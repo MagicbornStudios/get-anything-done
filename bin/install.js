@@ -2992,11 +2992,35 @@ function install(isGlobal, runtime = 'claude') {
 
       // Enable hooks feature flag if not present
       if (!configContent.includes('codex_hooks')) {
-        const featuresSection = '[features]\ncodex_hooks = true\n';
         if (configContent.includes('[features]')) {
-          configContent = configContent.replace(/\[features\]\n/, featuresSection);
+          // Insert codex_hooks = true right after the [features] header.
+          // Fixes #1202: previous approach could leave non-boolean keys (like
+          // model = "gpt-5.4") under [features], causing Codex TOML parse errors.
+          configContent = configContent.replace(/(\[features\]\n)/, '$1codex_hooks = true\n');
         } else {
-          configContent = featuresSection + '\n' + configContent;
+          configContent = '[features]\ncodex_hooks = true\n\n' + configContent;
+        }
+      }
+
+      // Safety check: detect non-boolean keys under [features] that would break Codex (#1202).
+      // Extract the [features] section content (between [features] and next [section] or EOF).
+      const featuresMatch = configContent.match(/\[features\]\n([\s\S]*?)(?=\n\[|$)/);
+      if (featuresMatch) {
+        const featuresBody = featuresMatch[1];
+        const nonBooleanKeys = featuresBody.split('\n')
+          .filter(line => line.match(/^\s*\w+\s*=/) && !line.match(/=\s*(true|false)\s*(#.*)?$/))
+          .map(line => line.trim());
+        if (nonBooleanKeys.length > 0) {
+          // Move non-boolean keys above [features] to prevent TOML parse errors
+          let cleanedFeatures = featuresBody.split('\n')
+            .filter(line => !line.match(/^\s*\w+\s*=/) || line.match(/=\s*(true|false)\s*(#.*)?$/))
+            .join('\n');
+          const movedKeys = nonBooleanKeys.join('\n') + '\n';
+          configContent = configContent.replace(
+            /\[features\]\n[\s\S]*?(?=\n\[|$)/,
+            movedKeys + '\n[features]\n' + cleanedFeatures.trim() + '\n'
+          );
+          console.log(`  ${yellow}⚠${reset}  Moved ${nonBooleanKeys.length} non-feature key(s) out of [features] section to prevent TOML errors`);
         }
       }
 
