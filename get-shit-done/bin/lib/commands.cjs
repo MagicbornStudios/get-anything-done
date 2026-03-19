@@ -238,7 +238,13 @@ function cmdCommit(cwd, message, files, raw, amend, noVerify) {
   // Stage files
   const filesToStage = files && files.length > 0 ? files : ['.planning/'];
   for (const file of filesToStage) {
-    execGit(cwd, ['add', file]);
+    const fullPath = path.join(cwd, file);
+    if (!fs.existsSync(fullPath)) {
+      // File was deleted/moved — stage the deletion
+      execGit(cwd, ['rm', '--cached', '--ignore-unmatch', file]);
+    } else {
+      execGit(cwd, ['add', file]);
+    }
   }
 
   // Commit (--no-verify skips pre-commit hooks, used by parallel executor agents)
