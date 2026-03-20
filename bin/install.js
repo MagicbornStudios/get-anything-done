@@ -3123,7 +3123,7 @@ function uninstall(isGlobal, runtime = 'claude') {
   // 4. Remove GSD hooks
   const hooksDir = path.join(targetDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const gsdHooks = ['gsd-statusline.js', 'gsd-check-update.js', 'gsd-check-update.sh', 'gsd-context-monitor.js'];
+    const gsdHooks = ['gsd-statusline.js', 'gsd-check-update.js', 'gsd-check-update.sh', 'gsd-context-monitor.js', 'gsd-prompt-guard.js'];
     let hookCount = 0;
     for (const hook of gsdHooks) {
       const hookPath = path.join(hooksDir, hook);
@@ -3211,6 +3211,27 @@ function uninstall(isGlobal, runtime = 'claude') {
         if (settings.hooks[eventName].length === 0) {
           delete settings.hooks[eventName];
         }
+      }
+    }
+
+    // Remove GSD hooks from PreToolUse (prompt injection guard)
+    if (settings.hooks && settings.hooks.PreToolUse) {
+      const before = settings.hooks.PreToolUse.length;
+      settings.hooks.PreToolUse = settings.hooks.PreToolUse.filter(entry => {
+        if (entry.hooks && Array.isArray(entry.hooks)) {
+          const hasGsdHook = entry.hooks.some(h =>
+            h.command && h.command.includes('gsd-prompt-guard')
+          );
+          return !hasGsdHook;
+        }
+        return true;
+      });
+      if (settings.hooks.PreToolUse.length < before) {
+        settingsModified = true;
+        console.log(`  ${green}✓${reset} Removed prompt injection guard hook from settings`);
+      }
+      if (settings.hooks.PreToolUse.length === 0) {
+        delete settings.hooks.PreToolUse;
       }
     }
 
@@ -4007,6 +4028,9 @@ function install(isGlobal, runtime = 'claude') {
   const contextMonitorCommand = isGlobal
     ? buildHookCommand(targetDir, 'gsd-context-monitor.js')
     : 'node ' + dirName + '/hooks/gsd-context-monitor.js';
+  const promptGuardCommand = isGlobal
+    ? buildHookCommand(targetDir, 'gsd-prompt-guard.js')
+    : 'node ' + dirName + '/hooks/gsd-prompt-guard.js';
 
   // Enable experimental agents for Gemini CLI (required for custom sub-agents)
   if (isGemini) {
@@ -4085,6 +4109,30 @@ function install(isGlobal, runtime = 'claude') {
           }
         }
       }
+    }
+
+    // Configure PreToolUse hook for prompt injection detection
+    const preToolEvent = 'PreToolUse';
+    if (!settings.hooks[preToolEvent]) {
+      settings.hooks[preToolEvent] = [];
+    }
+
+    const hasPromptGuardHook = settings.hooks[preToolEvent].some(entry =>
+      entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-prompt-guard'))
+    );
+
+    if (!hasPromptGuardHook) {
+      settings.hooks[preToolEvent].push({
+        matcher: 'Write|Edit',
+        hooks: [
+          {
+            type: 'command',
+            command: promptGuardCommand,
+            timeout: 5
+          }
+        ]
+      });
+      console.log(`  ${green}✓${reset} Configured prompt injection guard hook`);
     }
   }
 

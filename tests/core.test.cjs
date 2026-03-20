@@ -942,6 +942,7 @@ describe('stale hook filter', () => {
     const files = [
       'gsd-check-update.js',
       'gsd-context-monitor.js',
+      'gsd-prompt-guard.js',
       'gsd-statusline.js',
       'gsd-workflow-guard.js',
       'guard-edits-outside-project.js',  // user hook
@@ -956,6 +957,7 @@ describe('stale hook filter', () => {
     assert.deepStrictEqual(filtered, [
       'gsd-check-update.js',
       'gsd-context-monitor.js',
+      'gsd-prompt-guard.js',
       'gsd-statusline.js',
       'gsd-workflow-guard.js',
     ], 'should only include gsd-prefixed .js files');

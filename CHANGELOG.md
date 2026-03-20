@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Security hardening** — Centralized `security.cjs` module with path traversal prevention, prompt injection detection/sanitization, safe JSON parsing, field name validation, and shell argument validation. PreToolUse `gsd-prompt-guard` hook scans writes to `.planning/` for injection patterns. CI-ready `prompt-injection-scan.test.cjs` scans all agent/workflow/command files for embedded injection vectors
+
+### Fixed
+- Path traversal in `readTextArgOrFile` — `--text-file` and `--prd` arguments now validate paths resolve within the project directory
+- Unprotected `JSON.parse` in `--fields` argument (could crash on malformed input)
+- macOS `/var` symlink resolution in path validation (`/var` -> `/private/var`)
+
 ## [1.26.0] - 2026-03-18
 
 ### Added

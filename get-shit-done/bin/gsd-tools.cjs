@@ -359,7 +359,12 @@ async function main() {
           name: nameIdx !== -1 ? args[nameIdx + 1] : null,
           type: typeIdx !== -1 ? args[typeIdx + 1] : 'execute',
           wave: waveIdx !== -1 ? args[waveIdx + 1] : '1',
-          fields: fieldsIdx !== -1 ? JSON.parse(args[fieldsIdx + 1]) : {},
+          fields: fieldsIdx !== -1 ? (() => {
+            const { safeJsonParse } = require('./lib/security.cjs');
+            const result = safeJsonParse(args[fieldsIdx + 1], { label: '--fields' });
+            if (!result.ok) error(result.error);
+            return result.value;
+          })() : {},
         }, raw);
       } else {
         error('Unknown template subcommand. Available: select, fill');
