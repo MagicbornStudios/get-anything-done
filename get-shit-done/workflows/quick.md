@@ -581,9 +581,23 @@ ${AGENT_SKILLS_EXECUTOR}
 ```
 
 After executor returns:
-1. Verify summary exists at `${QUICK_DIR}/${quick_id}-SUMMARY.md`
-2. Extract commit hash from executor output
-3. Report completion status
+1. **Worktree cleanup:** If the executor ran with `isolation="worktree"`, merge the worktree branch back and clean up:
+   ```bash
+   # Find worktrees created by the executor
+   WORKTREES=$(git worktree list --porcelain | grep "^worktree " | grep -v "$(pwd)$" | sed 's/^worktree //')
+   for WT in $WORKTREES; do
+     WT_BRANCH=$(git -C "$WT" rev-parse --abbrev-ref HEAD 2>/dev/null)
+     if [ -n "$WT_BRANCH" ] && [ "$WT_BRANCH" != "HEAD" ]; then
+       git merge "$WT_BRANCH" --no-edit -m "chore: merge quick task worktree ($WT_BRANCH)" 2>&1 || echo "⚠ Merge conflict — resolve manually"
+       git worktree remove "$WT" --force 2>/dev/null || true
+       git branch -D "$WT_BRANCH" 2>/dev/null || true
+     fi
+   done
+   ```
+   If `workflow.use_worktrees` is `false`, skip this step.
+2. Verify summary exists at `${QUICK_DIR}/${quick_id}-SUMMARY.md`
+3. Extract commit hash from executor output
+4. Report completion status
 
 **Known Claude Code bug (classifyHandoffIfNeeded):** If executor reports "failed" with error `classifyHandoffIfNeeded is not defined`, this is a Claude Code runtime bug — not a real failure. Check if summary file exists and git log shows commits. If so, treat as successful.
 

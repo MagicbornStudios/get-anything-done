@@ -336,6 +336,39 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
    ```
    If hooks fail: report the failure and ask "Fix hook issues now?" or "Continue to next wave?"
 
+4.5. **Worktree cleanup (when `isolation="worktree"` was used):**
+
+   When executor agents ran in worktree isolation, their commits land on temporary branches in separate working trees. After the wave completes, merge these changes back and clean up:
+
+   ```bash
+   # List worktrees created by this wave's agents
+   WORKTREES=$(git worktree list --porcelain | grep "^worktree " | grep -v "$(pwd)$" | sed 's/^worktree //')
+
+   for WT in $WORKTREES; do
+     # Get the branch name for this worktree
+     WT_BRANCH=$(git -C "$WT" rev-parse --abbrev-ref HEAD 2>/dev/null)
+     if [ -n "$WT_BRANCH" ] && [ "$WT_BRANCH" != "HEAD" ]; then
+       CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+       # Merge the worktree branch into the current branch
+       git merge "$WT_BRANCH" --no-edit -m "chore: merge executor worktree ($WT_BRANCH)" 2>&1 || {
+         echo "⚠ Merge conflict from worktree $WT_BRANCH — resolve manually"
+         continue
+       }
+
+       # Remove the worktree
+       git worktree remove "$WT" --force 2>/dev/null || true
+
+       # Delete the temporary branch
+       git branch -D "$WT_BRANCH" 2>/dev/null || true
+     fi
+   done
+   ```
+
+   **If `workflow.use_worktrees` is `false`:** Agents ran on the main working tree — skip this step entirely.
+
+   **If no worktrees found:** Skip silently — agents may have been spawned without worktree isolation.
+
 5. **Report completion — spot-check claims first:**
 
    For each SUMMARY.md:
