@@ -561,6 +561,15 @@ function planningDir(cwd, ws, project) {
   if (project === undefined) project = process.env.GSD_PROJECT || null;
   if (ws === undefined) ws = process.env.GSD_WORKSTREAM || null;
 
+  // Reject path separators and traversal components in project/workstream names
+  const BAD_SEGMENT = /[/\\]|\.\./;
+  if (project && BAD_SEGMENT.test(project)) {
+    throw new Error(`GSD_PROJECT contains invalid path characters: ${project}`);
+  }
+  if (ws && BAD_SEGMENT.test(ws)) {
+    throw new Error(`GSD_WORKSTREAM contains invalid path characters: ${ws}`);
+  }
+
   let base = path.join(cwd, '.planning');
   if (project) base = path.join(base, project);
   if (ws) base = path.join(base, 'workstreams', ws);
