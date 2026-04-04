@@ -1,0 +1,21 @@
+{
+  "type": "eval",
+  "name": "portfolio-bare",
+  "description": "Portfolio monorepo requirements — bare implementation benchmark",
+  "baseline": "v1",
+  "trace": true,
+  "constraints": {
+    "local_only": true,
+    "no_external_services": true,
+    "local_db_allowed": true
+  },
+  "scoring": {
+    "weights": {
+      "requirement_coverage": 0.40,
+      "edit_efficiency": 0.20,
+      "token_cost": 0.15,
+      "skill_calls": 0.15,
+      "task_alignment": 0.10
+    }
+  }
+}

@@ -582,9 +582,73 @@ const evalRun = defineCommand({
   },
 });
 
+const evalScore = defineCommand({
+  meta: { name: 'score', description: 'Compute SCORE.md for latest (or specified) eval run' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', required: true },
+    version: { type: 'string', description: 'Version to score (default: latest)', default: '' },
+  },
+  run({ args }) {
+    const { generateScore } = require('../lib/score-generator.cjs');
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+    const projectDir = path.join(evalsDir, args.project);
+
+    if (!fs.existsSync(projectDir)) {
+      outputError(`Eval project '${args.project}' not found.`);
+    }
+
+    const versions = fs.readdirSync(projectDir)
+      .filter(n => /^v\d+$/.test(n))
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+
+    if (versions.length === 0) {
+      outputError(`No runs found for project '${args.project}'. Run \`gad eval run --project ${args.project}\` first.`);
+    }
+
+    const version = args.version || versions[versions.length - 1];
+    if (!versions.includes(version)) {
+      outputError(`Version '${version}' not found. Available: ${versions.join(', ')}`);
+    }
+
+    try {
+      const scorePath = generateScore(projectDir, version);
+      console.log(`\n✓ SCORE.md written: ${path.relative(process.cwd(), scorePath)}`);
+    } catch (e) {
+      outputError(e.message);
+    }
+  },
+});
+
+const evalDiff = defineCommand({
+  meta: { name: 'diff', description: 'Diff two eval run score files' },
+  args: {
+    v1: { type: 'positional', description: 'First version (e.g. v1)', required: true },
+    v2: { type: 'positional', description: 'Second version (e.g. v2)', required: true },
+    project: { type: 'string', description: 'Eval project name', required: true },
+  },
+  run({ args }) {
+    const { diffVersions } = require('../lib/score-generator.cjs');
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+    const projectDir = path.join(evalsDir, args.project);
+
+    if (!fs.existsSync(projectDir)) {
+      outputError(`Eval project '${args.project}' not found.`);
+    }
+
+    try {
+      const table = diffVersions(projectDir, args.v1, args.v2);
+      console.log('\n' + table);
+    } catch (e) {
+      outputError(e.message);
+    }
+  },
+});
+
 const evalCmd = defineCommand({
   meta: { name: 'eval', description: 'Run and manage eval projects' },
-  subCommands: { list: evalList, run: evalRun },
+  subCommands: { list: evalList, run: evalRun, score: evalScore, diff: evalDiff },
 });
 
 // ---------------------------------------------------------------------------
