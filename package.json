@@ -3,7 +3,8 @@
   "version": "1.32.0",
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by MagicbornStudios.",
   "bin": {
-    "get-anything-done": "bin/install.js"
+    "get-anything-done": "bin/install.js",
+    "gad": "bin/gad.cjs"
   },
   "files": [
     "bin",
@@ -40,6 +41,9 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "citty": "^0.1.6"
   },
   "devDependencies": {
     "c8": "^11.0.0",
