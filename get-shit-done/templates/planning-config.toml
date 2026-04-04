@@ -1,0 +1,58 @@
+# planning-config.toml — GAD project configuration
+# Read by: bin/gad-config.cjs
+# Docs: https://github.com/MagicbornStudios/get-anything-done
+
+[planning]
+# Maximum phases per milestone sprint cycle (default: 5)
+sprintSize = 5
+
+# Active profile name — switches context density for commands
+# "human" = readable output, "agent" = JSON-first output
+currentProfile = "human"
+
+# Paths to project conventions / agent instructions files.
+# Loaded as context when GAD commands run.
+conventionsPaths = [
+  "AGENTS.md",
+  ".planning/AGENTS.md",
+]
+
+# Where `gad docs compile` writes MDX output for the docs site.
+# Omit if you don't use a documentation sink.
+# docs_sink = "apps/portfolio/content/docs/planning"
+
+# Glob patterns to ignore when crawling for .planning/ directories.
+ignore = ["**/node_modules/**", "**/dist/**", "**/.git/**"]
+
+# Docs sink workflow: "manual" | "compile-on-phase-complete" | "compile-on-state-change"
+# sink_workflow = "manual"
+
+# ---------------------------------------------------------------------------
+# Planning roots — each entry is one project / sub-repo tracked by GAD.
+# `gad workspace sync` auto-populates these from a monorepo crawl.
+# ---------------------------------------------------------------------------
+
+# Primary / monorepo root
+[[planning.roots]]
+id = "root"
+path = "."
+planningDir = ".planning"
+discover = false   # true = auto-crawl path for nested .planning/ dirs
+
+# Example: vendor sub-repo
+# [[planning.roots]]
+# id = "my-sub-project"
+# path = "vendor/my-sub-project"
+# planningDir = ".planning"
+# discover = false
+
+# ---------------------------------------------------------------------------
+# Profiles — context-density presets for commands
+# ---------------------------------------------------------------------------
+
+[profiles.human]
+description = "Default human view — readable prose output."
+
+[profiles.agent]
+description = "Agent perspective — JSON-first, minimal prose."
+defaultJson = true

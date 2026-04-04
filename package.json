@@ -1,9 +1,9 @@
 {
-  "name": "get-shit-done-cc",
-  "version": "1.31.0",
-  "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by TÂCHES.",
+  "name": "get-anything-done",
+  "version": "1.32.0",
+  "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by MagicbornStudios.",
   "bin": {
-    "get-shit-done-cc": "bin/install.js"
+    "get-anything-done": "bin/install.js"
   },
   "files": [
     "bin",
@@ -25,15 +25,18 @@
     "codex",
     "codex-cli"
   ],
-  "author": "TÂCHES",
+  "author": "MagicbornStudios",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsd-build/get-shit-done.git"
+    "url": "git+https://github.com/MagicbornStudios/get-anything-done.git"
   },
-  "homepage": "https://github.com/gsd-build/get-shit-done",
+  "homepage": "https://github.com/MagicbornStudios/get-anything-done",
   "bugs": {
-    "url": "https://github.com/gsd-build/get-shit-done/issues"
+    "url": "https://github.com/MagicbornStudios/get-anything-done/issues"
+  },
+  "peerDependencies": {
+    "get-shit-done-cc": ">=1.30.0"
   },
   "engines": {
     "node": ">=20.0.0"

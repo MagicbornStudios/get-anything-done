@@ -2993,9 +2993,9 @@ function convertClaudeToGeminiToml(content) {
 /**
  * Copy commands to a flat structure for OpenCode
  * OpenCode expects: command/gsd-help.md (invoked as /gsd-help)
- * Source structure: commands/gsd/help.md
+ * Source structure: commands/gad/help.md
  * 
- * @param {string} srcDir - Source directory (e.g., commands/gsd/)
+ * @param {string} srcDir - Source directory (e.g., commands/gad/)
  * @param {string} destDir - Destination directory (e.g., command/)
  * @param {string} prefix - Prefix for filenames (e.g., 'gsd')
  * @param {string} pathPrefix - Path prefix for file references
@@ -3024,7 +3024,7 @@ function copyFlattenedCommands(srcDir, destDir, prefix, pathPrefix, runtime) {
     
     if (entry.isDirectory()) {
       // Recurse into subdirectories, adding to prefix
-      // e.g., commands/gsd/debug/start.md -> command/gsd-debug-start.md
+      // e.g., commands/gad/debug/start.md -> command/gsd-debug-start.md
       copyFlattenedCommands(srcPath, destDir, `${prefix}-${entry.name}`, pathPrefix, runtime);
     } else if (entry.name.endsWith('.md')) {
       // Flatten: help.md -> gsd-help.md
@@ -3273,7 +3273,7 @@ function copyCommandsAsCopilotSkills(srcDir, skillsDir, prefix, isGlobal = false
 
 /**
  * Copy Claude commands as Claude skills — one folder per skill with SKILL.md.
- * Claude Code 2.1.88+ uses skills/xxx/SKILL.md instead of commands/gsd/xxx.md.
+ * Claude Code 2.1.88+ uses skills/xxx/SKILL.md instead of commands/gad/xxx.md.
  * Claude is the native format so no path replacement is needed — only
  * frontmatter restructuring via convertClaudeCommandToClaudeSkill.
  * @param {string} srcDir - Source commands directory
@@ -3698,12 +3698,12 @@ function uninstall(isGlobal, runtime = 'claude') {
 
   // 1. Remove GSD commands/skills
   if (isOpencode) {
-    // OpenCode: remove command/gsd-*.md files
+    // OpenCode: remove command/gad-*.md files
     const commandDir = path.join(targetDir, 'command');
     if (fs.existsSync(commandDir)) {
       const files = fs.readdirSync(commandDir);
       for (const file of files) {
-        if (file.startsWith('gsd-') && file.endsWith('.md')) {
+        if (file.startsWith('gad-') && file.endsWith('.md')) {
           fs.unlinkSync(path.join(commandDir, file));
           removedCount++;
         }
@@ -3711,13 +3711,13 @@ function uninstall(isGlobal, runtime = 'claude') {
       console.log(`  ${green}✓${reset} Removed GSD commands from command/`);
     }
   } else if (isCodex || isCursor || isWindsurf) {
-    // Codex/Cursor/Windsurf: remove skills/gsd-*/SKILL.md skill directories
+    // Codex/Cursor/Windsurf: remove skills/gad-*/SKILL.md skill directories
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(skillsDir)) {
       let skillCount = 0;
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('gsd-')) {
+        if (entry.isDirectory() && entry.name.startsWith('gad-')) {
           fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
           skillCount++;
         }
@@ -3764,13 +3764,13 @@ function uninstall(isGlobal, runtime = 'claude') {
     }
     }
   } else if (isCopilot) {
-    // Copilot: remove skills/gsd-*/ directories (same layout as Codex skills)
+    // Copilot: remove skills/gad-*/ directories (same layout as Codex skills)
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(skillsDir)) {
       let skillCount = 0;
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('gsd-')) {
+        if (entry.isDirectory() && entry.name.startsWith('gad-')) {
           fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
           skillCount++;
         }
@@ -3797,13 +3797,13 @@ function uninstall(isGlobal, runtime = 'claude') {
       }
     }
   } else if (isAntigravity) {
-    // Antigravity: remove skills/gsd-*/ directories (same layout as Copilot skills)
+    // Antigravity: remove skills/gad-*/ directories (same layout as Copilot skills)
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(skillsDir)) {
       let skillCount = 0;
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('gsd-')) {
+        if (entry.isDirectory() && entry.name.startsWith('gad-')) {
           fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
           skillCount++;
         }
@@ -3814,13 +3814,13 @@ function uninstall(isGlobal, runtime = 'claude') {
       }
     }
   } else if (isCursor) {
-    // Cursor: remove skills/gsd-*/ directories (same layout as Codex skills)
+    // Cursor: remove skills/gad-*/ directories (same layout as Codex skills)
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(skillsDir)) {
       let skillCount = 0;
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('gsd-')) {
+        if (entry.isDirectory() && entry.name.startsWith('gad-')) {
           fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
           skillCount++;
         }
@@ -3831,13 +3831,13 @@ function uninstall(isGlobal, runtime = 'claude') {
       }
     }
   } else if (isWindsurf) {
-    // Windsurf: remove skills/gsd-*/ directories (same layout as Cursor skills)
+    // Windsurf: remove skills/gad-*/ directories (same layout as Cursor skills)
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(skillsDir)) {
       let skillCount = 0;
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('gsd-')) {
+        if (entry.isDirectory() && entry.name.startsWith('gad-')) {
           fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
           skillCount++;
         }
@@ -3848,8 +3848,8 @@ function uninstall(isGlobal, runtime = 'claude') {
       }
     }
   } else if (isGemini) {
-    // Gemini: still uses commands/gsd/
-    const gsdCommandsDir = path.join(targetDir, 'commands', 'gsd');
+    // Gemini: still uses commands/gad/
+    const gsdCommandsDir = path.join(targetDir, 'commands', 'gad');
     if (fs.existsSync(gsdCommandsDir)) {
       // Preserve user-generated files before wipe (#1423)
       // Note: if more user files are added, consider a naming convention (e.g., USER-*.md)
@@ -3859,27 +3859,27 @@ function uninstall(isGlobal, runtime = 'claude') {
 
       fs.rmSync(gsdCommandsDir, { recursive: true });
       removedCount++;
-      console.log(`  ${green}✓${reset} Removed commands/gsd/`);
+      console.log(`  ${green}✓${reset} Removed commands/gad/`);
 
       // Restore user-generated files
       if (preservedDevPrefs) {
         try {
           fs.mkdirSync(gsdCommandsDir, { recursive: true });
           fs.writeFileSync(devPrefsPath, preservedDevPrefs);
-          console.log(`  ${green}✓${reset} Preserved commands/gsd/dev-preferences.md`);
+          console.log(`  ${green}✓${reset} Preserved commands/gad/dev-preferences.md`);
         } catch (err) {
           console.error(`  ${red}✗${reset} Failed to restore dev-preferences.md: ${err.message}`);
         }
       }
     }
   } else {
-    // Claude Code: remove skills/gsd-*/ directories
+    // Claude Code: remove skills/gad-*/ directories
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(skillsDir)) {
       let skillCount = 0;
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('gsd-')) {
+        if (entry.isDirectory() && entry.name.startsWith('gad-')) {
           fs.rmSync(path.join(skillsDir, entry.name), { recursive: true });
           skillCount++;
         }
@@ -3890,7 +3890,7 @@ function uninstall(isGlobal, runtime = 'claude') {
       }
     }
 
-    // Also clean up legacy commands/gsd/ from older installs
+    // Also clean up legacy commands/gsd/ from older GSD installs
     const legacyCommandsDir = path.join(targetDir, 'commands', 'gsd');
     if (fs.existsSync(legacyCommandsDir)) {
       // Preserve user-generated files before legacy wipe (#1423)
@@ -3899,13 +3899,13 @@ function uninstall(isGlobal, runtime = 'claude') {
 
       fs.rmSync(legacyCommandsDir, { recursive: true });
       removedCount++;
-      console.log(`  ${green}✓${reset} Removed legacy commands/gsd/`);
+      console.log(`  ${green}✓${reset} Removed legacy commands/gad/`);
 
       if (preservedDevPrefs) {
         try {
           fs.mkdirSync(legacyCommandsDir, { recursive: true });
           fs.writeFileSync(devPrefsPath, preservedDevPrefs);
-          console.log(`  ${green}✓${reset} Preserved commands/gsd/dev-preferences.md`);
+          console.log(`  ${green}✓${reset} Preserved commands/gad/dev-preferences.md`);
         } catch (err) {
           console.error(`  ${red}✗${reset} Failed to restore dev-preferences.md: ${err.message}`);
         }
@@ -4364,7 +4364,7 @@ function writeManifest(configDir, runtime = 'claude') {
   const isCursor = runtime === 'cursor';
   const isWindsurf = runtime === 'windsurf';
   const gsdDir = path.join(configDir, 'get-shit-done');
-  const commandsDir = path.join(configDir, 'commands', 'gsd');
+  const commandsDir = path.join(configDir, 'commands', 'gad');
   const opencodeCommandDir = path.join(configDir, 'command');
   const codexSkillsDir = path.join(configDir, 'skills');
   const agentsDir = path.join(configDir, 'agents');
@@ -4377,7 +4377,7 @@ function writeManifest(configDir, runtime = 'claude') {
   if (isGemini && fs.existsSync(commandsDir)) {
     const cmdHashes = generateManifest(commandsDir);
     for (const [rel, hash] of Object.entries(cmdHashes)) {
-      manifest.files['commands/gsd/' + rel] = hash;
+      manifest.files['commands/gad/' + rel] = hash;
     }
   }
   if (isOpencode && fs.existsSync(opencodeCommandDir)) {
@@ -4567,124 +4567,124 @@ function install(isGlobal, runtime = 'claude') {
   // Clean up orphaned files from previous versions
   cleanupOrphanedFiles(targetDir);
 
-  // OpenCode uses command/ (flat), Codex uses skills/, Claude/Gemini use commands/gsd/
+  // OpenCode uses command/ (flat), Codex uses skills/, Claude/Gemini use commands/gad/
   if (isOpencode) {
     // OpenCode: flat structure in command/ directory
     const commandDir = path.join(targetDir, 'command');
     fs.mkdirSync(commandDir, { recursive: true });
     
-    // Copy commands/gsd/*.md as command/gsd-*.md (flatten structure)
-    const gsdSrc = path.join(src, 'commands', 'gsd');
-    copyFlattenedCommands(gsdSrc, commandDir, 'gsd', pathPrefix, runtime);
-    if (verifyInstalled(commandDir, 'command/gsd-*')) {
-      const count = fs.readdirSync(commandDir).filter(f => f.startsWith('gsd-')).length;
+    // Copy commands/gad/*.md as command/gsd-*.md (flatten structure)
+    const gsdSrc = path.join(src, 'commands', 'gad');
+    copyFlattenedCommands(gsdSrc, commandDir, 'gad', pathPrefix, runtime);
+    if (verifyInstalled(commandDir, 'command/gad-*')) {
+      const count = fs.readdirSync(commandDir).filter(f => f.startsWith('gad-')).length;
       console.log(`  ${green}✓${reset} Installed ${count} commands to command/`);
     } else {
-      failures.push('command/gsd-*');
+      failures.push('command/gad-*');
     }
   } else if (isCodex) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gsdSrc = path.join(src, 'commands', 'gsd');
-    copyCommandsAsCodexSkills(gsdSrc, skillsDir, 'gsd', pathPrefix, runtime);
+    const gsdSrc = path.join(src, 'commands', 'gad');
+    copyCommandsAsCodexSkills(gsdSrc, skillsDir, 'gad', pathPrefix, runtime);
     const installedSkillNames = listCodexSkillNames(skillsDir);
     if (installedSkillNames.length > 0) {
       console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
     } else {
-      failures.push('skills/gsd-*');
+      failures.push('skills/gad-*');
     }
   } else if (isCopilot) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gsdSrc = path.join(src, 'commands', 'gsd');
-    copyCommandsAsCopilotSkills(gsdSrc, skillsDir, 'gsd', isGlobal);
+    const gsdSrc = path.join(src, 'commands', 'gad');
+    copyCommandsAsCopilotSkills(gsdSrc, skillsDir, 'gad', isGlobal);
     if (fs.existsSync(skillsDir)) {
       const count = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gsd-')).length;
+        .filter(e => e.isDirectory() && e.name.startsWith('gad-')).length;
       if (count > 0) {
         console.log(`  ${green}✓${reset} Installed ${count} skills to skills/`);
       } else {
-        failures.push('skills/gsd-*');
+        failures.push('skills/gad-*');
       }
     } else {
-      failures.push('skills/gsd-*');
+      failures.push('skills/gad-*');
     }
   } else if (isAntigravity) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gsdSrc = path.join(src, 'commands', 'gsd');
-    copyCommandsAsAntigravitySkills(gsdSrc, skillsDir, 'gsd', isGlobal);
+    const gsdSrc = path.join(src, 'commands', 'gad');
+    copyCommandsAsAntigravitySkills(gsdSrc, skillsDir, 'gad', isGlobal);
     if (fs.existsSync(skillsDir)) {
       const count = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gsd-')).length;
+        .filter(e => e.isDirectory() && e.name.startsWith('gad-')).length;
       if (count > 0) {
         console.log(`  ${green}✓${reset} Installed ${count} skills to skills/`);
       } else {
-        failures.push('skills/gsd-*');
+        failures.push('skills/gad-*');
       }
     } else {
-      failures.push('skills/gsd-*');
+      failures.push('skills/gad-*');
     }
   } else if (isCursor) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gsdSrc = path.join(src, 'commands', 'gsd');
-    copyCommandsAsCursorSkills(gsdSrc, skillsDir, 'gsd', pathPrefix, runtime);
+    const gsdSrc = path.join(src, 'commands', 'gad');
+    copyCommandsAsCursorSkills(gsdSrc, skillsDir, 'gad', pathPrefix, runtime);
     const installedSkillNames = listCodexSkillNames(skillsDir); // reuse — same dir structure
     if (installedSkillNames.length > 0) {
       console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
     } else {
-      failures.push('skills/gsd-*');
+      failures.push('skills/gad-*');
     }
   } else if (isWindsurf) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gsdSrc = path.join(src, 'commands', 'gsd');
-    copyCommandsAsWindsurfSkills(gsdSrc, skillsDir, 'gsd', pathPrefix, runtime);
+    const gsdSrc = path.join(src, 'commands', 'gad');
+    copyCommandsAsWindsurfSkills(gsdSrc, skillsDir, 'gad', pathPrefix, runtime);
     const installedSkillNames = listCodexSkillNames(skillsDir); // reuse — same dir structure
     if (installedSkillNames.length > 0) {
       console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
     } else {
-      failures.push('skills/gsd-*');
+      failures.push('skills/gad-*');
     }
   } else if (isAugment) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gsdSrc = path.join(src, 'commands', 'gsd');
-    copyCommandsAsAugmentSkills(gsdSrc, skillsDir, 'gsd', pathPrefix, runtime);
+    const gsdSrc = path.join(src, 'commands', 'gad');
+    copyCommandsAsAugmentSkills(gsdSrc, skillsDir, 'gad', pathPrefix, runtime);
     const installedSkillNames = listCodexSkillNames(skillsDir);
     if (installedSkillNames.length > 0) {
       console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
     } else {
-      failures.push('skills/gsd-*');
+      failures.push('skills/gad-*');
     }
   } else if (isGemini) {
     const commandsDir = path.join(targetDir, 'commands');
     fs.mkdirSync(commandsDir, { recursive: true });
-    const gsdSrc = path.join(src, 'commands', 'gsd');
+    const gsdSrc = path.join(src, 'commands', 'gad');
     const gsdDest = path.join(commandsDir, 'gsd');
     copyWithPathReplacement(gsdSrc, gsdDest, pathPrefix, runtime, true, isGlobal);
-    if (verifyInstalled(gsdDest, 'commands/gsd')) {
-      console.log(`  ${green}✓${reset} Installed commands/gsd`);
+    if (verifyInstalled(gsdDest, 'commands/gad')) {
+      console.log(`  ${green}✓${reset} Installed commands/gad`);
     } else {
-      failures.push('commands/gsd');
+      failures.push('commands/gad');
     }
   } else {
     // Claude Code: skills/ format (2.1.88+ compatibility)
     const skillsDir = path.join(targetDir, 'skills');
-    const gsdSrc = path.join(src, 'commands', 'gsd');
+    const gsdSrc = path.join(src, 'commands', 'gad');
     copyCommandsAsClaudeSkills(gsdSrc, skillsDir, 'gsd', pathPrefix, runtime, isGlobal);
     if (fs.existsSync(skillsDir)) {
       const count = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gsd-')).length;
+        .filter(e => e.isDirectory() && e.name.startsWith('gad-')).length;
       if (count > 0) {
         console.log(`  ${green}✓${reset} Installed ${count} skills to skills/`);
       } else {
-        failures.push('skills/gsd-*');
+        failures.push('skills/gad-*');
       }
     } else {
-      failures.push('skills/gsd-*');
+      failures.push('skills/gad-*');
     }
 
-    // Clean up legacy commands/gsd/ from previous installs
-    const legacyCommandsDir = path.join(targetDir, 'commands', 'gsd');
+    // Clean up legacy commands/gad/ from previous installs
+    const legacyCommandsDir = path.join(targetDir, 'commands', 'gad');
     if (fs.existsSync(legacyCommandsDir)) {
       fs.rmSync(legacyCommandsDir, { recursive: true });
-      console.log(`  ${green}✓${reset} Removed legacy commands/gsd/ directory`);
+      console.log(`  ${green}✓${reset} Removed legacy commands/gad/ directory`);
     }
   }
 
@@ -4707,7 +4707,7 @@ function install(isGlobal, runtime = 'claude') {
     // Remove old GSD agents (gsd-*.md) before copying new ones
     if (fs.existsSync(agentsDest)) {
       for (const file of fs.readdirSync(agentsDest)) {
-        if (file.startsWith('gsd-') && file.endsWith('.md')) {
+        if (file.startsWith('gad-') && file.endsWith('.md')) {
           fs.unlinkSync(path.join(agentsDest, file));
         }
       }
@@ -5264,6 +5264,56 @@ function handleStatusline(settings, isInteractive, callback) {
 }
 
 /**
+ * Ensure the GSD peer dependency is installed before the GAD layer.
+ * Runs `npx get-shit-done-cc@latest` with the same runtime/location flags
+ * that were passed to this installer.
+ * @param {string[]} runtimes - Selected runtimes (e.g. ['claude', 'gemini'])
+ * @param {boolean} isGlobal - Whether this is a global install
+ * @returns {boolean} true if GSD was installed successfully
+ */
+function ensureGsdInstalled(runtimes, isGlobal) {
+  const { execSync } = require('child_process');
+
+  const locationFlag = isGlobal ? '--global' : '--local';
+  const runtimeFlags = runtimes.map(r => '--' + r).join(' ');
+  const cmd = `npx get-shit-done-cc@latest ${runtimeFlags} ${locationFlag}`;
+
+  console.log(`\n  ${cyan}Installing GSD peer dependency...${reset}`);
+  console.log(`  ${dim}${cmd}${reset}\n`);
+
+  try {
+    execSync(cmd, { stdio: 'inherit' });
+    console.log(`\n  ${green}✓${reset} GSD installed`);
+    return true;
+  } catch (e) {
+    console.log(`\n  ${yellow}⚠${reset} GSD install failed: ${e.message}`);
+    console.log(`  ${dim}You can install it manually: npx get-shit-done-cc@latest${reset}`);
+    return false;
+  }
+}
+
+/**
+ * Write a GAD_TOOLS_PATH marker file so gad-config.cjs and GAD workflows can
+ * locate the installed gsd-tools.cjs without hardcoding paths.
+ *
+ * File written: <configDir>/get-shit-done/.gad-env
+ * Format: JSON  { "GAD_TOOLS_PATH": "/abs/path/to/gsd-tools.cjs" }
+ *
+ * @param {string} configDir - Root config directory (e.g. ~/.claude)
+ */
+function writeGadToolsPath(configDir) {
+  const toolsPath = path.join(configDir, 'get-shit-done', 'bin', 'gsd-tools.cjs');
+  const envFile = path.join(configDir, 'get-shit-done', '.gad-env');
+
+  try {
+    fs.writeFileSync(envFile, JSON.stringify({ GAD_TOOLS_PATH: toolsPath }, null, 2) + '\n');
+    console.log(`  ${green}✓${reset} Wrote GAD_TOOLS_PATH → ${dim}${toolsPath}${reset}`);
+  } catch (e) {
+    console.log(`  ${yellow}⚠${reset} Could not write GAD_TOOLS_PATH: ${e.message}`);
+  }
+}
+
+/**
  * Install the GSD SDK globally via npm.
  * @returns {boolean} true if install succeeded
  */
@@ -5450,9 +5500,20 @@ function promptLocation(runtimes) {
 function installAllRuntimes(runtimes, isGlobal, isInteractive) {
   const results = [];
 
+  // Step 1: ensure GSD is installed as the runtime layer
+  if (!process.env.GSD_TEST_MODE) {
+    ensureGsdInstalled(runtimes, isGlobal);
+  }
+
   for (const runtime of runtimes) {
     const result = install(isGlobal, runtime);
     results.push(result);
+
+    // Step 2: write GAD_TOOLS_PATH marker for this runtime's config dir
+    if (!process.env.GSD_TEST_MODE && result && result.settingsPath) {
+      const configDir = path.dirname(result.settingsPath);
+      writeGadToolsPath(configDir);
+    }
   }
 
   const statuslineRuntimes = ['claude', 'gemini'];

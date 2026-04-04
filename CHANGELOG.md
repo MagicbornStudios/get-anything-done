@@ -1,10 +1,47 @@
 # Changelog
 
-All notable changes to GSD will be documented in this file.
+All notable changes to GAD will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
+
+## [1.32.0] - 2026-04-03
+
+### Added — GAD Foundation (global-planning-01)
+
+**Package**
+- Renamed package to `get-anything-done` with `get-shit-done-cc >= 1.30.0` as peer dependency
+- Bumped binary name to `get-anything-done`
+- Updated repository/homepage to `MagicbornStudios/get-anything-done`
+
+**Installer**
+- `bin/install.js`: runs GSD installer first before GAD layer (`ensureGsdInstalled`)
+- `bin/install.js`: writes `GAD_TOOLS_PATH` marker to `~/.claude/get-shit-done/.gad-env` after install
+- All commands install from `commands/gad/` (renamed from `commands/gsd/`)
+
+**Configuration**
+- `bin/gad-config.cjs`: reads `planning-config.toml` (root or `.planning/` subdir), falls back to `config.json`
+- `get-shit-done/templates/planning-config.toml`: scaffold template with `[[planning.roots]]` example
+
+**Command prefix**
+- All slash commands renamed from `gsd:*` to `gad:*`
+- Removed: `workstreams`, `list-workspaces`, `new-workspace`, `remove-workspace`, `ui-phase`, `ui-review`, `secure-phase`, `pr-branch`, `ship`, `profile-user` (use `gad` CLI instead)
+
+**Net-new commands**
+- `gad:workspace-sync` — crawl monorepo, sync `[[planning.roots]]` in `planning-config.toml`
+- `gad:workspace-add` — add a path as a planning root
+- `gad:workspace-show` — show all roots + current phase/milestone
+- `gad:docs-compile` — compile STATE.md + ROADMAP.md from all roots → MDX docs sink
+- `gad:migrate-schema` — convert RP XML files (STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, REQUIREMENTS.xml) to GAD Markdown; archives originals
+- `gad:eval-run` — run an eval project in an isolated git worktree
+- `gad:eval-list` — list eval projects and run history
+
+**Eval framework**
+- `evals/portfolio-bare/REQUIREMENTS.md` — initial eval project (portfolio monorepo benchmark)
+
+**Documentation**
+- `README.md` — complete rewrite: GSD-powered positioning, simple/monorepo/ecosystem scaling model, canonical portfolio example, `.gad` pack intro
 
 ## [1.31.0] - 2026-04-01
 
