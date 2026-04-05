@@ -1,21 +1,28 @@
 {
   "type": "eval",
   "name": "portfolio-bare",
-  "description": "Portfolio monorepo requirements — bare implementation benchmark",
+  "description": "Portfolio monorepo planning eval. Agent opens a fresh template directory, plans and executes phases from requirements, declares context mode (fresh/loaded) at session start. Runs accumulate over time — context_delta emerges from the comparison.",
   "baseline": "v1",
   "trace": true,
+  "template": "template/",
+  "skill": "gad:eval-run",
+  "report_skill": "gad:eval-report",
   "constraints": {
-    "local_only": true,
-    "no_external_services": true,
-    "local_db_allowed": true
+    "planning_only": true,
+    "no_app_code": true,
+    "no_external_services": true
   },
+  "context_modes": ["fresh", "loaded"],
   "scoring": {
     "weights": {
       "requirement_coverage": 0.40,
-      "edit_efficiency": 0.20,
-      "token_cost": 0.15,
-      "skill_calls": 0.15,
-      "task_alignment": 0.10
+      "task_alignment": 0.25,
+      "state_hygiene": 0.20,
+      "decision_coverage": 0.15
+    },
+    "context_delta": {
+      "description": "loaded_score - fresh_score across matched task sets. Positive = context helps. Target: report only (no pass/fail threshold — accumulates over runs).",
+      "requires_both_modes": true
     }
   }
 }

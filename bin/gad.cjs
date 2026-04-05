@@ -17,6 +17,11 @@
  *   gad docs compile [--sink <path>]
  *   gad eval list
  *   gad eval run --project <name>
+ *   gad session list
+ *   gad session new [--project <id>]
+ *   gad session resume <id>
+ *   gad session close <id>
+ *   gad context [--session <id>] [--project <id>]
  */
 
 const { defineCommand, runMain, createMain } = require('citty');
@@ -26,6 +31,7 @@ const fs = require('fs');
 const gadConfig = require('./gad-config.cjs');
 const { render, shouldUseJson } = require('../lib/table.cjs');
 const { readState } = require('../lib/state-reader.cjs');
+const { readTasks } = require('../lib/task-registry-reader.cjs');
 const { readPhases } = require('../lib/roadmap-reader.cjs');
 const { compile: compileDocs } = require('../lib/docs-compiler.cjs');
 
@@ -60,6 +66,54 @@ function output(rows, opts = {}) {
 
 function outputError(msg) {
   console.error(`Error: ${msg}`);
+  process.exit(1);
+}
+
+/** List available eval projects and suggest rerun hint. */
+function listEvalProjectsHint() {
+  const gadDir = path.join(__dirname, '..');
+  const evalsDir = path.join(gadDir, 'evals');
+  if (!fs.existsSync(evalsDir)) {
+    console.error('No eval projects found. Create evals/<name>/REQUIREMENTS.md to get started.');
+    process.exit(1);
+  }
+  const projects = fs.readdirSync(evalsDir, { withFileTypes: true })
+    .filter(e => e.isDirectory())
+    .map(e => e.name);
+  if (projects.length === 0) {
+    console.error('No eval projects found. Create evals/<name>/REQUIREMENTS.md to get started.');
+    process.exit(1);
+  }
+  console.error(`\nMissing --project. Available eval projects:\n`);
+  for (const p of projects) console.error(`  ${p}`);
+  console.error(`\nRerun: gad eval run --project ${projects[0]}`);
+  process.exit(1);
+}
+
+/**
+ * Return the projectId of the most-recently-updated active session, or null.
+ * Used to scope state/phases to session project by default.
+ */
+function getActiveSessionProjectId(baseDir, roots) {
+  const sessions = loadSessions(baseDir, roots).filter(s => s.status !== 'closed');
+  if (sessions.length === 0) return null;
+  // loadSessions already sorts by updatedAt desc — first is most recent
+  return sessions[0].projectId || null;
+}
+
+/** List active sessions and suggest rerun hint for a subcommand. */
+function listActiveSessionsHint(baseDir, config, subcommand) {
+  const sessions = loadSessions(baseDir, config.roots).filter(s => s.status !== 'closed');
+  if (sessions.length === 0) {
+    console.error('No active sessions. Run `gad session new` to start one.');
+    process.exit(1);
+  }
+  console.error(`\nMissing --id. Active sessions:\n`);
+  for (const s of sessions) {
+    const phase = s.position?.phase ? `  phase: ${s.position.phase}` : '';
+    console.error(`  ${s.id}  [${s.projectId || '?'}]${phase}`);
+  }
+  console.error(`\nRerun: gad session ${subcommand} --id ${sessions[0].id}`);
   process.exit(1);
 }
 
@@ -287,11 +341,110 @@ const projectsInit = defineCommand({
   },
 });
 
+// projects audit — per-project health check
+const REQUIRED_FILES_BY_FORMAT = {
+  xml: ['STATE.xml', 'ROADMAP.xml'],
+  md:  ['STATE.md',  'ROADMAP.md'],
+};
+const RECOMMENDED_FILES = ['DECISIONS.xml', 'DECISIONS.md', 'AGENTS.md', 'REQUIREMENTS.xml', 'REQUIREMENTS.md'];
+
+const projectsAudit = defineCommand({
+  meta: { name: 'audit', description: 'Audit all projects for missing files, format violations, and sink gaps' },
+  args: {
+    project: { type: 'string', description: 'Scope to one project ID', default: '' },
+    json:    { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config  = gadConfig.load(baseDir);
+    const sink    = config.docs_sink;
+    let roots = config.roots;
+    if (args.project) roots = roots.filter(r => r.id === args.project);
+
+    const { isGenerated } = require('../lib/docs-compiler.cjs');
+    const results = [];
+
+    for (const root of roots) {
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      const checks  = [];
+
+      // 1. Planning dir exists
+      const dirExists = fs.existsSync(planDir);
+      checks.push({ check: 'planning_dir_exists', pass: dirExists, detail: dirExists ? planDir : `missing: ${planDir}` });
+      if (!dirExists) { results.push({ project: root.id, checks }); continue; }
+
+      // 2. Required files present (at least one format)
+      const filesPresent = fs.readdirSync(planDir);
+      const hasXml = REQUIRED_FILES_BY_FORMAT.xml.every(f => filesPresent.includes(f));
+      const hasMd  = REQUIRED_FILES_BY_FORMAT.md.every(f  => filesPresent.includes(f));
+      const hasRequired = hasXml || hasMd;
+      const detectedFormat = hasXml ? 'xml' : hasMd ? 'md' : 'unknown';
+      checks.push({ check: 'required_files', pass: hasRequired, detail: hasRequired ? `format=${detectedFormat}` : `missing STATE+ROADMAP (checked xml and md)` });
+
+      // 3. Recommended files
+      const missingRec = RECOMMENDED_FILES.filter(f => !filesPresent.includes(f));
+      const hasRec = missingRec.length < RECOMMENDED_FILES.length; // at least one present
+      checks.push({ check: 'recommended_files', pass: hasRec, detail: hasRec ? `present` : `none of: ${RECOMMENDED_FILES.join(', ')}` });
+
+      // 4. Sink alignment (if sink configured)
+      if (sink) {
+        const sinkPlanDir = path.join(baseDir, sink, root.id, 'planning');
+        const sinkExists  = fs.existsSync(sinkPlanDir);
+        if (!sinkExists) {
+          checks.push({ check: 'sink_exists', pass: false, detail: `no sink dir: ${sink}/${root.id}/planning/` });
+        } else {
+          const sinkFiles = fs.readdirSync(sinkPlanDir).filter(f => f.endsWith('.mdx'));
+          const generatedCount = sinkFiles.filter(f => isGenerated(path.join(sinkPlanDir, f))).length;
+          const humanCount     = sinkFiles.length - generatedCount;
+          checks.push({ check: 'sink_exists', pass: true, detail: `${sinkFiles.length} mdx (${humanCount} human, ${generatedCount} generated)` });
+
+          // Stale check
+          const stale = [];
+          for (const srcName of filesPresent.filter(f => /\.(xml|md)$/.test(f))) {
+            const srcPath = path.join(planDir, srcName);
+            const sinkName = srcName.replace(/\.(xml|md)$/, '.mdx').toLowerCase();
+            const sinkPath = path.join(sinkPlanDir, sinkName);
+            if (fs.existsSync(sinkPath)) {
+              const srcMtime  = fs.statSync(srcPath).mtimeMs;
+              const sinkMtime = fs.statSync(sinkPath).mtimeMs;
+              if (srcMtime > sinkMtime && isGenerated(sinkPath)) stale.push(srcName);
+            }
+          }
+          checks.push({ check: 'sink_fresh', pass: stale.length === 0, detail: stale.length === 0 ? 'all generated files current' : `stale: ${stale.join(', ')}` });
+        }
+      }
+
+      results.push({ project: root.id, format: detectedFormat, checks });
+    }
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify(results, null, 2));
+      return;
+    }
+
+    // Table view: one row per check per project
+    const rows = [];
+    for (const r of results) {
+      for (const c of r.checks) {
+        rows.push({ project: r.project, check: c.check, pass: c.pass ? '✓' : '✗', detail: c.detail });
+      }
+    }
+    output(rows, { title: `Projects Audit (${results.length} projects)` });
+
+    const failed = results.flatMap(r => r.checks).filter(c => !c.pass).length;
+    console.log(failed === 0
+      ? '\n✓ All checks passed.'
+      : `\n${failed} check(s) failed.`
+    );
+  },
+});
+
 const projectsCmd = defineCommand({
   meta: { name: 'projects', description: 'List or initialize projects' },
   subCommands: {
     list: projectsList,
     init: projectsInit,
+    audit: projectsAudit,
   },
 });
 
@@ -303,18 +456,42 @@ const stateCmd = defineCommand({
   meta: { name: 'state', description: 'Show current state for all projects' },
   args: {
     projectid: { type: 'string', description: 'Scope to one project', default: '' },
-    json: { type: 'boolean', description: 'JSON output', default: false },
+    json: { type: 'boolean', description: 'JSON output (includes full next-action)', default: false },
+    full: { type: 'boolean', description: 'Include full next-action text in output', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
 
     let roots = config.roots;
-    if (args.projectid) {
-      roots = roots.filter(r => r.id === args.projectid);
-      if (roots.length === 0) outputError(`Project not found: ${args.projectid}`);
+    // If no --projectid given, default to active session's project (v6 session-scoped default)
+    const scopeId = args.projectid || getActiveSessionProjectId(baseDir, config.roots);
+    if (scopeId) {
+      roots = roots.filter(r => r.id === scopeId);
+      if (roots.length === 0 && args.projectid) outputError(`Project not found: ${args.projectid}`);
+      // If session-scoped but project not found, fall back to all projects
+      if (roots.length === 0) roots = config.roots;
     }
 
+    if (args.json) {
+      // JSON: emit full structured state per project
+      const out = roots.map(root => {
+        const state = readState(root, baseDir);
+        return {
+          project: root.id,
+          phase: state.phasesTotal > 0 ? `${state.phasesComplete}/${state.phasesTotal}` : (state.currentPhase || null),
+          milestone: state.milestone || null,
+          status: state.status,
+          openTasks: state.openTasks,
+          lastActivity: state.lastActivity || null,
+          nextAction: state.nextAction || null,
+        };
+      });
+      console.log(JSON.stringify(out, null, 2));
+      return;
+    }
+
+    // Table: summary row + optional next-action block
     const rows = roots.map(root => {
       const state = readState(root, baseDir);
       return {
@@ -324,11 +501,21 @@ const stateCmd = defineCommand({
         status: state.status,
         'open tasks': state.openTasks > 0 ? String(state.openTasks) : '—',
         'last activity': state.lastActivity || '—',
+        _nextAction: state.nextAction || null,
       };
     });
 
-    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
-    console.log(render(rows, { format: fmt, title: 'GAD State' }));
+    const displayRows = rows.map(({ _nextAction, ...r }) => r);
+    console.log(render(displayRows, { format: 'table', title: 'GAD State' }));
+
+    if (args.full) {
+      for (const r of rows) {
+        if (r._nextAction) {
+          console.log(`\n── next action [${r.project}] ──────────────────────────────`);
+          console.log(r._nextAction);
+        }
+      }
+    }
   },
 });
 
@@ -340,6 +527,7 @@ const phasesCmd = defineCommand({
   meta: { name: 'phases', description: 'List phases from ROADMAP.md' },
   args: {
     projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    full: { type: 'boolean', description: 'Show complete goal text for each phase', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
@@ -347,9 +535,12 @@ const phasesCmd = defineCommand({
     const config = gadConfig.load(baseDir);
 
     let roots = config.roots;
-    if (args.projectid) {
-      roots = roots.filter(r => r.id === args.projectid);
-      if (roots.length === 0) outputError(`Project not found: ${args.projectid}`);
+    // If no --projectid given, default to active session's project (v6 session-scoped default)
+    const scopeId = args.projectid || getActiveSessionProjectId(baseDir, config.roots);
+    if (scopeId) {
+      roots = roots.filter(r => r.id === scopeId);
+      if (roots.length === 0 && args.projectid) outputError(`Project not found: ${args.projectid}`);
+      if (roots.length === 0) roots = config.roots;
     }
 
     const rows = [];
@@ -357,17 +548,31 @@ const phasesCmd = defineCommand({
       const phases = readPhases(root, baseDir);
       if (phases.length === 0) continue;
       for (const phase of phases) {
-        rows.push({
+        const isActive = phase.status === 'active' || phase.status === 'in-progress';
+        const row = {
           project: root.id,
           id: phase.id,
           status: phase.status,
           title: phase.title.length > 60 ? phase.title.slice(0, 57) + '...' : phase.title,
-        });
+        };
+        // Include full goal only for active phases (or when --full)
+        if (isActive || args.full) row.goal = phase.goal || phase.title;
+        rows.push(row);
       }
     }
 
     if (rows.length === 0) {
       console.log('No phases found. Create ROADMAP.md files in your .planning/ directories.');
+      return;
+    }
+
+    if (args.full && !args.json && !shouldUseJson()) {
+      // Full mode: print as readable blocks, not table
+      for (const r of rows) {
+        console.log(`\n[${r.project}] Phase ${r.id} — ${r.title}  (${r.status})`);
+        if (r.goal) console.log(`  Goal: ${r.goal}`);
+      }
+      console.log(`\n${rows.length} phase(s)`);
       return;
     }
 
@@ -381,9 +586,12 @@ const phasesCmd = defineCommand({
 // ---------------------------------------------------------------------------
 
 const tasksCmd = defineCommand({
-  meta: { name: 'tasks', description: 'Show open tasks from STATE.md' },
+  meta: { name: 'tasks', description: 'Show tasks from TASK-REGISTRY.xml (falls back to STATE.md)' },
   args: {
     projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    status: { type: 'string', description: 'Filter by status (e.g. in-progress, planned)', default: '' },
+    phase: { type: 'string', description: 'Filter by phase id (e.g. 03)', default: '' },
+    full: { type: 'boolean', description: 'Show full goal text (no truncation)', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
@@ -393,47 +601,35 @@ const tasksCmd = defineCommand({
     let roots = config.roots;
     if (args.projectid) {
       roots = roots.filter(r => r.id === args.projectid);
-      if (roots.length === 0) outputError(`Project not found: ${args.projectid}`);
+      if (roots.length === 0) { outputError(`Project not found: ${args.projectid}`); return; }
     }
+
+    const filter = {};
+    if (args.status) filter.status = args.status;
+    if (args.phase) filter.phase = args.phase;
 
     const rows = [];
     for (const root of roots) {
-      const state = readState(root, baseDir);
-      const stateFile = path.join(baseDir, root.path, root.planningDir, 'STATE.md');
-      if (!fs.existsSync(stateFile)) continue;
-
-      const content = fs.readFileSync(stateFile, 'utf8');
-      // Extract task table rows: | task-id | description | status |
-      const tableRe = /\|\s*([^\|]+)\s*\|\s*([^\|]+)\s*\|\s*([^\|]+)\s*\|/g;
-      let m;
-      let inTaskTable = false;
-      for (const line of content.split('\n')) {
-        if (/task|status/i.test(line) && line.includes('|')) inTaskTable = true;
-        if (inTaskTable && line.trim().startsWith('|') && !line.includes('---')) {
-          const cols = line.split('|').map(c => c.trim()).filter(Boolean);
-          if (cols.length >= 2 && !cols[0].toLowerCase().includes('task') && !cols[0].toLowerCase().includes('id')) {
-            const status = cols[2] || cols[1] || '';
-            if (!status.toLowerCase().includes('done') && !status.toLowerCase().includes('complete')) {
-              rows.push({
-                project: root.id,
-                id: cols[0],
-                description: (cols[1] || '').slice(0, 50),
-                status: status.slice(0, 20),
-              });
-            }
-          }
-        }
-        if (inTaskTable && line.trim() === '') inTaskTable = false;
+      const tasks = readTasks(root, baseDir, filter);
+      for (const t of tasks) {
+        const limit = args.full ? Infinity : 200;
+        rows.push({
+          project: root.id,
+          id: t.id,
+          goal: t.goal.length > limit ? t.goal.slice(0, limit - 1) + '…' : t.goal,
+          status: t.status,
+          phase: t.phase,
+        });
       }
     }
 
     if (rows.length === 0) {
-      console.log('No open tasks found.');
+      console.log('No tasks found.');
       return;
     }
 
-    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
-    console.log(render(rows, { format: fmt, title: `Open Tasks (${rows.length})` }));
+    const fmt = args.json ? 'json' : 'table';
+    console.log(render(rows, { format: fmt, title: `Tasks (${rows.length})` }));
   },
 });
 
@@ -458,11 +654,13 @@ const docsCompile = defineCommand({
 
     console.log(`Compiling ${config.roots.length} roots → ${sink}\n`);
     try {
-      const { compiled, warnings } = compileDocs(config, { sink, baseDir, verbose: args.verbose });
-      for (const w of warnings) {
-        console.warn(`  ⚠ ${w}`);
+      let total = 0;
+      for (const root of config.roots) {
+        const n = compileDocs(baseDir, root, sink);
+        if (args.verbose && n > 0) console.log(`  ✓ ${root.id}: ${n} file(s)`);
+        total += n || 0;
       }
-      console.log(`\n✓ Compiled ${compiled} files`);
+      console.log(`\n✓ Compiled ${total} files`);
     } catch (e) {
       outputError(e.message);
     }
@@ -517,10 +715,11 @@ const evalList = defineCommand({
 const evalRun = defineCommand({
   meta: { name: 'run', description: 'Run eval project in isolated git worktree' },
   args: {
-    project: { type: 'string', description: 'Eval project name', required: true },
+    project: { type: 'string', description: 'Eval project name', default: '' },
     baseline: { type: 'string', description: 'Git baseline (default: HEAD)', default: 'HEAD' },
   },
   async run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
     const { execSync } = require('child_process');
     const gadDir = path.join(__dirname, '..');
     const evalsDir = path.join(gadDir, 'evals');
@@ -585,10 +784,11 @@ const evalRun = defineCommand({
 const evalScore = defineCommand({
   meta: { name: 'score', description: 'Compute SCORE.md for latest (or specified) eval run' },
   args: {
-    project: { type: 'string', description: 'Eval project name', required: true },
+    project: { type: 'string', description: 'Eval project name', default: '' },
     version: { type: 'string', description: 'Version to score (default: latest)', default: '' },
   },
   run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
     const { generateScore } = require('../lib/score-generator.cjs');
     const gadDir = path.join(__dirname, '..');
     const evalsDir = path.join(gadDir, 'evals');
@@ -623,11 +823,16 @@ const evalScore = defineCommand({
 const evalDiff = defineCommand({
   meta: { name: 'diff', description: 'Diff two eval run score files' },
   args: {
-    v1: { type: 'positional', description: 'First version (e.g. v1)', required: true },
-    v2: { type: 'positional', description: 'Second version (e.g. v2)', required: true },
-    project: { type: 'string', description: 'Eval project name', required: true },
+    v1: { type: 'positional', description: 'First version (e.g. v1)', required: false },
+    v2: { type: 'positional', description: 'Second version (e.g. v2)', required: false },
+    project: { type: 'string', description: 'Eval project name', default: '' },
   },
   run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    if (!args.v1 || !args.v2) {
+      console.error(`\nUsage: gad eval diff v1 v2 --project ${args.project}\n`);
+      process.exit(1);
+    }
     const { diffVersions } = require('../lib/score-generator.cjs');
     const gadDir = path.join(__dirname, '..');
     const evalsDir = path.join(gadDir, 'evals');
@@ -646,9 +851,1002 @@ const evalDiff = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// eval trace subcommands
+// ---------------------------------------------------------------------------
+//
+// TRACE.json schema (written by agent or `gad eval trace write`):
+// {
+//   "version": "v3",          // run version this trace belongs to
+//   "project": "cli-efficiency",
+//   "workflow": "A",          // "A" = CLI workflow, "B" = raw-file workflow, "both"
+//   "recorded": "<ISO>",
+//   "commands": [
+//     { "seq": 1, "type": "cli", "cmd": "gad context --json",
+//       "chars": 428, "tokens": 107, "units": { "U10": "Referenced" } },
+//     { "seq": 2, "type": "file", "path": ".planning/STATE.xml",
+//       "chars": 8200, "tokens": 2050, "units": { "U1": "Full", "U2": "Full" } }
+//   ],
+//   "unit_coverage": { "U1": "Full", "U6": "Truncated", "U8": "Absent", ... },
+//   "totals": { "chars": 5000, "tokens": 1250,
+//               "units_full": 7, "units_partial": 3, "units_absent": 2,
+//               "completeness": 0.85 }
+// }
+
+const FIDELITY_SCORE = { Full: 1.0, Referenced: 1.0, Truncated: 0.5, Approximated: 0.5, Absent: 0 };
+const ALL_UNITS = ['U1','U2','U3','U4','U5','U6','U7','U8','U9','U10','U11','U12'];
+
+const UNIT_LABELS = {
+  U1: 'Current phase ID', U2: 'Milestone / plan name', U3: 'Project status',
+  U4: 'Open task count', U5: 'Next action (full text)', U6: 'In-progress task IDs + goals',
+  U7: 'Phase history', U8: 'Last activity date', U9: 'Active session ID + phase',
+  U10: 'Files to read (refs)', U11: 'Agent loop steps', U12: 'Build / verify commands',
+};
+
+function loadTrace(projectDir, version) {
+  const traceFile = path.join(projectDir, version, 'TRACE.json');
+  if (!fs.existsSync(traceFile)) return null;
+  try { return JSON.parse(fs.readFileSync(traceFile, 'utf8')); } catch { return null; }
+}
+
+function computeCompleteness(unitCoverage) {
+  const units = Object.entries(unitCoverage);
+  if (units.length === 0) return null;
+  const full = units.filter(([,v]) => v === 'Full' || v === 'Referenced').length;
+  const partial = units.filter(([,v]) => v === 'Truncated' || v === 'Approximated').length;
+  return (full + 0.5 * partial) / units.length;
+}
+
+// trace list — which runs have a TRACE.json
+const evalTraceList = defineCommand({
+  meta: { name: 'list', description: 'List eval runs that have a TRACE.json' },
+  args: {
+    project: { type: 'string', description: 'Eval project name (default: all)', default: '' },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+    if (!fs.existsSync(evalsDir)) { console.log('No eval projects found.'); return; }
+
+    const projects = args.project
+      ? [args.project]
+      : fs.readdirSync(evalsDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name);
+
+    const rows = [];
+    for (const proj of projects) {
+      const projDir = path.join(evalsDir, proj);
+      if (!fs.existsSync(projDir)) continue;
+      const runs = fs.readdirSync(projDir, { withFileTypes: true })
+        .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+        .map(r => r.name)
+        .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+      for (const v of runs) {
+        const trace = loadTrace(projDir, v);
+        if (!trace) { rows.push({ project: proj, version: v, workflow: '—', completeness: '—', tokens: '—', traced: 'no' }); continue; }
+        const completeness = trace.totals?.completeness ?? computeCompleteness(trace.unit_coverage ?? {});
+        rows.push({
+          project: proj, version: v,
+          workflow: trace.workflow || '—',
+          completeness: completeness != null ? completeness.toFixed(3) : '—',
+          tokens: trace.totals?.tokens ?? '—',
+          traced: 'yes',
+        });
+      }
+    }
+
+    output(rows, { title: 'Eval Traces' });
+    const traced = rows.filter(r => r.traced === 'yes').length;
+    console.log(`\n${traced}/${rows.length} run(s) have traces.  Missing: run \`gad eval trace write\` after each run.`);
+  },
+});
+
+// trace show — print a trace in full
+const evalTraceShow = defineCommand({
+  meta: { name: 'show', description: 'Show TRACE.json for an eval run' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    version: { type: 'string', description: 'Version (default: latest)', default: '' },
+    json: { type: 'boolean', description: 'Raw JSON output', default: false },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .map(r => r.name)
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+    if (runs.length === 0) { outputError(`No runs found for '${args.project}'.`); return; }
+
+    const version = args.version || runs[runs.length - 1];
+    if (!runs.includes(version)) { outputError(`Version '${version}' not found. Available: ${runs.join(', ')}`); return; }
+
+    const trace = loadTrace(projDir, version);
+    if (!trace) {
+      console.log(`No TRACE.json for ${args.project} ${version}.`);
+      console.log(`Write one with: gad eval trace write --project ${args.project} --version ${version}`);
+      return;
+    }
+
+    if (args.json || shouldUseJson()) { console.log(JSON.stringify(trace, null, 2)); return; }
+
+    console.log(`\nTrace: ${args.project}  ${version}  (workflow ${trace.workflow || '?'})`);
+    console.log(`Recorded: ${trace.recorded || '—'}  Method version: ${trace.methodology_version || '—'}\n`);
+
+    // Unit coverage table
+    console.log(`Unit Coverage\n${'─'.repeat(60)}`);
+    const cov = trace.unit_coverage || {};
+    const unitRows = ALL_UNITS.filter(u => cov[u] || trace.commands?.some(c => c.units?.[u])).map(u => ({
+      unit: u, description: UNIT_LABELS[u] || '?', fidelity: cov[u] || '—',
+      score: cov[u] ? FIDELITY_SCORE[cov[u]] ?? '?' : '—',
+    }));
+    if (unitRows.length > 0) output(unitRows, {});
+
+    // Commands
+    if (trace.commands?.length > 0) {
+      console.log(`\nCommands / Reads  (${trace.commands.length} total)\n${'─'.repeat(60)}`);
+      for (const c of trace.commands) {
+        const label = c.type === 'cli' ? `CLI  ${c.cmd}` : `FILE ${c.path}`;
+        const units = c.units ? `  [${Object.keys(c.units).join(', ')}]` : '';
+        console.log(`  ${c.seq}. ${label}  ${c.tokens ?? '?'}tok${units}`);
+      }
+    }
+
+    // Totals
+    if (trace.totals) {
+      const t = trace.totals;
+      const c = t.completeness != null ? t.completeness.toFixed(3) : computeCompleteness(cov)?.toFixed(3) ?? '—';
+      console.log(`\nTotals: ${t.chars ?? '—'} chars / ${t.tokens ?? '—'} tokens`);
+      console.log(`  full=${t.units_full ?? '—'}  partial=${t.units_partial ?? '—'}  absent=${t.units_absent ?? '—'}  completeness=${c}`);
+    }
+    console.log('');
+  },
+});
+
+// trace diff — compare unit coverage between two versions
+const evalTraceDiff = defineCommand({
+  meta: { name: 'diff', description: 'Diff unit coverage between two traced runs' },
+  args: {
+    v1: { type: 'positional', description: 'First version (e.g. v2)', required: false },
+    v2: { type: 'positional', description: 'Second version (e.g. v3)', required: false },
+    project: { type: 'string', description: 'Eval project name', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    if (!args.v1 || !args.v2) {
+      console.error(`\nUsage: gad eval trace diff v1 v2 --project ${args.project || '<name>'}\n`);
+      process.exit(1);
+    }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    const t1 = loadTrace(projDir, args.v1);
+    const t2 = loadTrace(projDir, args.v2);
+
+    if (!t1) { console.error(`No TRACE.json for ${args.v1}.`); process.exit(1); }
+    if (!t2) { console.error(`No TRACE.json for ${args.v2}.`); process.exit(1); }
+
+    const cov1 = t1.unit_coverage || {};
+    const cov2 = t2.unit_coverage || {};
+    const allUnits = [...new Set([...Object.keys(cov1), ...Object.keys(cov2)])].sort();
+
+    const rows = allUnits.map(u => {
+      const f1 = cov1[u] || 'Absent';
+      const f2 = cov2[u] || 'Absent';
+      const s1 = FIDELITY_SCORE[f1] ?? 0;
+      const s2 = FIDELITY_SCORE[f2] ?? 0;
+      const change = s2 > s1 ? '↑' : s2 < s1 ? '↓' : '=';
+      return { unit: u, [args.v1]: f1, [args.v2]: f2, change };
+    });
+
+    console.log(`\nTrace diff: ${args.project}  ${args.v1} → ${args.v2}\n`);
+    output(rows, {});
+
+    const c1 = computeCompleteness(cov1);
+    const c2 = computeCompleteness(cov2);
+    const tok1 = t1.totals?.tokens ?? '—';
+    const tok2 = t2.totals?.tokens ?? '—';
+    console.log(`\nCompleteness: ${c1?.toFixed(3) ?? '—'} → ${c2?.toFixed(3) ?? '—'}`);
+    console.log(`Tokens:       ${tok1} → ${tok2}`);
+
+    const improved = rows.filter(r => r.change === '↑').length;
+    const regressed = rows.filter(r => r.change === '↓').length;
+    console.log(`Units improved: ${improved}  regressed: ${regressed}`);
+    console.log('');
+  },
+});
+
+// trace report — aggregate stats across all traced runs
+const evalTraceReport = defineCommand({
+  meta: { name: 'report', description: 'Aggregate trace stats across all runs for a project' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .map(r => r.name)
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+
+    const traced = runs.map(v => ({ v, trace: loadTrace(projDir, v) })).filter(r => r.trace);
+    if (traced.length === 0) {
+      console.log(`No traces found for '${args.project}'. Run \`gad eval trace write\` after each eval run.`);
+      return;
+    }
+
+    // Per-unit trend across runs
+    const unitTrend = {};
+    for (const u of ALL_UNITS) {
+      unitTrend[u] = traced.map(({ v, trace }) => ({
+        v, fidelity: trace.unit_coverage?.[u] || 'Absent',
+        score: FIDELITY_SCORE[trace.unit_coverage?.[u]] ?? 0,
+      }));
+    }
+
+    if (args.json || shouldUseJson()) {
+      const out = {
+        project: args.project,
+        runs: traced.map(({ v, trace }) => ({
+          version: v, workflow: trace.workflow, tokens: trace.totals?.tokens,
+          completeness: trace.totals?.completeness ?? computeCompleteness(trace.unit_coverage ?? {}),
+        })),
+        unitTrend,
+      };
+      console.log(JSON.stringify(out, null, 2));
+      return;
+    }
+
+    console.log(`\nTrace Report: ${args.project}  (${traced.length} traced runs)\n`);
+
+    // Summary rows: version completeness + token trend
+    const summaryRows = traced.map(({ v, trace }) => {
+      const c = trace.totals?.completeness ?? computeCompleteness(trace.unit_coverage ?? {});
+      return { version: v, workflow: trace.workflow || '—', completeness: c?.toFixed(3) ?? '—', tokens: trace.totals?.tokens ?? '—' };
+    });
+    output(summaryRows, { title: 'Run Summary' });
+
+    // Unit trend: which units have been consistently absent/partial
+    console.log(`\nUnit Fidelity Trend\n${'─'.repeat(60)}`);
+    const problemUnits = ALL_UNITS.filter(u => {
+      const scores = unitTrend[u].map(t => t.score);
+      return scores.some(s => s < 1.0);
+    });
+
+    for (const u of problemUnits) {
+      const trend = unitTrend[u].map(t => `${t.v}:${t.fidelity[0]}`).join('  ');
+      const latest = unitTrend[u][unitTrend[u].length - 1]?.fidelity || 'Absent';
+      console.log(`  ${u}  ${UNIT_LABELS[u]?.slice(0, 28).padEnd(28)}  ${trend}  (latest: ${latest})`);
+    }
+    if (problemUnits.length === 0) console.log('  All units at Full/Referenced across all traced runs.');
+    console.log('');
+  },
+});
+
+// trace write — record a TRACE.json manually (or patch missing fields)
+const evalTraceWrite = defineCommand({
+  meta: { name: 'write', description: 'Record a TRACE.json for an eval run' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    version: { type: 'string', description: 'Run version (default: latest)', default: '' },
+    workflow: { type: 'string', description: 'Workflow: A, B, or both', default: 'A' },
+    completeness: { type: 'string', description: 'Completeness score (0–1)', default: '' },
+    tokens: { type: 'string', description: 'Total tokens consumed', default: '' },
+    units: { type: 'string', description: 'Unit fidelity JSON e.g. {"U1":"Full","U6":"Truncated"}', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .map(r => r.name)
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+    if (runs.length === 0) { outputError(`No runs found for '${args.project}'.`); return; }
+
+    const version = args.version || runs[runs.length - 1];
+    if (!runs.includes(version)) { outputError(`Version '${version}' not found.`); return; }
+
+    // Parse unit_coverage from --units JSON arg
+    let unitCoverage = {};
+    if (args.units) {
+      try { unitCoverage = JSON.parse(args.units); }
+      catch { outputError('--units must be valid JSON: {"U1":"Full","U6":"Truncated",...}'); return; }
+    }
+
+    // Compute totals
+    const entries = Object.entries(unitCoverage);
+    const unitsFull = entries.filter(([,v]) => v === 'Full' || v === 'Referenced').length;
+    const unitsPartial = entries.filter(([,v]) => v === 'Truncated' || v === 'Approximated').length;
+    const unitsAbsent = entries.filter(([,v]) => v === 'Absent').length;
+    const completeness = args.completeness ? parseFloat(args.completeness)
+      : entries.length > 0 ? (unitsFull + 0.5 * unitsPartial) / entries.length : null;
+    const tokens = args.tokens ? parseInt(args.tokens, 10) : null;
+
+    // Load existing trace to merge
+    const traceFile = path.join(projDir, version, 'TRACE.json');
+    const existing = loadTrace(projDir, version) || {};
+
+    const trace = {
+      ...existing,
+      version,
+      project: args.project,
+      workflow: args.workflow,
+      methodology_version: '1.0.0',
+      recorded: existing.recorded || new Date().toISOString(),
+      updated: new Date().toISOString(),
+      unit_coverage: { ...(existing.unit_coverage || {}), ...unitCoverage },
+      totals: {
+        ...(existing.totals || {}),
+        ...(tokens != null ? { tokens } : {}),
+        units_full: unitsFull,
+        units_partial: unitsPartial,
+        units_absent: unitsAbsent,
+        completeness,
+      },
+    };
+
+    fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
+    console.log(`\n✓ TRACE.json written: evals/${args.project}/${version}/TRACE.json`);
+    console.log(`  workflow=${trace.workflow}  completeness=${completeness?.toFixed(3) ?? '—'}  tokens=${tokens ?? '—'}`);
+    console.log(`\nView:  gad eval trace show --project ${args.project} --version ${version}`);
+  },
+});
+
+const evalTraceCmd = defineCommand({
+  meta: { name: 'trace', description: 'Inspect and compare eval traces (TRACE.json)' },
+  subCommands: { list: evalTraceList, show: evalTraceShow, diff: evalTraceDiff, report: evalTraceReport, write: evalTraceWrite },
+});
+
+// eval status — projects with coverage gaps
+const evalStatus = defineCommand({
+  meta: { name: 'status', description: 'Show all projects and eval coverage gaps' },
+  run() {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+
+    const evalProjects = fs.existsSync(evalsDir)
+      ? fs.readdirSync(evalsDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
+      : [];
+
+    const rows = config.roots.map(root => {
+      const evalMatches = evalProjects.filter(ep => ep.includes(root.id) || root.id.includes(ep));
+      const evalName = evalMatches[0] || null;
+      let runs = 0, latest = '—', status = '—';
+      if (evalName) {
+        const projectDir = path.join(evalsDir, evalName);
+        const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
+          .filter(r => r.isDirectory() && /^v\d+$/.test(r.name)).map(r => r.name).sort();
+        runs = runDirs.length;
+        latest = runs > 0 ? runDirs[runDirs.length - 1] : '—';
+        if (latest !== '—') {
+          const runMd = path.join(projectDir, latest, 'RUN.md');
+          if (fs.existsSync(runMd)) {
+            const m = fs.readFileSync(runMd, 'utf8').match(/status:\s*(\w+)/);
+            if (m) status = m[1];
+          }
+        }
+      }
+      const gap = !evalName ? 'NO EVAL' : runs === 0 ? 'NO RUNS' : status === 'completed' ? 'ok' : status;
+      return { project: root.id, eval: evalName || '—', runs, latest, status: status === '—' && !evalName ? '—' : status, gap };
+    });
+
+    output(rows, { title: 'GAD Eval Coverage' });
+    const gaps = rows.filter(r => r.gap !== 'ok');
+    if (gaps.length > 0) {
+      console.log(`\n${gaps.length} project(s) with gaps:`);
+      for (const g of gaps) console.log(`  ${g.project}  →  ${g.gap}`);
+    } else {
+      console.log('\n✓ All projects have eval coverage.');
+    }
+  },
+});
+
+// eval runs — list runs for a project
+const evalRuns = defineCommand({
+  meta: { name: 'runs', description: 'List runs for an eval project' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projectDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projectDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .map(r => r.name)
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+
+    if (runDirs.length === 0) {
+      console.log(`No runs yet for '${args.project}'. Run: gad eval run --project ${args.project}`);
+      return;
+    }
+
+    const rows = runDirs.map(v => {
+      const runMd = path.join(projectDir, v, 'RUN.md');
+      let started = '—', status = '—', baseline = '—';
+      if (fs.existsSync(runMd)) {
+        const content = fs.readFileSync(runMd, 'utf8');
+        const ms = content.match(/started:\s*(.+)/); if (ms) started = ms[1].trim().slice(0, 16).replace('T', ' ');
+        const mv = content.match(/status:\s*(\w+)/); if (mv) status = mv[1];
+        const mb = content.match(/baseline:\s*(.+)/); if (mb) baseline = mb[1].trim();
+      }
+      const scoreFile = path.join(projectDir, v, 'SCORE.md');
+      const scored = fs.existsSync(scoreFile) ? 'yes' : 'no';
+      return { version: v, status, baseline, started, scored };
+    });
+
+    output(rows, { title: `Eval Runs: ${args.project} (${rows.length} runs)` });
+  },
+});
+
+// eval show — print a specific run's output
+const evalShow = defineCommand({
+  meta: { name: 'show', description: 'Show output of an eval run' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    version: { type: 'string', description: 'Version to show (default: latest)', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projectDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projectDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .map(r => r.name)
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+
+    if (runDirs.length === 0) { outputError(`No runs found for '${args.project}'.`); return; }
+
+    const version = args.version || runDirs[runDirs.length - 1];
+    if (!runDirs.includes(version)) { outputError(`Version '${version}' not found. Available: ${runDirs.join(', ')}`); return; }
+
+    const runDir = path.join(projectDir, version);
+    const filesToShow = ['RUN.md', 'SCORE.md', 'eval-output.txt', 'RESULTS.md'];
+    console.log(`\nEval: ${args.project}  ${version}\n`);
+    for (const f of filesToShow) {
+      const p = path.join(runDir, f);
+      if (!fs.existsSync(p)) continue;
+      console.log(`${'─'.repeat(60)}`);
+      console.log(`# ${f}`);
+      console.log(`${'─'.repeat(60)}`);
+      console.log(fs.readFileSync(p, 'utf8'));
+    }
+  },
+});
+
+// eval scores — compare scores across runs
+const evalScores = defineCommand({
+  meta: { name: 'scores', description: 'Compare SCORE.md across runs for a project' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projectDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projectDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .map(r => r.name)
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+
+    const rows = [];
+    for (const v of runDirs) {
+      const scoreFile = path.join(projectDir, v, 'SCORE.md');
+      if (!fs.existsSync(scoreFile)) { rows.push({ version: v, score: '—', note: 'no SCORE.md' }); continue; }
+      const content = fs.readFileSync(scoreFile, 'utf8');
+      // Parse total score from SCORE.md (e.g. "Total: 7/10" or "**7/10**")
+      const m = content.match(/total[:\s]+\**(\d+\/\d+)\**/i) || content.match(/(\d+)\/(\d+)/);
+      const score = m ? (m[1] || `${m[1]}/${m[2]}`) : '?';
+      const note = content.split('\n').slice(0, 5).join(' ').slice(0, 60);
+      rows.push({ version: v, score, note });
+    }
+
+    if (rows.length === 0) { console.log(`No runs found for '${args.project}'.`); return; }
+    output(rows, { title: `Scores: ${args.project}` });
+    console.log(`\nTo see a run: gad eval show --project ${args.project} --version <v>`);
+    console.log(`To diff:      gad eval diff v1 v2 --project ${args.project}`);
+  },
+});
+
+// eval version — print GAD methodology version
+const evalVersion = defineCommand({
+  meta: { name: 'version', description: 'Print GAD methodology version' },
+  run() {
+    const methodologyVersion = pkg.gadMethodologyVersion || '1.0.0';
+    const cliVersion = pkg.version;
+    console.log(`\nGAD methodology: ${methodologyVersion}`);
+    console.log(`CLI version:     ${cliVersion}`);
+    console.log(`\nDefined in: vendor/get-anything-done/package.json`);
+    console.log(`Reference:  vendor/get-anything-done/evals/DEFINITIONS.md\n`);
+  },
+});
+
 const evalCmd = defineCommand({
   meta: { name: 'eval', description: 'Run and manage eval projects' },
-  subCommands: { list: evalList, run: evalRun, score: evalScore, diff: evalDiff },
+  subCommands: { list: evalList, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd },
+});
+
+// ---------------------------------------------------------------------------
+// session subcommands
+// ---------------------------------------------------------------------------
+//
+// Sessions are lightweight JSON files in .planning/sessions/<id>.json
+// They track where an agent is in a project and what files to load.
+// Format:
+//   { id, projectId, position: { phase, plan, task }, status, refs[], createdAt, updatedAt }
+//
+// This replaces session.md — agents run `gad session new` at the start of
+// each work window and `gad context` to get the minimal file refs they need.
+
+const SESSION_DIR = 'sessions';
+const SESSION_STATUS = { ACTIVE: 'active', PAUSED: 'paused', CLOSED: 'closed' };
+
+function generateSessionId() {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 6);
+  return `s-${ts}-${rand}`;
+}
+
+function sessionsDir(baseDir, root) {
+  return path.join(baseDir, root.path, root.planningDir, SESSION_DIR);
+}
+
+function loadSessions(baseDir, roots) {
+  const all = [];
+  for (const root of roots) {
+    const dir = sessionsDir(baseDir, root);
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.json')) continue;
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+        all.push({ ...data, _root: root, _file: path.join(dir, f) });
+      } catch { /* skip corrupt file */ }
+    }
+  }
+  return all.sort((a, b) => (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || ''));
+}
+
+function writeSession(session) {
+  session.updatedAt = new Date().toISOString();
+  fs.writeFileSync(session._file, JSON.stringify(
+    (({ _root, _file, ...rest }) => rest)(session), null, 2
+  ));
+}
+
+/** Write ISO timestamp to <last-updated> in STATE.xml (creates tag if absent). */
+function touchStateXml(root, baseDir) {
+  const planDir = path.join(baseDir, root.path, root.planningDir);
+  const stateXml = path.join(planDir, 'STATE.xml');
+  if (!fs.existsSync(stateXml)) return;
+  try {
+    let xml = fs.readFileSync(stateXml, 'utf8');
+    const iso = new Date().toISOString();
+    if (/<last-updated>/.test(xml)) {
+      xml = xml.replace(/<last-updated>[^<]*<\/last-updated>/, `<last-updated>${iso}</last-updated>`);
+    } else {
+      xml = xml.replace(/<\/state>/, `  <last-updated>${iso}</last-updated>\n</state>`);
+    }
+    fs.writeFileSync(stateXml, xml);
+  } catch { /* non-fatal */ }
+}
+
+/** Build the context refs an agent should load for a session. */
+function buildContextRefs(root, baseDir, session) {
+  const planDir = path.join(baseDir, root.path, root.planningDir);
+  const refs = [];
+
+  // Always include AGENTS.md (repo root or planning dir)
+  const agentsMd = path.join(baseDir, 'AGENTS.md');
+  const planningAgentsMd = path.join(planDir, 'AGENTS.md');
+  if (fs.existsSync(agentsMd)) refs.push({ file: 'AGENTS.md', reason: 'agent conventions' });
+  if (fs.existsSync(planningAgentsMd)) refs.push({ file: path.join(root.planningDir, 'AGENTS.md'), reason: 'planning agent conventions' });
+
+  // State file (MD preferred, XML fallback)
+  const stateMd = path.join(planDir, 'STATE.md');
+  const stateXml = path.join(planDir, 'STATE.xml');
+  if (fs.existsSync(stateMd)) refs.push({ file: path.join(root.planningDir, 'STATE.md'), reason: 'current position and status' });
+  else if (fs.existsSync(stateXml)) refs.push({ file: path.join(root.planningDir, 'STATE.xml'), reason: 'current position and status' });
+
+  // Roadmap
+  const roadmapMd = path.join(planDir, 'ROADMAP.md');
+  const roadmapXml = path.join(planDir, 'ROADMAP.xml');
+  if (fs.existsSync(roadmapMd)) refs.push({ file: path.join(root.planningDir, 'ROADMAP.md'), reason: 'phase roadmap' });
+  else if (fs.existsSync(roadmapXml)) refs.push({ file: path.join(root.planningDir, 'ROADMAP.xml'), reason: 'phase roadmap' });
+
+  // If session has a current phase, include phase PLAN file
+  const phase = session?.position?.phase;
+  if (phase) {
+    const phasesDir = path.join(planDir, 'phases');
+    if (fs.existsSync(phasesDir)) {
+      const phaseDir = fs.readdirSync(phasesDir).find(d => d.startsWith(phase) || d.includes(phase));
+      if (phaseDir) {
+        const planFile = path.join(phasesDir, phaseDir, 'PLAN.md');
+        if (fs.existsSync(planFile)) {
+          refs.push({ file: path.join(root.planningDir, 'phases', phaseDir, 'PLAN.md'), reason: `active phase plan (${phase})` });
+        }
+      }
+    }
+    // Also look for MDX plan in content/docs (portfolio pattern)
+    // We surface these as hints only — agent reads them from refs
+  }
+
+  return refs;
+}
+
+const sessionList = defineCommand({
+  meta: { name: 'list', description: 'List sessions' },
+  args: {
+    project: { type: 'string', description: 'Filter by project ID', default: '' },
+    all: { type: 'boolean', description: 'Include closed sessions', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+    if (args.project) roots = roots.filter(r => r.id === args.project);
+
+    let sessions = loadSessions(baseDir, roots);
+    if (!args.all) sessions = sessions.filter(s => s.status !== SESSION_STATUS.CLOSED);
+
+    if (sessions.length === 0) {
+      console.log(args.all ? 'No sessions found.' : 'No active sessions. Run `gad session new` to start one.');
+      return;
+    }
+
+    const rows = sessions.map(s => ({
+      id: s.id,
+      project: s.projectId || '—',
+      phase: s.position?.phase || '—',
+      status: s.status,
+      ctx: s.contextMode || 'loaded',
+      updated: s.updatedAt ? s.updatedAt.slice(0, 16).replace('T', ' ') : '—',
+    }));
+
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+    console.log(render(rows, { format: fmt, title: `Sessions (${rows.length})` }));
+  },
+});
+
+const sessionNew = defineCommand({
+  meta: { name: 'new', description: 'Create a new session and print context refs' },
+  args: {
+    project: { type: 'string', description: 'Project ID (uses first root if omitted)', default: '' },
+    fresh: { type: 'boolean', description: 'Mark as fresh-context session (no prior planning state loaded)', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+
+    if (args.project) {
+      roots = roots.filter(r => r.id === args.project);
+      if (roots.length === 0) { outputError(`Project not found: ${args.project}`); return; }
+    }
+
+    if (roots.length === 0) { outputError('No projects configured. Run `gad workspace sync` first.'); return; }
+
+    const root = roots[0];
+    const dir = sessionsDir(baseDir, root);
+    fs.mkdirSync(dir, { recursive: true });
+
+    // Read current state to seed position
+    const state = readState(root, baseDir);
+    const session = {
+      id: generateSessionId(),
+      projectId: root.id,
+      contextMode: args.fresh ? 'fresh' : 'loaded',
+      position: {
+        phase: state.currentPhase || null,
+        plan: null,
+        task: null,
+      },
+      status: SESSION_STATUS.ACTIVE,
+      refs: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      _root: root,
+      _file: '',
+    };
+    session._file = path.join(dir, `${session.id}.json`);
+    session.refs = buildContextRefs(root, baseDir, session);
+    writeSession(session);
+    touchStateXml(root, baseDir);
+
+    if (args.json || shouldUseJson()) {
+      const { _root, _file, ...clean } = session;
+      console.log(JSON.stringify(clean, null, 2));
+    } else {
+      console.log(`\nSession created: ${session.id}`);
+      console.log(`Project:      ${root.id}`);
+      console.log(`Context mode: ${session.contextMode}${session.contextMode === 'fresh' ? '  ← no prior state loaded' : '  ← planning state loaded before this session'}`);
+      if (state.currentPhase) console.log(`Phase:        ${state.currentPhase}`);
+      console.log(`\nLoad these files to resume context:\n`);
+      for (const ref of session.refs) {
+        console.log(`  ${ref.file}  — ${ref.reason}`);
+      }
+      console.log(`\nRun \`gad context --session ${session.id}\` to refresh refs at any time.`);
+    }
+  },
+});
+
+const sessionResume = defineCommand({
+  meta: { name: 'resume', description: 'Resume an existing session' },
+  args: {
+    id: { type: 'string', description: 'Session ID', default: '' },
+    fresh: { type: 'boolean', description: 'Override context mode to fresh for this session', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const id = args.id;
+    if (!id) { listActiveSessionsHint(baseDir, config, 'resume'); return; }
+
+    const sessions = loadSessions(baseDir, config.roots);
+    const session = sessions.find(s => s.id === id);
+
+    if (!session) { outputError(`Session not found: ${id}. Run \`gad session list --all\` to see all sessions.`); return; }
+    if (session.status === SESSION_STATUS.CLOSED) {
+      console.log(`Session ${id} is closed. Create a new one with \`gad session new\`.`);
+      return;
+    }
+
+    // Refresh refs and mark active
+    session.refs = buildContextRefs(session._root, baseDir, session);
+    session.status = SESSION_STATUS.ACTIVE;
+    // Preserve contextMode from creation; allow override with --fresh
+    if (!session.contextMode) session.contextMode = 'loaded';
+    if (args.fresh) session.contextMode = 'fresh';
+    writeSession(session);
+    touchStateXml(session._root, baseDir);
+
+    if (args.json || shouldUseJson()) {
+      const { _root, _file, ...clean } = session;
+      console.log(JSON.stringify(clean, null, 2));
+    } else {
+      console.log(`\nResuming session: ${session.id}`);
+      console.log(`Project: ${session.projectId}  Phase: ${session.position?.phase || '—'}`);
+      console.log(`\nLoad these files to restore context:\n`);
+      for (const ref of session.refs) {
+        console.log(`  ${ref.file}  — ${ref.reason}`);
+      }
+    }
+  },
+});
+
+const sessionClose = defineCommand({
+  meta: { name: 'close', description: 'Close a session' },
+  args: {
+    id: { type: 'string', description: 'Session ID', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const id = args.id;
+    if (!id) { listActiveSessionsHint(baseDir, config, 'close'); return; }
+
+    const sessions = loadSessions(baseDir, config.roots);
+    const session = sessions.find(s => s.id === id);
+
+    if (!session) { outputError(`Session not found: ${id}`); return; }
+
+    session.status = SESSION_STATUS.CLOSED;
+    writeSession(session);
+    console.log(`Session ${id} closed.`);
+  },
+});
+
+const sessionCmd = defineCommand({
+  meta: { name: 'session', description: 'Manage work sessions' },
+  subCommands: { list: sessionList, new: sessionNew, resume: sessionResume, close: sessionClose },
+});
+
+// ---------------------------------------------------------------------------
+// context command
+// ---------------------------------------------------------------------------
+//
+// Returns the minimal set of files an agent needs to load to understand
+// the current project position. Designed to reduce context tokens — agents
+// run `gad context` instead of reading whole planning dirs.
+
+const contextCmd = defineCommand({
+  meta: { name: 'context', description: 'Print context files for current project position (inlines content by default)' },
+  args: {
+    session: { type: 'string', description: 'Session ID (uses latest active session if omitted)', default: '' },
+    project: { type: 'string', description: 'Project ID', default: '' },
+    refs: { type: 'boolean', description: 'Print file refs only — no content (lightweight mode)', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+    if (args.project) roots = roots.filter(r => r.id === args.project);
+
+    let session = null;
+
+    if (args.session) {
+      const all = loadSessions(baseDir, roots);
+      session = all.find(s => s.id === args.session);
+      if (!session) { outputError(`Session not found: ${args.session}`); return; }
+    } else {
+      // Use latest active session, or fall back to no session (position from state)
+      const active = loadSessions(baseDir, roots).filter(s => s.status === SESSION_STATUS.ACTIVE);
+      if (active.length > 0) session = active[0];
+    }
+
+    const root = session?._root || roots[0];
+    if (!root) { outputError('No projects configured. Run `gad workspace sync` first.'); return; }
+
+    const refs = buildContextRefs(root, baseDir, session);
+
+    if (args.json || shouldUseJson()) {
+      if (args.refs) {
+        console.log(JSON.stringify({ session: session?.id || null, project: root.id, refs }, null, 2));
+      } else {
+        // Inline content into JSON
+        const refsWithContent = refs.map(ref => {
+          const absPath = path.join(baseDir, root.path, ref.file.replace(/^\.planning[\\/]/, root.planningDir + path.sep));
+          const filePath = fs.existsSync(path.join(baseDir, ref.file))
+            ? path.join(baseDir, ref.file)
+            : path.join(baseDir, root.path, ref.file);
+          let content = null;
+          try { content = fs.readFileSync(filePath, 'utf8'); } catch { /* missing */ }
+          return { ...ref, content };
+        });
+        console.log(JSON.stringify({ session: session?.id || null, project: root.id, refs: refsWithContent }, null, 2));
+      }
+    } else if (args.refs) {
+      // Lightweight: refs only
+      const sessionLine = session ? `Session: ${session.id}  Status: ${session.status}` : 'No active session — run `gad session new` to track this work.';
+      console.log(`\n${sessionLine}`);
+      console.log(`Project: ${root.id}`);
+      if (session?.position?.phase) console.log(`Phase:   ${session.position.phase}`);
+      console.log('\nFiles to load:\n');
+      for (const ref of refs) {
+        console.log(`  ${ref.file}`);
+        console.log(`    → ${ref.reason}`);
+      }
+      if (refs.length === 0) console.log('  (no planning files found)');
+      console.log('');
+    } else {
+      // Default: inline all file contents
+      const sessionLine = session ? `Session: ${session.id}  Status: ${session.status}` : 'No active session — run `gad session new` to track this work.';
+      console.log(`\n${sessionLine}`);
+      console.log(`Project: ${root.id}`);
+      if (session?.position?.phase) console.log(`Phase:   ${session.position.phase}`);
+      console.log('');
+      for (const ref of refs) {
+        const filePath = fs.existsSync(path.join(baseDir, ref.file))
+          ? path.join(baseDir, ref.file)
+          : path.join(baseDir, root.path, ref.file);
+        console.log(`${'─'.repeat(60)}`);
+        console.log(`# ${ref.file}  (${ref.reason})`);
+        console.log(`${'─'.repeat(60)}`);
+        try {
+          console.log(fs.readFileSync(filePath, 'utf8'));
+        } catch {
+          console.log(`(file not found: ${filePath})`);
+        }
+        console.log('');
+      }
+      if (refs.length === 0) console.log('  (no planning files found)');
+      console.log(`─── end context (${refs.length} files) ───`);
+      console.log(`\nTo refresh: gad context${session ? ` --session ${session.id}` : ''}`);
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// snapshot command
+// ---------------------------------------------------------------------------
+//
+// Inlines every planning file for a project in one shot — the fastest way
+// to hand an agent the full project context.
+
+const snapshotCmd = defineCommand({
+  meta: { name: 'snapshot', description: 'Print all planning files inlined for a project' },
+  args: {
+    project: { type: 'string', description: 'Project ID (default: first root)', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+
+    if (args.project) {
+      roots = roots.filter(r => r.id === args.project);
+      if (roots.length === 0) {
+        console.error(`Project not found: ${args.project}`);
+        console.error(`Available: ${config.roots.map(r => r.id).join(', ')}`);
+        process.exit(1);
+      }
+    }
+
+    if (roots.length === 0) { outputError('No projects configured. Run `gad workspace sync` first.'); return; }
+    const root = roots[0];
+    const planDir = path.join(baseDir, root.path, root.planningDir);
+
+    // Collect all planning files — named files first, then phases/, then rest
+    const PRIORITY = ['AGENTS.md', 'STATE.md', 'STATE.xml', 'ROADMAP.md', 'ROADMAP.xml',
+      'REQUIREMENTS.md', 'REQUIREMENTS.xml', 'DECISIONS.xml', 'TASK-REGISTRY.xml',
+      'session.md', 'ERRORS-AND-ATTEMPTS.xml'];
+
+    const allFiles = [];
+    function collectDir(dir, relBase) {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+          if (entry.name === 'archive' || entry.name === 'sessions' || entry.name === 'node_modules') continue;
+          collectDir(path.join(dir, entry.name), rel);
+        } else if (entry.isFile()) {
+          allFiles.push(rel);
+        }
+      }
+    }
+    collectDir(planDir, '');
+
+    // Sort: priority files first, then phases/, then alphabetical
+    allFiles.sort((a, b) => {
+      const aBase = path.basename(a);
+      const bBase = path.basename(b);
+      const aIdx = PRIORITY.indexOf(aBase);
+      const bIdx = PRIORITY.indexOf(bBase);
+      if (aIdx !== -1 && bIdx === -1) return -1;
+      if (bIdx !== -1 && aIdx === -1) return 1;
+      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+      return a.localeCompare(b);
+    });
+
+    if (args.json || shouldUseJson()) {
+      const files = allFiles.map(rel => {
+        let content = null;
+        try { content = fs.readFileSync(path.join(planDir, rel), 'utf8'); } catch { /* skip */ }
+        return { path: `${root.planningDir}/${rel}`, content };
+      });
+      console.log(JSON.stringify({ project: root.id, planningDir: root.planningDir, files }, null, 2));
+      return;
+    }
+
+    console.log(`\nSnapshot: ${root.id}  (${root.planningDir})  —  ${allFiles.length} files\n`);
+    for (const rel of allFiles) {
+      const filePath = path.join(planDir, rel);
+      console.log(`${'═'.repeat(70)}`);
+      console.log(`## ${root.planningDir}/${rel}`);
+      console.log(`${'═'.repeat(70)}`);
+      try {
+        console.log(fs.readFileSync(filePath, 'utf8'));
+      } catch {
+        console.log(`(unreadable)`);
+      }
+      console.log('');
+    }
+    console.log(`═══ end snapshot (${allFiles.length} files) ═══`);
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -877,6 +2075,193 @@ function crawlPlanningDirs(baseDir, ignore) {
 }
 
 // ---------------------------------------------------------------------------
+// sink subcommands
+// ---------------------------------------------------------------------------
+//
+// Manages the relationship between .planning/ files and the docs sink (MDX).
+// sink_workflow = "manual" means compile is always explicit.
+//
+//   gad sink status     — diff between planning state and docs sink
+//   gad sink compile    — write planning state → docs MDX (manual trigger)
+//   gad sink decompile  — pull docs MDX → planning state (reverse)
+//   gad sink validate   — check all sink mappings are well-formed
+
+const sinkStatus = defineCommand({
+  meta: { name: 'status', description: 'Show sync status between planning files and docs sink' },
+  args: {
+    project: { type: 'string', description: 'Project ID (default: first root)', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+    if (args.project) roots = roots.filter(r => r.id === args.project);
+    if (roots.length === 0) { outputError('No projects configured.'); return; }
+
+    const sink = config.docs_sink;
+    if (!sink) {
+      console.log('No docs_sink configured in planning-config.toml.');
+      console.log('Add: docs_sink = "apps/portfolio/content/docs"');
+      return;
+    }
+
+    const rows = [];
+    for (const root of roots) {
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      const SINK_FILES = [
+        { src: 'STATE.md', dest: `${root.id}/planning/state.mdx` },
+        { src: 'STATE.xml', dest: `${root.id}/planning/state.mdx` },
+        { src: 'ROADMAP.md', dest: `${root.id}/planning/roadmap.mdx` },
+        { src: 'ROADMAP.xml', dest: `${root.id}/planning/roadmap.mdx` },
+        { src: 'DECISIONS.xml', dest: `${root.id}/planning/decisions.mdx` },
+        { src: 'TASK-REGISTRY.xml', dest: `${root.id}/planning/task-registry.mdx` },
+      ];
+      for (const m of SINK_FILES) {
+        const srcPath = path.join(planDir, m.src);
+        const destPath = path.join(baseDir, sink, m.dest);
+        if (!fs.existsSync(srcPath)) continue;
+        const srcMtime = fs.statSync(srcPath).mtimeMs;
+        const destExists = fs.existsSync(destPath);
+        const destMtime = destExists ? fs.statSync(destPath).mtimeMs : 0;
+        const status = !destExists ? 'missing' : srcMtime > destMtime ? 'stale' : 'ok';
+        rows.push({ project: root.id, src: m.src, dest: m.dest, status });
+      }
+    }
+
+    output(rows, { title: `Sink Status  [sink: ${sink}]` });
+    const stale = rows.filter(r => r.status !== 'ok').length;
+    if (stale > 0) console.log(`\n${stale} file(s) need sync. Run \`gad sink compile\` to update.`);
+    else console.log('\n✓ All sink files are up to date.');
+  },
+});
+
+const sinkCompile = defineCommand({
+  meta: { name: 'compile', description: 'Write planning state → docs MDX sink (manual)' },
+  args: {
+    project: { type: 'string', description: 'Project ID (default: all)', default: '' },
+    yes: { type: 'boolean', alias: 'y', description: 'Apply without prompting', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+    if (args.project) {
+      roots = roots.filter(r => r.id === args.project);
+      if (roots.length === 0) { outputError(`Project not found: ${args.project}`); return; }
+    }
+
+    const sink = config.docs_sink;
+    if (!sink) {
+      outputError('No docs_sink in planning-config.toml. Add: docs_sink = "apps/portfolio/content/docs"');
+      return;
+    }
+
+    try {
+      const { compile: compileDocs2 } = require('../lib/docs-compiler.cjs');
+      let compiled = 0;
+      for (const root of roots) {
+        compiled += compileDocs2(baseDir, root, sink) || 0;
+      }
+      console.log(`\n✓ Sink compile: ${compiled} file(s) written to ${sink}`);
+    } catch (e) {
+      outputError(e.message);
+    }
+  },
+});
+
+const sinkDecompile = defineCommand({
+  meta: { name: 'decompile', description: 'Pull generated MDX sink → planning source (only generated files)' },
+  args: {
+    project: { type: 'string', description: 'Project ID (default: all)', default: '' },
+    yes: { type: 'boolean', alias: 'y', description: 'Apply without prompting', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+    if (args.project) {
+      roots = roots.filter(r => r.id === args.project);
+      if (roots.length === 0) { outputError(`Project not found: ${args.project}`); return; }
+    }
+
+    const sink = config.docs_sink;
+    if (!sink) { outputError('No docs_sink configured.'); return; }
+
+    const { decompile } = require('../lib/docs-compiler.cjs');
+    let total = 0;
+    for (const root of roots) {
+      if (!args.yes) {
+        // Dry-run: show what would happen
+        const planDir = path.join(baseDir, root.path, root.planningDir);
+        const outDir = path.join(baseDir, sink, root.id, 'planning');
+        const { isGenerated } = require('../lib/docs-compiler.cjs');
+        if (fs.existsSync(outDir)) {
+          for (const f of fs.readdirSync(outDir)) {
+            const fp = path.join(outDir, f);
+            if (isGenerated(fp)) console.log(`  ${root.id}: ${root.planningDir}/${f} (generated — would restore)`);
+          }
+        }
+      } else {
+        const n = decompile(baseDir, root, sink);
+        if (n > 0) console.log(`  ✓ ${root.id}: ${n} file(s) restored`);
+        total += n;
+      }
+    }
+    if (!args.yes) {
+      console.log('\nOnly files marked `generated: "true"` in frontmatter will be restored.');
+      console.log('Run with --yes to apply.');
+    } else {
+      console.log(`\n✓ Decompile: ${total} file(s) written.`);
+    }
+  },
+});
+
+const sinkValidate = defineCommand({
+  meta: { name: 'validate', description: 'Check all sink mappings are well-formed' },
+  args: {
+    project: { type: 'string', description: 'Project ID (default: all)', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+    if (args.project) roots = roots.filter(r => r.id === args.project);
+
+    const sink = config.docs_sink;
+    if (!sink) {
+      console.log('⚠ No docs_sink configured. Add: docs_sink = "apps/portfolio/content/docs"');
+      return;
+    }
+
+    let errors = 0;
+    let ok = 0;
+    for (const root of roots) {
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      if (!fs.existsSync(planDir)) {
+        console.log(`  ✗ [${root.id}] planning dir missing: ${planDir}`);
+        errors++;
+        continue;
+      }
+      const sinkDir = path.join(baseDir, sink, root.id, 'planning');
+      if (!fs.existsSync(sinkDir)) {
+        console.log(`  ⚠ [${root.id}] no sink dir yet: ${sink}/${root.id}/planning/`);
+      } else {
+        console.log(`  ✓ [${root.id}]`);
+        ok++;
+      }
+    }
+
+    console.log(`\n${ok} valid, ${errors} error(s). Sink: ${sink}`);
+    if (errors > 0) process.exit(1);
+  },
+});
+
+const sinkCmd = defineCommand({
+  meta: { name: 'sink', description: 'Manage docs sink — compile, decompile, status, validate' },
+  subCommands: { status: sinkStatus, compile: sinkCompile, decompile: sinkDecompile, validate: sinkValidate },
+});
+
+// ---------------------------------------------------------------------------
 // Root command
 // ---------------------------------------------------------------------------
 
@@ -889,11 +2274,15 @@ const main = defineCommand({
   subCommands: {
     workspace: workspaceCmd,
     projects: projectsCmd,
+    session: sessionCmd,
+    context: contextCmd,
     state: stateCmd,
     phases: phasesCmd,
     tasks: tasksCmd,
     docs: docsCmd,
     eval: evalCmd,
+    snapshot: snapshotCmd,
+    sink: sinkCmd,
     'migrate-schema': migrateSchema,
   },
 });

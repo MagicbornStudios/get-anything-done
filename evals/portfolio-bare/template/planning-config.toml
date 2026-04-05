@@ -1,0 +1,14 @@
+[planning]
+methodology_version = "1.0.0"
+
+[[planning.roots]]
+id = "portfolio"
+path = "."
+planning_dir = ".planning"
+docs_sink = ""
+
+[eval]
+project = "portfolio-bare"
+# context_mode is set per session via `gad session new [--fresh]`
+# fresh  = agent started with no prior planning context
+# loaded = agent loaded context before starting work

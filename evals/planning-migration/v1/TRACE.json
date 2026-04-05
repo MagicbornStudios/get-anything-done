@@ -1,0 +1,21 @@
+{
+  "version": "v1",
+  "project": "planning-migration",
+  "workflow": "both",
+  "methodology_version": "1.0.0",
+  "recorded": "2026-04-05T02:30:18.095Z",
+  "updated": "2026-04-05T02:30:18.097Z",
+  "unit_coverage": {
+    "format_compliance": "Full",
+    "lossless_roundtrip": "Full",
+    "trace_coverage": "Full",
+    "sink_alignment": "Approximated"
+  },
+  "totals": {
+    "tokens": 24084,
+    "units_full": 3,
+    "units_partial": 1,
+    "units_absent": 0,
+    "completeness": 0.978
+  }
+}

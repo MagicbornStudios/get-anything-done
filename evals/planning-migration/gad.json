@@ -1,0 +1,15 @@
+{
+  "type": "eval",
+  "name": "planning-migration",
+  "description": "Lossless migration of all vendor project .planning/ dirs and portfolio planning sink to unified GAD format. Evaluates format compliance, sink sync, trace coverage, and data preservation across the compile/decompile round-trip.",
+  "baseline": "planning-sink-backup-20260404",
+  "methodology_version": "1.0.0",
+  "scoring": {
+    "format_compliance": 0.30,
+    "lossless_roundtrip": 0.35,
+    "trace_coverage": 0.20,
+    "sink_alignment": 0.15
+  },
+  "trace": true,
+  "color": "active"
+}

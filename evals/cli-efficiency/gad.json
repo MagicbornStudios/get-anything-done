@@ -1,0 +1,18 @@
+{
+  "type": "eval",
+  "name": "cli-efficiency",
+  "description": "Measures token efficiency of gad CLI vs raw file reads for coding agent context. Compares two workflows: (1) CLI-first using gad context/session/state/phases/tasks, (2) baseline grep+read pattern used by GSD/RP agents.",
+  "baseline": "v1",
+  "trace": true,
+  "constraints": {
+    "local_only": true,
+    "no_external_services": true
+  },
+  "scoring": {
+    "weights": {
+      "token_reduction": 0.40,
+      "context_completeness": 0.35,
+      "information_loss": 0.25
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": "v5",
+  "project": "cli-efficiency",
+  "workflow": "A",
+  "methodology_version": "1.0.0",
+  "recorded": "2026-04-05T03:21:42.413Z",
+  "updated": "2026-04-05T03:21:42.415Z",
+  "unit_coverage": {
+    "U1": "Full",
+    "U2": "Full",
+    "U3": "Full",
+    "U4": "Full",
+    "U5": "Full",
+    "U6": "Full",
+    "U7": "Full",
+    "U8": "Full",
+    "U9": "Full",
+    "U10": "Referenced"
+  },
+  "totals": {
+    "tokens": 2341,
+    "units_full": 10,
+    "units_partial": 0,
+    "units_absent": 0,
+    "completeness": 1
+  }
+}
