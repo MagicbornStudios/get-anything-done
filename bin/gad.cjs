@@ -32,7 +32,11 @@ const gadConfig = require('./gad-config.cjs');
 const { render, shouldUseJson } = require('../lib/table.cjs');
 const { readState } = require('../lib/state-reader.cjs');
 const { readTasks } = require('../lib/task-registry-reader.cjs');
-const { readPhases } = require('../lib/roadmap-reader.cjs');
+const { readPhases, readDocFlow } = require('../lib/roadmap-reader.cjs');
+const { readDecisions } = require('../lib/decisions-reader.cjs');
+const { readRequirements } = require('../lib/requirements-reader.cjs');
+const { readErrors } = require('../lib/errors-reader.cjs');
+const { readBlockers } = require('../lib/blockers-reader.cjs');
 const { compile: compileDocs } = require('../lib/docs-compiler.cjs');
 
 const pkg = require('../package.json');
@@ -99,6 +103,27 @@ function getActiveSessionProjectId(baseDir, roots) {
   if (sessions.length === 0) return null;
   // loadSessions already sorts by updatedAt desc — first is most recent
   return sessions[0].projectId || null;
+}
+
+/**
+ * Resolve which roots to query based on --projectid / --all / active session.
+ * --all always returns all roots.
+ * --projectid scopes to one root (errors if not found).
+ * Neither: session-scoped default, falling back to all.
+ */
+function resolveRoots(args, baseDir, allRoots) {
+  if (args.all) return allRoots;
+  if (args.projectid) {
+    const found = allRoots.filter(r => r.id === args.projectid);
+    if (found.length === 0) { outputError(`Project not found: ${args.projectid}`); return []; }
+    return found;
+  }
+  const sessionId = getActiveSessionProjectId(baseDir, allRoots);
+  if (sessionId) {
+    const found = allRoots.filter(r => r.id === sessionId);
+    if (found.length > 0) return found;
+  }
+  return allRoots;
 }
 
 /** List active sessions and suggest rerun hint for a subcommand. */
@@ -269,24 +294,36 @@ const workspaceCmd = defineCommand({
 // projects subcommands
 // ---------------------------------------------------------------------------
 
+function listProjects(baseDir, config) {
+  const rows = config.roots.map(root => {
+    const state = readState(root, baseDir);
+    return {
+      id: root.id,
+      path: root.path,
+      phase: state.phasesTotal > 0 ? `${state.phasesComplete}/${state.phasesTotal}` : (state.currentPhase || '—'),
+      milestone: state.milestone || '—',
+      status: state.status || '—',
+    };
+  });
+  output(rows, { title: 'GAD Projects' });
+}
+
 const projectsList = defineCommand({
   meta: { name: 'list', description: 'List all registered projects' },
   run() {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
+    listProjects(baseDir, config);
+  },
+});
 
-    const rows = config.roots.map(root => {
-      const state = readState(root, baseDir);
-      return {
-        id: root.id,
-        path: root.path,
-        phase: state.phasesTotal > 0 ? `${state.phasesComplete}/${state.phasesTotal}` : (state.currentPhase || '—'),
-        milestone: state.milestone || '—',
-        status: state.status || '—',
-      };
-    });
-
-    output(rows, { title: 'GAD Projects' });
+// gad ls — top-level shorthand for gad projects list
+const lsCmd = defineCommand({
+  meta: { name: 'ls', description: 'List all registered projects (alias for: projects list)' },
+  run() {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    listProjects(baseDir, config);
   },
 });
 
@@ -455,23 +492,16 @@ const projectsCmd = defineCommand({
 const stateCmd = defineCommand({
   meta: { name: 'state', description: 'Show current state for all projects' },
   args: {
-    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
     json: { type: 'boolean', description: 'JSON output (includes full next-action)', default: false },
     full: { type: 'boolean', description: 'Include full next-action text in output', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
-
-    let roots = config.roots;
-    // If no --projectid given, default to active session's project (v6 session-scoped default)
-    const scopeId = args.projectid || getActiveSessionProjectId(baseDir, config.roots);
-    if (scopeId) {
-      roots = roots.filter(r => r.id === scopeId);
-      if (roots.length === 0 && args.projectid) outputError(`Project not found: ${args.projectid}`);
-      // If session-scoped but project not found, fall back to all projects
-      if (roots.length === 0) roots = config.roots;
-    }
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
 
     if (args.json) {
       // JSON: emit full structured state per project
@@ -524,24 +554,18 @@ const stateCmd = defineCommand({
 // ---------------------------------------------------------------------------
 
 const phasesCmd = defineCommand({
-  meta: { name: 'phases', description: 'List phases from ROADMAP.md' },
+  meta: { name: 'phases', description: 'List phases from ROADMAP.xml' },
   args: {
-    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
     full: { type: 'boolean', description: 'Show complete goal text for each phase', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
-
-    let roots = config.roots;
-    // If no --projectid given, default to active session's project (v6 session-scoped default)
-    const scopeId = args.projectid || getActiveSessionProjectId(baseDir, config.roots);
-    if (scopeId) {
-      roots = roots.filter(r => r.id === scopeId);
-      if (roots.length === 0 && args.projectid) outputError(`Project not found: ${args.projectid}`);
-      if (roots.length === 0) roots = config.roots;
-    }
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
 
     const rows = [];
     for (const root of roots) {
@@ -549,14 +573,24 @@ const phasesCmd = defineCommand({
       if (phases.length === 0) continue;
       for (const phase of phases) {
         const isActive = phase.status === 'active' || phase.status === 'in-progress';
+        const useJson = args.json || shouldUseJson();
         const row = {
           project: root.id,
           id: phase.id,
           status: phase.status,
           title: phase.title.length > 60 ? phase.title.slice(0, 57) + '...' : phase.title,
         };
-        // Include full goal only for active phases (or when --full)
-        if (isActive || args.full) row.goal = phase.goal || phase.title;
+        // In JSON mode or --full, include all fields without loss
+        if (useJson || args.full) {
+          row.goal = phase.goal || phase.title;
+          row.depends = phase.depends || '';
+          row.milestone = phase.milestone || '';
+          row.plans = phase.plans || '';
+          row.requirements = phase.requirements || '';
+        } else if (isActive) {
+          // Table mode: only show goal for active phases
+          row.goal = phase.goal || phase.title;
+        }
         rows.push(row);
       }
     }
@@ -578,6 +612,266 @@ const phasesCmd = defineCommand({
 
     const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
     console.log(render(rows, { format: fmt, title: `Phases (${rows.length})` }));
+  },
+});
+
+// ---------------------------------------------------------------------------
+// decisions command
+// ---------------------------------------------------------------------------
+
+const decisionsCmd = defineCommand({
+  meta: { name: 'decisions', description: 'List decisions from DECISIONS.xml' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
+    id: { type: 'string', description: 'Filter to a single decision by id', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+
+    const filter = args.id ? { id: args.id } : {};
+    const rows = [];
+    for (const root of roots) {
+      const decisions = readDecisions(root, baseDir, filter);
+      for (const d of decisions) {
+        rows.push({
+          project: root.id,
+          id: d.id,
+          title: d.title,
+          summary: d.summary,
+          impact: d.impact,
+          references: d.references,
+        });
+      }
+    }
+
+    if (rows.length === 0) {
+      console.log('No decisions found.');
+      return;
+    }
+
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+    if (fmt === 'json') {
+      console.log(JSON.stringify(rows, null, 2));
+    } else {
+      // Table: truncate summary for readability
+      const tableRows = rows.map(r => ({
+        project: r.project,
+        id: r.id,
+        title: r.title.length > 50 ? r.title.slice(0, 47) + '...' : r.title,
+        summary: r.summary.length > 80 ? r.summary.slice(0, 77) + '...' : r.summary,
+      }));
+      console.log(render(tableRows, { format: 'table', title: `Decisions (${rows.length})` }));
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// requirements command
+// ---------------------------------------------------------------------------
+
+const requirementsCmd = defineCommand({
+  meta: { name: 'requirements', description: 'List requirement doc references from REQUIREMENTS.xml' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+
+    const rows = [];
+    for (const root of roots) {
+      const refs = readRequirements(root, baseDir);
+      for (const r of refs) {
+        rows.push({ project: root.id, kind: r.kind, path: r.docPath, description: r.description });
+      }
+      // Also include doc-flow entries from ROADMAP.xml
+      const docFlow = readDocFlow(root, baseDir);
+      for (const d of docFlow) {
+        rows.push({ project: root.id, kind: 'doc-flow', path: d.name, description: d.description });
+      }
+    }
+
+    if (rows.length === 0) {
+      console.log('No requirement refs found. Create REQUIREMENTS.xml in your .planning/ directories.');
+      return;
+    }
+
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+    if (fmt === 'json') {
+      console.log(JSON.stringify(rows, null, 2));
+    } else {
+      const tableRows = rows.map(r => ({
+        project: r.project,
+        kind: r.kind,
+        path: r.path,
+        description: r.description.length > 70 ? r.description.slice(0, 67) + '...' : r.description,
+      }));
+      console.log(render(tableRows, { format: 'table', title: `Requirement refs (${rows.length})` }));
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// errors command
+// ---------------------------------------------------------------------------
+
+const errorsCmd = defineCommand({
+  meta: { name: 'errors', description: 'List error attempts from ERRORS-AND-ATTEMPTS.xml' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
+    status: { type: 'string', description: 'Filter by status: open|resolved|partial', default: '' },
+    phase: { type: 'string', description: 'Filter by phase id', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+    const filter = {};
+    if (args.status) filter.status = args.status;
+    if (args.phase)  filter.phase  = args.phase;
+
+    const rows = [];
+    for (const root of roots) {
+      for (const e of readErrors(root, baseDir, filter)) {
+        rows.push({ project: root.id, id: e.id, phase: e.phase, task: e.task, status: e.status, title: e.title, symptom: e.symptom, cause: e.cause, fix: e.fix, commands: e.commands });
+      }
+    }
+    if (rows.length === 0) { console.log('No error attempts found.'); return; }
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify(rows, null, 2));
+    } else {
+      const tableRows = rows.map(r => ({
+        project: r.project, id: r.id, phase: r.phase, task: r.task, status: r.status,
+        title: r.title.length > 60 ? r.title.slice(0, 57) + '...' : r.title,
+      }));
+      console.log(render(tableRows, { format: 'table', title: `Errors & Attempts (${rows.length})` }));
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// blockers command
+// ---------------------------------------------------------------------------
+
+const blockersCmd = defineCommand({
+  meta: { name: 'blockers', description: 'List blockers from BLOCKERS.xml' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
+    status: { type: 'string', description: 'Filter by status: open|resolved|wont-fix', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+    const filter = args.status ? { status: args.status } : {};
+
+    const rows = [];
+    for (const root of roots) {
+      for (const b of readBlockers(root, baseDir, filter)) {
+        rows.push({ project: root.id, id: b.id, status: b.status, title: b.title, summary: b.summary, taskRef: b.taskRef });
+      }
+    }
+    if (rows.length === 0) { console.log('No blockers found.'); return; }
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify(rows, null, 2));
+    } else {
+      const tableRows = rows.map(r => ({
+        project: r.project, id: r.id, status: r.status, task: r.taskRef,
+        title: r.title.length > 60 ? r.title.slice(0, 57) + '...' : r.title,
+      }));
+      console.log(render(tableRows, { format: 'table', title: `Blockers (${rows.length})` }));
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// refs command — aggregate all file references across planning files
+// ---------------------------------------------------------------------------
+
+const refsCmd = defineCommand({
+  meta: { name: 'refs', description: 'List all file references across planning files (decisions, requirements, phases)' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
+    source: { type: 'string', description: 'Filter by source: decisions|requirements|phases', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+
+    const rows = [];
+    for (const root of roots) {
+      // Decisions references
+      if (!args.source || args.source === 'decisions') {
+        const decisions = readDecisions(root, baseDir);
+        for (const d of decisions) {
+          for (const ref of d.references) {
+            rows.push({ project: root.id, source: 'decisions', via: d.id, path: ref });
+          }
+        }
+      }
+
+      // Requirements doc paths
+      if (!args.source || args.source === 'requirements') {
+        const reqs = readRequirements(root, baseDir);
+        for (const r of reqs) {
+          if (r.docPath) {
+            rows.push({ project: root.id, source: 'requirements', via: r.kind, path: r.docPath });
+          }
+        }
+      }
+
+      // Phase plan directories from ROADMAP.xml
+      if (!args.source || args.source === 'phases') {
+        const phases = readPhases(root, baseDir);
+        for (const p of phases) {
+          if (p.plans) {
+            rows.push({ project: root.id, source: 'phases', via: `phase-${p.id}`, path: p.plans });
+          }
+        }
+        // Also doc-flow entries
+        const docFlow = readDocFlow(root, baseDir);
+        for (const d of docFlow) {
+          rows.push({ project: root.id, source: 'doc-flow', via: 'roadmap', path: d.name });
+        }
+      }
+    }
+
+    if (rows.length === 0) {
+      console.log('No file references found.');
+      return;
+    }
+
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+    if (fmt === 'json') {
+      console.log(JSON.stringify(rows, null, 2));
+    } else {
+      const tableRows = rows.map(r => ({
+        project: r.project,
+        source: r.source,
+        via: r.via,
+        path: r.path.length > 70 ? r.path.slice(0, 67) + '...' : r.path,
+      }));
+      console.log(render(tableRows, { format: 'table', title: `File references (${rows.length})` }));
+    }
   },
 });
 
@@ -1450,6 +1744,30 @@ function touchStateXml(root, baseDir) {
   } catch { /* non-fatal */ }
 }
 
+/**
+ * After a sink compile, write a <sink-compiled> note into STATE.xml.
+ * This tells agents that planning files are mirrored in the docs sink —
+ * they should read the sink MDX for the human-readable version and treat
+ * the .planning/ XML as the machine-authoritative source.
+ */
+function stampSinkCompileNote(root, baseDir, sink, iso) {
+  const planDir = path.join(baseDir, root.path, root.planningDir);
+  const stateXml = path.join(planDir, 'STATE.xml');
+  if (!fs.existsSync(stateXml)) return;
+  try {
+    let xml = fs.readFileSync(stateXml, 'utf8');
+    const sinkPath = `${sink}/${root.id}/planning/`;
+    const tag = `<sink-compiled sink="${sinkPath}" at="${iso}" />`;
+    if (/<sink-compiled/.test(xml)) {
+      // Update existing tag
+      xml = xml.replace(/<sink-compiled[^>]*\/>/, tag);
+    } else {
+      xml = xml.replace(/<\/state>/, `  ${tag}\n</state>`);
+    }
+    fs.writeFileSync(stateXml, xml);
+  } catch { /* non-fatal */ }
+}
+
 /** Build the context refs an agent should load for a session. */
 function buildContextRefs(root, baseDir, session) {
   const planDir = path.join(baseDir, root.path, root.planningDir);
@@ -2086,179 +2404,181 @@ function crawlPlanningDirs(baseDir, ignore) {
 //   gad sink decompile  — pull docs MDX → planning state (reverse)
 //   gad sink validate   — check all sink mappings are well-formed
 
+function getSink(config) {
+  if (!config.docs_sink) {
+    outputError('No docs_sink configured in planning-config.toml. Add: docs_sink = "apps/portfolio/content/docs"');
+    return null;
+  }
+  return config.docs_sink;
+}
+
+// SOURCE_MAP mirror — XML preferred over MD (matches docs-compiler.cjs compile priority)
+const SINK_SOURCE_MAP = [
+  { srcs: ['STATE.xml', 'STATE.md'],                 sink: 'state.mdx' },
+  { srcs: ['ROADMAP.xml', 'ROADMAP.md'],             sink: 'roadmap.mdx' },
+  { srcs: ['DECISIONS.xml', 'DECISIONS.md'],         sink: 'decisions.mdx' },
+  { srcs: ['TASK-REGISTRY.xml', 'TASK-REGISTRY.md'], sink: 'task-registry.mdx' },
+  { srcs: ['REQUIREMENTS.xml', 'REQUIREMENTS.md'],   sink: 'requirements.mdx' },
+  { srcs: ['ERRORS-AND-ATTEMPTS.xml'],               sink: 'errors-and-attempts.mdx' },
+  { srcs: ['BLOCKERS.xml'],                          sink: 'blockers.mdx' },
+];
+
 const sinkStatus = defineCommand({
-  meta: { name: 'status', description: 'Show sync status between planning files and docs sink' },
+  meta: { name: 'status', description: 'Show sync status between .planning/ files and docs sink' },
   args: {
-    project: { type: 'string', description: 'Project ID (default: first root)', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all projects', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
-    let roots = config.roots;
-    if (args.project) roots = roots.filter(r => r.id === args.project);
-    if (roots.length === 0) { outputError('No projects configured.'); return; }
-
-    const sink = config.docs_sink;
-    if (!sink) {
-      console.log('No docs_sink configured in planning-config.toml.');
-      console.log('Add: docs_sink = "apps/portfolio/content/docs"');
-      return;
-    }
+    const sink = getSink(config); if (!sink) return;
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
 
     const rows = [];
     for (const root of roots) {
       const planDir = path.join(baseDir, root.path, root.planningDir);
-      const SINK_FILES = [
-        { src: 'STATE.md', dest: `${root.id}/planning/state.mdx` },
-        { src: 'STATE.xml', dest: `${root.id}/planning/state.mdx` },
-        { src: 'ROADMAP.md', dest: `${root.id}/planning/roadmap.mdx` },
-        { src: 'ROADMAP.xml', dest: `${root.id}/planning/roadmap.mdx` },
-        { src: 'DECISIONS.xml', dest: `${root.id}/planning/decisions.mdx` },
-        { src: 'TASK-REGISTRY.xml', dest: `${root.id}/planning/task-registry.mdx` },
-      ];
-      for (const m of SINK_FILES) {
-        const srcPath = path.join(planDir, m.src);
-        const destPath = path.join(baseDir, sink, m.dest);
-        if (!fs.existsSync(srcPath)) continue;
-        const srcMtime = fs.statSync(srcPath).mtimeMs;
+      for (const { srcs, sink: sinkName } of SINK_SOURCE_MAP) {
+        // Find which source file exists (prefer first)
+        const srcFile = srcs.find(s => fs.existsSync(path.join(planDir, s)));
+        if (!srcFile) continue;
+        const srcPath  = path.join(planDir, srcFile);
+        const destPath = path.join(baseDir, sink, root.id, 'planning', sinkName);
+        const { isGenerated } = require('../lib/docs-compiler.cjs');
+        const srcMtime  = fs.statSync(srcPath).mtimeMs;
         const destExists = fs.existsSync(destPath);
-        const destMtime = destExists ? fs.statSync(destPath).mtimeMs : 0;
-        const status = !destExists ? 'missing' : srcMtime > destMtime ? 'stale' : 'ok';
-        rows.push({ project: root.id, src: m.src, dest: m.dest, status });
+        const destMtime  = destExists ? fs.statSync(destPath).mtimeMs : 0;
+        const status = !destExists ? 'missing'
+          : !isGenerated(destPath) ? 'human-authored'
+          : srcMtime > destMtime ? 'stale' : 'ok';
+        rows.push({ project: root.id, src: srcFile, sink: `${root.id}/planning/${sinkName}`, status });
       }
     }
 
     output(rows, { title: `Sink Status  [sink: ${sink}]` });
-    const stale = rows.filter(r => r.status !== 'ok').length;
-    if (stale > 0) console.log(`\n${stale} file(s) need sync. Run \`gad sink compile\` to update.`);
-    else console.log('\n✓ All sink files are up to date.');
+    const needSync = rows.filter(r => r.status === 'missing' || r.status === 'stale').length;
+    const humanAuthored = rows.filter(r => r.status === 'human-authored').length;
+    if (needSync > 0) console.log(`\n${needSync} file(s) need sync. Run \`gad sink compile\` to update.`);
+    else console.log('\n✓ All generated sink files are up to date.');
+    if (humanAuthored > 0) console.log(`${humanAuthored} human-authored sink file(s) — not managed by compile.`);
   },
 });
 
 const sinkCompile = defineCommand({
-  meta: { name: 'compile', description: 'Write planning state → docs MDX sink (manual)' },
+  meta: { name: 'compile', description: 'Compile .planning/ XML files → docs sink MDX' },
   args: {
-    project: { type: 'string', description: 'Project ID (default: all)', default: '' },
-    yes: { type: 'boolean', alias: 'y', description: 'Apply without prompting', default: false },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Compile all projects', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
-    let roots = config.roots;
-    if (args.project) {
-      roots = roots.filter(r => r.id === args.project);
-      if (roots.length === 0) { outputError(`Project not found: ${args.project}`); return; }
-    }
+    const sink = getSink(config); if (!sink) return;
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
 
-    const sink = config.docs_sink;
-    if (!sink) {
-      outputError('No docs_sink in planning-config.toml. Add: docs_sink = "apps/portfolio/content/docs"');
-      return;
+    const { compile: compileDocs2 } = require('../lib/docs-compiler.cjs');
+    let compiled = 0;
+    for (const root of roots) {
+      // Stamp first so the source mtime is set before the sink mtime
+      stampSinkCompileNote(root, baseDir, sink, new Date().toISOString());
+      const n = compileDocs2(baseDir, root, sink) || 0;
+      if (n > 0) console.log(`  ✓ ${root.id}: ${n} file(s)`);
+      compiled += n;
     }
+    console.log(`\n✓ Sink compile: ${compiled} file(s) written to ${sink}`);
+  },
+});
 
-    try {
-      const { compile: compileDocs2 } = require('../lib/docs-compiler.cjs');
-      let compiled = 0;
-      for (const root of roots) {
-        compiled += compileDocs2(baseDir, root, sink) || 0;
-      }
-      console.log(`\n✓ Sink compile: ${compiled} file(s) written to ${sink}`);
-    } catch (e) {
-      outputError(e.message);
+const sinkSync = defineCommand({
+  meta: { name: 'sync', description: 'Sync all planning files to sink (compile all, non-destructive)' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Sync all projects (default when no session)', default: false },
+  },
+  run({ args }) {
+    // sync = compile everything; --all is the natural default
+    args.all = args.all || !args.projectid;
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const sink = getSink(config); if (!sink) return;
+    const roots = resolveRoots(args, baseDir, config.roots);
+
+    const { compile: compileDocs2 } = require('../lib/docs-compiler.cjs');
+    let compiled = 0;
+    for (const root of roots) {
+      stampSinkCompileNote(root, baseDir, sink, new Date().toISOString());
+      const n = compileDocs2(baseDir, root, sink) || 0;
+      console.log(`  ${n > 0 ? '✓' : '–'} ${root.id}: ${n} file(s) written`);
+      compiled += n;
     }
+    console.log(`\n✓ Sync complete: ${compiled} file(s) updated in ${sink}`);
   },
 });
 
 const sinkDecompile = defineCommand({
-  meta: { name: 'decompile', description: 'Pull generated MDX sink → planning source (only generated files)' },
+  meta: { name: 'decompile', description: 'Ensure .planning/ dirs exist for all projects; create stubs for missing source files' },
   args: {
-    project: { type: 'string', description: 'Project ID (default: all)', default: '' },
-    yes: { type: 'boolean', alias: 'y', description: 'Apply without prompting', default: false },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Decompile all projects', default: false },
   },
   run({ args }) {
+    // decompile defaults to all (it's a structural ensure operation)
+    args.all = args.all || !args.projectid;
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
-    let roots = config.roots;
-    if (args.project) {
-      roots = roots.filter(r => r.id === args.project);
-      if (roots.length === 0) { outputError(`Project not found: ${args.project}`); return; }
-    }
-
-    const sink = config.docs_sink;
-    if (!sink) { outputError('No docs_sink configured.'); return; }
+    const sink = getSink(config); if (!sink) return;
+    const roots = resolveRoots(args, baseDir, config.roots);
 
     const { decompile } = require('../lib/docs-compiler.cjs');
     let total = 0;
     for (const root of roots) {
-      if (!args.yes) {
-        // Dry-run: show what would happen
-        const planDir = path.join(baseDir, root.path, root.planningDir);
-        const outDir = path.join(baseDir, sink, root.id, 'planning');
-        const { isGenerated } = require('../lib/docs-compiler.cjs');
-        if (fs.existsSync(outDir)) {
-          for (const f of fs.readdirSync(outDir)) {
-            const fp = path.join(outDir, f);
-            if (isGenerated(fp)) console.log(`  ${root.id}: ${root.planningDir}/${f} (generated — would restore)`);
-          }
-        }
-      } else {
-        const n = decompile(baseDir, root, sink);
-        if (n > 0) console.log(`  ✓ ${root.id}: ${n} file(s) restored`);
-        total += n;
-      }
+      const n = decompile(baseDir, root, sink);
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      if (n > 0) console.log(`  ✓ ${root.id}: ${n} stub(s) created in ${planDir}`);
+      else console.log(`  – ${root.id}: dir ensured, no new stubs needed`);
+      total += n;
     }
-    if (!args.yes) {
-      console.log('\nOnly files marked `generated: "true"` in frontmatter will be restored.');
-      console.log('Run with --yes to apply.');
-    } else {
-      console.log(`\n✓ Decompile: ${total} file(s) written.`);
-    }
+    console.log(`\n✓ Decompile: ${total} stub file(s) created. Run \`gad sink compile\` to populate the sink.`);
   },
 });
 
 const sinkValidate = defineCommand({
   meta: { name: 'validate', description: 'Check all sink mappings are well-formed' },
   args: {
-    project: { type: 'string', description: 'Project ID (default: all)', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Validate all projects', default: false },
   },
   run({ args }) {
+    args.all = args.all || !args.projectid;
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
-    let roots = config.roots;
-    if (args.project) roots = roots.filter(r => r.id === args.project);
+    const sink = getSink(config); if (!sink) return;
+    const roots = resolveRoots(args, baseDir, config.roots);
 
-    const sink = config.docs_sink;
-    if (!sink) {
-      console.log('⚠ No docs_sink configured. Add: docs_sink = "apps/portfolio/content/docs"');
-      return;
-    }
-
-    let errors = 0;
-    let ok = 0;
+    let errors = 0; let ok = 0;
     for (const root of roots) {
       const planDir = path.join(baseDir, root.path, root.planningDir);
       if (!fs.existsSync(planDir)) {
-        console.log(`  ✗ [${root.id}] planning dir missing: ${planDir}`);
-        errors++;
-        continue;
+        console.log(`  ✗ [${root.id}] .planning/ missing: ${planDir}`);
+        errors++; continue;
       }
       const sinkDir = path.join(baseDir, sink, root.id, 'planning');
       if (!fs.existsSync(sinkDir)) {
-        console.log(`  ⚠ [${root.id}] no sink dir yet: ${sink}/${root.id}/planning/`);
+        console.log(`  ⚠ [${root.id}] sink dir not yet compiled: ${sink}/${root.id}/planning/`);
       } else {
-        console.log(`  ✓ [${root.id}]`);
-        ok++;
+        console.log(`  ✓ [${root.id}]`); ok++;
       }
     }
-
     console.log(`\n${ok} valid, ${errors} error(s). Sink: ${sink}`);
     if (errors > 0) process.exit(1);
   },
 });
 
 const sinkCmd = defineCommand({
-  meta: { name: 'sink', description: 'Manage docs sink — compile, decompile, status, validate' },
-  subCommands: { status: sinkStatus, compile: sinkCompile, decompile: sinkDecompile, validate: sinkValidate },
+  meta: { name: 'sink', description: 'Manage docs sink — sync, compile, decompile, status, validate' },
+  subCommands: { status: sinkStatus, compile: sinkCompile, sync: sinkSync, decompile: sinkDecompile, validate: sinkValidate },
 });
 
 // ---------------------------------------------------------------------------
@@ -2272,6 +2592,7 @@ const main = defineCommand({
     version: pkg.version,
   },
   subCommands: {
+    ls: lsCmd,
     workspace: workspaceCmd,
     projects: projectsCmd,
     session: sessionCmd,
@@ -2279,6 +2600,11 @@ const main = defineCommand({
     state: stateCmd,
     phases: phasesCmd,
     tasks: tasksCmd,
+    decisions: decisionsCmd,
+    requirements: requirementsCmd,
+    errors: errorsCmd,
+    blockers: blockersCmd,
+    refs: refsCmd,
     docs: docsCmd,
     eval: evalCmd,
     snapshot: snapshotCmd,
