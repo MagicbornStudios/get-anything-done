@@ -135,6 +135,7 @@ function parseTomlValue(raw) {
  *   profiles: Record<string, {description: string}>,
  *   currentProfile: string,
  *   conventionsPaths: string[],
+ *   docsProjects: Array<{id: string, sinkPath: string, description: string, kind: string, contentSkill: string|null, repo: string|null}>,
  *   source: 'toml'|'json'|'defaults'
  * }}
  */
@@ -163,6 +164,7 @@ function fromToml(tomlPath, root) {
   const data = parseToml(raw);
   const planning = data.planning || {};
   const profiles = data.profiles || {};
+  const docs = data.docs || {};
 
   return {
     roots: (planning.roots || []).map(r => ({
@@ -177,6 +179,14 @@ function fromToml(tomlPath, root) {
     profiles,
     currentProfile: planning.currentProfile || 'human',
     conventionsPaths: planning.conventionsPaths || [],
+    docsProjects: (docs.projects || []).map(p => ({
+      id: p.id || '',
+      sinkPath: p.sinkPath || p.id || '',
+      description: p.description || '',
+      kind: p.kind || 'app',
+      contentSkill: p['content-skill'] || null,
+      repo: p.repo || null,
+    })),
     source: 'toml',
   };
 }
@@ -218,6 +228,7 @@ function fromJson(jsonPath, root) {
     profiles: {},
     currentProfile: 'human',
     conventionsPaths: planning.conventionsPaths || [],
+    docsProjects: [],
     source: 'json',
   };
 }
@@ -236,6 +247,7 @@ function defaults(root) {
     profiles: {},
     currentProfile: 'human',
     conventionsPaths: [],
+    docsProjects: [],
     source: 'defaults',
   };
 }
@@ -273,6 +285,12 @@ if (require.main === module) {
     }
     if (config.conventionsPaths.length) {
       console.log(`Conventions: ${config.conventionsPaths.join(', ')}`);
+    }
+    if (config.docsProjects.length) {
+      console.log(`Docs projects (${config.docsProjects.length}):`);
+      for (const p of config.docsProjects) {
+        console.log(`  [${p.id}] ${p.sinkPath}  ${p.kind}${p.contentSkill ? ` (skill: ${p.contentSkill})` : ''}`);
+      }
     }
   }
 }

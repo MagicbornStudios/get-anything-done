@@ -37,6 +37,7 @@ const { readDecisions } = require('../lib/decisions-reader.cjs');
 const { readRequirements } = require('../lib/requirements-reader.cjs');
 const { readErrors } = require('../lib/errors-reader.cjs');
 const { readBlockers } = require('../lib/blockers-reader.cjs');
+const { readDocsMap } = require('../lib/docs-map-reader.cjs');
 const { compile: compileDocs } = require('../lib/docs-compiler.cjs');
 
 const pkg = require('../package.json');
@@ -808,7 +809,7 @@ const refsCmd = defineCommand({
   args: {
     projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
     all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
-    source: { type: 'string', description: 'Filter by source: decisions|requirements|phases', default: '' },
+    source: { type: 'string', description: 'Filter by source: decisions|requirements|phases|docs-map', default: '' },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
@@ -851,6 +852,14 @@ const refsCmd = defineCommand({
         const docFlow = readDocFlow(root, baseDir);
         for (const d of docFlow) {
           rows.push({ project: root.id, source: 'doc-flow', via: 'roadmap', path: d.name });
+        }
+      }
+
+      // DOCS-MAP.xml entries
+      if (!args.source || args.source === 'docs-map') {
+        const docsMapEntries = readDocsMap(root, baseDir);
+        for (const d of docsMapEntries) {
+          rows.push({ project: root.id, source: 'docs-map', via: d.skill || d.kind, path: d.sink });
         }
       }
     }
@@ -2576,6 +2585,91 @@ const sinkValidate = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// pack command — bundle all planning data for a project into portable JSON
+// ---------------------------------------------------------------------------
+
+const packCmd = defineCommand({
+  meta: { name: 'pack', description: 'Bundle all planning data for a project into a portable JSON pack' },
+  args: {
+    projectid: { type: 'string', description: 'Project id to pack (default: session or first root)', default: '' },
+    output:    { type: 'string', description: 'Output path for pack JSON (default: .planning/pack.json)', default: '' },
+    stdout:    { type: 'boolean', description: 'Print pack JSON to stdout instead of writing file', default: false },
+    pretty:    { type: 'boolean', description: 'Pretty-print JSON (default true)', default: true },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) { outputError('No project found. Use --projectid or start a session.'); return; }
+    if (roots.length > 1) { outputError('pack only supports a single project. Use --projectid to specify one.'); return; }
+
+    const root = roots[0];
+
+    const state   = readState(root, baseDir);
+    const phases  = readPhases(root, baseDir);
+    const tasks   = readTasks(root, baseDir);
+    const decisions = readDecisions(root, baseDir);
+    const reqs    = readRequirements(root, baseDir);
+    const errors  = readErrors(root, baseDir);
+    const blockers = readBlockers(root, baseDir);
+    const docsMap = readDocsMap(root, baseDir);
+
+    // Build doc refs from decisions + requirements + phase plans + docs-map
+    const docRefs = [];
+    for (const d of decisions) {
+      for (const ref of d.references) {
+        docRefs.push({ source: 'decisions', via: d.id, path: ref });
+      }
+    }
+    for (const r of reqs) {
+      if (r.docPath) docRefs.push({ source: 'requirements', via: r.kind, path: r.docPath });
+    }
+    for (const p of phases) {
+      if (p.plans) docRefs.push({ source: 'phases', via: `phase-${p.id}`, path: p.plans });
+    }
+    for (const d of docsMap) {
+      docRefs.push({ source: 'docs-map', via: d.skill || d.kind, path: d.sink });
+    }
+
+    const pack = {
+      version: 1,
+      project: root.id,
+      projectPath: root.path,
+      planningDir: root.planningDir,
+      packedAt: new Date().toISOString(),
+      state,
+      phases,
+      tasks,
+      decisions,
+      requirements: reqs,
+      errors,
+      blockers,
+      docsMap,
+      docRefs,
+    };
+
+    const json = args.pretty ? JSON.stringify(pack, null, 2) : JSON.stringify(pack);
+
+    if (args.stdout) {
+      console.log(json);
+      return;
+    }
+
+    const outPath = args.output
+      ? path.resolve(baseDir, args.output)
+      : path.join(baseDir, root.path, root.planningDir, 'pack.json');
+
+    fs.writeFileSync(outPath, json, 'utf8');
+    console.log(`✓ Pack written: ${path.relative(baseDir, outPath)}`);
+    console.log(`  project:   ${root.id}`);
+    console.log(`  phases:    ${phases.length}`);
+    console.log(`  tasks:     ${tasks.length}`);
+    console.log(`  decisions: ${decisions.length}`);
+    console.log(`  doc refs:  ${docRefs.length}`);
+  },
+});
+
 const sinkCmd = defineCommand({
   meta: { name: 'sink', description: 'Manage docs sink — sync, compile, decompile, status, validate' },
   subCommands: { status: sinkStatus, compile: sinkCompile, sync: sinkSync, decompile: sinkDecompile, validate: sinkValidate },
@@ -2605,6 +2699,7 @@ const main = defineCommand({
     errors: errorsCmd,
     blockers: blockersCmd,
     refs: refsCmd,
+    pack: packCmd,
     docs: docsCmd,
     eval: evalCmd,
     snapshot: snapshotCmd,
