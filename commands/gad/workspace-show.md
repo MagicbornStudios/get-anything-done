@@ -15,7 +15,7 @@ current state (phase, milestone progress, last modified).
 
 1. **Load config:**
    ```bash
-   node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get planning 2>/dev/null
+   node "vendor/get-anything-done/get-shit-done/bin/gsd-tools.cjs" config-get planning 2>/dev/null
    ```
 
 2. **For each root**, read its STATE.md and ROADMAP.md:

@@ -21,7 +21,7 @@ Debug issues using scientific method with subagent isolation.
 </objective>
 
 <available_agent_types>
-Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
 - gsd-debugger — Diagnoses and fixes issues
 </available_agent_types>
 
@@ -43,13 +43,13 @@ ls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5
 ## 0. Initialize Context
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state load)
+INIT=$(node "vendor/get-anything-done/get-shit-done/bin/gsd-tools.cjs" state load)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
 Extract `commit_docs` from init JSON. Resolve debugger model:
 ```bash
-debugger_model=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" resolve-model gsd-debugger --raw)
+debugger_model=$(node "vendor/get-anything-done/get-shit-done/bin/gsd-tools.cjs" resolve-model gsd-debugger --raw)
 ```
 
 ## 1. Check Active Sessions
@@ -117,13 +117,13 @@ Task(
 - Display root cause, confidence level, files involved, and suggested fix strategies
 - Offer options:
   - "Fix now" — spawn a continuation agent with `goal: find_and_fix` to apply the fix (see step 5)
-  - "Plan fix" — suggest `/gsd:plan-phase --gaps`
+  - "Plan fix" — suggest `/gad:plan-phase --gaps`
   - "Manual fix" — done
 
 **If `## DEBUG COMPLETE` (find_and_fix mode):**
 - Display root cause and fix summary
 - Offer options:
-  - "Plan fix" — suggest `/gsd:plan-phase --gaps` if further work needed
+  - "Plan fix" — suggest `/gad:plan-phase --gaps` if further work needed
   - "Done" — mark resolved
 
 **If `## CHECKPOINT REACHED`:**

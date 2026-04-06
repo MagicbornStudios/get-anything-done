@@ -1,7 +1,7 @@
 ---
 type: prompt
 name: gad:forensics
-description: Post-mortem investigation for failed GSD workflows — analyzes git history, artifacts, and state to diagnose what went wrong
+description: Post-mortem investigation for failed GAD workflows — analyzes git history, artifacts, and state to diagnose what went wrong
 argument-hint: "[problem description]"
 allowed-tools:
   - Read
@@ -12,14 +12,14 @@ allowed-tools:
 ---
 
 <objective>
-Investigate what went wrong during a GSD workflow execution. Analyzes git history, `.planning/` artifacts, and file system state to detect anomalies and generate a structured diagnostic report.
+Investigate what went wrong during a GAD workflow execution. Analyzes git history, `.planning/` artifacts, and file system state to detect anomalies and generate a structured diagnostic report.
 
 Purpose: Diagnose failed or stuck workflows so the user can understand root cause and take corrective action.
 Output: Forensic report saved to `.planning/forensics/`, presented inline, with optional issue creation.
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/forensics.md
+@vendor/get-anything-done/get-shit-done/workflows/forensics.md
 </execution_context>
 
 <context>
@@ -36,7 +36,7 @@ Output: Forensic report saved to `.planning/forensics/`, presented inline, with 
 </context>
 
 <process>
-Read and execute the forensics workflow from @~/.claude/get-shit-done/workflows/forensics.md end-to-end.
+Read and execute the forensics workflow from @vendor/get-anything-done/get-shit-done/workflows/forensics.md end-to-end.
 </process>
 
 <success_criteria>

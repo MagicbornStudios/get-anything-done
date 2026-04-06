@@ -18,7 +18,7 @@ Removed directories prompt before deletion.
 
 1. **Load current config:**
    ```bash
-   node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get planning.roots 2>/dev/null || echo "[]"
+   node "vendor/get-anything-done/get-shit-done/bin/gsd-tools.cjs" config-get planning.roots 2>/dev/null || echo "[]"
    ```
    Also read `planning-config.toml` directly to get existing roots.
 
@@ -68,5 +68,5 @@ Removed directories prompt before deletion.
 - Preserve entry order: existing roots first, new roots appended
 - Auto-generated id = dirname of the entry's parent path (e.g., `vendor/my-proj` → `my-proj`)
 - If planning-config.toml doesn't exist, create it from the template at
-  `~/.claude/get-shit-done/templates/planning-config.toml`
+  `vendor/get-anything-done/get-shit-done/templates/planning-config.toml`
 </rules>

@@ -5,7 +5,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 ---
 
 <purpose>
-After a GSD update wipes and reinstalls files, this command merges user's previously saved local modifications back into the new version. Uses three-way comparison (pristine baseline, user-modified backup, newly installed version) to reliably distinguish user customizations from version drift.
+After a GAD update wipes and reinstalls files, this command merges user's previously saved local modifications back into the new version. Uses three-way comparison (pristine baseline, user-modified backup, newly installed version) to reliably distinguish user customizations from version drift.
 
 **Critical invariant:** Every file in `gsd-local-patches/` was backed up because the installer's hash comparison detected it was modified. The workflow must NEVER conclude "no custom content" for any backed-up file — that is a logical contradiction. When in doubt, classify as CONFLICT requiring user review, not SKIP.
 </purpose>
@@ -44,15 +44,15 @@ Read `backup-meta.json` from the patches directory.
 ```
 No local patches found. Nothing to reapply.
 
-Local patches are automatically saved when you run /gsd:update
-after modifying any GSD workflow, command, or agent files.
+Local patches are automatically saved when you run /gad:update
+after modifying any GAD workflow, command, or agent files.
 ```
 Exit.
 
 ## Step 2: Determine baseline for three-way comparison
 
-The quality of the merge depends on having a **pristine baseline** — the original unmodified version of each file from the pre-update GSD release. This enables three-way comparison:
-- **Pristine baseline** (original GSD file before any user edits)
+The quality of the merge depends on having a **pristine baseline** — the original unmodified version of each file from the pre-update GAD release. This enables three-way comparison:
+- **Pristine baseline** (original GAD file before any user edits)
 - **User's version** (backed up in `gsd-local-patches/`)
 - **New version** (freshly installed after update)
 
@@ -66,7 +66,7 @@ if git -C "$CONFIG_DIR" rev-parse --git-dir >/dev/null 2>&1; then
   HAS_GIT=true
 fi
 ```
-When `HAS_GIT=true`, use `git log` to find the commit where GSD was originally installed (before user edits). For each file, the pristine baseline can be extracted with:
+When `HAS_GIT=true`, use `git log` to find the commit where GAD was originally installed (before user edits). For each file, the pristine baseline can be extracted with:
 ```bash
 git -C "$CONFIG_DIR" log --diff-filter=A --format="%H" -- "{file_path}"
 ```
@@ -158,7 +158,7 @@ Each matching commit represents an intentional user modification. Use the commit
 After reapplying, regenerate the file manifest so future updates correctly detect these as user modifications:
 
 ```bash
-# The manifest will be regenerated on next /gsd:update
+# The manifest will be regenerated on next /gad:update
 # For now, just note which files were modified
 ```
 
