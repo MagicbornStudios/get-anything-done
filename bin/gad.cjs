@@ -116,7 +116,13 @@ function resolveRoots(args, baseDir, allRoots) {
   if (args.all) return allRoots;
   if (args.projectid) {
     const found = allRoots.filter(r => r.id === args.projectid);
-    if (found.length === 0) { outputError(`Project not found: ${args.projectid}`); return []; }
+    if (found.length === 0) {
+      const ids = allRoots.map(r => r.id);
+      console.error(`\nProject not found: ${args.projectid}\n\nAvailable projects:\n`);
+      for (const id of ids) console.error(`  ${id}`);
+      console.error(`\nRerun with: --projectid ${ids[0]}`);
+      process.exit(1);
+    }
     return found;
   }
   const sessionId = getActiveSessionProjectId(baseDir, allRoots);
@@ -904,7 +910,13 @@ const tasksCmd = defineCommand({
     let roots = config.roots;
     if (args.projectid) {
       roots = roots.filter(r => r.id === args.projectid);
-      if (roots.length === 0) { outputError(`Project not found: ${args.projectid}`); return; }
+      if (roots.length === 0) {
+        const ids = config.roots.map(r => r.id);
+        console.error(`\nProject not found: ${args.projectid}\n\nAvailable projects:\n`);
+        for (const id of ids) console.error(`  ${id}`);
+        console.error(`\nRerun with: --projectid ${ids[0]}`);
+        process.exit(1);
+      }
     }
 
     const filter = {};
@@ -970,9 +982,80 @@ const docsCompile = defineCommand({
   },
 });
 
+const docsList = defineCommand({
+  meta: { name: 'list', description: 'List all docs for a project — planning files, DOCS-MAP entries, docs.projects' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    all:       { type: 'boolean', description: 'Show all projects', default: false },
+    json:      { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config  = gadConfig.load(baseDir);
+    const roots   = resolveRoots(args, baseDir, config.roots);
+    const sink    = config.docs_sink;
+    const rows    = [];
+
+    for (const root of roots) {
+      // Planning files from sink status
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      if (fs.existsSync(planDir)) {
+        const planFiles = fs.readdirSync(planDir).filter(f => /\.(xml|md)$/i.test(f) && !f.startsWith('.'));
+        for (const f of planFiles) {
+          rows.push({ project: root.id, type: 'planning', name: f, path: path.join(root.path, root.planningDir, f) });
+        }
+      }
+
+      // DOCS-MAP entries
+      const docsMapEntries = readDocsMap(root, baseDir);
+      for (const d of docsMapEntries) {
+        rows.push({ project: root.id, type: d.kind || 'docs-map', name: d.description || d.sink, path: d.sink });
+      }
+
+      // Sink files (non-planning, human-authored or feature docs)
+      if (sink) {
+        const sinkDir = path.join(baseDir, sink, root.id);
+        if (fs.existsSync(sinkDir)) {
+          const walkSync = (dir, rel) => {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const entryRel = rel ? `${rel}/${entry.name}` : entry.name;
+              if (entry.isDirectory() && entry.name !== 'planning') {
+                walkSync(path.join(dir, entry.name), entryRel);
+              } else if (entry.isFile() && /\.mdx?$/i.test(entry.name) && !/^planning\//.test(entryRel)) {
+                rows.push({ project: root.id, type: 'feature-doc', name: entry.name, path: `${root.id}/${entryRel}` });
+              }
+            }
+          };
+          walkSync(sinkDir, '');
+        }
+      }
+    }
+
+    // docs.projects entries
+    if (config.docsProjects && config.docsProjects.length > 0) {
+      for (const dp of config.docsProjects) {
+        if (args.projectid && dp.id !== args.projectid) continue;
+        rows.push({ project: dp.id, type: 'docs-project', name: dp.kind || 'project', path: dp.id });
+      }
+    }
+
+    if (rows.length === 0) {
+      console.log('No docs found. Create DOCS-MAP.xml or add docs.projects to planning-config.toml.');
+      return;
+    }
+
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+    if (fmt === 'json') {
+      console.log(JSON.stringify(rows, null, 2));
+    } else {
+      console.log(render(rows, { format: 'table', title: `Docs (${rows.length})` }));
+    }
+  },
+});
+
 const docsCmd = defineCommand({
-  meta: { name: 'docs', description: 'Compile or watch planning docs' },
-  subCommands: { compile: docsCompile },
+  meta: { name: 'docs', description: 'List and compile planning docs' },
+  subCommands: { list: docsList, compile: docsCompile },
 });
 
 // ---------------------------------------------------------------------------
