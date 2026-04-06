@@ -2479,16 +2479,18 @@ const contextCmd = defineCommand({
 const snapshotCmd = defineCommand({
   meta: { name: 'snapshot', description: 'Print all planning files inlined for a project' },
   args: {
-    project: { type: 'string', description: 'Project ID (default: first root)', default: '' },
+    projectid: { type: 'string', description: 'Project ID (default: first root)', default: '' },
+    project: { type: 'string', description: 'Project ID (alias for --projectid)', default: '' },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
     let roots = config.roots;
+    const projectId = args.projectid || args.project;
 
-    if (args.project) {
-      roots = roots.filter(r => r.id === args.project);
+    if (projectId) {
+      roots = roots.filter(r => r.id === projectId);
       if (roots.length === 0) {
         console.error(`Project not found: ${args.project}`);
         console.error(`Available: ${config.roots.map(r => r.id).join(', ')}`);
