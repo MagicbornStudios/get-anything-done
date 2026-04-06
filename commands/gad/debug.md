@@ -12,7 +12,7 @@ allowed-tools:
 <objective>
 Debug issues using scientific method with subagent isolation.
 
-**Orchestrator role:** Gather symptoms, spawn gsd-debugger agent, handle checkpoints, spawn continuations.
+**Orchestrator role:** Gather symptoms, spawn gad-debugger agent, handle checkpoints, spawn continuations.
 
 **Why subagent:** Investigation burns context fast (reading files, forming hypotheses, testing). Fresh 200k context per investigation. Main context stays lean for user interaction.
 
@@ -22,7 +22,7 @@ Debug issues using scientific method with subagent isolation.
 
 <available_agent_types>
 Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
-- gsd-debugger — Diagnoses and fixes issues
+- gad-debugger — Diagnoses and fixes issues
 </available_agent_types>
 
 <context>
@@ -49,7 +49,7 @@ if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 
 Extract `commit_docs` from init JSON. Resolve debugger model:
 ```bash
-debugger_model=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gsd-debugger --raw)
+debugger_model=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gad-debugger --raw)
 ```
 
 ## 1. Check Active Sessions
@@ -73,7 +73,7 @@ Use AskUserQuestion for each:
 
 After all gathered, confirm ready to investigate.
 
-## 3. Spawn gsd-debugger Agent
+## 3. Spawn gad-debugger Agent
 
 Fill prompt and spawn:
 
@@ -105,7 +105,7 @@ Create: .planning/debug/{slug}.md
 ```
 Task(
   prompt=filled_prompt,
-  subagent_type="gsd-debugger",
+  subagent_type="gad-debugger",
   model="{debugger_model}",
   description="Debug {slug}"
 )
@@ -169,7 +169,7 @@ goal: find_and_fix
 ```
 Task(
   prompt=continuation_prompt,
-  subagent_type="gsd-debugger",
+  subagent_type="gad-debugger",
   model="{debugger_model}",
   description="Continue debug {slug}"
 )
@@ -180,7 +180,7 @@ Task(
 <success_criteria>
 - [ ] Active sessions checked
 - [ ] Symptoms gathered (if new)
-- [ ] gsd-debugger spawned with context
+- [ ] gad-debugger spawned with context
 - [ ] Checkpoints handled correctly
 - [ ] Root cause confirmed before fixing
 </success_criteria>

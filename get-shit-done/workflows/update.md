@@ -218,7 +218,7 @@ Exit.
 ⚠️  **Note:** The installer performs a clean install of GSD folders:
 - `commands/gsd/` will be wiped and replaced
 - `get-shit-done/` will be wiped and replaced
-- `agents/gsd-*` files will be replaced
+- `agents/gad-*` files will be replaced
 
 (Paths are relative to detected runtime install location:
 global: `~/.claude/`, `~/.config/opencode/`, `~/.opencode/`, `~/.gemini/`, or `~/.codex/`
@@ -226,11 +226,11 @@ local: `./.claude/`, `./.config/opencode/`, `./.opencode/`, `./.gemini/`, or `./
 
 Your custom files in other locations are preserved:
 - Custom commands not in `commands/gsd/` ✓
-- Custom agents not prefixed with `gsd-` ✓
+- Custom agents not prefixed with `gad-` ✓
 - Custom hooks ✓
 - Your CLAUDE.md files ✓
 
-If you've modified any GSD files directly, they'll be automatically backed up to `gsd-local-patches/` and can be reapplied with `/gsd:reapply-patches` after the update.
+If you've modified any GSD files directly, they'll be automatically backed up to `gad-local-patches/` and can be reapplied with `/gsd:reapply-patches` after the update.
 ```
 
 Use AskUserQuestion:
@@ -272,12 +272,12 @@ Clear the update cache so statusline indicator disappears:
 ```bash
 # Clear update cache across all runtime directories
 for dir in .claude .config/opencode .opencode .gemini .codex; do
-  rm -f "./$dir/cache/gsd-update-check.json"
-  rm -f "$HOME/$dir/cache/gsd-update-check.json"
+  rm -f "./$dir/cache/gad-update-check.json"
+  rm -f "$HOME/$dir/cache/gad-update-check.json"
 done
 ```
 
-The SessionStart hook (`gsd-check-update.js`) writes to the detected runtime's cache directory, so all paths must be cleared to prevent stale update indicators.
+The SessionStart hook (`gad-check-update.js`) writes to the detected runtime's cache directory, so all paths must be cleared to prevent stale update indicators.
 </step>
 
 <step name="display_result">
@@ -290,7 +290,7 @@ Format completion message (changelog was already shown in confirmation step):
 
 ⚠️  Restart your runtime to pick up the new commands.
 
-[View full changelog](https://github.com/gsd-build/get-shit-done/blob/main/CHANGELOG.md)
+[View full changelog](https://github.com/gad-build/get-shit-done/blob/main/CHANGELOG.md)
 ```
 </step>
 
@@ -298,7 +298,7 @@ Format completion message (changelog was already shown in confirmation step):
 <step name="check_local_patches">
 After update completes, check if the installer detected and backed up any locally modified files:
 
-Check for gsd-local-patches/backup-meta.json in the config directory.
+Check for gad-local-patches/backup-meta.json in the config directory.
 
 **If patches found:**
 

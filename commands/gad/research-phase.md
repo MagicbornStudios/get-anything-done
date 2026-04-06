@@ -9,7 +9,7 @@ allowed-tools:
 ---
 
 <objective>
-Research how to implement a phase. Spawns gsd-phase-researcher agent with phase context.
+Research how to implement a phase. Spawns gad-phase-researcher agent with phase context.
 
 **Note:** This is a standalone research command. For most workflows, use `/gad:plan-phase` which integrates research automatically.
 
@@ -25,7 +25,7 @@ Research how to implement a phase. Spawns gsd-phase-researcher agent with phase 
 
 <available_agent_types>
 Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
-- gsd-phase-researcher — Researches technical approaches for a phase
+- gad-phase-researcher — Researches technical approaches for a phase
 </available_agent_types>
 
 <context>
@@ -47,7 +47,7 @@ Extract from init JSON: `phase_dir`, `phase_number`, `phase_name`, `phase_found`
 
 Resolve researcher model:
 ```bash
-RESEARCHER_MODEL=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gsd-phase-researcher --raw)
+RESEARCHER_MODEL=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gad-phase-researcher --raw)
 ```
 
 ## 1. Validate Phase
@@ -77,7 +77,7 @@ Use paths from INIT (do not inline file contents in orchestrator context):
 
 Present summary with phase description and what files the researcher will load.
 
-## 4. Spawn gsd-phase-researcher Agent
+## 4. Spawn gad-phase-researcher Agent
 
 Research modes: ecosystem (default), feasibility, implementation, comparison.
 
@@ -142,7 +142,7 @@ Write to: .planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md
 ```
 Task(
   prompt=filled_prompt,
-  subagent_type="gsd-phase-researcher",
+  subagent_type="gad-phase-researcher",
   model="{researcher_model}",
   description="Research Phase {phase}"
 )
@@ -178,7 +178,7 @@ Continue research for Phase {phase_number}: {phase_name}
 ```
 Task(
   prompt=continuation_prompt,
-  subagent_type="gsd-phase-researcher",
+  subagent_type="gad-phase-researcher",
   model="{researcher_model}",
   description="Continue research Phase {phase}"
 )
@@ -189,7 +189,7 @@ Task(
 <success_criteria>
 - [ ] Phase validated against roadmap
 - [ ] Existing research checked
-- [ ] gsd-phase-researcher spawned with context
+- [ ] gad-phase-researcher spawned with context
 - [ ] Checkpoints handled correctly
 - [ ] User knows next steps
 </success_criteria>

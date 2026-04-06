@@ -6,8 +6,8 @@ User tests, Claude records. One test at a time. Plain text responses.
 
 <available_agent_types>
 Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
-- gsd-planner — Creates detailed plans from phase scope
-- gsd-plan-checker — Reviews plan quality before execution
+- gad-planner — Creates detailed plans from phase scope
+- gad-plan-checker — Reviews plan quality before execution
 </available_agent_types>
 
 <philosophy>
@@ -30,10 +30,10 @@ No Pass/Fail buttons. No severity questions. Just: "Here's what should happen. D
 If $ARGUMENTS contains a phase number, load context:
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init verify-work "${PHASE_ARG}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" init verify-work "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_PLANNER=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-planner 2>/dev/null)
-AGENT_SKILLS_CHECKER=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-checker 2>/dev/null)
+AGENT_SKILLS_PLANNER=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" agent-skills gad-planner 2>/dev/null)
+AGENT_SKILLS_CHECKER=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" agent-skills gad-checker 2>/dev/null)
 ```
 
 Parse JSON for: `planner_model`, `checker_model`, `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `has_verification`, `uat_path`.
@@ -197,7 +197,7 @@ Proceed to `present_test`.
 Render the checkpoint from the structured UAT file instead of composing it freehand:
 
 ```bash
-CHECKPOINT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" uat render-checkpoint --file "$uat_path" --raw)
+CHECKPOINT=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" uat render-checkpoint --file "$uat_path" --raw)
 if [[ "$CHECKPOINT" == @file:* ]]; then CHECKPOINT=$(cat "${CHECKPOINT#@file:}"); fi
 ```
 
@@ -353,7 +353,7 @@ Clear Current Test section:
 
 Commit the UAT file:
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "test({phase_num}): complete UAT - {passed} passed, {issues} issues" --files ".planning/phases/XX-name/{phase_num}-UAT.md"
+node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" commit "test({phase_num}): complete UAT - {passed} passed, {issues} issues" --files ".planning/phases/XX-name/{phase_num}-UAT.md"
 ```
 
 Present summary:
@@ -377,7 +377,7 @@ Present summary:
 **If issues == 0:**
 
 ```bash
-SECURITY_CFG=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
+SECURITY_CFG=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
 SECURITY_FILE=$(ls "${PHASE_DIR}"/*-SECURITY.md 2>/dev/null | head -1)
 ```
 
@@ -444,7 +444,7 @@ Display:
 ◆ Spawning planner for gap closure...
 ```
 
-Spawn gsd-planner in --gaps mode:
+Spawn gad-planner in --gaps mode:
 
 ```
 Task(
@@ -469,7 +469,7 @@ Output consumed by /gsd:execute-phase
 Plans must be executable prompts.
 </downstream_consumer>
 """,
-  subagent_type="gsd-planner",
+  subagent_type="gad-planner",
   model="{planner_model}",
   description="Plan gap fixes for Phase {phase}"
 )
@@ -494,7 +494,7 @@ Display:
 
 Initialize: `iteration_count = 1`
 
-Spawn gsd-plan-checker:
+Spawn gad-plan-checker:
 
 ```
 Task(
@@ -518,7 +518,7 @@ Return one of:
 - ## ISSUES FOUND — structured issue list
 </expected_output>
 """,
-  subagent_type="gsd-plan-checker",
+  subagent_type="gad-plan-checker",
   model="{checker_model}",
   description="Verify Phase {phase} fix plans"
 )
@@ -536,7 +536,7 @@ On return:
 
 Display: `Sending back to planner for revision... (iteration {N}/3)`
 
-Spawn gsd-planner with revision context:
+Spawn gad-planner with revision context:
 
 ```
 Task(
@@ -562,7 +562,7 @@ Read existing PLAN.md files. Make targeted updates to address checker issues.
 Do NOT replan from scratch unless issues are fundamental.
 </instructions>
 """,
-  subagent_type="gsd-planner",
+  subagent_type="gad-planner",
   model="{planner_model}",
   description="Revise Phase {phase} plans"
 )
@@ -657,8 +657,8 @@ Default to **major** if unclear. User can correct if needed.
 - [ ] Batched writes: on issue, every 5 passes, or completion
 - [ ] Committed on completion
 - [ ] If issues: parallel debug agents diagnose root causes
-- [ ] If issues: gsd-planner creates fix plans (gap_closure mode)
-- [ ] If issues: gsd-plan-checker verifies fix plans
+- [ ] If issues: gad-planner creates fix plans (gap_closure mode)
+- [ ] If issues: gad-plan-checker verifies fix plans
 - [ ] If issues: revision loop until plans pass (max 3 iterations)
 - [ ] Ready for `/gsd:execute-phase --gaps-only` when complete
 </success_criteria>

@@ -1,0 +1,105 @@
+{
+  "eval": "escape-the-dungeon",
+  "version": "v2",
+  "date": "2026-04-06",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "timing": {
+    "started": "2026-04-06T23:33:55.433Z",
+    "ended": "2026-04-06T23:46:58.507Z",
+    "duration_minutes": 13,
+    "phases_completed": 0,
+    "tasks_completed": 0
+  },
+  "gad_commands": [
+    {
+      "cmd": "npm init + install kaplay vite typescript",
+      "at": "2026-04-06T23:46:40.229Z",
+      "tokens": 500
+    }
+  ],
+  "skill_triggers": [
+    {
+      "skill": "/gad:plan-phase",
+      "phase": "01",
+      "at": "2026-04-06T23:46:38.755Z",
+      "result": "Planned 7 phases: scaffold, navigation, game flow, combat, spells, content packs, menus+save"
+    },
+    {
+      "skill": "/gad:execute-phase",
+      "phase": "01",
+      "at": "2026-04-06T23:46:52.046Z",
+      "result": "Project scaffold: npm, KAPLAY, Vite, TypeScript, index.html, main.ts"
+    },
+    {
+      "skill": "/gad:execute-phase",
+      "phase": "02",
+      "at": "2026-04-06T23:46:52.292Z",
+      "result": "Core navigation: types, room graph, floor map rendering, exits, dungeon tick, fog"
+    },
+    {
+      "skill": "/gad:execute-phase",
+      "phase": "03",
+      "at": "2026-04-06T23:46:52.507Z",
+      "result": "Game flow: main menu, intro scene, game state manager, HUD"
+    },
+    {
+      "skill": "/gad:execute-phase",
+      "phase": "04",
+      "at": "2026-04-06T23:46:52.731Z",
+      "result": "Combat: interaction view, fight/spells/bag/run, damage formula, win/lose, XP"
+    },
+    {
+      "skill": "/gad:execute-phase",
+      "phase": "05",
+      "at": "2026-04-06T23:46:52.951Z",
+      "result": "Spells: 26 runes, spell composition, rune forge, spell slots, affinity tracking, combat casting"
+    },
+    {
+      "skill": "/gad:execute-phase",
+      "phase": "06",
+      "at": "2026-04-06T23:46:53.177Z",
+      "result": "Content: 3 dungeon floors, 10 entities, 11 authored spells, entity model, items, loot"
+    },
+    {
+      "skill": "/gad:execute-phase",
+      "phase": "07",
+      "at": "2026-04-06T23:46:53.413Z",
+      "result": "Menus: bag, spellbook, stats overlays, save/load via localStorage"
+    }
+  ],
+  "planning_quality": {
+    "phases_planned": 0,
+    "tasks_planned": 0,
+    "tasks_completed": 0,
+    "tasks_blocked": 0,
+    "decisions_captured": 0,
+    "state_updates": 0,
+    "state_stale_count": 0
+  },
+  "cli_efficiency": {
+    "total_gad_commands": 1,
+    "total_gad_tokens": 500,
+    "manual_file_reads": 0,
+    "manual_file_tokens": 0,
+    "token_reduction_vs_manual": 0
+  },
+  "skill_accuracy": {
+    "expected_triggers": [],
+    "accuracy": null
+  },
+  "scores": {
+    "cli_efficiency": 0,
+    "skill_accuracy": null,
+    "planning_quality": null,
+    "time_efficiency": 0.9729166666666667,
+    "composite": null
+  },
+  "human_review": {
+    "score": null,
+    "notes": null,
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+}

@@ -1,5 +1,5 @@
 <purpose>
-Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking). Quick mode spawns gsd-planner (quick mode) + gsd-executor(s), tracks tasks in `.planning/quick/`, and updates STATE.md's "Quick Tasks Completed" table.
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking). Quick mode spawns gad-planner (quick mode) + gad-executor(s), tracks tasks in `.planning/quick/`, and updates STATE.md's "Quick Tasks Completed" table.
 
 With `--full` flag: enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
 
@@ -18,11 +18,11 @@ Read all files referenced by the invoking prompt's execution_context before star
 
 <available_agent_types>
 Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
-- gsd-phase-researcher — Researches technical approaches for a phase
-- gsd-planner — Creates detailed plans from phase scope
-- gsd-plan-checker — Reviews plan quality before execution
-- gsd-executor — Executes plan tasks, commits, creates SUMMARY.md
-- gsd-verifier — Verifies phase completion, checks quality gates
+- gad-phase-researcher — Researches technical approaches for a phase
+- gad-planner — Creates detailed plans from phase scope
+- gad-plan-checker — Reviews plan quality before execution
+- gad-executor — Executes plan tasks, commits, creates SUMMARY.md
+- gad-verifier — Verifies phase completion, checks quality gates
 </available_agent_types>
 
 <process>
@@ -128,18 +128,18 @@ If `$VALIDATE_MODE` only:
 **Step 2: Initialize**
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init quick "$DESCRIPTION")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" init quick "$DESCRIPTION")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_PLANNER=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-planner 2>/dev/null)
-AGENT_SKILLS_EXECUTOR=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-executor 2>/dev/null)
-AGENT_SKILLS_CHECKER=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-checker 2>/dev/null)
-AGENT_SKILLS_VERIFIER=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-verifier 2>/dev/null)
+AGENT_SKILLS_PLANNER=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" agent-skills gad-planner 2>/dev/null)
+AGENT_SKILLS_EXECUTOR=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" agent-skills gad-executor 2>/dev/null)
+AGENT_SKILLS_CHECKER=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" agent-skills gad-checker 2>/dev/null)
+AGENT_SKILLS_VERIFIER=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" agent-skills gad-verifier 2>/dev/null)
 ```
 
 Parse JSON for: `planner_model`, `executor_model`, `checker_model`, `verifier_model`, `commit_docs`, `branch_name`, `quick_id`, `slug`, `date`, `timestamp`, `quick_dir`, `task_dir`, `roadmap_exists`, `planning_exists`.
 
 ```bash
-USE_WORKTREES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.use_worktrees 2>/dev/null || echo "true")
+USE_WORKTREES=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" config-get workflow.use_worktrees 2>/dev/null || echo "true")
 ```
 
 **If `roadmap_exists` is false:** Error — Quick mode requires an active project with ROADMAP.md. Run `/gsd:new-project` first.
@@ -367,7 +367,7 @@ Use standard research format but keep it lean — skip sections that don't apply
 Return: ## RESEARCH COMPLETE with file path
 </output>
 ",
-  subagent_type="gsd-phase-researcher",
+  subagent_type="gad-phase-researcher",
   model="{planner_model}",
   description="Research: ${DESCRIPTION}"
 )
@@ -423,7 +423,7 @@ Write plan to: ${QUICK_DIR}/${quick_id}-PLAN.md
 Return: ## PLANNING COMPLETE with plan path
 </output>
 ",
-  subagent_type="gsd-planner",
+  subagent_type="gad-planner",
   model="{planner_model}",
   description="Quick plan: ${DESCRIPTION}"
 )
@@ -487,7 +487,7 @@ ${DISCUSS_MODE ? '- Context compliance: Does the plan honor locked decisions fro
 ```
 Task(
   prompt=checker_prompt,
-  subagent_type="gsd-plan-checker",
+  subagent_type="gad-plan-checker",
   model="{checker_model}",
   description="Check quick plan: ${DESCRIPTION}"
 )
@@ -532,7 +532,7 @@ Return what changed.
 ```
 Task(
   prompt=revision_prompt,
-  subagent_type="gsd-planner",
+  subagent_type="gad-planner",
   model="{planner_model}",
   description="Revise quick plan: ${DESCRIPTION}"
 )
@@ -550,7 +550,7 @@ Offer: 1) Force proceed, 2) Abort
 
 **Step 6: Spawn executor**
 
-Spawn gsd-executor with plan reference:
+Spawn gad-executor with plan reference:
 
 ```
 Task(
@@ -574,7 +574,7 @@ ${AGENT_SKILLS_EXECUTOR}
 - Do NOT update ROADMAP.md (quick tasks are separate from planned phases)
 </constraints>
 ",
-  subagent_type="gsd-executor",
+  subagent_type="gad-executor",
   model="{executor_model}",
   ${USE_WORKTREES !== "false" ? 'isolation="worktree",' : ''}
   description="Execute: ${DESCRIPTION}"
@@ -634,7 +634,7 @@ Task goal: ${DESCRIPTION}
 ${AGENT_SKILLS_VERIFIER}
 
 Check must_haves against actual codebase. Create VERIFICATION.md at ${QUICK_DIR}/${quick_id}-VERIFICATION.md.",
-  subagent_type="gsd-verifier",
+  subagent_type="gad-verifier",
   model="{verifier_model}",
   description="Verify: ${DESCRIPTION}"
 )
@@ -712,7 +712,7 @@ Use Edit tool to make these changes atomically
 
 **Step 8: Final commit and completion**
 
-Stage and commit quick task artifacts. This step MUST always run — even if the executor already committed some files (e.g. when running without worktree isolation). The `gsd-tools commit` command handles already-committed files gracefully.
+Stage and commit quick task artifacts. This step MUST always run — even if the executor already committed some files (e.g. when running without worktree isolation). The `gad-tools commit` command handles already-committed files gracefully.
 
 Build file list:
 - `${QUICK_DIR}/${quick_id}-PLAN.md`
@@ -726,7 +726,7 @@ Build file list:
 # Explicitly stage all artifacts before commit — PLAN.md may be untracked
 # if the executor ran without worktree isolation and committed docs early
 git add ${file_list} 2>/dev/null
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(quick-${quick_id}): ${DESCRIPTION}" --files ${file_list}
+node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" commit "docs(quick-${quick_id}): ${DESCRIPTION}" --files ${file_list}
 ```
 
 Get final commit hash:

@@ -1,7 +1,7 @@
 <purpose>
 Orchestrate the full developer profiling flow: consent, session analysis (or questionnaire fallback), profile generation, result display, and artifact creation.
 
-This workflow wires Phase 1 (session pipeline) and Phase 2 (profiling engine) into a cohesive user-facing experience. All heavy lifting is done by existing gsd-tools.cjs subcommands and the gsd-user-profiler agent -- this workflow orchestrates the sequence, handles branching, and provides the UX.
+This workflow wires Phase 1 (session pipeline) and Phase 2 (profiling engine) into a cohesive user-facing experience. All heavy lifting is done by existing gad-tools.cjs subcommands and the gad-user-profiler agent -- this workflow orchestrates the sequence, handles branching, and provides the UX.
 </purpose>
 
 <required_reading>
@@ -9,7 +9,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 
 Key references:
 - @$HOME/.claude/get-shit-done/references/ui-brand.md (display patterns)
-- @$HOME/.claude/get-shit-done/agents/gsd-user-profiler.md (profiler agent definition)
+- @$HOME/.claude/get-shit-done/agents/gad-user-profiler.md (profiler agent definition)
 - @$HOME/.claude/get-shit-done/references/user-profiling.md (profiling reference doc)
 </required_reading>
 
@@ -128,7 +128,7 @@ Display: "◆ Scanning sessions..."
 
 Run session scan:
 ```bash
-SCAN_RESULT=$(node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs scan-sessions --json 2>/dev/null)
+SCAN_RESULT=$(node $HOME/.claude/get-shit-done/bin/gad-tools.cjs scan-sessions --json 2>/dev/null)
 ```
 
 Parse the JSON output to get session count and project count.
@@ -148,7 +148,7 @@ Display: "◆ Sampling messages..."
 
 Run profile sampling:
 ```bash
-SAMPLE_RESULT=$(node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs profile-sample --json 2>/dev/null)
+SAMPLE_RESULT=$(node $HOME/.claude/get-shit-done/bin/gad-tools.cjs profile-sample --json 2>/dev/null)
 ```
 
 Parse the JSON output to get the temp directory path and message count.
@@ -157,9 +157,9 @@ Display: "✓ Sampled N messages from M projects"
 
 Display: "◆ Analyzing patterns..."
 
-**Spawn gsd-user-profiler agent using Task tool:**
+**Spawn gad-user-profiler agent using Task tool:**
 
-Use the Task tool to spawn the `gsd-user-profiler` agent. Provide it with:
+Use the Task tool to spawn the `gad-user-profiler` agent. Provide it with:
 - The sampled JSONL file path from profile-sample output
 - The user-profiling reference doc at `$HOME/.claude/get-shit-done/references/user-profiling.md`
 
@@ -199,7 +199,7 @@ Display: "Using questionnaire to build your profile."
 
 **Get questions:**
 ```bash
-QUESTIONS=$(node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs profile-questionnaire --json 2>/dev/null)
+QUESTIONS=$(node $HOME/.claude/get-shit-done/bin/gad-tools.cjs profile-questionnaire --json 2>/dev/null)
 ```
 
 Parse the questions JSON. It contains 8 questions, one per dimension.
@@ -215,21 +215,21 @@ Collect all answers into an answers JSON object mapping dimension keys to select
 
 **Save answers to temp file:**
 ```bash
-ANSWERS_PATH=$(mktemp /tmp/gsd-profile-answers-XXXXXX.json)
+ANSWERS_PATH=$(mktemp /tmp/gad-profile-answers-XXXXXX.json)
 ```
 
 Write the answers JSON to `$ANSWERS_PATH`.
 
 **Convert answers to analysis:**
 ```bash
-ANALYSIS_RESULT=$(node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs profile-questionnaire --answers "$ANSWERS_PATH" --json 2>/dev/null)
+ANALYSIS_RESULT=$(node $HOME/.claude/get-shit-done/bin/gad-tools.cjs profile-questionnaire --answers "$ANSWERS_PATH" --json 2>/dev/null)
 ```
 
 Parse the analysis JSON from the result.
 
 Save analysis JSON to a temp file:
 ```bash
-ANALYSIS_PATH=$(mktemp /tmp/gsd-profile-analysis-XXXXXX.json)
+ANALYSIS_PATH=$(mktemp /tmp/gad-profile-analysis-XXXXXX.json)
 ```
 
 Write the analysis JSON to `$ANALYSIS_PATH`.
@@ -269,7 +269,7 @@ Write updated analysis JSON back to `$ANALYSIS_PATH`.
 Display: "◆ Writing profile..."
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs write-profile --input "$ANALYSIS_PATH" --json 2>/dev/null
+node $HOME/.claude/get-shit-done/bin/gad-tools.cjs write-profile --input "$ANALYSIS_PATH" --json 2>/dev/null
 ```
 
 Display: "✓ Profile written to $HOME/.claude/get-shit-done/USER-PROFILE.md"
@@ -348,7 +348,7 @@ Generate selected artifacts sequentially (file I/O is fast, no benefit from para
 **For /gsd:dev-preferences (if selected):**
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs generate-dev-preferences --analysis "$ANALYSIS_PATH" --json 2>/dev/null
+node $HOME/.claude/get-shit-done/bin/gad-tools.cjs generate-dev-preferences --analysis "$ANALYSIS_PATH" --json 2>/dev/null
 ```
 
 Display: "✓ Generated /gsd:dev-preferences at $HOME/.claude/commands/gsd/dev-preferences.md"
@@ -356,7 +356,7 @@ Display: "✓ Generated /gsd:dev-preferences at $HOME/.claude/commands/gsd/dev-p
 **For CLAUDE.md profile section (if selected):**
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --json 2>/dev/null
+node $HOME/.claude/get-shit-done/bin/gad-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --json 2>/dev/null
 ```
 
 Display: "✓ Added profile section to CLAUDE.md"
@@ -364,12 +364,12 @@ Display: "✓ Added profile section to CLAUDE.md"
 **For Global CLAUDE.md (if selected):**
 
 ```bash
-node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --global --json 2>/dev/null
+node $HOME/.claude/get-shit-done/bin/gad-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --global --json 2>/dev/null
 ```
 
 Display: "✓ Added profile section to $HOME/.claude/CLAUDE.md"
 
-**Error handling:** If any gsd-tools.cjs call fails, display the error message and use AskUserQuestion to offer "Retry" or "Skip this artifact". On retry, re-run the command. On skip, continue to next artifact.
+**Error handling:** If any gad-tools.cjs call fails, display the error message and use AskUserQuestion to offer "Retry" or "Skip this artifact". On retry, re-run the command. On skip, continue to next artifact.
 
 ---
 
@@ -444,7 +444,7 @@ rm -f "$ANALYSIS_PATH" 2>/dev/null
 - [ ] Profile written to USER-PROFILE.md via write-profile subcommand
 - [ ] Result display shows report card table and highlight reel with evidence
 - [ ] Artifact selection uses multiSelect with all options pre-selected
-- [ ] Artifacts generated sequentially via gsd-tools.cjs subcommands
+- [ ] Artifacts generated sequentially via gad-tools.cjs subcommands
 - [ ] Refresh diff shows changed dimensions when --refresh was used
 - [ ] Temp files cleaned up on completion
 </success_criteria>

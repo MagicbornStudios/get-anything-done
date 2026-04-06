@@ -8,7 +8,7 @@ Verify threat mitigations for a completed phase. Confirm PLAN.md threat register
 
 <available_agent_types>
 Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
-- gsd-security-auditor — Verifies threat mitigation coverage
+- gad-security-auditor — Verifies threat mitigation coverage
 </available_agent_types>
 
 <process>
@@ -16,16 +16,16 @@ Valid GSD subagent types (use exact names — do not fall back to 'general-purpo
 ## 0. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" init phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_AUDITOR=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-security-auditor 2>/dev/null)
+AGENT_SKILLS_AUDITOR=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" agent-skills gad-security-auditor 2>/dev/null)
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`.
 
 ```bash
-AUDITOR_MODEL=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" resolve-model gsd-security-auditor --raw)
-SECURITY_CFG=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
+AUDITOR_MODEL=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" resolve-model gad-security-auditor --raw)
+SECURITY_CFG=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
 ```
 
 If `SECURITY_CFG` is `false`: exit with "Security enforcement disabled. Enable via /gsd:settings."
@@ -78,17 +78,17 @@ Call AskUserQuestion with threat table and options:
 2. "Accept all open — document in accepted risks log" → add to SECURITY.md accepted risks, set all CLOSED, Step 6
 3. "Cancel" → exit
 
-## 5. Spawn gsd-security-auditor
+## 5. Spawn gad-security-auditor
 
 ```
 Task(
-  prompt="Read ~/.claude/agents/gsd-security-auditor.md for instructions.\n\n" +
+  prompt="Read ~/.claude/agents/gad-security-auditor.md for instructions.\n\n" +
     "<files_to_read>{PLAN, SUMMARY, impl files, SECURITY.md}</files_to_read>" +
     "<threat_register>{threat register}</threat_register>" +
     "<config>asvs_level: {SECURITY_ASVS}, block_on: {SECURITY_BLOCK_ON}</config>" +
     "<constraints>Never modify implementation files. Verify mitigations exist — do not scan for new threats. Escalate implementation gaps.</constraints>" +
     "${AGENT_SKILLS_AUDITOR}",
-  subagent_type="gsd-security-auditor",
+  subagent_type="gad-security-auditor",
   model="{AUDITOR_MODEL}",
   description="Verify threat mitigations for Phase {N}"
 )
@@ -132,7 +132,7 @@ Do NOT emit next-phase routing. Stop here.
 ## 7. Commit
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(phase-${PHASE}): add/update security threat verification"
+node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" commit "docs(phase-${PHASE}): add/update security threat verification"
 ```
 
 ## 8. Results + Routing

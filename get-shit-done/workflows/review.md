@@ -51,7 +51,7 @@ to ensure independence. At least one DIFFERENT CLI must be available.
 Collect phase artifacts for the review prompt:
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" init phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -115,7 +115,7 @@ Focus on:
 Output your review in markdown format.
 ```
 
-Write to a temp file: `/tmp/gsd-review-prompt-{phase}.md`
+Write to a temp file: `/tmp/gad-review-prompt-{phase}.md`
 </step>
 
 <step name="invoke_reviewers">
@@ -123,17 +123,17 @@ For each selected CLI, invoke in sequence (not parallel — avoid rate limits):
 
 **Gemini:**
 ```bash
-gemini -p "$(cat /tmp/gsd-review-prompt-{phase}.md)" 2>/dev/null > /tmp/gsd-review-gemini-{phase}.md
+gemini -p "$(cat /tmp/gad-review-prompt-{phase}.md)" 2>/dev/null > /tmp/gad-review-gemini-{phase}.md
 ```
 
 **Claude (separate session):**
 ```bash
-claude -p "$(cat /tmp/gsd-review-prompt-{phase}.md)" --no-input 2>/dev/null > /tmp/gsd-review-claude-{phase}.md
+claude -p "$(cat /tmp/gad-review-prompt-{phase}.md)" --no-input 2>/dev/null > /tmp/gad-review-claude-{phase}.md
 ```
 
 **Codex:**
 ```bash
-codex exec --skip-git-repo-check "$(cat /tmp/gsd-review-prompt-{phase}.md)" 2>/dev/null > /tmp/gsd-review-codex-{phase}.md
+codex exec --skip-git-repo-check "$(cat /tmp/gad-review-prompt-{phase}.md)" 2>/dev/null > /tmp/gad-review-codex-{phase}.md
 ```
 
 **CodeRabbit:**
@@ -141,14 +141,14 @@ codex exec --skip-git-repo-check "$(cat /tmp/gsd-review-prompt-{phase}.md)" 2>/d
 Note: CodeRabbit reviews the current git diff/working tree — it does not accept a prompt. It may take up to 5 minutes. Use `timeout: 360000` on the Bash tool call.
 
 ```bash
-coderabbit review --prompt-only 2>/dev/null > /tmp/gsd-review-coderabbit-{phase}.md
+coderabbit review --prompt-only 2>/dev/null > /tmp/gad-review-coderabbit-{phase}.md
 ```
 
 **OpenCode (via GitHub Copilot):**
 ```bash
-cat /tmp/gsd-review-prompt-{phase}.md | opencode run - 2>/dev/null > /tmp/gsd-review-opencode-{phase}.md
-if [ ! -s /tmp/gsd-review-opencode-{phase}.md ]; then
-  echo "OpenCode review failed or returned empty output." > /tmp/gsd-review-opencode-{phase}.md
+cat /tmp/gad-review-prompt-{phase}.md | opencode run - 2>/dev/null > /tmp/gad-review-opencode-{phase}.md
+if [ ! -s /tmp/gad-review-opencode-{phase}.md ]; then
+  echo "OpenCode review failed or returned empty output." > /tmp/gad-review-opencode-{phase}.md
 fi
 ```
 
@@ -224,7 +224,7 @@ plans_reviewed: [{list of PLAN.md files}]
 
 Commit:
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: cross-AI review for phase {N}" --files {phase_dir}/{padded_phase}-REVIEWS.md
+node "$HOME/.claude/get-shit-done/bin/gad-tools.cjs" commit "docs: cross-AI review for phase {N}" --files {phase_dir}/{padded_phase}-REVIEWS.md
 ```
 </step>
 
