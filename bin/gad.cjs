@@ -1589,9 +1589,213 @@ const evalTraceWrite = defineCommand({
   },
 });
 
+const evalTraceInit = defineCommand({
+  meta: { name: 'init', description: 'Initialize a TRACE.json for an implementation eval run' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    mode: { type: 'string', description: 'Context mode: fresh or loaded', default: 'fresh' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
+
+    // Find or create next version directory
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .map(r => parseInt(r.name.slice(1)))
+      .sort((a, b) => a - b);
+    const nextVersion = runs.length > 0 ? runs[runs.length - 1] + 1 : 1;
+    const versionDir = path.join(projDir, `v${nextVersion}`);
+    fs.mkdirSync(versionDir, { recursive: true });
+
+    const trace = {
+      eval: args.project,
+      version: `v${nextVersion}`,
+      date: new Date().toISOString().split('T')[0],
+      gad_version: require('../package.json').version || '1.0.0',
+      eval_type: 'implementation',
+      context_mode: args.mode,
+      timing: {
+        started: new Date().toISOString(),
+        ended: null,
+        duration_minutes: null,
+        phases_completed: 0,
+        tasks_completed: 0,
+      },
+      gad_commands: [],
+      skill_triggers: [],
+      planning_quality: {
+        phases_planned: 0,
+        tasks_planned: 0,
+        tasks_completed: 0,
+        tasks_blocked: 0,
+        decisions_captured: 0,
+        state_updates: 0,
+        state_stale_count: 0,
+      },
+      cli_efficiency: {
+        total_gad_commands: 0,
+        total_gad_tokens: 0,
+        manual_file_reads: 0,
+        manual_file_tokens: 0,
+        token_reduction_vs_manual: null,
+      },
+      skill_accuracy: {
+        expected_triggers: [],
+        accuracy: null,
+      },
+      scores: {
+        cli_efficiency: null,
+        skill_accuracy: null,
+        planning_quality: null,
+        time_efficiency: null,
+        composite: null,
+      },
+      human_review: {
+        score: null,
+        notes: null,
+        reviewed_by: null,
+        reviewed_at: null,
+      },
+    };
+
+    const traceFile = path.join(versionDir, 'TRACE.json');
+    fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
+    console.log(`\n✓ Implementation trace initialized: evals/${args.project}/v${nextVersion}/TRACE.json`);
+    console.log(`  context_mode=${args.mode}  started=${trace.timing.started}`);
+    console.log(`\nLog commands:  gad eval trace log-cmd --project ${args.project} --cmd "gad snapshot"`);
+    console.log(`Log skills:    gad eval trace log-skill --project ${args.project} --skill "/gad:plan-phase" --phase 01`);
+    console.log(`Finalize:      gad eval trace finalize --project ${args.project}`);
+  },
+});
+
+const evalTraceLogCmd = defineCommand({
+  meta: { name: 'log-cmd', description: 'Log a gad command to the active implementation trace' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    cmd: { type: 'string', description: 'Command that was run', default: '' },
+    tokens: { type: 'string', description: 'Token count of output', default: '0' },
+  },
+  run({ args }) {
+    if (!args.project || !args.cmd) { outputError('Usage: gad eval trace log-cmd --project <name> --cmd "<command>" [--tokens N]'); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .sort((a, b) => parseInt(b.name.slice(1)) - parseInt(a.name.slice(1)));
+    if (runs.length === 0) { outputError('No runs found. Run gad eval trace init first.'); return; }
+    const traceFile = path.join(projDir, runs[0].name, 'TRACE.json');
+    const trace = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+    trace.gad_commands.push({ cmd: args.cmd, at: new Date().toISOString(), tokens: parseInt(args.tokens) || 0 });
+    trace.cli_efficiency.total_gad_commands = trace.gad_commands.length;
+    trace.cli_efficiency.total_gad_tokens = trace.gad_commands.reduce((s, c) => s + (c.tokens || 0), 0);
+    fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
+  },
+});
+
+const evalTraceLogSkill = defineCommand({
+  meta: { name: 'log-skill', description: 'Log a skill trigger to the active implementation trace' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    skill: { type: 'string', description: 'Skill name (e.g. /gad:plan-phase)', default: '' },
+    phase: { type: 'string', description: 'Phase number', default: '' },
+    result: { type: 'string', description: 'Result summary', default: '' },
+  },
+  run({ args }) {
+    if (!args.project || !args.skill) { outputError('Usage: gad eval trace log-skill --project <name> --skill "<skill>" [--phase N] [--result "..."]'); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .sort((a, b) => parseInt(b.name.slice(1)) - parseInt(a.name.slice(1)));
+    if (runs.length === 0) { outputError('No runs found. Run gad eval trace init first.'); return; }
+    const traceFile = path.join(projDir, runs[0].name, 'TRACE.json');
+    const trace = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+    trace.skill_triggers.push({
+      skill: args.skill,
+      phase: args.phase || '',
+      at: new Date().toISOString(),
+      result: args.result || '',
+    });
+    fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
+  },
+});
+
+const evalTraceFinalize = defineCommand({
+  meta: { name: 'finalize', description: 'Finalize an implementation trace — compute scores' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .sort((a, b) => parseInt(b.name.slice(1)) - parseInt(a.name.slice(1)));
+    if (runs.length === 0) { outputError('No runs found.'); return; }
+    const traceFile = path.join(projDir, runs[0].name, 'TRACE.json');
+    const trace = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+
+    // Finalize timing
+    trace.timing.ended = new Date().toISOString();
+    const startMs = new Date(trace.timing.started).getTime();
+    const endMs = new Date(trace.timing.ended).getTime();
+    trace.timing.duration_minutes = Math.round((endMs - startMs) / 60000);
+
+    // Compute cli_efficiency score
+    const totalTokens = trace.cli_efficiency.total_gad_tokens + trace.cli_efficiency.manual_file_tokens;
+    if (totalTokens > 0) {
+      trace.cli_efficiency.token_reduction_vs_manual = 1 - (trace.cli_efficiency.total_gad_tokens / totalTokens);
+      trace.scores.cli_efficiency = trace.cli_efficiency.token_reduction_vs_manual;
+    }
+
+    // Compute skill_accuracy
+    const expected = trace.skill_accuracy.expected_triggers;
+    if (expected.length > 0) {
+      const correct = expected.filter(e => e.triggered).length;
+      trace.skill_accuracy.accuracy = correct / expected.length;
+      trace.scores.skill_accuracy = trace.skill_accuracy.accuracy;
+    }
+
+    // Compute planning_quality
+    const pq = trace.planning_quality;
+    if (pq.tasks_planned > 0) {
+      const taskRatio = pq.tasks_completed / pq.tasks_planned;
+      const stalePenalty = pq.state_updates > 0 ? (1 - pq.state_stale_count / pq.state_updates) : 1;
+      trace.scores.planning_quality = taskRatio * stalePenalty;
+    }
+
+    // Compute time_efficiency (uses 480 min = 8 hours as expected max for a full eval)
+    const expectedDuration = 480;
+    if (trace.timing.duration_minutes != null) {
+      trace.scores.time_efficiency = Math.max(0, Math.min(1, 1 - (trace.timing.duration_minutes / expectedDuration)));
+    }
+
+    // Composite
+    const s = trace.scores;
+    if (s.cli_efficiency != null && s.skill_accuracy != null && s.planning_quality != null && s.time_efficiency != null) {
+      s.composite = (s.cli_efficiency * 0.25) + (s.skill_accuracy * 0.25) + (s.planning_quality * 0.30) + (s.time_efficiency * 0.20);
+    }
+
+    fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
+    console.log(`\n✓ Trace finalized: evals/${args.project}/${runs[0].name}/TRACE.json`);
+    console.log(`\n  Duration:         ${trace.timing.duration_minutes} min`);
+    console.log(`  Phases completed: ${trace.timing.phases_completed}`);
+    console.log(`  Tasks completed:  ${trace.timing.tasks_completed}`);
+    console.log(`  CLI efficiency:   ${s.cli_efficiency?.toFixed(3) ?? '—'}`);
+    console.log(`  Skill accuracy:   ${s.skill_accuracy?.toFixed(3) ?? '—'}`);
+    console.log(`  Planning quality: ${s.planning_quality?.toFixed(3) ?? '—'}`);
+    console.log(`  Time efficiency:  ${s.time_efficiency?.toFixed(3) ?? '—'}`);
+    console.log(`  Composite:        ${s.composite?.toFixed(3) ?? '—'}`);
+  },
+});
+
 const evalTraceCmd = defineCommand({
   meta: { name: 'trace', description: 'Inspect and compare eval traces (TRACE.json)' },
-  subCommands: { list: evalTraceList, show: evalTraceShow, diff: evalTraceDiff, report: evalTraceReport, write: evalTraceWrite },
+  subCommands: { list: evalTraceList, show: evalTraceShow, diff: evalTraceDiff, report: evalTraceReport, write: evalTraceWrite, init: evalTraceInit, 'log-cmd': evalTraceLogCmd, 'log-skill': evalTraceLogSkill, finalize: evalTraceFinalize },
 });
 
 // eval status — projects with coverage gaps

@@ -1,0 +1,63 @@
+{
+  "eval": "escape-the-dungeon",
+  "version": "v1",
+  "date": "2026-04-06",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "timing": {
+    "started": "2026-04-06T21:39:38.637Z",
+    "ended": "2026-04-06T21:39:39.663Z",
+    "duration_minutes": 0,
+    "phases_completed": 0,
+    "tasks_completed": 0
+  },
+  "gad_commands": [
+    {
+      "cmd": "gad snapshot",
+      "at": "2026-04-06T21:39:38.889Z",
+      "tokens": 1200
+    }
+  ],
+  "skill_triggers": [
+    {
+      "skill": "/gad:discuss-phase",
+      "phase": "01",
+      "at": "2026-04-06T21:39:39.123Z",
+      "result": "CONTEXT.md written"
+    }
+  ],
+  "planning_quality": {
+    "phases_planned": 0,
+    "tasks_planned": 0,
+    "tasks_completed": 0,
+    "tasks_blocked": 0,
+    "decisions_captured": 0,
+    "state_updates": 0,
+    "state_stale_count": 0
+  },
+  "cli_efficiency": {
+    "total_gad_commands": 1,
+    "total_gad_tokens": 1200,
+    "manual_file_reads": 0,
+    "manual_file_tokens": 0,
+    "token_reduction_vs_manual": 0
+  },
+  "skill_accuracy": {
+    "expected_triggers": [],
+    "accuracy": null
+  },
+  "scores": {
+    "cli_efficiency": 0,
+    "skill_accuracy": null,
+    "planning_quality": null,
+    "time_efficiency": 1,
+    "composite": null
+  },
+  "human_review": {
+    "score": null,
+    "notes": null,
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+}
