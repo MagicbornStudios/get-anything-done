@@ -33,7 +33,7 @@ function makeTempRoot(files) {
 // Known fields for each schema — every field must be present in parsed output
 const STATE_FIELDS    = ['projectId', 'path', 'planningDir', 'currentPhase', 'milestone', 'status', 'openTasks', 'phasesComplete', 'phasesTotal', 'lastActivity', 'nextAction'];
 const PHASE_FIELDS    = ['id', 'title', 'goal', 'status', 'depends', 'milestone', 'plans', 'requirements', 'description'];
-const TASK_FIELDS     = ['id', 'agentId', 'goal', 'status', 'phase', 'keywords', 'depends', 'commands'];
+const TASK_FIELDS     = ['id', 'agentId', 'goal', 'status', 'phase', 'keywords', 'depends', 'commands', 'files'];
 const DECISION_FIELDS = ['id', 'title', 'summary', 'impact', 'references'];
 const REQ_FIELDS      = ['kind', 'docPath', 'description'];
 

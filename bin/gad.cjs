@@ -47,6 +47,10 @@ const pkg = require('../package.json');
 // ---------------------------------------------------------------------------
 
 /** Resolve repo root from cwd (looks for planning-config.toml up the tree). */
+function readXmlFile(filePath) {
+  try { return fs.readFileSync(filePath, 'utf8'); } catch { return null; }
+}
+
 function findRepoRoot(start) {
   let dir = start || process.cwd();
   for (let i = 0; i < 10; i++) {
@@ -2481,6 +2485,7 @@ const snapshotCmd = defineCommand({
   args: {
     projectid: { type: 'string', description: 'Project ID (default: first root)', default: '' },
     project: { type: 'string', description: 'Project ID (alias for --projectid)', default: '' },
+    full: { type: 'boolean', description: 'Full dump (no sprint filtering)', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
@@ -2492,8 +2497,10 @@ const snapshotCmd = defineCommand({
     if (projectId) {
       roots = roots.filter(r => r.id === projectId);
       if (roots.length === 0) {
-        console.error(`Project not found: ${args.project}`);
-        console.error(`Available: ${config.roots.map(r => r.id).join(', ')}`);
+        const ids = config.roots.map(r => r.id);
+        console.error(`\nProject not found: ${projectId}\n\nAvailable projects:\n`);
+        for (const id of ids) console.error(`  ${id}`);
+        console.error(`\nRerun with: --projectid ${ids[0]}`);
         process.exit(1);
       }
     }
@@ -2501,63 +2508,175 @@ const snapshotCmd = defineCommand({
     if (roots.length === 0) { outputError('No projects configured. Run `gad workspace sync` first.'); return; }
     const root = roots[0];
     const planDir = path.join(baseDir, root.path, root.planningDir);
+    const sprintSize = config.sprintSize || 5;
+    const useFull = args.full;
 
-    // Collect all planning files — named files first, then phases/, then rest
-    const PRIORITY = ['AGENTS.md', 'STATE.md', 'STATE.xml', 'ROADMAP.md', 'ROADMAP.xml',
-      'REQUIREMENTS.md', 'REQUIREMENTS.xml', 'DECISIONS.xml', 'TASK-REGISTRY.xml',
-      'session.md', 'ERRORS-AND-ATTEMPTS.xml'];
-
-    const allFiles = [];
-    function collectDir(dir, relBase) {
-      if (!fs.existsSync(dir)) return;
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
-        if (entry.isDirectory()) {
-          if (entry.name === 'archive' || entry.name === 'sessions' || entry.name === 'node_modules') continue;
-          collectDir(path.join(dir, entry.name), rel);
-        } else if (entry.isFile()) {
-          allFiles.push(rel);
+    if (useFull) {
+      // Full dump — original behavior
+      const allFiles = [];
+      const PRIORITY = ['AGENTS.md', 'STATE.md', 'STATE.xml', 'ROADMAP.md', 'ROADMAP.xml',
+        'REQUIREMENTS.md', 'REQUIREMENTS.xml', 'DECISIONS.xml', 'TASK-REGISTRY.xml',
+        'session.md', 'ERRORS-AND-ATTEMPTS.xml'];
+      function collectDir(dir, relBase) {
+        if (!fs.existsSync(dir)) return;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
+          if (entry.isDirectory()) {
+            if (entry.name === 'archive' || entry.name === 'sessions' || entry.name === 'node_modules') continue;
+            collectDir(path.join(dir, entry.name), rel);
+          } else if (entry.isFile()) {
+            allFiles.push(rel);
+          }
         }
       }
-    }
-    collectDir(planDir, '');
-
-    // Sort: priority files first, then phases/, then alphabetical
-    allFiles.sort((a, b) => {
-      const aBase = path.basename(a);
-      const bBase = path.basename(b);
-      const aIdx = PRIORITY.indexOf(aBase);
-      const bIdx = PRIORITY.indexOf(bBase);
-      if (aIdx !== -1 && bIdx === -1) return -1;
-      if (bIdx !== -1 && aIdx === -1) return 1;
-      if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-      return a.localeCompare(b);
-    });
-
-    if (args.json || shouldUseJson()) {
-      const files = allFiles.map(rel => {
-        let content = null;
-        try { content = fs.readFileSync(path.join(planDir, rel), 'utf8'); } catch { /* skip */ }
-        return { path: `${root.planningDir}/${rel}`, content };
+      collectDir(planDir, '');
+      allFiles.sort((a, b) => {
+        const aIdx = PRIORITY.indexOf(path.basename(a));
+        const bIdx = PRIORITY.indexOf(path.basename(b));
+        if (aIdx !== -1 && bIdx === -1) return -1;
+        if (bIdx !== -1 && aIdx === -1) return 1;
+        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+        return a.localeCompare(b);
       });
-      console.log(JSON.stringify({ project: root.id, planningDir: root.planningDir, files }, null, 2));
+
+      if (args.json || shouldUseJson()) {
+        const files = allFiles.map(rel => {
+          let content = null;
+          try { content = fs.readFileSync(path.join(planDir, rel), 'utf8'); } catch {}
+          return { path: `${root.planningDir}/${rel}`, content };
+        });
+        console.log(JSON.stringify({ project: root.id, mode: 'full', planningDir: root.planningDir, files }, null, 2));
+        return;
+      }
+      console.log(`\nSnapshot (full): ${root.id}  —  ${allFiles.length} files\n`);
+      for (const rel of allFiles) {
+        console.log(`${'═'.repeat(70)}`);
+        console.log(`## ${root.planningDir}/${rel}`);
+        console.log(`${'═'.repeat(70)}`);
+        try { console.log(fs.readFileSync(path.join(planDir, rel), 'utf8')); } catch { console.log('(unreadable)'); }
+        console.log('');
+      }
+      console.log(`═══ end snapshot (${allFiles.length} files) ═══`);
       return;
     }
 
-    console.log(`\nSnapshot: ${root.id}  (${root.planningDir})  —  ${allFiles.length} files\n`);
-    for (const rel of allFiles) {
-      const filePath = path.join(planDir, rel);
-      console.log(`${'═'.repeat(70)}`);
-      console.log(`## ${root.planningDir}/${rel}`);
-      console.log(`${'═'.repeat(70)}`);
-      try {
-        console.log(fs.readFileSync(filePath, 'utf8'));
-      } catch {
-        console.log(`(unreadable)`);
+    // Sprint-scoped snapshot (default)
+    const phases = readPhases(root, baseDir);
+    const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
+    const currentPhase = stateXml ? (stateXml.match(/<current-phase>([\s\S]*?)<\/current-phase>/) || [])[1]?.trim() || '' : '';
+    const k = getCurrentSprintIndex(phases, sprintSize, currentPhase);
+    const sprintPhaseIds = getSprintPhaseIds(phases, sprintSize, k);
+
+    const sections = [];
+
+    // 1. STATE.xml — full (compact already)
+    if (stateXml) {
+      sections.push({ title: 'STATE.xml', content: stateXml.trim() });
+    }
+
+    // 2. ROADMAP.xml — sprint-scoped
+    let roadmapSection = '';
+    for (const p of phases) {
+      if (sprintPhaseIds.includes(p.id)) {
+        // Full detail for sprint phases
+        roadmapSection += `<phase id="${p.id}">\n  <title>${p.title || ''}</title>\n  <goal>${p.goal || ''}</goal>\n  <status>${p.status}</status>\n  <depends>${p.depends || ''}</depends>\n</phase>\n`;
+      } else {
+        // One-liner for non-sprint phases
+        roadmapSection += `${p.id} | ${(p.title || '').slice(0, 60)} | ${p.status}\n`;
       }
+    }
+    sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapSection.trim() });
+
+    // 3. TASK-REGISTRY.xml — open tasks only
+    const allTasks = readTasks(root, baseDir, {});
+    const openTasks = allTasks.filter(t => t.status !== 'done');
+    let tasksSection = '';
+    if (openTasks.length > 0) {
+      let currentTaskPhase = '';
+      for (const t of openTasks) {
+        const taskPhase = t.id ? t.id.split('-')[0] : '';
+        if (taskPhase !== currentTaskPhase) {
+          currentTaskPhase = taskPhase;
+          tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+        }
+        const goalText = (t.goal || '').slice(0, 200);
+        tasksSection += `    <task id="${t.id}" status="${t.status}"><goal>${goalText}</goal></task>\n`;
+      }
+    }
+    const doneCount = allTasks.length - openTasks.length;
+    sections.push({ title: `TASKS (${openTasks.length} open, ${doneCount} done)`, content: tasksSection.trim() || '(no open tasks)' });
+
+    // 4. DECISIONS.xml — only decisions relevant to sprint phases
+    const decisionsXml = readXmlFile(path.join(planDir, 'DECISIONS.xml'));
+    if (decisionsXml) {
+      // Always include gad-04, gad-17, gad-18 (core loop decisions)
+      const ALWAYS_INCLUDE = ['gad-04', 'gad-17', 'gad-18'];
+      const decisionRe = /<decision\s+id="([^"]*)">([\s\S]*?)<\/decision>/g;
+      let dm;
+      let decSection = '';
+      let decCount = 0;
+      let totalDec = 0;
+      while ((dm = decisionRe.exec(decisionsXml)) !== null) {
+        totalDec++;
+        const decId = dm[1];
+        const decInner = dm[2];
+        const titleMatch = decInner.match(/<title>([\s\S]*?)<\/title>/);
+        const title = titleMatch ? titleMatch[1].trim() : '';
+        if (ALWAYS_INCLUDE.includes(decId)) {
+          // Full inline for core decisions
+          decSection += `<decision id="${decId}"><title>${title}</title></decision>\n`;
+          decCount++;
+        } else {
+          // One-liner for others
+          decSection += `${decId}: ${title.slice(0, 80)}\n`;
+          decCount++;
+        }
+      }
+      sections.push({ title: `DECISIONS (${totalDec} total, core inlined)`, content: decSection.trim() });
+    }
+
+    // 5. File refs — recent git log scoped to project path
+    let fileRefs = '';
+    try {
+      const { execSync } = require('child_process');
+      const projectPath = root.path === '.' ? '' : root.path;
+      const gitCmd = projectPath
+        ? `git log --oneline -5 -- "${projectPath}"`
+        : `git log --oneline -5`;
+      const gitLog = execSync(gitCmd, { cwd: baseDir, encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+      if (gitLog) fileRefs += `Recent commits:\n${gitLog}\n`;
+
+      // Files changed in last 3 commits
+      const filesCmd = projectPath
+        ? `git log --name-only --pretty=format: -3 -- "${projectPath}"`
+        : `git log --name-only --pretty=format: -3`;
+      const changedFiles = execSync(filesCmd, { cwd: baseDir, encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+      if (changedFiles) fileRefs += `\nRecently changed files:\n${changedFiles}`;
+    } catch { /* git not available or too few commits */ }
+    if (fileRefs) {
+      sections.push({ title: 'FILE REFS (git)', content: fileRefs.trim() });
+    }
+
+    // 6. DOCS-MAP.xml — full (compact)
+    const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
+    if (docsMapXml) {
+      sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
+    }
+
+    // Output
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify({ project: root.id, mode: 'sprint', sprintIndex: k, sprintPhaseIds, sections: sections.map(s => ({ title: s.title, content: s.content })) }, null, 2));
+      return;
+    }
+
+    console.log(`\nSnapshot (sprint ${k}): ${root.id}  —  phases ${sprintPhaseIds.join(', ')}\n`);
+    for (const s of sections) {
+      console.log(`── ${s.title} ${'─'.repeat(Math.max(0, 60 - s.title.length))}`);
+      console.log(s.content);
       console.log('');
     }
-    console.log(`═══ end snapshot (${allFiles.length} files) ═══`);
+    const totalChars = sections.reduce((sum, s) => sum + s.content.length, 0);
+    console.log(`── end snapshot (~${Math.round(totalChars / 4)} tokens) ──`);
   },
 });
 
@@ -3064,6 +3183,113 @@ const sinkCmd = defineCommand({
 // Root command
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// sprint subcommands
+// ---------------------------------------------------------------------------
+
+function getSprintPhaseIds(phases, sprintSize, sprintIndex) {
+  const start = sprintIndex * sprintSize;
+  return phases.slice(start, start + sprintSize).map(p => p.id);
+}
+
+function getCurrentSprintIndex(phases, sprintSize, currentPhaseId) {
+  const idx = phases.findIndex(p => p.id === currentPhaseId || p.id === String(currentPhaseId).padStart(2, '0'));
+  return idx >= 0 ? Math.floor(idx / sprintSize) : 0;
+}
+
+const sprintShow = defineCommand({
+  meta: { name: 'show', description: 'Show sprint boundaries and phases in each sprint' },
+  args: {
+    projectid: { type: 'string', description: 'Project ID', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    const sprintSize = config.sprintSize || 5;
+
+    for (const root of roots) {
+      const phases = readPhases(root, baseDir);
+      if (phases.length === 0) continue;
+      const totalSprints = Math.ceil(phases.length / sprintSize);
+
+      if (args.json || shouldUseJson()) {
+        const sprints = [];
+        for (let i = 0; i < totalSprints; i++) {
+          const ids = getSprintPhaseIds(phases, sprintSize, i);
+          sprints.push({ sprintIndex: i, phaseIds: ids, phases: phases.filter(p => ids.includes(p.id)).map(p => ({ id: p.id, title: p.title, status: p.status })) });
+        }
+        console.log(JSON.stringify({ project: root.id, sprintSize, sprints }, null, 2));
+      } else {
+        console.log(`\nSprints for ${root.id} (size=${sprintSize}):\n`);
+        for (let i = 0; i < totalSprints; i++) {
+          const ids = getSprintPhaseIds(phases, sprintSize, i);
+          const sprintPhases = phases.filter(p => ids.includes(p.id));
+          console.log(`  Sprint ${i}: phases ${ids.join(', ')}`);
+          for (const p of sprintPhases) {
+            console.log(`    ${p.id}  ${(p.title || '').slice(0, 50)}  [${p.status}]`);
+          }
+        }
+      }
+    }
+  },
+});
+
+const sprintContext = defineCommand({
+  meta: { name: 'context', description: 'Sprint-scoped context window: paths + summary for current sprint' },
+  args: {
+    projectid: { type: 'string', description: 'Project ID', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    const sprintSize = config.sprintSize || 5;
+
+    for (const root of roots) {
+      const phases = readPhases(root, baseDir);
+      const stateContent = readXmlFile(path.join(baseDir, root.path, root.planningDir, 'STATE.xml'));
+      const currentPhase = stateContent ? (stateContent.match(/<current-phase>([\s\S]*?)<\/current-phase>/) || [])[1] || '' : '';
+      const k = getCurrentSprintIndex(phases, sprintSize, currentPhase.trim());
+      const phaseIds = getSprintPhaseIds(phases, sprintSize, k);
+      const sprintPhases = phases.filter(p => phaseIds.includes(p.id));
+      const tasks = readTasks(root, baseDir, {});
+      const sprintTasks = tasks.filter(t => {
+        const taskPhase = t.id ? t.id.split('-')[0] : '';
+        return phaseIds.includes(taskPhase) || phaseIds.includes(taskPhase.padStart(2, '0'));
+      });
+      const openTasks = sprintTasks.filter(t => t.status !== 'done');
+
+      const context = {
+        project: root.id,
+        sprintIndex: k,
+        sprintSize,
+        phaseIds,
+        phases: sprintPhases.map(p => ({ id: p.id, title: p.title, status: p.status })),
+        taskCount: sprintTasks.length,
+        openTaskCount: openTasks.length,
+      };
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify(context, null, 2));
+      } else {
+        console.log(`\nSprint ${k} (${root.id}): phases ${phaseIds.join(', ')}`);
+        for (const p of sprintPhases) {
+          console.log(`  ${p.id}  ${(p.title || '').slice(0, 60)}  [${p.status}]`);
+        }
+        console.log(`\nTasks: ${sprintTasks.length} total, ${openTasks.length} open`);
+      }
+    }
+  },
+});
+
+const sprintCmd = defineCommand({
+  meta: { name: 'sprint', description: 'Sprint management — show boundaries and get sprint context window' },
+  subCommands: { show: sprintShow, context: sprintContext },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -3088,6 +3314,7 @@ const main = defineCommand({
     docs: docsCmd,
     eval: evalCmd,
     snapshot: snapshotCmd,
+    sprint: sprintCmd,
     sink: sinkCmd,
     'migrate-schema': migrateSchema,
   },

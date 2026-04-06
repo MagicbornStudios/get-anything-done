@@ -468,3 +468,6 @@ These are **not proposed changes** — they are quantified options with tradeoff
 | Hook overhead (30-call session) | ~350-1,250 tokens |
 | `TASK-REGISTRY.xml` if loaded | 3,425 tokens — **biggest single planning file** |
 | `requirements.mdx` loaded vs on-demand | 2,529 tokens every session vs ~50 tokens per query via gad |
+| `gad snapshot --full` (get-anything-done) | ~10,674 tokens — raw dump of all planning files |
+| `gad snapshot` (sprint-scoped, default) | ~1,711 tokens — **83% reduction**, open tasks only, done phases collapsed |
+| Sprint context window target | <3,000 tokens — achieved at 1,711 |
