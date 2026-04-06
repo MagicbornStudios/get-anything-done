@@ -2661,7 +2661,37 @@ const snapshotCmd = defineCommand({
       sections.push({ title: 'FILE REFS (git)', content: fileRefs.trim() });
     }
 
-    // 6. DOCS-MAP.xml — full (compact)
+    // 6. Conventions — project-scoped, then global fallback
+    let conventions = '';
+    // a) Project-level CONVENTIONS.md in .planning/
+    const projConventions = readXmlFile(path.join(planDir, 'CONVENTIONS.md'));
+    if (projConventions) {
+      conventions += projConventions.trim();
+    }
+    // b) Project AGENTS.md conventions section (extract if present)
+    const projAgentsMd = readXmlFile(path.join(baseDir, root.path, 'AGENTS.md'));
+    if (projAgentsMd) {
+      // Extract conventions/style sections from AGENTS.md
+      const convMatch = projAgentsMd.match(/##\s*(Conventions|Style|Coding\s+conventions|Code\s+style)[^\n]*\n([\s\S]*?)(?=\n##\s|\n═|$)/i);
+      if (convMatch) {
+        conventions += (conventions ? '\n\n' : '') + `## ${convMatch[1].trim()}\n${convMatch[2].trim()}`;
+      }
+    }
+    // c) Global conventions fallback (root AGENTS.md conventions section)
+    if (!conventions && root.path !== '.') {
+      const rootAgentsMd = readXmlFile(path.join(baseDir, 'AGENTS.md'));
+      if (rootAgentsMd) {
+        const globalConv = rootAgentsMd.match(/##\s*(Conventions|Public site copy)[^\n]*\n([\s\S]*?)(?=\n##\s[A-Z]|\n═|$)/i);
+        if (globalConv) {
+          conventions += `## ${globalConv[1].trim()} (global)\n${globalConv[2].trim()}`;
+        }
+      }
+    }
+    if (conventions) {
+      sections.push({ title: 'CONVENTIONS', content: conventions.trim() });
+    }
+
+    // 7. DOCS-MAP.xml — full (compact)
     const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
     if (docsMapXml) {
       sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
