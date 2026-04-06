@@ -19,7 +19,7 @@ source — source files in `.planning/` are never modified.
 
 1. **Load config:**
    ```bash
-   node "vendor/get-anything-done/get-shit-done/bin/gsd-tools.cjs" config-get planning 2>/dev/null
+   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning 2>/dev/null
    ```
    Also parse `--sink <path>` from `$ARGUMENTS` to override `docs_sink`.
 

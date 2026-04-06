@@ -9,4 +9,4 @@ allowed-tools:
 
 Show the following output to the user verbatim, with no extra commentary:
 
-!`node "vendor/get-anything-done/get-shit-done/bin/gsd-tools.cjs" config-set-model-profile $ARGUMENTS --raw`
+!`node "vendor/get-anything-done/bin/gad-tools.cjs" config-set-model-profile $ARGUMENTS --raw`
