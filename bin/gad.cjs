@@ -2623,8 +2623,12 @@ const snapshotCmd = defineCommand({
         const titleMatch = decInner.match(/<title>([\s\S]*?)<\/title>/);
         const title = titleMatch ? titleMatch[1].trim() : '';
         if (ALWAYS_INCLUDE.includes(decId)) {
-          // Full inline for core decisions
-          decSection += `<decision id="${decId}"><title>${title}</title></decision>\n`;
+          // Full inline for core decisions — title + summary + impact
+          const summaryMatch = decInner.match(/<summary>([\s\S]*?)<\/summary>/);
+          const impactMatch = decInner.match(/<impact>([\s\S]*?)<\/impact>/);
+          const summary = summaryMatch ? summaryMatch[1].trim() : '';
+          const impact = impactMatch ? impactMatch[1].trim() : '';
+          decSection += `<decision id="${decId}">\n  <title>${title}</title>\n  <summary>${summary}</summary>\n  <impact>${impact}</impact>\n</decision>\n`;
           decCount++;
         } else {
           // One-liner for others
