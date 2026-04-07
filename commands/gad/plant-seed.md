@@ -20,9 +20,9 @@ Consumed by: /gad:new-milestone (scans seeds and presents matches)
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/get-shit-done/workflows/plant-seed.md
+@vendor/get-anything-done/workflows/plant-seed.md
 </execution_context>
 
 <process>
-Execute the plant-seed workflow from @vendor/get-anything-done/get-shit-done/workflows/plant-seed.md end-to-end.
+Execute the plant-seed workflow from @vendor/get-anything-done/workflows/plant-seed.md end-to-end.
 </process>

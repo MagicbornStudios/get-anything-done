@@ -354,7 +354,7 @@ const projectsInit = defineCommand({
     fs.mkdirSync(planDir, { recursive: true });
 
     // Create starter files from templates
-    const templateDir = path.join(__dirname, '..', 'get-shit-done', 'templates');
+    const templateDir = path.join(__dirname, '..', 'templates');
     const starters = ['state.md', 'roadmap.md', 'requirements.md', 'project.md'];
     let created = 0;
 

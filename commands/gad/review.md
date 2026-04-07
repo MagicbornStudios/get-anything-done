@@ -19,7 +19,7 @@ planning via /gad:plan-phase --reviews.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/get-shit-done/workflows/review.md
+@vendor/get-anything-done/workflows/review.md
 </execution_context>
 
 <context>
@@ -34,5 +34,5 @@ Phase number: extracted from $ARGUMENTS (required)
 </context>
 
 <process>
-Execute the review workflow from @vendor/get-anything-done/get-shit-done/workflows/review.md end-to-end.
+Execute the review workflow from @vendor/get-anything-done/workflows/review.md end-to-end.
 </process>

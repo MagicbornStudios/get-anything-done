@@ -68,5 +68,5 @@ Removed directories prompt before deletion.
 - Preserve entry order: existing roots first, new roots appended
 - Auto-generated id = dirname of the entry's parent path (e.g., `vendor/my-proj` → `my-proj`)
 - If planning-config.toml doesn't exist, create it from the template at
-  `vendor/get-anything-done/get-shit-done/templates/planning-config.toml`
+  `vendor/get-anything-done/templates/planning-config.toml`
 </rules>

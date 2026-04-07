@@ -31,8 +31,8 @@ Context budget: ~15% orchestrator, 100% fresh per subagent.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/get-shit-done/workflows/execute-phase.md
-@vendor/get-anything-done/get-shit-done/references/ui-brand.md
+@vendor/get-anything-done/workflows/execute-phase.md
+@vendor/get-anything-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -54,6 +54,6 @@ Context files are resolved inside the workflow via `gad-tools init execute-phase
 </context>
 
 <process>
-Execute the execute-phase workflow from @vendor/get-anything-done/get-shit-done/workflows/execute-phase.md end-to-end.
+Execute the execute-phase workflow from @vendor/get-anything-done/workflows/execute-phase.md end-to-end.
 Preserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).
 </process>

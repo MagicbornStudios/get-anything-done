@@ -13,11 +13,11 @@ Output ONLY the reference content below. Do NOT add:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/get-shit-done/workflows/help.md
+@vendor/get-anything-done/workflows/help.md
 </execution_context>
 
 <process>
-Output the complete GAD command reference from @vendor/get-anything-done/get-shit-done/workflows/help.md.
+Output the complete GAD command reference from @vendor/get-anything-done/workflows/help.md.
 Display the reference content directly — no additions or modifications.
 
 Note: GAD commands use the `gad:` prefix. The following commands have been removed from GAD

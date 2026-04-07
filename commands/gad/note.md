@@ -20,8 +20,8 @@ Runs inline — no Task, no AskUserQuestion, no Bash.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/get-shit-done/workflows/note.md
-@vendor/get-anything-done/get-shit-done/references/ui-brand.md
+@vendor/get-anything-done/workflows/note.md
+@vendor/get-anything-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -29,6 +29,6 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the note workflow from @vendor/get-anything-done/get-shit-done/workflows/note.md end-to-end.
+Execute the note workflow from @vendor/get-anything-done/workflows/note.md end-to-end.
 Capture the note, list notes, or promote to todo — depending on arguments.
 </process>
