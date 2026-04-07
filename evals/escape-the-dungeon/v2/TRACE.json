@@ -6,11 +6,11 @@
   "eval_type": "implementation",
   "context_mode": "fresh",
   "timing": {
-    "started": "2026-04-06T23:33:55.433Z",
-    "ended": "2026-04-06T23:46:58.507Z",
-    "duration_minutes": 13,
+    "started": "2026-04-06T21:30:50.000Z",
+    "ended": "2026-04-06T23:47:16.000Z",
+    "duration_minutes": 136,
     "phases_completed": 0,
-    "tasks_completed": 0
+    "tasks_completed": 34
   },
   "gad_commands": [
     {
@@ -70,13 +70,13 @@
     }
   ],
   "planning_quality": {
-    "phases_planned": 0,
-    "tasks_planned": 0,
-    "tasks_completed": 0,
+    "phases_planned": 7,
+    "tasks_planned": 35,
+    "tasks_completed": 34,
     "tasks_blocked": 0,
     "decisions_captured": 0,
     "state_updates": 0,
-    "state_stale_count": 0
+    "state_stale_count": 34
   },
   "cli_efficiency": {
     "total_gad_commands": 1,
@@ -92,8 +92,8 @@
   "scores": {
     "cli_efficiency": 0,
     "skill_accuracy": null,
-    "planning_quality": null,
-    "time_efficiency": 0.9729166666666667,
+    "planning_quality": 0,
+    "time_efficiency": 0.7166666666666667,
     "composite": null
   },
   "human_review": {
@@ -101,5 +101,16 @@
     "notes": null,
     "reviewed_by": null,
     "reviewed_at": null
+  },
+  "reconstructed": true,
+  "reconstructed_at": "2026-04-07T00:24:27.939Z",
+  "git_analysis": {
+    "total_commits": 3,
+    "task_id_commits": 0,
+    "batch_commits": 1,
+    "source_files_created": 18,
+    "state_updates": 0,
+    "decisions_added": 0,
+    "per_task_discipline": 0
   }
 }

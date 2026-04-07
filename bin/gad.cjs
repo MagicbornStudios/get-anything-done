@@ -1797,9 +1797,195 @@ const evalTraceFinalize = defineCommand({
   },
 });
 
+const evalTraceReconstruct = defineCommand({
+  meta: { name: 'reconstruct', description: 'Reconstruct TRACE.json from git history — no agent cooperation needed' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    path: { type: 'string', description: 'Path to eval worktree or project dir', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const { execSync } = require('child_process');
+    const gadDir = path.join(__dirname, '..');
+    const projDir = path.join(gadDir, 'evals', args.project);
+    const evalPath = args.path || path.join(projDir, 'game');
+
+    // Find the latest run version
+    const runs = fs.readdirSync(projDir, { withFileTypes: true })
+      .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+      .sort((a, b) => parseInt(b.name.slice(1)) - parseInt(a.name.slice(1)));
+    if (runs.length === 0) { outputError('No runs found.'); return; }
+    const version = runs[0].name;
+    const traceFile = path.join(projDir, version, 'TRACE.json');
+
+    // Load existing trace as base
+    let trace = {};
+    if (fs.existsSync(traceFile)) {
+      trace = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+    }
+
+    // Get git log for the eval directory — try from GAD repo (submodule) first, then parent
+    let gitLog = '';
+    const gadRepoDir = path.join(__dirname, '..');
+    const evalRelPath = path.relative(gadRepoDir, projDir);
+    try {
+      gitLog = execSync(`git log --all --format="%H|%aI|%s" --name-only -- "${evalRelPath}"`, {
+        cwd: gadRepoDir, encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe']
+      }).trim();
+    } catch { /* try parent repo */ }
+    if (!gitLog) {
+      try {
+        gitLog = execSync(`git log --all --format="%H|%aI|%s" --name-only -- "${path.relative(findRepoRoot(), projDir)}"`, {
+          cwd: findRepoRoot(), encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe']
+        }).trim();
+      } catch { /* no git history */ }
+    }
+
+    if (!gitLog) {
+      console.log('No git history found for this eval project.');
+      return;
+    }
+
+    // Parse commits
+    const commits = [];
+    let currentCommit = null;
+    for (const line of gitLog.split('\n')) {
+      if (line.includes('|')) {
+        const [hash, date, ...msgParts] = line.split('|');
+        currentCommit = { hash, date, message: msgParts.join('|'), files: [] };
+        commits.push(currentCommit);
+      } else if (line.trim() && currentCommit) {
+        currentCommit.files.push(line.trim());
+      }
+    }
+
+    // Analyze planning doc changes
+    let phasesCompleted = 0;
+    let tasksCompleted = 0;
+    let stateUpdates = 0;
+    let decisionsAdded = 0;
+    const taskIds = [];
+
+    // Read current planning state to count completed work
+    const templatePlanDir = path.join(projDir, 'template', '.planning');
+    const taskRegXml = readXmlFile(path.join(templatePlanDir, 'TASK-REGISTRY.xml'));
+    if (taskRegXml) {
+      const doneMatches = taskRegXml.match(/status="done"/g);
+      const inProgressMatches = taskRegXml.match(/status="in-progress"/g);
+      tasksCompleted = doneMatches ? doneMatches.length : 0;
+      const taskIdMatches = taskRegXml.match(/id="([^"]+)"/g);
+      if (taskIdMatches) {
+        for (const m of taskIdMatches) {
+          const id = m.match(/id="([^"]+)"/)[1];
+          if (id && !id.startsWith('0')) taskIds.push(id); // skip phase ids
+        }
+      }
+    }
+
+    const roadmapXml = readXmlFile(path.join(templatePlanDir, 'ROADMAP.xml'));
+    if (roadmapXml) {
+      const donePhases = roadmapXml.match(/status="done"/g) || roadmapXml.match(/status="complete"/g);
+      phasesCompleted = donePhases ? donePhases.length : 0;
+    }
+
+    const decisionsXml = readXmlFile(path.join(templatePlanDir, 'DECISIONS.xml'));
+    if (decisionsXml) {
+      const decMatches = decisionsXml.match(/<decision\s/g);
+      decisionsAdded = decMatches ? decMatches.length : 0;
+    }
+
+    // Count state updates from commits touching STATE.xml
+    stateUpdates = commits.filter(c => c.files.some(f => f.includes('STATE.xml') || f.includes('STATE.md'))).length;
+
+    // Detect task-per-commit discipline
+    const taskCommits = commits.filter(c => /\d+-\d+/.test(c.message));
+    const batchCommits = commits.filter(c => !(/\d+-\d+/.test(c.message)) && c.files.length > 3);
+
+    // Timing from git
+    const timestamps = commits.map(c => new Date(c.date).getTime()).filter(t => !isNaN(t));
+    const started = timestamps.length > 0 ? new Date(Math.min(...timestamps)).toISOString() : trace.timing?.started;
+    const ended = timestamps.length > 0 ? new Date(Math.max(...timestamps)).toISOString() : trace.timing?.ended;
+    const durationMin = started && ended ? Math.round((new Date(ended).getTime() - new Date(started).getTime()) / 60000) : null;
+
+    // Count source files created
+    const sourceFiles = new Set();
+    for (const c of commits) {
+      for (const f of c.files) {
+        if (f.includes('/src/') || f.includes('/game/')) sourceFiles.add(f);
+      }
+    }
+
+    // Build reconstructed trace
+    const reconstructed = {
+      ...trace,
+      eval: args.project,
+      version,
+      eval_type: 'implementation',
+      reconstructed: true,
+      reconstructed_at: new Date().toISOString(),
+      timing: {
+        started: started || trace.timing?.started,
+        ended: ended || trace.timing?.ended,
+        duration_minutes: durationMin,
+        phases_completed: phasesCompleted,
+        tasks_completed: tasksCompleted,
+      },
+      git_analysis: {
+        total_commits: commits.length,
+        task_id_commits: taskCommits.length,
+        batch_commits: batchCommits.length,
+        source_files_created: sourceFiles.size,
+        state_updates: stateUpdates,
+        decisions_added: decisionsAdded,
+        per_task_discipline: taskCommits.length > 0 ? (taskCommits.length / Math.max(tasksCompleted, 1)) : 0,
+      },
+      planning_quality: {
+        phases_planned: roadmapXml ? (roadmapXml.match(/<phase/g) || []).length : 0,
+        tasks_planned: taskRegXml ? (taskRegXml.match(/<task/g) || []).length : 0,
+        tasks_completed: tasksCompleted,
+        tasks_blocked: 0,
+        decisions_captured: decisionsAdded,
+        state_updates: stateUpdates,
+        state_stale_count: Math.max(0, tasksCompleted - stateUpdates),
+      },
+    };
+
+    // Compute planning quality score
+    const pq = reconstructed.planning_quality;
+    if (pq.tasks_planned > 0) {
+      const taskRatio = pq.tasks_completed / pq.tasks_planned;
+      const stalePenalty = pq.state_updates > 0 ? (1 - pq.state_stale_count / Math.max(pq.state_updates + pq.state_stale_count, 1)) : 0;
+      reconstructed.scores = reconstructed.scores || {};
+      reconstructed.scores.planning_quality = taskRatio * stalePenalty;
+    }
+
+    // Time efficiency
+    if (durationMin != null) {
+      reconstructed.scores = reconstructed.scores || {};
+      reconstructed.scores.time_efficiency = Math.max(0, Math.min(1, 1 - (durationMin / 480)));
+    }
+
+    fs.writeFileSync(traceFile, JSON.stringify(reconstructed, null, 2));
+
+    console.log(`\n✓ Trace reconstructed: evals/${args.project}/${version}/TRACE.json`);
+    console.log(`\n  Git commits analyzed:  ${commits.length}`);
+    console.log(`  Phases completed:      ${phasesCompleted}`);
+    console.log(`  Tasks completed:       ${tasksCompleted}`);
+    console.log(`  Task-id commits:       ${taskCommits.length} / ${commits.length}`);
+    console.log(`  State updates:         ${stateUpdates}`);
+    console.log(`  Decisions captured:    ${decisionsAdded}`);
+    console.log(`  Source files created:  ${sourceFiles.size}`);
+    console.log(`  Per-task discipline:   ${reconstructed.git_analysis.per_task_discipline.toFixed(2)}`);
+    console.log(`  Duration:              ${durationMin} min`);
+    if (reconstructed.scores?.planning_quality != null) {
+      console.log(`  Planning quality:      ${reconstructed.scores.planning_quality.toFixed(3)}`);
+    }
+  },
+});
+
 const evalTraceCmd = defineCommand({
   meta: { name: 'trace', description: 'Inspect and compare eval traces (TRACE.json)' },
-  subCommands: { list: evalTraceList, show: evalTraceShow, diff: evalTraceDiff, report: evalTraceReport, write: evalTraceWrite, init: evalTraceInit, 'log-cmd': evalTraceLogCmd, 'log-skill': evalTraceLogSkill, finalize: evalTraceFinalize },
+  subCommands: { list: evalTraceList, show: evalTraceShow, diff: evalTraceDiff, report: evalTraceReport, write: evalTraceWrite, init: evalTraceInit, 'log-cmd': evalTraceLogCmd, 'log-skill': evalTraceLogSkill, finalize: evalTraceFinalize, reconstruct: evalTraceReconstruct },
 });
 
 // eval status — projects with coverage gaps
