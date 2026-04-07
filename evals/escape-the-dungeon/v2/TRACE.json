@@ -7,8 +7,8 @@
   "context_mode": "fresh",
   "timing": {
     "started": "2026-04-06T21:30:50.000Z",
-    "ended": "2026-04-06T23:47:16.000Z",
-    "duration_minutes": 136,
+    "ended": "2026-04-07T00:25:05.000Z",
+    "duration_minutes": 174,
     "phases_completed": 0,
     "tasks_completed": 34
   },
@@ -86,15 +86,41 @@
     "token_reduction_vs_manual": 0
   },
   "skill_accuracy": {
-    "expected_triggers": [],
-    "accuracy": null
+    "expected_triggers": [
+      {
+        "skill": "/gad:plan-phase",
+        "when": "before implementation",
+        "triggered": true
+      },
+      {
+        "skill": "/gad:execute-phase",
+        "when": "per phase",
+        "triggered": true
+      },
+      {
+        "skill": "/gad:task-checkpoint",
+        "when": "between tasks",
+        "triggered": true
+      },
+      {
+        "skill": "/gad:auto-conventions",
+        "when": "after first code phase",
+        "triggered": false
+      },
+      {
+        "skill": "/gad:verify-work",
+        "when": "after phase completion",
+        "triggered": false
+      }
+    ],
+    "accuracy": 0.6
   },
   "scores": {
     "cli_efficiency": 0,
-    "skill_accuracy": null,
+    "skill_accuracy": 0.6,
     "planning_quality": 0,
-    "time_efficiency": 0.7166666666666667,
-    "composite": null
+    "time_efficiency": 0.6375,
+    "composite": 0.28485294117647053
   },
   "human_review": {
     "score": null,
@@ -103,14 +129,14 @@
     "reviewed_at": null
   },
   "reconstructed": true,
-  "reconstructed_at": "2026-04-07T00:24:27.939Z",
+  "reconstructed_at": "2026-04-07T00:29:54.492Z",
   "git_analysis": {
-    "total_commits": 3,
-    "task_id_commits": 0,
+    "total_commits": 4,
+    "task_id_commits": 1,
     "batch_commits": 1,
     "source_files_created": 18,
     "state_updates": 0,
     "decisions_added": 0,
-    "per_task_discipline": 0
+    "per_task_discipline": 0.029411764705882353
   }
 }
