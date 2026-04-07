@@ -1,0 +1,26 @@
+{
+  "created": "2026-04-07T03:42:09.559Z",
+  "projects": [
+    {
+      "project": "escape-the-dungeon",
+      "version": "v4",
+      "chars": 18315,
+      "tokens": 4579,
+      "file": "escape-the-dungeon-v4.md"
+    },
+    {
+      "project": "portfolio-bare",
+      "version": "v3",
+      "chars": 5263,
+      "tokens": 1316,
+      "file": "portfolio-bare-v3.md"
+    },
+    {
+      "project": "reader-workspace",
+      "version": "v2",
+      "chars": 38133,
+      "tokens": 9534,
+      "file": "reader-workspace-v2.md"
+    }
+  ]
+}

@@ -12,6 +12,21 @@
 6. **Commit** with a message referencing the task id (e.g. "feat: 01-02 implement reading store")
 7. **Repeat** from step 1
 
+## After completing each phase (all tasks done)
+
+**Verify the phase before moving on.** Write `.planning/VERIFICATION.md` (append each phase):
+
+```markdown
+## Phase [X]: [Name]
+- Build: PASS/FAIL (run the build command)
+- Tasks: [N]/[N] done
+- State: current (next-action points to next phase)
+```
+
+Then commit: `git commit -m "verify: phase [X] verified"`
+
+This is mandatory -- your skill accuracy score depends on it.
+
 ## Before you start coding
 
 1. Read `.planning/REQUIREMENTS.xml` -- the full feature spec (51 success criteria)

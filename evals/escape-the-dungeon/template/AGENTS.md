@@ -13,6 +13,21 @@
 7. **Commit** with a message referencing the task id (e.g. "feat: 02-03 render floor map")
 8. **Repeat** from step 2
 
+## After completing each phase (all tasks done)
+
+**Verify the phase before moving on.** Write `.planning/VERIFICATION.md` (append each phase):
+
+```markdown
+## Phase [X]: [Name]
+- Build: PASS/FAIL (run the build command)
+- Tasks: [N]/[N] done
+- State: current (next-action points to next phase)
+```
+
+Then commit: `git commit -m "verify: phase [X] verified"`
+
+This is mandatory — your skill accuracy score depends on it.
+
 ## Before you start coding
 
 You MUST do these first:

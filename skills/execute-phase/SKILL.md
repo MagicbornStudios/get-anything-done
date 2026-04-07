@@ -104,6 +104,17 @@ Read the `definition-of-done` field from KICKOFF.md. For each criterion:
 
 **If DoD passes:**
 
+0. Write or append to `.planning/VERIFICATION.md`:
+
+```markdown
+## Phase <phase-id>: <name>
+- Build: PASS (exit 0)
+- Tasks: N/N done
+- State: current
+```
+
+Commit: `git commit -m "verify: phase <phase-id> verified"`
+
 1. Write a brief SUMMARY.md in `.planning/phases/<phase-id>/SUMMARY.md`:
 
 ```markdown

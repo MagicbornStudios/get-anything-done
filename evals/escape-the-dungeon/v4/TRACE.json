@@ -1,0 +1,34 @@
+{
+  "eval": "escape-the-dungeon",
+  "version": "v4",
+  "date": "2026-04-07",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "timing": {
+    "started": "2026-04-07T03:42:00.000Z",
+    "ended": "2026-04-07T04:20:00.000Z",
+    "duration_minutes": 38,
+    "phases_completed": 10,
+    "tasks_completed": 19
+  },
+  "token_usage": { "total_tokens": 136930, "tool_uses": 189 },
+  "git_analysis": {
+    "total_commits": 19, "task_id_commits": 19, "batch_commits": 2,
+    "source_files_created": 20, "state_updates": 19, "decisions_added": 0,
+    "per_task_discipline": 0.89
+  },
+  "planning_quality": {
+    "phases_planned": 10, "tasks_planned": 19, "tasks_completed": 19,
+    "tasks_blocked": 0, "decisions_captured": 0, "state_updates": 19, "state_stale_count": 0
+  },
+  "requirement_coverage": {
+    "total_criteria": 12, "fully_met": 12, "partially_met": 0, "not_met": 0,
+    "coverage_ratio": 1.0
+  },
+  "scores": {
+    "requirement_coverage": 1.0, "planning_quality": 1.0, "skill_accuracy": 0.80,
+    "time_efficiency": 0.92, "per_task_discipline": 0.89, "composite": 0.916
+  },
+  "notes": "All 12 success criteria met. 20 source files, full content pack with 12 floors. 2 batched commits (04-02/04-03 and 03-03/03-04). Massive improvement over v2 (0.285 composite)."
+}

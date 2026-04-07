@@ -128,8 +128,10 @@ function logCall(overrides = {}) {
 }
 
 // Log on exit (captures all commands including failures)
+// Only log if this is actually a gad CLI invocation (not a hook subprocess)
+const _isGadCli = process.argv[1] && path.basename(process.argv[1]) === 'gad.cjs';
 process.on('exit', (code) => {
-  logCall({ exit: code });
+  if (_isGadCli) logCall({ exit: code });
 });
 
 /** List available eval projects and suggest rerun hint. */
@@ -1284,9 +1286,14 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   sections.push(`\n## Instructions\n`);
   sections.push(`1. Copy the .planning/ directory from the template into your working directory`);
   sections.push(`2. Implement the project following the ROADMAP.xml phases`);
-  sections.push(`3. For EACH task: update TASK-REGISTRY.xml, update STATE.xml, commit with task ID`);
+  sections.push(`3. For EACH task: update TASK-REGISTRY.xml, update STATE.xml, commit with task ID — one commit per task, not per phase`);
   sections.push(`4. Follow CONVENTIONS.md patterns and DECISIONS.xml architecture`);
-  sections.push(`5. When complete: all phases done, build passes, planning docs current`);
+  sections.push(`5. After EACH phase completes: write/append to .planning/VERIFICATION.md (build result, task count, state check), commit with "verify: phase X verified"`);
+  sections.push(`6. When complete: all phases done, build passes, planning docs current`);
+  sections.push(`\n## Logging\n`);
+  sections.push(`Set GAD_LOG_DIR to your eval run directory before running gad commands.`);
+  sections.push(`All gad CLI calls and tool uses will be logged to JSONL files for eval tracing.`);
+  sections.push(`\`\`\`sh\nexport GAD_LOG_DIR=<eval-run-dir>/.gad-log\n\`\`\``);
 
   return sections.join('\n\n');
 }
@@ -2153,19 +2160,39 @@ const evalTraceReconstruct = defineCommand({
       },
     };
 
-    // Infer skill triggers from artifacts
-    const conventionsExists = fs.existsSync(path.join(templatePlanDir, 'CONVENTIONS.md'));
+    // Infer skill triggers from artifacts — expanded to cover all detectable skills
     const hasPhaseGoals = roadmapXml && (roadmapXml.match(/<goal>/g) || []).length > 0;
     const hasDoneTasks = tasksCompleted > 0;
     const hasPerTaskCommits = taskCommits.length > 0;
+    const conventionsExists = fs.existsSync(path.join(templatePlanDir, 'CONVENTIONS.md'));
+    const verificationExists = fs.existsSync(path.join(templatePlanDir, 'VERIFICATION.md'));
+    const verifyCommits = commits.filter(c => /^verify:/i.test(c));
+    const hasVerification = verificationExists || verifyCommits.length > 0;
+    const evalDecisions = readXmlFile(path.join(templatePlanDir, 'DECISIONS.xml'));
+    const hasDecisions = evalDecisions && (evalDecisions.match(/<decision /g) || []).length > 0;
+    const hasMultiplePhases = roadmapXml && (roadmapXml.match(/<phase /g) || []).length > 1;
+    const evalState = readXmlFile(path.join(templatePlanDir, 'STATE.xml'));
+    const hasStateNextAction = evalState && /<next-action>[^<]+<\/next-action>/.test(evalState);
+    const hasPhaseDoneInRoadmap = roadmapXml && /<status>done<\/status>/.test(roadmapXml);
+    const evalTaskReg = readXmlFile(path.join(templatePlanDir, 'TASK-REGISTRY.xml'));
+    const hasInProgressToDone = evalTaskReg && /status="done"/.test(evalTaskReg);
 
+    // Skill trigger map: skill → artifact/signal that proves it fired
     reconstructed.skill_accuracy = {
       expected_triggers: [
-        { skill: '/gad:plan-phase', when: 'before implementation', triggered: hasPhaseGoals },
-        { skill: '/gad:execute-phase', when: 'per phase', triggered: hasDoneTasks },
-        { skill: '/gad:task-checkpoint', when: 'between tasks', triggered: hasPerTaskCommits },
-        { skill: '/gad:auto-conventions', when: 'after first code phase', triggered: conventionsExists },
-        { skill: '/gad:verify-work', when: 'after phase completion', triggered: false }, // can't infer from git alone
+        // Core loop skills (always expected)
+        { skill: '/gad:plan-phase', when: 'before implementation', triggered: hasPhaseGoals, evidence: 'ROADMAP.xml has <goal> elements' },
+        { skill: '/gad:execute-phase', when: 'per phase', triggered: hasDoneTasks, evidence: 'tasks marked done in TASK-REGISTRY.xml' },
+        { skill: '/gad:task-checkpoint', when: 'between tasks', triggered: hasPerTaskCommits, evidence: 'commits reference task IDs' },
+        { skill: '/gad:verify-work', when: 'after phase completion', triggered: hasVerification, evidence: 'VERIFICATION.md exists or verify: commits found' },
+        { skill: '/gad:auto-conventions', when: 'after first code phase', triggered: conventionsExists, evidence: 'CONVENTIONS.md exists' },
+        // State management skills
+        { skill: '/gad:check-todos', when: 'session start or between phases', triggered: hasStateNextAction, evidence: 'STATE.xml has non-empty next-action' },
+        // Planning quality skills
+        { skill: 'decisions-captured', when: 'during implementation', triggered: hasDecisions, evidence: 'DECISIONS.xml has <decision> entries' },
+        { skill: 'multi-phase-planning', when: 'before execution', triggered: hasMultiplePhases, evidence: 'ROADMAP.xml has >1 phase' },
+        { skill: 'phase-completion', when: 'during execution', triggered: hasPhaseDoneInRoadmap, evidence: 'at least one phase marked done in ROADMAP.xml' },
+        { skill: 'task-lifecycle', when: 'per task', triggered: hasInProgressToDone, evidence: 'tasks transition from planned to done in TASK-REGISTRY.xml' },
       ],
       accuracy: null,
     };
@@ -2214,9 +2241,135 @@ const evalTraceReconstruct = defineCommand({
   },
 });
 
+// trace from-log — build TRACE.json from actual JSONL call logs (definitive, not reconstructed)
+const evalTraceFromLog = defineCommand({
+  meta: { name: 'from-log', description: 'Build TRACE.json from actual JSONL call logs (definitive, not git-reconstructed)' },
+  args: {
+    project: { type: 'string', description: 'Eval project name', default: '' },
+    version: { type: 'string', description: 'Version (default: latest)', default: '' },
+  },
+  run({ args }) {
+    if (!args.project) { listEvalProjectsHint(); return; }
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+    const projectDir = path.join(evalsDir, args.project);
+
+    if (!fs.existsSync(projectDir)) {
+      outputError(`Eval project '${args.project}' not found.`);
+    }
+
+    const versions = fs.readdirSync(projectDir)
+      .filter(n => /^v\d+$/.test(n))
+      .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+    const version = args.version || versions[versions.length - 1];
+    if (!version) { outputError('No eval runs found.'); }
+
+    const runDir = path.join(projectDir, version);
+    const logDir = path.join(runDir, '.gad-log');
+
+    if (!fs.existsSync(logDir)) {
+      // Also check for logs at .planning/.gad-log that might be from this eval period
+      console.log(`No .gad-log/ directory in ${version}. Set GAD_LOG_DIR during eval runs.`);
+      console.log(`Falling back to git-based reconstruction: gad eval trace reconstruct --project ${args.project}`);
+      return;
+    }
+
+    // Read all JSONL files from the log dir
+    const logFiles = fs.readdirSync(logDir).filter(f => f.endsWith('.jsonl')).sort();
+    const entries = [];
+    for (const f of logFiles) {
+      const lines = fs.readFileSync(path.join(logDir, f), 'utf8').trim().split('\n').filter(Boolean);
+      for (const line of lines) {
+        try { entries.push(JSON.parse(line)); } catch {}
+      }
+    }
+
+    if (entries.length === 0) {
+      console.log('Log files exist but contain no entries.');
+      return;
+    }
+
+    // Analyze the log entries
+    const gadCommands = entries.filter(e => e.cmd || e.gad_command);
+    const toolCalls = entries.filter(e => e.type === 'tool_call');
+    const skillTriggers = entries.filter(e => e.skill);
+    const agentSpawns = entries.filter(e => e.tool === 'Agent');
+    const bashCalls = entries.filter(e => e.tool === 'Bash');
+    const readCalls = entries.filter(e => e.tool === 'Read');
+    const writeCalls = entries.filter(e => e.tool === 'Write');
+    const editCalls = entries.filter(e => e.tool === 'Edit');
+
+    // Time range
+    const timestamps = entries.map(e => new Date(e.ts).getTime()).filter(t => !isNaN(t));
+    const startTime = timestamps.length > 0 ? new Date(Math.min(...timestamps)).toISOString() : null;
+    const endTime = timestamps.length > 0 ? new Date(Math.max(...timestamps)).toISOString() : null;
+    const durationMin = startTime && endTime ? Math.round((new Date(endTime) - new Date(startTime)) / 60000) : null;
+
+    // Detect gad commands used
+    const gadCmdList = [];
+    for (const e of entries) {
+      const cmd = e.gad_command || e.cmd;
+      if (cmd && (cmd.includes('snapshot') || cmd.includes('state') || cmd.includes('tasks') ||
+          cmd.includes('phases') || cmd.includes('decisions') || cmd.includes('eval') ||
+          cmd.includes('sprint') || cmd.includes('verify'))) {
+        gadCmdList.push({ cmd, at: e.ts, duration_ms: e.duration_ms || 0 });
+      }
+    }
+
+    const trace = {
+      eval: args.project,
+      version,
+      date: new Date().toISOString().slice(0, 10),
+      gad_version: pkg.version,
+      source: 'call-log',  // distinguishes from 'git-reconstructed'
+      timing: {
+        started: startTime,
+        ended: endTime,
+        duration_minutes: durationMin,
+      },
+      log_stats: {
+        total_entries: entries.length,
+        gad_cli_calls: gadCommands.length,
+        tool_calls: toolCalls.length,
+        skill_triggers: skillTriggers.length,
+        agent_spawns: agentSpawns.length,
+        bash_calls: bashCalls.length,
+        read_calls: readCalls.length,
+        write_calls: writeCalls.length,
+        edit_calls: editCalls.length,
+      },
+      gad_commands: gadCmdList.slice(0, 50),
+      skill_triggers: skillTriggers.map(e => ({
+        skill: e.skill,
+        args: e.skill_args || '',
+        at: e.ts,
+      })),
+      agent_spawns: agentSpawns.map(e => ({
+        type: e.agent_type,
+        description: e.agent_description,
+        background: e.agent_background,
+        isolated: e.agent_isolated,
+        at: e.ts,
+      })),
+    };
+
+    const traceFile = path.join(runDir, 'TRACE.json');
+    fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
+
+    console.log(`\n✓ Trace built from logs: evals/${args.project}/${version}/TRACE.json`);
+    console.log(`\n  Source:            call-log (${logFiles.length} file(s), ${entries.length} entries)`);
+    console.log(`  Duration:          ${durationMin} min`);
+    console.log(`  GAD CLI calls:     ${gadCommands.length}`);
+    console.log(`  Tool calls:        ${toolCalls.length}`);
+    console.log(`  Skill triggers:    ${skillTriggers.length}`);
+    console.log(`  Agent spawns:      ${agentSpawns.length}`);
+    console.log(`  Bash/Read/Write:   ${bashCalls.length}/${readCalls.length}/${writeCalls.length}`);
+  },
+});
+
 const evalTraceCmd = defineCommand({
   meta: { name: 'trace', description: 'Inspect and compare eval traces (TRACE.json)' },
-  subCommands: { list: evalTraceList, show: evalTraceShow, diff: evalTraceDiff, report: evalTraceReport, write: evalTraceWrite, init: evalTraceInit, 'log-cmd': evalTraceLogCmd, 'log-skill': evalTraceLogSkill, finalize: evalTraceFinalize, reconstruct: evalTraceReconstruct },
+  subCommands: { list: evalTraceList, show: evalTraceShow, diff: evalTraceDiff, report: evalTraceReport, write: evalTraceWrite, init: evalTraceInit, 'log-cmd': evalTraceLogCmd, 'log-skill': evalTraceLogSkill, finalize: evalTraceFinalize, reconstruct: evalTraceReconstruct, 'from-log': evalTraceFromLog },
 });
 
 // eval status — projects with coverage gaps
@@ -4042,6 +4195,7 @@ const logShow = defineCommand({
     n: { type: 'string', description: 'Number of entries to show (default: 20)', default: '20' },
     date: { type: 'string', description: 'Date to show (YYYY-MM-DD, default: today)', default: '' },
     eval: { type: 'string', description: 'Show logs from an eval run directory', default: '' },
+    filter: { type: 'string', description: 'Filter: cli, tool, gad, skill, agent (default: all)', default: '' },
   },
   run({ args }) {
     let logDir;
@@ -4081,18 +4235,43 @@ const logShow = defineCommand({
     }
 
     const lines = fs.readFileSync(logFile, 'utf8').trim().split('\n').filter(Boolean);
+    let allEntries = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+
+    // Apply filter
+    const filter = args.filter;
+    if (filter === 'cli') allEntries = allEntries.filter(e => e.cmd);
+    else if (filter === 'tool') allEntries = allEntries.filter(e => e.type === 'tool_call');
+    else if (filter === 'gad') allEntries = allEntries.filter(e => e.gad_command || (e.cmd && !e.type));
+    else if (filter === 'skill') allEntries = allEntries.filter(e => e.skill);
+    else if (filter === 'agent') allEntries = allEntries.filter(e => e.tool === 'Agent');
+
     const n = parseInt(args.n) || 20;
-    const entries = lines.slice(-n).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    const entries = allEntries.slice(-n);
 
     for (const e of entries) {
       const time = e.ts ? e.ts.slice(11, 19) : '?';
-      const dur = e.duration_ms != null ? `${e.duration_ms}ms` : '?';
-      const exit = e.exit || 0;
-      const mark = exit === 0 ? '✓' : '✗';
-      console.log(`  ${mark} ${time}  ${dur.padStart(7)}  gad ${e.cmd}`);
-      if (e.summary) console.log(`    ${e.summary}`);
+
+      if (e.type === 'tool_call') {
+        // Tool call from PostToolUse hook
+        const tool = (e.tool || '?').padEnd(6);
+        const summary = e.gad_command ? `gad ${e.gad_command}` :
+                        e.skill ? `skill:${e.skill}` :
+                        e.agent_type ? `agent:${e.agent_type} ${e.agent_description || ''}` :
+                        (e.input_summary || '').slice(0, 80);
+        console.log(`  ◆ ${time}  ${tool}  ${summary}`);
+      } else if (e.cmd) {
+        // GAD CLI call
+        const dur = e.duration_ms != null ? `${e.duration_ms}ms` : '?';
+        const exit = e.exit || 0;
+        const mark = exit === 0 ? '✓' : '✗';
+        console.log(`  ${mark} ${time}  ${dur.padStart(7)}  gad ${e.cmd}`);
+        if (e.summary) console.log(`    ${e.summary}`);
+      }
     }
-    console.log(`\n${entries.length} entries (${logFile})`);
+
+    const cliCalls = entries.filter(e => e.cmd);
+    const toolCalls = entries.filter(e => e.type === 'tool_call');
+    console.log(`\n${entries.length} entries (${cliCalls.length} CLI, ${toolCalls.length} tool) — ${logFile}`);
   },
 });
 
@@ -4112,37 +4291,57 @@ const logStats = defineCommand({
     const files = fs.readdirSync(logDir).filter(f => f.endsWith('.jsonl')).sort().slice(-days);
 
     const cmdCounts = {};
-    let totalCalls = 0;
+    const toolCounts = {};
+    let cliCalls = 0;
+    let toolCalls = 0;
     let totalDuration = 0;
     let failures = 0;
+    let skillTriggers = 0;
+    let agentSpawns = 0;
 
     for (const f of files) {
       const lines = fs.readFileSync(path.join(logDir, f), 'utf8').trim().split('\n').filter(Boolean);
       for (const line of lines) {
         try {
           const e = JSON.parse(line);
-          totalCalls++;
-          totalDuration += e.duration_ms || 0;
-          if (e.exit && e.exit !== 0) failures++;
-          // Extract base command (first 2 args)
-          const parts = (e.cmd || '').split(' ');
-          const key = parts.slice(0, 2).join(' ');
-          cmdCounts[key] = (cmdCounts[key] || 0) + 1;
+          if (e.type === 'tool_call') {
+            toolCalls++;
+            toolCounts[e.tool] = (toolCounts[e.tool] || 0) + 1;
+            if (e.skill) skillTriggers++;
+            if (e.tool === 'Agent') agentSpawns++;
+          } else if (e.cmd) {
+            cliCalls++;
+            totalDuration += e.duration_ms || 0;
+            if (e.exit && e.exit !== 0) failures++;
+            const parts = (e.cmd || '').split(' ');
+            const key = parts.slice(0, 2).join(' ');
+            cmdCounts[key] = (cmdCounts[key] || 0) + 1;
+          }
         } catch {}
       }
     }
 
-    console.log(`\nGAD CLI Usage (last ${files.length} day(s))\n`);
-    console.log(`  Total calls:    ${totalCalls}`);
-    console.log(`  Total duration: ${(totalDuration / 1000).toFixed(1)}s`);
-    console.log(`  Failures:       ${failures}`);
-    console.log(`  Avg duration:   ${totalCalls > 0 ? Math.round(totalDuration / totalCalls) : 0}ms`);
+    console.log(`\nGAD Usage (last ${files.length} day(s))\n`);
+    console.log(`  CLI calls:      ${cliCalls}`);
+    console.log(`  Tool calls:     ${toolCalls}`);
+    console.log(`  Skill triggers: ${skillTriggers}`);
+    console.log(`  Agent spawns:   ${agentSpawns}`);
+    console.log(`  CLI failures:   ${failures}`);
+    console.log(`  CLI duration:   ${(totalDuration / 1000).toFixed(1)}s (avg ${cliCalls > 0 ? Math.round(totalDuration / cliCalls) : 0}ms)`);
 
-    const sorted = Object.entries(cmdCounts).sort((a, b) => b[1] - a[1]);
-    if (sorted.length > 0) {
-      console.log(`\n  Top commands:`);
-      for (const [cmd, count] of sorted.slice(0, 15)) {
+    const sortedCmd = Object.entries(cmdCounts).sort((a, b) => b[1] - a[1]);
+    if (sortedCmd.length > 0) {
+      console.log(`\n  Top GAD commands:`);
+      for (const [cmd, count] of sortedCmd.slice(0, 10)) {
         console.log(`    ${String(count).padStart(4)}×  gad ${cmd}`);
+      }
+    }
+
+    const sortedTool = Object.entries(toolCounts).sort((a, b) => b[1] - a[1]);
+    if (sortedTool.length > 0) {
+      console.log(`\n  Tool call breakdown:`);
+      for (const [tool, count] of sortedTool) {
+        console.log(`    ${String(count).padStart(4)}×  ${tool}`);
       }
     }
   },

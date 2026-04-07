@@ -1,0 +1,23 @@
+{
+  "eval": "portfolio-bare",
+  "version": "v4",
+  "date": "2026-04-07",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "timing": { "started": "2026-04-07T07:00:00.000Z", "ended": "2026-04-07T07:12:00.000Z", "duration_minutes": 12, "phases_completed": 5, "tasks_completed": 12 },
+  "token_usage": { "total_tokens": 78550, "tool_uses": 119 },
+  "git_analysis": { "total_commits": 19, "task_id_commits": 12, "batch_commits": 0, "source_files_created": 15, "state_updates": 12, "decisions_added": 3, "per_task_discipline": 1.0, "verify_commits": 5, "conventions_created": true },
+  "planning_quality": { "phases_planned": 5, "tasks_planned": 13, "tasks_completed": 13, "tasks_blocked": 0, "decisions_captured": 3, "state_updates": 12, "state_stale_count": 0 },
+  "skill_accuracy": {
+    "expected_triggers": [
+      { "skill": "/gad:plan-phase", "when": "before implementation", "triggered": true },
+      { "skill": "/gad:execute-phase", "when": "per phase", "triggered": true },
+      { "skill": "/gad:task-checkpoint", "when": "between tasks", "triggered": true },
+      { "skill": "/gad:auto-conventions", "when": "after first code phase", "triggered": true },
+      { "skill": "/gad:verify-work", "when": "after phase completion", "triggered": true }
+    ],
+    "accuracy": 1.0
+  },
+  "scores": { "planning_quality": 1.0, "skill_accuracy": 1.0, "time_efficiency": 0.975, "per_task_discipline": 1.0, "composite": 0.994 }
+}

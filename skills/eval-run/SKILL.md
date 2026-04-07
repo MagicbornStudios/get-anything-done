@@ -1,6 +1,6 @@
 ---
 name: gad:eval-run
-description: Run a GAD evaluation against a bare project. Use this skill when working inside a portfolio-bare (or any eval template) directory. Guides the agent through declaring context mode, planning phases from requirements, executing tasks, and writing the trace at the end. Triggers on: AGENTS.md with eval language, directory has planning-config.toml with [eval] section, user says "run the eval" or "start an eval session", or the project has only .planning/ docs and no application code.
+description: Run a GAD evaluation against a bare project with context mode, planning, execution, and trace output
 ---
 
 # gad:eval-run

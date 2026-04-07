@@ -1,0 +1,13 @@
+{
+  "eval": "portfolio-bare",
+  "version": "v3",
+  "date": "2026-04-07",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "timing": { "started": "2026-04-07T03:42:00.000Z", "ended": "2026-04-07T04:06:00.000Z", "duration_minutes": 24, "phases_completed": 5, "tasks_completed": 12 },
+  "token_usage": { "total_tokens": 90181, "tool_uses": 140 },
+  "git_analysis": { "total_commits": 13, "task_id_commits": 12, "batch_commits": 1, "source_files_created": 15, "state_updates": 12, "decisions_added": 0, "per_task_discipline": 1.0 },
+  "planning_quality": { "phases_planned": 5, "tasks_planned": 12, "tasks_completed": 12, "tasks_blocked": 0, "decisions_captured": 0, "state_updates": 12, "state_stale_count": 0 },
+  "scores": { "planning_quality": 1.0, "skill_accuracy": 0.80, "time_efficiency": 0.95, "per_task_discipline": 1.0, "composite": 0.944 }
+}

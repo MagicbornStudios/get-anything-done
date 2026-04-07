@@ -1,6 +1,6 @@
 ---
 name: gad:eval-suite
-description: Run multiple eval projects in parallel. Use when iterating on GAD — run portfolio-bare + escape-the-dungeon + reader-workspace evals simultaneously, then compare results across all projects. Supports the full cycle: generate prompts, launch agents, reconstruct traces, and produce cross-project reports.
+description: Run multiple eval projects in parallel and compare results across all projects
 ---
 
 # gad:eval-suite

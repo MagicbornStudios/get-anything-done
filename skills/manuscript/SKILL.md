@@ -1,6 +1,6 @@
 ---
 name: gad:manuscript
-description: Fiction and creative writing adaptation of the GAD loop — the manuscript loop. Use this skill whenever working on a novel, book series, creative writing project, or story outline that uses planning documents. Triggers on: AGENTS.md with "fiction" or "manuscript" language, beat sheets, state files with narrative fronts or forward questions, task registries with chapter IDs, decisions files with MT-* or ML-* canon locks, or any project under books/<slug>/. Also use when the user says "draft chapter", "work on the novel", "lock a beat", "add a forward question", "canon lock this", or asks what story work to do next. The manuscript loop extends the standard 5-doc planning loop with fiction-specific vocabulary and verification patterns.
+description: Fiction and creative writing adaptation of the GAD loop for novels and story outlines
 migrated-from: rp-manuscript
 ---
 

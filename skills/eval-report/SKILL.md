@@ -1,6 +1,6 @@
 ---
 name: gad:eval-report
-description: Generate comparison reports across eval runs — within a single project or across all projects. Use after eval runs complete to understand what improved, what regressed, and what skills need tightening. Triggers on: user says "show eval results", "compare runs", "eval report", "how did the evals do", or after completing an eval suite run.
+description: Generate comparison reports across eval runs, within a single project or across all projects
 ---
 
 # gad:eval-report
