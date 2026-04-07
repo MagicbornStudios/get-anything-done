@@ -3,8 +3,6 @@ name: gad:quick
 description: Execute a quick ad-hoc task with planning guarantees (atomic commit, STATE update) but without the full phase ceremony — no kickoff, no research, no plan-checker. Use this skill for small fixes, chores, hotfixes, dependency updates, documentation patches, or any self-contained task that doesn't belong in the roadmap and can be clearly described in one sentence. Also use it when the user says "quick fix", "just change X", "can you update Y", or describes a task that's clearly scoped and under ~30 minutes. Keeps the task registry and roadmap clean by handling ad-hoc work in a separate lane.
 ---
 
-> **Deprecated:** Use `gad:quick` instead. This skill remains for backwards compatibility but `gad:` is the preferred prefix.
-
 # Quick Task
 
 Fast path for self-contained ad-hoc work. Same guarantees as `gad:execute-phase` (atomic commit, state update, verify) without the phase scaffolding. Lives in `.planning/quick/` — separate from the roadmap so the milestone stays clean.
@@ -63,7 +61,7 @@ Write `.planning/quick/<id>.md`:
 
 Implement the change. Stay strictly within scope — if you discover the task is larger than expected, stop, note it, and surface to the user rather than expanding.
 
-Check DECISIONS.md and CONVENTIONS.md (from `gad:map-codebase`) before changing anything — quick tasks that ignore established conventions create quiet drift.
+Check decisions (from the snapshot) and CONVENTIONS.md (from `gad:map-codebase`) before changing anything — quick tasks that ignore established conventions create quiet drift.
 
 ## Step 5: Verify
 

@@ -1,11 +1,11 @@
 ---
 name: gad:eval-suite
-description: Run multiple eval projects in parallel. Use when iterating on GAD — run portfolio-bare + escape-the-dungeon + any other evals simultaneously, then compare results across all projects.
+description: Run multiple eval projects in parallel. Use when iterating on GAD — run portfolio-bare + escape-the-dungeon + reader-workspace evals simultaneously, then compare results across all projects. Supports the full cycle: generate prompts, launch agents, reconstruct traces, and produce cross-project reports.
 ---
 
 # gad:eval-suite
 
-Runs multiple eval projects in parallel using the Agent tool, then reconstructs traces and produces a comparison report.
+Runs multiple eval projects in parallel using the Agent tool, then reconstructs traces and produces a cross-project comparison report.
 
 ## When to use
 
@@ -13,23 +13,30 @@ Runs multiple eval projects in parallel using the Agent tool, then reconstructs 
 - When iterating on the framework and need to validate across multiple projects
 - Regular eval cadence — run the suite, review, improve, repeat
 
-## Step 1 — List eval projects to run
+## Step 1 — Generate bootstrap prompts
 
 ```sh
-gad eval list
+gad eval suite
 ```
 
-Pick which projects to include in this run. Default: all projects with a `template/` directory.
+This finds all eval projects with a `template/` directory and generates a PROMPT.md for each. Output goes to a timestamped directory under `evals/.suite-runs/`.
+
+To run specific projects only:
+```sh
+gad eval suite --projects escape-the-dungeon,portfolio-bare
+```
 
 ## Step 2 — Launch agents in parallel
 
-For EACH eval project, launch a background agent using the eval-bootstrap skill approach:
+For EACH prompt file generated, launch a background agent:
 
-1. Read the project's `template/AGENTS.md`
-2. Read `REQUIREMENTS.md` or `template/.planning/REQUIREMENTS.xml`
-3. Read any CONTEXT.md from prior discussion
-4. Construct the bootstrap prompt (inline all context)
-5. Launch via Agent tool with `isolation: "worktree"` and `run_in_background: true`
+```
+Agent(
+  prompt=<contents of the PROMPT.md file>,
+  isolation="worktree",
+  run_in_background=true
+)
+```
 
 **All agents launch in a single message** — parallel, not sequential.
 
@@ -45,15 +52,23 @@ For each completed eval:
 gad eval trace reconstruct --project <name>
 ```
 
-## Step 5 — Compare results
+This parses git history from the eval's worktree to build TRACE.json — no agent cooperation needed (gad-22).
 
-Build a comparison table:
+## Step 5 — Cross-project report
 
-| Project | Phases | Tasks | Task-ID Commits | State Updates | Decisions | Conventions | Discipline | Composite |
-|---------|--------|-------|-----------------|---------------|-----------|-------------|------------|-----------|
-| portfolio-bare | X | Y | Z | ... | ... | ... | ... | ... |
-| escape-the-dungeon | X | Y | Z | ... | ... | ... | ... | ... |
-| reader-workspace | X | Y | Z | ... | ... | ... | ... | ... |
+```sh
+gad eval report
+```
+
+Produces a comparison table across all projects:
+
+| Project | Version | Phases | Tasks | Discipline | Planning | Skill Acc | Composite |
+|---------|---------|--------|-------|------------|----------|-----------|-----------|
+
+To compare specific projects:
+```sh
+gad eval report --projects escape-the-dungeon,portfolio-bare
+```
 
 ## Step 6 — Report findings
 
@@ -63,7 +78,7 @@ For each eval:
 - What skills were triggered / missing?
 - What conventions were generated?
 
-Cross-eval:
+Cross-eval patterns:
 - Which skills work across all project types?
 - Which need per-project adaptation?
 - Where does the loop break consistently?
@@ -71,10 +86,22 @@ Cross-eval:
 ## Iteration cycle
 
 ```
-make changes → run suite → review findings → make more changes → run suite
+make changes → gad eval suite → launch agents → gad eval report → review → repeat
 ```
 
 Each iteration should:
 1. Fix at least one finding from the prior run
-2. Add at least one new eval project OR new eval criterion
+2. Add at least one new eval criterion
 3. Tighten at least one skill based on findings
+
+## CLI quick reference
+
+| Command | Purpose |
+|---------|---------|
+| `gad eval suite` | Generate prompts for all runnable evals |
+| `gad eval run --project <name> --prompt-only` | Generate prompt for one eval |
+| `gad eval run --project <name>` | Generate prompt + create worktree |
+| `gad eval trace reconstruct --project <name>` | Build TRACE.json from git history |
+| `gad eval report` | Cross-project comparison table |
+| `gad eval scores --project <name>` | Compare runs within one project |
+| `gad eval diff v1 v2 --project <name>` | Diff two specific runs |

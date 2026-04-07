@@ -3,8 +3,6 @@ name: gad:map-codebase
 description: Analyze an existing codebase and produce structured documents capturing stack, architecture, conventions, and concerns — used before planning phases in a brownfield project. Use this skill when the user wants to understand an unfamiliar codebase, when starting to plan work in an existing project that has no planning docs, when onboarding to a repo, or when beginning any phase that touches code you haven't read yet. Produces .planning/codebase/ documents that feed directly into gad:new-project and gad:plan-phase. Run once per project or when architecture changes significantly.
 ---
 
-> **Deprecated:** Use `gad:map-codebase` instead. This skill remains for backwards compatibility but `gad:` is the preferred prefix.
-
 # Map Codebase
 
 Produces a structured map of an existing codebase in `.planning/codebase/`. These documents are consumed by `gad:new-project` (brownfield requirements inference) and `gad:plan-phase` (research foundation). Run this before planning work in any repo you don't already understand.

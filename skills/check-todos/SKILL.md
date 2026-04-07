@@ -3,37 +3,26 @@ name: gad:check-todos
 description: Read current planning state and surface the single best next task or action — the re-entry point for any autonomous loop. Use this skill when the user asks "what should I work on next?", "what's the status?", "where are we?", "what's next?", or starts a new session and needs to orient. Also use it to find the next task after completing one, or to decide whether to plan a new phase or execute an existing one. This is the navigation skill — run it between every phase and after any context reset.
 ---
 
-> **Deprecated:** Use `gad:check-todos` instead. This skill remains for backwards compatibility but `gad:` is the preferred prefix.
-
 # Check Todos
 
 Reads planning state and surfaces the single best next action. This is the re-entry skill for any execution loop — run it whenever you need to orient or after any context reset.
 
-## Step 1: Read state
+## Step 1: Bootstrap context
 
 ```bash
-cat .planning/STATE.md
+node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>
 ```
 
-Extract:
+This gives you state, roadmap, tasks, decisions, and file refs in one command. Extract:
 - Current phase ID and goal
-- Current focus
-- Next queue (priority-ordered)
+- Current focus / next-action
+- Open tasks (status=planned)
+
+**Do NOT manually cat STATE, ROADMAP, or TASK-REGISTRY files** — the snapshot gives all of this. Use `gad tasks --projectid <id>` only if you need the full task detail beyond what the snapshot shows.
 
 ## Step 2: Check the phase's actual status
 
-```bash
-cat .planning/ROADMAP.md
-```
-
-Find the current phase row. What's its status — `planned`, `active`, `blocked`, `done`?
-
-Then check the task registry:
-```bash
-cat .planning/TASK-REGISTRY.md
-```
-
-For the current phase, what's the first task that isn't `done`?
+From the snapshot output, find the current phase. What's its status — `planned`, `active`, `blocked`, `done`? What's the first task that isn't `done`?
 
 ## Step 3: Determine the next action
 
@@ -118,6 +107,6 @@ The planning docs are the shared memory across loop iterations. Even after a con
 
 ## What makes this work
 
-The state doc must be current. If STATE.md hasn't been updated after the last task, `gad:check-todos` will surface stale information. After any execution, update STATE.md before ending the session.
+The state doc must be current. If STATE hasn't been updated after the last task, `gad:check-todos` will surface stale information. After any execution, update STATE (XML or MD) before ending the session.
 
-This is why every skill in the GAD system updates STATE.md as part of its close step — so re-entry always works from an accurate picture.
+This is why every skill in the GAD system updates STATE as part of its close step — so re-entry always works from an accurate picture.

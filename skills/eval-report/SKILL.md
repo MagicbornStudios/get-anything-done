@@ -1,76 +1,89 @@
 ---
 name: gad:eval-report
-description: Generate a comparison report across portfolio-bare eval runs. Shows fresh-context vs loaded-context performance, task alignment trends, and which planning decisions diverge between context modes. Use after multiple eval runs have been completed. Triggers on: user says "show eval results", "compare runs", "how did the fresh run do", or "eval report".
+description: Generate comparison reports across eval runs — within a single project or across all projects. Use after eval runs complete to understand what improved, what regressed, and what skills need tightening. Triggers on: user says "show eval results", "compare runs", "eval report", "how did the evals do", or after completing an eval suite run.
 ---
 
 # gad:eval-report
 
-Reads all TRACE.json files for a project and produces a comparison across context modes.
+Reads TRACE.json files and produces comparison reports — within a project (across versions) or across all projects (cross-eval).
 
-## When to use this skill
+## When to use
 
-- Multiple eval runs have been completed (at least one fresh, one loaded)
-- User wants to see how context mode affected planning outcomes
-- User wants to understand which parts of the planning are robust vs context-dependent
+- After one or more eval runs have completed
+- After running `gad eval suite` and reconstructing traces
+- When iterating on skills and need to see the impact
+- User asks about eval results or progress
 
-## Step 1 — Check available runs
+## Step 1 — Reconstruct traces (if needed)
 
-```sh
-gad eval runs --project portfolio-bare
-```
-
-Look at the `ctx` column. You want at least one `fresh` and one `loaded` run before the comparison is meaningful.
-
-## Step 2 — Generate the trace report
+For each eval that ran in a worktree agent:
 
 ```sh
-gad eval trace report --project portfolio-bare
+gad eval trace reconstruct --project <name>
 ```
 
-This shows:
-- Per-run: tasks completed, context mode, score
-- Cross-run: which tasks appear in all runs vs only some
-- Fresh vs loaded delta: did loaded context produce better task alignment or state hygiene?
+This parses git history to build TRACE.json — no agent cooperation needed (gad-22).
 
-## Step 3 — Interpret the report
+## Step 2 — Choose the right report
 
-### If loaded runs score higher than fresh runs
+### Cross-project comparison (the big picture)
 
-Context is providing real signal. The planning docs (ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml) that an agent reads before starting are genuinely helping it make better choices. This validates the cli-efficiency eval's information_loss = 0 claim.
-
-### If fresh runs score equally or higher
-
-Either:
-- The requirements are clear enough that context adds nothing (fine — good requirements)
-- The loaded-context agent is being distracted by prior state (a smell — planning docs may be noisy)
-- Not enough runs yet to see the difference (run more)
-
-### If a specific task only appears in loaded runs
-
-That task was only identified when the agent had context. Fresh agents either skipped it or called it something else. This is the most actionable finding — it surfaces tasks that are easy to miss without context.
-
-### If a specific task appears in all runs regardless of context
-
-That task is requirements-derivable. It will be planned correctly even without prior context. These are your most robust tasks.
-
-## Step 4 — Write a summary
-
-After reading the report, write a brief EVAL-SUMMARY.md in the eval version directory:
-
-```md
-# Eval Summary — portfolio-bare vN
-
-**Runs:** N total (X fresh, Y loaded)
-**Context delta:** loaded score − fresh score = Z
-
-## Most robust tasks (appear in all runs)
-- ...
-
-## Context-dependent tasks (loaded only)
-- ...
-
-## Action items
-- ...
+```sh
+gad eval report
 ```
 
-This summary is the human-readable output of the eval. The TRACE.json is the machine-readable version.
+Shows a table across ALL projects with the latest trace for each:
+
+| Project | Version | Phases | Tasks | Discipline | Planning | Skill Acc | Composite |
+
+### Within-project comparison (version-over-version)
+
+```sh
+gad eval scores --project <name>
+```
+
+Shows how scores evolved across runs of one project.
+
+### Two-version diff
+
+```sh
+gad eval diff v1 v2 --project <name>
+```
+
+Detailed diff between two specific runs.
+
+## Step 3 — Interpret findings
+
+### Per-task discipline score
+
+Measures whether the agent committed with task IDs. Low discipline (< 0.5) means the agent is batching work instead of following the atomic commit loop. Fix: tighten AGENTS.md in the eval template, add checkpoint enforcement.
+
+### Planning quality score
+
+Measures task completion rate and state freshness. Low planning quality means the agent planned tasks but didn't complete them, or STATE.xml drifted. Fix: verify that ROADMAP.xml phases are right-sized.
+
+### Skill accuracy
+
+Measures whether the right skills were triggered at the right time. Missing triggers mean the agent bypassed the methodology. Fix: make skill triggers more obvious in AGENTS.md, or add checkpoint gates.
+
+### Composite score
+
+Weighted combination: skill_accuracy (0.25) + planning_quality (0.30) + time_efficiency (0.20) + per_task_discipline (0.25).
+
+## Step 4 — Write findings
+
+After reviewing, update the eval-suite skill or create a decision:
+
+- If a pattern appears across ALL evals: it's a framework issue → update a skill
+- If a pattern appears in only one eval: it's a project-specific issue → update that eval's AGENTS.md
+- If a score regressed: find what changed and revert or fix
+
+## CLI quick reference
+
+| Command | Purpose |
+|---------|---------|
+| `gad eval report` | Cross-project comparison table |
+| `gad eval scores --project <name>` | Version-over-version for one project |
+| `gad eval diff v1 v2 --project <name>` | Detailed two-version diff |
+| `gad eval trace reconstruct --project <name>` | Build TRACE.json from git history |
+| `gad eval trace report --project <name>` | Aggregate trace stats for one project |

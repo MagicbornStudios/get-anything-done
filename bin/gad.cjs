@@ -78,6 +78,60 @@ function outputError(msg) {
   process.exit(1);
 }
 
+// ---------------------------------------------------------------------------
+// Call logger — every gad command writes a JSONL entry
+// ---------------------------------------------------------------------------
+//
+// Log location priority:
+//   1. GAD_LOG_DIR env var (eval runs set this to their run directory)
+//   2. .planning/.gad-log/ in the repo root
+//
+// Each entry is one JSON line: { ts, cmd, args, duration_ms, exit, summary }
+
+const GAD_LOG_DIR = process.env.GAD_LOG_DIR || null;
+let _logDir = null;
+let _logStart = Date.now();
+let _logCmd = process.argv.slice(2).join(' ');
+
+function getLogDir() {
+  if (_logDir) return _logDir;
+  if (GAD_LOG_DIR) {
+    _logDir = GAD_LOG_DIR;
+  } else {
+    try {
+      const root = findRepoRoot();
+      _logDir = path.join(root, '.planning', '.gad-log');
+    } catch {
+      return null;
+    }
+  }
+  try { fs.mkdirSync(_logDir, { recursive: true }); } catch {}
+  return _logDir;
+}
+
+function logCall(overrides = {}) {
+  const dir = getLogDir();
+  if (!dir) return;
+  const entry = {
+    ts: new Date().toISOString(),
+    cmd: overrides.cmd || _logCmd,
+    args: overrides.args || process.argv.slice(2),
+    duration_ms: Date.now() - _logStart,
+    exit: overrides.exit || 0,
+    summary: overrides.summary || '',
+    pid: process.pid,
+  };
+  const logFile = path.join(dir, `${new Date().toISOString().slice(0, 10)}.jsonl`);
+  try {
+    fs.appendFileSync(logFile, JSON.stringify(entry) + '\n');
+  } catch {}
+}
+
+// Log on exit (captures all commands including failures)
+process.on('exit', (code) => {
+  logCall({ exit: code });
+});
+
 /** List available eval projects and suggest rerun hint. */
 function listEvalProjectsHint() {
   const gadDir = path.join(__dirname, '..');
@@ -1163,7 +1217,7 @@ const evalList = defineCommand({
     }
 
     const projects = fs.readdirSync(evalsDir, { withFileTypes: true })
-      .filter(e => e.isDirectory())
+      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
       .map(e => {
         const runs = fs.readdirSync(path.join(evalsDir, e.name), { withFileTypes: true })
           .filter(r => r.isDirectory() && r.name.startsWith('v'))
@@ -1174,7 +1228,7 @@ const evalList = defineCommand({
         if (latest !== '—') {
           const runMd = path.join(evalsDir, e.name, latest, 'RUN.md');
           if (fs.existsSync(runMd)) {
-            const m = fs.readFileSync(runMd, 'utf8').match(/status:\s*(\w+)/);
+            const m = fs.readFileSync(runMd, 'utf8').match(/status:\s*([\w-]+)/);
             if (m) status = m[1];
           }
         }
@@ -1186,15 +1240,66 @@ const evalList = defineCommand({
   },
 });
 
+/** Read a file if it exists, return content or null. */
+function readIfExists(p) { return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; }
+
+/**
+ * Build a bootstrap prompt for an eval project.
+ * Reads all template planning files and constructs a complete prompt
+ * that any AI agent can use to run the eval (agent-agnostic per gad-01).
+ */
+function buildEvalPrompt(projectDir, projectName, runNum) {
+  const templateDir = path.join(projectDir, 'template');
+  const planDir = path.join(templateDir, '.planning');
+
+  const agentsMd = readIfExists(path.join(templateDir, 'AGENTS.md'));
+  const reqXml = readIfExists(path.join(planDir, 'REQUIREMENTS.xml'));
+  const reqMd = readIfExists(path.join(projectDir, 'REQUIREMENTS.md'));
+  const decisionsXml = readIfExists(path.join(planDir, 'DECISIONS.xml'));
+  const conventionsMd = readIfExists(path.join(planDir, 'CONVENTIONS.md'));
+  const roadmapXml = readIfExists(path.join(planDir, 'ROADMAP.xml'));
+  const stateXml = readIfExists(path.join(planDir, 'STATE.xml'));
+
+  // Source docs (source-*.md, source-*.xml)
+  const sourceDocs = fs.existsSync(projectDir)
+    ? fs.readdirSync(projectDir).filter(f => f.startsWith('source-')).map(f => {
+        const content = fs.readFileSync(path.join(projectDir, f), 'utf8');
+        return `### ${f}\n\n${content.length > 3000 ? content.slice(0, 3000) + '\n...(truncated)' : content}`;
+      })
+    : [];
+
+  const sections = [];
+  sections.push(`# Eval: ${projectName} v${runNum}`);
+  sections.push(`\nYou are running a GAD eval. Follow the loop defined in AGENTS.md. Your work is being traced.\n`);
+
+  if (agentsMd) sections.push(`## AGENTS.md (follow this exactly)\n\n${agentsMd}`);
+  if (reqXml) sections.push(`## REQUIREMENTS.xml\n\n\`\`\`xml\n${reqXml}\`\`\``);
+  if (reqMd) sections.push(`## REQUIREMENTS.md (eval overview)\n\n${reqMd}`);
+  if (decisionsXml) sections.push(`## DECISIONS.xml\n\n\`\`\`xml\n${decisionsXml}\`\`\``);
+  if (conventionsMd) sections.push(`## CONVENTIONS.md\n\n${conventionsMd}`);
+  if (roadmapXml) sections.push(`## ROADMAP.xml\n\n\`\`\`xml\n${roadmapXml}\`\`\``);
+  if (stateXml) sections.push(`## STATE.xml\n\n\`\`\`xml\n${stateXml}\`\`\``);
+  if (sourceDocs.length > 0) sections.push(`## Source documents\n\n${sourceDocs.join('\n\n')}`);
+
+  sections.push(`\n## Instructions\n`);
+  sections.push(`1. Copy the .planning/ directory from the template into your working directory`);
+  sections.push(`2. Implement the project following the ROADMAP.xml phases`);
+  sections.push(`3. For EACH task: update TASK-REGISTRY.xml, update STATE.xml, commit with task ID`);
+  sections.push(`4. Follow CONVENTIONS.md patterns and DECISIONS.xml architecture`);
+  sections.push(`5. When complete: all phases done, build passes, planning docs current`);
+
+  return sections.join('\n\n');
+}
+
 const evalRun = defineCommand({
   meta: { name: 'run', description: 'Run eval project in isolated git worktree' },
   args: {
     project: { type: 'string', description: 'Eval project name', default: '' },
     baseline: { type: 'string', description: 'Git baseline (default: HEAD)', default: 'HEAD' },
+    'prompt-only': { type: 'boolean', description: 'Only generate the bootstrap prompt, do not create worktree', default: false },
   },
   async run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const { execSync } = require('child_process');
     const gadDir = path.join(__dirname, '..');
     const evalsDir = path.join(gadDir, 'evals');
     const projectDir = path.join(evalsDir, args.project);
@@ -1211,9 +1316,13 @@ const evalRun = defineCommand({
     const runDir = path.join(projectDir, `v${runNum}`);
     fs.mkdirSync(runDir, { recursive: true });
 
-    // Create worktree
-    const worktreePath = path.join(require('os').tmpdir(), `gad-eval-${args.project}-${Date.now()}`);
     const now = new Date().toISOString();
+
+    // Build the bootstrap prompt from template files
+    const prompt = buildEvalPrompt(projectDir, args.project, runNum);
+
+    // Write prompt to run directory
+    fs.writeFileSync(path.join(runDir, 'PROMPT.md'), prompt);
 
     // Write RUN.md
     fs.writeFileSync(path.join(runDir, 'RUN.md'), [
@@ -1222,21 +1331,31 @@ const evalRun = defineCommand({
       `project: ${args.project}`,
       `baseline: ${args.baseline}`,
       `started: ${now}`,
-      `status: running`,
+      `status: ${args['prompt-only'] ? 'prompt-generated' : 'running'}`,
     ].join('\n') + '\n');
+
+    if (args['prompt-only']) {
+      console.log(`\nEval run: ${args.project} v${runNum} (prompt only)`);
+      console.log(`\n✓ Bootstrap prompt written: evals/${args.project}/v${runNum}/PROMPT.md`);
+      console.log(`  ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
+      console.log(`\nTo run: copy the prompt into your AI agent with worktree isolation.`);
+      return;
+    }
 
     console.log(`\nEval run: ${args.project} v${runNum}`);
     console.log(`Baseline: ${args.baseline}`);
 
+    const { execSync } = require('child_process');
+    const worktreePath = path.join(require('os').tmpdir(), `gad-eval-${args.project}-${Date.now()}`);
+
     try {
       execSync(`git worktree add "${worktreePath}" "${args.baseline}"`, { stdio: 'pipe' });
       console.log(`✓ Worktree created: ${worktreePath}`);
-
-      // Stub: agent invocation
-      fs.writeFileSync(path.join(runDir, 'eval-output.txt'),
-        `STUB: eval run for ${args.project} v${runNum} at ${now}\n`);
-      console.log(`  (stub) Agent run completed`);
-
+      console.log(`✓ Bootstrap prompt: evals/${args.project}/v${runNum}/PROMPT.md`);
+      console.log(`  ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
+      console.log(`\nAgent should work in: ${worktreePath}`);
+      console.log(`After agent completes, run:`);
+      console.log(`  gad eval trace reconstruct --project ${args.project} --version v${runNum}`);
     } finally {
       try {
         execSync(`git worktree remove --force "${worktreePath}"`, { stdio: 'pipe' });
@@ -1244,13 +1363,13 @@ const evalRun = defineCommand({
       } catch {}
     }
 
-    // Update RUN.md with result
+    // Update RUN.md
     const endTime = new Date().toISOString();
     const runMd = fs.readFileSync(path.join(runDir, 'RUN.md'), 'utf8');
     fs.writeFileSync(path.join(runDir, 'RUN.md'),
-      runMd.replace('status: running', `status: completed\nended: ${endTime}`));
+      runMd.replace('status: running', `status: prompt-ready\nended: ${endTime}`));
 
-    console.log(`\n✓ Eval run complete`);
+    console.log(`\n✓ Eval run prepared`);
     console.log(`  Output: evals/${args.project}/v${runNum}/`);
   },
 });
@@ -2126,7 +2245,7 @@ const evalStatus = defineCommand({
         if (latest !== '—') {
           const runMd = path.join(projectDir, latest, 'RUN.md');
           if (fs.existsSync(runMd)) {
-            const m = fs.readFileSync(runMd, 'utf8').match(/status:\s*(\w+)/);
+            const m = fs.readFileSync(runMd, 'utf8').match(/status:\s*([\w-]+)/);
             if (m) status = m[1];
           }
         }
@@ -2174,7 +2293,7 @@ const evalRuns = defineCommand({
       if (fs.existsSync(runMd)) {
         const content = fs.readFileSync(runMd, 'utf8');
         const ms = content.match(/started:\s*(.+)/); if (ms) started = ms[1].trim().slice(0, 16).replace('T', ' ');
-        const mv = content.match(/status:\s*(\w+)/); if (mv) status = mv[1];
+        const mv = content.match(/status:\s*([\w-]+)/); if (mv) status = mv[1];
         const mb = content.match(/baseline:\s*(.+)/); if (mb) baseline = mb[1].trim();
       }
       const scoreFile = path.join(projectDir, v, 'SCORE.md');
@@ -2368,9 +2487,169 @@ Manual score added to SCORE.md.
   },
 });
 
+// eval suite — generate bootstrap prompts for all runnable eval projects
+const evalSuite = defineCommand({
+  meta: { name: 'suite', description: 'Generate bootstrap prompts for all eval projects in parallel' },
+  args: {
+    projects: { type: 'string', description: 'Comma-separated project names (default: all with templates)', default: '' },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+
+    if (!fs.existsSync(evalsDir)) {
+      outputError('No evals/ directory found.');
+    }
+
+    // Find all projects with a template/ directory (runnable evals)
+    const allProjects = fs.readdirSync(evalsDir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .filter(e => fs.existsSync(path.join(evalsDir, e.name, 'template')))
+      .map(e => e.name);
+
+    const selectedProjects = args.projects
+      ? args.projects.split(',').map(s => s.trim()).filter(Boolean)
+      : allProjects;
+
+    if (selectedProjects.length === 0) {
+      outputError('No runnable eval projects found (need template/ directory).');
+    }
+
+    // Create suite run directory
+    const suiteDir = path.join(evalsDir, '.suite-runs', new Date().toISOString().replace(/[:.]/g, '-'));
+    fs.mkdirSync(suiteDir, { recursive: true });
+
+    console.log(`\nEval Suite: ${selectedProjects.length} project(s)\n`);
+
+    const results = [];
+    for (const project of selectedProjects) {
+      const projectDir = path.join(evalsDir, project);
+      if (!fs.existsSync(projectDir)) {
+        console.log(`  ✗ ${project} — not found, skipping`);
+        continue;
+      }
+
+      // Determine next run number
+      const runs = fs.readdirSync(projectDir).filter(n => /^v\d+$/.test(n)).map(n => parseInt(n.slice(1), 10));
+      const runNum = runs.length > 0 ? Math.max(...runs) + 1 : 1;
+
+      // Build prompt
+      const prompt = buildEvalPrompt(projectDir, project, runNum);
+      const promptFile = path.join(suiteDir, `${project}-v${runNum}.md`);
+      fs.writeFileSync(promptFile, prompt);
+
+      const tokens = Math.ceil(prompt.length / 4);
+      results.push({ project, version: `v${runNum}`, chars: prompt.length, tokens, file: `${project}-v${runNum}.md` });
+      console.log(`  ✓ ${project} v${runNum} — ${tokens} tokens → ${project}-v${runNum}.md`);
+    }
+
+    // Write suite manifest
+    fs.writeFileSync(path.join(suiteDir, 'SUITE.json'), JSON.stringify({
+      created: new Date().toISOString(),
+      projects: results,
+    }, null, 2));
+
+    console.log(`\n✓ Suite prepared: ${results.length} prompt(s) in:`);
+    console.log(`  ${path.relative(process.cwd(), suiteDir)}/`);
+    console.log(`\nTo run: launch each prompt as a separate agent with worktree isolation.`);
+    console.log(`After all complete: gad eval report`);
+  },
+});
+
+// eval report — cross-project comparison from latest TRACE.json
+const evalReport = defineCommand({
+  meta: { name: 'report', description: 'Cross-project comparison from latest TRACE.json of each eval' },
+  args: {
+    projects: { type: 'string', description: 'Comma-separated project names (default: all with traces)', default: '' },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+
+    if (!fs.existsSync(evalsDir)) {
+      outputError('No evals/ directory found.');
+    }
+
+    const allProjects = fs.readdirSync(evalsDir, { withFileTypes: true })
+      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+      .map(e => e.name);
+
+    const selectedProjects = args.projects
+      ? args.projects.split(',').map(s => s.trim()).filter(Boolean)
+      : allProjects;
+
+    // Load latest TRACE.json for each project
+    const rows = [];
+    for (const project of selectedProjects) {
+      const projectDir = path.join(evalsDir, project);
+      if (!fs.existsSync(projectDir)) continue;
+
+      const versions = fs.readdirSync(projectDir)
+        .filter(n => /^v\d+$/.test(n))
+        .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+
+      // Find latest version with TRACE.json
+      let trace = null, version = null;
+      for (let i = versions.length - 1; i >= 0; i--) {
+        const traceFile = path.join(projectDir, versions[i], 'TRACE.json');
+        if (fs.existsSync(traceFile)) {
+          try {
+            trace = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+            version = versions[i];
+            break;
+          } catch {}
+        }
+      }
+
+      if (!trace) {
+        rows.push({ project, version: '—', phases: '—', tasks: '—', discipline: '—', planning: '—', skill_acc: '—', composite: '—' });
+        continue;
+      }
+
+      const ga = trace.git_analysis || {};
+      const pq = trace.planning_quality || {};
+      const sc = trace.scores || {};
+      const sa = trace.skill_accuracy || {};
+
+      rows.push({
+        project,
+        version,
+        phases: pq.phases_planned || ga.phases_completed || '—',
+        tasks: `${pq.tasks_completed || 0}/${pq.tasks_planned || 0}`,
+        discipline: ga.per_task_discipline != null ? ga.per_task_discipline.toFixed(2) : '—',
+        planning: sc.planning_quality != null ? sc.planning_quality.toFixed(3) : '—',
+        skill_acc: sc.skill_accuracy != null ? (sc.skill_accuracy * 100).toFixed(0) + '%' : '—',
+        composite: sc.composite != null ? sc.composite.toFixed(3) : '—',
+      });
+    }
+
+    if (rows.length === 0) {
+      console.log('\nNo eval projects with TRACE.json found.');
+      console.log('Run evals first, then: gad eval trace reconstruct --project <name>');
+      return;
+    }
+
+    output(rows, { title: 'GAD Eval Report — Cross-Project Comparison' });
+
+    // Summary stats
+    const scored = rows.filter(r => r.composite !== '—');
+    if (scored.length > 0) {
+      const composites = scored.map(r => parseFloat(r.composite));
+      const avg = composites.reduce((a, b) => a + b, 0) / composites.length;
+      console.log(`\nAverage composite: ${avg.toFixed(3)} across ${scored.length} project(s)`);
+    }
+
+    const noTrace = rows.filter(r => r.version === '—');
+    if (noTrace.length > 0) {
+      console.log(`\n${noTrace.length} project(s) without traces:`);
+      for (const r of noTrace) console.log(`  ${r.project} — run eval and reconstruct trace`);
+    }
+  },
+});
+
 const evalCmd = defineCommand({
   meta: { name: 'eval', description: 'Run and manage eval projects' },
-  subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd },
+  subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd, suite: evalSuite, report: evalReport },
 });
 
 // ---------------------------------------------------------------------------
@@ -3753,6 +4032,150 @@ const sprintCmd = defineCommand({
   subCommands: { show: sprintShow, context: sprintContext },
 });
 
+// ---------------------------------------------------------------------------
+// gad log — inspect CLI call logs
+// ---------------------------------------------------------------------------
+
+const logShow = defineCommand({
+  meta: { name: 'show', description: 'Show recent CLI call log entries' },
+  args: {
+    n: { type: 'string', description: 'Number of entries to show (default: 20)', default: '20' },
+    date: { type: 'string', description: 'Date to show (YYYY-MM-DD, default: today)', default: '' },
+    eval: { type: 'string', description: 'Show logs from an eval run directory', default: '' },
+  },
+  run({ args }) {
+    let logDir;
+    if (args.eval) {
+      const gadDir = path.join(__dirname, '..');
+      logDir = path.join(gadDir, 'evals', args.eval);
+      // Find latest version with a log
+      if (fs.existsSync(logDir)) {
+        const versions = fs.readdirSync(logDir).filter(n => /^v\d+$/.test(n)).sort();
+        for (let i = versions.length - 1; i >= 0; i--) {
+          const candidate = path.join(logDir, versions[i], '.gad-log');
+          if (fs.existsSync(candidate)) { logDir = candidate; break; }
+        }
+      }
+    } else {
+      logDir = getLogDir();
+    }
+
+    if (!logDir || !fs.existsSync(logDir)) {
+      console.log('No log directory found. CLI logging starts on first gad command.');
+      return;
+    }
+
+    const dateStr = args.date || new Date().toISOString().slice(0, 10);
+    const logFile = path.join(logDir, `${dateStr}.jsonl`);
+
+    if (!fs.existsSync(logFile)) {
+      // Try to find any log file
+      const files = fs.readdirSync(logDir).filter(f => f.endsWith('.jsonl')).sort();
+      if (files.length === 0) {
+        console.log('No log files found.');
+        return;
+      }
+      console.log(`No log for ${dateStr}. Available dates:`);
+      for (const f of files) console.log(`  ${f.replace('.jsonl', '')}`);
+      return;
+    }
+
+    const lines = fs.readFileSync(logFile, 'utf8').trim().split('\n').filter(Boolean);
+    const n = parseInt(args.n) || 20;
+    const entries = lines.slice(-n).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+
+    for (const e of entries) {
+      const time = e.ts ? e.ts.slice(11, 19) : '?';
+      const dur = e.duration_ms != null ? `${e.duration_ms}ms` : '?';
+      const exit = e.exit || 0;
+      const mark = exit === 0 ? '✓' : '✗';
+      console.log(`  ${mark} ${time}  ${dur.padStart(7)}  gad ${e.cmd}`);
+      if (e.summary) console.log(`    ${e.summary}`);
+    }
+    console.log(`\n${entries.length} entries (${logFile})`);
+  },
+});
+
+const logStats = defineCommand({
+  meta: { name: 'stats', description: 'Show CLI usage statistics' },
+  args: {
+    days: { type: 'string', description: 'Number of days to analyze (default: 7)', default: '7' },
+  },
+  run({ args }) {
+    const logDir = getLogDir();
+    if (!logDir || !fs.existsSync(logDir)) {
+      console.log('No log directory found.');
+      return;
+    }
+
+    const days = parseInt(args.days) || 7;
+    const files = fs.readdirSync(logDir).filter(f => f.endsWith('.jsonl')).sort().slice(-days);
+
+    const cmdCounts = {};
+    let totalCalls = 0;
+    let totalDuration = 0;
+    let failures = 0;
+
+    for (const f of files) {
+      const lines = fs.readFileSync(path.join(logDir, f), 'utf8').trim().split('\n').filter(Boolean);
+      for (const line of lines) {
+        try {
+          const e = JSON.parse(line);
+          totalCalls++;
+          totalDuration += e.duration_ms || 0;
+          if (e.exit && e.exit !== 0) failures++;
+          // Extract base command (first 2 args)
+          const parts = (e.cmd || '').split(' ');
+          const key = parts.slice(0, 2).join(' ');
+          cmdCounts[key] = (cmdCounts[key] || 0) + 1;
+        } catch {}
+      }
+    }
+
+    console.log(`\nGAD CLI Usage (last ${files.length} day(s))\n`);
+    console.log(`  Total calls:    ${totalCalls}`);
+    console.log(`  Total duration: ${(totalDuration / 1000).toFixed(1)}s`);
+    console.log(`  Failures:       ${failures}`);
+    console.log(`  Avg duration:   ${totalCalls > 0 ? Math.round(totalDuration / totalCalls) : 0}ms`);
+
+    const sorted = Object.entries(cmdCounts).sort((a, b) => b[1] - a[1]);
+    if (sorted.length > 0) {
+      console.log(`\n  Top commands:`);
+      for (const [cmd, count] of sorted.slice(0, 15)) {
+        console.log(`    ${String(count).padStart(4)}×  gad ${cmd}`);
+      }
+    }
+  },
+});
+
+const logClear = defineCommand({
+  meta: { name: 'clear', description: 'Clear old log files (keeps last 7 days)' },
+  args: {
+    keep: { type: 'string', description: 'Days to keep (default: 7)', default: '7' },
+  },
+  run({ args }) {
+    const logDir = getLogDir();
+    if (!logDir || !fs.existsSync(logDir)) {
+      console.log('No log directory found.');
+      return;
+    }
+
+    const keep = parseInt(args.keep) || 7;
+    const files = fs.readdirSync(logDir).filter(f => f.endsWith('.jsonl')).sort();
+    const toDelete = files.slice(0, -keep);
+
+    for (const f of toDelete) {
+      fs.unlinkSync(path.join(logDir, f));
+    }
+    console.log(`Cleared ${toDelete.length} log file(s), kept ${Math.min(files.length, keep)}.`);
+  },
+});
+
+const logCmd = defineCommand({
+  meta: { name: 'log', description: 'Inspect CLI call logs — usage stats, recent calls, eval logs' },
+  subCommands: { show: logShow, stats: logStats, clear: logClear },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -3781,6 +4204,7 @@ const main = defineCommand({
     snapshot: snapshotCmd,
     sprint: sprintCmd,
     sink: sinkCmd,
+    log: logCmd,
     'migrate-schema': migrateSchema,
   },
 });

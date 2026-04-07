@@ -3,30 +3,29 @@ name: gad:execute-phase
 description: Execute a planned phase by following PLAN.md tasks atomically — commit after each task, update planning docs, and run verify commands at each step. Use this skill when the user wants to execute a phase, start working on planned tasks, run through a phase autonomously, or continue execution of an in-progress phase. This is the autonomous execution skill — if the plan is solid and requirements are clear, Claude should be able to run this to completion without interruption. Requires gad:plan-phase to have been run first to produce a PLAN.md.
 ---
 
-> **Deprecated:** Use `gad:execute-phase` instead. This skill remains for backwards compatibility but `gad:` is the preferred prefix.
-
 # Execute Phase
 
 Execute all tasks in a planned phase, following PLAN.md atomically. Each task is a discrete unit: implement → verify → commit → update planning docs → next task.
 
 The goal is uninterrupted execution from first task to phase close. If the kickoff and plan are solid, this should run to completion without needing to ask questions.
 
-## Step 1: Load the plan
+## Step 1: Bootstrap context
 
 ```bash
-# Find the phase directory
-ls .planning/phases/
+node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>
 ```
 
-Read in order:
+This gives you state, roadmap, tasks, decisions, and file refs in one low-token command. Identify the current phase and its tasks from the snapshot output.
+
+Then read the phase-specific plan:
 1. `.planning/phases/<phase-id>/KICKOFF.md` — goal, scope, DoD, open questions
 2. `.planning/phases/<phase-id>/PLAN.md` — task list, verify commands, dependencies
-3. `.planning/STATE.md` — confirm this is the current phase
-4. `.planning/DECISIONS.md` — check for rules that apply to this work
 
 If no PLAN.md exists, stop: "Phase `<id>` has no plan. Run `gad:plan-phase` first."
 
-If KICKOFF.md has unresolved open questions that affect execution, surface them before starting. If they're non-blocking, continue and note them.
+If KICKOFF.md has unresolved open questions that affect execution, surface them before starting.
+
+**Do NOT manually read STATE, ROADMAP, DECISIONS, or TASK-REGISTRY files** — the snapshot already gave you that. Pull individual files with `gad tasks`, `gad decisions`, etc. only if you need more detail on a specific item. If they're non-blocking, continue and note them.
 
 ## Step 2: Determine the starting point
 
@@ -37,16 +36,7 @@ Check task statuses in PLAN.md. Find the first task that is not `done`:
 
 If any task is `blocked`, report it: "Task `<id>` is blocked: `<reason>`. Resolve this before execution can continue."
 
-Update STATE.md to mark the phase as `active` if it wasn't already:
-
-```markdown
-## Current cycle
-
-| Field | Value |
-|-------|-------|
-| `phase` | `<phase-id>` — <goal> |
-| `focus` | executing — working on `<first-task-id>` |
-```
+Update STATE (XML or MD, whichever the project uses) to mark the phase as `active` with next-action describing the current task.
 
 ## Step 3: Execute tasks in order
 
@@ -56,18 +46,15 @@ For each task (respecting dependency order):
 
 In PLAN.md, change the task status from `planned` to `active`.
 
-In STATE.md, update focus:
-```markdown
-| `focus` | executing `<task-id>`: <task goal> |
-```
+Update STATE next-action to reflect the active task.
 
 ### 3b. Implement the task
 
 Do the actual work. Stay within the task's stated scope — don't refactor adjacent code, don't add features not listed. If you discover the task is larger than expected, implement the minimum needed to satisfy the task goal.
 
-Check DECISIONS.md for rules that apply to this task. If a decision exists that covers this area, follow it without relitigating.
+The snapshot already gave you decisions — check them for rules that apply to this task. If a decision exists that covers this area, follow it without relitigating.
 
-Check ERRORS-AND-ATTEMPTS.md for any recorded failures in this area before choosing an approach.
+Check ERRORS-AND-ATTEMPTS (if it exists) for any recorded failures in this area before choosing an approach.
 
 ### 3c. Run the verify command
 
@@ -98,9 +85,9 @@ Example: `feat(app-auth-01): add JWT signing and verification helpers`
 
 In PLAN.md, mark the task `done`.
 
-In TASK-REGISTRY.md, find the matching task row and mark it `done`.
+In TASK-REGISTRY (XML or MD), find the matching task and mark it `done`.
 
-In STATE.md, advance the focus to the next task.
+In STATE (XML or MD), advance the next-action to the next task.
 
 ### 3f. Next task
 
@@ -135,13 +122,13 @@ Read the `definition-of-done` field from KICKOFF.md. For each criterion:
 - [anything the next phase should know]
 ```
 
-2. Update ROADMAP.md: phase status → `done`
+2. Update ROADMAP (XML or MD): phase status → `done`
 
-3. Update STATE.md: advance to next phase
+3. Update STATE (XML or MD): advance to next phase
 
-4. Add any new decisions to DECISIONS.md
+4. Add any new decisions to DECISIONS (XML or MD)
 
-5. Add any failed approaches to ERRORS-AND-ATTEMPTS.md
+5. Add any failed approaches to ERRORS-AND-ATTEMPTS (if it exists)
 
 6. Commit:
 ```bash

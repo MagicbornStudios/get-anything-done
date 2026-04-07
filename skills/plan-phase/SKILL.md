@@ -3,28 +3,21 @@ name: gad:plan-phase
 description: Plan a phase using the GAD methodology — creates a KICKOFF.md with goal/scope/DoD and a PLAN.md with concrete tasks. Use this skill when the user wants to plan the next phase, start planning a feature or milestone, create a task list for a phase, run a kickoff before implementation, or see what tasks are needed to achieve a phase goal. Also use it when a phase exists in the roadmap but has no tasks yet, or when a phase has been idle and assumptions may be stale. Requires repo-planner skill for the full methodology context.
 ---
 
-> **Deprecated:** Use `gad:plan-phase` instead. This skill remains for backwards compatibility but `gad:` is the preferred prefix.
-
 # Plan a Phase
 
 Creates a KICKOFF.md (phase contract) and PLAN.md (task list) for a phase from the roadmap. The kickoff prevents vague phases from producing wrong implementations. The plan breaks the goal into concrete, verifiable tasks.
 
-## Step 1: Load context
-
-Read the planning docs in order:
+## Step 1: Bootstrap context
 
 ```bash
-# Find the planning root
-ls .planning/ 2>/dev/null || echo "No .planning/ — run gad:new-project first"
+node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>
 ```
 
-Read:
-1. `.planning/STATE.md` — what phase are we on, what comes next
-2. `.planning/ROADMAP.md` — find the target phase, its goal and requirements
-3. `.planning/REQUIREMENTS.md` — understand requirement scope
-4. `.planning/DECISIONS.md` — check for constraints that affect this phase
+This gives you state, roadmap, tasks, decisions, and file refs in one low-token command. Identify the target phase from the snapshot.
 
-**Which phase?** If the user specified one, use that. Otherwise, find the next `planned` phase in the roadmap.
+**Which phase?** If the user specified one, use that. Otherwise, find the next `planned` phase in the roadmap (shown in the snapshot).
+
+If you need more detail on requirements, run `gad requirements --projectid <id>`. **Do NOT manually read STATE, ROADMAP, DECISIONS, or TASK-REGISTRY files** — the snapshot already gave you that.
 
 ## Step 2: Run the kickoff
 
@@ -95,9 +88,9 @@ Write `.planning/phases/<phase-id>/PLAN.md`:
 
 ## Step 4: Update planning docs
 
-Add the tasks to the main task registry:
+Add the tasks to the main task registry.
 
-In `.planning/TASK-REGISTRY.md`, add a new section:
+In TASK-REGISTRY (XML or MD, whichever the project uses), add a new section:
 
 ```markdown
 ## Phase `<phase-id>`
@@ -110,9 +103,9 @@ In `.planning/TASK-REGISTRY.md`, add a new section:
 ...
 ```
 
-Update `.planning/ROADMAP.md` to show the phase as `active` (if starting now) or leave as `planned` with a link to the kickoff.
+Update ROADMAP (XML or MD) to show the phase as `active` (if starting now) or leave as `planned` with a link to the kickoff.
 
-Update `.planning/STATE.md`:
+Update STATE (XML or MD):
 
 ```markdown
 ## Current cycle
@@ -133,7 +126,7 @@ Update `.planning/STATE.md`:
 ## Step 5: Commit and present
 
 ```bash
-git add .planning/phases/<phase-id>/ .planning/TASK-REGISTRY.md .planning/STATE.md .planning/ROADMAP.md
+git add .planning/
 git commit -m "docs(<phase-id>): kickoff and task plan"
 ```
 
