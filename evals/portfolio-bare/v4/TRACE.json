@@ -15,7 +15,12 @@
       { "skill": "/gad:execute-phase", "when": "per phase", "triggered": true },
       { "skill": "/gad:task-checkpoint", "when": "between tasks", "triggered": true },
       { "skill": "/gad:auto-conventions", "when": "after first code phase", "triggered": true },
-      { "skill": "/gad:verify-work", "when": "after phase completion", "triggered": true }
+      { "skill": "/gad:verify-work", "when": "after phase completion", "triggered": true },
+      { "skill": "/gad:check-todos", "when": "session start", "triggered": true },
+      { "skill": "decisions-captured", "when": "during implementation", "triggered": true },
+      { "skill": "multi-phase-planning", "when": "before execution", "triggered": true },
+      { "skill": "phase-completion", "when": "during execution", "triggered": true },
+      { "skill": "task-lifecycle", "when": "per task", "triggered": true }
     ],
     "accuracy": 1.0
   },

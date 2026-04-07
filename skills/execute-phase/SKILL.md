@@ -56,6 +56,20 @@ The snapshot already gave you decisions — check them for rules that apply to t
 
 Check ERRORS-AND-ATTEMPTS (if it exists) for any recorded failures in this area before choosing an approach.
 
+### 3b-ii. Capture decisions as you make them
+
+If you chose between alternatives during implementation (framework, pattern, data model, architecture), that's a decision. Write it to DECISIONS (XML or MD) **before committing this task** — not at the end of the phase:
+
+```xml
+<decision id="<phase>-d<N>">
+  <title>Chose X over Y</title>
+  <summary>What you picked and why — what was the alternative?</summary>
+  <impact>How this affects future tasks</impact>
+</decision>
+```
+
+This is not optional. Every non-obvious choice is a decision. If you installed a library, picked a file structure, chose a state management pattern, or decided how to model data — record it. Aim for 1-2 decisions per phase minimum.
+
 ### 3c. Run the verify command
 
 Run the verify command from the task row. Examples:

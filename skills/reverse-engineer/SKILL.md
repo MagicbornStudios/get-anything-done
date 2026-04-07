@@ -1,22 +1,24 @@
 ---
 name: gad:reverse-engineer
-description: Point at a repo or codebase and produce GAD requirements, decisions, and a planning scaffold from what exists. License-safe — captures requirements and architecture, not code. Inspired by RepoMirror's analysis-first approach.
+description: Analyze any codebase (local path or GitHub URL) and produce GAD planning docs for clean-room reimplementation. Removes dependencies by capturing requirements, not code.
 ---
 
 # gad:reverse-engineer
 
-Analyzes an existing codebase and produces structured GAD planning docs (REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml) that capture what was built, why, and how. The output is a complete GAD project scaffold ready for an eval agent to re-implement from scratch.
+Analyzes an existing codebase and produces structured GAD planning docs (REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml) that capture what was built, why, and how. The output is a complete project scaffold ready for clean-room reimplementation without the original dependency.
+
+**Primary use case: dependency removal.** Point at a library you depend on, extract what it does as requirements, then implement your own version from the spec.
 
 ## When to use
 
+- Removing a dependency by reimplementing it from requirements
 - Reverse-engineering an existing project to create eval requirements
-- Onboarding to an unfamiliar codebase — produce requirements + architecture docs
+- Analyzing a GitHub repo you want to understand and replace
 - Creating a license-safe specification from a reference implementation
-- Setting up a GAD eval project from an existing repo
 
 ## What it produces
 
-1. **REQUIREMENTS.xml** — structured requirements derived from the codebase
+1. **REQUIREMENTS.xml** — structured requirements with testable success criteria
 2. **DECISIONS.xml** — architectural decisions inferred from code patterns
 3. **CONVENTIONS.md** — coding conventions observed in the codebase
 4. **ROADMAP.xml** — suggested phase breakdown for re-implementation
@@ -24,70 +26,84 @@ Analyzes an existing codebase and produces structured GAD planning docs (REQUIRE
 
 ## What it does NOT produce
 
-- No copied source code (license-safe)
+- No copied source code (license-safe, clean-room)
 - No line-for-line implementation details
-- No proprietary algorithms or business logic specifics
-- Only captures WHAT was built and WHY, not HOW at the code level
+- No proprietary algorithms — only WHAT was built, not HOW
 
-## Step 1 — Identify the target
+## Step 1 — Acquire the target
 
+### Local path
 ```sh
-# Point at a local repo
-gad reverse-engineer --path vendor/repub-builder
+# Entire repo
+gad reverse-engineer --path vendor/some-library
 
-# Or a specific subdirectory
-gad reverse-engineer --path vendor/repub-builder/src/reader
+# Specific subdirectory
+gad reverse-engineer --path vendor/some-library/src/core
+```
 
-# Or a remote repo (clones to temp)
+### GitHub URL (clone to temp)
+```sh
+# Full repo
 gad reverse-engineer --repo https://github.com/org/project
+
+# Specific branch
+gad reverse-engineer --repo https://github.com/org/project --branch main
+
+# GitHub URL with path (e.g. from browser)
+gad reverse-engineer --repo https://github.com/org/project/tree/main/src/core
 ```
 
-## Step 2 — Explore the codebase (read-only)
+For GitHub URLs:
+1. Clone to a temp directory: `git clone --depth 1 <url> /tmp/gad-re-<name>`
+2. If the URL includes a path (e.g. `/tree/main/src/core`), scope analysis to that subdirectory
+3. Read-only — never push to or modify the cloned repo
+4. Clean up temp directory when done
 
-Use read-only tools to understand the project. Do NOT modify any files in the target.
+## Step 2 — Deep analysis (multiple passes)
 
-### 2a. Structure scan
-```sh
-# File tree
-find <path> -type f -name "*.ts" -o -name "*.tsx" -o -name "*.js" | head -50
+Do NOT rush this step. The quality of the output depends on thorough analysis. Make multiple passes through the codebase.
 
-# Package.json for stack
-cat <path>/package.json
+### Pass 1: Orientation
+- README, package.json, entry points
+- What is this project? Who uses it? What problem does it solve?
+- File tree structure — how is it organized?
 
-# README for purpose
-cat <path>/README.md
-```
+### Pass 2: Public API surface
+- What does this expose to consumers? Exports, types, functions, components
+- Read the index.ts/index.js — what's the public contract?
+- Look at TypeScript declarations (.d.ts) if they exist
+- Check examples/ or docs/ for intended usage patterns
 
-### 2b. Architecture analysis
-- Entry points (main files, CLI commands, exports)
-- Component/module boundaries
-- Data flow (what talks to what)
-- External dependencies (APIs, databases, services)
-- State management patterns
-- UI component hierarchy (if frontend)
+### Pass 3: Core systems
+- Read every major module/file — understand what each one does
+- Map the data flow: what creates data, what transforms it, what renders it
+- Identify the state management approach
+- Identify external integrations (APIs, databases, services)
 
-### 2c. Pattern extraction
-- File naming conventions
-- Import patterns
-- Type system usage
-- Error handling approach
-- Test patterns
-- Content/data model
+### Pass 4: Edge cases and non-obvious behavior
+- Look at tests — they reveal edge cases the code handles
+- Look at error handling — what can go wrong?
+- Look at configuration — what's tunable?
+- Look at migration/upgrade code — what changed over time?
+
+### Pass 5: Dependencies and their roles
+- For each dependency in package.json, understand WHY it's there
+- Which dependencies are core to the architecture vs convenience?
+- Which could be replaced with simpler alternatives?
 
 ## Step 3 — Produce requirements
 
-Write REQUIREMENTS.xml structured as:
+Write REQUIREMENTS.xml. **Every observable feature becomes a testable criterion.**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <requirements>
-  <goal>One-sentence project purpose derived from README/code</goal>
+  <goal>One-sentence project purpose</goal>
   <audience>Who uses this and how</audience>
 
   <success-criteria>
-    <criterion>User-facing capability 1</criterion>
-    <criterion>User-facing capability 2</criterion>
-    <!-- One criterion per observable feature -->
+    <!-- One criterion per observable feature. MUST be testable. -->
+    <criterion id="sc-01">Description of user-facing capability</criterion>
   </success-criteria>
 
   <non-goals>
@@ -95,87 +111,62 @@ Write REQUIREMENTS.xml structured as:
   </non-goals>
 
   <core-systems>
-    <system id="system-name">What this system does, its inputs/outputs, key interfaces</system>
-    <!-- One system per major module/component boundary -->
+    <system id="name">What this system does, inputs/outputs, key interfaces</system>
   </core-systems>
 
   <stack>
-    <item>Framework/library and why it's used</item>
+    <item>Framework/library — why it's used, what role it fills</item>
   </stack>
 </requirements>
 ```
 
-### Requirements quality rules
-- Each criterion must be **testable** — an agent can verify it
-- Each system must describe **what**, not **how** — no implementation details
-- Stack items include the **why** — "React for component UI" not just "React"
-- Capture **every user-facing feature** you observe, not just the obvious ones
+### Requirements quality checklist
+- [ ] Every user-facing feature has a criterion (not just the obvious ones)
+- [ ] Each criterion is testable — an agent can verify pass/fail
+- [ ] Each system describes WHAT not HOW
+- [ ] Stack items include the WHY
+- [ ] Non-goals are explicit (prevents scope creep during reimplementation)
+- [ ] At least 20 criteria for a substantial library, 50+ for a large one
 
 ## Step 4 — Infer decisions
 
-Write DECISIONS.xml with architectural choices observed:
+Write DECISIONS.xml with **every architectural choice** you can observe:
 
 ```xml
 <decision id="re-01">
-  <title>Choice observed in codebase</title>
-  <summary>What was chosen and evidence of why</summary>
+  <title>Choice observed</title>
+  <summary>What was chosen, evidence of why</summary>
   <impact>How this constrains re-implementation</impact>
 </decision>
 ```
 
-Common decisions to look for:
-- Framework/library choices and their tradeoffs
-- State management approach
-- Data model design
-- UI architecture (component hierarchy, routing)
-- Build tooling choices
-- Testing strategy
+Look for: framework choices, state management, data model design, UI architecture, build tooling, testing strategy, error handling philosophy, performance optimizations.
 
 ## Step 5 — Extract conventions
 
-Write CONVENTIONS.md documenting:
-- File structure and organization
-- Naming conventions (files, exports, types, components)
-- Import patterns
-- Code style patterns
-- Content/data format conventions
+Write CONVENTIONS.md: file structure, naming, imports, code style, content/data formats, component patterns.
 
-## Step 6 — Suggest implementation roadmap
+## Step 6 — Suggest roadmap
 
-Write ROADMAP.xml with a phased re-implementation plan:
+Write ROADMAP.xml with phases in dependency order. First phase is always foundation (types, build, scaffold). Last phase is always public API and exports.
 
-```xml
-<phase id="01">
-  <title>Foundation</title>
-  <goal>Project scaffold, core types, build tooling</goal>
-  <status>planned</status>
-</phase>
-```
+## Step 7 — Write context
 
-Phase ordering should follow dependency order — what needs to exist before what.
+Write CONTEXT.md summarizing what you learned — the non-obvious insights that don't fit in structured docs.
 
-## Step 7 — Create eval project (optional)
-
-If creating an eval project from the reverse-engineered requirements:
+## Step 8 — Create eval project (optional)
 
 ```sh
 gad eval setup --project <name>
 ```
 
-Then copy the produced REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, and ROADMAP.xml into the eval template.
-
-## RepoMirror inspiration
-
-This skill takes RepoMirror's approach of analysis-first, transformation-second:
-- **RepoMirror:** analyze source → generate transformation prompt → port code
-- **GAD reverse-engineer:** analyze source → generate requirements → eval agent implements from requirements
-
-Both are license-safe because the output is a specification, not copied code. The eval agent implements from the spec without seeing the original source.
+Copy REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml into the eval template. An agent reading only these docs should be able to build a functional equivalent.
 
 ## Definition of done
 
-1. REQUIREMENTS.xml covers every observable feature
+1. REQUIREMENTS.xml covers every observable feature (20+ criteria)
 2. DECISIONS.xml captures 5+ architectural choices
-3. CONVENTIONS.md documents patterns the re-implementation should follow
-4. ROADMAP.xml has a coherent phase plan
+3. CONVENTIONS.md documents patterns for the re-implementation
+4. ROADMAP.xml has a coherent phase plan in dependency order
 5. An eval agent reading only these docs could build a functional equivalent
+6. No source code was copied — only requirements and architecture

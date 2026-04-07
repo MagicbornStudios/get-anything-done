@@ -1,0 +1,19 @@
+{
+  "created": "2026-04-07T15:12:30.791Z",
+  "projects": [
+    {
+      "project": "escape-the-dungeon",
+      "version": "v6",
+      "chars": 19093,
+      "tokens": 4774,
+      "file": "escape-the-dungeon-v6.md"
+    },
+    {
+      "project": "reader-workspace",
+      "version": "v4",
+      "chars": 38912,
+      "tokens": 9728,
+      "file": "reader-workspace-v4.md"
+    }
+  ]
+}

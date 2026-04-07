@@ -61,6 +61,11 @@
 | /gad:task-checkpoint | between tasks | ✓ |
 | /gad:auto-conventions | after first code phase | ✓ |
 | /gad:verify-work | after phase completion | ✓ |
+| /gad:check-todos | session start | ✓ |
+| decisions-captured | during implementation | ✓ |
+| multi-phase-planning | before execution | ✓ |
+| phase-completion | during execution | ✓ |
+| task-lifecycle | per task | ✓ |
 
 | **Skill accuracy** | **100.0%** |
 
