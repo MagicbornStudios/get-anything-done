@@ -3516,6 +3516,137 @@ const sinkCmd = defineCommand({
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
+// verify command
+// ---------------------------------------------------------------------------
+
+const verifyCmd = defineCommand({
+  meta: { name: 'verify', description: 'Verify a phase achieved its goals — checks tasks, build, state, conventions' },
+  args: {
+    projectid: { type: 'string', description: 'Project ID', default: '' },
+    phase: { type: 'string', description: 'Phase ID to verify', default: '' },
+  },
+  run({ args }) {
+    const { execSync } = require('child_process');
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+    const root = roots[0];
+    const planDir = path.join(baseDir, root.path, root.planningDir);
+
+    // Determine phase to verify
+    const phases = readPhases(root, baseDir);
+    let targetPhase = args.phase;
+    if (!targetPhase) {
+      // Find latest active or done phase
+      const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
+      targetPhase = stateXml ? (stateXml.match(/<current-phase>([\s\S]*?)<\/current-phase>/) || [])[1]?.trim() : '';
+    }
+    if (!targetPhase) { outputError('No phase specified and no current phase found. Use --phase <id>'); return; }
+
+    const padded = targetPhase.padStart(2, '0');
+    const phase = phases.find(p => p.id === padded || p.id === targetPhase);
+    if (!phase) { outputError(`Phase ${targetPhase} not found in ROADMAP.xml`); return; }
+
+    console.log(`\nVerifying phase ${padded}: ${phase.title || ''}\n`);
+
+    const checks = [];
+
+    // 1. All tasks done
+    const allTasks = readTasks(root, baseDir, {});
+    const phaseTasks = allTasks.filter(t => {
+      const tp = t.id ? t.id.split('-')[0] : '';
+      return tp === padded || tp === targetPhase;
+    });
+    const doneTasks = phaseTasks.filter(t => t.status === 'done');
+    const openTasks = phaseTasks.filter(t => t.status !== 'done');
+    checks.push({
+      category: 'Tasks',
+      check: `All tasks done (${doneTasks.length}/${phaseTasks.length})`,
+      result: openTasks.length === 0 ? 'PASS' : 'FAIL',
+      evidence: openTasks.length === 0 ? `${doneTasks.length} done` : `${openTasks.length} still open: ${openTasks.map(t => t.id).join(', ')}`,
+    });
+
+    // 2. Build passes (try common commands)
+    const projectDir = path.join(baseDir, root.path);
+    let buildResult = 'SKIP';
+    let buildEvidence = 'no build command detected';
+    const buildCmds = [
+      { cmd: 'npm run build', check: 'package.json' },
+      { cmd: 'npx tsc --noEmit', check: 'tsconfig.json' },
+      { cmd: 'pnpm run build', check: 'pnpm-workspace.yaml' },
+    ];
+    for (const bc of buildCmds) {
+      if (fs.existsSync(path.join(projectDir, bc.check))) {
+        try {
+          execSync(bc.cmd, { cwd: projectDir, encoding: 'utf8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] });
+          buildResult = 'PASS';
+          buildEvidence = `${bc.cmd} exited 0`;
+        } catch (e) {
+          buildResult = 'FAIL';
+          buildEvidence = `${bc.cmd} failed: ${(e.stderr || e.message || '').slice(0, 200)}`;
+        }
+        break;
+      }
+    }
+    checks.push({ category: 'Build', check: 'Build/typecheck passes', result: buildResult, evidence: buildEvidence });
+
+    // 3. STATE.xml is current
+    const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
+    if (stateXml) {
+      const nextAction = (stateXml.match(/<next-action>([\s\S]*?)<\/next-action>/) || [])[1]?.trim() || '';
+      const stateOk = nextAction.length > 10;
+      checks.push({
+        category: 'State',
+        check: 'STATE.xml next-action is current',
+        result: stateOk ? 'PASS' : 'FAIL',
+        evidence: stateOk ? nextAction.slice(0, 100) : 'next-action is empty or too short',
+      });
+    }
+
+    // 4. Decisions captured (if any tasks suggest architectural choices)
+    const decisionsXml = readXmlFile(path.join(planDir, 'DECISIONS.xml'));
+    const decCount = decisionsXml ? (decisionsXml.match(/<decision\s/g) || []).length : 0;
+    checks.push({
+      category: 'Decisions',
+      check: 'Decisions documented',
+      result: decCount > 0 ? 'PASS' : 'SKIP',
+      evidence: decCount > 0 ? `${decCount} decisions in DECISIONS.xml` : 'no decisions (may be ok for non-architectural phases)',
+    });
+
+    // 5. Conventions (greenfield first phase)
+    const conventionsExists = fs.existsSync(path.join(planDir, 'CONVENTIONS.md'));
+    const isFirstPhase = padded === '01' || phases.filter(p => p.status === 'done').length <= 1;
+    if (isFirstPhase) {
+      checks.push({
+        category: 'Conventions',
+        check: 'CONVENTIONS.md exists (first implementation phase)',
+        result: conventionsExists ? 'PASS' : 'FAIL',
+        evidence: conventionsExists ? 'file exists' : 'missing — create with gad:auto-conventions',
+      });
+    }
+
+    // Output
+    const passed = checks.filter(c => c.result === 'PASS').length;
+    const failed = checks.filter(c => c.result === 'FAIL').length;
+    const skipped = checks.filter(c => c.result === 'SKIP').length;
+    const total = checks.length;
+    const overall = failed > 0 ? 'FAIL' : 'PASS';
+
+    console.log(`  #  CATEGORY      CHECK                                    RESULT  EVIDENCE`);
+    console.log(`  ─  ────────────  ───────────────────────────────────────  ──────  ────────`);
+    for (let i = 0; i < checks.length; i++) {
+      const c = checks[i];
+      const icon = c.result === 'PASS' ? '✓' : c.result === 'FAIL' ? '✗' : '–';
+      console.log(`  ${i + 1}  ${c.category.padEnd(12)}  ${c.check.slice(0, 39).padEnd(39)}  ${icon} ${c.result.padEnd(4)}  ${(c.evidence || '').slice(0, 50)}`);
+    }
+    console.log(`\n  Result: ${overall} (${passed} passed, ${failed} failed, ${skipped} skipped)\n`);
+
+    if (failed > 0) process.exit(1);
+  },
+});
+
+// ---------------------------------------------------------------------------
 // sprint subcommands
 // ---------------------------------------------------------------------------
 
@@ -3646,6 +3777,7 @@ const main = defineCommand({
     pack: packCmd,
     docs: docsCmd,
     eval: evalCmd,
+    verify: verifyCmd,
     snapshot: snapshotCmd,
     sprint: sprintCmd,
     sink: sinkCmd,
