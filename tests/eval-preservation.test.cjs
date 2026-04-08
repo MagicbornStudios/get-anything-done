@@ -26,6 +26,9 @@ const IMPL_EVAL_PROJECTS = [
   'escape-the-dungeon',
   'escape-the-dungeon-bare',
   'escape-the-dungeon-emergent',
+  'etd-brownfield-gad',
+  'etd-brownfield-bare',
+  'etd-brownfield-emergent',
 ];
 
 // Preservation contract cutoff — runs before this version/project combo predate
@@ -35,12 +38,25 @@ const PRESERVATION_CONTRACT_CUTOFF = {
   'escape-the-dungeon': 7, // v1-v6 predate contract
   'escape-the-dungeon-bare': 1,
   'escape-the-dungeon-emergent': 1,
+  'etd-brownfield-gad': 1,
+  'etd-brownfield-bare': 1,
+  'etd-brownfield-emergent': 1,
 };
 
 function requiresPreservation(project, version) {
   const versionNum = parseInt(version.slice(1), 10);
   const cutoff = PRESERVATION_CONTRACT_CUTOFF[project] ?? 1;
-  return versionNum >= cutoff;
+  if (versionNum < cutoff) return false;
+  // Skip runs that are only prompt-generated (not yet executed)
+  const runMdPath = path.join(evalsDir, project, version, 'RUN.md');
+  if (fs.existsSync(runMdPath)) {
+    const content = fs.readFileSync(runMdPath, 'utf8');
+    // If status is prompt-generated and no preserved: line exists, the run hasn't been executed
+    if (/status:\s*prompt-generated/.test(content) && !/preserved:/.test(content)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 describe('gad eval preserve', () => {

@@ -1,0 +1,24 @@
+{
+  "type": "eval",
+  "name": "escape-the-dungeon",
+  "description": "Greenfield: agent builds the game from scratch using the full GAD framework",
+  "eval_mode": "greenfield",
+  "workflow": "gad",
+  "baseline": null,
+  "trace": true,
+  "template": "template/",
+  "constraints": {
+    "uses_gad_framework": true,
+    "starts_from_scratch": true
+  },
+  "scoring": {
+    "weights": {
+      "requirement_coverage": 0.15,
+      "planning_quality": 0.15,
+      "per_task_discipline": 0.15,
+      "skill_accuracy": 0.10,
+      "time_efficiency": 0.05,
+      "human_review": 0.30
+    }
+  }
+}

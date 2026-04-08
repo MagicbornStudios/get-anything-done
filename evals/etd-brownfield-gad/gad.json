@@ -1,0 +1,30 @@
+{
+  "type": "eval",
+  "name": "etd-brownfield-gad",
+  "description": "Brownfield: extend bare v3 codebase with v4 features using the full GAD framework",
+  "eval_mode": "brownfield",
+  "workflow": "gad",
+  "baseline": {
+    "project": "escape-the-dungeon-bare",
+    "version": "v3",
+    "source": "evals/escape-the-dungeon-bare/v3/run/"
+  },
+  "trace": true,
+  "template": "template/",
+  "extends": "_brownfield-extensions-v4.md",
+  "compare_to": ["etd-brownfield-bare", "etd-brownfield-emergent"],
+  "constraints": {
+    "uses_gad_framework": true,
+    "starts_from_existing_codebase": true
+  },
+  "scoring": {
+    "weights": {
+      "requirement_coverage": 0.15,
+      "planning_quality": 0.15,
+      "per_task_discipline": 0.15,
+      "skill_accuracy": 0.10,
+      "time_efficiency": 0.05,
+      "human_review": 0.30
+    }
+  }
+}

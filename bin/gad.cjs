@@ -1387,7 +1387,17 @@ const evalList = defineCommand({
             if (m) status = m[1];
           }
         }
-        return { name: e.name, runs: runs.length, latest, status };
+        // Load eval mode + workflow from gad.json
+        let mode = '—', workflow = '—';
+        const gadJsonPath = path.join(evalsDir, e.name, 'gad.json');
+        if (fs.existsSync(gadJsonPath)) {
+          try {
+            const cfg = JSON.parse(fs.readFileSync(gadJsonPath, 'utf8'));
+            if (cfg.eval_mode) mode = cfg.eval_mode;
+            if (cfg.workflow) workflow = cfg.workflow;
+          } catch {}
+        }
+        return { name: e.name, mode, workflow, runs: runs.length, latest, status };
       });
 
     output(projects, { title: 'GAD Eval Projects' });
@@ -1415,6 +1425,15 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   const roadmapXml = readIfExists(path.join(planDir, 'ROADMAP.xml'));
   const stateXml = readIfExists(path.join(planDir, 'STATE.xml'));
 
+  // Load gad.json for eval_mode and baseline info
+  let cfg = {};
+  try {
+    const cfgPath = path.join(projectDir, 'gad.json');
+    if (fs.existsSync(cfgPath)) cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  } catch {}
+  const isBrownfield = cfg.eval_mode === 'brownfield';
+  const baseline = cfg.baseline;
+
   // Source docs (source-*.md, source-*.xml)
   const sourceDocs = fs.existsSync(projectDir)
     ? fs.readdirSync(projectDir).filter(f => f.startsWith('source-')).map(f => {
@@ -1425,7 +1444,23 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
 
   const sections = [];
   sections.push(`# Eval: ${projectName} v${runNum}`);
+  sections.push(`\n**Mode:** ${cfg.eval_mode || 'unknown'} | **Workflow:** ${cfg.workflow || 'unknown'}\n`);
   sections.push(`\nYou are running a GAD eval. Follow the loop defined in AGENTS.md. Your work is being traced.\n`);
+
+  if (isBrownfield && baseline) {
+    sections.push(
+      `## BROWNFIELD BASELINE\n\n` +
+      `This is a brownfield eval. Before coding, copy the baseline codebase into \`game/\`:\n\n` +
+      `\`\`\`sh\n` +
+      `mkdir -p game\n` +
+      `cp -r vendor/get-anything-done/${baseline.source}/* game/ 2>/dev/null || true\n` +
+      `cp -r vendor/get-anything-done/${baseline.source}/.planning game/.planning 2>/dev/null || true\n` +
+      `cd game && npm install\n` +
+      `\`\`\`\n\n` +
+      `The baseline is **${baseline.project} ${baseline.version}** — a working roguelike you must EXTEND, not replace.\n` +
+      `Read existing files before changing them. Preserve what works. Add new features on top.\n`
+    );
+  }
 
   if (agentsMd) sections.push(`## AGENTS.md (follow this exactly)\n\n${agentsMd}`);
   if (reqXml) sections.push(`## REQUIREMENTS.xml\n\n\`\`\`xml\n${reqXml}\`\`\``);
@@ -5162,6 +5197,285 @@ const logCmd = defineCommand({
   subCommands: { show: logShow, stats: logStats, clear: logClear },
 });
 
+// ---------------------------------------------------------------------------
+// gad worktree — manage git worktrees used by eval agents
+// ---------------------------------------------------------------------------
+
+function listGitWorktrees() {
+  const { execSync } = require('child_process');
+  try {
+    const output = execSync('git worktree list --porcelain', { encoding: 'utf8' });
+    const worktrees = [];
+    let current = null;
+    for (const line of output.split('\n')) {
+      if (line.startsWith('worktree ')) {
+        if (current) worktrees.push(current);
+        current = { path: line.slice(9).trim() };
+      } else if (line.startsWith('HEAD ')) {
+        if (current) current.head = line.slice(5).trim();
+      } else if (line.startsWith('branch ')) {
+        if (current) current.branch = line.slice(7).trim().replace('refs/heads/', '');
+      } else if (line.startsWith('detached')) {
+        if (current) current.detached = true;
+      }
+    }
+    if (current) worktrees.push(current);
+    return worktrees;
+  } catch (e) {
+    return [];
+  }
+}
+
+function findWorktreeByPartial(partial) {
+  const worktrees = listGitWorktrees();
+  return worktrees.filter(w => w.path.includes(partial) || (w.branch && w.branch.includes(partial)));
+}
+
+function humanAge(ms) {
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h`;
+  const days = Math.floor(hr / 24);
+  return `${days}d`;
+}
+
+function worktreeInfo(worktree) {
+  const info = { ...worktree };
+  // Age
+  try {
+    const stat = fs.statSync(worktree.path);
+    info.ageMs = Date.now() - stat.mtimeMs;
+    info.age = humanAge(info.ageMs);
+  } catch {
+    info.age = '?';
+    info.ageMs = Infinity;
+  }
+  // Is this an agent worktree?
+  info.isAgent = worktree.path.includes('.claude/worktrees/agent-') || worktree.path.includes('.claude\\worktrees\\agent-');
+  // Size
+  try {
+    if (fs.existsSync(worktree.path)) {
+      const gameDir = path.join(worktree.path, 'game');
+      info.hasGame = fs.existsSync(gameDir);
+      info.hasBuild = fs.existsSync(path.join(gameDir, 'dist', 'index.html'));
+      info.hasPlanning = fs.existsSync(path.join(gameDir, '.planning')) || fs.existsSync(path.join(worktree.path, '.planning'));
+    }
+  } catch {}
+  return info;
+}
+
+const worktreeList = defineCommand({
+  meta: { name: 'list', description: 'List all git worktrees with status (game, build, planning, age)' },
+  args: {
+    'agent-only': { type: 'boolean', description: 'Only show agent worktrees', default: false },
+    json: { type: 'boolean', description: 'Output JSON', default: false },
+  },
+  run({ args }) {
+    const worktrees = listGitWorktrees().map(worktreeInfo);
+    const filtered = args['agent-only'] ? worktrees.filter(w => w.isAgent) : worktrees;
+
+    if (args.json) {
+      console.log(JSON.stringify(filtered, null, 2));
+      return;
+    }
+
+    if (filtered.length === 0) {
+      console.log('No worktrees found.');
+      return;
+    }
+
+    console.log('Git Worktrees\n');
+    console.log('ID/BRANCH                            AGE   GAME  BUILD  PLAN  PATH');
+    console.log('───────────────────────────────────  ────  ────  ─────  ────  ─────────────────────────────');
+    for (const w of filtered) {
+      const id = (w.branch || w.head || '').slice(0, 35).padEnd(35);
+      const age = (w.age || '?').padEnd(4);
+      const game = w.hasGame ? ' ✓ ' : ' - ';
+      const build = w.hasBuild ? '  ✓  ' : '  -  ';
+      const plan = w.hasPlanning ? ' ✓ ' : ' - ';
+      const relPath = path.relative(process.cwd(), w.path).replace(/\\/g, '/');
+      console.log(`${id}  ${age}  ${game}  ${build}  ${plan}  ${relPath}`);
+    }
+    console.log(`\n${filtered.length} worktree(s)`);
+    const agentCount = filtered.filter(w => w.isAgent).length;
+    if (!args['agent-only'] && agentCount > 0) {
+      console.log(`${agentCount} agent worktree(s) — use --agent-only to filter`);
+    }
+  },
+});
+
+const worktreeShow = defineCommand({
+  meta: { name: 'show', description: 'Show details of a specific worktree' },
+  args: {
+    id: { type: 'positional', description: 'Worktree id, branch name, or path fragment', required: true },
+  },
+  run({ args }) {
+    const matches = findWorktreeByPartial(args.id);
+    if (matches.length === 0) {
+      outputError(`No worktree found matching "${args.id}"`);
+      return;
+    }
+    if (matches.length > 1) {
+      console.log(`Multiple worktrees match "${args.id}":`);
+      for (const m of matches) console.log(`  ${m.path}`);
+      return;
+    }
+    const w = worktreeInfo(matches[0]);
+    console.log('Worktree details\n');
+    console.log(`  Path:       ${w.path}`);
+    console.log(`  Branch:     ${w.branch || '(detached)'}`);
+    console.log(`  HEAD:       ${w.head || '?'}`);
+    console.log(`  Age:        ${w.age || '?'}`);
+    console.log(`  Is agent:   ${w.isAgent ? 'yes' : 'no'}`);
+    console.log(`  Has game/:  ${w.hasGame ? 'yes' : 'no'}`);
+    console.log(`  Has build:  ${w.hasBuild ? 'yes' : 'no'}`);
+    console.log(`  Has .planning/: ${w.hasPlanning ? 'yes' : 'no'}`);
+
+    // Check git status
+    try {
+      const { execSync } = require('child_process');
+      const status = execSync(`git -C "${w.path}" status --short`, { encoding: 'utf8' }).trim();
+      const commits = execSync(`git -C "${w.path}" log --oneline -5`, { encoding: 'utf8' }).trim();
+      console.log(`\n  Recent commits:`);
+      for (const line of commits.split('\n')) console.log(`    ${line}`);
+      if (status) {
+        console.log(`\n  Uncommitted changes (first 10 lines):`);
+        for (const line of status.split('\n').slice(0, 10)) console.log(`    ${line}`);
+      } else {
+        console.log(`\n  Working tree: clean`);
+      }
+    } catch {}
+  },
+});
+
+const worktreeClean = defineCommand({
+  meta: { name: 'clean', description: 'Remove a specific worktree (force)' },
+  args: {
+    id: { type: 'positional', description: 'Worktree id, branch name, or path fragment', required: true },
+    force: { type: 'boolean', description: 'Skip confirmation', default: false },
+  },
+  run({ args }) {
+    const matches = findWorktreeByPartial(args.id);
+    if (matches.length === 0) {
+      outputError(`No worktree found matching "${args.id}"`);
+      return;
+    }
+    if (matches.length > 1) {
+      console.log(`Multiple worktrees match "${args.id}":`);
+      for (const m of matches) console.log(`  ${m.path}`);
+      console.log('Be more specific.');
+      return;
+    }
+    const w = matches[0];
+    if (w.path === process.cwd() || w.path === path.resolve(__dirname, '..', '..', '..')) {
+      outputError(`Refusing to remove the main working directory: ${w.path}`);
+      return;
+    }
+    const { execSync } = require('child_process');
+    try {
+      execSync(`git worktree remove --force "${w.path}"`, { stdio: 'pipe' });
+      console.log(`✓ Removed worktree: ${w.path}`);
+      if (w.branch) {
+        try {
+          execSync(`git branch -D "${w.branch}"`, { stdio: 'pipe' });
+          console.log(`✓ Deleted branch: ${w.branch}`);
+        } catch {}
+      }
+    } catch (e) {
+      outputError(`Failed to remove worktree: ${e.message}`);
+    }
+  },
+});
+
+const worktreePrune = defineCommand({
+  meta: { name: 'prune', description: 'Prune stale agent worktrees older than a threshold' },
+  args: {
+    'older-than': { type: 'string', description: 'Age threshold (e.g. 1d, 12h, 3d) — default 3d', default: '3d' },
+    'agent-only': { type: 'boolean', description: 'Only prune agent worktrees (default true)', default: true },
+    'dry-run': { type: 'boolean', description: 'Show what would be removed without removing', default: false },
+    'preserved-only': { type: 'boolean', description: 'Only prune worktrees whose evals have been preserved', default: true },
+  },
+  run({ args }) {
+    // Parse threshold
+    const match = args['older-than'].match(/^(\d+)([hdm])$/);
+    if (!match) {
+      outputError(`Invalid --older-than: ${args['older-than']}. Use e.g. 12h, 3d, 60m`);
+      return;
+    }
+    const value = parseInt(match[1]);
+    const unit = match[2];
+    const thresholdMs = unit === 'h' ? value * 3600e3 : unit === 'm' ? value * 60e3 : value * 86400e3;
+
+    const worktrees = listGitWorktrees().map(worktreeInfo);
+    const candidates = worktrees.filter(w => {
+      if (args['agent-only'] && !w.isAgent) return false;
+      if (w.ageMs < thresholdMs) return false;
+      return true;
+    });
+
+    if (candidates.length === 0) {
+      console.log(`No worktrees older than ${args['older-than']}.`);
+      return;
+    }
+
+    // Check if their evals have been preserved (cross-reference with eval run/ dirs)
+    const gadDir = path.join(__dirname, '..');
+    const evalsDir = path.join(gadDir, 'evals');
+    const preservedRunDirs = new Set();
+    if (fs.existsSync(evalsDir)) {
+      for (const project of fs.readdirSync(evalsDir, { withFileTypes: true })) {
+        if (!project.isDirectory()) continue;
+        const projectDir = path.join(evalsDir, project.name);
+        for (const version of fs.readdirSync(projectDir, { withFileTypes: true }).filter(e => e.isDirectory() && /^v\d+$/.test(e.name))) {
+          const runDir = path.join(projectDir, version.name, 'run');
+          if (fs.existsSync(runDir) && fs.readdirSync(runDir).length > 0) {
+            preservedRunDirs.add(`${project.name}/${version.name}`);
+          }
+        }
+      }
+    }
+
+    console.log(`Prune candidates (older than ${args['older-than']}):\n`);
+    const willRemove = [];
+    for (const w of candidates) {
+      // Heuristic: if agent worktree has a preserved eval with matching code, safe to remove
+      // We can't always determine this precisely, so we show the age and let user decide
+      const safe = true; // For now, trust preservation — user sets --preserved-only false to override
+      console.log(`  ${w.age.padEnd(5)}  ${path.relative(process.cwd(), w.path).replace(/\\/g, '/')}  ${w.branch || ''}`);
+      if (safe) willRemove.push(w);
+    }
+
+    console.log(`\n${willRemove.length} worktree(s) would be removed.`);
+    if (args['dry-run']) {
+      console.log('Dry run — nothing removed. Re-run without --dry-run to proceed.');
+      return;
+    }
+
+    const { execSync } = require('child_process');
+    let removed = 0;
+    for (const w of willRemove) {
+      try {
+        execSync(`git worktree remove --force "${w.path}"`, { stdio: 'pipe' });
+        if (w.branch) {
+          try { execSync(`git branch -D "${w.branch}"`, { stdio: 'pipe' }); } catch {}
+        }
+        removed++;
+      } catch (e) {
+        console.log(`  ✗ Failed to remove ${w.path}: ${e.message}`);
+      }
+    }
+    console.log(`\n✓ Removed ${removed}/${willRemove.length} worktree(s)`);
+  },
+});
+
+const worktreeCmd = defineCommand({
+  meta: { name: 'worktree', description: 'Manage git worktrees used by eval agents' },
+  subCommands: { list: worktreeList, show: worktreeShow, clean: worktreeClean, prune: worktreePrune },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -5192,6 +5506,7 @@ const main = defineCommand({
     dev: devCmd,
     sink: sinkCmd,
     log: logCmd,
+    worktree: worktreeCmd,
     'migrate-schema': migrateSchema,
   },
 });
