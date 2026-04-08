@@ -1,0 +1,51 @@
+{
+  "entityTypes": [
+    {
+      "id": "human",
+      "name": "Human",
+      "baseStats": { "maxHp": 100, "maxMana": 50, "might": 10, "agility": 10, "defense": 5, "power": 8, "insight": 8, "willpower": 8 }
+    },
+    {
+      "id": "goblin",
+      "name": "Goblin",
+      "baseStats": { "maxHp": 40, "maxMana": 10, "might": 8, "agility": 14, "defense": 3, "power": 4, "insight": 5, "willpower": 4 }
+    },
+    {
+      "id": "skeleton",
+      "name": "Skeleton",
+      "baseStats": { "maxHp": 55, "maxMana": 0, "might": 12, "agility": 6, "defense": 8, "power": 2, "insight": 3, "willpower": 2 }
+    },
+    {
+      "id": "slime",
+      "name": "Slime",
+      "baseStats": { "maxHp": 30, "maxMana": 20, "might": 5, "agility": 4, "defense": 2, "power": 6, "insight": 2, "willpower": 6 }
+    },
+    {
+      "id": "dragon",
+      "name": "Dragon",
+      "baseStats": { "maxHp": 200, "maxMana": 100, "might": 25, "agility": 8, "defense": 15, "power": 20, "insight": 15, "willpower": 18 }
+    },
+    {
+      "id": "merchant_npc",
+      "name": "Merchant",
+      "baseStats": { "maxHp": 60, "maxMana": 30, "might": 5, "agility": 8, "defense": 4, "power": 3, "insight": 12, "willpower": 10 }
+    }
+  ],
+  "archetypes": [
+    {
+      "id": "wanderer",
+      "name": "Wanderer",
+      "statModifiers": { "maxHp": 10, "might": 2, "agility": 3, "defense": 1 }
+    },
+    {
+      "id": "warrior",
+      "name": "Warrior",
+      "statModifiers": { "maxHp": 30, "might": 5, "defense": 5, "agility": -2 }
+    },
+    {
+      "id": "mage",
+      "name": "Mage",
+      "statModifiers": { "maxMana": 30, "power": 5, "insight": 3, "maxHp": -10, "defense": -2 }
+    }
+  ]
+}

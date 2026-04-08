@@ -1,115 +1,96 @@
 /**
- * Static eval results — copied from vendor/get-anything-done/evals/<project>/<version>/TRACE.json
- * at the time the site was built. Source of truth lives in the eval directories; this file
- * is regenerated whenever a new round publishes.
+ * Public entry point for eval data. All runtime data comes from
+ * eval-data.generated.ts (written by scripts/build-site-data.mjs during
+ * prebuild). This file only re-exports and adds a few display helpers.
  */
 
-export type Workflow = "gad" | "bare" | "emergent";
+export {
+  EVAL_RUNS,
+  EVAL_TEMPLATES,
+  GAD_PACK_TEMPLATE,
+  PLAYABLE_INDEX,
+  WORKFLOW_LABELS,
+  WORKFLOW_DESCRIPTIONS,
+  type EvalRunRecord,
+  type EvalScores,
+  type EvalTemplateAsset,
+  type Workflow,
+} from "./eval-data.generated";
 
-export interface EvalRun {
-  project: string;
-  version: string;
-  workflow: Workflow;
-  requirementsVersion: string;
-  date: string;
-  composite: number;
-  humanReview: number;
-  gateFailed: boolean;
-  notes: string;
+import {
+  EVAL_RUNS,
+  PLAYABLE_INDEX,
+  type EvalRunRecord,
+  type Workflow,
+} from "./eval-data.generated";
+
+export const PROJECT_LABELS: Record<string, string> = {
+  "escape-the-dungeon": "Escape the Dungeon · GAD",
+  "escape-the-dungeon-bare": "Escape the Dungeon · Bare",
+  "escape-the-dungeon-emergent": "Escape the Dungeon · Emergent",
+  "etd-brownfield-gad": "ETD Brownfield · GAD",
+  "etd-brownfield-bare": "ETD Brownfield · Bare",
+  "etd-brownfield-emergent": "ETD Brownfield · Emergent",
+  "reader-workspace": "Reader Workspace",
+};
+
+export function runKey(r: { project: string; version: string }) {
+  return `${r.project}/${r.version}`;
 }
 
-export const EVAL_RUNS: EvalRun[] = [
-  {
-    project: "escape-the-dungeon",
-    version: "v7",
-    workflow: "gad",
-    requirementsVersion: "v3",
-    date: "2026-04-08",
-    composite: 0.668,
-    humanReview: 0.3,
-    gateFailed: false,
-    notes:
-      "Passed gate technically; human review noted unintentional UI polish and combat felt rote.",
-  },
-  {
-    project: "escape-the-dungeon",
-    version: "v8",
-    workflow: "gad",
-    requirementsVersion: "v3",
-    date: "2026-04-08",
-    composite: 0.177,
-    humanReview: 0.2,
-    gateFailed: true,
-    notes:
-      "Crafting system broke the game when used. ASCII map, no sourced sprites. Rate-limited mid-run.",
-  },
-  {
-    project: "escape-the-dungeon-bare",
-    version: "v1",
-    workflow: "bare",
-    requirementsVersion: "v3",
-    date: "2026-04-08",
-    composite: 0.198,
-    humanReview: 0.1,
-    gateFailed: true,
-    notes: "Main menu rendered but New Game didn't fire — KAPLAY click area missing.",
-  },
-  {
-    project: "escape-the-dungeon-bare",
-    version: "v2",
-    workflow: "bare",
-    requirementsVersion: "v3",
-    date: "2026-04-08",
-    composite: 0.601,
-    humanReview: 0.5,
-    gateFailed: false,
-    notes: "Most playable yet, but raw ASCII UI and no rune forge.",
-  },
-  {
-    project: "escape-the-dungeon-bare",
-    version: "v3",
-    workflow: "bare",
-    requirementsVersion: "v3",
-    date: "2026-04-08",
-    composite: 0.526,
-    humanReview: 0.7,
-    gateFailed: false,
-    notes:
-      "Highest human review across all runs. Inspired the freedom hypothesis: less framework, more output.",
-  },
-  {
-    project: "escape-the-dungeon-emergent",
-    version: "v1",
-    workflow: "emergent",
-    requirementsVersion: "v3",
-    date: "2026-04-08",
-    composite: 0.303,
-    humanReview: 0.1,
-    gateFailed: false,
-    notes: "Crashed on KAPLAY styled-text — captured the failure as a skill for v2.",
-  },
-  {
-    project: "escape-the-dungeon-emergent",
-    version: "v2",
-    workflow: "emergent",
-    requirementsVersion: "v3",
-    date: "2026-04-08",
-    composite: 0.478,
-    humanReview: 0.5,
-    gateFailed: false,
-    notes: "Inherited skills paid off — no repeat of v1's crash.",
-  },
-];
+export function playableUrl(r: { project: string; version: string }): string | null {
+  return PLAYABLE_INDEX[runKey(r)] ?? null;
+}
 
-export const WORKFLOW_LABELS: Record<Workflow, string> = {
-  gad: "GAD",
-  bare: "Bare",
-  emergent: "Emergent",
-};
+export function runsByProject(): Array<{ project: string; runs: EvalRunRecord[] }> {
+  const groups = new Map<string, EvalRunRecord[]>();
+  for (const r of EVAL_RUNS) {
+    const arr = groups.get(r.project) ?? [];
+    arr.push(r);
+    groups.set(r.project, arr);
+  }
+  // Sort each project's runs by version number ascending.
+  for (const arr of groups.values()) {
+    arr.sort((a, b) => {
+      const av = parseInt(a.version.slice(1), 10) || 0;
+      const bv = parseInt(b.version.slice(1), 10) || 0;
+      return av - bv;
+    });
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([project, runs]) => ({ project, runs }));
+}
 
-export const WORKFLOW_DESCRIPTIONS: Record<Workflow, string> = {
-  gad: "Full GAD framework: .planning/ XML, AGENTS.md loop, skill triggers, plan/execute/verify cycle.",
-  bare: "No framework. Agent builds the game however it wants. Workflow artifacts only mandated to live under game/.planning/.",
-  emergent:
-    "No framework, but inherits skills from previous bare/emergent runs. Evolves them in place and writes a CHANGELOG.",
-};
+export function runsByWorkflow(): Record<Workflow, EvalRunRecord[]> {
+  const by: Record<Workflow, EvalRunRecord[]> = { gad: [], bare: [], emergent: [] };
+  for (const r of EVAL_RUNS) {
+    if (r.workflow in by) by[r.workflow as Workflow].push(r);
+  }
+  return by;
+}
+
+export function latestPlayableRuns(): EvalRunRecord[] {
+  // One representative (latest version) per project that has a playable build.
+  const latest = new Map<string, EvalRunRecord>();
+  for (const r of EVAL_RUNS) {
+    if (!playableUrl(r)) continue;
+    const existing = latest.get(r.project);
+    if (!existing) {
+      latest.set(r.project, r);
+    } else {
+      const existingV = parseInt(existing.version.slice(1), 10) || 0;
+      const thisV = parseInt(r.version.slice(1), 10) || 0;
+      if (thisV > existingV) latest.set(r.project, r);
+    }
+  }
+  return [...latest.values()].sort((a, b) => a.project.localeCompare(b.project));
+}
+
+export function findRun(project: string, version: string): EvalRunRecord | undefined {
+  return EVAL_RUNS.find((r) => r.project === project && r.version === version);
+}
+
+export function humanReviewNotes(r: EvalRunRecord): string | null {
+  return r.humanReview?.notes ?? null;
+}

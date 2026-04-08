@@ -1,0 +1,26 @@
+[
+  {
+    "id": "potion_hp",
+    "name": "Health Potion",
+    "description": "Restores 30 HP.",
+    "effect": "heal_hp",
+    "value": 30,
+    "price": 15
+  },
+  {
+    "id": "potion_mana",
+    "name": "Mana Potion",
+    "description": "Restores 20 Mana.",
+    "effect": "heal_mana",
+    "value": 20,
+    "price": 20
+  },
+  {
+    "id": "potion_hp_large",
+    "name": "Large Health Potion",
+    "description": "Restores 60 HP.",
+    "effect": "heal_hp",
+    "value": 60,
+    "price": 30
+  }
+]

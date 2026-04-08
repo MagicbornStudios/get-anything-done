@@ -1,0 +1,116 @@
+{
+  "entityTypes": [
+    {
+      "id": "goblin",
+      "name": "Goblin",
+      "baseStats": { "maxHp": 30, "maxMana": 5, "might": 8, "agility": 12, "defense": 4, "power": 3, "insight": 3, "willpower": 2 },
+      "description": "A sneaky little creature with sharp claws.",
+      "color": "#4a9e4a",
+      "icon": "goblin"
+    },
+    {
+      "id": "skeleton",
+      "name": "Skeleton Warrior",
+      "baseStats": { "maxHp": 45, "maxMana": 0, "might": 14, "agility": 6, "defense": 8, "power": 2, "insight": 1, "willpower": 1 },
+      "description": "Animated bones wielding a rusty sword.",
+      "color": "#c9c9c9",
+      "icon": "skeleton"
+    },
+    {
+      "id": "dark_mage",
+      "name": "Dark Mage",
+      "baseStats": { "maxHp": 25, "maxMana": 30, "might": 4, "agility": 7, "defense": 3, "power": 16, "insight": 14, "willpower": 10 },
+      "description": "A hooded figure crackling with dark energy.",
+      "color": "#7b3fa0",
+      "icon": "mage"
+    },
+    {
+      "id": "slime",
+      "name": "Cave Slime",
+      "baseStats": { "maxHp": 50, "maxMana": 0, "might": 6, "agility": 3, "defense": 12, "power": 1, "insight": 1, "willpower": 5 },
+      "description": "A gooey mass that absorbs impacts.",
+      "color": "#3bbd5e",
+      "icon": "slime"
+    },
+    {
+      "id": "floor_boss",
+      "name": "Dungeon Guardian",
+      "baseStats": { "maxHp": 100, "maxMana": 20, "might": 18, "agility": 8, "defense": 14, "power": 12, "insight": 10, "willpower": 8 },
+      "description": "A massive armored figure guarding the dungeon exit.",
+      "color": "#d4302d",
+      "icon": "boss"
+    }
+  ],
+  "archetypes": [
+    {
+      "id": "wanderer",
+      "name": "Wanderer",
+      "statModifiers": { "maxHp": 5, "agility": 3, "might": 2 },
+      "description": "A balanced traveler."
+    },
+    {
+      "id": "warrior",
+      "name": "Warrior",
+      "statModifiers": { "maxHp": 15, "might": 5, "defense": 3, "agility": -2 },
+      "description": "Strong and tough, but slow."
+    },
+    {
+      "id": "mage",
+      "name": "Mage",
+      "statModifiers": { "maxMana": 15, "power": 6, "insight": 4, "maxHp": -5 },
+      "description": "Powerful spellcaster, fragile body."
+    }
+  ],
+  "npcs": [
+    {
+      "id": "old_sage",
+      "name": "Old Sage",
+      "entityType": "human",
+      "color": "#6699cc",
+      "icon": "sage",
+      "greeting": "Greetings, traveler. The dungeon holds many secrets...",
+      "dialogue": [
+        {
+          "text": "Tell me about this place.",
+          "response": "This dungeon shifts and changes. Each floor grows more dangerous. Seek the forge rooms to craft powerful spells.",
+          "effect": null
+        },
+        {
+          "text": "Can you teach me a spell?",
+          "response": "Here, take this rune. It channels the power of flame. Use it wisely at the forge.",
+          "effect": { "type": "giveRune", "runeId": "ignis" }
+        },
+        {
+          "text": "Do you have any potions?",
+          "response": "Take this healing draught. May it serve you well.",
+          "effect": { "type": "heal", "amount": 20 }
+        }
+      ]
+    },
+    {
+      "id": "merchant",
+      "name": "Wandering Merchant",
+      "entityType": "human",
+      "color": "#cc9933",
+      "icon": "merchant",
+      "greeting": "Psst! Looking for supplies? I've got what you need...",
+      "dialogue": [
+        {
+          "text": "What do you sell?",
+          "response": "Potions, runes, and more! But everything costs mana crystals.",
+          "effect": null
+        },
+        {
+          "text": "Buy a Health Potion (5 crystals)",
+          "response": "A wise purchase. This will restore 30 HP when you need it most.",
+          "effect": { "type": "buy", "item": "health_potion", "cost": 5 }
+        },
+        {
+          "text": "Buy a Rune (10 crystals)",
+          "response": "An excellent rune of frost. Take it to the forge and see what you can create.",
+          "effect": { "type": "buyRune", "runeId": "glacius", "cost": 10 }
+        }
+      ]
+    }
+  ]
+}

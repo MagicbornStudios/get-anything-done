@@ -1,0 +1,87 @@
+{
+  "floors": [
+    {
+      "id": "floor1",
+      "name": "Dungeon Floor 1",
+      "rooms": [
+        {
+          "id": "r1",
+          "name": "Entrance Hall",
+          "description": "A dimly lit hall. Torches flicker along the stone walls.",
+          "type": "start",
+          "exits": { "north": "r2", "east": "r3" }
+        },
+        {
+          "id": "r2",
+          "name": "Goblin Den",
+          "description": "You hear chittering from the shadows. Goblins lurk here.",
+          "type": "combat",
+          "enemyType": "goblin",
+          "exits": { "south": "r1", "north": "r4", "east": "r5" }
+        },
+        {
+          "id": "r3",
+          "name": "Sage's Chamber",
+          "description": "A quiet room filled with books and mystical artifacts.",
+          "type": "dialogue",
+          "npcId": "old_sage",
+          "exits": { "west": "r1", "north": "r5" }
+        },
+        {
+          "id": "r4",
+          "name": "Ancient Forge",
+          "description": "Glowing runes cover the walls. An enchanted anvil pulses with energy.",
+          "type": "forge",
+          "exits": { "south": "r2", "east": "r6" }
+        },
+        {
+          "id": "r5",
+          "name": "Treasure Vault",
+          "description": "Gleaming crystals and ancient coins litter the floor.",
+          "type": "treasure",
+          "loot": { "crystals": 15 },
+          "exits": { "west": "r2", "south": "r3", "north": "r6" }
+        },
+        {
+          "id": "r6",
+          "name": "Skeleton Crypt",
+          "description": "Bones crunch underfoot. The dead do not rest here.",
+          "type": "combat",
+          "enemyType": "skeleton",
+          "exits": { "south": "r5", "west": "r4", "north": "r7" }
+        },
+        {
+          "id": "r7",
+          "name": "Rest Alcove",
+          "description": "A small alcove with a healing spring. You feel your wounds mending.",
+          "type": "rest",
+          "exits": { "south": "r6", "east": "r8" }
+        },
+        {
+          "id": "r8",
+          "name": "Merchant's Nook",
+          "description": "A makeshift shop set up in the dungeon corridor.",
+          "type": "dialogue",
+          "npcId": "merchant",
+          "exits": { "west": "r7", "north": "r9" }
+        },
+        {
+          "id": "r9",
+          "name": "Dark Mage's Lair",
+          "description": "Purple energy crackles through the air. A powerful mage awaits.",
+          "type": "combat",
+          "enemyType": "dark_mage",
+          "exits": { "south": "r8", "north": "r10" }
+        },
+        {
+          "id": "r10",
+          "name": "Guardian's Chamber",
+          "description": "A massive door blocks the way forward. The Guardian stands before it.",
+          "type": "boss",
+          "enemyType": "floor_boss",
+          "exits": { "south": "r9" }
+        }
+      ]
+    }
+  ]
+}

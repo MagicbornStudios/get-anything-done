@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "id": "health_potion",
+      "name": "Health Potion",
+      "description": "Restores 30 HP.",
+      "type": "consumable",
+      "effect": { "type": "heal", "amount": 30 },
+      "icon": "potion_red",
+      "color": "#ff4444"
+    },
+    {
+      "id": "mana_potion",
+      "name": "Mana Potion",
+      "description": "Restores 20 Mana.",
+      "type": "consumable",
+      "effect": { "type": "restoreMana", "amount": 20 },
+      "icon": "potion_blue",
+      "color": "#4444ff"
+    },
+    {
+      "id": "crystal",
+      "name": "Mana Crystal",
+      "description": "Currency used for purchases.",
+      "type": "currency",
+      "icon": "crystal",
+      "color": "#aa44ff"
+    }
+  ]
+}

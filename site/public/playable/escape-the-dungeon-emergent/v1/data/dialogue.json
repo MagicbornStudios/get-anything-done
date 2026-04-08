@@ -1,0 +1,45 @@
+[
+  {
+    "id": "merchant_1",
+    "npcName": "Old Merchant",
+    "text": "Welcome, traveler! I've been trapped in this dungeon for weeks. Take this potion -- you'll need it more than I do.",
+    "options": [
+      {
+        "text": "Thank you! (Receive Health Potion)",
+        "giveItem": "potion_hp",
+        "next": "merchant_1_thanks"
+      },
+      {
+        "text": "Tell me about this dungeon.",
+        "next": "merchant_1_info"
+      },
+      {
+        "text": "Goodbye.",
+        "next": null
+      }
+    ]
+  },
+  {
+    "id": "merchant_1_thanks",
+    "npcName": "Old Merchant",
+    "text": "May it serve you well. The dragon at the end of this floor is fearsome -- prepare yourself!",
+    "options": [
+      {
+        "text": "I will. Farewell.",
+        "next": null
+      }
+    ]
+  },
+  {
+    "id": "merchant_1_info",
+    "npcName": "Old Merchant",
+    "text": "This dungeon is filled with monsters. Goblins lurk to the north, and skeletons guard the path to the dragon. Rest when you can, and don't forget your spells!",
+    "options": [
+      {
+        "text": "Thanks for the advice.",
+        "healHp": 5,
+        "next": null
+      }
+    ]
+  }
+]

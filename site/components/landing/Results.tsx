@@ -1,7 +1,8 @@
-import { ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { EVAL_RUNS, WORKFLOW_LABELS, type Workflow } from "@/lib/eval-data";
+import { EVAL_RUNS, WORKFLOW_LABELS, playableUrl, type Workflow } from "@/lib/eval-data";
 
 const REPO = "https://github.com/MagicbornStudios/get-anything-done";
 const WORKFLOW_TINT: Record<Workflow, string> = {
@@ -22,6 +23,15 @@ function ScoreBar({ value }: { value: number }) {
   );
 }
 
+// Only show runs that have human review — skipped / rate-limited runs aren't
+// representative for the comparison table.
+const DISPLAY_RUNS = EVAL_RUNS.filter((r) => r.humanReview?.score != null).sort((a, b) => {
+  if (a.project !== b.project) return a.project.localeCompare(b.project);
+  const av = parseInt(a.version.slice(1), 10) || 0;
+  const bv = parseInt(b.version.slice(1), 10) || 0;
+  return av - bv;
+});
+
 export default function Results() {
   return (
     <section id="results" className="border-t border-border/60 bg-card/20">
@@ -32,68 +42,96 @@ export default function Results() {
         </h2>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
           We ran the same task — &quot;build a roguelike dungeon crawler called Escape the Dungeon&quot; —
-          across all three workflows, three rounds in a row, with the same v3 requirements.
-          Across every metric the human reviewers cared about, the bare and emergent workflows
-          shipped better games than the full GAD framework. That wasn&apos;t the result we expected
-          and it sent us back to redesign v4 of the requirements around <em>pressure</em>, not features.
+          across all three workflows, three rounds in a row, with the same v3 requirements. Across
+          every metric the human reviewers cared about, the bare and emergent workflows shipped
+          better games than the full GAD framework. That wasn&apos;t the result we expected, and it
+          sent us back to redesign v4 of the requirements around <em>pressure</em>, not features.
         </p>
 
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {EVAL_RUNS.map((run) => (
-            <Card
-              key={`${run.project}-${run.version}`}
-              className={`border-l-4 ${WORKFLOW_TINT[run.workflow]} transition-colors hover:border-accent/70`}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between gap-3">
-                  <Badge variant="outline" className="border-border/70">
-                    {WORKFLOW_LABELS[run.workflow]} · {run.version}
-                  </Badge>
-                  {run.gateFailed ? (
-                    <Badge variant="danger">Gate failed</Badge>
-                  ) : (
-                    <Badge variant="success">Gate passed</Badge>
-                  )}
-                </div>
-                <CardTitle className="mt-2 truncate text-lg">{run.project}</CardTitle>
-                <CardDescription>requirements {run.requirementsVersion} · {run.date}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex items-baseline justify-between text-xs text-muted-foreground">
-                    <span>Composite</span>
-                    <span className="text-base font-semibold tabular-nums text-foreground">
-                      {run.composite.toFixed(3)}
-                    </span>
+          {DISPLAY_RUNS.map((run) => {
+            const playable = playableUrl(run);
+            const composite = run.scores.composite ?? 0;
+            const human = run.humanReview?.score ?? 0;
+            return (
+              <Card
+                key={`${run.project}-${run.version}`}
+                className={`border-l-4 ${WORKFLOW_TINT[run.workflow]} transition-colors hover:border-accent/70`}
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge variant="outline" className="border-border/70">
+                      {WORKFLOW_LABELS[run.workflow]} · {run.version}
+                    </Badge>
+                    {run.requirementCoverage?.gate_failed ? (
+                      <Badge variant="danger">Gate failed</Badge>
+                    ) : (
+                      <Badge variant="success">Gate passed</Badge>
+                    )}
                   </div>
-                  <div className="mt-1.5">
-                    <ScoreBar value={run.composite} />
+                  <CardTitle className="mt-2 truncate text-lg">{run.project}</CardTitle>
+                  <CardDescription>
+                    requirements {run.requirementsVersion} · {run.date}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>Composite</span>
+                      <span className="text-base font-semibold tabular-nums text-foreground">
+                        {composite.toFixed(3)}
+                      </span>
+                    </div>
+                    <div className="mt-1.5">
+                      <ScoreBar value={composite} />
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="flex items-baseline justify-between text-xs text-muted-foreground">
-                    <span>Human review</span>
-                    <span className="text-base font-semibold tabular-nums text-foreground">
-                      {run.humanReview.toFixed(2)}
-                    </span>
+                  <div>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>Human review</span>
+                      <span className="text-base font-semibold tabular-nums text-foreground">
+                        {human.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="mt-1.5">
+                      <ScoreBar value={human} />
+                    </div>
                   </div>
-                  <div className="mt-1.5">
-                    <ScoreBar value={run.humanReview} />
+                  <p className="line-clamp-4 text-sm leading-6 text-muted-foreground">
+                    {run.humanReview?.notes ?? run.requirementCoverage?.gate_notes ?? ""}
+                  </p>
+                  <div className="flex flex-wrap gap-3 pt-1 text-xs font-medium">
+                    <Link
+                      href={`/runs/${run.project}/${run.version}`}
+                      className="inline-flex items-center gap-1 text-accent hover:underline"
+                    >
+                      Full breakdown →
+                    </Link>
+                    {playable && (
+                      <a
+                        href={playable}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-accent hover:underline"
+                      >
+                        <Play size={12} aria-hidden />
+                        Play
+                      </a>
+                    )}
+                    <a
+                      href={`${REPO}/tree/main/evals/${run.project}/${run.version}`}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-accent"
+                    >
+                      TRACE
+                      <ExternalLink size={12} aria-hidden />
+                    </a>
                   </div>
-                </div>
-                <p className="text-sm leading-6 text-muted-foreground">{run.notes}</p>
-                <a
-                  href={`${REPO}/tree/main/evals/${run.project}/${run.version}`}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  TRACE.json on GitHub
-                  <ExternalLink size={12} aria-hidden />
-                </a>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <div className="mt-12 rounded-2xl border border-accent/40 bg-accent/5 p-6 md:p-8">

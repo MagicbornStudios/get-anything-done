@@ -1,0 +1,30 @@
+{
+  "dialogues": {
+    "hermit": {
+      "npcName": "Old Hermit",
+      "greeting": "Ah, a brave soul enters the dungeon. I've been trapped here for years...",
+      "options": [
+        {
+          "text": "Tell me about this dungeon.",
+          "response": "This dungeon has three floors. Each is guarded by a powerful boss. Defeat them all to escape. But beware the ticking clock - the bosses grow stronger with each room you enter.",
+          "effect": null
+        },
+        {
+          "text": "Do you have any supplies?",
+          "response": "Take this potion. You'll need it more than I will.",
+          "effect": { "type": "give_item", "itemId": "health_potion" }
+        },
+        {
+          "text": "Can you teach me a spell?",
+          "response": "I know the Healing Light spell. Focus your mana and let the light flow through you.",
+          "effect": { "type": "give_spell", "spellId": "heal" }
+        },
+        {
+          "text": "Goodbye.",
+          "response": "Good luck, adventurer. You'll need it.",
+          "effect": null
+        }
+      ]
+    }
+  }
+}

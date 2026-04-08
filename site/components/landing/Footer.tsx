@@ -41,11 +41,13 @@ export default function Footer() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jump to</p>
             <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <li><a href="#what" className="text-muted-foreground transition-colors hover:text-foreground">What it is</a></li>
-              <li><a href="#lineage" className="text-muted-foreground transition-colors hover:text-foreground">Lineage</a></li>
-              <li><a href="#framework" className="text-muted-foreground transition-colors hover:text-foreground">Framework</a></li>
-              <li><a href="#results" className="text-muted-foreground transition-colors hover:text-foreground">Results</a></li>
-              <li><a href="#run" className="text-muted-foreground transition-colors hover:text-foreground">Run it</a></li>
+              <li><a href="/#what" className="text-muted-foreground transition-colors hover:text-foreground">What it is</a></li>
+              <li><a href="/#lineage" className="text-muted-foreground transition-colors hover:text-foreground">Lineage</a></li>
+              <li><a href="/#framework" className="text-muted-foreground transition-colors hover:text-foreground">Framework</a></li>
+              <li><a href="/#results" className="text-muted-foreground transition-colors hover:text-foreground">Results</a></li>
+              <li><a href="/#play" className="text-muted-foreground transition-colors hover:text-foreground">Play</a></li>
+              <li><a href="/#templates" className="text-muted-foreground transition-colors hover:text-foreground">Downloads</a></li>
+              <li><a href="/#run" className="text-muted-foreground transition-colors hover:text-foreground">Run it</a></li>
             </ul>
           </div>
         </div>

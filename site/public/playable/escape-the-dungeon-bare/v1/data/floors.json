@@ -1,0 +1,142 @@
+{
+  "floors": [
+    {
+      "id": "floor1",
+      "name": "The Dark Entrance",
+      "rooms": [
+        {
+          "id": "f1_start",
+          "name": "Dungeon Entrance",
+          "description": "A damp stone corridor. Torches flicker on the walls.",
+          "feature": "start",
+          "exits": { "north": "f1_combat1", "east": "f1_dialogue1" }
+        },
+        {
+          "id": "f1_combat1",
+          "name": "Guard Room",
+          "description": "Two goblins patrol this narrow chamber.",
+          "feature": "combat",
+          "enemyId": "goblin",
+          "enemyArchetype": "warrior",
+          "exits": { "south": "f1_start", "east": "f1_treasure1" }
+        },
+        {
+          "id": "f1_dialogue1",
+          "name": "Old Hermit's Alcove",
+          "description": "A ragged old man sits by a small fire.",
+          "feature": "dialogue",
+          "npcId": "hermit",
+          "exits": { "west": "f1_start", "north": "f1_treasure1" }
+        },
+        {
+          "id": "f1_treasure1",
+          "name": "Hidden Vault",
+          "description": "Glinting coins and a wooden chest catch your eye.",
+          "feature": "treasure",
+          "loot": { "crystals": 50, "itemId": "health_potion" },
+          "exits": { "south": "f1_dialogue1", "west": "f1_combat1", "north": "f1_rest1" }
+        },
+        {
+          "id": "f1_rest1",
+          "name": "Mossy Spring",
+          "description": "A natural spring flows here. The air feels restorative.",
+          "feature": "rest",
+          "exits": { "south": "f1_treasure1", "north": "f1_boss" }
+        },
+        {
+          "id": "f1_boss",
+          "name": "Throne of the Goblin King",
+          "description": "A massive goblin sits on a throne of bones.",
+          "feature": "boss",
+          "enemyId": "goblin",
+          "enemyArchetype": "warrior",
+          "bossName": "Goblin King",
+          "bossStats": { "maxHp": 120, "maxMana": 20, "might": 15, "agility": 10, "defense": 8, "power": 6, "insight": 4, "willpower": 5 },
+          "exits": {}
+        }
+      ]
+    },
+    {
+      "id": "floor2",
+      "name": "The Bone Crypts",
+      "rooms": [
+        {
+          "id": "f2_start",
+          "name": "Crypt Entry",
+          "description": "Bones line the walls in neat rows. The air is cold.",
+          "feature": "start",
+          "exits": { "north": "f2_combat1", "east": "f2_forge1" }
+        },
+        {
+          "id": "f2_combat1",
+          "name": "Skeleton Patrol",
+          "description": "Animated skeletons clatter through the hallway.",
+          "feature": "combat",
+          "enemyId": "skeleton",
+          "enemyArchetype": "warrior",
+          "exits": { "south": "f2_start", "east": "f2_combat2" }
+        },
+        {
+          "id": "f2_forge1",
+          "name": "Ancient Forge",
+          "description": "A glowing anvil hums with magical energy.",
+          "feature": "forge",
+          "exits": { "west": "f2_start", "north": "f2_combat2" }
+        },
+        {
+          "id": "f2_combat2",
+          "name": "Slime Pit",
+          "description": "Gelatinous creatures ooze across the floor.",
+          "feature": "combat",
+          "enemyId": "slime",
+          "enemyArchetype": "mage",
+          "exits": { "west": "f2_combat1", "south": "f2_forge1", "north": "f2_boss" }
+        },
+        {
+          "id": "f2_boss",
+          "name": "The Bone Lord's Chamber",
+          "description": "A towering skeleton wreathed in dark flame blocks the way.",
+          "feature": "boss",
+          "enemyId": "skeleton",
+          "enemyArchetype": "mage",
+          "bossName": "Bone Lord",
+          "bossStats": { "maxHp": 180, "maxMana": 60, "might": 18, "agility": 8, "defense": 12, "power": 15, "insight": 10, "willpower": 10 },
+          "exits": {}
+        }
+      ]
+    },
+    {
+      "id": "floor3",
+      "name": "Dragon's Lair",
+      "rooms": [
+        {
+          "id": "f3_start",
+          "name": "Scorched Tunnel",
+          "description": "The stone walls are blackened by dragonfire.",
+          "feature": "start",
+          "exits": { "north": "f3_combat1" }
+        },
+        {
+          "id": "f3_combat1",
+          "name": "Drake Nest",
+          "description": "Young drakes hiss and snarl from their nest.",
+          "feature": "combat",
+          "enemyId": "dragon",
+          "enemyArchetype": "warrior",
+          "exits": { "south": "f3_start", "north": "f3_boss" }
+        },
+        {
+          "id": "f3_boss",
+          "name": "The Elder Dragon",
+          "description": "An enormous dragon regards you with ancient, calculating eyes.",
+          "feature": "boss",
+          "enemyId": "dragon",
+          "enemyArchetype": "mage",
+          "bossName": "Elder Dragon",
+          "bossStats": { "maxHp": 350, "maxMana": 150, "might": 30, "agility": 15, "defense": 20, "power": 25, "insight": 20, "willpower": 20 },
+          "exits": {}
+        }
+      ]
+    }
+  ]
+}
