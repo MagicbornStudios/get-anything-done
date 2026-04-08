@@ -3101,19 +3101,56 @@ const evalPreserve = defineCommand({
       return;
     }
 
-    // Preserve code + planning docs to evals/<project>/<version>/run/
+    // Preserve the ENTIRE project to evals/<project>/<version>/run/
+    // This is the full game directory minus heavy/regeneratable artifacts
+    // (node_modules, .git, dist — dist is preserved separately as the build).
     const runTargetDir = path.join(runDir, 'run');
+
+    // Clear target if it exists (idempotent re-preserve)
+    if (fs.existsSync(runTargetDir)) {
+      fs.rmSync(runTargetDir, { recursive: true, force: true });
+    }
     fs.mkdirSync(runTargetDir, { recursive: true });
 
-    const itemsToCopy = ['src', 'public', '.planning', 'skills', 'package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.ts', 'index.html', 'ARCHITECTURE.md', 'WORKFLOW.md'];
+    // Copy every top-level entry in game/, excluding heavy/regenerated dirs
+    const excludeTopLevel = new Set(['node_modules', '.git', 'dist']);
     let copiedCount = 0;
-    for (const item of itemsToCopy) {
-      const srcPath = path.join(gameSrc, item);
-      const dstPath = path.join(runTargetDir, item);
-      if (fs.existsSync(srcPath)) {
-        copyRecursive(srcPath, dstPath);
-        copiedCount++;
+    for (const entry of fs.readdirSync(gameSrc)) {
+      if (excludeTopLevel.has(entry)) continue;
+      const srcPath = path.join(gameSrc, entry);
+      const dstPath = path.join(runTargetDir, entry);
+      copyRecursive(srcPath, dstPath);
+      copiedCount++;
+    }
+
+    // Also preserve any agent-created files at the worktree root that aren't
+    // part of the base monorepo. Only files that DON'T exist at all in the
+    // main repo are considered agent-created.
+    const rootExtras = ['ARCHITECTURE.md', 'WORKFLOW.md', 'NOTES.md', 'CHANGELOG.md'];
+    const extrasDir = path.join(runTargetDir, '_worktree_root_extras');
+    let rootExtrasCopied = 0;
+    for (const extra of rootExtras) {
+      const srcPath = path.join(from, extra);
+      if (!fs.existsSync(srcPath)) continue;
+      // Only copy if it does NOT exist in the main repo (agent-created)
+      const mainRepoPath = path.join(repoRoot, extra);
+      if (fs.existsSync(mainRepoPath)) {
+        try {
+          const srcStat = fs.statSync(srcPath);
+          const mainStat = fs.statSync(mainRepoPath);
+          if (srcStat.isFile() && mainStat.isFile()) {
+            const srcContent = fs.readFileSync(srcPath, 'utf8');
+            const mainContent = fs.readFileSync(mainRepoPath, 'utf8');
+            if (srcContent === mainContent) continue; // identical to main, skip
+          } else {
+            // directory in main repo, don't treat as agent-created
+            continue;
+          }
+        } catch { continue; }
       }
+      if (rootExtrasCopied === 0) fs.mkdirSync(extrasDir, { recursive: true });
+      copyRecursive(srcPath, path.join(extrasDir, extra));
+      rootExtrasCopied++;
     }
 
     // Preserve build to apps/portfolio/public/evals/<project>/<version>/
@@ -3121,24 +3158,39 @@ const evalPreserve = defineCommand({
     let buildPreserved = false;
     if (fs.existsSync(distSrc)) {
       const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, args.version);
+      if (fs.existsSync(buildTarget)) {
+        fs.rmSync(buildTarget, { recursive: true, force: true });
+      }
       fs.mkdirSync(buildTarget, { recursive: true });
       copyRecursive(distSrc, buildTarget, true);
       buildPreserved = true;
     }
 
-    // Preserve CLI logs if present
-    const logSrc = path.join(from, '.planning', '.gad-log');
+    // Preserve CLI logs if present (check both <from>/.planning/.gad-log and <from>/.gad-log)
+    const logCandidates = [
+      path.join(from, '.planning', '.gad-log'),
+      path.join(from, '.gad-log'),
+      path.join(gameSrc, '.gad-log'),
+      path.join(gameSrc, '.planning', '.gad-log'),
+    ];
     let logsPreserved = false;
-    if (fs.existsSync(logSrc)) {
-      const logDst = path.join(runDir, '.gad-log');
-      copyRecursive(logSrc, logDst);
-      logsPreserved = true;
+    for (const logSrc of logCandidates) {
+      if (fs.existsSync(logSrc)) {
+        const logDst = path.join(runDir, '.gad-log');
+        if (fs.existsSync(logDst)) fs.rmSync(logDst, { recursive: true, force: true });
+        copyRecursive(logSrc, logDst);
+        logsPreserved = true;
+        break;
+      }
     }
 
     console.log(`\n✓ Preserved ${args.project} ${args.version}`);
-    console.log(`  Code + planning: ${copiedCount} items → evals/${args.project}/${args.version}/run/`);
+    console.log(`  Project tree:    ${copiedCount} top-level entries → evals/${args.project}/${args.version}/run/`);
+    if (rootExtrasCopied > 0) {
+      console.log(`  Root extras:     ${rootExtrasCopied} agent-created files → run/_worktree_root_extras/`);
+    }
     console.log(`  Build:           ${buildPreserved ? 'preserved' : 'NOT FOUND (no dist/)'}`);
-    console.log(`  CLI logs:        ${logsPreserved ? 'preserved' : 'NOT FOUND (no .gad-log/)'}`);
+    console.log(`  CLI logs:        ${logsPreserved ? 'preserved' : 'NOT FOUND'}`);
 
     if (!buildPreserved) {
       console.log(`\n⚠  No build was preserved. Agent did not produce game/dist/.`);
