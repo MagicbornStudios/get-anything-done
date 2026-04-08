@@ -3,6 +3,28 @@
 This document defines the terms, formulas, and measurement methodology used across all GAD evals.
 It is the scientific foundation — every eval RUN.md and SCORE.md must reference these definitions.
 
+## The Preservation Contract (mandatory for impl evals)
+
+Every implementation eval run MUST preserve these artifacts to be valid:
+
+| Artifact | Canonical location | Purpose |
+|----------|-------------------|---------|
+| `TRACE.json` | `evals/<project>/<version>/TRACE.json` | Measurement data, dimensions, composite |
+| Code + planning docs | `evals/<project>/<version>/run/` | What the agent actually built |
+| Build output | `apps/portfolio/public/evals/<project>/<version>/` | Playable demo for human review |
+| CLI logs | `evals/<project>/<version>/.gad-log/` | Which gad commands the agent ran |
+
+**Enforcement:**
+- `gad eval preserve <project> <version> --from <worktree>` copies everything after a run
+- `gad eval verify` audits all runs and exits non-zero if any are missing artifacts
+- `tests/eval-preservation.test.cjs` fails the build if any recent run is incomplete
+- The preservation cutoff is defined per project in the test file — runs before the
+  cutoff are legacy/exempt, runs after MUST comply
+
+If you cannot preserve a run (e.g., the worktree was already removed), the run is
+invalid and must be re-executed. See `gad:eval-run` skill for the full procedure.
+
+
 ---
 
 ## What is "context"?

@@ -1,104 +1,143 @@
 ---
 name: gad:eval-run
-description: Run a GAD evaluation against a bare project with context mode, planning, execution, and trace output
+description: Run a GAD evaluation with full preservation of code, builds, and planning docs
 ---
 
 # gad:eval-run
 
-An eval run is a normal GAD planning+execution session with one addition: you declare your context mode up front, and you write a trace at the end. Everything else follows the standard loop.
+A GAD eval is a controlled experiment. Every run MUST preserve its outputs so that
+experiments are reproducible and comparable. This skill describes the full procedure.
+
+## The Preservation Contract (mandatory)
+
+Every eval run on an implementation project MUST end with these artifacts preserved:
+
+1. **TRACE.json** at `evals/<project>/v<N>/TRACE.json` — measurement results
+2. **Code + planning docs** at `evals/<project>/v<N>/run/` — what the agent built
+3. **Build output** at `apps/portfolio/public/evals/<project>/v<N>/` — playable demo
+4. **CLI logs** at `evals/<project>/v<N>/.gad-log/` — what commands the agent ran
+
+**If any of these are missing, the run is invalid and must be re-executed.**
+Verify with `gad eval verify`. The test suite enforces this via `tests/eval-preservation.test.cjs`.
 
 ## When to use this skill
 
-- You are working in a bare eval project (only `.planning/` + requirements, no app code)
-- The user says "run the eval", "start fresh", "start an eval session"
-- The project's `planning-config.toml` has an `[eval]` section
+- User says "run the eval", "start the eval", "run round N"
+- You need to run a specific impl eval project against its requirements
+- You need to A/B compare conditions (GAD vs bare vs emergent)
 
-## Step 1 — Declare context mode
+## Procedure
 
-Before reading anything else, decide: **did you load prior planning context for this project before this session?**
-
-- **Fresh**: you opened this directory cold. You have not read STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, or DECISIONS.xml from this project in any prior message.
-- **Loaded**: you ran `gad context`, read planning files, or resumed a prior session before starting this one.
+### Step 1 — Generate the bootstrap prompt
 
 ```sh
-gad session new --fresh     # cold start — no prior context
-gad session new             # context was loaded before this session
+gad eval run --project <project-name> --prompt-only
 ```
 
-This is self-reported. The eval report will show which tasks were done at which mode. If you declare fresh but actually loaded context, the comparison is meaningless — you are the only one who knows.
+This creates `evals/<project>/v<N>/PROMPT.md` by inlining:
+- The current `template/AGENTS.md`
+- The current `template/REQUIREMENTS.xml` (and any versioned variant)
+- Source docs from `template/source-*`
+- Any planning files in `template/.planning/`
+- Any inherited skills in `template/skills/` (for emergent evals)
 
-## Step 2 — Read requirements
+The generated `v<N>` directory becomes the canonical home for this run's artifacts.
+
+### Step 2 — Spawn an isolated agent
+
+Use the Agent tool with `isolation: "worktree"` to run the prompt in an isolated git
+worktree. The agent should build the project under `game/` in the worktree root.
+
+Pass the prompt file path in the agent's instructions so they can re-read it if needed.
+
+### Step 3 — Preserve outputs (MANDATORY)
+
+After the agent completes:
 
 ```sh
-# Read the requirements file — this is your only input
-cat REQUIREMENTS.md
-# or for a structured view:
-gad context --json
+gad eval preserve <project-name> v<N> --from <worktree-path>
 ```
 
-Do not read STATE.xml, ROADMAP.xml, or TASK-REGISTRY.xml yet if this is a fresh session. Those files are empty at the start of a fresh eval.
+This copies:
+- `<worktree>/game/src/`, `public/`, `.planning/`, `skills/`, config files → `evals/<project>/v<N>/run/`
+- `<worktree>/game/dist/` → `apps/portfolio/public/evals/<project>/v<N>/`
+- `<worktree>/.planning/.gad-log/` → `evals/<project>/v<N>/.gad-log/` (if present)
 
-## Step 3 — Plan phases
+**Do this for every run, without exception.** If you skip it, the outputs are lost
+when the worktree is cleaned up. The test suite will fail if preservation is missing
+for any new run.
 
-Follow the `gad:plan-phase` skill for each phase:
-
-1. Read requirements, identify phase boundaries
-2. Write phase goals to ROADMAP.xml
-3. Break each phase into tasks, write to TASK-REGISTRY.xml
-4. Update STATE.xml with current phase and next-action
-
-Each task in TASK-REGISTRY.xml must record:
-```xml
-<task id="01-01" status="planned" context-mode="fresh">
-  <goal>...</goal>
-</task>
-```
-
-The `context-mode` attribute on each task inherits from the session's `contextMode`. Read it from the session:
-```sh
-gad session list --json   # check contextMode field
-```
-
-## Step 4 — Execute tasks
-
-Follow the `gad:execute-phase` skill for each task:
-
-1. Mark task `in-progress` in TASK-REGISTRY.xml
-2. Do the work (planning doc updates in this eval, not code)
-3. Mark task `done`
-4. Update STATE.xml next-action
-
-Since this is a planning-only project, "doing the work" means:
-- Filling in ROADMAP.xml phase details
-- Writing DECISIONS.xml entries for choices made
-- Keeping STATE.xml accurate
-
-## Step 5 — Verify
-
-After each phase, run:
-```sh
-gad eval run --project portfolio-bare
-```
-
-This checks your planning docs against the reference solution in `evals/portfolio-bare/REQUIREMENTS.md`. It scores: requirement coverage, task alignment, state hygiene.
-
-## Step 6 — Write trace and close session
-
-At the end of the session:
+### Step 4 — Verify preservation
 
 ```sh
-gad eval trace write --project portfolio-bare
-gad session close <session-id>
+gad eval verify
 ```
 
-The trace captures what you did, what context mode you used, and how it compares to prior runs.
+Shows a table of all runs and flags any missing artifacts. Every recent run should
+show OK. Legacy runs (before the preservation contract) are exempt.
 
-## What the eval measures
+### Step 5 — Write or reconstruct TRACE.json
 
-After multiple runs (some fresh, some loaded), `gad eval trace report --project portfolio-bare` shows:
+If you have CLI logs:
+```sh
+gad eval trace from-log --project <project-name> --version v<N>
+```
 
-- **context_delta**: did loaded-context sessions produce better planning outcomes than fresh sessions?
-- **task_alignment**: did your phases and tasks match the reference structure?
-- **state_hygiene**: did STATE.xml stay accurate throughout?
+Or reconstruct from git history:
+```sh
+gad eval trace reconstruct --project <project-name> --version v<N>
+```
 
-The goal is NOT to get a high score on a single run. The goal is to accumulate enough fresh vs loaded runs that the comparison is statistically meaningful.
+Or write TRACE.json manually with the measured dimensions (see DEFINITIONS.md).
+
+### Step 6 — Human review
+
+Open the build:
+```sh
+gad eval open <project-name> v<N>
+```
+
+Score it 0.0-1.0 and record:
+```sh
+gad eval review <project-name> v<N> --score 0.65 --notes "notes here"
+```
+
+The composite is automatically recomputed with caps (<0.20 → 0.40, <0.10 → 0.25).
+
+### Step 7 — Check the report
+
+```sh
+gad eval report
+```
+
+Shows cross-project comparison with human review scores and composite rankings.
+
+## A/B experiments
+
+When running an A/B comparison (e.g., GAD vs bare vs emergent):
+
+1. Generate prompts for all conditions with the SAME base requirements version
+2. Launch all agents in parallel (each gets its own worktree)
+3. Preserve each run immediately on completion
+4. Score all conditions with the same human reviewer and rubric
+5. Document findings in `evals/FINDINGS-<date>-<label>.md`
+6. Reference the requirements version used in the findings doc
+
+## What gets tested by the preservation test suite
+
+`tests/eval-preservation.test.cjs` enforces:
+
+1. `gad eval preserve` actually copies files correctly
+2. Every impl eval run at or after the contract cutoff has `TRACE.json`
+3. Every impl eval run at or after the cutoff has `run/` with code
+4. Every impl eval run at or after the cutoff has a preserved build
+
+If you add a new impl eval project, update `IMPL_EVAL_PROJECTS` and
+`PRESERVATION_CONTRACT_CUTOFF` in the test file.
+
+## Common failure modes
+
+- **Agent forgets to copy build** — `gad eval preserve` handles this for you, don't rely on the agent
+- **Worktree cleaned up before preserve** — preserve BEFORE the worktree is removed
+- **TRACE.json missing** — write it manually or via `gad eval review` which updates the composite
+- **Build renders blank** — still preserve it, but score human_review = 0.0 (caps will apply)

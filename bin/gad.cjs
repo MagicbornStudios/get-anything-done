@@ -3062,6 +3062,203 @@ const evalReport = defineCommand({
   },
 });
 
+// gad eval preserve — copy agent outputs to canonical per-version locations
+// This is MANDATORY after every eval run. Without this, outputs can be lost
+// when worktrees are cleaned up or overwritten.
+const evalPreserve = defineCommand({
+  meta: { name: 'preserve', description: 'Preserve agent eval outputs (code + build + logs) to canonical per-version paths — MANDATORY after every run' },
+  args: {
+    project: { type: 'positional', description: 'Eval project name', required: true },
+    version: { type: 'positional', description: 'Version (e.g. v5)', required: true },
+    from: { type: 'string', description: 'Source path (agent worktree root)', default: '' },
+    'game-subdir': { type: 'string', description: 'Subdir containing the game (default: game)', default: 'game' },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const repoRoot = path.resolve(gadDir, '..', '..');
+    const evalsDir = path.join(gadDir, 'evals');
+    const projectDir = path.join(evalsDir, args.project);
+    const runDir = path.join(projectDir, args.version);
+
+    if (!args.from) {
+      outputError('--from <worktree-path> is required');
+      return;
+    }
+    const from = path.resolve(args.from);
+    if (!fs.existsSync(from)) {
+      outputError(`Source path does not exist: ${from}`);
+      return;
+    }
+
+    if (!fs.existsSync(runDir)) {
+      fs.mkdirSync(runDir, { recursive: true });
+    }
+
+    // Locate game directory inside worktree
+    const gameSrc = path.join(from, args['game-subdir']);
+    if (!fs.existsSync(gameSrc)) {
+      outputError(`Game subdir not found: ${gameSrc}. Use --game-subdir to override.`);
+      return;
+    }
+
+    // Preserve code + planning docs to evals/<project>/<version>/run/
+    const runTargetDir = path.join(runDir, 'run');
+    fs.mkdirSync(runTargetDir, { recursive: true });
+
+    const itemsToCopy = ['src', 'public', '.planning', 'skills', 'package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.ts', 'index.html', 'ARCHITECTURE.md', 'WORKFLOW.md'];
+    let copiedCount = 0;
+    for (const item of itemsToCopy) {
+      const srcPath = path.join(gameSrc, item);
+      const dstPath = path.join(runTargetDir, item);
+      if (fs.existsSync(srcPath)) {
+        copyRecursive(srcPath, dstPath);
+        copiedCount++;
+      }
+    }
+
+    // Preserve build to apps/portfolio/public/evals/<project>/<version>/
+    const distSrc = path.join(gameSrc, 'dist');
+    let buildPreserved = false;
+    if (fs.existsSync(distSrc)) {
+      const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, args.version);
+      fs.mkdirSync(buildTarget, { recursive: true });
+      copyRecursive(distSrc, buildTarget, true);
+      buildPreserved = true;
+    }
+
+    // Preserve CLI logs if present
+    const logSrc = path.join(from, '.planning', '.gad-log');
+    let logsPreserved = false;
+    if (fs.existsSync(logSrc)) {
+      const logDst = path.join(runDir, '.gad-log');
+      copyRecursive(logSrc, logDst);
+      logsPreserved = true;
+    }
+
+    console.log(`\n✓ Preserved ${args.project} ${args.version}`);
+    console.log(`  Code + planning: ${copiedCount} items → evals/${args.project}/${args.version}/run/`);
+    console.log(`  Build:           ${buildPreserved ? 'preserved' : 'NOT FOUND (no dist/)'}`);
+    console.log(`  CLI logs:        ${logsPreserved ? 'preserved' : 'NOT FOUND (no .gad-log/)'}`);
+
+    if (!buildPreserved) {
+      console.log(`\n⚠  No build was preserved. Agent did not produce game/dist/.`);
+      console.log(`    This may be a gate failure — verify and record.`);
+    }
+
+    // Update RUN.md
+    const runMdPath = path.join(runDir, 'RUN.md');
+    const runMdLine = `preserved: ${new Date().toISOString()} (from ${from})\n`;
+    if (fs.existsSync(runMdPath)) {
+      fs.appendFileSync(runMdPath, runMdLine);
+    } else {
+      fs.writeFileSync(runMdPath, `# Eval Run ${args.version}\n\nproject: ${args.project}\n${runMdLine}`);
+    }
+  },
+});
+
+// Helper for eval preserve
+function copyRecursive(src, dst, flatten = false) {
+  const stat = fs.statSync(src);
+  if (stat.isDirectory()) {
+    if (!flatten) fs.mkdirSync(dst, { recursive: true });
+    for (const entry of fs.readdirSync(src)) {
+      if (entry === 'node_modules' || entry === '.git') continue;
+      copyRecursive(path.join(src, entry), path.join(flatten ? dst : dst, entry));
+    }
+  } else {
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    fs.copyFileSync(src, dst);
+  }
+}
+
+// gad eval verify — audit preservation of all eval runs
+const evalVerify = defineCommand({
+  meta: { name: 'verify', description: 'Audit all eval runs for preservation completeness (code, build, logs, trace)' },
+  args: {
+    project: { type: 'positional', description: 'Specific project to verify (default: all)', default: '' },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const repoRoot = path.resolve(gadDir, '..', '..');
+    const evalsDir = path.join(gadDir, 'evals');
+
+    if (!fs.existsSync(evalsDir)) {
+      outputError('No evals/ directory found.');
+      return;
+    }
+
+    const projects = args.project
+      ? [args.project]
+      : fs.readdirSync(evalsDir, { withFileTypes: true })
+          .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+          .map(e => e.name);
+
+    const issues = [];
+    let totalRuns = 0;
+    let cleanRuns = 0;
+
+    console.log('GAD Eval Preservation Audit\n');
+    console.log('PROJECT                         VERSION  TRACE  RUN   BUILD  LOGS  STATUS');
+    console.log('──────────────────────────────  ───────  ─────  ────  ─────  ────  ──────');
+
+    for (const project of projects) {
+      const projectDir = path.join(evalsDir, project);
+      if (!fs.existsSync(projectDir)) continue;
+      const versions = fs.readdirSync(projectDir)
+        .filter(n => /^v\d+$/.test(n))
+        .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+
+      // Determine eval type from gad.json or latest TRACE.json
+      let evalType = 'implementation';
+      const gadJsonPath = path.join(projectDir, 'gad.json');
+      if (fs.existsSync(gadJsonPath)) {
+        try {
+          const cfg = JSON.parse(fs.readFileSync(gadJsonPath, 'utf8'));
+          if (cfg.type === 'eval' && cfg.scoring?.weights?.correctness != null) evalType = 'tooling';
+          if (cfg.constraints?.planning_only) evalType = 'planning';
+        } catch {}
+      }
+      // Heuristic: tooling/mcp/cli-efficiency evals don't need run/ or build/
+      const skipCodeCheck = ['tooling-watch', 'tooling-mcp', 'cli-efficiency', 'planning-migration', 'project-migration', 'portfolio-bare', 'reader-workspace', 'gad-planning-loop', 'subagent-utility'].includes(project);
+
+      for (const v of versions) {
+        totalRuns++;
+        const vDir = path.join(projectDir, v);
+        const hasTrace = fs.existsSync(path.join(vDir, 'TRACE.json'));
+        const hasRun = fs.existsSync(path.join(vDir, 'run')) &&
+                       fs.readdirSync(path.join(vDir, 'run')).length > 0;
+        const hasBuild = fs.existsSync(path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', project, v, 'index.html'));
+        const hasLogs = fs.existsSync(path.join(vDir, '.gad-log'));
+
+        const problems = [];
+        if (!hasTrace) problems.push('no TRACE.json');
+        if (!skipCodeCheck && !hasRun) problems.push('no run/ dir');
+        if (!skipCodeCheck && !hasBuild) problems.push('no build');
+        if (!skipCodeCheck && !hasLogs) problems.push('no CLI logs');
+
+        const status = problems.length === 0 ? 'OK' : 'MISSING';
+        if (problems.length === 0) cleanRuns++;
+        else issues.push({ project, version: v, problems });
+
+        const mark = (x, req) => req ? (x ? '  ✓  ' : '  ✗  ') : '  -  ';
+        console.log(
+          `${project.padEnd(30)}  ${v.padEnd(7)}  ${mark(hasTrace, true)}  ${mark(hasRun, !skipCodeCheck).trim().padStart(4)}  ${mark(hasBuild, !skipCodeCheck)}  ${mark(hasLogs, !skipCodeCheck).trim().padStart(4)}  ${status}`
+        );
+      }
+    }
+
+    console.log(`\n${cleanRuns}/${totalRuns} runs fully preserved`);
+
+    if (issues.length > 0) {
+      console.log('\nIssues:');
+      for (const issue of issues) {
+        console.log(`  ${issue.project} ${issue.version}: ${issue.problems.join(', ')}`);
+      }
+      process.exit(1);
+    }
+  },
+});
+
 // gad eval review — human scoring
 const evalReview = defineCommand({
   meta: { name: 'review', description: 'Submit human review score for an eval run' },
@@ -3229,7 +3426,7 @@ const evalOpen = defineCommand({
 
 const evalCmd = defineCommand({
   meta: { name: 'eval', description: 'Run and manage eval projects' },
-  subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd, suite: evalSuite, report: evalReport, review: evalReview, open: evalOpen },
+  subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd, suite: evalSuite, report: evalReport, review: evalReview, open: evalOpen, preserve: evalPreserve, verify: evalVerify },
 });
 
 // ---------------------------------------------------------------------------

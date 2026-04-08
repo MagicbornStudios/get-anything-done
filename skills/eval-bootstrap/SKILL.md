@@ -46,14 +46,44 @@ Agent(
 
 For suite runs, launch ALL agents in a single message (parallel, not sequential).
 
-## Step 3 — After completion
+## Step 3 — After completion (PRESERVATION IS MANDATORY)
 
-When the agent finishes:
+When the agent finishes, **BEFORE the worktree is cleaned up**:
 
-1. Check the worktree for planning doc updates and implementation code
-2. Run `gad eval trace reconstruct --project <name>` to build TRACE.json from git
-3. Run `gad eval score --project <name>` to produce SCORE.md
-4. Run `gad eval report` for cross-project comparison
+1. **PRESERVE the outputs** — this is not optional:
+   ```sh
+   gad eval preserve <project-name> v<N> --from <worktree-path>
+   ```
+   This copies code, planning docs, and build to canonical per-version locations.
+   Without this step, the agent's work is lost when the worktree is removed.
+
+2. **Verify preservation worked**:
+   ```sh
+   gad eval verify <project-name>
+   ```
+   Should show OK for the new version.
+
+3. **Write or reconstruct TRACE.json**:
+   ```sh
+   gad eval trace from-log --project <name> --version v<N>
+   # or
+   gad eval trace reconstruct --project <name> --version v<N>
+   ```
+
+4. **Human review**:
+   ```sh
+   gad eval open <project-name> v<N>
+   gad eval review <project-name> v<N> --score <0-1> --notes "..."
+   ```
+
+5. **Cross-project report**:
+   ```sh
+   gad eval report
+   ```
+
+## The preservation contract
+
+Every impl eval run MUST preserve: TRACE.json, run/ (code), build (under apps/portfolio/public/evals/), and .gad-log/ (CLI calls). `tests/eval-preservation.test.cjs` enforces this — the test suite will fail if any recent run is missing artifacts. See `gad:eval-run` skill for the full procedure.
 
 ## What this replaces
 
