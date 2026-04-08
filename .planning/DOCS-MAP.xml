@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<docs-map>
+  <doc kind="feature" sink="get-anything-done/evals.mdx" skill="gad:write-feature-doc">
+    <description>GAD evaluation framework — what evals are, how they work, DEFINITIONS.md model, cli-efficiency results, portfolio-bare concept</description>
+  </doc>
+</docs-map>

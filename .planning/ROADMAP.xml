@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roadmap>
+  <phase id="01">
+    <title>Foundation</title>
+    <goal>Citty-based CJS CLI scaffold. bin/gad.cjs, defineCommand, workspace/projects commands, planning-config.toml loading, findRepoRoot.</goal>
+    <status>done</status>
+    <depends></depends>
+  </phase>
+  <phase id="02">
+    <title>Session management</title>
+    <goal>gad session new/list/resume/close. Session JSON files in .planning/sessions/. contextMode (fresh|loaded). Session-scoped defaults for state/phases commands.</goal>
+    <status>done</status>
+    <depends>01</depends>
+  </phase>
+  <phase id="03">
+    <title>Planning readers — state, roadmap, tasks</title>
+    <goal>state-reader.cjs, roadmap-reader.cjs, task-registry-reader.cjs. gad state / gad phases / gad tasks commands. XML preferred over MD. Session-scoped --projectid defaults.</goal>
+    <status>done</status>
+    <depends>02</depends>
+  </phase>
+  <phase id="04">
+    <title>Extended readers — decisions, requirements, errors, blockers</title>
+    <goal>decisions-reader.cjs, requirements-reader.cjs, errors-reader.cjs, blockers-reader.cjs. Corresponding CLI commands. No-misc rule: every named field must be parseable.</goal>
+    <status>done</status>
+    <depends>03</depends>
+  </phase>
+  <phase id="05">
+    <title>Docs sink pipeline</title>
+    <goal>docs-compiler.cjs: compile (.planning XML → MDX sink) and decompile (ensure .planning dirs, create stubs). gad sink compile/decompile/sync/status/validate. SOURCE_MAP, isGenerated guard, human-authored detection.</goal>
+    <status>done</status>
+    <depends>04</depends>
+  </phase>
+  <phase id="06">
+    <title>Eval framework</title>
+    <goal>evals/ structure with DEFINITIONS.md, RUN.md, SCORE.md, TRACE.json. gad eval run/score/diff/trace commands. portfolio-bare template. eval-run and eval-report skills. v1–v6 CLI efficiency evals.</goal>
+    <status>done</status>
+    <depends>03</depends>
+  </phase>
+  <phase id="07">
+    <title>Parser 100% coverage + tests</title>
+    <goal>parser-coverage.test.cjs: 46 tests across 6 suites. Every named XML field covered. No-misc assertion per parser. Fixed task-registry regex bugs (&lt;task\s vs \b, agent-id lookbehind).</goal>
+    <status>done</status>
+    <depends>04</depends>
+  </phase>
+  <phase id="08">
+    <title>Full repo planning coverage</title>
+    <goal>All vendor projects registered in planning-config.toml with .planning/ scaffold. gad refs command. plans/requirements/title fields in roadmap reader. sink sync for all 6 roots.</goal>
+    <status>done</status>
+    <depends>05</depends>
+  </phase>
+  <phase id="09">
+    <title>Scoping and discoverability</title>
+    <goal>resolveRoots() helper. --all flag on all scoped commands. --projectid consistent across all commands. gad ls alias for projects list. Sink status human-authored detection.</goal>
+    <status>done</status>
+    <depends>08</depends>
+  </phase>
+  <phase id="10">
+    <title>GAD eats its own dogfood + planning packs</title>
+    <goal>Register get-anything-done as a planning root. Migrate gad-* decisions into this project. Add gad pack command (bundle .planning data for repo-planner display). Update repo-planner planning-pack to consume GAD XML format.</goal>
+    <status>done</status>
+    <depends>09</depends>
+  </phase>
+  <phase id="11">
+    <title>AGENTS.md and context system</title>
+    <goal>Update AGENTS.md across all vendor projects to reference XML files and gad: commands. Formalize context re-hydration flow. Validate eval scores against v6 baseline.</goal>
+    <status>done</status>
+    <depends>10</depends>
+  </phase>
+  <phase id="12">
+    <title>Kill GSD, formalize GAD loop, reduce startup redundancy</title>
+    <goal>Remove all GSD artifacts (commands, hooks, settings). Add gad-17 revision (auto-compact over fresh sessions), gad-18 (canonical loop), gad-19 (GSD is dead). Simplify root AGENTS.md so agents use gad snapshot instead of reading 15 files. Rebrand useful hooks (context monitor, statusline) for GAD. Eliminate redundancy between root AGENTS.md, .planning/AGENTS.md, and vendor GAD AGENTS.md.</goal>
+    <status>done</status>
+    <depends>11</depends>
+  </phase>
+  <phase id="13">
+    <title>Docs commands, skill content, DOCS-MAP rollout</title>
+    <goal>Add gad docs command. Write real content for write-intent, write-feature-doc, write-tech-doc skills. Roll out DOCS-MAP.xml to all planning roots. Production-harden CLI error paths.</goal>
+    <status>done</status>
+    <depends>12</depends>
+  </phase>
+  <phase id="14">
+    <title>Eval framework: escape-the-dungeon + tracing</title>
+    <goal>Set up escape-the-dungeon eval project from GAMEPLAY-DESIGN.xml. Create eval-setup skill. Extend TRACE.json for tool_calls/skill_triggers. Define scoring rubric. Run escape-the-dungeon eval via discuss→plan→execute→verify→score flow. Tighten portfolio-bare.</goal>
+    <status>done</status>
+    <depends>13</depends>
+  </phase>
+  <phase id="14.5">
+    <title>Eval findings: enforce the loop, automate tracing, auto-scaffold conventions</title>
+    <goal>Fix the 5 structural problems exposed by escape-the-dungeon eval v2: agent bootstrap with GAD context, automatic trace reconstruction from git, checkpoint enforcement for task-level tracking, auto-scaffold CONVENTIONS.md for greenfield projects, eval template AGENTS.md that enforces the loop. Re-run eval to validate fixes.</goal>
+    <status>done</status>
+    <depends>14</depends>
+  </phase>
+  <phase id="15">
+    <title>GSD→GAD migration: port workflows, delete legacy</title>
+    <goal>Move workflows/, templates/, references/ out of get-shit-done/ to top-level GAD directories. Update 42 command @-path references. Delete get-shit-done/ directory (137 files). Also: copy eval game dist to docs site public dir for hosting.</goal>
+    <status>done</status>
+    <depends>14</depends>
+  </phase>
+  <phase id="16">
+    <title>Sprint context window + snapshot optimization</title>
+    <goal>Add sprint concept to GAD: configurable sprint size (default 5 phases), gad sprint show/context commands. Optimize gad snapshot to fit sprint context window: collapse done phases to id|title|done, inline only active/planned phases, show only open tasks, include file refs from active tasks and recent git log. Target: snapshot fits in ~3,000 tokens (currently ~9,750). Reference: docs/context-budget.md baseline analysis, RepoPlanner sprint model (scripts/loop-cli.mjs).</goal>
+    <status>done</status>
+    <depends>15</depends>
+  </phase>
+  <phase id="17">
+    <title>Reverse-engineer skill + reader-workspace eval</title>
+    <goal>Use gad:reverse-engineer to analyze repub-builder reader workspace UI. Produce REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md from the existing codebase. Create reader-workspace eval project. Run eval to validate reverse-engineer → implement cycle.</goal>
+    <status>done</status>
+    <depends>16</depends>
+  </phase>
+  <phase id="18">
+    <title>Eval suite — parallel runs + iteration cycle</title>
+    <goal>Run portfolio-bare + escape-the-dungeon + reader-workspace evals in parallel using gad:eval-suite. Compare results, identify patterns, tighten skills. Establish regular eval cadence. Each iteration fixes findings and adds criteria.</goal>
+    <status>done</status>
+    <depends>17</depends>
+  </phase>
+  <phase id="19">
+    <title>Milestone close and v1.1 planning</title>
+    <goal>Formally close gad-v1-cli milestone. Run final eval pass across all projects. Define gad-v1.1 milestone scope (domain translators, multi-agent eval, publishing pipeline, reverse-engineer refinement).</goal>
+    <status>planned</status>
+    <depends>18</depends>
+  </phase>
+  <phase id="20">
+    <title>Real-time tooling, MCP bridge, and tooling evals</title>
+    <goal>Ship `gad watch planning` / `gad dev` (debounced file watch + gad refs verify + structured JSON events). Add optional MCP adapter exposing the same operations for Cursor/agents. Introduce eval_type tooling (and later mcp) with versioned TRACE.json, fixed fixtures, automated harnesses, and regression-friendly metrics. Emit machine-readable scores.json; extend report/diff for tooling runs. Increase metric granularity over time via trace_schema_version + optional metrics.json for histograms. IDE/editor integration is out of scope until explicitly re-opened.</goal>
+    <status>done</status>
+    <depends>19</depends>
+  </phase>
+  <phase id="21">
+    <title>Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield</title>
+    <goal>Evolve the eval framework to produce trustworthy measurements of agent workflows on creative implementation tasks. Deliver: (1) requirements versioning with v1→v2→v3 history; (2) gate criteria enforcement (game-loop, spell-crafting, UI quality); (3) composite formula v3 with human_review weight 0.30 and low-score caps; (4) preservation contract with gad eval preserve/verify commands and tests/eval-preservation.test.cjs; (5) game/.planning/ layout mandate for all eval conditions; (6) gad worktree management commands; (7) brownfield eval mode with baseline inheritance; (8) three new brownfield eval projects (etd-brownfield-gad/bare/emergent) extending bare v3. Discovered the freedom hypothesis: bare workflow consistently beats GAD on greenfield creative implementation (round 3 human scores: bare v3=0.70, emergent v2=0.50, GAD v8=0.20). Brownfield experiments are next to test whether GAD's overhead pays off on codebase extension.</goal>
+    <status>active</status>
+    <depends>20</depends>
+  </phase>
+  <phase id="22">
+    <title>Portfolio experiment documentation — hub, per-project, per-run, findings, graphs</title>
+    <goal>Publish all eval experiment documentation on the portfolio before further experimentation. User wants to showcase the work publicly: hub explaining methodology, per-eval-project pages with version history, per-run detail pages with scores and links to playable builds + source code, per-round experiment summaries, visualizations/graphs comparing conditions over time, requirements version history, decisions index, findings (freedom hypothesis). All compiled into apps/portfolio/content/docs/get-anything-done/evals/ via gad sink pipeline. BLOCKS round 4 and brownfield round 1 per user directive.</goal>
+    <status>active</status>
+    <depends>21</depends>
+  </phase>
+  <phase id="23">
+    <title>Round 4 greenfield with v4 pressure-oriented requirements</title>
+    <goal>Run round 4 greenfield experiment with v4 requirements (pressure-oriented design, forge gate with per-floor adaptation requirement, authored dungeon with 5-8 rooms per floor and boss gates, ingenuity scoring). Three conditions: GAD, Bare, Emergent. Updated AGENTS.md for bare/emergent is minimal (only mandate .planning/ location and create_skill reference). Preserve all runs. Re-examine freedom hypothesis with new data.</goal>
+    <status>planned</status>
+    <depends>22</depends>
+  </phase>
+  <phase id="24">
+    <title>Round 1 brownfield — bare v3 baseline + v4 extensions</title>
+    <goal>Run the first brownfield experiment. All three conditions (etd-brownfield-gad/bare/emergent) start from escape-the-dungeon-bare v3 as baseline and extend it with v4 feature requirements. Tests whether GAD's overhead pays off on codebase extension vs fresh creation. This is the experiment that could validate or refute the freedom hypothesis if GAD wins.</goal>
+    <status>planned</status>
+    <depends>23</depends>
+  </phase>
+</roadmap>

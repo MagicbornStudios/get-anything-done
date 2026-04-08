@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decisions>
+
+  <decision id="gad-01">
+    <title>GAD is the universal planning framework — agent-agnostic, not Claude Code-specific</title>
+    <summary>GAD (get-anything-done) is the single planning framework for all projects in this repo. Skills are methodology documents (SKILL.md) stored in vendor/get-anything-done/skills/ — they must work with any AI coding assistant, not just Claude Code. Claude Code-specific install paths (~/.claude/) are implementation details, not the canonical source.</summary>
+    <impact>All projects register under GAD via planning-config.toml. rp-* skills are deprecated; gad:* skills are canonical. No new framework-specific skill systems are added.</impact>
+    <references>
+      <file path="vendor/get-anything-done/skills/README.md" />
+      <file path=".planning/planning-config.toml" />
+    </references>
+  </decision>
+
+  <decision id="gad-02">
+    <title>Evals capture actual content, not just byte counts — token counts are the primary efficiency metric</title>
+    <summary>Every eval RUN.md must contain verbatim CLI and raw workflow outputs, a unit-by-unit fidelity table, token counts (chars/4), arithmetic showing all formulas applied, and an agent simulation proving the next-action decision is identical with and without the CLI. Byte counts alone are insufficient because they cannot reveal whether information is actually readable or complete.</summary>
+    <impact>All future eval runs follow the scientific format defined in vendor/get-anything-done/evals/DEFINITIONS.md. v3 is the first run that meets this standard.</impact>
+    <references>
+      <file path="vendor/get-anything-done/evals/DEFINITIONS.md" />
+      <file path="vendor/get-anything-done/evals/cli-efficiency/REQUIREMENTS.md" />
+      <file path="vendor/get-anything-done/evals/cli-efficiency/v3/RUN.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-03">
+    <title>Context = session-variable information units; static docs are exempt from CLI coverage</title>
+    <summary>Context for agent resumption is defined as the 10 session-variable information units (U1–U10) in DEFINITIONS.md. Static docs (AGENTS.md style guide, planning model reference tables, done-task history) do not constitute context loss if absent from CLI output — they are read once and cached. Context loss occurs only when a unit's absence would cause an agent to make a different next-action decision.</summary>
+    <impact>Completeness scoring is now honest: units present at reduced fidelity (Truncated/Approximated) score 0.5, not 1.0. v3 completeness = 0.85, lower than v2's inflated 0.95.</impact>
+    <references>
+      <file path="vendor/get-anything-done/evals/DEFINITIONS.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-04">
+    <title>All session intents, decisions, and guidance must be captured in planning docs each session</title>
+    <summary>Every working session that produces new decisions, requirements, or guidance must update DECISIONS.xml and the relevant planning docs before the session ends. Chat context is ephemeral — planning docs are the durable record. The GAD planning loop is the mechanism; this decision makes the capture requirement explicit.</summary>
+    <impact>Agents starting a new session get current decisions from the planning docs, not from reconstructing chat history. Drift between chat intent and planning state is prevented.</impact>
+    <references>
+      <file path="vendor/get-anything-done/.planning/DECISIONS.xml" />
+      <file path="vendor/get-anything-done/evals/DEFINITIONS.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-05">
+    <title>repo-planner is officially a GAD project; rp-* skills are deprecated</title>
+    <summary>vendor/repo-planner is registered as a GAD root (id=repo-planner) in planning-config.toml. It has a GAD-format .planning/ directory. Its skills (rp-*) are deprecated stubs pointing to gad:* equivalents. The manuscript skill content migrated to vendor/get-anything-done/skills/manuscript/SKILL.md. The portfolio docs remain as the docs sink.</summary>
+    <impact>gad ls shows both global and repo-planner. gad state, phases, and tasks all work for repo-planner. No new rp-* skills should be created.</impact>
+    <references>
+      <file path=".planning/planning-config.toml" />
+      <file path="vendor/repo-planner/.planning/STATE.xml" />
+      <file path="vendor/get-anything-done/skills/README.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-06">
+    <title>GAD CLI is format-agnostic: XML, MD, MDX all valid in .planning/</title>
+    <summary>Sub-repos and .planning/ directories may use XML, MD, or MDX. The GAD CLI must parse all three transparently. The planning sink normalizes to MDX only. compile() converts any format to MDX; decompile() restores the original format. Coding agents and the CLI treat methodology as the constant — format is an implementation detail.</summary>
+    <impact>gad sink validate checks parseability and round-trip fidelity, not format compliance. Any new project may choose its format. XML is preferred when both exist.</impact>
+    <references>
+      <file path="vendor/get-anything-done/lib/docs-compiler.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-07">
+    <title>gad-manuscript is a self-contained domain translator repo</title>
+    <summary>gad-manuscript is a standalone repo that defines the domain translator pattern — adapts GAD base methodology to book/fiction creation. It owns its own SKILL.md files, evals, and planning docs while referencing gad:* base skills. The magicborn in-world lore content in the docs sink is produced by gad-manuscript skills.</summary>
+    <impact>Domain translator pattern is defined. Other verticals (product, design) follow the same pattern: standalone repo, own skills, own evals, references gad:* base. magicborn docs.project has content-skill = gad-manuscript.</impact>
+    <references>
+      <file path="vendor/gad-manuscript/" />
+      <file path=".planning/planning-config.toml" />
+    </references>
+  </decision>
+
+  <decision id="gad-08">
+    <title>GAD v1.0.0 defining characteristic: skills-first with evaluation</title>
+    <summary>Pre-1.0 (GSD/ralph-wiggum loop) was workflow-heavy — agents followed long workflow docs. v1.0.0 is skills-first: every skill has an agent-agnostic SKILL.md definition, is evaluated for output quality, and is versioned with the methodology. The CLI provides context efficiency. Evals are scientific. Traces measure what agents retrieve. Domain translators extend GAD to verticals.</summary>
+    <impact>All new skills must have SKILL.md in vendor/get-anything-done/skills/. Skills are evaluated via the eval framework. Methodology version is tracked in package.json gadMethodologyVersion field.</impact>
+    <references>
+      <file path="vendor/get-anything-done/skills/README.md" />
+      <file path="vendor/get-anything-done/evals/DEFINITIONS.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-09">
+    <title>gad context inlines file contents by default; --refs is the lightweight mode</title>
+    <summary>The `gad context` command inlines all planning file contents directly into its output by default. This gives agents a single command to get full context without reading files separately. The `--refs` flag restores the lightweight behavior (file paths only). This improves the completeness score on the cli-efficiency eval.</summary>
+    <impact>Agents must use `gad context --refs` when they only want file paths. `gad context` without flags is verbose — suitable for session start, not for routine orientation checks.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-10">
+    <title>gad snapshot is the one-shot full project context command</title>
+    <summary>`gad snapshot` inlines every planning file in a project's .planning/ directory (excluding archive/, sessions/, node_modules/). Priority order: STATE, ROADMAP, REQUIREMENTS, DECISIONS, TASK-REGISTRY, then alphabetical. This is the canonical command for handing an agent a complete cold-start context pack. It differs from `gad context` — context gives session-aware minimal refs, snapshot gives everything.</summary>
+    <impact>Agents starting a fresh session on an unfamiliar project use `gad snapshot --projectid <id>`. `gad context` is for ongoing work within a session.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-11">
+    <title>gad sink is the canonical docs sync command</title>
+    <summary>`gad sink` owns the four-direction docs sync surface: status (diff), compile (planning→docs), sync (compile all, non-destructive), decompile (ensure dirs, create stubs), validate (mapping health). Sink is manual by default — no auto-compile on file change. Human-authored sink files (no generated: true frontmatter) are never overwritten.</summary>
+    <impact>New code uses `gad sink compile` or `gad sink sync`. sink status shows: ok | stale | missing | human-authored. All 7 registered roots compile to the sink.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+      <file path="vendor/get-anything-done/lib/docs-compiler.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-12">
+    <title>Missing-arg UX: print available choices and rerun hint, never a blind error</title>
+    <summary>All GAD CLI commands that require a --projectid or --id argument must, when absent, print the list of valid choices and a ready-to-run rerun hint on stderr before exiting 1. Blind citty "Missing required argument" errors are banned — required: true is replaced with our own check.</summary>
+    <impact>Any future command added to gad.cjs that takes a required project/session/id arg must follow this pattern.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-13">
+    <title>TRACE.json is the machine-readable sidecar for every eval run</title>
+    <summary>Every eval run directory must contain a TRACE.json alongside RUN.md and SCORE.md. TRACE.json records: workflow (A/B/both), per-command token counts and unit fidelity, unit_coverage map (U1–U12 at Full/Referenced/Truncated/Approximated/Absent), and computed totals. Agents write it using `gad eval trace write` or inline during a run.</summary>
+    <impact>Any new eval run must produce a TRACE.json. The diff command surfaces regressions and improvements per information unit. The report command shows persistent problem units across the full run history.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+      <file path="vendor/get-anything-done/evals/DEFINITIONS.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-14">
+    <title>gad state and gad phases default to session project when a session is active</title>
+    <summary>When no --projectid flag is given, `gad state`, `gad phases`, `gad decisions`, `gad requirements`, `gad errors`, `gad blockers`, and `gad refs` call getActiveSessionProjectId() and scope output to the active session's project. Explicit --projectid overrides. --all bypasses session scope entirely and shows all roots. gad ls always shows all roots unscoped.</summary>
+    <impact>Agents working in a session see only their project by default. Multi-project output via --all or when no session exists. token_reduction improved from 0.874 (v5) to 0.940 (v6).</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+      <file path="vendor/get-anything-done/evals/cli-efficiency/v6/SCORE.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-15">
+    <title>portfolio-bare eval uses real agent sessions, not a harness — context_mode is self-declared</title>
+    <summary>The portfolio-bare eval is a real agent session in a template directory (evals/portfolio-bare/template/) containing only planning docs and requirements — no app code. The agent opens the template in Claude Code or Codex, runs `gad session new [--fresh]` to declare context mode, plans phases from requirements, executes tasks, and writes a trace at the end. No API keys, no execSync harness.</summary>
+    <impact>The eval IS real agent work. context_delta emerges from comparing runs across context modes over time. A task that only appears in loaded runs is one the agent misses cold — the most actionable finding.</impact>
+    <references>
+      <file path="vendor/get-anything-done/evals/portfolio-bare/template/" />
+      <file path="vendor/get-anything-done/skills/eval-run/SKILL.md" />
+      <file path="vendor/get-anything-done/skills/eval-report/SKILL.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-16">
+    <title>GAD does not support subagents until they are formally evaluated</title>
+    <summary>Spawning fresh agent instances (subagents via the Agent tool in Claude Code, or equivalent in other CLIs) is not part of the GAD workflow. Subagents start cold with no conversation history, burn context re-deriving state from files, introduce coordination overhead, and have uncharacterized failure modes. Until a formal GAD eval measures subagent utility against inline work, they are not a recommended tool. All work happens in a single agent session using the GAD planning loop.</summary>
+    <impact>No GAD skill should instruct an agent to spawn subagents. The Agent tool is not referenced in any SKILL.md. When context limits are approached, the correct response is to finish the current task, update planning docs, commit, and start a fresh session — not to spawn a subagent mid-task.</impact>
+    <revision-path>The subagent-utility eval (evals/subagent-utility/) defines the criteria for revising this decision. gad-16 may be updated to allow category-specific subagent use if eval results meet the thresholds defined in that eval's REQUIREMENTS.md.</revision-path>
+    <references>
+      <file path="vendor/get-anything-done/skills/README.md" />
+      <file path="vendor/get-anything-done/evals/DEFINITIONS.md" />
+      <file path="vendor/get-anything-done/evals/subagent-utility/REQUIREMENTS.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-17">
+    <title>Context exhaustion: work through auto-compact, do not stop</title>
+    <summary>When context window fills, Claude Code auto-compacts. The agent works through it — stopping to start a fresh session is pointless friction. After compaction, run `gad snapshot --projectid &lt;id&gt;` or `gad context` to re-hydrate and continue. The planning docs are what make this possible — STATE.xml next-action and TASK-REGISTRY.xml tell the agent exactly where it was. No fresh sessions, no handoff files, no asking the user to restart.</summary>
+    <impact>Agents never stop work due to context limits. Auto-compact handles it. After compaction: read gad snapshot, continue. gad-04 (capture decisions in planning docs) is what makes auto-compact re-hydration work — the planning docs ARE the durable state.</impact>
+    <references>
+      <file path="vendor/get-anything-done/.planning/STATE.xml" />
+      <file path="vendor/get-anything-done/evals/cli-efficiency/" />
+    </references>
+  </decision>
+
+  <decision id="gad-18">
+    <title>The GAD loop is simple: snapshot → work → update docs → commit</title>
+    <summary>The canonical GAD loop for any agent, any coding tool:
+1. `gad snapshot --projectid &lt;id&gt;` — one command, full context. No reading 15 files manually.
+2. Pick one task from TASK-REGISTRY.xml (status=planned).
+3. Implement it.
+4. Update TASK-REGISTRY.xml (mark done), STATE.xml (next-action), DECISIONS.xml (if new decisions).
+5. Commit.
+
+That's it. AGENTS.md files in each project reference this loop but do NOT redefine it. The vendor/get-anything-done/ project is the canonical source. Root AGENTS.md and .planning/AGENTS.md are consumers that point here, not parallel definitions.
+
+Skills are methodology documents (SKILL.md) — agents read and follow them. They are not CLI commands or executable plugins. The GAD CLI provides context efficiency. Skills provide methodology.</summary>
+    <impact>Root AGENTS.md mandatory read order must be simplified. Agents should NOT read 15 files on startup — gad snapshot exists for this. AGENTS.md files across vendor projects reference the GAD loop, they don't each define their own version. No memory files, no shadow task lists — TASK-REGISTRY.xml and STATE.xml are the only task tracking.</impact>
+    <references>
+      <file path="vendor/get-anything-done/AGENTS.md" />
+      <file path="AGENTS.md" />
+      <file path=".planning/AGENTS.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-21">
+    <title>Eval agents must be bootstrapped with GAD context — not just prompted</title>
+    <summary>The escape-the-dungeon eval (v2) showed that prompting an agent to "use gad snapshot" and "log traces" doesn't work — the agent ignored the CLI entirely, read requirements, and coded directly. Eval agents need: (1) GAD CLI available and working in the worktree, (2) AGENTS.md in the eval template that enforces the loop, (3) snapshot output injected into the agent's initial prompt (not "run this command"), (4) hooks or structured checkpoints that enforce task-level tracking. The agent must be inside the loop from the start, not asked to enter it.</summary>
+    <impact>Eval templates must include an AGENTS.md with the GAD loop. The eval-run skill must inject snapshot context into the agent prompt. The agent's working environment must have gad CLI accessible. Honor-system tracing is insufficient — tracing must be automated or enforced via checkpoints.</impact>
+    <references>
+      <file path="vendor/get-anything-done/evals/escape-the-dungeon/v2/TRACE.json" />
+      <file path="vendor/get-anything-done/skills/eval-run/SKILL.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-22">
+    <title>Trace logging must be automatic — hooks or checkpoint-based, not manual log-cmd calls</title>
+    <summary>Manual trace logging (gad eval trace log-cmd/log-skill) requires the agent to remember to call them. The v2 eval proved this doesn't happen — the agent backfilled all 8 skill triggers in 15 seconds at the end. Tracing should be: (1) automatic via hooks that detect gad CLI calls and skill invocations, or (2) checkpoint-based where the agent must produce a trace entry to unlock the next phase, or (3) post-hoc by parsing git history and planning doc diffs to reconstruct what happened. Option 3 is the most reliable since it doesn't depend on agent cooperation.</summary>
+    <impact>The eval-run workflow should reconstruct traces from git log + planning doc state changes, not rely on the agent to self-report. gad eval trace reconstruct --project &lt;name&gt; should parse git history to build TRACE.json after the fact.</impact>
+    <references>
+      <file path="vendor/get-anything-done/evals/escape-the-dungeon/v2/TRACE.json" />
+    </references>
+  </decision>
+
+  <decision id="gad-23">
+    <title>Greenfield eval projects must auto-scaffold CONVENTIONS.md after phase 01</title>
+    <summary>The escape-the-dungeon agent created 13 source files with patterns (scene structure, content pack format, state management) but documented none of them. A follow-up agent would start cold with no conventions. After the first implementation phase, GAD should prompt or auto-generate a CONVENTIONS.md from the code patterns established — file structure, naming, import patterns, content pack format, scene registration pattern.</summary>
+    <impact>Add a post-phase-01 checkpoint to eval-run and execute-phase that generates CONVENTIONS.md from the codebase. The gad:map-codebase skill already does this — it should be triggered automatically after the first implementation phase of any greenfield project.</impact>
+    <references>
+      <file path="vendor/get-anything-done/skills/snapshot-optimize/SKILL.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-20">
+    <title>Snapshot includes project-scoped conventions with global fallback</title>
+    <summary>gad snapshot includes a CONVENTIONS section: first checks project-level CONVENTIONS.md in .planning/, then extracts conventions/style sections from the project's AGENTS.md, then falls back to global root AGENTS.md conventions. Conventions grow per-project as code/content/patterns evolve — refactoring introduces new conventions, and the snapshot surfaces them to agents. Eval runs are expected to produce findings that tighten workflows, create new skills, and refine snapshot content.</summary>
+    <impact>Every project can have its own CONVENTIONS.md. The snapshot surfaces the right conventions for the project being worked on. After eval runs, review outputs and create/update conventions based on what worked and what didn't.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+      <file path="vendor/get-anything-done/skills/snapshot-optimize/SKILL.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-25">
+    <title>All GAD CLI calls and agent tool uses are logged to JSONL for eval tracing</title>
+    <summary>Every gad CLI invocation logs to .planning/.gad-log/ (JSONL, one file per day): timestamp, command, args, duration, exit code. A PostToolUse hook (tool-trace.js) logs every agent tool call (Bash, Read, Write, Edit, Agent, Skill, Grep, Glob) to the same directory. During eval runs, GAD_LOG_DIR routes logs to the eval run directory for permanent storage. `gad log show` displays both log types interleaved with filters (--filter cli|tool|gad|skill|agent). `gad eval trace from-log` builds TRACE.json from actual logs (source: call-log) instead of git reconstruction. This is the definitive, numerical, measurable observability layer.</summary>
+    <impact>Evals produce real call logs, not reconstructed approximations. Agents that spawn subagents, trigger skills, or call gad CLI commands are all traced. Log data enables: per-tool-call token estimates, skill trigger verification, gad CLI usage patterns, and cross-eval comparison on actual behavior.</impact>
+    <references>
+      <file path=".claude/hooks/tool-trace.js" />
+      <file path=".claude/settings.json" />
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-26">
+    <title>Real-time GAD tooling: core first, transports second</title>
+    <summary>The live developer loop (watch planning files, re-run refs verify, surface results quickly) is implemented once as a small core: debounced filesystem watch, call into existing verify code paths, emit structured events (JSON lines or NDJSON) for consumers. CLI (`gad dev` / `gad watch planning`) is the first transport. An MCP server, if added, is a thin adapter over the same core — not a separate implementation. Primary user is humans and local tooling (terminal, scripts, CI); agent use via MCP is optional and must not block shipping the core. IDE/editor-specific integrations (VS Code tasks, problem matchers, extensions) are out of scope until explicitly re-scoped — not required for the core.</summary>
+    <impact>New watch/MCP code should live next to existing `gad refs` / verify libraries. No required network service for v1. MCP must not duplicate business logic.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+      <file path="vendor/get-anything-done/lib/planning-ref-verify.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-27">
+    <title>Tooling and MCP evals are automated, fixture-based, and comparable across versions</title>
+    <summary>Evaluating watch/dev and MCP differs from implementation evals (agents building projects). Tooling evals use `eval_type` of `tooling` or `mcp`, a fixed `scenario` id pointing at an in-repo fixture, and an automated harness (Node script or `gad eval tooling run`) that starts the watcher or MCP client, performs scripted actions, and asserts ground truth (missing paths, exit codes) plus latency metrics. No LLM in the loop. Each run writes `TRACE.json` with `trace_schema_version` so new granular fields (p50/p95, event counts, feature_flags) can be added without invalidating old runs. Compare runs with the same scenario id to measure improvement per feature or gad version.</summary>
+    <impact>New eval projects under `evals/` for tooling/mcp. CI can run them on every PR touching gad.cjs or verify libs. Feature flags or gad version are recorded in the trace for attribution.</impact>
+    <references>
+      <file path="vendor/get-anything-done/evals/" />
+      <file path="vendor/get-anything-done/.planning/TASK-REGISTRY.xml" />
+    </references>
+  </decision>
+
+  <decision id="gad-28">
+    <title>Granular eval metrics: versioned schema, summary in TRACE, detail in optional metrics.json</title>
+    <summary>Automation must not depend on regex-parsing human-oriented `SCORE.md`. Implementation evals gain `scores.json` (or equivalent) alongside `SCORE.md` with stable numeric fields. Tooling evals store a summary composite (`tooling_composite` or nested `scores`) in `TRACE.json` for gates and trends; high-cardinality data (per-invocation latencies, histogram buckets, full event traces) go in `metrics.json` or retained JSONL only when needed. Bump `trace_schema_version` when the summary shape changes. `gad eval report` / `diff` read structured JSON, not markdown, for machine comparisons.</summary>
+    <impact>score-generator and eval scores command updated to emit and read JSON. Report tables can aggregate tooling and implementation evals. Raw logs remain optional debug artifacts.</impact>
+    <references>
+      <file path="vendor/get-anything-done/lib/score-generator.cjs" />
+      <file path="vendor/get-anything-done/bin/gad.cjs" />
+    </references>
+  </decision>
+
+  <decision id="gad-24">
+    <title>All skills and agents must bootstrap via gad snapshot, not manual file reads</title>
+    <summary>Skills were hardcoding "read STATE.md, ROADMAP.md, DECISIONS.md, REQUIREMENTS.md" as Step 1 — 4+ file reads that the gad snapshot command already provides in one low-token output. Skills must use `gad snapshot --projectid &lt;id&gt;` as their bootstrap step. Individual CLI commands (gad tasks, gad decisions, gad phases) are available for drilling into detail. Skills must also be format-agnostic (XML or MD) per gad-06 — never hardcode .md or .xml extensions when referencing planning files. CLAUDE.md enforces this at the instance level: every fresh session runs gad snapshot first.</summary>
+    <impact>All core skills updated: execute-phase, plan-phase, check-todos, quick. CLAUDE.md created as hard startup requirement. Subagent prompts should include the project ID so agents can run gad snapshot. Deprecated GSD compatibility notices removed from all skills (gad-19 already killed GSD).</impact>
+    <references>
+      <file path="CLAUDE.md" />
+      <file path="vendor/get-anything-done/skills/execute-phase/SKILL.md" />
+      <file path="vendor/get-anything-done/skills/plan-phase/SKILL.md" />
+      <file path="vendor/get-anything-done/skills/check-todos/SKILL.md" />
+      <file path="vendor/get-anything-done/skills/execute-phase/SKILL.md" />
+    </references>
+  </decision>
+
+  <decision id="gad-19">
+    <title>GSD is dead — GAD and RepoPlanner only</title>
+    <summary>All GSD (get-shit-done) skills, hooks, commands, and references are removed from the repo. GAD is the planning framework. RepoPlanner provides the planning snapshot format that GAD consumes. No GSD commands in .claude/commands/, no GSD hooks in .claude/hooks/, no GSD references in settings.json or AGENTS.md. The context monitor and statusline hooks are useful infrastructure but must be rebranded for GAD — no npm checks for get-shit-done-cc.</summary>
+    <impact>Delete .claude/commands/gsd/ entirely. Remove or rebrand .claude/hooks/gsd-* files. Clean settings.json. Remove GSD references from root AGENTS.md. Keep context monitor and statusline functionality but strip GSD branding.</impact>
+    <references>
+      <file path=".claude/commands/gsd/" />
+      <file path=".claude/hooks/" />
+      <file path=".claude/settings.json" />
+    </references>
+  </decision>
+
+  <decision id="gad-29">
+    <title>Process metrics do not guarantee output quality — human review is the ground truth</title>
+    <summary>GAD v7 scored 0.81 discipline and 1.0 planning quality but only 0.30 human review (broken game loop). Bare v2 scored 0.0 discipline but 0.50 human review (most playable game). Auto-composite can be misleading — the 15% human_review weight is insufficient. For implementation evals that produce user-facing output, human review should be weighted higher or serve as a gate.</summary>
+    <impact>Re-evaluate composite weights for game evals. Consider human_review as a multiplier rather than an additive dimension. A game that scores 0.0 human review should never have a composite above 0.50 regardless of process metrics.</impact>
+  </decision>
+
+  <decision id="gad-30">
+    <title>Eval requirements must be versioned and findings documented per experiment</title>
+    <summary>Requirements changed twice in one session (original 12 criteria → gate criteria + vertical slice). Each change invalidates comparison with previous runs. Requirements must carry a version tag, and FINDINGS docs must reference which requirement version was used. Scientific rigor requires reproducibility.</summary>
+    <impact>Add version field to REQUIREMENTS.xml. FINDINGS docs reference requirement version. TRACE.json includes requirements_version field.</impact>
+  </decision>
+
+  <decision id="gad-41">
+    <title>v4 game requirements reframed: pressure over features</title>
+    <summary>Round 3 findings exposed that v3 was a features checklist, not a game design. Players could beat floors with default spells, forge was optional, no encounter tested adaptation. v4 flips this: every mechanic must create pressure that rewards ingenuity. Core principle: "baseline starter abilities must not be sufficient to comfortably complete a full floor without adaptation or enhancement." Specific additions: floors contain 5-8 authored rooms + boss gate; each floor must introduce a mechanical constraint that default spells can't brute-force (elemental resistance, DoT requirement, reflection, etc.); forge gate requires at least one per-floor encounter that significantly favors crafted/adapted spells; pressure mechanics required from at least 2 of 4 categories (resource, enemy counterplay, encounter design, build specialization); new ingenuity/adaptation scoring dimension measures whether players needed to craft/adapt.</summary>
+    <impact>v4 REQUIREMENTS.xml rewritten with gates reframed around friction, not feature checklists. Authored-only (no procedural generation). Room types: Combat, Elite, Forge, Rest, Event. Decay and deep evolution trees deferred to v5. Starter spells explicitly insufficient. New scored dimension: ingenuity_score = f(crafted_spells_used, spell_diversity, adaptation_required_by_encounters).</impact>
+  </decision>
+
+  <decision id="gad-42">
+    <title>Skills (physical actions) are a scored criterion, not a gate, in v4</title>
+    <summary>Skills system (physical non-spell actions that evolve via own XP, can be supercharged with mana crystals) was considered for gate status but deferred. Forge is already a major gate and requiring both would cause broad-but-shallow implementations. v4 requires only that combat supports at least one non-spell action category (basic attack or skill). Full skill system with evolution and mana-crystal overcharge is scored, not required.</summary>
+    <impact>v4 gate: combat has at least one non-spell action category. v4 scored: distinct skill system, mana overcharge, DoT/stun/bleed effects. Prevents the forge gate from eating all implementation budget.</impact>
+  </decision>
+
+  <decision id="gad-43">
+    <title>Sprite sourcing is a workflow requirement with coherent fallback allowed</title>
+    <summary>v4 requires agents to attempt asset sourcing first through a defined search workflow: lightweight installable icon packs, web-searched free/open-license sprites, or common art sources. Fallback to generated/programmatic placeholders is allowed only if sourcing genuinely fails or integration cost becomes disproportionate — but the fallback must still be visually coherent. Ugly primitive-only presentation counts against the UI quality gate regardless of sourcing attempts. Requires creating a gad:find-sprites skill (or equivalent workflow doc) that agents can reference.</summary>
+    <impact>Add a sprite-sourcing workflow skill agents can reference. UI gate stays strict — sourcing failure is not an excuse to ship ugly output. Authored asset sources (Pokemon-style open sprites, game-icons.github.io, etc.) preferred over procedural.</impact>
+  </decision>
+
+  <decision id="gad-44">
+    <title>"Traits" in UI, narrativeStats in code — split terminology</title>
+    <summary>Player-facing UI shows narrative/progression stats as "Traits". Internal code/data can continue using narrativeStats as the technical term. Both must be documented with a mapping. Prevents churn of a full taxonomy rename while giving players the more legible label.</summary>
+    <impact>UI label: Traits. Code identifier: narrativeStats. Docs note the mapping once. Applies to all eval templates and game builds from v4 forward.</impact>
+  </decision>
+
+  <decision id="gad-45">
+    <title>Emergent AGENTS.md stops mandating specific artifacts — agents define their own</title>
+    <summary>Round 3 emergent AGENTS.md prescribed ARCHITECTURE.md, CHANGELOG.md, specific directory layouts. That defeats the point of the emergent experiment, which is to observe what workflow artifacts an AI-decided workflow produces. v4 emergent AGENTS.md only mandates: (1) put all workflow artifacts in game/.planning/, (2) reference the create_skill skill to define new skills when patterns emerge. Everything else — what files exist, what formats, how tasks are tracked — is decided by the agent itself. Same applies to bare eval.</summary>
+    <impact>emergent/template/AGENTS.md rewritten to be minimal. Bare template similar. Both reference a new create_skill skill that documents how to create reusable skills. This is the only skill bare starts with; emergent starts with create_skill + inherited skills from previous runs.</impact>
+  </decision>
+
+  <decision id="gad-46">
+    <title>Skills evolution flow: greenfield emergent → brownfield emergent → greenfield (installed back)</title>
+    <summary>The experimental model for emergent workflows: (1) greenfield emergent creates initial skills from scratch (only has create_skill skill); (2) brownfield emergent inherits those skills + creates new ones as it extends existing code; (3) when proven, those skills can be "installed back" into the next greenfield emergent run as its inheritance. This creates a feedback loop where AI-decided workflows evolve across rounds and environments. GAD represents what humans have decided is good; bare and emergent represent AI-first AI-decided workflows for achieving the desired human output. The comparison is human-defined methodology vs AI-emergent methodology.</summary>
+    <impact>Skills from each emergent run are preserved in evals/&lt;project&gt;/v&lt;N&gt;/run/.planning/skills/. When planning the next round, skills can be copied into the next template as inherited starting state. Both greenfield and brownfield can feed skills back into each other over time.</impact>
+  </decision>
+
+  <decision id="gad-47">
+    <title>Portfolio must host all experiment documentation before further experimentation</title>
+    <summary>User wants to view all experiment docs on apps/portfolio: links to code, game builds, scores, process, workflows, graphs, explanations of what's being tested. The portfolio acts as the public showcase of the experiment. Before running any more eval rounds, the portfolio must contain: (1) hub page explaining the experiment, the conditions (GAD/bare/emergent), and the freedom hypothesis; (2) per-round pages with scores and links to preserved builds + run code; (3) per-eval-project pages showing version history; (4) visualizations/graphs of scores across rounds; (5) requirements version history; (6) findings docs. Everything must be viewable from either the get-anything-done repo OR the portfolio docs sink.</summary>
+    <impact>New phase 22 dedicated to portfolio experiment documentation. Blocks round 4 experimentation until complete. Uses existing apps/portfolio/content/docs/get-anything-done/ structure with new evals/ subsection. Each eval project + run has its own MDX page with links to apps/portfolio/public/evals/&lt;project&gt;/&lt;version&gt;/ for playable builds.</impact>
+  </decision>
+
+  <decision id="gad-48">
+    <title>GAD framework diagnosis (freedom hypothesis) is deferred — need more eval data first</title>
+    <summary>The round 3 findings showing bare consistently beats GAD on creative implementation are enough to treat as a real pattern but not yet enough to commit to structural changes (GAD-lite, pivoting away from creative evals, etc.). Before making architectural decisions about GAD itself, we need: (1) round 4 greenfield with v4 (pressure-oriented) requirements to see if the pattern persists; (2) brownfield round 1 to test whether GAD's overhead pays off on codebase extension; (3) at least one more iteration of each condition to establish variance. Discussions about GAD-full vs GAD-lite vs GAD-seeded are ongoing but not action items yet.</summary>
+    <impact>Do not split GAD into variants yet. Do not abandon game evals yet. Focus round 4 on v4 requirements (pressure-oriented) with the same three conditions. Re-examine the hypothesis after round 4 and brownfield round 1 data. Keep the diagnosis thread open in DECISIONS but don't force premature conclusions.</impact>
+  </decision>
+
+  <decision id="gad-40">
+    <title>Eval projects categorized by mode (greenfield/brownfield) and workflow (gad/bare/emergent)</title>
+    <summary>Evals are now categorized on two axes: eval_mode (greenfield starts from scratch, brownfield extends an existing baseline codebase) and workflow (gad uses full framework, bare creates own workflow, emergent inherits and evolves). Stored in gad.json. Shown in gad eval list. Brownfield evals reference a baseline (project+version) whose run/ becomes the starting codebase. Added three new brownfield evals: etd-brownfield-gad, etd-brownfield-bare, etd-brownfield-emergent — all starting from escape-the-dungeon-bare v3 as baseline, extended with v4 feature requirements (floor progression, respawning encounters, rune forge with affinity, skills system, visual upgrade).</summary>
+    <impact>Brownfield experiments test how each workflow handles long-term project evolution vs fresh starts. The freedom hypothesis (gad-36) was measured on greenfield only — brownfield may produce different results because GAD's overhead could pay off more when extending existing code (planning docs help track what's already there). gad worktree commands added for managing the many worktrees these experiments create. AGENTS.md for bare/emergent simplified — less prescriptive, lets agents figure out workflow details themselves.</impact>
+  </decision>
+
+  <decision id="gad-39">
+    <title>All eval workflow artifacts must live under game/.planning/ regardless of framework</title>
+    <summary>GAD, bare, and emergent evals all must place workflow/tracking/skills/decisions/notes files under game/.planning/. Source code in src/, assets in public/, process artifacts in .planning/. This separation allows clean inspection of what methodology each eval invented without mixing it into source. The format inside .planning/ is up to the agent (XML, Markdown, whatever). Violations (files at project root or mixed into src/) are detected by gad eval preserve and logged as warnings.</summary>
+    <impact>AGENTS.md updated for all 3 eval templates with mandatory layout section. gad eval preserve detects and warns on violations. DEFINITIONS.md documents the contract. Round 3 findings: GAD runs compliant (had .planning/), bare and emergent all violated by putting WORKFLOW.md and skills/ at project root. Round 4+ will enforce.</impact>
+  </decision>
+
+  <decision id="gad-38">
+    <title>Eval preservation is a hard contract enforced by tests</title>
+    <summary>Every implementation eval run MUST end with these artifacts preserved at canonical locations: (1) evals/PROJECT/vN/TRACE.json, (2) evals/PROJECT/vN/run/ with code+planning, (3) apps/portfolio/public/evals/PROJECT/vN/ with the playable build, (4) evals/PROJECT/vN/.gad-log/ with CLI logs. The gad eval preserve command copies everything after a run; gad eval verify audits compliance; tests/eval-preservation.test.cjs fails the build if any run on or after the contract cutoff is missing artifacts. Before this decision, multiple runs' outputs were lost when worktrees were cleaned up or builds were overwritten.</summary>
+    <impact>Future eval runs cannot be "forgotten" — the tests enforce preservation. Every agent running an eval must call gad eval preserve immediately after agent completion, before the worktree is removed. gad:eval-run and gad:eval-bootstrap skills updated with mandatory preservation step. DEFINITIONS.md documents the contract at the top.</impact>
+  </decision>
+
+  <decision id="gad-36">
+    <title>Freedom hypothesis: GAD constraint may correlate inversely with creative output quality</title>
+    <summary>Across 3 rounds of escape-the-dungeon evals, Bare (no framework) consistently outperformed GAD (full framework) on human review. Round 3: Bare v3 = 0.70, Emergent v2 = 0.50, GAD v8 = 0.20. GAD has never exceeded 0.30 across 4 attempts; Bare is monotonically improving (0.10 → 0.50 → 0.70). GAD's planning overhead may consume tokens that could go to implementation and testing. The process is followed but the product fails. Status: PRELIMINARY — single-run variance is high, needs more data. Confound: rate limits may have hit GAD harder because it was mid-planning.</summary>
+    <impact>(1) Do not abandon GAD — this may be specific to greenfield game implementation. (2) Create a GAD-lite mode for comparison. (3) Add context-resumption eval where GAD should show its advantages. (4) Re-examine GAD's value proposition: is it optimizing for traceability/handoff rather than creative speed? (5) The game eval may be the wrong benchmark for GAD's core strengths.</impact>
+  </decision>
+
+  <decision id="gad-37">
+    <title>Eval game builds must be preserved per-version, never overwritten</title>
+    <summary>Previously, gad eval open copied builds to apps/portfolio/public/evals/PROJECT/index.html, overwriting previous runs. This destroyed experimental history. Now all builds are preserved at apps/portfolio/public/evals/PROJECT/VERSION/index.html. The gad eval open command checks version-specific paths first.</summary>
+    <impact>All 8 escape-the-dungeon builds now preserved (v5-v8, bare v1-v3, emergent v1-v2). Experiments can be compared across time. Showcase path is apps/portfolio/public/evals/PROJECT/VERSION/ for every run.</impact>
+  </decision>
+
+  <decision id="gad-32">
+    <title>UI quality is a gate criterion at full presentation level</title>
+    <summary>The build must include icons, visually differentiated room presentation, styled controls/panels, and entity visual representation. Easily installable icon/sprite packs, web-searched assets, or generated placeholders are acceptable when setup cost is low. Raw ASCII/text-only UI fails the gate. Geometric fallback tiles are last resort, not primary path.</summary>
+    <impact>All game eval REQUIREMENTS.xml updated to v3 with gate G3 (ui-quality). Agents must source visual assets as part of implementation. Asset sourcing can be a skill.</impact>
+  </decision>
+
+  <decision id="gad-33">
+    <title>Spell crafting is a gate criterion — loot/rewards do not satisfy it</title>
+    <summary>The player must intentionally combine runes/components through a forge/crafting interface and produce at least one new spell outcome. Pre-equipped spells or spell rewards from NPCs/loot do not count. Minimum: 3-5 runes, 3+ valid combinations, crafted spell usable in encounters.</summary>
+    <impact>Gate G2 added to REQUIREMENTS.xml v3. No previous run has satisfied this — all runs will need to implement a forge system for the first time.</impact>
+  </decision>
+
+  <decision id="gad-34">
+    <title>Human review weight raised to 0.30 with low-score caps</title>
+    <summary>human_review weight increased from 0.15 to 0.30 in composite formula. Added hard caps: if human_review &lt; 0.20, composite capped at 0.40; if &lt; 0.10, capped at 0.25. This prevents technically compliant but broken/unusable output from ranking highly. Process metrics cannot override a bad user experience.</summary>
+    <impact>Composite formula updated in DEFINITIONS.md and gad.cjs. All existing auto_composite scores are now provisional — human review is required for the real score.</impact>
+  </decision>
+
+  <decision id="gad-35">
+    <title>Bare eval condition is a live contender, not a deprecated baseline</title>
+    <summary>Bare v2 scored 0.50 human review (most playable game) versus GAD v7 at 0.30. The bare condition responds well when informed by prior failure signals, making it a valid forward-looking experimental condition. All three conditions (GAD, Bare, Emergent) remain in active testing with equal priority.</summary>
+    <impact>Do not deprioritize or drop the bare condition. Continue iterating on all three. The bare condition's strength is adaptation from failure feedback — test that hypothesis further.</impact>
+  </decision>
+
+  <decision id="gad-31">
+    <title>Inherited skills must capture failure modes and fixes, not just patterns</title>
+    <summary>Emergent v1 inherited 4 skills from bare v1 but still failed (KAPLAY styled text error). The skills documented code patterns but not failure modes. Bare v2 (told about v1 failure, no inherited skills) succeeded because it had to solve the problem itself. Skills that only document "how I did it" without "what went wrong and how I fixed it" are insufficient for cross-run learning.</summary>
+    <impact>Skill format should include: pattern, when-to-use, failure-modes, and known-fixes sections. Previous-workflow.md should include specific error messages and resolutions, not just "it didn't work."</impact>
+  </decision>
+
+</decisions>

@@ -18,10 +18,12 @@ coverage/
 animation/
 *.gif
 
-# Internal planning documents (submodule's own planning is local-only by design)
+# Internal planning: ignore the folder by default, then track canonical XML so
+# STATE/ROADMAP/TASK/DECISIONS sync to the remote (agents rely on git, not disk-only).
 reports/
 RAILROAD_ARCHITECTURE.md
-.planning/
+.planning/*
+!.planning/*.xml
 # BUT: eval template and preserved run .planning/ directories MUST be tracked.
 # These are experimental artifacts that need to travel with the submodule.
 !evals/**/.planning/
