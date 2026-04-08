@@ -24,15 +24,25 @@ Track your work in `game/.planning/` using whatever format keeps you sane — ch
 prose, JSON, whatever. Update it as you go so you can pick up where you left off if
 you lose context.
 
-When you hit repeated problems, write reusable patterns down in
-`game/.planning/skills/` (or wherever in `.planning/` makes sense) so you can reference
-them later.
+You start with two inherited skills in `skills/`:
+
+- **`create-skill.md`** — how to capture a working pattern as a reusable skill doc.
+  Use this whenever you solve something non-obvious.
+- **`find-sprites.md`** — how to source coherent visual assets so the UI doesn't fail
+  the quality gate.
+
+Copy them into `game/.planning/skills/` and use them. When you hit repeated problems,
+write a new skill there using the `create-skill` pattern. That's how your workflow
+evolves.
 
 ## Gates (all must pass or score 0)
 
-- **G1 Game loop**: Title → New Game → room → navigate → combat → return → keep playing. No softlocks.
-- **G2 Spell crafting**: Player accesses a forge, combines runes, creates a spell, uses it in combat. Loot/rewards don't count.
-- **G3 UI quality**: Icons, styled buttons, HP bars, room-type visual differentiation, entity representation. No raw ASCII/text-only UI.
+See `REQUIREMENTS.xml` for the authoritative version. Summary:
+
+- **G1 Game loop**: Title → New Game → room → navigate → combat → return → at least 3 room transitions, no softlock.
+- **G2 Forge with ingenuity payoff**: Functional spell crafting AND at least one encounter per floor where the crafted/adapted spell provides a meaningful advantage. Loot-granted spells do NOT satisfy this gate.
+- **G3 UI quality**: Icons, styled controls, HP/mana bars, room-type differentiation, sprite/portrait representation. Use the `find-sprites` skill. Raw ASCII fails.
+- **G4 Pressure mechanics**: At least two systems (resource / counterplay / encounter design / build) that make baseline starter abilities insufficient to brute-force a floor. At least one must interact with the forge.
 
 ## Build and verify
 
@@ -54,4 +64,7 @@ generated SVG/canvas, or emoji. Make it look intentional, not like a debug conso
 
 - `game/dist/` with a working `index.html`
 - Full game loop playable in the browser when served via HTTP
-- `game/.planning/ARCHITECTURE.md` with a short system overview
+- Whatever you put in `game/.planning/` to make the run reproducible
+
+That's the contract. How you organize work and what artifacts you author beyond that
+is yours to decide.
