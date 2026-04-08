@@ -3162,13 +3162,16 @@ const evalOpen = defineCommand({
       return;
     }
 
-    // Look for build output in common locations
+    // Look for build output in common locations (version-specific first)
     const candidates = [
+      // Portfolio public, per-version (canonical location for preserved builds)
+      path.join(gadDir, '..', '..', 'apps', 'portfolio', 'public', 'evals', args.project, version, 'index.html'),
+      // Eval dir per-version
       path.join(projectDir, version, 'game', 'dist', 'index.html'),
       path.join(projectDir, version, 'dist', 'index.html'),
       path.join(projectDir, version, 'build', 'index.html'),
       path.join(projectDir, version, 'index.html'),
-      // Also check portfolio public path
+      // Legacy: portfolio public root (latest only)
       path.join(gadDir, '..', '..', 'apps', 'portfolio', 'public', 'evals', args.project, 'index.html'),
     ];
 

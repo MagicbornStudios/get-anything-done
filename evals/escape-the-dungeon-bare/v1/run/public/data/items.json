@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "health_potion",
+      "name": "Health Potion",
+      "description": "Restores 30 HP.",
+      "type": "consumable",
+      "effect": { "stat": "currentHp", "amount": 30 }
+    },
+    {
+      "id": "mana_potion",
+      "name": "Mana Potion",
+      "description": "Restores 20 Mana.",
+      "type": "consumable",
+      "effect": { "stat": "currentMana", "amount": 20 }
+    },
+    {
+      "id": "iron_shield",
+      "name": "Iron Shield",
+      "description": "Increases Defense by 3.",
+      "type": "equipment",
+      "slot": "offhand",
+      "effect": { "stat": "defense", "amount": 3 }
+    },
+    {
+      "id": "crystal_staff",
+      "name": "Crystal Staff",
+      "description": "Increases Power by 5.",
+      "type": "equipment",
+      "slot": "weapon",
+      "effect": { "stat": "power", "amount": 5 }
+    }
+  ]
+}

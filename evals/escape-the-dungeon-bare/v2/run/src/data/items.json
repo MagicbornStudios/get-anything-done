@@ -1,0 +1,9 @@
+{
+  "items": [
+    { "id": "health_potion", "name": "Health Potion", "type": "consumable", "effect": "heal_hp", "value": 30, "description": "Restores 30 HP.", "cost": 15 },
+    { "id": "mana_potion", "name": "Mana Potion", "type": "consumable", "effect": "heal_mana", "value": 25, "description": "Restores 25 Mana.", "cost": 15 },
+    { "id": "iron_sword", "name": "Iron Sword", "type": "equipment", "slot": "weapon", "statBonus": { "might": 5 }, "description": "A sturdy iron blade.", "cost": 30 },
+    { "id": "leather_armor", "name": "Leather Armor", "type": "equipment", "slot": "armor", "statBonus": { "defense": 4 }, "description": "Basic leather protection.", "cost": 25 },
+    { "id": "golden_crystal", "name": "Golden Crystal", "type": "key_item", "description": "A crystal of immense value. Worth 10,000 mana crystals.", "value": 10000 }
+  ]
+}

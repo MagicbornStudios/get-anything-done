@@ -1,0 +1,24 @@
+{
+  "npcs": {
+    "scholar": {
+      "name": "Old Scholar",
+      "entityType": "human",
+      "greeting": "Ah, a fellow explorer! These ruins hold many secrets...",
+      "dialogueOptions": [
+        { "text": "Tell me about this dungeon.", "response": "This dungeon has three floors. Each floor has a boss guarding the exit. Defeat them or find another way past.", "effect": null },
+        { "text": "Do you have anything useful?", "response": "Take this health potion. You'll need it.", "effect": { "type": "give_item", "itemId": "health_potion" } },
+        { "text": "Goodbye.", "response": "Good luck, adventurer. You'll need it.", "effect": null }
+      ]
+    },
+    "merchant": {
+      "name": "Crystal Merchant",
+      "entityType": "merchant",
+      "greeting": "Welcome! I have wares if you have crystals...",
+      "dialogueOptions": [
+        { "text": "Buy Health Potion (15 crystals)", "response": "A wise purchase! Here you go.", "effect": { "type": "buy_item", "itemId": "health_potion", "cost": 15 } },
+        { "text": "Buy Mana Potion (15 crystals)", "response": "Excellent choice for a spellcaster!", "effect": { "type": "buy_item", "itemId": "mana_potion", "cost": 15 } },
+        { "text": "Leave", "response": "Come back anytime!", "effect": null }
+      ]
+    }
+  }
+}

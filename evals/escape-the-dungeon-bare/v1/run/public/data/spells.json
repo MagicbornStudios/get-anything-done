@@ -1,0 +1,54 @@
+{
+  "spells": [
+    {
+      "id": "fireball",
+      "name": "Fireball",
+      "description": "Hurls a ball of fire at the enemy.",
+      "runes": ["rune_f", "rune_i", "rune_r"],
+      "manaCost": 15,
+      "damage": 25,
+      "category": "combat",
+      "element": "fire"
+    },
+    {
+      "id": "heal",
+      "name": "Healing Light",
+      "description": "Restores HP with gentle light.",
+      "runes": ["rune_h", "rune_e"],
+      "manaCost": 12,
+      "healing": 20,
+      "category": "combat",
+      "element": "light"
+    },
+    {
+      "id": "ice_shard",
+      "name": "Ice Shard",
+      "description": "Launches a frozen projectile.",
+      "runes": ["rune_i", "rune_c"],
+      "manaCost": 10,
+      "damage": 18,
+      "category": "combat",
+      "element": "ice"
+    },
+    {
+      "id": "thunder",
+      "name": "Thunder Strike",
+      "description": "Calls down lightning on the foe.",
+      "runes": ["rune_t", "rune_h", "rune_u"],
+      "manaCost": 20,
+      "damage": 35,
+      "category": "combat",
+      "element": "lightning"
+    },
+    {
+      "id": "barrier",
+      "name": "Arcane Barrier",
+      "description": "Raises defense temporarily.",
+      "runes": ["rune_b", "rune_a"],
+      "manaCost": 8,
+      "defenseBoost": 5,
+      "category": "combat",
+      "element": "arcane"
+    }
+  ]
+}

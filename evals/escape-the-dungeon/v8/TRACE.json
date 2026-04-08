@@ -1,0 +1,34 @@
+{
+  "eval": "escape-the-dungeon",
+  "version": "v8",
+  "date": "2026-04-08",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "context_mode": "fresh",
+  "requirements_version": "v3",
+  "timing": { "duration_minutes": 16, "phases_completed": 0, "tasks_completed": 0 },
+  "token_usage": { "total_tokens": 1291, "tool_uses": 62, "note": "rate-limited" },
+  "git_analysis": { "total_commits": 0, "task_id_commits": 0, "batch_commits": 0, "per_task_discipline": 0.0 },
+  "planning_quality": { "phases_planned": 0, "tasks_planned": 0, "tasks_completed": 0, "decisions_captured": 0 },
+  "requirement_coverage": {
+    "total_criteria": 12, "gate_failed": true,
+    "gate_notes": "G1 (game-loop) partial — renders. G2 (spell-crafting) FAILED — crafting system broken, breaks the game when used. G3 (ui-quality) partial — has particle effects and colors, but text is hard to read, ASCII for map/spells/bags, no sourced sprites.",
+    "fully_met": 2, "partially_met": 4, "not_met": 6, "coverage_ratio": 0.33
+  },
+  "scores": {
+    "requirement_coverage": 0.33,
+    "planning_quality": 0.0,
+    "per_task_discipline": 0.0,
+    "skill_accuracy": 0.17,
+    "time_efficiency": 0.967,
+    "human_review": 0.20,
+    "composite": 0.177
+  },
+  "human_review": {
+    "score": 0.20,
+    "notes": "Better particle effects on main menu and better colors than previous GAD runs. However, crafting system broke the game when used (unusable). Old ASCII text design for map/spells/bags menus. Hard to read text. Added icons but didn't search for sourced sprites. 0 commits — rate limit hit before agent could finalize. Score 0.20: has some visual improvements but broken crafting gates it.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-08T06:00:00.000Z"
+  }
+}

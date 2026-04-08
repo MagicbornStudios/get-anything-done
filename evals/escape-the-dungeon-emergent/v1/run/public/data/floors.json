@@ -1,0 +1,84 @@
+[
+  {
+    "id": "floor_1",
+    "name": "Floor 1 - The Dark Entrance",
+    "startRoomId": "room_1_start",
+    "rooms": [
+      {
+        "id": "room_1_start",
+        "name": "Dungeon Entrance",
+        "description": "A dimly lit stone corridor. Torches flicker on the walls. The air smells of damp earth and old iron.",
+        "feature": "start",
+        "exits": [
+          { "direction": "North", "targetRoomId": "room_1_combat1" },
+          { "direction": "East", "targetRoomId": "room_1_dialogue" }
+        ]
+      },
+      {
+        "id": "room_1_combat1",
+        "name": "Goblin Den",
+        "description": "A filthy cave littered with bones. A goblin snarls at you from the shadows!",
+        "feature": "combat",
+        "enemyId": "goblin",
+        "exits": [
+          { "direction": "South", "targetRoomId": "room_1_start" },
+          { "direction": "West", "targetRoomId": "room_1_treasure" },
+          { "direction": "North", "targetRoomId": "room_1_rest" }
+        ]
+      },
+      {
+        "id": "room_1_dialogue",
+        "name": "Merchant's Alcove",
+        "description": "A small room with a makeshift stall. A weathered merchant sits behind a pile of wares.",
+        "feature": "dialogue",
+        "dialogueId": "merchant_1",
+        "exits": [
+          { "direction": "West", "targetRoomId": "room_1_start" },
+          { "direction": "North", "targetRoomId": "room_1_combat2" }
+        ]
+      },
+      {
+        "id": "room_1_treasure",
+        "name": "Hidden Chamber",
+        "description": "Behind a crumbling wall, you find a small room with a dusty treasure chest.",
+        "feature": "treasure",
+        "treasureItemId": "potion_mana",
+        "exits": [
+          { "direction": "East", "targetRoomId": "room_1_combat1" }
+        ]
+      },
+      {
+        "id": "room_1_rest",
+        "name": "Abandoned Camp",
+        "description": "An old campsite with a bedroll and cold fire pit. You could rest here.",
+        "feature": "rest",
+        "exits": [
+          { "direction": "South", "targetRoomId": "room_1_combat1" },
+          { "direction": "East", "targetRoomId": "room_1_combat2" }
+        ]
+      },
+      {
+        "id": "room_1_combat2",
+        "name": "Skeleton Crypt",
+        "description": "Coffins line the walls. A skeleton warrior rises from its eternal slumber!",
+        "feature": "combat",
+        "enemyId": "skeleton",
+        "exits": [
+          { "direction": "South", "targetRoomId": "room_1_dialogue" },
+          { "direction": "West", "targetRoomId": "room_1_rest" },
+          { "direction": "North", "targetRoomId": "room_1_boss" }
+        ]
+      },
+      {
+        "id": "room_1_boss",
+        "name": "Dragon's Lair",
+        "description": "A vast cavern filled with heat. A massive dragon blocks the exit to the next floor!",
+        "feature": "boss",
+        "enemyId": "dragon",
+        "exits": [
+          { "direction": "South", "targetRoomId": "room_1_combat2" }
+        ]
+      }
+    ]
+  }
+]

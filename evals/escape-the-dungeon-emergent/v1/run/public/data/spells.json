@@ -1,0 +1,42 @@
+[
+  {
+    "id": "fireball",
+    "name": "Fireball",
+    "manaCost": 12,
+    "damage": 25,
+    "description": "Hurl a ball of fire at your enemy.",
+    "runes": ["F", "I", "R"]
+  },
+  {
+    "id": "heal",
+    "name": "Heal",
+    "manaCost": 10,
+    "damage": -20,
+    "description": "Restore 20 HP to yourself.",
+    "runes": ["H", "E", "A"]
+  },
+  {
+    "id": "shield",
+    "name": "Shield",
+    "manaCost": 8,
+    "damage": 0,
+    "description": "Temporarily boost your defense by 5.",
+    "runes": ["S", "H", "D"]
+  },
+  {
+    "id": "lightning",
+    "name": "Lightning Bolt",
+    "manaCost": 18,
+    "damage": 35,
+    "description": "Call down a bolt of lightning.",
+    "runes": ["L", "I", "G"]
+  },
+  {
+    "id": "drain",
+    "name": "Mana Drain",
+    "manaCost": 5,
+    "damage": 15,
+    "description": "Drain enemy vitality. Restores 5 mana.",
+    "runes": ["D", "R", "N"]
+  }
+]

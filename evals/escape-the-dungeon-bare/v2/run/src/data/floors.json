@@ -1,0 +1,44 @@
+{
+  "floors": [
+    {
+      "id": "floor_1",
+      "name": "Dungeon Entrance",
+      "level": 1,
+      "rooms": [
+        { "id": "f1_start", "name": "Entrance Hall", "type": "start", "description": "A dimly lit stone hall. Torches flicker on the walls.", "exits": { "north": "f1_combat1", "east": "f1_dialogue1" } },
+        { "id": "f1_combat1", "name": "Guard Room", "type": "combat", "description": "Broken weapons litter the floor. Something moves in the shadows.", "exits": { "south": "f1_start", "east": "f1_treasure1" }, "enemyId": "goblin_scout" },
+        { "id": "f1_dialogue1", "name": "Old Library", "type": "dialogue", "description": "Dusty bookshelves line the walls. An old scholar sits reading.", "exits": { "west": "f1_start", "north": "f1_treasure1" }, "npcId": "scholar" },
+        { "id": "f1_treasure1", "name": "Hidden Cache", "type": "treasure", "description": "A small room with a gleaming chest in the corner.", "exits": { "west": "f1_combat1", "south": "f1_dialogue1", "north": "f1_rest1" }, "loot": { "crystals": 20, "item": "health_potion" } },
+        { "id": "f1_rest1", "name": "Safe Room", "type": "rest", "description": "A warm campfire crackles. You feel safe here.", "exits": { "south": "f1_treasure1", "north": "f1_boss" } },
+        { "id": "f1_boss", "name": "Boss Chamber", "type": "boss", "description": "A massive door looms ahead. Beyond it, the floor guardian waits.", "exits": { "south": "f1_rest1" }, "enemyId": "skeleton_guard" }
+      ]
+    },
+    {
+      "id": "floor_2",
+      "name": "Crystal Caverns",
+      "level": 2,
+      "rooms": [
+        { "id": "f2_start", "name": "Cavern Mouth", "type": "start", "description": "Crystals glow faintly in the damp stone walls.", "exits": { "north": "f2_combat1", "east": "f2_combat2" } },
+        { "id": "f2_combat1", "name": "Slime Den", "type": "combat", "description": "The floor is slick with slime. Gelatinous shapes quiver nearby.", "exits": { "south": "f2_start", "east": "f2_dialogue1" }, "enemyId": "slime_blob" },
+        { "id": "f2_combat2", "name": "Bone Yard", "type": "combat", "description": "Bones crunch underfoot. Skeletal figures rise from the debris.", "exits": { "west": "f2_start", "north": "f2_treasure1" }, "enemyId": "skeleton_guard" },
+        { "id": "f2_dialogue1", "name": "Crystal Grotto", "type": "dialogue", "description": "A traveling merchant has set up shop among the crystals.", "exits": { "west": "f2_combat1", "south": "f2_treasure1" }, "npcId": "merchant" },
+        { "id": "f2_treasure1", "name": "Gem Cache", "type": "treasure", "description": "A sparkling chest sits atop a crystal formation.", "exits": { "south": "f2_combat2", "north": "f2_dialogue1", "east": "f2_rest1" }, "loot": { "crystals": 35, "item": "mana_potion" } },
+        { "id": "f2_rest1", "name": "Crystal Pool", "type": "rest", "description": "A glowing pool of water radiates warmth. Rest here.", "exits": { "west": "f2_treasure1", "north": "f2_boss" } },
+        { "id": "f2_boss", "name": "Dragon's Lair", "type": "boss", "description": "Heat washes over you. A young dragon curls around a golden crystal.", "exits": { "south": "f2_rest1" }, "enemyId": "dragon_whelp" }
+      ]
+    },
+    {
+      "id": "floor_3",
+      "name": "The Abyss",
+      "level": 3,
+      "rooms": [
+        { "id": "f3_start", "name": "Abyss Entry", "type": "start", "description": "Darkness stretches in every direction. A cold wind howls.", "exits": { "north": "f3_combat1", "east": "f3_combat2" } },
+        { "id": "f3_combat1", "name": "Shadow Hall", "type": "combat", "description": "Shadows twist and writhe. Something lunges from the dark.", "exits": { "south": "f3_start", "east": "f3_rest1" }, "enemyId": "skeleton_guard" },
+        { "id": "f3_combat2", "name": "Goblin Warren", "type": "combat", "description": "Goblins chatter in the darkness, weapons at the ready.", "exits": { "west": "f3_start", "north": "f3_treasure1" }, "enemyId": "goblin_scout" },
+        { "id": "f3_rest1", "name": "Ancient Shrine", "type": "rest", "description": "An old shrine glows softly. Peace fills the air.", "exits": { "west": "f3_combat1", "south": "f3_treasure1" } },
+        { "id": "f3_treasure1", "name": "Vault", "type": "treasure", "description": "A treasure vault! Gold and crystals fill the room.", "exits": { "south": "f3_combat2", "north": "f3_rest1", "east": "f3_boss" }, "loot": { "crystals": 50, "item": "health_potion" } },
+        { "id": "f3_boss", "name": "Final Chamber", "type": "boss", "description": "The exit is here. But a massive dragon blocks the way.", "exits": { "west": "f3_treasure1" }, "enemyId": "dragon_whelp" }
+      ]
+    }
+  ]
+}

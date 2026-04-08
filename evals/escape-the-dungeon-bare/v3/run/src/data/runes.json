@@ -1,0 +1,9 @@
+[
+  { "id": "ignis", "name": "Ignis", "symbol": "🔥", "color": "#ff4400", "description": "The rune of fire and passion." },
+  { "id": "aqua", "name": "Aqua", "symbol": "💧", "color": "#0088ff", "description": "The rune of water and flow." },
+  { "id": "terra", "name": "Terra", "symbol": "🪨", "color": "#8B6914", "description": "The rune of earth and stability." },
+  { "id": "ventus", "name": "Ventus", "symbol": "💨", "color": "#88ccff", "description": "The rune of wind and speed." },
+  { "id": "lux", "name": "Lux", "symbol": "✨", "color": "#ffdd00", "description": "The rune of light and revelation." },
+  { "id": "umbra", "name": "Umbra", "symbol": "🌑", "color": "#6633aa", "description": "The rune of shadow and mystery." },
+  { "id": "vitae", "name": "Vitae", "symbol": "🌿", "color": "#44bb44", "description": "The rune of life and growth." }
+]

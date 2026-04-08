@@ -1,0 +1,114 @@
+[
+  {
+    "floor": 1,
+    "rooms": [
+      {
+        "id": "f1_start",
+        "name": "Dungeon Entrance",
+        "description": "Cold stone steps descend into darkness. Torches flicker on moss-covered walls.",
+        "type": "start",
+        "floor": 1,
+        "exits": [
+          { "direction": "North", "targetRoomId": "f1_combat1" },
+          { "direction": "East", "targetRoomId": "f1_dialogue1" }
+        ]
+      },
+      {
+        "id": "f1_combat1",
+        "name": "Goblin Den",
+        "description": "Bones and scraps litter the floor. Something moves in the shadows.",
+        "type": "combat",
+        "floor": 1,
+        "enemyId": "goblin",
+        "exits": [
+          { "direction": "South", "targetRoomId": "f1_start" },
+          { "direction": "West", "targetRoomId": "f1_treasure1" },
+          { "direction": "North", "targetRoomId": "f1_forge1" }
+        ]
+      },
+      {
+        "id": "f1_dialogue1",
+        "name": "Hermit's Alcove",
+        "description": "A small lantern illuminates a cramped nook. An old figure sits cross-legged.",
+        "type": "dialogue",
+        "floor": 1,
+        "npcId": "hermit",
+        "exits": [
+          { "direction": "West", "targetRoomId": "f1_start" },
+          { "direction": "North", "targetRoomId": "f1_combat2" }
+        ]
+      },
+      {
+        "id": "f1_treasure1",
+        "name": "Hidden Cache",
+        "description": "A small chamber with a dusty chest against the far wall.",
+        "type": "treasure",
+        "floor": 1,
+        "loot": ["health_potion", "mana_potion"],
+        "exits": [
+          { "direction": "East", "targetRoomId": "f1_combat1" },
+          { "direction": "North", "targetRoomId": "f1_rest1" }
+        ]
+      },
+      {
+        "id": "f1_rest1",
+        "name": "Quiet Spring",
+        "description": "A natural spring bubbles softly. The air feels calm and restorative.",
+        "type": "rest",
+        "floor": 1,
+        "exits": [
+          { "direction": "South", "targetRoomId": "f1_treasure1" },
+          { "direction": "East", "targetRoomId": "f1_forge1" }
+        ]
+      },
+      {
+        "id": "f1_forge1",
+        "name": "Rune Forge",
+        "description": "An ancient anvil pulses with arcane energy. Rune symbols glow on the walls.",
+        "type": "forge",
+        "floor": 1,
+        "exits": [
+          { "direction": "South", "targetRoomId": "f1_combat1" },
+          { "direction": "West", "targetRoomId": "f1_rest1" },
+          { "direction": "North", "targetRoomId": "f1_combat3" }
+        ]
+      },
+      {
+        "id": "f1_combat2",
+        "name": "Skeleton Crypt",
+        "description": "Stone coffins line the walls. The dead do not rest easy here.",
+        "type": "combat",
+        "floor": 1,
+        "enemyId": "skeleton",
+        "exits": [
+          { "direction": "South", "targetRoomId": "f1_dialogue1" },
+          { "direction": "West", "targetRoomId": "f1_combat3" }
+        ]
+      },
+      {
+        "id": "f1_combat3",
+        "name": "Shadow Corridor",
+        "description": "Dark mist swirls through this narrow passage. Arcane whispers echo.",
+        "type": "combat",
+        "floor": 1,
+        "enemyId": "dark_mage",
+        "exits": [
+          { "direction": "East", "targetRoomId": "f1_combat2" },
+          { "direction": "South", "targetRoomId": "f1_forge1" },
+          { "direction": "North", "targetRoomId": "f1_boss" }
+        ]
+      },
+      {
+        "id": "f1_boss",
+        "name": "Keeper's Chamber",
+        "description": "A massive hall. The Dungeon Keeper stands guard before the stairway down.",
+        "type": "boss",
+        "floor": 1,
+        "enemyId": "floor_boss",
+        "exits": [
+          { "direction": "South", "targetRoomId": "f1_combat3" }
+        ]
+      }
+    ]
+  }
+]

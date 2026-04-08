@@ -1,0 +1,9 @@
+{
+  "spells": [
+    { "id": "fireball", "name": "Fireball", "runes": ["F", "I", "R"], "manaCost": 15, "damage": 25, "type": "combat", "description": "Hurls a ball of fire at the enemy." },
+    { "id": "heal", "name": "Healing Light", "runes": ["H", "E", "A"], "manaCost": 20, "damage": -30, "type": "combat", "description": "Restores HP with divine light." },
+    { "id": "ice_shard", "name": "Ice Shard", "runes": ["I", "C", "E"], "manaCost": 10, "damage": 15, "type": "combat", "description": "Launches a shard of ice." },
+    { "id": "thunder", "name": "Thunder Strike", "runes": ["T", "H", "U"], "manaCost": 25, "damage": 35, "type": "combat", "description": "Calls down lightning on the foe." },
+    { "id": "shield", "name": "Magic Shield", "runes": ["S", "H", "I"], "manaCost": 12, "damage": 0, "type": "combat", "description": "Raises defense for 3 turns.", "effect": "defense_up" }
+  ]
+}

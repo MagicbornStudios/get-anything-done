@@ -1,0 +1,82 @@
+[
+  {
+    "id": "fireball",
+    "name": "Fireball",
+    "description": "Hurls a ball of fire at the enemy.",
+    "manaCost": 8,
+    "damage": 18,
+    "icon": "spell-fire",
+    "element": "fire",
+    "effect": "damage",
+    "runeComposition": ["ignis", "ventus"]
+  },
+  {
+    "id": "ice_shard",
+    "name": "Ice Shard",
+    "description": "Launches a razor-sharp shard of ice.",
+    "manaCost": 6,
+    "damage": 14,
+    "icon": "spell-ice",
+    "element": "ice",
+    "effect": "damage",
+    "runeComposition": ["aqua", "terra"]
+  },
+  {
+    "id": "heal_light",
+    "name": "Healing Light",
+    "description": "Restores HP with gentle radiance.",
+    "manaCost": 10,
+    "damage": 0,
+    "icon": "spell-heal",
+    "element": "light",
+    "effect": "heal",
+    "effectValue": 25,
+    "runeComposition": ["lux", "vitae"]
+  },
+  {
+    "id": "lightning_bolt",
+    "name": "Lightning Bolt",
+    "description": "Calls down a bolt of lightning.",
+    "manaCost": 12,
+    "damage": 24,
+    "icon": "spell-lightning",
+    "element": "lightning",
+    "effect": "damage",
+    "runeComposition": ["ventus", "lux"]
+  },
+  {
+    "id": "shadow_strike",
+    "name": "Shadow Strike",
+    "description": "A dark energy blast that weakens the enemy.",
+    "manaCost": 7,
+    "damage": 12,
+    "icon": "spell-shadow",
+    "element": "shadow",
+    "effect": "debuff",
+    "effectValue": 3,
+    "runeComposition": ["umbra", "terra"]
+  },
+  {
+    "id": "poison_cloud",
+    "name": "Poison Cloud",
+    "description": "A noxious cloud that corrodes armor.",
+    "manaCost": 9,
+    "damage": 16,
+    "icon": "spell-poison",
+    "element": "poison",
+    "effect": "damage",
+    "runeComposition": ["vitae", "umbra"]
+  },
+  {
+    "id": "earth_shield",
+    "name": "Earth Shield",
+    "description": "Raises your defense temporarily.",
+    "manaCost": 8,
+    "damage": 0,
+    "icon": "spell-earth",
+    "element": "earth",
+    "effect": "buff",
+    "effectValue": 5,
+    "runeComposition": ["terra", "ignis"]
+  }
+]

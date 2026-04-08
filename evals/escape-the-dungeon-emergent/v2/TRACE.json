@@ -1,0 +1,49 @@
+{
+  "eval": "escape-the-dungeon-emergent",
+  "version": "v2",
+  "date": "2026-04-08",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "context_mode": "fresh",
+  "requirements_version": "v3",
+  "timing": { "duration_minutes": 15, "phases_completed": 2, "tasks_completed": 0 },
+  "token_usage": { "total_tokens": 1609, "tool_uses": 73, "note": "rate-limited — but maintained phase commits" },
+  "git_analysis": { "total_commits": 2, "task_id_commits": 0, "batch_commits": 0, "phase_commits": 2, "per_task_discipline": 0.0, "phase_discipline": 1.0 },
+  "requirement_coverage": {
+    "total_criteria": 12, "gate_failed": false,
+    "gate_notes": "G1 (game-loop) partial — playable but no floor progression. G2 (spell-crafting) MET — forge added and functional, has authored content. G3 (ui-quality) medium — better than GAD, worse than bare v3.",
+    "fully_met": 6, "partially_met": 4, "not_met": 2, "coverage_ratio": 0.667
+  },
+  "workflow_emergence": { "created_task_lists": true, "created_state_tracking": true, "created_architecture_docs": true, "created_reusable_skills": false, "emergence_score": 0.75 },
+  "skill_reuse": {
+    "inherited_skills": 5,
+    "skills_used": 3,
+    "skills_improved": 0,
+    "new_skills_created": 0,
+    "reuse_score": 0.3,
+    "note": "Rate-limited before skill evolution could complete"
+  },
+  "iteration_evidence": {
+    "workflow_updates": 1,
+    "total_phases": 2,
+    "iteration_score": 0.5,
+    "note": "Phase 2 commit is a fix — actual iteration on phase 1"
+  },
+  "scores": {
+    "requirement_coverage": 0.667,
+    "workflow_quality": 0.75,
+    "skill_reuse": 0.3,
+    "implementation_quality": 0.6,
+    "iteration_evidence": 0.5,
+    "time_efficiency": 0.969,
+    "human_review": 0.50,
+    "composite": 0.478
+  },
+  "human_review": {
+    "score": 0.50,
+    "notes": "Solid crafting system — forge functional with more authored content than other runs. Playable but no floor progression after boss. No way to train or test crafted spells. Maintained 2 phase commits even under rate limit pressure (the only condition that did). UI is medium quality — better than GAD v8, worse than bare v3. Score 0.50: most disciplined under pressure with functional crafting.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-08T06:00:00.000Z"
+  }
+}

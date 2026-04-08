@@ -1,0 +1,30 @@
+[
+  {
+    "id": "hermit",
+    "name": "Old Hermit Aldric",
+    "portrait": "hermit",
+    "color": "#7a6440",
+    "greeting": "Ah, another soul wandering these depths. I've been here longer than I care to remember.",
+    "dialogueOptions": [
+      {
+        "text": "Do you know the way out?",
+        "response": "The stairs down are guarded by the Keeper. Defeat him, and the next floor awaits. But be warned \u2014 he grows stronger with each passing tick.",
+        "effect": { "type": "info" }
+      },
+      {
+        "text": "Can you help me?",
+        "response": "Take this potion. You'll need it more than I will. And here \u2014 this rune may prove useful at the forge.",
+        "effect": { "type": "giveItem", "itemId": "health_potion" }
+      },
+      {
+        "text": "I found a strange rune...",
+        "response": "A rune! Take it to the forge room. Combine two runes to craft a spell. The ancient magic still lingers there.",
+        "effect": { "type": "giveRune", "runeId": "ignis" }
+      },
+      {
+        "text": "Farewell.",
+        "response": "May the light guide you, adventurer. These halls are not kind to the lost."
+      }
+    ]
+  }
+]

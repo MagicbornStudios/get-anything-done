@@ -1,0 +1,107 @@
+{
+  "runes": [
+    { "id": "ignis", "name": "Ignis", "element": "fire", "color": "#ff4422", "icon": "flame", "description": "A rune of fire and destruction." },
+    { "id": "glacius", "name": "Glacius", "element": "ice", "color": "#44aaff", "icon": "snowflake", "description": "A rune of frost and slowing." },
+    { "id": "terra", "name": "Terra", "element": "earth", "color": "#8b6914", "icon": "mountain", "description": "A rune of earth and stability." },
+    { "id": "ventus", "name": "Ventus", "element": "air", "color": "#aaddff", "icon": "wind", "description": "A rune of wind and swiftness." },
+    { "id": "vita", "name": "Vita", "element": "life", "color": "#44ff66", "icon": "heart", "description": "A rune of healing and restoration." }
+  ],
+  "recipes": [
+    {
+      "id": "fireball",
+      "name": "Fireball",
+      "runes": ["ignis", "ignis"],
+      "manaCost": 8,
+      "damage": 25,
+      "element": "fire",
+      "description": "Hurls a ball of fire at the enemy.",
+      "color": "#ff4422"
+    },
+    {
+      "id": "ice_lance",
+      "name": "Ice Lance",
+      "runes": ["glacius", "glacius"],
+      "manaCost": 7,
+      "damage": 20,
+      "element": "ice",
+      "description": "Launches a shard of ice that pierces defenses.",
+      "color": "#44aaff"
+    },
+    {
+      "id": "stone_shield",
+      "name": "Stone Shield",
+      "runes": ["terra", "terra"],
+      "manaCost": 6,
+      "damage": 0,
+      "element": "earth",
+      "description": "Raises a stone barrier, boosting defense for 3 turns.",
+      "color": "#8b6914",
+      "effect": { "type": "buff", "stat": "defense", "amount": 8, "duration": 3 }
+    },
+    {
+      "id": "flame_frost",
+      "name": "Flame Frost",
+      "runes": ["ignis", "glacius"],
+      "manaCost": 12,
+      "damage": 35,
+      "element": "arcane",
+      "description": "Combines fire and ice into a devastating blast.",
+      "color": "#cc66ff"
+    },
+    {
+      "id": "healing_wind",
+      "name": "Healing Wind",
+      "runes": ["vita", "ventus"],
+      "manaCost": 10,
+      "damage": 0,
+      "element": "life",
+      "description": "A soothing breeze that heals wounds.",
+      "color": "#44ff66",
+      "effect": { "type": "heal", "amount": 30 }
+    },
+    {
+      "id": "earthquake",
+      "name": "Earthquake",
+      "runes": ["terra", "ignis"],
+      "manaCost": 14,
+      "damage": 30,
+      "element": "earth",
+      "description": "Shakes the ground, dealing heavy damage.",
+      "color": "#cc8844"
+    },
+    {
+      "id": "gale_force",
+      "name": "Gale Force",
+      "runes": ["ventus", "ventus"],
+      "manaCost": 6,
+      "damage": 15,
+      "element": "air",
+      "description": "A blast of cutting wind.",
+      "color": "#aaddff"
+    },
+    {
+      "id": "life_bloom",
+      "name": "Life Bloom",
+      "runes": ["vita", "vita"],
+      "manaCost": 12,
+      "damage": 0,
+      "element": "life",
+      "description": "Full restoration of vitality.",
+      "color": "#22ee55",
+      "effect": { "type": "heal", "amount": 50 }
+    },
+    {
+      "id": "frost_shield",
+      "name": "Frost Shield",
+      "runes": ["glacius", "terra"],
+      "manaCost": 9,
+      "damage": 10,
+      "element": "ice",
+      "description": "An icy barrier that damages attackers.",
+      "color": "#66bbdd",
+      "effect": { "type": "buff", "stat": "defense", "amount": 5, "duration": 3 }
+    }
+  ],
+  "starterSpells": ["fireball"],
+  "starterRunes": ["ignis", "ignis", "glacius", "terra", "vita"]
+}

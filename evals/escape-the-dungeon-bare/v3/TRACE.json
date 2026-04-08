@@ -1,0 +1,40 @@
+{
+  "eval": "escape-the-dungeon-bare",
+  "version": "v3",
+  "date": "2026-04-08",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "context_mode": "fresh",
+  "requirements_version": "v3",
+  "timing": { "duration_minutes": 15, "phases_completed": 0, "tasks_completed": 0 },
+  "token_usage": { "total_tokens": 1877, "tool_uses": 53, "note": "rate-limited — single giant commit" },
+  "git_analysis": { "total_commits": 1, "task_id_commits": 0, "batch_commits": 1, "per_task_discipline": 0.0 },
+  "requirement_coverage": {
+    "total_criteria": 12, "gate_failed": false,
+    "gate_notes": "G1 (game-loop) partial — playable but no floor progression after boss. G2 (spell-crafting) not clearly implemented. G3 (ui-quality) BEST of round 3 — best UI/UX by far.",
+    "fully_met": 8, "partially_met": 3, "not_met": 1, "coverage_ratio": 0.792
+  },
+  "workflow_emergence": {
+    "created_task_lists": true,
+    "created_state_tracking": false,
+    "created_architecture_docs": true,
+    "created_reusable_skills": false,
+    "emergence_score": 0.5
+  },
+  "scores": {
+    "requirement_coverage": 0.792,
+    "workflow_emergence": 0.5,
+    "implementation_quality": 0.75,
+    "iteration_evidence": 0.0,
+    "time_efficiency": 0.969,
+    "human_review": 0.70,
+    "composite": 0.526
+  },
+  "human_review": {
+    "score": 0.70,
+    "notes": "Best UI/UX of all eval runs by far. Most enjoyable and playable. Functional game loop with combat and dialogue. Missing: floor progression after boss (can grind same floor), no clear spell crafting path. Regressed on commit discipline under pressure (1 giant commit vs v2's 6). Score 0.70: most enjoyable game across all experiments.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-08T06:00:00.000Z"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "entityTypes": [
+    { "id": "human", "name": "Human", "spriteColor": [200, 180, 160] },
+    { "id": "goblin", "name": "Goblin", "spriteColor": [80, 180, 80] },
+    { "id": "skeleton", "name": "Skeleton", "spriteColor": [220, 220, 200] },
+    { "id": "slime", "name": "Slime", "spriteColor": [100, 200, 255] },
+    { "id": "dragon", "name": "Dragon", "spriteColor": [200, 50, 50] },
+    { "id": "merchant", "name": "Merchant", "spriteColor": [180, 140, 60] }
+  ],
+  "archetypes": [
+    {
+      "id": "warrior",
+      "name": "Warrior",
+      "baseStats": { "maxHp": 120, "maxMana": 30, "might": 15, "agility": 8, "defense": 12, "power": 5, "insight": 5, "willpower": 6 }
+    },
+    {
+      "id": "mage",
+      "name": "Mage",
+      "baseStats": { "maxHp": 70, "maxMana": 100, "might": 5, "agility": 7, "defense": 5, "power": 18, "insight": 14, "willpower": 12 }
+    },
+    {
+      "id": "rogue",
+      "name": "Rogue",
+      "baseStats": { "maxHp": 90, "maxMana": 50, "might": 10, "agility": 16, "defense": 7, "power": 8, "insight": 10, "willpower": 8 }
+    },
+    {
+      "id": "wanderer",
+      "name": "Wanderer",
+      "baseStats": { "maxHp": 100, "maxMana": 60, "might": 10, "agility": 10, "defense": 10, "power": 10, "insight": 10, "willpower": 10 }
+    }
+  ],
+  "enemies": [
+    {
+      "id": "goblin_scout", "name": "Goblin Scout", "entityType": "goblin", "archetype": "rogue",
+      "level": 1, "stats": { "maxHp": 30, "maxMana": 10, "might": 6, "agility": 10, "defense": 3, "power": 2 },
+      "xpReward": 15, "crystalReward": 5
+    },
+    {
+      "id": "skeleton_guard", "name": "Skeleton Guard", "entityType": "skeleton", "archetype": "warrior",
+      "level": 2, "stats": { "maxHp": 50, "maxMana": 5, "might": 10, "agility": 5, "defense": 8, "power": 3 },
+      "xpReward": 25, "crystalReward": 10
+    },
+    {
+      "id": "slime_blob", "name": "Slime Blob", "entityType": "slime", "archetype": "wanderer",
+      "level": 1, "stats": { "maxHp": 40, "maxMana": 15, "might": 5, "agility": 4, "defense": 6, "power": 5 },
+      "xpReward": 12, "crystalReward": 8
+    },
+    {
+      "id": "dragon_whelp", "name": "Dragon Whelp", "entityType": "dragon", "archetype": "mage",
+      "level": 3, "stats": { "maxHp": 80, "maxMana": 40, "might": 12, "agility": 8, "defense": 10, "power": 15 },
+      "xpReward": 50, "crystalReward": 25
+    }
+  ]
+}

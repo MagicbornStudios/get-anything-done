@@ -1,0 +1,9 @@
+[
+  { "rune1": "ignis", "rune2": "ventus", "resultSpellId": "fireball" },
+  { "rune1": "aqua", "rune2": "terra", "resultSpellId": "ice_shard" },
+  { "rune1": "lux", "rune2": "vitae", "resultSpellId": "heal_light" },
+  { "rune1": "ventus", "rune2": "lux", "resultSpellId": "lightning_bolt" },
+  { "rune1": "umbra", "rune2": "terra", "resultSpellId": "shadow_strike" },
+  { "rune1": "vitae", "rune2": "umbra", "resultSpellId": "poison_cloud" },
+  { "rune1": "terra", "rune2": "ignis", "resultSpellId": "earth_shield" }
+]

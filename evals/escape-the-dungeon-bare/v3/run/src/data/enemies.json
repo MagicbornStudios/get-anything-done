@@ -1,0 +1,72 @@
+[
+  {
+    "id": "goblin",
+    "name": "Cave Goblin",
+    "description": "A sneaky goblin lurking in the shadows.",
+    "combatStats": {
+      "currentHp": 25, "maxHp": 25,
+      "currentMana": 5, "maxMana": 5,
+      "might": 6, "agility": 8, "defense": 3, "power": 2, "insight": 2, "willpower": 2
+    },
+    "xpReward": 15,
+    "crystalReward": 5,
+    "sprite": "goblin",
+    "color": "#4a7c3f"
+  },
+  {
+    "id": "skeleton",
+    "name": "Skeleton Warrior",
+    "description": "Animated bones wielding a rusty sword.",
+    "combatStats": {
+      "currentHp": 35, "maxHp": 35,
+      "currentMana": 0, "maxMana": 0,
+      "might": 8, "agility": 4, "defense": 6, "power": 1, "insight": 1, "willpower": 1
+    },
+    "xpReward": 22,
+    "crystalReward": 8,
+    "sprite": "skeleton",
+    "color": "#c8c8b0"
+  },
+  {
+    "id": "dark_mage",
+    "name": "Dark Mage",
+    "description": "A corrupted spellcaster wreathed in shadow.",
+    "combatStats": {
+      "currentHp": 30, "maxHp": 30,
+      "currentMana": 20, "maxMana": 20,
+      "might": 3, "agility": 5, "defense": 4, "power": 10, "insight": 8, "willpower": 6
+    },
+    "xpReward": 30,
+    "crystalReward": 12,
+    "sprite": "mage",
+    "color": "#6b3fa0"
+  },
+  {
+    "id": "slime",
+    "name": "Dungeon Slime",
+    "description": "A wobbling mass of corrosive goo.",
+    "combatStats": {
+      "currentHp": 20, "maxHp": 20,
+      "currentMana": 0, "maxMana": 0,
+      "might": 4, "agility": 3, "defense": 2, "power": 1, "insight": 1, "willpower": 1
+    },
+    "xpReward": 10,
+    "crystalReward": 3,
+    "sprite": "slime",
+    "color": "#39bf5c"
+  },
+  {
+    "id": "floor_boss",
+    "name": "Dungeon Keeper",
+    "description": "The ancient guardian of this dungeon floor.",
+    "combatStats": {
+      "currentHp": 80, "maxHp": 80,
+      "currentMana": 30, "maxMana": 30,
+      "might": 12, "agility": 6, "defense": 8, "power": 8, "insight": 6, "willpower": 6
+    },
+    "xpReward": 60,
+    "crystalReward": 25,
+    "sprite": "boss",
+    "color": "#c43030"
+  }
+]

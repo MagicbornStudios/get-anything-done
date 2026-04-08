@@ -1,0 +1,38 @@
+[
+  {
+    "id": "health_potion",
+    "name": "Health Potion",
+    "description": "Restores 20 HP.",
+    "icon": "potion-red",
+    "type": "potion",
+    "effect": { "stat": "currentHp", "value": 20 },
+    "quantity": 1
+  },
+  {
+    "id": "mana_potion",
+    "name": "Mana Potion",
+    "description": "Restores 15 Mana.",
+    "icon": "potion-blue",
+    "type": "potion",
+    "effect": { "stat": "currentMana", "value": 15 },
+    "quantity": 1
+  },
+  {
+    "id": "greater_health_potion",
+    "name": "Greater Health Potion",
+    "description": "Restores 50 HP.",
+    "icon": "potion-red-big",
+    "type": "potion",
+    "effect": { "stat": "currentHp", "value": 50 },
+    "quantity": 1
+  },
+  {
+    "id": "scroll_of_might",
+    "name": "Scroll of Might",
+    "description": "Temporarily increases Might by 5.",
+    "icon": "scroll",
+    "type": "scroll",
+    "effect": { "stat": "might", "value": 5 },
+    "quantity": 1
+  }
+]

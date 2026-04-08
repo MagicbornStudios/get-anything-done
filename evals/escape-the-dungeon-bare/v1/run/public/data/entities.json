@@ -1,0 +1,47 @@
+{
+  "entityTypes": [
+    {
+      "id": "human",
+      "name": "Human",
+      "baseStats": { "maxHp": 100, "maxMana": 50, "might": 10, "agility": 10, "defense": 5, "power": 8, "insight": 8, "willpower": 7 }
+    },
+    {
+      "id": "goblin",
+      "name": "Goblin",
+      "baseStats": { "maxHp": 40, "maxMana": 10, "might": 8, "agility": 14, "defense": 3, "power": 4, "insight": 3, "willpower": 3 }
+    },
+    {
+      "id": "skeleton",
+      "name": "Skeleton",
+      "baseStats": { "maxHp": 55, "maxMana": 0, "might": 12, "agility": 6, "defense": 8, "power": 2, "insight": 1, "willpower": 2 }
+    },
+    {
+      "id": "slime",
+      "name": "Slime",
+      "baseStats": { "maxHp": 30, "maxMana": 20, "might": 5, "agility": 4, "defense": 2, "power": 10, "insight": 5, "willpower": 5 }
+    },
+    {
+      "id": "dragon",
+      "name": "Dragon",
+      "baseStats": { "maxHp": 200, "maxMana": 100, "might": 25, "agility": 12, "defense": 15, "power": 20, "insight": 15, "willpower": 18 }
+    }
+  ],
+  "archetypes": [
+    {
+      "id": "warrior",
+      "name": "Warrior",
+      "statModifiers": { "might": 5, "defense": 3, "maxHp": 20 }
+    },
+    {
+      "id": "mage",
+      "name": "Mage",
+      "statModifiers": { "power": 5, "maxMana": 30, "insight": 3 }
+    },
+    {
+      "id": "rogue",
+      "name": "Rogue",
+      "statModifiers": { "agility": 5, "might": 2, "insight": 2 }
+    }
+  ],
+  "occupations": ["dungeoneer", "merchant", "boss", "civilian"]
+}
