@@ -2,9 +2,14 @@ import Nav from "@/components/landing/Nav";
 import Hero from "@/components/landing/Hero";
 import WhatItIs from "@/components/landing/WhatItIs";
 import Lineage from "@/components/landing/Lineage";
+import Workflow from "@/components/landing/Workflow";
 import Framework from "@/components/landing/Framework";
+import Rounds from "@/components/landing/Rounds";
+import Projects from "@/components/landing/Projects";
 import Results from "@/components/landing/Results";
 import Playable from "@/components/landing/Playable";
+import Requirements from "@/components/landing/Requirements";
+import Catalog from "@/components/landing/Catalog";
 import Templates from "@/components/landing/Templates";
 import RunIt from "@/components/landing/RunIt";
 import Footer from "@/components/landing/Footer";
@@ -16,9 +21,14 @@ export default function Page() {
       <Hero />
       <WhatItIs />
       <Lineage />
+      <Workflow />
       <Framework />
+      <Rounds />
+      <Projects />
       <Results />
       <Playable />
+      <Requirements />
+      <Catalog />
       <Templates />
       <RunIt />
       <Footer />

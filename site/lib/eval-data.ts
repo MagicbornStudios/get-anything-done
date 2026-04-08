@@ -7,6 +7,10 @@
 export {
   EVAL_RUNS,
   EVAL_TEMPLATES,
+  PLANNING_ZIPS,
+  ROUND_SUMMARIES,
+  FINDINGS_ROUND_3_RAW,
+  FINDINGS_GENERAL_RAW,
   GAD_PACK_TEMPLATE,
   PLAYABLE_INDEX,
   WORKFLOW_LABELS,
@@ -14,6 +18,8 @@ export {
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,
+  type PlanningZipAsset,
+  type RoundSummary,
   type Workflow,
 } from "./eval-data.generated";
 

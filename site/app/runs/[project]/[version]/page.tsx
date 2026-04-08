@@ -88,6 +88,13 @@ export default async function RunPage({
 
   const playable = playableUrl(run);
   const composite = run.scores.composite ?? 0;
+  const humanScore = run.humanReview?.score ?? null;
+  // Only show a gate badge if the requirements version actually had gates
+  // (v1/v2 predate the concept, so gate_failed is absent).
+  const gateKnown = typeof run.requirementCoverage?.gate_failed === "boolean";
+  // Divergence callout: mechanical composite >= 0.6 but human review <= 0.25.
+  // Highlights runs where process metrics lie.
+  const divergent = humanScore != null && composite >= 0.6 && humanScore <= 0.25;
   const dimensionScores = SCORE_ORDER.map(([key, label]) => ({
     key,
     label,
@@ -112,10 +119,14 @@ export default async function RunPage({
             <Badge variant="outline">{run.version}</Badge>
             <Badge variant="outline">requirements {run.requirementsVersion}</Badge>
             <Badge variant="outline">{run.date}</Badge>
-            {run.requirementCoverage?.gate_failed ? (
-              <Badge variant="danger">Gate failed</Badge>
+            {gateKnown ? (
+              run.requirementCoverage!.gate_failed ? (
+                <Badge variant="danger">Gate failed</Badge>
+              ) : (
+                <Badge variant="success">Gate passed</Badge>
+              )
             ) : (
-              <Badge variant="success">Gate passed</Badge>
+              <Badge variant="outline">pre-gate requirements</Badge>
             )}
           </div>
 
@@ -128,15 +139,53 @@ export default async function RunPage({
 
           <div className="mt-10 grid gap-8 lg:grid-cols-[2fr_1fr]">
             <div>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Composite score
-              </p>
-              <p className="mt-1 text-6xl font-semibold tabular-nums gradient-text">
-                {formatNum(composite)}
-              </p>
-              <div className="mt-3 max-w-md">
-                <ScoreBar value={composite} />
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Composite score
+                  </p>
+                  <p className="mt-1 text-6xl font-semibold tabular-nums gradient-text">
+                    {formatNum(composite)}
+                  </p>
+                  <div className="mt-3">
+                    <ScoreBar value={composite} />
+                  </div>
+                </div>
+                {humanScore != null && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Human review
+                    </p>
+                    <p
+                      className={`mt-1 text-6xl font-semibold tabular-nums ${
+                        humanScore >= 0.5 ? "text-emerald-400" : humanScore >= 0.25 ? "text-amber-400" : "text-red-400"
+                      }`}
+                    >
+                      {humanScore.toFixed(2)}
+                    </p>
+                    <div className="mt-3">
+                      <ScoreBar value={humanScore} />
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {divergent && (
+                <div className="mt-6 rounded-2xl border border-red-500/40 bg-red-500/5 p-5">
+                  <p className="text-xs uppercase tracking-wider text-red-400">
+                    Process metrics diverged from reality
+                  </p>
+                  <p className="mt-2 text-base leading-7 text-foreground">
+                    This run scored <strong>{formatNum(composite)}</strong> on the composite formula
+                    (requirement coverage, planning quality, commit discipline, skill accuracy, time
+                    efficiency) but a human reviewer rated the actual artifact{" "}
+                    <strong>{humanScore!.toFixed(2)}</strong> out of 1.0. This is exactly the failure
+                    mode that prompted gad-29 (&quot;process metrics do not guarantee output
+                    quality&quot;) and the move to weight human review at 30%.
+                  </p>
+                </div>
+              )}
+
               {run.humanReview?.notes && (
                 <div className="mt-6 rounded-2xl border border-border/70 bg-card/40 p-5">
                   <p className="text-xs uppercase tracking-wider text-accent">Human review note</p>
@@ -147,7 +196,7 @@ export default async function RunPage({
                     <p className="mt-3 text-xs text-muted-foreground">
                       Reviewed by {run.humanReview.reviewed_by}
                       {run.humanReview.reviewed_at
-                        ? ` · ${run.humanReview.reviewed_at.slice(0, 10)}`
+                        ? ` · ${String(run.humanReview.reviewed_at).slice(0, 10)}`
                         : ""}
                     </p>
                   )}

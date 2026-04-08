@@ -2,13 +2,14 @@ import Link from "next/link";
 import { Github } from "lucide-react";
 
 const NAV_LINKS = [
-  { href: "/#what", label: "What" },
-  { href: "/#lineage", label: "Lineage" },
-  { href: "/#framework", label: "Framework" },
+  { href: "/#workflow", label: "Loop" },
+  { href: "/#rounds", label: "Rounds" },
+  { href: "/#projects", label: "Projects" },
   { href: "/#results", label: "Results" },
   { href: "/#play", label: "Play" },
+  { href: "/#requirements", label: "Requirements" },
+  { href: "/#catalog", label: "Catalog" },
   { href: "/#templates", label: "Downloads" },
-  { href: "/#run", label: "Run it" },
 ];
 
 export default function Nav() {

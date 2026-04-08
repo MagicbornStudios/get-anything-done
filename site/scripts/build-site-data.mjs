@@ -17,6 +17,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import AdmZip from "adm-zip";
 
@@ -26,11 +27,17 @@ const __dirname = path.dirname(__filename);
 const SITE_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 const TEMPLATES_DIR = path.join(REPO_ROOT, "templates");
+const SKILLS_DIR = path.join(REPO_ROOT, "skills");
+const AGENTS_DIR = path.join(REPO_ROOT, "agents");
+const COMMANDS_DIR = path.join(REPO_ROOT, "commands", "gad");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
 const DOWNLOADS_DIR = path.join(PUBLIC_DIR, "downloads");
+const REQUIREMENTS_DIR = path.join(DOWNLOADS_DIR, "requirements");
+const PLANNING_ZIPS_DIR = path.join(DOWNLOADS_DIR, "planning");
 const PLAYABLE_DIR = path.join(PUBLIC_DIR, "playable");
 const GENERATED_FILE = path.join(SITE_ROOT, "lib", "eval-data.generated.ts");
+const CATALOG_FILE = path.join(SITE_ROOT, "lib", "catalog.generated.ts");
 
 // -------------------------------------------------------------------------
 // Helpers
@@ -67,6 +74,63 @@ function formatBytes(n) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
+}
+
+/**
+ * Tiny frontmatter parser. Handles the `---\n...\n---\n<body>` shape.
+ * Returns { data, body }. Only understands key: value (strings, one level).
+ */
+function parseFrontmatter(src) {
+  if (!src.startsWith("---")) return { data: {}, body: src };
+  const end = src.indexOf("\n---", 3);
+  if (end < 0) return { data: {}, body: src };
+  const header = src.slice(3, end).trim();
+  const body = src.slice(end + 4).replace(/^\n/, "");
+  const data = {};
+  let key = null;
+  let buf = "";
+  for (const rawLine of header.split("\n")) {
+    const line = rawLine;
+    const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (m && !/^\s/.test(rawLine)) {
+      if (key) data[key] = buf.trim();
+      key = m[1];
+      buf = m[2];
+    } else if (key) {
+      buf += " " + line.trim();
+    }
+  }
+  if (key) data[key] = buf.trim();
+  return { data, body };
+}
+
+function firstParagraph(text, max = 600) {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  // Skip a leading # Heading line.
+  const lines = trimmed.split("\n");
+  let i = 0;
+  while (i < lines.length && /^\s*#/.test(lines[i])) i++;
+  while (i < lines.length && !lines[i].trim()) i++;
+  const chunks = [];
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) break;
+    chunks.push(line);
+    i++;
+  }
+  const result = chunks.join(" ").replace(/\s+/g, " ").trim();
+  return result.length > max ? result.slice(0, max - 1) + "…" : result;
+}
+
+function gitShow(ref, repoRelPath) {
+  try {
+    return execSync(`git -C "${REPO_ROOT}" show ${ref}:${repoRelPath}`, {
+      stdio: ["ignore", "pipe", "ignore"],
+    }).toString("utf8");
+  } catch {
+    return null;
+  }
 }
 
 // Skip these patterns when zipping — keeps downloads lean.
@@ -142,6 +206,93 @@ function zipEvalTemplates() {
 }
 
 // -------------------------------------------------------------------------
+// 2b. Planning-only zips (no source code) — bundles just the planning
+// artifacts a human would read to understand the eval: .planning/, skills/,
+// AGENTS.md, REQUIREMENTS.xml or REQUIREMENTS.md, source-*.xml design docs.
+// -------------------------------------------------------------------------
+
+const PLANNING_INCLUDE_FILES = new Set([
+  "AGENTS.md",
+  "REQUIREMENTS.xml",
+  "REQUIREMENTS.md",
+  "WORKFLOW.md",
+  "CHANGELOG.md",
+]);
+const PLANNING_INCLUDE_DIRS = new Set([".planning", "skills", "planning"]);
+function isPlanningFile(relName) {
+  if (PLANNING_INCLUDE_FILES.has(relName)) return true;
+  if (relName.startsWith("source-") && (relName.endsWith(".md") || relName.endsWith(".xml")))
+    return true;
+  if (relName.startsWith("_brownfield") && relName.endsWith(".md")) return true;
+  return false;
+}
+
+function zipPlanningOnly(srcDir, zipPath, label) {
+  if (!exists(srcDir)) {
+    console.warn(`  [skip] ${label}: ${srcDir} not found`);
+    return null;
+  }
+  const zip = new AdmZip();
+  const innerRoot = path.basename(srcDir);
+  let fileCount = 0;
+  function walkIncludeDir(dir, rel) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (shouldSkipForZip(entry.name)) continue;
+      const sp = path.join(dir, entry.name);
+      const r = path.posix.join(rel, entry.name);
+      if (entry.isDirectory()) walkIncludeDir(sp, r);
+      else if (entry.isFile()) {
+        zip.addFile(r, fs.readFileSync(sp));
+        fileCount++;
+      }
+    }
+  }
+  for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+    if (shouldSkipForZip(entry.name)) continue;
+    const sp = path.join(srcDir, entry.name);
+    const r = path.posix.join(innerRoot, entry.name);
+    if (entry.isDirectory()) {
+      if (PLANNING_INCLUDE_DIRS.has(entry.name)) walkIncludeDir(sp, r);
+    } else if (entry.isFile()) {
+      if (isPlanningFile(entry.name)) {
+        zip.addFile(r, fs.readFileSync(sp));
+        fileCount++;
+      }
+    }
+  }
+  if (fileCount === 0) return null;
+  ensureDir(path.dirname(zipPath));
+  zip.writeZip(zipPath);
+  const size = fs.statSync(zipPath).size;
+  console.log(`  [zip] planning:${label} → ${path.relative(SITE_ROOT, zipPath)} (${formatBytes(size)}, ${fileCount} files)`);
+  return { path: path.relative(PUBLIC_DIR, zipPath).split(path.sep).join("/"), bytes: size, files: fileCount };
+}
+
+function zipPlanningOnlyPerEval() {
+  console.log("[2b/4] Zipping planning-only per eval");
+  const results = [];
+  if (!exists(EVALS_DIR)) return results;
+  for (const name of fs.readdirSync(EVALS_DIR).sort()) {
+    const projectDir = path.join(EVALS_DIR, name);
+    if (!fs.statSync(projectDir).isDirectory()) continue;
+    if (name.startsWith(".")) continue;
+    const templateDir = path.join(projectDir, "template");
+    if (!exists(templateDir)) continue;
+    const zipPath = path.join(PLANNING_ZIPS_DIR, `eval-${name}-planning.zip`);
+    const entry = zipPlanningOnly(templateDir, zipPath, name);
+    if (entry) {
+      results.push({
+        project: name,
+        zipPath: `/${entry.path}`,
+        bytes: entry.bytes,
+        files: entry.files,
+      });
+    }
+  }
+  return results;
+}
+
+// -------------------------------------------------------------------------
 // 3. Parse all TRACE.json files into rich eval data
 // -------------------------------------------------------------------------
 
@@ -184,7 +335,268 @@ function isImplementationRun(project, data) {
   return true;
 }
 
-function writeEvalDataTs(traces, evalTemplates, gadPackTemplate) {
+// -------------------------------------------------------------------------
+// Requirements versions — the current v4 and a narrative for v1-v3
+// -------------------------------------------------------------------------
+
+function copyCurrentRequirements() {
+  console.log("[2c/4] Copying current game requirements");
+  const out = [];
+  ensureDir(REQUIREMENTS_DIR);
+  const projects = ["escape-the-dungeon", "escape-the-dungeon-bare", "escape-the-dungeon-emergent"];
+  for (const project of projects) {
+    // Try template/.planning/REQUIREMENTS.xml first, then template/REQUIREMENTS.xml.
+    const candidates = [
+      path.join(EVALS_DIR, project, "template", ".planning", "REQUIREMENTS.xml"),
+      path.join(EVALS_DIR, project, "template", "REQUIREMENTS.xml"),
+    ];
+    const src = candidates.find(exists);
+    if (!src) continue;
+    const destName = `${project}-REQUIREMENTS-v4.xml`;
+    const dest = path.join(REQUIREMENTS_DIR, destName);
+    fs.copyFileSync(src, dest);
+    const size = fs.statSync(dest).size;
+    console.log(`  [copy] ${project} v4 → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
+    out.push({
+      project,
+      version: "v4",
+      path: `/downloads/requirements/${destName}`,
+      bytes: size,
+    });
+  }
+  // Also copy the REQUIREMENTS-VERSIONS.md narrative so users can download the
+  // full history as a single file.
+  const historyFile = path.join(EVALS_DIR, "REQUIREMENTS-VERSIONS.md");
+  if (exists(historyFile)) {
+    const dest = path.join(REQUIREMENTS_DIR, "REQUIREMENTS-VERSIONS.md");
+    fs.copyFileSync(historyFile, dest);
+    console.log(`  [copy] requirements history narrative → ${path.relative(SITE_ROOT, dest)}`);
+  }
+  return out;
+}
+
+function parseRequirementsHistory() {
+  console.log("[2d/4] Parsing REQUIREMENTS-VERSIONS.md");
+  const file = path.join(EVALS_DIR, "REQUIREMENTS-VERSIONS.md");
+  if (!exists(file)) return [];
+  const text = fs.readFileSync(file, "utf8");
+  // Split on ## vN headers.
+  const chunks = text.split(/^## /m).slice(1); // first is header
+  const versions = [];
+  for (const chunk of chunks) {
+    const lines = chunk.split("\n");
+    const header = lines[0] ?? "";
+    const versionMatch = header.match(/^(v\d+)\s*—\s*(\d{4}-\d{2}-\d{2})/);
+    if (!versionMatch) continue;
+    const body = lines.slice(1).join("\n").trim();
+    // Extract labeled sections by bold prefix.
+    const sections = {};
+    const sectionRegex = /\*\*([^:*]+):\*\*([\s\S]*?)(?=\n\*\*[^:*]+:\*\*|$)/g;
+    let match;
+    while ((match = sectionRegex.exec(body)) !== null) {
+      const key = match[1].trim().toLowerCase().replace(/\s+/g, "_");
+      sections[key] = match[2].trim();
+    }
+    versions.push({
+      version: versionMatch[1],
+      date: versionMatch[2],
+      rawBody: body,
+      sections,
+    });
+  }
+  console.log(`  [parse] ${versions.length} requirements versions`);
+  return versions;
+}
+
+// -------------------------------------------------------------------------
+// Catalog scanners — skills, agents, commands
+// -------------------------------------------------------------------------
+
+function scanDirFiles(dir, pattern) {
+  if (!exists(dir)) return [];
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isFile() && pattern.test(entry.name)) {
+      out.push(path.join(dir, entry.name));
+    } else if (entry.isDirectory()) {
+      const nested = path.join(dir, entry.name, "SKILL.md");
+      if (exists(nested)) out.push(nested);
+    }
+  }
+  return out.sort();
+}
+
+function scanCatalog() {
+  console.log("[2e/4] Scanning catalog (skills, agents, commands, templates)");
+  const catalog = { skills: [], agents: [], commands: [], templates: [] };
+
+  if (exists(SKILLS_DIR)) {
+    for (const entry of fs.readdirSync(SKILLS_DIR, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (entry.isDirectory()) {
+        const file = path.join(SKILLS_DIR, entry.name, "SKILL.md");
+        if (exists(file)) {
+          const src = fs.readFileSync(file, "utf8");
+          const { data, body } = parseFrontmatter(src);
+          catalog.skills.push({
+            id: entry.name,
+            name: data.name || entry.name,
+            description: data.description || firstParagraph(body, 280),
+            file: `vendor/get-anything-done/skills/${entry.name}/SKILL.md`,
+          });
+        }
+      }
+    }
+  }
+
+  if (exists(AGENTS_DIR)) {
+    for (const name of fs.readdirSync(AGENTS_DIR).sort()) {
+      if (!name.endsWith(".md")) continue;
+      const file = path.join(AGENTS_DIR, name);
+      const src = fs.readFileSync(file, "utf8");
+      const { data, body } = parseFrontmatter(src);
+      const id = name.replace(/\.md$/, "");
+      catalog.agents.push({
+        id,
+        name: data.name || id,
+        description: data.description || firstParagraph(body, 280),
+        tools: data.tools || null,
+        color: data.color || null,
+        file: `vendor/get-anything-done/agents/${name}`,
+      });
+    }
+  }
+
+  if (exists(COMMANDS_DIR)) {
+    for (const name of fs.readdirSync(COMMANDS_DIR).sort()) {
+      if (!name.endsWith(".md")) continue;
+      const file = path.join(COMMANDS_DIR, name);
+      const src = fs.readFileSync(file, "utf8");
+      const { data, body } = parseFrontmatter(src);
+      const id = name.replace(/\.md$/, "");
+      catalog.commands.push({
+        id,
+        name: data.name || `gad:${id}`,
+        description: data.description || firstParagraph(body, 280),
+        agent: data.agent || null,
+        argumentHint: data["argument-hint"] || null,
+        file: `vendor/get-anything-done/commands/gad/${name}`,
+      });
+    }
+  }
+
+  if (exists(TEMPLATES_DIR)) {
+    function walk(dir, rel = "") {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+        const sp = path.join(dir, entry.name);
+        const r = rel ? `${rel}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) walk(sp, r);
+        else if (entry.isFile() && (entry.name.endsWith(".md") || entry.name.endsWith(".toml") || entry.name.endsWith(".json"))) {
+          const size = fs.statSync(sp).size;
+          catalog.templates.push({ path: r, bytes: size });
+        }
+      }
+    }
+    walk(TEMPLATES_DIR);
+  }
+
+  console.log(
+    `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} commands=${catalog.commands.length} templates=${catalog.templates.length}`
+  );
+  return catalog;
+}
+
+function writeCatalogTs(catalog, requirementsHistory, currentRequirements) {
+  console.log("  [write] lib/catalog.generated.ts");
+  const out = `/**
+ * Auto-generated from skills/, agents/, commands/gad/, templates/, and
+ * evals/REQUIREMENTS-VERSIONS.md. DO NOT EDIT BY HAND.
+ */
+
+export interface CatalogSkill {
+  id: string;
+  name: string;
+  description: string;
+  file: string;
+}
+export interface CatalogAgent {
+  id: string;
+  name: string;
+  description: string;
+  tools: string | null;
+  color: string | null;
+  file: string;
+}
+export interface CatalogCommand {
+  id: string;
+  name: string;
+  description: string;
+  agent: string | null;
+  argumentHint: string | null;
+  file: string;
+}
+export interface CatalogTemplate {
+  path: string;
+  bytes: number;
+}
+export interface RequirementsVersion {
+  version: string;
+  date: string;
+  rawBody: string;
+  sections: Record<string, string>;
+}
+export interface CurrentRequirementsFile {
+  project: string;
+  version: string;
+  path: string;
+  bytes: number;
+}
+
+export const SKILLS: CatalogSkill[] = ${JSON.stringify(catalog.skills, null, 2)};
+export const AGENTS: CatalogAgent[] = ${JSON.stringify(catalog.agents, null, 2)};
+export const COMMANDS: CatalogCommand[] = ${JSON.stringify(catalog.commands, null, 2)};
+export const TEMPLATES: CatalogTemplate[] = ${JSON.stringify(catalog.templates, null, 2)};
+export const REQUIREMENTS_HISTORY: RequirementsVersion[] = ${JSON.stringify(requirementsHistory, null, 2)};
+export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = ${JSON.stringify(currentRequirements, null, 2)};
+
+export const GITHUB_REPO = "https://github.com/MagicbornStudios/get-anything-done";
+`;
+  ensureDir(path.dirname(CATALOG_FILE));
+  fs.writeFileSync(CATALOG_FILE, out, "utf8");
+}
+
+// -------------------------------------------------------------------------
+// Findings + experiment log — parse into round summaries
+// -------------------------------------------------------------------------
+
+function parseRoundSummaries() {
+  console.log("[2f/4] Parsing experiment log + findings");
+  const expPath = path.join(EVALS_DIR, "EXPERIMENT-LOG.md");
+  const findingsRound3Path = path.join(EVALS_DIR, "FINDINGS-2026-04-08-round-3.md");
+  const findingsGeneralPath = path.join(EVALS_DIR, "FINDINGS-2026-04-08.md");
+  const rounds = [];
+  if (exists(expPath)) {
+    const text = fs.readFileSync(expPath, "utf8").replace(/\r\n/g, "\n");
+    const chunks = text.split(/\n## /);
+    for (const chunk of chunks) {
+      const header = (chunk.split("\n")[0] ?? "").trim();
+      // Match "Round 1", "Round 1 — …", "Round 1 - …", or "Round 1:"
+      const m = header.match(/^(Round\s*\d+)\s*[\u2014\u2013:\-]?\s*(.*)$/i);
+      if (!m) continue;
+      const round = m[1];
+      const title = m[2]?.trim() || "";
+      const body = chunk.split("\n").slice(1).join("\n").trim();
+      rounds.push({ round, title, body });
+    }
+  }
+  const findings = {
+    round3: exists(findingsRound3Path) ? fs.readFileSync(findingsRound3Path, "utf8") : null,
+    general: exists(findingsGeneralPath) ? fs.readFileSync(findingsGeneralPath, "utf8") : null,
+  };
+  console.log(`  [parse] ${rounds.length} rounds in experiment log`);
+  return { rounds, findings };
+}
+
+function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
   console.log("[3/4] Writing lib/eval-data.generated.ts");
   const records = traces
     .filter((t) => isImplementationRun(t.project, t.data))
@@ -214,7 +626,9 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate) {
   for (const r of records) {
     const playablePath = path.join(PLAYABLE_DIR, r.project, r.version, "index.html");
     if (exists(playablePath)) {
-      playable[`${r.project}/${r.version}`] = `/playable/${r.project}/${r.version}/`;
+      // Explicit filename — Next.js on Vercel does not serve directory index
+      // files for public/ subdirectories reliably, so link to index.html.
+      playable[`${r.project}/${r.version}`] = `/playable/${r.project}/${r.version}/index.html`;
     }
   }
 
@@ -314,9 +728,24 @@ export interface EvalTemplateAsset {
   bytes: number;
 }
 
+export interface PlanningZipAsset {
+  project: string;
+  zipPath: string;
+  bytes: number;
+  files: number;
+}
+
+export interface RoundSummary {
+  round: string;
+  title: string;
+  body: string;
+}
+
 export const EVAL_RUNS: EvalRunRecord[] = ${JSON.stringify(records, null, 2)};
 
 export const EVAL_TEMPLATES: EvalTemplateAsset[] = ${JSON.stringify(evalTemplates, null, 2)};
+
+export const PLANNING_ZIPS: PlanningZipAsset[] = ${JSON.stringify(extras.planningZips ?? [], null, 2)};
 
 export const GAD_PACK_TEMPLATE = ${JSON.stringify(
     gadPackTemplate
@@ -325,6 +754,11 @@ export const GAD_PACK_TEMPLATE = ${JSON.stringify(
     null,
     2
   )};
+
+export const ROUND_SUMMARIES: RoundSummary[] = ${JSON.stringify(extras.rounds ?? [], null, 2)};
+
+export const FINDINGS_ROUND_3_RAW: string | null = ${JSON.stringify(extras.findings?.round3 ?? null)};
+export const FINDINGS_GENERAL_RAW: string | null = ${JSON.stringify(extras.findings?.general ?? null)};
 
 export const PLAYABLE_INDEX: Record<string, string> = ${JSON.stringify(playable, null, 2)};
 
@@ -379,11 +813,24 @@ function main() {
   console.log("=== build-site-data ===");
   rmrf(DOWNLOADS_DIR);
   ensureDir(DOWNLOADS_DIR);
+  ensureDir(PLANNING_ZIPS_DIR);
+  ensureDir(REQUIREMENTS_DIR);
 
   const gadPackTemplate = zipGadPackTemplate();
   const evalTemplates = zipEvalTemplates();
+  const planningZips = zipPlanningOnlyPerEval();
+  const currentRequirements = copyCurrentRequirements();
+  const requirementsHistory = parseRequirementsHistory();
+  const catalog = scanCatalog();
+  const roundData = parseRoundSummaries();
   const traces = findTraceFiles();
-  writeEvalDataTs(traces, evalTemplates, gadPackTemplate);
+
+  writeEvalDataTs(traces, evalTemplates, gadPackTemplate, {
+    planningZips,
+    rounds: roundData.rounds,
+    findings: roundData.findings,
+  });
+  writeCatalogTs(catalog, requirementsHistory, currentRequirements);
   auditPlayable();
 
   console.log("=== done ===");

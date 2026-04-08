@@ -94,6 +94,19 @@ export interface EvalTemplateAsset {
   bytes: number;
 }
 
+export interface PlanningZipAsset {
+  project: string;
+  zipPath: string;
+  bytes: number;
+  files: number;
+}
+
+export interface RoundSummary {
+  round: string;
+  title: string;
+  body: string;
+}
+
 export const EVAL_RUNS: EvalRunRecord[] = [
   {
     "project": "escape-the-dungeon",
@@ -1214,20 +1227,91 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
   }
 ];
 
+export const PLANNING_ZIPS: PlanningZipAsset[] = [
+  {
+    "project": "escape-the-dungeon",
+    "zipPath": "/downloads/planning/eval-escape-the-dungeon-planning.zip",
+    "bytes": 15740,
+    "files": 8
+  },
+  {
+    "project": "escape-the-dungeon-bare",
+    "zipPath": "/downloads/planning/eval-escape-the-dungeon-bare-planning.zip",
+    "bytes": 17939,
+    "files": 6
+  },
+  {
+    "project": "escape-the-dungeon-emergent",
+    "zipPath": "/downloads/planning/eval-escape-the-dungeon-emergent-planning.zip",
+    "bytes": 23643,
+    "files": 11
+  },
+  {
+    "project": "etd-brownfield-bare",
+    "zipPath": "/downloads/planning/eval-etd-brownfield-bare-planning.zip",
+    "bytes": 1130,
+    "files": 1
+  },
+  {
+    "project": "etd-brownfield-emergent",
+    "zipPath": "/downloads/planning/eval-etd-brownfield-emergent-planning.zip",
+    "bytes": 1063,
+    "files": 1
+  },
+  {
+    "project": "etd-brownfield-gad",
+    "zipPath": "/downloads/planning/eval-etd-brownfield-gad-planning.zip",
+    "bytes": 1410,
+    "files": 1
+  },
+  {
+    "project": "reader-workspace",
+    "zipPath": "/downloads/planning/eval-reader-workspace-planning.zip",
+    "bytes": 15255,
+    "files": 6
+  }
+];
+
 export const GAD_PACK_TEMPLATE = {
   "zipPath": "/downloads/gad-pack-template.zip",
   "bytes": 91146
 };
 
+export const ROUND_SUMMARIES: RoundSummary[] = [
+  {
+    "round": "Round 1",
+    "title": "Greenfield, single-condition, requirements v1",
+    "body": "**Date:** 2026-04-06 to 2026-04-07\n**Requirements version:** v1 (12 systems-focused criteria, no gates)\n**Conditions:** GAD only (escape-the-dungeon v1-v5)\n**Results:**\n- v1-v4: Iterative development of the GAD eval harness itself. Not scored.\n- **v5:** Auto-composite 0.935, human review 0.0 (blank screen). Gap between\n  automated scoring and reality first exposed here.\n\n**Key finding:** Automated scoring without human review is dangerously misleading.\nrequirement_coverage was 1.0 but nothing rendered.\n\n**Led to:** Gate criteria design, human_review weight increase, build-must-render rule.\n\n---"
+  },
+  {
+    "round": "Round 2",
+    "title": "Greenfield, three-condition, requirements v2",
+    "body": "**Date:** 2026-04-08\n**Requirements version:** v2 (added gate criteria, vertical-slice priority, UI-first)\n**Conditions:** GAD v6/v7, Bare v1/v2, Emergent v1\n\n**Results:**\n| Condition | Version | Tokens | Commits | Human |\n|-----------|---------|--------|---------|-------|\n| GAD | v6 | ~100k | 21 | 0.00 (blank screen) |\n| GAD | v7 | 93k | 21 | 0.30 (stuck after combat) |\n| Bare | v1 | 68k | 2 | 0.10 (main menu only) |\n| Bare | v2 | 88k | 6 | **0.50** (most playable) |\n| Emergent | v1 | 67k | 2 | 0.10 (styled text crash) |\n\n**Key findings:**\n1. Bare workflow beats GAD on human review even at equal requirements\n2. Inherited skills (emergent v1) didn't prevent new failure modes\n3. GAD has perfect process metrics (planning_quality 1.0) but broken game loops\n4. Commit discipline inversely tracked with output quality in this round\n\n**Led to:**\n- Requirements v3 with explicit game-loop gate, spell-crafting gate, UI quality gate\n- Human_review weight raised from 0.15 to 0.30 with low-score caps\n- Skills must capture failure modes and fixes, not just patterns\n\n---"
+  },
+  {
+    "round": "Round 3",
+    "title": "Greenfield, three-condition, requirements v3",
+    "body": "**Date:** 2026-04-08\n**Requirements version:** v3 (game-loop gate, spell-crafting gate, UI quality gate)\n**Conditions:** GAD v8, Bare v3, Emergent v2\n**Note:** All three hit rate limits mid-run\n\n**Results:**\n| Condition | Tokens | Commits | Human | Composite | Notes |\n|-----------|--------|---------|-------|-----------|-------|\n| **Bare v3** | 1877 | 1 batch | **0.70** | 0.526 | **Best game overall** — best UI/UX, most enjoyable. ASCII for some menus. |\n| Emergent v2 | 1609 | 2 phases | 0.50 | 0.478 | Functional forge with authored content. Medium UI. Maintained discipline under pressure. |\n| GAD v8 | 1291 | 0 | 0.20 | 0.177 | Broken crafting, old ASCII design. Never committed anything (rate limit hit mid-task). |\n\n**Key findings — the Freedom Hypothesis:**\n- Bare (no framework) consistently outperforms GAD (full framework) on creative implementation\n- GAD has never exceeded 0.30 human review across 4 attempts (v5, v6, v7, v8)\n- Bare has improved monotonically: 0.10 → 0.50 → 0.70\n- **Process metrics ≠ output quality.** GAD's planning overhead consumes tokens that\n  could go to testing and fixing the game.\n- Under rate-limit pressure, emergent maintained phase commits (inherited skill)\n  while bare regressed to 1 batch commit\n\n**Status of hypothesis:** PRELIMINARY — single-run variance is high, needs more trials.\nBrownfield experiments may invalidate if GAD's overhead pays off on codebase extension.\n\n**Documented in:** `evals/FINDINGS-2026-04-08-round-3.md`\n**Decision:** gad-36 (Freedom hypothesis)\n\n**Led to:**\n- Eval preservation contract (gad-38)\n- game/.planning/ layout mandate (gad-39)\n- Brownfield eval mode (gad-40)\n- Greenfield/brownfield categorization\n- `gad eval preserve`, `gad eval verify`, `gad worktree` commands\n\n---"
+  },
+  {
+    "round": "Round 4",
+    "title": "TBD",
+    "body": "**Pending user decisions:**\n- Updated game requirements (v4) for greenfield\n- Whether to run greenfield v4 first or brownfield round 1 first"
+  }
+];
+
+export const FINDINGS_ROUND_3_RAW: string | null = "# Round 3 Findings — Freedom Hypothesis\r\n\r\n**Requirements version:** v3 (game-loop gate, spell-crafting gate, UI quality gate)\r\n**Date:** 2026-04-08\r\n**Conditions:** GAD v8, Bare v3, Emergent v2 — all hit rate limits but produced builds\r\n\r\n## Results — inverted from expectations\r\n\r\n| Condition | Framework constraint | Tokens | Commits | Human score | Notes |\r\n|-----------|---------------------|--------|---------|-------------|-------|\r\n| **Bare v3** | **None (most freedom)** | 1,877 | 1 batch | **0.70** | Best UI/UX by far, most enjoyable |\r\n| Emergent v2 | Medium (inherited skills) | 1,609 | 2 phases | 0.50 | Solid forge, more content, maintained discipline |\r\n| GAD v8 | Full framework | 1,291 | 0 | 0.20 | Broken crafting, ASCII UI, hard to read |\r\n\r\n**The result is monotonic and inverse to framework constraint.** More freedom = better output.\r\n\r\n## Running tally across all rounds\r\n\r\n| Run | Requirements | Human | Key observation |\r\n|-----|-------------|-------|----------------|\r\n| GAD v5 | v1 | 0.00 | Blank screen |\r\n| GAD v6 | v2 | 0.00 | Blank screen |\r\n| GAD v7 | v2 | 0.30 | Stuck after combat |\r\n| **GAD v8** | **v3** | **0.20** | Broken crafting |\r\n| Bare v1 | v2 | 0.10 | New Game broken |\r\n| Bare v2 | v2 | 0.50 | Playable, ASCII UI |\r\n| **Bare v3** | **v3** | **0.70** | **Best game overall** |\r\n| Emergent v1 | v2 | 0.10 | Styled text crash |\r\n| **Emergent v2** | **v3** | **0.50** | Functional forge, medium UI |\r\n\r\n**GAD has never exceeded 0.30 human review across 4 attempts.**\r\n**Bare has improved monotonically: 0.10 → 0.50 → 0.70.**\r\n**Emergent has improved: 0.10 → 0.50.**\r\n\r\n## Freedom hypothesis\r\n\r\n> For creative/game implementation tasks, agent performance correlates INVERSELY with\r\n> framework constraint. Less prescribed structure leads to better output.\r\n\r\n### Supporting evidence\r\n\r\n1. **Bare always beats GAD** on human review, across all 3 rounds with same requirements\r\n2. **GAD has more tokens, more tool uses, more commits** — but produces worse games\r\n3. **GAD v8 had 0 commits** because it was so busy following the framework it hit the rate limit\r\n   before completing a work unit worth committing\r\n4. **Bare v3 best UI/UX** despite no framework telling it how to build UI\r\n5. **Emergent sits in the middle** — some framework, some freedom, middle results\r\n\r\n### Counter-evidence / confounds\r\n\r\n1. Rate limits hit all three runs — GAD v8 may have been about to commit when cut off\r\n2. Single-run variance is high — we haven't established statistical significance\r\n3. GAD's strength is discipline/traceability, not creative output — we may be measuring the\r\n   wrong thing for game evals\r\n4. Bare v3's \"one giant commit\" means if it had broken, there'd be no checkpoint. GAD's\r\n   discipline is insurance against catastrophic failure, not a booster for success\r\n\r\n### Alternative interpretation: the framework hurts speed\r\n\r\nGAD's planning overhead (reading/writing .planning/ docs, per-task commits, state updates,\r\ndecision capture) consumes tokens that could have gone to implementation and testing. In\r\na time-limited or token-limited environment, this overhead compounds:\r\n\r\n| Metric | GAD | Bare | Ratio |\r\n|--------|-----|------|-------|\r\n| Rounds completed with playable game | 0/4 | 2/3 | Bare 5x better |\r\n| Rounds with blank screen | 2/4 | 0/3 | GAD worse |\r\n| Rounds with gate failure | 4/4 | 1/3 | GAD worse |\r\n\r\n**GAD is producing disciplined garbage.** The process is followed but the product fails.\r\n\r\n## What this means for GAD\r\n\r\n1. **GAD may not be the right framework for creative implementation tasks.** It was designed\r\n   for planning/tracking, not for game development. Game dev rewards iteration speed and\r\n   visual feedback, which GAD's planning overhead slows down.\r\n\r\n2. **The bare condition's success suggests \"AGENTS.md + requirements + freedom\" is sufficient**\r\n   for implementation. The planning doc maintenance may be dead weight.\r\n\r\n3. **GAD's value proposition needs to be re-examined.** If process compliance doesn't correlate\r\n   with output quality, what is GAD actually optimizing for?\r\n   - Traceability across sessions (context compaction recovery)\r\n   - Multi-agent coordination\r\n   - Long-horizon planning (months, not days)\r\n   - Regulatory/compliance work where process matters\r\n\r\n4. **The game eval may be the wrong benchmark for GAD.** A better benchmark would be:\r\n   - Resuming work after context compaction\r\n   - Multi-phase refactors where state matters\r\n   - Documentation that has to be kept in sync with code\r\n   - Bug triage and root-cause analysis\r\n\r\n## Open questions\r\n\r\n1. Would GAD win if we measured context-resumption rather than fresh implementation?\r\n2. Does GAD win when the agent is replaced mid-run (simulating handoff)?\r\n3. What happens if we give Bare the same token budget as GAD's planning overhead in the form of free research time?\r\n4. Is the freedom hypothesis specific to KAPLAY/games, or does it generalize to web apps, APIs, CLIs?\r\n5. Would GAD do better with a \"lite mode\" that strips planning doc maintenance but keeps verification?\r\n\r\n## Immediate actions\r\n\r\n1. Treat this as a preliminary finding — needs more runs for statistical validity\r\n2. Create a GAD-lite mode for comparison (no per-task planning doc updates, only phase-level)\r\n3. Add a context-resumption eval where GAD's advantages should appear\r\n4. Do NOT abandon GAD — this finding may be specific to greenfield game implementation\r\n\r\n## Infrastructure findings\r\n\r\n- **Rate limits revealed discipline pressure response:** Emergent v2 was the only condition\r\n  that maintained phase commits under pressure. Bare regressed to 1 batch commit. GAD never\r\n  committed anything. Emergent's inherited skill \"game-loop-verification\" (which mandated\r\n  verify-per-phase) may have enforced a checkpoint discipline that kicked in before the limit.\r\n\r\n- **Build preservation was broken:** All previous runs overwrote the same path in\r\n  apps/portfolio/public/evals/. Now fixed — all 8 builds preserved per-version.\r\n";
+export const FINDINGS_GENERAL_RAW: string | null = "# Eval Findings — 2026-04-08\n\n## Experiment: Escape the Dungeon — Three Conditions\n\n### Setup\n\nSame game requirements (12 criteria, vertical-slice priority, UI-first mandate), same source\ndocs (trimmed gameplay design ~120 lines), same stack (Vite + TypeScript + KAPLAY).\n\n| Condition | Framework | Skills | Runs |\n|-----------|-----------|--------|------|\n| GAD (escape-the-dungeon) | Full GAD: .planning/ XML, AGENTS.md loop, skill triggers | Pre-built | v5 (0.0), v6 (0.0), v7 (0.30) |\n| Bare (escape-the-dungeon-bare) | None — agent creates own workflow | From scratch | v1 (0.10), v2 (0.50) |\n| Emergent (escape-the-dungeon-emergent) | None — inherits skills from bare v1 | Inherited + evolves | v1 (0.10) |\n\n### Results: Human review scores\n\n| Run | Human | Notes |\n|-----|-------|-------|\n| GAD v5 | 0.00 | Blank screen |\n| GAD v6 | 0.00 | Blank screen (ES module + file://) |\n| GAD v7 | **0.30** | Renders, better UI layout, but game loop breaks after combat — player gets stuck |\n| Bare v1 | 0.10 | Main menu renders, New Game doesn't work |\n| Bare v2 | **0.50** | **Most playable.** Full game loop works. ASCII/plain UI, needs polish, no rune forge |\n| Emergent v1 | 0.10 | Main menu + saved game detection, but crashes entering game (styled text error) |\n\n### Key finding: Bare v2 beat GAD v7 on playability\n\nThe agent WITHOUT a framework produced the most playable game. This is a significant finding.\n\n**Why bare v2 won:**\n- Simpler architecture — fewer abstractions meant fewer places for bugs\n- Focused on making things work rather than following a process\n- 6 commits (phase-level granularity) — enough traceability without overhead\n- The feedback from v1's failure was more actionable than GAD's structural requirements\n\n**Why GAD v7 lost on playability despite better process metrics:**\n- 21 commits, 17/17 tasks tracked, full planning docs — excellent discipline\n- But the game loop broke (combat → no return to navigation)\n- More framework overhead (93K tokens vs 88K) didn't translate to better output\n- Planning docs were maintained perfectly while the actual game was broken\n- **The process was followed but the product was worse**\n\n### Token comparison\n\n| Run | Tokens | Tool uses | Commits | Human |\n|-----|--------|-----------|---------|-------|\n| Bare v1 | 67,751 | 62 | 2 | 0.10 |\n| Emergent v1 | 67,375 | 79 | 2 | 0.10 |\n| Bare v2 | 87,661 | 110 | 6 | **0.50** |\n| GAD v7 | 93,632 | 137 | 21 | 0.30 |\n\nGAD used 7% more tokens than bare v2 but scored 40% lower on human review. The token overhead\nof maintaining .planning/ docs did not pay for itself in output quality.\n\n### Emergent v1 findings\n\nThe emergent eval (inherited skills from bare v1) performed WORSE than both bare v2 and GAD v7.\nThis challenges the hypothesis that inherited skills improve outcomes.\n\n**Why emergent v1 failed:**\n- Inherited skills were code-level patterns, not workflow fixes\n- The `previous-workflow.md` told it v1's New Game was broken, but the fix didn't work\n- \"Styled text error: unclosed tags START\" — a KAPLAY API issue the skills didn't cover\n- Fewer tokens (67K) suggests it relied on inherited knowledge but that knowledge was insufficient\n\n**Lesson:** Skills need to capture failure modes and fixes, not just patterns. The bare v2 agent\nsucceeded because it was told \"v1's New Game was broken\" and had to figure out the fix itself.\nThe emergent agent was told the same thing AND given skills, but the skills didn't help with\nthe specific KAPLAY API issue that caused the crash.\n\n### What this means for GAD\n\n1. **Process metrics ≠ output quality.** GAD v7 had near-perfect discipline (0.81) and planning\n   quality (1.0) but produced a worse game than the undisciplined bare v2.\n\n2. **The framework adds overhead that doesn't always pay off.** 93K tokens for GAD vs 88K for\n   bare, with worse results. The planning doc maintenance consumed tokens that could have gone\n   to testing and fixing the game.\n\n3. **Feedback about failures is more valuable than inherited skills.** Bare v2 (told about v1's\n   failure) outperformed emergent v1 (given v1's skills + failure notes). Direct feedback\n   about what broke was more actionable than documented patterns.\n\n4. **Human review is the only metric that matters for game evals.** Auto-composite can be\n   0.95+ while the game is a blank screen. The gate criteria help but aren't sufficient —\n   a game can render and still be broken.\n\n### Requirements versioning\n\nRequirements have been updated twice this session:\n- **v1 (original):** 12 criteria focused on systems completeness\n- **v2 (current):** Gate criteria (must render, must be playable), vertical-slice priority,\n  UI-first build order. Trimmed source docs from 640 → 127 lines.\n\nNext iteration should add:\n- Explicit game-loop verification: title → new game → room → interaction → room (full cycle)\n- UI quality baseline: minimum spacing, readable text, no overlapping elements\n- Rune forge as a required criterion (currently missing from all implementations)\n\n### Open questions\n\n1. Would GAD do better if the AGENTS.md mandated explicit game-loop testing per phase?\n2. Would the emergent eval improve if skills captured KAPLAY-specific error fixes?\n3. Is the bare approach inherently better for creative/game implementation, or was this specific to KAPLAY?\n4. Would multiple bare v2 runs cluster around 0.50, or was this a lucky outlier?\n";
+
 export const PLAYABLE_INDEX: Record<string, string> = {
-  "escape-the-dungeon/v6": "/playable/escape-the-dungeon/v6/",
-  "escape-the-dungeon/v7": "/playable/escape-the-dungeon/v7/",
-  "escape-the-dungeon/v8": "/playable/escape-the-dungeon/v8/",
-  "escape-the-dungeon-bare/v1": "/playable/escape-the-dungeon-bare/v1/",
-  "escape-the-dungeon-bare/v2": "/playable/escape-the-dungeon-bare/v2/",
-  "escape-the-dungeon-bare/v3": "/playable/escape-the-dungeon-bare/v3/",
-  "escape-the-dungeon-emergent/v1": "/playable/escape-the-dungeon-emergent/v1/",
-  "escape-the-dungeon-emergent/v2": "/playable/escape-the-dungeon-emergent/v2/"
+  "escape-the-dungeon/v6": "/playable/escape-the-dungeon/v6/index.html",
+  "escape-the-dungeon/v7": "/playable/escape-the-dungeon/v7/index.html",
+  "escape-the-dungeon/v8": "/playable/escape-the-dungeon/v8/index.html",
+  "escape-the-dungeon-bare/v1": "/playable/escape-the-dungeon-bare/v1/index.html",
+  "escape-the-dungeon-bare/v2": "/playable/escape-the-dungeon-bare/v2/index.html",
+  "escape-the-dungeon-bare/v3": "/playable/escape-the-dungeon-bare/v3/index.html",
+  "escape-the-dungeon-emergent/v1": "/playable/escape-the-dungeon-emergent/v1/index.html",
+  "escape-the-dungeon-emergent/v2": "/playable/escape-the-dungeon-emergent/v2/index.html"
 };
 
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
