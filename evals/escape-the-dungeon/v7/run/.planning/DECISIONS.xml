@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decisions>
+  <decision id="etd-01">
+    <title>Vite + KAPLAY + TypeScript stack</title>
+    <summary>Use Vite for build tooling, KAPLAY for game rendering, TypeScript for type safety. Same stack as reference implementation.</summary>
+    <impact>All game code uses KAPLAY scene/component model. Build output goes to game/dist/.</impact>
+  </decision>
+  <decision id="etd-02">
+    <title>Button-choice navigation, not tile-based</title>
+    <summary>Navigation is choice-driven via room graph exits. Floor map is visual only, movement is by selecting exit buttons. No grid walking.</summary>
+    <impact>Game scene renders floor map as visual board but movement is through button clicks on exits.</impact>
+  </decision>
+  <decision id="etd-03">
+    <title>Content as TypeScript modules, not JSON files</title>
+    <summary>For eval scope, content packs (dungeon, entities, runes, spells) are TypeScript modules with exported constants. Could be converted to JSON later.</summary>
+    <impact>Content is imported directly, no JSON loading needed. Still content-driven architecture.</impact>
+  </decision>
+</decisions>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<requirements>
+  <goal>A browser-based EPUB reader workspace with library shelf, annotations, reading progress, and planning integration — shipped as a reusable React package.</goal>
+  <audience>Portfolio visitors reading built-in EPUB editions, and workspace owners who import/upload personal EPUBs with persistent progress and highlights.</audience>
+
+  <success-criteria>
+    <!-- EPUB rendering -->
+    <criterion id="sc-01">Render EPUB files from both remote URL and local ArrayBuffer sources using the react-reader library.</criterion>
+    <criterion id="sc-02">Support paginated (book-like spread) and scrolled-doc flow modes, toggled by a preferPagedReader setting.</criterion>
+    <criterion id="sc-03">Automatically switch between single-page and two-page spread layout based on viewport width (threshold ~1050px).</criterion>
+    <criterion id="sc-04">Apply a custom sepia-toned reader theme with serif typography to EPUB content frames.</criterion>
+    <criterion id="sc-05">Display a Table of Contents panel that slides in from the left with animated transitions (framer-motion), showing nested TOC items.</criterion>
+    <criterion id="sc-06">Show current section label, page number, and total pages in a bottom navigation bar.</criterion>
+    <criterion id="sc-07">Provide prev/next page navigation buttons and direct page-number jump input.</criterion>
+    <criterion id="sc-08">Calculate reading progress as a percentage from EPUB location data (CFI-based).</criterion>
+    <criterion id="sc-09">Restore reading position on return — persist last location per book using a storage key.</criterion>
+    <criterion id="sc-10">Support deep-linking to a specific EPUB location via URL search params (book, record, at, cfi).</criterion>
+
+    <!-- Library / shelf -->
+    <criterion id="sc-11">Display a library shelf view with book cards in a responsive grid (2-col on sm, 3-col on xl).</criterion>
+    <criterion id="sc-12">Each shelf card shows cover image (or generated empty cover with initials), title, author, genres, description, and reading status badge.</criterion>
+    <criterion id="sc-13">Reading status badges resolve to New, N% progress, Done, or Coming Soon based on stored progress.</criterion>
+    <criterion id="sc-14">Partition shelf into built-in books (with EPUBs), queued books (no EPUB yet), and uploaded library books.</criterion>
+    <criterion id="sc-15">Filter the shelf by genre chips (All + distinct genres extracted from book entries).</criterion>
+    <criterion id="sc-16">Filter the shelf by free-text search across title, slug, author, description, and genres.</criterion>
+    <criterion id="sc-17">Drag-and-drop EPUB files onto the library view to import them.</criterion>
+    <criterion id="sc-18">Import EPUB via file picker button, validating .epub extension.</criterion>
+    <criterion id="sc-19">Format uploaded file name into a display title (strip extension, replace separators with spaces).</criterion>
+
+    <!-- Sidebar navigation -->
+    <criterion id="sc-20">Render a collapsible sidebar rail on desktop (expanded: 15.5rem, collapsed: 4.25rem) with animated width transition.</criterion>
+    <criterion id="sc-21">Show a slide-over mobile drawer on viewports below md, with backdrop overlay and body scroll lock.</criterion>
+    <criterion id="sc-22">Sidebar shows Library link, Now Reading indicator when a book is open, and optional host-provided nav links with contextual icons.</criterion>
+    <criterion id="sc-23">Sidebar collapse/expand state persists in localStorage via a zustand store.</criterion>
+
+    <!-- Annotations and highlights -->
+    <criterion id="sc-24">Allow text selection in the EPUB to create highlights with amber overlay styling.</criterion>
+    <criterion id="sc-25">Show a floating selection toolbar with Add Highlight and Dismiss actions when text is selected.</criterion>
+    <criterion id="sc-26">Display a Notes and Highlights side panel (slides from right) listing all annotations with quoted text and editable note fields.</criterion>
+    <criterion id="sc-27">Support Go To navigation (jump to annotation CFI) and Remove for each annotation.</criterion>
+    <criterion id="sc-28">Export annotations as a JSON file following the portfolio-epub-annotations schema.</criterion>
+    <criterion id="sc-29">Import annotations from a JSON file and re-apply highlights to the rendition.</criterion>
+    <criterion id="sc-30">Download an annotated EPUB with annotations embedded in META-INF/portfolio-annotations.json.</criterion>
+    <criterion id="sc-31">Persist annotations locally in IndexedDB keyed by storageKey + contentHash (SHA-256 of EPUB bytes).</criterion>
+    <criterion id="sc-32">Merge local, embedded, and remote annotations using last-write-wins by updatedAt timestamp.</criterion>
+
+    <!-- Persistence -->
+    <criterion id="sc-33">Track reading progress and location in a zustand store persisted to localStorage as a single JSON blob (portfolio-reader-epub-reading).</criterion>
+    <criterion id="sc-34">Migrate legacy per-book localStorage keys (epub-location-*, epub-progress-*) into the consolidated store on first access.</criterion>
+    <criterion id="sc-35">Cross-tab synchronization — rehydrate the reading store when the storage event fires for the store key.</criterion>
+    <criterion id="sc-36">Support an optional ReaderPersistenceAdapter for remote save/load of location, progress, and annotations.</criterion>
+    <criterion id="sc-37">Debounce remote persistence writes by 500ms to avoid excessive API calls.</criterion>
+
+    <!-- Workspace settings and access -->
+    <criterion id="sc-38">Owner workspace mode with access state controlling canPersist, canEdit, canUpload permissions.</criterion>
+    <criterion id="sc-39">Workspace settings panel (default view, prefer paged reader, show progress badges) persisted via host callback.</criterion>
+    <criterion id="sc-40">Continue-reading mode: when defaultWorkspaceView is continue-reading, auto-select the first book with saved progress on load.</criterion>
+    <criterion id="sc-41">Explicit upload panel for saving an imported EPUB to the backend library with title, author, description, visibility fields.</criterion>
+    <criterion id="sc-42">Upload requires explicit action — importing does not auto-upload; a separate Upload to Library flow is gated by canUpload.</criterion>
+
+    <!-- Modal system -->
+    <criterion id="sc-43">Planning cockpit modal rendered as a full-screen overlay with backdrop blur, managed by a dedicated zustand store.</criterion>
+    <criterion id="sc-44">Modal accepts a host-provided renderPlanningCockpit render function and a ReaderPlanningCockpitPayload.</criterion>
+
+    <!-- Planning strip -->
+    <criterion id="sc-45">Collapsible planning strip bar between header and content area, showing Planning and Planning Cockpit buttons.</criterion>
+    <criterion id="sc-46">Expandable quick-links row within the planning strip using animated height transition.</criterion>
+
+    <!-- Planning pack extraction -->
+    <criterion id="sc-47">Extract planning packs from EPUB files by reading a planning-pack manifest or falling back to plan-*.xhtml files.</criterion>
+    <criterion id="sc-48">Parse XHTML content into plain text for planning pack files, stripping HTML tags and decoding entities.</criterion>
+
+    <!-- Lazy loading -->
+    <criterion id="sc-49">Lazy-load the EpubViewer component using React.lazy with a Suspense fallback showing a loading spinner.</criterion>
+
+    <!-- EPUB download -->
+    <criterion id="sc-50">Provide a Download EPUB button for built-in books, constructing the download URL from slug or remoteEpubUrl.</criterion>
+
+    <!-- Chrome theming -->
+    <criterion id="sc-51">All workspace chrome uses semantic Tailwind/shadcn tokens (bg-background, border-border, text-foreground) — no separate light/dark palettes.</criterion>
+  </success-criteria>
+
+  <non-goals>
+    <item>The reader does NOT include a full CMS or book authoring interface — it is read-only with import.</item>
+    <item>The reader does NOT handle EPUB building/compilation — that is the repub-builder CLI concern.</item>
+    <item>The reader does NOT implement authentication — it accepts access state from the host.</item>
+    <item>The reader does NOT render non-EPUB formats (PDF, MOBI, etc.).</item>
+  </non-goals>
+
+  <core-systems>
+    <system id="epub-viewer">EPUB rendering engine wrapping react-reader (epubjs). Handles book loading (URL fetch or ArrayBuffer), rendition configuration (theme, flow, spread), location tracking, TOC extraction, page calculation, and text selection events. Provides prev/next navigation and page jump.</system>
+    <system id="workspace-shell">Top-level workspace layout orchestrating the sidebar, header toolbar, planning strip, content area, and modal root. Manages EPUB import (file picker + drag-drop), workspace state resolution, and child component composition.</system>
+    <system id="library-shelf">Library view with searchable, filterable book card grid. Partitions books by source kind and EPUB availability. Each card shows metadata, cover, status badge, and action controls. Cards link to the reader view for that book.</system>
+    <system id="sidebar-nav">Collapsible navigation rail with desktop aside and mobile slide-over drawer. Shows brand header, Library link, Now Reading section, and host-injected navigation links. Collapse state persisted in a UI store.</system>
+    <system id="annotations-engine">Highlight and note system. Creates highlights from text selections on the EPUB rendition. Persists to IndexedDB keyed by book+hash. Supports JSON import/export and embedding annotations inside EPUB ZIP archives. Merges annotations from multiple sources (local, embedded, remote) using timestamp-based conflict resolution.</system>
+    <system id="reading-store">Zustand store (persist + immer middleware) tracking per-book reading progress (0-1 float) and last CFI location. Single localStorage JSON blob with legacy key migration. Cross-tab sync via storage event listener.</system>
+    <system id="workspace-ui-store">Zustand store persisting sidebar expanded state and shelf genre filter. Includes legacy key migration from older localStorage formats.</system>
+    <system id="persistence-adapter">Adapter interface for optional remote persistence. Accepts loadState/saveState with storageKey + contentHash. Merges remote state with local on hydration. Debounced writes.</system>
+    <system id="modal-system">Zustand store for planning cockpit modal (open/close + payload). ReaderModalRoot renders the overlay with host-provided content function.</system>
+    <system id="planning-integration">Planning strip with quick-links and cockpit button. Planning pack extraction from EPUB archives. Host-configurable per-book planning payload.</system>
+    <system id="ui-primitives">Lightweight UI primitives (Button, Card, Badge, Input, Select, Textarea, Checkbox) with variant/size props and a minimal cn() class merge utility. Not shadcn/ui directly — custom implementations matching shadcn conventions.</system>
+    <system id="chrome-theme">Single object mapping semantic slot names to Tailwind class strings. All workspace components reference this map for consistent theming.</system>
+    <system id="route-builder">Utility function constructing reader URLs from a base path and optional search params (book, record, at, cfi).</system>
+  </core-systems>
+
+  <stack>
+    <item>React 19 — component UI and hooks for state/effects</item>
+    <item>TypeScript — strict typing for all modules, exported type definitions for host integration</item>
+    <item>react-reader v2 (epubjs wrapper) — EPUB rendering, TOC, location management, rendition API</item>
+    <item>zustand v5 with persist + immer middleware — client-side state management with localStorage persistence</item>
+    <item>framer-motion — animated transitions for TOC panel, notes panel, and planning strip</item>
+    <item>lucide-react — icon library for all UI icons</item>
+    <item>jszip — reading/writing ZIP archives for annotation embedding and planning pack extraction</item>
+    <item>Tailwind CSS — utility-first styling with shadcn semantic token conventions</item>
+    <item>tsup — build tooling for the package (ESM output)</item>
+    <item>vitest — test runner</item>
+  </stack>
+</requirements>

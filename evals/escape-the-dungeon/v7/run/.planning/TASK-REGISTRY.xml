@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task-registry>
+  <!-- Phase 01: Project Scaffold -->
+  <task id="01-01" phase="01" status="done">
+    <title>Create package.json, vite.config.ts, tsconfig.json, index.html</title>
+  </task>
+  <task id="01-02" phase="01" status="done">
+    <title>Create main.ts entry point with KAPLAY init and scene loading</title>
+  </task>
+
+  <!-- Phase 02: Title Screen and Game Flow -->
+  <task id="02-01" phase="02" status="done">
+    <title>Main menu scene with title, new game button, keyboard support</title>
+  </task>
+  <task id="02-02" phase="02" status="done">
+    <title>Intro narrative scene with story text and proceed action</title>
+  </task>
+
+  <!-- Phase 03: Core Navigation -->
+  <task id="03-01" phase="03" status="done">
+    <title>Type definitions for rooms, dungeon, entities, spells, player state</title>
+  </task>
+  <task id="03-02" phase="03" status="done">
+    <title>Game state management module with player init, room helpers, movement</title>
+  </task>
+  <task id="03-03" phase="03" status="done">
+    <title>Dungeon content data for 3 floors with rooms, exits, entities</title>
+  </task>
+  <task id="03-04" phase="03" status="done">
+    <title>Game scene with floor map rendering, room selection, movement</title>
+  </task>
+
+  <!-- Phase 04: HUD and Room Info -->
+  <task id="04-01" phase="04" status="done">
+    <title>HUD bar showing HP, mana, level, crystals, dungeon tick</title>
+  </task>
+  <task id="04-02" phase="04" status="done">
+    <title>Room info panel and room-type-specific actions (rest, search, talk, forge, fight)</title>
+  </task>
+
+  <!-- Phase 05: Combat System -->
+  <task id="05-01" phase="05" status="done">
+    <title>Combat scene with enemy display, player stats, combat log, Fight/Spells/Bag/Run</title>
+  </task>
+  <task id="05-02" phase="05" status="done">
+    <title>Combat resolution: damage calc, spell casting, items, flee, win/lose, XP/crystals</title>
+  </task>
+
+  <!-- Phase 06: Dialogue -->
+  <task id="06-01" phase="06" status="done">
+    <title>Dialogue scene with NPC name, lines, advance/exit flow</title>
+  </task>
+
+  <!-- Phase 07: Spell System -->
+  <task id="07-01" phase="07" status="done">
+    <title>Rune and spell content data (26 runes, authored spells)</title>
+  </task>
+  <task id="07-02" phase="07" status="done">
+    <title>Rune forge scene for crafting spells from runes</title>
+  </task>
+
+  <!-- Phase 08: Content and Polish -->
+  <task id="08-01" phase="08" status="done">
+    <title>Entity content data for all 3 floors (enemies, bosses, NPCs)</title>
+  </task>
+  <task id="08-02" phase="08" status="done">
+    <title>Save/load system, game over scene, boss floor progression</title>
+  </task>
+  <task id="08-03" phase="08" status="done">
+    <title>Production build to game/dist/, verify playable index.html</title>
+  </task>
+</task-registry>

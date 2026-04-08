@@ -18,10 +18,14 @@ coverage/
 animation/
 *.gif
 
-# Internal planning documents
+# Internal planning documents (submodule's own planning is local-only by design)
 reports/
 RAILROAD_ARCHITECTURE.md
 .planning/
+# BUT: eval template and preserved run .planning/ directories MUST be tracked.
+# These are experimental artifacts that need to travel with the submodule.
+!evals/**/.planning/
+!evals/**/.planning/**
 analysis/
 docs/GSD-MASTER-ARCHITECTURE.md
 docs/GSD-RUST-IMPLEMENTATION-GUIDE.md

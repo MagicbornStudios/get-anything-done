@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roadmap>
+  <phase id="01" title="Project Scaffold">
+    <goal>KAPLAY + TypeScript setup, Vite build tooling, dev server, HTML shell, basic canvas</goal>
+    <status>done</status>
+  </phase>
+  <phase id="02" title="Title Screen and Game Flow">
+    <goal>Main menu scene, new game button, intro narrative beat, scene transitions</goal>
+    <status>done</status>
+  </phase>
+  <phase id="03" title="Core Navigation and Floor Map">
+    <goal>Room graph data model, floor map rendering, exit selection, room transitions, dungeon tick, discovery/fog</goal>
+    <status>done</status>
+  </phase>
+  <phase id="04" title="HUD and Room Info">
+    <goal>HP/mana/tick HUD bar, room description panel, room actions based on feature type</goal>
+    <status>done</status>
+  </phase>
+  <phase id="05" title="Combat System">
+    <goal>Turn-based combat scene, Fight/Spells/Bag/Run actions, HP/mana tracking, win/lose/flee, XP rewards</goal>
+    <status>done</status>
+  </phase>
+  <phase id="06" title="Dialogue and NPC Interaction">
+    <goal>Dialogue interaction view, NPC portrait, dialogue lines, conversation flow</goal>
+    <status>done</status>
+  </phase>
+  <phase id="07" title="Spell System and Rune Forge">
+    <goal>26 runes, spell composition, rune forge scene, spell slots, affinity tracking</goal>
+    <status>done</status>
+  </phase>
+  <phase id="08" title="Content Packs and Polish">
+    <goal>JSON content for entities, dungeon floors, spells, items; save/load; game over; production build</goal>
+    <status>done</status>
+  </phase>
+</roadmap>

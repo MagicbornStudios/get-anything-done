@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task-registry>
+  <!-- Phase 01: Project Scaffold and Title Screen -->
+  <task id="01-01" phase="01" status="planned">Initialize Vite + TypeScript + KAPLAY project with dependencies</task>
+  <task id="01-02" phase="01" status="planned">Create KAPLAY game instance and styled title screen scene</task>
+  <task id="01-03" phase="01" status="planned">Add game state manager and scene routing infrastructure</task>
+
+  <!-- Phase 02: Room Navigation -->
+  <task id="02-01" phase="02" status="planned">Create dungeon data model with room graph and types</task>
+  <task id="02-02" phase="02" status="planned">Build room scene with styled panels, room-type icons, and exit buttons</task>
+  <task id="02-03" phase="02" status="planned">Implement fog of war and room discovery</task>
+  <task id="02-04" phase="02" status="planned">Add room-type visual differentiation with themed colors and backgrounds</task>
+
+  <!-- Phase 03: Combat Encounter -->
+  <task id="03-01" phase="03" status="planned">Create combat scene with player and enemy HP bars and action buttons</task>
+  <task id="03-02" phase="03" status="planned">Implement turn-based combat logic with Fight/Spells/Bag/Run</task>
+  <task id="03-03" phase="03" status="planned">Add 3 enemy types with different stats and canvas-drawn sprites</task>
+  <task id="03-04" phase="03" status="planned">Implement combat rewards (XP, crystals) and return to room navigation</task>
+
+  <!-- Phase 04: Rune Forge and Spell Crafting -->
+  <task id="04-01" phase="04" status="planned">Create rune inventory system with 5 base runes</task>
+  <task id="04-02" phase="04" status="planned">Build forge scene UI with rune selection and crafting interface</task>
+  <task id="04-03" phase="04" status="planned">Implement spell recipes (3+ combinations) and crafted spell usage in combat</task>
+
+  <!-- Phase 05: Dialogue System -->
+  <task id="05-01" phase="05" status="planned">Create dialogue scene with NPC portrait and text display</task>
+  <task id="05-02" phase="05" status="planned">Implement branching choices with gameplay effects</task>
+
+  <!-- Phase 06: HUD and Menus -->
+  <task id="06-01" phase="06" status="planned">Create persistent HUD with HP/mana bars, floor, and tick count</task>
+  <task id="06-02" phase="06" status="planned">Add Map overlay menu showing explored rooms</task>
+  <task id="06-03" phase="06" status="planned">Add Spellbook overlay menu showing crafted spells</task>
+
+  <!-- Phase 07: Content Packs and Save/Load -->
+  <task id="07-01" phase="07" status="planned">Extract game data into JSON content pack files</task>
+  <task id="07-02" phase="07" status="planned">Implement localStorage save/load with auto-save</task>
+  <task id="07-03" phase="07" status="planned">Add leveling system with XP thresholds and stat increases</task>
+
+  <!-- Phase 08: Polish and Production Build -->
+  <task id="08-01" phase="08" status="planned">Full game loop verification and softlock fixes</task>
+  <task id="08-02" phase="08" status="planned">Visual polish pass and consistency check</task>
+  <task id="08-03" phase="08" status="planned">Production build, architecture doc, and final verification</task>
+</task-registry>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roadmap>
+  <phase id="01" name="Project Scaffold and Title Screen">
+    <goal>Vite + KAPLAY + TypeScript project running, styled title screen with New Game button</goal>
+  </phase>
+  <phase id="02" name="Room Navigation">
+    <goal>Styled rooms with icons, themed colors per room type, exit buttons, fog of war</goal>
+  </phase>
+  <phase id="03" name="Combat Encounter">
+    <goal>Turn-based combat with HP bars, action buttons, enemy sprites, damage numbers, return to room</goal>
+  </phase>
+  <phase id="04" name="Rune Forge and Spell Crafting">
+    <goal>Player combines runes to create spells at forge room, uses crafted spells in combat</goal>
+  </phase>
+  <phase id="05" name="Dialogue System">
+    <goal>NPC dialogue with portraits, branching choices, gameplay effects</goal>
+  </phase>
+  <phase id="06" name="HUD and Menus">
+    <goal>Persistent HUD with HP/mana bars, overlay menus (Map, Spellbook, Bag)</goal>
+  </phase>
+  <phase id="07" name="Content Packs and Save/Load">
+    <goal>JSON content packs, localStorage persistence, leveling system</goal>
+  </phase>
+  <phase id="08" name="Polish and Production Build">
+    <goal>Full game loop verification, visual polish, production dist build</goal>
+  </phase>
+</roadmap>

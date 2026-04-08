@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roadmap>
+  <phase id="01">
+    <title>Foundation: types, utilities, and build scaffold</title>
+    <goal>Set up the package structure with tsup build, define all shared types (ReaderBookEntry, ReaderWorkspaceAccessState, ReaderWorkspaceSettingsState, etc.), create the cn() utility and route builder, and establish the ui/ primitives directory with Button, Card, Badge, Input, Select, Textarea, Checkbox.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="02">
+    <title>Chrome theme and empty cover</title>
+    <goal>Implement the readerChromeClasses theme object with all semantic slots. Create ReaderEmptyCover component that generates initials from a book title.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="03">
+    <title>Reading stores and progress tracking</title>
+    <goal>Build the zustand reading store (reader-reading-store) with persist + immer + legacy migration. Implement reader-progress module with progress/location read/write functions and shelf status resolution. Build reader-storage-keys constants. Add cross-tab sync via storage event.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="04">
+    <title>Workspace UI store and shelf catalog</title>
+    <goal>Build the workspace UI store (sidebar expanded, shelf filter with genre clamping, legacy migration). Implement reader-shelf-catalog with genre extraction, book partitioning, and genre-based filtering.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="05">
+    <title>Annotations engine</title>
+    <goal>Implement epub-annotations module: PortfolioAnnotation type, IndexedDB persistence (open, load, save), SHA-256 content hashing with annotation-file normalization, JSON export/import (parseAnnotationsFile, serializeAnnotationsExport), and EPUB embedding/extraction using jszip. Implement reader-persistence module with mergePersistedAnnotations and the ReaderPersistenceAdapter interface.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="06">
+    <title>EpubViewer component</title>
+    <goal>Build the core EpubViewer wrapping ReactReader. Handle URL fetch and ArrayBuffer loading, custom sepia reader theme registration, paginated/scrolled flow + spread control, TOC extraction and section label resolution, page calculation, location persistence, annotation hydration (merge local + embedded + remote), highlight rendering, text selection for new highlights, notes panel UI, annotation import/export/download actions, bottom navigation bar with page jump, and the lazy-loading wrapper (EpubViewerLazy).</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="07">
+    <title>Workspace state and shelf card</title>
+    <goal>Implement reader-workspace-state with the discriminated union resolver (library / built-in-reading / local-reading), storage key derivation, and the UploadedBookSource type. Build ReaderShelfCard with cover, status badge, genre chips, hover action cluster, and planning cockpit trigger.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="08">
+    <title>Sidebar navigation</title>
+    <goal>Build ReaderWorkspaceSidebar with desktop rail (collapsible), mobile drawer (slide-over with backdrop), nav sections (Library, Now Reading, extra links with contextual icons), brand header, and collapse toggle button.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="09">
+    <title>Modal system and planning strip</title>
+    <goal>Build reader-modal-store (zustand + immer, non-persisted). Build ReaderModalRoot overlay component with backdrop blur and host-rendered cockpit content. Build ReaderPlanningStrip with toggle button and animated quick-links row.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="10">
+    <title>ReaderWorkspace orchestration</title>
+    <goal>Build the main ReaderWorkspace component that composes all subsystems: sidebar, header toolbar (with import/upload/settings/download buttons), planning strip, content area (viewer or library shelf), shelf search and genre filter chips, EPUB drag-and-drop import, upload panel, settings panel, workspace access display, and modal root. Wire all state flows between subsystems.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="11">
+    <title>Planning pack extraction</title>
+    <goal>Implement planning-pack-from-epub module: manifest-driven extraction, plan-*.xhtml fallback discovery, XHTML-to-plaintext conversion (tag stripping, entity decoding), virtual path resolution. Create readerBookPlanningPackId utility.</goal>
+    <status>planned</status>
+  </phase>
+
+  <phase id="12">
+    <title>Public API and package exports</title>
+    <goal>Wire up index.ts with all public re-exports. Verify sub-path export (./reader) works. Ensure all types, components, stores, and utilities are accessible to host apps. Add default-reader-link fallback component.</goal>
+    <status>planned</status>
+  </phase>
+</roadmap>

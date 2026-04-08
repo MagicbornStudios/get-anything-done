@@ -61,18 +61,38 @@ No gates. No UI quality mandate. No priority on vertical slice.
 
 ---
 
-## v4 — PENDING (user providing updated requirements)
+## v4 — 2026-04-08
 
-**Planned changes from v3 (tentative):**
-- Floor progression (defeat boss → unlock next floor)
-- Respawning encounters (grinding)
-- Rune affinity system (specialization, decay, evolution gates, train-at-forge)
-- User-authored spells
-- Skills system (physical actions, evolve by own XP, supercharge with mana crystals)
-- Narrative stats displayed as "Traits"
-- Richer room navigation model (rethink rooms)
-- Mandatory sprite sourcing (web search or npm packages, not geometric fallbacks)
+**Core shift from v3:** Pressure-oriented design. Previous versions were feature
+checklists. v4 reframes around "every system must create friction that rewards
+creative player choice." Central principle: **baseline starter abilities must NOT
+be sufficient to comfortably complete a full floor**.
+
+**Changes from v3:**
+- Authored-only (explicitly no procedural generation)
+- Floors → Rooms → Boss gate hierarchy; 5-8 rooms per floor
+- Room types: Combat, Elite, Forge, Rest, Event (mechanically distinct)
+- Each floor must introduce a mechanical constraint that can't be brute-forced with default spells
+- Respawning encounters on cleared floors allowed (grinding)
+- G2 forge gate expanded: not just "crafting exists" but **at least one encounter per floor must significantly favor crafted/adapted spells**
+- G4 pressure mechanics gate added: must include at least 2 of (resource pressure, enemy counterplay, encounter design pressure, build pressure)
+- New ingenuity_score dimension measures whether player had to adapt
+- Skills system: scored (not gate) — combat must support at least one non-spell action category but full skill system is bonus
+- Asset sourcing: attempt-first workflow (find-sprites skill), coherent fallback allowed only when sourcing genuinely fails
+- Terminology split: UI shows "Traits", code uses `narrativeStats`
+
+**Deferred to v5:**
+- Rune affinity decay when unused
+- Deep evolution trees (multi-stage mutations)
+- Full authored spell customization (naming still allowed in v4)
+
+**Scoring impact:**
+- Gates: game-loop, forge-with-ingenuity-payoff, ui-quality, pressure-mechanics (4 gates now)
+- Composite weights unchanged from v3 (human_review 0.30, low-score caps)
+- New ingenuity_score as a scored dimension (not yet in composite — evaluated in round 4 results)
 
 **Brownfield vs greenfield:**
-- Greenfield v4 applies to the 3 greenfield evals (from-scratch implementations)
-- Brownfield v4 extensions live in `_brownfield-extensions-v4.md` and apply to brownfield evals (starting from bare v3 baseline)
+- Greenfield v4 applies to escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent
+- Brownfield v4 extensions live in `_brownfield-extensions-v4.md` (similar direction, applied to bare v3 baseline)
+
+**Decision references:** gad-41 (pressure reframe), gad-42 (skills scored), gad-43 (sprite sourcing), gad-44 (Traits terminology), gad-48 (GAD diagnosis deferred)

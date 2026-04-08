@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decisions>
+  <decision id="etd-01">
+    <title>Use KAPLAY with canvas-drawn sprites for visual assets</title>
+    <summary>Using KAPLAY game framework with canvas-drawn sprites/shapes for entities and SVG-style icons for room types. This avoids external asset dependencies while meeting the UI quality gate.</summary>
+    <impact>All visual elements are self-contained in code. No external asset loading failures possible.</impact>
+  </decision>
+  <decision id="etd-02">
+    <title>Scene-based architecture with shared game state</title>
+    <summary>Each major game mode (title, room, combat, forge, dialogue) is a separate KAPLAY scene. A shared GameState object persists across scene transitions.</summary>
+    <impact>Clean separation of concerns. Scene transitions are the main navigation mechanism.</impact>
+  </decision>
+</decisions>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<state>
+  <current-phase>01</current-phase>
+  <current-plan>Project Scaffold and Title Screen</current-plan>
+  <milestone>escape-the-dungeon-eval</milestone>
+  <status>in-progress</status>
+  <next-action>Implement task 01-01: Initialize Vite + TypeScript + KAPLAY project</next-action>
+  <last-updated>2026-04-07</last-updated>
+</state>

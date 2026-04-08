@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decisions>
+  <decision id="tw-01">
+    <title>Fixture uses known good and bad paths</title>
+    <summary>Tests verify that good paths pass and bad paths are caught.</summary>
+    <impact>Baseline for tooling eval regression testing.</impact>
+    <references>
+      <file path="src/index.ts" />
+      <file path="src/does-not-exist.ts" />
+    </references>
+  </decision>
+</decisions>
