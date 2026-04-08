@@ -1,0 +1,61 @@
+{
+  "eval": "tooling-mcp",
+  "version": "v1",
+  "date": "2026-04-07",
+  "gad_version": "1.32.0",
+  "eval_type": "mcp",
+  "trace_schema_version": 2,
+  "scenario": "golden-tools",
+  "timing": {
+    "started": "2026-04-07T22:46:35.240Z",
+    "ended": "2026-04-07T22:47:05.904Z",
+    "duration_ms": 30653
+  },
+  "mcp": {
+    "tools_tested": 3,
+    "tools_passed": 1,
+    "cold_start_ms": 542,
+    "per_tool": [
+      {
+        "tool": "initialize",
+        "duration_ms": 5,
+        "pass": true
+      },
+      {
+        "tool": "cold-start",
+        "duration_ms": 542,
+        "pass": true
+      },
+      {
+        "tool": "tools/list",
+        "duration_ms": 0,
+        "pass": false
+      },
+      {
+        "tool": "gad_verify",
+        "duration_ms": 0,
+        "pass": false
+      },
+      {
+        "tool": "gad_state",
+        "duration_ms": 4,
+        "pass": true
+      },
+      {
+        "tool": "gad_snapshot",
+        "duration_ms": 0,
+        "pass": false
+      }
+    ]
+  },
+  "metrics": {
+    "p50_ms": 0,
+    "p95_ms": 4,
+    "error_rate": 0.5
+  },
+  "scores": {
+    "correctness": 0.5,
+    "latency": 0.992,
+    "mcp_composite": 0.6968000000000001
+  }
+}

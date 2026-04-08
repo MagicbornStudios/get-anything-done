@@ -4,9 +4,9 @@
 /**
  * gad-config.cjs — GAD configuration reader
  *
- * Reads planning-config.toml from the project root and returns a parsed
- * configuration object. Falls back to config.json `planning.*` keys if no
- * TOML file is found (backwards compatibility).
+ * Reads **gad-config.toml** (canonical) or legacy **planning-config.toml**
+ * from the repo root or `.planning/`. Falls back to config.json `planning.*`
+ * keys if no TOML file is found (backwards compatibility).
  *
  * Usage (from GAD workflows / commands):
  *   const config = require('./gad-config.cjs').load(projectRoot);
@@ -119,12 +119,53 @@ function parseTomlValue(raw) {
 // Public API
 // ---------------------------------------------------------------------------
 
+/** Preferred TOML filenames (first match wins). */
+const GAD_TOML_PRIMARY = 'gad-config.toml';
+const GAD_TOML_LEGACY = 'planning-config.toml';
+
+/**
+ * Resolve path to GAD TOML config, or null if neither primary nor legacy exists.
+ */
+function resolveTomlPath(root) {
+  const candidates = [
+    path.join(root, GAD_TOML_PRIMARY),
+    path.join(root, '.planning', GAD_TOML_PRIMARY),
+    path.join(root, GAD_TOML_LEGACY),
+    path.join(root, '.planning', GAD_TOML_LEGACY),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+function mergeSectionsIntoRoots(roots, sections) {
+  const seen = new Set(roots.map((r) => r.id));
+  const out = roots.slice();
+  for (const s of sections || []) {
+    const id = (s.id && String(s.id).trim()) || 'global';
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const planningDir = s.planningDir || s.planning_dir || '.planning';
+    out.push({
+      id,
+      path: '.',
+      planningDir,
+      discover: s.discover === true,
+    });
+  }
+  return out;
+}
+
 /**
  * Load GAD configuration for a project root.
  *
  * Resolution order:
- *   1. <root>/planning-config.toml
- *   2. <root>/config.json  (backwards compat — reads planning.* keys)
+ *   1. <root>/gad-config.toml
+ *   2. <root>/.planning/gad-config.toml
+ *   3. <root>/planning-config.toml (legacy)
+ *   4. <root>/.planning/planning-config.toml (legacy)
+ *   5. <root>/config.json  (backwards compat — reads planning.* keys)
  *
  * @param {string} [root] - Project root directory. Defaults to cwd.
  * @returns {{
@@ -142,13 +183,10 @@ function parseTomlValue(raw) {
 function load(root) {
   root = root || process.cwd();
 
-  // Check root-level first, then .planning/ subdir (portfolio convention)
-  const tomlPath = fs.existsSync(path.join(root, 'planning-config.toml'))
-    ? path.join(root, 'planning-config.toml')
-    : path.join(root, '.planning', 'planning-config.toml');
+  const tomlPath = resolveTomlPath(root);
   const jsonPath = path.join(root, 'config.json');
 
-  if (fs.existsSync(tomlPath)) {
+  if (tomlPath) {
     return fromToml(tomlPath, root);
   }
 
@@ -166,13 +204,17 @@ function fromToml(tomlPath, root) {
   const profiles = data.profiles || {};
   const docs = data.docs || {};
 
+  const rootsTable = (planning.roots || []).map((r) => ({
+    id: r.id || path.basename(r.path || root),
+    path: r.path || '.',
+    planningDir: r.planningDir || r.planning_dir || '.planning',
+    discover: r.discover === true,
+  }));
+  const rootsMerged = mergeSectionsIntoRoots(rootsTable, planning.sections);
+
   return {
-    roots: (planning.roots || []).map(r => ({
-      id: r.id || path.basename(r.path || root),
-      path: r.path || '.',
-      planningDir: r.planningDir || '.planning',
-      discover: r.discover === true,
-    })),
+    configPath: tomlPath,
+    roots: rootsMerged,
     docs_sink: planning.docs_sink || null,
     ignore: planning.ignore || ['**/node_modules/**', '**/dist/**'],
     sprintSize: typeof planning.sprintSize === 'number' ? planning.sprintSize : 5,
@@ -188,6 +230,7 @@ function fromToml(tomlPath, root) {
       repo: p.repo || null,
     })),
     source: 'toml',
+    legacyToml: path.basename(tomlPath) === GAD_TOML_LEGACY,
   };
 }
 
@@ -221,6 +264,7 @@ function fromJson(jsonPath, root) {
   }
 
   return {
+    configPath: jsonPath,
     roots,
     docs_sink: planning.docs_sink || null,
     ignore: planning.ignore || ['**/node_modules/**', '**/dist/**'],
@@ -230,11 +274,13 @@ function fromJson(jsonPath, root) {
     conventionsPaths: planning.conventionsPaths || [],
     docsProjects: [],
     source: 'json',
+    legacyToml: false,
   };
 }
 
 function defaults(root) {
   return {
+    configPath: null,
     roots: [{
       id: path.basename(root),
       path: '.',
@@ -249,10 +295,11 @@ function defaults(root) {
     conventionsPaths: [],
     docsProjects: [],
     source: 'defaults',
+    legacyToml: false,
   };
 }
 
-module.exports = { load, parseToml };
+module.exports = { load, parseToml, resolveTomlPath, GAD_TOML_PRIMARY, GAD_TOML_LEGACY };
 
 // ---------------------------------------------------------------------------
 // CLI entry point

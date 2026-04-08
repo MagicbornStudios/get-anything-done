@@ -76,6 +76,15 @@ M1: Reader Workspace -- full re-implementation of the reader UI from requirement
 
 First run establishes the baseline. Subsequent runs compare against it.
 
+## Public reference (not part of the scored worktree)
+
+The **eval** is “agent implements from requirements **without** the reference repo.” For **humans** who want a working EPUB3 reader and **visible production code**, use the **custom_portfolio** monorepo:
+
+- **Live UI:** `/apps/reader` on the deployed portfolio — built-in catalog plus **library upload** for EPUB3 files.
+- **Code:** `apps/portfolio/components/books/ReaderWorkspace.tsx` and `vendor/repub-builder/src/reader/` (`@portfolio/repub-builder`).
+
+That is the implementation the eval is designed to **approximate**, scored separately.
+
 ## Notes
 
 - The eval template provides REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml,

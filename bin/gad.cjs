@@ -30,6 +30,7 @@ const path = require('path');
 const fs = require('fs');
 
 const gadConfig = require('./gad-config.cjs');
+const { resolveTomlPath } = require('./gad-config.cjs');
 const { render, shouldUseJson } = require('../lib/table.cjs');
 const { readState } = require('../lib/state-reader.cjs');
 const { readTasks } = require('../lib/task-registry-reader.cjs');
@@ -48,7 +49,7 @@ const pkg = require('../package.json');
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Resolve repo root from cwd (looks for planning-config.toml up the tree). */
+/** Resolve repo root from cwd (looks for gad-config.toml / legacy planning-config.toml up the tree). */
 function readXmlFile(filePath) {
   try { return fs.readFileSync(filePath, 'utf8'); } catch { return null; }
 }
@@ -56,11 +57,7 @@ function readXmlFile(filePath) {
 function findRepoRoot(start) {
   let dir = start || process.cwd();
   for (let i = 0; i < 10; i++) {
-    if (
-      fs.existsSync(path.join(dir, 'planning-config.toml')) ||
-      fs.existsSync(path.join(dir, '.planning', 'planning-config.toml')) ||
-      fs.existsSync(path.join(dir, 'config.json'))
-    ) {
+    if (resolveTomlPath(dir) || fs.existsSync(path.join(dir, 'config.json'))) {
       return dir;
     }
     const parent = path.dirname(dir);
@@ -238,7 +235,7 @@ const workspaceShow = defineCommand({
 });
 
 const workspaceSync = defineCommand({
-  meta: { name: 'sync', description: 'Crawl repo for .planning/ dirs and sync planning-config.toml' },
+  meta: { name: 'sync', description: 'Crawl repo for .planning/ dirs and sync gad-config.toml roots' },
   args: {
     yes: { type: 'boolean', alias: 'y', description: 'Apply changes without prompting', default: false },
   },
@@ -289,7 +286,7 @@ const workspaceSync = defineCommand({
     }
 
     writeRootsToToml(baseDir, updatedRoots, config);
-    console.log(`✓ planning-config.toml updated — ${updatedRoots.length} roots registered`);
+    console.log(`✓ gad-config.toml updated — ${updatedRoots.length} roots registered`);
   },
 });
 
@@ -442,7 +439,7 @@ const projectsInit = defineCommand({
       const id = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
       config.roots.push({ id, path: relPath, planningDir: '.planning', discover: false });
       writeRootsToToml(baseDir, config.roots, config);
-      console.log(`  Registered as [${id}] in planning-config.toml`);
+      console.log(`  Registered as [${id}] in gad-config.toml`);
     }
   },
 });
@@ -1264,7 +1261,7 @@ const docsCompile = defineCommand({
 
     const sink = args.sink || config.docs_sink;
     if (!sink) {
-      outputError('No docs_sink configured. Pass --sink <path> or set docs_sink in planning-config.toml.');
+      outputError('No docs_sink configured. Pass --sink <path> or set docs_sink in gad-config.toml.');
     }
 
     console.log(`Compiling ${config.roots.length} roots → ${sink}\n`);
@@ -1340,7 +1337,7 @@ const docsList = defineCommand({
     }
 
     if (rows.length === 0) {
-      console.log('No docs found. Create DOCS-MAP.xml or add docs.projects to planning-config.toml.');
+      console.log('No docs found. Create DOCS-MAP.xml or add docs.projects to gad-config.toml.');
       return;
     }
 
@@ -1447,6 +1444,7 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   sections.push(`4b. Capture decisions AS YOU MAKE THEM — if you chose between alternatives (library, pattern, data model), write a <decision> to DECISIONS.xml before committing that task. Aim for 1-2 per phase minimum.`);
   sections.push(`5. After EACH phase completes: write/append to .planning/VERIFICATION.md (build result, task count, state check), commit with "verify: phase X verified"`);
   sections.push(`6. When complete: all phases done, build passes, planning docs current`);
+  sections.push(`7. FINAL STEP: produce a production build (dist/ directory) and commit it. The build artifact is showcased on the docs site. No dist = eval incomplete.`);
   sections.push(`\n## Logging\n`);
   sections.push(`Set GAD_LOG_DIR to your eval run directory before running gad commands.`);
   sections.push(`All gad CLI calls and tool uses will be logged to JSONL files for eval tracing.`);
@@ -2145,22 +2143,36 @@ const evalTraceFinalize = defineCommand({
       trace.scores.time_efficiency = Math.max(0, Math.min(1, 1 - (trace.timing.duration_minutes / expectedDuration)));
     }
 
-    // Composite
+    // Composite (v3 formula — 6 dimensions, normalized when human_review absent)
     const s = trace.scores;
-    if (s.cli_efficiency != null && s.skill_accuracy != null && s.planning_quality != null && s.time_efficiency != null) {
-      s.composite = (s.cli_efficiency * 0.25) + (s.skill_accuracy * 0.25) + (s.planning_quality * 0.30) + (s.time_efficiency * 0.20);
+    const hr = trace.human_review?.score ?? null;
+    s.human_review = hr;
+    if (s.requirement_coverage != null && s.planning_quality != null && s.per_task_discipline != null && s.skill_accuracy != null && s.time_efficiency != null) {
+      if (hr != null) {
+        s.composite = (s.requirement_coverage * 0.15) + (s.planning_quality * 0.15) + (s.per_task_discipline * 0.15) + (s.skill_accuracy * 0.10) + (s.time_efficiency * 0.05) + (hr * 0.30);
+        // Low human-review caps
+        if (hr < 0.10) s.composite = Math.min(s.composite, 0.25);
+        else if (hr < 0.20) s.composite = Math.min(s.composite, 0.40);
+        s.auto_composite = null;
+      } else {
+        s.auto_composite = (s.requirement_coverage * 0.25) + (s.planning_quality * 0.25) + (s.per_task_discipline * 0.25) + (s.skill_accuracy * 0.167) + (s.time_efficiency * 0.083);
+        s.composite = s.auto_composite;
+      }
     }
 
+    trace.trace_schema_version = 3;
     fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
     console.log(`\n✓ Trace finalized: evals/${args.project}/${runs[0].name}/TRACE.json`);
-    console.log(`\n  Duration:         ${trace.timing.duration_minutes} min`);
-    console.log(`  Phases completed: ${trace.timing.phases_completed}`);
-    console.log(`  Tasks completed:  ${trace.timing.tasks_completed}`);
-    console.log(`  CLI efficiency:   ${s.cli_efficiency?.toFixed(3) ?? '—'}`);
-    console.log(`  Skill accuracy:   ${s.skill_accuracy?.toFixed(3) ?? '—'}`);
-    console.log(`  Planning quality: ${s.planning_quality?.toFixed(3) ?? '—'}`);
-    console.log(`  Time efficiency:  ${s.time_efficiency?.toFixed(3) ?? '—'}`);
-    console.log(`  Composite:        ${s.composite?.toFixed(3) ?? '—'}`);
+    console.log(`\n  Duration:          ${trace.timing.duration_minutes} min`);
+    console.log(`  Phases completed:  ${trace.timing.phases_completed}`);
+    console.log(`  Tasks completed:   ${trace.timing.tasks_completed}`);
+    console.log(`  Req coverage:      ${s.requirement_coverage?.toFixed(3) ?? '—'}`);
+    console.log(`  Planning quality:  ${s.planning_quality?.toFixed(3) ?? '—'}`);
+    console.log(`  Task discipline:   ${s.per_task_discipline?.toFixed(3) ?? '—'}`);
+    console.log(`  Skill accuracy:    ${s.skill_accuracy?.toFixed(3) ?? '—'}`);
+    console.log(`  Time efficiency:   ${s.time_efficiency?.toFixed(3) ?? '—'}`);
+    console.log(`  Human review:      ${hr?.toFixed(3) ?? '(pending)'}`);
+    console.log(`  Composite:         ${s.composite?.toFixed(3) ?? '—'}${hr == null ? ' (auto)' : ''}`);
   },
 });
 
@@ -2333,6 +2345,12 @@ const evalTraceReconstruct = defineCommand({
     const hasPhaseDoneInRoadmap = roadmapXml && /<status>done<\/status>/.test(roadmapXml);
     const evalTaskReg = readXmlFile(path.join(templatePlanDir, 'TASK-REGISTRY.xml'));
     const hasInProgressToDone = evalTaskReg && /status="done"/.test(evalTaskReg);
+    // Detect build artifact (dist/ or demo/ in worktree root or common subdirs)
+    const worktreeRoot = path.dirname(templatePlanDir);
+    const hasBuildArtifact = ['dist', 'demo', 'game/dist', 'build', 'out'].some(d =>
+      fs.existsSync(path.join(worktreeRoot, d)) && fs.statSync(path.join(worktreeRoot, d)).isDirectory()
+    );
+    const hasArchDoc = fs.existsSync(path.join(templatePlanDir, 'ARCHITECTURE.md'));
 
     // Skill trigger map: skill → artifact/signal that proves it fired
     reconstructed.skill_accuracy = {
@@ -2350,6 +2368,9 @@ const evalTraceReconstruct = defineCommand({
         { skill: 'multi-phase-planning', when: 'before execution', triggered: hasMultiplePhases, evidence: 'ROADMAP.xml has >1 phase' },
         { skill: 'phase-completion', when: 'during execution', triggered: hasPhaseDoneInRoadmap, evidence: 'at least one phase marked done in ROADMAP.xml' },
         { skill: 'task-lifecycle', when: 'per task', triggered: hasInProgressToDone, evidence: 'tasks transition from planned to done in TASK-REGISTRY.xml' },
+        // Deliverable
+        { skill: 'build-artifact', when: 'final phase', triggered: hasBuildArtifact, evidence: 'dist/ or demo/ directory exists with build output' },
+        { skill: 'architecture-doc', when: 'before final commit', triggered: hasArchDoc, evidence: 'ARCHITECTURE.md exists in .planning/' },
       ],
       accuracy: null,
     };
@@ -2372,13 +2393,18 @@ const evalTraceReconstruct = defineCommand({
       reconstructed.scores.time_efficiency = Math.max(0, Math.min(1, 1 - (durationMin / 480)));
     }
 
-    // Compute composite score
+    // Compute composite score (v3 formula)
     const scores = reconstructed.scores || {};
     scores.skill_accuracy = reconstructed.skill_accuracy.accuracy;
-    if (scores.planning_quality != null && scores.skill_accuracy != null && scores.time_efficiency != null) {
-      scores.composite = (scores.skill_accuracy * 0.25) + (scores.planning_quality * 0.30) + (scores.time_efficiency * 0.20) + ((reconstructed.git_analysis.per_task_discipline) * 0.25);
+    scores.per_task_discipline = reconstructed.git_analysis.per_task_discipline;
+    scores.requirement_coverage = reconstructed.requirement_coverage?.coverage_ratio ?? null;
+    scores.human_review = null;
+    if (scores.requirement_coverage != null && scores.planning_quality != null && scores.skill_accuracy != null && scores.time_efficiency != null && scores.per_task_discipline != null) {
+      scores.auto_composite = (scores.requirement_coverage * 0.25) + (scores.planning_quality * 0.25) + (scores.per_task_discipline * 0.25) + (scores.skill_accuracy * 0.167) + (scores.time_efficiency * 0.083);
+      scores.composite = scores.auto_composite;
     }
     reconstructed.scores = scores;
+    reconstructed.trace_schema_version = 3;
 
     fs.writeFileSync(traceFile, JSON.stringify(reconstructed, null, 2));
 
@@ -2898,10 +2924,19 @@ const evalReport = defineCommand({
         .filter(n => /^v\d+$/.test(n))
         .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
 
-      // Find latest version with TRACE.json
-      let trace = null, version = null;
+      // Find latest version with scores.json (preferred) or TRACE.json (fallback)
+      let trace = null, version = null, scoresData = null;
       for (let i = versions.length - 1; i >= 0; i--) {
+        const scoresFile = path.join(projectDir, versions[i], 'scores.json');
         const traceFile = path.join(projectDir, versions[i], 'TRACE.json');
+        if (fs.existsSync(scoresFile)) {
+          try {
+            scoresData = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
+            trace = fs.existsSync(traceFile) ? JSON.parse(fs.readFileSync(traceFile, 'utf8')) : {};
+            version = versions[i];
+            break;
+          } catch {}
+        }
         if (fs.existsSync(traceFile)) {
           try {
             trace = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
@@ -2912,25 +2947,52 @@ const evalReport = defineCommand({
       }
 
       if (!trace) {
-        rows.push({ project, version: '—', phases: '—', tasks: '—', discipline: '—', planning: '—', skill_acc: '—', composite: '—' });
+        rows.push({ project, version: '—', type: '', phases: '—', tasks: '—', discipline: '—', planning: '—', skill_acc: '—', human: '—', composite: '—' });
         continue;
       }
 
-      const ga = trace.git_analysis || {};
-      const pq = trace.planning_quality || {};
-      const sc = trace.scores || {};
-      const sa = trace.skill_accuracy || {};
+      // Use scores.json if available, otherwise fall back to trace
+      const sc = scoresData?.dimensions || trace.scores || {};
+      const compositeVal = scoresData?.composite || trace.scores?.composite || trace.scores?.tooling_composite || trace.scores?.mcp_composite;
+      const evalType = scoresData?.eval_type || trace.eval_type || 'implementation';
+      const humanScore = trace.human_review?.score ?? sc.human_review ?? null;
+      const humanStr = humanScore != null ? humanScore.toFixed(2) : '—';
+      const compositeStr = compositeVal != null ? compositeVal.toFixed(3) : '—';
+      const compositeLabel = compositeVal != null && humanScore == null && (evalType !== 'tooling' && evalType !== 'mcp') ? compositeStr + '*' : compositeStr;
 
-      rows.push({
-        project,
-        version,
-        phases: pq.phases_planned || ga.phases_completed || '—',
-        tasks: `${pq.tasks_completed || 0}/${pq.tasks_planned || 0}`,
-        discipline: ga.per_task_discipline != null ? ga.per_task_discipline.toFixed(2) : '—',
-        planning: sc.planning_quality != null ? sc.planning_quality.toFixed(3) : '—',
-        skill_acc: sc.skill_accuracy != null ? (sc.skill_accuracy * 100).toFixed(0) + '%' : '—',
-        composite: sc.composite != null ? sc.composite.toFixed(3) : '—',
-      });
+      if (evalType === 'tooling' || evalType === 'mcp') {
+        // Tooling/MCP eval row
+        const tl = trace.tooling || trace.mcp || {};
+        rows.push({
+          project,
+          version,
+          type: evalType,
+          phases: '—',
+          tasks: `${tl.tools_passed || tl.passes || 0}/${tl.tools_tested || tl.invocations || 0}`,
+          discipline: '—',
+          planning: '—',
+          skill_acc: sc.correctness != null ? (sc.correctness * 100).toFixed(0) + '%' : '—',
+          human: '—',
+          composite: compositeStr,
+        });
+      } else {
+        // Implementation eval row
+        const ga = trace.git_analysis || {};
+        const pq = trace.planning_quality || {};
+
+        rows.push({
+          project,
+          version,
+          type: 'impl',
+          phases: pq.phases_planned || ga.phases_completed || '—',
+          tasks: `${pq.tasks_completed || 0}/${pq.tasks_planned || 0}`,
+          discipline: ga.per_task_discipline != null ? ga.per_task_discipline.toFixed(2) : (sc.per_task_discipline != null ? sc.per_task_discipline.toFixed(2) : '—'),
+          planning: sc.planning_quality != null ? sc.planning_quality.toFixed(3) : '—',
+          skill_acc: sc.skill_accuracy != null ? (sc.skill_accuracy * 100).toFixed(0) + '%' : '—',
+          human: humanStr,
+          composite: compositeLabel,
+        });
+      }
     }
 
     if (rows.length === 0) {
@@ -2949,17 +3011,222 @@ const evalReport = defineCommand({
       console.log(`\nAverage composite: ${avg.toFixed(3)} across ${scored.length} project(s)`);
     }
 
+    const unreviewed = rows.filter(r => r.human === '—' && r.type === 'impl');
     const noTrace = rows.filter(r => r.version === '—');
+    if (unreviewed.length > 0) {
+      console.log(`\n* = auto_composite (no human review). Run: gad eval review <project> <version> --score <0-1>`);
+    }
     if (noTrace.length > 0) {
       console.log(`\n${noTrace.length} project(s) without traces:`);
       for (const r of noTrace) console.log(`  ${r.project} — run eval and reconstruct trace`);
     }
+
+    // Skill coverage analysis
+    const skillsDir = path.join(evalsDir, '..', 'skills');
+    if (fs.existsSync(skillsDir)) {
+      const allSkills = fs.readdirSync(skillsDir)
+        .filter(n => { try { return fs.statSync(path.join(skillsDir, n)).isDirectory(); } catch { return false; } })
+        .map(n => `gad:${n}`);
+
+      // Skill name aliases (trace name → canonical skill directory name)
+      const skillAliases = { 'gad:verify-work': 'gad:verify-phase' };
+
+      // Collect all tested skills from traces
+      const testedSkills = new Set();
+      for (const project of allProjects) {
+        const projectDir = path.join(evalsDir, project);
+        const versions = fs.readdirSync(projectDir).filter(n => /^v\d+$/.test(n));
+        for (const v of versions) {
+          const traceFile = path.join(projectDir, v, 'TRACE.json');
+          if (!fs.existsSync(traceFile)) continue;
+          try {
+            const t = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+            const triggers = t.skill_accuracy?.expected_triggers || [];
+            for (const tr of triggers) {
+              const rawName = (tr.skill || '').replace(/^\//, '');
+              const name = skillAliases[rawName] || rawName;
+              if (name.startsWith('gad:')) testedSkills.add(name);
+            }
+          } catch {}
+        }
+      }
+
+      const untestedSkills = allSkills.filter(s => !testedSkills.has(s));
+      const coverage = ((allSkills.length - untestedSkills.length) / allSkills.length * 100).toFixed(0);
+
+      console.log(`\nSkill coverage: ${testedSkills.size}/${allSkills.length} skills tested (${coverage}%)`);
+      if (untestedSkills.length > 0) {
+        console.log(`Untested: ${untestedSkills.join(', ')}`);
+      }
+    }
+  },
+});
+
+// gad eval review — human scoring
+const evalReview = defineCommand({
+  meta: { name: 'review', description: 'Submit human review score for an eval run' },
+  args: {
+    project: { type: 'positional', description: 'Eval project name', required: true },
+    version: { type: 'positional', description: 'Version (e.g. v5)', required: true },
+    score: { type: 'string', description: 'Human review score 0.0-1.0', default: '' },
+    notes: { type: 'string', description: 'Review notes', default: '' },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const runDir = path.join(gadDir, 'evals', args.project, args.version);
+    const traceFile = path.join(runDir, 'TRACE.json');
+
+    if (!fs.existsSync(traceFile)) {
+      outputError(`No TRACE.json found at evals/${args.project}/${args.version}/`);
+      return;
+    }
+
+    if (!args.score) {
+      outputError('--score is required (0.0 to 1.0)');
+      return;
+    }
+
+    const scoreVal = parseFloat(args.score);
+    if (isNaN(scoreVal) || scoreVal < 0 || scoreVal > 1) {
+      outputError('Score must be between 0.0 and 1.0');
+      return;
+    }
+
+    const trace = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+    trace.human_review = {
+      score: scoreVal,
+      notes: args.notes || null,
+      reviewed_by: 'human',
+      reviewed_at: new Date().toISOString(),
+    };
+
+    // Recompute composite with human review
+    const s = trace.scores || {};
+    s.human_review = scoreVal;
+    if (s.requirement_coverage != null && s.planning_quality != null && s.per_task_discipline != null && s.skill_accuracy != null && s.time_efficiency != null) {
+      s.composite = (s.requirement_coverage * 0.15) + (s.planning_quality * 0.15) + (s.per_task_discipline * 0.15) + (s.skill_accuracy * 0.10) + (s.time_efficiency * 0.05) + (scoreVal * 0.30);
+      // Low human-review caps
+      if (scoreVal < 0.10) s.composite = Math.min(s.composite, 0.25);
+      else if (scoreVal < 0.20) s.composite = Math.min(s.composite, 0.40);
+      s.auto_composite = null;
+    }
+    trace.scores = s;
+
+    fs.writeFileSync(traceFile, JSON.stringify(trace, null, 2));
+
+    // Also update scores.json if it exists
+    const scoresFile = path.join(runDir, 'scores.json');
+    if (fs.existsSync(scoresFile)) {
+      try {
+        const sd = JSON.parse(fs.readFileSync(scoresFile, 'utf8'));
+        sd.dimensions = sd.dimensions || {};
+        sd.dimensions.human_review = scoreVal;
+        sd.human_reviewed = true;
+        if (s.composite != null) sd.composite = s.composite;
+        fs.writeFileSync(scoresFile, JSON.stringify(sd, null, 2));
+      } catch {}
+    }
+
+    console.log(`Human review recorded: ${args.project} ${args.version}`);
+    console.log(`  Score: ${scoreVal}`);
+    if (args.notes) console.log(`  Notes: ${args.notes}`);
+    if (s.composite != null) console.log(`  New composite: ${s.composite.toFixed(3)} (with human review)`);
+  },
+});
+
+// gad eval open — launch eval output in browser
+const evalOpen = defineCommand({
+  meta: { name: 'open', description: 'Open eval build output in browser' },
+  args: {
+    project: { type: 'positional', description: 'Eval project name', required: true },
+    version: { type: 'positional', description: 'Version (default: latest)', default: '' },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const projectDir = path.join(gadDir, 'evals', args.project);
+
+    if (!fs.existsSync(projectDir)) {
+      outputError(`Eval project not found: ${args.project}`);
+      return;
+    }
+
+    // Find version
+    let version = args.version;
+    if (!version) {
+      const versions = fs.readdirSync(projectDir).filter(n => /^v\d+$/.test(n)).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+      version = versions[versions.length - 1] || '';
+    }
+
+    if (!version) {
+      outputError(`No runs found for ${args.project}`);
+      return;
+    }
+
+    // Look for build output in common locations
+    const candidates = [
+      path.join(projectDir, version, 'game', 'dist', 'index.html'),
+      path.join(projectDir, version, 'dist', 'index.html'),
+      path.join(projectDir, version, 'build', 'index.html'),
+      path.join(projectDir, version, 'index.html'),
+      // Also check portfolio public path
+      path.join(gadDir, '..', '..', 'apps', 'portfolio', 'public', 'evals', args.project, 'index.html'),
+    ];
+
+    let found = null;
+    for (const c of candidates) {
+      if (fs.existsSync(c)) { found = c; break; }
+    }
+
+    if (!found) {
+      console.log(`No build output found for ${args.project} ${version}`);
+      console.log('Checked:');
+      for (const c of candidates) console.log(`  ${path.relative(process.cwd(), c)}`);
+      return;
+    }
+
+    const serveDir = path.dirname(path.resolve(found));
+    const { exec, spawn } = require('child_process');
+
+    // Start a local HTTP server — ES module builds don't work on file://
+    const port = 4173 + Math.floor(Math.random() * 100);
+    console.log(`Serving: ${path.relative(process.cwd(), serveDir)}`);
+    console.log(`http://localhost:${port}/`);
+
+    // Try npx serve first, fall back to python, fall back to file://
+    const server = spawn('npx', ['serve', serveDir, '-l', String(port), '--no-clipboard'], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: true,
+    });
+
+    let opened = false;
+    const openBrowser = () => {
+      if (opened) return;
+      opened = true;
+      const isWin = process.platform === 'win32';
+      const url = `http://localhost:${port}/`;
+      const cmd = isWin ? `start "" "${url}"` : (process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`);
+      exec(cmd);
+    };
+
+    server.stdout.on('data', (d) => {
+      const s = d.toString();
+      if (s.includes('Accepting') || s.includes('Local:') || s.includes('listening')) {
+        openBrowser();
+      }
+    });
+
+    // Give it 3 seconds then open anyway
+    setTimeout(openBrowser, 3000);
+
+    // Keep process alive until ctrl+c
+    console.log('\nPress Ctrl+C to stop the server.');
+    process.on('SIGINT', () => { server.kill(); process.exit(); });
   },
 });
 
 const evalCmd = defineCommand({
   meta: { name: 'eval', description: 'Run and manage eval projects' },
-  subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd, suite: evalSuite, report: evalReport },
+  subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd, suite: evalSuite, report: evalReport, review: evalReview, open: evalOpen },
 });
 
 // ---------------------------------------------------------------------------
@@ -3735,11 +4002,9 @@ function convertXmlToMd(filename, xml) {
 // ---------------------------------------------------------------------------
 
 function findTomlPath(baseDir) {
-  const root = path.join(baseDir, 'planning-config.toml');
-  const nested = path.join(baseDir, '.planning', 'planning-config.toml');
-  if (fs.existsSync(root)) return root;
-  if (fs.existsSync(nested)) return nested;
-  return nested; // Default to .planning/ location
+  const resolved = resolveTomlPath(baseDir);
+  if (resolved) return resolved;
+  return path.join(baseDir, '.planning', 'gad-config.toml');
 }
 
 function normalizePath(p) {
@@ -3833,14 +4098,16 @@ function crawlPlanningDirs(baseDir, ignore) {
 // Manages the relationship between .planning/ files and the docs sink (MDX).
 // sink_workflow = "manual" means compile is always explicit.
 //
-//   gad sink status     — diff between planning state and docs sink
+//   gad sink status     — table of planning vs sink (mtimes, generated flag)
+//   gad sink diff       — show what compile would change vs sink on disk
 //   gad sink compile    — write planning state → docs MDX (manual trigger)
+//   gad sink compile --force — overwrite sink MDX even when not generated
 //   gad sink decompile  — pull docs MDX → planning state (reverse)
 //   gad sink validate   — check all sink mappings are well-formed
 
 function getSink(config) {
   if (!config.docs_sink) {
-    outputError('No docs_sink configured in planning-config.toml. Add: docs_sink = "apps/portfolio/content/docs"');
+    outputError('No docs_sink configured in gad-config.toml. Add: docs_sink = "apps/portfolio/content/docs"');
     return null;
   }
   return config.docs_sink;
@@ -3893,9 +4160,47 @@ const sinkStatus = defineCommand({
     output(rows, { title: `Sink Status  [sink: ${sink}]` });
     const needSync = rows.filter(r => r.status === 'missing' || r.status === 'stale').length;
     const humanAuthored = rows.filter(r => r.status === 'human-authored').length;
-    if (needSync > 0) console.log(`\n${needSync} file(s) need sync. Run \`gad sink compile\` to update.`);
+    if (needSync > 0) console.log(`\n${needSync} file(s) need sync. Run \`gad sink diff\`, then \`gad sink compile\`.`);
     else console.log('\n✓ All generated sink files are up to date.');
-    if (humanAuthored > 0) console.log(`${humanAuthored} human-authored sink file(s) — not managed by compile.`);
+    if (humanAuthored > 0) console.log(`${humanAuthored} sink file(s) are not tagged generated — run \`gad sink diff\`; use \`gad sink compile --force\` only after review.`);
+  },
+});
+
+const sinkDiff = defineCommand({
+  meta: { name: 'diff', description: 'Show what sink compile would change vs MDX on disk (compare before compile --force)' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Diff all projects', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const sink = getSink(config); if (!sink) return;
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+
+    const { diffSink } = require('../lib/docs-compiler.cjs');
+    let totalChanged = 0;
+    let totalForce = 0;
+    for (const root of roots) {
+      const { chunks, changed, needsForce } = diffSink(baseDir, root, sink);
+      totalChanged += changed;
+      totalForce += needsForce;
+      if (chunks.length) {
+        console.log(`\n── ${root.id} ──`);
+        console.log(chunks.join('\n'));
+      }
+    }
+    if (totalChanged === 0) {
+      console.log(`\n✓ Sink diff: no content changes (sink matches compile output — ${sink})`);
+      return;
+    }
+    console.log(`\n${totalChanged} file(s) differ from compiled output.`);
+    if (totalForce > 0) {
+      console.log(`${totalForce} of those need \`gad sink compile --force\` to overwrite (not generated on disk).`);
+    }
+    console.log('Review the output above, then run `gad sink compile` or `gad sink compile --force` as needed.');
+    process.exit(1);
   },
 });
 
@@ -3904,6 +4209,7 @@ const sinkCompile = defineCommand({
   args: {
     projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
     all: { type: 'boolean', description: 'Compile all projects', default: false },
+    force: { type: 'boolean', description: 'Overwrite sink MDX even when not tagged generated (use after gad sink diff)', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
@@ -3917,11 +4223,12 @@ const sinkCompile = defineCommand({
     for (const root of roots) {
       // Stamp first so the source mtime is set before the sink mtime
       stampSinkCompileNote(root, baseDir, sink, new Date().toISOString());
-      const n = compileDocs2(baseDir, root, sink) || 0;
+      const n = compileDocs2(baseDir, root, sink, { force: args.force }) || 0;
       if (n > 0) console.log(`  ✓ ${root.id}: ${n} file(s)`);
       compiled += n;
     }
-    console.log(`\n✓ Sink compile: ${compiled} file(s) written to ${sink}`);
+    const forceNote = args.force ? ' (including non-generated sink files)' : '';
+    console.log(`\n✓ Sink compile: ${compiled} file(s) written to ${sink}${forceNote}`);
   },
 });
 
@@ -3930,6 +4237,7 @@ const sinkSync = defineCommand({
   args: {
     projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
     all: { type: 'boolean', description: 'Sync all projects (default when no session)', default: false },
+    force: { type: 'boolean', description: 'Overwrite sink MDX even when not tagged generated (use after gad sink diff)', default: false },
   },
   run({ args }) {
     // sync = compile everything; --all is the natural default
@@ -3943,11 +4251,12 @@ const sinkSync = defineCommand({
     let compiled = 0;
     for (const root of roots) {
       stampSinkCompileNote(root, baseDir, sink, new Date().toISOString());
-      const n = compileDocs2(baseDir, root, sink) || 0;
+      const n = compileDocs2(baseDir, root, sink, { force: args.force }) || 0;
       console.log(`  ${n > 0 ? '✓' : '–'} ${root.id}: ${n} file(s) written`);
       compiled += n;
     }
-    console.log(`\n✓ Sync complete: ${compiled} file(s) updated in ${sink}`);
+    const forceNote = args.force ? ' (including non-generated sink files)' : '';
+    console.log(`\n✓ Sync complete: ${compiled} file(s) updated in ${sink}${forceNote}`);
   },
 });
 
@@ -4097,7 +4406,7 @@ const packCmd = defineCommand({
 
 const sinkCmd = defineCommand({
   meta: { name: 'sink', description: 'Manage docs sink — sync, compile, decompile, status, validate' },
-  subCommands: { status: sinkStatus, compile: sinkCompile, sync: sinkSync, decompile: sinkDecompile, validate: sinkValidate },
+  subCommands: { status: sinkStatus, diff: sinkDiff, compile: sinkCompile, sync: sinkSync, decompile: sinkDecompile, validate: sinkValidate },
 });
 
 // ---------------------------------------------------------------------------
@@ -4343,6 +4652,44 @@ const sprintCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// gad dev — watch planning files and re-run refs verify on changes
+// ---------------------------------------------------------------------------
+
+const devCmd = defineCommand({
+  meta: { name: 'dev', description: 'Watch .planning/ files and re-run refs verify on changes (JSON output)' },
+  args: {
+    debounce: { type: 'string', description: 'Debounce interval in ms (default: 500)', default: '500' },
+    poll: { type: 'boolean', description: 'Use polling instead of fs.watch (for unreliable FS watchers)', default: false },
+    once: { type: 'boolean', description: 'Run verify once and exit (no watch)', default: false },
+  },
+  run({ args }) {
+    const { startWatch, runVerify } = require('../lib/watch-planning.cjs');
+    const baseDir = findRepoRoot();
+    const debounceMs = parseInt(args.debounce) || 500;
+
+    if (args.once) {
+      const result = runVerify(baseDir, 'once', (obj) => console.log(JSON.stringify(obj)));
+      process.exit(result.ok ? 0 : 1);
+      return;
+    }
+
+    console.error(`gad dev — watching .planning/ files (debounce: ${debounceMs}ms, mode: ${args.poll ? 'poll' : 'fs.watch'})`);
+    console.error('Press Ctrl+C to stop.\n');
+
+    const { stop } = startWatch(baseDir, {
+      debounceMs,
+      poll: args.poll,
+    });
+
+    process.on('SIGINT', () => {
+      stop();
+      console.error('\ngad dev stopped.');
+      process.exit(0);
+    });
+  },
+});
+
+// ---------------------------------------------------------------------------
 // gad log — inspect CLI call logs
 // ---------------------------------------------------------------------------
 
@@ -4559,6 +4906,7 @@ const main = defineCommand({
     verify: verifyCmd,
     snapshot: snapshotCmd,
     sprint: sprintCmd,
+    dev: devCmd,
     sink: sinkCmd,
     log: logCmd,
     'migrate-schema': migrateSchema,

@@ -1,0 +1,24 @@
+{
+  "type": "eval",
+  "name": "escape-the-dungeon-bare",
+  "description": "Baseline: agent builds the same game WITHOUT a planning framework, creating its own workflow organically",
+  "baseline": "v1",
+  "trace": true,
+  "template": "template/",
+  "compare_to": "escape-the-dungeon",
+  "constraints": {
+    "no_gad_framework": true,
+    "no_planning_skills": true,
+    "agent_creates_own_workflow": true
+  },
+  "scoring": {
+    "weights": {
+      "requirement_coverage": 0.25,
+      "workflow_emergence": 0.20,
+      "implementation_quality": 0.20,
+      "iteration_evidence": 0.15,
+      "time_efficiency": 0.05,
+      "human_review": 0.15
+    }
+  }
+}

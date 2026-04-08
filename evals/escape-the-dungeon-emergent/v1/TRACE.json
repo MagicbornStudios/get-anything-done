@@ -1,0 +1,52 @@
+{
+  "eval": "escape-the-dungeon-emergent",
+  "version": "v1",
+  "date": "2026-04-08",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "context_mode": "fresh",
+  "timing": { "duration_minutes": 14, "phases_completed": 7, "tasks_completed": 0 },
+  "token_usage": { "total_tokens": 67375, "tool_uses": 79 },
+  "git_analysis": { "total_commits": 2, "task_id_commits": 0, "batch_commits": 2, "per_task_discipline": 0.0 },
+  "requirement_coverage": {
+    "total_criteria": 12, "gate_failed": false,
+    "gate_notes": "Main menu renders, recognized saved game. But entering game gives error: 'Styled text error: unclosed tags START'. Cannot progress past main menu.",
+    "fully_met": 2, "partially_met": 1, "not_met": 9, "coverage_ratio": 0.208
+  },
+  "workflow_emergence": {
+    "created_task_lists": true,
+    "created_state_tracking": true,
+    "created_architecture_docs": true,
+    "created_reusable_skills": true,
+    "emergence_score": 1.0
+  },
+  "skill_reuse": {
+    "inherited_skills": 4,
+    "skills_used": 3,
+    "skills_improved": 1,
+    "new_skills_created": 4,
+    "reuse_score": 0.75
+  },
+  "iteration_evidence": {
+    "workflow_updates": 1,
+    "total_phases": 7,
+    "iteration_score": 0.14
+  },
+  "scores": {
+    "requirement_coverage": 0.208,
+    "workflow_quality": 0.60,
+    "skill_reuse": 0.75,
+    "implementation_quality": 0.10,
+    "iteration_evidence": 0.14,
+    "time_efficiency": 0.971,
+    "human_review": 0.10,
+    "composite": 0.303
+  },
+  "human_review": {
+    "score": 0.10,
+    "notes": "Main menu renders and recognizes saved game state (improvement over bare v1). But game crashes with 'Styled text error: unclosed tags START' when entering gameplay. Cannot play. Score 0.10: better than blank screen, menu works, but game is broken.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-08T03:00:00.000Z"
+  }
+}

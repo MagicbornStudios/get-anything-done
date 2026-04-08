@@ -17,5 +17,8 @@
     "units_partial": 1,
     "units_absent": 0,
     "completeness": 0.978
+  },
+  "scores": {
+    "composite": 0.978
   }
 }

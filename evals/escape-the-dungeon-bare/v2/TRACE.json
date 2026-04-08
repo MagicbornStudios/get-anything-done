@@ -1,0 +1,40 @@
+{
+  "eval": "escape-the-dungeon-bare",
+  "version": "v2",
+  "date": "2026-04-08",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "context_mode": "fresh",
+  "timing": { "duration_minutes": 21, "phases_completed": 7, "tasks_completed": 0 },
+  "token_usage": { "total_tokens": 87661, "tool_uses": 110 },
+  "git_analysis": { "total_commits": 6, "task_id_commits": 0, "batch_commits": 6, "per_task_discipline": 0.0 },
+  "planning_quality": { "phases_planned": 7, "tasks_planned": 0, "tasks_completed": 0, "tasks_blocked": 0, "decisions_captured": 0, "state_updates": 0, "state_stale_count": 0 },
+  "requirement_coverage": {
+    "total_criteria": 12, "gate_failed": false,
+    "gate_notes": "Game renders, title works, New Game works, room navigation works, combat works, dialogue works, menus work. Very playable vertical slice. Missing: rune forge, icons, visual polish.",
+    "fully_met": 9, "partially_met": 2, "not_met": 1, "coverage_ratio": 0.833
+  },
+  "workflow_emergence": {
+    "created_task_lists": true,
+    "created_state_tracking": true,
+    "created_architecture_docs": true,
+    "created_reusable_skills": true,
+    "emergence_score": 1.0
+  },
+  "scores": {
+    "requirement_coverage": 0.833,
+    "workflow_emergence": 1.0,
+    "implementation_quality": 0.70,
+    "iteration_evidence": 0.0,
+    "time_efficiency": 0.956,
+    "human_review": 0.50,
+    "composite": 0.601
+  },
+  "human_review": {
+    "score": 0.50,
+    "notes": "Most playable game of all evals. Full game loop works: title → new game → rooms → combat → dialogue → navigation. UX and flow are good. UI is very ASCII/plain — needs spacing, icons, better styling. Color coding is good. No spell crafting despite rune system in requirements. Rest room doesn't offer forge. Score 0.50: playable vertical slice but visually rough.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-08T03:00:00.000Z"
+  }
+}

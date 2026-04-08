@@ -1,0 +1,44 @@
+{
+  "eval": "escape-the-dungeon",
+  "version": "v7",
+  "date": "2026-04-08",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "context_mode": "fresh",
+  "timing": { "duration_minutes": 24, "phases_completed": 9, "tasks_completed": 17 },
+  "token_usage": { "total_tokens": 93632, "tool_uses": 137 },
+  "git_analysis": { "total_commits": 21, "task_id_commits": 17, "batch_commits": 0, "per_task_discipline": 0.81 },
+  "planning_quality": { "phases_planned": 9, "tasks_planned": 17, "tasks_completed": 17, "tasks_blocked": 0, "decisions_captured": 0, "state_updates": 17, "state_stale_count": 0 },
+  "requirement_coverage": {
+    "total_criteria": 12, "gate_failed": false,
+    "gate_notes": "Game renders, title screen works, combat works. But game loop breaks — after combat, player is stuck with no route back to room navigation.",
+    "fully_met": 7, "partially_met": 3, "not_met": 2, "coverage_ratio": 0.708
+  },
+  "skill_accuracy": {
+    "expected_triggers": [
+      { "skill": "/gad:plan-phase", "when": "before implementation", "triggered": true },
+      { "skill": "/gad:execute-phase", "when": "per phase", "triggered": true },
+      { "skill": "/gad:task-checkpoint", "when": "between tasks", "triggered": true },
+      { "skill": "/gad:auto-conventions", "when": "after first code phase", "triggered": true },
+      { "skill": "/gad:verify-phase", "when": "after phase completion", "triggered": true },
+      { "skill": "/gad:check-todos", "when": "session start", "triggered": false }
+    ],
+    "accuracy": 0.833
+  },
+  "scores": {
+    "requirement_coverage": 0.708,
+    "planning_quality": 1.0,
+    "per_task_discipline": 0.81,
+    "skill_accuracy": 0.833,
+    "time_efficiency": 0.950,
+    "human_review": 0.30,
+    "composite": 0.668
+  },
+  "human_review": {
+    "score": 0.30,
+    "notes": "Game renders, better UI/layout than other evals. But game loop is broken — after combat, player gets stuck with no navigation. Cannot progress past first encounter. UI is bland but structured. Has fallback data (good defensive coding). Score 0.30: renders and partially playable but broken core loop.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-08T03:00:00.000Z"
+  }
+}

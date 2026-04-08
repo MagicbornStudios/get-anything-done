@@ -17,13 +17,9 @@
       { "skill": "/gad:task-checkpoint", "when": "between tasks", "triggered": true },
       { "skill": "/gad:auto-conventions", "when": "after first code phase", "triggered": true },
       { "skill": "/gad:verify-work", "when": "after phase completion", "triggered": true },
-      { "skill": "/gad:check-todos", "when": "session start", "triggered": true },
-      { "skill": "decisions-captured", "when": "during implementation", "triggered": false },
-      { "skill": "multi-phase-planning", "when": "before execution", "triggered": true },
-      { "skill": "phase-completion", "when": "during execution", "triggered": true },
-      { "skill": "task-lifecycle", "when": "per task", "triggered": true }
+      { "skill": "/gad:check-todos", "when": "session start", "triggered": true }
     ],
-    "accuracy": 0.90
+    "accuracy": 1.0
   },
-  "scores": { "requirement_coverage": 1.0, "planning_quality": 1.0, "skill_accuracy": 0.90, "time_efficiency": 0.938, "per_task_discipline": 0.31, "composite": 0.816 }
+  "scores": { "requirement_coverage": 1.0, "planning_quality": 1.0, "skill_accuracy": 1.0, "time_efficiency": 0.938, "per_task_discipline": 0.31, "composite": 0.830, "human_review": null, "auto_composite": 0.830 }
 }

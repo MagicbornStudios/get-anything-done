@@ -16,6 +16,10 @@
 4. Verification: `/gad:verify-work` — check each phase against its definition of done
 5. Scoring: TRACE.json + SCORE.md produced at end
 
+## Hosted demo and source (portfolio site)
+
+A **production build** of the game can be copied into the **custom_portfolio** repo at `apps/portfolio/public/evals/escape-the-dungeon/` so it is served at **`/evals/escape-the-dungeon/`** (playable in the browser). **Game source** lives in this repo under **`evals/escape-the-dungeon/game/`** (Vite + TypeScript + Kaplay). Traces and scores remain under `evals/escape-the-dungeon/vN/`.
+
 ## Source material
 
 - `source-GAMEPLAY-DESIGN.xml` — full gameplay design (500+ lines of XML)
@@ -24,10 +28,22 @@
 
 ## Human review
 
-After the eval agent completes, a human reviews:
-- Does the game feel playable?
-- Does navigation work intuitively?
-- Are the UI surfaces clear?
-- Is the content-driven architecture sound?
+After the eval agent completes, a human opens the build output (`gad eval open escape-the-dungeon`)
+and scores it 0.0-1.0 via `gad eval review`. The rubric:
 
-This is a manual score added to SCORE.md after the eval run.
+| Score | Meaning |
+|-------|---------|
+| 0.0 | Blank screen, nothing renders |
+| 0.1-0.3 | Something renders but not playable (menus don't work, can't start game) |
+| 0.4-0.6 | Playable vertical slice — can start game, navigate, have one interaction |
+| 0.7-0.8 | Multiple interactions work, UI is functional, core loop is playable |
+| 0.9-1.0 | Polished, all major systems present and working, feels like a real game |
+
+**Gate:** If the build output shows a blank screen, `requirement_coverage` is overridden to 0
+regardless of what the automated trace says. Code that doesn't render has zero coverage.
+
+## v5 finding
+
+v5 scored auto_composite 0.955 but human_review 0.0 (blank screen). The agent built systems
+code but no visible UI. Requirements updated to mandate UI-first build order and a playable
+vertical slice as the primary success criterion.

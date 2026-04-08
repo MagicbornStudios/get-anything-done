@@ -9,7 +9,7 @@
 3. **Implement it**
 4. **Mark it done** in TASK-REGISTRY.xml
 5. **Update STATE.xml** -- set `next-action` to describe what comes next
-6. **Commit** with a message referencing the task id (e.g. "feat: 01-02 implement reading store")
+6. **Commit exactly one task per commit.** Message MUST include the task id (e.g. "feat: 01-02 implement reading store"). NEVER batch multiple tasks into one commit -- each task gets its own atomic commit. This is how your discipline is scored.
 7. **Repeat** from step 1
 
 ## After completing each phase (all tasks done)
@@ -77,10 +77,32 @@ Capture any new architectural choices in `.planning/DECISIONS.xml`:
 
 - Do NOT skip TASK-REGISTRY.xml updates -- your trace depends on them
 - Do NOT batch all planning updates at the end -- update PER TASK
+- Do NOT batch multiple tasks into one commit -- ONE task = ONE commit. This is scored as per_task_discipline and is 20% of your composite
 - Do NOT code without planning first
 - Do NOT import from shadcn/ui or Radix -- build lightweight primitives
 - Do NOT copy code from any external source -- implement from the requirements spec
 - Do NOT create files outside the standard artifact set without reason
+
+## Final deliverable (MANDATORY)
+
+Your LAST phase must produce a working build. This is non-negotiable:
+
+1. Run `npx tsup` (or the build script) -- it must succeed with zero errors
+2. Create a `demo/index.html` that imports the built package and renders the ReaderWorkspace component with sample data (2-3 hardcoded books with placeholder covers)
+3. The demo must be viewable in a browser -- static HTML that loads the ESM bundle
+4. Commit: `git add dist/ demo/ && git commit -m "build: production dist + demo"`
+
+The demo is what gets showcased on the docs site. No working demo = eval incomplete.
+
+## Architecture doc (MANDATORY)
+
+Before your final commit, write `.planning/ARCHITECTURE.md` describing what you built:
+- System overview (1 paragraph)
+- Key modules and what each does (bullet list)
+- Data flow (stores, persistence, component tree)
+- Key decisions you made and why
+
+This is scored. 10-20 lines is enough.
 
 ## Scoring
 

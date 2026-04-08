@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Eval project: Escape the Dungeon
+  Source: GAMEPLAY-DESIGN.xml + STAT-AND-BEHAVIOUR-TAXONOMY.md
+  Requirements version history:
+    v1 (2026-04-06): 12 systems-focused criteria, no gates
+    v2 (2026-04-08): Added gate criteria, vertical-slice priority, UI-first mandate
+    v3 (2026-04-08): Game-loop gate, spell-crafting gate, UI quality gate, revised weights
+-->
+<requirements version="v3" updated="2026-04-08">
+  <goal>Build a playable roguelike dungeon crawler web game called "Escape the Dungeon". Player navigates a dungeon via room choices, encounters NPCs and enemies, crafts spells at a rune forge, and progresses through floors. Priority is a PLAYABLE VERTICAL SLICE with intentional visual presentation — not a raw prototype shell.</goal>
+
+  <audience>Solo player (keyboard + mouse). Content-driven, designer-tunable via JSON packs. Target: KAPLAY (web/JS).</audience>
+
+  <!-- ============================================================ -->
+  <!-- GATE CRITERIA: All gates must pass or requirement_coverage = 0 -->
+  <!-- ============================================================ -->
+  <gate-criteria>
+    <gate id="G1" name="game-loop">
+      The complete game loop must work without softlock:
+      1. Title screen renders visually
+      2. Player clicks New Game and the game starts
+      3. Player sees current room with description and navigation options
+      4. Player navigates to another room (scene transition works)
+      5. Player encounters combat — fight resolves — player returns to room navigation
+      6. Player encounters dialogue — conversation resolves — player returns to room navigation
+      7. Player can continue playing into additional rooms without getting stuck
+      If any step in this loop is broken, the gate fails.
+    </gate>
+
+    <gate id="G2" name="spell-crafting">
+      The game must include a functional spell-crafting system. During a test run:
+      1. Player can access a rune forge / spell craft interface during gameplay
+      2. Player selects at least two crafting inputs (runes or components)
+      3. System creates or unlocks a resulting spell from the combination
+      4. Crafted spell can be equipped, viewed, or used in encounters
+      5. Game loop continues afterward (no softlock)
+      Mere spell acquisition through loot, NPC rewards, or pre-equipped spells does NOT
+      satisfy this gate. The player must intentionally craft.
+      Minimum implementation floor: 3-5 runes/components, 3+ valid combinations, output
+      clearly presented, crafted spell usable in encounter flow.
+    </gate>
+
+    <gate id="G3" name="ui-quality">
+      The game must present a fully intentional UI, not a raw prototype shell. Required:
+      - Readable and visually structured layout with spacing and hierarchy
+      - Room-type icons (installable icon pack, generated, or consistent placeholder art)
+      - Encounter/entity visual representation via sprite, portrait, or consistent placeholder
+      - Themed visual differentiation across room types (color, background, or panel treatment)
+      - Styled interactive controls (buttons with visible affordance, not raw text links)
+      - HP, mana, and critical state shown as visual bars or indicators, not only numbers
+
+      Acceptable asset sourcing (in order of preference):
+      1. Lightweight installable icon/sprite libraries (npm packages, CDN)
+      2. Common web-safe or open-source art packs
+      3. Web-searched and sourced sprite/icon assets (use web search to find them)
+      4. Generated placeholder sprites/portraits (canvas-drawn, SVG, emoji-based)
+      5. Simple geometric fallback tiles (LAST RESORT, not the primary path)
+
+      Visual polish is a gate criterion. Implementers may use easily installable resources
+      provided the dependency/setup burden stays low and the result remains coherent.
+      Raw ASCII/text-only UI fails this gate.
+    </gate>
+  </gate-criteria>
+
+  <!-- ============================================================ -->
+  <!-- SCORED CRITERIA: Each scored 0-1, averaged for coverage ratio -->
+  <!-- ============================================================ -->
+  <success-criteria>
+    <!-- Combat -->
+    <criterion>Turn-based combat with Fight/Spells/Bag/Run actions, visible HP bars for both player and enemy, damage numbers shown, XP/crystal rewards on win</criterion>
+    <criterion>At least 3 distinct enemy types with different stats, encountered in combat rooms</criterion>
+
+    <!-- Dialogue -->
+    <criterion>NPC dialogue with portrait/representation, dialogue text, and branching choice options that affect gameplay (give items, teach spells, reveal info)</criterion>
+
+    <!-- Navigation and exploration -->
+    <criterion>Room navigation showing current location, available exits, and room type — player chooses where to go via buttons/choices</criterion>
+    <criterion>Dungeon has at least 3 rooms with different types (combat, dialogue, treasure, rest, forge)</criterion>
+    <criterion>Fog of war or discovery — rooms are revealed as player explores</criterion>
+
+    <!-- HUD and menus -->
+    <criterion>Persistent HUD showing: player name, HP bar, mana bar, current floor, dungeon tick or turn count</criterion>
+    <criterion>At least two overlay menus accessible during gameplay (Map, Bag, Stats, Spellbook — pick two minimum)</criterion>
+
+    <!-- Systems -->
+    <criterion>Entity model with at least 3 entity types loaded from content pack JSON</criterion>
+    <criterion>Content pack architecture: game data loaded from JSON files, not hardcoded in source</criterion>
+    <criterion>Game state persists across page refresh (localStorage save/load or auto-save)</criterion>
+    <criterion>Player can level up or gain power through gameplay progression (XP, stat increases, new abilities)</criterion>
+  </success-criteria>
+
+  <vertical-slice>
+    The eval prioritizes a PLAYABLE DEMO over feature completeness. Build the UI and
+    game loop first, then add depth. The build order should be:
+    1. Project scaffold + title screen that renders
+    2. Room navigation with styled UI (not ASCII)
+    3. Combat encounter with visual HP bars
+    4. Rune forge with basic spell crafting
+    5. Dialogue with NPC representation
+    6. HUD + menus
+    7. Content packs + save/load
+    8. Polish pass
+
+    Spell crafting must be reachable within the playable loop, though not necessarily
+    in the first two rooms if that would overconstrain pacing.
+  </vertical-slice>
+
+  <non-goals>
+    <item>Tile-based movement or 2D grid walking — navigation is choice-driven via room graph</item>
+    <item>Similarity/vector/distance-based content selection — all content is authored and static</item>
+    <item>Full 50 titles + 50 archetypes content — minimum viable for demo</item>
+    <item>Complex asset pipelines or custom art tools — use easily sourced assets</item>
+    <item>Multiplayer or networking</item>
+  </non-goals>
+
+  <source-docs>
+    <doc path="source-GAMEPLAY-DESIGN.xml" role="Trimmed gameplay design (vertical slice focus)" />
+    <doc path="source-STAT-AND-BEHAVIOUR-TAXONOMY.md" role="Canonical stat names, groupings, and engine mappings" />
+  </source-docs>
+</requirements>

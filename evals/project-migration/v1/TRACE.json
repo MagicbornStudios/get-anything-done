@@ -1,0 +1,24 @@
+{
+  "eval": "project-migration",
+  "version": "v1",
+  "date": "2026-04-04",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 2,
+  "context_mode": "fresh",
+  "timing": {
+    "phases_completed": 1,
+    "tasks_completed": 8
+  },
+  "planning_quality": {
+    "tasks_completed": 8,
+    "tasks_total": 8
+  },
+  "scores": {
+    "planning_continuity": 0.90,
+    "skill_coverage": 0.95,
+    "context_efficiency": 0.85,
+    "docs_sink_alignment": 0.80,
+    "composite": 0.890
+  }
+}

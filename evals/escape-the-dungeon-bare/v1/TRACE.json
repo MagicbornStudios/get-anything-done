@@ -1,0 +1,70 @@
+{
+  "eval": "escape-the-dungeon-bare",
+  "version": "v1",
+  "date": "2026-04-08",
+  "gad_version": "1.32.0",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "context_mode": "fresh",
+  "timing": {
+    "duration_minutes": 12,
+    "phases_completed": 7,
+    "tasks_completed": 21
+  },
+  "token_usage": {
+    "total_tokens": 67751,
+    "tool_uses": 62
+  },
+  "git_analysis": {
+    "total_commits": 2,
+    "task_id_commits": 0,
+    "batch_commits": 2,
+    "per_task_discipline": 0.0
+  },
+  "planning_quality": {
+    "phases_planned": 7,
+    "tasks_planned": 21,
+    "tasks_completed": 21,
+    "tasks_blocked": 0,
+    "decisions_captured": 10,
+    "state_updates": 0,
+    "state_stale_count": 0
+  },
+  "requirement_coverage": {
+    "total_criteria": 12,
+    "gate_failed": true,
+    "gate_notes": "Build exists but renders blank screen on file:// open. Same ES module issue as GAD version.",
+    "fully_met": 0,
+    "partially_met": 0,
+    "not_met": 12,
+    "coverage_ratio": 0.0
+  },
+  "workflow_emergence": {
+    "created_task_lists": true,
+    "created_state_tracking": true,
+    "created_architecture_docs": true,
+    "created_reusable_skills": true,
+    "emergence_score": 1.0
+  },
+  "iteration_evidence": {
+    "workflow_updates": 0,
+    "total_phases": 7,
+    "iteration_score": 0.0,
+    "notes": "Agent created WORKFLOW.md but never updated it during implementation — wrote it all at once"
+  },
+  "scores": {
+    "requirement_coverage": 0.0,
+    "workflow_emergence": 1.0,
+    "implementation_quality": 0.0,
+    "iteration_evidence": 0.0,
+    "time_efficiency": 0.975,
+    "human_review": 0.10,
+    "composite": 0.198
+  },
+  "human_review": {
+    "score": 0.10,
+    "notes": "Main menu renders with New Game button visible. Cannot start game — clicking New Game does not progress. Broken build. Score 0.10 for rendering menu only.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-08T02:00:00.000Z"
+  }
+}
