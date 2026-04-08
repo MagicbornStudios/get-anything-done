@@ -38,6 +38,12 @@ gad snapshot --projectid get-anything-done
 
 GAD does **not** infer paths from TypeScript or imports — only explicit strings in XML and migrate/verify operations.
 
+## Snapshot output vs telemetry
+
+- **`gad snapshot`** prints the full planning bundle to **stdout** (or JSON with `--json` / agent profile). That content is not duplicated in log files.
+- Each **`gad`** invocation appends one JSON line under **`.planning/.gad-log/<YYYY-MM-DD>.jsonl`** at the resolved repo root (`ts`, `cmd`, `args`, `duration_ms`, `exit`, `summary` — usually empty). This is run metadata only, not snapshot text.
+- **RepoPlanner** (`loop-cli` in the monorepo) writes **`{ "at", "command" }`** lines to **`usage.jsonl`** for command-frequency tracking — not GAD and not snapshot bodies. Prefer **`gad`** for vendor project planning loops; reserve RepoPlanner scripts for monorepo init / embed flows where needed.
+
 ## Key decisions
 
 - **gad-01** — GAD is agent-agnostic, not Claude Code-specific
