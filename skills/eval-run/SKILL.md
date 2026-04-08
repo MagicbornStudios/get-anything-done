@@ -20,6 +20,26 @@ Every eval run on an implementation project MUST end with these artifacts preser
 **If any of these are missing, the run is invalid and must be re-executed.**
 Verify with `gad eval verify`. The test suite enforces this via `tests/eval-preservation.test.cjs`.
 
+## The Project Layout Contract (mandatory)
+
+Every eval — regardless of framework (GAD, bare, emergent) — MUST place ALL workflow
+artifacts under `game/.planning/`:
+
+```
+game/
+├── .planning/            ← ALL workflow artifacts (WORKFLOW.md, DECISIONS, skills/, etc.)
+├── src/                  ← source code only
+├── public/               ← assets only
+└── package.json, etc.    ← build config only
+```
+
+This separates process artifacts from source code so experiments can be compared cleanly.
+The format inside `.planning/` is entirely up to the agent — XML, Markdown, whatever —
+but workflow files MUST NOT be mixed into source directories or placed at the project root.
+
+`gad eval preserve` detects violations (missing `.planning/`, workflow files outside
+`.planning/`) and logs warnings. Record violations in human review notes.
+
 ## When to use this skill
 
 - User says "run the eval", "start the eval", "run round N"

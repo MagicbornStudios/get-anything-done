@@ -2,6 +2,31 @@
 
 **You are inside a GAD eval.** Follow this loop exactly. Your work is being traced.
 
+## Project layout (MANDATORY)
+
+Create the game under `game/` in the worktree root. The template provides starter
+planning files in `<worktree-root>/.planning/` but you MUST copy them into `game/.planning/`
+at the start so ALL your workflow artifacts live alongside the game.
+
+```
+game/
+├── .planning/            ← ALL workflow artifacts go here
+│   ├── REQUIREMENTS.xml  ← copied from template
+│   ├── ROADMAP.xml       ← you plan phases here
+│   ├── TASK-REGISTRY.xml ← you track tasks here
+│   ├── STATE.xml         ← current phase + next-action
+│   ├── DECISIONS.xml     ← architectural decisions
+│   ├── VERIFICATION.md   ← phase verification results
+│   ├── ARCHITECTURE.md   ← final system overview
+│   └── CONVENTIONS.md    ← patterns (after first code phase)
+├── src/                  ← source code only
+├── public/               ← assets
+└── package.json, tsconfig.json, etc.
+```
+
+Never put workflow/tracking/notes/decision files at the project root or mixed with source
+code — they all live under `game/.planning/`.
+
 ## The loop (mandatory)
 
 1. **Read context:** `gad snapshot --projectid escape-the-dungeon` or read `.planning/STATE.xml`

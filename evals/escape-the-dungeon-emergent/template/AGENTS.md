@@ -3,25 +3,47 @@
 You are building a roguelike dungeon crawler game. This is a continuation of a previous
 attempt. You have inherited skills and a workflow from the last run — read them first.
 
+## Project layout (MANDATORY)
+
+Create the game under `game/` in the worktree root. All your WORKFLOW, SKILLS, DECISIONS,
+NOTES, ARCHITECTURE docs — anything that isn't source code — MUST live under `game/.planning/`.
+Do NOT put these files at the project root or mixed in with source code.
+
+```
+game/
+├── .planning/            ← ALL workflow artifacts go here
+│   ├── WORKFLOW.md       ← your task tracking
+│   ├── DECISIONS.md      ← decisions you make
+│   ├── ARCHITECTURE.md   ← system design
+│   ├── skills/           ← inherited skills + new ones you create
+│   │   ├── CHANGELOG.md  ← what you changed from the inherited set
+│   │   └── ...
+│   └── ...
+├── src/                  ← source code only
+├── public/               ← assets
+└── package.json, etc.
+```
+
+**The inherited skills are at `<worktree>/skills/` in your prompt/template** — but you
+MUST copy them into `game/.planning/skills/` at the start of your work, then evolve them
+there. The `game/.planning/` is the only canonical location during implementation.
+
 ## Before you start coding
 
-1. **Read `skills/previous-workflow.md`** — learn what worked and what failed last time.
-2. **Read all files in `skills/`** — these are reusable patterns from the previous run.
-3. **Read `REQUIREMENTS.xml`** — what you're building. Same game, same requirements.
+1. **Read the inherited skills** — the template provides them in a `skills/` directory.
+   Read ALL of them, especially `previous-workflow.md` which documents what failed.
+2. **Copy skills into `game/.planning/skills/`** so you can evolve them in place.
+3. **Read `REQUIREMENTS.xml`** — what you're building.
 4. **Read the source docs** — `source-GAMEPLAY-DESIGN.xml` and `source-STAT-AND-BEHAVIOUR-TAXONOMY.md`.
-5. **Create or update your workflow** — based on what you learned from the previous run's failures:
-   - The last run produced a main menu but the game didn't start when clicking New Game.
-   - The last run wrote everything in 1 commit with no verification between phases.
-   - Fix these problems in your workflow before you start coding.
-
-Write your workflow to a file (e.g. `WORKFLOW.md`) and ACTUALLY UPDATE IT as you work.
+5. **Create or update your workflow** at `game/.planning/WORKFLOW.md` — based on what
+   you learned from the previous run's failures. ACTUALLY UPDATE IT as you work.
 
 ## During implementation
 
-- **Use your inherited skills.** The `skills/` directory has patterns from the last run. Use them.
+- **Use your inherited skills.** They're in `game/.planning/skills/`.
 - **Verify after each phase.** The last run didn't verify and bugs accumulated silently. After each phase, run the game and confirm it works. If something breaks, fix it before moving on.
-- **Create new skills when you hit problems.** If you encounter a new pattern or fix a tricky bug, write it down in `skills/` immediately — not after the fact.
-- **Update existing skills if they're wrong.** If an inherited skill doesn't work or could be better, update it.
+- **Create new skills when you hit problems** — write them into `game/.planning/skills/` immediately, not after the fact.
+- **Update existing skills if they're wrong.** If an inherited skill doesn't work or could be better, update it in place.
 - **Commit after each phase at minimum.** The last run had 1 giant commit. Do better.
 - **Test the New Game flow early.** The last run's main menu rendered but New Game didn't work. Make sure the full flow works: title → new game → room → interaction.
 
@@ -66,14 +88,14 @@ The game must look intentional. Use these approaches:
 
 ## Architecture doc (MANDATORY)
 
-Write `ARCHITECTURE.md` — system overview, key modules, data flow, decisions. 10-20 lines.
+Write `game/.planning/ARCHITECTURE.md` — system overview, key modules, data flow, decisions. 10-20 lines.
 
 ## Skill evolution
 
-After completing the game, review your skills:
+After completing the game, review your skills in `game/.planning/skills/`:
 - Which inherited skills did you actually use?
 - Which did you improve?
 - What new skills did you create?
-- Write a `skills/CHANGELOG.md` documenting what changed and why.
+- Write `game/.planning/skills/CHANGELOG.md` documenting what changed and why.
 
 This changelog is how the next run learns from your experience.

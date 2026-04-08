@@ -24,6 +24,21 @@ Every implementation eval run MUST preserve these artifacts to be valid:
 If you cannot preserve a run (e.g., the worktree was already removed), the run is
 invalid and must be re-executed. See `gad:eval-run` skill for the full procedure.
 
+## The Project Layout Contract
+
+Every eval — regardless of framework — MUST put all workflow artifacts under
+`game/.planning/`. Source code lives in `src/`, assets in `public/`, process
+artifacts (workflow, decisions, skills, notes, architecture docs) under
+`.planning/`. Never mix them.
+
+This applies to bare and emergent evals too, even though they don't use GAD:
+they must still separate their self-created workflow from the source code so
+we can clearly inspect what methodology they invented.
+
+`gad eval preserve` warns when workflow files are found outside `.planning/`.
+Record layout violations in the human review notes — a violation does not
+automatically fail the run but indicates the agent ignored the contract.
+
 
 ---
 

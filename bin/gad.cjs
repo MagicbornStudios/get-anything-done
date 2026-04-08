@@ -3086,7 +3086,11 @@ const evalPreserve = defineCommand({
     }
     const from = path.resolve(args.from);
     if (!fs.existsSync(from)) {
-      outputError(`Source path does not exist: ${from}`);
+      outputError(
+        `Source path does not exist: ${from}\n` +
+        `  The worktree may have been removed. Worktrees must be preserved IMMEDIATELY\n` +
+        `  after the agent completes — before any cleanup. See gad:eval-run skill.`
+      );
       return;
     }
 
@@ -3184,6 +3188,21 @@ const evalPreserve = defineCommand({
       }
     }
 
+    // Detect workflow artifacts OUTSIDE .planning/ (violation of layout contract)
+    const workflowArtifactNames = ['WORKFLOW.md', 'ARCHITECTURE.md', 'DECISIONS.md', 'DECISIONS.xml', 'NOTES.md', 'CHANGELOG.md', 'ROADMAP.md', 'ROADMAP.xml', 'TASK-REGISTRY.md', 'TASK-REGISTRY.xml', 'STATE.md', 'STATE.xml', 'VERIFICATION.md'];
+    const misplaced = [];
+    const hasPlanningDir = fs.existsSync(path.join(runTargetDir, '.planning'));
+    for (const entry of fs.readdirSync(runTargetDir)) {
+      if (entry === '.planning' || entry === '_worktree_root_extras') continue;
+      if (workflowArtifactNames.includes(entry)) {
+        misplaced.push(entry);
+      }
+      // Also check for a skills/ directory not under .planning/
+      if (entry === 'skills' && fs.statSync(path.join(runTargetDir, entry)).isDirectory()) {
+        misplaced.push('skills/');
+      }
+    }
+
     console.log(`\n✓ Preserved ${args.project} ${args.version}`);
     console.log(`  Project tree:    ${copiedCount} top-level entries → evals/${args.project}/${args.version}/run/`);
     if (rootExtrasCopied > 0) {
@@ -3191,6 +3210,18 @@ const evalPreserve = defineCommand({
     }
     console.log(`  Build:           ${buildPreserved ? 'preserved' : 'NOT FOUND (no dist/)'}`);
     console.log(`  CLI logs:        ${logsPreserved ? 'preserved' : 'NOT FOUND'}`);
+    console.log(`  .planning/ home: ${hasPlanningDir ? 'present' : 'MISSING'}`);
+
+    if (misplaced.length > 0) {
+      console.log(`\n⚠  Workflow artifacts found OUTSIDE game/.planning/:`);
+      for (const m of misplaced) console.log(`     ${m}`);
+      console.log(`   Contract violation: all workflow artifacts should live under game/.planning/.`);
+      console.log(`   See AGENTS.md layout requirements. Record this in the human review notes.`);
+    }
+    if (!hasPlanningDir) {
+      console.log(`\n⚠  No game/.planning/ directory found. Agent did not create a planning home.`);
+      console.log(`   This is a contract violation — all evals must put workflow artifacts in .planning/.`);
+    }
 
     if (!buildPreserved) {
       console.log(`\n⚠  No build was preserved. Agent did not produce game/dist/.`);

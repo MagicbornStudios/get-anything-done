@@ -3,6 +3,29 @@
 You are building a roguelike dungeon crawler game. Your job is to implement the full game
 described in `REQUIREMENTS.xml` and deliver a working production build.
 
+## Project layout (MANDATORY)
+
+Create the game under `game/` in the worktree root. All your WORKFLOW, SKILLS, DECISIONS,
+NOTES, ARCHITECTURE docs — anything that isn't source code — MUST live under `game/.planning/`.
+Do NOT put these files at the project root or mixed in with source code.
+
+```
+game/
+├── .planning/          ← ALL workflow artifacts go here
+│   ├── WORKFLOW.md     ← your task tracking (whatever format you choose)
+│   ├── DECISIONS.md    ← architectural decisions
+│   ├── ARCHITECTURE.md ← system design
+│   ├── skills/         ← any reusable patterns you document
+│   └── ...             ← anything else you create to organize your work
+├── src/                ← source code only
+├── public/             ← assets
+├── dist/               ← production build output
+└── package.json, tsconfig.json, etc.
+```
+
+This separation lets us clearly inspect what workflow artifacts you created without mixing
+them into the code. The format inside `.planning/` is entirely up to you.
+
 ## Before you start coding
 
 1. **Read `REQUIREMENTS.xml`** — this is what you're building. Read it carefully.
@@ -14,7 +37,8 @@ described in `REQUIREMENTS.xml` and deliver a working production build.
    - How will you remember architectural decisions you make?
    - How will you verify each piece works before moving on?
 
-Write your workflow system down in a file so you can reference it throughout the build.
+Write your workflow system down in **`game/.planning/`** (not at the project root) so you
+can reference it throughout the build. Use any file format you like.
 
 ## During implementation
 
