@@ -42,7 +42,7 @@ GAD does **not** infer paths from TypeScript or imports — only explicit string
 
 - **`gad snapshot`** prints the full planning bundle to **stdout** (or JSON with `--json` / agent profile). That content is not duplicated in log files.
 - Each **`gad`** invocation appends one JSON line under **`.planning/.gad-log/<YYYY-MM-DD>.jsonl`** at the resolved repo root (`ts`, `cmd`, `args`, `duration_ms`, `exit`, `summary` — usually empty). This is run metadata only, not snapshot text.
-- **RepoPlanner** (`loop-cli` in the monorepo) writes **`{ "at", "command" }`** lines to **`usage.jsonl`** for command-frequency tracking — not GAD and not snapshot bodies. Prefer **`gad`** for vendor project planning loops; reserve RepoPlanner scripts for monorepo init / embed flows where needed.
+- **Legacy RepoPlanner** (`pnpm planning` → `loop-cli.mjs`) is being **migrated off**; it only logged **`{ "at", "command" }`** to **`usage.jsonl`** (no snapshot body). Remaining monorepo uses (embed-pack, init templates, cockpit parsers) are tracked in **`custom_portfolio/.planning/REPOPLANNER-TO-GAD-MIGRATION-GAPS.md`** — target state is **GAD-only** CLI and artifacts.
 
 ## Key decisions
 
