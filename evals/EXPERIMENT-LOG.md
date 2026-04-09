@@ -84,8 +84,42 @@ Brownfield experiments may invalidate if GAD's overhead pays off on codebase ext
 
 ---
 
-## Round 4 — TBD
+## Round 4 — Greenfield, three-condition, requirements v4 (pressure-oriented)
 
-**Pending user decisions:**
-- Updated game requirements (v4) for greenfield
-- Whether to run greenfield v4 first or brownfield round 1 first
+**Date:** 2026-04-09
+**Requirements version:** v4 (pressure over features, authored-only, 4 gates including forge-with-ingenuity-payoff and pressure-mechanics)
+**Conditions:** GAD v10, Bare v5, Emergent v4 — run serially after round 3's parallel attempt hit the shared account rate limit (gad-62)
+**Framework versioning:** first round under trace schema v4 with hook-captured events (phase 25). Framework version stamped on every TRACE.json.
+
+**Results:**
+
+| Condition | Version | Human (rubric) | Composite | Notes |
+|-----------|---------|----------------|-----------|-------|
+| **Bare v5** | v5 | TBD | TBD | Complete playable game against v4 pressure requirements. DOM + iconify-icon + @iconify-json/game-icons. 2 floors × 8 rooms. |
+| **Emergent v4** | v4 | **0.805** (rubric aggregate) | TBD | Complete playable, "incredible" book-like UI, DoT/resistance/stacking mechanics, first observed full skill ratcheting cycle — authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG. 6-dimension rubric including skill_inheritance_effectiveness 0.95. |
+| **GAD v10** | v4 | **0.02** (rubric aggregate) | — | **API-interrupted** (HTTP 529 overloaded_error, gad-64). Title screen rendered with a novel visual treatment (ui_polish 0.10) but planning phase crashed before scene implementation. Excluded from cross-round quality comparisons per gad-63 + gad-64. |
+| GAD v9 | v4 | 0.05 (legacy score) | — | Rate-limited during round 4 attempt #1 (parallel). Start screen only. Excluded from cross-round quality. |
+
+**Key findings — freedom hypothesis holds under v4:**
+- Under pressure-oriented v4 requirements, Bare + Emergent both shipped complete playable games; GAD was api-interrupted before implementation. Freedom hypothesis (gad-36) still holds, now with v4 as the stricter test.
+- **First observed full skill ratcheting cycle.** Emergent v4 inherited from emergent v3, authored 2 new project-tailored skills (dom-over-kaplay, pressure-forge-coupling), documented the disposition of each inherited skill in CHANGELOG.md, and deprecated kaplay-scene-pattern as unusable under DOM architecture. This is the first round where the compound-skills hypothesis (gad-65) has evidence to evaluate.
+- **Convergent design evolution.** All three conditions independently chose DOM + iconify-icon + @iconify-json/game-icons + per-floor forced-craft encounters, suggesting v4's pressure requirements are narrow enough to collapse the solution space regardless of framework.
+- **Rubric replaces single-score human review** (phase 27 track 1, gad-61). Emergent gets a 6th dimension `skill_inheritance_effectiveness` as the CSH test signal.
+
+**User playtest captured 12 v5 requirements** (`evals/_v5-requirements-addendum.md`): training-via-encounter, rune discovery loop, merchants, NPC dialogue, inventory/equipment + skill tree, spell/skill loadout slots, end-boss reachability, save checkpoints, notification lifecycle, rest rooms actually rest, 2D map navigation.
+
+**Documented in:**
+- `evals/FINDINGS-2026-04-09-round-4-complete.md`
+- `evals/FINDINGS-2026-04-09-round-4-partial.md`
+- `evals/_v5-requirements-addendum.md`
+
+**Decisions landed this round:** gad-61 (programmatic eval priority), gad-62 (serial default), gad-63 (rate-limited preserve-but-exclude), gad-64 (api-interrupted as distinct failure category), gad-65 (compound-skills hypothesis), gad-66 (authored-content injection experiment queued), gad-67 (serial as permanent default).
+
+**Led to:**
+- v5 requirements addendum (12 new/changed requirements from playtest)
+- Phase 27 rubric shipping (per-dimension scoring, RubricRadar SVG, /rubric page)
+- gad-66 content-pack extraction experiment
+- HTTP 529 investigation queued before GAD v11 retry (task 21-23b)
+- Serial-only execution as permanent default (gad-67)
+
+---

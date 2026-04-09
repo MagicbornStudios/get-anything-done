@@ -29,7 +29,7 @@
     "total_commits": 0,
     "task_id_commits": 0,
     "batch_commits": 0,
-    "per_task_discipline": 0.0
+    "per_task_discipline": 0
   },
   "planning_quality": {
     "phases_planned": 7,
@@ -60,18 +60,41 @@
   "scores": {
     "requirement_coverage": 0.083,
     "planning_quality": 0.9,
-    "per_task_discipline": 0.0,
+    "per_task_discipline": 0,
     "skill_accuracy": null,
     "time_efficiency": 0.7,
-    "human_review": null,
+    "human_review": 0.02,
     "composite": null
   },
   "scores_note": "API-interrupted run. Planning quality is the HIGHEST of any eval run captured (0.9) — full 7-phase roadmap with 20 tasks, STATE authored with explicit next-action, DECISIONS scaffolded, phase 01 verified. Requirement coverage is the LOWEST of any round 4 run (0.083) — zero scene implementation reached. Strongest freedom-hypothesis signal in the dataset: GAD planning + data-layer authoring ate the tool budget before implementation could begin.",
   "human_review": {
-    "score": null,
-    "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output.",
-    "reviewed_by": null,
-    "reviewed_at": null
+    "rubric_version": "v1",
+    "dimensions": {
+      "playability": {
+        "score": 0,
+        "notes": null
+      },
+      "ui_polish": {
+        "score": 0.1,
+        "notes": null
+      },
+      "mechanics_implementation": {
+        "score": 0,
+        "notes": null
+      },
+      "ingenuity_requirement_met": {
+        "score": 0,
+        "notes": null
+      },
+      "stability": {
+        "score": 0,
+        "notes": null
+      }
+    },
+    "aggregate_score": 0.02,
+    "notes": "GAD v10 — api-interrupted per gad-64 (HTTP 529 pattern crashed the planning phase before scene implementation). Main title screen felt novel and visually cool which is where the 0.10 on UI polish comes from, but everything beyond it is absent: no game loop, no mechanics, no ingenuity payoff, no stable play. Preserved as a data point, excluded from cross-round quality comparisons (gad-63 + gad-64). User playtest 2026-04-09.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-09T18:56:35.493Z"
   },
   "notes": "Round 4 greenfield, GAD condition, v4 requirements. API-interrupted after reaching phase 02 completion. Data point preserved because phases 01+02 completed cleanly with the fullest planning suite captured to date."
 }

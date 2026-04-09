@@ -339,29 +339,68 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "per_task_discipline": 0,
       "skill_accuracy": null,
       "time_efficiency": 0.7,
-      "human_review": null,
+      "human_review": 0.02,
       "composite": null
     },
     "humanReview": {
-      "score": null,
-      "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output.",
-      "reviewed_by": null,
-      "reviewed_at": null
-    },
-    "humanReviewNormalized": {
-      "rubric_version": "legacy-v0",
+      "rubric_version": "v1",
       "dimensions": {
-        "overall": {
-          "score": null,
-          "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output."
+        "playability": {
+          "score": 0,
+          "notes": null
+        },
+        "ui_polish": {
+          "score": 0.1,
+          "notes": null
+        },
+        "mechanics_implementation": {
+          "score": 0,
+          "notes": null
+        },
+        "ingenuity_requirement_met": {
+          "score": 0,
+          "notes": null
+        },
+        "stability": {
+          "score": 0,
+          "notes": null
         }
       },
-      "aggregate_score": null,
-      "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output.",
-      "reviewed_by": null,
-      "reviewed_at": null,
-      "is_legacy": true,
-      "is_empty": true
+      "aggregate_score": 0.02,
+      "notes": "GAD v10 — api-interrupted per gad-64 (HTTP 529 pattern crashed the planning phase before scene implementation). Main title screen felt novel and visually cool which is where the 0.10 on UI polish comes from, but everything beyond it is absent: no game loop, no mechanics, no ingenuity payoff, no stable play. Preserved as a data point, excluded from cross-round quality comparisons (gad-63 + gad-64). User playtest 2026-04-09.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T18:56:35.493Z"
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "v1",
+      "dimensions": {
+        "playability": {
+          "score": 0,
+          "notes": null
+        },
+        "ui_polish": {
+          "score": 0.1,
+          "notes": null
+        },
+        "mechanics_implementation": {
+          "score": 0,
+          "notes": null
+        },
+        "ingenuity_requirement_met": {
+          "score": 0,
+          "notes": null
+        },
+        "stability": {
+          "score": 0,
+          "notes": null
+        }
+      },
+      "aggregate_score": 0.02,
+      "notes": "GAD v10 — api-interrupted per gad-64 (HTTP 529 pattern crashed the planning phase before scene implementation). Main title screen felt novel and visually cool which is where the 0.10 on UI polish comes from, but everything beyond it is absent: no game loop, no mechanics, no ingenuity payoff, no stable play. Preserved as a data point, excluded from cross-round quality comparisons (gad-63 + gad-64). User playtest 2026-04-09.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T18:56:35.493Z",
+      "is_legacy": false,
+      "is_empty": false
     },
     "skillAccuracyBreakdown": null,
     "requirementsDoc": {
@@ -3049,8 +3088,8 @@ export const ROUND_SUMMARIES: RoundSummary[] = [
   },
   {
     "round": "Round 4",
-    "title": "TBD",
-    "body": "**Pending user decisions:**\n- Updated game requirements (v4) for greenfield\n- Whether to run greenfield v4 first or brownfield round 1 first"
+    "title": "Greenfield, three-condition, requirements v4 (pressure-oriented)",
+    "body": "**Date:** 2026-04-09\n**Requirements version:** v4 (pressure over features, authored-only, 4 gates including forge-with-ingenuity-payoff and pressure-mechanics)\n**Conditions:** GAD v10, Bare v5, Emergent v4 — run serially after round 3's parallel attempt hit the shared account rate limit (gad-62)\n**Framework versioning:** first round under trace schema v4 with hook-captured events (phase 25). Framework version stamped on every TRACE.json.\n\n**Results:**\n\n| Condition | Version | Human (rubric) | Composite | Notes |\n|-----------|---------|----------------|-----------|-------|\n| **Bare v5** | v5 | TBD | TBD | Complete playable game against v4 pressure requirements. DOM + iconify-icon + @iconify-json/game-icons. 2 floors × 8 rooms. |\n| **Emergent v4** | v4 | **0.805** (rubric aggregate) | TBD | Complete playable, \"incredible\" book-like UI, DoT/resistance/stacking mechanics, first observed full skill ratcheting cycle — authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG. 6-dimension rubric including skill_inheritance_effectiveness 0.95. |\n| **GAD v10** | v4 | **0.02** (rubric aggregate) | — | **API-interrupted** (HTTP 529 overloaded_error, gad-64). Title screen rendered with a novel visual treatment (ui_polish 0.10) but planning phase crashed before scene implementation. Excluded from cross-round quality comparisons per gad-63 + gad-64. |\n| GAD v9 | v4 | 0.05 (legacy score) | — | Rate-limited during round 4 attempt #1 (parallel). Start screen only. Excluded from cross-round quality. |\n\n**Key findings — freedom hypothesis holds under v4:**\n- Under pressure-oriented v4 requirements, Bare + Emergent both shipped complete playable games; GAD was api-interrupted before implementation. Freedom hypothesis (gad-36) still holds, now with v4 as the stricter test.\n- **First observed full skill ratcheting cycle.** Emergent v4 inherited from emergent v3, authored 2 new project-tailored skills (dom-over-kaplay, pressure-forge-coupling), documented the disposition of each inherited skill in CHANGELOG.md, and deprecated kaplay-scene-pattern as unusable under DOM architecture. This is the first round where the compound-skills hypothesis (gad-65) has evidence to evaluate.\n- **Convergent design evolution.** All three conditions independently chose DOM + iconify-icon + @iconify-json/game-icons + per-floor forced-craft encounters, suggesting v4's pressure requirements are narrow enough to collapse the solution space regardless of framework.\n- **Rubric replaces single-score human review** (phase 27 track 1, gad-61). Emergent gets a 6th dimension `skill_inheritance_effectiveness` as the CSH test signal.\n\n**User playtest captured 12 v5 requirements** (`evals/_v5-requirements-addendum.md`): training-via-encounter, rune discovery loop, merchants, NPC dialogue, inventory/equipment + skill tree, spell/skill loadout slots, end-boss reachability, save checkpoints, notification lifecycle, rest rooms actually rest, 2D map navigation.\n\n**Documented in:**\n- `evals/FINDINGS-2026-04-09-round-4-complete.md`\n- `evals/FINDINGS-2026-04-09-round-4-partial.md`\n- `evals/_v5-requirements-addendum.md`\n\n**Decisions landed this round:** gad-61 (programmatic eval priority), gad-62 (serial default), gad-63 (rate-limited preserve-but-exclude), gad-64 (api-interrupted as distinct failure category), gad-65 (compound-skills hypothesis), gad-66 (authored-content injection experiment queued), gad-67 (serial as permanent default).\n\n**Led to:**\n- v5 requirements addendum (12 new/changed requirements from playtest)\n- Phase 27 rubric shipping (per-dimension scoring, RubricRadar SVG, /rubric page)\n- gad-66 content-pack extraction experiment\n- HTTP 529 investigation queued before GAD v11 retry (task 21-23b)\n- Serial-only execution as permanent default (gad-67)\n\n---"
   }
 ];
 
