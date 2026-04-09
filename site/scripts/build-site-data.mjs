@@ -1079,8 +1079,15 @@ function normalizeHumanReviewPrebuild(humanReview) {
  * showing the file content without a network fetch.
  */
 function loadRequirementsForRun(project, requirementsVersion) {
-  // Priority 1: v4 template (current)
-  if (requirementsVersion === 'v4') {
+  // Priority 1: current template version (v5 as of 2026-04-09). The current
+  // template always holds the LATEST requirements version and carries the full
+  // history of addendums inside it. Any run stamped with the template's current
+  // version reads directly from the template. Pre-current versions fall through
+  // to the snapshot path below.
+  const currentTemplateVersion = 'v5';
+  if (requirementsVersion === currentTemplateVersion || requirementsVersion === 'v4') {
+    // v4 still resolves to the same file for now because the template includes
+    // the full v4 base + v5 addendum — a v4-tagged run can still read it.
     const candidates = [
       path.join(EVALS_DIR, project, 'template', '.planning', 'REQUIREMENTS.xml'),
       path.join(EVALS_DIR, project, 'template', 'REQUIREMENTS.xml'),
