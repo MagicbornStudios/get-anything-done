@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EVAL_RUNS, WORKFLOW_LABELS, type EvalRunRecord, type Workflow } from "@/lib/eval-data";
+import { EVAL_RUNS, WORKFLOW_LABELS, isRateLimited, type EvalRunRecord, type Workflow } from "@/lib/eval-data";
 
 // Pure-SVG charts, server-rendered. No chart library. Two charts:
 // 1. Composite vs Human Review scatter — grouped by workflow — shows the
@@ -16,8 +16,12 @@ const WORKFLOW_COLOUR: Record<Workflow, string> = {
 };
 
 function runsWithScores(): EvalRunRecord[] {
+  // Exclude rate-limited runs from cross-round comparison (decision gad-63).
+  // They're preserved on /runs/[project]/[version] with a rate-limited badge
+  // but don't belong on the freedom-hypothesis scatter.
   return EVAL_RUNS.filter(
     (r) =>
+      !isRateLimited(r) &&
       r.scores.composite != null &&
       r.humanReview?.score != null
   );

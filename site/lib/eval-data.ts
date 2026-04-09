@@ -104,3 +104,24 @@ export function findRun(project: string, version: string): EvalRunRecord | undef
 export function humanReviewNotes(r: EvalRunRecord): string | null {
   return r.humanReview?.notes ?? null;
 }
+
+/**
+ * True when the run hit a rate limit before completing. Rate-limited runs
+ * are preserved as data points but explicitly excluded from cross-round
+ * quality comparisons per decision gad-63.
+ */
+export function isRateLimited(r: EvalRunRecord): boolean {
+  if (!r.timing) return false;
+  // Field is on the nested raw timing object.
+  const flag = (r.timing as Record<string, unknown>).rate_limited;
+  return flag === true;
+}
+
+/**
+ * Returns only runs suitable for cross-round comparison — completed runs
+ * with a scored composite. Rate-limited runs are filtered out; runs without
+ * a composite score are also filtered.
+ */
+export function comparableRuns(runs: EvalRunRecord[] = EVAL_RUNS): EvalRunRecord[] {
+  return runs.filter((r) => !isRateLimited(r) && r.scores.composite != null);
+}

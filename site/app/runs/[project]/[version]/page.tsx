@@ -14,6 +14,7 @@ import {
   PROJECT_LABELS,
   WORKFLOW_LABELS,
   findRun,
+  isRateLimited,
   playableUrl,
 } from "@/lib/eval-data";
 
@@ -135,6 +136,11 @@ export default async function RunPage({
 
   const produced = PRODUCED_ARTIFACTS[`${run.project}/${run.version}`];
   const videos = compositionsForRun(run.project, run.version);
+  const rateLimited = isRateLimited(run);
+  const rateLimitNote =
+    rateLimited && run.timing
+      ? ((run.timing as Record<string, unknown>).rate_limit_note as string | undefined) ?? null
+      : null;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -162,6 +168,11 @@ export default async function RunPage({
               )
             ) : (
               <Badge variant="outline">pre-gate requirements</Badge>
+            )}
+            {rateLimited && (
+              <Badge variant="outline" className="border-amber-500/50 text-amber-300">
+                ⚠ rate limited — not comparable
+              </Badge>
             )}
           </div>
 
@@ -205,7 +216,36 @@ export default async function RunPage({
                 )}
               </div>
 
-              {divergent && (
+              {rateLimited && (
+                <div className="mt-6 rounded-2xl border border-amber-500/50 bg-amber-500/5 p-5">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-amber-400" aria-hidden />
+                    <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+                      Rate-limited run · excluded from cross-round comparisons
+                    </p>
+                  </div>
+                  <p className="mt-2 text-base leading-7 text-foreground">
+                    This run hit an account-level rate limit before completing. The data
+                    captured here reflects partial progress only — it is <strong>not</strong>{" "}
+                    included in the freedom-hypothesis scatter, the Results card grid, or any
+                    aggregate comparison on the site (decision gad-63). Preserved here as a
+                    data point for planning-differential analysis and honest documentation.
+                  </p>
+                  {rateLimitNote && (
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      <strong>Details:</strong> {rateLimitNote}
+                    </p>
+                  )}
+                  <Link
+                    href="/findings/2026-04-09-round-4-partial"
+                    className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+                  >
+                    Full round 4 partial-results finding →
+                  </Link>
+                </div>
+              )}
+
+              {divergent && !rateLimited && (
                 <div className="mt-6 rounded-2xl border border-red-500/40 bg-red-500/5 p-5">
                   <p className="text-xs uppercase tracking-wider text-red-400">
                     Process metrics diverged from reality
