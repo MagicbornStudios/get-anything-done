@@ -637,9 +637,14 @@
       <goal>Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content — the scaffold establishes the pattern and the first composition is a placeholder.</goal>
       <keywords>remotion,scaffold,videos-route,player-embed</keywords>
     </task>
-    <task id="22-32" agent-id="" status="planned">
-      <goal>Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output: hook-aware route chosen, Claude Code PreToolUse/PostToolUse hook integration first, Codex and other agents as future converters, freeze-old-stamp-new backfill, hook runtime detection at eval-run time, phase 25 task list. This is the discuss-phase artifact that feeds plan-phase 25.</goal>
+    <task id="22-32" agent-id="" status="done">
+      <goal>Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output.</goal>
+      <resolution>Full discuss-phase output written with 9 answered questions + 4-milestone breakdown. Session 5 then updated it with confirmed answers (hybrid file+hook skill marker, framework-versioned handler, 4KB cap, defer Remotion). Session 6 converted this into the concrete PLAN.md at .planning/plans/phase-25/PLAN.md with 22 atomic tasks across 4 milestones.</resolution>
       <keywords>phase-25,discuss-phase,trace-schema-v4,planning-doc</keywords>
+    </task>
+    <task id="22-33" agent-id="" status="planned">
+      <goal>`gad install` CLI subcommand for automating framework installation into agent runtimes. Subcommands: `gad install skills [--target .claude|.agents|all]` copies vendor/get-anything-done/skills/* into target skill directories; `gad install agents [--target]` copies agents/*.md; `gad install commands [--target]` copies commands/gad/*.md; `gad install hooks` writes PreToolUse/PostToolUse handler references into settings.json (also referenced by phase 25 task 25-04); `gad install all` does all of the above. Reverse: `gad uninstall <target>`. Session 6 ran this manually via filesystem copy — this task automates it so future installs and updates don't drift. Belongs in phase 22 because it's site/framework infrastructure, not trace work.</goal>
+      <keywords>gad-install,cli,automation,infrastructure</keywords>
     </task>
   </phase>
 </task-registry>
