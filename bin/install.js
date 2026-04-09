@@ -4691,14 +4691,22 @@ function install(isGlobal, runtime = 'claude') {
     }
   }
 
-  // Copy get-anything-done skill with path replacement
+  // Copy get-anything-done skill with path replacement.
+  // This directory ships inside the npm-published tarball but is absent from
+  // local git checkouts (the skill is regenerated during `npm publish`). Skip
+  // gracefully when running from a checkout so the installer doesn't crash
+  // and leave the previous install in a broken state (see task 22-34).
   const skillSrc = path.join(src, 'get-anything-done');
-  const skillDest = path.join(targetDir, 'get-anything-done');
-  copyWithPathReplacement(skillSrc, skillDest, pathPrefix, runtime, false, isGlobal);
-  if (verifyInstalled(skillDest, 'get-anything-done')) {
-    console.log(`  ${green}✓${reset} Installed get-anything-done`);
+  if (fs.existsSync(skillSrc)) {
+    const skillDest = path.join(targetDir, 'get-anything-done');
+    copyWithPathReplacement(skillSrc, skillDest, pathPrefix, runtime, false, isGlobal);
+    if (verifyInstalled(skillDest, 'get-anything-done')) {
+      console.log(`  ${green}✓${reset} Installed get-anything-done`);
+    } else {
+      failures.push('get-anything-done');
+    }
   } else {
-    failures.push('get-anything-done');
+    console.log(`  ${yellow}⚠${reset} Skipping get-anything-done skill (not found in source — local checkout?)`);
   }
 
   // Copy agents to agents directory
@@ -4758,9 +4766,17 @@ function install(isGlobal, runtime = 'claude') {
     }
   }
 
+  // Copy CHANGELOG.md and write VERSION into the get-anything-done skill dir.
+  // Ensure the directory exists first — local git checkouts skip the skill
+  // copy above, so the parent dir may not be there yet. Create it if needed.
+  const gadSkillDir = path.join(targetDir, 'get-anything-done');
+  if (!fs.existsSync(gadSkillDir)) {
+    fs.mkdirSync(gadSkillDir, { recursive: true });
+  }
+
   // Copy CHANGELOG.md
   const changelogSrc = path.join(src, 'CHANGELOG.md');
-  const changelogDest = path.join(targetDir, 'get-anything-done', 'CHANGELOG.md');
+  const changelogDest = path.join(gadSkillDir, 'CHANGELOG.md');
   if (fs.existsSync(changelogSrc)) {
     fs.copyFileSync(changelogSrc, changelogDest);
     if (verifyFileInstalled(changelogDest, 'CHANGELOG.md')) {
@@ -4771,7 +4787,7 @@ function install(isGlobal, runtime = 'claude') {
   }
 
   // Write VERSION file
-  const versionDest = path.join(targetDir, 'get-anything-done', 'VERSION');
+  const versionDest = path.join(gadSkillDir, 'VERSION');
   fs.writeFileSync(versionDest, pkg.version);
   if (verifyFileInstalled(versionDest, 'VERSION')) {
     console.log(`  ${green}✓${reset} Wrote VERSION (${pkg.version})`);

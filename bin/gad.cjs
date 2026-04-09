@@ -5476,6 +5476,176 @@ const worktreeCmd = defineCommand({
   subCommands: { list: worktreeList, show: worktreeShow, clean: worktreeClean, prune: worktreePrune },
 });
 
+// ---------------------------------------------------------------------------
+// Install subcommand — gad install hooks, gad install all, gad uninstall hooks
+// ---------------------------------------------------------------------------
+//
+// Decision gad-59 pins the hook handler location as framework-versioned in
+// vendor/get-anything-done/bin/gad-trace-hook.cjs. `gad install hooks` writes
+// that absolute path into ~/.claude/settings.json as PreToolUse + PostToolUse
+// handler references. `gad uninstall hooks` removes them. Both operations
+// merge into existing settings — they don't overwrite the user's other hooks
+// or statusline config.
+//
+// Framework-wide install (skills, agents, commands, templates) delegates to
+// the existing bin/install.js which ships with the full GSD-pattern cross-
+// runtime installer (--claude --cursor --codex --all etc). This wrapper just
+// invokes it via child_process for the framework subcommand.
+
+const GAD_HOOK_MARKER = 'gad-trace-hook';
+
+function getClaudeSettingsPath(isGlobal) {
+  if (isGlobal) {
+    return path.join(require('os').homedir(), '.claude', 'settings.json');
+  }
+  return path.join(process.cwd(), '.claude', 'settings.json');
+}
+
+function readJsonSafe(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function writeJsonPretty(file, data) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
+}
+
+const installHooks = defineCommand({
+  meta: {
+    name: 'hooks',
+    description: 'Wire GAD trace hook (PreToolUse + PostToolUse) into Claude Code settings.json',
+  },
+  args: {
+    global: { type: 'boolean', description: 'Install into ~/.claude/settings.json instead of local .claude/' },
+  },
+  run: ({ args }) => {
+    const isGlobal = Boolean(args.global);
+    const settingsPath = getClaudeSettingsPath(isGlobal);
+    const handlerPath = path.resolve(__dirname, 'gad-trace-hook.cjs');
+
+    if (!fs.existsSync(handlerPath)) {
+      console.error(`gad install hooks: handler not found at ${handlerPath}`);
+      process.exit(1);
+    }
+
+    const settings = readJsonSafe(settingsPath) || {};
+    settings.hooks = settings.hooks || {};
+
+    const hookCommand = `node "${handlerPath}"`;
+    const handlerEntry = {
+      hooks: [{ type: 'command', command: hookCommand }],
+    };
+
+    // Merge into PreToolUse and PostToolUse. If the user already has a
+    // GAD trace hook entry (detected by the hook command containing
+    // "gad-trace-hook"), replace it rather than duplicate.
+    for (const hookType of ['PreToolUse', 'PostToolUse']) {
+      const existing = Array.isArray(settings.hooks[hookType]) ? settings.hooks[hookType] : [];
+      // Filter out any previous GAD trace hook entries
+      const filtered = existing.filter((entry) => {
+        if (!entry || !Array.isArray(entry.hooks)) return true;
+        return !entry.hooks.some((h) => typeof h?.command === 'string' && h.command.includes(GAD_HOOK_MARKER));
+      });
+      filtered.push(handlerEntry);
+      settings.hooks[hookType] = filtered;
+    }
+
+    writeJsonPretty(settingsPath, settings);
+    console.log(`✓ Installed GAD trace hooks`);
+    console.log(`  handler: ${handlerPath}`);
+    console.log(`  settings: ${settingsPath}`);
+    console.log(`\n  Hooks wired: PreToolUse, PostToolUse`);
+    console.log(`  Events written to <project>/.planning/.trace-events.jsonl per run`);
+  },
+});
+
+const uninstallHooks = defineCommand({
+  meta: {
+    name: 'hooks',
+    description: 'Remove GAD trace hook entries from Claude Code settings.json',
+  },
+  args: {
+    global: { type: 'boolean', description: 'Uninstall from ~/.claude/settings.json instead of local .claude/' },
+  },
+  run: ({ args }) => {
+    const isGlobal = Boolean(args.global);
+    const settingsPath = getClaudeSettingsPath(isGlobal);
+    const settings = readJsonSafe(settingsPath);
+    if (!settings || !settings.hooks) {
+      console.log('No hooks configured; nothing to uninstall.');
+      return;
+    }
+
+    let removed = 0;
+    for (const hookType of ['PreToolUse', 'PostToolUse']) {
+      if (!Array.isArray(settings.hooks[hookType])) continue;
+      const before = settings.hooks[hookType].length;
+      settings.hooks[hookType] = settings.hooks[hookType].filter((entry) => {
+        if (!entry || !Array.isArray(entry.hooks)) return true;
+        return !entry.hooks.some((h) => typeof h?.command === 'string' && h.command.includes(GAD_HOOK_MARKER));
+      });
+      removed += before - settings.hooks[hookType].length;
+      if (settings.hooks[hookType].length === 0) {
+        delete settings.hooks[hookType];
+      }
+    }
+
+    writeJsonPretty(settingsPath, settings);
+    console.log(`✓ Removed ${removed} GAD trace hook entr${removed === 1 ? 'y' : 'ies'}`);
+    console.log(`  settings: ${settingsPath}`);
+  },
+});
+
+const installAll = defineCommand({
+  meta: {
+    name: 'all',
+    description: 'Delegate to bin/install.js for full framework install (skills, agents, commands, hooks)',
+  },
+  args: {
+    claude: { type: 'boolean' },
+    cursor: { type: 'boolean' },
+    codex: { type: 'boolean' },
+    local: { type: 'boolean' },
+    global: { type: 'boolean' },
+  },
+  run: ({ args }) => {
+    const { spawnSync } = require('child_process');
+    const installerPath = path.resolve(__dirname, 'install.js');
+    const flagArgs = [];
+    if (args.claude) flagArgs.push('--claude');
+    if (args.cursor) flagArgs.push('--cursor');
+    if (args.codex) flagArgs.push('--codex');
+    if (args.local) flagArgs.push('--local');
+    if (args.global) flagArgs.push('--global');
+    if (flagArgs.length === 0) {
+      console.log('Usage: gad install all [--claude] [--cursor] [--codex] [--local|--global]');
+      console.log('       runs bin/install.js with the given flags');
+      return;
+    }
+    const result = spawnSync('node', [installerPath, ...flagArgs], { stdio: 'inherit' });
+    process.exit(result.status || 0);
+  },
+});
+
+const installCmd = defineCommand({
+  meta: { name: 'install', description: 'Install GAD into an agent runtime (hooks, framework, or full install)' },
+  subCommands: {
+    hooks: installHooks,
+    all: installAll,
+  },
+});
+
+const uninstallCmd = defineCommand({
+  meta: { name: 'uninstall', description: 'Uninstall GAD trace hooks (full uninstall: use install.js --uninstall)' },
+  subCommands: {
+    hooks: uninstallHooks,
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -5508,6 +5678,8 @@ const main = defineCommand({
     log: logCmd,
     worktree: worktreeCmd,
     'migrate-schema': migrateSchema,
+    install: installCmd,
+    uninstall: uninstallCmd,
   },
 });
 
