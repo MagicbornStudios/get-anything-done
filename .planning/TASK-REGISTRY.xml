@@ -646,9 +646,32 @@
       <goal>`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modules/get-anything-done/get-anything-done/`). This task wraps it in a `gad install` subcommand that resolves paths correctly whether running from a git checkout (vendor/get-anything-done/) or an npm install. Related to 22-34 (fix install.js directly) — this task may become a no-op if 22-34 fixes the path resolution at the install.js level.</goal>
       <keywords>gad-install,cli,wrapper,infrastructure</keywords>
     </task>
-    <task id="22-34" agent-id="" status="planned">
-      <goal>Fix path resolution bug in bin/install.js: copyWithPathReplacement reads from `&lt;repo-root&gt;/get-anything-done/` which only exists when the installer runs from within an npm-published `node_modules/get-anything-done/` tarball. For local git checkouts (vendor/get-anything-done/) the extra subdirectory doesn't exist and the installer crashes mid-copy after deleting target files. Fix: detect the installer's own directory layout via `__dirname` and walk up to the package root correctly, or accept a --source flag. Session 7 hit this bug — crash deleted .claude/commands/gad/ and .claude/hooks/statusline.js before erroring out, recovery required manual filesystem copy. Add a test that runs install.js --claude --local from a git checkout and verifies no deletions.</goal>
+    <task id="22-34" agent-id="" status="done">
+      <goal>Fix path resolution bug in bin/install.js for local git checkouts.</goal>
+      <resolution>Two fixes in bin/install.js: (1) added existence check before copying the get-anything-done skill directory — local checkouts skip gracefully with a warning instead of crashing on ENOENT. (2) ensure the CHANGELOG/VERSION destination parent directory (targetDir/get-anything-done/) exists via mkdir recursive, since the prior skill copy may have been skipped. Verified by running `node bin/install.js --claude --cursor --codex --local` to clean completion across all three runtimes. Test also merged existing settings hooks successfully.</resolution>
       <keywords>install-js,bug,path-resolution,local-checkout</keywords>
+    </task>
+    <task id="25-01" agent-id="" status="done">
+      <goal>Design trace event envelope + 4 event types as a reusable library in lib/trace-schema.cjs.</goal>
+      <resolution>lib/trace-schema.cjs exports TRACE_SCHEMA_VERSION=4, EVENT_TYPES (tool_use, skill_invocation, subagent_spawn, file_mutation), factory functions for each event type, type guard isTraceEvent, and parseTraceEventsJsonl parser. Each factory takes a plain options object and returns an envelope with ts (ISO8601), seq (monotonic int), type, and type-specific fields. Smoke-tested via node REPL: factories return valid events, type guard round-trips, parser handles invalid lines gracefully.</resolution>
+      <keywords>trace-schema,v4,event-types,library</keywords>
+    </task>
+    <task id="25-02" agent-id="" status="done">
+      <goal>Write the hook handler script at bin/gad-trace-hook.cjs that Claude Code invokes for PreToolUse/PostToolUse.</goal>
+      <resolution>bin/gad-trace-hook.cjs reads hook payload from stdin, finds project root by walking up for .planning/, reads .planning/.trace-active-skill marker, detects transitions against .planning/.trace-last-skill file, and appends events to .planning/.trace-events.jsonl synchronously. PreToolUse emits only skill_invocation events (on transition); PostToolUse emits tool_use plus conditionally subagent_spawn (for Task tool) and file_mutation (for Write/Edit/NotebookEdit). Monotonic seq persisted in .planning/.trace-seq. Never blocks the main agent — all errors logged to stderr and hook exits 0. Verified end-to-end with a mock PostToolUse Bash payload: valid tool_use event appended correctly.</resolution>
+      <depends>25-01,25-03</depends>
+      <keywords>hook-handler,claude-code,pretooluse,posttooluse,trace</keywords>
+    </task>
+    <task id="25-03" agent-id="" status="done">
+      <goal>4 KB truncation helper with head+tail split for trace event outputs.</goal>
+      <resolution>lib/trace-truncate.cjs exports truncateOutput({ value, truncated, originalBytes }) and truncateInputsObject helpers. Default cap 4096 bytes (decision gad-60), split 2048 head + 2048 tail joined by "... [truncated N bytes] ..." marker. Multibyte-safe via Buffer slicing. Returns the truncated flag for the caller to stamp on the event. Smoke-tested: 11-byte input passes through (truncated=false, 11 bytes); 5000-byte input truncates to 4127 bytes (truncated=true, original=5000).</resolution>
+      <keywords>truncation,output-cap,4kb,trace</keywords>
+    </task>
+    <task id="25-04" agent-id="" status="done">
+      <goal>`gad install hooks` CLI subcommand that wires the trace hook into Claude Code settings.json.</goal>
+      <resolution>Added install + uninstall subcommands in bin/gad.cjs. `gad install hooks` (optional --global) merges a PreToolUse + PostToolUse entry pointing at the absolute path to bin/gad-trace-hook.cjs into .claude/settings.json (or ~/.claude/settings.json with --global). Merges into existing hooks — preserves all other entries. Idempotent: existing GAD trace entries (detected by "gad-trace-hook" substring) are filtered before re-adding. `gad uninstall hooks` is the reverse. `gad install all --claude --cursor --codex --local` delegates to bin/install.js as a wrapper satisfying task 22-33 via delegation. Verified: installed into a settings.json with 8 existing hook entries, all preserved, new GAD entries added to PreToolUse and PostToolUse.</resolution>
+      <depends>25-02</depends>
+      <keywords>cli,install-hooks,settings-json,gad-install</keywords>
     </task>
     <task id="22-35" agent-id="" status="done">
       <goal>Fix YAML parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). Descriptions with embedded colons like "methodology:" and "discipline:" were parsed by js-yaml as key-value separators, breaking skill loading in Claude Code. Fix by converting plain scalar descriptions to YAML folded block scalar form (`description: &gt;- ...`) which treats the body as opaque.</goal>
