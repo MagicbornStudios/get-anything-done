@@ -414,4 +414,28 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Skill format should include: pattern, when-to-use, failure-modes, and known-fixes sections. Previous-workflow.md should include specific error messages and resolutions, not just "it didn't work."</impact>
   </decision>
 
+  <decision id="gad-49">
+    <title>Bare and Emergent bootstrap skill set is a pinned invariant: create-skill + find-sprites</title>
+    <summary>Any bare or emergent greenfield eval template MUST include skills/create-skill.md and skills/find-sprites.md in its template/skills/ directory before the eval runs. These two are the minimum bootstrap methodology an agent needs to author its own workflow (create-skill) and source coherent visual assets (find-sprites). Emergent projects may inherit ADDITIONAL skills from previous runs, but the two-skill floor is non-negotiable. Regressing the bootstrap set without a corresponding requirements update invalidates cross-round comparisons for bare/emergent.</summary>
+    <impact>portfolio-sync skill enforces this during site sync; any regression becomes visible because the /projects/[id] page shows the bootstrap set per eval and the catalog inheritance map flags the mismatch. If we intentionally change the bootstrap set (e.g. add a third skill), we bump the requirements version and document the change in REQUIREMENTS-VERSIONS.md.</impact>
+  </decision>
+
+  <decision id="gad-50">
+    <title>Trace schema v4: every tool use, skill invocation, and subagent spawn must be captured</title>
+    <summary>Today's TRACE.json has a bare numeric skill_accuracy field for most runs (e.g. escape-the-dungeon v8 = 0.17 with no breakdown of which of the 6 expected triggers fired vs missed). This means we can't interpret scores across workflows. Trace schema v4 will capture: (1) every tool_use with timestamp + name + outcome; (2) every skill invocation with trigger context (user phrase, auto-detected, explicit slash command); (3) every subagent spawn with inputs + outputs + duration; (4) every file mutation with path + size delta. Schema versioned so older traces still parse; rendering on the site degrades gracefully for pre-v4 runs.</summary>
+    <impact>Phase 25 is the backing work. Per-run pages on the site will show a "tracing gap" callout for runs whose TRACE.json is pre-v4 and surface the full breakdown for v4+. Framework versioning (also phase 25) is a prerequisite because we need to know which trace schema the run was recorded against.</impact>
+  </decision>
+
+  <decision id="gad-51">
+    <title>Framework is versioned on branches so evals can pin + re-run across versions</title>
+    <summary>main = current. Frozen snapshots live on version/v1.1, version/v1.2, etc. When we ship a framework change that could affect eval scores (new skill, changed command, different subagent wiring), we branch, tag, and update a FRAMEWORK_VERSION constant used by `gad version`. Every TRACE.json stamps the commit it ran against so we can distinguish "the agent did better" from "the framework changed." Re-running past evals against the current framework becomes a scheduled activity, and score drift between framework versions becomes visible.</summary>
+    <impact>Phase 25 builds the branching strategy, `gad version` command, and the stamping. skills/framework-upgrade/SKILL.md is the methodology agents follow when proposing a framework change. Without this, cross-round comparisons that span framework updates are dishonest — we're comparing two different systems.</impact>
+  </decision>
+
+  <decision id="gad-52">
+    <title>Remotion is how we ship video explainers — player, not compiler</title>
+    <summary>Remotion's @remotion/player is a React component that renders video compositions live in the browser without requiring MP4 export. Free for teams ≤3 and reuses existing React components (SiteHeader, score cards, SVG charts) as video frames. No separate asset pipeline — video IS composable React. Phase 26 scopes what videos we want (GAD loop walkthrough, v8 failure dissection with tracing overlay, freedom hypothesis explainer, bare-vs-emergent emergence comparison) and plans the Player integration before implementing. MP4 export only if we need social-media distribution later; primary mode is interactive browser playback.</summary>
+    <impact>Phase 26 is a discuss-first phase. No Remotion code ships until we've scoped the video list and confirmed the React reuse pattern. Decision captured now so future sessions don't have to rederive "why not Adobe After Effects" — the answer is "because our React components are already the scenes we want to show."</impact>
+  </decision>
+
 </decisions>

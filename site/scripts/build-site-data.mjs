@@ -332,6 +332,126 @@ function findTraceFiles() {
   return traces;
 }
 
+/**
+ * Scan each eval project for gad.json + extract scoring weights.
+ * Also snapshot eval_mode, workflow, baseline, constraints — used by the
+ * /projects/[id] page and the methodology page.
+ */
+function scanEvalProjects() {
+  console.log("[2h/4] Scanning eval project metadata (gad.json)");
+  const projects = [];
+  if (!exists(EVALS_DIR)) return projects;
+  for (const name of fs.readdirSync(EVALS_DIR).sort()) {
+    const projectDir = path.join(EVALS_DIR, name);
+    if (!fs.statSync(projectDir).isDirectory()) continue;
+    if (name.startsWith(".")) continue;
+    const gadJsonPath = path.join(projectDir, "gad.json");
+    if (!exists(gadJsonPath)) continue;
+    try {
+      const data = JSON.parse(fs.readFileSync(gadJsonPath, "utf8"));
+      projects.push({
+        id: name,
+        name,
+        description: data.description || null,
+        evalMode: data.eval_mode || null,
+        workflow: data.workflow || null,
+        baseline: data.baseline || null,
+        constraints: data.constraints || null,
+        scoringWeights: data.scoring?.weights || null,
+      });
+    } catch (err) {
+      console.warn(`  [warn] failed to parse ${gadJsonPath}: ${err.message}`);
+    }
+  }
+  console.log(`  [scan] ${projects.length} eval project(s)`);
+  return projects;
+}
+
+/**
+ * Scan each eval run's run/ directory for what the agent produced for itself —
+ * workflow notes, written skills, created AGENTS.md, planning artifacts.
+ * Returns a map keyed by `${project}/${version}` -> { skillFiles, agentFiles, planningFiles, workflowNotes }.
+ */
+function scanProducedArtifacts() {
+  console.log("[2i/4] Scanning agent-produced artifacts per run");
+  const produced = {};
+  if (!exists(EVALS_DIR)) return produced;
+  for (const project of fs.readdirSync(EVALS_DIR).sort()) {
+    const projectDir = path.join(EVALS_DIR, project);
+    if (!fs.statSync(projectDir).isDirectory()) continue;
+    if (project.startsWith(".")) continue;
+    for (const version of fs.readdirSync(projectDir).sort()) {
+      if (!/^v\d+$/.test(version)) continue;
+      const runDir = path.join(projectDir, version, "run");
+      if (!exists(runDir)) continue;
+      const key = `${project}/${version}`;
+      const entry = {
+        skillFiles: [],
+        agentFiles: [],
+        planningFiles: [],
+        workflowNotes: [],
+      };
+      // Look for game/.planning/skills/*.md (bare/emergent pattern)
+      const candidates = [
+        path.join(runDir, "game", ".planning", "skills"),
+        path.join(runDir, ".planning", "skills"),
+        path.join(runDir, "game", "skills"),
+      ];
+      for (const skillDir of candidates) {
+        if (!exists(skillDir)) continue;
+        for (const f of fs.readdirSync(skillDir)) {
+          if (f.endsWith(".md")) {
+            const size = fs.statSync(path.join(skillDir, f)).size;
+            entry.skillFiles.push({ name: f, bytes: size });
+          }
+        }
+      }
+      // game/.planning/agents/*.md
+      const agentCandidates = [
+        path.join(runDir, "game", ".planning", "agents"),
+        path.join(runDir, ".planning", "agents"),
+      ];
+      for (const agentDir of agentCandidates) {
+        if (!exists(agentDir)) continue;
+        for (const f of fs.readdirSync(agentDir)) {
+          if (f.endsWith(".md")) {
+            entry.agentFiles.push({ name: f, bytes: fs.statSync(path.join(agentDir, f)).size });
+          }
+        }
+      }
+      // game/.planning/*.md (WORKFLOW.md, CHANGELOG.md, ARCHITECTURE.md, NOTES.md etc)
+      const planningCandidates = [
+        path.join(runDir, "game", ".planning"),
+        path.join(runDir, ".planning"),
+      ];
+      for (const pd of planningCandidates) {
+        if (!exists(pd)) continue;
+        for (const f of fs.readdirSync(pd)) {
+          const fp = path.join(pd, f);
+          if (fs.statSync(fp).isFile() && f.endsWith(".md")) {
+            entry.planningFiles.push({ name: f, bytes: fs.statSync(fp).size });
+          }
+        }
+      }
+      // WORKFLOW.md at run root (bare pattern)
+      const workflowMd = path.join(runDir, "WORKFLOW.md");
+      if (exists(workflowMd)) {
+        entry.workflowNotes.push({ name: "WORKFLOW.md", bytes: fs.statSync(workflowMd).size });
+      }
+      if (
+        entry.skillFiles.length > 0 ||
+        entry.agentFiles.length > 0 ||
+        entry.planningFiles.length > 0 ||
+        entry.workflowNotes.length > 0
+      ) {
+        produced[key] = entry;
+      }
+    }
+  }
+  console.log(`  [scan] ${Object.keys(produced).length} run(s) with produced artifacts`);
+  return produced;
+}
+
 const IMPLEMENTATION_WORKFLOWS = new Set(["gad", "bare", "emergent"]);
 
 function inferWorkflow(project, data) {
@@ -887,6 +1007,21 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
     .filter((t) => isImplementationRun(t.project, t.data))
     .map((t) => {
     const d = t.data;
+    // Top-level skill_accuracy in v3-era TRACE.json is an object with
+    // expected_triggers; scores.skill_accuracy is the aggregated number.
+    // Preserve both so the per-run page can render the breakdown.
+    const skillAccuracyBreakdown =
+      d.skill_accuracy && typeof d.skill_accuracy === "object"
+        ? {
+            expected_triggers: Array.isArray(d.skill_accuracy.expected_triggers)
+              ? d.skill_accuracy.expected_triggers
+              : [],
+            accuracy:
+              typeof d.skill_accuracy.accuracy === "number"
+                ? d.skill_accuracy.accuracy
+                : null,
+          }
+        : null;
     return {
       project: t.project,
       version: t.version,
@@ -904,6 +1039,7 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       planningQuality: d.planning_quality ?? null,
       scores: d.scores ?? {},
       humanReview: d.human_review ?? null,
+      skillAccuracyBreakdown,
     };
   });
 
@@ -1005,6 +1141,17 @@ export interface EvalRunRecord {
         reviewed_at?: string | null;
       } & Record<string, unknown>)
     | null;
+  skillAccuracyBreakdown:
+    | {
+        expected_triggers: Array<{
+          skill: string;
+          when?: string;
+          triggered: boolean;
+          note?: string;
+        } & Record<string, unknown>>;
+        accuracy: number | null;
+      }
+    | null;
 }
 
 export interface EvalTemplateAsset {
@@ -1026,6 +1173,24 @@ export interface RoundSummary {
   body: string;
 }
 
+export interface EvalProjectMeta {
+  id: string;
+  name: string;
+  description: string | null;
+  evalMode: string | null;
+  workflow: string | null;
+  baseline: string | { project?: string; version?: string; source?: string } | null;
+  constraints: Record<string, unknown> | null;
+  scoringWeights: Record<string, number> | null;
+}
+
+export interface ProducedArtifacts {
+  skillFiles: Array<{ name: string; bytes: number }>;
+  agentFiles: Array<{ name: string; bytes: number }>;
+  planningFiles: Array<{ name: string; bytes: number }>;
+  workflowNotes: Array<{ name: string; bytes: number }>;
+}
+
 export const EVAL_RUNS: EvalRunRecord[] = ${JSON.stringify(records, null, 2)};
 
 export const EVAL_TEMPLATES: EvalTemplateAsset[] = ${JSON.stringify(evalTemplates, null, 2)};
@@ -1044,6 +1209,10 @@ export const ROUND_SUMMARIES: RoundSummary[] = ${JSON.stringify(extras.rounds ??
 
 export const FINDINGS_ROUND_3_RAW: string | null = ${JSON.stringify(extras.findings?.round3 ?? null)};
 export const FINDINGS_GENERAL_RAW: string | null = ${JSON.stringify(extras.findings?.general ?? null)};
+
+export const EVAL_PROJECTS: EvalProjectMeta[] = ${JSON.stringify(extras.evalProjects ?? [], null, 2)};
+
+export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = ${JSON.stringify(extras.producedArtifacts ?? {}, null, 2)};
 
 export const PLAYABLE_INDEX: Record<string, string> = ${JSON.stringify(playable, null, 2)};
 
@@ -1110,12 +1279,16 @@ function main() {
   const roundData = parseRoundSummaries();
   const findings = parseFindings();
   const planningState = parsePlanningState();
+  const evalProjects = scanEvalProjects();
+  const producedArtifacts = scanProducedArtifacts();
   const traces = findTraceFiles();
 
   writeEvalDataTs(traces, evalTemplates, gadPackTemplate, {
     planningZips,
     rounds: roundData.rounds,
     findings: roundData.findings,
+    evalProjects,
+    producedArtifacts,
   });
   writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
   auditPlayable();

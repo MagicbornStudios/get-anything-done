@@ -11,6 +11,8 @@ export {
   ROUND_SUMMARIES,
   FINDINGS_ROUND_3_RAW,
   FINDINGS_GENERAL_RAW,
+  EVAL_PROJECTS,
+  PRODUCED_ARTIFACTS,
   GAD_PACK_TEMPLATE,
   PLAYABLE_INDEX,
   WORKFLOW_LABELS,
@@ -20,6 +22,8 @@ export {
   type EvalTemplateAsset,
   type PlanningZipAsset,
   type RoundSummary,
+  type EvalProjectMeta,
+  type ProducedArtifacts,
   type Workflow,
 } from "./eval-data.generated";
 

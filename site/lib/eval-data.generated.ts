@@ -86,6 +86,17 @@ export interface EvalRunRecord {
         reviewed_at?: string | null;
       } & Record<string, unknown>)
     | null;
+  skillAccuracyBreakdown:
+    | {
+        expected_triggers: Array<{
+          skill: string;
+          when?: string;
+          triggered: boolean;
+          note?: string;
+        } & Record<string, unknown>>;
+        accuracy: number | null;
+      }
+    | null;
 }
 
 export interface EvalTemplateAsset {
@@ -105,6 +116,24 @@ export interface RoundSummary {
   round: string;
   title: string;
   body: string;
+}
+
+export interface EvalProjectMeta {
+  id: string;
+  name: string;
+  description: string | null;
+  evalMode: string | null;
+  workflow: string | null;
+  baseline: string | { project?: string; version?: string; source?: string } | null;
+  constraints: Record<string, unknown> | null;
+  scoringWeights: Record<string, number> | null;
+}
+
+export interface ProducedArtifacts {
+  skillFiles: Array<{ name: string; bytes: number }>;
+  agentFiles: Array<{ name: string; bytes: number }>;
+  planningFiles: Array<{ name: string; bytes: number }>;
+  workflowNotes: Array<{ name: string; bytes: number }>;
 }
 
 export const EVAL_RUNS: EvalRunRecord[] = [
@@ -149,6 +178,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": null,
       "reviewed_by": null,
       "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [],
+      "accuracy": null
     }
   },
   {
@@ -200,6 +233,36 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": null,
       "reviewed_by": null,
       "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [
+        {
+          "skill": "/gad:plan-phase",
+          "when": "before implementation",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:execute-phase",
+          "when": "per phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:task-checkpoint",
+          "when": "between tasks",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:auto-conventions",
+          "when": "after first code phase",
+          "triggered": false
+        },
+        {
+          "skill": "/gad:verify-work",
+          "when": "after phase completion",
+          "triggered": false
+        }
+      ],
+      "accuracy": 0.6
     }
   },
   {
@@ -256,7 +319,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "per_task_discipline": 0.89,
       "composite": 0.916
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "escape-the-dungeon",
@@ -321,6 +385,41 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Blank screen, no UI renders, no main menu, no playable content. Systems may exist in code but nothing visible. Eval must require vertical slice with playable demo.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T01:01:12.987Z"
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [
+        {
+          "skill": "/gad:plan-phase",
+          "when": "before implementation",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:execute-phase",
+          "when": "per phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:task-checkpoint",
+          "when": "between tasks",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:auto-conventions",
+          "when": "after first code phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:verify-work",
+          "when": "after phase completion",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:check-todos",
+          "when": "session start",
+          "triggered": true
+        }
+      ],
+      "accuracy": 1
     }
   },
   {
@@ -381,6 +480,41 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Blank screen on file:// open. KAPLAY canvas game with ES module script requires web server. Gate criterion failed. Same failure mode as v5.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T02:00:00.000Z"
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [
+        {
+          "skill": "/gad:plan-phase",
+          "when": "before implementation",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:execute-phase",
+          "when": "per phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:task-checkpoint",
+          "when": "between tasks",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:auto-conventions",
+          "when": "after first code phase",
+          "triggered": false
+        },
+        {
+          "skill": "/gad:verify-phase",
+          "when": "after phase completion",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:check-todos",
+          "when": "session start",
+          "triggered": true
+        }
+      ],
+      "accuracy": 0.833
     }
   },
   {
@@ -440,6 +574,41 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Game renders, better UI/layout than other evals. But game loop is broken — after combat, player gets stuck with no navigation. Cannot progress past first encounter. UI is bland but structured. Has fallback data (good defensive coding). Score 0.30: renders and partially playable but broken core loop.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [
+        {
+          "skill": "/gad:plan-phase",
+          "when": "before implementation",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:execute-phase",
+          "when": "per phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:task-checkpoint",
+          "when": "between tasks",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:auto-conventions",
+          "when": "after first code phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:verify-phase",
+          "when": "after phase completion",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:check-todos",
+          "when": "session start",
+          "triggered": false
+        }
+      ],
+      "accuracy": 0.833
     }
   },
   {
@@ -497,7 +666,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Better particle effects on main menu and better colors than previous GAD runs. However, crafting system broke the game when used (unusable). Old ASCII text design for map/spells/bags menus. Hard to read text. Added icons but didn't search for sourced sprites. 0 commits — rate limit hit before agent could finalize. Score 0.20: has some visual improvements but broken crafting gates it.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
-    }
+    },
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "escape-the-dungeon-bare",
@@ -562,7 +732,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Main menu renders with New Game button visible. Cannot start game — clicking New Game does not progress. Broken build. Score 0.10 for rendering menu only.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T02:00:00.000Z"
-    }
+    },
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "escape-the-dungeon-bare",
@@ -627,7 +798,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Most playable game of all evals. Full game loop works: title → new game → rooms → combat → dialogue → navigation. UX and flow are good. UI is very ASCII/plain — needs spacing, icons, better styling. Color coding is good. No spell crafting despite rune system in requirements. Rest room doesn't offer forge. Score 0.50: playable vertical slice but visually rough.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
-    }
+    },
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "escape-the-dungeon-bare",
@@ -685,7 +857,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Best UI/UX of all eval runs by far. Most enjoyable and playable. Functional game loop with combat and dialogue. Missing: floor progression after boss (can grind same floor), no clear spell crafting path. Regressed on commit discipline under pressure (1 giant commit vs v2's 6). Score 0.70: most enjoyable game across all experiments.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
-    }
+    },
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "escape-the-dungeon-emergent",
@@ -743,7 +916,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Main menu renders and recognizes saved game state (improvement over bare v1). But game crashes with 'Styled text error: unclosed tags START' when entering gameplay. Cannot play. Score 0.10: better than blank screen, menu works, but game is broken.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
-    }
+    },
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "escape-the-dungeon-emergent",
@@ -804,7 +978,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Solid crafting system — forge functional with more authored content than other runs. Playable but no floor progression after boss. No way to train or test crafted spells. Maintained 2 phase commits even under rate limit pressure (the only condition that did). UI is medium quality — better than GAD v8, worse than bare v3. Score 0.50: most disciplined under pressure with functional crafting.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
-    }
+    },
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "planning-migration",
@@ -824,7 +999,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "scores": {
       "composite": 0.978
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "portfolio-bare",
@@ -867,6 +1043,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": null,
       "reviewed_by": null,
       "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [],
+      "accuracy": null
     }
   },
   {
@@ -916,7 +1096,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "per_task_discipline": 1,
       "composite": 0.944
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "portfolio-bare",
@@ -976,7 +1157,42 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "human_review": null,
       "auto_composite": 0.996
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [
+        {
+          "skill": "/gad:plan-phase",
+          "when": "before implementation",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:execute-phase",
+          "when": "per phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:task-checkpoint",
+          "when": "between tasks",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:auto-conventions",
+          "when": "after first code phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:verify-work",
+          "when": "after phase completion",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:check-todos",
+          "when": "session start",
+          "triggered": true
+        }
+      ],
+      "accuracy": 1
+    }
   },
   {
     "project": "project-migration",
@@ -1006,7 +1222,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "docs_sink_alignment": 0.8,
       "composite": 0.89
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "reader-workspace",
@@ -1069,7 +1286,37 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "per_task_discipline": 0.5,
       "composite": 0.821
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [
+        {
+          "skill": "/gad:plan-phase",
+          "when": "before implementation",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:execute-phase",
+          "when": "per phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:task-checkpoint",
+          "when": "between tasks",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:auto-conventions",
+          "when": "after first code phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:verify-work",
+          "when": "after phase completion",
+          "triggered": false
+        }
+      ],
+      "accuracy": 0.8
+    }
   },
   {
     "project": "reader-workspace",
@@ -1125,7 +1372,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "per_task_discipline": 0.925,
       "composite": 0.928
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": null
   },
   {
     "project": "reader-workspace",
@@ -1185,7 +1433,42 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "human_review": null,
       "auto_composite": 0.83
     },
-    "humanReview": null
+    "humanReview": null,
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [
+        {
+          "skill": "/gad:plan-phase",
+          "when": "before implementation",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:execute-phase",
+          "when": "per phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:task-checkpoint",
+          "when": "between tasks",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:auto-conventions",
+          "when": "after first code phase",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:verify-work",
+          "when": "after phase completion",
+          "triggered": true
+        },
+        {
+          "skill": "/gad:check-todos",
+          "when": "session start",
+          "triggered": true
+        }
+      ],
+      "accuracy": 1
+    }
   }
 ];
 
@@ -1302,6 +1585,287 @@ export const ROUND_SUMMARIES: RoundSummary[] = [
 
 export const FINDINGS_ROUND_3_RAW: string | null = "# Round 3 Findings — Freedom Hypothesis\r\n\r\n**Requirements version:** v3 (game-loop gate, spell-crafting gate, UI quality gate)\r\n**Date:** 2026-04-08\r\n**Conditions:** GAD v8, Bare v3, Emergent v2 — all hit rate limits but produced builds\r\n\r\n## Results — inverted from expectations\r\n\r\n| Condition | Framework constraint | Tokens | Commits | Human score | Notes |\r\n|-----------|---------------------|--------|---------|-------------|-------|\r\n| **Bare v3** | **None (most freedom)** | 1,877 | 1 batch | **0.70** | Best UI/UX by far, most enjoyable |\r\n| Emergent v2 | Medium (inherited skills) | 1,609 | 2 phases | 0.50 | Solid forge, more content, maintained discipline |\r\n| GAD v8 | Full framework | 1,291 | 0 | 0.20 | Broken crafting, ASCII UI, hard to read |\r\n\r\n**The result is monotonic and inverse to framework constraint.** More freedom = better output.\r\n\r\n## Running tally across all rounds\r\n\r\n| Run | Requirements | Human | Key observation |\r\n|-----|-------------|-------|----------------|\r\n| GAD v5 | v1 | 0.00 | Blank screen |\r\n| GAD v6 | v2 | 0.00 | Blank screen |\r\n| GAD v7 | v2 | 0.30 | Stuck after combat |\r\n| **GAD v8** | **v3** | **0.20** | Broken crafting |\r\n| Bare v1 | v2 | 0.10 | New Game broken |\r\n| Bare v2 | v2 | 0.50 | Playable, ASCII UI |\r\n| **Bare v3** | **v3** | **0.70** | **Best game overall** |\r\n| Emergent v1 | v2 | 0.10 | Styled text crash |\r\n| **Emergent v2** | **v3** | **0.50** | Functional forge, medium UI |\r\n\r\n**GAD has never exceeded 0.30 human review across 4 attempts.**\r\n**Bare has improved monotonically: 0.10 → 0.50 → 0.70.**\r\n**Emergent has improved: 0.10 → 0.50.**\r\n\r\n## Freedom hypothesis\r\n\r\n> For creative/game implementation tasks, agent performance correlates INVERSELY with\r\n> framework constraint. Less prescribed structure leads to better output.\r\n\r\n### Supporting evidence\r\n\r\n1. **Bare always beats GAD** on human review, across all 3 rounds with same requirements\r\n2. **GAD has more tokens, more tool uses, more commits** — but produces worse games\r\n3. **GAD v8 had 0 commits** because it was so busy following the framework it hit the rate limit\r\n   before completing a work unit worth committing\r\n4. **Bare v3 best UI/UX** despite no framework telling it how to build UI\r\n5. **Emergent sits in the middle** — some framework, some freedom, middle results\r\n\r\n### Counter-evidence / confounds\r\n\r\n1. Rate limits hit all three runs — GAD v8 may have been about to commit when cut off\r\n2. Single-run variance is high — we haven't established statistical significance\r\n3. GAD's strength is discipline/traceability, not creative output — we may be measuring the\r\n   wrong thing for game evals\r\n4. Bare v3's \"one giant commit\" means if it had broken, there'd be no checkpoint. GAD's\r\n   discipline is insurance against catastrophic failure, not a booster for success\r\n\r\n### Alternative interpretation: the framework hurts speed\r\n\r\nGAD's planning overhead (reading/writing .planning/ docs, per-task commits, state updates,\r\ndecision capture) consumes tokens that could have gone to implementation and testing. In\r\na time-limited or token-limited environment, this overhead compounds:\r\n\r\n| Metric | GAD | Bare | Ratio |\r\n|--------|-----|------|-------|\r\n| Rounds completed with playable game | 0/4 | 2/3 | Bare 5x better |\r\n| Rounds with blank screen | 2/4 | 0/3 | GAD worse |\r\n| Rounds with gate failure | 4/4 | 1/3 | GAD worse |\r\n\r\n**GAD is producing disciplined garbage.** The process is followed but the product fails.\r\n\r\n## What this means for GAD\r\n\r\n1. **GAD may not be the right framework for creative implementation tasks.** It was designed\r\n   for planning/tracking, not for game development. Game dev rewards iteration speed and\r\n   visual feedback, which GAD's planning overhead slows down.\r\n\r\n2. **The bare condition's success suggests \"AGENTS.md + requirements + freedom\" is sufficient**\r\n   for implementation. The planning doc maintenance may be dead weight.\r\n\r\n3. **GAD's value proposition needs to be re-examined.** If process compliance doesn't correlate\r\n   with output quality, what is GAD actually optimizing for?\r\n   - Traceability across sessions (context compaction recovery)\r\n   - Multi-agent coordination\r\n   - Long-horizon planning (months, not days)\r\n   - Regulatory/compliance work where process matters\r\n\r\n4. **The game eval may be the wrong benchmark for GAD.** A better benchmark would be:\r\n   - Resuming work after context compaction\r\n   - Multi-phase refactors where state matters\r\n   - Documentation that has to be kept in sync with code\r\n   - Bug triage and root-cause analysis\r\n\r\n## Open questions\r\n\r\n1. Would GAD win if we measured context-resumption rather than fresh implementation?\r\n2. Does GAD win when the agent is replaced mid-run (simulating handoff)?\r\n3. What happens if we give Bare the same token budget as GAD's planning overhead in the form of free research time?\r\n4. Is the freedom hypothesis specific to KAPLAY/games, or does it generalize to web apps, APIs, CLIs?\r\n5. Would GAD do better with a \"lite mode\" that strips planning doc maintenance but keeps verification?\r\n\r\n## Immediate actions\r\n\r\n1. Treat this as a preliminary finding — needs more runs for statistical validity\r\n2. Create a GAD-lite mode for comparison (no per-task planning doc updates, only phase-level)\r\n3. Add a context-resumption eval where GAD's advantages should appear\r\n4. Do NOT abandon GAD — this finding may be specific to greenfield game implementation\r\n\r\n## Infrastructure findings\r\n\r\n- **Rate limits revealed discipline pressure response:** Emergent v2 was the only condition\r\n  that maintained phase commits under pressure. Bare regressed to 1 batch commit. GAD never\r\n  committed anything. Emergent's inherited skill \"game-loop-verification\" (which mandated\r\n  verify-per-phase) may have enforced a checkpoint discipline that kicked in before the limit.\r\n\r\n- **Build preservation was broken:** All previous runs overwrote the same path in\r\n  apps/portfolio/public/evals/. Now fixed — all 8 builds preserved per-version.\r\n";
 export const FINDINGS_GENERAL_RAW: string | null = "# Eval Findings — 2026-04-08\n\n## Experiment: Escape the Dungeon — Three Conditions\n\n### Setup\n\nSame game requirements (12 criteria, vertical-slice priority, UI-first mandate), same source\ndocs (trimmed gameplay design ~120 lines), same stack (Vite + TypeScript + KAPLAY).\n\n| Condition | Framework | Skills | Runs |\n|-----------|-----------|--------|------|\n| GAD (escape-the-dungeon) | Full GAD: .planning/ XML, AGENTS.md loop, skill triggers | Pre-built | v5 (0.0), v6 (0.0), v7 (0.30) |\n| Bare (escape-the-dungeon-bare) | None — agent creates own workflow | From scratch | v1 (0.10), v2 (0.50) |\n| Emergent (escape-the-dungeon-emergent) | None — inherits skills from bare v1 | Inherited + evolves | v1 (0.10) |\n\n### Results: Human review scores\n\n| Run | Human | Notes |\n|-----|-------|-------|\n| GAD v5 | 0.00 | Blank screen |\n| GAD v6 | 0.00 | Blank screen (ES module + file://) |\n| GAD v7 | **0.30** | Renders, better UI layout, but game loop breaks after combat — player gets stuck |\n| Bare v1 | 0.10 | Main menu renders, New Game doesn't work |\n| Bare v2 | **0.50** | **Most playable.** Full game loop works. ASCII/plain UI, needs polish, no rune forge |\n| Emergent v1 | 0.10 | Main menu + saved game detection, but crashes entering game (styled text error) |\n\n### Key finding: Bare v2 beat GAD v7 on playability\n\nThe agent WITHOUT a framework produced the most playable game. This is a significant finding.\n\n**Why bare v2 won:**\n- Simpler architecture — fewer abstractions meant fewer places for bugs\n- Focused on making things work rather than following a process\n- 6 commits (phase-level granularity) — enough traceability without overhead\n- The feedback from v1's failure was more actionable than GAD's structural requirements\n\n**Why GAD v7 lost on playability despite better process metrics:**\n- 21 commits, 17/17 tasks tracked, full planning docs — excellent discipline\n- But the game loop broke (combat → no return to navigation)\n- More framework overhead (93K tokens vs 88K) didn't translate to better output\n- Planning docs were maintained perfectly while the actual game was broken\n- **The process was followed but the product was worse**\n\n### Token comparison\n\n| Run | Tokens | Tool uses | Commits | Human |\n|-----|--------|-----------|---------|-------|\n| Bare v1 | 67,751 | 62 | 2 | 0.10 |\n| Emergent v1 | 67,375 | 79 | 2 | 0.10 |\n| Bare v2 | 87,661 | 110 | 6 | **0.50** |\n| GAD v7 | 93,632 | 137 | 21 | 0.30 |\n\nGAD used 7% more tokens than bare v2 but scored 40% lower on human review. The token overhead\nof maintaining .planning/ docs did not pay for itself in output quality.\n\n### Emergent v1 findings\n\nThe emergent eval (inherited skills from bare v1) performed WORSE than both bare v2 and GAD v7.\nThis challenges the hypothesis that inherited skills improve outcomes.\n\n**Why emergent v1 failed:**\n- Inherited skills were code-level patterns, not workflow fixes\n- The `previous-workflow.md` told it v1's New Game was broken, but the fix didn't work\n- \"Styled text error: unclosed tags START\" — a KAPLAY API issue the skills didn't cover\n- Fewer tokens (67K) suggests it relied on inherited knowledge but that knowledge was insufficient\n\n**Lesson:** Skills need to capture failure modes and fixes, not just patterns. The bare v2 agent\nsucceeded because it was told \"v1's New Game was broken\" and had to figure out the fix itself.\nThe emergent agent was told the same thing AND given skills, but the skills didn't help with\nthe specific KAPLAY API issue that caused the crash.\n\n### What this means for GAD\n\n1. **Process metrics ≠ output quality.** GAD v7 had near-perfect discipline (0.81) and planning\n   quality (1.0) but produced a worse game than the undisciplined bare v2.\n\n2. **The framework adds overhead that doesn't always pay off.** 93K tokens for GAD vs 88K for\n   bare, with worse results. The planning doc maintenance consumed tokens that could have gone\n   to testing and fixing the game.\n\n3. **Feedback about failures is more valuable than inherited skills.** Bare v2 (told about v1's\n   failure) outperformed emergent v1 (given v1's skills + failure notes). Direct feedback\n   about what broke was more actionable than documented patterns.\n\n4. **Human review is the only metric that matters for game evals.** Auto-composite can be\n   0.95+ while the game is a blank screen. The gate criteria help but aren't sufficient —\n   a game can render and still be broken.\n\n### Requirements versioning\n\nRequirements have been updated twice this session:\n- **v1 (original):** 12 criteria focused on systems completeness\n- **v2 (current):** Gate criteria (must render, must be playable), vertical-slice priority,\n  UI-first build order. Trimmed source docs from 640 → 127 lines.\n\nNext iteration should add:\n- Explicit game-loop verification: title → new game → room → interaction → room (full cycle)\n- UI quality baseline: minimum spacing, readable text, no overlapping elements\n- Rune forge as a required criterion (currently missing from all implementations)\n\n### Open questions\n\n1. Would GAD do better if the AGENTS.md mandated explicit game-loop testing per phase?\n2. Would the emergent eval improve if skills captured KAPLAY-specific error fixes?\n3. Is the bare approach inherently better for creative/game implementation, or was this specific to KAPLAY?\n4. Would multiple bare v2 runs cluster around 0.50, or was this a lucky outlier?\n";
+
+export const EVAL_PROJECTS: EvalProjectMeta[] = [
+  {
+    "id": "cli-efficiency",
+    "name": "cli-efficiency",
+    "description": "Measures token efficiency of gad CLI vs raw file reads for coding agent context. Compares two workflows: (1) CLI-first using gad context/session/state/phases/tasks, (2) baseline grep+read pattern used by GSD/RP agents.",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": "v1",
+    "constraints": {
+      "local_only": true,
+      "no_external_services": true
+    },
+    "scoringWeights": {
+      "token_reduction": 0.4,
+      "context_completeness": 0.35,
+      "information_loss": 0.25
+    }
+  },
+  {
+    "id": "escape-the-dungeon",
+    "name": "escape-the-dungeon",
+    "description": "Greenfield: agent builds the game from scratch using the full GAD framework",
+    "evalMode": "greenfield",
+    "workflow": "gad",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": true,
+      "starts_from_scratch": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.15,
+      "planning_quality": 0.15,
+      "per_task_discipline": 0.15,
+      "skill_accuracy": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    }
+  },
+  {
+    "id": "escape-the-dungeon-bare",
+    "name": "escape-the-dungeon-bare",
+    "description": "Greenfield baseline: agent builds the game WITHOUT a planning framework, creating its own workflow",
+    "evalMode": "greenfield",
+    "workflow": "bare",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_scratch": true,
+      "agent_creates_own_workflow": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.2,
+      "workflow_emergence": 0.15,
+      "iteration_evidence": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    }
+  },
+  {
+    "id": "escape-the-dungeon-emergent",
+    "name": "escape-the-dungeon-emergent",
+    "description": "Greenfield emergent: agent builds the game with skills inherited from previous bare/emergent runs. Tests whether self-created systems improve over iterations.",
+    "evalMode": "greenfield",
+    "workflow": "emergent",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_scratch": true,
+      "inherits_previous_skills": true,
+      "agent_iterates_on_workflow": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.15,
+      "skill_reuse": 0.15,
+      "workflow_quality": 0.1,
+      "iteration_evidence": 0.05,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    }
+  },
+  {
+    "id": "etd-brownfield-bare",
+    "name": "etd-brownfield-bare",
+    "description": "Brownfield: extend bare v3 codebase with v4 features WITHOUT a planning framework",
+    "evalMode": "brownfield",
+    "workflow": "bare",
+    "baseline": {
+      "project": "escape-the-dungeon-bare",
+      "version": "v3",
+      "source": "evals/escape-the-dungeon-bare/v3/run/"
+    },
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_existing_codebase": true,
+      "agent_creates_own_workflow": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.2,
+      "workflow_emergence": 0.15,
+      "iteration_evidence": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    }
+  },
+  {
+    "id": "etd-brownfield-emergent",
+    "name": "etd-brownfield-emergent",
+    "description": "Brownfield emergent: extend bare v3 codebase with v4 features, inheriting skills from previous emergent runs",
+    "evalMode": "brownfield",
+    "workflow": "emergent",
+    "baseline": {
+      "project": "escape-the-dungeon-bare",
+      "version": "v3",
+      "source": "evals/escape-the-dungeon-bare/v3/run/"
+    },
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_existing_codebase": true,
+      "inherits_previous_skills": true,
+      "agent_iterates_on_workflow": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.15,
+      "skill_reuse": 0.15,
+      "workflow_quality": 0.1,
+      "iteration_evidence": 0.05,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    }
+  },
+  {
+    "id": "etd-brownfield-gad",
+    "name": "etd-brownfield-gad",
+    "description": "Brownfield: extend bare v3 codebase with v4 features using the full GAD framework",
+    "evalMode": "brownfield",
+    "workflow": "gad",
+    "baseline": {
+      "project": "escape-the-dungeon-bare",
+      "version": "v3",
+      "source": "evals/escape-the-dungeon-bare/v3/run/"
+    },
+    "constraints": {
+      "uses_gad_framework": true,
+      "starts_from_existing_codebase": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.15,
+      "planning_quality": 0.15,
+      "per_task_discipline": 0.15,
+      "skill_accuracy": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    }
+  },
+  {
+    "id": "gad-planning-loop",
+    "name": "gad-planning-loop",
+    "description": "GAD self-evaluation: measures planning loop fidelity across a phase",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": null,
+    "constraints": null,
+    "scoringWeights": null
+  },
+  {
+    "id": "planning-migration",
+    "name": "planning-migration",
+    "description": "Lossless migration of all vendor project .planning/ dirs and portfolio planning sink to unified GAD format. Evaluates format compliance, sink sync, trace coverage, and data preservation across the compile/decompile round-trip.",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": "planning-sink-backup-20260404",
+    "constraints": null,
+    "scoringWeights": null
+  },
+  {
+    "id": "portfolio-bare",
+    "name": "portfolio-bare",
+    "description": "Portfolio monorepo planning eval. Agent opens a fresh template directory, plans and executes phases from requirements, declares context mode (fresh/loaded) at session start. Runs accumulate over time — context_delta emerges from the comparison.",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": "v1",
+    "constraints": {
+      "planning_only": true,
+      "no_app_code": true,
+      "no_external_services": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.4,
+      "task_alignment": 0.25,
+      "state_hygiene": 0.2,
+      "decision_coverage": 0.15
+    }
+  },
+  {
+    "id": "project-migration",
+    "name": "project-migration",
+    "description": "Measures quality and completeness of migrating a project from a legacy planning framework (RP) to GAD. Scores planning continuity, skill coverage, and context efficiency before and after.",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": null,
+    "constraints": null,
+    "scoringWeights": null
+  },
+  {
+    "id": "subagent-utility",
+    "name": "subagent-utility",
+    "description": "Formal evaluation of subagent utility vs single-session — informs gad-16 revision",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": null,
+    "constraints": null,
+    "scoringWeights": null
+  }
+];
+
+export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = {
+  "escape-the-dungeon/v7": {
+    "skillFiles": [],
+    "agentFiles": [],
+    "planningFiles": [
+      {
+        "name": "ARCHITECTURE.md",
+        "bytes": 3424
+      },
+      {
+        "name": "VERIFICATION.md",
+        "bytes": 1069
+      }
+    ],
+    "workflowNotes": []
+  },
+  "escape-the-dungeon-bare/v1": {
+    "skillFiles": [],
+    "agentFiles": [],
+    "planningFiles": [],
+    "workflowNotes": [
+      {
+        "name": "WORKFLOW.md",
+        "bytes": 3110
+      }
+    ]
+  },
+  "escape-the-dungeon-bare/v2": {
+    "skillFiles": [],
+    "agentFiles": [],
+    "planningFiles": [],
+    "workflowNotes": [
+      {
+        "name": "WORKFLOW.md",
+        "bytes": 2751
+      }
+    ]
+  },
+  "escape-the-dungeon-bare/v3": {
+    "skillFiles": [],
+    "agentFiles": [],
+    "planningFiles": [],
+    "workflowNotes": [
+      {
+        "name": "WORKFLOW.md",
+        "bytes": 1493
+      }
+    ]
+  },
+  "escape-the-dungeon-emergent/v2": {
+    "skillFiles": [],
+    "agentFiles": [],
+    "planningFiles": [],
+    "workflowNotes": [
+      {
+        "name": "WORKFLOW.md",
+        "bytes": 1163
+      }
+    ]
+  }
+};
 
 export const PLAYABLE_INDEX: Record<string, string> = {
   "escape-the-dungeon/v6": "/playable/escape-the-dungeon/v6/index.html",

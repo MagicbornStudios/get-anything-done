@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Github } from "lucide-react";
 
 const NAV_LINKS = [
-  { href: "/#workflow", label: "Loop" },
+  { href: "/gad", label: "GAD" },
+  { href: "/methodology", label: "Methodology" },
   { href: "/#projects", label: "Projects" },
   { href: "/#results", label: "Results" },
+  { href: "/#graphs", label: "Graphs" },
   { href: "/#play", label: "Play" },
-  { href: "/#requirements", label: "Requirements" },
   { href: "/#catalog", label: "Catalog" },
   { href: "/findings", label: "Findings" },
   { href: "/planning", label: "Planning" },

@@ -524,8 +524,9 @@
       <goal>Decisions index page. Deferred — decisions referenced inline in Rounds and Requirements sections; full decisions index can be a dedicated /decisions route later when the list is big enough to warrant it.</goal>
       <keywords>portfolio,decisions,deferred</keywords>
     </task>
-    <task id="22-09" agent-id="" status="in-progress">
-      <goal>Findings as standalone pages: /findings index + /findings/[slug] per finding. Currently findings are parsed and exposed as FINDINGS_ROUND_3_RAW / FINDINGS_GENERAL_RAW but not yet rendered as routes.</goal>
+    <task id="22-09" agent-id="" status="done">
+      <goal>Findings as standalone pages: /findings index + /findings/[slug] per finding.</goal>
+      <resolution>app/findings/page.tsx + app/findings/[slug]/page.tsx (SSG). Prebuild parses all evals/FINDINGS-*.md into FINDINGS export and renders markdown bodies via marked at build time. 2 findings currently indexed.</resolution>
       <depends>22-12</depends>
       <keywords>portfolio,findings,routes</keywords>
     </task>
@@ -535,45 +536,92 @@
       <keywords>portfolio,build-pipeline,prebuild</keywords>
     </task>
     <!-- Session 2 additions: user-requested expansion after the first ship -->
-    <task id="22-11" agent-id="" status="planned">
-      <goal>Extract v1 and v2 REQUIREMENTS.md snapshots from git history via `git show &lt;commit&gt;:evals/escape-the-dungeon/REQUIREMENTS.md` and expose as downloads in public/downloads/requirements/. Two historical commits known: b5052fe (earliest) and 02b0e84 (pre-v3 refresh).</goal>
+    <task id="22-11" agent-id="" status="done">
+      <goal>Extract v1 and v2 REQUIREMENTS.md snapshots from git history.</goal>
+      <resolution>build-site-data.mjs uses `git show` to extract b5052fe + 02b0e84 snapshots. Written to public/downloads/requirements/ with provenance headers clearly labelling them as eval-description docs, not game spec (the game XML was only committed from v4 on).</resolution>
       <keywords>requirements,git-history,downloads</keywords>
     </task>
-    <task id="22-12" agent-id="" status="planned">
-      <goal>Add markdown rendering to build-site-data.mjs using `marked`. Render SKILL.md, agent .md, command .md, and FINDINGS-*.md bodies to HTML strings emitted in lib/content.generated.ts (or extended in catalog.generated.ts). Keeps the client bundle free of a runtime markdown dep.</goal>
+    <task id="22-12" agent-id="" status="done">
+      <goal>Markdown rendering via marked in prebuild.</goal>
+      <resolution>marked@^14 added as devDep. Every SKILL.md / agent .md / command .md / FINDINGS-*.md body rendered to HTML at build time, embedded in catalog.generated.ts. .prose-content CSS in globals.css handles headings, code, pre, tables, blockquotes, hr, lists.</resolution>
       <keywords>markdown,marked,prebuild,content</keywords>
     </task>
-    <task id="22-13" agent-id="" status="planned">
-      <goal>Per-skill detail pages at app/skills/[id]/page.tsx. Statically generated via generateStaticParams from the catalog. Shows frontmatter metadata, rendered body, source link, "which evals inherit this skill" backlinks.</goal>
+    <task id="22-13" agent-id="" status="done">
+      <goal>Per-skill detail pages app/skills/[id]/page.tsx.</goal>
+      <resolution>25 SSG pages via generateStaticParams. Uses components/detail/DetailShell.tsx. Sidebar shows inherited-by eval projects or framework-only.</resolution>
       <depends>22-12</depends>
       <keywords>skills,detail,ssg</keywords>
     </task>
-    <task id="22-14" agent-id="" status="planned">
-      <goal>Per-agent detail pages at app/agents/[id]/page.tsx. Shows frontmatter (name, tools, color), rendered body, source link, "which commands spawn this agent" backlinks.</goal>
+    <task id="22-14" agent-id="" status="done">
+      <goal>Per-agent detail pages app/agents/[id]/page.tsx.</goal>
+      <resolution>21 SSG pages. Meta card: tools, color, spawn count. Sidebar: spawned-by-commands with links.</resolution>
       <depends>22-12</depends>
       <keywords>agents,detail,ssg</keywords>
     </task>
-    <task id="22-15" agent-id="" status="planned">
-      <goal>Per-command detail pages at app/commands/[id]/page.tsx. Shows argument-hint, linked spawned agent, rendered body, source link.</goal>
+    <task id="22-15" agent-id="" status="done">
+      <goal>Per-command detail pages app/commands/[id]/page.tsx.</goal>
+      <resolution>60 SSG pages. Usage hint + linked spawned subagent detail page.</resolution>
       <depends>22-12</depends>
       <keywords>commands,detail,ssg</keywords>
     </task>
-    <task id="22-16" agent-id="" status="planned">
-      <goal>Findings routes: app/findings/page.tsx (index listing all findings files) and app/findings/[slug]/page.tsx (per-file rendered markdown). Pulls FINDINGS-*.md from evals/ directory.</goal>
+    <task id="22-16" agent-id="" status="done">
+      <goal>Findings routes at /findings and /findings/[slug].</goal>
+      <resolution>Index + SSG detail pages covering 2 findings files. New findings auto-surface on the next prebuild.</resolution>
       <depends>22-12</depends>
       <keywords>findings,routes,ssg</keywords>
     </task>
-    <task id="22-17" agent-id="" status="planned">
-      <goal>Split catalog display: framework-level catalog (skills/agents/commands that ship with GAD core) vs per-eval inherited catalog (skills that a specific eval project copies into its template/skills/ directory). Makes the inheritance model visible.</goal>
+    <task id="22-17" agent-id="" status="done">
+      <goal>Framework vs eval-inherited catalog split.</goal>
+      <resolution>SKILL_INHERITANCE map built by walking evals/&lt;project&gt;/template/skills. Catalog cards and skill detail sidebars show inheritance per project.</resolution>
       <keywords>catalog,framework-vs-eval,inheritance</keywords>
     </task>
-    <task id="22-18" agent-id="" status="planned">
-      <goal>Display the site's own planning state on the site as a meta-transparency page (/planning). Shows current phase, open tasks for phase 22, recent decisions. Parsed from STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml in the prebuild script.</goal>
+    <task id="22-18" agent-id="" status="done">
+      <goal>/planning meta-transparency page.</goal>
+      <resolution>Parses STATE.xml + ROADMAP.xml + TASK-REGISTRY.xml + DECISIONS.xml in prebuild. Page shows current phase, open tasks, done count, roadmap status, next action, last 12 decisions.</resolution>
       <keywords>planning-state,meta,transparency</keywords>
     </task>
-    <task id="22-19" agent-id="" status="planned">
-      <goal>Create skills/portfolio-sync/SKILL.md — methodology for keeping the public site in sync with evals as they evolve. Not rigid format; describes triggers (new run, new finding, new skill, new decision) and the prebuild pattern that regenerates everything from filesystem scans. Registered in the catalog alongside the other framework skills.</goal>
+    <task id="22-19" agent-id="" status="done">
+      <goal>skills/portfolio-sync/SKILL.md — methodology for keeping the public site in sync with evals.</goal>
+      <resolution>Full skill doc with trigger list, sync procedure, patterns for new surfaces, what NOT to do. Automatically picked up as the 25th framework skill at /skills/portfolio-sync.</resolution>
       <keywords>skill,portfolio-sync,methodology</keywords>
+    </task>
+    <!-- Session 3 additions: deeper research surfacing, tracing visibility, per-project catalogs, framework versioning -->
+    <task id="22-20" agent-id="" status="planned">
+      <goal>Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no standalone "what is GAD" reference page someone can deep-link to. The catalog cards work but users have asked for a top-level GAD explainer + index that links into skills/agents/commands as a single navigation hub.</goal>
+      <keywords>gad-overview,navigation,catalog-hub</keywords>
+    </task>
+    <task id="22-21" agent-id="" status="planned">
+      <goal>/methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. This is the "how we measure" appendix users have been asking for. Includes concrete worked examples showing how a composite score was derived.</goal>
+      <keywords>methodology,formulas,tracing,scoring</keywords>
+    </task>
+    <task id="22-22" agent-id="" status="planned">
+      <goal>Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a "tracing gap" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schema overhaul).</goal>
+      <keywords>per-run,formulas,trace-breakdown,tracing-gap</keywords>
+    </task>
+    <task id="22-23" agent-id="" status="planned">
+      <goal>Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, "what the agent built for itself" per run (scan run/.planning/skills/*.md and similar).</goal>
+      <keywords>projects,per-project,catalog-scope,produced-artifacts</keywords>
+    </task>
+    <task id="22-24" agent-id="" status="planned">
+      <goal>Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library — pure React-rendered SVG so it ships in every prebuild.</goal>
+      <keywords>graphs,svg,charts,home</keywords>
+    </task>
+    <task id="22-25" agent-id="" status="planned">
+      <goal>Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary nav row or drop items.</goal>
+      <depends>22-20,22-21,22-23</depends>
+      <keywords>nav,navigation</keywords>
+    </task>
+    <task id="22-26" agent-id="" status="planned">
+      <goal>Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math.</goal>
+      <keywords>scoring-weights,gad-json,prebuild</keywords>
+    </task>
+    <task id="22-27" agent-id="" status="planned">
+      <goal>New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work.</goal>
+      <keywords>skill,framework-upgrade,versioning</keywords>
+    </task>
+    <task id="22-28" agent-id="" status="planned">
+      <goal>Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed. Both currently have it; decision gad-49 pins the invariant that create-skill + find-sprites must always be in the bootstrap set for bare and emergent.</goal>
+      <keywords>decision,create-skill,invariant</keywords>
     </task>
   </phase>
 </task-registry>

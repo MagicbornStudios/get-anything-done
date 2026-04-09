@@ -7,6 +7,7 @@ import Framework from "@/components/landing/Framework";
 import Rounds from "@/components/landing/Rounds";
 import Projects from "@/components/landing/Projects";
 import Results from "@/components/landing/Results";
+import Graphs from "@/components/landing/Graphs";
 import Playable from "@/components/landing/Playable";
 import Requirements from "@/components/landing/Requirements";
 import Catalog from "@/components/landing/Catalog";
@@ -26,6 +27,7 @@ export default function Page() {
       <Rounds />
       <Projects />
       <Results />
+      <Graphs />
       <Playable />
       <Requirements />
       <Catalog />

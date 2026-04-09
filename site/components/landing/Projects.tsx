@@ -109,7 +109,12 @@ export default function Projects() {
             )}
           </div>
           <CardTitle className="text-lg">
-            {PROJECT_LABELS[p.project] ?? p.project}
+            <Link
+              href={`/projects/${p.project}`}
+              className="transition-colors hover:text-accent"
+            >
+              {PROJECT_LABELS[p.project] ?? p.project}
+            </Link>
           </CardTitle>
           <CardDescription className="font-mono text-[11px]">{p.project}</CardDescription>
         </CardHeader>

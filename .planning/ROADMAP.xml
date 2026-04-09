@@ -150,4 +150,16 @@
     <status>planned</status>
     <depends>23</depends>
   </phase>
+  <phase id="25">
+    <title>Framework versioning workflow + trace schema overhaul</title>
+    <goal>Formalize how we ship new versions of the GAD framework itself and re-run evals across versions. Deliverables: (1) branching strategy (main = current, version/v1.1, version/v1.2 etc as frozen snapshots) so evals can pin to a framework version; (2) `gad version` command to stamp TRACE.json with the commit hash + branch it ran against; (3) trace schema v4 capturing every tool_use, skill invocation with trigger context, subagent spawn with inputs/outputs, file mutation — today's TRACE.json has a bare `skill_accuracy: 0.17` with no breakdown of WHICH skills fired and when; (4) methodology for re-running past evals against the current framework to see if framework changes affect scores; (5) new skill `framework-upgrade` documenting the upgrade + re-eval procedure. Precondition for interpreting any cross-version eval data honestly — right now we can't tell whether a score change is the agent or the framework.</goal>
+    <status>planned</status>
+    <depends>22</depends>
+  </phase>
+  <phase id="26">
+    <title>Research-grade visualization + Remotion video compositions</title>
+    <goal>Expand the public site from text + tables into interactive visualizations and embedded video explainers. Two tracks: (a) static SVG / React-rendered charts for score comparisons, trigger timelines, agent loops, trace breakdowns — lightweight, ship with every prebuild; (b) Remotion React compositions embedded via @remotion/player (free for teams ≤3, no MP4 export required — plays React frames live in the browser). Video topics to scope: GAD loop walkthrough, a failure-case dissection (v8 broken-crafting with tracing overlay), freedom hypothesis explanation, bare vs emergent workflow emergence comparison, per-eval "what the agent built for itself" retrospectives. Compositions reuse existing site React components (SiteHeader, score cards, etc) so video = composable React, no separate asset pipeline. Remotion itself is a plan-phase concern — discuss what's needed before implementing.</goal>
+    <status>planned</status>
+    <depends>22</depends>
+  </phase>
 </roadmap>
