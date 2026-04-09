@@ -1166,29 +1166,29 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "per_task_discipline": 0,
       "skill_accuracy": null,
       "time_efficiency": 0.533,
-      "human_review": null,
+      "human_review": 0.05,
       "composite": null
     },
     "humanReview": {
-      "score": null,
-      "notes": "RATE LIMITED after full phase-01 scaffold + phase-02 task 01. Dist builds successfully (only one of three conditions to produce a working build). VERIFICATION.md shows the agent self-verified phase 01 as PASS before continuing. Cleanest GAD execution captured — planning overhead visible (23 tasks planned in 14 minutes) but implementation depth limited by rate budget. Freedom-hypothesis signal: GAD spent tokens on planning, bare on direct implementation, neither reached the gates. DO NOT include in cross-round comparisons against completed runs.",
-      "reviewed_by": null,
-      "reviewed_at": null
+      "score": 0.05,
+      "notes": "Rate-limited GAD v9. Start screen loads but nothing beyond it — regressed vs earlier GAD builds. Preserved as data point but excluded from cross-round quality per gad-63. User playtest 2026-04-09.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T16:08:04.201Z"
     },
     "humanReviewNormalized": {
       "rubric_version": "legacy-v0",
       "dimensions": {
         "overall": {
-          "score": null,
-          "notes": "RATE LIMITED after full phase-01 scaffold + phase-02 task 01. Dist builds successfully (only one of three conditions to produce a working build). VERIFICATION.md shows the agent self-verified phase 01 as PASS before continuing. Cleanest GAD execution captured — planning overhead visible (23 tasks planned in 14 minutes) but implementation depth limited by rate budget. Freedom-hypothesis signal: GAD spent tokens on planning, bare on direct implementation, neither reached the gates. DO NOT include in cross-round comparisons against completed runs."
+          "score": 0.05,
+          "notes": "Rate-limited GAD v9. Start screen loads but nothing beyond it — regressed vs earlier GAD builds. Preserved as data point but excluded from cross-round quality per gad-63. User playtest 2026-04-09."
         }
       },
-      "aggregate_score": null,
-      "notes": "RATE LIMITED after full phase-01 scaffold + phase-02 task 01. Dist builds successfully (only one of three conditions to produce a working build). VERIFICATION.md shows the agent self-verified phase 01 as PASS before continuing. Cleanest GAD execution captured — planning overhead visible (23 tasks planned in 14 minutes) but implementation depth limited by rate budget. Freedom-hypothesis signal: GAD spent tokens on planning, bare on direct implementation, neither reached the gates. DO NOT include in cross-round comparisons against completed runs.",
-      "reviewed_by": null,
-      "reviewed_at": null,
+      "aggregate_score": 0.05,
+      "notes": "Rate-limited GAD v9. Start screen loads but nothing beyond it — regressed vs earlier GAD builds. Preserved as data point but excluded from cross-round quality per gad-63. User playtest 2026-04-09.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T16:08:04.201Z",
       "is_legacy": true,
-      "is_empty": true
+      "is_empty": false
     },
     "skillAccuracyBreakdown": null,
     "requirementsDoc": {
@@ -1199,7 +1199,7 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     },
     "topSkill": null,
     "derived": {
-      "divergence_score": null,
+      "divergence_score": 0.05,
       "plan_adherence_delta": 19,
       "produced_artifact_density": 0.14285714285714285,
       "tool_use_mix": null,
@@ -2082,28 +2082,76 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "skill_accuracy": null,
       "planning_quality": null,
       "time_efficiency": null,
-      "composite": null
+      "composite": null,
+      "human_review": 0.805
     },
     "humanReview": {
-      "score": null,
-      "notes": null,
-      "reviewed_by": null,
-      "reviewed_at": null
-    },
-    "humanReviewNormalized": {
-      "rubric_version": "legacy-v0",
+      "rubric_version": "v1",
       "dimensions": {
-        "overall": {
-          "score": null,
+        "playability": {
+          "score": 0.65,
+          "notes": null
+        },
+        "ui_polish": {
+          "score": 0.95,
+          "notes": null
+        },
+        "mechanics_implementation": {
+          "score": 0.9,
+          "notes": null
+        },
+        "ingenuity_requirement_met": {
+          "score": 0.8,
+          "notes": null
+        },
+        "stability": {
+          "score": 0.55,
+          "notes": null
+        },
+        "skill_inheritance_effectiveness": {
+          "score": 0.95,
           "notes": null
         }
       },
-      "aggregate_score": null,
-      "notes": null,
-      "reviewed_by": null,
-      "reviewed_at": null,
-      "is_legacy": true,
-      "is_empty": true
+      "aggregate_score": 0.805,
+      "notes": "User target ~0.85. Strengths: UI is incredible, book-like presentation, icons + animated encounters, battle log great, resistance/DoT/stacking mechanics all landed, pressure felt clearly, forge coupling works, mana crystals + potions wired. First full skill ratcheting cycle observed (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG). Weaknesses: navigation difficult (map is a list), training affinity is menu-driven (user expected casting spells vs training dummy drives affinity), rune forge room has forge+train but no rest option, no inventory/bag/grid or equippable items, no NPC dialogue or merchant buy/sell/trade, not all runes listed so rune discovery loop missing, no continue after death (no save checkpoints), notifications (e.g. 'trained fire affinity') persist above the screen across new games, stuck on warden boss with no remaining way to gain exp/mana once all spells crafted, no visible combat/physical skill stats or skill tree, will need spell slots + skill slots when many spells exist. Captured as v5 requirements feedback.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T16:08:34.438Z"
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "v1",
+      "dimensions": {
+        "playability": {
+          "score": 0.65,
+          "notes": null
+        },
+        "ui_polish": {
+          "score": 0.95,
+          "notes": null
+        },
+        "mechanics_implementation": {
+          "score": 0.9,
+          "notes": null
+        },
+        "ingenuity_requirement_met": {
+          "score": 0.8,
+          "notes": null
+        },
+        "stability": {
+          "score": 0.55,
+          "notes": null
+        },
+        "skill_inheritance_effectiveness": {
+          "score": 0.95,
+          "notes": null
+        }
+      },
+      "aggregate_score": 0.805,
+      "notes": "User target ~0.85. Strengths: UI is incredible, book-like presentation, icons + animated encounters, battle log great, resistance/DoT/stacking mechanics all landed, pressure felt clearly, forge coupling works, mana crystals + potions wired. First full skill ratcheting cycle observed (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG). Weaknesses: navigation difficult (map is a list), training affinity is menu-driven (user expected casting spells vs training dummy drives affinity), rune forge room has forge+train but no rest option, no inventory/bag/grid or equippable items, no NPC dialogue or merchant buy/sell/trade, not all runes listed so rune discovery loop missing, no continue after death (no save checkpoints), notifications (e.g. 'trained fire affinity') persist above the screen across new games, stuck on warden boss with no remaining way to gain exp/mana once all spells crafted, no visible combat/physical skill stats or skill tree, will need spell slots + skill slots when many spells exist. Captured as v5 requirements feedback.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T16:08:34.438Z",
+      "is_legacy": false,
+      "is_empty": false
     },
     "skillAccuracyBreakdown": {
       "expected_triggers": [],

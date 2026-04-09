@@ -29,7 +29,7 @@
     "total_commits": 0,
     "task_id_commits": 0,
     "batch_commits": 0,
-    "per_task_discipline": 0.0,
+    "per_task_discipline": 0,
     "note": "No commits — agent was running in a worktree. Rate limit hit before commit discipline was exercised."
   },
   "planning_quality": {
@@ -62,18 +62,18 @@
   "scores": {
     "requirement_coverage": 0.208,
     "planning_quality": 0.85,
-    "per_task_discipline": 0.0,
+    "per_task_discipline": 0,
     "skill_accuracy": null,
     "time_efficiency": 0.533,
-    "human_review": null,
+    "human_review": 0.05,
     "composite": null
   },
   "scores_note": "Highest planning_quality ever captured (0.85) — full XML suite + phase verification + structured task breakdown.",
   "human_review": {
-    "score": null,
-    "notes": "RATE LIMITED after full phase-01 scaffold + phase-02 task 01. Dist builds successfully (only one of three conditions to produce a working build). VERIFICATION.md shows the agent self-verified phase 01 as PASS before continuing. Cleanest GAD execution captured — planning overhead visible (23 tasks planned in 14 minutes) but implementation depth limited by rate budget. Freedom-hypothesis signal: GAD spent tokens on planning, bare on direct implementation, neither reached the gates. DO NOT include in cross-round comparisons against completed runs.",
-    "reviewed_by": null,
-    "reviewed_at": null
+    "score": 0.05,
+    "notes": "Rate-limited GAD v9. Start screen loads but nothing beyond it — regressed vs earlier GAD builds. Preserved as data point but excluded from cross-round quality per gad-63. User playtest 2026-04-09.",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-09T16:08:04.201Z"
   },
   "notes": "Round 4 greenfield, GAD condition. Rate-limited run with most complete planning suite of any run to date. Partial data — preserve for cross-condition planning_quality comparison against bare and emergent rate-limited peers."
 }

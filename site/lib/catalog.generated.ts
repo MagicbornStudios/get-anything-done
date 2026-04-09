@@ -1465,8 +1465,8 @@ export const FINDINGS: Finding[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "22",
   "milestone": "gad-v1.1",
-  "nextAction": "PHASE 23 ACTIVE (round 4 greenfield) + PHASE 27 track 1 shipped. Round 4 results: Bare v5 + Emergent v4 shipped complete playable games against v4 pressure-oriented requirements, GAD v10 api-interrupted at phases 01+02 completion (55 tool_uses for planning + data layer, no scene implementation reached). Freedom hypothesis holds under v4. Emergent v4 authored 2 new skills (dom-over-kaplay, pressure-forge-coupling) and a CHANGELOG — first observed full inheritance→apply→evolve→document cycle. Phase 27 track 1 (rubric) shipped session 13: lib/rubric-schema.cjs + human_review_rubric blocks in 3 greenfield gad.json files (emergent gets a 6th dimension `skill_inheritance_effectiveness` as the compound-skills hypothesis test signal) + prebuild parser handles both legacy single-score and rubric formats via normalizeHumanReviewPrebuild + `gad eval review --rubric '<json>'` CLI extension + RubricRadar SVG chart component rendered on per-run pages when rubric is populated. Decision gad-65 pins the Compound-Skills Hypothesis. Skill inheritance lineage table live on /projects/escape-the-dungeon-emergent showing per-run newly-authored vs carried-over skills. Task 21-23b queued for GAD v11 retry after 529 investigation. NEXT SESSION USER WORK: play Bare v5 and Emergent v4 on the deployed site, submit rubric review via `gad eval review escape-the-dungeon-bare v5 --rubric '{\"playability\":0.8,...}' --notes \"...\"`. Then NEXT AGENT SESSION: investigate HTTP 529 pattern, retry GAD v11, regenerate site data, push.",
-  "lastUpdated": "2026-04-08",
+  "nextAction": "ROUND 4 REVIEWED + V5 REQUIREMENTS DRAFTED. User played escape-the-dungeon v9 (GAD rate-limited, scored 0.05 — start screen only, preserved as data point excluded from cross-round per gad-63) and escape-the-dungeon-emergent v4 (rubric aggregate 0.805, user target ~0.85). Emergent v4 rubric breakdown: playability 0.65 / ui_polish 0.95 / mechanics_implementation 0.90 / ingenuity_requirement_met 0.80 / stability 0.55 / skill_inheritance_effectiveness 0.95. Detailed playtest feedback captured as `evals/_v5-requirements-addendum.md` with 12 new/changed requirements (R-v5.01..12): training via encounter not menu, rune discovery loop, merchant buy/sell/trade, NPC dialogue with branching, inventory/bag grid + equippable items, visible character sheet + skill tree, spell/skill loadout slots, end-boss reachability, save checkpoints + continue, notification lifecycle, rest rooms actually offer rest, 2D map navigation. New decisions: gad-66 (authored-content injection experiment — preserve content packs per run, inherit alongside requirements in a new eval flavor), gad-67 (serial eval execution is permanent default, parallel requires explicit authorization + pre-computed budget). Playable Archive site enhancement shipped (3cd2dd4 + 0347da6): clicking requirements filename or top skill filename on a playable card opens an inline modal with file content. NEXT AGENT SESSION: (1) investigate HTTP 529 pattern, (2) promote _v5-requirements-addendum.md into real v5 REQUIREMENTS.xml for all 3 greenfield escape-the-dungeon projects + bump requirements_version in templates + append v5 section to REQUIREMENTS-VERSIONS.md, (3) design content-pack extraction for gad-66 (probably a new `gad eval extract-content` subcommand), (4) retry GAD v11 serially against v5 after 529 investigation, (5) regenerate site data + push. Do NOT run round 5 against v4.",
+  "lastUpdated": "2026-04-09",
   "phases": [
     {
       "id": "01",
@@ -1694,6 +1694,16 @@ export const PLANNING_STATE: PlanningState = {
       "summary": "The primary goal of the eval framework is no longer \"score runs\" — it's \"produce structured data that yields insights.\" A score is just one kind of derived data; the framework should also produce structured human review rubrics (dimensions instead of single numbers), automated gate checks (playwright tests instead of human inspection for things automatable), derived metrics (tool mix, commit rhyth"
     },
     {
+      "id": "gad-67",
+      "title": "Serial eval execution is the permanent default — parallel requires explicit authorization",
+      "summary": "Reinforcement of gad-62 with a stronger default. User directive after round 4: \"our tests done sequentially to use the full token/budget that we get for these evals is more than likely what we will need to do rather than run them all in parallel most of the time. we will just need to remember to eval.\" Policy: any agent session proposing an eval run defaults to serial execution (one condition at a"
+    },
+    {
+      "id": "gad-66",
+      "title": "Authored-content injection experiment — inherit content packs alongside requirements",
+      "summary": "New eval condition proposal: preserve every run's authored game content (spells, runes, items, NPCs, dialogue trees, skills, encounter tables) as a portable \"content pack\" separate from the source code. A subsequent eval run inherits both the requirements document AND a content pack extracted from prior runs, then builds on top. This is NOT a freedom-hypothesis test — it explicitly scaffolds the a"
+    },
+    {
       "id": "gad-63",
       "title": "Rate-limited runs are preserved as data points but excluded from cross-round quality comparisons",
       "summary": "TRACE.json files from rate-limited runs are still preserved (the partial work is informative about planning differential, architecture patterns, and inheritance effects) but explicitly excluded from freedom-hypothesis comparisons, Graphs scatter plots, and cross-round score aggregation. The filter key is `timing.rate_limited === true` in TRACE.json. Site rendering (Results, Graphs, /insights) shou"
@@ -1737,16 +1747,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-56",
       "title": "Lineage attribution: GSD → RepoPlanner → GAD",
       "summary": "GAD's lineage is acknowledged explicitly on the public site. Get Shit Done (gsd-build, https://github.com/gsd-build/get-shit-done) is the upstream inspiration — small planning loops, visible state, executable specs. RepoPlanner (b2gdevs, https://repo-planner.vercel.app/) was an earlier attempt by the same author to formalize the \"Ralph Wiggum loop\" (continuous agent work maintained by in-repo docu"
-    },
-    {
-      "id": "gad-55",
-      "title": "Multi-agent tracing is a conversion problem, not a reimplementation problem",
-      "summary": "If we ever want to evaluate Codex, Aider, or other hook-capable agents, the path is: their native session format → a converter script that emits GAD trace schema v4 → the same /runs/[project]/[version] page renders it. No per-agent site code. Codex's output format (Running/Ran prefixes with output blocks under ` └ `) is parseable but stream-based — would need a converter that tails the session and"
-    },
-    {
-      "id": "gad-54",
-      "title": "Eval backfill policy: freeze old scores, stamp new runs with framework version",
-      "summary": "When the framework changes (new skill, new subagent, rewritten command), old eval scores are never recomputed. They're historical records, frozen at the framework commit they ran against. New runs against the updated framework get stamped with the new framework commit and become the \"current\" data point for cross-version comparisons. This preserves the archaeology — a reader can see what a v5 esca"
     }
   ]
 };
