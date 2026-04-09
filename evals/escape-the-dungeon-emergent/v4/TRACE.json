@@ -1,0 +1,56 @@
+{
+  "eval": "escape-the-dungeon-emergent",
+  "version": "v4",
+  "date": "2026-04-09",
+  "gad_version": "1.32.0",
+  "framework_version": "1.32.0",
+  "framework_commit": "459dc36",
+  "framework_branch": "main",
+  "framework_commit_ts": "2026-04-09T00:22:35-05:00",
+  "framework_stamp": "v1.32.0+459dc36",
+  "trace_schema_version": 4,
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "timing": {
+    "started": "2026-04-09T05:39:12.311Z",
+    "ended": null,
+    "duration_minutes": null,
+    "phases_completed": 0,
+    "tasks_completed": 0
+  },
+  "gad_commands": [],
+  "skill_triggers": [],
+  "planning_quality": {
+    "phases_planned": 0,
+    "tasks_planned": 0,
+    "tasks_completed": 0,
+    "tasks_blocked": 0,
+    "decisions_captured": 0,
+    "state_updates": 0,
+    "state_stale_count": 0
+  },
+  "cli_efficiency": {
+    "total_gad_commands": 0,
+    "total_gad_tokens": 0,
+    "manual_file_reads": 0,
+    "manual_file_tokens": 0,
+    "token_reduction_vs_manual": null
+  },
+  "skill_accuracy": {
+    "expected_triggers": [],
+    "accuracy": null
+  },
+  "scores": {
+    "cli_efficiency": null,
+    "skill_accuracy": null,
+    "planning_quality": null,
+    "time_efficiency": null,
+    "composite": null
+  },
+  "human_review": {
+    "score": null,
+    "notes": null,
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+}

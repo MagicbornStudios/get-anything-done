@@ -492,6 +492,12 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Eval runner behaviour change: `gad eval suite` no longer implies parallel execution. Future round 4 retries run serially (one greenfield condition at a time), expected 20-30 min each, 60-90 min total wall clock. Parallel execution available as an explicit flag if/when per-run budget is known.</impact>
   </decision>
 
+  <decision id="gad-64">
+    <title>API-interrupted runs are a separate failure category from rate-limited runs</title>
+    <summary>Round 4's GAD v10 hit Anthropic API 529 overloaded_error twice. This is server-side transient load, not an account rate limit — different cause, different retry semantics, different interpretation. TRACE.json now distinguishes the two via separate flags: timing.rate_limited (account cap hit — gad-63 treats these as preserve-but-exclude) and timing.api_interrupted (server overload — ALSO preserve-but-exclude, with interruption_reason field capturing the specific HTTP error). Both flags filter runs out of cross-round quality comparisons in the site's Graphs and Results sections. The distinction matters because rate-limited runs imply budget planning issues while api-interrupted runs imply external infrastructure issues — researchers reading the /findings/ round writeups need to see which failure mode they're looking at.</summary>
+    <impact>site isRateLimited() helper extends to isApiInterrupted() and comparableRuns() excludes both. Per-run pages get an amber "API interrupted — server overload" badge distinct from the "rate limited — account cap" badge. TRACE.json schema allows both flags on the same run (a run could theoretically hit both).</impact>
+  </decision>
+
   <decision id="gad-63">
     <title>Rate-limited runs are preserved as data points but excluded from cross-round quality comparisons</title>
     <summary>TRACE.json files from rate-limited runs are still preserved (the partial work is informative about planning differential, architecture patterns, and inheritance effects) but explicitly excluded from freedom-hypothesis comparisons, Graphs scatter plots, and cross-round score aggregation. The filter key is `timing.rate_limited === true` in TRACE.json. Site rendering (Results, Graphs, /insights) should filter these out by default with an opt-in "include rate-limited" toggle for researchers. The human_review.notes field on every rate-limited TRACE carries "DO NOT include in cross-round comparisons against completed runs" as the explicit instruction.</summary>

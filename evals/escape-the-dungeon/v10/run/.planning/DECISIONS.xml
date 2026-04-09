@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decisions>
+  <decision id="etd-01">
+    <title>DOM renderer, no game framework</title>
+    <summary>
+      Reject KAPLAY despite REQUIREMENTS.xml suggesting it. Two independent previous
+      rounds (Bare v5, Emergent v4) converged on DOM + TypeScript + Vite + iconify-icon
+      after KAPLAY's styled text, missing area(), and scene-arg gotchas bit earlier
+      runs. Going with the consensus is the lower-risk path to a green build and a
+      polished UI in the time budget. The GAD condition's value is in planning
+      discipline and gate tracking, not in re-litigating framework choice.
+    </summary>
+    <impact>
+      Renderer = direct DOM + CSS. Icons = iconify-icon web component + @iconify-json/game-icons.
+      No canvas. No game loop — event-driven scene router. Simpler mental model per scene.
+    </impact>
+  </decision>
+  <decision id="etd-02">
+    <title>Ingenuity clause for forge combinations</title>
+    <summary>
+      Forge supports authored combos AND unknown combos. Any unknown 2-rune combo
+      produces a valid spell via an "ingenuity recipe": rune types fold together
+      deterministically (e.g. fire+wind -> firestorm DoT). Prevents softlock and
+      rewards experimentation per the v4 pressure-oriented requirements.
+    </summary>
+    <impact>Forge is never a dead-end. All 5*4 ordered pairs yield a spell.</impact>
+  </decision>
+  <decision id="etd-03">
+    <title>Scene router = top-level string, not SPA</title>
+    <summary>
+      A single #app div, a renderScene() dispatcher by state.scene enum. Simple,
+      debuggable, and avoids framework overhead. Each scene module exports a
+      render(root) function that clears and repopulates.
+    </summary>
+    <impact>Easy to add new scenes; localStorage save-per-tick is trivial.</impact>
+  </decision>
+  <decision id="etd-04">
+    <title>Pressure gate G4: resource + counterplay + encounter</title>
+    <summary>
+      Three pressure mechanics, not just two: (A) mana and crystal pools constrain
+      casting/forging, (B) enemy resistances and reflect, (C) authored elites with
+      unique rules. At least (B) and (C) interact with the forge by making crafted
+      status/DoT/summon spells strictly better than the starter magic missile.
+    </summary>
+    <impact>G4 passes with margin.</impact>
+  </decision>
+</decisions>

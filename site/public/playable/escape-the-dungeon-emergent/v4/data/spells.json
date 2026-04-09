@@ -1,0 +1,78 @@
+{
+  "starter": [
+    {
+      "id": "starter_bolt",
+      "name": "Arcane Bolt",
+      "icon": "game-icons:magic-swirl",
+      "cost": 4,
+      "description": "A basic arcane missile. 8 damage.",
+      "effect": { "type": "direct", "damage": 8, "element": "arcane" }
+    }
+  ],
+  "combinations": [
+    {
+      "id": "fire+blood",
+      "inputs": ["fire", "blood"],
+      "name": "Ember Hemorrhage",
+      "icon": "game-icons:bleeding-wound",
+      "cost": 6,
+      "description": "5 damage then 4 burn + 3 bleed for 3 turns. Ignores armor.",
+      "effect": { "type": "dot", "damage": 5, "dotDamage": 7, "duration": 3, "element": "fire", "armorPierce": true }
+    },
+    {
+      "id": "frost+shock",
+      "inputs": ["frost", "shock"],
+      "name": "Stormlock",
+      "icon": "game-icons:lightning-storm",
+      "cost": 7,
+      "description": "12 damage, stuns for 1 turn. Chain arc.",
+      "effect": { "type": "stun", "damage": 12, "stunTurns": 1, "element": "shock" }
+    },
+    {
+      "id": "nature+blood",
+      "inputs": ["nature", "blood"],
+      "name": "Rotbloom",
+      "icon": "game-icons:poison-cloud",
+      "cost": 5,
+      "description": "6 damage + 5 poison/turn for 4 turns. DoT kills things that reflect direct damage.",
+      "effect": { "type": "dot", "damage": 6, "dotDamage": 5, "duration": 4, "element": "nature" }
+    },
+    {
+      "id": "shadow+nature",
+      "inputs": ["shadow", "nature"],
+      "name": "Hexroot",
+      "icon": "game-icons:hanging-spider",
+      "cost": 6,
+      "description": "9 damage, bypasses shields. Drains 3 HP to caster.",
+      "effect": { "type": "drain", "damage": 9, "heal": 3, "element": "shadow", "ignoreShield": true }
+    },
+    {
+      "id": "fire+shock",
+      "inputs": ["fire", "shock"],
+      "name": "Plasma Lance",
+      "icon": "game-icons:crossed-bones",
+      "cost": 8,
+      "description": "16 heavy direct damage. Overkill basic defenses.",
+      "effect": { "type": "direct", "damage": 16, "element": "plasma" }
+    },
+    {
+      "id": "shadow+blood",
+      "inputs": ["shadow", "blood"],
+      "name": "Soul Rend",
+      "icon": "game-icons:spiral-bloom",
+      "cost": 7,
+      "description": "10 damage; restores mana equal to damage dealt over max HP%.",
+      "effect": { "type": "direct", "damage": 10, "manaReturn": 4, "element": "shadow", "armorPierce": true }
+    },
+    {
+      "id": "frost+nature",
+      "inputs": ["frost", "nature"],
+      "name": "Glacier Thorns",
+      "inputs_alt": [],
+      "icon": "game-icons:ice-spear",
+      "cost": 6,
+      "description": "7 damage + 3 bleed for 3 turns + slow.",
+      "effect": { "type": "dot", "damage": 7, "dotDamage": 3, "duration": 3, "element": "frost" }
+    }
+  ]
+}

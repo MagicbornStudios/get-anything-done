@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ExternalLink, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { EVAL_RUNS, WORKFLOW_LABELS, isRateLimited, playableUrl, type Workflow } from "@/lib/eval-data";
+import { EVAL_RUNS, WORKFLOW_LABELS, isInterrupted, playableUrl, type Workflow } from "@/lib/eval-data";
 
 const REPO = "https://github.com/MagicbornStudios/get-anything-done";
 const WORKFLOW_TINT: Record<Workflow, string> = {
@@ -23,10 +23,11 @@ function ScoreBar({ value }: { value: number }) {
   );
 }
 
-// Only show runs that have human review AND aren't rate-limited — decision
-// gad-63 pins rate-limited runs as archival-only, not comparison data.
+// Only show runs that have human review AND weren't interrupted — decisions
+// gad-63 (rate limit) and gad-64 (api overload) pin interrupted runs as
+// archival-only, not comparison data.
 const DISPLAY_RUNS = EVAL_RUNS.filter(
-  (r) => r.humanReview?.score != null && !isRateLimited(r)
+  (r) => r.humanReview?.score != null && !isInterrupted(r)
 ).sort((a, b) => {
   if (a.project !== b.project) return a.project.localeCompare(b.project);
   const av = parseInt(a.version.slice(1), 10) || 0;

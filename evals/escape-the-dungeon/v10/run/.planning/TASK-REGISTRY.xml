@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task-registry>
+  <!-- Phase 01: scaffold -->
+  <task id="01-01" phase="01" status="done">Create package.json, tsconfig.json, vite.config.ts, index.html, src/main.ts booting a styled title bar</task>
+  <task id="01-02" phase="01" status="done">Install iconify-icon + @iconify-json/game-icons, prove one icon renders</task>
+
+  <!-- Phase 02: data layer -->
+  <task id="02-01" phase="02" status="done">src/types.ts: Entity, CombatStats, Rune, Spell, Room, Floor types</task>
+  <task id="02-02" phase="02" status="done">src/content/runes.ts and spells.ts: 5 runes, starter spells, combo recipes, ingenuity folding</task>
+  <task id="02-03" phase="02" status="done">src/content/enemies.ts: 6+ enemies incl. Stone Warden, Mirror Djinn, Pyre Lich, slimes, wraiths, bandit</task>
+  <task id="02-04" phase="02" status="done">src/content/floors.ts: floor 1 (7 rooms + boss), floor 2 (6 rooms + boss), authored graph</task>
+  <task id="02-05" phase="02" status="planned">src/state.ts: GameState, load/save via localStorage, newGame() initializer</task>
+
+  <!-- Phase 03: title + HUD -->
+  <task id="03-01" phase="03" status="planned">src/scenes/router.ts: scene enum + render dispatcher, CSS base theme</task>
+  <task id="03-02" phase="03" status="planned">src/scenes/title.ts: title screen with "New Game" and "Continue"</task>
+  <task id="03-03" phase="03" status="planned">src/ui/hud.ts: persistent HUD (HP bar, mana bar, floor, tick, crystals, Traits label)</task>
+
+  <!-- Phase 04: rooms -->
+  <task id="04-01" phase="04" status="planned">src/scenes/room.ts: room view with type icon, themed panel, exit buttons, fog reveal</task>
+  <task id="04-02" phase="04" status="planned">Navigation tick: save on entry, respawn logic, boss gate check</task>
+
+  <!-- Phase 05: combat -->
+  <task id="05-01" phase="05" status="planned">src/combat.ts: turn resolver, damage calc, type/resist handling</task>
+  <task id="05-02" phase="05" status="planned">src/scenes/combat.ts: Fight/Spells/Bag/Run UI with HP bars, enemy iconify sprite, log</task>
+  <task id="05-03" phase="05" status="planned">Victory/defeat flow: XP, crystals, return to room or game over</task>
+
+  <!-- Phase 06: forge -->
+  <task id="06-01" phase="06" status="planned">src/forge.ts: combo table + ingenuity folding recipe, affinity tracking</task>
+  <task id="06-02" phase="06" status="planned">src/scenes/forge.ts: rune selection, preview, craft, affinity display, equip</task>
+
+  <!-- Phase 07: pressure encounters -->
+  <task id="07-01" phase="07" status="planned">Wire floor 1 Stone Warden elite + boss; verify starter spells inefficient</task>
+  <task id="07-02" phase="07" status="planned">Wire floor 2 Mirror Djinn elite + Pyre Lich boss; new constraint</task>
+
+  <!-- Phase 08: dialogue -->
+  <task id="08-01" phase="08" status="planned">src/scenes/event.ts: NPC portrait, text, 2+ choices, effect application</task>
+
+  <!-- Phase 09: overlays -->
+  <task id="09-01" phase="09" status="planned">src/ui/overlays.ts: Map, Spellbook, Traits overlay toggles from HUD</task>
+
+  <!-- Phase 10: polish + verify -->
+  <task id="10-01" phase="10" status="planned">CONVENTIONS.md + ARCHITECTURE.md</task>
+  <task id="10-02" phase="10" status="planned">Full-playthrough smoke test, fix any softlocks</task>
+  <task id="10-03" phase="10" status="planned">Production build, VERIFICATION.md with 4 gates</task>
+</task-registry>

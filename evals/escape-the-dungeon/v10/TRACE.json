@@ -1,0 +1,77 @@
+{
+  "eval": "escape-the-dungeon",
+  "version": "v10",
+  "date": "2026-04-09",
+  "gad_version": "1.32.0",
+  "framework_version": "1.32.0",
+  "framework_commit": "459dc36",
+  "framework_branch": "main",
+  "framework_stamp": "v1.32.0+459dc36",
+  "trace_schema_version": 4,
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "requirements_version": "v4",
+  "timing": {
+    "started": "2026-04-09T05:30:00.000Z",
+    "ended": "2026-04-09T05:39:00.000Z",
+    "duration_minutes": 9,
+    "phases_completed": 2,
+    "tasks_completed": 6,
+    "api_interrupted": true,
+    "interruption_note": "Anthropic API returned 529 overloaded_error at tool_uses=55. Not a rate limit (full budget available), transient server overload. Previous attempt (not preserved) crashed at tool_uses=18 with the same error."
+  },
+  "token_usage": {
+    "total_tokens": 1216,
+    "tool_uses": 55,
+    "note": "API 529 interrupted — more tool uses than Bare v5 (45) or Emergent v4 (45) but NO playable game produced. The 55 tool uses went to planning + data authoring, not scene implementation."
+  },
+  "git_analysis": {
+    "total_commits": 0,
+    "task_id_commits": 0,
+    "batch_commits": 0,
+    "per_task_discipline": 0.0
+  },
+  "planning_quality": {
+    "phases_planned": 7,
+    "tasks_planned": 20,
+    "tasks_completed": 6,
+    "tasks_blocked": 14,
+    "decisions_captured": 0,
+    "state_updates": 2,
+    "state_stale_count": 0,
+    "note": "Full XML planning suite: ROADMAP with 7 phases (scaffold, data, title+HUD, room-navigation, combat, forge-and-runes, pressure-encounters), TASK-REGISTRY with ~20 tasks, STATE current at phase 02 task 02-01, DECISIONS scaffolded. Phase 01 + Phase 02 complete with 875 lines of TypeScript (types 137, state 72, enemies 160, floors 224, runes 221, events 43, main 7 stub, router 11 stub). Phases 03-07 NOT STARTED — scenes for title, room, combat, forge all unimplemented at interruption."
+  },
+  "workflow_emergence": {
+    "created_task_lists": true,
+    "created_state_tracking": true,
+    "created_architecture_docs": true,
+    "created_reusable_skills": false,
+    "emergence_score": 0.75
+  },
+  "requirement_coverage": {
+    "total_criteria": 12,
+    "gate_failed": true,
+    "gate_notes": "G1 NOT MET — no game loop. Dist is scaffold-only title 'ESCAPE THE DUNGEON v10 — scaffold booted' with no navigation, combat, or forge wired. router.ts is an 11-line stub. G2 NOT MET — runes and spells data authored (221 lines of runes.ts) but no forge UI. G3 PARTIAL — scaffold title has iconify-icon + styled h1 but that is the only rendered surface. G4 NOT MET — pressure mechanics not implemented beyond data declarations.",
+    "fully_met": 0,
+    "partially_met": 2,
+    "not_met": 10,
+    "coverage_ratio": 0.083
+  },
+  "scores": {
+    "requirement_coverage": 0.083,
+    "planning_quality": 0.9,
+    "per_task_discipline": 0.0,
+    "skill_accuracy": null,
+    "time_efficiency": 0.7,
+    "human_review": null,
+    "composite": null
+  },
+  "scores_note": "API-interrupted run. Planning quality is the HIGHEST of any eval run captured (0.9) — full 7-phase roadmap with 20 tasks, STATE authored with explicit next-action, DECISIONS scaffolded, phase 01 verified. Requirement coverage is the LOWEST of any round 4 run (0.083) — zero scene implementation reached. Strongest freedom-hypothesis signal in the dataset: GAD planning + data-layer authoring ate the tool budget before implementation could begin.",
+  "human_review": {
+    "score": null,
+    "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output.",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  "notes": "Round 4 greenfield, GAD condition, v4 requirements. API-interrupted after reaching phase 02 completion. Data point preserved because phases 01+02 completed cleanly with the fullest planning suite captured to date."
+}

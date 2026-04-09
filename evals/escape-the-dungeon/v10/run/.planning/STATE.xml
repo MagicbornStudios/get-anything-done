@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<state>
+  <current-phase>02</current-phase>
+  <current-plan>core-state-and-content</current-plan>
+  <milestone>escape-the-dungeon-v10</milestone>
+  <status>in-progress</status>
+  <next-action>Phase 02: data layer. Start with task 02-01 (src/types.ts).</next-action>
+  <last-updated>2026-04-09</last-updated>
+</state>

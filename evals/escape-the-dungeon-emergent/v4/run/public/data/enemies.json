@@ -1,0 +1,96 @@
+{
+  "enemies": {
+    "cave_rat": {
+      "name": "Cave Rat",
+      "icon": "game-icons:rat",
+      "maxHp": 14,
+      "might": 4,
+      "defense": 1,
+      "xp": 6,
+      "crystals": 3,
+      "resistances": [],
+      "behavior": "basic",
+      "description": "Quick but fragile scavenger."
+    },
+    "stone_golem": {
+      "name": "Stone Golem",
+      "icon": "game-icons:stone-crafting",
+      "maxHp": 32,
+      "might": 5,
+      "defense": 8,
+      "xp": 14,
+      "crystals": 6,
+      "resistances": ["direct"],
+      "behavior": "brute",
+      "description": "Skin of granite. Soaks direct hits — seek armor-piercing damage.",
+      "note": "Resistant to direct damage. Bleed, burn, or piercing strikes bypass its stone skin."
+    },
+    "crypt_lich": {
+      "name": "Crypt Lich",
+      "icon": "game-icons:dark-squad",
+      "maxHp": 46,
+      "might": 7,
+      "defense": 4,
+      "xp": 22,
+      "crystals": 10,
+      "resistances": [],
+      "behavior": "caster",
+      "description": "An ancient mage, hoarding arcane wards."
+    },
+    "thornwretch": {
+      "name": "Thornwretch",
+      "icon": "game-icons:venomous-sprite",
+      "maxHp": 28,
+      "might": 6,
+      "defense": 2,
+      "xp": 12,
+      "crystals": 5,
+      "resistances": [],
+      "reflects": "direct",
+      "behavior": "reflector",
+      "description": "Its thorns snap back at direct strikes. Use DoT or indirect effects.",
+      "note": "Reflects direct damage. DoT and status effects bypass."
+    },
+    "manaweaver": {
+      "name": "Manaweaver",
+      "icon": "game-icons:aura",
+      "maxHp": 38,
+      "might": 8,
+      "defense": 3,
+      "xp": 18,
+      "crystals": 8,
+      "resistances": [],
+      "aura": "mana_drain",
+      "behavior": "draining",
+      "description": "An aura of hunger. Drains 3 mana/turn from you. Fight it fast or with physical strikes.",
+      "note": "Drains 3 mana/turn. Spells become expensive — consider Fight or cheap crafted spells."
+    },
+    "warden_f1": {
+      "name": "Warden of the First Gate",
+      "icon": "game-icons:minotaur",
+      "maxHp": 68,
+      "might": 9,
+      "defense": 6,
+      "xp": 40,
+      "crystals": 20,
+      "resistances": ["direct"],
+      "behavior": "boss_phase",
+      "description": "A masoned sentinel. Stone skin reduces direct hits.",
+      "note": "Floor 1 Boss. Resistant to direct. Use DoT, bleed, or piercing to defeat."
+    },
+    "warden_f2": {
+      "name": "The Thornlord",
+      "icon": "game-icons:evil-tree",
+      "maxHp": 90,
+      "might": 11,
+      "defense": 4,
+      "xp": 60,
+      "crystals": 35,
+      "resistances": [],
+      "reflects": "direct",
+      "behavior": "boss_reflector",
+      "description": "Twisted into the wall, it lashes back at those who strike it directly.",
+      "note": "Floor 2 Boss. Reflects 50% of direct damage. Crafted DoTs are essential."
+    }
+  }
+}

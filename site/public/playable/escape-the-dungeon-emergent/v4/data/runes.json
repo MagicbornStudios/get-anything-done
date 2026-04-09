@@ -1,0 +1,10 @@
+{
+  "runes": [
+    { "id": "fire",   "name": "Pyr",    "icon": "game-icons:flame",         "element": "fire",   "description": "Scorching heat. Applies burn." },
+    { "id": "frost",  "name": "Gel",    "icon": "game-icons:snowflake-1",   "element": "frost",  "description": "Biting cold. Slows foes." },
+    { "id": "shock",  "name": "Volt",   "icon": "game-icons:lightning-tree","element": "shock",  "description": "Arcing voltage. Chains through armor." },
+    { "id": "nature", "name": "Verdan", "icon": "game-icons:vine-leaf",     "element": "nature", "description": "Creeping rot. Applies poison DoT." },
+    { "id": "shadow", "name": "Umbra",  "icon": "game-icons:skull-crack",   "element": "shadow", "description": "Drains life force. Bypasses defense." },
+    { "id": "blood",  "name": "Sangu",  "icon": "game-icons:dripping-blade","element": "blood",  "description": "Wounds that bleed. Pierces armor." }
+  ]
+}

@@ -14,6 +14,7 @@ import {
   PROJECT_LABELS,
   WORKFLOW_LABELS,
   findRun,
+  isApiInterrupted,
   isRateLimited,
   playableUrl,
 } from "@/lib/eval-data";
@@ -137,9 +138,14 @@ export default async function RunPage({
   const produced = PRODUCED_ARTIFACTS[`${run.project}/${run.version}`];
   const videos = compositionsForRun(run.project, run.version);
   const rateLimited = isRateLimited(run);
+  const apiInterrupted = isApiInterrupted(run);
   const rateLimitNote =
     rateLimited && run.timing
       ? ((run.timing as Record<string, unknown>).rate_limit_note as string | undefined) ?? null
+      : null;
+  const interruptionNote =
+    apiInterrupted && run.timing
+      ? ((run.timing as Record<string, unknown>).interruption_note as string | undefined) ?? null
       : null;
 
   return (
@@ -172,6 +178,11 @@ export default async function RunPage({
             {rateLimited && (
               <Badge variant="outline" className="border-amber-500/50 text-amber-300">
                 ⚠ rate limited — not comparable
+              </Badge>
+            )}
+            {apiInterrupted && (
+              <Badge variant="outline" className="border-amber-500/50 text-amber-300">
+                ⚠ API interrupted — not comparable
               </Badge>
             )}
           </div>
@@ -245,7 +256,36 @@ export default async function RunPage({
                 </div>
               )}
 
-              {divergent && !rateLimited && (
+              {apiInterrupted && (
+                <div className="mt-6 rounded-2xl border border-amber-500/50 bg-amber-500/5 p-5">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-amber-400" aria-hidden />
+                    <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+                      API interrupted · Anthropic server overload
+                    </p>
+                  </div>
+                  <p className="mt-2 text-base leading-7 text-foreground">
+                    This run was stopped by an HTTP 529 <code>overloaded_error</code> from the
+                    Anthropic API — a server-side transient load issue, not a rate limit or
+                    agent failure. The data captured here reflects partial progress before the
+                    API stopped responding. Excluded from cross-round comparisons per{" "}
+                    <strong>decision gad-64</strong>.
+                  </p>
+                  {interruptionNote && (
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      <strong>Details:</strong> {interruptionNote}
+                    </p>
+                  )}
+                  <Link
+                    href="/findings/2026-04-09-round-4-complete"
+                    className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+                  >
+                    Full round 4 findings →
+                  </Link>
+                </div>
+              )}
+
+              {divergent && !rateLimited && !apiInterrupted && (
                 <div className="mt-6 rounded-2xl border border-red-500/40 bg-red-500/5 p-5">
                   <p className="text-xs uppercase tracking-wider text-red-400">
                     Process metrics diverged from reality

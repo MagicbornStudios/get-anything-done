@@ -1,0 +1,197 @@
+{
+  "floors": [
+    {
+      "id": "f1",
+      "name": "The Quarry Catacombs",
+      "icon": "game-icons:stone-tower",
+      "intel": "Stone guardians rule this floor. Their skin shrugs off direct blasts — DoTs and bleeds from the forge will find cracks.",
+      "pressure_note": "Enemies resistant to direct damage. Craft Rotbloom or Ember Hemorrhage.",
+      "start": "f1_start",
+      "rooms": [
+        {
+          "id": "f1_start",
+          "name": "Forsaken Threshold",
+          "feature": "start",
+          "description": "You stand at the mouth of the catacombs. Wet moss claims the stones. A bone-dry wind carries distant laughter.",
+          "exits": [
+            { "to": "f1_rats",   "label": "Descend into the rat warren" },
+            { "to": "f1_forge1", "label": "Enter the old runesmithy" }
+          ]
+        },
+        {
+          "id": "f1_rats",
+          "name": "Rat Warren",
+          "feature": "combat",
+          "description": "Squeaking echoes from every corner. Yellow eyes blink in the dark.",
+          "encounter": { "enemy": "cave_rat", "count": 2 },
+          "exits": [
+            { "to": "f1_start",  "label": "Retreat to threshold" },
+            { "to": "f1_forge1", "label": "Follow a cut stone passage" },
+            { "to": "f1_event1", "label": "Squeeze through a crack" }
+          ]
+        },
+        {
+          "id": "f1_forge1",
+          "name": "The Old Runesmithy",
+          "feature": "forge",
+          "description": "A cold forge. Runes glow faintly in the ash, still hungry. Someone died here studying them.",
+          "exits": [
+            { "to": "f1_start",  "label": "Back to threshold" },
+            { "to": "f1_golem",  "label": "Take the eastern tunnel" },
+            { "to": "f1_rest1",  "label": "Shelter by the banked embers" }
+          ]
+        },
+        {
+          "id": "f1_event1",
+          "name": "Votive Chamber",
+          "feature": "event",
+          "description": "A mouldering shrine. Candle stubs in a ring around a stone basin full of dark water.",
+          "event_id": "votive_f1",
+          "exits": [
+            { "to": "f1_rats",  "label": "Back" },
+            { "to": "f1_rest1", "label": "A carved stair goes down" }
+          ]
+        },
+        {
+          "id": "f1_rest1",
+          "name": "Banked Embers",
+          "feature": "rest",
+          "description": "A cramped alcove where a traveler once slept. The embers still give heat.",
+          "exits": [
+            { "to": "f1_forge1", "label": "Back to the smithy" },
+            { "to": "f1_event1", "label": "Back to the shrine" },
+            { "to": "f1_golem",  "label": "Into the quarry hall" }
+          ]
+        },
+        {
+          "id": "f1_golem",
+          "name": "Quarry Hall",
+          "feature": "combat",
+          "description": "A vaulted hall cut from living stone. Something slab-shouldered and slow stirs among the pillars.",
+          "encounter": { "enemy": "stone_golem", "count": 1 },
+          "exits": [
+            { "to": "f1_forge1", "label": "Back to the smithy" },
+            { "to": "f1_elite",  "label": "Approach the sealed gate" }
+          ]
+        },
+        {
+          "id": "f1_elite",
+          "name": "Sealed Antechamber",
+          "feature": "elite",
+          "description": "Two golems flank a sealed door. Air hums with warding magic.",
+          "encounter": { "enemy": "stone_golem", "count": 1, "elite": true },
+          "exits": [
+            { "to": "f1_golem", "label": "Retreat" },
+            { "to": "f1_boss",  "label": "Face the Warden" }
+          ]
+        },
+        {
+          "id": "f1_boss",
+          "name": "Gate of the First Warden",
+          "feature": "boss",
+          "description": "A colossal figure of hammered stone unfolds from the wall, eyes igniting with slow malice.",
+          "encounter": { "enemy": "warden_f1", "count": 1 },
+          "exits": [
+            { "to": "f1_elite", "label": "Retreat (if not defeated)" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "name": "The Witchwood Descent",
+      "icon": "game-icons:oak-leaf",
+      "intel": "Living thorns and hungry mana below. Direct magic rebounds from the Thornlord's grove. Forge hexes and DoTs.",
+      "pressure_note": "Enemies reflect direct damage or drain mana. Consider Hexroot, Rotbloom.",
+      "start": "f2_start",
+      "rooms": [
+        {
+          "id": "f2_start",
+          "name": "Root Entry",
+          "feature": "start",
+          "description": "Tree-roots have cracked the stone. The air smells of sap and old blood.",
+          "exits": [
+            { "to": "f2_thorn1", "label": "Push through the brambles" },
+            { "to": "f2_forge2", "label": "Follow the glowing moss" }
+          ]
+        },
+        {
+          "id": "f2_thorn1",
+          "name": "Thicket Grove",
+          "feature": "combat",
+          "description": "Gnarled saplings twist toward you, eyes opening in their bark.",
+          "encounter": { "enemy": "thornwretch", "count": 1 },
+          "exits": [
+            { "to": "f2_start",  "label": "Back" },
+            { "to": "f2_forge2", "label": "Find the old altar" },
+            { "to": "f2_weaver", "label": "Through the mana-haze" }
+          ]
+        },
+        {
+          "id": "f2_forge2",
+          "name": "Druid's Altar",
+          "feature": "forge",
+          "description": "An altar of living wood. It drinks mana and weeps resin that hums to the touch.",
+          "exits": [
+            { "to": "f2_start",  "label": "Back to roots" },
+            { "to": "f2_thorn1", "label": "Back to grove" },
+            { "to": "f2_rest2",  "label": "Sleep by the altar" }
+          ]
+        },
+        {
+          "id": "f2_weaver",
+          "name": "Mana Haze",
+          "feature": "combat",
+          "description": "A sickly aura chokes your spellcraft. Something wreathed in light hangs in the air.",
+          "encounter": { "enemy": "manaweaver", "count": 1 },
+          "exits": [
+            { "to": "f2_thorn1", "label": "Back" },
+            { "to": "f2_elite2", "label": "Press deeper" }
+          ]
+        },
+        {
+          "id": "f2_rest2",
+          "name": "Grove Rest",
+          "feature": "rest",
+          "description": "A hollow lined with soft moss. The altar's hum lulls your aches.",
+          "exits": [
+            { "to": "f2_forge2", "label": "Back to altar" },
+            { "to": "f2_elite2", "label": "Brave the elite grove" }
+          ]
+        },
+        {
+          "id": "f2_elite2",
+          "name": "Hex-Ringed Glade",
+          "feature": "elite",
+          "description": "Two thornwretches stand back-to-back in a glowing ring of warding runes.",
+          "encounter": { "enemy": "thornwretch", "count": 1, "elite": true },
+          "exits": [
+            { "to": "f2_weaver", "label": "Retreat" },
+            { "to": "f2_boss",   "label": "The Thornlord's throne" }
+          ]
+        },
+        {
+          "id": "f2_boss",
+          "name": "Throne of the Thornlord",
+          "feature": "boss",
+          "description": "A face in the wall of the tree, mouth full of iron. It opens.",
+          "encounter": { "enemy": "warden_f2", "count": 1 },
+          "exits": [
+            { "to": "f2_elite2", "label": "Retreat" }
+          ]
+        }
+      ]
+    }
+  ],
+  "events": {
+    "votive_f1": {
+      "title": "The Votive Basin",
+      "story": "The water is cold enough to hurt. Something glints at the bottom — a rune? A coin? Your reflection doesn't look back at you.",
+      "choices": [
+        { "label": "Drink from the basin", "effect": { "heal": 15, "toast": "You feel renewed. +15 HP." } },
+        { "label": "Reach into the water", "effect": { "grantRune": "shadow", "crystals": 8, "toast": "You pull out a shadow rune and a handful of crystals." } },
+        { "label": "Leave it alone", "effect": { "trait": { "Equilibrium": 1 }, "toast": "You bow respectfully. Trait: Equilibrium +1." } }
+      ]
+    }
+  }
+}

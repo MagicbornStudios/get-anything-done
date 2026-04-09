@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roadmap>
+  <milestone id="escape-the-dungeon-v10" target="playable vertical slice">
+    <phase id="01" name="scaffold" status="planned">
+      Vite + TypeScript project in game/. iconify-icon for sprites. DOM renderer,
+      no game framework. index.html boots to a title bar proving the stack works.
+    </phase>
+    <phase id="02" name="core-state-and-content" status="planned">
+      Entity types, combat/skill/narrative stat shapes, rune data, spell data,
+      floor/room graph data. All content authored under src/content as TS modules.
+      Pure-data layer — no UI yet.
+    </phase>
+    <phase id="03" name="title-and-hud" status="planned">
+      Title screen with "New Game". HUD bar (name, HP bar, Mana bar, floor, tick,
+      crystals). Scene router. Persisted save via localStorage.
+    </phase>
+    <phase id="04" name="room-navigation" status="planned">
+      Room view with room-type icon, themed background per type, exit buttons.
+      Walk 3+ rooms on floor 1 without softlock. Fog reveal on entry.
+    </phase>
+    <phase id="05" name="combat" status="planned">
+      Turn-based combat: Fight / Spells / Bag / Run. Visible HP/mana bars,
+      enemy sprite, damage numbers. Victory returns to room view.
+    </phase>
+    <phase id="06" name="forge-and-runes" status="planned">
+      Rune forge scene. 5 runes, 6+ authored combinations, ingenuity clause:
+      unknown combos still produce a valid spell via "ingenuity" recipe.
+      Craft -> equip -> usable in combat.
+    </phase>
+    <phase id="07" name="pressure-encounters" status="planned">
+      Floor 1 Stone Warden (physical-resist, demands DoT/burn).
+      Floor 2 Mirror Djinn (reflects direct damage, demands DoT/summon).
+      Elite on each floor that strongly favors a crafted spell.
+      Second floor with distinct constraint and boss.
+    </phase>
+    <phase id="08" name="dialogue-events" status="planned">
+      Event room with NPC portrait (iconify), text, choices. At least one
+      choice grants a rune or crystal.
+    </phase>
+    <phase id="09" name="overlay-menus" status="planned">
+      Map overlay, Spellbook overlay, Traits overlay (narrativeStats). Toggle
+      from HUD. Esc closes.
+    </phase>
+    <phase id="10" name="polish-and-verify" status="planned">
+      Full playthrough test, visual consistency pass, CONVENTIONS.md,
+      ARCHITECTURE.md, production build, VERIFICATION.md with 4 gates.
+    </phase>
+  </milestone>
+</roadmap>

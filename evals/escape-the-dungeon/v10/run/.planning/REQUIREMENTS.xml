@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Eval project: Escape the Dungeon
+  Requirements version history:
+    v1 (2026-04-06): 12 systems-focused criteria, no gates
+    v2 (2026-04-08): Gate criteria, vertical-slice priority, UI-first mandate
+    v3 (2026-04-08): Game-loop gate, spell-crafting gate, UI quality gate
+    v4 (2026-04-08): Pressure-oriented design, authored-only, ingenuity enforcement,
+                     floor progression with boss gates, forge integrated with encounter design,
+                     starter abilities explicitly insufficient, Traits UI label
+-->
+<requirements version="v4" updated="2026-04-08">
+  <goal>
+    Build a playable roguelike dungeon crawler "Escape the Dungeon" where players must
+    exercise INGENUITY through spell crafting and adaptation to progress. This is not a
+    features checklist — it is a problem-solving loop disguised as a dungeon crawler.
+    Every mechanical system must create friction that rewards creative player choice.
+  </goal>
+
+  <audience>Solo player (keyboard + mouse). Authored content only. Target: Vite + TypeScript + KAPLAY (web).</audience>
+
+  <core-principle>
+    **Baseline starter abilities must NOT be sufficient to comfortably complete a full
+    floor without adaptation or enhancement.** If a player can brute-force progression
+    using only what they start with, the design has failed. Encounters must demand
+    spell crafting, skill use, resource management, or build specialization.
+  </core-principle>
+
+  <!-- ============================================================ -->
+  <!-- GATE CRITERIA — all must pass or requirement_coverage = 0    -->
+  <!-- ============================================================ -->
+  <gate-criteria>
+
+    <gate id="G1" name="game-loop">
+      The complete game loop must work without softlock. A test run must walk through:
+      1. Title screen renders and "New Game" starts a run
+      2. Player enters first room with visible navigation options
+      3. Player navigates to a second room (scene transition succeeds)
+      4. Player encounters combat OR dialogue and resolves it
+      5. After resolution, player returns to room navigation state
+      6. Player continues into at least one additional room without softlock or dead end
+      Minimum 3 total room transitions in a passing run.
+    </gate>
+
+    <gate id="G2" name="forge-with-ingenuity-payoff">
+      The game must include a functional spell-crafting system AND at least one encounter
+      per floor where the crafted/adapted spell provides a meaningful advantage.
+
+      Crafting requirements:
+      - Player can access a forge / spell-craft interface during gameplay
+      - Player selects at least 2 crafting inputs (runes or components)
+      - System produces a new, usable spell from the combination
+      - Crafted spell can be equipped and used in encounter flow
+      - Minimum 3-5 runes/components, 3+ valid combinations
+
+      Ingenuity payoff requirement (THIS IS THE KEY ADDITION):
+      - At least one encounter per floor must significantly favor or require a crafted/
+        adapted spell. Examples: enemy resistant to base damage types, enemy that punishes
+        spell repetition, enemy that only yields to DoT or burst, etc.
+      - Mere spell acquisition through loot/NPC rewards does NOT satisfy this gate.
+      - Player must intentionally CRAFT to succeed.
+    </gate>
+
+    <gate id="G3" name="ui-quality">
+      The game must present a fully intentional UI. Required:
+      - Readable, visually structured layout with spacing and hierarchy
+      - Room-type icons or sprite representations
+      - Encounter/entity visual representation via sprite, portrait, or coherent placeholder
+      - Themed visual differentiation across room types (color, background, or panel treatment)
+      - Styled interactive controls (buttons with visible affordance)
+      - HP/mana/resources as visual bars, not only numeric dumps
+      - Color-coded statuses / spell types / factions
+
+      Acceptable asset sourcing (in order of preference):
+      1. Lightweight installable icon/sprite libraries (npm packages, CDN)
+      2. Web-searched free/open-license sprites and tilesets (use the find-sprites skill)
+      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)
+      4. Simple geometric fallback tiles — LAST RESORT, counts against UI quality score
+
+      Raw ASCII/text-only UI fails this gate. Ugly primitive-only output counts as a gate
+      failure even if asset sourcing was attempted.
+    </gate>
+
+    <gate id="G4" name="pressure-mechanics">
+      The game must include at least TWO systems that constrain player behavior such that
+      crafting or adapting spells provides a meaningful advantage or is required for success.
+
+      Pick at least two from these categories:
+      A. **Resource pressure** — limited mana pool, limited healing, forge training has a cost,
+         cannot spam indefinitely
+      B. **Enemy counterplay** — resistances, immunities, behavior that punishes repetition,
+         shields requiring specific effects
+      C. **Encounter design pressure** — elites with unique rules, bosses that invalidate
+         default play, rooms with mechanical constraints
+      D. **Build pressure** — player cannot master everything, affinity pushes specialization,
+         loadout limits force trade-offs
+
+      At least one pressure mechanic must interact with the forge so crafted spells are
+      demonstrably more effective than default spells in affected encounters.
+    </gate>
+
+  </gate-criteria>
+
+  <!-- ============================================================ -->
+  <!-- DUNGEON STRUCTURE (authored, not procedural)                 -->
+  <!-- ============================================================ -->
+  <dungeon-structure>
+    <authored-only>
+      All content is authored. No procedural level generation. Light randomness in encounter
+      tables or loot is acceptable; structural layout must be hand-designed.
+    </authored-only>
+
+    <hierarchy>
+      Floors → Rooms → Boss Gate. Each floor has 5-8 authored rooms plus a floor boss that
+      gates progression to the next floor. Player clears a floor by defeating the boss,
+      which unlocks the next floor.
+    </hierarchy>
+
+    <room-types>
+      <type name="Combat">Standard enemy encounter, authored enemy composition.</type>
+      <type name="Elite">Stress test for a mechanic introduced earlier on this floor or a previous one. Harder than standard combat, usually requires crafted spells or adaptation.</type>
+      <type name="Forge">Crafting + affinity training interface. May cost mana crystals or XP to use.</type>
+      <type name="Rest">Limited recovery (heal HP/mana to a cap, NOT full restore every time).</type>
+      <type name="Event">Choices, narrative, tradeoffs. May give items, information, or apply debuffs.</type>
+    </room-types>
+
+    <floor-mechanical-constraint>
+      Each floor MUST introduce at least one mechanical constraint or enemy behavior that
+      cannot be brute-forced with the player's current default abilities. Examples:
+      - Floor 1: enemies resistant to raw damage → player must apply DoT or status effects
+      - Floor 2: enemies that reflect direct damage → player must use indirect or summon-based attacks
+      - Floor 3: enemies with mana-drain aura → player must conserve or use physical skills
+      This constraint is discovered through gameplay, not explained in a tutorial.
+    </floor-mechanical-constraint>
+
+    <respawn-and-grinding>
+      Combat rooms on a cleared floor may respawn enemies on re-entry (respawn cadence is
+      authored, not every entry). Player can grind for XP, crystals, and rune affinity
+      before attempting bosses. Grinding should be slower than forge training to create
+      choice pressure.
+    </respawn-and-grinding>
+  </dungeon-structure>
+
+  <!-- ============================================================ -->
+  <!-- FORGE SYSTEM (now integrated with encounter design)          -->
+  <!-- ============================================================ -->
+  <forge-system>
+    <required>
+      - Forge interface accessible at Forge rooms
+      - 3-5 runes or crafting components
+      - 3+ valid combinations producing distinct spell effects
+      - Affinity tracking per rune/spell family, increases with use
+      - Forge can train affinity directly in exchange for XP (cheaper than combat grinding)
+      - At least one encounter per floor requires or strongly favors a crafted/adapted spell
+    </required>
+    <strongly-recommended>
+      - Visible affinity level (UI shows current levels)
+      - Affinity thresholds unlock stronger spell variants
+      - Authored or player-authored spell customization (player can name their spells)
+    </strongly-recommended>
+    <deferred-to-v5>
+      - Cross-affinity decay when runes are neglected
+      - Deep evolution trees
+      - Multi-stage spell mutations
+    </deferred-to-v5>
+  </forge-system>
+
+  <!-- ============================================================ -->
+  <!-- SKILLS (scored, not gated)                                    -->
+  <!-- ============================================================ -->
+  <skills-system>
+    <required>
+      Combat must support at least one non-spell action category (basic attack, skill, or similar).
+      The combat model should NOT be single-lane "spell or nothing".
+    </required>
+    <scored>
+      Full skill system with physical (no-mana) actions, skill XP / evolution, mana-crystal
+      overcharge to add extra damage or effects (DoT, burn, bleed, stun, knockback).
+    </scored>
+  </skills-system>
+
+  <!-- ============================================================ -->
+  <!-- ASSET SOURCING (first attempt real assets)                   -->
+  <!-- ============================================================ -->
+  <asset-sourcing>
+    <workflow>
+      Agents must attempt asset sourcing first via the find-sprites skill or equivalent
+      web-search workflow. Sourced assets should be lightweight, installable, and legally
+      usable (open-license, public domain, or generated).
+    </workflow>
+    <preference-order>
+      1. Lightweight installable icon/sprite npm packages (game-icons, pixel-art packs)
+      2. Web-searched free/open-license sprites/tilesets (itch.io, OpenGameArt, etc.)
+      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)
+      4. Geometric fallback tiles — LAST RESORT, counts against UI quality
+    </preference-order>
+    <fallback-policy>
+      Fallback to generated/geometric placeholders is allowed ONLY if sourcing genuinely
+      fails (404s, no suitable assets, integration cost disproportionate). Fallback must
+      still be visually coherent. Using fallback when real assets were reachable is a
+      gate violation.
+    </fallback-policy>
+  </asset-sourcing>
+
+  <!-- ============================================================ -->
+  <!-- TERMINOLOGY                                                   -->
+  <!-- ============================================================ -->
+  <terminology>
+    <ui-label>Traits — player-facing label for narrative/progression stats</ui-label>
+    <code-identifier>narrativeStats — internal code/data structure name</code-identifier>
+    <rationale>Splits stable internal naming from clearer external naming. Document the mapping once.</rationale>
+  </terminology>
+
+  <!-- ============================================================ -->
+  <!-- SCORED CRITERIA                                               -->
+  <!-- ============================================================ -->
+  <scored-criteria>
+    <criterion>Turn-based combat with Fight/Spells/Bag/Run, visible HP bars, damage numbers, XP/crystal rewards</criterion>
+    <criterion>At least 3 distinct enemy types with different stats and mechanical behaviors</criterion>
+    <criterion>NPC dialogue with portrait/representation and choice options that affect gameplay</criterion>
+    <criterion>Persistent HUD: player name, HP bar, mana bar, current floor, dungeon tick or turn count, crystal currency</criterion>
+    <criterion>At least two overlay menus (Map, Bag, Stats, Spellbook)</criterion>
+    <criterion>Entity model with at least 3 entity types loaded from content pack JSON</criterion>
+    <criterion>Game state persists across page refresh (localStorage)</criterion>
+    <criterion>Player can level up or gain power through gameplay progression</criterion>
+    <criterion>At least 2 floors with different mechanical constraints and boss encounters</criterion>
+    <criterion>"Traits" label used in UI where narrative stats appear</criterion>
+    <criterion>Full skill system with mana-crystal overcharge (scored bonus, not gate)</criterion>
+    <criterion>Affinity thresholds unlock spell variants (scored bonus, not gate)</criterion>
+  </scored-criteria>
+
+  <!-- ============================================================ -->
+  <!-- INGENUITY / ADAPTATION SCORING                                -->
+  <!-- ============================================================ -->
+  <ingenuity-scoring>
+    <dimension>ingenuity_score</dimension>
+    <measures>
+      Whether the player needed to change strategy, whether crafted spells were meaningfully
+      used, and whether encounters encouraged experimentation. Scored 0.0 to 1.0.
+    </measures>
+    <signals>
+      - Number of crafted spells actually used in a test run
+      - Diversity of spell usage (no single spell dominates)
+      - Can the starter spell alone clear every floor? (this should be NO)
+      - Does at least one encounter REQUIRE crafted spell usage to succeed?
+      - Did the test player adapt their build across floors?
+    </signals>
+    <scoring-notes>
+      This is measured via human review during playtesting. The reviewer asks: "Did I feel
+      like I needed to craft to make progress, or could I spam the default spell?"
+    </scoring-notes>
+  </ingenuity-scoring>
+
+  <non-goals>
+    <item>Procedural generation — authored content only</item>
+    <item>Full rune affinity decay — deferred to v5</item>
+    <item>Multi-stage deep evolution trees — deferred to v5</item>
+    <item>Tile-based movement or 2D grid walking</item>
+    <item>Multiplayer or networking</item>
+    <item>Complex asset pipelines or custom art tools</item>
+  </non-goals>
+
+  <source-docs>
+    <doc path="source-GAMEPLAY-DESIGN.xml" role="Trimmed gameplay design (vertical slice focus)" />
+    <doc path="source-STAT-AND-BEHAVIOUR-TAXONOMY.md" role="Canonical stat names, groupings, engine mappings" />
+  </source-docs>
+
+  <evaluation-notes>
+    Human reviewer rubric for ingenuity:
+    - 0.0: Could spam starter abilities to clear everything, no crafting needed
+    - 0.3: Had to use forge once, but mostly spammed
+    - 0.6: Had to craft 2-3 spells and switch strategies per floor
+    - 1.0: Had to think carefully about builds, crafted spells were essential, felt like a puzzle
+  </evaluation-notes>
+</requirements>

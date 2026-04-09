@@ -1,0 +1,54 @@
+{
+  "created": "2026-04-09T05:23:00.878Z",
+  "projects": [
+    {
+      "project": "escape-the-dungeon",
+      "version": "v10",
+      "chars": 33957,
+      "tokens": 8490,
+      "file": "escape-the-dungeon-v10.md"
+    },
+    {
+      "project": "escape-the-dungeon-bare",
+      "version": "v5",
+      "chars": 7405,
+      "tokens": 1852,
+      "file": "escape-the-dungeon-bare-v5.md"
+    },
+    {
+      "project": "escape-the-dungeon-emergent",
+      "version": "v4",
+      "chars": 7703,
+      "tokens": 1926,
+      "file": "escape-the-dungeon-emergent-v4.md"
+    },
+    {
+      "project": "etd-brownfield-bare",
+      "version": "v2",
+      "chars": 7535,
+      "tokens": 1884,
+      "file": "etd-brownfield-bare-v2.md"
+    },
+    {
+      "project": "etd-brownfield-emergent",
+      "version": "v2",
+      "chars": 7549,
+      "tokens": 1888,
+      "file": "etd-brownfield-emergent-v2.md"
+    },
+    {
+      "project": "etd-brownfield-gad",
+      "version": "v2",
+      "chars": 8135,
+      "tokens": 2034,
+      "file": "etd-brownfield-gad-v2.md"
+    },
+    {
+      "project": "reader-workspace",
+      "version": "v4",
+      "chars": 41269,
+      "tokens": 10318,
+      "file": "reader-workspace-v4.md"
+    }
+  ]
+}

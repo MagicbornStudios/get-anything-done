@@ -220,6 +220,95 @@ export const EVAL_RUNS: EvalRunRecord[] = [
   },
   {
     "project": "escape-the-dungeon",
+    "version": "v10",
+    "workflow": "gad",
+    "requirementsVersion": "v4",
+    "date": "2026-04-09",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 4,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": "459dc36",
+    "frameworkBranch": "main",
+    "frameworkCommitTs": null,
+    "frameworkStamp": "v1.32.0+459dc36",
+    "traceEvents": null,
+    "evalType": "implementation",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-09T05:30:00.000Z",
+      "ended": "2026-04-09T05:39:00.000Z",
+      "duration_minutes": 9,
+      "phases_completed": 2,
+      "tasks_completed": 6,
+      "api_interrupted": true,
+      "interruption_note": "Anthropic API returned 529 overloaded_error at tool_uses=55. Not a rate limit (full budget available), transient server overload. Previous attempt (not preserved) crashed at tool_uses=18 with the same error."
+    },
+    "tokenUsage": {
+      "total_tokens": 1216,
+      "tool_uses": 55,
+      "note": "API 529 interrupted — more tool uses than Bare v5 (45) or Emergent v4 (45) but NO playable game produced. The 55 tool uses went to planning + data authoring, not scene implementation."
+    },
+    "gitAnalysis": {
+      "total_commits": 0,
+      "task_id_commits": 0,
+      "batch_commits": 0,
+      "per_task_discipline": 0
+    },
+    "requirementCoverage": {
+      "total_criteria": 12,
+      "gate_failed": true,
+      "gate_notes": "G1 NOT MET — no game loop. Dist is scaffold-only title 'ESCAPE THE DUNGEON v10 — scaffold booted' with no navigation, combat, or forge wired. router.ts is an 11-line stub. G2 NOT MET — runes and spells data authored (221 lines of runes.ts) but no forge UI. G3 PARTIAL — scaffold title has iconify-icon + styled h1 but that is the only rendered surface. G4 NOT MET — pressure mechanics not implemented beyond data declarations.",
+      "fully_met": 0,
+      "partially_met": 2,
+      "not_met": 10,
+      "coverage_ratio": 0.083
+    },
+    "workflowEmergence": {
+      "created_task_lists": true,
+      "created_state_tracking": true,
+      "created_architecture_docs": true,
+      "created_reusable_skills": false,
+      "emergence_score": 0.75
+    },
+    "planningQuality": {
+      "phases_planned": 7,
+      "tasks_planned": 20,
+      "tasks_completed": 6,
+      "tasks_blocked": 14,
+      "decisions_captured": 0,
+      "state_updates": 2,
+      "state_stale_count": 0,
+      "note": "Full XML planning suite: ROADMAP with 7 phases (scaffold, data, title+HUD, room-navigation, combat, forge-and-runes, pressure-encounters), TASK-REGISTRY with ~20 tasks, STATE current at phase 02 task 02-01, DECISIONS scaffolded. Phase 01 + Phase 02 complete with 875 lines of TypeScript (types 137, state 72, enemies 160, floors 224, runes 221, events 43, main 7 stub, router 11 stub). Phases 03-07 NOT STARTED — scenes for title, room, combat, forge all unimplemented at interruption."
+    },
+    "scores": {
+      "requirement_coverage": 0.083,
+      "planning_quality": 0.9,
+      "per_task_discipline": 0,
+      "skill_accuracy": null,
+      "time_efficiency": 0.7,
+      "human_review": null,
+      "composite": null
+    },
+    "humanReview": {
+      "score": null,
+      "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output.",
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 14,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 0,
+      "commit_discipline": null
+    }
+  },
+  {
+    "project": "escape-the-dungeon",
     "version": "v2",
     "workflow": "gad",
     "requirementsVersion": "unknown",
@@ -1228,6 +1317,71 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     }
   },
   {
+    "project": "escape-the-dungeon-bare",
+    "version": "v5",
+    "workflow": "bare",
+    "requirementsVersion": "unknown",
+    "date": "2026-04-09",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": "459dc36",
+    "frameworkBranch": "main",
+    "frameworkCommitTs": "2026-04-09T00:22:35-05:00",
+    "frameworkStamp": "v1.32.0+459dc36",
+    "traceEvents": null,
+    "evalType": "implementation",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-09T05:24:02.406Z",
+      "ended": "2026-04-09T05:35:47.858Z",
+      "duration_minutes": 12,
+      "phases_completed": 0,
+      "tasks_completed": 0
+    },
+    "tokenUsage": null,
+    "gitAnalysis": null,
+    "requirementCoverage": null,
+    "workflowEmergence": null,
+    "planningQuality": {
+      "phases_planned": 0,
+      "tasks_planned": 0,
+      "tasks_completed": 0,
+      "tasks_blocked": 0,
+      "decisions_captured": 0,
+      "state_updates": 0,
+      "state_stale_count": 0
+    },
+    "scores": {
+      "cli_efficiency": null,
+      "skill_accuracy": null,
+      "planning_quality": null,
+      "time_efficiency": 0.975,
+      "composite": null,
+      "human_review": null
+    },
+    "humanReview": {
+      "score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [],
+      "accuracy": null
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": 0.25,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
+      "commit_discipline": null
+    }
+  },
+  {
     "project": "escape-the-dungeon-emergent",
     "version": "v1",
     "workflow": "emergent",
@@ -1469,6 +1623,70 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "skill_to_tool_ratio": null,
       "subagent_utilization": null,
       "total_commits": 0,
+      "commit_discipline": null
+    }
+  },
+  {
+    "project": "escape-the-dungeon-emergent",
+    "version": "v4",
+    "workflow": "emergent",
+    "requirementsVersion": "unknown",
+    "date": "2026-04-09",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 4,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": "459dc36",
+    "frameworkBranch": "main",
+    "frameworkCommitTs": "2026-04-09T00:22:35-05:00",
+    "frameworkStamp": "v1.32.0+459dc36",
+    "traceEvents": null,
+    "evalType": "implementation",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-09T05:39:12.311Z",
+      "ended": null,
+      "duration_minutes": null,
+      "phases_completed": 0,
+      "tasks_completed": 0
+    },
+    "tokenUsage": null,
+    "gitAnalysis": null,
+    "requirementCoverage": null,
+    "workflowEmergence": null,
+    "planningQuality": {
+      "phases_planned": 0,
+      "tasks_planned": 0,
+      "tasks_completed": 0,
+      "tasks_blocked": 0,
+      "decisions_captured": 0,
+      "state_updates": 0,
+      "state_stale_count": 0
+    },
+    "scores": {
+      "cli_efficiency": null,
+      "skill_accuracy": null,
+      "planning_quality": null,
+      "time_efficiency": null,
+      "composite": null
+    },
+    "humanReview": {
+      "score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": {
+      "expected_triggers": [],
+      "accuracy": null
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
       "commit_discipline": null
     }
   },
@@ -2516,6 +2734,26 @@ export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = {
     ],
     "workflowNotes": []
   },
+  "escape-the-dungeon-bare/v5": {
+    "skillFiles": [
+      {
+        "name": "create-skill.md",
+        "bytes": 5012
+      },
+      {
+        "name": "find-sprites.md",
+        "bytes": 6073
+      }
+    ],
+    "agentFiles": [],
+    "planningFiles": [
+      {
+        "name": "worklog.md",
+        "bytes": 3283
+      }
+    ],
+    "workflowNotes": []
+  },
   "escape-the-dungeon-emergent/v2": {
     "skillFiles": [],
     "agentFiles": [],
@@ -2561,10 +2799,58 @@ export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = {
     "agentFiles": [],
     "planningFiles": [],
     "workflowNotes": []
+  },
+  "escape-the-dungeon-emergent/v4": {
+    "skillFiles": [
+      {
+        "name": "CHANGELOG.md",
+        "bytes": 4917
+      },
+      {
+        "name": "content-pack-loading.md",
+        "bytes": 1370
+      },
+      {
+        "name": "create-skill.md",
+        "bytes": 5012
+      },
+      {
+        "name": "dom-over-kaplay.md",
+        "bytes": 3096
+      },
+      {
+        "name": "find-sprites.md",
+        "bytes": 6073
+      },
+      {
+        "name": "game-loop-verification.md",
+        "bytes": 1696
+      },
+      {
+        "name": "kaplay-scene-pattern.md",
+        "bytes": 1689
+      },
+      {
+        "name": "pressure-forge-coupling.md",
+        "bytes": 3377
+      },
+      {
+        "name": "previous-workflow.md",
+        "bytes": 2951
+      },
+      {
+        "name": "state-composition.md",
+        "bytes": 1129
+      }
+    ],
+    "agentFiles": [],
+    "planningFiles": [],
+    "workflowNotes": []
   }
 };
 
 export const PLAYABLE_INDEX: Record<string, string> = {
+  "escape-the-dungeon/v10": "/playable/escape-the-dungeon/v10/index.html",
   "escape-the-dungeon/v6": "/playable/escape-the-dungeon/v6/index.html",
   "escape-the-dungeon/v7": "/playable/escape-the-dungeon/v7/index.html",
   "escape-the-dungeon/v8": "/playable/escape-the-dungeon/v8/index.html",
@@ -2573,8 +2859,10 @@ export const PLAYABLE_INDEX: Record<string, string> = {
   "escape-the-dungeon-bare/v2": "/playable/escape-the-dungeon-bare/v2/index.html",
   "escape-the-dungeon-bare/v3": "/playable/escape-the-dungeon-bare/v3/index.html",
   "escape-the-dungeon-bare/v4": "/playable/escape-the-dungeon-bare/v4/index.html",
+  "escape-the-dungeon-bare/v5": "/playable/escape-the-dungeon-bare/v5/index.html",
   "escape-the-dungeon-emergent/v1": "/playable/escape-the-dungeon-emergent/v1/index.html",
-  "escape-the-dungeon-emergent/v2": "/playable/escape-the-dungeon-emergent/v2/index.html"
+  "escape-the-dungeon-emergent/v2": "/playable/escape-the-dungeon-emergent/v2/index.html",
+  "escape-the-dungeon-emergent/v4": "/playable/escape-the-dungeon-emergent/v4/index.html"
 };
 
 export const WORKFLOW_LABELS: Record<Workflow, string> = {

@@ -107,21 +107,38 @@ export function humanReviewNotes(r: EvalRunRecord): string | null {
 
 /**
  * True when the run hit a rate limit before completing. Rate-limited runs
- * are preserved as data points but explicitly excluded from cross-round
- * quality comparisons per decision gad-63.
+ * are preserved as data points but excluded from cross-round comparisons
+ * per decision gad-63.
  */
 export function isRateLimited(r: EvalRunRecord): boolean {
   if (!r.timing) return false;
-  // Field is on the nested raw timing object.
   const flag = (r.timing as Record<string, unknown>).rate_limited;
   return flag === true;
 }
 
 /**
+ * True when the run was interrupted by an Anthropic API error (e.g. HTTP 529
+ * overloaded_error). Different cause than rate limit — infrastructure issue
+ * rather than account cap — but same exclusion policy per decision gad-64.
+ */
+export function isApiInterrupted(r: EvalRunRecord): boolean {
+  if (!r.timing) return false;
+  const flag = (r.timing as Record<string, unknown>).api_interrupted;
+  return flag === true;
+}
+
+/**
+ * True when the run was interrupted for ANY reason (rate limit OR API error).
+ * Use this as the default filter for comparison surfaces.
+ */
+export function isInterrupted(r: EvalRunRecord): boolean {
+  return isRateLimited(r) || isApiInterrupted(r);
+}
+
+/**
  * Returns only runs suitable for cross-round comparison — completed runs
- * with a scored composite. Rate-limited runs are filtered out; runs without
- * a composite score are also filtered.
+ * with a scored composite, no interruption flags.
  */
 export function comparableRuns(runs: EvalRunRecord[] = EVAL_RUNS): EvalRunRecord[] {
-  return runs.filter((r) => !isRateLimited(r) && r.scores.composite != null);
+  return runs.filter((r) => !isInterrupted(r) && r.scores.composite != null);
 }
