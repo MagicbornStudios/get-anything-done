@@ -16,11 +16,11 @@ const PREDECESSORS = [
     name: "Get Shit Done",
     author: "gsd-build",
     url: "https://github.com/gsd-build/get-shit-done",
-    tagline: "The structured planning loop GAD forked from.",
+    tagline: "The framework GAD forked from. Cross-runtime installer + planning loop + skills.",
     contribution:
-      "Small planning loops, visible state, executable specs. The insight that an agent can be reliably productive if it has a tight, repeatable loop and a persistent place to put its thinking. GAD's plan → execute → verify → commit cycle is descended directly from GSD's methodology.",
+      "GSD is a full framework, not just a methodology. Ships a cross-runtime installer (bin/install.js) that can target Claude Code, Cursor, Codex, OpenCode, Gemini, Copilot, Antigravity, Windsurf, Augment — nine coding-agent runtimes with one command. Plus: a structured planning loop, visible state, executable specs, and the insight that an agent is productive when it has a tight repeatable loop plus a persistent place to put its thinking. GAD's plan → execute → verify → commit cycle is descended directly from GSD's methodology, and GAD's installer is the same install.js script inherited from the GSD fork.",
     howGadUses:
-      "GAD inherits the loop shape, the emphasis on checkpointable state, and the principle that skills (methodology documents) are the durable layer — not ephemeral chat history. Where GAD diverges: the CLI is format-agnostic (XML/MD/MDX), subagents are formalized as first-class entities, and an evaluation framework sits alongside to test whether any of this actually helps.",
+      "GAD inherits the loop shape, checkpointable state, the skills-as-durable-layer principle, AND the nine-runtime installer. Where GAD diverges: the CLI is format-agnostic (XML/MD/MDX), subagents are formalized as first-class entities with their own agents/ directory, and an evaluation framework sits alongside to test whether any of this actually helps. The eval framework is the thing you won't find in GSD upstream — it's GAD's load-bearing addition.",
   },
   {
     name: "RepoPlanner",

@@ -1,6 +1,14 @@
 ---
 name: objective-eval-design
-description: Design evals that produce structured, objective, comparable data instead of single opaque scores. Trigger this skill when designing a new eval project, adding a new scoring dimension, deciding whether to measure something with human review vs automation, or when a reviewer or stakeholder asks "why did this run score X?" and the answer isn't immediately visible in the data. The core discipline: every measurement you add should answer a specific research question, expose its inputs clearly, and be comparable across runs. If a score can't be decomposed into dimensions or traced back to the events that produced it, it isn't objective — it's just a vibe with a number attached.
+description: >-
+  Design evals that produce structured, objective, comparable data instead of single opaque
+  scores. Trigger this skill when designing a new eval project, adding a new scoring
+  dimension, deciding whether to measure something with human review vs automation, or when
+  a reviewer or stakeholder asks "why did this run score X?" and the answer isn't
+  immediately visible in the data. The core discipline is that every measurement you add
+  should answer a specific research question, expose its inputs clearly, and be comparable
+  across runs. If a score can't be decomposed into dimensions or traced back to the events
+  that produced it, it isn't objective — it's just a vibe with a number attached.
 ---
 
 # objective-eval-design

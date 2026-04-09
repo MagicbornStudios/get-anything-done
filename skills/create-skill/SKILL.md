@@ -1,6 +1,14 @@
 ---
 name: create-skill
-description: Capture a reusable pattern, recipe, or failure-mode fix as a skill document so future agents (including you after a context reset) can apply it without rediscovering it. Use this skill whenever you solve a non-obvious problem, discover a working pattern after two or more failed attempts, hit a bug whose fix isn't self-evident from the code, or finish a piece of work that future runs will likely repeat. Write the skill the moment you learn the lesson — not at the end. In bare/emergent eval conditions this is the primary mechanism for agent-authored methodology: the agent IS the workflow author, and skills are how that authorship persists.
+description: >-
+  Capture a reusable pattern, recipe, or failure-mode fix as a skill document so future
+  agents (including you after a context reset) can apply it without rediscovering it. Use
+  this skill whenever you solve a non-obvious problem, discover a working pattern after
+  two or more failed attempts, hit a bug whose fix isn't self-evident from the code, or
+  finish a piece of work that future runs will likely repeat. Write the skill the moment
+  you learn the lesson — not at the end. In bare/emergent eval conditions this is the
+  primary mechanism for agent-authored methodology. The agent IS the workflow author, and
+  skills are how that authorship persists.
 ---
 
 # create-skill
@@ -30,6 +38,44 @@ game/.planning/skills/<kebab-name>.md
 ```
 
 One skill per file. Kebab-case filename matching the skill's topic.
+
+## YAML frontmatter format (critical)
+
+Every skill starts with a YAML frontmatter block (`---` delimiters) containing `name` and
+`description` fields. The skill loader in Claude Code, Cursor, Codex, and other runtimes
+all parse this strictly with js-yaml, which means:
+
+- **Descriptions with embedded colons break parsing.** A description like
+  `"methodology: the core idea"` fails because YAML reads `methodology:` as a key.
+- **Always use the folded block scalar form** (`>-`) for descriptions, which lets you
+  write multi-line prose without worrying about colons, quotes, or line length:
+
+  ```yaml
+  ---
+  name: my-skill
+  description: >-
+    First paragraph of the description, as long as you want. The folded scalar joins
+    wrapped lines with spaces so the final string is a single paragraph. Colons inside
+    the prose are safe: they don't get parsed as YAML keys because the scalar is treated
+    as a single opaque string.
+  ---
+  ```
+
+- The `>-` is `>` (folded, lines join with spaces) plus `-` (strip trailing newline).
+  Without the `-`, you get an extra newline at the end; without the `>`, you get literal
+  line breaks preserved.
+- Indentation matters. The body of the folded scalar must be indented more than the
+  `description:` key. Two spaces is the convention.
+
+**Test your skill frontmatter** before shipping by running any YAML parser:
+
+```sh
+node -e "console.log(require('js-yaml').load(require('fs').readFileSync('SKILL.md','utf8').split('---')[1]))"
+```
+
+Or just let `install.js` do it — it validates every SKILL.md during install and warns on
+the exact line and column of any failure (this is how we caught the two broken skills in
+session 6).
 
 ## Skill structure
 

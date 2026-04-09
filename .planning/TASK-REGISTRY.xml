@@ -643,8 +643,17 @@
       <keywords>phase-25,discuss-phase,trace-schema-v4,planning-doc</keywords>
     </task>
     <task id="22-33" agent-id="" status="planned">
-      <goal>`gad install` CLI subcommand for automating framework installation into agent runtimes. Subcommands: `gad install skills [--target .claude|.agents|all]` copies vendor/get-anything-done/skills/* into target skill directories; `gad install agents [--target]` copies agents/*.md; `gad install commands [--target]` copies commands/gad/*.md; `gad install hooks` writes PreToolUse/PostToolUse handler references into settings.json (also referenced by phase 25 task 25-04); `gad install all` does all of the above. Reverse: `gad uninstall <target>`. Session 6 ran this manually via filesystem copy — this task automates it so future installs and updates don't drift. Belongs in phase 22 because it's site/framework infrastructure, not trace work.</goal>
-      <keywords>gad-install,cli,automation,infrastructure</keywords>
+      <goal>`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modules/get-anything-done/get-anything-done/`). This task wraps it in a `gad install` subcommand that resolves paths correctly whether running from a git checkout (vendor/get-anything-done/) or an npm install. Related to 22-34 (fix install.js directly) — this task may become a no-op if 22-34 fixes the path resolution at the install.js level.</goal>
+      <keywords>gad-install,cli,wrapper,infrastructure</keywords>
+    </task>
+    <task id="22-34" agent-id="" status="planned">
+      <goal>Fix path resolution bug in bin/install.js: copyWithPathReplacement reads from `&lt;repo-root&gt;/get-anything-done/` which only exists when the installer runs from within an npm-published `node_modules/get-anything-done/` tarball. For local git checkouts (vendor/get-anything-done/) the extra subdirectory doesn't exist and the installer crashes mid-copy after deleting target files. Fix: detect the installer's own directory layout via `__dirname` and walk up to the package root correctly, or accept a --source flag. Session 7 hit this bug — crash deleted .claude/commands/gad/ and .claude/hooks/statusline.js before erroring out, recovery required manual filesystem copy. Add a test that runs install.js --claude --local from a git checkout and verifies no deletions.</goal>
+      <keywords>install-js,bug,path-resolution,local-checkout</keywords>
+    </task>
+    <task id="22-35" agent-id="" status="done">
+      <goal>Fix YAML parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). Descriptions with embedded colons like "methodology:" and "discipline:" were parsed by js-yaml as key-value separators, breaking skill loading in Claude Code. Fix by converting plain scalar descriptions to YAML folded block scalar form (`description: &gt;- ...`) which treats the body as opaque.</goal>
+      <resolution>Fixed create-skill and objective-eval-design. Updated create-skill/SKILL.md body to document the YAML frontmatter discipline (folded block scalar, colons are safe inside, test with js-yaml). Validated all 5 session-authored skills now parse clean. Claude Code system reminder confirms all GAD skills load with no YAML errors.</resolution>
+      <keywords>yaml,frontmatter,skill-loader,js-yaml</keywords>
     </task>
   </phase>
 </task-registry>
