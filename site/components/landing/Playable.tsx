@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ExternalLink, Gamepad2, FileText, Sparkles, X } from "lucide-react";
+import { ExternalLink, Gamepad2, FileText, Sparkles, X, BarChart3 } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   EVAL_RUNS,
@@ -173,6 +174,13 @@ export default function Playable() {
             )}
 
             <div className="mt-5 flex flex-col gap-2">
+              <Link
+                href={`/runs/${selected.project}/${selected.version}`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+              >
+                <BarChart3 size={11} aria-hidden />
+                Full breakdown
+              </Link>
               <a
                 href={`${REPO}/tree/main/evals/${selected.project}/${selected.version}`}
                 target="_blank"
