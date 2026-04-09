@@ -23,6 +23,7 @@ export {
   BUGS_UPDATED,
   GLOSSARY,
   GLOSSARY_UPDATED,
+  ALL_DECISIONS,
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,
@@ -34,6 +35,7 @@ export {
   type OpenQuestion,
   type BugRecord,
   type GlossaryTerm,
+  type DecisionRecord,
 } from "./eval-data.generated";
 
 import {

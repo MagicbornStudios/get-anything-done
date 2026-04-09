@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
 import { Term } from "@/components/glossary/Term";
+import { Ref } from "@/components/refs/Ref";
 import {
   OPEN_QUESTIONS,
   OPEN_QUESTIONS_UPDATED,
@@ -163,20 +164,10 @@ export default function QuestionsPage() {
                       q.related_requirements.length > 0) && (
                       <div className="mt-4 flex flex-wrap gap-1.5">
                         {q.related_decisions.map((d) => (
-                          <span
-                            key={d}
-                            className="inline-flex items-center rounded border border-border/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
-                          >
-                            {d}
-                          </span>
+                          <Ref key={d} id={d} />
                         ))}
                         {q.related_requirements.map((r) => (
-                          <span
-                            key={r}
-                            className="inline-flex items-center rounded border border-accent/40 bg-accent/5 px-1.5 py-0.5 font-mono text-[10px] text-accent"
-                          >
-                            {r}
-                          </span>
+                          <Ref key={r} id={r} />
                         ))}
                       </div>
                     )}

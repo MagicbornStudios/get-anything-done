@@ -730,6 +730,35 @@ function scanCatalog() {
 // for the /planning meta-transparency page.
 // -------------------------------------------------------------------------
 
+function parseAllDecisions() {
+  // Richer parse than parsePlanningState's recentDecisions — captures EVERY
+  // decision with full title/summary/impact for the /decisions page and for
+  // the <Ref id="gad-xx" /> component. Source of truth for decision cross-refs.
+  const planningDir = path.join(REPO_ROOT, ".planning");
+  const decisionsPath = path.join(planningDir, "DECISIONS.xml");
+  if (!exists(decisionsPath)) return [];
+  const src = fs.readFileSync(decisionsPath, "utf8");
+  const decisionRegex = /<decision\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/decision>/g;
+  const all = [];
+  let m;
+  while ((m = decisionRegex.exec(src)) !== null) {
+    const id = m[1];
+    const inner = m[2];
+    const title = (inner.match(/<title>([\s\S]*?)<\/title>/) || [])[1]?.trim() || id;
+    const summary = (inner.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1]?.trim() || "";
+    const impact = (inner.match(/<impact>([\s\S]*?)<\/impact>/) || [])[1]?.trim() || "";
+    all.push({ id, title, summary, impact });
+  }
+  // Sort by numeric suffix on gad-NN so the newest appear first.
+  all.sort((a, b) => {
+    const na = parseInt((a.id.match(/(\d+)/) || [])[1] || "0", 10);
+    const nb = parseInt((b.id.match(/(\d+)/) || [])[1] || "0", 10);
+    return nb - na;
+  });
+  console.log(`  [decisions] parsed ${all.length} decision(s) for cross-ref index`);
+  return all;
+}
+
 function parsePlanningState() {
   console.log("[2g/4] Parsing GAD planning state (STATE, TASKS, DECISIONS)");
   const planningDir = path.join(REPO_ROOT, ".planning");
@@ -1597,6 +1626,19 @@ export const GLOSSARY: GlossaryTerm[] = ${JSON.stringify(extras.pseudoDb?.glossa
 
 export const GLOSSARY_UPDATED: string | null = ${JSON.stringify(extras.pseudoDb?.glossary?._last_updated ?? null)};
 
+export interface DecisionRecord {
+  id: string;
+  title: string;
+  summary: string;
+  impact: string;
+}
+
+/**
+ * Every decision in .planning/DECISIONS.xml parsed in full. Source of truth
+ * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
+ */
+export const ALL_DECISIONS: DecisionRecord[] = ${JSON.stringify(extras.allDecisions ?? [], null, 2)};
+
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",
   bare: "Bare",
@@ -1664,6 +1706,7 @@ function main() {
   const producedArtifacts = scanProducedArtifacts();
   const traces = findTraceFiles();
   const pseudoDb = loadJsonDataPseudoDb();
+  const allDecisions = parseAllDecisions();
 
   writeEvalDataTs(traces, evalTemplates, gadPackTemplate, {
     planningZips,
@@ -1672,6 +1715,7 @@ function main() {
     evalProjects,
     producedArtifacts,
     pseudoDb,
+    allDecisions,
   });
   writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
   auditPlayable();

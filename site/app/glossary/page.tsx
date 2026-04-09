@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
 import { GLOSSARY, GLOSSARY_UPDATED, type GlossaryTerm } from "@/lib/eval-data";
+import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
   title: "Glossary — GAD",
@@ -187,12 +188,7 @@ export default function GlossaryPage() {
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="uppercase tracking-wider text-[10px]">decisions:</span>
                             {t.related_decisions.map((d) => (
-                              <span
-                                key={d}
-                                className="inline-flex items-center rounded border border-border/60 px-1.5 py-0.5 font-mono text-[10px]"
-                              >
-                                {d}
-                              </span>
+                              <Ref key={d} id={d} />
                             ))}
                           </div>
                         )}
