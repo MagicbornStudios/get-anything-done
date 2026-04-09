@@ -1,0 +1,293 @@
+{
+  "_schema": {
+    "file": "data/glossary.json",
+    "purpose": "Single source of truth for domain terms used across the site. Drives the Term tooltip component and the /glossary page.",
+    "written_by": "human",
+    "read_by": "site prebuild + Term component + /glossary page",
+    "shape": {
+      "terms[]": {
+        "id": "stable kebab-case slug used in anchors and Term component",
+        "term": "display name",
+        "aliases": "array of alternate spellings / casings that should also match (e.g. 'CSH' and 'compound-skills hypothesis')",
+        "category": "hypothesis | workflow | evaluation | framework | game-design | process | infra",
+        "short": "one-sentence definition used in the tooltip (< 200 chars)",
+        "full": "multi-paragraph markdown definition used on the /glossary page",
+        "related_decisions": "array of decision IDs",
+        "related_terms": "array of other term ids"
+      }
+    }
+  },
+  "_last_updated": "2026-04-09",
+  "terms": [
+    {
+      "id": "compound-skills-hypothesis",
+      "term": "Compound-Skills Hypothesis",
+      "aliases": ["CSH", "compound skills hypothesis"],
+      "category": "hypothesis",
+      "short": "The working hypothesis that a coding agent's skill library compounds in value over many rounds as skills are merged and tailored to a specific project — like a master craftsman accumulating tools for their craft.",
+      "full": "The Compound-Skills Hypothesis says the **emergent** eval condition should produce monotonically improving results as its inherited skill library grows more specialized to the project domain. The craftsman metaphor: a blacksmith who learns one skill per hour and authors one skill per hour eventually becomes a master of the specific kind of blade they keep forging. Signals we track: (1) human review score increases across rounds, (2) inherited skill count grows, (3) ratio of project-specific skills to generic methodology skills shifts toward specific, (4) time-to-working-game decreases as requirements get stricter. **Distinct from the freedom hypothesis** — CSH is about compounding returns over time, not about bare vs framework in a single round. First concrete evidence observed in round 4 with emergent v4 authoring `dom-over-kaplay` and `pressure-forge-coupling` skills while deprecating `kaplay-scene-pattern`.",
+      "related_decisions": ["gad-65", "gad-68"],
+      "related_terms": ["freedom-hypothesis", "emergent-workflow", "skill-inheritance"]
+    },
+    {
+      "id": "freedom-hypothesis",
+      "term": "Freedom Hypothesis",
+      "aliases": ["freedom hyp", "freeform hypothesis"],
+      "category": "hypothesis",
+      "short": "For creative implementation tasks, agent performance correlates INVERSELY with framework constraint — less prescribed structure leads to better output.",
+      "full": "The Freedom Hypothesis emerged from round 3's finding that the bare eval condition (no framework) outperformed the GAD condition (full framework) on human review scores across multiple rounds. Supporting evidence: Bare has improved monotonically 0.10 → 0.50 → 0.70 → 0.805 across rounds 2-4. GAD has never exceeded 0.30 human review across its first four attempts. Interpretation: GAD's planning overhead consumes tokens that could have gone to testing and fixing the game. The hypothesis is **preliminary** — single-run variance is high and framework overhead may pay off on different benchmarks (resumption after compaction, multi-phase refactors, compliance work). The Compound-Skills Hypothesis was formulated partly as a response to this finding: maybe the framework compounds over rounds in ways a single round can't show.",
+      "related_decisions": ["gad-36", "gad-68"],
+      "related_terms": ["compound-skills-hypothesis", "bare-workflow", "gad-workflow"]
+    },
+    {
+      "id": "emergent-evolution-hypothesis",
+      "term": "Emergent-Evolution Hypothesis",
+      "aliases": ["emergent evolution", "EEH"],
+      "category": "hypothesis",
+      "short": "Synthesis of freedom + compound-skills + project-tailored merging. Projects are themselves emergent; skills must be tailored, merged, and rehearsed against a foundational pool.",
+      "full": "Formal statement: a coding agent given (a) blank planning artifacts, (b) requirements, (c) the task, and (d) the ability to create, merge, and find skills from a GAD-provided foundational pool will produce better work than framework-constrained or bare conditions over time — because projects are themselves emergent, and skills must be tailored continually and merged with similar foundational skills to maintain consistency. The craftsman/lifter metaphor: a master lifter varies exercise and lowers weight to stay sharp, a craftsman returns to fundamentals to maintain form. GAD's role under this framing is NOT to prescribe process — it's to provide the foundational skill pool and an evolution substrate. This is the single most important research direction going forward.",
+      "related_decisions": ["gad-68", "gad-73"],
+      "related_terms": ["freedom-hypothesis", "compound-skills-hypothesis", "fundamental-skills", "merge-skill"]
+    },
+    {
+      "id": "emergent-workflow",
+      "term": "Emergent workflow",
+      "aliases": ["emergent condition", "emergent eval"],
+      "category": "workflow",
+      "short": "An eval condition where the agent has no mandated framework but inherits skills from previous runs, evolves them in place, and writes a CHANGELOG.",
+      "full": "The emergent workflow is one of three eval conditions (alongside GAD and bare). The agent runs without a prescribed framework but starts with a skill library inherited from previous bare or emergent runs on the same project. The agent is allowed (and encouraged) to update, deprecate, or author new skills based on what it learned. A CHANGELOG.md tracks the disposition of every inherited skill: kept-as-is, evolved, deprecated-as-wrong, or replaced-by-new. This is the workflow that produces evidence for the Compound-Skills Hypothesis. First full ratcheting cycle observed in round 4 with emergent v4 authoring two new skills and deprecating one.",
+      "related_decisions": ["gad-39", "gad-65", "gad-68"],
+      "related_terms": ["bare-workflow", "gad-workflow", "compound-skills-hypothesis", "skill-inheritance"]
+    },
+    {
+      "id": "bare-workflow",
+      "term": "Bare workflow",
+      "aliases": ["bare condition", "bare eval"],
+      "category": "workflow",
+      "short": "An eval condition where the agent has no framework and no inherited skills — only AGENTS.md, requirements, and freedom.",
+      "full": "The bare workflow is the simplest eval condition. The agent is given only requirements and an AGENTS.md directive to keep workflow artifacts under `game/.planning/` — nothing else. No framework, no skill library, no prescribed process. It exists to test the Freedom Hypothesis: can an unconstrained agent outperform a framework-driven one on creative implementation? As of round 4, the answer has been yes on human review scores, though the Emergent workflow has recently pulled ahead with its inherited skill library (round 4 emergent 0.885 vs bare 0.805).",
+      "related_decisions": ["gad-36", "gad-39"],
+      "related_terms": ["emergent-workflow", "gad-workflow", "freedom-hypothesis"]
+    },
+    {
+      "id": "gad-workflow",
+      "term": "GAD workflow",
+      "aliases": ["gad condition", "full gad"],
+      "category": "workflow",
+      "short": "An eval condition where the agent uses the full GAD framework — .planning/ XML, AGENTS.md loop, skill triggers, plan → execute → verify → commit.",
+      "full": "The GAD workflow is the framework-driven eval condition. The agent follows the full GAD planning loop: read STATE, pick a task, implement, update planning docs, commit. It has access to the entire GAD skill library, the subagent system, and formal phase/task tracking. Across rounds 1-4, GAD has consistently produced high process discipline (planning quality ~1.0, commits-per-task ~1.0) but low human-review scores (never exceeded 0.30). This gap between process metrics and output quality led to the Freedom Hypothesis and is the core puzzle the Emergent-Evolution Hypothesis is trying to resolve.",
+      "related_decisions": ["gad-01", "gad-36"],
+      "related_terms": ["bare-workflow", "emergent-workflow", "planning-loop"]
+    },
+    {
+      "id": "greenfield",
+      "term": "Greenfield",
+      "aliases": ["green field", "greenfield mode"],
+      "category": "evaluation",
+      "short": "An eval mode where the agent builds a project from nothing — no existing codebase, just requirements and a starting template.",
+      "full": "Greenfield is one of two eval modes (the other is brownfield). In greenfield mode, the agent starts with essentially nothing: a blank repo, a requirements document, and (depending on the workflow) either a full framework, a bare AGENTS.md, or an inherited skill library. The escape-the-dungeon game evals are all greenfield — each run builds the game from scratch. Greenfield tests the agent's ability to design and implement from zero. Compare with brownfield, which tests the agent's ability to extend and improve an existing codebase.",
+      "related_decisions": ["gad-40"],
+      "related_terms": ["brownfield", "eval-run"]
+    },
+    {
+      "id": "brownfield",
+      "term": "Brownfield",
+      "aliases": ["brown field", "brownfield mode"],
+      "category": "evaluation",
+      "short": "An eval mode where the agent inherits an existing codebase baseline and must extend or improve it against new requirements.",
+      "full": "Brownfield is one of two eval modes (the other is greenfield). In brownfield mode, the eval starts with a baseline codebase — typically the output of a prior greenfield run — and asks the agent to extend it against new or expanded requirements. This tests a different set of skills: code archaeology, maintaining consistency with existing patterns, understanding why something was done before changing it. The brownfield etd-brownfield-gad/bare/emergent projects inherit bare v3 as their baseline. Brownfield is where framework-driven workflows (GAD) might show their value — long-term maintenance rather than one-shot creative output.",
+      "related_decisions": ["gad-40"],
+      "related_terms": ["greenfield", "eval-run"]
+    },
+    {
+      "id": "gate",
+      "term": "Gate criterion",
+      "aliases": ["gate", "gates", "gate criteria"],
+      "category": "evaluation",
+      "short": "A binary pass/fail requirement that, if failed, zeroes the requirement_coverage score regardless of other criteria met.",
+      "full": "Gates are the load-bearing requirements every run must pass to be considered a serious attempt. Requirements v3 introduced four gates: G1 game-loop (full cycle title → new game → room → combat → return → continue), G2 forge-with-ingenuity-payoff (spell crafting exists AND at least one encounter per floor significantly favors crafted spells), G3 ui-quality (no raw ASCII, icons/bars/spacing intentional), G4 pressure-mechanics (at least 2 of resource/enemy/encounter/build pressure present). If any gate fails, requirement_coverage = 0 and the composite score is capped. Gates exist because automated requirement counting can hit 0.95 while the actual game is a blank screen.",
+      "related_decisions": ["gad-32", "gad-33", "gad-41"],
+      "related_terms": ["rubric", "composite", "ingenuity"]
+    },
+    {
+      "id": "rubric",
+      "term": "Rubric",
+      "aliases": ["human review rubric", "review rubric"],
+      "category": "evaluation",
+      "short": "A set of weighted dimensions a human reviewer scores 0.0 – 1.0 independently, summed to produce human_review.score.",
+      "full": "The rubric replaces a single-number human review score with a per-dimension breakdown. Each eval project defines its own rubric in `gad.json` under `human_review_rubric`. Dimensions include playability, ui_polish, mechanics_implementation, ingenuity_requirement_met, stability. The Emergent workflow gets a sixth dimension, skill_inheritance_effectiveness, that specifically tests the Compound-Skills Hypothesis. A reviewer submits scores via `gad eval review <project> v<N> --rubric '{...}' --notes '...'`. The weighted aggregate becomes `human_review.score` in the composite formula. See the /rubric page for each project's full rubric.",
+      "related_decisions": ["gad-61"],
+      "related_terms": ["composite", "human-review", "gate"]
+    },
+    {
+      "id": "composite",
+      "term": "Composite score",
+      "aliases": ["composite", "composite_score"],
+      "category": "evaluation",
+      "short": "Weighted sum of dimension scores per project. Each project weights dimensions differently. Range 0.0 – 1.0.",
+      "full": "Composite is the single derived number representing a run's overall quality. It's a weighted sum over a project's scoring dimensions — the weights live in `gad.json` under `scoring.weights`. Different projects weight differently: a tooling eval might weight time_efficiency highly; an implementation eval weights human_review at 0.30 to prevent process-metric-only wins. Gate failures cap the composite by zeroing requirement_coverage. Low-score caps: composite < 0.20 → 0.40, composite < 0.10 → 0.25. The composite is displayed on every run card and per-run page.",
+      "related_decisions": ["gad-34"],
+      "related_terms": ["rubric", "gate", "divergence"]
+    },
+    {
+      "id": "ingenuity",
+      "term": "Ingenuity",
+      "aliases": ["ingenuity score", "ingenuity requirement"],
+      "category": "game-design",
+      "short": "The v4 principle that baseline starter abilities must NOT be sufficient to complete a floor — the player must adapt, craft, or specialize.",
+      "full": "Ingenuity is the core design principle of requirements v4. Every mechanical system must create friction that rewards creative player choice. If a player can brute-force a floor using only default abilities, the design has failed. The G2 forge gate expanded in v4 from 'crafting exists' to 'at least one encounter per floor significantly favors crafted/adapted spells.' In the rubric, ingenuity_requirement_met is a scored dimension that asks whether the player was FORCED to think. This is why round 4 surfaced the observation that Emergent v4's floor-1 is 'beatable only by skipping combat, gathering mana, crafting the right spells, then fighting the boss fresh' — that's ingenuity working as intended.",
+      "related_decisions": ["gad-41", "gad-42"],
+      "related_terms": ["gate", "forge", "pressure-mechanics"]
+    },
+    {
+      "id": "forge",
+      "term": "Rune forge",
+      "aliases": ["forge", "spell crafting"],
+      "category": "game-design",
+      "short": "The in-game spell-crafting interface where players combine runes (and eventually spells) to create new abilities.",
+      "full": "The rune forge is the escape-the-dungeon spell-crafting system and the centerpiece of the G2 gate. Players select runes, combine them, and produce new spells. Requirements v4 requires at least 3-5 runes, 3+ valid combinations, and crucially, at least one encounter per floor where the crafted spell provides a meaningful advantage. v5 (addendum) expands the forge: spells themselves become craftable ingredients (R-v5.19), rune uniqueness per spell is enforced (R-v5.20), and affinity is gained through casting not menu training (R-v5.01). The forge is also an explicit in-game analogue for the GAD skill-merging meta-loop — merging runes into spells mirrors merging fundamental skills into project-tailored ones.",
+      "related_decisions": ["gad-33", "gad-41"],
+      "related_terms": ["ingenuity", "gate", "affinity", "merge-skill"]
+    },
+    {
+      "id": "affinity",
+      "term": "Rune affinity",
+      "aliases": ["affinity"],
+      "category": "game-design",
+      "short": "A per-rune progression stat gained by using that rune — higher affinity means stronger spells using it.",
+      "full": "Rune affinity is how players specialize their magical build in escape-the-dungeon. In v4 and earlier, affinity gain was implementation-dependent; in v5 (addendum R-v5.01), affinity must be gained as a side effect of casting spells in encounters — not via a training menu. A training-dummy encounter room type provides a low-risk place to cast without consequence. v5 also requires a visible affinity reward loop (R-v5.16): boosting a rune's affinity must produce a visible, valuable payoff (new rune variant, spell tier, gated event access). Affinity is a build-pressure mechanic per G4.",
+      "related_decisions": [],
+      "related_terms": ["forge", "pressure-mechanics", "ingenuity"]
+    },
+    {
+      "id": "pressure-mechanics",
+      "term": "Pressure mechanics",
+      "aliases": ["pressure", "pressure mechanic"],
+      "category": "game-design",
+      "short": "Systems that constrain player behavior so crafting or adapting spells provides a meaningful advantage.",
+      "full": "Pressure mechanics are the v4 G4 gate. A passing game must include at least two of: (a) resource pressure — limited mana, limited healing, forge cost; (b) enemy counterplay — resistances, immunities, behavior that punishes repetition; (c) encounter design pressure — elites, bosses that invalidate default play, rooms with mechanical constraints; (d) build pressure — affinity pushes specialization, loadout limits force trade-offs. At least one pressure mechanic must interact with the forge so crafted spells are demonstrably more effective than defaults. Pressure is what makes the Ingenuity requirement bite — without pressure, ingenuity is optional.",
+      "related_decisions": ["gad-41"],
+      "related_terms": ["gate", "ingenuity", "forge", "affinity"]
+    },
+    {
+      "id": "trace-schema-v4",
+      "term": "Trace schema v4",
+      "aliases": ["trace v4", "schema v4"],
+      "category": "infra",
+      "short": "The current version of TRACE.json plus hook-captured event streams. Every tool use, skill invocation, subagent spawn, and file mutation is recorded.",
+      "full": "Trace schema v4 is the instrumentation layer that makes programmatic evaluation possible. Every run produces a TRACE.json file with summary metrics plus a stream of events captured via Claude Code PreToolUse/PostToolUse hooks. Event types: tool_use, skill_invocation, subagent_spawn, file_mutation. Event output fields are capped at 4 KB with head/tail truncation; full output stays in Claude Code's session.jsonl for deeper inspection. The framework version is stamped on every TRACE so evals can be re-run across framework versions without contamination. All the programmatic-eval gaps in GAPS.md are built on top of this event stream.",
+      "related_decisions": ["gad-50", "gad-51", "gad-53", "gad-58", "gad-60"],
+      "related_terms": ["hooks", "programmatic-eval"]
+    },
+    {
+      "id": "hooks",
+      "term": "Hooks",
+      "aliases": ["hook", "pretooluse hook", "posttooluse hook"],
+      "category": "infra",
+      "short": "Claude Code PreToolUse/PostToolUse handlers that emit structured events into the trace stream.",
+      "full": "Hooks are how we capture trace schema v4 events without modifying the agent itself. Claude Code's hook system fires on every tool use (before + after) and passes a JSONL payload on stdin. The GAD hook handler (vendor/get-anything-done/bin/gad-trace-hook.cjs) reads that payload and emits a structured event into the per-phase trace stream. The handler lives in the GAD repo so framework updates automatically propagate to any workspace that references it by absolute path in .claude/settings.json.",
+      "related_decisions": ["gad-58", "gad-59"],
+      "related_terms": ["trace-schema-v4"]
+    },
+    {
+      "id": "rate-limited",
+      "term": "Rate-limited",
+      "aliases": ["rate limit", "rate limited run"],
+      "category": "evaluation",
+      "short": "A run that hit an account-level token/request rate limit before completing. Preserved as a data point but excluded from cross-round quality comparisons.",
+      "full": "When a run hits the Anthropic account rate limit mid-execution, it's marked `timing.rate_limited = true` in TRACE.json. The partial work is still preserved (it contains useful signal about planning differential, architecture patterns, inheritance effects) but is excluded from freedom-hypothesis comparisons, scatter plots, and cross-round quality aggregation. Rate limits forced the move to serial eval execution (gad-62 → gad-67) after round 3's parallel attempt lost all three runs simultaneously.",
+      "related_decisions": ["gad-62", "gad-63", "gad-67"],
+      "related_terms": ["api-interrupted", "eval-run"]
+    },
+    {
+      "id": "api-interrupted",
+      "term": "API-interrupted",
+      "aliases": ["api interrupted", "529 interrupted"],
+      "category": "evaluation",
+      "short": "A run that was interrupted by an Anthropic API server error (e.g. HTTP 529 overloaded_error). Different cause than rate limit, same exclusion policy.",
+      "full": "Server-side transient errors (HTTP 529 overloaded_error being the most common) are distinct from account rate limits: different cause, different retry semantics, different interpretation. The TRACE.json flag `timing.api_interrupted = true` with an `interruption_note` field distinguishes them. Both rate-limited and api-interrupted runs are preserved-but-excluded. GAD v10 was api-interrupted twice; investigating the 529 pattern is a queued task before the GAD v11 retry.",
+      "related_decisions": ["gad-64"],
+      "related_terms": ["rate-limited", "eval-run"]
+    },
+    {
+      "id": "eval-run",
+      "term": "Eval run",
+      "aliases": ["run", "eval version"],
+      "category": "evaluation",
+      "short": "A single attempt by an agent to satisfy an eval's requirements. Identified by project + version, e.g. escape-the-dungeon-bare/v5.",
+      "full": "An eval run is the atomic unit of evaluation. Each run produces a source tree, a build, a TRACE.json, and (ideally) a human review. Multiple runs can share a round (same requirements version) but differ in agent, workflow, or retry attempt. Runs are versioned monotonically per project: escape-the-dungeon-bare/v1, v2, ..., v5. Preserved runs land under evals/<project>/<version>/ and their builds under apps/portfolio/public/evals/<project>/<version>/. The preservation contract (gad-38) is enforced by tests.",
+      "related_decisions": ["gad-37", "gad-38"],
+      "related_terms": ["greenfield", "brownfield", "round"]
+    },
+    {
+      "id": "round",
+      "term": "Round",
+      "aliases": ["eval round", "rounds"],
+      "category": "evaluation",
+      "short": "A set of eval runs sharing the same requirements-document version. A new requirements version = a new round.",
+      "full": "Per gad-72, a round is defined by its requirements-document version. Round 1 = requirements v1 = escape-the-dungeon v1-v5 runs. Round 2 = v2 = etd v6/v7 + bare v1/v2 + emergent v1. Round 3 = v3. Round 4 = v4. Multiple runs can live inside a single round (different workflows, retries). Rounds are progressively more complex — requirements expand monotonically. Earlier rounds can be re-evaluated with new hypotheses; a new hypothesis can start a new round against any requirements version (e.g. 'does codex cli build similarly to claude code against v4' is a valid new round against v4, producing a new line of data).",
+      "related_decisions": ["gad-72"],
+      "related_terms": ["eval-run", "requirements-version"]
+    },
+    {
+      "id": "fundamental-skills",
+      "term": "Fundamental skills",
+      "aliases": ["fundamentals", "foundational skills", "triumvirate"],
+      "category": "framework",
+      "short": "GAD's three foundational skills — create-skill, merge-skill, find-skills — that enable the emergent-evolution hypothesis to work.",
+      "full": "Per gad-73, GAD provides a triumvirate of fundamental skills: find-skills (locate a trusted fundamental from the GAD ecosystem — like 'scientific-method' or 'debug'), merge-skill (fuse a fundamental into a project-attuned skill), and create-skill (author genuinely new skills when merging isn't possible). Together they let an emergent agent evolve its skill library across rounds by finding relevant fundamentals, tailoring them to the current project, and creating new primitives only when necessary. This is the meta-layer of the in-game rune/spell merging mechanic — the agent's skill library evolves via the same combine-fundamentals pattern the escape-the-dungeon game teaches players.",
+      "related_decisions": ["gad-70", "gad-73"],
+      "related_terms": ["merge-skill", "emergent-workflow", "emergent-evolution-hypothesis"]
+    },
+    {
+      "id": "merge-skill",
+      "term": "merge-skill",
+      "aliases": ["skill merging", "skill merge"],
+      "category": "framework",
+      "short": "A fundamental GAD skill that fuses a foundational skill (e.g. scientific-method) with a project context to produce a tailored variant.",
+      "full": "merge-skill is one of the three fundamental skills (gad-73). Input: a foundational skill from the trusted pool + a project context. Output: a new skill that carries the foundational's rigor into the project's vocabulary. Example: merging 'scientific-method' into a kaplay rune-spellcrafting project produces 'scientific-method-for-kaplay-rune-spellcrafting' — same underlying practice, tailored examples, tailored pitfalls. This is how the emergent workflow is supposed to evolve: not by inventing new skills from scratch but by taking fundamentals and attuning them.",
+      "related_decisions": ["gad-73"],
+      "related_terms": ["fundamental-skills", "emergent-workflow"]
+    },
+    {
+      "id": "programmatic-eval",
+      "term": "Programmatic evaluation",
+      "aliases": ["programmatic eval", "automated eval"],
+      "category": "evaluation",
+      "short": "Eval metrics collected by tooling (hooks, traces, parsers) rather than by agent self-report or human judgment.",
+      "full": "Per gad-69, every eval metric must answer 'can this be collected programmatically?' before 'how do we score it?'. The goal is to minimize agent-self-report (which is suspect) and minimize human-judgment (which doesn't scale) without sacrificing the dimensions that genuinely need a human. Current programmatic metrics: tool_use_mix, skill_to_tool_ratio, plan_adherence_delta, commit rhythm, produced_artifact_density. Gaps ranked in .planning/GAPS.md — the top three are skill-trigger coverage, build exit code, and skill-inheritance hygiene, all based on trace events rather than UI visual tests.",
+      "related_decisions": ["gad-61", "gad-69"],
+      "related_terms": ["trace-schema-v4", "hooks", "rubric"]
+    },
+    {
+      "id": "pseudo-database",
+      "term": "JSON pseudo-database",
+      "aliases": ["pseudo db", "data/ pattern"],
+      "category": "infra",
+      "short": "Hand-curated content files under vendor/get-anything-done/data/*.json, read at prebuild time and typed into the site.",
+      "full": "Per gad-71, the project uses a JSON pseudo-database for hand-curated content that doesn't belong in .planning/ XML (agent process state) or evals/ TRACE.json (eval outputs). data/ holds open-questions.json, bugs.json, glossary.json, etc. — anything a human authors that the site should render. The prebuild script reads each file, validates shape, and emits typed TypeScript exports into lib/eval-data.generated.ts. No runtime services, no ACID, no servers — fine because the site has no customers, no PII, no secrets. Migration path to a real database is clear if we ever need one (we don't expect to).",
+      "related_decisions": ["gad-71"],
+      "related_terms": []
+    },
+    {
+      "id": "ralph-wiggum-loop",
+      "term": "Ralph Wiggum loop",
+      "aliases": ["ralph loop", "wiggum loop"],
+      "category": "process",
+      "short": "The agent loop where everything the agent needs to remember lives in repo files, not in the agent's context window.",
+      "full": "Named after the RepoPlanner predecessor to GAD and, informally, the Simpsons character who is 'special.' The idea: context windows are ephemeral, agents forget, but the repo is persistent. If the plan, the state, the decisions, the skill library all live in committed files, the agent can rebuild its working memory at any time via a single snapshot command. GAD inherits this architecture from RepoPlanner and GSD. The pattern solves the context-rot problem: decisions drift over long sessions because the agent forgets what it decided earlier — but if decisions live in DECISIONS.xml, they're always queryable.",
+      "related_decisions": ["gad-17", "gad-19"],
+      "related_terms": ["planning-loop"]
+    },
+    {
+      "id": "planning-loop",
+      "term": "GAD planning loop",
+      "aliases": ["gad loop", "plan execute verify commit"],
+      "category": "process",
+      "short": "snapshot → pick one task → implement → update planning docs → commit. The durable iteration cycle GAD enforces.",
+      "full": "Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick one task (status=planned) from the snapshot, (3) implement it, (4) update TASK-REGISTRY.xml (mark done), STATE.xml (next-action), DECISIONS.xml (if new decisions), (5) commit. The loop is designed to survive auto-compaction: after the agent's context is compacted mid-session, running snapshot re-loads everything it needs to continue. Subagents working on GAD-tracked projects run snapshot at the start of their work too, with the project ID passed in the agent prompt.",
+      "related_decisions": ["gad-17", "gad-18", "gad-24"],
+      "related_terms": ["ralph-wiggum-loop", "gad-workflow"]
+    }
+  ]
+}

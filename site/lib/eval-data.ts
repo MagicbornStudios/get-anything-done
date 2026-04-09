@@ -21,6 +21,8 @@ export {
   OPEN_QUESTIONS_UPDATED,
   BUGS,
   BUGS_UPDATED,
+  GLOSSARY,
+  GLOSSARY_UPDATED,
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,
@@ -31,6 +33,7 @@ export {
   type Workflow,
   type OpenQuestion,
   type BugRecord,
+  type GlossaryTerm,
 } from "./eval-data.generated";
 
 import {

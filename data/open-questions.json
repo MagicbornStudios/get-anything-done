@@ -23,6 +23,45 @@
   "_last_updated": "2026-04-09",
   "questions": [
     {
+      "id": "fundamental-skills-triumvirate",
+      "title": "Do we already have create-skill / merge-skill / find-skills as fundamentals, and if not, should we build them?",
+      "category": "framework",
+      "status": "open",
+      "priority": "high",
+      "context": "User's vision (decision gad-73): GAD provides three fundamental skills as the foundation of emergent evolution. find-skills locates a trusted GAD fundamental (e.g. 'scientific method', 'debug'). merge-skill fuses that fundamental into a project-tailored skill (e.g. 'scientific-method-for-kaplay-rune-spellcrafting'). create-skill authors genuinely new ones when no merge candidate exists. This triumvirate IS the in-game rune/spell merging mechanic made meta. We need to audit what exists today in skills/ — create-skill likely already exists, merge-skill and find-skills may not. Reference: https://skills.sh/vercel-labs/skills/find-skills. GAD's version scopes to trusted ecosystem initially. Bigger ambition: prove skill effectiveness + provide skill security.",
+      "related_decisions": ["gad-70", "gad-73"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "gad-value-prop-landing-page-framing",
+      "title": "Should the landing page stop leading with 'ship software faster' and lead with task-management + skill evaluation instead?",
+      "category": "site",
+      "status": "discussing",
+      "priority": "high",
+      "context": "Per decision gad-74, GAD's actual value is not 'ship production software faster' — the freedom hypothesis already shows bare can outperform on creative implementation. Real value: (1) durable task management at scale with everything in-repo (no external DB, no lock-in), (2) scientific framework for proving skill effectiveness + workflow discipline, (3) skill security posture (longer-term). Landing page should reframe around these. Current landing hero is implicitly still about 'use GAD to build things' — it should be 'use GAD to understand whether agents are actually building things well.'",
+      "related_decisions": ["gad-74"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "skill-security-model",
+      "title": "What does 'skill security' actually look like in practice?",
+      "category": "framework",
+      "status": "open",
+      "priority": "medium",
+      "context": "User wants GAD to eventually provide a trust model for skills — how can you tell if a skill you're about to inherit is safe, effective, and actually improves anything? Initial thoughts: (a) frontmatter signing / checksum, (b) provenance lineage (which run authored it, which rubric scores validated it, which other runs inherited it successfully), (c) automated review against Anthropic's skills guide (gad-70), (d) sandboxed trial run in a throwaway worktree before trusting. Distinct from typosquatting defense (which lives in the planned /security page). This is about effectiveness + integrity, not name collisions.",
+      "related_decisions": ["gad-70", "gad-73", "gad-74"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
       "id": "csh-vs-freedom-which-wins-over-time",
       "title": "Does compounding skill inheritance (CSH) eventually beat raw freedom (freedom hypothesis) across many rounds?",
       "category": "hypothesis",
@@ -65,14 +104,14 @@
       "id": "content-pack-injection-baseline",
       "title": "How do we measure the value of authored-content-pack inheritance (gad-66) without confounding freedom/CSH tests?",
       "category": "evaluation",
-      "status": "open",
+      "status": "resolved",
       "priority": "medium",
       "context": "Decision gad-66 proposes an eval flavor that inherits pre-authored content (spells, runes, items, NPCs) alongside requirements. The user's goal is a 'really complex game made with all the builds and data around it.' But injecting content into a CSH-testing run would confound the compound-skills signal because the agent didn't author the content. Proposal: run it as a separate eval track (escape-the-dungeon-inherited-content) distinct from greenfield emergent, so CSH measurements stay clean. Still open: how do we compare a content-pack run to a greenfield run fairly?",
       "related_decisions": ["gad-65", "gad-66"],
       "related_requirements": [],
       "opened_on": "2026-04-09",
-      "resolved_on": null,
-      "resolution": null
+      "resolved_on": "2026-04-09",
+      "resolution": "Resolved: content-pack injection becomes its own eval track (separate from greenfield emergent) so CSH measurements stay clean. User reframed it as a *content-driven hypothesis* — analogous to making a game or movie derivative from a book. It is explicitly derivative work: not all processes are, 'much like a forger might not use the exact same brush.' This is a distinct hypothesis from freedom and CSH, with its own track, its own rounds, and its own comparison rules. We do NOT compare content-pack runs to greenfield runs on the same rubric — they answer different questions. The content-pack track's scoring focuses on: (a) does the extra content produce a more fleshed-out game given the same token budget, (b) does the agent integrate the content coherently rather than just bolting it on, (c) does the final game feel unified despite derivative source material."
     },
     {
       "id": "http-529-root-cause",

@@ -1193,7 +1193,7 @@ function loadTopSkillForRun(project, version, producedArtifacts) {
 function loadJsonDataPseudoDb() {
   // data/ is our JSON pseudo-database (decision gad-71). Each file is self-describing
   // with a _schema block. Missing files return null so the site renders empty states.
-  const result = { openQuestions: null, bugs: null };
+  const result = { openQuestions: null, bugs: null, glossary: null };
   if (!fs.existsSync(DATA_DIR)) return result;
 
   const read = (name) => {
@@ -1209,10 +1209,12 @@ function loadJsonDataPseudoDb() {
 
   result.openQuestions = read("open-questions.json");
   result.bugs = read("bugs.json");
+  result.glossary = read("glossary.json");
 
   const qCount = result.openQuestions?.questions?.length ?? 0;
   const bCount = result.bugs?.bugs?.length ?? 0;
-  console.log(`  [data] loaded pseudo-db: ${qCount} open question(s), ${bCount} bug(s)`);
+  const gCount = result.glossary?.terms?.length ?? 0;
+  console.log(`  [data] loaded pseudo-db: ${qCount} open question(s), ${bCount} bug(s), ${gCount} glossary term(s)`);
   return result;
 }
 
@@ -1572,6 +1574,21 @@ export const OPEN_QUESTIONS_UPDATED: string | null = ${JSON.stringify(extras.pse
 export const BUGS: BugRecord[] = ${JSON.stringify(extras.pseudoDb?.bugs?.bugs ?? [], null, 2)};
 
 export const BUGS_UPDATED: string | null = ${JSON.stringify(extras.pseudoDb?.bugs?._last_updated ?? null)};
+
+export interface GlossaryTerm {
+  id: string;
+  term: string;
+  aliases: string[];
+  category: string;
+  short: string;
+  full: string;
+  related_decisions: string[];
+  related_terms: string[];
+}
+
+export const GLOSSARY: GlossaryTerm[] = ${JSON.stringify(extras.pseudoDb?.glossary?.terms ?? [], null, 2)};
+
+export const GLOSSARY_UPDATED: string | null = ${JSON.stringify(extras.pseudoDb?.glossary?._last_updated ?? null)};
 
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",

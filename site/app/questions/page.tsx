@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
+import { Term } from "@/components/glossary/Term";
 import {
   OPEN_QUESTIONS,
   OPEN_QUESTIONS_UPDATED,
@@ -69,11 +70,20 @@ export default function QuestionsPage() {
             <span className="gradient-text">In public.</span>
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            GAD is a research framework. A lot of what we publish is provisional — the
-            hypotheses are hypotheses, the rubric is v1, the site is mid-refactor. Instead
-            of hiding the rough edges, this page lists every unresolved question we&apos;re
+            GAD is a research framework. A lot of what we publish is provisional — the{" "}
+            <Term id="compound-skills-hypothesis">hypotheses</Term> are hypotheses, the{" "}
+            <Term id="rubric">rubric</Term> is v1, the site is mid-refactor. Instead of
+            hiding the rough edges, this page lists every unresolved question we&apos;re
             currently sitting with, grouped by category and ranked by priority. When a
             question is resolved, it stays on the page with the resolution attached.
+          </p>
+          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+            Unfamiliar terms are underlined with a dotted line — hover for a short
+            definition, click to jump to the{" "}
+            <Link href="/glossary" className="text-accent underline decoration-dotted">
+              full glossary
+            </Link>
+            .
           </p>
           <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
             Source:{" "}

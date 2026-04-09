@@ -133,27 +133,34 @@ A gap exists when the answer to (2) is self-report or human AND the answer to (3
 
 ## Summary table
 
-| Gap | Severity | Feasibility | Phase |
-|---|---|---|---|
-| G1 Gate-pass verdict | critical | high | phase 27 track 2 |
-| G2 Skill-trigger coverage | high | medium | phase 25 milestone E (new) |
-| G3 Build/test exit code | high | high | phase 25 milestone D follow-up |
-| G6 Requirement coverage counts | high | medium | phase 27 track 2 (merge with G1) |
-| G11 Skill-inheritance hygiene | high | high (hygiene) | phase 27 new task |
-| G5 Commit rhythm sharpening | low | medium | polish |
-| G7 Subagent spawn audit | medium | high | phase 25 milestone B verify |
-| G8 Asset sourcing heuristic | medium | high | phase 25 milestone D follow-up |
-| G9 Notification persistence | medium | high | phase 27 track 2 |
-| G10 Per-tick redraw detection | medium | medium | phase 27 track 2 |
-| G12 Consistency cross-check | low | high | nice-to-have |
-| G4 Tool-use mix | — | — | already good, keep as reference pattern |
+| Gap | Priority (revised) | Feasibility | UI-dependent? | Phase |
+|---|---|---|---|---|
+| **G2 Skill-trigger coverage** | **critical** | medium | no | phase 25 milestone E (new) |
+| **G3 Build/test exit code** | **critical** | high | no | phase 25 milestone D follow-up |
+| **G11 Skill-inheritance hygiene** | **high** | high (hygiene) | no | phase 27 new task |
+| G7 Subagent spawn audit | medium | high | no | phase 25 milestone B verify |
+| G8 Asset sourcing heuristic | medium | high | no (bundle inspection) | phase 25 milestone D follow-up |
+| G5 Commit rhythm sharpening | low | medium | no | polish |
+| G12 Consistency cross-check | low | high | no | nice-to-have |
+| G4 Tool-use mix | — | — | no | already good, reference pattern |
+| G1 Gate-pass verdict | **deferred** | would need Playwright | yes | revisit at UI stability |
+| G6 Requirement coverage counts | **deferred** | would need Playwright | partially | revisit at UI stability |
+| G9 Notification persistence | **deferred** | would need Playwright | yes | revisit at UI stability |
+| G10 Per-tick redraw detection | **deferred** | would need Playwright | yes | revisit at UI stability |
 
-## Recommended next actions
+## Why not Playwright yet (user directive 2026-04-09)
 
-1. **Pick G1 + G3 as the two load-bearing wins.** Together they replace the two flimsiest self-report signals (gate verdict and build-works) with deterministic outputs. Both are high feasibility. This is the highest ROI.
-2. **Add G11's hygiene check as the CSH-measurement upgrade.** We already have the hook-captured data; we just need a checker that walks inherited-skill files + mutation events + CHANGELOG and reports hygiene %.
-3. **Defer G2 until v5 requirements promotion lands** — expected triggers change with v5, no point building a checker against a moving target.
+User review of this audit: **Playwright-based visual tests are deferred**. Reasoning: the game UI is still changing fast between rounds. A test harness built against the current UI would need constant refactoring as v5, v6, v7 land — the maintenance tax exceeds the signal value this early. Visual/integration tests become appropriate **after** a game has reached UI stability and the requirements stop moving. For now, we lean on trace-event-based signals (hooks, tool uses, file mutations) that don't assume anything about the UI. The gaps that depended on Playwright (G1, G9, G10) are re-ranked down; the gaps that depend only on trace events and build artifacts (G2, G3, G11) are re-ranked up.
+
+This is a deliberate tradeoff, not an oversight: we accept weaker gate-pass signals in exchange for low-maintenance instrumentation.
+
+## Recommended next actions (revised)
+
+1. **G2 Skill-trigger coverage** — highest priority. Per gad-69 the hook-captured skill_invocation events are the single most important programmatic signal we can collect. Build `gad eval check-triggers <project> <version>` that reads trace events and joins them against EXPECTED-TRIGGERS.md. This answers "did the right skill load on the right tool_use" without touching the game UI.
+2. **G3 Build/test exit code** — capture the exit code + log digest + bundle size during `gad eval preserve`. Low-effort, high-signal, no UI assumptions.
+3. **G11 Skill-inheritance hygiene** — walk inherited skill files + file-mutation events + CHANGELOG + frontmatter validity (per Anthropic skills guide gad-70). Reports hygiene % as a scored dimension alongside the human-judgment part of skill_inheritance_effectiveness.
 4. **G4 is the reference pattern.** Every new programmatic metric should follow its shape: trace events in, deterministic derivation out, typed field on EvalRunRecord, rendered on the per-run page with a data-provenance caption ("this score reads X from TRACE.json derived.foo").
+5. **Revisit G1 + G9 + G10 when the game reaches UI stability.** Likely after v6 or v7 when the requirements stabilize. Until then, these gaps stay open as documented-but-deferred.
 
 ## Data provenance convention (follows from G4)
 

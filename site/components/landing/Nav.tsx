@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { href: "/methodology", label: "Methodology" },
   { href: "/rubric", label: "Rubric" },
   { href: "/questions", label: "Questions" },
+  { href: "/glossary", label: "Glossary" },
   { href: "/#results", label: "Results" },
   { href: "/#graphs", label: "Graphs" },
   { href: "/videos", label: "Videos" },
