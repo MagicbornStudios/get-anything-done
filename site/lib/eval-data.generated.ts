@@ -806,6 +806,97 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     }
   },
   {
+    "project": "escape-the-dungeon",
+    "version": "v9",
+    "workflow": "gad",
+    "requirementsVersion": "v4",
+    "date": "2026-04-09",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 4,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": "3ef0bb5",
+    "frameworkBranch": "main",
+    "frameworkCommitTs": null,
+    "frameworkStamp": "v1.32.0+3ef0bb5",
+    "traceEvents": null,
+    "evalType": "implementation",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-09T04:26:00.000Z",
+      "ended": "2026-04-09T04:40:00.000Z",
+      "duration_minutes": 14,
+      "phases_completed": 1,
+      "tasks_completed": 4,
+      "rate_limited": true,
+      "rate_limit_note": "Hit account-level rate limit at tool_uses=81 (highest of three conditions). Planned 7 phases + 23 tasks before rate-limit. Completed phase 01 fully + task 02-01."
+    },
+    "tokenUsage": {
+      "total_tokens": 3238,
+      "tool_uses": 81,
+      "note": "Highest tool_uses of the three conditions — most planning overhead upfront."
+    },
+    "gitAnalysis": {
+      "total_commits": 0,
+      "task_id_commits": 0,
+      "batch_commits": 0,
+      "per_task_discipline": 0,
+      "note": "No commits — agent was running in a worktree. Rate limit hit before commit discipline was exercised."
+    },
+    "requirementCoverage": {
+      "total_criteria": 12,
+      "gate_failed": true,
+      "gate_notes": "G1 PARTIAL — title screen scene renders, scene transition to New Game NOT IMPLEMENTED (task 02-02 was next). No room navigation. G2 NOT MET. G3 PARTIAL — title screen styled. G4 NOT MET. RATE LIMITED at task 02-02. Phase 01 scaffold passed its own verification with working build.",
+      "fully_met": 1,
+      "partially_met": 3,
+      "not_met": 8,
+      "coverage_ratio": 0.208
+    },
+    "workflowEmergence": {
+      "created_task_lists": true,
+      "created_state_tracking": true,
+      "created_architecture_docs": true,
+      "created_reusable_skills": false,
+      "emergence_score": 0.75,
+      "note": "Full GAD planning suite produced. Architecture: scenes/, systems/, types/, data/, main.ts — clean separation. Did not author new skills (framework provides them) but used the planning-doc architecture per GAD conventions."
+    },
+    "planningQuality": {
+      "phases_planned": 7,
+      "tasks_planned": 23,
+      "tasks_completed": 4,
+      "tasks_blocked": 19,
+      "decisions_captured": 0,
+      "state_updates": 2,
+      "state_stale_count": 0,
+      "note": "FULL XML planning suite produced: ROADMAP.xml (7 phases), TASK-REGISTRY.xml (23 tasks), STATE.xml, DECISIONS.xml (empty), REQUIREMENTS.xml, VERIFICATION.md (phase 01 verified PASS). Highest planning_quality of any eval run. Framework planning overhead clearly visible."
+    },
+    "scores": {
+      "requirement_coverage": 0.208,
+      "planning_quality": 0.85,
+      "per_task_discipline": 0,
+      "skill_accuracy": null,
+      "time_efficiency": 0.533,
+      "human_review": null,
+      "composite": null
+    },
+    "humanReview": {
+      "score": null,
+      "notes": "RATE LIMITED after full phase-01 scaffold + phase-02 task 01. Dist builds successfully (only one of three conditions to produce a working build). VERIFICATION.md shows the agent self-verified phase 01 as PASS before continuing. Cleanest GAD execution captured — planning overhead visible (23 tasks planned in 14 minutes) but implementation depth limited by rate budget. Freedom-hypothesis signal: GAD spent tokens on planning, bare on direct implementation, neither reached the gates. DO NOT include in cross-round comparisons against completed runs.",
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 19,
+      "produced_artifact_density": 0.14285714285714285,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 0,
+      "commit_discipline": null
+    }
+  },
+  {
     "project": "escape-the-dungeon-bare",
     "version": "v1",
     "workflow": "bare",
@@ -1048,6 +1139,95 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     }
   },
   {
+    "project": "escape-the-dungeon-bare",
+    "version": "v4",
+    "workflow": "bare",
+    "requirementsVersion": "v4",
+    "date": "2026-04-09",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 4,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": "3ef0bb5",
+    "frameworkBranch": "main",
+    "frameworkCommitTs": null,
+    "frameworkStamp": "v1.32.0+3ef0bb5",
+    "traceEvents": null,
+    "evalType": "implementation",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-09T04:26:00.000Z",
+      "ended": "2026-04-09T04:40:00.000Z",
+      "duration_minutes": 14,
+      "phases_completed": 1,
+      "tasks_completed": 1,
+      "rate_limited": true,
+      "rate_limit_note": "Hit account-level rate limit at tool_uses=45. Shared rate bucket with parallel GAD + Emergent runs."
+    },
+    "tokenUsage": {
+      "total_tokens": 1682,
+      "tool_uses": 45,
+      "note": "rate-limited — partial implementation"
+    },
+    "gitAnalysis": {
+      "total_commits": 0,
+      "task_id_commits": 0,
+      "batch_commits": 0,
+      "per_task_discipline": 0
+    },
+    "requirementCoverage": {
+      "total_criteria": 12,
+      "gate_failed": true,
+      "gate_notes": "G1 partial (scaffold only). G2/G3/G4 NOT MET. RATE LIMITED before any gate could be verified. Vite build succeeds manually (54 KB, 18 modules) but game loop is not wired end-to-end.",
+      "fully_met": 0,
+      "partially_met": 3,
+      "not_met": 9,
+      "coverage_ratio": 0.125
+    },
+    "workflowEmergence": {
+      "created_task_lists": true,
+      "created_state_tracking": false,
+      "created_architecture_docs": false,
+      "created_reusable_skills": false,
+      "emergence_score": 0.3
+    },
+    "planningQuality": {
+      "phases_planned": 10,
+      "tasks_planned": 10,
+      "tasks_completed": 1,
+      "tasks_blocked": 9,
+      "decisions_captured": 0,
+      "state_updates": 0,
+      "state_stale_count": 0,
+      "note": "Wrote game/.planning/worklog.md with 10-step plan matching 4 gates. Actual progress: step 1 (project scaffold) complete."
+    },
+    "scores": {
+      "requirement_coverage": 0.125,
+      "planning_quality": 0.1,
+      "per_task_discipline": 0,
+      "skill_accuracy": null,
+      "time_efficiency": 0.533,
+      "human_review": null,
+      "composite": null
+    },
+    "humanReview": {
+      "score": null,
+      "notes": "RATE LIMITED before completion. 6 source files written, vite build succeeds manually (54 KB bundle). worklog.md shows 10-step plan covering all 4 gates. Implementation depth: step 1 of 10 complete. DO NOT include in cross-round comparisons against completed runs.",
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 9,
+      "produced_artifact_density": 0.21428571428571427,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 0,
+      "commit_discipline": null
+    }
+  },
+  {
     "project": "escape-the-dungeon-emergent",
     "version": "v1",
     "workflow": "emergent",
@@ -1200,6 +1380,96 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 2,
       "commit_discipline": 0
+    }
+  },
+  {
+    "project": "escape-the-dungeon-emergent",
+    "version": "v3",
+    "workflow": "emergent",
+    "requirementsVersion": "v4",
+    "date": "2026-04-09",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 4,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": "3ef0bb5",
+    "frameworkBranch": "main",
+    "frameworkCommitTs": null,
+    "frameworkStamp": "v1.32.0+3ef0bb5",
+    "traceEvents": null,
+    "evalType": "implementation",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-09T04:26:00.000Z",
+      "ended": "2026-04-09T04:40:00.000Z",
+      "duration_minutes": 14,
+      "phases_completed": 0,
+      "tasks_completed": 0,
+      "rate_limited": true,
+      "rate_limit_note": "Hit account-level rate limit at tool_uses=40 (lowest of three conditions). Shared rate bucket with parallel GAD + Bare runs."
+    },
+    "tokenUsage": {
+      "total_tokens": 1008,
+      "tool_uses": 40,
+      "note": "rate-limited — did not reach build step"
+    },
+    "gitAnalysis": {
+      "total_commits": 0,
+      "task_id_commits": 0,
+      "batch_commits": 0,
+      "per_task_discipline": 0
+    },
+    "requirementCoverage": {
+      "total_criteria": 12,
+      "gate_failed": true,
+      "gate_notes": "BUILD FAILS — main.ts entry point missing. index.html references /src/main.ts but only 6 supporting modules exist. Rollup error: 'failed to resolve import /src/main.ts'. All gates NOT MET because the build itself fails.",
+      "fully_met": 0,
+      "partially_met": 1,
+      "not_met": 11,
+      "coverage_ratio": 0.042
+    },
+    "workflowEmergence": {
+      "created_task_lists": false,
+      "created_state_tracking": false,
+      "created_architecture_docs": false,
+      "created_reusable_skills": false,
+      "emergence_score": 0.4,
+      "note": "Inherited 7 skills from previous runs. Wrote 6 modular source files (content, icons, renderer, state, styles, types) — the state-composition inherited skill shaped the architecture. Did NOT reach skill-authoring step."
+    },
+    "planningQuality": {
+      "phases_planned": 0,
+      "tasks_planned": 0,
+      "tasks_completed": 0,
+      "tasks_blocked": 0,
+      "decisions_captured": 0,
+      "state_updates": 0,
+      "state_stale_count": 0,
+      "note": "No explicit planning artifact created beyond copying inherited skills."
+    },
+    "scores": {
+      "requirement_coverage": 0.042,
+      "planning_quality": 0.05,
+      "per_task_discipline": 0,
+      "skill_accuracy": null,
+      "time_efficiency": 0.533,
+      "human_review": null,
+      "composite": null
+    },
+    "humanReview": {
+      "score": null,
+      "notes": "RATE LIMITED before main.ts entry point was written. Build fails objectively at link time. Architectural signal: emergent agent wrote 6 modular files before the integration layer, matching the state-composition inherited skill's pattern. Interesting emergence data point despite incomplete run. DO NOT include in cross-round comparisons against completed runs.",
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": 0.5,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 0,
+      "commit_discipline": null
     }
   },
   {
@@ -2178,6 +2448,21 @@ export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = {
     ],
     "workflowNotes": []
   },
+  "escape-the-dungeon/v9": {
+    "skillFiles": [],
+    "agentFiles": [],
+    "planningFiles": [
+      {
+        "name": "source-STAT-AND-BEHAVIOUR-TAXONOMY.md",
+        "bytes": 4628
+      },
+      {
+        "name": "VERIFICATION.md",
+        "bytes": 154
+      }
+    ],
+    "workflowNotes": []
+  },
   "escape-the-dungeon-bare/v1": {
     "skillFiles": [],
     "agentFiles": [],
@@ -2211,6 +2496,26 @@ export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = {
       }
     ]
   },
+  "escape-the-dungeon-bare/v4": {
+    "skillFiles": [
+      {
+        "name": "create-skill.md",
+        "bytes": 5012
+      },
+      {
+        "name": "find-sprites.md",
+        "bytes": 6073
+      }
+    ],
+    "agentFiles": [],
+    "planningFiles": [
+      {
+        "name": "worklog.md",
+        "bytes": 745
+      }
+    ],
+    "workflowNotes": []
+  },
   "escape-the-dungeon-emergent/v2": {
     "skillFiles": [],
     "agentFiles": [],
@@ -2221,6 +2526,41 @@ export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = {
         "bytes": 1163
       }
     ]
+  },
+  "escape-the-dungeon-emergent/v3": {
+    "skillFiles": [
+      {
+        "name": "content-pack-loading.md",
+        "bytes": 1370
+      },
+      {
+        "name": "create-skill.md",
+        "bytes": 5012
+      },
+      {
+        "name": "find-sprites.md",
+        "bytes": 6073
+      },
+      {
+        "name": "game-loop-verification.md",
+        "bytes": 1696
+      },
+      {
+        "name": "kaplay-scene-pattern.md",
+        "bytes": 1689
+      },
+      {
+        "name": "previous-workflow.md",
+        "bytes": 2951
+      },
+      {
+        "name": "state-composition.md",
+        "bytes": 1129
+      }
+    ],
+    "agentFiles": [],
+    "planningFiles": [],
+    "workflowNotes": []
   }
 };
 
@@ -2228,9 +2568,11 @@ export const PLAYABLE_INDEX: Record<string, string> = {
   "escape-the-dungeon/v6": "/playable/escape-the-dungeon/v6/index.html",
   "escape-the-dungeon/v7": "/playable/escape-the-dungeon/v7/index.html",
   "escape-the-dungeon/v8": "/playable/escape-the-dungeon/v8/index.html",
+  "escape-the-dungeon/v9": "/playable/escape-the-dungeon/v9/index.html",
   "escape-the-dungeon-bare/v1": "/playable/escape-the-dungeon-bare/v1/index.html",
   "escape-the-dungeon-bare/v2": "/playable/escape-the-dungeon-bare/v2/index.html",
   "escape-the-dungeon-bare/v3": "/playable/escape-the-dungeon-bare/v3/index.html",
+  "escape-the-dungeon-bare/v4": "/playable/escape-the-dungeon-bare/v4/index.html",
   "escape-the-dungeon-emergent/v1": "/playable/escape-the-dungeon-emergent/v1/index.html",
   "escape-the-dungeon-emergent/v2": "/playable/escape-the-dungeon-emergent/v2/index.html"
 };

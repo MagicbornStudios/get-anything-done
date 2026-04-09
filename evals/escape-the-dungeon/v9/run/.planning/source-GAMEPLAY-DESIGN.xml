@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Escape the Dungeon: gameplay design (trimmed for vertical slice eval).
+  Full design is 640 lines. This version focuses on what's needed for a playable demo.
+-->
+<gameplay-design>
+  <identity>
+    <one-liner>Roguelike dungeon crawl where you negotiate as much as you fight.</one-liner>
+    <reference>Pokemon is a reference for encounter system, types, and sprites.</reference>
+    <pacing>Target ~1 dungeon floor cleared per game hour. Main driver: loot.</pacing>
+  </identity>
+
+  <player-loop>
+    <primary-driver>Loot.</primary-driver>
+    <success-criteria>In 5 minutes: "I cared about one choice." Avoid: unclear what to do next.</success-criteria>
+  </player-loop>
+
+  <!-- NAVIGATION: How the player moves through the dungeon -->
+  <navigation>
+    <model>Graph of rooms. Each room has: id, name, description, type, exits (direction → target room id). No tile-based movement — player chooses exits from buttons/choices.</model>
+    <floor-map>Show current floor as a simple list or grid of rooms. Player sees: current room highlighted, available exits as buttons, room types (combat, dialogue, treasure, rest, boss).</floor-map>
+    <fog>Rooms start undiscovered. Adjacent rooms become visible when you enter a neighboring room. Boss room is always visible.</fog>
+    <simplified-navigation>For the vertical slice, navigation can be simplified to button choices: "Go North (Combat Room)", "Go East (Treasure Room)". A full graphical map is NOT required — functional room-to-room movement is.</simplified-navigation>
+  </navigation>
+
+  <!-- DUNGEON STRUCTURE -->
+  <dungeon>
+    <floors>Multiple dungeon floors. Each floor has rooms connected by exits. Boss guards the exit to the next floor.</floors>
+    <tick-system>Dungeon tick advances when player enters a room. Boss spawns enemies every 3 ticks from adjacent rooms.</tick-system>
+    <room-types>
+      <type>combat — enemy encounter</type>
+      <type>dialogue — NPC conversation</type>
+      <type>treasure — loot chest</type>
+      <type>rest — heal HP/mana</type>
+      <type>forge — craft/evolve spells</type>
+      <type>boss — floor boss, guards exit</type>
+    </room-types>
+  </dungeon>
+
+  <!-- COMBAT: Turn-based encounters -->
+  <combat>
+    <flow>Turn-based. Player acts, then enemy acts. Repeat until one side is defeated or player flees.</flow>
+    <actions>
+      <action>Fight — basic attack using Might stat vs enemy Defense</action>
+      <action>Spells — cast a prepared spell (costs mana)</action>
+      <action>Bag — use an item (potion, scroll)</action>
+      <action>Run — attempt to flee (Agility check)</action>
+    </actions>
+    <stats>
+      <stat>HP — health points, 0 = defeat</stat>
+      <stat>Mana — spell resource, spent on casting</stat>
+      <stat>Might — physical attack power</stat>
+      <stat>Agility — speed, flee chance</stat>
+      <stat>Defense — damage reduction</stat>
+    </stats>
+    <rewards>Win = XP + mana crystals. Lose = game over (or retreat to last rest room).</rewards>
+    <ui>Show: enemy sprite/name, enemy HP bar, player HP/mana bars, action buttons. Keep it simple and visible.</ui>
+  </combat>
+
+  <!-- DIALOGUE: NPC interactions -->
+  <dialogue>
+    <flow>Player enters dialogue room, sees NPC portrait and greeting text. Player chooses from dialogue options. Some options may be gated by stats or items.</flow>
+    <outcomes>Dialogue can give: items, quest info, lore, stat changes, shop access.</outcomes>
+    <ui>Show: NPC sprite/portrait, dialogue text, choice buttons. Simple and readable.</ui>
+  </dialogue>
+
+  <!-- ENTITY MODEL -->
+  <entities>
+    <layers>
+      <layer>entityType — physical kind (human, goblin, dragon, etc.)</layer>
+      <layer>archetype — build/stats derived from title (wanderer, warrior, mage, etc.)</layer>
+      <layer>occupation — role (dungeoneer, merchant, boss, civilian)</layer>
+      <layer>partyRole — flavor (tank, healer, scout, etc.)</layer>
+    </layers>
+    <content-driven>All entity data lives in JSON content packs. No hardcoded entities.</content-driven>
+    <sprites>Use placeholder sprites. Pokemon-style pixel art or simple colored shapes are fine for the eval.</sprites>
+  </entities>
+
+  <!-- SPELLS (simplified for vertical slice) -->
+  <spells>
+    <model>Spells are composed of runes. 26 runes (A-Z). A spell = ordered list of rune IDs.</model>
+    <slots>Player has limited spell slots (prepared spells). Can swap at forge rooms.</slots>
+    <casting>In combat: choose Spells action, pick a spell, spend mana, apply effect.</casting>
+    <forge>At forge rooms: combine runes to create new spells. Simple UI: pick runes, name spell, confirm.</forge>
+    <for-vertical-slice>Start with 3-5 pre-made spells the player gets. Forge can be phase 2. Focus on: spells work in combat, mana is spent, effects are visible.</for-vertical-slice>
+  </spells>
+
+  <!-- ECONOMY -->
+  <economy>
+    <currency>Mana crystals. Earned from combat wins and treasure chests.</currency>
+    <shops>NPCs in dialogue rooms may sell items for crystals.</shops>
+    <golden-crystal>Boss drops golden crystal (high value) — or offers a deal to let you pass.</golden-crystal>
+  </economy>
+
+  <!-- UI PRINCIPLES -->
+  <ui>
+    <gameplay-ui>The main game view during dungeon exploration. Shows: room info, navigation choices, HUD (HP/mana/floor/tick). This is where the player spends most of their time.</gameplay-ui>
+    <display-menus>Overlay menus that open from a header/toolbar: Map, Bag, Spellbook, Stats, Settings. These overlay the game view, they don't replace it.</display-menus>
+    <hud>Always visible during gameplay: player name, HP bar, mana bar, current floor, dungeon tick count.</hud>
+    <principle>Clarity over polish. The player must always know: where am I, what can I do, what are my stats. Fancy graphics are NOT needed — clear text and functional buttons are enough.</principle>
+  </ui>
+
+  <!-- SAVE/LOAD -->
+  <persistence>
+    <method>localStorage. Save full game state (player stats, inventory, position, floor progress, discovered rooms).</method>
+    <auto-save>Auto-save on room entry. Manual save from Settings menu.</auto-save>
+  </persistence>
+
+  <!-- CONTENT PACKS -->
+  <content-packs>
+    <principle>All game data is in JSON files loaded at startup. No hardcoded game rules in code.</principle>
+    <packs>
+      <pack>entities.json — entity types, archetypes, stats</pack>
+      <pack>floors.json — room layouts per floor, exits, room types</pack>
+      <pack>items.json — items, potions, equipment</pack>
+      <pack>spells.json — pre-made spells with rune compositions</pack>
+      <pack>dialogue.json — NPC dialogue trees</pack>
+    </packs>
+  </content-packs>
+
+  <!-- BUILD APPROACH -->
+  <build>
+    <stack>Vite + TypeScript + KAPLAY (web game framework). Single page app.</stack>
+    <no-tile-movement>No character walking on grids. Navigate by choosing exits.</no-tile-movement>
+    <vertical-slice-priority>Build a playable vertical slice first. 3 rooms, working combat, visible UI. Then add depth. A blank screen scores 0.</vertical-slice-priority>
+  </build>
+</gameplay-design>

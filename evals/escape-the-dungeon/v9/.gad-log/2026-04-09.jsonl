@@ -1,0 +1,2 @@
+{"ts":"2026-04-09T04:27:48.974Z","cmd":"snapshot --projectid get-anything-done","args":["snapshot","--projectid","get-anything-done"],"duration_ms":297,"exit":0,"summary":"","pid":27088}
+{"ts":"2026-04-09T04:27:55.166Z","cmd":"eval trace init --project escape-the-dungeon","args":["eval","trace","init","--project","escape-the-dungeon"],"duration_ms":409,"exit":0,"summary":"","pid":33328}

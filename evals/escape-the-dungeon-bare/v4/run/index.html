@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escape the Dungeon</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a0f; }
+    #game-root {
+      width: 100vw; height: 100vh;
+      display: flex; flex-direction: column;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      color: #e0d8c8;
+      background: linear-gradient(180deg, #0d0d1a 0%, #1a1520 100%);
+    }
+    /* HUD bar */
+    #hud {
+      display: none;
+      height: 48px; padding: 6px 16px;
+      background: linear-gradient(90deg, #1a1428, #201830);
+      border-bottom: 2px solid #3a2a5a;
+      align-items: center; gap: 16px;
+      font-size: 13px; z-index: 10;
+    }
+    #hud.visible { display: flex; }
+    .hud-item { display: flex; align-items: center; gap: 6px; }
+    .bar-container {
+      width: 120px; height: 16px; background: #1a1a2a; border-radius: 8px;
+      border: 1px solid #333; overflow: hidden; position: relative;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 8px; transition: width 0.3s ease;
+      position: absolute; left: 0; top: 0;
+    }
+    .bar-text {
+      position: absolute; width: 100%; text-align: center; font-size: 11px;
+      line-height: 16px; color: white; text-shadow: 1px 1px 2px black; z-index: 1;
+    }
+    .hp-fill { background: linear-gradient(90deg, #cc2222, #ff4444); }
+    .mana-fill { background: linear-gradient(90deg, #2244cc, #4488ff); }
+    .crystal-icon { color: #a8f0ff; }
+
+    /* Main content area */
+    #main-content {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; position: relative;
+    }
+
+    /* Title screen */
+    .screen { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+    .screen.active { display: flex; }
+    #title-screen h1 {
+      font-size: 48px; color: #ffd700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.5), 0 4px 8px rgba(0,0,0,0.8);
+      margin-bottom: 8px;
+    }
+    #title-screen .subtitle { color: #8a7a9a; font-size: 16px; margin-bottom: 40px; }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 24px; margin: 6px; border: 2px solid #5a4a7a;
+      background: linear-gradient(180deg, #2a2040, #1a1530);
+      color: #e0d8c8; font-size: 15px; border-radius: 8px; cursor: pointer;
+      transition: all 0.15s ease; min-width: 160px; text-align: center;
+    }
+    .btn:hover { background: linear-gradient(180deg, #3a3060, #2a2040); border-color: #8a6aaa; transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); }
+    .btn-danger { border-color: #aa3333; }
+    .btn-danger:hover { border-color: #dd4444; background: linear-gradient(180deg, #3a2020, #2a1515); }
+    .btn-success { border-color: #33aa55; }
+    .btn-success:hover { border-color: #44dd66; background: linear-gradient(180deg, #203a20, #152a15); }
+    .btn-small { padding: 8px 16px; font-size: 13px; min-width: 100px; }
+    .btn-forge { border-color: #aa6622; }
+    .btn-forge:hover { border-color: #dd8833; background: linear-gradient(180deg, #3a2a10, #2a1a08); }
+
+    /* Room screen */
+    #room-screen { align-items: stretch; padding: 20px; }
+    .room-header {
+      display: flex; align-items: center; gap: 12px; padding: 16px;
+      background: rgba(30,20,50,0.8); border-radius: 12px;
+      border: 1px solid #3a2a5a; margin-bottom: 16px;
+    }
+    .room-icon {
+      width: 48px; height: 48px; border-radius: 8px; display: flex;
+      align-items: center; justify-content: center; font-size: 28px;
+    }
+    .room-info h2 { font-size: 22px; margin-bottom: 4px; }
+    .room-info p { color: #8a7a9a; font-size: 14px; }
+    .room-body { flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .exits-panel {
+      background: rgba(20,15,35,0.6); border-radius: 10px; padding: 16px;
+      border: 1px solid #2a2040;
+    }
+    .exits-panel h3 { font-size: 14px; color: #8a7a9a; margin-bottom: 10px; }
+    .exit-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* Combat screen */
+    #combat-screen { padding: 20px; }
+    .combat-layout { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+    .enemy-panel {
+      background: rgba(50,20,20,0.6); border-radius: 12px; padding: 20px;
+      border: 1px solid #5a2a2a; text-align: center;
+    }
+    .enemy-sprite {
+      width: 96px; height: 96px; margin: 0 auto 12px;
+      border-radius: 12px; display: flex; align-items: center;
+      justify-content: center; font-size: 56px;
+      background: rgba(0,0,0,0.3); border: 2px solid #4a3a3a;
+    }
+    .enemy-name { font-size: 20px; color: #ff8888; margin-bottom: 8px; }
+    .enemy-info { font-size: 12px; color: #aa8888; margin-bottom: 4px; }
+    .combat-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 12px; }
+    .combat-log {
+      background: rgba(10,10,20,0.8); border-radius: 8px; padding: 12px;
+      max-height: 140px; overflow-y: auto; font-size: 13px; line-height: 1.6;
+      border: 1px solid #2a2040;
+    }
+    .log-entry { padding: 2px 0; }
+    .log-damage { color: #ff6666; }
+    .log-heal { color: #66ff88; }
+    .log-spell { color: #88aaff; }
+    .log-info { color: #aaaa88; }
+    .log-resist { color: #ffaa44; }
+
+    /* Spell list in combat */
+    .spell-list {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      padding: 8px; background: rgba(20,20,40,0.5); border-radius: 8px;
+    }
+    .spell-btn { position: relative; }
+    .spell-cost { font-size: 10px; color: #88aaff; }
+    .spell-type-fire { border-color: #cc4422; }
+    .spell-type-ice { border-color: #2288cc; }
+    .spell-type-lightning { border-color: #ccaa22; }
+    .spell-type-poison { border-color: #44aa22; }
+    .spell-type-arcane { border-color: #8844cc; }
+    .spell-type-holy { border-color: #cccc44; }
+
+    /* Forge screen */
+    #forge-screen { padding: 20px; }
+    .forge-layout { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+    .rune-grid {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 12px;
+    }
+    .rune-slot {
+      width: 64px; height: 64px; border-radius: 10px; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      border: 2px solid #3a3a5a; background: rgba(20,15,40,0.8); cursor: pointer;
+      transition: all 0.15s ease; font-size: 12px;
+    }
+    .rune-slot:hover { border-color: #7a6aaa; transform: scale(1.05); }
+    .rune-slot.selected { border-color: #ffaa33; background: rgba(40,30,20,0.8); box-shadow: 0 0 12px rgba(255,170,50,0.3); }
+    .rune-symbol { font-size: 24px; margin-bottom: 4px; }
+    .rune-name { font-size: 10px; color: #8a7a9a; }
+    .craft-preview {
+      background: rgba(30,25,50,0.8); border-radius: 12px; padding: 16px;
+      border: 1px solid #4a3a6a; text-align: center; min-height: 80px;
+    }
+    .affinity-grid {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 8px;
+    }
+    .affinity-item {
+      background: rgba(20,15,35,0.8); border-radius: 6px; padding: 6px 12px;
+      border: 1px solid #2a2040; font-size: 12px;
+    }
+    .affinity-bar { width: 60px; height: 6px; background: #1a1a2a; border-radius: 3px; margin-top: 4px; }
+    .affinity-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #aa44cc, #ff66ff); }
+
+    /* Event/dialogue screen */
+    #event-screen { padding: 20px; }
+    .event-panel {
+      background: rgba(20,30,20,0.6); border-radius: 12px; padding: 24px;
+      border: 1px solid #3a5a3a; text-align: center;
+    }
+    .npc-portrait {
+      width: 80px; height: 80px; margin: 0 auto 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 48px;
+      background: rgba(0,0,0,0.3); border: 3px solid #5a7a5a;
+    }
+    .npc-name { font-size: 18px; color: #88cc88; margin-bottom: 12px; }
+    .dialogue-text { font-size: 15px; line-height: 1.6; color: #c8d8c0; margin-bottom: 20px; max-width: 500px; }
+    .choice-buttons { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+
+    /* Rest screen */
+    #rest-screen { padding: 20px; }
+    .rest-panel {
+      background: rgba(20,20,35,0.6); border-radius: 12px; padding: 24px;
+      border: 1px solid #3a3a5a; text-align: center; max-width: 400px; margin: 0 auto;
+    }
+
+    /* Overlay menus */
+    .overlay {
+      display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(5,5,15,0.92); z-index: 20; padding: 20px;
+      flex-direction: column; overflow-y: auto;
+    }
+    .overlay.active { display: flex; }
+    .overlay h2 { text-align: center; margin-bottom: 16px; color: #ffd700; }
+    .overlay-close { position: absolute; top: 12px; right: 16px; cursor: pointer; font-size: 24px; color: #8a7a9a; }
+    .overlay-close:hover { color: #fff; }
+
+    /* Stats overlay */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+    .stat-row { display: flex; justify-content: space-between; padding: 6px 12px; background: rgba(20,15,35,0.6); border-radius: 6px; }
+    .stat-label { color: #8a7a9a; }
+    .stat-value { color: #e0d8c8; font-weight: bold; }
+
+    /* Bag overlay */
+    .item-grid { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+    .item-row {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      background: rgba(20,15,35,0.6); border-radius: 8px; border: 1px solid #2a2040;
+    }
+    .item-icon { font-size: 24px; }
+    .item-info { flex: 1; }
+    .item-name { font-size: 14px; }
+    .item-desc { font-size: 12px; color: #8a7a9a; }
+    .item-count { color: #aaa; font-size: 13px; }
+
+    /* Spellbook overlay */
+    .spell-grid { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+    .spell-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px;
+      background: rgba(20,15,35,0.6); border-radius: 8px; border: 1px solid #2a2040;
+    }
+    .spell-icon-big { font-size: 28px; }
+    .spell-detail { flex: 1; }
+    .spell-detail-name { font-size: 15px; margin-bottom: 2px; }
+    .spell-detail-info { font-size: 12px; color: #8a7a9a; }
+    .spell-crafted { border-color: #aa6622; background: rgba(30,20,10,0.6); }
+
+    /* Menu bar */
+    #menu-bar {
+      display: none; height: 40px; padding: 4px 12px;
+      background: linear-gradient(90deg, #1a1428, #201830);
+      border-top: 2px solid #3a2a5a;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    #menu-bar.visible { display: flex; }
+
+    /* Victory / defeat */
+    .result-screen { text-align: center; }
+    .result-screen h1 { font-size: 36px; margin-bottom: 16px; }
+    .result-screen .reward-list { margin: 16px 0; font-size: 15px; }
+
+    /* Room type colors */
+    .room-combat { background: rgba(80,20,20,0.3); border-color: #5a2a2a; }
+    .room-elite { background: rgba(100,30,10,0.3); border-color: #7a3a1a; }
+    .room-forge { background: rgba(80,50,10,0.3); border-color: #6a4a1a; }
+    .room-rest { background: rgba(20,40,60,0.3); border-color: #2a4a6a; }
+    .room-event { background: rgba(20,60,30,0.3); border-color: #2a5a3a; }
+    .room-boss { background: rgba(80,10,60,0.3); border-color: #6a1a5a; }
+    .room-treasure { background: rgba(70,60,10,0.3); border-color: #5a4a1a; }
+    .room-start { background: rgba(30,30,50,0.3); border-color: #3a3a5a; }
+
+    /* Resistance indicators */
+    .resist-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; margin: 2px;
+    }
+    .resist-fire { background: rgba(200,50,20,0.3); color: #ff8866; border: 1px solid #aa4422; }
+    .resist-ice { background: rgba(20,100,200,0.3); color: #66aaff; border: 1px solid #2266aa; }
+    .resist-lightning { background: rgba(200,170,20,0.3); color: #ffdd66; border: 1px solid #aa8822; }
+    .resist-poison { background: rgba(50,170,30,0.3); color: #88ff66; border: 1px solid #44aa22; }
+    .resist-physical { background: rgba(150,150,150,0.3); color: #cccccc; border: 1px solid #888888; }
+    .resist-arcane { background: rgba(130,60,200,0.3); color: #bb88ff; border: 1px solid #7744aa; }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute; background: #1a1530; border: 1px solid #5a4a7a;
+      border-radius: 6px; padding: 8px 12px; font-size: 12px;
+      pointer-events: none; z-index: 30; max-width: 250px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(10,10,20,0.5); }
+    ::-webkit-scrollbar-thumb { background: #3a2a5a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #5a4a7a; }
+
+    /* Map overlay */
+    .map-grid { display: flex; flex-direction: column; gap: 4px; align-items: center; padding: 20px; }
+    .map-row { display: flex; gap: 4px; }
+    .map-cell {
+      width: 60px; height: 48px; border-radius: 6px; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      font-size: 10px; border: 1px solid #2a2040; background: rgba(15,12,25,0.8);
+    }
+    .map-cell.current { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+    .map-cell.visited { background: rgba(30,25,50,0.8); }
+    .map-cell.hidden { opacity: 0.2; }
+    .map-cell-icon { font-size: 18px; }
+    .map-cell-name { font-size: 8px; color: #8a7a9a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 56px; }
+
+    /* Game over */
+    #gameover-screen h1 { color: #cc2222; }
+    #victory-screen h1 { color: #ffd700; }
+  </style>
+</head>
+<body>
+  <div id="game-root">
+    <div id="hud">
+      <div class="hud-item">
+        <span>🗡️</span>
+        <span id="hud-name">Hero</span>
+      </div>
+      <div class="hud-item">
+        <span style="color:#ff4444">❤️</span>
+        <div class="bar-container">
+          <div class="bar-fill hp-fill" id="hud-hp-bar" style="width:100%"></div>
+          <div class="bar-text" id="hud-hp-text">100/100</div>
+        </div>
+      </div>
+      <div class="hud-item">
+        <span style="color:#4488ff">💎</span>
+        <div class="bar-container">
+          <div class="bar-fill mana-fill" id="hud-mana-bar" style="width:100%"></div>
+          <div class="bar-text" id="hud-mana-text">50/50</div>
+        </div>
+      </div>
+      <div class="hud-item crystal-icon">
+        <span>✨</span>
+        <span id="hud-crystals">0</span>
+      </div>
+      <div class="hud-item" style="margin-left:auto">
+        <span>🏰 Floor</span>
+        <span id="hud-floor">1</span>
+      </div>
+      <div class="hud-item">
+        <span>⏱️</span>
+        <span id="hud-tick">0</span>
+      </div>
+    </div>
+
+    <div id="main-content">
+      <!-- Title Screen -->
+      <div id="title-screen" class="screen active">
+        <h1>⚔️ Escape the Dungeon</h1>
+        <p class="subtitle">A roguelike dungeon crawler where ingenuity is your weapon</p>
+        <button class="btn" id="btn-new-game">🎮 New Game</button>
+        <button class="btn" id="btn-continue" style="display:none">📂 Continue</button>
+      </div>
+
+      <!-- Room Screen -->
+      <div id="room-screen" class="screen"></div>
+
+      <!-- Combat Screen -->
+      <div id="combat-screen" class="screen"></div>
+
+      <!-- Forge Screen -->
+      <div id="forge-screen" class="screen"></div>
+
+      <!-- Event Screen -->
+      <div id="event-screen" class="screen"></div>
+
+      <!-- Rest Screen -->
+      <div id="rest-screen" class="screen"></div>
+
+      <!-- Game Over Screen -->
+      <div id="gameover-screen" class="screen result-screen">
+        <h1>💀 Defeated</h1>
+        <p id="gameover-text">You have fallen in the dungeon...</p>
+        <div class="reward-list" id="gameover-stats"></div>
+        <button class="btn" id="btn-restart">🔄 Try Again</button>
+      </div>
+
+      <!-- Victory Screen -->
+      <div id="victory-screen" class="screen result-screen">
+        <h1>🏆 Escaped!</h1>
+        <p>You have conquered the dungeon!</p>
+        <div class="reward-list" id="victory-stats"></div>
+        <button class="btn" id="btn-victory-restart">🎮 Play Again</button>
+      </div>
+
+      <!-- Overlays -->
+      <div id="overlay-map" class="overlay">
+        <span class="overlay-close" onclick="window.game.closeOverlay()">✕</span>
+        <h2>🗺️ Dungeon Map</h2>
+        <div id="map-content"></div>
+      </div>
+
+      <div id="overlay-bag" class="overlay">
+        <span class="overlay-close" onclick="window.game.closeOverlay()">✕</span>
+        <h2>🎒 Bag</h2>
+        <div id="bag-content" class="item-grid"></div>
+      </div>
+
+      <div id="overlay-stats" class="overlay">
+        <span class="overlay-close" onclick="window.game.closeOverlay()">✕</span>
+        <h2>📊 Stats & Traits</h2>
+        <div id="stats-content"></div>
+      </div>
+
+      <div id="overlay-spellbook" class="overlay">
+        <span class="overlay-close" onclick="window.game.closeOverlay()">✕</span>
+        <h2>📖 Spellbook</h2>
+        <div id="spellbook-content" class="spell-grid"></div>
+      </div>
+    </div>
+
+    <div id="menu-bar">
+      <button class="btn btn-small" onclick="window.game.openOverlay('map')">🗺️ Map</button>
+      <button class="btn btn-small" onclick="window.game.openOverlay('bag')">🎒 Bag</button>
+      <button class="btn btn-small" onclick="window.game.openOverlay('spellbook')">📖 Spells</button>
+      <button class="btn btn-small" onclick="window.game.openOverlay('stats')">📊 Stats</button>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

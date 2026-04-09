@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decisions>
+  <decision id="etd-01">
+    <title>UI-first vertical slice build order</title>
+    <summary>Following AGENTS.md mandate: build visible UI first, systems second. Title screen -> rooms -> combat -> forge -> pressure -> dialogue -> HUD -> content -> polish.</summary>
+    <impact>Every phase produces visible, playable output. No invisible backend-only phases.</impact>
+  </decision>
+  <decision id="etd-02">
+    <title>KAPLAY for game framework</title>
+    <summary>Using KAPLAY (kaboom successor) for rendering, scene management, and game objects. Lightweight, TypeScript-friendly, good for 2D games.</summary>
+    <impact>All scenes use KAPLAY scene system. UI elements use KAPLAY text/rect primitives.</impact>
+  </decision>
+  <decision id="etd-03">
+    <title>Authored content in JSON packs</title>
+    <summary>All game content (floors, enemies, spells, dialogue) lives in JSON files. No procedural generation per requirements.</summary>
+    <impact>Content changes don't require code changes. Entity model is data-driven.</impact>
+  </decision>
+</decisions>

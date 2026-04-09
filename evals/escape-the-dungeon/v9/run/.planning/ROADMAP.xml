@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roadmap>
+  <phase id="01" name="Project Scaffold">
+    <goal>Vite + KAPLAY + TypeScript project with dev server running</goal>
+  </phase>
+  <phase id="02" name="Title Screen and Game Start">
+    <goal>Styled title menu, New Game starts a run, scene management</goal>
+  </phase>
+  <phase id="03" name="Room Navigation and Floor Layout">
+    <goal>Authored floor with 6 rooms, styled room UI, exit buttons, room-type visual differentiation, fog of war</goal>
+  </phase>
+  <phase id="04" name="Combat System">
+    <goal>Turn-based combat with Fight/Spells/Bag/Run, HP bars, enemy sprites, XP/crystal rewards</goal>
+  </phase>
+  <phase id="05" name="Rune Forge and Spell Crafting">
+    <goal>Forge UI, rune combination, crafted spells usable in combat, affinity tracking (G2 gate)</goal>
+  </phase>
+  <phase id="06" name="Pressure Mechanics and Ingenuity">
+    <goal>Enemy resistances, resource pressure, encounters requiring crafted spells (G4 gate)</goal>
+  </phase>
+  <phase id="07" name="Dialogue, NPCs, and Events">
+    <goal>NPC dialogue with portraits, choice options, event rooms, shop</goal>
+  </phase>
+  <phase id="08" name="HUD, Menus, and Overlays">
+    <goal>Persistent HUD, overlay menus (Map, Bag, Spellbook, Stats/Traits), color-coded statuses</goal>
+  </phase>
+  <phase id="09" name="Floor 2, Boss Encounters, Save/Load">
+    <goal>Second floor with different constraints, boss gates, JSON content packs, localStorage persistence</goal>
+  </phase>
+  <phase id="10" name="Final Polish and Production Build">
+    <goal>Full game loop verification, no softlocks, visual polish, ARCHITECTURE.md, dist/ build</goal>
+  </phase>
+</roadmap>

@@ -486,6 +486,18 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Phase 25 hook handler implements the truncation. The site's per-run page renders the head/tail split as a collapsible code block with a "view full output in session.jsonl" link. Future sub-phase can add full-output lookup if we find ourselves reaching for session.jsonl frequently.</impact>
   </decision>
 
+  <decision id="gad-62">
+    <title>Parallel eval runs share a single account rate limit — serial execution is the default</title>
+    <summary>Round 4 attempt #1 launched GAD + Bare + Emergent in parallel via three worktree agents. All three hit an account-level rate limit simultaneously at ~14 minutes (tool_uses 81/45/40) with the message "You've hit your limit · resets 12am America/Chicago". The shared bucket meant none of the three runs finished. Implication: parallel eval runs on one account are a false economy. Serial execution (one agent to completion before launching the next) is the new default. Parallel is only acceptable when we have documented per-account capacity and a pre-calculated budget for the combined workload.</summary>
+    <impact>Eval runner behaviour change: `gad eval suite` no longer implies parallel execution. Future round 4 retries run serially (one greenfield condition at a time), expected 20-30 min each, 60-90 min total wall clock. Parallel execution available as an explicit flag if/when per-run budget is known.</impact>
+  </decision>
+
+  <decision id="gad-63">
+    <title>Rate-limited runs are preserved as data points but excluded from cross-round quality comparisons</title>
+    <summary>TRACE.json files from rate-limited runs are still preserved (the partial work is informative about planning differential, architecture patterns, and inheritance effects) but explicitly excluded from freedom-hypothesis comparisons, Graphs scatter plots, and cross-round score aggregation. The filter key is `timing.rate_limited === true` in TRACE.json. Site rendering (Results, Graphs, /insights) should filter these out by default with an opt-in "include rate-limited" toggle for researchers. The human_review.notes field on every rate-limited TRACE carries "DO NOT include in cross-round comparisons against completed runs" as the explicit instruction.</summary>
+    <impact>Site's Results cards, Graphs scatter plot, and per-round summaries default-filter rate_limited runs. The runs still show up on /runs/[project]/[version] pages with a "rate limited" badge and a link to the partial-results finding doc. Raw data is preserved forever; comparison treatment is explicit.</impact>
+  </decision>
+
   <decision id="gad-61">
     <title>Research priority: structured objective data production for evaluations</title>
     <summary>The primary goal of the eval framework is no longer "score runs" — it's "produce structured data that yields insights." A score is just one kind of derived data; the framework should also produce structured human review rubrics (dimensions instead of single numbers), automated gate checks (playwright tests instead of human inspection for things automatable), derived metrics (tool mix, commit rhythm, plan-adherence deltas, divergence scores), cross-run aggregation queries, and visualizations that surface patterns rather than just summaries. Phase 27 is the research methodology phase that designs all of this in parallel with phase 25's raw event capture. Future decisions about what to measure next always answer "does this yield an insight we can represent objectively?" before "how do we score it?"</summary>

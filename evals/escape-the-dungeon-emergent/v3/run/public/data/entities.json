@@ -1,0 +1,78 @@
+{
+  "entityTypes": {
+    "human": {
+      "name": "Human",
+      "baseStats": {
+        "maxHp": 100, "might": 12, "agility": 10, "insight": 10,
+        "willpower": 8, "defense": 8, "power": 10, "maxMana": 50
+      }
+    },
+    "goblin": {
+      "name": "Goblin",
+      "baseStats": {
+        "maxHp": 40, "might": 8, "agility": 14, "insight": 4,
+        "willpower": 4, "defense": 4, "power": 5, "maxMana": 10
+      }
+    },
+    "skeleton": {
+      "name": "Skeleton",
+      "baseStats": {
+        "maxHp": 55, "might": 10, "agility": 6, "insight": 2,
+        "willpower": 6, "defense": 12, "power": 3, "maxMana": 0
+      }
+    },
+    "slime": {
+      "name": "Slime",
+      "baseStats": {
+        "maxHp": 70, "might": 6, "agility": 4, "insight": 2,
+        "willpower": 10, "defense": 15, "power": 4, "maxMana": 20
+      }
+    },
+    "wraith": {
+      "name": "Wraith",
+      "baseStats": {
+        "maxHp": 45, "might": 4, "agility": 12, "insight": 14,
+        "willpower": 12, "defense": 3, "power": 16, "maxMana": 60
+      }
+    },
+    "orc": {
+      "name": "Orc",
+      "baseStats": {
+        "maxHp": 90, "might": 16, "agility": 6, "insight": 4,
+        "willpower": 8, "defense": 14, "power": 6, "maxMana": 15
+      }
+    },
+    "dragon_whelp": {
+      "name": "Dragon Whelp",
+      "baseStats": {
+        "maxHp": 120, "might": 14, "agility": 8, "insight": 10,
+        "willpower": 12, "defense": 16, "power": 18, "maxMana": 40
+      }
+    },
+    "dark_mage": {
+      "name": "Dark Mage",
+      "baseStats": {
+        "maxHp": 50, "might": 4, "agility": 8, "insight": 16,
+        "willpower": 14, "defense": 5, "power": 20, "maxMana": 80
+      }
+    }
+  },
+  "archetypes": {
+    "wanderer": {
+      "name": "Wanderer",
+      "statModifiers": { "maxHp": 10, "might": 2, "agility": 2, "defense": 2, "maxMana": 10 }
+    },
+    "warrior": {
+      "name": "Warrior",
+      "statModifiers": { "maxHp": 30, "might": 6, "defense": 4, "agility": -2, "maxMana": -10 }
+    },
+    "mage": {
+      "name": "Mage",
+      "statModifiers": { "maxHp": -20, "might": -4, "power": 8, "insight": 6, "maxMana": 40 }
+    },
+    "scout": {
+      "name": "Scout",
+      "statModifiers": { "agility": 8, "might": 2, "defense": -2, "maxMana": 5 }
+    }
+  }
+}

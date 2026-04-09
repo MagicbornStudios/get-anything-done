@@ -1,0 +1,77 @@
+{
+  "eval": "escape-the-dungeon-emergent",
+  "version": "v3",
+  "date": "2026-04-09",
+  "gad_version": "1.32.0",
+  "framework_version": "1.32.0",
+  "framework_commit": "3ef0bb5",
+  "framework_branch": "main",
+  "framework_stamp": "v1.32.0+3ef0bb5",
+  "trace_schema_version": 4,
+  "eval_type": "implementation",
+  "context_mode": "fresh",
+  "requirements_version": "v4",
+  "timing": {
+    "started": "2026-04-09T04:26:00.000Z",
+    "ended": "2026-04-09T04:40:00.000Z",
+    "duration_minutes": 14,
+    "phases_completed": 0,
+    "tasks_completed": 0,
+    "rate_limited": true,
+    "rate_limit_note": "Hit account-level rate limit at tool_uses=40 (lowest of three conditions). Shared rate bucket with parallel GAD + Bare runs."
+  },
+  "token_usage": {
+    "total_tokens": 1008,
+    "tool_uses": 40,
+    "note": "rate-limited — did not reach build step"
+  },
+  "git_analysis": {
+    "total_commits": 0,
+    "task_id_commits": 0,
+    "batch_commits": 0,
+    "per_task_discipline": 0.0
+  },
+  "planning_quality": {
+    "phases_planned": 0,
+    "tasks_planned": 0,
+    "tasks_completed": 0,
+    "tasks_blocked": 0,
+    "decisions_captured": 0,
+    "state_updates": 0,
+    "state_stale_count": 0,
+    "note": "No explicit planning artifact created beyond copying inherited skills."
+  },
+  "workflow_emergence": {
+    "created_task_lists": false,
+    "created_state_tracking": false,
+    "created_architecture_docs": false,
+    "created_reusable_skills": false,
+    "emergence_score": 0.4,
+    "note": "Inherited 7 skills from previous runs. Wrote 6 modular source files (content, icons, renderer, state, styles, types) — the state-composition inherited skill shaped the architecture. Did NOT reach skill-authoring step."
+  },
+  "requirement_coverage": {
+    "total_criteria": 12,
+    "gate_failed": true,
+    "gate_notes": "BUILD FAILS — main.ts entry point missing. index.html references /src/main.ts but only 6 supporting modules exist. Rollup error: 'failed to resolve import /src/main.ts'. All gates NOT MET because the build itself fails.",
+    "fully_met": 0,
+    "partially_met": 1,
+    "not_met": 11,
+    "coverage_ratio": 0.042
+  },
+  "scores": {
+    "requirement_coverage": 0.042,
+    "planning_quality": 0.05,
+    "per_task_discipline": 0.0,
+    "skill_accuracy": null,
+    "time_efficiency": 0.533,
+    "human_review": null,
+    "composite": null
+  },
+  "human_review": {
+    "score": null,
+    "notes": "RATE LIMITED before main.ts entry point was written. Build fails objectively at link time. Architectural signal: emergent agent wrote 6 modular files before the integration layer, matching the state-composition inherited skill's pattern. Interesting emergence data point despite incomplete run. DO NOT include in cross-round comparisons against completed runs.",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  "notes": "Round 4 greenfield, emergent condition. Rate-limited run with build-level gate failure. Source architecture captured for workflow emergence analysis only."
+}

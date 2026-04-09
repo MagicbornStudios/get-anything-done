@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task-registry>
+  <!-- Phase 01: Project Scaffold -->
+  <task id="01-01" phase="01" status="done">Initialize Vite + TypeScript + KAPLAY project with package.json</task>
+  <task id="01-02" phase="01" status="done">Create main.ts entry point with KAPLAY init and basic scene</task>
+  <task id="01-03" phase="01" status="done">Install icon package and verify dev server runs</task>
+
+  <!-- Phase 02: Title Screen -->
+  <task id="02-01" phase="02" status="done">Create title screen scene with styled menu</task>
+  <task id="02-02" phase="02" status="planned">Implement scene transition system and New Game flow</task>
+  <task id="02-03" phase="02" status="planned">Add game state initialization on New Game</task>
+
+  <!-- Phase 03: Room Navigation -->
+  <task id="03-01" phase="03" status="planned">Define Floor 1 room data (6 rooms with types and exits)</task>
+  <task id="03-02" phase="03" status="planned">Create room scene with styled room display and exit buttons</task>
+  <task id="03-03" phase="03" status="planned">Implement room-type visual differentiation (colors, icons)</task>
+  <task id="03-04" phase="03" status="planned">Add fog of war and room discovery</task>
+
+  <!-- Phase 04: Combat -->
+  <task id="04-01" phase="04" status="planned">Create combat scene with turn-based flow (Fight/Spells/Bag/Run)</task>
+  <task id="04-02" phase="04" status="planned">Implement HP/mana bars and enemy representation</task>
+  <task id="04-03" phase="04" status="planned">Add damage calculation, XP and crystal rewards</task>
+  <task id="04-04" phase="04" status="planned">Create enemy data with 3+ distinct types</task>
+  <task id="04-05" phase="04" status="planned">Implement combat resolution and return to room navigation</task>
+
+  <!-- Phase 05: Rune Forge -->
+  <task id="05-01" phase="05" status="planned">Create rune data (5 runes with elements/effects)</task>
+  <task id="05-02" phase="05" status="planned">Build forge UI scene with rune selection and combination</task>
+  <task id="05-03" phase="05" status="planned">Implement spell creation from rune combos (3+ valid combos)</task>
+  <task id="05-04" phase="05" status="planned">Connect crafted spells to combat system with affinity tracking</task>
+
+  <!-- Phase 06: Pressure Mechanics -->
+  <task id="06-01" phase="06" status="planned">Add enemy resistances and immunities system</task>
+  <task id="06-02" phase="06" status="planned">Implement resource pressure (limited mana, forge costs)</task>
+  <task id="06-03" phase="06" status="planned">Create encounters that require crafted spells to succeed</task>
+
+  <!-- Phase 07: Dialogue and NPCs -->
+  <task id="07-01" phase="07" status="planned">Create dialogue scene with NPC portrait and choice buttons</task>
+  <task id="07-02" phase="07" status="planned">Add event rooms with tradeoff choices</task>
+
+  <!-- Phase 08: HUD and Menus -->
+  <task id="08-01" phase="08" status="planned">Create persistent HUD (HP bar, mana bar, floor, tick, crystals)</task>
+  <task id="08-02" phase="08" status="planned">Add overlay menus (Map, Bag, Spellbook, Stats/Traits)</task>
+  <task id="08-03" phase="08" status="planned">Implement Traits UI label for narrative stats</task>
+
+  <!-- Phase 09: Content, Floor 2, Save/Load -->
+  <task id="09-01" phase="09" status="planned">Create Floor 2 with different mechanical constraints</task>
+  <task id="09-02" phase="09" status="planned">Add boss encounters that gate floor progression</task>
+  <task id="09-03" phase="09" status="planned">Extract content to JSON packs and implement save/load</task>
+
+  <!-- Phase 10: Final Polish -->
+  <task id="10-01" phase="10" status="planned">Full game loop verification and softlock fixes</task>
+  <task id="10-02" phase="10" status="planned">Write ARCHITECTURE.md and CONVENTIONS.md</task>
+  <task id="10-03" phase="10" status="planned">Production build to game/dist/</task>
+</task-registry>
