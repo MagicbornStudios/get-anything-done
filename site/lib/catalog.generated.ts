@@ -1465,7 +1465,7 @@ export const FINDINGS: Finding[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "22",
   "milestone": "gad-v1.1",
-  "nextAction": "PHASE 22 SESSION 8: install.js fix + phase 25 milestone A shipped. (1) Task 22-34 fixed the install.js path bug (existence check for get-anything-done skill dir, mkdir parent for CHANGELOG/VERSION). Verified by running install for --claude --cursor --codex --local to clean completion across all three runtimes (60 commands + 21 agents + 27 skills each). (2) Phase 25 milestone A complete: lib/trace-schema.cjs (25-01, event envelope + 4 event type factories + parser), lib/trace-truncate.cjs (25-03, 4KB head+tail split with multibyte safety), bin/gad-trace-hook.cjs (25-02, Claude Code PreToolUse/PostToolUse handler that reads stdin, walks up for project root, reads .trace-active-skill marker, detects transitions, emits tool_use/subagent_spawn/file_mutation events to .planning/.trace-events.jsonl), new `gad install hooks` and `gad install all` and `gad uninstall hooks` subcommands in bin/gad.cjs (25-04 — wires handler into .claude/settings.json preserving existing hook entries, delegates full framework install to bin/install.js). (3) Smoke test verified all 4 components: trace-schema factories produce valid JSON, truncate handles 5KB→4127 bytes correctly, hook handler appends valid events to JSONL when piped mock PostToolUse payload, install hooks merges into existing 8-entry settings.json without overwriting. Submodule commit 163e07f pushed. NEXT SESSION: phase 25 milestone B (document .trace-active-skill marker contract in skill docs, refine skill_invocation event emission with nested parent tracking, real eval run end-to-end test), OR phase 25 milestone C (framework versioning: gad version command + TRACE.json stamping), OR phase 27 track 3 (derived metrics from existing v3 data). All three can land in parallel.",
+  "nextAction": "PHASE 23 ACTIVE (round 4 greenfield) + PHASE 27 track 1 shipped. Round 4 results: Bare v5 + Emergent v4 shipped complete playable games against v4 pressure-oriented requirements, GAD v10 api-interrupted at phases 01+02 completion (55 tool_uses for planning + data layer, no scene implementation reached). Freedom hypothesis holds under v4. Emergent v4 authored 2 new skills (dom-over-kaplay, pressure-forge-coupling) and a CHANGELOG — first observed full inheritance→apply→evolve→document cycle. Phase 27 track 1 (rubric) shipped session 13: lib/rubric-schema.cjs + human_review_rubric blocks in 3 greenfield gad.json files (emergent gets a 6th dimension `skill_inheritance_effectiveness` as the compound-skills hypothesis test signal) + prebuild parser handles both legacy single-score and rubric formats via normalizeHumanReviewPrebuild + `gad eval review --rubric '<json>'` CLI extension + RubricRadar SVG chart component rendered on per-run pages when rubric is populated. Decision gad-65 pins the Compound-Skills Hypothesis. Skill inheritance lineage table live on /projects/escape-the-dungeon-emergent showing per-run newly-authored vs carried-over skills. Task 21-23b queued for GAD v11 retry after 529 investigation. NEXT SESSION USER WORK: play Bare v5 and Emergent v4 on the deployed site, submit rubric review via `gad eval review escape-the-dungeon-bare v5 --rubric '{\"playability\":0.8,...}' --notes \"...\"`. Then NEXT AGENT SESSION: investigate HTTP 529 pattern, retry GAD v11, regenerate site data, push.",
   "lastUpdated": "2026-04-08",
   "phases": [
     {
@@ -1612,8 +1612,13 @@ export const PLANNING_STATE: PlanningState = {
   "openTasks": [
     {
       "id": "21-23",
+      "status": "in-progress",
+      "goal": "Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates."
+    },
+    {
+      "id": "21-23b",
       "status": "planned",
-      "goal": "Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates. BLOCKED on portfolio documentation (21-28) per user directive."
+      "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's …"
     },
     {
       "id": "21-24",
@@ -1699,6 +1704,11 @@ export const PLANNING_STATE: PlanningState = {
       "summary": "Round 4's GAD v10 hit Anthropic API 529 overloaded_error twice. This is server-side transient load, not an account rate limit — different cause, different retry semantics, different interpretation. TRACE.json now distinguishes the two via separate flags: timing.rate_limited (account cap hit — gad-63 treats these as preserve-but-exclude) and timing.api_interrupted (server overload — ALSO preserve-b"
     },
     {
+      "id": "gad-65",
+      "title": "Compound-Skills Hypothesis — emergent workflow as a skill-growth framework tailored to a specific project domain",
+      "summary": "The emergent eval condition is not just \"inherit some skills and don't regress.\" It is a testable hypothesis about knowledge compounding: **as an emergent agent iterates on the same project domain across rounds, its inherited skill library should grow more specialized to that domain, and the game it produces should improve in quality and requirements-alignment per round more than bare produces by "
+    },
+    {
       "id": "gad-62",
       "title": "Parallel eval runs share a single account rate limit — serial execution is the default",
       "summary": "Round 4 attempt #1 launched GAD + Bare + Emergent in parallel via three worktree agents. All three hit an account-level rate limit simultaneously at ~14 minutes (tool_uses 81/45/40) with the message \"You've hit your limit · resets 12am America/Chicago\". The shared bucket meant none of the three runs finished. Implication: parallel eval runs on one account are a false economy. Serial execution (one"
@@ -1737,11 +1747,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-54",
       "title": "Eval backfill policy: freeze old scores, stamp new runs with framework version",
       "summary": "When the framework changes (new skill, new subagent, rewritten command), old eval scores are never recomputed. They're historical records, frozen at the framework commit they ran against. New runs against the updated framework get stamped with the new framework commit and become the \"current\" data point for cross-version comparisons. This preserves the archaeology — a reader can see what a v5 esca"
-    },
-    {
-      "id": "gad-53",
-      "title": "Trace schema v4 requires hook-aware agents — other coding agents are explicitly unsupported for tracing",
-      "summary": "Phase 25's trace schema v4 captures every tool_use, skill invocation with trigger context, and subagent spawn with inputs/outputs. The only reliable way to capture this data is from within the coding agent's runtime via hooks — Claude Code's PreToolUse/PostToolUse hooks, Aider's Python callbacks, Continue.dev's extension API. Agents without hook runtimes (Cursor's closed-source editor, basic Codex"
     }
   ]
 };

@@ -1061,6 +1061,134 @@ function normalizeHumanReviewPrebuild(humanReview) {
   };
 }
 
+/**
+ * Load the game requirements XML content for a run, keyed by
+ * run.requirements_version. Returns { filename, content } or null when no
+ * matching file is found. Used by the Playable Archive popup (and eventually
+ * any per-run page that wants to show the spec the run was measured against).
+ *
+ * Strategy:
+ *  1. For pre-v4 runs, try the git-history snapshots at
+ *     public/downloads/requirements/*.md (we extracted these in task 22-11).
+ *  2. For v4 runs, read the current template/.planning/REQUIREMENTS.xml.
+ *  3. Fall back to the REQUIREMENTS.md meta file at evals/<project>/REQUIREMENTS.md
+ *     when nothing else resolves.
+ *
+ * Each run gets a REQUIREMENTS_BY_RUN entry; the UI can then pop up a modal
+ * showing the file content without a network fetch.
+ */
+function loadRequirementsForRun(project, requirementsVersion) {
+  // Priority 1: v4 template (current)
+  if (requirementsVersion === 'v4') {
+    const candidates = [
+      path.join(EVALS_DIR, project, 'template', '.planning', 'REQUIREMENTS.xml'),
+      path.join(EVALS_DIR, project, 'template', 'REQUIREMENTS.xml'),
+    ];
+    for (const candidate of candidates) {
+      if (exists(candidate)) {
+        const content = fs.readFileSync(candidate, 'utf8');
+        return {
+          filename: `REQUIREMENTS.xml (${requirementsVersion})`,
+          path: candidate.replace(REPO_ROOT, '').replace(/\\/g, '/').replace(/^\//, ''),
+          content,
+          format: 'xml',
+        };
+      }
+    }
+  }
+
+  // Priority 2: historical snapshot from git-extracted files
+  const snapshotDir = path.join(PUBLIC_DIR, 'downloads', 'requirements');
+  if (exists(snapshotDir)) {
+    // Snapshot naming: <project>-EVAL-REQUIREMENTS-<date>-<label>.md
+    // For v1/v2 we use date-based matching: v1 ≈ 2026-04-06, v2 ≈ 2026-04-07
+    const snapshotMap = {
+      v1: '2026-04-06-pre-gates',
+      v2: '2026-04-07-hosted-demo-added',
+    };
+    const snapshotSlug = snapshotMap[requirementsVersion];
+    if (snapshotSlug) {
+      const base = project.startsWith('escape-the-dungeon')
+        ? 'escape-the-dungeon'
+        : project;
+      const snapshotPath = path.join(
+        snapshotDir,
+        `${base}-EVAL-REQUIREMENTS-${snapshotSlug}.md`
+      );
+      if (exists(snapshotPath)) {
+        return {
+          filename: `REQUIREMENTS.md snapshot (${requirementsVersion}, ${snapshotSlug.split('-').slice(0, 3).join('-')})`,
+          path: `downloads/requirements/${path.basename(snapshotPath)}`,
+          content: fs.readFileSync(snapshotPath, 'utf8'),
+          format: 'md',
+        };
+      }
+    }
+  }
+
+  // Priority 3: the current REQUIREMENTS.md meta file for the project
+  const metaPath = path.join(EVALS_DIR, project, 'REQUIREMENTS.md');
+  if (exists(metaPath)) {
+    return {
+      filename: `REQUIREMENTS.md (eval meta)`,
+      path: metaPath.replace(REPO_ROOT, '').replace(/\\/g, '/').replace(/^\//, ''),
+      content: fs.readFileSync(metaPath, 'utf8'),
+      format: 'md',
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Pick the "top skill used" for a run — the single most load-bearing skill
+ * we can surface. Heuristic: largest skill file by bytes in the run's
+ * game/.planning/skills/ directory. Returns { filename, content } or null.
+ *
+ * For runs where the agent only inherited bootstrap skills, this will
+ * surface whichever of those two is largest (usually find-sprites since
+ * it's the longer doc). For emergent runs that authored new skills, this
+ * surfaces the biggest one — typically the one that captures the most
+ * project-specific knowledge.
+ */
+function loadTopSkillForRun(project, version, producedArtifacts) {
+  const key = `${project}/${version}`;
+  const produced = producedArtifacts[key];
+  if (!produced || !produced.skillFiles || produced.skillFiles.length === 0) {
+    return null;
+  }
+
+  // Sort by bytes descending — biggest first
+  const sorted = [...produced.skillFiles].sort((a, b) => (b.bytes ?? 0) - (a.bytes ?? 0));
+  const top = sorted[0];
+  if (!top) return null;
+
+  // Try to read the skill content from the preserved run's planning dir
+  const candidates = [
+    path.join(EVALS_DIR, project, version, 'run', 'game', '.planning', 'skills', top.name),
+    path.join(EVALS_DIR, project, version, 'run', '.planning', 'skills', top.name),
+    path.join(EVALS_DIR, project, version, 'run', 'game', 'skills', top.name),
+  ];
+  for (const candidate of candidates) {
+    if (exists(candidate)) {
+      return {
+        filename: top.name,
+        content: fs.readFileSync(candidate, 'utf8'),
+        bytes: top.bytes,
+        total_skills: produced.skillFiles.length,
+      };
+    }
+  }
+
+  // Couldn't find the file on disk — return metadata only
+  return {
+    filename: top.name,
+    content: null,
+    bytes: top.bytes,
+    total_skills: produced.skillFiles.length,
+  };
+}
+
 function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
   console.log("[3/4] Writing lib/eval-data.generated.ts");
   const records = traces
@@ -1109,6 +1237,8 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       humanReview: d.human_review ?? null,
       humanReviewNormalized: normalizeHumanReviewPrebuild(d.human_review),
       skillAccuracyBreakdown,
+      requirementsDoc: loadRequirementsForRun(t.project, d.requirements_version ?? 'v4'),
+      topSkill: loadTopSkillForRun(t.project, t.version, extras.producedArtifacts ?? {}),
     };
   });
 
@@ -1283,6 +1413,18 @@ export interface EvalRunRecord {
     is_legacy: boolean;
     is_empty: boolean;
   };
+  requirementsDoc: {
+    filename: string;
+    path: string;
+    content: string;
+    format: 'xml' | 'md';
+  } | null;
+  topSkill: {
+    filename: string;
+    content: string | null;
+    bytes: number;
+    total_skills: number;
+  } | null;
   skillAccuracyBreakdown:
     | {
         expected_triggers: Array<{

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ExternalLink, Gamepad2 } from "lucide-react";
+import { ExternalLink, Gamepad2, FileText, Sparkles, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   EVAL_RUNS,
@@ -41,6 +41,7 @@ export default function Playable() {
     runs.findIndex((r) => r.project === "escape-the-dungeon-bare" && r.version === "v3")
   );
   const [selectedIndex, setSelectedIndex] = useState(defaultIndex);
+  const [modal, setModal] = useState<"requirements" | "skill" | null>(null);
   const selected = runs[selectedIndex];
 
   if (!selected) {
@@ -171,18 +172,98 @@ export default function Playable() {
               </p>
             )}
 
-            <a
-              href={`${REPO}/tree/main/evals/${selected.project}/${selected.version}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
-            >
-              Source on GitHub
-              <ExternalLink size={11} aria-hidden />
-            </a>
+            <div className="mt-5 flex flex-col gap-2">
+              <a
+                href={`${REPO}/tree/main/evals/${selected.project}/${selected.version}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+              >
+                Source on GitHub
+                <ExternalLink size={11} aria-hidden />
+              </a>
+              {selected.requirementsDoc && (
+                <button
+                  type="button"
+                  onClick={() => setModal("requirements")}
+                  className="inline-flex items-center gap-1.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:text-accent"
+                >
+                  <FileText size={11} aria-hidden />
+                  <span className="underline decoration-dotted underline-offset-2">
+                    {selected.requirementsDoc.filename}
+                  </span>
+                </button>
+              )}
+              {selected.topSkill && (
+                <button
+                  type="button"
+                  onClick={() => setModal("skill")}
+                  disabled={!selected.topSkill.content}
+                  className="inline-flex items-center gap-1.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:text-accent disabled:opacity-60 disabled:hover:text-muted-foreground"
+                  title={
+                    selected.topSkill.total_skills > 1
+                      ? `Top skill — ${selected.topSkill.total_skills} skills authored this run`
+                      : "Top skill authored this run"
+                  }
+                >
+                  <Sparkles size={11} aria-hidden className="text-amber-400" />
+                  <span className="underline decoration-dotted underline-offset-2">
+                    {selected.topSkill.filename}
+                  </span>
+                  {selected.topSkill.total_skills > 1 && (
+                    <span className="text-[10px] text-muted-foreground/70">
+                      (+{selected.topSkill.total_skills - 1})
+                    </span>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {modal && selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
+          onClick={() => setModal(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-2xl shadow-black/60"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-border/60 px-6 py-4">
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  {modal === "requirements" ? "Game requirements" : "Top skill"} ·{" "}
+                  {selected.project}/{selected.version}
+                </p>
+                <h3 className="mt-1 truncate text-lg font-semibold text-foreground">
+                  {modal === "requirements"
+                    ? selected.requirementsDoc?.filename
+                    : selected.topSkill?.filename}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModal(null)}
+                className="rounded-full border border-border/60 p-1.5 text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                aria-label="Close"
+              >
+                <X size={14} aria-hidden />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto bg-background/60 p-6">
+              <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-6 text-muted-foreground">
+                {modal === "requirements"
+                  ? selected.requirementsDoc?.content
+                  : selected.topSkill?.content ?? "(skill file content unavailable)"}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
