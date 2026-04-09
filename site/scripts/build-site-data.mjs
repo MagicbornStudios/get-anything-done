@@ -20,6 +20,20 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import AdmZip from "adm-zip";
+import { marked } from "marked";
+
+// Render markdown to HTML deterministically. GitHub flavoured, no sanitizer
+// because the content is authored in this repo and static at build time.
+marked.setOptions({ gfm: true, breaks: false });
+function renderMarkdown(src) {
+  if (!src) return "";
+  try {
+    return marked.parse(src, { async: false });
+  } catch (err) {
+    console.warn("  [warn] markdown render failed:", err.message);
+    return `<pre>${src.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</pre>`;
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -372,6 +386,65 @@ function copyCurrentRequirements() {
     fs.copyFileSync(historyFile, dest);
     console.log(`  [copy] requirements history narrative → ${path.relative(SITE_ROOT, dest)}`);
   }
+
+  // Extract historical REQUIREMENTS.md snapshots from git. These are the eval
+  // DESCRIPTION docs (what the eval measures), not the game spec itself — the
+  // game spec XML was only committed starting with v4. Still valuable for
+  // lineage, labelled truthfully as "eval description snapshots".
+  const historicalSnapshots = [
+    {
+      commit: "b5052fe",
+      date: "2026-04-06",
+      label: "pre-gates",
+      project: "escape-the-dungeon",
+      repoPath: "evals/escape-the-dungeon/REQUIREMENTS.md",
+    },
+    {
+      commit: "02b0e84",
+      date: "2026-04-07",
+      label: "hosted-demo-added",
+      project: "escape-the-dungeon",
+      repoPath: "evals/escape-the-dungeon/REQUIREMENTS.md",
+    },
+  ];
+  const extracted = [];
+  for (const snap of historicalSnapshots) {
+    const content = gitShow(snap.commit, snap.repoPath);
+    if (!content) {
+      console.warn(`  [skip] snapshot ${snap.commit}: not found`);
+      continue;
+    }
+    const destName = `${snap.project}-EVAL-REQUIREMENTS-${snap.date}-${snap.label}.md`;
+    const dest = path.join(REQUIREMENTS_DIR, destName);
+    // Prepend a short provenance header so the file is self-describing.
+    const annotated =
+      `<!-- Extracted from git commit ${snap.commit} on ${snap.date} (${snap.label}). -->\n` +
+      `<!-- This is the eval DESCRIPTION doc — what the eval measures — not the\n` +
+      `     game spec. The game spec XML lives in template/.planning/REQUIREMENTS.xml\n` +
+      `     and was only committed to git starting with v4 (the earlier .planning/\n` +
+      `     directories were gitignored). -->\n\n` +
+      content;
+    fs.writeFileSync(dest, annotated, "utf8");
+    const size = fs.statSync(dest).size;
+    console.log(`  [git] snapshot ${snap.commit} (${snap.date}) → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
+    extracted.push({
+      commit: snap.commit,
+      date: snap.date,
+      label: snap.label,
+      project: snap.project,
+      path: `/downloads/requirements/${destName}`,
+      bytes: size,
+    });
+  }
+  out.push(...extracted.map((e) => ({
+    project: e.project,
+    version: `snapshot-${e.date}`,
+    path: e.path,
+    bytes: e.bytes,
+    label: e.label,
+    commit: e.commit,
+    isSnapshot: true,
+  })));
   return out;
 }
 
@@ -442,6 +515,8 @@ function scanCatalog() {
             name: data.name || entry.name,
             description: data.description || firstParagraph(body, 280),
             file: `vendor/get-anything-done/skills/${entry.name}/SKILL.md`,
+            bodyHtml: renderMarkdown(body),
+            bodyRaw: body,
           });
         }
       }
@@ -462,6 +537,8 @@ function scanCatalog() {
         tools: data.tools || null,
         color: data.color || null,
         file: `vendor/get-anything-done/agents/${name}`,
+        bodyHtml: renderMarkdown(body),
+        bodyRaw: body,
       });
     }
   }
@@ -480,6 +557,8 @@ function scanCatalog() {
         agent: data.agent || null,
         argumentHint: data["argument-hint"] || null,
         file: `vendor/get-anything-done/commands/gad/${name}`,
+        bodyHtml: renderMarkdown(body),
+        bodyRaw: body,
       });
     }
   }
@@ -499,13 +578,131 @@ function scanCatalog() {
     walk(TEMPLATES_DIR);
   }
 
+  // Scan which eval templates inherit which framework skills.
+  // template/skills/<name>.md → the eval copies that skill into its starting state.
+  const inheritanceMap = {}; // skillId -> [project...]
+  for (const skill of catalog.skills) inheritanceMap[skill.id] = [];
+  if (exists(EVALS_DIR)) {
+    for (const project of fs.readdirSync(EVALS_DIR).sort()) {
+      const skillsDir = path.join(EVALS_DIR, project, "template", "skills");
+      if (!exists(skillsDir)) continue;
+      for (const file of fs.readdirSync(skillsDir)) {
+        if (!file.endsWith(".md")) continue;
+        const skillId = file.replace(/\.md$/, "");
+        if (inheritanceMap[skillId]) inheritanceMap[skillId].push(project);
+      }
+    }
+  }
+  catalog.inheritance = inheritanceMap;
+
   console.log(
     `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} commands=${catalog.commands.length} templates=${catalog.templates.length}`
   );
+  const inheritedCount = Object.values(inheritanceMap).filter((v) => v.length > 0).length;
+  console.log(`  [scan] ${inheritedCount} skill(s) inherited by at least one eval template`);
   return catalog;
 }
 
-function writeCatalogTs(catalog, requirementsHistory, currentRequirements) {
+// -------------------------------------------------------------------------
+// Planning state — parse STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml
+// for the /planning meta-transparency page.
+// -------------------------------------------------------------------------
+
+function parsePlanningState() {
+  console.log("[2g/4] Parsing GAD planning state (STATE, TASKS, DECISIONS)");
+  const planningDir = path.join(REPO_ROOT, ".planning");
+  const state = {
+    currentPhase: null,
+    milestone: null,
+    nextAction: null,
+    lastUpdated: null,
+    phases: [],
+    openTasks: [],
+    doneTasksCount: 0,
+    recentDecisions: [],
+  };
+  if (!exists(planningDir)) {
+    console.log("  (no .planning/ directory)");
+    return state;
+  }
+
+  // STATE.xml
+  const statePath = path.join(planningDir, "STATE.xml");
+  if (exists(statePath)) {
+    const src = fs.readFileSync(statePath, "utf8");
+    state.currentPhase = (src.match(/<current-phase>(.*?)<\/current-phase>/) || [])[1] ?? null;
+    state.milestone = (src.match(/<milestone>(.*?)<\/milestone>/) || [])[1] ?? null;
+    state.lastUpdated = (src.match(/<last-updated>(.*?)<\/last-updated>/) || [])[1] ?? null;
+    state.nextAction = (src.match(/<next-action>([\s\S]*?)<\/next-action>/) || [])[1] ?? null;
+    if (state.nextAction) state.nextAction = state.nextAction.trim();
+  }
+
+  // ROADMAP.xml — high-level phase list
+  const roadmapPath = path.join(planningDir, "ROADMAP.xml");
+  if (exists(roadmapPath)) {
+    const src = fs.readFileSync(roadmapPath, "utf8");
+    const phaseRegex = /<phase\s+id="(\d+(?:\.\d+)?)"[^>]*>[\s\S]*?<title>([^<]*)<\/title>[\s\S]*?(?:<status>([^<]*)<\/status>)?[\s\S]*?<\/phase>/g;
+    let m;
+    while ((m = phaseRegex.exec(src)) !== null) {
+      state.phases.push({
+        id: m[1],
+        title: m[2].trim(),
+        status: (m[3] || "planned").trim(),
+      });
+    }
+  }
+
+  // TASK-REGISTRY.xml — tasks (open vs done)
+  const taskPath = path.join(planningDir, "TASK-REGISTRY.xml");
+  if (exists(taskPath)) {
+    const src = fs.readFileSync(taskPath, "utf8");
+    // Simple regex: capture task id, phase id, status, goal
+    // Phase wraps tasks; we grab phase id from the nearest preceding <phase id="N">.
+    const taskRegex = /<task\s+id="([^"]+)"[^>]*status="([^"]+)"[^>]*>([\s\S]*?)<\/task>/g;
+    let m;
+    while ((m = taskRegex.exec(src)) !== null) {
+      const id = m[1];
+      const status = m[2];
+      const inner = m[3];
+      const goalMatch = inner.match(/<goal>([\s\S]*?)<\/goal>/);
+      const goal = goalMatch ? goalMatch[1].trim() : "";
+      if (status === "done") {
+        state.doneTasksCount++;
+      } else if (status !== "cancelled") {
+        state.openTasks.push({ id, status, goal: goal.length > 260 ? goal.slice(0, 259) + "…" : goal });
+      }
+    }
+  }
+
+  // DECISIONS.xml — latest N decisions with title
+  const decisionsPath = path.join(planningDir, "DECISIONS.xml");
+  if (exists(decisionsPath)) {
+    const src = fs.readFileSync(decisionsPath, "utf8");
+    const decisionRegex = /<decision\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/decision>/g;
+    const all = [];
+    let m;
+    while ((m = decisionRegex.exec(src)) !== null) {
+      const id = m[1];
+      const inner = m[2];
+      const titleMatch = inner.match(/<title>([\s\S]*?)<\/title>/);
+      const summaryMatch = inner.match(/<summary>([\s\S]*?)<\/summary>/);
+      all.push({
+        id,
+        title: titleMatch ? titleMatch[1].trim() : id,
+        summary: summaryMatch ? summaryMatch[1].trim().slice(0, 400) : null,
+      });
+    }
+    // Take the last 12.
+    state.recentDecisions = all.slice(-12).reverse();
+  }
+
+  console.log(
+    `  [state] phase=${state.currentPhase} · open=${state.openTasks.length} · done=${state.doneTasksCount} · decisions=${state.recentDecisions.length}`
+  );
+  return state;
+}
+
+function writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState) {
   console.log("  [write] lib/catalog.generated.ts");
   const out = `/**
  * Auto-generated from skills/, agents/, commands/gad/, templates/, and
@@ -517,6 +714,8 @@ export interface CatalogSkill {
   name: string;
   description: string;
   file: string;
+  bodyHtml: string;
+  bodyRaw: string;
 }
 export interface CatalogAgent {
   id: string;
@@ -525,6 +724,8 @@ export interface CatalogAgent {
   tools: string | null;
   color: string | null;
   file: string;
+  bodyHtml: string;
+  bodyRaw: string;
 }
 export interface CatalogCommand {
   id: string;
@@ -533,6 +734,8 @@ export interface CatalogCommand {
   agent: string | null;
   argumentHint: string | null;
   file: string;
+  bodyHtml: string;
+  bodyRaw: string;
 }
 export interface CatalogTemplate {
   path: string;
@@ -549,14 +752,66 @@ export interface CurrentRequirementsFile {
   version: string;
   path: string;
   bytes: number;
+  label?: string;
+  commit?: string;
+  isSnapshot?: boolean;
+}
+
+export interface Finding {
+  slug: string;
+  title: string;
+  date: string | null;
+  file: string;
+  bodyRaw: string;
+  bodyHtml: string;
+  summary: string;
+}
+
+export interface PlanningTask {
+  id: string;
+  status: string;
+  goal: string;
+}
+export interface PlanningPhase {
+  id: string;
+  title: string;
+  status: string;
+}
+export interface PlanningDecision {
+  id: string;
+  title: string;
+  summary: string | null;
+}
+export interface PlanningState {
+  currentPhase: string | null;
+  milestone: string | null;
+  nextAction: string | null;
+  lastUpdated: string | null;
+  phases: PlanningPhase[];
+  openTasks: PlanningTask[];
+  doneTasksCount: number;
+  recentDecisions: PlanningDecision[];
 }
 
 export const SKILLS: CatalogSkill[] = ${JSON.stringify(catalog.skills, null, 2)};
 export const AGENTS: CatalogAgent[] = ${JSON.stringify(catalog.agents, null, 2)};
 export const COMMANDS: CatalogCommand[] = ${JSON.stringify(catalog.commands, null, 2)};
 export const TEMPLATES: CatalogTemplate[] = ${JSON.stringify(catalog.templates, null, 2)};
+
+/**
+ * Which framework skills are inherited (copied) into each eval project's
+ * template/skills/ directory. A skill with a non-empty list is something eval
+ * agents see in their starting workspace; a skill with an empty list lives
+ * only at the framework level and is not yet part of any eval's bootstrap set.
+ */
+export const SKILL_INHERITANCE: Record<string, string[]> = ${JSON.stringify(catalog.inheritance || {}, null, 2)};
+
 export const REQUIREMENTS_HISTORY: RequirementsVersion[] = ${JSON.stringify(requirementsHistory, null, 2)};
 export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = ${JSON.stringify(currentRequirements, null, 2)};
+
+export const FINDINGS: Finding[] = ${JSON.stringify(findings || [], null, 2)};
+
+export const PLANNING_STATE: PlanningState = ${JSON.stringify(planningState || null, null, 2)};
 
 export const GITHUB_REPO = "https://github.com/MagicbornStudios/get-anything-done";
 `;
@@ -567,6 +822,36 @@ export const GITHUB_REPO = "https://github.com/MagicbornStudios/get-anything-don
 // -------------------------------------------------------------------------
 // Findings + experiment log — parse into round summaries
 // -------------------------------------------------------------------------
+
+function parseFindings() {
+  const out = [];
+  if (!exists(EVALS_DIR)) return out;
+  for (const name of fs.readdirSync(EVALS_DIR).sort()) {
+    if (!name.startsWith("FINDINGS-") || !name.endsWith(".md")) continue;
+    const file = path.join(EVALS_DIR, name);
+    const src = fs.readFileSync(file, "utf8");
+    // Slug: strip FINDINGS- prefix and .md suffix.
+    const slug = name.replace(/^FINDINGS-/, "").replace(/\.md$/, "").toLowerCase();
+    // Title: first H1 heading, or derive from filename.
+    const h1Match = src.match(/^#\s+(.+)$/m);
+    const title = h1Match ? h1Match[1].trim() : name.replace(/\.md$/, "");
+    // Date embedded in the filename if present (FINDINGS-YYYY-MM-DD-xxx.md).
+    const dateMatch = name.match(/FINDINGS-(\d{4}-\d{2}-\d{2})/);
+    const date = dateMatch ? dateMatch[1] : null;
+    // Summary: first non-heading paragraph.
+    const summary = firstParagraph(src, 300);
+    out.push({
+      slug,
+      title,
+      date,
+      file: `vendor/get-anything-done/evals/${name}`,
+      bodyRaw: src,
+      bodyHtml: renderMarkdown(src),
+      summary,
+    });
+  }
+  return out;
+}
 
 function parseRoundSummaries() {
   console.log("[2f/4] Parsing experiment log + findings");
@@ -823,6 +1108,8 @@ function main() {
   const requirementsHistory = parseRequirementsHistory();
   const catalog = scanCatalog();
   const roundData = parseRoundSummaries();
+  const findings = parseFindings();
+  const planningState = parsePlanningState();
   const traces = findTraceFiles();
 
   writeEvalDataTs(traces, evalTemplates, gadPackTemplate, {
@@ -830,7 +1117,7 @@ function main() {
     rounds: roundData.rounds,
     findings: roundData.findings,
   });
-  writeCatalogTs(catalog, requirementsHistory, currentRequirements);
+  writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
   auditPlayable();
 
   console.log("=== done ===");

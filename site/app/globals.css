@@ -75,6 +75,134 @@
   }
 }
 
+@layer components {
+  .prose-content {
+    color: var(--color-foreground);
+    font-size: 0.95rem;
+    line-height: 1.75;
+    max-width: 68ch;
+  }
+  .prose-content h1,
+  .prose-content h2,
+  .prose-content h3,
+  .prose-content h4 {
+    color: var(--color-foreground);
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+  .prose-content h1 {
+    font-size: 1.875rem;
+  }
+  .prose-content h2 {
+    font-size: 1.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+  }
+  .prose-content h3 {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+  }
+  .prose-content p {
+    margin: 1rem 0;
+    color: color-mix(in oklch, var(--foreground) 90%, transparent);
+  }
+  .prose-content strong {
+    color: var(--color-foreground);
+    font-weight: 600;
+  }
+  .prose-content a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-content code {
+    background: color-mix(in oklch, var(--card) 70%, transparent);
+    border: 1px solid color-mix(in oklch, var(--border) 50%, transparent);
+    border-radius: 0.25rem;
+    padding: 0.1em 0.4em;
+    font-size: 0.85em;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+  .prose-content pre {
+    background: color-mix(in oklch, var(--background) 80%, black);
+    border: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin: 1.25rem 0;
+  }
+  .prose-content pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: color-mix(in oklch, var(--foreground) 90%, transparent);
+  }
+  .prose-content ul,
+  .prose-content ol {
+    margin: 1rem 0 1rem 1.25rem;
+    padding-left: 0.5rem;
+  }
+  .prose-content ul {
+    list-style: disc;
+  }
+  .prose-content ol {
+    list-style: decimal;
+  }
+  .prose-content li {
+    margin: 0.35rem 0;
+  }
+  .prose-content li > ul,
+  .prose-content li > ol {
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+  }
+  .prose-content blockquote {
+    border-left: 3px solid var(--color-accent);
+    background: color-mix(in oklch, var(--card) 50%, transparent);
+    padding: 0.75rem 1rem;
+    margin: 1.25rem 0;
+    color: color-mix(in oklch, var(--foreground) 85%, transparent);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+  .prose-content hr {
+    border: none;
+    border-top: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+    margin: 2rem 0;
+  }
+  .prose-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.85rem;
+    border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  .prose-content th,
+  .prose-content td {
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);
+  }
+  .prose-content th {
+    background: color-mix(in oklch, var(--card) 80%, transparent);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-muted-foreground);
+  }
+  .prose-content tr:last-child td {
+    border-bottom: none;
+  }
+}
+
 @layer utilities {
   .section-shell {
     @apply mx-auto w-full max-w-6xl px-6 py-20 md:py-28;

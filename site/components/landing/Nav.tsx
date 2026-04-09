@@ -3,13 +3,13 @@ import { Github } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/#workflow", label: "Loop" },
-  { href: "/#rounds", label: "Rounds" },
   { href: "/#projects", label: "Projects" },
   { href: "/#results", label: "Results" },
   { href: "/#play", label: "Play" },
   { href: "/#requirements", label: "Requirements" },
   { href: "/#catalog", label: "Catalog" },
-  { href: "/#templates", label: "Downloads" },
+  { href: "/findings", label: "Findings" },
+  { href: "/planning", label: "Planning" },
 ];
 
 export default function Nav() {

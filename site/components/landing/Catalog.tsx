@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Bot, ExternalLink, FileCode, Search, Sparkles, Wrench } from "lucide-react";
+import { ArrowRight, Bot, Search, Sparkles, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   SKILLS,
   AGENTS,
   COMMANDS,
-  GITHUB_REPO,
+  SKILL_INHERITANCE,
   type CatalogAgent,
   type CatalogCommand,
   type CatalogSkill,
@@ -15,6 +16,12 @@ import {
 
 type Tab = "skills" | "agents" | "commands";
 type CatalogItem = CatalogSkill | CatalogAgent | CatalogCommand;
+
+const DETAIL_PREFIX: Record<Tab, string> = {
+  skills: "/skills",
+  agents: "/agents",
+  commands: "/commands",
+};
 
 const TAB_META: Record<Tab, { label: string; icon: typeof Sparkles; count: number }> = {
   skills: { label: "Skills", icon: Sparkles, count: SKILLS.length },
@@ -40,26 +47,6 @@ export default function Catalog() {
     });
   }, [tab, query]);
 
-  function renderExtras(item: CatalogItem) {
-    const agent = (item as CatalogCommand).agent;
-    const hint = (item as CatalogCommand).argumentHint;
-    const tools = (item as CatalogAgent).tools;
-    return (
-      <>
-        {agent && (
-          <Badge variant="outline" className="shrink-0">
-            {agent}
-          </Badge>
-        )}
-        {hint && (
-          <p className="mt-3 font-mono text-[11px] text-muted-foreground">{hint}</p>
-        )}
-        {tools && (
-          <p className="mt-3 font-mono text-[11px] text-muted-foreground">tools: {tools}</p>
-        )}
-      </>
-    );
-  }
 
   return (
     <section id="catalog" className="border-t border-border/60">
@@ -127,44 +114,64 @@ export default function Catalog() {
         </div>
 
         <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {items.map((item) => (
-            <article
-              key={item.id}
-              className="group flex h-full flex-col rounded-2xl border border-border/70 bg-card/40 p-5 transition-colors hover:border-accent/60"
-            >
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <code className="truncate rounded-md bg-background/60 px-2 py-1 font-mono text-xs text-accent">
-                  {item.name}
-                </code>
-                {(item as CatalogCommand).agent && (
-                  <Badge variant="outline" className="shrink-0">
-                    {(item as CatalogCommand).agent}
-                  </Badge>
-                )}
-              </div>
-              <p className="flex-1 text-sm leading-6 text-muted-foreground">{item.description}</p>
-              {(item as CatalogCommand).argumentHint && (
-                <p className="mt-3 font-mono text-[11px] text-muted-foreground">
-                  {(item as CatalogCommand).argumentHint}
-                </p>
-              )}
-              {(item as CatalogAgent).tools && (
-                <p className="mt-3 font-mono text-[11px] text-muted-foreground">
-                  tools: {(item as CatalogAgent).tools}
-                </p>
-              )}
-              <a
-                href={`${GITHUB_REPO}/blob/main/${item.file}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-1 self-start text-[11px] font-semibold text-accent transition-opacity hover:underline"
+          {items.map((item) => {
+            const inherited =
+              tab === "skills" ? (SKILL_INHERITANCE[item.id] ?? []) : [];
+            const detailHref = `${DETAIL_PREFIX[tab]}/${item.id}`;
+            return (
+              <Link
+                key={item.id}
+                href={detailHref}
+                className="group flex h-full flex-col rounded-2xl border border-border/70 bg-card/40 p-5 transition-colors hover:border-accent/60"
               >
-                <FileCode size={11} aria-hidden />
-                View source
-                <ExternalLink size={10} aria-hidden />
-              </a>
-            </article>
-          ))}
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <code className="truncate rounded-md bg-background/60 px-2 py-1 font-mono text-xs text-accent">
+                    {item.name}
+                  </code>
+                  {(item as CatalogCommand).agent && (
+                    <Badge variant="outline" className="shrink-0">
+                      {(item as CatalogCommand).agent}
+                    </Badge>
+                  )}
+                </div>
+                <p className="flex-1 text-sm leading-6 text-muted-foreground">
+                  {item.description}
+                </p>
+                {(item as CatalogCommand).argumentHint && (
+                  <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+                    {(item as CatalogCommand).argumentHint}
+                  </p>
+                )}
+                {(item as CatalogAgent).tools && (
+                  <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+                    tools: {(item as CatalogAgent).tools}
+                  </p>
+                )}
+                {tab === "skills" && inherited.length > 0 && (
+                  <div className="mt-3 flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
+                    <span className="uppercase tracking-wider">inherited by:</span>
+                    {inherited.map((project) => (
+                      <code
+                        key={project}
+                        className="rounded-sm bg-emerald-500/10 px-1 py-0.5 text-emerald-300"
+                      >
+                        {project.replace("escape-the-dungeon", "etd")}
+                      </code>
+                    ))}
+                  </div>
+                )}
+                {tab === "skills" && inherited.length === 0 && (
+                  <p className="mt-3 text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                    framework-only
+                  </p>
+                )}
+                <span className="mt-4 inline-flex items-center gap-1 self-start text-[11px] font-semibold text-accent">
+                  Read detail
+                  <ArrowRight size={10} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            );
+          })}
         </div>
 
         {items.length === 0 && (

@@ -481,54 +481,99 @@
     </task>
   </phase>
   <phase id="22">
-    <task id="22-01" agent-id="" status="planned">
-      <goal>Plan the portfolio experiment documentation structure. Design the navigation hierarchy under apps/portfolio/content/docs/get-anything-done/evals/. Decide per-eval-project pages, per-round summary pages, per-run detail pages, and hub overview page.</goal>
-      <keywords>portfolio,docs,planning,structure</keywords>
+    <!-- Phase 22 pivoted: the "portfolio" is now a self-contained Next.js
+         site at vendor/get-anything-done/site/ deploying to Vercel from the
+         GAD repo (not apps/portfolio/content/docs). The prebuild script at
+         site/scripts/build-site-data.mjs replaces the gad sink concept for
+         this use case — it scans the repo at build time. -->
+    <task id="22-01" agent-id="" status="done">
+      <goal>Plan the portfolio experiment documentation structure — pivoted to a standalone Next.js site at vendor/get-anything-done/site/ instead of apps/portfolio docs. Designed single-page sections (workflow, rounds, projects, results, playable, requirements, catalog, templates) plus dynamic per-run pages.</goal>
+      <resolution>Committed as site/ scaffold (commit 070ec88) and expanded through commits 6bd55bf, c4f2aa5, 1d523ff. Section hierarchy finalized with anchor nav; dynamic routes under /runs/[project]/[version]; prebuild script at scripts/build-site-data.mjs produces all data + downloads at build time.</resolution>
+      <keywords>portfolio,site,planning,structure,pivot</keywords>
     </task>
-    <task id="22-02" agent-id="" status="planned">
-      <goal>Create evals hub page (apps/portfolio/content/docs/get-anything-done/evals/index.mdx) explaining the experiment: what we're testing (GAD vs Bare vs Emergent), the freedom hypothesis finding, the methodology, how to read the results. Links to each eval project.</goal>
-      <depends>22-01</depends>
-      <keywords>portfolio,hub,evals-index</keywords>
+    <task id="22-02" agent-id="" status="done">
+      <goal>Hub/home page explaining the experiment, freedom hypothesis, methodology, and linking to every section.</goal>
+      <resolution>app/page.tsx composes Hero, WhatItIs, Lineage, Workflow, Framework, Rounds, Projects, Results, Playable, Requirements, Catalog, Templates, RunIt, Footer.</resolution>
+      <keywords>portfolio,hub,home</keywords>
     </task>
-    <task id="22-03" agent-id="" status="planned">
-      <goal>Create per-eval-project pages for all 6 impl eval projects (escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent, etd-brownfield-gad, etd-brownfield-bare, etd-brownfield-emergent). Each shows: description, eval_mode, workflow, baseline, all run versions with scores, links to each version's page.</goal>
-      <depends>22-02</depends>
-      <keywords>portfolio,eval-projects,per-project-page</keywords>
+    <task id="22-03" agent-id="" status="done">
+      <goal>Per-eval-project cards for all six projects with greenfield/brownfield split.</goal>
+      <resolution>components/landing/Projects.tsx renders greenfield + brownfield sections with run badges, planning + template downloads, play-latest button. Cards hydrate from EVAL_RUNS, EVAL_TEMPLATES, PLANNING_ZIPS.</resolution>
+      <keywords>portfolio,projects,greenfield,brownfield</keywords>
     </task>
-    <task id="22-04" agent-id="" status="planned">
-      <goal>Create per-run detail pages for each completed eval run (escape-the-dungeon v7/v8, bare v1/v2/v3, emergent v1/v2). Each shows: TRACE.json scores, dimension breakdown, human review notes, link to playable build at apps/portfolio/public/evals/&lt;project&gt;/&lt;version&gt;/, link to source code at vendor/get-anything-done/evals/&lt;project&gt;/v&lt;N&gt;/run/, token usage, commit count, duration.</goal>
-      <depends>22-03</depends>
-      <keywords>portfolio,per-run-page,detail</keywords>
+    <task id="22-04" agent-id="" status="done">
+      <goal>Per-run detail pages for every eval run with TRACE.json breakdown, dimension scores, gate report, process metrics, playable link.</goal>
+      <resolution>app/runs/[project]/[version]/page.tsx statically generates 20 pages via generateStaticParams. Shows side-by-side composite + human review, divergence callout, dimension score table, 4-card gate report, 4-card process metrics, Play + Source + Raw TRACE links.</resolution>
+      <keywords>portfolio,per-run,ssg</keywords>
     </task>
-    <task id="22-05" agent-id="" status="planned">
-      <goal>Create per-round experiment summary pages that compare conditions side-by-side. Round 1 (greenfield v1), Round 2 (greenfield v2), Round 3 (greenfield v3 with freedom hypothesis finding). Each round page shows: requirements version used, results table, key finding, what led to the next iteration.</goal>
-      <depends>22-02</depends>
-      <keywords>portfolio,round-summary,experiment</keywords>
+    <task id="22-05" agent-id="" status="done">
+      <goal>Per-round experiment summary sections that compare conditions.</goal>
+      <resolution>components/landing/Rounds.tsx parses EXPERIMENT-LOG.md in the prebuild script and renders each round with markdown tables, bullets, and per-round tinted borders.</resolution>
+      <keywords>portfolio,rounds,experiment-log</keywords>
     </task>
-    <task id="22-06" agent-id="" status="planned">
-      <goal>Add visualizations/graphs to portfolio eval pages: human review scores across rounds per condition, token usage vs output quality scatter, process metrics vs human review (to visualize the freedom hypothesis). Use a lightweight charting approach (Recharts, SVG, or similar).</goal>
-      <depends>22-04,22-05</depends>
-      <keywords>portfolio,graphs,visualization,charts</keywords>
+    <task id="22-06" agent-id="" status="cancelled">
+      <goal>Visualizations/graphs across rounds. Deferred — score bars on the per-run page and run cards cover the "at a glance" comparison for now; a dedicated charts section can be revived later if we decide we're missing the signal.</goal>
+      <keywords>portfolio,graphs,deferred</keywords>
     </task>
-    <task id="22-07" agent-id="" status="planned">
-      <goal>Create requirements version history page (evals/requirements-versions.mdx) showing v1 → v2 → v3 → v4 evolution. Port from REQUIREMENTS-VERSIONS.md. Show what changed and why at each step.</goal>
-      <depends>22-02</depends>
-      <keywords>portfolio,requirements-history</keywords>
+    <task id="22-07" agent-id="" status="done">
+      <goal>Requirements version history (v1 → v4 lineage with diffs).</goal>
+      <resolution>components/landing/Requirements.tsx renders 4 version cards with per-section fields parsed from REQUIREMENTS-VERSIONS.md (scope, changes, problems, scoring impact, brownfield notes, decision refs). Plus download cards for current v4 XML + full narrative MD.</resolution>
+      <keywords>portfolio,requirements,lineage</keywords>
     </task>
-    <task id="22-08" agent-id="" status="planned">
-      <goal>Create decisions index page showing key decisions that shaped the experiments (gad-29 through gad-48). Cross-link from per-round pages.</goal>
-      <depends>22-02</depends>
-      <keywords>portfolio,decisions-index</keywords>
+    <task id="22-08" agent-id="" status="cancelled">
+      <goal>Decisions index page. Deferred — decisions referenced inline in Rounds and Requirements sections; full decisions index can be a dedicated /decisions route later when the list is big enough to warrant it.</goal>
+      <keywords>portfolio,decisions,deferred</keywords>
     </task>
-    <task id="22-09" agent-id="" status="planned">
-      <goal>Create findings page showing major results: freedom hypothesis (round 3), preservation contract gap, the .planning/ layout contract. Link to backing data per finding.</goal>
-      <depends>22-04,22-05</depends>
-      <keywords>portfolio,findings,freedom-hypothesis</keywords>
+    <task id="22-09" agent-id="" status="in-progress">
+      <goal>Findings as standalone pages: /findings index + /findings/[slug] per finding. Currently findings are parsed and exposed as FINDINGS_ROUND_3_RAW / FINDINGS_GENERAL_RAW but not yet rendered as routes.</goal>
+      <depends>22-12</depends>
+      <keywords>portfolio,findings,routes</keywords>
     </task>
-    <task id="22-10" agent-id="" status="planned">
-      <goal>Update DOCS-MAP.xml and gad sink pipeline so eval docs compile automatically from evals/ sources. The existing evals.mdx entry may need to become an index; individual per-project/per-run pages need their own sink entries. Verify portfolio docs site renders everything. This is the unlock for round 4 experimentation.</goal>
-      <depends>22-02,22-03,22-04,22-05,22-06,22-07,22-08,22-09</depends>
-      <keywords>docs-map,sink,pipeline,unlock</keywords>
+    <task id="22-10" agent-id="" status="done">
+      <goal>Build pipeline so the site data stays in sync with the repo.</goal>
+      <resolution>scripts/build-site-data.mjs runs via prebuild + predev. Walks templates/, evals/, skills/, agents/, commands/gad/ and parses EXPERIMENT-LOG, REQUIREMENTS-VERSIONS, FINDINGS-*. Emits eval-data.generated.ts + catalog.generated.ts and zips downloads into public/downloads/. The pattern replaces the gad sink MDX approach for this use case.</resolution>
+      <keywords>portfolio,build-pipeline,prebuild</keywords>
+    </task>
+    <!-- Session 2 additions: user-requested expansion after the first ship -->
+    <task id="22-11" agent-id="" status="planned">
+      <goal>Extract v1 and v2 REQUIREMENTS.md snapshots from git history via `git show &lt;commit&gt;:evals/escape-the-dungeon/REQUIREMENTS.md` and expose as downloads in public/downloads/requirements/. Two historical commits known: b5052fe (earliest) and 02b0e84 (pre-v3 refresh).</goal>
+      <keywords>requirements,git-history,downloads</keywords>
+    </task>
+    <task id="22-12" agent-id="" status="planned">
+      <goal>Add markdown rendering to build-site-data.mjs using `marked`. Render SKILL.md, agent .md, command .md, and FINDINGS-*.md bodies to HTML strings emitted in lib/content.generated.ts (or extended in catalog.generated.ts). Keeps the client bundle free of a runtime markdown dep.</goal>
+      <keywords>markdown,marked,prebuild,content</keywords>
+    </task>
+    <task id="22-13" agent-id="" status="planned">
+      <goal>Per-skill detail pages at app/skills/[id]/page.tsx. Statically generated via generateStaticParams from the catalog. Shows frontmatter metadata, rendered body, source link, "which evals inherit this skill" backlinks.</goal>
+      <depends>22-12</depends>
+      <keywords>skills,detail,ssg</keywords>
+    </task>
+    <task id="22-14" agent-id="" status="planned">
+      <goal>Per-agent detail pages at app/agents/[id]/page.tsx. Shows frontmatter (name, tools, color), rendered body, source link, "which commands spawn this agent" backlinks.</goal>
+      <depends>22-12</depends>
+      <keywords>agents,detail,ssg</keywords>
+    </task>
+    <task id="22-15" agent-id="" status="planned">
+      <goal>Per-command detail pages at app/commands/[id]/page.tsx. Shows argument-hint, linked spawned agent, rendered body, source link.</goal>
+      <depends>22-12</depends>
+      <keywords>commands,detail,ssg</keywords>
+    </task>
+    <task id="22-16" agent-id="" status="planned">
+      <goal>Findings routes: app/findings/page.tsx (index listing all findings files) and app/findings/[slug]/page.tsx (per-file rendered markdown). Pulls FINDINGS-*.md from evals/ directory.</goal>
+      <depends>22-12</depends>
+      <keywords>findings,routes,ssg</keywords>
+    </task>
+    <task id="22-17" agent-id="" status="planned">
+      <goal>Split catalog display: framework-level catalog (skills/agents/commands that ship with GAD core) vs per-eval inherited catalog (skills that a specific eval project copies into its template/skills/ directory). Makes the inheritance model visible.</goal>
+      <keywords>catalog,framework-vs-eval,inheritance</keywords>
+    </task>
+    <task id="22-18" agent-id="" status="planned">
+      <goal>Display the site's own planning state on the site as a meta-transparency page (/planning). Shows current phase, open tasks for phase 22, recent decisions. Parsed from STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml in the prebuild script.</goal>
+      <keywords>planning-state,meta,transparency</keywords>
+    </task>
+    <task id="22-19" agent-id="" status="planned">
+      <goal>Create skills/portfolio-sync/SKILL.md — methodology for keeping the public site in sync with evals as they evolve. Not rigid format; describes triggers (new run, new finding, new skill, new decision) and the prebuild pattern that regenerates everything from filesystem scans. Registered in the catalog alongside the other framework skills.</goal>
+      <keywords>skill,portfolio-sync,methodology</keywords>
     </task>
   </phase>
 </task-registry>
