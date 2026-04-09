@@ -358,6 +358,7 @@ function scanEvalProjects() {
         baseline: data.baseline || null,
         constraints: data.constraints || null,
         scoringWeights: data.scoring?.weights || null,
+        humanReviewRubric: data.human_review_rubric || null,
       });
     } catch (err) {
       console.warn(`  [warn] failed to parse ${gadJsonPath}: ${err.message}`);
@@ -1001,6 +1002,65 @@ function parseRoundSummaries() {
   return { rounds, findings };
 }
 
+/**
+ * Normalize human_review into the rubric shape. Legacy single-score runs get
+ * a synthetic `overall` dimension so the site can render a consistent format.
+ * New rubric runs pass through unchanged. Computes aggregate from dimensions
+ * if the run hasn't pre-computed one.
+ */
+function normalizeHumanReviewPrebuild(humanReview) {
+  if (!humanReview) {
+    return {
+      rubric_version: "none",
+      dimensions: {},
+      aggregate_score: null,
+      notes: null,
+      reviewed_by: null,
+      reviewed_at: null,
+      is_legacy: true,
+      is_empty: true,
+    };
+  }
+  // Already rubric format
+  if (humanReview.dimensions != null) {
+    const dims = humanReview.dimensions;
+    let aggregate = humanReview.aggregate_score;
+    if (aggregate == null) {
+      // Attempt to compute from scored dimensions (simple average when weights unknown)
+      const scores = Object.values(dims)
+        .map((d) => d && typeof d.score === "number" ? d.score : null)
+        .filter((s) => s != null);
+      if (scores.length > 0) {
+        aggregate = +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(4);
+      }
+    }
+    return {
+      rubric_version: humanReview.rubric_version ?? "v1",
+      dimensions: dims,
+      aggregate_score: aggregate,
+      notes: humanReview.notes ?? null,
+      reviewed_by: humanReview.reviewed_by ?? null,
+      reviewed_at: humanReview.reviewed_at ?? null,
+      is_legacy: false,
+      is_empty: Object.values(dims).every((d) => !d || d.score == null),
+    };
+  }
+  // Legacy single-score — synthesize `overall`
+  const score = typeof humanReview.score === "number" ? humanReview.score : null;
+  return {
+    rubric_version: "legacy-v0",
+    dimensions: {
+      overall: { score, notes: humanReview.notes ?? null },
+    },
+    aggregate_score: score,
+    notes: humanReview.notes ?? null,
+    reviewed_by: humanReview.reviewed_by ?? null,
+    reviewed_at: humanReview.reviewed_at ?? null,
+    is_legacy: true,
+    is_empty: score == null,
+  };
+}
+
 function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
   console.log("[3/4] Writing lib/eval-data.generated.ts");
   const records = traces
@@ -1047,6 +1107,7 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       planningQuality: d.planning_quality ?? null,
       scores: d.scores ?? {},
       humanReview: d.human_review ?? null,
+      humanReviewNormalized: normalizeHumanReviewPrebuild(d.human_review),
       skillAccuracyBreakdown,
     };
   });
@@ -1212,6 +1273,16 @@ export interface EvalRunRecord {
         reviewed_at?: string | null;
       } & Record<string, unknown>)
     | null;
+  humanReviewNormalized: {
+    rubric_version: string;
+    dimensions: Record<string, { score: number | null; notes: string | null }>;
+    aggregate_score: number | null;
+    notes: string | null;
+    reviewed_by: string | null;
+    reviewed_at: string | null;
+    is_legacy: boolean;
+    is_empty: boolean;
+  };
   skillAccuracyBreakdown:
     | {
         expected_triggers: Array<{
@@ -1253,6 +1324,15 @@ export interface EvalProjectMeta {
   baseline: string | { project?: string; version?: string; source?: string } | null;
   constraints: Record<string, unknown> | null;
   scoringWeights: Record<string, number> | null;
+  humanReviewRubric: {
+    version: string;
+    dimensions: Array<{
+      key: string;
+      label: string;
+      weight: number;
+      description: string;
+    }>;
+  } | null;
 }
 
 export interface ProducedArtifacts {

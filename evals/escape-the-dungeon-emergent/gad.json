@@ -25,5 +25,16 @@
       "time_efficiency": 0.05,
       "human_review": 0.30
     }
+  },
+  "human_review_rubric": {
+    "version": "v1",
+    "dimensions": [
+      { "key": "playability", "label": "Playability", "weight": 0.25, "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks." },
+      { "key": "ui_polish", "label": "UI polish", "weight": 0.15, "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type differentiation, styled controls. No raw ASCII." },
+      { "key": "mechanics_implementation", "label": "Mechanics implementation", "weight": 0.15, "description": "Are combat, forge, rune crafting, resistances functional and coherent?" },
+      { "key": "ingenuity_requirement_met", "label": "Ingenuity requirement met", "weight": 0.15, "description": "v4 principle: do starter abilities feel insufficient? Is the forge necessary, not cosmetic?" },
+      { "key": "stability", "label": "Stability", "weight": 0.10, "description": "Crashes? Stale state? Save/load works? Finish a run without reload?" },
+      { "key": "skill_inheritance_effectiveness", "label": "Skill inheritance effectiveness", "weight": 0.20, "description": "EMERGENT-SPECIFIC: did the agent productively apply inherited skills? Did it evolve or author new skills worth inheriting by the next run? Did CHANGELOG.md document the disposition of each inherited skill? This is the compound-skills hypothesis check — is the skill library compounding in usefulness?" }
+    ]
   }
 }

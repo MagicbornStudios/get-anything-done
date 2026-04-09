@@ -20,5 +20,15 @@
       "time_efficiency": 0.05,
       "human_review": 0.30
     }
+  },
+  "human_review_rubric": {
+    "version": "v1",
+    "dimensions": [
+      { "key": "playability", "label": "Playability", "weight": 0.30, "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks. Inputs responsive." },
+      { "key": "ui_polish", "label": "UI polish", "weight": 0.20, "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type visual differentiation, styled controls. Not raw ASCII or debug panels." },
+      { "key": "mechanics_implementation", "label": "Mechanics implementation", "weight": 0.20, "description": "Are the declared mechanics (combat, forge, rune crafting, resistances) functional and coherent? Do they match the design doc?" },
+      { "key": "ingenuity_requirement_met", "label": "Ingenuity requirement met", "weight": 0.20, "description": "v4 core principle: do starter abilities ACTUALLY feel insufficient? Does the forge produce spells that feel necessary rather than cosmetic? If you can reach floor 2 without crafting, the gate failed." },
+      { "key": "stability", "label": "Stability", "weight": 0.10, "description": "Does the game crash? Do scene transitions leave stale state? Does save/load work? Can you finish a run start-to-end without reload?" }
+    ]
   }
 }

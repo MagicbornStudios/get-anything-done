@@ -103,6 +103,16 @@ export interface EvalRunRecord {
         reviewed_at?: string | null;
       } & Record<string, unknown>)
     | null;
+  humanReviewNormalized: {
+    rubric_version: string;
+    dimensions: Record<string, { score: number | null; notes: string | null }>;
+    aggregate_score: number | null;
+    notes: string | null;
+    reviewed_by: string | null;
+    reviewed_at: string | null;
+    is_legacy: boolean;
+    is_empty: boolean;
+  };
   skillAccuracyBreakdown:
     | {
         expected_triggers: Array<{
@@ -144,6 +154,15 @@ export interface EvalProjectMeta {
   baseline: string | { project?: string; version?: string; source?: string } | null;
   constraints: Record<string, unknown> | null;
   scoringWeights: Record<string, number> | null;
+  humanReviewRubric: {
+    version: string;
+    dimensions: Array<{
+      key: string;
+      label: string;
+      weight: number;
+      description: string;
+    }>;
+  } | null;
 }
 
 export interface ProducedArtifacts {
@@ -202,6 +221,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": null,
       "reviewed_by": null,
       "reviewed_at": null
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": null
+        }
+      },
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
     },
     "skillAccuracyBreakdown": {
       "expected_triggers": [],
@@ -295,6 +329,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": null,
       "reviewed_at": null
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output."
+        }
+      },
+      "aggregate_score": null,
+      "notes": "API-INTERRUPTED after phase 01 + phase 02 completed cleanly. Scaffold dist exists but is a static title screen with no game logic. 875 lines of TypeScript authored across types, state, and content data modules — all pure-data, no scene rendering, no interactivity beyond the static title. Compare directly to Bare v5 (45 tool uses → complete 2-floor playable game) and Emergent v4 (45 tool uses → complete 2-floor playable game + 2 new skills): GAD at 55 tool uses reached only phases 1-2 of 7. Partial data where implementation didn't finish, but the partial IS the finding. Mark with api_interrupted flag not rate_limited — cause is different (server overload not account cap) and the data is more meaningful than a true rate-limit because 55 > 45 uses still produced less shippable output.",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -363,6 +412,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": null,
       "reviewed_by": null,
       "reviewed_at": null
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": null
+        }
+      },
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
     },
     "skillAccuracyBreakdown": {
       "expected_triggers": [
@@ -467,6 +531,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.916
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -549,6 +623,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Blank screen, no UI renders, no main menu, no playable content. Systems may exist in code but nothing visible. Eval must require vertical slice with playable demo.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T01:01:12.987Z"
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0,
+          "notes": "Blank screen, no UI renders, no main menu, no playable content. Systems may exist in code but nothing visible. Eval must require vertical slice with playable demo."
+        }
+      },
+      "aggregate_score": 0,
+      "notes": "Blank screen, no UI renders, no main menu, no playable content. Systems may exist in code but nothing visible. Eval must require vertical slice with playable demo.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T01:01:12.987Z",
+      "is_legacy": true,
+      "is_empty": false
     },
     "skillAccuracyBreakdown": {
       "expected_triggers": [
@@ -662,6 +751,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T02:00:00.000Z"
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0,
+          "notes": "Blank screen on file:// open. KAPLAY canvas game with ES module script requires web server. Gate criterion failed. Same failure mode as v5."
+        }
+      },
+      "aggregate_score": 0,
+      "notes": "Blank screen on file:// open. KAPLAY canvas game with ES module script requires web server. Gate criterion failed. Same failure mode as v5.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T02:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
+    },
     "skillAccuracyBreakdown": {
       "expected_triggers": [
         {
@@ -773,6 +877,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0.3,
+          "notes": "Game renders, better UI/layout than other evals. But game loop is broken — after combat, player gets stuck with no navigation. Cannot progress past first encounter. UI is bland but structured. Has fallback data (good defensive coding). Score 0.30: renders and partially playable but broken core loop."
+        }
+      },
+      "aggregate_score": 0.3,
+      "notes": "Game renders, better UI/layout than other evals. But game loop is broken — after combat, player gets stuck with no navigation. Cannot progress past first encounter. UI is bland but structured. Has fallback data (good defensive coding). Score 0.30: renders and partially playable but broken core loop.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T03:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
+    },
     "skillAccuracyBreakdown": {
       "expected_triggers": [
         {
@@ -882,6 +1001,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0.2,
+          "notes": "Better particle effects on main menu and better colors than previous GAD runs. However, crafting system broke the game when used (unusable). Old ASCII text design for map/spells/bags menus. Hard to read text. Added icons but didn't search for sourced sprites. 0 commits — rate limit hit before agent could finalize. Score 0.20: has some visual improvements but broken crafting gates it."
+        }
+      },
+      "aggregate_score": 0.2,
+      "notes": "Better particle effects on main menu and better colors than previous GAD runs. However, crafting system broke the game when used (unusable). Old ASCII text design for map/spells/bags menus. Hard to read text. Added icons but didn't search for sourced sprites. 0 commits — rate limit hit before agent could finalize. Score 0.20: has some visual improvements but broken crafting gates it.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T06:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": 0.02300000000000002,
@@ -973,6 +1107,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": null,
       "reviewed_at": null
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": "RATE LIMITED after full phase-01 scaffold + phase-02 task 01. Dist builds successfully (only one of three conditions to produce a working build). VERIFICATION.md shows the agent self-verified phase 01 as PASS before continuing. Cleanest GAD execution captured — planning overhead visible (23 tasks planned in 14 minutes) but implementation depth limited by rate budget. Freedom-hypothesis signal: GAD spent tokens on planning, bare on direct implementation, neither reached the gates. DO NOT include in cross-round comparisons against completed runs."
+        }
+      },
+      "aggregate_score": null,
+      "notes": "RATE LIMITED after full phase-01 scaffold + phase-02 task 01. Dist builds successfully (only one of three conditions to produce a working build). VERIFICATION.md shows the agent self-verified phase 01 as PASS before continuing. Cleanest GAD execution captured — planning overhead visible (23 tasks planned in 14 minutes) but implementation depth limited by rate budget. Freedom-hypothesis signal: GAD spent tokens on planning, bare on direct implementation, neither reached the gates. DO NOT include in cross-round comparisons against completed runs.",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -1055,6 +1204,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Main menu renders with New Game button visible. Cannot start game — clicking New Game does not progress. Broken build. Score 0.10 for rendering menu only.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T02:00:00.000Z"
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0.1,
+          "notes": "Main menu renders with New Game button visible. Cannot start game — clicking New Game does not progress. Broken build. Score 0.10 for rendering menu only."
+        }
+      },
+      "aggregate_score": 0.1,
+      "notes": "Main menu renders with New Game button visible. Cannot start game — clicking New Game does not progress. Broken build. Score 0.10 for rendering menu only.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T02:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
     },
     "skillAccuracyBreakdown": null,
     "derived": {
@@ -1139,6 +1303,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0.5,
+          "notes": "Most playable game of all evals. Full game loop works: title → new game → rooms → combat → dialogue → navigation. UX and flow are good. UI is very ASCII/plain — needs spacing, icons, better styling. Color coding is good. No spell crafting despite rune system in requirements. Rest room doesn't offer forge. Score 0.50: playable vertical slice but visually rough."
+        }
+      },
+      "aggregate_score": 0.5,
+      "notes": "Most playable game of all evals. Full game loop works: title → new game → rooms → combat → dialogue → navigation. UX and flow are good. UI is very ASCII/plain — needs spacing, icons, better styling. Color coding is good. No spell crafting despite rune system in requirements. Rest room doesn't offer forge. Score 0.50: playable vertical slice but visually rough.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T03:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": 0.10099999999999998,
@@ -1214,6 +1393,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Best UI/UX of all eval runs by far. Most enjoyable and playable. Functional game loop with combat and dialogue. Missing: floor progression after boss (can grind same floor), no clear spell crafting path. Regressed on commit discipline under pressure (1 giant commit vs v2's 6). Score 0.70: most enjoyable game across all experiments.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0.7,
+          "notes": "Best UI/UX of all eval runs by far. Most enjoyable and playable. Functional game loop with combat and dialogue. Missing: floor progression after boss (can grind same floor), no clear spell crafting path. Regressed on commit discipline under pressure (1 giant commit vs v2's 6). Score 0.70: most enjoyable game across all experiments."
+        }
+      },
+      "aggregate_score": 0.7,
+      "notes": "Best UI/UX of all eval runs by far. Most enjoyable and playable. Functional game loop with combat and dialogue. Missing: floor progression after boss (can grind same floor), no clear spell crafting path. Regressed on commit discipline under pressure (1 giant commit vs v2's 6). Score 0.70: most enjoyable game across all experiments.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T06:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
     },
     "skillAccuracyBreakdown": null,
     "derived": {
@@ -1304,6 +1498,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": null,
       "reviewed_at": null
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": "RATE LIMITED before completion. 6 source files written, vite build succeeds manually (54 KB bundle). worklog.md shows 10-step plan covering all 4 gates. Implementation depth: step 1 of 10 complete. DO NOT include in cross-round comparisons against completed runs."
+        }
+      },
+      "aggregate_score": null,
+      "notes": "RATE LIMITED before completion. 6 source files written, vite build succeeds manually (54 KB bundle). worklog.md shows 10-step plan covering all 4 gates. Implementation depth: step 1 of 10 complete. DO NOT include in cross-round comparisons against completed runs.",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -1365,6 +1574,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": null,
       "reviewed_by": null,
       "reviewed_at": null
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": null
+        }
+      },
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
     },
     "skillAccuracyBreakdown": {
       "expected_triggers": [],
@@ -1445,6 +1669,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0.1,
+          "notes": "Main menu renders and recognizes saved game state (improvement over bare v1). But game crashes with 'Styled text error: unclosed tags START' when entering gameplay. Cannot play. Score 0.10: better than blank screen, menu works, but game is broken."
+        }
+      },
+      "aggregate_score": 0.1,
+      "notes": "Main menu renders and recognizes saved game state (improvement over bare v1). But game crashes with 'Styled text error: unclosed tags START' when entering gameplay. Cannot play. Score 0.10: better than blank screen, menu works, but game is broken.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T03:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": 0.20299999999999999,
@@ -1523,6 +1762,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": "Solid crafting system — forge functional with more authored content than other runs. Playable but no floor progression after boss. No way to train or test crafted spells. Maintained 2 phase commits even under rate limit pressure (the only condition that did). UI is medium quality — better than GAD v8, worse than bare v3. Score 0.50: most disciplined under pressure with functional crafting.",
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": 0.5,
+          "notes": "Solid crafting system — forge functional with more authored content than other runs. Playable but no floor progression after boss. No way to train or test crafted spells. Maintained 2 phase commits even under rate limit pressure (the only condition that did). UI is medium quality — better than GAD v8, worse than bare v3. Score 0.50: most disciplined under pressure with functional crafting."
+        }
+      },
+      "aggregate_score": 0.5,
+      "notes": "Solid crafting system — forge functional with more authored content than other runs. Playable but no floor progression after boss. No way to train or test crafted spells. Maintained 2 phase commits even under rate limit pressure (the only condition that did). UI is medium quality — better than GAD v8, worse than bare v3. Score 0.50: most disciplined under pressure with functional crafting.",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-08T06:00:00.000Z",
+      "is_legacy": true,
+      "is_empty": false
     },
     "skillAccuracyBreakdown": null,
     "derived": {
@@ -1614,6 +1868,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": null,
       "reviewed_at": null
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": "RATE LIMITED before main.ts entry point was written. Build fails objectively at link time. Architectural signal: emergent agent wrote 6 modular files before the integration layer, matching the state-composition inherited skill's pattern. Interesting emergence data point despite incomplete run. DO NOT include in cross-round comparisons against completed runs."
+        }
+      },
+      "aggregate_score": null,
+      "notes": "RATE LIMITED before main.ts entry point was written. Build fails objectively at link time. Architectural signal: emergent agent wrote 6 modular files before the integration layer, matching the state-composition inherited skill's pattern. Interesting emergence data point despite incomplete run. DO NOT include in cross-round comparisons against completed runs.",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -1675,6 +1944,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": null,
       "reviewed_at": null
     },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": null
+        }
+      },
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": {
       "expected_triggers": [],
       "accuracy": null
@@ -1716,6 +2000,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.978
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -1776,6 +2070,21 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "notes": null,
       "reviewed_by": null,
       "reviewed_at": null
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "legacy-v0",
+      "dimensions": {
+        "overall": {
+          "score": null,
+          "notes": null
+        }
+      },
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
     },
     "skillAccuracyBreakdown": {
       "expected_triggers": [],
@@ -1847,6 +2156,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.944
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -1925,6 +2244,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "auto_composite": 0.996
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": {
       "expected_triggers": [
         {
@@ -2007,6 +2336,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.89
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -2088,6 +2427,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.821
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": {
       "expected_triggers": [
         {
@@ -2191,6 +2540,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.928
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": null,
     "derived": {
       "divergence_score": null,
@@ -2269,6 +2628,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "auto_composite": 0.83
     },
     "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
     "skillAccuracyBreakdown": {
       "expected_triggers": [
         {
@@ -2447,7 +2816,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "token_reduction": 0.4,
       "context_completeness": 0.35,
       "information_loss": 0.25
-    }
+    },
+    "humanReviewRubric": null
   },
   {
     "id": "escape-the-dungeon",
@@ -2467,6 +2837,41 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "skill_accuracy": 0.1,
       "time_efficiency": 0.05,
       "human_review": 0.3
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "playability",
+          "label": "Playability",
+          "weight": 0.3,
+          "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks. Inputs responsive."
+        },
+        {
+          "key": "ui_polish",
+          "label": "UI polish",
+          "weight": 0.2,
+          "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type visual differentiation, styled controls. Not raw ASCII or debug panels."
+        },
+        {
+          "key": "mechanics_implementation",
+          "label": "Mechanics implementation",
+          "weight": 0.2,
+          "description": "Are the declared mechanics (combat, forge, rune crafting, resistances) functional and coherent? Do they match the design doc?"
+        },
+        {
+          "key": "ingenuity_requirement_met",
+          "label": "Ingenuity requirement met",
+          "weight": 0.2,
+          "description": "v4 core principle: do starter abilities ACTUALLY feel insufficient? Does the forge produce spells that feel necessary rather than cosmetic? If you can reach floor 2 without crafting, the gate failed."
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.1,
+          "description": "Does the game crash? Do scene transitions leave stale state? Does save/load work? Can you finish a run start-to-end without reload?"
+        }
+      ]
     }
   },
   {
@@ -2488,6 +2893,41 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "iteration_evidence": 0.1,
       "time_efficiency": 0.05,
       "human_review": 0.3
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "playability",
+          "label": "Playability",
+          "weight": 0.3,
+          "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks."
+        },
+        {
+          "key": "ui_polish",
+          "label": "UI polish",
+          "weight": 0.2,
+          "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type differentiation, styled controls. No raw ASCII."
+        },
+        {
+          "key": "mechanics_implementation",
+          "label": "Mechanics implementation",
+          "weight": 0.2,
+          "description": "Are combat, forge, rune crafting, resistances functional and coherent?"
+        },
+        {
+          "key": "ingenuity_requirement_met",
+          "label": "Ingenuity requirement met",
+          "weight": 0.2,
+          "description": "v4 principle: do starter abilities feel insufficient? Is the forge necessary, not cosmetic?"
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.1,
+          "description": "Crashes? Stale state? Save/load works? Finish a run without reload?"
+        }
+      ]
     }
   },
   {
@@ -2511,6 +2951,47 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "iteration_evidence": 0.05,
       "time_efficiency": 0.05,
       "human_review": 0.3
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "playability",
+          "label": "Playability",
+          "weight": 0.25,
+          "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks."
+        },
+        {
+          "key": "ui_polish",
+          "label": "UI polish",
+          "weight": 0.15,
+          "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type differentiation, styled controls. No raw ASCII."
+        },
+        {
+          "key": "mechanics_implementation",
+          "label": "Mechanics implementation",
+          "weight": 0.15,
+          "description": "Are combat, forge, rune crafting, resistances functional and coherent?"
+        },
+        {
+          "key": "ingenuity_requirement_met",
+          "label": "Ingenuity requirement met",
+          "weight": 0.15,
+          "description": "v4 principle: do starter abilities feel insufficient? Is the forge necessary, not cosmetic?"
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.1,
+          "description": "Crashes? Stale state? Save/load works? Finish a run without reload?"
+        },
+        {
+          "key": "skill_inheritance_effectiveness",
+          "label": "Skill inheritance effectiveness",
+          "weight": 0.2,
+          "description": "EMERGENT-SPECIFIC: did the agent productively apply inherited skills? Did it evolve or author new skills worth inheriting by the next run? Did CHANGELOG.md document the disposition of each inherited skill? This is the compound-skills hypothesis check — is the skill library compounding in usefulness?"
+        }
+      ]
     }
   },
   {
@@ -2536,7 +3017,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "iteration_evidence": 0.1,
       "time_efficiency": 0.05,
       "human_review": 0.3
-    }
+    },
+    "humanReviewRubric": null
   },
   {
     "id": "etd-brownfield-emergent",
@@ -2563,7 +3045,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "iteration_evidence": 0.05,
       "time_efficiency": 0.05,
       "human_review": 0.3
-    }
+    },
+    "humanReviewRubric": null
   },
   {
     "id": "etd-brownfield-gad",
@@ -2587,7 +3070,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "skill_accuracy": 0.1,
       "time_efficiency": 0.05,
       "human_review": 0.3
-    }
+    },
+    "humanReviewRubric": null
   },
   {
     "id": "gad-planning-loop",
@@ -2597,7 +3081,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "workflow": null,
     "baseline": null,
     "constraints": null,
-    "scoringWeights": null
+    "scoringWeights": null,
+    "humanReviewRubric": null
   },
   {
     "id": "planning-migration",
@@ -2607,7 +3092,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "workflow": null,
     "baseline": "planning-sink-backup-20260404",
     "constraints": null,
-    "scoringWeights": null
+    "scoringWeights": null,
+    "humanReviewRubric": null
   },
   {
     "id": "portfolio-bare",
@@ -2626,7 +3112,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "task_alignment": 0.25,
       "state_hygiene": 0.2,
       "decision_coverage": 0.15
-    }
+    },
+    "humanReviewRubric": null
   },
   {
     "id": "project-migration",
@@ -2636,7 +3123,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "workflow": null,
     "baseline": null,
     "constraints": null,
-    "scoringWeights": null
+    "scoringWeights": null,
+    "humanReviewRubric": null
   },
   {
     "id": "subagent-utility",
@@ -2646,7 +3134,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "workflow": null,
     "baseline": null,
     "constraints": null,
-    "scoringWeights": null
+    "scoringWeights": null,
+    "humanReviewRubric": null
   }
 ];
 
