@@ -7,6 +7,10 @@ description: Execute a planned phase by following PLAN.md tasks atomically — c
 
 Execute all tasks in a planned phase, following PLAN.md atomically. Each task is a discrete unit: implement → verify → commit → update planning docs → next task.
 
+**Trace marker (when running under eval hooks):** write `execute-phase` to
+`.planning/.trace-active-skill` at start, clear at end. See
+`skills/create-skill/SKILL.md` → "Trace marker contract".
+
 The goal is uninterrupted execution from first task to phase close. If the kickoff and plan are solid, this should run to completion without needing to ask questions.
 
 ## Step 1: Bootstrap context

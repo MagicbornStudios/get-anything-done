@@ -1029,6 +1029,14 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       requirementsVersion: d.requirements_version ?? "unknown",
       date: d.date ?? null,
       gadVersion: d.gad_version ?? null,
+      // Phase 25 trace schema v4 fields — framework version stamps
+      traceSchemaVersion: typeof d.trace_schema_version === "number" ? d.trace_schema_version : 3,
+      frameworkVersion: d.framework_version ?? null,
+      frameworkCommit: d.framework_commit ?? null,
+      frameworkBranch: d.framework_branch ?? null,
+      frameworkCommitTs: d.framework_commit_ts ?? null,
+      frameworkStamp: d.framework_stamp ?? null,
+      traceEvents: Array.isArray(d.trace_events) ? d.trace_events : null,
       evalType: d.eval_type ?? "implementation",
       contextMode: d.context_mode ?? null,
       timing: d.timing ?? null,
@@ -1042,6 +1050,52 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       skillAccuracyBreakdown,
     };
   });
+
+  // ---- Derived metrics (phase 27 track 3, task 27-11) ----
+  // Compute per-run derived metrics from existing v3 fields. Phase-25-dependent
+  // metrics (tool_use_mix, skill_to_tool_ratio, subagent_utilization) stub to
+  // null until trace v4 events are available.
+  for (const r of records) {
+    const composite = r.scores.composite ?? 0;
+    const humanScore = r.humanReview?.score;
+    const pq = r.planningQuality;
+    const timing = r.timing;
+    const ga = r.gitAnalysis;
+    const produced = extras.producedArtifacts?.[`${r.project}/${r.version}`];
+
+    r.derived = {
+      // |composite - human_review| — flags runs where process metrics lie
+      divergence_score:
+        typeof humanScore === "number"
+          ? Math.abs(composite - humanScore)
+          : null,
+      // tasks_planned - tasks_completed
+      plan_adherence_delta:
+        pq && typeof pq.tasks_planned === "number" && typeof pq.tasks_completed === "number"
+          ? pq.tasks_planned - pq.tasks_completed
+          : null,
+      // total produced skills + agents + planning files / duration_minutes
+      produced_artifact_density:
+        produced && timing && typeof timing.duration_minutes === "number" && timing.duration_minutes > 0
+          ? (
+              (produced.skillFiles?.length ?? 0) +
+              (produced.agentFiles?.length ?? 0) +
+              (produced.planningFiles?.length ?? 0)
+            ) / timing.duration_minutes
+          : null,
+      // Stubbed — require trace v4 events (phase 25)
+      tool_use_mix: null,
+      skill_to_tool_ratio: null,
+      subagent_utilization: null,
+      // total_commits
+      total_commits: ga?.total_commits ?? null,
+      // batch vs atomic — 1 means all atomic, 0 means all batched
+      commit_discipline:
+        ga && typeof ga.total_commits === "number" && ga.total_commits > 0
+          ? (ga.task_id_commits ?? 0) / ga.total_commits
+          : null,
+    };
+  }
 
   const playable = {};
   for (const r of records) {
@@ -1080,6 +1134,13 @@ export interface EvalRunRecord {
   requirementsVersion: string;
   date: string | null;
   gadVersion: string | null;
+  traceSchemaVersion: number;
+  frameworkVersion: string | null;
+  frameworkCommit: string | null;
+  frameworkBranch: string | null;
+  frameworkCommitTs: string | null;
+  frameworkStamp: string | null;
+  traceEvents: Array<Record<string, unknown>> | null;
   evalType: string;
   contextMode: string | null;
   timing:
@@ -1132,6 +1193,16 @@ export interface EvalRunRecord {
         decisions_captured?: number | null;
       } & Record<string, unknown>)
     | null;
+  derived?: {
+    divergence_score: number | null;
+    plan_adherence_delta: number | null;
+    produced_artifact_density: number | null;
+    tool_use_mix: Record<string, number> | null;
+    skill_to_tool_ratio: number | null;
+    subagent_utilization: number | null;
+    total_commits: number | null;
+    commit_discipline: number | null;
+  };
   scores: EvalScores;
   humanReview:
     | ({

@@ -39,6 +39,37 @@ game/.planning/skills/<kebab-name>.md
 
 One skill per file. Kebab-case filename matching the skill's topic.
 
+## Trace marker contract (for evals)
+
+When running inside an eval with GAD trace hooks installed (`gad install hooks`),
+**any skill you author should write its id to the trace marker file at start and
+clear it at end.** This is how the hook handler attributes subsequent tool calls
+to the active skill and emits a discrete `skill_invocation` event on each
+transition.
+
+```sh
+# At the start of the skill
+echo "my-skill-id" > .planning/.trace-active-skill
+
+# ... skill body runs, tool calls get attributed ...
+
+# At the end of the skill (or before handing control back)
+echo -n "" > .planning/.trace-active-skill
+```
+
+Nested skills: when skill X invokes skill Y, Y overwrites the marker with its
+own id. The hook handler records `parent: "X"` on the `skill_invocation` event
+for Y, then when Y finishes and restores the marker to "X", another transition
+event is emitted. The lineage is preserved as a chain of parent pointers.
+
+**The agent never reads the marker directly.** The hook is the source of truth
+for the event stream. The marker is a one-file write per skill start, zero
+ceremony beyond that. No other coordination required.
+
+Not running inside an eval? The marker file is harmless — it's just an
+untracked file in `.planning/` that nothing reads. Write to it freely; it's
+only consumed by `gad-trace-hook.cjs` when hooks are installed.
+
 ## YAML frontmatter format (critical)
 
 Every skill starts with a YAML frontmatter block (`---` delimiters) containing `name` and

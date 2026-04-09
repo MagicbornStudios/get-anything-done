@@ -7,6 +7,10 @@ description: Plan a phase using the GAD methodology — creates a KICKOFF.md wit
 
 Creates a KICKOFF.md (phase contract) and PLAN.md (task list) for a phase from the roadmap. The kickoff prevents vague phases from producing wrong implementations. The plan breaks the goal into concrete, verifiable tasks.
 
+**Trace marker (when running under eval hooks):** write `plan-phase` to
+`.planning/.trace-active-skill` at start, clear at end. See
+`skills/create-skill/SKILL.md` → "Trace marker contract" for the why.
+
 ## Step 1: Bootstrap context
 
 ```bash

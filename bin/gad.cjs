@@ -1632,6 +1632,37 @@ const evalDiff = defineCommand({
       outputError(`Eval project '${args.project}' not found.`);
     }
 
+    // Framework version mismatch check (decisions gad-51, gad-54). Load both
+    // TRACE.json files and compare their framework commit. If they differ,
+    // emit a prominent warning so the reader knows the score delta may
+    // reflect framework changes rather than agent behaviour.
+    try {
+      const t1Path = path.join(projectDir, args.v1, 'TRACE.json');
+      const t2Path = path.join(projectDir, args.v2, 'TRACE.json');
+      if (fs.existsSync(t1Path) && fs.existsSync(t2Path)) {
+        const t1 = JSON.parse(fs.readFileSync(t1Path, 'utf8'));
+        const t2 = JSON.parse(fs.readFileSync(t2Path, 'utf8'));
+        const c1 = t1.framework_commit || null;
+        const c2 = t2.framework_commit || null;
+        const v1Stamp = t1.framework_stamp || t1.framework_version || '(unstamped)';
+        const v2Stamp = t2.framework_stamp || t2.framework_version || '(unstamped)';
+        if (c1 && c2 && c1 !== c2) {
+          console.log('\n⚠  FRAMEWORK MISMATCH');
+          console.log(`   ${args.v1} ran against ${v1Stamp}`);
+          console.log(`   ${args.v2} ran against ${v2Stamp}`);
+          console.log('   Score deltas below may reflect framework changes, not agent changes.');
+          console.log('   See skills/framework-upgrade/SKILL.md for the re-run procedure.');
+        } else if (!c1 || !c2) {
+          console.log('\n⚠  At least one run has no framework_commit stamp.');
+          console.log('   Pre-v4 TRACE.json files predate framework versioning (decision gad-51).');
+          console.log('   Cross-version comparisons against unstamped runs are unreliable.');
+        }
+      }
+    } catch (err) {
+      // Never block the diff output on the framework check.
+      process.stderr.write(`framework-check: ${err.message}\n`);
+    }
+
     try {
       const table = diffVersions(projectDir, args.v1, args.v2);
       console.log('\n' + table);
@@ -2014,11 +2045,23 @@ const evalTraceInit = defineCommand({
     const versionDir = path.join(projDir, `v${nextVersion}`);
     fs.mkdirSync(versionDir, { recursive: true });
 
+    // Framework version stamping — decisions gad-51, gad-54. Every TRACE.json
+    // records the commit it ran against so cross-version comparisons can
+    // distinguish "agent improved" from "framework changed".
+    const { getFrameworkVersion: _getFv } = require('../lib/framework-version.cjs');
+    const fv = _getFv();
+
     const trace = {
       eval: args.project,
       version: `v${nextVersion}`,
       date: new Date().toISOString().split('T')[0],
       gad_version: require('../package.json').version || '1.0.0',
+      framework_version: fv.version,
+      framework_commit: fv.commit,
+      framework_branch: fv.branch,
+      framework_commit_ts: fv.commit_ts,
+      framework_stamp: fv.stamp,
+      trace_schema_version: 4,
       eval_type: 'implementation',
       context_mode: args.mode,
       timing: {
@@ -5477,6 +5520,34 @@ const worktreeCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// gad version — framework version info for trace stamping (phase 25 task 25-12)
+// ---------------------------------------------------------------------------
+
+const { getFrameworkVersion } = require('../lib/framework-version.cjs');
+
+const versionCmd = defineCommand({
+  meta: { name: 'version', description: 'Print GAD framework version + git commit/branch for trace stamping' },
+  args: {
+    json: { type: 'boolean', description: 'Emit JSON for consumption by the eval preserver' },
+  },
+  run({ args }) {
+    const info = getFrameworkVersion();
+    if (args.json) {
+      process.stdout.write(JSON.stringify(info, null, 2) + '\n');
+      return;
+    }
+    console.log(`\nGAD framework version:`);
+    console.log(`  version:     ${info.version || '(unknown)'}`);
+    console.log(`  methodology: ${info.methodology_version || '(unknown)'}`);
+    console.log(`  commit:      ${info.commit || '(unknown)'}`);
+    console.log(`  branch:      ${info.branch || '(unknown)'}`);
+    console.log(`  commit_ts:   ${info.commit_ts || '(unknown)'}`);
+    console.log(`  stamp:       ${info.stamp}`);
+    console.log('');
+  },
+});
+
+// ---------------------------------------------------------------------------
 // Install subcommand — gad install hooks, gad install all, gad uninstall hooks
 // ---------------------------------------------------------------------------
 //
@@ -5680,6 +5751,7 @@ const main = defineCommand({
     'migrate-schema': migrateSchema,
     install: installCmd,
     uninstall: uninstallCmd,
+    version: versionCmd,
   },
 });
 

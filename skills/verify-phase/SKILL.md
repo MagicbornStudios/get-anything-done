@@ -7,6 +7,10 @@ description: Verify a completed phase achieved its goals. Runs build checks, val
 
 Checks whether a completed phase actually achieved its goals — not just that tasks were marked done.
 
+**Trace marker (when running under eval hooks):** write `verify-phase` to
+`.planning/.trace-active-skill` at start, clear at end. See
+`skills/create-skill/SKILL.md` → "Trace marker contract".
+
 ## When to use
 
 - After all tasks in a phase are marked done

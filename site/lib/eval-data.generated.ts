@@ -25,6 +25,13 @@ export interface EvalRunRecord {
   requirementsVersion: string;
   date: string | null;
   gadVersion: string | null;
+  traceSchemaVersion: number;
+  frameworkVersion: string | null;
+  frameworkCommit: string | null;
+  frameworkBranch: string | null;
+  frameworkCommitTs: string | null;
+  frameworkStamp: string | null;
+  traceEvents: Array<Record<string, unknown>> | null;
   evalType: string;
   contextMode: string | null;
   timing:
@@ -77,6 +84,16 @@ export interface EvalRunRecord {
         decisions_captured?: number | null;
       } & Record<string, unknown>)
     | null;
+  derived?: {
+    divergence_score: number | null;
+    plan_adherence_delta: number | null;
+    produced_artifact_density: number | null;
+    tool_use_mix: Record<string, number> | null;
+    skill_to_tool_ratio: number | null;
+    subagent_utilization: number | null;
+    total_commits: number | null;
+    commit_discipline: number | null;
+  };
   scores: EvalScores;
   humanReview:
     | ({
@@ -144,6 +161,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-06",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -182,6 +206,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "skillAccuracyBreakdown": {
       "expected_triggers": [],
       "accuracy": null
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
+      "commit_discipline": null
     }
   },
   {
@@ -191,6 +225,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-06",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -263,6 +304,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
         }
       ],
       "accuracy": 0.6
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 1,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 4,
+      "commit_discipline": 0.25
     }
   },
   {
@@ -272,6 +323,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -320,7 +378,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.916
     },
     "humanReview": null,
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 19,
+      "commit_discipline": 1
+    }
   },
   {
     "project": "escape-the-dungeon",
@@ -329,6 +397,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -420,6 +495,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
         }
       ],
       "accuracy": 1
+    },
+    "derived": {
+      "divergence_score": 0.8123,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 11,
+      "commit_discipline": 0.9090909090909091
     }
   },
   {
@@ -429,6 +514,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -515,6 +607,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
         }
       ],
       "accuracy": 0.833
+    },
+    "derived": {
+      "divergence_score": 0.347,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 13,
+      "commit_discipline": 0.8461538461538461
     }
   },
   {
@@ -524,6 +626,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -609,6 +718,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
         }
       ],
       "accuracy": 0.833
+    },
+    "derived": {
+      "divergence_score": 0.36800000000000005,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": 0.08333333333333333,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 21,
+      "commit_discipline": 0.8095238095238095
     }
   },
   {
@@ -618,6 +737,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "v3",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -667,7 +793,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
     },
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": 0.02300000000000002,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 0,
+      "commit_discipline": null
+    }
   },
   {
     "project": "escape-the-dungeon-bare",
@@ -676,6 +812,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -733,7 +876,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T02:00:00.000Z"
     },
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": 0.098,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": 0,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 2,
+      "commit_discipline": 0
+    }
   },
   {
     "project": "escape-the-dungeon-bare",
@@ -742,6 +895,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -799,7 +959,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
     },
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": 0.10099999999999998,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": 0,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 6,
+      "commit_discipline": 0
+    }
   },
   {
     "project": "escape-the-dungeon-bare",
@@ -808,6 +978,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "v3",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -858,7 +1035,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
     },
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": 0.17399999999999993,
+      "plan_adherence_delta": null,
+      "produced_artifact_density": 0,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 1,
+      "commit_discipline": 0
+    }
   },
   {
     "project": "escape-the-dungeon-emergent",
@@ -867,6 +1054,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -917,7 +1111,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T03:00:00.000Z"
     },
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": 0.20299999999999999,
+      "plan_adherence_delta": null,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 2,
+      "commit_discipline": 0
+    }
   },
   {
     "project": "escape-the-dungeon-emergent",
@@ -926,6 +1130,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "v3",
     "date": "2026-04-08",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -979,7 +1190,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "reviewed_by": "human",
       "reviewed_at": "2026-04-08T06:00:00.000Z"
     },
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": 0.02200000000000002,
+      "plan_adherence_delta": null,
+      "produced_artifact_density": 0,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 2,
+      "commit_discipline": 0
+    }
   },
   {
     "project": "planning-migration",
@@ -988,6 +1209,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": null,
     "gadVersion": null,
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": null,
     "timing": null,
@@ -1000,7 +1228,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.978
     },
     "humanReview": null,
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": null,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
+      "commit_discipline": null
+    }
   },
   {
     "project": "portfolio-bare",
@@ -1009,6 +1247,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1047,6 +1292,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "skillAccuracyBreakdown": {
       "expected_triggers": [],
       "accuracy": null
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
+      "commit_discipline": null
     }
   },
   {
@@ -1056,6 +1311,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1097,7 +1359,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.944
     },
     "humanReview": null,
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 13,
+      "commit_discipline": 0.9230769230769231
+    }
   },
   {
     "project": "portfolio-bare",
@@ -1106,6 +1378,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1192,6 +1471,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
         }
       ],
       "accuracy": 1
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 19,
+      "commit_discipline": 0.631578947368421
     }
   },
   {
@@ -1201,6 +1490,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-04",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 2,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1223,7 +1519,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.89
     },
     "humanReview": null,
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": null,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
+      "commit_discipline": null
+    }
   },
   {
     "project": "reader-workspace",
@@ -1232,6 +1538,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1316,6 +1629,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
         }
       ],
       "accuracy": 0.8
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 12,
+      "commit_discipline": 1
     }
   },
   {
@@ -1325,6 +1648,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1373,7 +1703,17 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "composite": 0.928
     },
     "humanReview": null,
-    "skillAccuracyBreakdown": null
+    "skillAccuracyBreakdown": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 37,
+      "commit_discipline": 1
+    }
   },
   {
     "project": "reader-workspace",
@@ -1382,6 +1722,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "requirementsVersion": "unknown",
     "date": "2026-04-07",
     "gadVersion": "1.32.0",
+    "traceSchemaVersion": 3,
+    "frameworkVersion": null,
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1468,6 +1815,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
         }
       ],
       "accuracy": 1
+    },
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": 0,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": 23,
+      "commit_discipline": 0.4782608695652174
     }
   }
 ];
