@@ -1,0 +1,87 @@
+{
+  "_schema": {
+    "file": "data/bugs.json",
+    "purpose": "Bugs observed in eval runs. Tracked over time across versions so regressions / fixes can be compared.",
+    "written_by": "human (after playtest)",
+    "read_by": "site prebuild + site pages",
+    "shape": {
+      "bugs[]": {
+        "id": "stable kebab-case slug",
+        "title": "short description",
+        "project": "eval project id",
+        "version": "version tag where observed (e.g. v5)",
+        "observed_on": "ISO date",
+        "severity": "low | medium | high | critical",
+        "status": "open | fixed | wontfix | reproduced-elsewhere",
+        "description": "what happens",
+        "expected": "what should happen",
+        "reproduction": "steps to reproduce",
+        "related_requirement": "Rvx.yy tag from requirements addendum, optional",
+        "related_runs": "array of other {project, version} where the same bug was observed, optional"
+      }
+    }
+  },
+  "_last_updated": "2026-04-09",
+  "bugs": [
+    {
+      "id": "rune-forge-same-rune-twice",
+      "title": "Rune forge allows same rune twice in a single spell, boosts affinity twice",
+      "project": "escape-the-dungeon-bare",
+      "version": "v5",
+      "observed_on": "2026-04-09",
+      "severity": "medium",
+      "status": "open",
+      "description": "In the rune forge, the player can select the same rune twice as ingredients for a single spell. When crafted, the affinity gain for that rune is applied twice as if two distinct rune slots were consumed. The resulting spell also treats the duplicate as a meaningful second ingredient.",
+      "expected": "Selecting a rune that is already in the current spell's ingredient list should either reject the second click or toggle that rune off. Affinity gain should be per-unique-rune-slot. Duplicate runes across DIFFERENT spells in the player's spellbook remain fine and are explicitly allowed.",
+      "reproduction": "Open forge. Select Fire rune. Select Fire rune again. Craft. Observe that Fire affinity increases by 2x the normal amount for a single-rune craft.",
+      "related_requirement": "R-v5.20",
+      "related_runs": []
+    },
+    {
+      "id": "notifications-persist-across-sessions",
+      "title": "Toast notifications persist above the screen across new game sessions",
+      "project": "escape-the-dungeon-emergent",
+      "version": "v4",
+      "observed_on": "2026-04-09",
+      "severity": "medium",
+      "status": "open",
+      "description": "Notifications like 'trained fire affinity' appear and never auto-dismiss. Starting a new game does not clear the backlog; they remain above the latest build's UI.",
+      "expected": "Every notification auto-dismisses after a short timeout (3-5s) or has an explicit close control. Starting a new game clears the notification queue. Page reload clears stale notifications.",
+      "reproduction": "Play until a notification appears. Do not dismiss. Start a new game. Observe notification still overlays the new session.",
+      "related_requirement": "R-v5.10",
+      "related_runs": []
+    },
+    {
+      "id": "continue-after-death-greyed-out",
+      "title": "Continue button disabled after death — no save checkpoints",
+      "project": "escape-the-dungeon-emergent",
+      "version": "v4",
+      "observed_on": "2026-04-09",
+      "severity": "high",
+      "status": "open",
+      "description": "On player death the game ends and Continue is no longer selectable. No automatic checkpoint appears to have been created during the run.",
+      "expected": "Room-clear or floor-clear creates a checkpoint. On death, Continue loads the most recent checkpoint.",
+      "reproduction": "Start new game. Die in any encounter. Return to title. Continue is greyed out.",
+      "related_requirement": "R-v5.09",
+      "related_runs": []
+    },
+    {
+      "id": "glitchy-button-click-redraws",
+      "title": "Glitchy redraws on button clicks across all round-4 builds",
+      "project": "escape-the-dungeon",
+      "version": "v10",
+      "observed_on": "2026-04-09",
+      "severity": "medium",
+      "status": "open",
+      "description": "UI visibly glitches/flickers on button clicks as if full per-tick redraws are running. Observed consistently across GAD v9, GAD v10, Bare v5, and Emergent v4.",
+      "expected": "Event-driven rendering only. No redraw loops firing at a fixed rate regardless of state changes. React/DOM reconciles on state change; requestAnimationFrame only runs when animation is active.",
+      "reproduction": "Click any menu button in any round-4 build. Observe brief UI flicker.",
+      "related_requirement": "R-v5.21",
+      "related_runs": [
+        { "project": "escape-the-dungeon", "version": "v9" },
+        { "project": "escape-the-dungeon-bare", "version": "v5" },
+        { "project": "escape-the-dungeon-emergent", "version": "v4" }
+      ]
+    }
+  ]
+}

@@ -45,6 +45,7 @@ const SKILLS_DIR = path.join(REPO_ROOT, "skills");
 const AGENTS_DIR = path.join(REPO_ROOT, "agents");
 const COMMANDS_DIR = path.join(REPO_ROOT, "commands", "gad");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
+const DATA_DIR = path.join(REPO_ROOT, "data");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
 const DOWNLOADS_DIR = path.join(PUBLIC_DIR, "downloads");
 const REQUIREMENTS_DIR = path.join(DOWNLOADS_DIR, "requirements");
@@ -1189,6 +1190,32 @@ function loadTopSkillForRun(project, version, producedArtifacts) {
   };
 }
 
+function loadJsonDataPseudoDb() {
+  // data/ is our JSON pseudo-database (decision gad-71). Each file is self-describing
+  // with a _schema block. Missing files return null so the site renders empty states.
+  const result = { openQuestions: null, bugs: null };
+  if (!fs.existsSync(DATA_DIR)) return result;
+
+  const read = (name) => {
+    const p = path.join(DATA_DIR, name);
+    if (!fs.existsSync(p)) return null;
+    try {
+      return JSON.parse(fs.readFileSync(p, "utf8"));
+    } catch (err) {
+      console.warn(`  [data] failed to parse ${name}: ${err.message}`);
+      return null;
+    }
+  };
+
+  result.openQuestions = read("open-questions.json");
+  result.bugs = read("bugs.json");
+
+  const qCount = result.openQuestions?.questions?.length ?? 0;
+  const bCount = result.bugs?.bugs?.length ?? 0;
+  console.log(`  [data] loaded pseudo-db: ${qCount} open question(s), ${bCount} bug(s)`);
+  return result;
+}
+
 function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
   console.log("[3/4] Writing lib/eval-data.generated.ts");
   const records = traces
@@ -1509,6 +1536,43 @@ export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = ${JSON.stri
 
 export const PLAYABLE_INDEX: Record<string, string> = ${JSON.stringify(playable, null, 2)};
 
+export interface OpenQuestion {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  priority: string;
+  context: string;
+  related_decisions: string[];
+  related_requirements: string[];
+  opened_on: string;
+  resolved_on: string | null;
+  resolution: string | null;
+}
+
+export interface BugRecord {
+  id: string;
+  title: string;
+  project: string;
+  version: string;
+  observed_on: string;
+  severity: string;
+  status: string;
+  description: string;
+  expected: string;
+  reproduction: string;
+  related_requirement?: string;
+  related_runs?: Array<{ project: string; version: string }>;
+}
+
+export const OPEN_QUESTIONS: OpenQuestion[] = ${JSON.stringify(extras.pseudoDb?.openQuestions?.questions ?? [], null, 2)};
+
+export const OPEN_QUESTIONS_UPDATED: string | null = ${JSON.stringify(extras.pseudoDb?.openQuestions?._last_updated ?? null)};
+
+export const BUGS: BugRecord[] = ${JSON.stringify(extras.pseudoDb?.bugs?.bugs ?? [], null, 2)};
+
+export const BUGS_UPDATED: string | null = ${JSON.stringify(extras.pseudoDb?.bugs?._last_updated ?? null)};
+
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",
   bare: "Bare",
@@ -1575,6 +1639,7 @@ function main() {
   const evalProjects = scanEvalProjects();
   const producedArtifacts = scanProducedArtifacts();
   const traces = findTraceFiles();
+  const pseudoDb = loadJsonDataPseudoDb();
 
   writeEvalDataTs(traces, evalTemplates, gadPackTemplate, {
     planningZips,
@@ -1582,6 +1647,7 @@ function main() {
     findings: roundData.findings,
     evalProjects,
     producedArtifacts,
+    pseudoDb,
   });
   writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
   auditPlayable();

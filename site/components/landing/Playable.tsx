@@ -24,6 +24,35 @@ const WORKFLOW_TINT: Record<Workflow, string> = {
   emergent: "bg-amber-500/15 text-amber-300 border-amber-500/40",
 };
 
+type ReviewState = "reviewed" | "needs-review" | "excluded";
+
+function reviewStateFor(r: EvalRunRecord): ReviewState {
+  const t = r.timing as Record<string, unknown> | null | undefined;
+  if (t && (t.rate_limited === true || t.api_interrupted === true)) {
+    return "excluded";
+  }
+  const norm = r.humanReviewNormalized;
+  if (norm && !norm.is_empty && norm.aggregate_score != null) {
+    return "reviewed";
+  }
+  if (r.humanReview && typeof r.humanReview.score === "number") {
+    return "reviewed";
+  }
+  return "needs-review";
+}
+
+const REVIEW_STATE_DOT: Record<ReviewState, string> = {
+  reviewed: "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]",
+  "needs-review": "bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.7)] animate-pulse",
+  excluded: "bg-zinc-500",
+};
+
+const REVIEW_STATE_LABEL: Record<ReviewState, string> = {
+  reviewed: "Reviewed",
+  "needs-review": "Needs review",
+  excluded: "Excluded (interrupted)",
+};
+
 export default function Playable() {
   const runs = useMemo<EvalRunRecord[]>(
     () =>
@@ -65,14 +94,32 @@ export default function Playable() {
           Rate-limited runs with no functioning UI are omitted.
         </p>
 
-        <div className="mt-10 flex flex-wrap gap-2">
+        <div className="mt-8 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+          <span className="font-semibold uppercase tracking-wider">Legend:</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className={`size-2 rounded-full ${REVIEW_STATE_DOT.reviewed}`} aria-hidden />
+            reviewed
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className={`size-2 rounded-full ${REVIEW_STATE_DOT["needs-review"]}`} aria-hidden />
+            needs review
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className={`size-2 rounded-full ${REVIEW_STATE_DOT.excluded}`} aria-hidden />
+            excluded (rate-limited / api-interrupted)
+          </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
           {runs.map((r, i) => {
             const active = i === selectedIndex;
+            const state = reviewStateFor(r);
             return (
               <button
                 key={runKey(r)}
                 type="button"
                 onClick={() => setSelectedIndex(i)}
+                title={REVIEW_STATE_LABEL[state]}
                 className={[
                   "group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors",
                   active
@@ -80,6 +127,10 @@ export default function Playable() {
                     : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60 hover:text-foreground",
                 ].join(" ")}
               >
+                <span
+                  className={`size-2 shrink-0 rounded-full ${REVIEW_STATE_DOT[state]}`}
+                  aria-label={REVIEW_STATE_LABEL[state]}
+                />
                 <span
                   className={[
                     "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider",
@@ -125,8 +176,19 @@ export default function Playable() {
           </div>
 
           <div className="rounded-2xl border border-border/70 bg-card/40 p-6">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{WORKFLOW_LABELS[selected.workflow]} · {selected.version}</Badge>
+              {(() => {
+                const state = reviewStateFor(selected);
+                const variant =
+                  state === "reviewed" ? "success" : state === "excluded" ? "outline" : "danger";
+                return (
+                  <Badge variant={variant} className="inline-flex items-center gap-1.5">
+                    <span className={`size-1.5 rounded-full ${REVIEW_STATE_DOT[state]}`} aria-hidden />
+                    {REVIEW_STATE_LABEL[state]}
+                  </Badge>
+                );
+              })()}
               {selected.requirementCoverage?.gate_failed ? (
                 <Badge variant="danger">Gate failed</Badge>
               ) : (

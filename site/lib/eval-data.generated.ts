@@ -1714,28 +1714,67 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "planning_quality": null,
       "time_efficiency": 0.975,
       "composite": null,
-      "human_review": null
+      "human_review": 0.805
     },
     "humanReview": {
-      "score": null,
-      "notes": null,
-      "reviewed_by": null,
-      "reviewed_at": null
-    },
-    "humanReviewNormalized": {
-      "rubric_version": "legacy-v0",
+      "rubric_version": "v1",
       "dimensions": {
-        "overall": {
-          "score": null,
+        "playability": {
+          "score": 0.7,
+          "notes": null
+        },
+        "ui_polish": {
+          "score": 0.85,
+          "notes": null
+        },
+        "mechanics_implementation": {
+          "score": 0.9,
+          "notes": null
+        },
+        "ingenuity_requirement_met": {
+          "score": 0.95,
+          "notes": null
+        },
+        "stability": {
+          "score": 0.55,
           "notes": null
         }
       },
-      "aggregate_score": null,
-      "notes": null,
-      "reviewed_by": null,
-      "reviewed_at": null,
-      "is_legacy": true,
-      "is_empty": true
+      "aggregate_score": 0.805,
+      "notes": "Highest ingenuity of any round-4 run (user: 'highest ingenuity out of all runs'). Strengths: multi-enemy combat encounters (very creative), forge room UI is great (icons, spacing, placement, highlighting), training affinity mechanic 'pretty sweet' — user loved it, spell crafting loop enjoyable for finding combos yourself, pressure mechanics landed clearly (Fungal Sovereign: resistant to physical / immune to fire called out subtly on the map — user prefers subtle hints over explicit), goals feel earned. Weaknesses: (1) combat lacks targeting — user prefers Unicorn-Overlord-style rule-based simulation with board positioning (chess-like), action policies per entity traits, initiative-driven turn order (captured as v5 R-v5.13, R-v5.14); (2) affinity reward loop unclear — no visible reward for boosting a rune a lot, users will want curiosity payoff (R-v5.16); (3) navigation of exits/rooms difficult — only dropdown, no visual map with player location (R-v5.17); (4) unclear visual player-vs-enemy identity in encounters (ooze looked ambiguous) — user wants Pokemon or Unicorn-Overlord style (R-v5.18); (5) glitchy redraws on button clicks (observed across ALL round-4 builds) — likely per-tick redraw, remove ticks entirely, use event-driven updates, real-time 1hr=1day game time (R-v5.15, R-v5.21); (6) BUG: rune forge lets you craft a spell using the same rune twice which boosts that rune's affinity twice — should be forbidden per-spell but allowed across DIFFERENT spells (R-v5.20, bugs.json). Other user notes: clear-button UX is better for controller so keep it; user really likes how the in-game rune/spell system mirrors the emergent skill/merge hypothesis; wants spell-mixing-spells (use existing spells as ingredients too, procedural-but-semantic naming — R-v5.19).",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T21:07:17.787Z"
+    },
+    "humanReviewNormalized": {
+      "rubric_version": "v1",
+      "dimensions": {
+        "playability": {
+          "score": 0.7,
+          "notes": null
+        },
+        "ui_polish": {
+          "score": 0.85,
+          "notes": null
+        },
+        "mechanics_implementation": {
+          "score": 0.9,
+          "notes": null
+        },
+        "ingenuity_requirement_met": {
+          "score": 0.95,
+          "notes": null
+        },
+        "stability": {
+          "score": 0.55,
+          "notes": null
+        }
+      },
+      "aggregate_score": 0.805,
+      "notes": "Highest ingenuity of any round-4 run (user: 'highest ingenuity out of all runs'). Strengths: multi-enemy combat encounters (very creative), forge room UI is great (icons, spacing, placement, highlighting), training affinity mechanic 'pretty sweet' — user loved it, spell crafting loop enjoyable for finding combos yourself, pressure mechanics landed clearly (Fungal Sovereign: resistant to physical / immune to fire called out subtly on the map — user prefers subtle hints over explicit), goals feel earned. Weaknesses: (1) combat lacks targeting — user prefers Unicorn-Overlord-style rule-based simulation with board positioning (chess-like), action policies per entity traits, initiative-driven turn order (captured as v5 R-v5.13, R-v5.14); (2) affinity reward loop unclear — no visible reward for boosting a rune a lot, users will want curiosity payoff (R-v5.16); (3) navigation of exits/rooms difficult — only dropdown, no visual map with player location (R-v5.17); (4) unclear visual player-vs-enemy identity in encounters (ooze looked ambiguous) — user wants Pokemon or Unicorn-Overlord style (R-v5.18); (5) glitchy redraws on button clicks (observed across ALL round-4 builds) — likely per-tick redraw, remove ticks entirely, use event-driven updates, real-time 1hr=1day game time (R-v5.15, R-v5.21); (6) BUG: rune forge lets you craft a spell using the same rune twice which boosts that rune's affinity twice — should be forbidden per-spell but allowed across DIFFERENT spells (R-v5.20, bugs.json). Other user notes: clear-button UX is better for controller so keep it; user really likes how the in-game rune/spell system mirrors the emergent skill/merge hypothesis; wants spell-mixing-spells (use existing spells as ingredients too, procedural-but-semantic naming — R-v5.19).",
+      "reviewed_by": "human",
+      "reviewed_at": "2026-04-09T21:07:17.787Z",
+      "is_legacy": false,
+      "is_empty": false
     },
     "skillAccuracyBreakdown": {
       "expected_triggers": [],
@@ -2122,13 +2161,13 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "planning_quality": null,
       "time_efficiency": null,
       "composite": null,
-      "human_review": 0.805
+      "human_review": 0.885
     },
     "humanReview": {
       "rubric_version": "v1",
       "dimensions": {
         "playability": {
-          "score": 0.65,
+          "score": 0.88,
           "notes": null
         },
         "ui_polish": {
@@ -2140,7 +2179,7 @@ export const EVAL_RUNS: EvalRunRecord[] = [
           "notes": null
         },
         "ingenuity_requirement_met": {
-          "score": 0.8,
+          "score": 0.95,
           "notes": null
         },
         "stability": {
@@ -2152,16 +2191,16 @@ export const EVAL_RUNS: EvalRunRecord[] = [
           "notes": null
         }
       },
-      "aggregate_score": 0.805,
-      "notes": "User target ~0.85. Strengths: UI is incredible, book-like presentation, icons + animated encounters, battle log great, resistance/DoT/stacking mechanics all landed, pressure felt clearly, forge coupling works, mana crystals + potions wired. First full skill ratcheting cycle observed (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG). Weaknesses: navigation difficult (map is a list), training affinity is menu-driven (user expected casting spells vs training dummy drives affinity), rune forge room has forge+train but no rest option, no inventory/bag/grid or equippable items, no NPC dialogue or merchant buy/sell/trade, not all runes listed so rune discovery loop missing, no continue after death (no save checkpoints), notifications (e.g. 'trained fire affinity') persist above the screen across new games, stuck on warden boss with no remaining way to gain exp/mana once all spells crafted, no visible combat/physical skill stats or skill tree, will need spell slots + skill slots when many spells exist. Captured as v5 requirements feedback.",
+      "aggregate_score": 0.885,
+      "notes": "REVISED UPWARD 2026-04-09 after user re-played and beat floor 1. Previous review incorrectly penalized playability for 'unbeatable boss'. Actual discovery: floor 1 IS beatable by skipping combat, gathering mana crystals, crafting the right spells, then fighting the warden fresh with stacked effects. User quote: 'fantastic representation of what a game should FEEL like.' The 'right answer exists and must be discovered' loop is precisely what v4 pressure requirements ask for, so ingenuity bumps 0.80 → 0.95. Playability 0.65 → 0.88 — the softlock feeling was user's learning curve, not a design failure. UI/mechanics/stability/skill-inheritance unchanged from first review. Stability 0.55 kept: notifications persisting across sessions and continue-after-death still broken (carried over to v5 addendum R-v5.09, R-v5.10). First observed full skill ratcheting cycle (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG) still stands.",
       "reviewed_by": "human",
-      "reviewed_at": "2026-04-09T16:08:34.438Z"
+      "reviewed_at": "2026-04-09T21:06:50.140Z"
     },
     "humanReviewNormalized": {
       "rubric_version": "v1",
       "dimensions": {
         "playability": {
-          "score": 0.65,
+          "score": 0.88,
           "notes": null
         },
         "ui_polish": {
@@ -2173,7 +2212,7 @@ export const EVAL_RUNS: EvalRunRecord[] = [
           "notes": null
         },
         "ingenuity_requirement_met": {
-          "score": 0.8,
+          "score": 0.95,
           "notes": null
         },
         "stability": {
@@ -2185,10 +2224,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
           "notes": null
         }
       },
-      "aggregate_score": 0.805,
-      "notes": "User target ~0.85. Strengths: UI is incredible, book-like presentation, icons + animated encounters, battle log great, resistance/DoT/stacking mechanics all landed, pressure felt clearly, forge coupling works, mana crystals + potions wired. First full skill ratcheting cycle observed (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG). Weaknesses: navigation difficult (map is a list), training affinity is menu-driven (user expected casting spells vs training dummy drives affinity), rune forge room has forge+train but no rest option, no inventory/bag/grid or equippable items, no NPC dialogue or merchant buy/sell/trade, not all runes listed so rune discovery loop missing, no continue after death (no save checkpoints), notifications (e.g. 'trained fire affinity') persist above the screen across new games, stuck on warden boss with no remaining way to gain exp/mana once all spells crafted, no visible combat/physical skill stats or skill tree, will need spell slots + skill slots when many spells exist. Captured as v5 requirements feedback.",
+      "aggregate_score": 0.885,
+      "notes": "REVISED UPWARD 2026-04-09 after user re-played and beat floor 1. Previous review incorrectly penalized playability for 'unbeatable boss'. Actual discovery: floor 1 IS beatable by skipping combat, gathering mana crystals, crafting the right spells, then fighting the warden fresh with stacked effects. User quote: 'fantastic representation of what a game should FEEL like.' The 'right answer exists and must be discovered' loop is precisely what v4 pressure requirements ask for, so ingenuity bumps 0.80 → 0.95. Playability 0.65 → 0.88 — the softlock feeling was user's learning curve, not a design failure. UI/mechanics/stability/skill-inheritance unchanged from first review. Stability 0.55 kept: notifications persisting across sessions and continue-after-death still broken (carried over to v5 addendum R-v5.09, R-v5.10). First observed full skill ratcheting cycle (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG) still stands.",
       "reviewed_by": "human",
-      "reviewed_at": "2026-04-09T16:08:34.438Z",
+      "reviewed_at": "2026-04-09T21:06:50.140Z",
       "is_legacy": false,
       "is_empty": false
     },
@@ -3649,6 +3688,241 @@ export const PLAYABLE_INDEX: Record<string, string> = {
   "escape-the-dungeon-emergent/v2": "/playable/escape-the-dungeon-emergent/v2/index.html",
   "escape-the-dungeon-emergent/v4": "/playable/escape-the-dungeon-emergent/v4/index.html"
 };
+
+export interface OpenQuestion {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  priority: string;
+  context: string;
+  related_decisions: string[];
+  related_requirements: string[];
+  opened_on: string;
+  resolved_on: string | null;
+  resolution: string | null;
+}
+
+export interface BugRecord {
+  id: string;
+  title: string;
+  project: string;
+  version: string;
+  observed_on: string;
+  severity: string;
+  status: string;
+  description: string;
+  expected: string;
+  reproduction: string;
+  related_requirement?: string;
+  related_runs?: Array<{ project: string; version: string }>;
+}
+
+export const OPEN_QUESTIONS: OpenQuestion[] = [
+  {
+    "id": "csh-vs-freedom-which-wins-over-time",
+    "title": "Does compounding skill inheritance (CSH) eventually beat raw freedom (freedom hypothesis) across many rounds?",
+    "category": "hypothesis",
+    "status": "open",
+    "priority": "high",
+    "context": "Round 4 produced a provocative finding: Emergent v4 scored 0.885 (with the 6-dim rubric including skill_inheritance_effectiveness), Bare v5 scored 0.805 (5-dim rubric), and GAD v10 was api-interrupted. On shared rubric dimensions (playability, ui_polish, mechanics, ingenuity, stability) Emergent beat Bare on playability and UI polish, tied on mechanics/ingenuity/stability. The freedom hypothesis (gad-36) says bare beats framework on creative output. The compound-skills hypothesis (gad-65) says emergent-with-evolution compounds over rounds. Round 4 may be the first evidence that CSH is overtaking freedom — BUT it's one round, rubric reweighting matters, and Emergent inherited from Bare so it has freedom-hypothesis lineage baked in. Need more rounds against v5 requirements to disambiguate.",
+    "related_decisions": [
+      "gad-36",
+      "gad-65",
+      "gad-68"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "programmatic-eval-gap-ranking",
+    "title": "Which of our current eval metrics should become programmatic first?",
+    "category": "evaluation",
+    "status": "open",
+    "priority": "critical",
+    "context": "Per gad-69, every eval metric must answer 'can this be collected programmatically?' before 'how do we score it?'. We currently rely heavily on human review + agent self-report for: did the skill actually load, did the gate pass, is the forge integrated with pressure, is the game beatable. A programmatic-eval GAPS audit is queued as task 83 / task 96. The output should be .planning/GAPS.md ranking gaps by (a) how much human/agent judgment they currently require, (b) how mechanically checkable they actually are, (c) which phase picks them up. Highest candidates: playwright smoke tests for G1-G4 gates, hook-captured skill-trigger events, build/test exit codes as stability signals.",
+    "related_decisions": [
+      "gad-61",
+      "gad-69"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "combat-model-a-vs-b",
+    "title": "Should v5 mandate Unicorn-Overlord-style rule-based combat (Model A) or allow direct-control (Model B)?",
+    "category": "game-design",
+    "status": "discussing",
+    "priority": "high",
+    "context": "Bare v5 playtest surfaced a preference for rule-based simulated combat (loadout + spells + stats + action policies + initiative, chess-like positioning) over direct-control. R-v5.13 captures this as 'Model A preferred unless implementation exception granted.' Open question: is this the right call for round 5? Rule-based is harder to implement correctly in a single eval run and may advantage GAD's planning overhead (which would invalidate the freedom comparison if it's the reason bare underperforms next round).",
+    "related_decisions": [
+      "gad-36",
+      "gad-68"
+    ],
+    "related_requirements": [
+      "R-v5.13",
+      "R-v5.14"
+    ],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "content-pack-injection-baseline",
+    "title": "How do we measure the value of authored-content-pack inheritance (gad-66) without confounding freedom/CSH tests?",
+    "category": "evaluation",
+    "status": "open",
+    "priority": "medium",
+    "context": "Decision gad-66 proposes an eval flavor that inherits pre-authored content (spells, runes, items, NPCs) alongside requirements. The user's goal is a 'really complex game made with all the builds and data around it.' But injecting content into a CSH-testing run would confound the compound-skills signal because the agent didn't author the content. Proposal: run it as a separate eval track (escape-the-dungeon-inherited-content) distinct from greenfield emergent, so CSH measurements stay clean. Still open: how do we compare a content-pack run to a greenfield run fairly?",
+    "related_decisions": [
+      "gad-65",
+      "gad-66"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "http-529-root-cause",
+    "title": "What is the actual root cause of the HTTP 529 overloaded_error crashing GAD runs?",
+    "category": "tooling",
+    "status": "open",
+    "priority": "high",
+    "context": "GAD v10 was api-interrupted twice by HTTP 529 (once at tool_uses=18, then 55). This is distinct from account rate limits (gad-64). Per STATE.xml, investigation is queued before GAD v11 retry. Without understanding whether 529 correlates with high planning overhead (GAD-specific), payload size, tool-use frequency, or time of day, we can't plan round 5 reliably.",
+    "related_decisions": [
+      "gad-62",
+      "gad-64"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "target-users-not-documented",
+    "title": "Who exactly is the site + framework for?",
+    "category": "site",
+    "status": "open",
+    "priority": "high",
+    "context": "Task 90 queues ASSUMPTIONS.md. Without a documented target user, IA refactor decisions (task 84), skills directory UX (task 85), and landing-page framing will be ad-hoc. Candidates: coding-agent researchers, framework authors, indie devs exploring skill evolution, enterprise teams evaluating agent frameworks. Each implies a different navigation priority.",
+    "related_decisions": [
+      "gad-68"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "is-our-rubric-worth-its-ceiling",
+    "title": "Is the 6th skill_inheritance_effectiveness dimension on emergent an unfair boost vs the 5-dim bare/gad rubric?",
+    "category": "evaluation",
+    "status": "discussing",
+    "priority": "medium",
+    "context": "Emergent v4 aggregate: 0.885. Bare v5 aggregate: 0.805. The 0.08 delta maps almost exactly to emergent's 6th-dimension contribution (skill_inheritance_effectiveness 0.95 * 0.20 weight = +0.19 against bare's absent-dimension 0). Shared-dimension comparison: emergent +0.18 playability, +0.10 ui_polish, tie on mechanics/ingenuity/stability. Is that 6th dimension double-counting emergent's inheritance advantage? Arguably yes — CSH is being tested by the existence of that dimension. Counter: without it, there's no way to score whether inheritance is actually working, which is the whole point of the emergent condition.",
+    "related_decisions": [
+      "gad-65"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "navigation-sprawl",
+    "title": "How do we keep the site navigable as we add /security, /glossary, /roadmap, /skills-guide, /questions, /compare?",
+    "category": "site",
+    "status": "open",
+    "priority": "high",
+    "context": "Current nav already has 11 items (GAD, Lineage, Methodology, Rubric, Results, Graphs, Videos, Catalog, Findings, Planning, and now + Rubric). Tasks 86/87/88/95 will add more. Task 84 plans dropdown grouping + keyword search before more pages ship. Open: what is the grouping that makes sense to a first-time visitor vs a returning researcher?",
+    "related_decisions": [],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  }
+];
+
+export const OPEN_QUESTIONS_UPDATED: string | null = "2026-04-09";
+
+export const BUGS: BugRecord[] = [
+  {
+    "id": "rune-forge-same-rune-twice",
+    "title": "Rune forge allows same rune twice in a single spell, boosts affinity twice",
+    "project": "escape-the-dungeon-bare",
+    "version": "v5",
+    "observed_on": "2026-04-09",
+    "severity": "medium",
+    "status": "open",
+    "description": "In the rune forge, the player can select the same rune twice as ingredients for a single spell. When crafted, the affinity gain for that rune is applied twice as if two distinct rune slots were consumed. The resulting spell also treats the duplicate as a meaningful second ingredient.",
+    "expected": "Selecting a rune that is already in the current spell's ingredient list should either reject the second click or toggle that rune off. Affinity gain should be per-unique-rune-slot. Duplicate runes across DIFFERENT spells in the player's spellbook remain fine and are explicitly allowed.",
+    "reproduction": "Open forge. Select Fire rune. Select Fire rune again. Craft. Observe that Fire affinity increases by 2x the normal amount for a single-rune craft.",
+    "related_requirement": "R-v5.20",
+    "related_runs": []
+  },
+  {
+    "id": "notifications-persist-across-sessions",
+    "title": "Toast notifications persist above the screen across new game sessions",
+    "project": "escape-the-dungeon-emergent",
+    "version": "v4",
+    "observed_on": "2026-04-09",
+    "severity": "medium",
+    "status": "open",
+    "description": "Notifications like 'trained fire affinity' appear and never auto-dismiss. Starting a new game does not clear the backlog; they remain above the latest build's UI.",
+    "expected": "Every notification auto-dismisses after a short timeout (3-5s) or has an explicit close control. Starting a new game clears the notification queue. Page reload clears stale notifications.",
+    "reproduction": "Play until a notification appears. Do not dismiss. Start a new game. Observe notification still overlays the new session.",
+    "related_requirement": "R-v5.10",
+    "related_runs": []
+  },
+  {
+    "id": "continue-after-death-greyed-out",
+    "title": "Continue button disabled after death — no save checkpoints",
+    "project": "escape-the-dungeon-emergent",
+    "version": "v4",
+    "observed_on": "2026-04-09",
+    "severity": "high",
+    "status": "open",
+    "description": "On player death the game ends and Continue is no longer selectable. No automatic checkpoint appears to have been created during the run.",
+    "expected": "Room-clear or floor-clear creates a checkpoint. On death, Continue loads the most recent checkpoint.",
+    "reproduction": "Start new game. Die in any encounter. Return to title. Continue is greyed out.",
+    "related_requirement": "R-v5.09",
+    "related_runs": []
+  },
+  {
+    "id": "glitchy-button-click-redraws",
+    "title": "Glitchy redraws on button clicks across all round-4 builds",
+    "project": "escape-the-dungeon",
+    "version": "v10",
+    "observed_on": "2026-04-09",
+    "severity": "medium",
+    "status": "open",
+    "description": "UI visibly glitches/flickers on button clicks as if full per-tick redraws are running. Observed consistently across GAD v9, GAD v10, Bare v5, and Emergent v4.",
+    "expected": "Event-driven rendering only. No redraw loops firing at a fixed rate regardless of state changes. React/DOM reconciles on state change; requestAnimationFrame only runs when animation is active.",
+    "reproduction": "Click any menu button in any round-4 build. Observe brief UI flicker.",
+    "related_requirement": "R-v5.21",
+    "related_runs": [
+      {
+        "project": "escape-the-dungeon",
+        "version": "v9"
+      },
+      {
+        "project": "escape-the-dungeon-bare",
+        "version": "v5"
+      },
+      {
+        "project": "escape-the-dungeon-emergent",
+        "version": "v4"
+      }
+    ]
+  }
+];
+
+export const BUGS_UPDATED: string | null = "2026-04-09";
 
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",

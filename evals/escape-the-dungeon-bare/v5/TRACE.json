@@ -46,12 +46,35 @@
     "planning_quality": null,
     "time_efficiency": 0.975,
     "composite": null,
-    "human_review": null
+    "human_review": 0.805
   },
   "human_review": {
-    "score": null,
-    "notes": null,
-    "reviewed_by": null,
-    "reviewed_at": null
+    "rubric_version": "v1",
+    "dimensions": {
+      "playability": {
+        "score": 0.7,
+        "notes": null
+      },
+      "ui_polish": {
+        "score": 0.85,
+        "notes": null
+      },
+      "mechanics_implementation": {
+        "score": 0.9,
+        "notes": null
+      },
+      "ingenuity_requirement_met": {
+        "score": 0.95,
+        "notes": null
+      },
+      "stability": {
+        "score": 0.55,
+        "notes": null
+      }
+    },
+    "aggregate_score": 0.805,
+    "notes": "Highest ingenuity of any round-4 run (user: 'highest ingenuity out of all runs'). Strengths: multi-enemy combat encounters (very creative), forge room UI is great (icons, spacing, placement, highlighting), training affinity mechanic 'pretty sweet' — user loved it, spell crafting loop enjoyable for finding combos yourself, pressure mechanics landed clearly (Fungal Sovereign: resistant to physical / immune to fire called out subtly on the map — user prefers subtle hints over explicit), goals feel earned. Weaknesses: (1) combat lacks targeting — user prefers Unicorn-Overlord-style rule-based simulation with board positioning (chess-like), action policies per entity traits, initiative-driven turn order (captured as v5 R-v5.13, R-v5.14); (2) affinity reward loop unclear — no visible reward for boosting a rune a lot, users will want curiosity payoff (R-v5.16); (3) navigation of exits/rooms difficult — only dropdown, no visual map with player location (R-v5.17); (4) unclear visual player-vs-enemy identity in encounters (ooze looked ambiguous) — user wants Pokemon or Unicorn-Overlord style (R-v5.18); (5) glitchy redraws on button clicks (observed across ALL round-4 builds) — likely per-tick redraw, remove ticks entirely, use event-driven updates, real-time 1hr=1day game time (R-v5.15, R-v5.21); (6) BUG: rune forge lets you craft a spell using the same rune twice which boosts that rune's affinity twice — should be forbidden per-spell but allowed across DIFFERENT spells (R-v5.20, bugs.json). Other user notes: clear-button UX is better for controller so keep it; user really likes how the in-game rune/spell system mirrors the emergent skill/merge hypothesis; wants spell-mixing-spells (use existing spells as ingredients too, procedural-but-semantic naming — R-v5.19).",
+    "reviewed_by": "human",
+    "reviewed_at": "2026-04-09T21:07:17.787Z"
   }
 }

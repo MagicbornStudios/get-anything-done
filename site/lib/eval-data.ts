@@ -17,6 +17,10 @@ export {
   PLAYABLE_INDEX,
   WORKFLOW_LABELS,
   WORKFLOW_DESCRIPTIONS,
+  OPEN_QUESTIONS,
+  OPEN_QUESTIONS_UPDATED,
+  BUGS,
+  BUGS_UPDATED,
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,
@@ -25,6 +29,8 @@ export {
   type EvalProjectMeta,
   type ProducedArtifacts,
   type Workflow,
+  type OpenQuestion,
+  type BugRecord,
 } from "./eval-data.generated";
 
 import {

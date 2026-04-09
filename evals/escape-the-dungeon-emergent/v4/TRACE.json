@@ -46,13 +46,13 @@
     "planning_quality": null,
     "time_efficiency": null,
     "composite": null,
-    "human_review": 0.805
+    "human_review": 0.885
   },
   "human_review": {
     "rubric_version": "v1",
     "dimensions": {
       "playability": {
-        "score": 0.65,
+        "score": 0.88,
         "notes": null
       },
       "ui_polish": {
@@ -64,7 +64,7 @@
         "notes": null
       },
       "ingenuity_requirement_met": {
-        "score": 0.8,
+        "score": 0.95,
         "notes": null
       },
       "stability": {
@@ -76,9 +76,9 @@
         "notes": null
       }
     },
-    "aggregate_score": 0.805,
-    "notes": "User target ~0.85. Strengths: UI is incredible, book-like presentation, icons + animated encounters, battle log great, resistance/DoT/stacking mechanics all landed, pressure felt clearly, forge coupling works, mana crystals + potions wired. First full skill ratcheting cycle observed (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG). Weaknesses: navigation difficult (map is a list), training affinity is menu-driven (user expected casting spells vs training dummy drives affinity), rune forge room has forge+train but no rest option, no inventory/bag/grid or equippable items, no NPC dialogue or merchant buy/sell/trade, not all runes listed so rune discovery loop missing, no continue after death (no save checkpoints), notifications (e.g. 'trained fire affinity') persist above the screen across new games, stuck on warden boss with no remaining way to gain exp/mana once all spells crafted, no visible combat/physical skill stats or skill tree, will need spell slots + skill slots when many spells exist. Captured as v5 requirements feedback.",
+    "aggregate_score": 0.885,
+    "notes": "REVISED UPWARD 2026-04-09 after user re-played and beat floor 1. Previous review incorrectly penalized playability for 'unbeatable boss'. Actual discovery: floor 1 IS beatable by skipping combat, gathering mana crystals, crafting the right spells, then fighting the warden fresh with stacked effects. User quote: 'fantastic representation of what a game should FEEL like.' The 'right answer exists and must be discovered' loop is precisely what v4 pressure requirements ask for, so ingenuity bumps 0.80 → 0.95. Playability 0.65 → 0.88 — the softlock feeling was user's learning curve, not a design failure. UI/mechanics/stability/skill-inheritance unchanged from first review. Stability 0.55 kept: notifications persisting across sessions and continue-after-death still broken (carried over to v5 addendum R-v5.09, R-v5.10). First observed full skill ratcheting cycle (authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG) still stands.",
     "reviewed_by": "human",
-    "reviewed_at": "2026-04-09T16:08:34.438Z"
+    "reviewed_at": "2026-04-09T21:06:50.140Z"
   }
 }

@@ -1,0 +1,130 @@
+{
+  "_schema": {
+    "file": "data/open-questions.json",
+    "purpose": "Public list of unresolved questions about the project, hypothesis, evaluation approach, and framework. Anyone can read; only the repo owner can edit. Serves as a transparent backlog of what is genuinely still being worked out.",
+    "written_by": "human",
+    "read_by": "site prebuild + /questions page",
+    "shape": {
+      "questions[]": {
+        "id": "stable kebab-case slug",
+        "title": "short question",
+        "category": "hypothesis | evaluation | site | framework | tooling | game-design",
+        "status": "open | discussing | resolved",
+        "priority": "low | medium | high | critical",
+        "context": "markdown paragraph explaining why this is open",
+        "related_decisions": "array of decision IDs like 'gad-68'",
+        "related_requirements": "array of requirement tags like 'R-v5.13'",
+        "opened_on": "ISO date",
+        "resolved_on": "ISO date or null",
+        "resolution": "markdown paragraph if resolved"
+      }
+    }
+  },
+  "_last_updated": "2026-04-09",
+  "questions": [
+    {
+      "id": "csh-vs-freedom-which-wins-over-time",
+      "title": "Does compounding skill inheritance (CSH) eventually beat raw freedom (freedom hypothesis) across many rounds?",
+      "category": "hypothesis",
+      "status": "open",
+      "priority": "high",
+      "context": "Round 4 produced a provocative finding: Emergent v4 scored 0.885 (with the 6-dim rubric including skill_inheritance_effectiveness), Bare v5 scored 0.805 (5-dim rubric), and GAD v10 was api-interrupted. On shared rubric dimensions (playability, ui_polish, mechanics, ingenuity, stability) Emergent beat Bare on playability and UI polish, tied on mechanics/ingenuity/stability. The freedom hypothesis (gad-36) says bare beats framework on creative output. The compound-skills hypothesis (gad-65) says emergent-with-evolution compounds over rounds. Round 4 may be the first evidence that CSH is overtaking freedom — BUT it's one round, rubric reweighting matters, and Emergent inherited from Bare so it has freedom-hypothesis lineage baked in. Need more rounds against v5 requirements to disambiguate.",
+      "related_decisions": ["gad-36", "gad-65", "gad-68"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "programmatic-eval-gap-ranking",
+      "title": "Which of our current eval metrics should become programmatic first?",
+      "category": "evaluation",
+      "status": "open",
+      "priority": "critical",
+      "context": "Per gad-69, every eval metric must answer 'can this be collected programmatically?' before 'how do we score it?'. We currently rely heavily on human review + agent self-report for: did the skill actually load, did the gate pass, is the forge integrated with pressure, is the game beatable. A programmatic-eval GAPS audit is queued as task 83 / task 96. The output should be .planning/GAPS.md ranking gaps by (a) how much human/agent judgment they currently require, (b) how mechanically checkable they actually are, (c) which phase picks them up. Highest candidates: playwright smoke tests for G1-G4 gates, hook-captured skill-trigger events, build/test exit codes as stability signals.",
+      "related_decisions": ["gad-61", "gad-69"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "combat-model-a-vs-b",
+      "title": "Should v5 mandate Unicorn-Overlord-style rule-based combat (Model A) or allow direct-control (Model B)?",
+      "category": "game-design",
+      "status": "discussing",
+      "priority": "high",
+      "context": "Bare v5 playtest surfaced a preference for rule-based simulated combat (loadout + spells + stats + action policies + initiative, chess-like positioning) over direct-control. R-v5.13 captures this as 'Model A preferred unless implementation exception granted.' Open question: is this the right call for round 5? Rule-based is harder to implement correctly in a single eval run and may advantage GAD's planning overhead (which would invalidate the freedom comparison if it's the reason bare underperforms next round).",
+      "related_decisions": ["gad-36", "gad-68"],
+      "related_requirements": ["R-v5.13", "R-v5.14"],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "content-pack-injection-baseline",
+      "title": "How do we measure the value of authored-content-pack inheritance (gad-66) without confounding freedom/CSH tests?",
+      "category": "evaluation",
+      "status": "open",
+      "priority": "medium",
+      "context": "Decision gad-66 proposes an eval flavor that inherits pre-authored content (spells, runes, items, NPCs) alongside requirements. The user's goal is a 'really complex game made with all the builds and data around it.' But injecting content into a CSH-testing run would confound the compound-skills signal because the agent didn't author the content. Proposal: run it as a separate eval track (escape-the-dungeon-inherited-content) distinct from greenfield emergent, so CSH measurements stay clean. Still open: how do we compare a content-pack run to a greenfield run fairly?",
+      "related_decisions": ["gad-65", "gad-66"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "http-529-root-cause",
+      "title": "What is the actual root cause of the HTTP 529 overloaded_error crashing GAD runs?",
+      "category": "tooling",
+      "status": "open",
+      "priority": "high",
+      "context": "GAD v10 was api-interrupted twice by HTTP 529 (once at tool_uses=18, then 55). This is distinct from account rate limits (gad-64). Per STATE.xml, investigation is queued before GAD v11 retry. Without understanding whether 529 correlates with high planning overhead (GAD-specific), payload size, tool-use frequency, or time of day, we can't plan round 5 reliably.",
+      "related_decisions": ["gad-62", "gad-64"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "target-users-not-documented",
+      "title": "Who exactly is the site + framework for?",
+      "category": "site",
+      "status": "open",
+      "priority": "high",
+      "context": "Task 90 queues ASSUMPTIONS.md. Without a documented target user, IA refactor decisions (task 84), skills directory UX (task 85), and landing-page framing will be ad-hoc. Candidates: coding-agent researchers, framework authors, indie devs exploring skill evolution, enterprise teams evaluating agent frameworks. Each implies a different navigation priority.",
+      "related_decisions": ["gad-68"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "is-our-rubric-worth-its-ceiling",
+      "title": "Is the 6th skill_inheritance_effectiveness dimension on emergent an unfair boost vs the 5-dim bare/gad rubric?",
+      "category": "evaluation",
+      "status": "discussing",
+      "priority": "medium",
+      "context": "Emergent v4 aggregate: 0.885. Bare v5 aggregate: 0.805. The 0.08 delta maps almost exactly to emergent's 6th-dimension contribution (skill_inheritance_effectiveness 0.95 * 0.20 weight = +0.19 against bare's absent-dimension 0). Shared-dimension comparison: emergent +0.18 playability, +0.10 ui_polish, tie on mechanics/ingenuity/stability. Is that 6th dimension double-counting emergent's inheritance advantage? Arguably yes — CSH is being tested by the existence of that dimension. Counter: without it, there's no way to score whether inheritance is actually working, which is the whole point of the emergent condition.",
+      "related_decisions": ["gad-65"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "navigation-sprawl",
+      "title": "How do we keep the site navigable as we add /security, /glossary, /roadmap, /skills-guide, /questions, /compare?",
+      "category": "site",
+      "status": "open",
+      "priority": "high",
+      "context": "Current nav already has 11 items (GAD, Lineage, Methodology, Rubric, Results, Graphs, Videos, Catalog, Findings, Planning, and now + Rubric). Tasks 86/87/88/95 will add more. Task 84 plans dropdown grouping + keyword search before more pages ship. Open: what is the grouping that makes sense to a first-time visitor vs a returning researcher?",
+      "related_decisions": [],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    }
+  ]
+}

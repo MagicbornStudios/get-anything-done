@@ -124,6 +124,105 @@ Map/navigation UI must be more than a linear list.
 
 ---
 
+---
+
+## v5 — additional requirements from Bare v5 playtest (2026-04-09)
+
+Captured after user played Bare v5 on the deployed site. Bare v5 scored 0.805 rubric aggregate (highest ingenuity of round 4) and surfaced another pass of requirements that belong in v5 before round 5 runs.
+
+### R-v5.13 · Combat model must be explicitly chosen (**amends G1 + G4**)
+
+The combat system must be one of two named models, chosen and documented in the requirements themselves before implementation:
+
+**Model A — Rule-based simulation (Unicorn-Overlord-style, user's preference).**
+- Encounters are simulated from loadout + spells + skills + stats + level + traits.
+- **Board positioning:** chess-like grid where each entity occupies a cell, adjacency and range matter.
+- **Action policies:** every entity has an ordered list of rule-based actions driven by its traits. Player authors action policies for their own party; enemies have authored action policies per species/trait.
+- **Initiative:** turn order derived from stats + policy, not menu selection.
+- Player inputs are loadout + policies + positioning; combat resolves automatically with clear log.
+
+**Model B — Direct-control combat** (simpler, less ingenuity ceiling).
+
+v5 picks **Model A** unless an implementation exception is granted. "No targeting" observed in Bare v5 is only acceptable under Model A where rules drive targeting automatically.
+
+### R-v5.14 · Action policies driven by entity traits (both enemies AND NPCs)
+
+Every entity with agency has an action-policy block keyed to its traits.
+
+- Enemies: trait `aggressive` → priority 1 is attack; `territorial` → priority 1 is hold position; etc.
+- **NPCs get action policies too, not just enemies.** NPC dialogue options and behavior change as their traits (or the player's traits) shift.
+- Example: a `greedy` merchant charges 20% more when player is `famous`; a `scholarly` NPC reveals rune lore only if player `affinity.arcane > 0.5`.
+- Dialogue must become more prevalent overall — NPC interaction is a first-class gameplay loop, not a decoration.
+- **Rationale:** "action policies based on priorities set by the player as rules, then there was initiative and the like for turn of events, this game should have action policies driven by whatever entities traits. like npcs should have action policies based on traits, and different dialogue options as those traits change for the player and the npcs when dialogue is more prevalent."
+
+### R-v5.15 · Real-time game-time model (remove tick system)
+
+Game time progresses in real time with a fixed real-to-game ratio. Default: **1 real hour = 1 in-game day.**
+
+- Remove any per-tick redraw loop. Use event-driven updates only.
+- Day/night cycle exists as game state and can drive encounter tables, merchant stock, NPC availability.
+- **UI time-of-day shading is a SOFT requirement** (bonus scored dimension, not gate). If performant, the UI tints shift across in-game day phases.
+- **Rationale:** "ticks dont seem to be playing a role really so lets remove that and just have it in realtime/game time. like 1 hr for us is 1 day. I think it would be cool to have the ui reflect the time change as shades if performant (new requirements, but should not be strict)."
+
+### R-v5.16 · Affinity reward loop
+
+Boosting a rune's affinity must produce a **visible, valuable reward** — not just a stat increment hidden on a sheet.
+
+- Suggested rewards at affinity thresholds: new rune variant unlocked, existing spells using that rune gain a visual effect tier, new spell combinations become craftable, access to an affinity-gated event or NPC.
+- At least one affinity reward must be visible in the forge UI (e.g. an affinity progress bar with named milestones).
+- **Rationale:** "I am not sure what to do with more affinity if I boosted a rune a lot. there is no obvious reward in doing so when trying it out. users will want to be curious."
+
+### R-v5.17 · Central visual navigation map with player location (**amends R-v5.12 + G3**)
+
+Stronger form of R-v5.12. The navigation view must be a persistent, reachable, visual map:
+
+- Accessible from a single button/keystroke at any time in exploration mode.
+- Shows the **player token** on its current room, **room type icons**, **discovered vs undiscovered rooms**, **cleared vs active rooms**, and **visible exit connections** between rooms.
+- Clicking an adjacent room must move the player there in one action (no nested dropdowns).
+- Minimum layout: 2D node graph. Preferred layout: 2D grid or spatial floor map.
+- **Rationale:** "navigation of exits and rooms and etc is very difficult with just the options and no real visual guide but a drop down at times. im fine with the room system, but we need some central navigation system we can repeatedly go to that is visual and have player representation and location."
+
+### R-v5.18 · Visual player vs enemy identity in encounters
+
+Encounter rendering must make it obvious which visual element is the player and which is the enemy.
+
+- Distinct portrait, positioning, or color treatment for player and enemies.
+- Reference style: **Pokemon or Unicorn Overlord** (user prefers UO).
+- No rendering where the player cannot visually distinguish themselves from the first enemy without reading text labels.
+- **Rationale:** "it is not clear that i am the seeker/vs the enemies like ooze in the encounters for the bare eval."
+
+### R-v5.19 · Spells as craftable ingredients + procedural-but-semantic naming
+
+Spell crafting accepts **runes AND existing spells** as ingredients.
+
+- A spell used as an ingredient consumes or copies from the existing spell (design choice explicit).
+- Combining two spells or a spell + rune produces an **evolved spell** with procedurally generated but semantically meaningful naming.
+- Naming scheme must be **consistent but varied** — similar combinations produce similar names, slight differences produce slightly varied names. Not too verbose.
+- Example scheme: root spell + modifier noun keyed to added element/spell. e.g. "Fireball" + Ice rune → "Frostfall Ember". Two Frostfall Embers fused → "Glacial Ember" (same family, progressed).
+- **Rationale:** "we should be able to evolve spells by mixing runes and other spells together. spells themselves and the fundamental runes should be ingredients for new spells. spells created like this can be procedural and will need a consistent naming scheme that isnt too verbose, but can vary. so the choosing of a name should be more semantically create when being procedural to describe similar things, even if they are slightly different."
+- This requirement **mirrors the emergent-evolution working hypothesis (gad-68)**: the in-game rune/spell/merge system is an explicit narrative analogue for the agent's skill-authoring/merge loop. Users get to feel the hypothesis being tested.
+
+### R-v5.20 · Rune uniqueness within a single spell (**bug fix**)
+
+A spell may not include the same rune twice in its ingredient list.
+
+- Selecting rune X, then rune X again for the same spell must be rejected or de-selected.
+- The same rune CAN appear across different spells in the player's spellbook — the constraint is per-spell, not per-player.
+- Affinity gain must be calculated based on unique rune slots actually consumed.
+- **Observed bug (Bare v5):** crafting with the same rune twice doubled that rune's affinity gain. Logged in `data/bugs.json`.
+- **Rationale:** "a bug in the rune forge where i can select and craft 2 runes will increase its affinity of both runes. while I do want that, it should not be the case for the same spell that we have."
+
+### R-v5.21 · Event-driven rendering (remove per-tick redraws)
+
+All UI updates must be event-driven, not per-tick.
+
+- No redraw loops firing at a fixed rate regardless of state changes.
+- Observable symptom to eliminate: glitchy redraws on button clicks, observed across ALL round-4 builds (GAD v9/v10, Bare v5, Emergent v4). This is a perf-and-stability gate failure mode.
+- Acceptable patterns: React reconciliation on state change, requestAnimationFrame scheduling only when animation is active.
+- **Rationale:** "all games have had with stability is that the game glitches on button clicks and etc, like redrawing a good bit. I feel like its a performance issue involving the ticks."
+
+---
+
 ## Explicitly deferred to v6
 
 - Deep evolution trees (multi-stage mutations) — still deferred.
