@@ -619,9 +619,27 @@
       <goal>New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work.</goal>
       <keywords>skill,framework-upgrade,versioning</keywords>
     </task>
-    <task id="22-28" agent-id="" status="planned">
-      <goal>Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed. Both currently have it; decision gad-49 pins the invariant that create-skill + find-sprites must always be in the bootstrap set for bare and emergent.</goal>
+    <task id="22-28" agent-id="" status="done">
+      <goal>Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed.</goal>
+      <resolution>Decision gad-49 pinned create-skill + find-sprites as the bootstrap invariant. Checked on disk — both bare and emergent template/skills/ have them.</resolution>
       <keywords>decision,create-skill,invariant</keywords>
+    </task>
+    <!-- Session 4 additions: lineage, agent runtimes, Remotion scaffolding, phase 25 discussion output -->
+    <task id="22-29" agent-id="" status="planned">
+      <goal>/lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. Captures decision gad-56.</goal>
+      <keywords>lineage,context-rot,gsd,repoplanner,attribution</keywords>
+    </task>
+    <task id="22-30" agent-id="" status="planned">
+      <goal>Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for GAD evaluation.</goal>
+      <keywords>agent-runtimes,hooks,methodology,decision-gad-53</keywords>
+    </task>
+    <task id="22-31" agent-id="" status="planned">
+      <goal>Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content — the scaffold establishes the pattern and the first composition is a placeholder.</goal>
+      <keywords>remotion,scaffold,videos-route,player-embed</keywords>
+    </task>
+    <task id="22-32" agent-id="" status="planned">
+      <goal>Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output: hook-aware route chosen, Claude Code PreToolUse/PostToolUse hook integration first, Codex and other agents as future converters, freeze-old-stamp-new backfill, hook runtime detection at eval-run time, phase 25 task list. This is the discuss-phase artifact that feeds plan-phase 25.</goal>
+      <keywords>phase-25,discuss-phase,trace-schema-v4,planning-doc</keywords>
     </task>
   </phase>
 </task-registry>

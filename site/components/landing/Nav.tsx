@@ -3,11 +3,11 @@ import { Github } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/gad", label: "GAD" },
+  { href: "/lineage", label: "Lineage" },
   { href: "/methodology", label: "Methodology" },
-  { href: "/#projects", label: "Projects" },
   { href: "/#results", label: "Results" },
   { href: "/#graphs", label: "Graphs" },
-  { href: "/#play", label: "Play" },
+  { href: "/videos", label: "Videos" },
   { href: "/#catalog", label: "Catalog" },
   { href: "/findings", label: "Findings" },
   { href: "/planning", label: "Planning" },

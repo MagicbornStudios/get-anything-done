@@ -438,4 +438,34 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Phase 26 is a discuss-first phase. No Remotion code ships until we've scoped the video list and confirmed the React reuse pattern. Decision captured now so future sessions don't have to rederive "why not Adobe After Effects" — the answer is "because our React components are already the scenes we want to show."</impact>
   </decision>
 
+  <decision id="gad-53">
+    <title>Trace schema v4 requires hook-aware agents — other coding agents are explicitly unsupported for tracing</title>
+    <summary>Phase 25's trace schema v4 captures every tool_use, skill invocation with trigger context, and subagent spawn with inputs/outputs. The only reliable way to capture this data is from within the coding agent's runtime via hooks — Claude Code's PreToolUse/PostToolUse hooks, Aider's Python callbacks, Continue.dev's extension API. Agents without hook runtimes (Cursor's closed-source editor, basic Codex CLI, vanilla ChatGPT) cannot produce trace v4 data and are explicitly unsupported for GAD evaluation. This isn't a limitation we're going to work around — attempting to reconstruct tool calls from stdout parsing or screen-scraping is lossy and fragile. We'll publish an Agent Runtimes comparison on /methodology listing which coding agents are evaluable and which aren't, and why.</summary>
+    <impact>Phase 25 eval harness wiring is Claude-Code-specific (via its hooks). Future support for other agents requires each one to expose a structured tool-use event stream. The site's /methodology page has an Agent Runtimes table explaining this; the agent runtime requirement becomes a gate criterion in the eval project gad.json so runs against unsupported agents are rejected at the eval-run step.</impact>
+  </decision>
+
+  <decision id="gad-54">
+    <title>Eval backfill policy: freeze old scores, stamp new runs with framework version</title>
+    <summary>When the framework changes (new skill, new subagent, rewritten command), old eval scores are never recomputed. They're historical records, frozen at the framework commit they ran against. New runs against the updated framework get stamped with the new framework commit and become the "current" data point for cross-version comparisons. This preserves the archaeology — a reader can see what a v5 escape-the-dungeon run scored in April 2026 against framework v1.32.0 and trust that number. Framework drift is detected by re-running the same eval against the current framework and diffing, not by rewriting history.</summary>
+    <impact>skills/framework-upgrade/SKILL.md documents this as the invariant. The site's /methodology page explains it. Trace schema v4 adds a mandatory gad_version + framework_commit field so every run is self-describing about which framework it ran against. No backfill commands exist in the CLI; any attempt to rewrite an old TRACE.json is a bug.</impact>
+  </decision>
+
+  <decision id="gad-55">
+    <title>Multi-agent tracing is a conversion problem, not a reimplementation problem</title>
+    <summary>If we ever want to evaluate Codex, Aider, or other hook-capable agents, the path is: their native session format → a converter script that emits GAD trace schema v4 → the same /runs/[project]/[version] page renders it. No per-agent site code. Codex's output format (Running/Ran prefixes with output blocks under ` └ `) is parseable but stream-based — would need a converter that tails the session and emits trace events. Captured here so we don't go down the "let's add Codex-specific TRACE fields" path when the right answer is a converter.</summary>
+    <impact>Phase 25 ships the Claude Code converter first. Future phases can add codex-to-trace or aider-to-trace converters as needed. The trace schema itself stays agent-agnostic. Unit of comparison is "a trace", not "a trace from Claude Code specifically."</impact>
+  </decision>
+
+  <decision id="gad-56">
+    <title>Lineage attribution: GSD → RepoPlanner → GAD</title>
+    <summary>GAD's lineage is acknowledged explicitly on the public site. Get Shit Done (gsd-build, https://github.com/gsd-build/get-shit-done) is the upstream inspiration — small planning loops, visible state, executable specs. RepoPlanner (b2gdevs, https://repo-planner.vercel.app/) was an earlier attempt by the same author to formalize the "Ralph Wiggum loop" (continuous agent work maintained by in-repo documents and tasks) — the core insight: keep docs and tasks in the repo so long development always has context and something to work on. GAD builds on both: the planning rigour of GSD, the in-repo context persistence of RepoPlanner, plus the eval framework as the thing that distinguishes us — we actually measure whether the loop helps. The /lineage page on the site tells this story with concrete links and explains the context rot problem each approach tries to solve.</summary>
+    <impact>/lineage page exists and links to both upstream projects. Any talk of "what GAD is" has to route through this lineage — we're not claiming to have invented structured agent planning, we're claiming to have taken two previous approaches and added measurement. Keeps us honest and gives visitors a starting point if they'd rather use GSD or RepoPlanner.</impact>
+  </decision>
+
+  <decision id="gad-57">
+    <title>Remotion parameters: 30s max, cinematic passthrough, stoppable, /videos route + inline embeds</title>
+    <summary>Phase 26 parameters pinned: every composition is max 30 seconds, rendered as a cinematic passthrough (linear timeline, no branching), but the player must expose play/pause so viewers can stop mid-scroll. Videos live in two places: (1) inline "watch this dissection" embeds on relevant per-run pages — e.g. the v8 failure dissection shows up on /runs/escape-the-dungeon/v8, and (2) a dedicated /videos route that lists every composition with a search/filter so visitors can browse them standalone. All compositions reuse existing site React components (Graphs, ScoreBar, Cards, etc) as video frames — no separate asset pipeline. No MP4 compilation. @remotion/player handles all rendering client-side. Composition registry lives in site/remotion/Root.tsx.</summary>
+    <impact>Phase 26 is now execute-ready. No more discussion needed on length, format, playback, or placement. Next sessions can author individual video compositions against this spec and register them in the registry. Remotion Player is free for teams ≤3; no paid license needed for the current shape of the project.</impact>
+  </decision>
+
 </decisions>

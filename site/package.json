@@ -13,6 +13,7 @@
     "build:data": "node scripts/build-site-data.mjs"
   },
   "dependencies": {
+    "@remotion/player": "^4.0.447",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.469.0",
@@ -21,6 +22,7 @@
     "next": "^16.2.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "remotion": "^4.0.447",
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {

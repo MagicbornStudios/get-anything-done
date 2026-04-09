@@ -1438,7 +1438,7 @@ export const FINDINGS: Finding[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "22",
   "milestone": "gad-v1.1",
-  "nextAction": "PHASE 22 SESSION 3: research depth. Sessions 1 + 2 shipped the site scaffold + detail pages + catalog + findings + planning transparency (22-01→22-19 done). Session 3 adds the research-grade surfaces the user asked for: /gad framework overview page (22-20), /methodology with all formulas + tracing explained (22-21), per-run formula breakdown + trace-gap callout (22-22), /projects/[id] per-eval catalog scope + produced artifacts (22-23), lightweight SVG charts on home (22-24), nav update (22-25), scoring weights by project (22-26), framework-upgrade skill (22-27), decision gad-49 pinning create-skill invariant (22-28). Phases 25 (framework versioning + trace schema overhaul — THE underlying work that would let us actually break down skill_accuracy 0.17 into which triggers fired vs missed) and 26 (Remotion compositions + interactive player) added to roadmap as planned. Remotion is explicitly a discuss-phase item before implementation.",
+  "nextAction": "PHASE 22 SESSION 4: lineage, agent runtimes, Remotion scaffold. Sessions 1-3 shipped the full research site (133→155 static pages). Session 4 ships: 22-29 /lineage page (context rot + GSD + RepoPlanner + GAD), 22-30 agent runtimes table on /methodology with the hook-aware-required requirement for trace v4, 22-31 Remotion scaffold (install @remotion/player, site/remotion/ composition registry, /videos route with filter, VideoEmbed inline wrapper, placeholder v8 dissection composition), 22-32 phase 25 discuss-phase output doc. Decisions gad-53 through gad-57 pinned: trace v4 requires hook-aware agents, backfill policy freeze-old-stamp-new, multi-agent is a converter problem, lineage attribution, Remotion parameters (30s cinematic passthrough stoppable, /videos + inline). Phase 25 ready for plan-phase once 22-32 ships.",
   "lastUpdated": "2026-04-08",
   "phases": [
     {
@@ -1629,13 +1629,53 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-l…"
     },
     {
-      "id": "22-28",
+      "id": "22-29",
       "status": "planned",
-      "goal": "Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed. Both currently have it; decision gad-49 pins the invariant that create-skill + find-sprites must always be in the bootstrap set for…"
+      "goal": "/lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. C…"
+    },
+    {
+      "id": "22-30",
+      "status": "planned",
+      "goal": "Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside dec…"
+    },
+    {
+      "id": "22-31",
+      "status": "planned",
+      "goal": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inlin…"
+    },
+    {
+      "id": "22-32",
+      "status": "planned",
+      "goal": "Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output: hook-aware route chosen, Claude Code PreToolUse/PostToolUse hook integration first, Codex and other agents as future converters, freeze-old-stamp-new backfill, hook runtime d…"
     }
   ],
-  "doneTasksCount": 114,
+  "doneTasksCount": 115,
   "recentDecisions": [
+    {
+      "id": "gad-57",
+      "title": "Remotion parameters: 30s max, cinematic passthrough, stoppable, /videos route + inline embeds",
+      "summary": "Phase 26 parameters pinned: every composition is max 30 seconds, rendered as a cinematic passthrough (linear timeline, no branching), but the player must expose play/pause so viewers can stop mid-scroll. Videos live in two places: (1) inline \"watch this dissection\" embeds on relevant per-run pages — e.g. the v8 failure dissection shows up on /runs/escape-the-dungeon/v8, and (2) a dedicated /videos"
+    },
+    {
+      "id": "gad-56",
+      "title": "Lineage attribution: GSD → RepoPlanner → GAD",
+      "summary": "GAD's lineage is acknowledged explicitly on the public site. Get Shit Done (gsd-build, https://github.com/gsd-build/get-shit-done) is the upstream inspiration — small planning loops, visible state, executable specs. RepoPlanner (b2gdevs, https://repo-planner.vercel.app/) was an earlier attempt by the same author to formalize the \"Ralph Wiggum loop\" (continuous agent work maintained by in-repo docu"
+    },
+    {
+      "id": "gad-55",
+      "title": "Multi-agent tracing is a conversion problem, not a reimplementation problem",
+      "summary": "If we ever want to evaluate Codex, Aider, or other hook-capable agents, the path is: their native session format → a converter script that emits GAD trace schema v4 → the same /runs/[project]/[version] page renders it. No per-agent site code. Codex's output format (Running/Ran prefixes with output blocks under ` └ `) is parseable but stream-based — would need a converter that tails the session and"
+    },
+    {
+      "id": "gad-54",
+      "title": "Eval backfill policy: freeze old scores, stamp new runs with framework version",
+      "summary": "When the framework changes (new skill, new subagent, rewritten command), old eval scores are never recomputed. They're historical records, frozen at the framework commit they ran against. New runs against the updated framework get stamped with the new framework commit and become the \"current\" data point for cross-version comparisons. This preserves the archaeology — a reader can see what a v5 esca"
+    },
+    {
+      "id": "gad-53",
+      "title": "Trace schema v4 requires hook-aware agents — other coding agents are explicitly unsupported for tracing",
+      "summary": "Phase 25's trace schema v4 captures every tool_use, skill invocation with trigger context, and subagent spawn with inputs/outputs. The only reliable way to capture this data is from within the coding agent's runtime via hooks — Claude Code's PreToolUse/PostToolUse hooks, Aider's Python callbacks, Continue.dev's extension API. Agents without hook runtimes (Cursor's closed-source editor, basic Codex"
+    },
     {
       "id": "gad-52",
       "title": "Remotion is how we ship video explainers — player, not compiler",
@@ -1670,31 +1710,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-34",
       "title": "Human review weight raised to 0.30 with low-score caps",
       "summary": "human_review weight increased from 0.15 to 0.30 in composite formula. Added hard caps: if human_review &lt; 0.20, composite capped at 0.40; if &lt; 0.10, capped at 0.25. This prevents technically compliant but broken/unusable output from ranking highly. Process metrics cannot override a bad user experience."
-    },
-    {
-      "id": "gad-33",
-      "title": "Spell crafting is a gate criterion — loot/rewards do not satisfy it",
-      "summary": "The player must intentionally combine runes/components through a forge/crafting interface and produce at least one new spell outcome. Pre-equipped spells or spell rewards from NPCs/loot do not count. Minimum: 3-5 runes, 3+ valid combinations, crafted spell usable in encounters."
-    },
-    {
-      "id": "gad-32",
-      "title": "UI quality is a gate criterion at full presentation level",
-      "summary": "The build must include icons, visually differentiated room presentation, styled controls/panels, and entity visual representation. Easily installable icon/sprite packs, web-searched assets, or generated placeholders are acceptable when setup cost is low. Raw ASCII/text-only UI fails the gate. Geometric fallback tiles are last resort, not primary path."
-    },
-    {
-      "id": "gad-37",
-      "title": "Eval game builds must be preserved per-version, never overwritten",
-      "summary": "Previously, gad eval open copied builds to apps/portfolio/public/evals/PROJECT/index.html, overwriting previous runs. This destroyed experimental history. Now all builds are preserved at apps/portfolio/public/evals/PROJECT/VERSION/index.html. The gad eval open command checks version-specific paths first."
-    },
-    {
-      "id": "gad-36",
-      "title": "Freedom hypothesis: GAD constraint may correlate inversely with creative output quality",
-      "summary": "Across 3 rounds of escape-the-dungeon evals, Bare (no framework) consistently outperformed GAD (full framework) on human review. Round 3: Bare v3 = 0.70, Emergent v2 = 0.50, GAD v8 = 0.20. GAD has never exceeded 0.30 across 4 attempts; Bare is monotonically improving (0.10 → 0.50 → 0.70). GAD's planning overhead may consume tokens that could go to implementation and testing. The process is followe"
-    },
-    {
-      "id": "gad-38",
-      "title": "Eval preservation is a hard contract enforced by tests",
-      "summary": "Every implementation eval run MUST end with these artifacts preserved at canonical locations: (1) evals/PROJECT/vN/TRACE.json, (2) evals/PROJECT/vN/run/ with code+planning, (3) apps/portfolio/public/evals/PROJECT/vN/ with the playable build, (4) evals/PROJECT/vN/.gad-log/ with CLI logs. The gad eval preserve command copies everything after a run; gad eval verify audits compliance; tests/eval-prese"
     }
   ]
 };
