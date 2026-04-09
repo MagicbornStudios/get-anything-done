@@ -3720,6 +3720,52 @@ export interface BugRecord {
 
 export const OPEN_QUESTIONS: OpenQuestion[] = [
   {
+    "id": "pressure-score-formula",
+    "title": "How do we compute a pressure score per eval operationally?",
+    "category": "evaluation",
+    "status": "open",
+    "priority": "critical",
+    "context": "Decision gad-75 names pressure as a first-class eval dimension with five sub-dimensions (requirement complexity, ambiguity, constraint density, iteration budget, failure cost). The dimensions are named; the formula is not. Open questions: (a) is pressure a single aggregate score or a 5-tuple? (b) is it self-rated by the requirements author or programmatically extracted? (c) if programmatic, which fields in REQUIREMENTS.xml feed which sub-dimension? (d) does pressure live on requirements (per version) or on runs (per execution), or both? (e) how do we validate that our pressure rating matches agent-experienced pressure — probably by correlating rating against tool_uses-to-failure ratio. Candidate first-pass: self-rated 0.0-1.0 per sub-dimension on each requirements version (stored in REQUIREMENTS-VERSIONS.md and in a new <pressure-profile> block in REQUIREMENTS.xml), aggregated as a weighted sum, displayed on the /roadmap timeline as a pressure-tier progression across rounds.",
+    "related_decisions": [
+      "gad-75",
+      "gad-72"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "pressure-as-rubric-vs-metadata",
+    "title": "Should pressure become a scored rubric dimension or stay as test-condition metadata?",
+    "category": "evaluation",
+    "status": "discussing",
+    "priority": "high",
+    "context": "Pressure is CURRENTLY framed in gad-75 as metadata about the test conditions, not a measurement of the result. But there's a parallel interpretation: pressure could be scored — 'did the agent handle the pressure well'. That scoring collapses pressure into the existing rubric as a new dimension. The two framings answer different questions: metadata-pressure lets us normalize cross-round comparisons ('X scored 0.8 at pressure 0.6 vs Y scored 0.7 at pressure 0.9'), scored-pressure lets us rank agents on pressure-handling ability directly. Probably both are useful and we need both — one stored in REQUIREMENTS/TRACE metadata and one computed as a derived dimension. But committing to one framing first matters for the /roadmap page design and for any comparison visualization.",
+    "related_decisions": [
+      "gad-75"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
+    "id": "fresh-clone-contribution-test",
+    "title": "Does a fresh clone of the repo actually work end-to-end for a human contributor?",
+    "category": "framework",
+    "status": "open",
+    "priority": "high",
+    "context": "Per decision gad-77, before the /contribute page ships we need to verify: (a) cloning the repo into a new directory results in a working agent environment (skills in .claude/, agents installed, commands available), (b) opening the repo in Claude Code surfaces the GAD skills to the agent without additional setup, (c) a conversational request like 'run the escape-the-dungeon-bare eval' actually works with no manual snapshot or XML editing. This is an untested assumption right now — we've been running agents in the canonical development repo where everything is already wired up. A fresh clone might hit missing .claude/settings.json entries, missing hook handler paths, missing env vars, or installer bugs. Until this is tested, /contribute is vaporware.",
+    "related_decisions": [
+      "gad-77"
+    ],
+    "related_requirements": [],
+    "opened_on": "2026-04-09",
+    "resolved_on": null,
+    "resolution": null
+  },
+  {
     "id": "fundamental-skills-triumvirate",
     "title": "Do we already have create-skill / merge-skill / find-skills as fundamentals, and if not, should we build them?",
     "category": "framework",
@@ -3739,16 +3785,17 @@ export const OPEN_QUESTIONS: OpenQuestion[] = [
     "id": "gad-value-prop-landing-page-framing",
     "title": "Should the landing page stop leading with 'ship software faster' and lead with task-management + skill evaluation instead?",
     "category": "site",
-    "status": "discussing",
+    "status": "resolved",
     "priority": "high",
     "context": "Per decision gad-74, GAD's actual value is not 'ship production software faster' — the freedom hypothesis already shows bare can outperform on creative implementation. Real value: (1) durable task management at scale with everything in-repo (no external DB, no lock-in), (2) scientific framework for proving skill effectiveness + workflow discipline, (3) skill security posture (longer-term). Landing page should reframe around these. Current landing hero is implicitly still about 'use GAD to build things' — it should be 'use GAD to understand whether agents are actually building things well.'",
     "related_decisions": [
-      "gad-74"
+      "gad-74",
+      "gad-76"
     ],
     "related_requirements": [],
     "opened_on": "2026-04-09",
-    "resolved_on": null,
-    "resolution": null
+    "resolved_on": "2026-04-09",
+    "resolution": "Resolved by decision gad-76 and the landing rewrite shipped in the 2026-04-09 IA session. New value-prop line: 'A system for evaluating and evolving agents through real tasks, measurable pressure, and iteration.' Landing primary CTA is now Play (B), above-the-fold stack is Play → Methodology → Findings → Hypothesis → Fork. Target audience is primarily coding-agent researchers (A) with indie devs (C) as experiential secondary entry. Pressure (gad-75) is introduced as the hook that differentiates GAD from other coding-agent frameworks."
   },
   {
     "id": "skill-security-model",
@@ -4525,6 +4572,24 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-77",
+    "title": "Contribution flow is human-first — snapshot is agent-facing, not human-facing",
+    "summary": "Important clarification the user surfaced during the IA planning conversation: `gad snapshot` is a command for AGENTS to rehydrate context after compaction — it produces no useful output for a human reading it. A human contribution flow must NOT include running snapshot as a step. The correct human flow is: (1) clone the repo, (2) npm install (or pnpm/yarn), (3) open the repo in Claude Code (or Cursor/Codex/other agent runtime), (4) the GAD skills are already installed in the repo so the agent has them available, (5) the human talks conversationally to the agent about running an eval or introducing a new hypothesis. The human never reads STATE.xml; they read the site's /findings, /decisions, /questions pages. The agent reads STATE.xml on their behalf when they ask it to. **Contribution pages must explicitly separate the human path from the agent path** so users don't follow agent-facing instructions and get confused by the output. Decision also commits us to TESTING the contribution flow on a fresh clone in a new repo before publishing the /contribute page, to verify skills are actually present and usable without manual setup steps we've forgotten to document.",
+    "impact": "(1) /contribute page ships with two clearly separated sections: \"Human workflow\" and \"What the agent does behind the scenes\". (2) The human workflow is bare bones: clone → install → open in Claude → talk. No snapshot, no XML editing, no planning loop explanation. (3) The agent workflow section is a short explainer so humans know the difference but aren't expected to follow it. (4) Before shipping /contribute, we run a fresh-clone test in a new repo to verify: (a) skills copy into .claude/, (b) the agent can snapshot on first run, (c) a conversational request like \"run the escape-the-dungeon-bare eval\" actually works. (5) No PR template, no eval submission rubric, no contribution guidelines doc yet — those are process overhead we don't need until we have contributors. (6) CONTRIBUTING.md in the repo root is queued as a follow-up after the fresh-clone test succeeds."
+  },
+  {
+    "id": "gad-76",
+    "title": "Target users + value-prop framing — researchers primary, indie devs experiential, pressure as the hook",
+    "summary": "Formal statement of who the site is for and what it says. **Primary user: coding-agent researchers** (target A) — people evaluating skill frameworks, hypothesis quality, and measurement rigor. They read findings, click through to DECISIONS.xml on GitHub, scrutinize the rubric construction. They tolerate dense content and reject marketing copy. **Secondary user: indie devs curious about skill evolution** (target C) — they land via playable demos, stay for the research transparency, need jargon wrapped in tooltips. **Not the audience (yet):** enterprise teams evaluating for procurement, framework authors looking to fork GAD wholesale. **Value proposition working line:** *\"A system for evaluating and evolving agents through real tasks, measurable pressure, and iteration.\"* This combines three load-bearing ideas: evaluating agents on real tasks (not benchmarks), measurable pressure (gad-75), and iteration (compound-skills hypothesis). **Explicitly NOT the value prop:** \"Use GAD to ship software faster.\" The freedom hypothesis (gad-36) shows bare agents outperform framework agents on greenfield creative implementation — GAD's value is the measurement layer and task-management substrate, not shipping speed.",
+    "impact": "(1) Landing page rewrite lands this session: hero headline uses the pressure framing, primary CTA is Play (B), above-the-fold priority stack is Play → Methodology → Findings → Hypothesis → Fork. (2) Copy across all pages must assume primary user A (no oversimplifying, no marketing), but must wrap jargon in Term tooltips for secondary user C. (3) Everything we build must serve user A or user C — if it serves neither, it's out of scope for now. (4) The open question gad-value-prop-landing-page-framing is RESOLVED by this decision + the landing rewrite that ships alongside it. (5) ASSUMPTIONS.md captures full details of both users + what we're NOT building for them."
+  },
+  {
+    "id": "gad-75",
+    "title": "Pressure is a first-class eval dimension — the measurable axis connecting game-feel, requirements, and skill evolution",
+    "summary": "Introduced during the IA planning conversation on 2026-04-09: \"Pressure\" becomes a first-class evaluation dimension alongside quality, iteration count, and composite score. Working definition: pressure = the constraint intensity applied to the agent during an eval, composed of five sub-dimensions — (1) requirement complexity (moving parts, cross-system interactions, logic depth), (2) ambiguity (clarity, missing info, interpretation required), (3) constraint density (hard rules, architecture constraints, stack lock-in), (4) iteration budget (tool-use ceiling, retry passes, rate/529 limits), (5) failure cost (gate vs scored, visible vs hidden, cascading vs isolated). Pressure is what the requirements have been implicitly encoding, what the game design has been trying to deliver to players, and what the eval framework has been partially measuring without naming. Requirement versions implicitly ARE pressure tiers — v1 was low pressure, v5 is high pressure, and rounds ARE pressure transitions. Promoting pressure to a named variable lets us normalize cross-round comparisons and ask \"how did agent X perform under pressure tier Y\" instead of just \"what score did X get\". This is distinct from the rubric (which measures result quality) — pressure is metadata about the test conditions. Pressure ALSO connects the game-feel thread (players feel pressure as challenge, ingenuity is pressure on the player) to the eval-rigor thread, which is the project's strongest differentiator. The landing page value-prop reframes around \"evaluating and evolving agents through real tasks, measurable pressure, and iteration\" (gad-76).",
+    "impact": "(1) Pressure score formula is a new research task — open question opened in data/open-questions.json. (2) REQUIREMENTS.xml templates gain an optional `<pressure-profile>` block per version capturing the five sub-dimensions as author-rated scores; this is self-rated metadata initially, refined later with programmatic extraction. (3) Per-run page gains a pressure tier badge next to the composite score. (4) /roadmap timeline renders pressure progression across rounds as a new axis. (5) A future /pressure page (queued, not yet built) will let users see agent-performance-vs-pressure as a scatter. (6) Findings writeups must name the pressure tier they're evaluating under. (7) This decision is the biggest single-session conceptual shift the project has made; it reframes the landing page entirely and becomes a major signal of research credibility versus \"just another agent framework\" positioning."
+  },
   {
     "id": "gad-74",
     "title": "GAD's actual value proposition — task management at scale in-repo + skill evaluation, NOT \"ship software faster\"",

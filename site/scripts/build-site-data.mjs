@@ -488,16 +488,22 @@ function copyCurrentRequirements() {
     ];
     const src = candidates.find(exists);
     if (!src) continue;
-    const destName = `${project}-REQUIREMENTS-v4.xml`;
+    const content = fs.readFileSync(src, "utf8");
+    // Read the version attribute from the XML itself so we stop hardcoding.
+    const versionMatch = content.match(/<requirements\s+version="([^"]+)"/);
+    const version = versionMatch ? versionMatch[1] : "unknown";
+    const destName = `${project}-REQUIREMENTS-${version}.xml`;
     const dest = path.join(REQUIREMENTS_DIR, destName);
     fs.copyFileSync(src, dest);
     const size = fs.statSync(dest).size;
-    console.log(`  [copy] ${project} v4 → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
+    console.log(`  [copy] ${project} ${version} → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
     out.push({
       project,
-      version: "v4",
+      version,
       path: `/downloads/requirements/${destName}`,
       bytes: size,
+      content,
+      sourcePath: path.relative(REPO_ROOT, src).replace(/\\/g, "/"),
     });
   }
   // Also copy the REQUIREMENTS-VERSIONS.md narrative so users can download the
@@ -906,6 +912,8 @@ export interface CurrentRequirementsFile {
   label?: string;
   commit?: string;
   isSnapshot?: boolean;
+  content?: string;
+  sourcePath?: string;
 }
 
 export interface Finding {

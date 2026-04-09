@@ -23,6 +23,45 @@
   "_last_updated": "2026-04-09",
   "questions": [
     {
+      "id": "pressure-score-formula",
+      "title": "How do we compute a pressure score per eval operationally?",
+      "category": "evaluation",
+      "status": "open",
+      "priority": "critical",
+      "context": "Decision gad-75 names pressure as a first-class eval dimension with five sub-dimensions (requirement complexity, ambiguity, constraint density, iteration budget, failure cost). The dimensions are named; the formula is not. Open questions: (a) is pressure a single aggregate score or a 5-tuple? (b) is it self-rated by the requirements author or programmatically extracted? (c) if programmatic, which fields in REQUIREMENTS.xml feed which sub-dimension? (d) does pressure live on requirements (per version) or on runs (per execution), or both? (e) how do we validate that our pressure rating matches agent-experienced pressure — probably by correlating rating against tool_uses-to-failure ratio. Candidate first-pass: self-rated 0.0-1.0 per sub-dimension on each requirements version (stored in REQUIREMENTS-VERSIONS.md and in a new <pressure-profile> block in REQUIREMENTS.xml), aggregated as a weighted sum, displayed on the /roadmap timeline as a pressure-tier progression across rounds.",
+      "related_decisions": ["gad-75", "gad-72"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "pressure-as-rubric-vs-metadata",
+      "title": "Should pressure become a scored rubric dimension or stay as test-condition metadata?",
+      "category": "evaluation",
+      "status": "discussing",
+      "priority": "high",
+      "context": "Pressure is CURRENTLY framed in gad-75 as metadata about the test conditions, not a measurement of the result. But there's a parallel interpretation: pressure could be scored — 'did the agent handle the pressure well'. That scoring collapses pressure into the existing rubric as a new dimension. The two framings answer different questions: metadata-pressure lets us normalize cross-round comparisons ('X scored 0.8 at pressure 0.6 vs Y scored 0.7 at pressure 0.9'), scored-pressure lets us rank agents on pressure-handling ability directly. Probably both are useful and we need both — one stored in REQUIREMENTS/TRACE metadata and one computed as a derived dimension. But committing to one framing first matters for the /roadmap page design and for any comparison visualization.",
+      "related_decisions": ["gad-75"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "fresh-clone-contribution-test",
+      "title": "Does a fresh clone of the repo actually work end-to-end for a human contributor?",
+      "category": "framework",
+      "status": "open",
+      "priority": "high",
+      "context": "Per decision gad-77, before the /contribute page ships we need to verify: (a) cloning the repo into a new directory results in a working agent environment (skills in .claude/, agents installed, commands available), (b) opening the repo in Claude Code surfaces the GAD skills to the agent without additional setup, (c) a conversational request like 'run the escape-the-dungeon-bare eval' actually works with no manual snapshot or XML editing. This is an untested assumption right now — we've been running agents in the canonical development repo where everything is already wired up. A fresh clone might hit missing .claude/settings.json entries, missing hook handler paths, missing env vars, or installer bugs. Until this is tested, /contribute is vaporware.",
+      "related_decisions": ["gad-77"],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
       "id": "fundamental-skills-triumvirate",
       "title": "Do we already have create-skill / merge-skill / find-skills as fundamentals, and if not, should we build them?",
       "category": "framework",
@@ -39,14 +78,14 @@
       "id": "gad-value-prop-landing-page-framing",
       "title": "Should the landing page stop leading with 'ship software faster' and lead with task-management + skill evaluation instead?",
       "category": "site",
-      "status": "discussing",
+      "status": "resolved",
       "priority": "high",
       "context": "Per decision gad-74, GAD's actual value is not 'ship production software faster' — the freedom hypothesis already shows bare can outperform on creative implementation. Real value: (1) durable task management at scale with everything in-repo (no external DB, no lock-in), (2) scientific framework for proving skill effectiveness + workflow discipline, (3) skill security posture (longer-term). Landing page should reframe around these. Current landing hero is implicitly still about 'use GAD to build things' — it should be 'use GAD to understand whether agents are actually building things well.'",
-      "related_decisions": ["gad-74"],
+      "related_decisions": ["gad-74", "gad-76"],
       "related_requirements": [],
       "opened_on": "2026-04-09",
-      "resolved_on": null,
-      "resolution": null
+      "resolved_on": "2026-04-09",
+      "resolution": "Resolved by decision gad-76 and the landing rewrite shipped in the 2026-04-09 IA session. New value-prop line: 'A system for evaluating and evolving agents through real tasks, measurable pressure, and iteration.' Landing primary CTA is now Play (B), above-the-fold stack is Play → Methodology → Findings → Hypothesis → Fork. Target audience is primarily coding-agent researchers (A) with indie devs (C) as experiential secondary entry. Pressure (gad-75) is introduced as the hook that differentiates GAD from other coding-agent frameworks."
     },
     {
       "id": "skill-security-model",
