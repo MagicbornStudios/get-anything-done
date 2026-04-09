@@ -206,20 +206,62 @@ When `/gad:plan-phase 25` runs, these become the initial task candidates:
 - 25-16 — test eval runner refusal when hooks not installed (decision gad-53 enforcement).
 - 25-17 — documentation: skills/framework-upgrade references trace v4 fields; /lineage mentions it in the "what GAD adds" section.
 
-## Open items for plan-phase to resolve
+## Open items — resolved in session 5
 
-- **Skill invocation marker mechanism.** How does the agent signal "I'm following skill X"
-  in a way a hook can capture? Two candidates: (a) the agent runs a bash command like
-  `gad trace-skill-start <id>` which the hook intercepts; (b) a file-based marker written to
-  .planning/.trace-active-skill that the hook reads. Option (a) is more structured, option (b)
-  is more reliable across crashes. Plan-phase picks one.
-- **Hook handler script location.** In the GAD repo (distributed as part of the framework) or
-  written into the user's workspace by `gad install hooks`? Probably the former, referenced
-  by absolute path from settings.json. Plan-phase confirms.
-- **Tool output truncation limits.** What's the cap on `outputs` fields? 10KB per event? 1KB?
-  Plan-phase picks a number based on how noisy real runs are.
-- **Event buffering vs direct emit.** Write every event synchronously or batch every N events?
-  Batch is faster but loses events on crash. Plan-phase picks; start with synchronous.
+All four items the plan-phase session would normally resolve were answered by the user in
+session 5. Decisions gad-58 through gad-61 pin the answers.
+
+- **Skill invocation marker mechanism — HYBRID file + hook-emitted event (decision gad-58).**
+  The agent writes a single plain-text file at `.planning/.trace-active-skill` containing just
+  the active skill id (one line, no schema). That's the entire agent-side burden: one file
+  write per skill start. The hook handler reads this file on every `PreToolUse` event and:
+  (1) attributes subsequent tool_use events to the current active skill by adding a
+  `trigger_skill` field; (2) detects content changes and emits a discrete `skill_invocation`
+  event to the JSONL stream whenever the file transitions from "no active skill" to "skill X"
+  or from "skill X" to "skill Y". This gives us both low agent burden (one file write) and
+  structured/objective events (hook-emitted, not inferred at analysis time). When nesting —
+  skill X applies skill Y mid-execution — skill Y becomes the active marker and skill X is
+  recorded as the `parent` field on the nested invocation event. On skill completion the
+  agent clears the file (writes empty string).
+
+- **Hook handler script location — framework-versioned in the GAD repo (decision gad-59).**
+  The handler lives at `vendor/get-anything-done/bin/gad-trace-hook.cjs` (or equivalent
+  within the GAD distribution). `gad install hooks` writes an absolute path reference into
+  the user's `~/.claude/settings.json` pointing at the installed GAD binary. Updates arrive
+  via `gad update`. Single canonical handler, one version per framework commit, no per-
+  workspace drift. `gad uninstall hooks` is the reverse operation. The handler reads
+  arguments via stdin per Claude Code's hook contract and writes JSONL events to
+  `<project-root>/.planning/.trace-events.jsonl` (append-only, gitignored).
+
+- **Tool output truncation limit — 4 KB per event (decision gad-60).** Individual event
+  `outputs` fields capped at 4096 bytes. When output exceeds the cap, we split head/tail
+  (2KB of the beginning, 2KB of the end) joined with a `... [truncated N bytes] ...`
+  marker, and set `truncated: true` in the event. Full untruncated output stays in the
+  Claude Code `session.jsonl` which is still accessible via the run's file system. The
+  4KB cap keeps even noisy runs (hundreds of events over 15 minutes) under 1-2 MB of trace
+  data, which is well within what git can comfortably track.
+
+- **Event buffering — synchronous write per event.** Start simple: each hook invocation
+  writes its event to the JSONL file before returning. Latency overhead is negligible
+  (single line append). Batching is a later optimization if we see the hook latency show
+  up in eval timings. Not a decision candidate yet — just the simpler default.
+
+## Additional scope added in session 5
+
+- **Codex and other non-hook agents explicitly out of scope for phase 25.** The user has no
+  near-term need for Codex evaluation. If/when we add it, it's a separate sub-phase that
+  ships a Codex-specific converter reading its `Running`/`Ran` stream format and emitting
+  v4 JSONL.
+
+- **Video authoring for Remotion deferred (phase 26 blocked on v4 data landing).** The v8
+  dissection placeholder composition will stay a placeholder until phase 25 ships real
+  trace v4 data — at which point we have actual per-skill trigger timing, tool-use mix, and
+  subagent spawn data to animate honestly. Authoring videos against lossy v3 data would
+  just immortalize the tracing gap we're trying to fix.
+
+- **Phase 27 opened — structured objective data production.** Parallel to phase 25. Phase
+  25 captures more raw events; phase 27 designs the structures those events feed into and
+  the derived metrics we extract. Discussed separately in `.planning/DISCUSS-PHASE-27.md`.
 
 ---
 

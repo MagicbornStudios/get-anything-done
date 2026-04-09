@@ -468,4 +468,28 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Phase 26 is now execute-ready. No more discussion needed on length, format, playback, or placement. Next sessions can author individual video compositions against this spec and register them in the registry. Remotion Player is free for teams ≤3; no paid license needed for the current shape of the project.</impact>
   </decision>
 
+  <decision id="gad-58">
+    <title>Skill invocation marker: hybrid file + hook-emitted event</title>
+    <summary>The agent writes a single plain-text file at .planning/.trace-active-skill containing just the active skill id. That's the entire agent-side burden — one file write per skill start. The hook handler reads this file on every PreToolUse event to attribute subsequent tool uses to the active skill (adds trigger_skill field on each event) and detects content changes to emit a discrete skill_invocation event whenever the active skill transitions. Gives us both low agent burden and structured/objective data: the hook is the source of truth for the skill_invocation event stream, not the agent's self-reporting. For nested skills (skill X applies skill Y), the currently-active skill is whichever one the file last pointed to, and the skill_invocation event records the parent as whatever was active before the transition.</summary>
+    <impact>Phase 25 implements the hook logic that reads and watches .planning/.trace-active-skill. The skills/ documentation is updated to instruct agents to write the marker on skill start and clear it on skill completion — this is a low-burden contract that can be enforced via linting. Alternatives considered and rejected: (a) explicit bash command marker — more agent burden, duplicates events in the tool stream; (b) inference from tool use patterns — too lossy, not objective.</impact>
+  </decision>
+
+  <decision id="gad-59">
+    <title>Hook handler lives in the GAD repo, referenced by absolute path from user settings</title>
+    <summary>The hook handler script lives at vendor/get-anything-done/bin/gad-trace-hook.cjs (or equivalent in the distributed GAD package). `gad install hooks` writes an absolute path reference into the user's ~/.claude/settings.json pointing at the installed GAD binary. This gives us one canonical handler per framework commit, zero per-workspace drift, updates via `gad update`. `gad uninstall hooks` is the reverse operation. Handler receives arguments via stdin per Claude Code's hook contract and appends JSONL events to &lt;project-root&gt;/.planning/.trace-events.jsonl (append-only, gitignored).</summary>
+    <impact>Phase 25 ships both `gad install hooks` and the handler script. Users run the install command once per workspace; subsequent framework updates pick up new handler behaviour automatically because the path reference points at the installed package. Alternative rejected: per-workspace handler written by install — drifts from framework version, harder to update, defeats the purpose of centralised versioning.</impact>
+  </decision>
+
+  <decision id="gad-60">
+    <title>Trace event output field capped at 4 KB with head/tail truncation</title>
+    <summary>Individual event `outputs` fields in the JSONL stream are capped at 4096 bytes. When raw output exceeds the cap, it's split into 2 KB of head + 2 KB of tail joined by a "... [truncated N bytes] ..." marker, and the event is stamped with `truncated: true`. Full untruncated output remains in Claude Code's session.jsonl which is accessible on disk for any run that needs deeper inspection. The 4 KB cap keeps noisy runs (hundreds of events over a 15-minute session) under 1-2 MB of trace data, comfortably within git's working-tree range.</summary>
+    <impact>Phase 25 hook handler implements the truncation. The site's per-run page renders the head/tail split as a collapsible code block with a "view full output in session.jsonl" link. Future sub-phase can add full-output lookup if we find ourselves reaching for session.jsonl frequently.</impact>
+  </decision>
+
+  <decision id="gad-61">
+    <title>Research priority: structured objective data production for evaluations</title>
+    <summary>The primary goal of the eval framework is no longer "score runs" — it's "produce structured data that yields insights." A score is just one kind of derived data; the framework should also produce structured human review rubrics (dimensions instead of single numbers), automated gate checks (playwright tests instead of human inspection for things automatable), derived metrics (tool mix, commit rhythm, plan-adherence deltas, divergence scores), cross-run aggregation queries, and visualizations that surface patterns rather than just summaries. Phase 27 is the research methodology phase that designs all of this in parallel with phase 25's raw event capture. Future decisions about what to measure next always answer "does this yield an insight we can represent objectively?" before "how do we score it?"</summary>
+    <impact>Phase 27 opens in the roadmap as a peer of phase 25. skills/objective-eval-design/SKILL.md captures the methodology. Phase 25 is about getting the raw events; phase 27 is about what we do with them. The two phases can proceed in parallel — phase 27 designs against v3 trace data today and gets richer inputs when v4 lands.</impact>
+  </decision>
+
 </decisions>

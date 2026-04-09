@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Calculator, CheckCircle2, FileJson, Gauge, Plug, XCircle } from "lucide-react";
+import { AlertTriangle, Calculator, CheckCircle2, Database, FileJson, Gauge, Plug, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
@@ -274,6 +274,73 @@ export default function MethodologyPage() {
       <section className="border-b border-border/60">
         <div className="section-shell">
           <div className="mb-2 flex items-center gap-2">
+            <Database size={18} className="text-accent" aria-hidden />
+            <p className="section-kicker !mb-0">Data production pipeline</p>
+          </div>
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
+            Raw → structured → derived → insight
+          </h2>
+          <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
+            The eval framework&apos;s primary output is{" "}
+            <strong className="text-foreground">structured data</strong>, not scores. Scores are
+            one kind of derived number; the framework also produces rubrics, automated gate
+            checks, derived metrics from trace events, and cross-run aggregates. The four stages
+            below are how raw run artifacts become insights on this site.
+          </p>
+
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {DATA_STAGES.map((stage) => (
+              <Card key={stage.stage}>
+                <CardHeader>
+                  <div className="mb-2 inline-flex size-8 items-center justify-center rounded-lg border border-border/60 bg-background/40 text-xs font-semibold text-accent">
+                    {stage.stage}
+                  </div>
+                  <CardTitle className="text-base">{stage.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
+                  <p>{stage.body}</p>
+                  <p className="mt-3 font-mono text-[11px] text-foreground/70">
+                    Examples: {stage.examples}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-border/70 bg-card/40 p-6">
+            <p className="text-xs uppercase tracking-wider text-accent">
+              Objective vs subjective today
+            </p>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Most of what we measure today is objective (counts, durations, coverage ratios,
+              commit rhythm). A few load-bearing measurements are still subjective — human
+              review is a single number set by a reviewer who "felt like it was mid," and gate
+              pass/fail depends on a human opening the built game and playing it. Phase 27 is
+              the research methodology work that makes those measurements structured:
+              human review gets a per-dimension rubric, gate checks get playwright automation,
+              and derived metrics get exposed via{" "}
+              <code className="rounded bg-background/60 px-1.5 py-0.5 text-xs">
+                gad eval query
+              </code>{" "}
+              so we can ask cross-run questions like "which runs used the forge room more than
+              3 times?"
+            </p>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              The methodology discipline is captured in the{" "}
+              <Link href="/skills/objective-eval-design" className="text-accent hover:underline">
+                objective-eval-design
+              </Link>{" "}
+              skill: every measurement must answer a specific research question, expose its
+              inputs, be comparable across runs, and be decomposable. A number that fails any
+              of those tests isn&apos;t ready to publish.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border/60">
+        <div className="section-shell">
+          <div className="mb-2 flex items-center gap-2">
             <Plug size={18} className="text-accent" aria-hidden />
             <p className="section-kicker !mb-0">Agent runtimes</p>
           </div>
@@ -403,6 +470,37 @@ export default function MethodologyPage() {
     </main>
   );
 }
+
+const DATA_STAGES = [
+  {
+    stage: "1",
+    title: "Raw artifacts",
+    body:
+      "Every eval run produces a TRACE.json sidecar, a session.jsonl (Claude Code), a git log with per-task commits, and a dist/ build. Phase 25 adds .trace-events.jsonl for hook-captured tool/skill/subagent events. These are the primary sources — nothing is ever recomputed from anything upstream.",
+    examples: "TRACE.json · session.jsonl · git log · dist/",
+  },
+  {
+    stage: "2",
+    title: "Structured records",
+    body:
+      "The prebuild script reads raw artifacts and emits typed records: EvalRunRecord, CatalogSkill, RequirementsVersion, PlanningState, ProducedArtifacts. Schema versioned so old runs parse cleanly alongside new ones. This is what the site consumes — no client-side parsing.",
+    examples: "lib/eval-data.generated.ts · lib/catalog.generated.ts",
+  },
+  {
+    stage: "3",
+    title: "Derived metrics",
+    body:
+      "Computed from structured records: composite scores, divergence (composite vs human review), commit rhythm, plan-adherence delta, tool-use mix (phase 25+), skill-to-tool ratio, produced artifact density. Each derived number has a formula that's traceable back to its inputs — no magic aggregates.",
+    examples: "scores.composite · divergence_score · plan_adherence_delta",
+  },
+  {
+    stage: "4",
+    title: "Insights + visualizations",
+    body:
+      "Cross-run queries answer specific research questions. Charts shape data around the question, not the data shape. Phase 27 adds /insights with curated query cards and gad eval query for custom drilling. Every chart's caption is the question it answers — the number is just evidence.",
+    examples: "freedom hypothesis scatter · rubric radar · insight cards",
+  },
+];
 
 const AGENT_RUNTIMES = [
   {
