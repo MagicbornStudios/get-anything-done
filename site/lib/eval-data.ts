@@ -24,6 +24,8 @@ export {
   GLOSSARY,
   GLOSSARY_UPDATED,
   ALL_DECISIONS,
+  ALL_TASKS,
+  ALL_PHASES,
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,
@@ -36,6 +38,8 @@ export {
   type BugRecord,
   type GlossaryTerm,
   type DecisionRecord,
+  type TaskRecord,
+  type PhaseRecord,
 } from "./eval-data.generated";
 
 import {

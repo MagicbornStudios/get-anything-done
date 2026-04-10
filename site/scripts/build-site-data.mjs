@@ -765,6 +765,71 @@ function parseAllDecisions() {
   return all;
 }
 
+function parseAllPhases() {
+  // Full parse of ROADMAP.xml — every phase with title, status, goal, tasks[].
+  // Feeds /phases page + Ref component phase resolution.
+  const planningDir = path.join(REPO_ROOT, ".planning");
+  const roadmapPath = path.join(planningDir, "ROADMAP.xml");
+  if (!exists(roadmapPath)) return [];
+  const src = fs.readFileSync(roadmapPath, "utf8");
+  const phaseRegex = /<phase\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/phase>/g;
+  const out = [];
+  let m;
+  while ((m = phaseRegex.exec(src)) !== null) {
+    const id = m[1];
+    const inner = m[2];
+    const title = (inner.match(/<title>([\s\S]*?)<\/title>/) || [])[1]?.trim() ?? id;
+    const status = (inner.match(/<status>([\s\S]*?)<\/status>/) || [])[1]?.trim() ?? "planned";
+    const goal = (inner.match(/<goal>([\s\S]*?)<\/goal>/) || [])[1]?.trim() ?? "";
+    const outcome = (inner.match(/<outcome>([\s\S]*?)<\/outcome>/) || [])[1]?.trim() ?? null;
+    out.push({ id, title, status, goal, outcome });
+  }
+  console.log(`  [phases] parsed ${out.length} phase(s) for cross-ref index`);
+  return out;
+}
+
+function parseAllTasks() {
+  // Full parse of TASK-REGISTRY.xml — every task with full goal text, keywords,
+  // status, and the phase it belongs to (via the nearest preceding <phase id="">).
+  const planningDir = path.join(REPO_ROOT, ".planning");
+  const taskPath = path.join(planningDir, "TASK-REGISTRY.xml");
+  if (!exists(taskPath)) return [];
+  const src = fs.readFileSync(taskPath, "utf8");
+  const out = [];
+
+  // Walk phase blocks and capture tasks inside each so we know the phase
+  // association without nested regex.
+  const phaseBlockRegex = /<phase\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/phase>/g;
+  let pm;
+  while ((pm = phaseBlockRegex.exec(src)) !== null) {
+    const phaseId = pm[1];
+    const phaseInner = pm[2];
+    const taskRegex = /<task\s+id="([^"]+)"([^>]*)>([\s\S]*?)<\/task>/g;
+    let tm;
+    while ((tm = taskRegex.exec(phaseInner)) !== null) {
+      const id = tm[1];
+      const attrs = tm[2];
+      const inner = tm[3];
+      const status = (attrs.match(/status="([^"]*)"/) || [])[1] ?? "planned";
+      const agentId = (attrs.match(/agent-id="([^"]*)"/) || [])[1] ?? null;
+      const goal = (inner.match(/<goal>([\s\S]*?)<\/goal>/) || [])[1]?.trim() ?? "";
+      const keywords = (inner.match(/<keywords>([\s\S]*?)<\/keywords>/) || [])[1]?.trim() ?? "";
+      const depends = (inner.match(/<depends>([\s\S]*?)<\/depends>/) || [])[1]?.trim() ?? "";
+      out.push({
+        id,
+        phaseId,
+        status,
+        agentId,
+        goal,
+        keywords: keywords ? keywords.split(",").map((s) => s.trim()).filter(Boolean) : [],
+        depends: depends ? depends.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      });
+    }
+  }
+  console.log(`  [tasks] parsed ${out.length} task(s) for cross-ref index`);
+  return out;
+}
+
 function parsePlanningState() {
   console.log("[2g/4] Parsing GAD planning state (STATE, TASKS, DECISIONS)");
   const planningDir = path.join(REPO_ROOT, ".planning");
@@ -1647,6 +1712,34 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = ${JSON.stringify(extras.allDecisions ?? [], null, 2)};
 
+export interface TaskRecord {
+  id: string;
+  phaseId: string;
+  status: string;
+  agentId: string | null;
+  goal: string;
+  keywords: string[];
+  depends: string[];
+}
+
+/**
+ * Every task in .planning/TASK-REGISTRY.xml. Feeds /tasks page + Ref resolution.
+ */
+export const ALL_TASKS: TaskRecord[] = ${JSON.stringify(extras.allTasks ?? [], null, 2)};
+
+export interface PhaseRecord {
+  id: string;
+  title: string;
+  status: string;
+  goal: string;
+  outcome: string | null;
+}
+
+/**
+ * Every phase in .planning/ROADMAP.xml. Feeds /phases page + Ref resolution.
+ */
+export const ALL_PHASES: PhaseRecord[] = ${JSON.stringify(extras.allPhases ?? [], null, 2)};
+
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",
   bare: "Bare",
@@ -1715,6 +1808,8 @@ function main() {
   const traces = findTraceFiles();
   const pseudoDb = loadJsonDataPseudoDb();
   const allDecisions = parseAllDecisions();
+  const allTasks = parseAllTasks();
+  const allPhases = parseAllPhases();
 
   writeEvalDataTs(traces, evalTemplates, gadPackTemplate, {
     planningZips,
@@ -1724,6 +1819,8 @@ function main() {
     producedArtifacts,
     pseudoDb,
     allDecisions,
+    allTasks,
+    allPhases,
   });
   writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
   auditPlayable();

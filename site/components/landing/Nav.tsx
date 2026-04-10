@@ -35,6 +35,7 @@ const GROUPS: NavGroup[] = [
       { href: "/decisions", label: "Decisions", note: "DECISIONS.xml rendered" },
       { href: "/questions", label: "Questions", note: "open research questions" },
       { href: "/roadmap", label: "Roadmap", note: "round timeline" },
+      { href: "/data", label: "Data provenance", note: "every number's source" },
     ],
   },
   {
@@ -57,6 +58,10 @@ const GROUPS: NavGroup[] = [
     label: "System",
     links: [
       { href: "/planning", label: "Planning", note: "in-repo state + tasks" },
+      { href: "/tasks", label: "Tasks", note: "every task in TASK-REGISTRY" },
+      { href: "/phases", label: "Phases", note: "ROADMAP.xml rendered" },
+      { href: "/bugs", label: "Bugs", note: "tracked across runs" },
+      { href: "/requirements", label: "Requirements", note: "v5 + history" },
       { href: "/security", label: "Security", note: "skill risks + certification" },
       { href: "/contribute", label: "Contribute", note: "clone and run your own" },
     ],
