@@ -4,7 +4,62 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>CRITICAL SITE FIXES NEEDED — NEXT SESSION MUST START HERE. The landing page has multiple broken promises that have been requested 5+ times and never shipped to main due to worktree branch confusion throughout session 2026-04-09/10. Git state is now clean (main branch, no worktrees, 32 runs, 19 playable). PRIORITY 1 (non-negotiable, do before anything else): (1) Results section on landing page STILL says "Round 3 results" — must paginate across all rounds with per-round conclusions, filter by project and hypothesis, show TBD for unreviewed rounds. This has been asked for 5+ times. (2) The Loop section on landing page needs pagination showing different hypothesis loops. (3) Hover info panels on eval components in the Playable Archive — not implemented. (4) Hook error handling — gad-trace-hook.cjs should create .planning/ if it doesn't exist instead of erroring, manage log file size with rotation (keep last N entries), and the hook error message in Claude Code should log WHICH hook failed and WHAT the error was to a log file. (5) shadcn is available but underutilized — the site uses custom components when shadcn has chart, tooltip, popover, dialog components that would solve several of these UX issues. (6) data/ folder should be the pseudo-database for ALL structured site data — hypothesis definitions, graph data points, eval results, round conclusions, not just open-questions and bugs. Extract hardcoded data from components into data/*.json collections. PRIORITY 2: Round 5 eval builds exist and are playable (19 builds deployed). User needs to play and review them. Bare v5 playtest feedback from round 4 drove v5 requirements. Round 5 has UO-style auto-resolve combat + trait system with numeric values. Conditions: bare v6 (111K tokens), GAD v11 (107K), GAD v12 rerun (120K), emergent v5 (84K), emergent v6 rerun (97K), video v1 (33K). TRACE data is stub-only (no behavioral events — worktree hooks don't fire, feature request anthropics/claude-code#46279 submitted). Clone-based eval runner exists as workaround (scripts/eval-clone-run.sh) but untested. PRIORITY 3: Site architecture — use data/ as the single source of truth for all structured content, reusable components via shadcn, proper state management. Feature requests page live at /feature-requests. 5 starter repos published on GitHub (MagicbornStudios/escape-the-dungeon-*). The session-discipline skill exists but was not followed — dogfood failure repeated.</next-action>
+  <next-action>SITE FIXES — NON-NEGOTIABLE BEFORE ANYTHING ELSE. Session 2026-04-10 ended with 5+ broken promises due to worktree branch confusion (now resolved — main branch clean, no worktrees, 32 runs, 19 playable). NEXT SESSION MUST RUN gad snapshot FIRST per session-discipline skill, then execute these in order:
+
+=== PRIORITY 1: LANDING PAGE FIXES (asked 5+ times, never shipped) ===
+
+(A) EXPERIMENT LOG (was "Rounds" component, rename to ExperimentLog):
+- Paginate by round with project + hypothesis filters
+- Keyword search across log entries (narrow search just for this section)
+- Tags + references linking to source evals/findings
+- Show TBD for unreviewed rounds
+- Filter by project (escape-the-dungeon, gad-explainer-video, etc)
+- Filter by hypothesis (freedom, CSH, emergent-evolution, etc)
+- Round conclusions per round (not just "Round 3 results" forever)
+
+(B) RESULTS SECTION: Must update dynamically per round, not hardcoded to Round 3. Same filtering as experiment log. Per-round conclusions.
+
+(C) HOVER INFO PANELS on eval components in Playable Archive — use shadcn HoverCard or Popover. On hover of any eval badge/card, show detailed panel with tokens, duration, hypothesis, condition, trace status, review status.
+
+(D) LOOP SECTION pagination showing different hypothesis loops and how they evolve.
+
+=== PRIORITY 2: TECHNICAL STACK ===
+
+(A) Install zustand + zustand/immer for shared state (stop prop drilling + custom events). Use for filter state shared between chart, playable archive, experiment log, results.
+
+(B) Install react-query (@tanstack/react-query) for any client-side data fetching + caching if needed.
+
+(C) Install lucide-animated icons: pnpm dlx shadcn@latest registry add @lucide-animated. Use animated icons throughout the site for visual energy.
+
+(D) Use shadcn components properly: HoverCard for info panels, Popover for filter dropdowns, Dialog for modals, Charts for interactive graphs. Stop reinventing.
+
+(E) Rename Rounds component to ExperimentLog everywhere.
+
+=== PRIORITY 3: DATA ARCHITECTURE ===
+
+(A) data/ IS the pseudo-database. Move ALL hardcoded site data into data/*.json:
+- data/hypotheses.json — hypothesis definitions, status, evidence summary
+- data/rounds.json — round conclusions, findings references, status
+- data/eval-conditions.json — the 5-condition matrix descriptions
+- data/graph-series.json — precomputed chart data points
+- data/media.json — video/image references for the site
+Keep existing: open-questions.json, bugs.json, glossary.json, feature-requests.json
+
+(B) data/ should also reference media (videos, images). Media FILES live in starter repos or external URLs (NOT in the GAD repo to avoid bloat). data/media.json holds URLs + metadata.
+
+(C) Remove broken screenshot references from GitHub starter repo READMEs. The image URLs point at screenshots we deleted from the GAD repo. Remove the img tags.
+
+=== PRIORITY 4: HOOK ERROR HANDLING ===
+
+(A) gad-trace-hook.cjs: create .planning/ dir if it doesn't exist (don't error). The user accepted the hook on install — it should work silently.
+
+(B) Log rotation: keep last 1000 events max in .trace-events.jsonl. Truncate oldest when limit reached. Don't let logs grow unbounded.
+
+(C) Hook error logging: write which hook failed + what the error was to a separate .claude/hooks.log with timestamps. Don't just print "hook error" — say what happened.
+
+=== CONTEXT ===
+
+Round 5: 19 playable builds deployed. TRACE data is stub-only (no behavioral events). Feature request anthropics/claude-code#46279 submitted for worktree hook inheritance. Clone-based eval runner exists (scripts/eval-clone-run.sh) but untested. User has NOT played round 5 builds yet — waiting for site fixes first. Do NOT run more evals until site is fixed and user has reviewed round 5. Follow the session-discipline skill. Follow the GAD loop. Do NOT use worktree isolation for subagents — use the clone-based approach or run changes directly on main.</next-action>
   <last-updated>2026-04-10</last-updated>
   <sink-compiled sink="apps/portfolio/content/docs/get-anything-done/planning/" at="2026-04-07T20:03:13.950Z" />
 </state>
