@@ -52,6 +52,7 @@ A playable build that satisfies the requirements. The agent should:
 4. Serve it locally so you can play/view it
 5. The build should pass all gate criteria in the requirements
 
+## Live demo[**Play the latest build →**](https://get-anything-done.vercel.app/playable/escape-the-dungeon/v10/index.html)> Built by a coding agent against these exact template files. No human code edits.
 ## See the demos
 
 Builds from previous rounds are playable in your browser:
