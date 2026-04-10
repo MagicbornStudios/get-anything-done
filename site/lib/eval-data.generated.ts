@@ -3053,6 +3053,11 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
     "bytes": 1410
   },
   {
+    "project": "gad-explainer-video",
+    "zipPath": "/downloads/eval-gad-explainer-video-template.zip",
+    "bytes": 22
+  },
+  {
     "project": "reader-workspace",
     "zipPath": "/downloads/eval-reader-workspace-template.zip",
     "bytes": 15255
@@ -3407,6 +3412,65 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "human_review": 0.3
     },
     "humanReviewRubric": null
+  },
+  {
+    "id": "gad-explainer-video",
+    "name": "gad-explainer-video",
+    "description": "NEW EVAL DOMAIN (task 22-31, scaffolded 2026-04-09). The task is to produce a Remotion video that explains the GAD framework, its hypotheses, and its current state. The video requirements evolve across rounds the same way the escape-the-dungeon game requirements did — each round adds clarity, constraints, and complexity to the explainer script. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a completely different task domain: video composition instead of game implementation. If bare still outperforms GAD here, freedom hypothesis generalizes beyond game dev. If not, freedom may be specific to creative implementation.",
+    "evalMode": "greenfield",
+    "workflow": "gad",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": true,
+      "starts_from_scratch": true,
+      "target_runtime": "@remotion/player + @remotion/cli",
+      "video_duration_seconds_max": 180,
+      "no_external_assets_without_attribution": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.15,
+      "video_polish": 0.2,
+      "pedagogical_clarity": 0.15,
+      "workflow_quality": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.15
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "pedagogical_clarity",
+          "label": "Pedagogical clarity",
+          "weight": 0.3,
+          "description": "After watching the video, can a first-time viewer explain back to you what GAD is, what the freedom hypothesis is, and why the compound-skills hypothesis matters? Optimized for new-user comprehension, not insider accuracy."
+        },
+        {
+          "key": "video_polish",
+          "label": "Video polish",
+          "weight": 0.25,
+          "description": "Composition quality. Smooth transitions, readable typography, consistent color palette, intentional pacing, working audio. No raw unstyled text. No broken renders."
+        },
+        {
+          "key": "accuracy",
+          "label": "Accuracy",
+          "weight": 0.2,
+          "description": "Does the video accurately represent the current state of the project? Hypotheses named correctly, round numbers right, skeptic disclaimers present, no overclaiming of findings."
+        },
+        {
+          "key": "scope_fit",
+          "label": "Scope fit",
+          "weight": 0.15,
+          "description": "The video hits its target duration (up to 3 minutes) without feeling rushed or padded. Explains what needs explaining without over-indexing on minor details."
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.1,
+          "description": "Renders without errors. No @remotion/cli crashes. Deterministic output across renders."
+        }
+      ]
+    }
   },
   {
     "id": "gad-planning-loop",
@@ -6744,7 +6808,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-20",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no standalone \"what is GAD\" reference page someone can deep-link to. The catalog cards work but users have asked for a top-level GAD explainer + index that links into skills/agents/commands as a single navigation hub.",
     "keywords": [
@@ -6757,7 +6821,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-21",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "/methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. This is the \"how we measure\" appendix users have been asking for. Includes concrete worked examples showing how a composite score was derived.",
     "keywords": [
@@ -6785,7 +6849,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-23",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, \"what the agent built for itself\" per run (scan run/.planning/skills/*.md and similar).",
     "keywords": [
@@ -6799,26 +6863,30 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-24",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library — pure React-rendered SVG so it ships in every prebuild.",
     "keywords": [
       "graphs",
-      "svg",
       "charts",
-      "home"
+      "recharts",
+      "interactive",
+      "home",
+      "roadmap"
     ],
     "depends": []
   },
   {
     "id": "22-25",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary nav row or drop items.",
     "keywords": [
       "nav",
-      "navigation"
+      "navigation",
+      "dropdown",
+      "refactor"
     ],
     "depends": [
       "22-20",
@@ -6868,7 +6936,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-29",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "/lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. Captures decision gad-56.",
     "keywords": [
@@ -6897,14 +6965,15 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-31",
     "phaseId": "22",
-    "status": "planned",
+    "status": "in-progress",
     "agentId": "",
     "goal": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content — the scaffold establishes the pattern and the first composition is a placeholder.",
     "keywords": [
       "remotion",
       "scaffold",
       "videos-route",
-      "player-embed"
+      "player-embed",
+      "eval-domain"
     ],
     "depends": []
   },
@@ -7025,6 +7094,146 @@ export const ALL_TASKS: TaskRecord[] = [
       "js-yaml"
     ],
     "depends": []
+  },
+  {
+    "id": "22-36",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Dogfood-failure recovery: author skills/emergent/session-discipline/SKILL.md as an agent-authored hard-start checklist. Move agent-authored skills into skills/emergent/ so default install can skip them. Add origin + authored-by + authored-on + excluded-from-default-install fields to CatalogSkill. Capture gad-78 (dogfood failure) + gad-79 (task_pressure programmatic) decisions.",
+    "keywords": [
+      "dogfood",
+      "emergent-skill",
+      "session-discipline",
+      "catalog",
+      "origin"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-37",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Reorganize .planning/ root: move ad-hoc markdown docs (ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-*.md) into a new .planning/docs/ subdirectory per user directive. Rationale: .planning/ root should hold the formal XML artifacts that gad snapshot surfaces; ad-hoc human-written docs that are not formal (but still project-relevant) belong in a peer docs/ folder. Update all site page references to the new paths.",
+    "keywords": [
+      "planning-docs",
+      "reorganization",
+      "site-refs"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-38",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Retroactively update TASK-REGISTRY.xml to mark 22-20/22-21/22-23/22-24/22-25/22-29 as done (work shipped in prior sessions without registry updates — dogfood failure per gad-78). Add new tasks 22-36/22-37/22-38/22-39/22-40/22-41/22-42/22-43 for this session's work.",
+    "keywords": [
+      "registry-truth",
+      "retroactive-update",
+      "dogfood-recovery"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-39",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Agent-crawlable documentation export: emit public/llms.txt (concise index per llmstxt.org convention), public/llms-full.txt (full-text dump of skills/decisions/questions/bugs/glossary/tasks/phases/current-requirements), public/api/docs.json (structured JSON with schema gad-docs-v1) at prebuild. Provides a full API reference for external agents evaluating or reviewing GAD without needing to crawl HTML.",
+    "keywords": [
+      "llms-txt",
+      "api-reference",
+      "agent-ingest",
+      "prebuild"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-40",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Interactive chart on /roadmap showing human review across rounds broken out by hypothesis track. Solid lines for tracks with real data (freedom/csh/gad). Dashed ghost lines for planned tracks without runs yet (content-driven, codex runtime) so the research plan is visible.",
+    "keywords": [
+      "interactive-chart",
+      "recharts",
+      "hypothesis-tracks"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-41",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "/hypotheses index page + /freedom evidence page + /content-driven planned-hypothesis page. Every hypothesis the project tracks gets wired to its eval track, its latest evidence, and its dedicated evidence page. Status labels: preliminary observation / discussing / operationalized / not-yet-tested.",
+    "keywords": [
+      "hypotheses",
+      "freedom",
+      "content-driven",
+      "hypothesis-pages"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-42",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Clickable skills modal on /emergent: convert the static skill-artifact chip list on the emergent page into client-component buttons that open a modal showing the full SKILL.md content with Copy button + GitHub source link. Per user directive 2026-04-09: \"I wish i could click and download or get that pop up of those skills on the page.\"",
+    "keywords": [
+      "emergent",
+      "skill-modal",
+      "client-component"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-43",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Scaffold evals/gad-explainer-video/ as a new eval project: REQUIREMENTS.md describing the Remotion GAD explainer video task (3-minute explainer, 4 mandatory gate frames, pedagogical clarity as primary rubric dimension), gad.json with workflow:gad + compare_to bare/emergent siblings + rubric weights. Tests freedom/CSH/emergent-evolution hypotheses on a DIFFERENT task domain (video composition instead of game implementation) — the generalization test /skeptic says we need.",
+    "keywords": [
+      "remotion",
+      "eval-domain",
+      "generalization",
+      "gad-explainer",
+      "task-22-31"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-44",
+    "phaseId": "22",
+    "status": "planned",
+    "agentId": "",
+    "goal": "Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in Claude → talk conversationally), document everything that breaks, update /contribute with the friction points, remove the \"fresh-clone test still open\" amber warning. Goal: make contribution actually work for a human who has never touched GAD before.",
+    "keywords": [
+      "contribution",
+      "fresh-clone",
+      "gad-77",
+      "manual-test"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-45",
+    "phaseId": "22",
+    "status": "planned",
+    "agentId": "",
+    "goal": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time.",
+    "keywords": [
+      "remotion",
+      "runtime",
+      "videos-route",
+      "scaffold"
+    ],
+    "depends": [
+      "22-43"
+    ]
   }
 ];
 
@@ -8677,14 +8886,14 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, ",
     "kind": "task",
     "href": "/tasks#22-24",
-    "body": "22-24 lightweight svg charts in a graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). no charting library — pure react-rendered svg so it ships in every prebuild. graphs svg charts home"
+    "body": "22-24 lightweight svg charts in a graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). no charting library — pure react-rendered svg so it ships in every prebuild. graphs charts recharts interactive home roadmap"
   },
   {
     "id": "22-25",
     "title": "Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary n",
     "kind": "task",
     "href": "/tasks#22-25",
-    "body": "22-25 nav surface update: add framework + methodology + projects links. current nav is already packed — may need a secondary nav row or drop items. nav navigation"
+    "body": "22-25 nav surface update: add framework + methodology + projects links. current nav is already packed — may need a secondary nav row or drop items. nav navigation dropdown refactor"
   },
   {
     "id": "22-26",
@@ -8726,7 +8935,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one",
     "kind": "task",
     "href": "/tasks#22-31",
-    "body": "22-31 phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with root.tsx composition registry + one placeholder composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/videoembed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). does not author full video content — the scaffold establishes the pattern and the first composition is a placeholder. remotion scaffold videos-route player-embed"
+    "body": "22-31 phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with root.tsx composition registry + one placeholder composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/videoembed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). does not author full video content — the scaffold establishes the pattern and the first composition is a placeholder. remotion scaffold videos-route player-embed eval-domain"
   },
   {
     "id": "22-32",
@@ -8783,6 +8992,76 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/tasks#22-35",
     "body": "22-35 fix yaml parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). descriptions with embedded colons like \"methodology:\" and \"discipline:\" were parsed by js-yaml as key-value separators, breaking skill loading in claude code. fix by converting plain scalar descriptions to yaml folded block scalar form (`description: &gt;- ...`) which treats the body as opaque. yaml frontmatter skill-loader js-yaml"
+  },
+  {
+    "id": "22-36",
+    "title": "Dogfood-failure recovery: author skills/emergent/session-discipline/SKILL.md as an agent-authored hard-start checklist. ",
+    "kind": "task",
+    "href": "/tasks#22-36",
+    "body": "22-36 dogfood-failure recovery: author skills/emergent/session-discipline/skill.md as an agent-authored hard-start checklist. move agent-authored skills into skills/emergent/ so default install can skip them. add origin + authored-by + authored-on + excluded-from-default-install fields to catalogskill. capture gad-78 (dogfood failure) + gad-79 (task_pressure programmatic) decisions. dogfood emergent-skill session-discipline catalog origin"
+  },
+  {
+    "id": "22-37",
+    "title": "Reorganize .planning/ root: move ad-hoc markdown docs (ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-*.md) int",
+    "kind": "task",
+    "href": "/tasks#22-37",
+    "body": "22-37 reorganize .planning/ root: move ad-hoc markdown docs (assumptions.md, gaps.md, skeptic.md, session-reflection-*.md) into a new .planning/docs/ subdirectory per user directive. rationale: .planning/ root should hold the formal xml artifacts that gad snapshot surfaces; ad-hoc human-written docs that are not formal (but still project-relevant) belong in a peer docs/ folder. update all site page references to the new paths. planning-docs reorganization site-refs"
+  },
+  {
+    "id": "22-38",
+    "title": "Retroactively update TASK-REGISTRY.xml to mark 22-20/22-21/22-23/22-24/22-25/22-29 as done (work shipped in prior sessio",
+    "kind": "task",
+    "href": "/tasks#22-38",
+    "body": "22-38 retroactively update task-registry.xml to mark 22-20/22-21/22-23/22-24/22-25/22-29 as done (work shipped in prior sessions without registry updates — dogfood failure per gad-78). add new tasks 22-36/22-37/22-38/22-39/22-40/22-41/22-42/22-43 for this session's work. registry-truth retroactive-update dogfood-recovery"
+  },
+  {
+    "id": "22-39",
+    "title": "Agent-crawlable documentation export: emit public/llms.txt (concise index per llmstxt.org convention), public/llms-full.",
+    "kind": "task",
+    "href": "/tasks#22-39",
+    "body": "22-39 agent-crawlable documentation export: emit public/llms.txt (concise index per llmstxt.org convention), public/llms-full.txt (full-text dump of skills/decisions/questions/bugs/glossary/tasks/phases/current-requirements), public/api/docs.json (structured json with schema gad-docs-v1) at prebuild. provides a full api reference for external agents evaluating or reviewing gad without needing to crawl html. llms-txt api-reference agent-ingest prebuild"
+  },
+  {
+    "id": "22-40",
+    "title": "Interactive chart on /roadmap showing human review across rounds broken out by hypothesis track. Solid lines for tracks ",
+    "kind": "task",
+    "href": "/tasks#22-40",
+    "body": "22-40 interactive chart on /roadmap showing human review across rounds broken out by hypothesis track. solid lines for tracks with real data (freedom/csh/gad). dashed ghost lines for planned tracks without runs yet (content-driven, codex runtime) so the research plan is visible. interactive-chart recharts hypothesis-tracks"
+  },
+  {
+    "id": "22-41",
+    "title": "/hypotheses index page + /freedom evidence page + /content-driven planned-hypothesis page. Every hypothesis the project ",
+    "kind": "task",
+    "href": "/tasks#22-41",
+    "body": "22-41 /hypotheses index page + /freedom evidence page + /content-driven planned-hypothesis page. every hypothesis the project tracks gets wired to its eval track, its latest evidence, and its dedicated evidence page. status labels: preliminary observation / discussing / operationalized / not-yet-tested. hypotheses freedom content-driven hypothesis-pages"
+  },
+  {
+    "id": "22-42",
+    "title": "Clickable skills modal on /emergent: convert the static skill-artifact chip list on the emergent page into client-compon",
+    "kind": "task",
+    "href": "/tasks#22-42",
+    "body": "22-42 clickable skills modal on /emergent: convert the static skill-artifact chip list on the emergent page into client-component buttons that open a modal showing the full skill.md content with copy button + github source link. per user directive 2026-04-09: \"i wish i could click and download or get that pop up of those skills on the page.\" emergent skill-modal client-component"
+  },
+  {
+    "id": "22-43",
+    "title": "Scaffold evals/gad-explainer-video/ as a new eval project: REQUIREMENTS.md describing the Remotion GAD explainer video t",
+    "kind": "task",
+    "href": "/tasks#22-43",
+    "body": "22-43 scaffold evals/gad-explainer-video/ as a new eval project: requirements.md describing the remotion gad explainer video task (3-minute explainer, 4 mandatory gate frames, pedagogical clarity as primary rubric dimension), gad.json with workflow:gad + compare_to bare/emergent siblings + rubric weights. tests freedom/csh/emergent-evolution hypotheses on a different task domain (video composition instead of game implementation) — the generalization test /skeptic says we need. remotion eval-domain generalization gad-explainer task-22-31"
+  },
+  {
+    "id": "22-44",
+    "title": "Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into",
+    "kind": "task",
+    "href": "/tasks#22-44",
+    "body": "22-44 manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in claude → talk conversationally), document everything that breaks, update /contribute with the friction points, remove the \"fresh-clone test still open\" amber warning. goal: make contribution actually work for a human who has never touched gad before. contribution fresh-clone gad-77 manual-test"
+  },
+  {
+    "id": "22-45",
+    "title": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Compo",
+    "kind": "task",
+    "href": "/tasks#22-45",
+    "body": "22-45 site/remotion/ runtime scaffold (second half of task 22-31): create root.tsx composition registry, one placeholder composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, videoembed.tsx wrapper component. this unblocks the gad-explainer-video eval project (22-43) being run for the first time. remotion runtime videos-route scaffold"
   },
   {
     "id": "01",

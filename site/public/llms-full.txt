@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-10T02:17:58.686Z
+Generated: 2026-04-10T02:30:25.957Z
 
 
 ---
@@ -5519,7 +5519,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (140)
+# Tasks (150)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -5761,17 +5761,17 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **22-19** [done]: skills/portfolio-sync/SKILL.md — methodology for keeping the public site in sync with evals.
 
-- **22-20** [planned]: Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no standalone "what is GAD" reference page someone can deep-link to. The catalog cards work but users have asked for a top-level GAD explainer + index that links into skills/agents/commands as a single navigation hub.
+- **22-20** [done]: Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no standalone "what is GAD" reference page someone can deep-link to. The catalog cards work but users have asked for a top-level GAD explainer + index that links into skills/agents/commands as a single navigation hub.
 
-- **22-21** [planned]: /methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. This is the "how we measure" appendix users have been asking for. Includes concrete worked examples showing how a composite score was derived.
+- **22-21** [done]: /methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. This is the "how we measure" appendix users have been asking for. Includes concrete worked examples showing how a composite score was derived.
 
 - **22-22** [planned]: Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a "tracing gap" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schem
 
-- **22-23** [planned]: Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, "what the agent built for itself" per run (scan run/.planning/skills/*.md and similar).
+- **22-23** [done]: Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, "what the agent built for itself" per run (scan run/.planning/skills/*.md and similar).
 
-- **22-24** [planned]: Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library — pure React-rendered SVG so it ships in every prebuild.
+- **22-24** [done]: Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library — pure React-rendered SVG so it ships in every prebuild.
 
-- **22-25** [planned]: Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary nav row or drop items.
+- **22-25** [done]: Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary nav row or drop items.
 
 - **22-26** [planned]: Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math.
 
@@ -5779,11 +5779,11 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **22-28** [done]: Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed.
 
-- **22-29** [planned]: /lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. Captures decision gad-56.
+- **22-29** [done]: /lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. Captures decision gad-56.
 
 - **22-30** [planned]: Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for GAD evaluation.
 
-- **22-31** [planned]: Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content
+- **22-31** [in-progress]: Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content
 
 - **22-32** [done]: Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output.
 
@@ -5800,6 +5800,26 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 - **25-04** [done]: `gad install hooks` CLI subcommand that wires the trace hook into Claude Code settings.json.
 
 - **22-35** [done]: Fix YAML parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). Descriptions with embedded colons like "methodology:" and "discipline:" were parsed by js-yaml as key-value separators, breaking skill loading in Claude Code. Fix by converting plain scalar descriptions to YAML folded block scalar form (`description: &gt;- ...`) which treats the body as opaque.
+
+- **22-36** [done]: Dogfood-failure recovery: author skills/emergent/session-discipline/SKILL.md as an agent-authored hard-start checklist. Move agent-authored skills into skills/emergent/ so default install can skip them. Add origin + authored-by + authored-on + excluded-from-default-install fields to CatalogSkill. Capture gad-78 (dogfood failure) + gad-79 (task_pressure programmatic) decisions.
+
+- **22-37** [done]: Reorganize .planning/ root: move ad-hoc markdown docs (ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-*.md) into a new .planning/docs/ subdirectory per user directive. Rationale: .planning/ root should hold the formal XML artifacts that gad snapshot surfaces; ad-hoc human-written docs that are not formal (but still project-relevant) belong in a peer docs/ folder. Update all site page refe
+
+- **22-38** [done]: Retroactively update TASK-REGISTRY.xml to mark 22-20/22-21/22-23/22-24/22-25/22-29 as done (work shipped in prior sessions without registry updates — dogfood failure per gad-78). Add new tasks 22-36/22-37/22-38/22-39/22-40/22-41/22-42/22-43 for this session's work.
+
+- **22-39** [done]: Agent-crawlable documentation export: emit public/llms.txt (concise index per llmstxt.org convention), public/llms-full.txt (full-text dump of skills/decisions/questions/bugs/glossary/tasks/phases/current-requirements), public/api/docs.json (structured JSON with schema gad-docs-v1) at prebuild. Provides a full API reference for external agents evaluating or reviewing GAD without needing to crawl H
+
+- **22-40** [done]: Interactive chart on /roadmap showing human review across rounds broken out by hypothesis track. Solid lines for tracks with real data (freedom/csh/gad). Dashed ghost lines for planned tracks without runs yet (content-driven, codex runtime) so the research plan is visible.
+
+- **22-41** [done]: /hypotheses index page + /freedom evidence page + /content-driven planned-hypothesis page. Every hypothesis the project tracks gets wired to its eval track, its latest evidence, and its dedicated evidence page. Status labels: preliminary observation / discussing / operationalized / not-yet-tested.
+
+- **22-42** [done]: Clickable skills modal on /emergent: convert the static skill-artifact chip list on the emergent page into client-component buttons that open a modal showing the full SKILL.md content with Copy button + GitHub source link. Per user directive 2026-04-09: "I wish i could click and download or get that pop up of those skills on the page."
+
+- **22-43** [done]: Scaffold evals/gad-explainer-video/ as a new eval project: REQUIREMENTS.md describing the Remotion GAD explainer video task (3-minute explainer, 4 mandatory gate frames, pedagogical clarity as primary rubric dimension), gad.json with workflow:gad + compare_to bare/emergent siblings + rubric weights. Tests freedom/CSH/emergent-evolution hypotheses on a DIFFERENT task domain (video composition inste
+
+- **22-44** [planned]: Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in Claude → talk conversationally), document everything that breaks, update /contribute with the friction points, remove the "fresh-clone test still open" amber warning. Goal: make contribution act
+
+- **22-45** [planned]: Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time.
 
 
 ---

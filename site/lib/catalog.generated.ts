@@ -1774,34 +1774,9 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Run round 1 brownfield experiments. Three conditions using bare v3 baseline + v4 extensions. BLOCKED on portfolio documentation (21-28)."
     },
     {
-      "id": "22-20",
-      "status": "planned",
-      "goal": "Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no standalone \"what is GAD\" reference page someone can deep-link to. The catalog cards work but users have asked for a top-level GAD explainer + i…"
-    },
-    {
-      "id": "22-21",
-      "status": "planned",
-      "goal": "/methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. This is the \"how we measure\" appendix users…"
-    },
-    {
       "id": "22-22",
       "status": "planned",
       "goal": "Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accur…"
-    },
-    {
-      "id": "22-23",
-      "status": "planned",
-      "goal": "Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, \"what the …"
-    },
-    {
-      "id": "22-24",
-      "status": "planned",
-      "goal": "Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library — pure React-rendered SVG so it shi…"
-    },
-    {
-      "id": "22-25",
-      "status": "planned",
-      "goal": "Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary nav row or drop items."
     },
     {
       "id": "22-26",
@@ -1814,27 +1789,32 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-l…"
     },
     {
-      "id": "22-29",
-      "status": "planned",
-      "goal": "/lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. C…"
-    },
-    {
       "id": "22-30",
       "status": "planned",
       "goal": "Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside dec…"
     },
     {
       "id": "22-31",
-      "status": "planned",
+      "status": "in-progress",
       "goal": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inlin…"
     },
     {
       "id": "22-33",
       "status": "planned",
       "goal": "`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships…"
+    },
+    {
+      "id": "22-44",
+      "status": "planned",
+      "goal": "Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in Claude → talk conversationally), document everything …"
+    },
+    {
+      "id": "22-45",
+      "status": "planned",
+      "goal": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-exp…"
     }
   ],
-  "doneTasksCount": 122,
+  "doneTasksCount": 136,
   "recentDecisions": [
     {
       "id": "gad-61",
