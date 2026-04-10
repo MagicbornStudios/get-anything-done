@@ -131,6 +131,20 @@ export default function Hero() {
               See the evidence <ArrowRight size={11} className="inline" aria-hidden />
             </Link>
           </p>
+
+          <p className="mt-4 max-w-2xl rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-[13px] leading-6 text-rose-200">
+            <strong className="font-semibold text-rose-100">Honest disclosure:</strong>{" "}
+            N=2-5 runs per condition. One human reviewer. One task domain. The
+            &quot;hypotheses&quot; on this site are exploratory observations, not
+            tested claims. We hold every claim to its strongest critique on{" "}
+            <Link
+              href="/skeptic"
+              className="underline decoration-rose-300 underline-offset-2 hover:text-rose-100"
+            >
+              /skeptic
+            </Link>{" "}
+            &mdash; read it before trusting any number on this site.
+          </p>
         </div>
       </div>
     </section>

@@ -23,6 +23,7 @@ const GROUPS: NavGroup[] = [
       { href: "/gad", label: "GAD", note: "what the framework is" },
       { href: "/lineage", label: "Lineage", note: "GSD → RepoPlanner → GAD" },
       { href: "/methodology", label: "Methodology", note: "rubric, gates, rounds" },
+      { href: "/skeptic", label: "Skeptic", note: "devils advocate against our claims" },
       { href: "/glossary", label: "Glossary", note: "every domain term" },
     ],
   },
