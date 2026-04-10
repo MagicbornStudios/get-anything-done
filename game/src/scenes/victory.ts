@@ -1,32 +1,36 @@
-import { registerScene, el, icon } from '../renderer';
-import { getState, deleteSave, setScene } from '../state';
+// ============================================================
+// Victory Scene
+// ============================================================
 
-registerScene('victory', (container) => {
-  const state = getState();
-  const p = state.player;
+import { registerScene, renderScene, icon } from '../renderer';
+import { getState, deleteSave } from '../state';
 
-  const screen = el('div', { className: 'title-screen' },
-    icon('game-icons:trophy', 'icon-xxl'),
-    el('h1', { style: { background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-heal))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } }, 'ESCAPE COMPLETE!'),
-    el('p', { className: 'subtitle' }, 'You have conquered the dungeon.'),
-    el('div', { className: 'panel', style: { maxWidth: '400px', textAlign: 'center' } },
-      el('h3', {}, 'Final Stats'),
-      el('p', {}, `Level: ${p.stats.level}`),
-      el('p', {}, `Spells Crafted: ${p.spells.length - 2}`),
-      el('p', {}, `Runes Discovered: ${p.discoveredRunes.length}`),
-      el('p', {}, `Gold: ${p.gold}`),
-      el('p', {}, `Traits: ${Object.entries(p.traits).map(([k, v]) => `${k}: ${(v as number).toFixed(2)}`).join(', ')}`),
-    ),
-    el('div', { className: 'title-buttons', style: { marginTop: '16px' } },
-      el('button', {
-        className: 'btn btn-primary',
-        onclick: () => {
-          deleteSave();
-          setScene('title');
-        },
-      }, 'Return to Title'),
-    ),
-  );
+registerScene('victory', () => {
+  const app = document.getElementById('app')!;
+  const s = getState();
+  const elapsed = Date.now() - s.player.gameClockStart;
+  const mins = Math.floor(elapsed / 60000);
 
-  container.appendChild(screen);
+  app.innerHTML = `
+    <div class="scene victory-scene">
+      <div class="victory-content">
+        ${icon('game-icons:laurel-crown', 80)}
+        <h1>You Escaped the Dungeon!</h1>
+        <p>The Lich King has been defeated. The dungeon crumbles as light floods the depths.</p>
+        <div class="victory-stats">
+          <div class="victory-stat">${icon('game-icons:person', 20)} Level ${s.player.stats.level}</div>
+          <div class="victory-stat">${icon('game-icons:spell-book', 20)} ${s.player.spells.length} spells learned</div>
+          <div class="victory-stat">${icon('game-icons:fire-ring', 20)} ${s.player.discoveredRunes.length} runes discovered</div>
+          <div class="victory-stat">${icon('game-icons:coins', 20)} ${s.player.gold} gold collected</div>
+          <div class="victory-stat">${icon('game-icons:sundial', 20)} ${mins} minutes played</div>
+        </div>
+        <button class="btn btn-primary btn-large" id="btn-new-game">${icon('game-icons:sword-brandish', 24)} Play Again</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-new-game')?.addEventListener('click', () => {
+    deleteSave();
+    renderScene('title');
+  });
 });
