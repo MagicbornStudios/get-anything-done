@@ -4573,6 +4573,18 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
   {
+    "id": "gad-79",
+    "title": "task_pressure operationalized — programmatic, structural, Shannon-inspired",
+    "summary": "Decision gad-75 introduced \"pressure\" as a first-class dimension but left the formula open. User answered the open question on 2026-04-09: pressure is computed PROGRAMMATICALLY from REQUIREMENTS.xml STRUCTURE, with no human override, no `<pressure-profile>` block, and no subjective scoring (ambiguity, failure cost, etc. are dropped as sub-dimensions). The formulation borrows the Shannon-entropy intuition without computing entropy directly: \"pressure ≈ the number of decisions/questions required to satisfy the system.\" Each requirement is a question, each gate is a resolved state, more requirements and more cross-cuts mean more decisions. Concrete inputs: (a) R = count of `&lt;requirement&gt;` elements (including inside `&lt;addendum&gt;`), (b) G = count of `&lt;gate&gt;` elements, each weighted 2x because a gate groups multiple decisions, (c) C = count of `amends` attribute values across requirements (cross-cut dependencies), (d) W = word-count proxy for raw scope. Formula: `task_pressure_raw = R + 2*G + C` and `task_pressure_score = log2(task_pressure_raw + 1) / log2(MAX_EXPECTED + 1)` normalized to 0-1. Stored in TRACE.json per run (not a rubric dimension — Q2 answered A, metadata only). Critical naming clarification: this is `task_pressure` (structural, programmatic) and must NOT be conflated with `game_pressure` (the player-experience concept of stamina / resource exhaustion / time pressure in the escape-the-dungeon game). They are separate systems. The UI may display either as \"pressure\" but the internal names stay distinct.",
+    "impact": "(1) Prebuild gains a `computeTaskPressure(xml)` function called once per REQUIREMENTS.xml version, emitting per-version scores to `TASK_PRESSURE` in eval-data.generated.ts. (2) /roadmap's `PRESSURE_BY_ROUND` hand-typed constant is replaced by computed values, with a data-provenance note pointing at the formula. (3) Per-run pages gain a `task_pressure` badge showing the requirements-version pressure that run was operating under. (4) Cross-round comparison pages can now normalize: \"agent X scored 0.8 at task_pressure 0.42.\" (5) gad-75 supersedes: the 5-subdimension framing is replaced by the structural 3-input formula (R/G/C with W as a secondary proxy). gad-75's conceptual framing remains valid as motivation; gad-79 is the operational definition. (6) The formula is intentionally simple and transparent so it can be audited and disputed. Open question pressure-score-formula is RESOLVED by this decision. Open question pressure-as-rubric-vs-metadata is RESOLVED as metadata-only. (7) game_pressure remains as the in-game design concept referenced in REQUIREMENTS addendum R-v5 items and the /requirements page rendering; no overlap with task_pressure."
+  },
+  {
+    "id": "gad-78",
+    "title": "Dogfood failure observed — session 2026-04-09 built GAD without using GAD",
+    "summary": "During the 2026-04-09 IA refactor session, Claude Code (the agent building the project) shipped 20+ surfaces (pages, components, prebuild extensions, decisions) without following GAD's own workflow. Specifically: (1) did not run `gad snapshot` between turns — ran it once early in the session and never rehydrated, (2) did not check TASK-REGISTRY.xml for matching planned tasks despite 22-20 /gad page / 22-21 /methodology / 22-23 /projects / 22-24 interactive charts / 22-25 nav update / 22-31 Remotion scaffolding all being PLANNED in the registry for exactly the work that was then done ad-hoc, (3) did not invoke a single one of the 26 skills shipping in `skills/`, most notably `portfolio-sync` whose entire purpose is the workflow the agent executed manually, (4) did not spawn any subagents (gad-planner, gad-phase-researcher, gad-codebase-mapper all existed and were relevant), (5) wrote SKEPTIC.md into `.planning/` without checking whether that location is in `gad snapshot`'s output surface — it is not, so the doc is invisible to future agent sessions unless a human points at it, (6) used Claude Code's session-scoped TaskCreate tool instead of TASK-REGISTRY.xml, creating 40+ ephemeral tasks that vanish when the session ends. This is the most meta failure possible: the agent testing whether framework discipline helps agents was not using the framework. Full writeup in `.planning/SESSION-REFLECTION-2026-04-09.md`. THIS IS A FINDING AGAINST THE COMPOUND-SKILLS HYPOTHESIS as currently framed: skills do not compound if the agent doesn't invoke them, and nothing in the framework currently forces invocation.",
+    "impact": "Immediate fixes this session: (1) new `skills/session-discipline/SKILL.md` codifying the hard-start checklist every agent turn must follow (snapshot → check registry → scan skills → adopt or create task → work → write skills for non-obvious patterns → update registry → update STATE → commit with task id → push), (2) SKEPTIC.md gets a new dogfood-failure section, (3) new task queued: extend `gad snapshot` to list `.planning/*.md` ad-hoc docs so future sessions see ASSUMPTIONS/GAPS/SKEPTIC/SESSION-REFLECTION automatically, (4) new task queued: retroactively update TASK-REGISTRY.xml marking 22-20/22-21/22-23/22-24/22-25 as done where the work actually shipped. Longer-term: the framework needs self-enforcement — hooks at session boundaries, skill-trigger coverage checks (GAPS G2) that fail when a tool-use pattern matches a skill description but no skill invocation event fires, commit-message linting that rejects commits without a task id. Until that happens, agents will pattern-match around the framework and the research data we collect will be contaminated by \"agent did not actually use framework.\""
+  },
+  {
     "id": "gad-77",
     "title": "Contribution flow is human-first — snapshot is agent-facing, not human-facing",
     "summary": "Important clarification the user surfaced during the IA planning conversation: `gad snapshot` is a command for AGENTS to rehydrate context after compaction — it produces no useful output for a human reading it. A human contribution flow must NOT include running snapshot as a step. The correct human flow is: (1) clone the repo, (2) npm install (or pnpm/yarn), (3) open the repo in Claude Code (or Cursor/Codex/other agent runtime), (4) the GAD skills are already installed in the repo so the agent has them available, (5) the human talks conversationally to the agent about running an eval or introducing a new hypothesis. The human never reads STATE.xml; they read the site's /findings, /decisions, /questions pages. The agent reads STATE.xml on their behalf when they ask it to. **Contribution pages must explicitly separate the human path from the agent path** so users don't follow agent-facing instructions and get confused by the output. Decision also commits us to TESTING the contribution flow on a fresh clone in a new repo before publishing the /contribute page, to verify skills are actually present and usable without manual setup steps we've forgotten to document.",
@@ -7198,6 +7210,20 @@ export interface SearchEntry {
  */
 export const SEARCH_INDEX: SearchEntry[] = [
   {
+    "id": "gad-79",
+    "title": "task_pressure operationalized — programmatic, structural, Shannon-inspired",
+    "kind": "decision",
+    "href": "/decisions#gad-79",
+    "body": "gad-79 task_pressure operationalized — programmatic, structural, shannon-inspired decision gad-75 introduced \"pressure\" as a first-class dimension but left the formula open. user answered the open question on 2026-04-09: pressure is computed programmatically from requirements.xml structure, with no human override, no `<pressure-profile>` block, and no subjective scoring (ambiguity, failure cost, etc. are dropped as sub-dimensions). the formulation borrows the shannon-entropy in"
+  },
+  {
+    "id": "gad-78",
+    "title": "Dogfood failure observed — session 2026-04-09 built GAD without using GAD",
+    "kind": "decision",
+    "href": "/decisions#gad-78",
+    "body": "gad-78 dogfood failure observed — session 2026-04-09 built gad without using gad during the 2026-04-09 ia refactor session, claude code (the agent building the project) shipped 20+ surfaces (pages, components, prebuild extensions, decisions) without following gad's own workflow. specifically: (1) did not run `gad snapshot` between turns — ran it once early in the session and never rehydrated, (2) did not check task-registry.xml for matching planned tasks despite 22-20 /gad pag"
+  },
+  {
     "id": "gad-77",
     "title": "Contribution flow is human-first — snapshot is agent-facing, not human-facing",
     "kind": "decision",
@@ -9375,6 +9401,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "session gad:session save and restore full planning context across sessions — creates a handoff file when pausing and restores from it when resuming. use this skill when the user is about to stop work mid-phase, wants to hand off to a new context window, is starting a new session and needs to orient fully, or when gad:check-todos alone isn't enough because there's in-progress work, unresolved decisions, or active blockers that aren't captured in the living planning docs. essential for the autonomous execution loop — call it at pause and resume to maintain continuity."
   },
   {
+    "id": "session-discipline",
+    "title": "session-discipline",
+    "kind": "skill",
+    "href": "/skills/session-discipline",
+    "body": "session-discipline session-discipline >- hard-start procedure for any agent about to touch the gad repo in a new turn or session. forces the agent to rehydrate state, check existing planned work, load relevant skills, and commit through the formal task registry before running ad-hoc. load this skill at the start of every turn that writes to the repo. written after a dogfood failure in session 2026-04-09 where an agent shipped 20+ surfaces without invoking a single skill or updating task-registry.xml. use when starting a session, resuming after auto-compact, picking up new user instructions, or noticing you have drifted into ad-hoc execution."
+  },
+  {
     "id": "snapshot-optimize",
     "title": "gad:snapshot-optimize",
     "kind": "skill",
@@ -9984,6 +10017,38 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "workspace-sync gad:workspace-sync crawl monorepo for .planning/ directories and sync planning-config.toml roots"
   }
 ];
+
+export interface TaskPressureRecord {
+  /** Count of <requirement> elements (including inside <addendum>) */
+  R: number;
+  /** Count of <gate> elements */
+  G: number;
+  /** Count of amends attribute cross-cuts */
+  C: number;
+  /** Word count of the requirements text body */
+  W: number;
+  /** Raw: R + 2*G + C */
+  raw: number;
+  /** Normalized 0-1 via log2(raw+1) / log2(MAX_EXPECTED+1), MAX_EXPECTED=64 */
+  score: number;
+}
+
+/**
+ * Programmatic task_pressure per requirements version, computed from
+ * REQUIREMENTS.xml structure at prebuild. Decision gad-79. Distinct from
+ * "game_pressure" which is the in-game player-experience concept. Do not
+ * conflate.
+ */
+export const TASK_PRESSURE: Record<string, TaskPressureRecord> = {
+  "v5": {
+    "R": 21,
+    "G": 4,
+    "C": 10,
+    "W": 2888,
+    "raw": 39,
+    "score": 0.8836936334865167
+  }
+};
 
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",

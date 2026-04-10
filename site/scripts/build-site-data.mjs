@@ -830,6 +830,80 @@ function parseAllTasks() {
   return out;
 }
 
+function computeTaskPressure(xml) {
+  // Decision gad-79: task_pressure is computed programmatically from
+  // REQUIREMENTS.xml structure. Shannon-entropy intuition without computing
+  // entropy directly — "pressure ≈ number of decisions/questions required
+  // to satisfy the system."
+  //
+  // Inputs:
+  //   R = count of <requirement> elements (inside <gate-criteria> and <addendum>)
+  //   G = count of <gate> elements (each gate groups multiple decisions, weighted 2x)
+  //   C = count of amends="..." attribute cross-cuts
+  //   W = word count as a scope proxy
+  //
+  // Formula:
+  //   raw   = R + 2*G + C
+  //   score = log2(raw + 1) / log2(MAX_EXPECTED + 1), clamped [0, 1]
+  //
+  // MAX_EXPECTED is chosen at 64 so round-5 (R≈21 addendum + G=4 + ≥6 cross-cuts
+  // ≈ 21 + 8 + 6 = 35 raw) normalizes to log2(36)/log2(65) ≈ 0.86. Values above
+  // MAX_EXPECTED clamp to 1.0.
+  if (!xml) return { R: 0, G: 0, C: 0, W: 0, raw: 0, score: 0 };
+
+  const reqMatches = xml.match(/<requirement(?:\s[^>]*)?>/g) || [];
+  const R = reqMatches.length;
+
+  const gateMatches = xml.match(/<gate\s[^>]*>/g) || [];
+  const G = gateMatches.length;
+
+  const amendsMatches = xml.match(/\samends="[^"]+"/g) || [];
+  // Each amends attribute may name multiple targets (e.g. amends="G1 G4") — count tokens.
+  let C = 0;
+  for (const m of amendsMatches) {
+    const val = m.match(/amends="([^"]+)"/)?.[1] ?? "";
+    C += val.split(/\s+/).filter(Boolean).length;
+  }
+
+  // Word count over the textual body (strip tags + comments, collapse whitespace)
+  const text = xml
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const W = text ? text.split(/\s+/).length : 0;
+
+  const raw = R + 2 * G + C;
+  const MAX_EXPECTED = 64;
+  const rawScore = Math.log2(raw + 1) / Math.log2(MAX_EXPECTED + 1);
+  const score = Math.max(0, Math.min(1, rawScore));
+
+  return { R, G, C, W, raw, score };
+}
+
+function computeTaskPressurePerVersion(currentRequirements) {
+  // Walk each CurrentRequirementsFile record and compute pressure from its content.
+  // Emits a { version: { R, G, C, W, raw, score } } map keyed by requirements version.
+  const byVersion = {};
+  for (const req of currentRequirements) {
+    if (!req.content) continue;
+    // Only compute once per version (all three greenfield templates share the same content)
+    if (byVersion[req.version]) continue;
+    byVersion[req.version] = computeTaskPressure(req.content);
+  }
+  // For historical versions (v1-v4) that don't have a current template, we parse the
+  // version-specific blocks out of REQUIREMENTS-VERSIONS.md narrative instead. But
+  // those don't have the same structure, so we leave them with a null-ish entry until
+  // the v1-v4 source XMLs are reconstructed or a historical formula is agreed on.
+  console.log(`  [pressure] computed task_pressure for ${Object.keys(byVersion).length} version(s):`);
+  for (const [v, p] of Object.entries(byVersion)) {
+    console.log(
+      `    ${v}: R=${p.R} G=${p.G} C=${p.C} W=${p.W} raw=${p.raw} score=${p.score.toFixed(3)}`
+    );
+  }
+  return byVersion;
+}
+
 function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs, skills, agents, commands }) {
   // Flat list of searchable entries. Each entry is { id, title, kind, href, body }.
   // Body is the searchable haystack — fuzzy match against this.
@@ -1855,6 +1929,29 @@ export interface SearchEntry {
  */
 export const SEARCH_INDEX: SearchEntry[] = ${JSON.stringify(extras.searchIndex ?? [], null, 2)};
 
+export interface TaskPressureRecord {
+  /** Count of <requirement> elements (including inside <addendum>) */
+  R: number;
+  /** Count of <gate> elements */
+  G: number;
+  /** Count of amends attribute cross-cuts */
+  C: number;
+  /** Word count of the requirements text body */
+  W: number;
+  /** Raw: R + 2*G + C */
+  raw: number;
+  /** Normalized 0-1 via log2(raw+1) / log2(MAX_EXPECTED+1), MAX_EXPECTED=64 */
+  score: number;
+}
+
+/**
+ * Programmatic task_pressure per requirements version, computed from
+ * REQUIREMENTS.xml structure at prebuild. Decision gad-79. Distinct from
+ * "game_pressure" which is the in-game player-experience concept. Do not
+ * conflate.
+ */
+export const TASK_PRESSURE: Record<string, TaskPressureRecord> = ${JSON.stringify(extras.taskPressureByVersion ?? {}, null, 2)};
+
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",
   bare: "Bare",
@@ -1925,6 +2022,7 @@ function main() {
   const allDecisions = parseAllDecisions();
   const allTasks = parseAllTasks();
   const allPhases = parseAllPhases();
+  const taskPressureByVersion = computeTaskPressurePerVersion(currentRequirements);
   const searchIndex = buildSearchIndex({
     decisions: allDecisions,
     tasks: allTasks,
@@ -1948,6 +2046,7 @@ function main() {
     allTasks,
     allPhases,
     searchIndex,
+    taskPressureByVersion,
   });
   writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
   auditPlayable();

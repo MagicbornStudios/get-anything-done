@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
-import { ROUND_SUMMARIES, EVAL_RUNS } from "@/lib/eval-data";
+import { ROUND_SUMMARIES, EVAL_RUNS, TASK_PRESSURE } from "@/lib/eval-data";
 
 export const metadata = {
   title: "Roadmap — GAD",
@@ -13,37 +13,81 @@ export const metadata = {
 };
 
 /**
- * Per-round pressure rating (self-rated per gad-75). Becomes programmatic when
- * the pressure-score-formula open question resolves. Until then these are
- * authored estimates against the five pressure dimensions.
+ * Per-round task_pressure. Values for rounds with a current template
+ * (v4/v5) are COMPUTED programmatically from REQUIREMENTS.xml structure per
+ * decision gad-79. Values for historical rounds (v1-v3) without a current
+ * template remain as author-rated estimates until their XMLs are
+ * reconstructed. Annotations come from the round context.
  */
-const PRESSURE_BY_ROUND: Record<string, { value: number; tier: string; note: string }> = {
+function tierLabel(score: number): string {
+  if (score >= 0.85) return "High";
+  if (score >= 0.65) return "Medium-High";
+  if (score >= 0.45) return "Medium";
+  if (score >= 0.25) return "Low-Medium";
+  return "Low";
+}
+
+const PRESSURE_ANNOTATIONS: Record<string, { note: string; source: "computed" | "authored" }> = {
   "Round 1": {
-    value: 0.15,
-    tier: "Low",
-    note: "12 systems-focused criteria, no gates. Agents could ship invisible backend and still score 1.0 on requirement_coverage.",
+    source: "authored",
+    note: "12 systems-focused criteria, no gates. Agents could ship invisible backend and still score 1.0 on requirement_coverage. v1 template not preserved — this is an estimated value until the v1 XML is reconstructed.",
   },
   "Round 2": {
-    value: 0.35,
-    tier: "Low-Medium",
-    note: "Added 2 gate criteria and UI-first mandate. Vertical-slice priority introduced.",
+    source: "authored",
+    note: "Added 2 gate criteria and UI-first mandate. Vertical-slice priority introduced. v2 template not preserved — estimated.",
   },
   "Round 3": {
-    value: 0.55,
-    tier: "Medium",
-    note: "3 explicit gates (game-loop, spell-crafting, UI quality). Rubric weights shifted toward human review.",
+    source: "authored",
+    note: "3 explicit gates (game-loop, spell-crafting, UI quality). Rubric weights shifted toward human review. v3 template not preserved — estimated.",
   },
   "Round 4": {
-    value: 0.80,
-    tier: "High",
-    note: "4 gates including pressure-mechanics gate itself. Authored-only, ingenuity requirement, forge must tie to encounter design. 'Starter abilities must NOT be sufficient.'",
+    source: "computed",
+    note: "4 gates including pressure-mechanics gate itself. Authored-only, ingenuity requirement, forge must tie to encounter design. v4 is the first round with a preserved current template — pressure is COMPUTED from REQUIREMENTS.xml structure (gad-79).",
   },
   "Round 5": {
-    value: 0.92,
-    tier: "High",
-    note: "v5 adds 21 requirements on top of v4 base: rule-based combat, entity-trait action policies, save checkpoints, spells-as-ingredients, visual map, event-driven rendering. Round not yet executed (blocked on HTTP 529 investigation).",
+    source: "computed",
+    note: "v5 adds 21 requirements on top of v4 base via the <addendum> block: rule-based combat, entity-trait action policies, save checkpoints, spells-as-ingredients, visual map, event-driven rendering. Pressure is COMPUTED from the v5 REQUIREMENTS.xml including the addendum (gad-79).",
   },
 };
+
+// Manual fallback values for pre-v4 rounds without a preserved current template.
+const AUTHORED_PRESSURE: Record<string, number> = {
+  "Round 1": 0.15,
+  "Round 2": 0.35,
+  "Round 3": 0.55,
+};
+
+// Map round number → requirements version that round targeted.
+const ROUND_TO_VERSION: Record<string, string> = {
+  "Round 1": "v1",
+  "Round 2": "v2",
+  "Round 3": "v3",
+  "Round 4": "v5", // v4 template now carries the v5 addendum — single source of truth
+  "Round 5": "v5",
+};
+
+function pressureForRound(round: string): { value: number; tier: string; note: string; source: "computed" | "authored" } {
+  const annotation = PRESSURE_ANNOTATIONS[round];
+  const version = ROUND_TO_VERSION[round];
+  const computed = version ? TASK_PRESSURE[version] : undefined;
+
+  if (computed && annotation?.source === "computed") {
+    return {
+      value: computed.score,
+      tier: tierLabel(computed.score),
+      note: annotation.note,
+      source: "computed",
+    };
+  }
+
+  const authored = AUTHORED_PRESSURE[round] ?? 0;
+  return {
+    value: authored,
+    tier: tierLabel(authored),
+    note: annotation?.note ?? "",
+    source: "authored",
+  };
+}
 
 const FUTURE_ROUNDS = [
   {
@@ -138,13 +182,13 @@ export default function RoadmapPage() {
           </p>
           <div className="space-y-3">
             {["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"].map((round) => {
-              const p = PRESSURE_BY_ROUND[round];
+              const p = pressureForRound(round);
               if (!p) return null;
               const pct = Math.round(p.value * 100);
               return (
                 <div
                   key={round}
-                  className="grid grid-cols-[80px_1fr_60px] items-center gap-3 rounded-lg border border-border/60 bg-card/40 p-3 md:grid-cols-[100px_1fr_80px]"
+                  className="grid grid-cols-[80px_1fr_60px_auto] items-center gap-3 rounded-lg border border-border/60 bg-card/40 p-3 md:grid-cols-[100px_1fr_80px_auto]"
                 >
                   <div>
                     <div className="font-mono text-xs text-foreground">{round}</div>
@@ -160,17 +204,35 @@ export default function RoadmapPage() {
                   <div className="text-right font-mono text-sm tabular-nums text-foreground">
                     {p.value.toFixed(2)}
                   </div>
+                  <Badge
+                    variant={p.source === "computed" ? "success" : "outline"}
+                    className="text-[9px]"
+                  >
+                    {p.source}
+                  </Badge>
                 </div>
               );
             })}
           </div>
           <p className="mt-4 text-[11px] text-muted-foreground">
-            <strong className="text-foreground">Data provenance:</strong> values are
-            authored in{" "}
-            <code className="rounded bg-background/60 px-1 py-0.5">app/roadmap/page.tsx</code>{" "}
-            as <code className="rounded bg-background/60 px-1 py-0.5">PRESSURE_BY_ROUND</code>.
-            Will become programmatic once the pressure-score-formula open question
-            resolves.
+            <strong className="text-foreground">Data provenance:</strong> rounds 4 and 5
+            show <strong className="text-emerald-300">computed</strong> values — derived
+            programmatically from the REQUIREMENTS.xml structure via{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5">computeTaskPressure()</code>{" "}
+            in{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5">build-site-data.mjs</code>
+            . Formula (decision{" "}
+            <Link href="/decisions#gad-79" className="text-accent underline decoration-dotted">
+              gad-79
+            </Link>
+            ):{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5">
+              raw = R + 2*G + C; score = log2(raw+1) / log2(65)
+            </code>
+            {" "}where R = requirement elements, G = gates, C = amends cross-cuts. Rounds
+            1-3 show <strong className="text-muted-foreground">authored</strong> values
+            because their REQUIREMENTS.xml templates were not preserved — those will
+            become computed once the historical XMLs are reconstructed.
           </p>
         </div>
       </section>
@@ -184,7 +246,7 @@ export default function RoadmapPage() {
           </div>
           <div className="space-y-6">
             {ROUND_SUMMARIES.map((r) => {
-              const p = PRESSURE_BY_ROUND[r.round];
+              const p = pressureForRound(r.round);
               return (
                 <RoundCard
                   key={r.round}
@@ -209,7 +271,7 @@ export default function RoadmapPage() {
           </div>
           <div className="space-y-6">
             {FUTURE_ROUNDS.map((r) => {
-              const p = PRESSURE_BY_ROUND[r.round];
+              const p = pressureForRound(r.round);
               return (
                 <RoundCard
                   key={r.round}
@@ -240,7 +302,7 @@ function RoundCard({
   round: string;
   title: string;
   body: string;
-  pressure?: { value: number; tier: string; note: string };
+  pressure?: { value: number; tier: string; note: string; source: "computed" | "authored" };
   status: "completed" | "planned";
 }) {
   return (

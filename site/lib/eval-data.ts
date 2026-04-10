@@ -27,6 +27,7 @@ export {
   ALL_TASKS,
   ALL_PHASES,
   SEARCH_INDEX,
+  TASK_PRESSURE,
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,
@@ -42,6 +43,7 @@ export {
   type TaskRecord,
   type PhaseRecord,
   type SearchEntry,
+  type TaskPressureRecord,
 } from "./eval-data.generated";
 
 import {
