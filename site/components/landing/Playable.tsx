@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Gamepad2, FileText, Sparkles, X, BarChart3, Filter } from "lucide-react";
+import { ExternalLink, Gamepad2, FileText, Sparkles, X, BarChart3, Filter, Search, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -54,6 +54,25 @@ const REVIEW_STATE_LABEL: Record<ReviewState, string> = {
   excluded: "Excluded (interrupted)",
 };
 
+const STATUS_CHIP_STYLES: Record<"all" | ReviewState, { base: string; active: string }> = {
+  all: {
+    base: "border-border/70 text-muted-foreground hover:border-foreground/40",
+    active: "border-purple-500/60 bg-purple-500/15 text-purple-300",
+  },
+  reviewed: {
+    base: "border-border/70 text-muted-foreground hover:border-emerald-500/40",
+    active: "border-emerald-500/60 bg-emerald-500/15 text-emerald-300",
+  },
+  "needs-review": {
+    base: "border-border/70 text-muted-foreground hover:border-rose-500/40",
+    active: "border-rose-500/60 bg-rose-500/15 text-rose-300",
+  },
+  excluded: {
+    base: "border-border/70 text-muted-foreground hover:border-zinc-400/40",
+    active: "border-zinc-400/60 bg-zinc-500/15 text-zinc-300",
+  },
+};
+
 /** Project families for grouping. Order matters for display. */
 const PROJECT_FAMILIES: Array<{
   id: string;
@@ -85,6 +104,8 @@ const PROJECT_FAMILIES: Array<{
   },
 ];
 
+const ROUND_OPTIONS = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"] as const;
+
 /** Parse round number from URL hash like #play?round=4 */
 function parseRoundFromHash(): string | null {
   if (typeof window === "undefined") return null;
@@ -108,6 +129,8 @@ export default function Playable() {
 
   const [roundFilter, setRoundFilter] = useState<string | null>(null);
   const [domainFilter, setDomainFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | ReviewState>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modal, setModal] = useState<"requirements" | "skill" | null>(null);
 
@@ -141,7 +164,7 @@ export default function Playable() {
     };
   }, []);
 
-  // Filter runs by round AND domain
+  // Filter runs by round, domain, status, and search
   const runs = useMemo(() => {
     let filtered = allRuns;
     if (roundFilter) {
@@ -153,10 +176,23 @@ export default function Playable() {
         filtered = filtered.filter((r) => family.projects.includes(r.project));
       }
     }
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((r) => reviewStateFor(r) === statusFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          r.project.toLowerCase().includes(q) ||
+          r.version.toLowerCase().includes(q) ||
+          (roundForRun(r) ?? "").toLowerCase().includes(q) ||
+          WORKFLOW_LABELS[r.workflow].toLowerCase().includes(q)
+      );
+    }
     return filtered;
-  }, [allRuns, roundFilter, domainFilter]);
+  }, [allRuns, roundFilter, domainFilter, statusFilter, searchQuery]);
 
-  // Group filtered runs by project family — show ALL families (even empty when domain is selected)
+  // Group filtered runs by project family
   const groupedRuns = useMemo(() => {
     const families = domainFilter
       ? PROJECT_FAMILIES.filter((f) => f.id === domainFilter)
@@ -179,6 +215,19 @@ export default function Playable() {
     return defaultRun ?? runs[0] ?? null;
   }, [runs, selectedKey]);
 
+  const hasActiveFilters = roundFilter != null || domainFilter != null || statusFilter !== "all" || searchQuery.trim() !== "";
+
+  function clearAllFilters() {
+    setRoundFilter(null);
+    setDomainFilter(null);
+    setStatusFilter("all");
+    setSearchQuery("");
+    setSelectedKey(null);
+    window.history.replaceState(null, "", window.location.pathname + "#play");
+    window.dispatchEvent(new CustomEvent("round-filter", { detail: null }));
+    window.dispatchEvent(new CustomEvent("domain-filter", { detail: null }));
+  }
+
   if (allRuns.length === 0) {
     return null;
   }
@@ -196,33 +245,143 @@ export default function Playable() {
           These are the exact production builds the human reviewers scored — no rebuilds, no
           tweaks. Click a round on the{" "}
           <a href="#tracks" className="text-accent underline decoration-dotted">hypothesis chart above</a>{" "}
-          to filter, or browse all runs below.
-          Rate-limited runs with no functioning UI are omitted.
+          to filter, or use the controls below to search and filter.
         </p>
 
-        {/* Round filter indicator */}
-        {roundFilter && (
-          <div className="mt-4 flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-300">
-              <Filter size={13} aria-hidden />
-              Showing {roundFilter} only ({runs.length} build{runs.length !== 1 ? "s" : ""})
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setRoundFilter(null);
-                setSelectedKey(null);
-                window.history.replaceState(null, "", window.location.pathname + "#play");
-                window.dispatchEvent(new CustomEvent("round-filter", { detail: null }));
-              }}
-              className="text-xs text-muted-foreground underline decoration-dotted hover:text-foreground"
-            >
-              Show all rounds
-            </button>
-          </div>
-        )}
+        {/* ── Filter bar ────────────────────────────────────────── */}
+        <div className="mt-8 rounded-xl border border-border/60 bg-card/30 p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Round dropdown */}
+            <div className="relative">
+              <select
+                value={roundFilter ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value || null;
+                  setRoundFilter(val);
+                  setSelectedKey(null);
+                  if (val) {
+                    window.history.replaceState(null, "", `${window.location.pathname}#play?round=${val.replace("Round ", "")}`);
+                  } else {
+                    window.history.replaceState(null, "", window.location.pathname + "#play");
+                  }
+                  window.dispatchEvent(new CustomEvent("round-filter", { detail: val }));
+                }}
+                className="appearance-none rounded-lg border border-border/70 bg-background/60 py-2 pl-3 pr-8 text-xs font-medium text-foreground transition-colors hover:border-accent/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
+              >
+                <option value="">All rounds</option>
+                {ROUND_OPTIONS.map((r) => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+              <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+            {/* Project dropdown */}
+            <div className="relative">
+              <select
+                value={domainFilter ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value || null;
+                  setDomainFilter(val);
+                  setSelectedKey(null);
+                  window.dispatchEvent(new CustomEvent("domain-filter", { detail: val }));
+                }}
+                className="appearance-none rounded-lg border border-border/70 bg-background/60 py-2 pl-3 pr-8 text-xs font-medium text-foreground transition-colors hover:border-accent/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
+              >
+                <option value="">All projects</option>
+                {PROJECT_FAMILIES.map((f) => (
+                  <option key={f.id} value={f.id}>{f.label}</option>
+                ))}
+              </select>
+              <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            </div>
+
+            {/* Divider */}
+            <div className="hidden h-6 w-px bg-border/60 sm:block" />
+
+            {/* Status filter chips */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(["all", "reviewed", "needs-review", "excluded"] as const).map((s) => {
+                const isActive = statusFilter === s;
+                const styles = STATUS_CHIP_STYLES[s];
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatusFilter(s)}
+                    className={[
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                      isActive ? styles.active : styles.base,
+                    ].join(" ")}
+                  >
+                    {s !== "all" && (
+                      <span className={`size-1.5 rounded-full ${REVIEW_STATE_DOT[s]}`} aria-hidden />
+                    )}
+                    {s === "all" ? "All statuses" : REVIEW_STATE_LABEL[s]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className="hidden h-6 w-px bg-border/60 sm:block" />
+
+            {/* Search input */}
+            <div className="relative flex-1 min-w-[180px]">
+              <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name, version, or workflow..."
+                className="w-full rounded-lg border border-border/70 bg-background/60 py-2 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground/50 transition-colors hover:border-accent/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X size={12} aria-hidden />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Count + clear row */}
+          <div className="mt-3 flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Showing <span className="font-semibold text-foreground tabular-nums">{runs.length}</span>{" "}
+              of <span className="font-semibold text-foreground tabular-nums">{allRuns.length}</span>{" "}
+              build{allRuns.length !== 1 ? "s" : ""}
+              {roundFilter && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold text-purple-300">
+                  <Filter size={9} aria-hidden />
+                  {roundFilter}
+                </span>
+              )}
+              {domainFilter && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-300">
+                  {PROJECT_FAMILIES.find((f) => f.id === domainFilter)?.label}
+                </span>
+              )}
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:text-foreground"
+              >
+                <X size={10} aria-hidden />
+                Clear all filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
           <span className="font-semibold uppercase tracking-wider">Legend:</span>
           <span className="inline-flex items-center gap-1.5">
             <span className={`size-2 rounded-full ${REVIEW_STATE_DOT.reviewed}`} aria-hidden />
@@ -239,76 +398,84 @@ export default function Playable() {
         </div>
 
         {/* Grouped run pickers */}
-        {groupedRuns.map((group) => (
-          <div key={group.id} className="mt-6">
-            <div className="mb-2 flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
-              <span className="text-[11px] text-muted-foreground">{group.description}</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {group.runs.map((r) => {
-                const key = runKey(r);
-                const active = selected && runKey(selected) === key;
-                const state = reviewStateFor(r);
-                const round = roundForRun(r);
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setSelectedKey(key)}
-                    title={`${REVIEW_STATE_LABEL[state]}${round ? ` · ${round}` : ""}`}
-                    className={[
-                      "group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors",
-                      active
-                        ? "border-accent bg-accent text-accent-foreground shadow-md shadow-accent/20"
-                        : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60 hover:text-foreground",
-                    ].join(" ")}
-                  >
-                    <span
-                      className={`size-2 shrink-0 rounded-full ${REVIEW_STATE_DOT[state]}`}
-                      aria-label={REVIEW_STATE_LABEL[state]}
-                    />
-                    <span
+        {groupedRuns.map((group) => {
+          if (group.runs.length === 0) return null;
+          return (
+            <div key={group.id} className="mt-6">
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
+                <span className="text-[11px] text-muted-foreground">{group.description}</span>
+                <span className="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                  {group.runs.length}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {group.runs.map((r) => {
+                  const key = runKey(r);
+                  const active = selected && runKey(selected) === key;
+                  const state = reviewStateFor(r);
+                  const round = roundForRun(r);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedKey(key)}
+                      title={`${REVIEW_STATE_LABEL[state]}${round ? ` · ${round}` : ""}`}
                       className={[
-                        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider",
-                        active ? "border-background/40 bg-background/20 text-accent-foreground" : WORKFLOW_TINT[r.workflow],
+                        "group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors",
+                        active
+                          ? "border-accent bg-accent text-accent-foreground shadow-md shadow-accent/20"
+                          : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60 hover:text-foreground",
                       ].join(" ")}
                     >
-                      {WORKFLOW_LABELS[r.workflow]}
-                    </span>
-                    <span>{r.project.replace("escape-the-dungeon", "etd")}</span>
-                    <span className="tabular-nums">{r.version}</span>
-                    {round && (
-                      <span className="text-[10px] text-muted-foreground/60">
-                        {round.replace("Round ", "R")}
+                      <span
+                        className={`size-2 shrink-0 rounded-full ${REVIEW_STATE_DOT[state]}`}
+                        aria-label={REVIEW_STATE_LABEL[state]}
+                      />
+                      <span
+                        className={[
+                          "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider",
+                          active ? "border-background/40 bg-background/20 text-accent-foreground" : WORKFLOW_TINT[r.workflow],
+                        ].join(" ")}
+                      >
+                        {WORKFLOW_LABELS[r.workflow]}
                       </span>
-                    )}
-                  </button>
-                );
-              })}
+                      <span>{r.project.replace("escape-the-dungeon", "etd")}</span>
+                      <span className="tabular-nums">{r.version}</span>
+                      {round && (
+                        <span className={[
+                          "rounded-full border px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
+                          active
+                            ? "border-background/30 text-accent-foreground/80"
+                            : "border-purple-500/30 bg-purple-500/10 text-purple-400/80",
+                        ].join(" ")}>
+                          {round.replace("Round ", "R")}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* No results state */}
-        {runs.length === 0 && roundFilter && (
+        {runs.length === 0 && (
           <div className="mt-8 rounded-2xl border border-border/70 bg-card/30 p-8 text-center">
             <p className="text-lg font-semibold text-muted-foreground">
-              No playable builds in {roundFilter}
+              No playable builds match your filters
             </p>
             <p className="mt-2 text-sm text-muted-foreground/70">
-              This round may not have scored builds yet, or all runs were rate-limited.
+              {roundFilter && `${roundFilter} may not have scored builds yet, or all runs were rate-limited. `}
+              Try adjusting your filters or search query.
             </p>
             <button
               type="button"
-              onClick={() => {
-                setRoundFilter(null);
-                window.history.replaceState(null, "", window.location.pathname + "#play");
-                window.dispatchEvent(new CustomEvent("round-filter", { detail: null }));
-              }}
+              onClick={clearAllFilters}
               className="mt-4 inline-flex items-center gap-1 rounded-full border border-accent/60 px-4 py-2 text-sm font-semibold text-accent hover:bg-accent/10"
             >
-              Show all rounds
+              Clear all filters
             </button>
           </div>
         )}
