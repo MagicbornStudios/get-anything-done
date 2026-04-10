@@ -53,7 +53,6 @@ A playable build that satisfies the requirements. The agent should:
 5. The build should pass all gate criteria in the requirements
 
 ## Live demo[**Play the latest build →**](https://get-anything-done.vercel.app/playable/escape-the-dungeon/v10/index.html)> Built by a coding agent against these exact template files. No human code edits.
-n![Demo screenshot](https://get-anything-done.vercel.app/screenshots/escape-the-dungeon/v10.png)
 
 ## See the demos
 
