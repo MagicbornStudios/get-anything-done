@@ -1434,13 +1434,13 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   const isBrownfield = cfg.eval_mode === 'brownfield';
   const baseline = cfg.baseline;
 
-  // Source docs (source-*.md, source-*.xml)
-  const sourceDocs = fs.existsSync(projectDir)
-    ? fs.readdirSync(projectDir).filter(f => f.startsWith('source-')).map(f => {
-        const content = fs.readFileSync(path.join(projectDir, f), 'utf8');
-        return `### ${f}\n\n${content.length > 3000 ? content.slice(0, 3000) + '\n...(truncated)' : content}`;
-      })
-    : [];
+  // Source docs — REMOVED from eval prompts per decision gad-89.
+  // Previously this scanned projectDir for source-*.md and source-*.xml and
+  // injected them into the prompt. This was a bleed-in: the REQUIREMENTS.xml
+  // is supposed to be the single self-contained spec. Source docs are now
+  // archived under evals/<project>/archive/ for historical reference only.
+  // If you need to re-enable: restore the fs.readdirSync scan below.
+  const sourceDocs = [];
 
   const sections = [];
   sections.push(`# Eval: ${projectName} v${runNum}`);
