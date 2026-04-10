@@ -1,0 +1,471 @@
+{
+  "floors": [
+    {
+      "id": "f1",
+      "name": "The Crimson Depths",
+      "theme": "crypt",
+      "pressureNote": "Enemies here resist direct damage. Use the forge to craft DoT spells that bypass their defenses.",
+      "rooms": [
+        {
+          "id": "f1_entry",
+          "name": "Dungeon Entrance",
+          "type": "entrance",
+          "icon": "game-icons:dungeon-gate",
+          "description": "Cold stone walls drip with moisture. Faint torchlight flickers ahead. The air smells of iron and old blood.",
+          "exits": ["f1_corridor1", "f1_forge"]
+        },
+        {
+          "id": "f1_corridor1",
+          "name": "Winding Passage",
+          "type": "corridor",
+          "icon": "game-icons:stone-path",
+          "description": "A narrow corridor stretches into darkness. Strange runes glow faintly on the walls.",
+          "exits": ["f1_entry", "f1_combat1", "f1_dialogue1"]
+        },
+        {
+          "id": "f1_forge",
+          "name": "Abandoned Forge",
+          "type": "forge",
+          "icon": "game-icons:anvil-impact",
+          "description": "An ancient forge still radiates heat. Rune-etched anvils line the walls. You can combine runes here to craft powerful spells.",
+          "exits": ["f1_entry", "f1_merchant"]
+        },
+        {
+          "id": "f1_merchant",
+          "name": "Scavenger's Den",
+          "type": "merchant",
+          "icon": "game-icons:shop",
+          "description": "A haggard merchant has set up shop in a fortified alcove, selling goods to desperate adventurers.",
+          "exits": ["f1_forge", "f1_rest"],
+          "merchant": {
+            "name": "Grizzle the Scavenger",
+            "icon": "game-icons:hooded-figure",
+            "inventory": [
+              { "id": "shop_sword", "name": "Iron Sword", "type": "equipment", "icon": "game-icons:broadsword", "cost": 15, "slot": "weapon", "stats": { "attack": 4 } },
+              { "id": "shop_shield", "name": "Wooden Shield", "type": "equipment", "icon": "game-icons:round-shield", "cost": 12, "slot": "offhand", "stats": { "defense": 3 } },
+              { "id": "shop_potion", "name": "Health Potion", "type": "consumable", "icon": "game-icons:health-potion", "cost": 8, "effect": { "hp": 30 } },
+              { "id": "shop_mana_potion", "name": "Mana Potion", "type": "consumable", "icon": "game-icons:potion-ball", "cost": 10, "effect": { "mana": 20 } },
+              { "id": "shop_rune_nature", "name": "Nature Rune", "type": "rune", "icon": "game-icons:leaf", "cost": 20, "element": "nature" }
+            ]
+          }
+        },
+        {
+          "id": "f1_dialogue1",
+          "name": "Imprisoned Spirit",
+          "type": "dialogue",
+          "icon": "game-icons:ghost",
+          "description": "A translucent figure hovers behind ancient bars, its eyes flickering with spectral light.",
+          "exits": ["f1_corridor1", "f1_combat2"],
+          "npc": {
+            "name": "Elara's Shade",
+            "icon": "game-icons:ghost",
+            "greeting": "You... you can see me? I've been trapped here for centuries. Will you hear my plea, or are you just another looter?",
+            "branches": [
+              {
+                "text": "I'll help you. What do you need?",
+                "traitShift": { "compassion": 0.1, "aggression": -0.05 },
+                "response": "Bless you. Take this rune I've guarded. You'll need it against the shadow creatures below. Combine it with blood at the forge.",
+                "reward": { "type": "rune", "value": "rune_shadow" }
+              },
+              {
+                "text": "What's in it for me?",
+                "traitShift": { "cunning": 0.1, "compassion": -0.05 },
+                "response": "A mercenary's heart. Fine -- I have knowledge. The boss of this floor resists direct spells. Only damage-over-time effects can hurt it properly. Here's some gold for your trouble.",
+                "reward": { "type": "gold", "value": 15 }
+              },
+              {
+                "text": "Out of my way, ghost.",
+                "traitShift": { "aggression": 0.15, "compassion": -0.1 },
+                "response": "Such cruelty... You remind me of the one who trapped me. Go then, and face the dungeon with nothing but your rage.",
+                "reward": null
+              }
+            ]
+          }
+        },
+        {
+          "id": "f1_combat1",
+          "name": "Bone Guardians' Hall",
+          "type": "combat",
+          "icon": "game-icons:skeleton",
+          "description": "Skeletal warriors patrol this chamber, their bones reinforced with dark magic that deflects direct strikes.",
+          "exits": ["f1_corridor1", "f1_combat2"],
+          "enemy": {
+            "name": "Bone Guardian",
+            "icon": "game-icons:skeleton",
+            "hp": 55,
+            "maxHp": 55,
+            "attack": 8,
+            "defense": 4,
+            "directResist": 0.4,
+            "dotResist": 0.05,
+            "reflectDamage": 0,
+            "xpReward": 20,
+            "goldReward": 8,
+            "traits": { "aggression": 0.6 },
+            "loot": [
+              { "type": "consumable", "chance": 0.4 }
+            ]
+          }
+        },
+        {
+          "id": "f1_combat2",
+          "name": "Bloodthorn Cavern",
+          "type": "combat",
+          "icon": "game-icons:thorn-arrow",
+          "description": "Thorny vines pulse with crimson light, guarding a creature born of corrupted nature.",
+          "exits": ["f1_dialogue1", "f1_combat1", "f1_rest"],
+          "enemy": {
+            "name": "Crimson Thornbeast",
+            "icon": "game-icons:thorn-arrow",
+            "hp": 65,
+            "maxHp": 65,
+            "attack": 10,
+            "defense": 3,
+            "directResist": 0.35,
+            "dotResist": 0.1,
+            "reflectDamage": 0,
+            "xpReward": 25,
+            "goldReward": 10,
+            "traits": { "aggression": 0.7 },
+            "loot": [
+              { "type": "rune", "id": "rune_nature", "chance": 0.3 },
+              { "type": "consumable", "chance": 0.5 }
+            ]
+          }
+        },
+        {
+          "id": "f1_rest",
+          "name": "Hidden Spring",
+          "type": "rest",
+          "icon": "game-icons:campfire",
+          "description": "A natural spring flows through this chamber, its waters surprisingly warm. A good place to rest and recover.",
+          "exits": ["f1_merchant", "f1_combat2", "f1_boss"]
+        },
+        {
+          "id": "f1_boss",
+          "name": "Warden's Throne",
+          "type": "boss",
+          "icon": "game-icons:crowned-skull",
+          "description": "A massive undead knight sits upon a throne of bone, its armor crackling with dark energy that deflects direct attacks.",
+          "exits": ["f1_rest"],
+          "bossGateToFloor": "f2",
+          "enemy": {
+            "name": "The Bone Warden",
+            "icon": "game-icons:crowned-skull",
+            "hp": 120,
+            "maxHp": 120,
+            "attack": 14,
+            "defense": 6,
+            "directResist": 0.5,
+            "dotResist": 0.05,
+            "reflectDamage": 0,
+            "xpReward": 50,
+            "goldReward": 25,
+            "traits": { "aggression": 0.8 },
+            "loot": [
+              { "type": "rune", "id": "rune_shadow", "chance": 0.6 },
+              { "type": "consumable", "chance": 0.8 }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "name": "The Mirror Halls",
+      "theme": "crystal",
+      "pressureNote": "Enemies here REFLECT direct damage back at you. Use indirect effects (DoT, bypass) or you'll destroy yourself. Mana-draining enemies add pressure.",
+      "rooms": [
+        {
+          "id": "f2_entry",
+          "name": "Crystal Vestibule",
+          "type": "entrance",
+          "icon": "game-icons:crystal-growth",
+          "description": "Crystalline walls shimmer with reflected light. Every surface mirrors your image back at you, distorted and strange.",
+          "exits": ["f2_corridor1", "f2_forge"]
+        },
+        {
+          "id": "f2_corridor1",
+          "name": "Shattered Gallery",
+          "type": "corridor",
+          "icon": "game-icons:broken-wall",
+          "description": "Fragments of mirror-glass crunch underfoot. The reflections here seem to move independently of you.",
+          "exits": ["f2_entry", "f2_combat1", "f2_dialogue1"]
+        },
+        {
+          "id": "f2_forge",
+          "name": "Crystal Forge",
+          "type": "forge",
+          "icon": "game-icons:anvil-impact",
+          "description": "This forge burns with cold blue flame. The rune sockets here glow with crystalline energy.",
+          "exits": ["f2_entry", "f2_merchant"]
+        },
+        {
+          "id": "f2_merchant",
+          "name": "Mirror Merchant",
+          "type": "merchant",
+          "icon": "game-icons:shop",
+          "description": "A merchant appears through the crystal walls, her wares gleaming with reflected light.",
+          "exits": ["f2_forge", "f2_rest"],
+          "merchant": {
+            "name": "Silvra the Reflected",
+            "icon": "game-icons:mirror-mirror",
+            "inventory": [
+              { "id": "shop_crystal_blade", "name": "Crystal Blade", "type": "equipment", "icon": "game-icons:crystal-wand", "cost": 25, "slot": "weapon", "stats": { "attack": 3, "spellPower": 3 } },
+              { "id": "shop_ward_ring", "name": "Ward Ring", "type": "equipment", "icon": "game-icons:ring", "cost": 20, "slot": "accessory", "stats": { "defense": 2, "maxHp": 10 } },
+              { "id": "shop_mana_crystal", "name": "Mana Crystal", "type": "consumable", "icon": "game-icons:crystal-ball", "cost": 12, "effect": { "mana": 30 } },
+              { "id": "shop_rune_shadow", "name": "Shadow Rune", "type": "rune", "icon": "game-icons:eclipse-flare", "cost": 25, "element": "shadow" }
+            ]
+          }
+        },
+        {
+          "id": "f2_dialogue1",
+          "name": "The Mirror Oracle",
+          "type": "dialogue",
+          "icon": "game-icons:mirror-mirror",
+          "description": "A figure that looks exactly like you stands in the mirror, but its expression is wrong -- colder, more calculating.",
+          "exits": ["f2_corridor1", "f2_combat2"],
+          "npc": {
+            "name": "Your Reflection",
+            "icon": "game-icons:mirror-mirror",
+            "greeting": "We meet at last, real one. I know what you fear. I know what you desire. Shall we trade truths?",
+            "branches": [
+              {
+                "text": "Tell me how to defeat the Mirror Wraith.",
+                "traitShift": { "cunning": 0.1 },
+                "response": "The Wraith reflects everything you throw at it. Only damage that seeps in slowly -- poisons, burns, hexes -- can harm it. The forge can make such spells if you combine shadow and nature runes.",
+                "reward": { "type": "xp", "value": 15 }
+              },
+              {
+                "text": "I don't trust reflections. Show me what's real.",
+                "traitShift": { "aggression": 0.1, "cunning": -0.05 },
+                "response": "Reality? Reality is that you're running out of mana and time. But fine -- here's something real enough. Gold, from a dead adventurer's pocket.",
+                "reward": { "type": "gold", "value": 20 }
+              },
+              {
+                "text": "I feel sorry for you, trapped in glass forever.",
+                "traitShift": { "compassion": 0.15, "aggression": -0.05 },
+                "response": "Compassion... I had forgotten what that felt like. Take this healing energy -- you'll need it more than I will.",
+                "reward": { "type": "hp", "value": 30 }
+              }
+            ]
+          }
+        },
+        {
+          "id": "f2_combat1",
+          "name": "Manaweaver's Lair",
+          "type": "combat",
+          "icon": "game-icons:magic-swirl",
+          "description": "A creature woven from pure magical energy pulses in the center of the room, draining mana from the air itself.",
+          "exits": ["f2_corridor1", "f2_combat2"],
+          "enemy": {
+            "name": "Manaweaver",
+            "icon": "game-icons:magic-swirl",
+            "hp": 50,
+            "maxHp": 50,
+            "attack": 7,
+            "defense": 3,
+            "directResist": 0.2,
+            "dotResist": 0.1,
+            "reflectDamage": 0.3,
+            "manaDrainPerTurn": 4,
+            "xpReward": 30,
+            "goldReward": 12,
+            "traits": { "aggression": 0.4, "cunning": 0.7 },
+            "loot": [
+              { "type": "consumable", "chance": 0.5 }
+            ]
+          }
+        },
+        {
+          "id": "f2_combat2",
+          "name": "Shard Golem Chamber",
+          "type": "combat",
+          "icon": "game-icons:rock-golem",
+          "description": "A massive golem of crystallized mirror shards stands guard. Its surface ripples with reflected energy.",
+          "exits": ["f2_dialogue1", "f2_combat1", "f2_rest"],
+          "enemy": {
+            "name": "Shard Golem",
+            "icon": "game-icons:rock-golem",
+            "hp": 80,
+            "maxHp": 80,
+            "attack": 12,
+            "defense": 5,
+            "directResist": 0.3,
+            "dotResist": 0.1,
+            "reflectDamage": 0.4,
+            "xpReward": 35,
+            "goldReward": 15,
+            "traits": { "aggression": 0.5 },
+            "loot": [
+              { "type": "rune", "id": "rune_shadow", "chance": 0.3 },
+              { "type": "consumable", "chance": 0.6 }
+            ]
+          }
+        },
+        {
+          "id": "f2_rest",
+          "name": "Quiet Grotto",
+          "type": "rest",
+          "icon": "game-icons:campfire",
+          "description": "A small grotto where the mirror walls turn opaque. A rare pocket of peace in the Mirror Halls.",
+          "exits": ["f2_merchant", "f2_combat2", "f2_boss"]
+        },
+        {
+          "id": "f2_boss",
+          "name": "Hall of the Mirror Wraith",
+          "type": "boss",
+          "icon": "game-icons:spectre",
+          "description": "A terrifying wraith of living mirror shards fills the chamber. It reflects all direct attacks with devastating force.",
+          "exits": ["f2_rest"],
+          "bossGateToFloor": "victory",
+          "enemy": {
+            "name": "The Mirror Wraith",
+            "icon": "game-icons:spectre",
+            "hp": 150,
+            "maxHp": 150,
+            "attack": 16,
+            "defense": 4,
+            "directResist": 0.3,
+            "dotResist": 0.05,
+            "reflectDamage": 0.6,
+            "manaDrainPerTurn": 3,
+            "xpReward": 80,
+            "goldReward": 50,
+            "traits": { "aggression": 0.6, "cunning": 0.8 },
+            "loot": []
+          }
+        }
+      ]
+    }
+  ],
+  "runes": [
+    { "id": "rune_fire", "name": "Fire Rune", "element": "fire", "icon": "game-icons:fire-ring" },
+    { "id": "rune_blood", "name": "Blood Rune", "element": "blood", "icon": "game-icons:drop" },
+    { "id": "rune_nature", "name": "Nature Rune", "element": "nature", "icon": "game-icons:leaf" },
+    { "id": "rune_shadow", "name": "Shadow Rune", "element": "shadow", "icon": "game-icons:eclipse-flare" }
+  ],
+  "recipes": [
+    {
+      "id": "spell_ember_hemorrhage",
+      "name": "Ember Hemorrhage",
+      "icon": "game-icons:fire-spell-cast",
+      "elements": ["fire", "blood"],
+      "manaCost": 10,
+      "description": "Sears the target's blood, inflicting burning damage over time that bypasses armor.",
+      "effect": { "type": "dot", "damage": 8, "turns": 4, "element": "fire" }
+    },
+    {
+      "id": "spell_rotbloom",
+      "name": "Rotbloom",
+      "icon": "game-icons:vine-whip",
+      "elements": ["nature", "blood"],
+      "manaCost": 9,
+      "description": "Plants a rotting seed in the target's flesh, dealing nature damage over time.",
+      "effect": { "type": "dot", "damage": 6, "turns": 5, "element": "nature" }
+    },
+    {
+      "id": "spell_hexroot",
+      "name": "Hexroot",
+      "icon": "game-icons:thorny-vine",
+      "elements": ["shadow", "nature"],
+      "manaCost": 12,
+      "description": "Channels shadow energy through living roots, dealing damage that bypasses reflection shields.",
+      "effect": { "type": "dot", "damage": 10, "turns": 3, "element": "shadow", "bypassReflect": true }
+    },
+    {
+      "id": "spell_blood_pact",
+      "name": "Blood Pact",
+      "icon": "game-icons:bleeding-wound",
+      "elements": ["blood", "shadow"],
+      "manaCost": 6,
+      "description": "Sacrifice HP to restore mana and empower your next spells.",
+      "effect": { "type": "buff", "hpCost": 15, "manaRestore": 25, "spellPowerBuff": 4, "buffTurns": 3 }
+    },
+    {
+      "id": "spell_flame_ward",
+      "name": "Flame Ward",
+      "icon": "game-icons:fire-shield",
+      "elements": ["fire", "nature"],
+      "manaCost": 11,
+      "description": "Wraps you in a shield of living flame that absorbs incoming damage.",
+      "effect": { "type": "shield", "absorb": 35, "turns": 4 }
+    },
+    {
+      "id": "spell_shadow_fire",
+      "name": "Shadowflame",
+      "icon": "game-icons:fire-dash",
+      "elements": ["fire", "shadow"],
+      "manaCost": 14,
+      "description": "Dark fire that burns through reflective surfaces, dealing direct damage that cannot be reflected.",
+      "effect": { "type": "direct", "damage": 22, "element": "shadow", "bypassReflect": true }
+    }
+  ],
+  "starterSpells": [
+    {
+      "id": "spell_arcane_bolt",
+      "name": "Arcane Bolt",
+      "icon": "game-icons:magic-bolt",
+      "manaCost": 5,
+      "description": "A basic bolt of arcane energy. Effective against unshielded targets.",
+      "effect": { "type": "direct", "damage": 12, "element": "arcane" },
+      "isStarter": true
+    },
+    {
+      "id": "spell_minor_heal",
+      "name": "Minor Heal",
+      "icon": "game-icons:health-increase",
+      "manaCost": 8,
+      "description": "Restores a small amount of health.",
+      "effect": { "type": "heal", "amount": 25 },
+      "isStarter": true
+    }
+  ],
+  "skillTree": [
+    {
+      "id": "skill_vitality",
+      "name": "Vitality",
+      "icon": "game-icons:heart-plus",
+      "description": "Increases maximum HP by 15.",
+      "cost": 1,
+      "effect": { "maxHp": 15 },
+      "requires": []
+    },
+    {
+      "id": "skill_arcane_mastery",
+      "name": "Arcane Mastery",
+      "icon": "game-icons:magic-palm",
+      "description": "Increases spell power by 3.",
+      "cost": 1,
+      "effect": { "spellPower": 3 },
+      "requires": []
+    },
+    {
+      "id": "skill_forge_adept",
+      "name": "Forge Adept",
+      "icon": "game-icons:anvil-impact",
+      "description": "Reduces crafted spell mana cost by 3.",
+      "cost": 1,
+      "effect": { "craftedManaCostReduction": 3 },
+      "requires": ["skill_arcane_mastery"]
+    },
+    {
+      "id": "skill_endurance",
+      "name": "Endurance",
+      "icon": "game-icons:muscle-up",
+      "description": "Increases defense by 3 and max mana by 10.",
+      "cost": 1,
+      "effect": { "defense": 3, "maxMana": 10 },
+      "requires": ["skill_vitality"]
+    },
+    {
+      "id": "skill_battle_focus",
+      "name": "Battle Focus",
+      "icon": "game-icons:sword-clash",
+      "description": "Increases attack by 4.",
+      "cost": 1,
+      "effect": { "attack": 4 },
+      "requires": []
+    }
+  ]
+}

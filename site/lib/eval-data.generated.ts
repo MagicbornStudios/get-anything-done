@@ -4587,6 +4587,7 @@ export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = {
 export const PLAYABLE_INDEX: Record<string, string> = {
   "escape-the-dungeon/v10": "/playable/escape-the-dungeon/v10/index.html",
   "escape-the-dungeon/v11": "/playable/escape-the-dungeon/v11/index.html",
+  "escape-the-dungeon/v12": "/playable/escape-the-dungeon/v12/index.html",
   "escape-the-dungeon/v6": "/playable/escape-the-dungeon/v6/index.html",
   "escape-the-dungeon/v7": "/playable/escape-the-dungeon/v7/index.html",
   "escape-the-dungeon/v8": "/playable/escape-the-dungeon/v8/index.html",
@@ -4601,6 +4602,7 @@ export const PLAYABLE_INDEX: Record<string, string> = {
   "escape-the-dungeon-emergent/v2": "/playable/escape-the-dungeon-emergent/v2/index.html",
   "escape-the-dungeon-emergent/v4": "/playable/escape-the-dungeon-emergent/v4/index.html",
   "escape-the-dungeon-emergent/v5": "/playable/escape-the-dungeon-emergent/v5/index.html",
+  "escape-the-dungeon-emergent/v6": "/playable/escape-the-dungeon-emergent/v6/index.html",
   "gad-explainer-video/v1": "/playable/gad-explainer-video/v1/index.html"
 };
 
