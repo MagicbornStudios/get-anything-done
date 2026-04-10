@@ -1,127 +1,147 @@
-import { registerScene, el, icon } from '../renderer';
-import { getState, getCurrentRoom, shiftTrait, addGold, addItem, discoverRune, showToast, setScene, saveGame } from '../state';
-import { createHUD } from '../hud';
-import { ALL_ITEMS } from '../data';
-import type { NPC, DialogueNode, DialogueChoice, DialogueEffect } from '../types';
+// ============================================================
+// Dialogue / Event Scene (R-v5.04, R-v5.14)
+// ============================================================
 
-registerScene('dialogue', (container) => {
-  const state = getState();
+import { registerScene, renderScene, icon, elementColor } from '../renderer';
+import { getState, getCurrentRoom, saveGame, shiftTrait, discoverRune, addItem } from '../state';
+import { emit } from '../events';
+import type { DialogueNode, DialogueChoice, NPC } from '../types';
+import { ALL_ITEMS } from '../data';
+
+let currentNodeId: string | null = null;
+
+function applyEffects(effects: DialogueChoice['effects']): void {
+  const s = getState();
+  for (const eff of effects) {
+    switch (eff.type) {
+      case 'rune':
+        if (eff.id) discoverRune(eff.id);
+        break;
+      case 'item': {
+        const template = ALL_ITEMS.find(i => i.id === eff.id);
+        if (template) addItem({ ...template, quantity: 1 });
+        break;
+      }
+      case 'gold':
+        s.player.gold += (eff.value || 0);
+        if (eff.value) emit('toast', `${eff.value > 0 ? '+' : ''}${eff.value} gold`, eff.value > 0 ? 'success' : 'warning');
+        break;
+      case 'trait':
+        if (eff.traitKey && eff.value) shiftTrait(eff.traitKey, eff.value);
+        break;
+      case 'quest_flag':
+        if (eff.id) s.player.questFlags[eff.id] = true;
+        break;
+      case 'merchant_discount':
+        s.player.questFlags['merchant_discount'] = true;
+        emit('toast', 'Merchant discount unlocked!', 'success');
+        break;
+      case 'spawn_enemy':
+        emit('toast', 'An enemy appears!', 'danger');
+        // Could trigger combat but for simplicity, just a narrative beat
+        break;
+    }
+  }
+  emit('state-changed');
+}
+
+registerScene('dialogue', () => {
+  const app = document.getElementById('app')!;
+  const s = getState();
   const room = getCurrentRoom();
   const npc = room.npc;
-  if (!npc) { setScene('map'); return; }
 
-  let currentNodeId = npc.dialogue[0]?.id;
-
-  container.appendChild(createHUD());
-
-  const scene = el('div', { className: 'dialogue-scene' });
-
-  function renderDialogue() {
-    scene.innerHTML = '';
-
-    const node = npc!.dialogue.find(d => d.id === currentNodeId);
-    if (!node) {
-      // End dialogue
-      room.cleared = true;
-      saveGame();
-      setScene('map');
-      return;
-    }
-
-    const area = el('div', { className: 'dialogue-npc-area' });
-
-    // NPC portrait
-    area.appendChild(el('div', { className: 'dialogue-portrait' },
-      icon(npc!.portrait, 'icon-xl'),
-    ));
-
-    // Text area
-    const textArea = el('div', { className: 'dialogue-text-area' });
-    textArea.appendChild(el('div', { className: 'dialogue-name' }, npc!.name));
-
-    // Show NPC traits
-    textArea.appendChild(el('div', { style: { fontSize: '11px', color: 'var(--text-dim)', marginBottom: '8px', display: 'flex', gap: '8px' } },
-      ...Object.entries(npc!.traits).filter(([_, v]) => (v as number) > 0.3).map(([k, v]) =>
-        el('span', { className: 'elem-arcane' }, `${k}: ${(v as number).toFixed(1)}`)
-      ),
-    ));
-
-    textArea.appendChild(el('p', { className: 'dialogue-text' }, node.text));
-
-    // Choices
-    const choices = el('div', { className: 'dialogue-choices' });
-    for (const choice of node.choices) {
-      // Check trait requirement
-      const meetsReq = !choice.traitRequirement ||
-        state.player.traits[choice.traitRequirement.trait] >= choice.traitRequirement.minValue;
-
-      const choiceBtn = el('div', {
-        className: 'dialogue-choice',
-        style: { opacity: meetsReq ? '1' : '0.4', cursor: meetsReq ? 'pointer' : 'not-allowed' },
-        onclick: () => {
-          if (!meetsReq) {
-            showToast(`Requires ${choice.traitRequirement!.trait} >= ${choice.traitRequirement!.minValue}`, 'danger');
-            return;
-          }
-          applyEffects(choice.effects);
-          if (choice.nextNodeId) {
-            currentNodeId = choice.nextNodeId;
-            renderDialogue();
-          } else {
-            room.cleared = true;
-            saveGame();
-            setScene('map');
-          }
-        },
-      },
-        el('span', {}, choice.text),
-        choice.traitRequirement ? el('div', { className: 'dialogue-trait-req' },
-          `Requires ${choice.traitRequirement.trait} >= ${choice.traitRequirement.minValue}`) : el('span', {}),
-      );
-      choices.appendChild(choiceBtn);
-    }
-    textArea.appendChild(choices);
-    area.appendChild(textArea);
-    scene.appendChild(area);
+  if (!npc || !npc.dialogue || npc.dialogue.length === 0) {
+    // No NPC, show event text and return
+    room.cleared = true;
+    app.innerHTML = `
+      <div class="scene dialogue-scene">
+        <div class="scene-header">
+          <h2>${icon(room.icon, 28)} ${room.name}</h2>
+        </div>
+        <div class="dialogue-text">
+          <p>${room.description}</p>
+        </div>
+        <button class="btn btn-primary" id="btn-back">${icon('game-icons:return-arrow', 16)} Return to Map</button>
+      </div>
+    `;
+    document.getElementById('btn-back')?.addEventListener('click', () => {
+      s.currentScene = 'map'; saveGame(); renderScene('map');
+    });
+    return;
   }
 
-  function applyEffects(effects: DialogueEffect[]) {
-    for (const eff of effects) {
-      switch (eff.type) {
-        case 'trait':
-          if (eff.traitKey && eff.value) shiftTrait(eff.traitKey, eff.value, 'dialogue');
-          break;
-        case 'gold':
-          if (eff.value) addGold(eff.value);
-          if (eff.value! > 0) showToast(`+${eff.value} gold`, 'loot');
-          else if (eff.value! < 0) showToast(`${eff.value} gold`, 'danger');
-          break;
-        case 'item':
-          if (eff.id) {
-            const itemDef = ALL_ITEMS.find(i => i.id === eff.id);
-            if (itemDef) {
-              addItem({ ...itemDef, quantity: 1 });
-              showToast(`Received: ${itemDef.name}`, 'loot');
-            }
-          }
-          break;
-        case 'rune':
-          if (eff.id) discoverRune(eff.id);
-          break;
-        case 'quest_flag':
-          if (eff.id) {
-            state.player.questFlags[eff.id] = true;
-            showToast(`Quest updated`, 'info');
-          }
-          break;
-        case 'merchant_discount':
-          state.player.questFlags['merchant_discount'] = true;
-          showToast('Merchant discount unlocked!', 'success');
-          break;
+  // Get current dialogue node
+  if (!currentNodeId) currentNodeId = npc.dialogue[0].id;
+  const node = npc.dialogue.find(n => n.id === currentNodeId);
+
+  if (!node) {
+    // Dialogue ended
+    room.cleared = true;
+    currentNodeId = null;
+    s.currentScene = 'map';
+    saveGame();
+    renderScene('map');
+    return;
+  }
+
+  // Filter choices by trait requirements
+  const availableChoices = node.choices.filter(c => {
+    if (!c.traitRequirement) return true;
+    return (s.player.traits[c.traitRequirement.trait] ?? 0) >= c.traitRequirement.minValue;
+  });
+
+  app.innerHTML = `
+    <div class="scene dialogue-scene">
+      <div class="scene-header">
+        <h2>${icon(room.icon, 28)} ${room.name}</h2>
+      </div>
+
+      <div class="dialogue-panel">
+        <div class="npc-portrait">
+          ${icon(npc.portrait || npc.icon, 64)}
+          <div class="npc-name">${npc.name}</div>
+          <div class="npc-traits">
+            ${Object.entries(npc.traits).filter(([_, v]) => v > 0.4).map(([k, v]) => `<span class="trait-badge">${k}: ${(v as number).toFixed(1)}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="dialogue-content">
+          <div class="dialogue-speaker">${node.speaker || npc.name}</div>
+          <div class="dialogue-text">${node.text}</div>
+
+          <div class="dialogue-choices">
+            ${availableChoices.map((c, i) => `
+              <button class="btn btn-dialogue" data-choice-idx="${i}">
+                ${c.traitRequirement ? `<span class="trait-req">[${c.traitRequirement.trait} >= ${c.traitRequirement.minValue}]</span>` : ''}
+                ${c.text}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Bind choices
+  app.querySelectorAll('.btn-dialogue').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt((btn as HTMLElement).dataset.choiceIdx || '0');
+      const choice = availableChoices[idx];
+      if (choice) {
+        applyEffects(choice.effects);
+        if (choice.nextNodeId) {
+          currentNodeId = choice.nextNodeId;
+          renderScene('dialogue');
+        } else {
+          // End dialogue
+          room.cleared = true;
+          currentNodeId = null;
+          s.currentScene = 'map';
+          saveGame();
+          renderScene('map');
+        }
       }
-    }
-  }
-
-  renderDialogue();
-  container.appendChild(scene);
+    });
+  });
 });
