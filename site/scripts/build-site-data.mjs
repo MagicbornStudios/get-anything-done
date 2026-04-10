@@ -830,6 +830,107 @@ function parseAllTasks() {
   return out;
 }
 
+function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs, skills, agents, commands }) {
+  // Flat list of searchable entries. Each entry is { id, title, kind, href, body }.
+  // Body is the searchable haystack — fuzzy match against this.
+  const entries = [];
+
+  for (const d of decisions) {
+    entries.push({
+      id: d.id,
+      title: d.title,
+      kind: "decision",
+      href: `/decisions#${d.id}`,
+      body: `${d.id} ${d.title} ${d.summary?.slice(0, 400) ?? ""}`,
+    });
+  }
+
+  for (const t of tasks) {
+    entries.push({
+      id: t.id,
+      title: t.goal.slice(0, 120),
+      kind: "task",
+      href: `/tasks#${t.id}`,
+      body: `${t.id} ${t.goal} ${(t.keywords ?? []).join(" ")}`,
+    });
+  }
+
+  for (const p of phases) {
+    entries.push({
+      id: p.id,
+      title: `Phase ${p.id} — ${p.title}`,
+      kind: "phase",
+      href: `/phases#${p.id}`,
+      body: `${p.id} ${p.title} ${p.goal ?? ""}`,
+    });
+  }
+
+  for (const g of glossary) {
+    entries.push({
+      id: g.id,
+      title: g.term,
+      kind: "glossary",
+      href: `/glossary#${g.id}`,
+      body: `${g.term} ${(g.aliases ?? []).join(" ")} ${g.short ?? ""}`,
+    });
+  }
+
+  for (const q of questions) {
+    entries.push({
+      id: q.id,
+      title: q.title,
+      kind: "question",
+      href: `/questions#${q.id}`,
+      body: `${q.title} ${q.context?.slice(0, 400) ?? ""}`,
+    });
+  }
+
+  for (const b of bugs) {
+    entries.push({
+      id: b.id,
+      title: b.title,
+      kind: "bug",
+      href: `/bugs#${b.id}`,
+      body: `${b.title} ${b.description?.slice(0, 300) ?? ""}`,
+    });
+  }
+
+  for (const s of skills ?? []) {
+    entries.push({
+      id: s.id,
+      title: s.name ?? s.id,
+      kind: "skill",
+      href: `/skills/${s.id}`,
+      body: `${s.id} ${s.name ?? ""} ${s.description ?? ""}`,
+    });
+  }
+
+  for (const a of agents ?? []) {
+    entries.push({
+      id: a.id,
+      title: a.name ?? a.id,
+      kind: "agent",
+      href: `/#catalog`,
+      body: `${a.id} ${a.name ?? ""} ${a.description ?? ""}`,
+    });
+  }
+
+  for (const c of commands ?? []) {
+    entries.push({
+      id: c.id,
+      title: c.name ?? c.id,
+      kind: "command",
+      href: `/#catalog`,
+      body: `${c.id} ${c.name ?? ""} ${c.description ?? ""}`,
+    });
+  }
+
+  // Lowercase the body once so the client doesn't re-do it on every keystroke.
+  const lowered = entries.map((e) => ({ ...e, body: e.body.toLowerCase() }));
+  console.log(`  [search] indexed ${lowered.length} entries`);
+  return lowered;
+}
+
 function parsePlanningState() {
   console.log("[2g/4] Parsing GAD planning state (STATE, TASKS, DECISIONS)");
   const planningDir = path.join(REPO_ROOT, ".planning");
@@ -1740,6 +1841,20 @@ export interface PhaseRecord {
  */
 export const ALL_PHASES: PhaseRecord[] = ${JSON.stringify(extras.allPhases ?? [], null, 2)};
 
+export interface SearchEntry {
+  id: string;
+  title: string;
+  kind: "decision" | "task" | "phase" | "glossary" | "question" | "bug" | "skill" | "agent" | "command";
+  href: string;
+  body: string;
+}
+
+/**
+ * Flat search index over every structured entry on the site. Body is
+ * lowercased at prebuild so the client matcher only does substring checks.
+ */
+export const SEARCH_INDEX: SearchEntry[] = ${JSON.stringify(extras.searchIndex ?? [], null, 2)};
+
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",
   bare: "Bare",
@@ -1810,6 +1925,17 @@ function main() {
   const allDecisions = parseAllDecisions();
   const allTasks = parseAllTasks();
   const allPhases = parseAllPhases();
+  const searchIndex = buildSearchIndex({
+    decisions: allDecisions,
+    tasks: allTasks,
+    phases: allPhases,
+    glossary: pseudoDb.glossary?.terms ?? [],
+    questions: pseudoDb.openQuestions?.questions ?? [],
+    bugs: pseudoDb.bugs?.bugs ?? [],
+    skills: catalog.skills,
+    agents: catalog.agents,
+    commands: catalog.commands,
+  });
 
   writeEvalDataTs(traces, evalTemplates, gadPackTemplate, {
     planningZips,
@@ -1821,6 +1947,7 @@ function main() {
     allDecisions,
     allTasks,
     allPhases,
+    searchIndex,
   });
   writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
   auditPlayable();

@@ -7184,6 +7184,2807 @@ export const ALL_PHASES: PhaseRecord[] = [
   }
 ];
 
+export interface SearchEntry {
+  id: string;
+  title: string;
+  kind: "decision" | "task" | "phase" | "glossary" | "question" | "bug" | "skill" | "agent" | "command";
+  href: string;
+  body: string;
+}
+
+/**
+ * Flat search index over every structured entry on the site. Body is
+ * lowercased at prebuild so the client matcher only does substring checks.
+ */
+export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-77",
+    "title": "Contribution flow is human-first — snapshot is agent-facing, not human-facing",
+    "kind": "decision",
+    "href": "/decisions#gad-77",
+    "body": "gad-77 contribution flow is human-first — snapshot is agent-facing, not human-facing important clarification the user surfaced during the ia planning conversation: `gad snapshot` is a command for agents to rehydrate context after compaction — it produces no useful output for a human reading it. a human contribution flow must not include running snapshot as a step. the correct human flow is: (1) clone the repo, (2) npm install (or pnpm/yarn), (3) open the repo in claude code (or cu"
+  },
+  {
+    "id": "gad-76",
+    "title": "Target users + value-prop framing — researchers primary, indie devs experiential, pressure as the hook",
+    "kind": "decision",
+    "href": "/decisions#gad-76",
+    "body": "gad-76 target users + value-prop framing — researchers primary, indie devs experiential, pressure as the hook formal statement of who the site is for and what it says. **primary user: coding-agent researchers** (target a) — people evaluating skill frameworks, hypothesis quality, and measurement rigor. they read findings, click through to decisions.xml on github, scrutinize the rubric construction. they tolerate dense content and reject marketing copy. **secondary user: indie devs curious about skill evolu"
+  },
+  {
+    "id": "gad-75",
+    "title": "Pressure is a first-class eval dimension — the measurable axis connecting game-feel, requirements, and skill evolution",
+    "kind": "decision",
+    "href": "/decisions#gad-75",
+    "body": "gad-75 pressure is a first-class eval dimension — the measurable axis connecting game-feel, requirements, and skill evolution introduced during the ia planning conversation on 2026-04-09: \"pressure\" becomes a first-class evaluation dimension alongside quality, iteration count, and composite score. working definition: pressure = the constraint intensity applied to the agent during an eval, composed of five sub-dimensions — (1) requirement complexity (moving parts, cross-system interactions, logic depth), (2) ambiguity (cl"
+  },
+  {
+    "id": "gad-74",
+    "title": "GAD's actual value proposition — task management at scale in-repo + skill evaluation, NOT \"ship software faster\"",
+    "kind": "decision",
+    "href": "/decisions#gad-74",
+    "body": "gad-74 gad's actual value proposition — task management at scale in-repo + skill evaluation, not \"ship software faster\" user articulation: \"the main value i am seeing with gad is not software implementation fully as products. but definitely a good task management at scale all while in repo. get-anything-done's repo and the site/data is all in repo and we encourage others to clone and contribute any experiments and builds they want.\" formal statement of gad's value proposition, anchored by months of eval data: (1) *"
+  },
+  {
+    "id": "gad-73",
+    "title": "Fundamental skills triumvirate — create-skill / merge-skill / find-skills as GAD's foundational set",
+    "kind": "decision",
+    "href": "/decisions#gad-73",
+    "body": "gad-73 fundamental skills triumvirate — create-skill / merge-skill / find-skills as gad's foundational set user vision: gad provides three fundamental skills that together enable the emergent-evolution hypothesis (gad-68) to work in practice. (1) **find-skills** — locate a trusted fundamental skill from the gad ecosystem. examples of fundamentals: scientific-method, debug, write-tests, profile-performance, investigate-failure. inspired by https://skills.sh/vercel-labs/skills/find-skills but scoped to t"
+  },
+  {
+    "id": "gad-72",
+    "title": "Rounds framework — requirements-versioned, progressive complexity, hypothesis revisits allowed",
+    "kind": "decision",
+    "href": "/decisions#gad-72",
+    "body": "gad-72 rounds framework — requirements-versioned, progressive complexity, hypothesis revisits allowed formal statement of the rounds framework the project has been operating under informally. (1) a round is defined by a requirements-document version. new requirements version = new round. this is the unit of \"what are we testing against.\" (2) multiple eval versions can ship inside a single round — round 4 has etd v9, etd v10, bare v5, emergent v4 (4 builds across 3 projects) and all belong to round"
+  },
+  {
+    "id": "gad-71",
+    "title": "data/ JSON pseudo-database for hand-curated site content",
+    "kind": "decision",
+    "href": "/decisions#gad-71",
+    "body": "gad-71 data/ json pseudo-database for hand-curated site content user proposal: \"we might want to have a pseudo database that is json some json that gets stored in the repo and we use that to collect all the static data we need for the site and operate like it is a database, just in repo as dont expect customers and sensitive information at all.\" formalize the pattern: `vendor/get-anything-done/data/*.json` files are the authoritative source of hand-curated con"
+  },
+  {
+    "id": "gad-70",
+    "title": "Anthropic skills guide is the canonical reference for skill quality",
+    "kind": "decision",
+    "href": "/decisions#gad-70",
+    "body": "gad-70 anthropic skills guide is the canonical reference for skill quality the anthropic \"complete guide to building skills for claude\" (resources.anthropic.com/hubfs/the-complete-guide-to-building-skill-for-claude.pdf) is adopted as the canonical reference for what a good skill looks like and how to test one. three testing layers from the guide are named: (1) triggering tests — does the skill load on relevant / paraphrased / negative queries, (2) functional tests — vali"
+  },
+  {
+    "id": "gad-69",
+    "title": "Programmatic evaluation is the priority — minimize agent-self-report dependency",
+    "kind": "decision",
+    "href": "/decisions#gad-69",
+    "body": "gad-69 programmatic evaluation is the priority — minimize agent-self-report dependency user directive: \"i don't want to be too dependent on the agents following guides/tasks to evaluate agents following guides/tasks.\" evaluation framework must prioritize objective data produced by tooling, hooks, tracing, servers, parsing, and automation over agent self-reports, human judgment, or \"did the agent follow the rubric\" checks. every new eval metric must answer \"can this be collected prog"
+  },
+  {
+    "id": "gad-68",
+    "title": "Emergent-evolution working hypothesis — skill-evolution + emergent projects + tailored merging",
+    "kind": "decision",
+    "href": "/decisions#gad-68",
+    "body": "gad-68 emergent-evolution working hypothesis — skill-evolution + emergent projects + tailored merging synthesis of the freedom hypothesis (gad-36), compound-skills hypothesis (gad-65), and the consistent gad-framework hiccups observed across rounds 1-4 into a single working hypothesis. statement: \"a coding agent given blank planning artifacts, requirements, a task, and the ability to (a) create new skills, (b) merge similar skills, (c) find related skills to help, plus gad-provided foundational sk"
+  },
+  {
+    "id": "gad-67",
+    "title": "Serial eval execution is the permanent default — parallel requires explicit authorization",
+    "kind": "decision",
+    "href": "/decisions#gad-67",
+    "body": "gad-67 serial eval execution is the permanent default — parallel requires explicit authorization reinforcement of gad-62 with a stronger default. user directive after round 4: \"our tests done sequentially to use the full token/budget that we get for these evals is more than likely what we will need to do rather than run them all in parallel most of the time. we will just need to remember to eval.\" policy: any agent session proposing an eval run defaults to serial execution (one condition at a"
+  },
+  {
+    "id": "gad-66",
+    "title": "Authored-content injection experiment — inherit content packs alongside requirements",
+    "kind": "decision",
+    "href": "/decisions#gad-66",
+    "body": "gad-66 authored-content injection experiment — inherit content packs alongside requirements new eval condition proposal: preserve every run's authored game content (spells, runes, items, npcs, dialogue trees, skills, encounter tables) as a portable \"content pack\" separate from the source code. a subsequent eval run inherits both the requirements document and a content pack extracted from prior runs, then builds on top. this is not a freedom-hypothesis test — it explicitly scaffolds the a"
+  },
+  {
+    "id": "gad-65",
+    "title": "Compound-Skills Hypothesis — emergent workflow as a skill-growth framework tailored to a specific project domain",
+    "kind": "decision",
+    "href": "/decisions#gad-65",
+    "body": "gad-65 compound-skills hypothesis — emergent workflow as a skill-growth framework tailored to a specific project domain the emergent eval condition is not just \"inherit some skills and don't regress.\" it is a testable hypothesis about knowledge compounding: **as an emergent agent iterates on the same project domain across rounds, its inherited skill library should grow more specialized to that domain, and the game it produces should improve in quality and requirements-alignment per round more than bare produces by "
+  },
+  {
+    "id": "gad-64",
+    "title": "API-interrupted runs are a separate failure category from rate-limited runs",
+    "kind": "decision",
+    "href": "/decisions#gad-64",
+    "body": "gad-64 api-interrupted runs are a separate failure category from rate-limited runs round 4's gad v10 hit anthropic api 529 overloaded_error twice. this is server-side transient load, not an account rate limit — different cause, different retry semantics, different interpretation. trace.json now distinguishes the two via separate flags: timing.rate_limited (account cap hit — gad-63 treats these as preserve-but-exclude) and timing.api_interrupted (server overload — also preserve-b"
+  },
+  {
+    "id": "gad-63",
+    "title": "Rate-limited runs are preserved as data points but excluded from cross-round quality comparisons",
+    "kind": "decision",
+    "href": "/decisions#gad-63",
+    "body": "gad-63 rate-limited runs are preserved as data points but excluded from cross-round quality comparisons trace.json files from rate-limited runs are still preserved (the partial work is informative about planning differential, architecture patterns, and inheritance effects) but explicitly excluded from freedom-hypothesis comparisons, graphs scatter plots, and cross-round score aggregation. the filter key is `timing.rate_limited === true` in trace.json. site rendering (results, graphs, /insights) shou"
+  },
+  {
+    "id": "gad-62",
+    "title": "Parallel eval runs share a single account rate limit — serial execution is the default",
+    "kind": "decision",
+    "href": "/decisions#gad-62",
+    "body": "gad-62 parallel eval runs share a single account rate limit — serial execution is the default round 4 attempt #1 launched gad + bare + emergent in parallel via three worktree agents. all three hit an account-level rate limit simultaneously at ~14 minutes (tool_uses 81/45/40) with the message \"you've hit your limit · resets 12am america/chicago\". the shared bucket meant none of the three runs finished. implication: parallel eval runs on one account are a false economy. serial execution (one"
+  },
+  {
+    "id": "gad-61",
+    "title": "Research priority: structured objective data production for evaluations",
+    "kind": "decision",
+    "href": "/decisions#gad-61",
+    "body": "gad-61 research priority: structured objective data production for evaluations the primary goal of the eval framework is no longer \"score runs\" — it's \"produce structured data that yields insights.\" a score is just one kind of derived data; the framework should also produce structured human review rubrics (dimensions instead of single numbers), automated gate checks (playwright tests instead of human inspection for things automatable), derived metrics (tool mix, commit rhyth"
+  },
+  {
+    "id": "gad-60",
+    "title": "Trace event output field capped at 4 KB with head/tail truncation",
+    "kind": "decision",
+    "href": "/decisions#gad-60",
+    "body": "gad-60 trace event output field capped at 4 kb with head/tail truncation individual event `outputs` fields in the jsonl stream are capped at 4096 bytes. when raw output exceeds the cap, it's split into 2 kb of head + 2 kb of tail joined by a \"... [truncated n bytes] ...\" marker, and the event is stamped with `truncated: true`. full untruncated output remains in claude code's session.jsonl which is accessible on disk for any run that needs deeper inspection. the 4 kb ca"
+  },
+  {
+    "id": "gad-59",
+    "title": "Hook handler lives in the GAD repo, referenced by absolute path from user settings",
+    "kind": "decision",
+    "href": "/decisions#gad-59",
+    "body": "gad-59 hook handler lives in the gad repo, referenced by absolute path from user settings the hook handler script lives at vendor/get-anything-done/bin/gad-trace-hook.cjs (or equivalent in the distributed gad package). `gad install hooks` writes an absolute path reference into the user's ~/.claude/settings.json pointing at the installed gad binary. this gives us one canonical handler per framework commit, zero per-workspace drift, updates via `gad update`. `gad uninstall hooks` is the "
+  },
+  {
+    "id": "gad-58",
+    "title": "Skill invocation marker: hybrid file + hook-emitted event",
+    "kind": "decision",
+    "href": "/decisions#gad-58",
+    "body": "gad-58 skill invocation marker: hybrid file + hook-emitted event the agent writes a single plain-text file at .planning/.trace-active-skill containing just the active skill id. that's the entire agent-side burden — one file write per skill start. the hook handler reads this file on every pretooluse event to attribute subsequent tool uses to the active skill (adds trigger_skill field on each event) and detects content changes to emit a discrete skill_invocation "
+  },
+  {
+    "id": "gad-57",
+    "title": "Remotion parameters: 30s max, cinematic passthrough, stoppable, /videos route + inline embeds",
+    "kind": "decision",
+    "href": "/decisions#gad-57",
+    "body": "gad-57 remotion parameters: 30s max, cinematic passthrough, stoppable, /videos route + inline embeds phase 26 parameters pinned: every composition is max 30 seconds, rendered as a cinematic passthrough (linear timeline, no branching), but the player must expose play/pause so viewers can stop mid-scroll. videos live in two places: (1) inline \"watch this dissection\" embeds on relevant per-run pages — e.g. the v8 failure dissection shows up on /runs/escape-the-dungeon/v8, and (2) a dedicated /videos"
+  },
+  {
+    "id": "gad-56",
+    "title": "Lineage attribution: GSD → RepoPlanner → GAD",
+    "kind": "decision",
+    "href": "/decisions#gad-56",
+    "body": "gad-56 lineage attribution: gsd → repoplanner → gad gad's lineage is acknowledged explicitly on the public site. get shit done (gsd-build, https://github.com/gsd-build/get-shit-done) is the upstream inspiration — small planning loops, visible state, executable specs. repoplanner (b2gdevs, https://repo-planner.vercel.app/) was an earlier attempt by the same author to formalize the \"ralph wiggum loop\" (continuous agent work maintained by in-repo docu"
+  },
+  {
+    "id": "gad-55",
+    "title": "Multi-agent tracing is a conversion problem, not a reimplementation problem",
+    "kind": "decision",
+    "href": "/decisions#gad-55",
+    "body": "gad-55 multi-agent tracing is a conversion problem, not a reimplementation problem if we ever want to evaluate codex, aider, or other hook-capable agents, the path is: their native session format → a converter script that emits gad trace schema v4 → the same /runs/[project]/[version] page renders it. no per-agent site code. codex's output format (running/ran prefixes with output blocks under ` └ `) is parseable but stream-based — would need a converter that tails the session and"
+  },
+  {
+    "id": "gad-54",
+    "title": "Eval backfill policy: freeze old scores, stamp new runs with framework version",
+    "kind": "decision",
+    "href": "/decisions#gad-54",
+    "body": "gad-54 eval backfill policy: freeze old scores, stamp new runs with framework version when the framework changes (new skill, new subagent, rewritten command), old eval scores are never recomputed. they're historical records, frozen at the framework commit they ran against. new runs against the updated framework get stamped with the new framework commit and become the \"current\" data point for cross-version comparisons. this preserves the archaeology — a reader can see what a v5 esca"
+  },
+  {
+    "id": "gad-53",
+    "title": "Trace schema v4 requires hook-aware agents — other coding agents are explicitly unsupported for tracing",
+    "kind": "decision",
+    "href": "/decisions#gad-53",
+    "body": "gad-53 trace schema v4 requires hook-aware agents — other coding agents are explicitly unsupported for tracing phase 25's trace schema v4 captures every tool_use, skill invocation with trigger context, and subagent spawn with inputs/outputs. the only reliable way to capture this data is from within the coding agent's runtime via hooks — claude code's pretooluse/posttooluse hooks, aider's python callbacks, continue.dev's extension api. agents without hook runtimes (cursor's closed-source editor, basic codex"
+  },
+  {
+    "id": "gad-52",
+    "title": "Remotion is how we ship video explainers — player, not compiler",
+    "kind": "decision",
+    "href": "/decisions#gad-52",
+    "body": "gad-52 remotion is how we ship video explainers — player, not compiler remotion's @remotion/player is a react component that renders video compositions live in the browser without requiring mp4 export. free for teams ≤3 and reuses existing react components (siteheader, score cards, svg charts) as video frames. no separate asset pipeline — video is composable react. phase 26 scopes what videos we want (gad loop walkthrough, v8 failure dissection with tracing overlay, "
+  },
+  {
+    "id": "gad-51",
+    "title": "Framework is versioned on branches so evals can pin + re-run across versions",
+    "kind": "decision",
+    "href": "/decisions#gad-51",
+    "body": "gad-51 framework is versioned on branches so evals can pin + re-run across versions main = current. frozen snapshots live on version/v1.1, version/v1.2, etc. when we ship a framework change that could affect eval scores (new skill, changed command, different subagent wiring), we branch, tag, and update a framework_version constant used by `gad version`. every trace.json stamps the commit it ran against so we can distinguish \"the agent did better\" from \"the framework changed.\" re-"
+  },
+  {
+    "id": "gad-50",
+    "title": "Trace schema v4: every tool use, skill invocation, and subagent spawn must be captured",
+    "kind": "decision",
+    "href": "/decisions#gad-50",
+    "body": "gad-50 trace schema v4: every tool use, skill invocation, and subagent spawn must be captured today's trace.json has a bare numeric skill_accuracy field for most runs (e.g. escape-the-dungeon v8 = 0.17 with no breakdown of which of the 6 expected triggers fired vs missed). this means we can't interpret scores across workflows. trace schema v4 will capture: (1) every tool_use with timestamp + name + outcome; (2) every skill invocation with trigger context (user phrase, auto-detected, explic"
+  },
+  {
+    "id": "gad-49",
+    "title": "Bare and Emergent bootstrap skill set is a pinned invariant: create-skill + find-sprites",
+    "kind": "decision",
+    "href": "/decisions#gad-49",
+    "body": "gad-49 bare and emergent bootstrap skill set is a pinned invariant: create-skill + find-sprites any bare or emergent greenfield eval template must include skills/create-skill.md and skills/find-sprites.md in its template/skills/ directory before the eval runs. these two are the minimum bootstrap methodology an agent needs to author its own workflow (create-skill) and source coherent visual assets (find-sprites). emergent projects may inherit additional skills from previous runs, but the two-"
+  },
+  {
+    "id": "gad-48",
+    "title": "GAD framework diagnosis (freedom hypothesis) is deferred — need more eval data first",
+    "kind": "decision",
+    "href": "/decisions#gad-48",
+    "body": "gad-48 gad framework diagnosis (freedom hypothesis) is deferred — need more eval data first the round 3 findings showing bare consistently beats gad on creative implementation are enough to treat as a real pattern but not yet enough to commit to structural changes (gad-lite, pivoting away from creative evals, etc.). before making architectural decisions about gad itself, we need: (1) round 4 greenfield with v4 (pressure-oriented) requirements to see if the pattern persists; (2) brownfiel"
+  },
+  {
+    "id": "gad-47",
+    "title": "Portfolio must host all experiment documentation before further experimentation",
+    "kind": "decision",
+    "href": "/decisions#gad-47",
+    "body": "gad-47 portfolio must host all experiment documentation before further experimentation user wants to view all experiment docs on apps/portfolio: links to code, game builds, scores, process, workflows, graphs, explanations of what's being tested. the portfolio acts as the public showcase of the experiment. before running any more eval rounds, the portfolio must contain: (1) hub page explaining the experiment, the conditions (gad/bare/emergent), and the freedom hypothesis; (2) per-rou"
+  },
+  {
+    "id": "gad-46",
+    "title": "Skills evolution flow: greenfield emergent → brownfield emergent → greenfield (installed back)",
+    "kind": "decision",
+    "href": "/decisions#gad-46",
+    "body": "gad-46 skills evolution flow: greenfield emergent → brownfield emergent → greenfield (installed back) the experimental model for emergent workflows: (1) greenfield emergent creates initial skills from scratch (only has create_skill skill); (2) brownfield emergent inherits those skills + creates new ones as it extends existing code; (3) when proven, those skills can be \"installed back\" into the next greenfield emergent run as its inheritance. this creates a feedback loop where ai-decided workflows "
+  },
+  {
+    "id": "gad-45",
+    "title": "Emergent AGENTS.md stops mandating specific artifacts — agents define their own",
+    "kind": "decision",
+    "href": "/decisions#gad-45",
+    "body": "gad-45 emergent agents.md stops mandating specific artifacts — agents define their own round 3 emergent agents.md prescribed architecture.md, changelog.md, specific directory layouts. that defeats the point of the emergent experiment, which is to observe what workflow artifacts an ai-decided workflow produces. v4 emergent agents.md only mandates: (1) put all workflow artifacts in game/.planning/, (2) reference the create_skill skill to define new skills when patterns emerge. everyth"
+  },
+  {
+    "id": "gad-44",
+    "title": "\"Traits\" in UI, narrativeStats in code — split terminology",
+    "kind": "decision",
+    "href": "/decisions#gad-44",
+    "body": "gad-44 \"traits\" in ui, narrativestats in code — split terminology player-facing ui shows narrative/progression stats as \"traits\". internal code/data can continue using narrativestats as the technical term. both must be documented with a mapping. prevents churn of a full taxonomy rename while giving players the more legible label."
+  },
+  {
+    "id": "gad-43",
+    "title": "Sprite sourcing is a workflow requirement with coherent fallback allowed",
+    "kind": "decision",
+    "href": "/decisions#gad-43",
+    "body": "gad-43 sprite sourcing is a workflow requirement with coherent fallback allowed v4 requires agents to attempt asset sourcing first through a defined search workflow: lightweight installable icon packs, web-searched free/open-license sprites, or common art sources. fallback to generated/programmatic placeholders is allowed only if sourcing genuinely fails or integration cost becomes disproportionate — but the fallback must still be visually coherent. ugly primitive-only presen"
+  },
+  {
+    "id": "gad-42",
+    "title": "Skills (physical actions) are a scored criterion, not a gate, in v4",
+    "kind": "decision",
+    "href": "/decisions#gad-42",
+    "body": "gad-42 skills (physical actions) are a scored criterion, not a gate, in v4 skills system (physical non-spell actions that evolve via own xp, can be supercharged with mana crystals) was considered for gate status but deferred. forge is already a major gate and requiring both would cause broad-but-shallow implementations. v4 requires only that combat supports at least one non-spell action category (basic attack or skill). full skill system with evolution and mana-crystal o"
+  },
+  {
+    "id": "gad-41",
+    "title": "v4 game requirements reframed: pressure over features",
+    "kind": "decision",
+    "href": "/decisions#gad-41",
+    "body": "gad-41 v4 game requirements reframed: pressure over features round 3 findings exposed that v3 was a features checklist, not a game design. players could beat floors with default spells, forge was optional, no encounter tested adaptation. v4 flips this: every mechanic must create pressure that rewards ingenuity. core principle: \"baseline starter abilities must not be sufficient to comfortably complete a full floor without adaptation or enhancement.\" specific"
+  },
+  {
+    "id": "gad-40",
+    "title": "Eval projects categorized by mode (greenfield/brownfield) and workflow (gad/bare/emergent)",
+    "kind": "decision",
+    "href": "/decisions#gad-40",
+    "body": "gad-40 eval projects categorized by mode (greenfield/brownfield) and workflow (gad/bare/emergent) evals are now categorized on two axes: eval_mode (greenfield starts from scratch, brownfield extends an existing baseline codebase) and workflow (gad uses full framework, bare creates own workflow, emergent inherits and evolves). stored in gad.json. shown in gad eval list. brownfield evals reference a baseline (project+version) whose run/ becomes the starting codebase. added three new brownfield e"
+  },
+  {
+    "id": "gad-39",
+    "title": "All eval workflow artifacts must live under game/.planning/ regardless of framework",
+    "kind": "decision",
+    "href": "/decisions#gad-39",
+    "body": "gad-39 all eval workflow artifacts must live under game/.planning/ regardless of framework gad, bare, and emergent evals all must place workflow/tracking/skills/decisions/notes files under game/.planning/. source code in src/, assets in public/, process artifacts in .planning/. this separation allows clean inspection of what methodology each eval invented without mixing it into source. the format inside .planning/ is up to the agent (xml, markdown, whatever). violations (files at projec"
+  },
+  {
+    "id": "gad-38",
+    "title": "Eval preservation is a hard contract enforced by tests",
+    "kind": "decision",
+    "href": "/decisions#gad-38",
+    "body": "gad-38 eval preservation is a hard contract enforced by tests every implementation eval run must end with these artifacts preserved at canonical locations: (1) evals/project/vn/trace.json, (2) evals/project/vn/run/ with code+planning, (3) apps/portfolio/public/evals/project/vn/ with the playable build, (4) evals/project/vn/.gad-log/ with cli logs. the gad eval preserve command copies everything after a run; gad eval verify audits compliance; tests/eval-prese"
+  },
+  {
+    "id": "gad-37",
+    "title": "Eval game builds must be preserved per-version, never overwritten",
+    "kind": "decision",
+    "href": "/decisions#gad-37",
+    "body": "gad-37 eval game builds must be preserved per-version, never overwritten previously, gad eval open copied builds to apps/portfolio/public/evals/project/index.html, overwriting previous runs. this destroyed experimental history. now all builds are preserved at apps/portfolio/public/evals/project/version/index.html. the gad eval open command checks version-specific paths first."
+  },
+  {
+    "id": "gad-36",
+    "title": "Freedom hypothesis: GAD constraint may correlate inversely with creative output quality",
+    "kind": "decision",
+    "href": "/decisions#gad-36",
+    "body": "gad-36 freedom hypothesis: gad constraint may correlate inversely with creative output quality across 3 rounds of escape-the-dungeon evals, bare (no framework) consistently outperformed gad (full framework) on human review. round 3: bare v3 = 0.70, emergent v2 = 0.50, gad v8 = 0.20. gad has never exceeded 0.30 across 4 attempts; bare is monotonically improving (0.10 → 0.50 → 0.70). gad's planning overhead may consume tokens that could go to implementation and testing. the process is followe"
+  },
+  {
+    "id": "gad-35",
+    "title": "Bare eval condition is a live contender, not a deprecated baseline",
+    "kind": "decision",
+    "href": "/decisions#gad-35",
+    "body": "gad-35 bare eval condition is a live contender, not a deprecated baseline bare v2 scored 0.50 human review (most playable game) versus gad v7 at 0.30. the bare condition responds well when informed by prior failure signals, making it a valid forward-looking experimental condition. all three conditions (gad, bare, emergent) remain in active testing with equal priority."
+  },
+  {
+    "id": "gad-34",
+    "title": "Human review weight raised to 0.30 with low-score caps",
+    "kind": "decision",
+    "href": "/decisions#gad-34",
+    "body": "gad-34 human review weight raised to 0.30 with low-score caps human_review weight increased from 0.15 to 0.30 in composite formula. added hard caps: if human_review &lt; 0.20, composite capped at 0.40; if &lt; 0.10, capped at 0.25. this prevents technically compliant but broken/unusable output from ranking highly. process metrics cannot override a bad user experience."
+  },
+  {
+    "id": "gad-33",
+    "title": "Spell crafting is a gate criterion — loot/rewards do not satisfy it",
+    "kind": "decision",
+    "href": "/decisions#gad-33",
+    "body": "gad-33 spell crafting is a gate criterion — loot/rewards do not satisfy it the player must intentionally combine runes/components through a forge/crafting interface and produce at least one new spell outcome. pre-equipped spells or spell rewards from npcs/loot do not count. minimum: 3-5 runes, 3+ valid combinations, crafted spell usable in encounters."
+  },
+  {
+    "id": "gad-32",
+    "title": "UI quality is a gate criterion at full presentation level",
+    "kind": "decision",
+    "href": "/decisions#gad-32",
+    "body": "gad-32 ui quality is a gate criterion at full presentation level the build must include icons, visually differentiated room presentation, styled controls/panels, and entity visual representation. easily installable icon/sprite packs, web-searched assets, or generated placeholders are acceptable when setup cost is low. raw ascii/text-only ui fails the gate. geometric fallback tiles are last resort, not primary path."
+  },
+  {
+    "id": "gad-31",
+    "title": "Inherited skills must capture failure modes and fixes, not just patterns",
+    "kind": "decision",
+    "href": "/decisions#gad-31",
+    "body": "gad-31 inherited skills must capture failure modes and fixes, not just patterns emergent v1 inherited 4 skills from bare v1 but still failed (kaplay styled text error). the skills documented code patterns but not failure modes. bare v2 (told about v1 failure, no inherited skills) succeeded because it had to solve the problem itself. skills that only document \"how i did it\" without \"what went wrong and how i fixed it\" are insufficient for cross-run learning."
+  },
+  {
+    "id": "gad-30",
+    "title": "Eval requirements must be versioned and findings documented per experiment",
+    "kind": "decision",
+    "href": "/decisions#gad-30",
+    "body": "gad-30 eval requirements must be versioned and findings documented per experiment requirements changed twice in one session (original 12 criteria → gate criteria + vertical slice). each change invalidates comparison with previous runs. requirements must carry a version tag, and findings docs must reference which requirement version was used. scientific rigor requires reproducibility."
+  },
+  {
+    "id": "gad-29",
+    "title": "Process metrics do not guarantee output quality — human review is the ground truth",
+    "kind": "decision",
+    "href": "/decisions#gad-29",
+    "body": "gad-29 process metrics do not guarantee output quality — human review is the ground truth gad v7 scored 0.81 discipline and 1.0 planning quality but only 0.30 human review (broken game loop). bare v2 scored 0.0 discipline but 0.50 human review (most playable game). auto-composite can be misleading — the 15% human_review weight is insufficient. for implementation evals that produce user-facing output, human review should be weighted higher or serve as a gate."
+  },
+  {
+    "id": "gad-28",
+    "title": "Granular eval metrics: versioned schema, summary in TRACE, detail in optional metrics.json",
+    "kind": "decision",
+    "href": "/decisions#gad-28",
+    "body": "gad-28 granular eval metrics: versioned schema, summary in trace, detail in optional metrics.json automation must not depend on regex-parsing human-oriented `score.md`. implementation evals gain `scores.json` (or equivalent) alongside `score.md` with stable numeric fields. tooling evals store a summary composite (`tooling_composite` or nested `scores`) in `trace.json` for gates and trends; high-cardinality data (per-invocation latencies, histogram buckets, full event traces) go in `metrics.jso"
+  },
+  {
+    "id": "gad-27",
+    "title": "Tooling and MCP evals are automated, fixture-based, and comparable across versions",
+    "kind": "decision",
+    "href": "/decisions#gad-27",
+    "body": "gad-27 tooling and mcp evals are automated, fixture-based, and comparable across versions evaluating watch/dev and mcp differs from implementation evals (agents building projects). tooling evals use `eval_type` of `tooling` or `mcp`, a fixed `scenario` id pointing at an in-repo fixture, and an automated harness (node script or `gad eval tooling run`) that starts the watcher or mcp client, performs scripted actions, and asserts ground truth (missing paths, exit codes) plus latency metri"
+  },
+  {
+    "id": "gad-26",
+    "title": "Real-time GAD tooling: core first, transports second",
+    "kind": "decision",
+    "href": "/decisions#gad-26",
+    "body": "gad-26 real-time gad tooling: core first, transports second the live developer loop (watch planning files, re-run refs verify, surface results quickly) is implemented once as a small core: debounced filesystem watch, call into existing verify code paths, emit structured events (json lines or ndjson) for consumers. cli (`gad dev` / `gad watch planning`) is the first transport. an mcp server, if added, is a thin adapter over the same core — not a separate im"
+  },
+  {
+    "id": "gad-25",
+    "title": "All GAD CLI calls and agent tool uses are logged to JSONL for eval tracing",
+    "kind": "decision",
+    "href": "/decisions#gad-25",
+    "body": "gad-25 all gad cli calls and agent tool uses are logged to jsonl for eval tracing every gad cli invocation logs to .planning/.gad-log/ (jsonl, one file per day): timestamp, command, args, duration, exit code. a posttooluse hook (tool-trace.js) logs every agent tool call (bash, read, write, edit, agent, skill, grep, glob) to the same directory. during eval runs, gad_log_dir routes logs to the eval run directory for permanent storage. `gad log show` displays both log types interl"
+  },
+  {
+    "id": "gad-24",
+    "title": "All skills and agents must bootstrap via gad snapshot, not manual file reads",
+    "kind": "decision",
+    "href": "/decisions#gad-24",
+    "body": "gad-24 all skills and agents must bootstrap via gad snapshot, not manual file reads skills were hardcoding \"read state.md, roadmap.md, decisions.md, requirements.md\" as step 1 — 4+ file reads that the gad snapshot command already provides in one low-token output. skills must use `gad snapshot --projectid &lt;id&gt;` as their bootstrap step. individual cli commands (gad tasks, gad decisions, gad phases) are available for drilling into detail. skills must also be format-agnostic (x"
+  },
+  {
+    "id": "gad-23",
+    "title": "Greenfield eval projects must auto-scaffold CONVENTIONS.md after phase 01",
+    "kind": "decision",
+    "href": "/decisions#gad-23",
+    "body": "gad-23 greenfield eval projects must auto-scaffold conventions.md after phase 01 the escape-the-dungeon agent created 13 source files with patterns (scene structure, content pack format, state management) but documented none of them. a follow-up agent would start cold with no conventions. after the first implementation phase, gad should prompt or auto-generate a conventions.md from the code patterns established — file structure, naming, import patterns, content pack format, sc"
+  },
+  {
+    "id": "gad-22",
+    "title": "Trace logging must be automatic — hooks or checkpoint-based, not manual log-cmd calls",
+    "kind": "decision",
+    "href": "/decisions#gad-22",
+    "body": "gad-22 trace logging must be automatic — hooks or checkpoint-based, not manual log-cmd calls manual trace logging (gad eval trace log-cmd/log-skill) requires the agent to remember to call them. the v2 eval proved this doesn't happen — the agent backfilled all 8 skill triggers in 15 seconds at the end. tracing should be: (1) automatic via hooks that detect gad cli calls and skill invocations, or (2) checkpoint-based where the agent must produce a trace entry to unlock the next phase, or (3"
+  },
+  {
+    "id": "gad-21",
+    "title": "Eval agents must be bootstrapped with GAD context — not just prompted",
+    "kind": "decision",
+    "href": "/decisions#gad-21",
+    "body": "gad-21 eval agents must be bootstrapped with gad context — not just prompted the escape-the-dungeon eval (v2) showed that prompting an agent to \"use gad snapshot\" and \"log traces\" doesn't work — the agent ignored the cli entirely, read requirements, and coded directly. eval agents need: (1) gad cli available and working in the worktree, (2) agents.md in the eval template that enforces the loop, (3) snapshot output injected into the agent's initial prompt (not \"run this com"
+  },
+  {
+    "id": "gad-20",
+    "title": "Snapshot includes project-scoped conventions with global fallback",
+    "kind": "decision",
+    "href": "/decisions#gad-20",
+    "body": "gad-20 snapshot includes project-scoped conventions with global fallback gad snapshot includes a conventions section: first checks project-level conventions.md in .planning/, then extracts conventions/style sections from the project's agents.md, then falls back to global root agents.md conventions. conventions grow per-project as code/content/patterns evolve — refactoring introduces new conventions, and the snapshot surfaces them to agents. eval runs are expected to pr"
+  },
+  {
+    "id": "gad-19",
+    "title": "GSD is dead — GAD and RepoPlanner only",
+    "kind": "decision",
+    "href": "/decisions#gad-19",
+    "body": "gad-19 gsd is dead — gad and repoplanner only all gsd (get-shit-done) skills, hooks, commands, and references are removed from the repo. gad is the planning framework. repoplanner provides the planning snapshot format that gad consumes. no gsd commands in .claude/commands/, no gsd hooks in .claude/hooks/, no gsd references in settings.json or agents.md. the context monitor and statusline hooks are useful infrastructure but must be rebranded f"
+  },
+  {
+    "id": "gad-18",
+    "title": "The GAD loop is simple: snapshot → work → update docs → commit",
+    "kind": "decision",
+    "href": "/decisions#gad-18",
+    "body": "gad-18 the gad loop is simple: snapshot → work → update docs → commit the canonical gad loop for any agent, any coding tool:\n1. `gad snapshot --projectid &lt;id&gt;` — one command, full context. no reading 15 files manually.\n2. pick one task from task-registry.xml (status=planned).\n3. implement it.\n4. update task-registry.xml (mark done), state.xml (next-action), decisions.xml (if new decisions).\n5. commit.\n\nthat's it. agents.md files in each project reference this "
+  },
+  {
+    "id": "gad-17",
+    "title": "Context exhaustion: work through auto-compact, do not stop",
+    "kind": "decision",
+    "href": "/decisions#gad-17",
+    "body": "gad-17 context exhaustion: work through auto-compact, do not stop when context window fills, claude code auto-compacts. the agent works through it — stopping to start a fresh session is pointless friction. after compaction, run `gad snapshot --projectid &lt;id&gt;` or `gad context` to re-hydrate and continue. the planning docs are what make this possible — state.xml next-action and task-registry.xml tell the agent exactly where it was. no fresh sessions, no hand"
+  },
+  {
+    "id": "gad-16",
+    "title": "GAD does not support subagents until they are formally evaluated",
+    "kind": "decision",
+    "href": "/decisions#gad-16",
+    "body": "gad-16 gad does not support subagents until they are formally evaluated spawning fresh agent instances (subagents via the agent tool in claude code, or equivalent in other clis) is not part of the gad workflow. subagents start cold with no conversation history, burn context re-deriving state from files, introduce coordination overhead, and have uncharacterized failure modes. until a formal gad eval measures subagent utility against inline work, they are not a recommen"
+  },
+  {
+    "id": "gad-15",
+    "title": "portfolio-bare eval uses real agent sessions, not a harness — context_mode is self-declared",
+    "kind": "decision",
+    "href": "/decisions#gad-15",
+    "body": "gad-15 portfolio-bare eval uses real agent sessions, not a harness — context_mode is self-declared the portfolio-bare eval is a real agent session in a template directory (evals/portfolio-bare/template/) containing only planning docs and requirements — no app code. the agent opens the template in claude code or codex, runs `gad session new [--fresh]` to declare context mode, plans phases from requirements, executes tasks, and writes a trace at the end. no api keys, no execsync harness."
+  },
+  {
+    "id": "gad-14",
+    "title": "gad state and gad phases default to session project when a session is active",
+    "kind": "decision",
+    "href": "/decisions#gad-14",
+    "body": "gad-14 gad state and gad phases default to session project when a session is active when no --projectid flag is given, `gad state`, `gad phases`, `gad decisions`, `gad requirements`, `gad errors`, `gad blockers`, and `gad refs` call getactivesessionprojectid() and scope output to the active session's project. explicit --projectid overrides. --all bypasses session scope entirely and shows all roots. gad ls always shows all roots unscoped."
+  },
+  {
+    "id": "gad-13",
+    "title": "TRACE.json is the machine-readable sidecar for every eval run",
+    "kind": "decision",
+    "href": "/decisions#gad-13",
+    "body": "gad-13 trace.json is the machine-readable sidecar for every eval run every eval run directory must contain a trace.json alongside run.md and score.md. trace.json records: workflow (a/b/both), per-command token counts and unit fidelity, unit_coverage map (u1–u12 at full/referenced/truncated/approximated/absent), and computed totals. agents write it using `gad eval trace write` or inline during a run."
+  },
+  {
+    "id": "gad-12",
+    "title": "Missing-arg UX: print available choices and rerun hint, never a blind error",
+    "kind": "decision",
+    "href": "/decisions#gad-12",
+    "body": "gad-12 missing-arg ux: print available choices and rerun hint, never a blind error all gad cli commands that require a --projectid or --id argument must, when absent, print the list of valid choices and a ready-to-run rerun hint on stderr before exiting 1. blind citty \"missing required argument\" errors are banned — required: true is replaced with our own check."
+  },
+  {
+    "id": "gad-11",
+    "title": "gad sink is the canonical docs sync command",
+    "kind": "decision",
+    "href": "/decisions#gad-11",
+    "body": "gad-11 gad sink is the canonical docs sync command `gad sink` owns the four-direction docs sync surface: status (diff), compile (planning→docs), sync (compile all, non-destructive), decompile (ensure dirs, create stubs), validate (mapping health). sink is manual by default — no auto-compile on file change. human-authored sink files (no generated: true frontmatter) are never overwritten."
+  },
+  {
+    "id": "gad-10",
+    "title": "gad snapshot is the one-shot full project context command",
+    "kind": "decision",
+    "href": "/decisions#gad-10",
+    "body": "gad-10 gad snapshot is the one-shot full project context command `gad snapshot` inlines every planning file in a project's .planning/ directory (excluding archive/, sessions/, node_modules/). priority order: state, roadmap, requirements, decisions, task-registry, then alphabetical. this is the canonical command for handing an agent a complete cold-start context pack. it differs from `gad context` — context gives session-aware minimal refs, snapshot gives everyt"
+  },
+  {
+    "id": "gad-09",
+    "title": "gad context inlines file contents by default; --refs is the lightweight mode",
+    "kind": "decision",
+    "href": "/decisions#gad-09",
+    "body": "gad-09 gad context inlines file contents by default; --refs is the lightweight mode the `gad context` command inlines all planning file contents directly into its output by default. this gives agents a single command to get full context without reading files separately. the `--refs` flag restores the lightweight behavior (file paths only). this improves the completeness score on the cli-efficiency eval."
+  },
+  {
+    "id": "gad-08",
+    "title": "GAD v1.0.0 defining characteristic: skills-first with evaluation",
+    "kind": "decision",
+    "href": "/decisions#gad-08",
+    "body": "gad-08 gad v1.0.0 defining characteristic: skills-first with evaluation pre-1.0 (gsd/ralph-wiggum loop) was workflow-heavy — agents followed long workflow docs. v1.0.0 is skills-first: every skill has an agent-agnostic skill.md definition, is evaluated for output quality, and is versioned with the methodology. the cli provides context efficiency. evals are scientific. traces measure what agents retrieve. domain translators extend gad to verticals."
+  },
+  {
+    "id": "gad-07",
+    "title": "gad-manuscript is a self-contained domain translator repo",
+    "kind": "decision",
+    "href": "/decisions#gad-07",
+    "body": "gad-07 gad-manuscript is a self-contained domain translator repo gad-manuscript is a standalone repo that defines the domain translator pattern — adapts gad base methodology to book/fiction creation. it owns its own skill.md files, evals, and planning docs while referencing gad:* base skills. the magicborn in-world lore content in the docs sink is produced by gad-manuscript skills."
+  },
+  {
+    "id": "gad-06",
+    "title": "GAD CLI is format-agnostic: XML, MD, MDX all valid in .planning/",
+    "kind": "decision",
+    "href": "/decisions#gad-06",
+    "body": "gad-06 gad cli is format-agnostic: xml, md, mdx all valid in .planning/ sub-repos and .planning/ directories may use xml, md, or mdx. the gad cli must parse all three transparently. the planning sink normalizes to mdx only. compile() converts any format to mdx; decompile() restores the original format. coding agents and the cli treat methodology as the constant — format is an implementation detail."
+  },
+  {
+    "id": "gad-05",
+    "title": "repo-planner is officially a GAD project; rp-* skills are deprecated",
+    "kind": "decision",
+    "href": "/decisions#gad-05",
+    "body": "gad-05 repo-planner is officially a gad project; rp-* skills are deprecated vendor/repo-planner is registered as a gad root (id=repo-planner) in planning-config.toml. it has a gad-format .planning/ directory. its skills (rp-*) are deprecated stubs pointing to gad:* equivalents. the manuscript skill content migrated to vendor/get-anything-done/skills/manuscript/skill.md. the portfolio docs remain as the docs sink."
+  },
+  {
+    "id": "gad-04",
+    "title": "All session intents, decisions, and guidance must be captured in planning docs each session",
+    "kind": "decision",
+    "href": "/decisions#gad-04",
+    "body": "gad-04 all session intents, decisions, and guidance must be captured in planning docs each session every working session that produces new decisions, requirements, or guidance must update decisions.xml and the relevant planning docs before the session ends. chat context is ephemeral — planning docs are the durable record. the gad planning loop is the mechanism; this decision makes the capture requirement explicit."
+  },
+  {
+    "id": "gad-03",
+    "title": "Context = session-variable information units; static docs are exempt from CLI coverage",
+    "kind": "decision",
+    "href": "/decisions#gad-03",
+    "body": "gad-03 context = session-variable information units; static docs are exempt from cli coverage context for agent resumption is defined as the 10 session-variable information units (u1–u10) in definitions.md. static docs (agents.md style guide, planning model reference tables, done-task history) do not constitute context loss if absent from cli output — they are read once and cached. context loss occurs only when a unit's absence would cause an agent to make a different next-action decision."
+  },
+  {
+    "id": "gad-02",
+    "title": "Evals capture actual content, not just byte counts — token counts are the primary efficiency metric",
+    "kind": "decision",
+    "href": "/decisions#gad-02",
+    "body": "gad-02 evals capture actual content, not just byte counts — token counts are the primary efficiency metric every eval run.md must contain verbatim cli and raw workflow outputs, a unit-by-unit fidelity table, token counts (chars/4), arithmetic showing all formulas applied, and an agent simulation proving the next-action decision is identical with and without the cli. byte counts alone are insufficient because they cannot reveal whether information is actually readable or complete."
+  },
+  {
+    "id": "gad-01",
+    "title": "GAD is the universal planning framework — agent-agnostic, not Claude Code-specific",
+    "kind": "decision",
+    "href": "/decisions#gad-01",
+    "body": "gad-01 gad is the universal planning framework — agent-agnostic, not claude code-specific gad (get-anything-done) is the single planning framework for all projects in this repo. skills are methodology documents (skill.md) stored in vendor/get-anything-done/skills/ — they must work with any ai coding assistant, not just claude code. claude code-specific install paths (~/.claude/) are implementation details, not the canonical source."
+  },
+  {
+    "id": "10-01",
+    "title": "Create .planning/ scaffold for get-anything-done and register in planning-config.toml.",
+    "kind": "task",
+    "href": "/tasks#10-01",
+    "body": "10-01 create .planning/ scaffold for get-anything-done and register in planning-config.toml. planning scaffold registration"
+  },
+  {
+    "id": "10-02",
+    "title": "Migrate gad-01 through gad-15 decisions from root DECISIONS.xml into vendor/get-anything-done/.planning/DECISIONS.xml. A",
+    "kind": "task",
+    "href": "/tasks#10-02",
+    "body": "10-02 migrate gad-01 through gad-15 decisions from root decisions.xml into vendor/get-anything-done/.planning/decisions.xml. add gad-16 (no subagents until evaluated) and gad-17 (context handoff via planning docs). decisions migration subagents context-handoff"
+  },
+  {
+    "id": "10-03",
+    "title": "Add gad pack command that bundles .planning data into a repo-planner-compatible planning pack format (JSON bundle with s",
+    "kind": "task",
+    "href": "/tasks#10-03",
+    "body": "10-03 add gad pack command that bundles .planning data into a repo-planner-compatible planning pack format (json bundle with state, phases, tasks, decisions, requirements, docrefs). pack planning-pack repo-planner"
+  },
+  {
+    "id": "10-04",
+    "title": "Create vendor/get-anything-done/AGENTS.md using GAD's own workflow — gad CLI commands, planning loop, context re-hydrati",
+    "kind": "task",
+    "href": "/tasks#10-04",
+    "body": "10-04 create vendor/get-anything-done/agents.md using gad's own workflow — gad cli commands, planning loop, context re-hydration, skill references. agents documentation workflow"
+  },
+  {
+    "id": "10-05",
+    "title": "Create skill stubs: skills/write-intent/SKILL.md, skills/write-feature-doc/SKILL.md, skills/write-tech-doc/SKILL.md.",
+    "kind": "task",
+    "href": "/tasks#10-05",
+    "body": "10-05 create skill stubs: skills/write-intent/skill.md, skills/write-feature-doc/skill.md, skills/write-tech-doc/skill.md. skills documentation feature-docs tech-docs"
+  },
+  {
+    "id": "10-06",
+    "title": "Update gadConfig.load() to read [[docs.projects]] from planning-config.toml and expose as config.docsProjects. Update ga",
+    "kind": "task",
+    "href": "/tasks#10-06",
+    "body": "10-06 update gadconfig.load() to read [[docs.projects]] from planning-config.toml and expose as config.docsprojects. update gad sink status and gad refs to include docs.projects entries. config docs-projects sink-status"
+  },
+  {
+    "id": "10-07",
+    "title": "Create docs-map-reader.cjs and DOCS-MAP.xml per planning root. Extend gad refs to include docs-map entries. Update gad s",
+    "kind": "task",
+    "href": "/tasks#10-07",
+    "body": "10-07 create docs-map-reader.cjs and docs-map.xml per planning root. extend gad refs to include docs-map entries. update gad sink compile to handle docs-map.xml. docs-map feature-docs refs"
+  },
+  {
+    "id": "10-08",
+    "title": "Create eval documentation in sink: apps/portfolio/content/docs/get-anything-done/evals.mdx covering what GAD evals are, ",
+    "kind": "task",
+    "href": "/tasks#10-08",
+    "body": "10-08 create eval documentation in sink: apps/portfolio/content/docs/get-anything-done/evals.mdx covering what gad evals are, how they work, the definitions.md model, cli-efficiency results, portfolio-bare concept. evals documentation sink"
+  },
+  {
+    "id": "11-01",
+    "title": "Update AGENTS.md in all vendor project roots to reference XML planning files and gad: commands exclusively.",
+    "kind": "task",
+    "href": "/tasks#11-01",
+    "body": "11-01 update agents.md in all vendor project roots to reference xml planning files and gad: commands exclusively. agents documentation migration"
+  },
+  {
+    "id": "11-02",
+    "title": "Run gad:eval-run on GAD itself — portfolio-bare with get-anything-done requirements as the project. Measure planning loo",
+    "kind": "task",
+    "href": "/tasks#11-02",
+    "body": "11-02 run gad:eval-run on gad itself — portfolio-bare with get-anything-done requirements as the project. measure planning loop fidelity on gad's own workflow. eval self-eval portfolio-bare"
+  },
+  {
+    "id": "11-03",
+    "title": "Evaluate subagent utility formally: design an eval comparing single-session vs subagent execution on a representative ta",
+    "kind": "task",
+    "href": "/tasks#11-03",
+    "body": "11-03 evaluate subagent utility formally: design an eval comparing single-session vs subagent execution on a representative task. record findings in decisions.xml (may revise gad-16). subagents eval gad-16"
+  },
+  {
+    "id": "12-01",
+    "title": "Add decisions gad-17 (revised: auto-compact over fresh sessions), gad-18 (canonical loop: snapshot → work → update → com",
+    "kind": "task",
+    "href": "/tasks#12-01",
+    "body": "12-01 add decisions gad-17 (revised: auto-compact over fresh sessions), gad-18 (canonical loop: snapshot → work → update → commit), gad-19 (gsd is dead, gad only). decisions loop formalization"
+  },
+  {
+    "id": "12-02",
+    "title": "Delete .claude/commands/gsd/ directory entirely (30 command files).",
+    "kind": "task",
+    "href": "/tasks#12-02",
+    "body": "12-02 delete .claude/commands/gsd/ directory entirely (30 command files). gsd removal commands"
+  },
+  {
+    "id": "12-03",
+    "title": "Rebrand .claude/hooks/ for GAD: remove gsd-check-update.js (checks npm for get-shit-done-cc). Rename gsd-context-monitor",
+    "kind": "task",
+    "href": "/tasks#12-03",
+    "body": "12-03 rebrand .claude/hooks/ for gad: remove gsd-check-update.js (checks npm for get-shit-done-cc). rename gsd-context-monitor.js → context-monitor.js, strip gsd references from warning messages. rename gsd-statusline.js → statusline.js, strip gsd update check and branding. update .claude/settings.json to reference new hook filenames. hooks rebrand settings"
+  },
+  {
+    "id": "12-04",
+    "title": "Simplify root AGENTS.md: remove the 15-file mandatory read order. Agents use gad snapshot on session start, not manual f",
+    "kind": "task",
+    "href": "/tasks#12-04",
+    "body": "12-04 simplify root agents.md: remove the 15-file mandatory read order. agents use gad snapshot on session start, not manual file reads. remove gsd section. keep build/lint/verify gates, conventions, site copy guide. reference vendor/get-anything-done/agents.md as the canonical loop definition. agents simplify redundancy"
+  },
+  {
+    "id": "12-05",
+    "title": "Simplify .planning/AGENTS.md: remove redundant loop definition, trigger phrase table, and pattern examples that duplicat",
+    "kind": "task",
+    "href": "/tasks#12-05",
+    "body": "12-05 simplify .planning/agents.md: remove redundant loop definition, trigger phrase table, and pattern examples that duplicate root agents.md and vendor gad agents.md. keep xml schema reference and planning-config.toml pointers. reference gad-18 for the loop. agents simplify planning"
+  },
+  {
+    "id": "12-06",
+    "title": "Update vendor/get-anything-done/AGENTS.md: mark as canonical loop source per gad-18. Update \"Current work\" section to re",
+    "kind": "task",
+    "href": "/tasks#12-06",
+    "body": "12-06 update vendor/get-anything-done/agents.md: mark as canonical loop source per gad-18. update \"current work\" section to reference phase 12. fix gad-17 reference to reflect auto-compact over fresh sessions. agents canonical vendor"
+  },
+  {
+    "id": "12-07",
+    "title": "Uninstall GSD globally: delete ~/.claude/get-shit-done/, ~/.claude/commands/gsd/ (56 files), ~/.claude/hooks/gsd-*.js (5",
+    "kind": "task",
+    "href": "/tasks#12-07",
+    "body": "12-07 uninstall gsd globally: delete ~/.claude/get-shit-done/, ~/.claude/commands/gsd/ (56 files), ~/.claude/hooks/gsd-*.js (5 files). clean ~/.claude/settings.json — remove all gsd hooks and statusline, keep permissions and preferences. gsd global uninstall"
+  },
+  {
+    "id": "12-08",
+    "title": "Install all 56 GAD commands from vendor/get-anything-done/commands/gad/ as Claude Code slash commands in .claude/command",
+    "kind": "task",
+    "href": "/tasks#12-08",
+    "body": "12-08 install all 56 gad commands from vendor/get-anything-done/commands/gad/ as claude code slash commands in .claude/commands/gad/. includes the full planning loop: plan-phase, execute-phase, discuss-phase, progress, check-todos, next, plus project lifecycle, debug, health, verify, stats, and all other commands. skills install commands full-loop"
+  },
+  {
+    "id": "12-09",
+    "title": "Clean all GSD/get-shit-done references in vendor/get-anything-done/commands/gad/*.md and propagate to .claude/commands/g",
+    "kind": "task",
+    "href": "/tasks#12-09",
+    "body": "12-09 clean all gsd/get-shit-done references in vendor/get-anything-done/commands/gad/*.md and propagate to .claude/commands/gad/. replace gsd→gad, get-shit-done→get-anything-done, /gsd:→/gad: throughout. note: 115 references to get-shit-done remain as literal directory/file paths (the actual folder is named that). branding cleanup gsd-references"
+  },
+  {
+    "id": "13-01",
+    "title": "Extend gad docs command: add `gad docs list --projectid &lt;id&gt;` that shows all docs for a project — planning files f",
+    "kind": "task",
+    "href": "/tasks#13-01",
+    "body": "13-01 extend gad docs command: add `gad docs list --projectid &lt;id&gt;` that shows all docs for a project — planning files from sink status, docs-map entries, and docs.projects entries. add --all flag. docs cli discoverability"
+  },
+  {
+    "id": "13-02",
+    "title": "Create DOCS-MAP.xml for get-anything-done with entries for evals.mdx and any other non-planning feature docs in the sink",
+    "kind": "task",
+    "href": "/tasks#13-02",
+    "body": "13-02 create docs-map.xml for get-anything-done with entries for evals.mdx and any other non-planning feature docs in the sink. reader (docs-map-reader.cjs) already exists — this creates the actual data files. docs-map get-anything-done"
+  },
+  {
+    "id": "13-03",
+    "title": "Create DOCS-MAP.xml for grime-time, repo-planner, and any other roots that have feature docs in their sink paths. Check ",
+    "kind": "task",
+    "href": "/tasks#13-03",
+    "body": "13-03 create docs-map.xml for grime-time, repo-planner, and any other roots that have feature docs in their sink paths. check each root's sink directory for non-planning mdx files. docs-map rollout planning-roots"
+  },
+  {
+    "id": "13-04",
+    "title": "Flesh out write-intent SKILL.md: add concrete examples, template output, edge cases. The skill should be usable by any a",
+    "kind": "task",
+    "href": "/tasks#13-04",
+    "body": "13-04 flesh out write-intent skill.md: add concrete examples, template output, edge cases. the skill should be usable by any agent reading it cold — currently too abstract. skills write-intent content"
+  },
+  {
+    "id": "13-05",
+    "title": "Flesh out write-feature-doc SKILL.md: add concrete examples of good feature docs, MDX frontmatter template, sink path re",
+    "kind": "task",
+    "href": "/tasks#13-05",
+    "body": "13-05 flesh out write-feature-doc skill.md: add concrete examples of good feature docs, mdx frontmatter template, sink path resolution logic. currently steps are correct but thin. skills write-feature-doc content"
+  },
+  {
+    "id": "13-06",
+    "title": "Flesh out write-tech-doc SKILL.md: add concrete examples, mermaid diagram patterns, decision-referencing conventions. Cu",
+    "kind": "task",
+    "href": "/tasks#13-06",
+    "body": "13-06 flesh out write-tech-doc skill.md: add concrete examples, mermaid diagram patterns, decision-referencing conventions. currently steps are correct but thin. skills write-tech-doc content"
+  },
+  {
+    "id": "13-07",
+    "title": "CLI error hardening: audit all gad.cjs commands for gad-12 compliance (missing-arg UX prints choices + rerun hint). Test",
+    "kind": "task",
+    "href": "/tasks#13-07",
+    "body": "13-07 cli error hardening: audit all gad.cjs commands for gad-12 compliance (missing-arg ux prints choices + rerun hint). test edge cases: missing .planning/ dirs, malformed xml, empty files. error-handling hardening gad-12"
+  },
+  {
+    "id": "13-08",
+    "title": "Run gad sink compile to sync the 7 stale files (get-anything-done and grime-time). Verify sink is fully up to date after",
+    "kind": "task",
+    "href": "/tasks#13-08",
+    "body": "13-08 run gad sink compile to sync the 7 stale files (get-anything-done and grime-time). verify sink is fully up to date after phase 12 changes. sink compile sync"
+  },
+  {
+    "id": "14-01",
+    "title": "Create a gad eval project \"escape-the-dungeon\" from GAMEPLAY-DESIGN.xml and STAT-AND-BEHAVIOUR-TAXONOMY.md. Convert thes",
+    "kind": "task",
+    "href": "/tasks#14-01",
+    "body": "14-01 create a gad eval project \"escape-the-dungeon\" from gameplay-design.xml and stat-and-behaviour-taxonomy.md. convert these source docs into a gad requirements.xml in the eval project directory (evals/escape-the-dungeon/). the requirements should be structured for an agent to plan phases and implement from — not a raw xml dump. eval game requirements setup"
+  },
+  {
+    "id": "14-02",
+    "title": "Create bin/gad-tools.cjs — the GAD equivalent of gsd-tools.cjs. Provides the core commands that workflows depend on: ini",
+    "kind": "task",
+    "href": "/tasks#14-02",
+    "body": "14-02 create bin/gad-tools.cjs — the gad equivalent of gsd-tools.cjs. provides the core commands that workflows depend on: init (phase-op, execute-phase, plan-phase), commit, config-get, config-set, state (load, update, record-session), phase (find, add, complete), roadmap (get-phase, analyze), generate-slug, current-timestamp, scaffold, agent-skills. reads from xml planning files instead of md. this replaces all gsd-tools.cjs references in workflows. eval setup scaffold skill"
+  },
+  {
+    "id": "14-03",
+    "title": "Define the eval trace format for real implementations: track which gad commands were called, which gad skills were trigg",
+    "kind": "task",
+    "href": "/tasks#14-03",
+    "body": "14-03 define the eval trace format for real implementations: track which gad commands were called, which gad skills were triggered, arguments passed, token counts, time-to-completion. extend trace.json schema beyond the current unit-coverage model to include tool_calls[] and skill_triggers[]. eval trace format schema"
+  },
+  {
+    "id": "14-04",
+    "title": "Define the eval scoring rubric for real implementations: CLI efficiency (same as v6), skill trigger accuracy (were the r",
+    "kind": "task",
+    "href": "/tasks#14-04",
+    "body": "14-04 define the eval scoring rubric for real implementations: cli efficiency (same as v6), skill trigger accuracy (were the right skills triggered at the right time), planning quality (task coverage, state hygiene), and time-to-completion. human feedback is a separate manual score added after. eval scoring rubric"
+  },
+  {
+    "id": "14-05",
+    "title": "Run the escape-the-dungeon eval: fresh agent session, agent reads requirements, plans phases, implements using the GAD l",
+    "kind": "task",
+    "href": "/tasks#14-05",
+    "body": "14-05 run the escape-the-dungeon eval: fresh agent session, agent reads requirements, plans phases, implements using the gad loop, traces everything. produce trace.json and score.md. this validates the full loop end-to-end on a real project. eval run escape-the-dungeon end-to-end"
+  },
+  {
+    "id": "14-06",
+    "title": "Run the portfolio-bare eval with updated tracing. Compare against prior runs. Tighten portfolio-bare based on findings f",
+    "kind": "task",
+    "href": "/tasks#14-06",
+    "body": "14-06 run the portfolio-bare eval with updated tracing. compare against prior runs. tighten portfolio-bare based on findings from the escape-the-dungeon eval. eval portfolio-bare comparison"
+  },
+  {
+    "id": "14-07",
+    "title": "Review CONTEXT.md: what it is, how discuss-phase produces it, how downstream agents (researcher, planner) consume it. Ev",
+    "kind": "task",
+    "href": "/tasks#14-07",
+    "body": "14-07 review context.md: what it is, how discuss-phase produces it, how downstream agents (researcher, planner) consume it. evaluate whether gad cli should have a `gad context-doc` command or if gad-tools.cjs scaffold is sufficient. decide if context.md should be a gad skill output or a planning file type. update skills and cli to integrate context.md into the loop if valuable. context-md review skills cli integration"
+  },
+  {
+    "id": "14.5-01",
+    "title": "Create eval template AGENTS.md that enforces the GAD loop. The eval template's .planning/ directory must include an AGEN",
+    "kind": "task",
+    "href": "/tasks#14.5-01",
+    "body": "14.5-01 create eval template agents.md that enforces the gad loop. the eval template's .planning/ directory must include an agents.md that tells the agent: (1) run gad snapshot first, (2) plan phases in roadmap.xml before coding, (3) update task-registry.xml per task, (4) update state.xml after each phase, (5) capture decisions. this file is what the agent reads to know how to work — not a prompt instruction it ignores. eval agents-md enforcement loop"
+  },
+  {
+    "id": "14.5-02",
+    "title": "Update eval-run skill/command to inject snapshot context INTO the agent prompt. Instead of telling the agent \"run gad sn",
+    "kind": "task",
+    "href": "/tasks#14.5-02",
+    "body": "14.5-02 update eval-run skill/command to inject snapshot context into the agent prompt. instead of telling the agent \"run gad snapshot\", the eval-run workflow should run the snapshot itself and include the output in the agent's initial context. the agent starts with context, not instructions to get context. eval eval-run snapshot injection"
+  },
+  {
+    "id": "14.5-03",
+    "title": "Create gad eval trace reconstruct --project &lt;name&gt; command. Parses git log + planning doc state to build TRACE.jso",
+    "kind": "task",
+    "href": "/tasks#14.5-03",
+    "body": "14.5-03 create gad eval trace reconstruct --project &lt;name&gt; command. parses git log + planning doc state to build trace.json after the fact. detects: which files were created/modified per commit, which planning docs were updated, time between commits (phase duration), task completion count from task-registry.xml diff. this replaces manual log-cmd/log-skill with post-hoc reconstruction. eval trace reconstruct git-log automated"
+  },
+  {
+    "id": "14.5-04",
+    "title": "Add checkpoint enforcement to execute-phase workflow. Before the agent can start the next task, it must have: (1) update",
+    "kind": "task",
+    "href": "/tasks#14.5-04",
+    "body": "14.5-04 add checkpoint enforcement to execute-phase workflow. before the agent can start the next task, it must have: (1) updated task-registry.xml for the previous task, (2) updated state.xml next-action. the workflow checks these preconditions. if not met, it prompts the agent to update before continuing. not a hook — a step in the workflow that reads the planning docs and verifies. checkpoint enforcement task-tracking workflow"
+  },
+  {
+    "id": "14.5-05",
+    "title": "Auto-scaffold CONVENTIONS.md after first implementation phase of greenfield projects. When phase 01 (or first phase with",
+    "kind": "task",
+    "href": "/tasks#14.5-05",
+    "body": "14.5-05 auto-scaffold conventions.md after first implementation phase of greenfield projects. when phase 01 (or first phase with code output) completes in a project with no existing conventions.md, run a lightweight codebase scan (file structure, naming patterns, import style, content pack format) and write .planning/conventions.md. integrate with gad:map-codebase skill output. conventions auto-scaffold greenfield map-codebase"
+  },
+  {
+    "id": "14.5-06",
+    "title": "Define expected_triggers for implementation evals. The TRACE.json skill_accuracy field needs expected_triggers populated",
+    "kind": "task",
+    "href": "/tasks#14.5-06",
+    "body": "14.5-06 define expected_triggers for implementation evals. the trace.json skill_accuracy field needs expected_triggers populated before the eval runs — defining which skills should fire and when. create a template expected_triggers list for implementation evals: discuss-phase before planning, plan-phase before execution, execute-phase per phase, verify-work after phases, map-codebase after first implementation. eval trace expected-triggers skill-accuracy"
+  },
+  {
+    "id": "14.5-07",
+    "title": "Re-run escape-the-dungeon eval with fixes applied (template AGENTS.md, snapshot injection, checkpoint enforcement). Comp",
+    "kind": "task",
+    "href": "/tasks#14.5-07",
+    "body": "14.5-07 re-run escape-the-dungeon eval with fixes applied (template agents.md, snapshot injection, checkpoint enforcement). compare v3 trace.json against v2. validate that: gad cli is actually used, task-level tracking happens, conventions are generated, trace has real data not backfilled. eval rerun validation comparison"
+  },
+  {
+    "id": "15-01",
+    "title": "Move get-shit-done/workflows/ → workflows/ at GAD repo top level. All 58 workflow .md files.",
+    "kind": "task",
+    "href": "/tasks#15-01",
+    "body": "15-01 move get-shit-done/workflows/ → workflows/ at gad repo top level. all 58 workflow .md files. migration workflows move"
+  },
+  {
+    "id": "15-02",
+    "title": "Move get-shit-done/templates/ → templates/ at GAD repo top level. All 34 template files.",
+    "kind": "task",
+    "href": "/tasks#15-02",
+    "body": "15-02 move get-shit-done/templates/ → templates/ at gad repo top level. all 34 template files. migration templates move"
+  },
+  {
+    "id": "15-03",
+    "title": "Move get-shit-done/references/ → references/ at GAD repo top level. All 15 reference files.",
+    "kind": "task",
+    "href": "/tasks#15-03",
+    "body": "15-03 move get-shit-done/references/ → references/ at gad repo top level. all 15 reference files. migration references move"
+  },
+  {
+    "id": "15-04",
+    "title": "Update all 42 command @-path references from get-shit-done/workflows/ → workflows/, get-shit-done/templates/ → templates",
+    "kind": "task",
+    "href": "/tasks#15-04",
+    "body": "15-04 update all 42 command @-path references from get-shit-done/workflows/ → workflows/, get-shit-done/templates/ → templates/, get-shit-done/references/ → references/. sync to .claude/commands/gad/. migration commands path-update"
+  },
+  {
+    "id": "15-05",
+    "title": "Delete get-shit-done/ directory entirely (bin/, lib/, workflows/, templates/, references/). gsd-tools.cjs replaced by ga",
+    "kind": "task",
+    "href": "/tasks#15-05",
+    "body": "15-05 delete get-shit-done/ directory entirely (bin/, lib/, workflows/, templates/, references/). gsd-tools.cjs replaced by gad-tools.cjs. verify no remaining references. migration delete cleanup"
+  },
+  {
+    "id": "15-06",
+    "title": "Copy eval v3 game build (dist/) to apps/portfolio/public/evals/escape-the-dungeon/ for docs site hosting. Verify it's se",
+    "kind": "task",
+    "href": "/tasks#15-06",
+    "body": "15-06 copy eval v3 game build (dist/) to apps/portfolio/public/evals/escape-the-dungeon/ for docs site hosting. verify it's servable as static page. eval hosting docs-site"
+  },
+  {
+    "id": "16-01",
+    "title": "Review RepoPlanner sprint model: read scripts/loop-cli.mjs sprint commands (set-size, show, context), understand how spr",
+    "kind": "task",
+    "href": "/tasks#16-01",
+    "body": "16-01 review repoplanner sprint model: read scripts/loop-cli.mjs sprint commands (set-size, show, context), understand how sprintsize groups phases, how context sprint filters to sprint-scoped paths and task counts. document what rp gives that gad doesn't. research repoplanner sprint context-window"
+  },
+  {
+    "id": "16-02",
+    "title": "Add sprint concept to GAD: configurable sprint size in planning-config.toml (default 5 phases). Add gad sprint show (lis",
+    "kind": "task",
+    "href": "/tasks#16-02",
+    "body": "16-02 add sprint concept to gad: configurable sprint size in planning-config.toml (default 5 phases). add gad sprint show (list sprint boundaries) and gad sprint context (sprint-scoped paths + summary) commands to gad.cjs. sprint cli commands"
+  },
+  {
+    "id": "16-03",
+    "title": "Add gad snapshot --sprint mode: collapse done phases to id|title|done (no goal text), inline only active/planned phases ",
+    "kind": "task",
+    "href": "/tasks#16-03",
+    "body": "16-03 add gad snapshot --sprint mode: collapse done phases to id|title|done (no goal text), inline only active/planned phases within current sprint, show only open tasks (planned/in-progress), omit completed task history. measure token reduction vs current full dump. snapshot optimization token-reduction"
+  },
+  {
+    "id": "16-04",
+    "title": "Add file refs to snapshot: for each active/in-progress task, include code and doc files touched (from git log scoped to ",
+    "kind": "task",
+    "href": "/tasks#16-04",
+    "body": "16-04 add file refs to snapshot: for each active/in-progress task, include code and doc files touched (from git log scoped to project path). add recent git log (last 5-10 commits for the project). these give the agent immediate code context without manual file reads. snapshot file-refs git-log"
+  },
+  {
+    "id": "16-05",
+    "title": "Add file refs to TASK-REGISTRY.xml schema: optional &lt;files&gt; block per task listing paths touched during implementa",
+    "kind": "task",
+    "href": "/tasks#16-05",
+    "body": "16-05 add file refs to task-registry.xml schema: optional &lt;files&gt; block per task listing paths touched during implementation. update gad-tools.cjs and any task-completion workflows to prompt for file list on task done. task-registry file-refs schema"
+  },
+  {
+    "id": "16-06",
+    "title": "Measure optimized snapshot token count. Target: ~3,000 tokens for get-anything-done (currently ~9,750). Run cli-efficien",
+    "kind": "task",
+    "href": "/tasks#16-06",
+    "body": "16-06 measure optimized snapshot token count. target: ~3,000 tokens for get-anything-done (currently ~9,750). run cli-efficiency eval v7 with sprint-scoped snapshot. compare composite score vs v6. eval measurement cli-efficiency v7"
+  },
+  {
+    "id": "16-07",
+    "title": "Update docs/context-budget.md with new snapshot token counts and sprint context window analysis. Update DEFINITIONS.md i",
+    "kind": "task",
+    "href": "/tasks#16-07",
+    "body": "16-07 update docs/context-budget.md with new snapshot token counts and sprint context window analysis. update definitions.md if sprint changes the information unit model. docs context-budget definitions"
+  },
+  {
+    "id": "17-01",
+    "title": "Run gad:reverse-engineer on vendor/repub-builder/src/reader to produce REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ",
+    "kind": "task",
+    "href": "/tasks#17-01",
+    "body": "17-01 run gad:reverse-engineer on vendor/repub-builder/src/reader to produce requirements.xml, decisions.xml, conventions.md, roadmap.xml for the reader-workspace eval. reverse-engineer reader-workspace requirements"
+  },
+  {
+    "id": "17-02",
+    "title": "Create reader-workspace eval project with REQUIREMENTS.md, template/, and AGENTS.md.",
+    "kind": "task",
+    "href": "/tasks#17-02",
+    "body": "17-02 create reader-workspace eval project with requirements.md, template/, and agents.md. eval reader-workspace scaffold"
+  },
+  {
+    "id": "17-03",
+    "title": "Run reader-workspace eval v1: fresh agent builds the EPUB reader from reverse-engineered requirements alone. Produce TRA",
+    "kind": "task",
+    "href": "/tasks#17-03",
+    "body": "17-03 run reader-workspace eval v1: fresh agent builds the epub reader from reverse-engineered requirements alone. produce trace.json and score.md. validates the full reverse-engineer → implement cycle. eval reader-workspace run v1"
+  },
+  {
+    "id": "17-04",
+    "title": "Score reader-workspace v1: requirement coverage (51 criteria), architecture alignment (12 decisions), state hygiene, con",
+    "kind": "task",
+    "href": "/tasks#17-04",
+    "body": "17-04 score reader-workspace v1: requirement coverage (51 criteria), architecture alignment (12 decisions), state hygiene, convention adherence. compare output against reference implementation quality. eval reader-workspace scoring"
+  },
+  {
+    "id": "18-01",
+    "title": "Replace the stub in `gad eval run` with a prompt generator: read the eval template (AGENTS.md, REQUIREMENTS.xml, DECISIO",
+    "kind": "task",
+    "href": "/tasks#18-01",
+    "body": "18-01 replace the stub in `gad eval run` with a prompt generator: read the eval template (agents.md, requirements.xml, decisions.xml, conventions.md, roadmap.xml, state.xml), construct a full bootstrap prompt, and output it to stdout + eval-output.txt. the user/agent copies this prompt into their ai tool. agent-agnostic per gad-01. eval run prompt-generator agent-agnostic"
+  },
+  {
+    "id": "18-02",
+    "title": "Add `gad eval suite` CLI command: lists all eval projects with templates, generates bootstrap prompts for each, outputs ",
+    "kind": "task",
+    "href": "/tasks#18-02",
+    "body": "18-02 add `gad eval suite` cli command: lists all eval projects with templates, generates bootstrap prompts for each, outputs them as separate files in a timestamped suite run directory. shows a summary table of what will be run. eval suite cli parallel"
+  },
+  {
+    "id": "18-03",
+    "title": "Add `gad eval report` cross-project comparison: reads TRACE.json from latest run of each project, produces a comparison ",
+    "kind": "task",
+    "href": "/tasks#18-03",
+    "body": "18-03 add `gad eval report` cross-project comparison: reads trace.json from latest run of each project, produces a comparison table (phases, tasks, discipline, scores) across all projects. supports --all flag for all projects or specific --project list. eval report cross-project comparison"
+  },
+  {
+    "id": "18-03b",
+    "title": "Add comprehensive logging: GAD CLI call logger (JSONL per day), PostToolUse hook for tool tracing (Bash/Read/Write/Edit/",
+    "kind": "task",
+    "href": "/tasks#18-03b",
+    "body": "18-03b add comprehensive logging: gad cli call logger (jsonl per day), posttooluse hook for tool tracing (bash/read/write/edit/agent/skill/grep/glob), `gad log show|stats|clear` commands, `gad eval trace from-log` for definitive trace building from actual logs, gad_log_dir env for eval-scoped logs. logging observability eval trace jsonl hooks"
+  },
+  {
+    "id": "18-04",
+    "title": "Run the full eval suite: portfolio-bare v3, escape-the-dungeon v4, reader-workspace v2. Launch all three in parallel wor",
+    "kind": "task",
+    "href": "/tasks#18-04",
+    "body": "18-04 run the full eval suite: portfolio-bare v3, escape-the-dungeon v4, reader-workspace v2. launch all three in parallel worktree agents. reconstruct traces and produce cross-project report. eval suite run parallel all-projects"
+  },
+  {
+    "id": "18-05",
+    "title": "Iterate on findings: review eval results, tighten at least one skill based on patterns, update eval-suite SKILL.md with ",
+    "kind": "task",
+    "href": "/tasks#18-05",
+    "body": "18-05 iterate on findings: review eval results, tighten at least one skill based on patterns, update eval-suite skill.md with lessons learned, add any new eval criteria discovered. eval iteration findings skills"
+  },
+  {
+    "id": "20-01",
+    "title": "Document tooling eval contract: extend TRACE.json with eval_type tooling|mcp, trace_schema_version, nested tooling or mc",
+    "kind": "task",
+    "href": "/tasks#20-01",
+    "body": "20-01 document tooling eval contract: extend trace.json with eval_type tooling|mcp, trace_schema_version, nested tooling or mcp metrics blocks, optional metrics.json for granular histograms. record gad-26–gad-28 in decisions.xml. add a short section to vendor/get-anything-done/agents.md (or evals/readme) describing implementation vs tooling evals and how regressions are compared. tooling-eval trace-schema documentation gad-26 gad-27 gad-28"
+  },
+  {
+    "id": "20-02",
+    "title": "Implement `gad dev` or `gad watch planning`: debounced watch on .planning/**/*.xml (configurable), invoke existing refs ",
+    "kind": "task",
+    "href": "/tasks#20-02",
+    "body": "20-02 implement `gad dev` or `gad watch planning`: debounced watch on .planning/**/*.xml (configurable), invoke existing refs verify logic, print one json summary line per run (ok, missing paths, timing) for scripts and terminal/ci consumers. optional --poll for unreliable fs watchers. no network by default. watch dev real-time refs-verify json"
+  },
+  {
+    "id": "20-03",
+    "title": "Add evals/tooling-watch-baseline (or equivalent): fixed fixture repo with known good/bad paths, automated Node harness t",
+    "kind": "task",
+    "href": "/tasks#20-03",
+    "body": "20-03 add evals/tooling-watch-baseline (or equivalent): fixed fixture repo with known good/bad paths, automated node harness that starts watcher, performs scripted edits, asserts correctness + latency percentiles, writes evals/&lt;project&gt;/vn/trace.json with eval_type tooling. runnable in ci without an llm. tooling-eval fixture harness ci regression"
+  },
+  {
+    "id": "20-04",
+    "title": "Harden implementation eval scoring automation: generate scores.json alongside SCORE.md from score-generator; change gad ",
+    "kind": "task",
+    "href": "/tasks#20-04",
+    "body": "20-04 harden implementation eval scoring automation: generate scores.json alongside score.md from score-generator; change gad eval scores to prefer json totals over score.md regex. prepare same pattern for tooling composite (tooling_composite) so weights can evolve without breaking old runs. scores-json eval-scores automation"
+  },
+  {
+    "id": "20-05",
+    "title": "Optional MCP server package: thin adapter over the same core as CLI (verify, snapshot summary, session status). Stdio MC",
+    "kind": "task",
+    "href": "/tasks#20-05",
+    "body": "20-05 optional mcp server package: thin adapter over the same core as cli (verify, snapshot summary, session status). stdio mcp; document cursor config. agents may use it; primary user remains human ide workflows. mcp adapter cursor"
+  },
+  {
+    "id": "20-06",
+    "title": "MCP tooling eval: golden tool invocations, cold-start and per-tool latency, error rate on bad args. Produces eval_type m",
+    "kind": "task",
+    "href": "/tasks#20-06",
+    "body": "20-06 mcp tooling eval: golden tool invocations, cold-start and per-tool latency, error rate on bad args. produces eval_type mcp trace.json; compare across gad releases. mcp-eval latency golden"
+  },
+  {
+    "id": "20-07",
+    "title": "IDE integration: document VS Code / Cursor Tasks (background watch), optional problem matcher mapping JSON errors to Pro",
+    "kind": "task",
+    "href": "/tasks#20-07",
+    "body": "20-07 ide integration: document vs code / cursor tasks (background watch), optional problem matcher mapping json errors to problems panel. update portfolio sink evals.mdx when behavior is stable. ide vscode cursor docs-sink deferred"
+  },
+  {
+    "id": "20-08",
+    "title": "Extend gad eval report and gad eval diff to include tooling/mcp runs (filter by eval_type, compare tooling.metrics and c",
+    "kind": "task",
+    "href": "/tasks#20-08",
+    "body": "20-08 extend gad eval report and gad eval diff to include tooling/mcp runs (filter by eval_type, compare tooling.metrics and composite). ensure suite or follow-up command can run implementation + tooling evals in one report. eval-report eval-diff tooling"
+  },
+  {
+    "id": "21-01",
+    "title": "Fix MCP UTF-8 buffer bug: Content-Length counts bytes but handleData used string.length. tools/list responses with em da",
+    "kind": "task",
+    "href": "/tasks#21-01",
+    "body": "21-01 fix mcp utf-8 buffer bug: content-length counts bytes but handledata used string.length. tools/list responses with em dashes broke the parser. switch to buffer throughout mcp harness and server. mcp utf8 buffer bug"
+  },
+  {
+    "id": "21-02",
+    "title": "Speed up planning-ref-verify by reading from planning-config roots instead of full tree walk, plus cache fs.statSync res",
+    "kind": "task",
+    "href": "/tasks#21-02",
+    "body": "21-02 speed up planning-ref-verify by reading from planning-config roots instead of full tree walk, plus cache fs.statsync results. perf verify cache"
+  },
+  {
+    "id": "21-03",
+    "title": "Standardize implementation eval composite formula. Replace inconsistent per-eval weights with a single v3 formula: requi",
+    "kind": "task",
+    "href": "/tasks#21-03",
+    "body": "21-03 standardize implementation eval composite formula. replace inconsistent per-eval weights with a single v3 formula: requirement_coverage + planning_quality + per_task_discipline + skill_accuracy + time_efficiency + human_review. document in definitions.md. composite formula scoring v3"
+  },
+  {
+    "id": "21-04",
+    "title": "Clean skill_accuracy: remove methodology behaviors (decisions-captured, multi-phase-planning, phase-completion, task-lif",
+    "kind": "task",
+    "href": "/tasks#21-04",
+    "body": "21-04 clean skill_accuracy: remove methodology behaviors (decisions-captured, multi-phase-planning, phase-completion, task-lifecycle) from expected_triggers. only actual /gad:* skill invocations count. skill-accuracy cleanup methodology-behaviors"
+  },
+  {
+    "id": "21-05",
+    "title": "Add gad eval review CLI command to record human review scores that get folded into the composite with the v3 weights.",
+    "kind": "task",
+    "href": "/tasks#21-05",
+    "body": "21-05 add gad eval review cli command to record human review scores that get folded into the composite with the v3 weights. eval-review human-review cli"
+  },
+  {
+    "id": "21-06",
+    "title": "Add gad eval open CLI command to serve eval build output via local HTTP server (file:// doesn't work for ES module bundl",
+    "kind": "task",
+    "href": "/tasks#21-06",
+    "body": "21-06 add gad eval open cli command to serve eval build output via local http server (file:// doesn't work for es module bundles from vite/kaplay). eval-open http-server cli"
+  },
+  {
+    "id": "21-07",
+    "title": "Create escape-the-dungeon-bare eval project: same game requirements, no GAD framework, agent creates own workflow. Basel",
+    "kind": "task",
+    "href": "/tasks#21-07",
+    "body": "21-07 create escape-the-dungeon-bare eval project: same game requirements, no gad framework, agent creates own workflow. baseline a/b comparison for the freedom hypothesis. bare-eval a-b-test freedom-hypothesis"
+  },
+  {
+    "id": "21-08",
+    "title": "Create escape-the-dungeon-emergent eval project: no framework, but inherits skills from the previous run. Tests whether ",
+    "kind": "task",
+    "href": "/tasks#21-08",
+    "body": "21-08 create escape-the-dungeon-emergent eval project: no framework, but inherits skills from the previous run. tests whether self-created systems improve iteratively. emergent-eval skill-inheritance"
+  },
+  {
+    "id": "21-09",
+    "title": "Version game requirements. Document v1→v2→v3 history inside REQUIREMENTS.xml. Each eval round should reference the requi",
+    "kind": "task",
+    "href": "/tasks#21-09",
+    "body": "21-09 version game requirements. document v1→v2→v3 history inside requirements.xml. each eval round should reference the requirements version it used. requirements-versioning v3"
+  },
+  {
+    "id": "21-10",
+    "title": "Build requirements v3: add gate criteria (game loop, spell crafting, UI quality) that override requirement_coverage to 0",
+    "kind": "task",
+    "href": "/tasks#21-10",
+    "body": "21-10 build requirements v3: add gate criteria (game loop, spell crafting, ui quality) that override requirement_coverage to 0 if failed. trim source gameplay design doc from 640 → 120 lines for the vertical slice focus. requirements-v3 gates vertical-slice"
+  },
+  {
+    "id": "21-11",
+    "title": "Run round 2 greenfield evals with v2 requirements. Three conditions: GAD v7, Bare v2, Emergent v1.",
+    "kind": "task",
+    "href": "/tasks#21-11",
+    "body": "21-11 run round 2 greenfield evals with v2 requirements. three conditions: gad v7, bare v2, emergent v1. round-2 greenfield experiment"
+  },
+  {
+    "id": "21-12",
+    "title": "Run round 3 greenfield evals with v3 requirements (gates). GAD v8, Bare v3, Emergent v2.",
+    "kind": "task",
+    "href": "/tasks#21-12",
+    "body": "21-12 run round 3 greenfield evals with v3 requirements (gates). gad v8, bare v3, emergent v2. round-3 greenfield experiment freedom-hypothesis"
+  },
+  {
+    "id": "21-13",
+    "title": "Document the freedom hypothesis finding: GAD framework constraint correlates inversely with creative output quality on g",
+    "kind": "task",
+    "href": "/tasks#21-13",
+    "body": "21-13 document the freedom hypothesis finding: gad framework constraint correlates inversely with creative output quality on greenfield game implementation. capture in findings doc and decision. findings freedom-hypothesis gad-36"
+  },
+  {
+    "id": "21-14",
+    "title": "Build eval preservation contract: gad eval preserve command that copies code+planning+build+logs to canonical per-versio",
+    "kind": "task",
+    "href": "/tasks#21-14",
+    "body": "21-14 build eval preservation contract: gad eval preserve command that copies code+planning+build+logs to canonical per-version locations. enforce via tests/eval-preservation.test.cjs. preservation-contract tests gad-38"
+  },
+  {
+    "id": "21-15",
+    "title": "Fix eval preserve to copy the ENTIRE project (not cherry-picked files). Agent may create files we don't anticipate.",
+    "kind": "task",
+    "href": "/tasks#21-15",
+    "body": "21-15 fix eval preserve to copy the entire project (not cherry-picked files). agent may create files we don't anticipate. preserve entire-project"
+  },
+  {
+    "id": "21-16",
+    "title": "Mandate game/.planning/ as the home for all eval workflow artifacts regardless of framework. Bare and emergent must put ",
+    "kind": "task",
+    "href": "/tasks#21-16",
+    "body": "21-16 mandate game/.planning/ as the home for all eval workflow artifacts regardless of framework. bare and emergent must put workflow files there too, not at project root. layout-contract planning-dir gad-39"
+  },
+  {
+    "id": "21-17",
+    "title": "Add gad worktree management commands: list, show, clean, prune. User had no visibility into .claude/worktrees/agent-* di",
+    "kind": "task",
+    "href": "/tasks#21-17",
+    "body": "21-17 add gad worktree management commands: list, show, clean, prune. user had no visibility into .claude/worktrees/agent-* directories. worktree cli cleanup"
+  },
+  {
+    "id": "21-18",
+    "title": "Categorize evals by eval_mode (greenfield|brownfield) and workflow (gad|bare|emergent). Show in gad eval list.",
+    "kind": "task",
+    "href": "/tasks#21-18",
+    "body": "21-18 categorize evals by eval_mode (greenfield|brownfield) and workflow (gad|bare|emergent). show in gad eval list. eval-mode categorization gad-40"
+  },
+  {
+    "id": "21-19",
+    "title": "Create three brownfield eval projects (etd-brownfield-gad/bare/emergent) using bare v3 as baseline. Shared extension req",
+    "kind": "task",
+    "href": "/tasks#21-19",
+    "body": "21-19 create three brownfield eval projects (etd-brownfield-gad/bare/emergent) using bare v3 as baseline. shared extension requirements (_brownfield-extensions-v4.md) describing v4 features (floor progression, respawning encounters, forge affinity, skills system, visual upgrade). brownfield baseline v4-extensions"
+  },
+  {
+    "id": "21-20",
+    "title": "Port session tracking into TASK-REGISTRY.xml instead of Claude Code Task tool. Stop using ephemeral session tasks for GA",
+    "kind": "task",
+    "href": "/tasks#21-20",
+    "body": "21-20 port session tracking into task-registry.xml instead of claude code task tool. stop using ephemeral session tasks for gad-tracked work. session-tracking task-registry process"
+  },
+  {
+    "id": "21-21",
+    "title": "Create an experiment log doc (evals/EXPERIMENT-LOG.md) that tracks every round: conditions, requirements version, result",
+    "kind": "task",
+    "href": "/tasks#21-21",
+    "body": "21-21 create an experiment log doc (evals/experiment-log.md) that tracks every round: conditions, requirements version, results, findings. running ledger across all rounds. experiment-log documentation"
+  },
+  {
+    "id": "21-22",
+    "title": "Build requirements v4: pressure-oriented design (not features checklist). Authored dungeon with floors → 5-8 rooms → bos",
+    "kind": "task",
+    "href": "/tasks#21-22",
+    "body": "21-22 build requirements v4: pressure-oriented design (not features checklist). authored dungeon with floors → 5-8 rooms → boss gate. room types: combat, elite, forge, rest, event. each floor must introduce a mechanical constraint that can't be brute-forced with default spells. forge is gate with at least one encounter per floor that favors crafted/adapted spells. pressure mechanics required from at least 2 of 4 categories. starter abilities explicitly insufficient. skills scored but not gate (combat needs non-spell action category only). sprites: attempt sourcing first, coherent fallback allowed. traits label in ui, narrativestats in code. add ingenuity/adaptation scoring dimension. requirements-v4 greenfield pressure authored"
+  },
+  {
+    "id": "21-25",
+    "title": "Create create_skill skill doc (skills/create-skill/SKILL.md) that documents how bare/emergent agents can define their ow",
+    "kind": "task",
+    "href": "/tasks#21-25",
+    "body": "21-25 create create_skill skill doc (skills/create-skill/skill.md) that documents how bare/emergent agents can define their own reusable skills. only skill bare starts with; emergent starts with create_skill + inherited skills from previous runs. create-skill skill emergent bare ai-workflow"
+  },
+  {
+    "id": "21-26",
+    "title": "Rewrite bare and emergent AGENTS.md to be truly minimal. Stop mandating ARCHITECTURE.md, CHANGELOG.md, or any specific a",
+    "kind": "task",
+    "href": "/tasks#21-26",
+    "body": "21-26 rewrite bare and emergent agents.md to be truly minimal. stop mandating architecture.md, changelog.md, or any specific artifact. only mandate: (1) all workflow artifacts in game/.planning/, (2) reference create_skill skill for defining new skills. everything else is agent-defined. this defeats the previous round's too-prescriptive guidance and lets us observe what emergent workflows actually produce. bare emergent agents-md minimal emergent-workflow"
+  },
+  {
+    "id": "21-27",
+    "title": "Create gad:find-sprites skill (skills/find-sprites/SKILL.md) that documents the asset sourcing workflow: web search for ",
+    "kind": "task",
+    "href": "/tasks#21-27",
+    "body": "21-27 create gad:find-sprites skill (skills/find-sprites/skill.md) that documents the asset sourcing workflow: web search for free/open-license sprites and icons, preference order (npm packs → web search → generated → geometric fallback), integration tips, license verification. referenced by v4 agents.md for all 3 greenfield conditions. sprite-sourcing skill web-search assets"
+  },
+  {
+    "id": "21-23",
+    "title": "Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates.",
+    "kind": "task",
+    "href": "/tasks#21-23",
+    "body": "21-23 run round 4 greenfield with v4 requirements. three conditions: gad, bare, emergent. all with pressure-oriented gates. round-4 greenfield bare-v5 emergent-v4 gad-v10-partial"
+  },
+  {
+    "id": "21-23b",
+    "title": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaff",
+    "kind": "task",
+    "href": "/tasks#21-23b",
+    "body": "21-23b retry gad greenfield v11 after http 529 investigation. first attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before anthropic api returned overloaded_error. previous attempt crashed earlier at tool_uses=18. pattern suggests gad's setup-heavy phases (snapshot + planning xml writes) spend proportionally more time in server-dependent states during peak load periods. investigation needed: (1) check anthropic status page for correlation with our crash timestamps; (2) test whether spreading the snapshot + plan calls across shorter api invocations reduces 529 exposure; (3) consider a retry-with-backoff wrapper in the eval runner for 529 specifically (not for rate limits). only retry gad v11 after investigation produces a mitigation or explicit \"try again, the api was just overloaded that hour\" conclusion. round-4 gad-retry 529-investigation api-overload"
+  },
+  {
+    "id": "21-24",
+    "title": "Run round 1 brownfield experiments. Three conditions using bare v3 baseline + v4 extensions. BLOCKED on portfolio docume",
+    "kind": "task",
+    "href": "/tasks#21-24",
+    "body": "21-24 run round 1 brownfield experiments. three conditions using bare v3 baseline + v4 extensions. blocked on portfolio documentation (21-28). round-1 brownfield experiment blocked-on-portfolio"
+  },
+  {
+    "id": "22-01",
+    "title": "Plan the portfolio experiment documentation structure — pivoted to a standalone Next.js site at vendor/get-anything-done",
+    "kind": "task",
+    "href": "/tasks#22-01",
+    "body": "22-01 plan the portfolio experiment documentation structure — pivoted to a standalone next.js site at vendor/get-anything-done/site/ instead of apps/portfolio docs. designed single-page sections (workflow, rounds, projects, results, playable, requirements, catalog, templates) plus dynamic per-run pages. portfolio site planning structure pivot"
+  },
+  {
+    "id": "22-02",
+    "title": "Hub/home page explaining the experiment, freedom hypothesis, methodology, and linking to every section.",
+    "kind": "task",
+    "href": "/tasks#22-02",
+    "body": "22-02 hub/home page explaining the experiment, freedom hypothesis, methodology, and linking to every section. portfolio hub home"
+  },
+  {
+    "id": "22-03",
+    "title": "Per-eval-project cards for all six projects with greenfield/brownfield split.",
+    "kind": "task",
+    "href": "/tasks#22-03",
+    "body": "22-03 per-eval-project cards for all six projects with greenfield/brownfield split. portfolio projects greenfield brownfield"
+  },
+  {
+    "id": "22-04",
+    "title": "Per-run detail pages for every eval run with TRACE.json breakdown, dimension scores, gate report, process metrics, playa",
+    "kind": "task",
+    "href": "/tasks#22-04",
+    "body": "22-04 per-run detail pages for every eval run with trace.json breakdown, dimension scores, gate report, process metrics, playable link. portfolio per-run ssg"
+  },
+  {
+    "id": "22-05",
+    "title": "Per-round experiment summary sections that compare conditions.",
+    "kind": "task",
+    "href": "/tasks#22-05",
+    "body": "22-05 per-round experiment summary sections that compare conditions. portfolio rounds experiment-log"
+  },
+  {
+    "id": "22-06",
+    "title": "Visualizations/graphs across rounds. Deferred — score bars on the per-run page and run cards cover the \"at a glance\" com",
+    "kind": "task",
+    "href": "/tasks#22-06",
+    "body": "22-06 visualizations/graphs across rounds. deferred — score bars on the per-run page and run cards cover the \"at a glance\" comparison for now; a dedicated charts section can be revived later if we decide we're missing the signal. portfolio graphs deferred"
+  },
+  {
+    "id": "22-07",
+    "title": "Requirements version history (v1 → v4 lineage with diffs).",
+    "kind": "task",
+    "href": "/tasks#22-07",
+    "body": "22-07 requirements version history (v1 → v4 lineage with diffs). portfolio requirements lineage"
+  },
+  {
+    "id": "22-08",
+    "title": "Decisions index page. Deferred — decisions referenced inline in Rounds and Requirements sections; full decisions index c",
+    "kind": "task",
+    "href": "/tasks#22-08",
+    "body": "22-08 decisions index page. deferred — decisions referenced inline in rounds and requirements sections; full decisions index can be a dedicated /decisions route later when the list is big enough to warrant it. portfolio decisions deferred"
+  },
+  {
+    "id": "22-09",
+    "title": "Findings as standalone pages: /findings index + /findings/[slug] per finding.",
+    "kind": "task",
+    "href": "/tasks#22-09",
+    "body": "22-09 findings as standalone pages: /findings index + /findings/[slug] per finding. portfolio findings routes"
+  },
+  {
+    "id": "22-10",
+    "title": "Build pipeline so the site data stays in sync with the repo.",
+    "kind": "task",
+    "href": "/tasks#22-10",
+    "body": "22-10 build pipeline so the site data stays in sync with the repo. portfolio build-pipeline prebuild"
+  },
+  {
+    "id": "22-11",
+    "title": "Extract v1 and v2 REQUIREMENTS.md snapshots from git history.",
+    "kind": "task",
+    "href": "/tasks#22-11",
+    "body": "22-11 extract v1 and v2 requirements.md snapshots from git history. requirements git-history downloads"
+  },
+  {
+    "id": "22-12",
+    "title": "Markdown rendering via marked in prebuild.",
+    "kind": "task",
+    "href": "/tasks#22-12",
+    "body": "22-12 markdown rendering via marked in prebuild. markdown marked prebuild content"
+  },
+  {
+    "id": "22-13",
+    "title": "Per-skill detail pages app/skills/[id]/page.tsx.",
+    "kind": "task",
+    "href": "/tasks#22-13",
+    "body": "22-13 per-skill detail pages app/skills/[id]/page.tsx. skills detail ssg"
+  },
+  {
+    "id": "22-14",
+    "title": "Per-agent detail pages app/agents/[id]/page.tsx.",
+    "kind": "task",
+    "href": "/tasks#22-14",
+    "body": "22-14 per-agent detail pages app/agents/[id]/page.tsx. agents detail ssg"
+  },
+  {
+    "id": "22-15",
+    "title": "Per-command detail pages app/commands/[id]/page.tsx.",
+    "kind": "task",
+    "href": "/tasks#22-15",
+    "body": "22-15 per-command detail pages app/commands/[id]/page.tsx. commands detail ssg"
+  },
+  {
+    "id": "22-16",
+    "title": "Findings routes at /findings and /findings/[slug].",
+    "kind": "task",
+    "href": "/tasks#22-16",
+    "body": "22-16 findings routes at /findings and /findings/[slug]. findings routes ssg"
+  },
+  {
+    "id": "22-17",
+    "title": "Framework vs eval-inherited catalog split.",
+    "kind": "task",
+    "href": "/tasks#22-17",
+    "body": "22-17 framework vs eval-inherited catalog split. catalog framework-vs-eval inheritance"
+  },
+  {
+    "id": "22-18",
+    "title": "/planning meta-transparency page.",
+    "kind": "task",
+    "href": "/tasks#22-18",
+    "body": "22-18 /planning meta-transparency page. planning-state meta transparency"
+  },
+  {
+    "id": "22-19",
+    "title": "skills/portfolio-sync/SKILL.md — methodology for keeping the public site in sync with evals.",
+    "kind": "task",
+    "href": "/tasks#22-19",
+    "body": "22-19 skills/portfolio-sync/skill.md — methodology for keeping the public site in sync with evals. skill portfolio-sync methodology"
+  },
+  {
+    "id": "22-20",
+    "title": "Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no stan",
+    "kind": "task",
+    "href": "/tasks#22-20",
+    "body": "22-20 dedicated /gad framework overview page. currently the home loop + catalog sections are entry points but there is no standalone \"what is gad\" reference page someone can deep-link to. the catalog cards work but users have asked for a top-level gad explainer + index that links into skills/agents/commands as a single navigation hub. gad-overview navigation catalog-hub"
+  },
+  {
+    "id": "22-21",
+    "title": "/methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval projec",
+    "kind": "task",
+    "href": "/tasks#22-21",
+    "body": "22-21 /methodology page that explains how tracing works, what fields trace.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. this is the \"how we measure\" appendix users have been asking for. includes concrete worked examples showing how a composite score was derived. methodology formulas tracing scoring"
+  },
+  {
+    "id": "22-22",
+    "title": "Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contributio",
+    "kind": "task",
+    "href": "/tasks#22-22",
+    "body": "22-22 per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a \"tracing gap\" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schema overhaul). per-run formulas trace-breakdown tracing-gap"
+  },
+  {
+    "id": "22-23",
+    "title": "Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that pro",
+    "kind": "task",
+    "href": "/tasks#22-23",
+    "body": "22-23 per-project detail pages at /projects/[id]. shows: project description + mode + workflow, the catalog scope for that project (framework gad = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, \"what the agent built for itself\" per run (scan run/.planning/skills/*.md and similar). projects per-project catalog-scope produced-artifacts"
+  },
+  {
+    "id": "22-24",
+    "title": "Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, ",
+    "kind": "task",
+    "href": "/tasks#22-24",
+    "body": "22-24 lightweight svg charts in a graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). no charting library — pure react-rendered svg so it ships in every prebuild. graphs svg charts home"
+  },
+  {
+    "id": "22-25",
+    "title": "Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary n",
+    "kind": "task",
+    "href": "/tasks#22-25",
+    "body": "22-25 nav surface update: add framework + methodology + projects links. current nav is already packed — may need a secondary nav row or drop items. nav navigation"
+  },
+  {
+    "id": "22-26",
+    "title": "Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can hav",
+    "kind": "task",
+    "href": "/tasks#22-26",
+    "body": "22-26 expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. every eval project can have different weights; we're currently only reading one set for display. emit scoring_weights by project so the methodology page and per-run formula display can show the project-specific math. scoring-weights gad-json prebuild"
+  },
+  {
+    "id": "22-27",
+    "title": "New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), st",
+    "kind": "task",
+    "href": "/tasks#22-27",
+    "body": "22-27 new skill skills/framework-upgrade/skill.md. methodology for versioning the gad framework on branches (version/v1.x), stamping every trace.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. references phase 25 as the backing work. skill framework-upgrade versioning"
+  },
+  {
+    "id": "22-28",
+    "title": "Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally reg",
+    "kind": "task",
+    "href": "/tasks#22-28",
+    "body": "22-28 mark the create-skill inheritance requirement explicit in a decision so bare/emergent templates are not accidentally regressed. decision create-skill invariant"
+  },
+  {
+    "id": "22-29",
+    "title": "/lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.verc",
+    "kind": "task",
+    "href": "/tasks#22-29",
+    "body": "22-29 /lineage page explaining context rot, the gsd upstream, the repoplanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first ralph wiggum loop formalization), and how gad combines both approaches plus measurement. links to both projects' sources. captures decision gad-56. lineage context-rot gsd repoplanner attribution"
+  },
+  {
+    "id": "22-30",
+    "title": "Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via",
+    "kind": "task",
+    "href": "/tasks#22-30",
+    "body": "22-30 agent runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (claude code ✓ via hooks, aider ✓ via python callbacks, continue.dev ✓ via extension api, cursor ✗, vanilla codex cli ✗ stream-only). published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for gad evaluation. agent-runtimes hooks methodology decision-gad-53"
+  },
+  {
+    "id": "22-31",
+    "title": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one",
+    "kind": "task",
+    "href": "/tasks#22-31",
+    "body": "22-31 phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with root.tsx composition registry + one placeholder composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/videoembed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). does not author full video content — the scaffold establishes the pattern and the first composition is a placeholder. remotion scaffold videos-route player-embed"
+  },
+  {
+    "id": "22-32",
+    "title": "Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output.",
+    "kind": "task",
+    "href": "/tasks#22-32",
+    "body": "22-32 write .planning/discuss-phase-25.md capturing the trace schema v4 discussion output. phase-25 discuss-phase trace-schema-v4 planning-doc"
+  },
+  {
+    "id": "22-33",
+    "title": "`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install",
+    "kind": "task",
+    "href": "/tasks#22-33",
+    "body": "22-33 `gad install` cli subcommand as a local-checkout-friendly wrapper around existing bin/install.js. the underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full gsd-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modules/get-anything-done/get-anything-done/`). this task wraps it in a `gad install` subcommand that resolves paths correctly whether running from a git checkout (vendor/get-anything-done/) or an npm install. related to 22-34 (fix install.js directly) — this task may become a no-op if 22-34 fixes the path resolution at the install.js level. gad-install cli wrapper infrastructure"
+  },
+  {
+    "id": "22-34",
+    "title": "Fix path resolution bug in bin/install.js for local git checkouts.",
+    "kind": "task",
+    "href": "/tasks#22-34",
+    "body": "22-34 fix path resolution bug in bin/install.js for local git checkouts. install-js bug path-resolution local-checkout"
+  },
+  {
+    "id": "25-01",
+    "title": "Design trace event envelope + 4 event types as a reusable library in lib/trace-schema.cjs.",
+    "kind": "task",
+    "href": "/tasks#25-01",
+    "body": "25-01 design trace event envelope + 4 event types as a reusable library in lib/trace-schema.cjs. trace-schema v4 event-types library"
+  },
+  {
+    "id": "25-02",
+    "title": "Write the hook handler script at bin/gad-trace-hook.cjs that Claude Code invokes for PreToolUse/PostToolUse.",
+    "kind": "task",
+    "href": "/tasks#25-02",
+    "body": "25-02 write the hook handler script at bin/gad-trace-hook.cjs that claude code invokes for pretooluse/posttooluse. hook-handler claude-code pretooluse posttooluse trace"
+  },
+  {
+    "id": "25-03",
+    "title": "4 KB truncation helper with head+tail split for trace event outputs.",
+    "kind": "task",
+    "href": "/tasks#25-03",
+    "body": "25-03 4 kb truncation helper with head+tail split for trace event outputs. truncation output-cap 4kb trace"
+  },
+  {
+    "id": "25-04",
+    "title": "`gad install hooks` CLI subcommand that wires the trace hook into Claude Code settings.json.",
+    "kind": "task",
+    "href": "/tasks#25-04",
+    "body": "25-04 `gad install hooks` cli subcommand that wires the trace hook into claude code settings.json. cli install-hooks settings-json gad-install"
+  },
+  {
+    "id": "22-35",
+    "title": "Fix YAML parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). Descriptions with e",
+    "kind": "task",
+    "href": "/tasks#22-35",
+    "body": "22-35 fix yaml parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). descriptions with embedded colons like \"methodology:\" and \"discipline:\" were parsed by js-yaml as key-value separators, breaking skill loading in claude code. fix by converting plain scalar descriptions to yaml folded block scalar form (`description: &gt;- ...`) which treats the body as opaque. yaml frontmatter skill-loader js-yaml"
+  },
+  {
+    "id": "01",
+    "title": "Phase 01 — Foundation",
+    "kind": "phase",
+    "href": "/phases#01",
+    "body": "01 foundation citty-based cjs cli scaffold. bin/gad.cjs, definecommand, workspace/projects commands, planning-config.toml loading, findreporoot."
+  },
+  {
+    "id": "02",
+    "title": "Phase 02 — Session management",
+    "kind": "phase",
+    "href": "/phases#02",
+    "body": "02 session management gad session new/list/resume/close. session json files in .planning/sessions/. contextmode (fresh|loaded). session-scoped defaults for state/phases commands."
+  },
+  {
+    "id": "03",
+    "title": "Phase 03 — Planning readers — state, roadmap, tasks",
+    "kind": "phase",
+    "href": "/phases#03",
+    "body": "03 planning readers — state, roadmap, tasks state-reader.cjs, roadmap-reader.cjs, task-registry-reader.cjs. gad state / gad phases / gad tasks commands. xml preferred over md. session-scoped --projectid defaults."
+  },
+  {
+    "id": "04",
+    "title": "Phase 04 — Extended readers — decisions, requirements, errors, blockers",
+    "kind": "phase",
+    "href": "/phases#04",
+    "body": "04 extended readers — decisions, requirements, errors, blockers decisions-reader.cjs, requirements-reader.cjs, errors-reader.cjs, blockers-reader.cjs. corresponding cli commands. no-misc rule: every named field must be parseable."
+  },
+  {
+    "id": "05",
+    "title": "Phase 05 — Docs sink pipeline",
+    "kind": "phase",
+    "href": "/phases#05",
+    "body": "05 docs sink pipeline docs-compiler.cjs: compile (.planning xml → mdx sink) and decompile (ensure .planning dirs, create stubs). gad sink compile/decompile/sync/status/validate. source_map, isgenerated guard, human-authored detection."
+  },
+  {
+    "id": "06",
+    "title": "Phase 06 — Eval framework",
+    "kind": "phase",
+    "href": "/phases#06",
+    "body": "06 eval framework evals/ structure with definitions.md, run.md, score.md, trace.json. gad eval run/score/diff/trace commands. portfolio-bare template. eval-run and eval-report skills. v1–v6 cli efficiency evals."
+  },
+  {
+    "id": "07",
+    "title": "Phase 07 — Parser 100% coverage + tests",
+    "kind": "phase",
+    "href": "/phases#07",
+    "body": "07 parser 100% coverage + tests parser-coverage.test.cjs: 46 tests across 6 suites. every named xml field covered. no-misc assertion per parser. fixed task-registry regex bugs (&lt;task\\s vs \\b, agent-id lookbehind)."
+  },
+  {
+    "id": "08",
+    "title": "Phase 08 — Full repo planning coverage",
+    "kind": "phase",
+    "href": "/phases#08",
+    "body": "08 full repo planning coverage all vendor projects registered in planning-config.toml with .planning/ scaffold. gad refs command. plans/requirements/title fields in roadmap reader. sink sync for all 6 roots."
+  },
+  {
+    "id": "09",
+    "title": "Phase 09 — Scoping and discoverability",
+    "kind": "phase",
+    "href": "/phases#09",
+    "body": "09 scoping and discoverability resolveroots() helper. --all flag on all scoped commands. --projectid consistent across all commands. gad ls alias for projects list. sink status human-authored detection."
+  },
+  {
+    "id": "10",
+    "title": "Phase 10 — GAD eats its own dogfood + planning packs",
+    "kind": "phase",
+    "href": "/phases#10",
+    "body": "10 gad eats its own dogfood + planning packs register get-anything-done as a planning root. migrate gad-* decisions into this project. add gad pack command (bundle .planning data for repo-planner display). update repo-planner planning-pack to consume gad xml format."
+  },
+  {
+    "id": "11",
+    "title": "Phase 11 — AGENTS.md and context system",
+    "kind": "phase",
+    "href": "/phases#11",
+    "body": "11 agents.md and context system update agents.md across all vendor projects to reference xml files and gad: commands. formalize context re-hydration flow. validate eval scores against v6 baseline."
+  },
+  {
+    "id": "12",
+    "title": "Phase 12 — Kill GSD, formalize GAD loop, reduce startup redundancy",
+    "kind": "phase",
+    "href": "/phases#12",
+    "body": "12 kill gsd, formalize gad loop, reduce startup redundancy remove all gsd artifacts (commands, hooks, settings). add gad-17 revision (auto-compact over fresh sessions), gad-18 (canonical loop), gad-19 (gsd is dead). simplify root agents.md so agents use gad snapshot instead of reading 15 files. rebrand useful hooks (context monitor, statusline) for gad. eliminate redundancy between root agents.md, .planning/agents.md, and vendor gad agents.md."
+  },
+  {
+    "id": "13",
+    "title": "Phase 13 — Docs commands, skill content, DOCS-MAP rollout",
+    "kind": "phase",
+    "href": "/phases#13",
+    "body": "13 docs commands, skill content, docs-map rollout add gad docs command. write real content for write-intent, write-feature-doc, write-tech-doc skills. roll out docs-map.xml to all planning roots. production-harden cli error paths."
+  },
+  {
+    "id": "14",
+    "title": "Phase 14 — Eval framework: escape-the-dungeon + tracing",
+    "kind": "phase",
+    "href": "/phases#14",
+    "body": "14 eval framework: escape-the-dungeon + tracing set up escape-the-dungeon eval project from gameplay-design.xml. create eval-setup skill. extend trace.json for tool_calls/skill_triggers. define scoring rubric. run escape-the-dungeon eval via discuss→plan→execute→verify→score flow. tighten portfolio-bare."
+  },
+  {
+    "id": "14.5",
+    "title": "Phase 14.5 — Eval findings: enforce the loop, automate tracing, auto-scaffold conventions",
+    "kind": "phase",
+    "href": "/phases#14.5",
+    "body": "14.5 eval findings: enforce the loop, automate tracing, auto-scaffold conventions fix the 5 structural problems exposed by escape-the-dungeon eval v2: agent bootstrap with gad context, automatic trace reconstruction from git, checkpoint enforcement for task-level tracking, auto-scaffold conventions.md for greenfield projects, eval template agents.md that enforces the loop. re-run eval to validate fixes."
+  },
+  {
+    "id": "15",
+    "title": "Phase 15 — GSD→GAD migration: port workflows, delete legacy",
+    "kind": "phase",
+    "href": "/phases#15",
+    "body": "15 gsd→gad migration: port workflows, delete legacy move workflows/, templates/, references/ out of get-shit-done/ to top-level gad directories. update 42 command @-path references. delete get-shit-done/ directory (137 files). also: copy eval game dist to docs site public dir for hosting."
+  },
+  {
+    "id": "16",
+    "title": "Phase 16 — Sprint context window + snapshot optimization",
+    "kind": "phase",
+    "href": "/phases#16",
+    "body": "16 sprint context window + snapshot optimization add sprint concept to gad: configurable sprint size (default 5 phases), gad sprint show/context commands. optimize gad snapshot to fit sprint context window: collapse done phases to id|title|done, inline only active/planned phases, show only open tasks, include file refs from active tasks and recent git log. target: snapshot fits in ~3,000 tokens (currently ~9,750). reference: docs/context-budget.md baseline analysis, repoplanner sprint model (scripts/loop-cli.mjs)."
+  },
+  {
+    "id": "17",
+    "title": "Phase 17 — Reverse-engineer skill + reader-workspace eval",
+    "kind": "phase",
+    "href": "/phases#17",
+    "body": "17 reverse-engineer skill + reader-workspace eval use gad:reverse-engineer to analyze repub-builder reader workspace ui. produce requirements.xml, decisions.xml, conventions.md from the existing codebase. create reader-workspace eval project. run eval to validate reverse-engineer → implement cycle."
+  },
+  {
+    "id": "18",
+    "title": "Phase 18 — Eval suite — parallel runs + iteration cycle",
+    "kind": "phase",
+    "href": "/phases#18",
+    "body": "18 eval suite — parallel runs + iteration cycle run portfolio-bare + escape-the-dungeon + reader-workspace evals in parallel using gad:eval-suite. compare results, identify patterns, tighten skills. establish regular eval cadence. each iteration fixes findings and adds criteria."
+  },
+  {
+    "id": "19",
+    "title": "Phase 19 — Milestone close and v1.1 planning",
+    "kind": "phase",
+    "href": "/phases#19",
+    "body": "19 milestone close and v1.1 planning formally close gad-v1-cli milestone. run final eval pass across all projects. define gad-v1.1 milestone scope (domain translators, multi-agent eval, publishing pipeline, reverse-engineer refinement)."
+  },
+  {
+    "id": "20",
+    "title": "Phase 20 — Real-time tooling, MCP bridge, and tooling evals",
+    "kind": "phase",
+    "href": "/phases#20",
+    "body": "20 real-time tooling, mcp bridge, and tooling evals ship `gad watch planning` / `gad dev` (debounced file watch + gad refs verify + structured json events). add optional mcp adapter exposing the same operations for cursor/agents. introduce eval_type tooling (and later mcp) with versioned trace.json, fixed fixtures, automated harnesses, and regression-friendly metrics. emit machine-readable scores.json; extend report/diff for tooling runs. increase metric granularity over time via trace_schema_version + optional metrics.json for histograms. ide/editor integration is out of scope until explicitly re-opened."
+  },
+  {
+    "id": "21",
+    "title": "Phase 21 — Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield",
+    "kind": "phase",
+    "href": "/phases#21",
+    "body": "21 eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield evolve the eval framework to produce trustworthy measurements of agent workflows on creative implementation tasks. deliver: (1) requirements versioning with v1→v2→v3 history; (2) gate criteria enforcement (game-loop, spell-crafting, ui quality); (3) composite formula v3 with human_review weight 0.30 and low-score caps; (4) preservation contract with gad eval preserve/verify commands and tests/eval-preservation.test.cjs; (5) game/.planning/ layout mandate for all eval conditions; (6) gad worktree management commands; (7) brownfield eval mode with baseline inheritance; (8) three new brownfield eval projects (etd-brownfield-gad/bare/emergent) extending bare v3. discovered the freedom hypothesis: bare workflow consistently beats gad on greenfield creative implementation (round 3 human scores: bare v3=0.70, emergent v2=0.50, gad v8=0.20). brownfield experiments are next to test whether gad's overhead pays off on codebase extension."
+  },
+  {
+    "id": "22",
+    "title": "Phase 22 — Portfolio experiment documentation — hub, per-project, per-run, findings, graphs",
+    "kind": "phase",
+    "href": "/phases#22",
+    "body": "22 portfolio experiment documentation — hub, per-project, per-run, findings, graphs publish all eval experiment documentation on the portfolio before further experimentation. user wants to showcase the work publicly: hub explaining methodology, per-eval-project pages with version history, per-run detail pages with scores and links to playable builds + source code, per-round experiment summaries, visualizations/graphs comparing conditions over time, requirements version history, decisions index, findings (freedom hypothesis). all compiled into apps/portfolio/content/docs/get-anything-done/evals/ via gad sink pipeline. blocks round 4 and brownfield round 1 per user directive."
+  },
+  {
+    "id": "23",
+    "title": "Phase 23 — Round 4 greenfield with v4 pressure-oriented requirements",
+    "kind": "phase",
+    "href": "/phases#23",
+    "body": "23 round 4 greenfield with v4 pressure-oriented requirements run round 4 greenfield experiment with v4 requirements (pressure-oriented design, forge gate with per-floor adaptation requirement, authored dungeon with 5-8 rooms per floor and boss gates, ingenuity scoring). three conditions: gad, bare, emergent. updated agents.md for bare/emergent is minimal (only mandate .planning/ location and create_skill reference). preserve all runs. re-examine freedom hypothesis with new data."
+  },
+  {
+    "id": "24",
+    "title": "Phase 24 — Round 1 brownfield — bare v3 baseline + v4 extensions",
+    "kind": "phase",
+    "href": "/phases#24",
+    "body": "24 round 1 brownfield — bare v3 baseline + v4 extensions run the first brownfield experiment. all three conditions (etd-brownfield-gad/bare/emergent) start from escape-the-dungeon-bare v3 as baseline and extend it with v4 feature requirements. tests whether gad's overhead pays off on codebase extension vs fresh creation. this is the experiment that could validate or refute the freedom hypothesis if gad wins."
+  },
+  {
+    "id": "25",
+    "title": "Phase 25 — Framework versioning workflow + trace schema overhaul",
+    "kind": "phase",
+    "href": "/phases#25",
+    "body": "25 framework versioning workflow + trace schema overhaul formalize how we ship new versions of the gad framework itself and re-run evals across versions. deliverables: (1) branching strategy (main = current, version/v1.1, version/v1.2 etc as frozen snapshots) so evals can pin to a framework version; (2) `gad version` command to stamp trace.json with the commit hash + branch it ran against; (3) trace schema v4 capturing every tool_use, skill invocation with trigger context, subagent spawn with inputs/outputs, file mutation — today's trace.json has a bare `skill_accuracy: 0.17` with no breakdown of which skills fired and when; (4) methodology for re-running past evals against the current framework to see if framework changes affect scores; (5) new skill `framework-upgrade` documenting the upgrade + re-eval procedure. precondition for interpreting any cross-version eval data honestly — right now we can't tell whether a score change is the agent or the framework."
+  },
+  {
+    "id": "26",
+    "title": "Phase 26 — Research-grade visualization + Remotion video compositions",
+    "kind": "phase",
+    "href": "/phases#26",
+    "body": "26 research-grade visualization + remotion video compositions expand the public site from text + tables into interactive visualizations and embedded video explainers. two tracks: (a) static svg / react-rendered charts for score comparisons, trigger timelines, agent loops, trace breakdowns — lightweight, ship with every prebuild; (b) remotion react compositions embedded via @remotion/player (free for teams ≤3, no mp4 export required — plays react frames live in the browser). video topics to scope: gad loop walkthrough, a failure-case dissection (v8 broken-crafting with tracing overlay), freedom hypothesis explanation, bare vs emergent workflow emergence comparison, per-eval \"what the agent built for itself\" retrospectives. compositions reuse existing site react components (siteheader, score cards, etc) so video = composable react, no separate asset pipeline. scaffold landed in phase 22 session 4 (registry, player wrapper, /videos route, inline embed on per-run pages, v8 dissection placeholder). authoring real video content blocked on phase 25 landing so we're animating honest data, not v3-era lossy aggregates."
+  },
+  {
+    "id": "27",
+    "title": "Phase 27 — Structured objective data production for evaluations",
+    "kind": "phase",
+    "href": "/phases#27",
+    "body": "27 structured objective data production for evaluations the eval framework's primary output is no longer \"a score per run\" — it's \"structured data that yields insights.\" phase 27 ships the data production pipeline that makes that possible. five tracks: (1) **structured human review rubric** — replace the single human_review.score number with a dimensions object (playability, ui_polish, mechanics_implementation, ingenuity_requirement_met, stability, etc) and a rubric_version. each dimension scored and annotated independently so reviewers can disagree about playability without throwing out the rest. aggregate score is a weighted sum defined in rubric config, keeping current composite math intact. (2) **automated gate checks** — playwright tests per eval project that boot the built game and programmatically verify g1 (game loop transitions work), g3 (ui has sprites not ascii), g4 (pressure mechanics observable). gate status becomes mostly objective; human reviewers only judge what playwright can't check. (3) **derived metrics from trace events** — tool-use mix (read vs edit vs bash distribution), commit rhythm (time between commits, size distribution), plan-adherence delta (plan.md task count vs actually-completed tasks), skill-to-tool ratio, subagent utilization. all computed from trace v4 once phase 25 ships. (4) **cross-run aggregate queries** — sql-like queries against the trace dataset: \"average time-to-first-commit by workflow\", \"percent of runs that triggered gad:plan-phase before writing code\", \"distribution of produced-artifact counts for bare runs\". ships as a `gad eval query` subcommand + a /insights page on the site. (5) **visualization patterns** — not just more charts, but a discipline: every new metric gets a chart that answers a specific research question, not just shows the number. divergence scatter already exists; phase 27 adds tool-mix donuts, commit-rhythm timelines, rubric-dimension radar charts, trigger-timeline strips per skill. phase 27 runs parallel to phase 25 — the rubric work can land against v3 trace data today and get richer inputs when v4 arrives."
+  },
+  {
+    "id": "compound-skills-hypothesis",
+    "title": "Compound-Skills Hypothesis",
+    "kind": "glossary",
+    "href": "/glossary#compound-skills-hypothesis",
+    "body": "compound-skills hypothesis csh compound skills hypothesis the working hypothesis that a coding agent's skill library compounds in value over many rounds as skills are merged and tailored to a specific project — like a master craftsman accumulating tools for their craft."
+  },
+  {
+    "id": "freedom-hypothesis",
+    "title": "Freedom Hypothesis",
+    "kind": "glossary",
+    "href": "/glossary#freedom-hypothesis",
+    "body": "freedom hypothesis freedom hyp freeform hypothesis for creative implementation tasks, agent performance correlates inversely with framework constraint — less prescribed structure leads to better output."
+  },
+  {
+    "id": "emergent-evolution-hypothesis",
+    "title": "Emergent-Evolution Hypothesis",
+    "kind": "glossary",
+    "href": "/glossary#emergent-evolution-hypothesis",
+    "body": "emergent-evolution hypothesis emergent evolution eeh synthesis of freedom + compound-skills + project-tailored merging. projects are themselves emergent; skills must be tailored, merged, and rehearsed against a foundational pool."
+  },
+  {
+    "id": "emergent-workflow",
+    "title": "Emergent workflow",
+    "kind": "glossary",
+    "href": "/glossary#emergent-workflow",
+    "body": "emergent workflow emergent condition emergent eval an eval condition where the agent has no mandated framework but inherits skills from previous runs, evolves them in place, and writes a changelog."
+  },
+  {
+    "id": "bare-workflow",
+    "title": "Bare workflow",
+    "kind": "glossary",
+    "href": "/glossary#bare-workflow",
+    "body": "bare workflow bare condition bare eval an eval condition where the agent has no framework and no inherited skills — only agents.md, requirements, and freedom."
+  },
+  {
+    "id": "gad-workflow",
+    "title": "GAD workflow",
+    "kind": "glossary",
+    "href": "/glossary#gad-workflow",
+    "body": "gad workflow gad condition full gad an eval condition where the agent uses the full gad framework — .planning/ xml, agents.md loop, skill triggers, plan → execute → verify → commit."
+  },
+  {
+    "id": "greenfield",
+    "title": "Greenfield",
+    "kind": "glossary",
+    "href": "/glossary#greenfield",
+    "body": "greenfield green field greenfield mode an eval mode where the agent builds a project from nothing — no existing codebase, just requirements and a starting template."
+  },
+  {
+    "id": "brownfield",
+    "title": "Brownfield",
+    "kind": "glossary",
+    "href": "/glossary#brownfield",
+    "body": "brownfield brown field brownfield mode an eval mode where the agent inherits an existing codebase baseline and must extend or improve it against new requirements."
+  },
+  {
+    "id": "gate",
+    "title": "Gate criterion",
+    "kind": "glossary",
+    "href": "/glossary#gate",
+    "body": "gate criterion gate gates gate criteria a binary pass/fail requirement that, if failed, zeroes the requirement_coverage score regardless of other criteria met."
+  },
+  {
+    "id": "rubric",
+    "title": "Rubric",
+    "kind": "glossary",
+    "href": "/glossary#rubric",
+    "body": "rubric human review rubric review rubric a set of weighted dimensions a human reviewer scores 0.0 – 1.0 independently, summed to produce human_review.score."
+  },
+  {
+    "id": "composite",
+    "title": "Composite score",
+    "kind": "glossary",
+    "href": "/glossary#composite",
+    "body": "composite score composite composite_score weighted sum of dimension scores per project. each project weights dimensions differently. range 0.0 – 1.0."
+  },
+  {
+    "id": "ingenuity",
+    "title": "Ingenuity",
+    "kind": "glossary",
+    "href": "/glossary#ingenuity",
+    "body": "ingenuity ingenuity score ingenuity requirement the v4 principle that baseline starter abilities must not be sufficient to complete a floor — the player must adapt, craft, or specialize."
+  },
+  {
+    "id": "forge",
+    "title": "Rune forge",
+    "kind": "glossary",
+    "href": "/glossary#forge",
+    "body": "rune forge forge spell crafting the in-game spell-crafting interface where players combine runes (and eventually spells) to create new abilities."
+  },
+  {
+    "id": "affinity",
+    "title": "Rune affinity",
+    "kind": "glossary",
+    "href": "/glossary#affinity",
+    "body": "rune affinity affinity a per-rune progression stat gained by using that rune — higher affinity means stronger spells using it."
+  },
+  {
+    "id": "pressure-mechanics",
+    "title": "Pressure mechanics",
+    "kind": "glossary",
+    "href": "/glossary#pressure-mechanics",
+    "body": "pressure mechanics pressure pressure mechanic systems that constrain player behavior so crafting or adapting spells provides a meaningful advantage."
+  },
+  {
+    "id": "trace-schema-v4",
+    "title": "Trace schema v4",
+    "kind": "glossary",
+    "href": "/glossary#trace-schema-v4",
+    "body": "trace schema v4 trace v4 schema v4 the current version of trace.json plus hook-captured event streams. every tool use, skill invocation, subagent spawn, and file mutation is recorded."
+  },
+  {
+    "id": "hooks",
+    "title": "Hooks",
+    "kind": "glossary",
+    "href": "/glossary#hooks",
+    "body": "hooks hook pretooluse hook posttooluse hook claude code pretooluse/posttooluse handlers that emit structured events into the trace stream."
+  },
+  {
+    "id": "rate-limited",
+    "title": "Rate-limited",
+    "kind": "glossary",
+    "href": "/glossary#rate-limited",
+    "body": "rate-limited rate limit rate limited run a run that hit an account-level token/request rate limit before completing. preserved as a data point but excluded from cross-round quality comparisons."
+  },
+  {
+    "id": "api-interrupted",
+    "title": "API-interrupted",
+    "kind": "glossary",
+    "href": "/glossary#api-interrupted",
+    "body": "api-interrupted api interrupted 529 interrupted a run that was interrupted by an anthropic api server error (e.g. http 529 overloaded_error). different cause than rate limit, same exclusion policy."
+  },
+  {
+    "id": "eval-run",
+    "title": "Eval run",
+    "kind": "glossary",
+    "href": "/glossary#eval-run",
+    "body": "eval run run eval version a single attempt by an agent to satisfy an eval's requirements. identified by project + version, e.g. escape-the-dungeon-bare/v5."
+  },
+  {
+    "id": "round",
+    "title": "Round",
+    "kind": "glossary",
+    "href": "/glossary#round",
+    "body": "round eval round rounds a set of eval runs sharing the same requirements-document version. a new requirements version = a new round."
+  },
+  {
+    "id": "fundamental-skills",
+    "title": "Fundamental skills",
+    "kind": "glossary",
+    "href": "/glossary#fundamental-skills",
+    "body": "fundamental skills fundamentals foundational skills triumvirate gad's three foundational skills — create-skill, merge-skill, find-skills — that enable the emergent-evolution hypothesis to work."
+  },
+  {
+    "id": "merge-skill",
+    "title": "merge-skill",
+    "kind": "glossary",
+    "href": "/glossary#merge-skill",
+    "body": "merge-skill skill merging skill merge a fundamental gad skill that fuses a foundational skill (e.g. scientific-method) with a project context to produce a tailored variant."
+  },
+  {
+    "id": "programmatic-eval",
+    "title": "Programmatic evaluation",
+    "kind": "glossary",
+    "href": "/glossary#programmatic-eval",
+    "body": "programmatic evaluation programmatic eval automated eval eval metrics collected by tooling (hooks, traces, parsers) rather than by agent self-report or human judgment."
+  },
+  {
+    "id": "pseudo-database",
+    "title": "JSON pseudo-database",
+    "kind": "glossary",
+    "href": "/glossary#pseudo-database",
+    "body": "json pseudo-database pseudo db data/ pattern hand-curated content files under vendor/get-anything-done/data/*.json, read at prebuild time and typed into the site."
+  },
+  {
+    "id": "ralph-wiggum-loop",
+    "title": "Ralph Wiggum loop",
+    "kind": "glossary",
+    "href": "/glossary#ralph-wiggum-loop",
+    "body": "ralph wiggum loop ralph loop wiggum loop the agent loop where everything the agent needs to remember lives in repo files, not in the agent's context window."
+  },
+  {
+    "id": "planning-loop",
+    "title": "GAD planning loop",
+    "kind": "glossary",
+    "href": "/glossary#planning-loop",
+    "body": "gad planning loop gad loop plan execute verify commit snapshot → pick one task → implement → update planning docs → commit. the durable iteration cycle gad enforces."
+  },
+  {
+    "id": "pressure-score-formula",
+    "title": "How do we compute a pressure score per eval operationally?",
+    "kind": "question",
+    "href": "/questions#pressure-score-formula",
+    "body": "how do we compute a pressure score per eval operationally? decision gad-75 names pressure as a first-class eval dimension with five sub-dimensions (requirement complexity, ambiguity, constraint density, iteration budget, failure cost). the dimensions are named; the formula is not. open questions: (a) is pressure a single aggregate score or a 5-tuple? (b) is it self-rated by the requirements author or programmatically extracted? (c) if programmatic, which "
+  },
+  {
+    "id": "pressure-as-rubric-vs-metadata",
+    "title": "Should pressure become a scored rubric dimension or stay as test-condition metadata?",
+    "kind": "question",
+    "href": "/questions#pressure-as-rubric-vs-metadata",
+    "body": "should pressure become a scored rubric dimension or stay as test-condition metadata? pressure is currently framed in gad-75 as metadata about the test conditions, not a measurement of the result. but there's a parallel interpretation: pressure could be scored — 'did the agent handle the pressure well'. that scoring collapses pressure into the existing rubric as a new dimension. the two framings answer different questions: metadata-pressure lets us normalize cross-round comparisons"
+  },
+  {
+    "id": "fresh-clone-contribution-test",
+    "title": "Does a fresh clone of the repo actually work end-to-end for a human contributor?",
+    "kind": "question",
+    "href": "/questions#fresh-clone-contribution-test",
+    "body": "does a fresh clone of the repo actually work end-to-end for a human contributor? per decision gad-77, before the /contribute page ships we need to verify: (a) cloning the repo into a new directory results in a working agent environment (skills in .claude/, agents installed, commands available), (b) opening the repo in claude code surfaces the gad skills to the agent without additional setup, (c) a conversational request like 'run the escape-the-dungeon-bare eval' actually work"
+  },
+  {
+    "id": "fundamental-skills-triumvirate",
+    "title": "Do we already have create-skill / merge-skill / find-skills as fundamentals, and if not, should we build them?",
+    "kind": "question",
+    "href": "/questions#fundamental-skills-triumvirate",
+    "body": "do we already have create-skill / merge-skill / find-skills as fundamentals, and if not, should we build them? user's vision (decision gad-73): gad provides three fundamental skills as the foundation of emergent evolution. find-skills locates a trusted gad fundamental (e.g. 'scientific method', 'debug'). merge-skill fuses that fundamental into a project-tailored skill (e.g. 'scientific-method-for-kaplay-rune-spellcrafting'). create-skill authors genuinely new ones when no merge candidate exists. this trium"
+  },
+  {
+    "id": "gad-value-prop-landing-page-framing",
+    "title": "Should the landing page stop leading with 'ship software faster' and lead with task-management + skill evaluation instead?",
+    "kind": "question",
+    "href": "/questions#gad-value-prop-landing-page-framing",
+    "body": "should the landing page stop leading with 'ship software faster' and lead with task-management + skill evaluation instead? per decision gad-74, gad's actual value is not 'ship production software faster' — the freedom hypothesis already shows bare can outperform on creative implementation. real value: (1) durable task management at scale with everything in-repo (no external db, no lock-in), (2) scientific framework for proving skill effectiveness + workflow discipline, (3) skill security posture (longer-term). landing"
+  },
+  {
+    "id": "skill-security-model",
+    "title": "What does 'skill security' actually look like in practice?",
+    "kind": "question",
+    "href": "/questions#skill-security-model",
+    "body": "what does 'skill security' actually look like in practice? user wants gad to eventually provide a trust model for skills — how can you tell if a skill you're about to inherit is safe, effective, and actually improves anything? initial thoughts: (a) frontmatter signing / checksum, (b) provenance lineage (which run authored it, which rubric scores validated it, which other runs inherited it successfully), (c) automated review against anthropic's skills guid"
+  },
+  {
+    "id": "csh-vs-freedom-which-wins-over-time",
+    "title": "Does compounding skill inheritance (CSH) eventually beat raw freedom (freedom hypothesis) across many rounds?",
+    "kind": "question",
+    "href": "/questions#csh-vs-freedom-which-wins-over-time",
+    "body": "does compounding skill inheritance (csh) eventually beat raw freedom (freedom hypothesis) across many rounds? round 4 produced a provocative finding: emergent v4 scored 0.885 (with the 6-dim rubric including skill_inheritance_effectiveness), bare v5 scored 0.805 (5-dim rubric), and gad v10 was api-interrupted. on shared rubric dimensions (playability, ui_polish, mechanics, ingenuity, stability) emergent beat bare on playability and ui polish, tied on mechanics/ingenuity/stability. the freedom hypothesis ("
+  },
+  {
+    "id": "programmatic-eval-gap-ranking",
+    "title": "Which of our current eval metrics should become programmatic first?",
+    "kind": "question",
+    "href": "/questions#programmatic-eval-gap-ranking",
+    "body": "which of our current eval metrics should become programmatic first? per gad-69, every eval metric must answer 'can this be collected programmatically?' before 'how do we score it?'. we currently rely heavily on human review + agent self-report for: did the skill actually load, did the gate pass, is the forge integrated with pressure, is the game beatable. a programmatic-eval gaps audit is queued as task 83 / task 96. the output should be .planning/gaps.md ranking "
+  },
+  {
+    "id": "combat-model-a-vs-b",
+    "title": "Should v5 mandate Unicorn-Overlord-style rule-based combat (Model A) or allow direct-control (Model B)?",
+    "kind": "question",
+    "href": "/questions#combat-model-a-vs-b",
+    "body": "should v5 mandate unicorn-overlord-style rule-based combat (model a) or allow direct-control (model b)? bare v5 playtest surfaced a preference for rule-based simulated combat (loadout + spells + stats + action policies + initiative, chess-like positioning) over direct-control. r-v5.13 captures this as 'model a preferred unless implementation exception granted.' open question: is this the right call for round 5? rule-based is harder to implement correctly in a single eval run and may advantage gad's "
+  },
+  {
+    "id": "content-pack-injection-baseline",
+    "title": "How do we measure the value of authored-content-pack inheritance (gad-66) without confounding freedom/CSH tests?",
+    "kind": "question",
+    "href": "/questions#content-pack-injection-baseline",
+    "body": "how do we measure the value of authored-content-pack inheritance (gad-66) without confounding freedom/csh tests? decision gad-66 proposes an eval flavor that inherits pre-authored content (spells, runes, items, npcs) alongside requirements. the user's goal is a 'really complex game made with all the builds and data around it.' but injecting content into a csh-testing run would confound the compound-skills signal because the agent didn't author the content. proposal: run it as a separate eval track (escape-th"
+  },
+  {
+    "id": "http-529-root-cause",
+    "title": "What is the actual root cause of the HTTP 529 overloaded_error crashing GAD runs?",
+    "kind": "question",
+    "href": "/questions#http-529-root-cause",
+    "body": "what is the actual root cause of the http 529 overloaded_error crashing gad runs? gad v10 was api-interrupted twice by http 529 (once at tool_uses=18, then 55). this is distinct from account rate limits (gad-64). per state.xml, investigation is queued before gad v11 retry. without understanding whether 529 correlates with high planning overhead (gad-specific), payload size, tool-use frequency, or time of day, we can't plan round 5 reliably."
+  },
+  {
+    "id": "target-users-not-documented",
+    "title": "Who exactly is the site + framework for?",
+    "kind": "question",
+    "href": "/questions#target-users-not-documented",
+    "body": "who exactly is the site + framework for? task 90 queues assumptions.md. without a documented target user, ia refactor decisions (task 84), skills directory ux (task 85), and landing-page framing will be ad-hoc. candidates: coding-agent researchers, framework authors, indie devs exploring skill evolution, enterprise teams evaluating agent frameworks. each implies a different navigation priority."
+  },
+  {
+    "id": "is-our-rubric-worth-its-ceiling",
+    "title": "Is the 6th skill_inheritance_effectiveness dimension on emergent an unfair boost vs the 5-dim bare/gad rubric?",
+    "kind": "question",
+    "href": "/questions#is-our-rubric-worth-its-ceiling",
+    "body": "is the 6th skill_inheritance_effectiveness dimension on emergent an unfair boost vs the 5-dim bare/gad rubric? emergent v4 aggregate: 0.885. bare v5 aggregate: 0.805. the 0.08 delta maps almost exactly to emergent's 6th-dimension contribution (skill_inheritance_effectiveness 0.95 * 0.20 weight = +0.19 against bare's absent-dimension 0). shared-dimension comparison: emergent +0.18 playability, +0.10 ui_polish, tie on mechanics/ingenuity/stability. is that 6th dimension double-counting emergent's inheritance"
+  },
+  {
+    "id": "navigation-sprawl",
+    "title": "How do we keep the site navigable as we add /security, /glossary, /roadmap, /skills-guide, /questions, /compare?",
+    "kind": "question",
+    "href": "/questions#navigation-sprawl",
+    "body": "how do we keep the site navigable as we add /security, /glossary, /roadmap, /skills-guide, /questions, /compare? current nav already has 11 items (gad, lineage, methodology, rubric, results, graphs, videos, catalog, findings, planning, and now + rubric). tasks 86/87/88/95 will add more. task 84 plans dropdown grouping + keyword search before more pages ship. open: what is the grouping that makes sense to a first-time visitor vs a returning researcher?"
+  },
+  {
+    "id": "rune-forge-same-rune-twice",
+    "title": "Rune forge allows same rune twice in a single spell, boosts affinity twice",
+    "kind": "bug",
+    "href": "/bugs#rune-forge-same-rune-twice",
+    "body": "rune forge allows same rune twice in a single spell, boosts affinity twice in the rune forge, the player can select the same rune twice as ingredients for a single spell. when crafted, the affinity gain for that rune is applied twice as if two distinct rune slots were consumed. the resulting spell also treats the duplicate as a meaningful second ingredient."
+  },
+  {
+    "id": "notifications-persist-across-sessions",
+    "title": "Toast notifications persist above the screen across new game sessions",
+    "kind": "bug",
+    "href": "/bugs#notifications-persist-across-sessions",
+    "body": "toast notifications persist above the screen across new game sessions notifications like 'trained fire affinity' appear and never auto-dismiss. starting a new game does not clear the backlog; they remain above the latest build's ui."
+  },
+  {
+    "id": "continue-after-death-greyed-out",
+    "title": "Continue button disabled after death — no save checkpoints",
+    "kind": "bug",
+    "href": "/bugs#continue-after-death-greyed-out",
+    "body": "continue button disabled after death — no save checkpoints on player death the game ends and continue is no longer selectable. no automatic checkpoint appears to have been created during the run."
+  },
+  {
+    "id": "glitchy-button-click-redraws",
+    "title": "Glitchy redraws on button clicks across all round-4 builds",
+    "kind": "bug",
+    "href": "/bugs#glitchy-button-click-redraws",
+    "body": "glitchy redraws on button clicks across all round-4 builds ui visibly glitches/flickers on button clicks as if full per-tick redraws are running. observed consistently across gad v9, gad v10, bare v5, and emergent v4."
+  },
+  {
+    "id": "add-todo",
+    "title": "gad:add-todo",
+    "kind": "skill",
+    "href": "/skills/add-todo",
+    "body": "add-todo gad:add-todo capture an idea, task, or follow-up from the current conversation without losing flow — writes it to .planning/todos/ and updates state.md. use this skill when the user mentions something they want to remember (\"we should also...\", \"don't forget...\", \"add to the list...\"), when execution uncovers work that doesn't belong in the current phase, when a decision surfaces a follow-up task, or when an idea comes up mid-session that shouldn't be forgotten but shouldn't derail the current work. keeps ideas captured without derailing execution."
+  },
+  {
+    "id": "auto-conventions",
+    "title": "gad:auto-conventions",
+    "kind": "skill",
+    "href": "/skills/auto-conventions",
+    "body": "auto-conventions gad:auto-conventions auto-generate conventions.md from codebase patterns after first implementation phase. use for greenfield projects that have code but no documented conventions."
+  },
+  {
+    "id": "check-todos",
+    "title": "gad:check-todos",
+    "kind": "skill",
+    "href": "/skills/check-todos",
+    "body": "check-todos gad:check-todos read current planning state and surface the single best next task or action — the re-entry point for any autonomous loop. use this skill when the user asks \"what should i work on next?\", \"what's the status?\", \"where are we?\", \"what's next?\", or starts a new session and needs to orient. also use it to find the next task after completing one, or to decide whether to plan a new phase or execute an existing one. this is the navigation skill — run it between every phase and after any context reset."
+  },
+  {
+    "id": "create-skill",
+    "title": "create-skill",
+    "kind": "skill",
+    "href": "/skills/create-skill",
+    "body": "create-skill create-skill >- capture a reusable pattern, recipe, or failure-mode fix as a skill document so future agents (including you after a context reset) can apply it without rediscovering it. use this skill whenever you solve a non-obvious problem, discover a working pattern after two or more failed attempts, hit a bug whose fix isn't self-evident from the code, or finish a piece of work that future runs will likely repeat. write the skill the moment you learn the lesson — not at the end. in bare/emergent eval conditions this is the primary mechanism for agent-authored methodology. the agent is the workflow author, and skills are how that authorship persists."
+  },
+  {
+    "id": "debug",
+    "title": "gad:debug",
+    "kind": "skill",
+    "href": "/skills/debug",
+    "body": "debug gad:debug systematic debugging using the scientific method — form hypotheses, test them, eliminate dead ends, and find root causes. use this skill whenever the user reports a bug, unexpected behavior, test failure, build error, or anything that \"should work but doesn't.\" also use it when execution hits an unexpected blocker mid-phase, when a verification command produces confusing output, or when multiple debugging attempts have failed and you need a structured approach. maintains a persistent debug session file so investigation survives context resets."
+  },
+  {
+    "id": "eval-bootstrap",
+    "title": "eval-bootstrap",
+    "kind": "skill",
+    "href": "/skills/eval-bootstrap",
+    "body": "eval-bootstrap eval-bootstrap bootstrap an eval agent with full gad context injected into its prompt. use instead of gad:eval-run when running implementation evals. generates the bootstrap prompt via `gad eval run --prompt-only` or reads a suite-generated prompt.md, then launches an agent with worktree isolation."
+  },
+  {
+    "id": "eval-report",
+    "title": "gad:eval-report",
+    "kind": "skill",
+    "href": "/skills/eval-report",
+    "body": "eval-report gad:eval-report generate comparison reports across eval runs, within a single project or across all projects"
+  },
+  {
+    "id": "eval-run",
+    "title": "eval-run",
+    "kind": "skill",
+    "href": "/skills/eval-run",
+    "body": "eval-run eval-run run a gad evaluation with full preservation of code, builds, and planning docs"
+  },
+  {
+    "id": "eval-suite",
+    "title": "gad:eval-suite",
+    "kind": "skill",
+    "href": "/skills/eval-suite",
+    "body": "eval-suite gad:eval-suite run multiple eval projects in parallel and compare results across all projects"
+  },
+  {
+    "id": "execute-phase",
+    "title": "gad:execute-phase",
+    "kind": "skill",
+    "href": "/skills/execute-phase",
+    "body": "execute-phase gad:execute-phase execute a planned phase by following plan.md tasks atomically — commit after each task, update planning docs, and run verify commands at each step. use this skill when the user wants to execute a phase, start working on planned tasks, run through a phase autonomously, or continue execution of an in-progress phase. this is the autonomous execution skill — if the plan is solid and requirements are clear, claude should be able to run this to completion without interruption. requires gad:plan-phase to have been run first to produce a plan.md."
+  },
+  {
+    "id": "find-sprites",
+    "title": "find-sprites",
+    "kind": "skill",
+    "href": "/skills/find-sprites",
+    "body": "find-sprites find-sprites source visual assets (sprites, icons, tilesets, portraits) for a game or ui-heavy build in a way that yields a coherent, intentional look instead of a debug-console aesthetic. use this skill when you need art for rooms, entities, ui controls, hp bars, spell icons, status effects, or any other visual element; when the build is failing its ui-quality gate because it looks unintentional; or when you're about to fall back to raw ascii/text ui. the goal is \"looks like someone designed it\" — not photorealism, not 1:1 with aaa games, but internally consistent and readable."
+  },
+  {
+    "id": "framework-upgrade",
+    "title": "framework-upgrade",
+    "kind": "skill",
+    "href": "/skills/framework-upgrade",
+    "body": "framework-upgrade framework-upgrade ship a change to the gad framework itself (new skill, new subagent, reworked command, altered loop) in a way that preserves the ability to interpret eval results across versions. trigger this skill whenever a framework change could affect how an agent behaves during an eval run — e.g. adding a mandatory skill, changing a command's spawned subagent, rewording agents.md, changing the plan-phase flow, anything that would make \"the same agent prompt\" produce different output. the goal is to make framework drift visible so we don't mistake a framework improvement for an agent improvement (or vice versa) when scores move."
+  },
+  {
+    "id": "manuscript",
+    "title": "gad:manuscript",
+    "kind": "skill",
+    "href": "/skills/manuscript",
+    "body": "manuscript gad:manuscript fiction and creative writing adaptation of the gad loop for novels and story outlines"
+  },
+  {
+    "id": "map-codebase",
+    "title": "gad:map-codebase",
+    "kind": "skill",
+    "href": "/skills/map-codebase",
+    "body": "map-codebase gad:map-codebase analyze an existing codebase and produce structured documents capturing stack, architecture, conventions, and concerns — used before planning phases in a brownfield project. use this skill when the user wants to understand an unfamiliar codebase, when starting to plan work in an existing project that has no planning docs, when onboarding to a repo, or when beginning any phase that touches code you haven't read yet. produces .planning/codebase/ documents that feed directly into gad:new-project and gad:plan-phase. run once per project or when architecture changes significantly."
+  },
+  {
+    "id": "milestone",
+    "title": "gad:milestone",
+    "kind": "skill",
+    "href": "/skills/milestone",
+    "body": "milestone gad:milestone manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. use this skill when the user says \"we're starting v2\", \"let's kick off the next release\", \"we finished everything in this milestone, what's next\", \"archive this milestone\", or wants to review whether all planned work is actually done before closing. also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. covers gsd:new-milestone + gsd:complete-milestone + gsd:audit-milestone."
+  },
+  {
+    "id": "new-project",
+    "title": "gad:new-project",
+    "kind": "skill",
+    "href": "/skills/new-project",
+    "body": "new-project gad:new-project initialize a new project or new section with the gad planning structure. use this skill when the user wants to start a new project, set up planning docs for a repo that doesn't have them yet, add a new section to a monorepo, or scaffold requirements/roadmap/state/task-registry. creates the full .planning/ structure and 5-doc loop, asks the right questions about scope and goals, generates requirements with stable ids, and produces a phased roadmap. works for simple repos and monorepos."
+  },
+  {
+    "id": "objective-eval-design",
+    "title": "objective-eval-design",
+    "kind": "skill",
+    "href": "/skills/objective-eval-design",
+    "body": "objective-eval-design objective-eval-design >- design evals that produce structured, objective, comparable data instead of single opaque scores. trigger this skill when designing a new eval project, adding a new scoring dimension, deciding whether to measure something with human review vs automation, or when a reviewer or stakeholder asks \"why did this run score x?\" and the answer isn't immediately visible in the data. the core discipline is that every measurement you add should answer a specific research question, expose its inputs clearly, and be comparable across runs. if a score can't be decomposed into dimensions or traced back to the events that produced it, it isn't objective — it's just a vibe with a number attached."
+  },
+  {
+    "id": "plan-phase",
+    "title": "gad:plan-phase",
+    "kind": "skill",
+    "href": "/skills/plan-phase",
+    "body": "plan-phase gad:plan-phase plan a phase using the gad methodology — creates a kickoff.md with goal/scope/dod and a plan.md with concrete tasks. use this skill when the user wants to plan the next phase, start planning a feature or milestone, create a task list for a phase, run a kickoff before implementation, or see what tasks are needed to achieve a phase goal. also use it when a phase exists in the roadmap but has no tasks yet, or when a phase has been idle and assumptions may be stale. requires repo-planner skill for the full methodology context."
+  },
+  {
+    "id": "portfolio-sync",
+    "title": "portfolio-sync",
+    "kind": "skill",
+    "href": "/skills/portfolio-sync",
+    "body": "portfolio-sync portfolio-sync keep the public-facing get-anything-done landing site at vendor/get-anything-done/site/ in sync with the framework and its evals as they evolve. trigger this skill whenever an eval run finishes, a new finding is written, a skill/agent/command is added or rewritten, requirements versions change, decisions are captured, or planning state advances. the site reflects the filesystem via a prebuild script — your job is to make sure the filesystem tells the truth and that new surfaces get displayed. this skill is methodology, not a rigid checklist; if you see a better way to organize or refactor the site, take it."
+  },
+  {
+    "id": "reverse-engineer",
+    "title": "gad:reverse-engineer",
+    "kind": "skill",
+    "href": "/skills/reverse-engineer",
+    "body": "reverse-engineer gad:reverse-engineer analyze any codebase (local path or github url) and produce gad planning docs for clean-room reimplementation. removes dependencies by capturing requirements, not code."
+  },
+  {
+    "id": "session",
+    "title": "gad:session",
+    "kind": "skill",
+    "href": "/skills/session",
+    "body": "session gad:session save and restore full planning context across sessions — creates a handoff file when pausing and restores from it when resuming. use this skill when the user is about to stop work mid-phase, wants to hand off to a new context window, is starting a new session and needs to orient fully, or when gad:check-todos alone isn't enough because there's in-progress work, unresolved decisions, or active blockers that aren't captured in the living planning docs. essential for the autonomous execution loop — call it at pause and resume to maintain continuity."
+  },
+  {
+    "id": "snapshot-optimize",
+    "title": "gad:snapshot-optimize",
+    "kind": "skill",
+    "href": "/skills/snapshot-optimize",
+    "body": "snapshot-optimize gad:snapshot-optimize verify and optimize gad snapshot output to fit within the sprint context window. use after modifying snapshot logic, adding new planning file types, or when snapshot token count exceeds the target budget."
+  },
+  {
+    "id": "task-checkpoint",
+    "title": "gad:task-checkpoint",
+    "kind": "skill",
+    "href": "/skills/task-checkpoint",
+    "body": "task-checkpoint gad:task-checkpoint verify planning doc updates before proceeding to the next task. called between tasks during execute-phase to enforce per-task tracking. checks task-registry.xml and state.xml are current."
+  },
+  {
+    "id": "verify-phase",
+    "title": "gad:verify-phase",
+    "kind": "skill",
+    "href": "/skills/verify-phase",
+    "body": "verify-phase gad:verify-phase verify a completed phase achieved its goals. runs build checks, validates deliverables exist, checks planning doc state, produces verification.md. works automated (eval agents) or interactive (human review). use after completing a phase, before marking it done in roadmap.xml."
+  },
+  {
+    "id": "write-feature-doc",
+    "title": "gad:write-feature-doc",
+    "kind": "skill",
+    "href": "/skills/write-feature-doc",
+    "body": "write-feature-doc gad:write-feature-doc produce a feature documentation mdx file into the docs sink. use when a project feature needs clear human-readable documentation that persists across sessions."
+  },
+  {
+    "id": "write-intent",
+    "title": "gad:write-intent",
+    "kind": "skill",
+    "href": "/skills/write-intent",
+    "body": "write-intent gad:write-intent capture user intent for a project into planning docs. use when starting a new project, clarifying what a project is for, or when requirements are missing or vague."
+  },
+  {
+    "id": "write-tech-doc",
+    "title": "gad:write-tech-doc",
+    "kind": "skill",
+    "href": "/skills/write-tech-doc",
+    "body": "write-tech-doc gad:write-tech-doc produce a technical breakdown doc — architecture, data flow, component design. use when a system needs to be explained structurally for agent or developer onboarding."
+  },
+  {
+    "id": "gad-advisor-researcher",
+    "title": "gad-advisor-researcher",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-advisor-researcher gad-advisor-researcher researches a single gray area decision and returns a structured comparison table with rationale. spawned by discuss-phase advisor mode."
+  },
+  {
+    "id": "gad-assumptions-analyzer",
+    "title": "gad-assumptions-analyzer",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-assumptions-analyzer gad-assumptions-analyzer deeply analyzes codebase for a phase and returns structured assumptions with evidence. spawned by discuss-phase assumptions mode."
+  },
+  {
+    "id": "gad-codebase-mapper",
+    "title": "gad-codebase-mapper",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-codebase-mapper gad-codebase-mapper explores codebase and writes structured analysis documents. spawned by map-codebase with a focus area (tech, arch, quality, concerns). writes documents directly to reduce orchestrator context load."
+  },
+  {
+    "id": "gad-debugger",
+    "title": "gad-debugger",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-debugger gad-debugger investigates bugs using scientific method, manages debug sessions, handles checkpoints. spawned by /gad:debug orchestrator."
+  },
+  {
+    "id": "gad-doc-verifier",
+    "title": "gad-doc-verifier",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-doc-verifier gad-doc-verifier verifies factual claims in generated docs against the live codebase. returns structured json per doc."
+  },
+  {
+    "id": "gad-doc-writer",
+    "title": "gad-doc-writer",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-doc-writer gad-doc-writer writes and updates project documentation. spawned with a doc_assignment block specifying doc type, mode (create/update/supplement), and project context."
+  },
+  {
+    "id": "gad-executor",
+    "title": "gad-executor",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-executor gad-executor executes gad plans with atomic commits, deviation handling, checkpoint protocols, and state management. spawned by execute-phase orchestrator or execute-plan command."
+  },
+  {
+    "id": "gad-integration-checker",
+    "title": "gad-integration-checker",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-integration-checker gad-integration-checker verifies cross-phase integration and e2e flows. checks that phases connect properly and user workflows complete end-to-end."
+  },
+  {
+    "id": "gad-nyquist-auditor",
+    "title": "gad-nyquist-auditor",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-nyquist-auditor gad-nyquist-auditor fills nyquist validation gaps by generating tests and verifying coverage for phase requirements"
+  },
+  {
+    "id": "gad-phase-researcher",
+    "title": "gad-phase-researcher",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-phase-researcher gad-phase-researcher researches how to implement a phase before planning. produces research.md consumed by gad-planner. spawned by /gad:plan-phase orchestrator."
+  },
+  {
+    "id": "gad-plan-checker",
+    "title": "gad-plan-checker",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-plan-checker gad-plan-checker verifies plans will achieve phase goal before execution. goal-backward analysis of plan quality. spawned by /gad:plan-phase orchestrator."
+  },
+  {
+    "id": "gad-planner",
+    "title": "gad-planner",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-planner gad-planner creates executable phase plans with task breakdown, dependency analysis, and goal-backward verification. spawned by /gad:plan-phase orchestrator."
+  },
+  {
+    "id": "gad-project-researcher",
+    "title": "gad-project-researcher",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-project-researcher gad-project-researcher researches domain ecosystem before roadmap creation. produces files in .planning/research/ consumed during roadmap creation. spawned by /gad:new-project or /gad:new-milestone orchestrators."
+  },
+  {
+    "id": "gad-research-synthesizer",
+    "title": "gad-research-synthesizer",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-research-synthesizer gad-research-synthesizer synthesizes research outputs from parallel researcher agents into summary.md. spawned by /gad:new-project after 4 researcher agents complete."
+  },
+  {
+    "id": "gad-roadmapper",
+    "title": "gad-roadmapper",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-roadmapper gad-roadmapper creates project roadmaps with phase breakdown, requirement mapping, success criteria derivation, and coverage validation. spawned by /gad:new-project orchestrator."
+  },
+  {
+    "id": "gad-security-auditor",
+    "title": "gad-security-auditor",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-security-auditor gad-security-auditor verifies threat mitigations from plan.md threat model exist in implemented code. produces security.md. spawned by /gad:secure-phase."
+  },
+  {
+    "id": "gad-ui-auditor",
+    "title": "gad-ui-auditor",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-ui-auditor gad-ui-auditor retroactive 6-pillar visual audit of implemented frontend code. produces scored ui-review.md. spawned by /gad:ui-review orchestrator."
+  },
+  {
+    "id": "gad-ui-checker",
+    "title": "gad-ui-checker",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-ui-checker gad-ui-checker validates ui-spec.md design contracts against 6 quality dimensions. produces block/flag/pass verdicts. spawned by /gad:ui-phase orchestrator."
+  },
+  {
+    "id": "gad-ui-researcher",
+    "title": "gad-ui-researcher",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-ui-researcher gad-ui-researcher produces ui-spec.md design contract for frontend phases. reads upstream artifacts, detects design system state, asks only unanswered questions. spawned by /gad:ui-phase orchestrator."
+  },
+  {
+    "id": "gad-user-profiler",
+    "title": "gad-user-profiler",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-user-profiler gad-user-profiler analyzes extracted session messages across 8 behavioral dimensions to produce a scored developer profile with confidence levels and evidence. spawned by profile orchestration workflows."
+  },
+  {
+    "id": "gad-verifier",
+    "title": "gad-verifier",
+    "kind": "agent",
+    "href": "/#catalog",
+    "body": "gad-verifier gad-verifier verifies phase goal achievement through goal-backward analysis. checks codebase delivers what phase promised, not just that tasks completed. creates verification.md report."
+  },
+  {
+    "id": "add-backlog",
+    "title": "gad:add-backlog",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "add-backlog gad:add-backlog add an idea to the backlog parking lot (999.x numbering)"
+  },
+  {
+    "id": "add-phase",
+    "title": "gad:add-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "add-phase gad:add-phase add phase to end of current milestone in roadmap"
+  },
+  {
+    "id": "add-tests",
+    "title": "gad:add-tests",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "add-tests gad:add-tests generate tests for a completed phase based on uat criteria and implementation"
+  },
+  {
+    "id": "add-todo",
+    "title": "gad:add-todo",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "add-todo gad:add-todo capture idea or task as todo from current conversation context"
+  },
+  {
+    "id": "audit-milestone",
+    "title": "gad:audit-milestone",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "audit-milestone gad:audit-milestone audit milestone completion against original intent before archiving"
+  },
+  {
+    "id": "audit-uat",
+    "title": "gad:audit-uat",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "audit-uat gad:audit-uat cross-phase audit of all outstanding uat and verification items"
+  },
+  {
+    "id": "auto-conventions",
+    "title": "gad:auto-conventions",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "auto-conventions gad:auto-conventions auto-scaffold conventions.md from codebase patterns after first implementation phase"
+  },
+  {
+    "id": "autonomous",
+    "title": "gad:autonomous",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "autonomous gad:autonomous run all remaining phases autonomously — discuss→plan→execute per phase"
+  },
+  {
+    "id": "check-todos",
+    "title": "gad:check-todos",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "check-todos gad:check-todos list pending todos and select one to work on"
+  },
+  {
+    "id": "cleanup",
+    "title": "gad:cleanup",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "cleanup gad:cleanup archive accumulated phase directories from completed milestones"
+  },
+  {
+    "id": "complete-milestone",
+    "title": "gad:complete-milestone",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "complete-milestone gad:complete-milestone archive completed milestone and prepare for next version"
+  },
+  {
+    "id": "debug",
+    "title": "gad:debug",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "debug gad:debug systematic debugging with persistent state across context resets"
+  },
+  {
+    "id": "discuss-phase",
+    "title": "gad:discuss-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "discuss-phase gad:discuss-phase gather phase context through adaptive questioning before planning. use --auto to skip interactive questions (claude picks recommended defaults). use --chain for interactive discuss followed by automatic plan+execute."
+  },
+  {
+    "id": "do",
+    "title": "gad:do",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "do gad:do route freeform text to the right gad command automatically"
+  },
+  {
+    "id": "docs-compile",
+    "title": "gad:docs-compile",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "docs-compile gad:docs-compile compile planning docs from all roots into docs_sink as mdx files"
+  },
+  {
+    "id": "docs-update",
+    "title": "gad:docs-update",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "docs-update gad:docs-update generate or update project documentation verified against the codebase"
+  },
+  {
+    "id": "eval-bootstrap",
+    "title": "gad:eval-bootstrap",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "eval-bootstrap gad:eval-bootstrap bootstrap an eval agent with full gad context injected into its prompt"
+  },
+  {
+    "id": "eval-list",
+    "title": "gad:eval-list",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "eval-list gad:eval-list list available eval projects and their run history"
+  },
+  {
+    "id": "eval-report",
+    "title": "gad:eval-report",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "eval-report gad:eval-report show cross-project eval comparison and findings"
+  },
+  {
+    "id": "eval-run",
+    "title": "gad:eval-run",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "eval-run gad:eval-run run an eval project in an isolated git worktree"
+  },
+  {
+    "id": "eval-suite",
+    "title": "gad:eval-suite",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "eval-suite gad:eval-suite run all eval projects in parallel with bootstrap prompts"
+  },
+  {
+    "id": "execute-phase",
+    "title": "gad:execute-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "execute-phase gad:execute-phase execute all plans in a phase with wave-based parallelization"
+  },
+  {
+    "id": "forensics",
+    "title": "gad:forensics",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "forensics gad:forensics post-mortem investigation for failed gad workflows — analyzes git history, artifacts, and state to diagnose what went wrong"
+  },
+  {
+    "id": "health",
+    "title": "gad:health",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "health gad:health diagnose planning directory health and optionally repair issues"
+  },
+  {
+    "id": "help",
+    "title": "gad:help",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "help gad:help show available gad commands and usage guide"
+  },
+  {
+    "id": "insert-phase",
+    "title": "gad:insert-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "insert-phase gad:insert-phase insert urgent work as decimal phase (e.g., 72.1) between existing phases"
+  },
+  {
+    "id": "join-discord",
+    "title": "gad:join-discord",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "join-discord gad:join-discord join the gad discord community"
+  },
+  {
+    "id": "list-phase-assumptions",
+    "title": "gad:list-phase-assumptions",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "list-phase-assumptions gad:list-phase-assumptions surface claude's assumptions about a phase approach before planning"
+  },
+  {
+    "id": "manager",
+    "title": "gad:manager",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "manager gad:manager interactive command center for managing multiple phases from one terminal"
+  },
+  {
+    "id": "manuscript",
+    "title": "gad:manuscript",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "manuscript gad:manuscript fiction writing adaptation of the gad loop for novels and story outlines"
+  },
+  {
+    "id": "map-codebase",
+    "title": "gad:map-codebase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "map-codebase gad:map-codebase analyze codebase with parallel mapper agents to produce .planning/codebase/ documents"
+  },
+  {
+    "id": "migrate-schema",
+    "title": "gad:migrate-schema",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "migrate-schema gad:migrate-schema convert rp xml planning files (state.xml, roadmap.xml) to gad markdown format"
+  },
+  {
+    "id": "milestone-summary",
+    "title": "gad:milestone-summary",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "milestone-summary gad:milestone-summary generate a comprehensive project summary from milestone artifacts for team onboarding and review"
+  },
+  {
+    "id": "new-milestone",
+    "title": "gad:new-milestone",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "new-milestone gad:new-milestone start a new milestone cycle — update project.md and route to requirements"
+  },
+  {
+    "id": "new-project",
+    "title": "gad:new-project",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "new-project gad:new-project initialize a new project with deep context gathering and project.md"
+  },
+  {
+    "id": "next",
+    "title": "gad:next",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "next gad:next automatically advance to the next logical step in the gad workflow"
+  },
+  {
+    "id": "note",
+    "title": "gad:note",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "note gad:note zero-friction idea capture. append, list, or promote notes to todos."
+  },
+  {
+    "id": "pause-work",
+    "title": "gad:pause-work",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "pause-work gad:pause-work create context handoff when pausing work mid-phase"
+  },
+  {
+    "id": "plan-milestone-gaps",
+    "title": "gad:plan-milestone-gaps",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "plan-milestone-gaps gad:plan-milestone-gaps create phases to close all gaps identified by milestone audit"
+  },
+  {
+    "id": "plan-phase",
+    "title": "gad:plan-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "plan-phase gad:plan-phase create detailed phase plan (plan.md) with verification loop"
+  },
+  {
+    "id": "plant-seed",
+    "title": "gad:plant-seed",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "plant-seed gad:plant-seed capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone"
+  },
+  {
+    "id": "progress",
+    "title": "gad:progress",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "progress gad:progress check project progress, show context, and route to next action (execute or plan)"
+  },
+  {
+    "id": "reapply-patches",
+    "title": "gad:reapply-patches",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "reapply-patches gad:reapply-patches reapply local modifications after a gad update"
+  },
+  {
+    "id": "remove-phase",
+    "title": "gad:remove-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "remove-phase gad:remove-phase remove a future phase from roadmap and renumber subsequent phases"
+  },
+  {
+    "id": "research-phase",
+    "title": "gad:research-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "research-phase gad:research-phase research how to implement a phase (standalone - usually use /gad:plan-phase instead)"
+  },
+  {
+    "id": "resume-work",
+    "title": "gad:resume-work",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "resume-work gad:resume-work resume work from previous session with full context restoration"
+  },
+  {
+    "id": "reverse-engineer",
+    "title": "gad:reverse-engineer",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "reverse-engineer gad:reverse-engineer analyze any codebase (local or github url) and produce requirements for clean-room reimplementation"
+  },
+  {
+    "id": "review-backlog",
+    "title": "gad:review-backlog",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "review-backlog gad:review-backlog review and promote backlog items to active milestone"
+  },
+  {
+    "id": "review",
+    "title": "gad:review",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "review gad:review request cross-ai peer review of phase plans from external ai clis"
+  },
+  {
+    "id": "session-report",
+    "title": "gad:session-report",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "session-report gad:session-report generate a session report with token usage estimates, work summary, and outcomes"
+  },
+  {
+    "id": "set-profile",
+    "title": "gad:set-profile",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "set-profile gad:set-profile switch model profile for gad agents (quality/balanced/budget/inherit)"
+  },
+  {
+    "id": "settings",
+    "title": "gad:settings",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "settings gad:settings configure gad workflow toggles and model profile"
+  },
+  {
+    "id": "stats",
+    "title": "gad:stats",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "stats gad:stats display project statistics — phases, plans, requirements, git metrics, and timeline"
+  },
+  {
+    "id": "thread",
+    "title": "gad:thread",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "thread gad:thread manage persistent context threads for cross-session work"
+  },
+  {
+    "id": "update",
+    "title": "gad:update",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "update gad:update update gad to latest version with changelog display"
+  },
+  {
+    "id": "validate-phase",
+    "title": "gad:validate-phase",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "validate-phase gad:validate-phase retroactively audit and fill nyquist validation gaps for a completed phase"
+  },
+  {
+    "id": "verify-work",
+    "title": "gad:verify-work",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "verify-work gad:verify-work validate built features through conversational uat"
+  },
+  {
+    "id": "workspace-add",
+    "title": "gad:workspace-add",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "workspace-add gad:workspace-add add a path as a planning root in planning-config.toml"
+  },
+  {
+    "id": "workspace-show",
+    "title": "gad:workspace-show",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "workspace-show gad:workspace-show show all registered planning roots and their current status"
+  },
+  {
+    "id": "workspace-sync",
+    "title": "gad:workspace-sync",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "workspace-sync gad:workspace-sync crawl monorepo for .planning/ directories and sync planning-config.toml roots"
+  }
+];
+
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",
   bare: "Bare",

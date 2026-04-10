@@ -26,6 +26,7 @@ export {
   ALL_DECISIONS,
   ALL_TASKS,
   ALL_PHASES,
+  SEARCH_INDEX,
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,
@@ -40,6 +41,7 @@ export {
   type DecisionRecord,
   type TaskRecord,
   type PhaseRecord,
+  type SearchEntry,
 } from "./eval-data.generated";
 
 import {

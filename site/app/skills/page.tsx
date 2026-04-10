@@ -1,0 +1,237 @@
+import Link from "next/link";
+import { Sparkles, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Nav from "@/components/landing/Nav";
+import Footer from "@/components/landing/Footer";
+import { SKILLS, SKILL_INHERITANCE } from "@/lib/catalog.generated";
+import { PRODUCED_ARTIFACTS } from "@/lib/eval-data";
+
+export const metadata = {
+  title: "Skills — GAD",
+  description:
+    "Every authored skill in the GAD framework. Filterable by inheritance status and origin. Click any skill to read the full SKILL.md and copy it.",
+};
+
+const FUNDAMENTAL_IDS = new Set([
+  "create-skill",
+  "merge-skill",
+  "find-skills",
+  "scientific-method",
+  "debug",
+]);
+
+interface SkillSummary {
+  id: string;
+  name: string;
+  description: string;
+  inheritedBy: string[];
+  isFundamental: boolean;
+  authoredByEvals: string[];
+}
+
+function buildSkillSummaries(): SkillSummary[] {
+  return SKILLS.map((s) => {
+    // Find every eval run that produced a skill file matching this skill's id
+    const authoredByEvals: string[] = [];
+    for (const [runKey, artifacts] of Object.entries(PRODUCED_ARTIFACTS)) {
+      if (
+        artifacts.skillFiles?.some(
+          (f) =>
+            f.name === `${s.id}.md` ||
+            f.name === `${s.id}/SKILL.md` ||
+            f.name.startsWith(`${s.id}-`)
+        )
+      ) {
+        authoredByEvals.push(runKey);
+      }
+    }
+
+    return {
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      inheritedBy: SKILL_INHERITANCE[s.id] ?? [],
+      isFundamental: FUNDAMENTAL_IDS.has(s.id),
+      authoredByEvals,
+    };
+  });
+}
+
+function categoryFor(s: SkillSummary): string {
+  if (s.isFundamental) return "fundamental";
+  if (s.authoredByEvals.length > 0) return "eval-authored";
+  if (s.inheritedBy.length > 0) return "framework-inherited";
+  return "framework-only";
+}
+
+const CATEGORY_LABEL: Record<string, string> = {
+  fundamental: "Fundamental",
+  "eval-authored": "Eval-authored",
+  "framework-inherited": "Framework — inherited by evals",
+  "framework-only": "Framework — not yet inherited",
+};
+
+const CATEGORY_DESCRIPTION: Record<string, string> = {
+  fundamental:
+    "The triumvirate (gad-73) plus root primitives. These are the skills the emergent workflow merges from when authoring project-tailored variants.",
+  "eval-authored":
+    "Skills that originated inside an eval run. Provenance flows from a specific run + its rubric scores. CSH evidence — these are the skills that test whether the compound-skills hypothesis is real.",
+  "framework-inherited":
+    "Skills the main GAD framework provides AND that at least one eval template copies into its bootstrap skill set. Battle-tested across rounds.",
+  "framework-only":
+    "Skills available to the main GAD agent but not yet inherited by any eval. May be too generic, too specific, or simply not picked up yet.",
+};
+
+const CATEGORY_TINT: Record<string, string> = {
+  fundamental: "border-amber-500/40 bg-amber-500/5",
+  "eval-authored": "border-emerald-500/40 bg-emerald-500/5",
+  "framework-inherited": "border-sky-500/40 bg-sky-500/5",
+  "framework-only": "border-zinc-500/40 bg-zinc-500/5",
+};
+
+const CATEGORY_ORDER = [
+  "fundamental",
+  "eval-authored",
+  "framework-inherited",
+  "framework-only",
+];
+
+export default function SkillsIndexPage() {
+  const summaries = buildSkillSummaries();
+  const grouped: Record<string, SkillSummary[]> = {};
+  for (const s of summaries) {
+    const cat = categoryFor(s);
+    (grouped[cat] ??= []).push(s);
+  }
+  for (const k of Object.keys(grouped)) {
+    grouped[k].sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      <Nav />
+
+      <section className="border-b border-border/60">
+        <div className="section-shell">
+          <p className="section-kicker">Skills</p>
+          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
+            Every authored skill.{" "}
+            <span className="gradient-text">With provenance.</span>
+          </h1>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
+            The GAD skill catalog. Each skill is a SKILL.md file authored either
+            inside the framework, inherited from an upstream, or produced by an
+            eval run. Open any skill to read its full markdown and copy it
+            verbatim. Per <Link
+              href="/decisions#gad-73"
+              className="text-accent underline decoration-dotted"
+            >
+              gad-73
+            </Link>{" "}
+            the fundamental triumvirate (find-skills + merge-skill + create-skill)
+            is the foundational set.
+          </p>
+          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
+            Provenance per skill (origin run, inheritance lineage, evaluation
+            performance context) per <Link
+              href="/decisions#gad-76"
+              className="text-accent underline decoration-dotted"
+            >
+              gad-76
+            </Link>
+            . Q6-B from the IA conversation: parsed frontmatter + markdown +
+            copy buttons + lineage surface.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
+            <Stat label="Total skills" value={summaries.length.toString()} />
+            <Stat label="Fundamental" value={(grouped.fundamental?.length ?? 0).toString()} />
+            <Stat
+              label="Eval-authored"
+              value={(grouped["eval-authored"]?.length ?? 0).toString()}
+            />
+            <Stat
+              label="Framework-inherited"
+              value={(grouped["framework-inherited"]?.length ?? 0).toString()}
+            />
+          </div>
+        </div>
+      </section>
+
+      {CATEGORY_ORDER.filter((c) => grouped[c]?.length > 0).map((cat) => (
+        <section
+          key={cat}
+          id={`category-${cat}`}
+          className={`border-b border-border/60 last:bg-background ${
+            CATEGORY_TINT[cat] ?? ""
+          }`}
+        >
+          <div className="section-shell">
+            <div className="mb-4 flex items-center gap-3">
+              <Sparkles size={18} className="text-accent" aria-hidden />
+              <p className="section-kicker !mb-0">{CATEGORY_LABEL[cat]}</p>
+              <Badge variant="outline">{grouped[cat].length}</Badge>
+            </div>
+            <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+              {CATEGORY_DESCRIPTION[cat]}
+            </p>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {grouped[cat].map((s) => (
+                <SkillCard key={s.id} skill={s} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
+
+      <Footer />
+    </main>
+  );
+}
+
+function SkillCard({ skill }: { skill: SkillSummary }) {
+  return (
+    <Link href={`/skills/${skill.id}`} className="block">
+      <Card className="h-full transition-colors hover:border-accent/60">
+        <CardHeader className="pb-2">
+          <div className="mb-2 flex items-center gap-2">
+            {skill.isFundamental && (
+              <Badge variant="default" className="bg-amber-500/15 text-amber-300">
+                fundamental
+              </Badge>
+            )}
+            {skill.authoredByEvals.length > 0 && (
+              <Badge variant="outline" className="text-emerald-300">
+                eval-authored
+              </Badge>
+            )}
+          </div>
+          <CardTitle className="font-mono text-base">{skill.id}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="line-clamp-3 text-xs leading-5 text-muted-foreground">
+            {skill.description}
+          </p>
+          <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>
+              {skill.inheritedBy.length > 0
+                ? `inherited by ${skill.inheritedBy.length}`
+                : "framework-only"}
+            </span>
+            <ArrowRight size={11} aria-hidden />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{value}</div>
+    </div>
+  );
+}

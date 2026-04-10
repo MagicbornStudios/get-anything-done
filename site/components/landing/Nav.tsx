@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Github, ChevronDown, Menu, X } from "lucide-react";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 
 /**
  * IA refactor (decision gad-76 / ASSUMPTIONS.md): 14 flat nav items were
@@ -41,7 +42,7 @@ const GROUPS: NavGroup[] = [
   {
     label: "Catalog",
     links: [
-      { href: "/#catalog", label: "Skills", note: "every authored skill" },
+      { href: "/skills", label: "Skills", note: "every authored skill + provenance" },
       { href: "/#catalog", label: "Agents", note: "subagents" },
       { href: "/#catalog", label: "Commands", note: "gad CLI" },
       { href: "/#catalog", label: "Templates", note: "eval starting points" },
@@ -172,6 +173,9 @@ export default function Nav() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden md:block">
+            <GlobalSearch />
+          </div>
           <a
             href="https://github.com/MagicbornStudios/get-anything-done"
             rel="noopener noreferrer"
