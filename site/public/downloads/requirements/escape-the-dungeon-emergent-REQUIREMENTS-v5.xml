@@ -352,28 +352,20 @@
       satisfying G4.
     </requirement>
 
-    <requirement id="R-v5.08" amends="G1" title="Progression sources sufficient to reach end boss">
-      Final-floor boss must be defeatable by a player who engaged with the intended loops.
-      There must be enough exp/mana/item sources along the path that a fully-crafted build
-      can overcome the warden-class boss. Respawning encounters on cleared floors must
-      give meaningful progression — not asymptotic crumbs that leave the player stuck. At
-      least one guaranteed mana-max or spell-power upgrade per floor (item, event reward,
-      merchant purchase). A pressure gate that is unwinnable is indistinguishable from a
-      softlock.
+    <!-- R-v5.08 REMOVED — v4 progression requirements were sufficient. -->
+
+    <requirement id="R-v5.09" amends="G1" title="Session persistence">
+      The game must support resumable sessions. On room-clear or floor-clear, the
+      game checkpoints the player's state. If the player closes the browser or the
+      session ends, re-opening the game presents a Continue option that restores the
+      most recent checkpoint. New Game starts fresh. Both paths must work without error.
     </requirement>
 
-    <requirement id="R-v5.09" amends="G1" title="Save checkpoints and continue after death">
-      Death must not hard-brick the save. On new game, create a save slot and checkpoint
-      it on room-clear (or floor-clear at minimum). On death, "Continue" must load the
-      most recent checkpoint, not be greyed out. On manual exit from title screen,
-      re-entering must still offer Continue.
-    </requirement>
-
-    <requirement id="R-v5.10" amends="G3" title="Notification lifecycle">
-      Toast/notification elements must auto-dismiss and must not persist across game
-      sessions. Every notification has a timeout (suggested: 3-5s) or explicit dismiss
-      control. Starting a new game must clear any in-flight notifications from the
-      previous session. Reloading the page must not restore stale notifications.
+    <requirement id="R-v5.10" amends="G3" title="Transient UI feedback">
+      UI feedback elements (toasts, status messages, combat results) must be transient
+      and session-scoped. Each element auto-dismisses after a brief display period
+      (3-5 seconds) or provides an explicit dismiss control. Starting a new session
+      must present a clean UI with no carried-over feedback from a previous session.
     </requirement>
 
     <requirement id="R-v5.11" amends="room-types" title="Rest rooms must offer rest">
@@ -390,33 +382,57 @@
       menu. See R-v5.17 for the stronger form.
     </requirement>
 
-    <requirement id="R-v5.13" amends="G1 G4" title="Combat model must be explicitly chosen — Model A preferred">
-      The combat system must be one of two named models, chosen and documented before
-      implementation. Model A (RULE-BASED SIMULATION, Unicorn-Overlord-style, PREFERRED):
-      encounters simulated from loadout + spells + skills + stats + traits; board
-      positioning on a chess-like grid; action policies per entity driven by traits;
-      initiative turn order derived from stats + policy, not menu selection; player input
-      is loadout + policies + positioning; combat resolves automatically with clear log.
-      Model B (direct-control) is simpler but caps ingenuity. v5 PICKS MODEL A unless an
-      implementation exception is granted.
+    <requirement id="R-v5.13" amends="G1 G4" title="Auto-resolve combat with tactical loadout (Unicorn Overlord style)">
+      Combat resolves automatically based on the player's pre-set loadout, equipped
+      spells/skills, and tactical rules. The player does NOT click-attack individual
+      enemies during combat. Instead:
+
+      1. Before an encounter, the player configures: equipped spells, equipped physical
+         skills (per loadout slots from R-v5.07), formation/positioning of party members
+         (if applicable), and action-policy rules (e.g. "use heal when HP below 30%",
+         "prioritize targets weak to equipped element").
+      2. Combat plays out in real-time with a visible combat log showing each action,
+         its effect, and why it was chosen (which rule triggered).
+      3. The player can PAUSE at any time to adjust loadout, swap spells, or change
+         action-policy rules. The fight resumes with the new configuration.
+      4. Resolution depends on the loadout quality, spell/skill choices, and how well
+         the action policies match the enemy composition — this is where the forge and
+         rune crafting systems pay off.
+
+      This model rewards preparation and build-crafting over reflexes. The ingenuity
+      requirement (G2) is satisfied by encounters where the default loadout fails and
+      the player must pause, rethink, and adapt their tactical rules.
     </requirement>
 
-    <requirement id="R-v5.14" title="Action policies driven by entity traits (enemies AND NPCs)">
-      Every entity with agency has an action-policy block keyed to its traits. Enemies:
-      aggressive → attack; territorial → hold position; etc. NPCs get action policies too
-      — dialogue options and behavior change as their traits (or the player's traits)
-      shift. Example: a greedy merchant charges 20% more when player is famous; a
-      scholarly NPC reveals rune lore only if player affinity.arcane &gt; 0.5. Dialogue
-      must become more prevalent overall — NPC interaction is a first-class gameplay loop.
+    <requirement id="R-v5.14" title="Trait-driven behavior for all entities">
+      Every entity with agency (enemies, NPCs, the player character) has traits that
+      drive their behavior. Traits are NOT static labels — they shift based on:
+
+      - Dialogue choices the player makes (choosing aggressive responses shifts the
+        player toward "aggressive" trait, which changes available dialogue options
+        with NPCs who react to that trait)
+      - Moral interactions (sparing vs defeating enemies, helping vs ignoring NPCs,
+        stealing vs buying from merchants)
+      - Combat actions (repeatedly using fire spells shifts affinity toward fire,
+        which may change how fire-resistant enemies react)
+
+      Enemy behavior in auto-resolve combat is governed by their traits: an aggressive
+      enemy prioritizes attack, a territorial enemy holds position, a cowardly enemy
+      flees at low HP. NPC dialogue options expand or contract based on trait alignment
+      between the player and the NPC. Traits have visible NUMERIC values on the
+      character sheet (e.g. aggression: 0.7, compassion: 0.3, arcane affinity: 0.8).
+      When a trait shifts, the numeric change is shown inline (combat log or a brief
+      HUD notification like "+0.1 aggression").
     </requirement>
 
-    <requirement id="R-v5.15" title="Real-time game-time model (remove tick system)">
-      Game time progresses in real time with a fixed real-to-game ratio. Default:
-      1 real hour = 1 in-game day. Remove any per-tick redraw loop. Use event-driven
-      updates only. Day/night cycle exists as game state and can drive encounter tables,
-      merchant stock, NPC availability. UI time-of-day shading is a SOFT requirement —
-      bonus scored dimension, not gate — if performant, the UI tints shift across in-game
-      day phases.
+    <requirement id="R-v5.15" title="Real-time game clock">
+      The dungeon has an in-game clock that progresses in real time (suggested ratio:
+      1 real hour = 1 in-game day). The clock can influence gameplay: encounter
+      composition may shift by time of day, merchant stock may rotate, certain NPC
+      events may be time-gated. Day/night UI tinting is a SOFT bonus (not a gate).
+      The clock is purely flavor and pacing — it does NOT add turn-based tick
+      mechanics or per-tick processing. All rendering remains event-driven per
+      R-v5.21.
     </requirement>
 
     <requirement id="R-v5.16" title="Affinity reward loop">
@@ -459,13 +475,12 @@
       loop.
     </requirement>
 
-    <requirement id="R-v5.20" title="Rune uniqueness within a single spell (bug fix)">
-      A spell may not include the same rune twice in its ingredient list. Selecting rune X,
-      then rune X again for the same spell must be rejected or de-selected. The same rune
-      CAN appear across DIFFERENT spells in the player's spellbook — the constraint is
-      per-spell, not per-player. Affinity gain must be calculated based on unique rune
-      slots actually consumed. Observed bug (Bare v5): crafting with the same rune twice
-      doubled that rune's affinity gain. Logged in data/bugs.json.
+    <requirement id="R-v5.20" title="Unique ingredients per spell">
+      Each spell recipe requires unique ingredients — the same rune cannot be used
+      twice in a single spell's ingredient list. Selecting a rune already in the
+      current recipe must deselect it or be rejected. The same rune CAN appear
+      across different spells in the spellbook. Affinity gain is calculated per
+      unique rune slot consumed.
     </requirement>
 
     <requirement id="R-v5.21" title="Event-driven rendering (remove per-tick redraws)">

@@ -1,0 +1,26 @@
+{
+  "project": "escape-the-dungeon",
+  "version": "v11",
+  "workflow": "gad",
+  "requirements_version": "v5",
+  "date": "2026-04-10",
+  "eval_type": "greenfield",
+  "context_mode": "fresh",
+  "gad_version": "1.38.0",
+  "trace_schema_version": 4,
+  "timing": {
+    "duration_minutes": 24,
+    "phases_completed": null,
+    "tasks_completed": null
+  },
+  "token_usage": {
+    "total_tokens": 107228,
+    "tool_uses": 70
+  },
+  "scores": {
+    "requirement_coverage": null,
+    "human_review": null,
+    "composite": null
+  },
+  "human_review": null
+}

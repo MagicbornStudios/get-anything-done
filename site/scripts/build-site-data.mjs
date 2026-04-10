@@ -481,7 +481,10 @@ function isImplementationRun(project, data) {
   // cli-efficiency is a tooling eval with workflow="A"/"B" letters — not
   // comparable to implementation eval results.
   if (project.startsWith("cli-efficiency")) return false;
-  if (data.eval_type && data.eval_type !== "implementation") return false;
+  // Accept implementation + greenfield + brownfield eval types.
+  // Only reject explicit non-implementation types like "tooling".
+  const validTypes = new Set(["implementation", "greenfield", "brownfield", undefined, null, ""]);
+  if (data.eval_type && !validTypes.has(data.eval_type)) return false;
   return true;
 }
 
