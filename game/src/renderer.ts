@@ -1,70 +1,72 @@
 // ============================================================
-// DOM-based scene renderer — event-driven (R-v5.21)
-// No per-tick redraws. Only re-renders on state events.
+// Event-driven scene renderer (R-v5.21)
 // ============================================================
 
-import { bus, EVT } from './events';
+import { emit } from './events';
 
-type SceneRenderer = (container: HTMLElement) => void;
-type SceneCleanup = () => void;
+type SceneRenderer = () => void;
+const scenes: Record<string, SceneRenderer> = {};
+let currentSceneName = '';
 
-const scenes: Map<string, { render: SceneRenderer; cleanup?: SceneCleanup }> = new Map();
-let currentCleanup: SceneCleanup | null = null;
-
-export function registerScene(name: string, render: SceneRenderer, cleanup?: SceneCleanup): void {
-  scenes.set(name, { render, cleanup });
+export function registerScene(name: string, render: SceneRenderer): void {
+  scenes[name] = render;
 }
 
 export function renderScene(name: string): void {
-  const app = document.getElementById('app')!;
-  if (currentCleanup) {
-    currentCleanup();
-    currentCleanup = null;
-  }
+  currentSceneName = name;
+  const app = document.getElementById('app');
+  if (!app) return;
   app.innerHTML = '';
-  const scene = scenes.get(name);
-  if (!scene) {
-    app.innerHTML = `<div style="color:red;padding:20px;">Unknown scene: ${name}</div>`;
-    return;
+
+  if (scenes[name]) {
+    scenes[name]();
+  } else {
+    app.innerHTML = `<div class="scene-error">Unknown scene: ${name}</div>`;
   }
-  scene.render(app);
-  currentCleanup = scene.cleanup || null;
+
+  emit('scene-changed', name);
 }
 
-// Listen for scene changes
-bus.on(EVT.SCENE_CHANGE, (sceneName: string) => {
-  renderScene(sceneName);
-});
-
-// ---- Helper: create element with attributes ----
-export function el(tag: string, attrs: Record<string, any> = {}, ...children: (string | HTMLElement)[]): HTMLElement {
-  const elem = document.createElement(tag);
-  for (const [key, val] of Object.entries(attrs)) {
-    if (key === 'className') elem.className = val;
-    else if (key === 'onclick') elem.addEventListener('click', val);
-    else if (key === 'style' && typeof val === 'object') Object.assign(elem.style, val);
-    else if (key.startsWith('data-')) elem.setAttribute(key, val);
-    else elem.setAttribute(key, val);
-  }
-  for (const child of children) {
-    if (typeof child === 'string') elem.appendChild(document.createTextNode(child));
-    else elem.appendChild(child);
-  }
-  return elem;
+export function getCurrentSceneName(): string {
+  return currentSceneName;
 }
 
-export function icon(name: string, cls: string = ''): HTMLElement {
-  const ic = document.createElement('iconify-icon');
-  ic.setAttribute('icon', name);
-  if (cls) ic.className = cls;
-  return ic;
+export function refreshScene(): void {
+  if (currentSceneName) {
+    renderScene(currentSceneName);
+  }
 }
 
-export function barHTML(current: number, max: number, cssClass: string, label?: string): HTMLElement {
+// Helper to create an iconify-icon element
+export function icon(name: string, size = 24): string {
+  return `<iconify-icon icon="${name}" width="${size}" height="${size}"></iconify-icon>`;
+}
+
+// Helper to create a progress bar
+export function bar(current: number, max: number, color: string, label?: string, height = 18): string {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
-  const container = el('div', { className: `bar-container ${cssClass}` },
-    el('div', { className: 'bar-fill', style: { width: `${pct}%` } }),
-    el('div', { className: 'bar-label' }, label || `${current}/${max}`),
-  );
-  return container;
+  return `
+    <div class="bar-container" style="height:${height}px">
+      <div class="bar-fill" style="width:${pct}%;background:${color}"></div>
+      <div class="bar-text">${label || `${current}/${max}`}</div>
+    </div>
+  `;
+}
+
+// Helper: element color
+export function elementColor(el: string): string {
+  const colors: Record<string, string> = {
+    fire: '#ff6b35', ice: '#4fc3f7', nature: '#66bb6a', shadow: '#9c27b0', arcane: '#ffd54f',
+  };
+  return colors[el] || '#aaa';
+}
+
+// Helper: room type icon
+export function roomTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    combat: 'game-icons:crossed-swords', elite: 'game-icons:skull-crossed-bones',
+    forge: 'game-icons:anvil', rest: 'game-icons:campfire', event: 'game-icons:scroll-unfurled',
+    merchant: 'game-icons:trade', boss: 'game-icons:boss-key', training: 'game-icons:target-dummy',
+  };
+  return icons[type] || 'game-icons:dungeon-gate';
 }

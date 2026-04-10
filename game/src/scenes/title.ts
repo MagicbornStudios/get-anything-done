@@ -1,33 +1,48 @@
-import { registerScene, el, icon } from '../renderer';
-import { newGame, loadGame, hasSave, setScene, getState } from '../state';
+// ============================================================
+// Title Screen Scene
+// ============================================================
 
-registerScene('title', (container) => {
-  const canContinue = hasSave();
+import { registerScene, renderScene, icon } from '../renderer';
+import { hasSave, newGame, loadGame } from '../state';
 
-  const screen = el('div', { className: 'title-screen' },
-    icon('game-icons:dungeon-gate', 'icon-xxl'),
-    el('h1', {}, 'Escape the Dungeon'),
-    el('p', { className: 'subtitle' }, 'Craft. Adapt. Survive.'),
-    el('div', { className: 'title-buttons' },
-      el('button', {
-        className: 'btn btn-primary',
-        onclick: () => newGame(),
-      }, icon('game-icons:sword-brandish', 'icon-sm'), 'New Game'),
-      ...(canContinue ? [
-        el('button', {
-          className: 'btn',
-          onclick: () => {
-            loadGame();
-            const state = getState();
-            setScene(state.currentScene === 'title' ? 'map' : state.currentScene);
-          },
-        }, icon('game-icons:save', 'icon-sm'), 'Continue'),
-      ] : []),
-    ),
-    el('div', { style: { marginTop: '32px', color: 'var(--text-dim)', fontSize: '12px', textAlign: 'center', maxWidth: '400px', lineHeight: '1.6' } },
-      'A roguelike dungeon crawler. Craft spells from runes, build your loadout, and let combat auto-resolve based on your preparation. The dungeon demands ingenuity — brute force will not suffice.',
-    ),
-  );
+registerScene('title', () => {
+  const app = document.getElementById('app')!;
+  const hasContinue = hasSave();
 
-  container.appendChild(screen);
+  app.innerHTML = `
+    <div class="scene title-scene">
+      <div class="title-logo">
+        ${icon('game-icons:dungeon-gate', 80)}
+        <h1>Escape the Dungeon</h1>
+        <p class="title-subtitle">Forge your path. Craft your power. Survive.</p>
+      </div>
+      <div class="title-menu">
+        <button class="btn btn-primary btn-large" id="btn-new-game">
+          ${icon('game-icons:sword-brandish', 24)} New Game
+        </button>
+        ${hasContinue ? `
+          <button class="btn btn-secondary btn-large" id="btn-continue">
+            ${icon('game-icons:save', 24)} Continue
+          </button>
+        ` : ''}
+      </div>
+      <div class="title-footer">
+        <p>A roguelike dungeon crawler — v12 GAD Eval</p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-new-game')?.addEventListener('click', () => {
+    const s = newGame();
+    s.currentScene = 'map';
+    renderScene('map');
+  });
+
+  document.getElementById('btn-continue')?.addEventListener('click', () => {
+    const s = loadGame();
+    if (s) {
+      s.currentScene = 'map';
+      renderScene('map');
+    }
+  });
 });

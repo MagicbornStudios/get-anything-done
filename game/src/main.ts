@@ -1,22 +1,12 @@
 // ============================================================
-// Escape the Dungeon — Main Entry
-// v11 GAD Eval
+// Escape the Dungeon — Main Entry (v12 GAD Eval)
 // ============================================================
 
-// Import iconify-icon web component
 import 'iconify-icon';
-
-// Event system
+import './styles.css';
 import './events';
 import './toasts';
-
-// Renderer
 import { renderScene } from './renderer';
-
-// State
-import { getState, hasSave } from './state';
-
-// HUD
 import { setupHUDListeners } from './hud';
 
 // Register all scenes
@@ -32,13 +22,11 @@ import './scenes/inventory';
 import './scenes/loadout';
 import './scenes/victory';
 
-// Boot
 function boot() {
   setupHUDListeners();
   renderScene('title');
 }
 
-// Wait for DOM
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', boot);
 } else {

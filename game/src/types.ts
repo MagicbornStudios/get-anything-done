@@ -1,5 +1,5 @@
 // ============================================================
-// Core data models for Escape the Dungeon
+// Core data models for Escape the Dungeon v12
 // ============================================================
 
 export type Element = 'fire' | 'ice' | 'nature' | 'shadow' | 'arcane';
@@ -8,11 +8,11 @@ export type ItemCategory = 'consumable' | 'rune' | 'equipment';
 export type EquipSlot = 'main-hand' | 'off-hand' | 'body' | 'trinket';
 
 export interface Traits {
-  aggression: number;   // 0-1
-  compassion: number;   // 0-1
-  cunning: number;      // 0-1
-  resilience: number;   // 0-1
-  arcaneAffinity: number; // 0-1
+  aggression: number;
+  compassion: number;
+  cunning: number;
+  resilience: number;
+  arcaneAffinity: number;
   [key: string]: number;
 }
 
@@ -38,7 +38,7 @@ export interface Rune {
   icon: string;
   description: string;
   discovered: boolean;
-  affinityLevel: number; // 0-100
+  affinityLevel: number;
   affinityMilestones: { level: number; reward: string; claimed: boolean }[];
 }
 
@@ -51,15 +51,15 @@ export interface Spell {
   manaCost: number;
   effects: SpellEffect[];
   icon: string;
-  tier: number; // 1=basic, 2=crafted, 3=evolved
-  ingredients: string[]; // ids of runes/spells used to craft
+  tier: number;
+  ingredients: string[];
 }
 
 export interface SpellEffect {
   type: 'damage' | 'dot' | 'heal' | 'buff' | 'debuff' | 'status';
   element?: Element;
   value: number;
-  duration?: number; // turns
+  duration?: number;
   description: string;
 }
 
@@ -77,9 +77,10 @@ export interface PhysicalSkill {
 
 export interface ActionPolicy {
   id: string;
-  condition: string; // e.g. 'hp_below_30', 'enemy_weak_to_fire', 'always'
-  action: string;    // spell/skill id or 'attack'
-  priority: number;  // lower = higher priority
+  condition: string;
+  action: string;
+  priority: number;
+  enabled: boolean;
 }
 
 export interface Item {
@@ -92,7 +93,7 @@ export interface Item {
   equipSlot?: EquipSlot;
   statBonuses?: Partial<EntityStats>;
   element?: Element;
-  value: number; // gold value
+  value: number;
 }
 
 export interface Equipment {
@@ -109,8 +110,8 @@ export interface Enemy {
   stats: EntityStats;
   traits: Traits;
   loot: { itemId: string; chance: number }[];
-  resistances: Partial<Record<Element, number>>; // 0-1, damage multiplier
-  weaknesses: Partial<Record<Element, number>>;  // >1, damage multiplier
+  resistances: Partial<Record<Element, number>>;
+  weaknesses: Partial<Record<Element, number>>;
   actionPolicies: ActionPolicy[];
   xpReward: number;
   goldReward: number;
@@ -130,12 +131,13 @@ export interface NPC {
 export interface DialogueNode {
   id: string;
   text: string;
+  speaker?: string;
   choices: DialogueChoice[];
 }
 
 export interface DialogueChoice {
   text: string;
-  nextNodeId?: string; // null = end dialogue
+  nextNodeId?: string;
   traitRequirement?: { trait: string; minValue: number };
   effects: DialogueEffect[];
 }
@@ -154,7 +156,7 @@ export interface Room {
   floor: number;
   description: string;
   icon: string;
-  connections: string[]; // room ids
+  connections: string[];
   enemies?: Enemy[];
   npc?: NPC;
   merchantStock?: Item[];
@@ -163,7 +165,7 @@ export interface Room {
   gridX: number;
   gridY: number;
   lootTable?: { itemId: string; chance: number }[];
-  runeReward?: string; // rune id found here
+  runeReward?: string;
 }
 
 export interface Floor {
@@ -175,6 +177,12 @@ export interface Floor {
   cleared: boolean;
 }
 
+export interface CombatLogEntry {
+  text: string;
+  type: 'action' | 'damage' | 'heal' | 'status' | 'info' | 'trait';
+  timestamp: number;
+}
+
 export interface PlayerState {
   name: string;
   stats: EntityStats;
@@ -182,8 +190,8 @@ export interface PlayerState {
   runes: Rune[];
   spells: Spell[];
   physicalSkills: PhysicalSkill[];
-  spellLoadout: (Spell | null)[];  // 4 slots
-  skillLoadout: (PhysicalSkill | null)[]; // 3 slots
+  spellLoadout: (string | null)[];
+  skillLoadout: (string | null)[];
   actionPolicies: ActionPolicy[];
   inventory: Item[];
   equipment: Equipment;
@@ -192,7 +200,7 @@ export interface PlayerState {
   currentRoomId: string;
   questFlags: Record<string, boolean>;
   discoveredRunes: string[];
-  gameClockStart: number; // timestamp
+  gameClockStart: number;
 }
 
 export interface GameState {
@@ -200,12 +208,16 @@ export interface GameState {
   floors: Floor[];
   started: boolean;
   gameOver: boolean;
+  victory: boolean;
   currentScene: string;
-  toasts: { id: number; text: string; type: string; timestamp: number }[];
+  combatLog: CombatLogEntry[];
+  combatPaused: boolean;
+  combatActive: boolean;
 }
 
-export interface MerchantTransaction {
-  type: 'buy' | 'sell' | 'trade';
-  item: Item;
-  cost: number;
+export interface ToastMessage {
+  id: number;
+  text: string;
+  type: 'info' | 'success' | 'warning' | 'danger' | 'trait';
+  timestamp: number;
 }

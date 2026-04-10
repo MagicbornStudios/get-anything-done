@@ -1,70 +1,25 @@
-// Event bus for event-driven rendering (R-v5.21)
-// All UI updates go through events — no per-tick redraws
+// ============================================================
+// Event-driven rendering bus (R-v5.21)
+// No per-tick redraws — all UI updates are event-driven
+// ============================================================
 
-type Listener = (...args: any[]) => void;
+type EventHandler = (...args: any[]) => void;
 
-class EventBus {
-  private listeners: Map<string, Set<Listener>> = new Map();
+const listeners: Record<string, EventHandler[]> = {};
 
-  on(event: string, fn: Listener): () => void {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
-    this.listeners.get(event)!.add(fn);
-    return () => this.listeners.get(event)?.delete(fn);
-  }
-
-  off(event: string, fn: Listener) {
-    this.listeners.get(event)?.delete(fn);
-  }
-
-  emit(event: string, ...args: any[]) {
-    this.listeners.get(event)?.forEach(fn => fn(...args));
-  }
-
-  once(event: string, fn: Listener) {
-    const unsub = this.on(event, (...args) => {
-      unsub();
-      fn(...args);
-    });
-    return unsub;
-  }
+export function on(event: string, handler: EventHandler): void {
+  if (!listeners[event]) listeners[event] = [];
+  listeners[event].push(handler);
 }
 
-export const bus = new EventBus();
+export function off(event: string, handler: EventHandler): void {
+  if (!listeners[event]) return;
+  listeners[event] = listeners[event].filter(h => h !== handler);
+}
 
-// Event types
-export const EVT = {
-  // Scene
-  SCENE_CHANGE: 'scene:change',
-  // Game state
-  STATE_UPDATE: 'state:update',
-  PLAYER_UPDATE: 'player:update',
-  // Combat
-  COMBAT_START: 'combat:start',
-  COMBAT_ACTION: 'combat:action',
-  COMBAT_END: 'combat:end',
-  COMBAT_PAUSE: 'combat:pause',
-  COMBAT_RESUME: 'combat:resume',
-  // Map
-  ROOM_ENTER: 'room:enter',
-  ROOM_CLEAR: 'room:clear',
-  FLOOR_CHANGE: 'floor:change',
-  // Forge
-  SPELL_CRAFTED: 'spell:crafted',
-  RUNE_DISCOVERED: 'rune:discovered',
-  AFFINITY_CHANGE: 'affinity:change',
-  // Inventory
-  ITEM_GAINED: 'item:gained',
-  ITEM_USED: 'item:used',
-  EQUIP_CHANGE: 'equip:change',
-  // Traits
-  TRAIT_SHIFT: 'trait:shift',
-  // Dialogue
-  DIALOGUE_START: 'dialogue:start',
-  DIALOGUE_CHOICE: 'dialogue:choice',
-  // Toast
-  TOAST: 'toast:show',
-  // Save
-  SAVE: 'save:checkpoint',
-  // Clock
-  CLOCK_TICK: 'clock:tick',
-} as const;
+export function emit(event: string, ...args: any[]): void {
+  if (!listeners[event]) return;
+  for (const handler of listeners[event]) {
+    handler(...args);
+  }
+}

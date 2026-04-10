@@ -1,19 +1,16 @@
 {
-  "name": "game",
+  "name": "escape-the-dungeon",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "tsc && vite build --base ./",
+    "preview": "vite preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "@iconify-json/game-icons": "^1.2.3",
     "iconify-icon": "^3.0.2",
-    "kaplay": "^3001.0.19",
     "typescript": "^6.0.2",
     "vite": "^8.0.8"
   }
