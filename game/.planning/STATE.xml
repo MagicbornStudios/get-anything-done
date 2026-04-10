@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<state project="escape-the-dungeon" version="v11">
+<state project="escape-the-dungeon" version="v12">
   <current-phase>8</current-phase>
-  <current-milestone>v11</current-milestone>
+  <current-milestone>v12</current-milestone>
   <status>complete</status>
   <next-action>All phases complete. Production build committed. Ready for eval scoring.</next-action>
   <last-updated>2026-04-09</last-updated>

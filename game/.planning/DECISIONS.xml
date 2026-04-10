@@ -1,18 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<decisions project="escape-the-dungeon" version="v11">
-  <decision id="D1" date="2026-04-09" title="DOM-based UI with Kaplay for sprites only">
-    <context>R-v5.21 mandates event-driven rendering. Full Kaplay canvas UI makes event-driven harder.</context>
-    <choice>Use DOM/HTML+CSS for all UI panels, menus, HUD. Use Kaplay only for map visualization and combat scene sprites. This gives us event-driven rendering naturally via DOM updates.</choice>
-    <rationale>Previous eval rounds had glitchy redraws from canvas-based UI. DOM updates are inherently event-driven.</rationale>
+<decisions project="escape-the-dungeon" version="v12">
+  <decision id="D1" date="2026-04-09" phase="planning">
+    <title>Pure DOM rendering with event-driven updates (no canvas/kaplay)</title>
+    <rationale>Event-driven DOM rendering satisfies R-v5.21 naturally. No per-tick redraws. Vite+TS+iconify for icons. CSS for all styling. Simpler than canvas for UI-heavy game.</rationale>
   </decision>
-  <decision id="D2" date="2026-04-09" title="Single-page app with scene manager">
-    <context>Need scene transitions without page reloads for persistence.</context>
-    <choice>Custom scene manager that swaps DOM content. Scenes: title, map, combat, forge, merchant, dialogue, character-sheet, inventory.</choice>
-    <rationale>Simpler than Kaplay scenes for DOM-heavy UI. Full control over transitions.</rationale>
+  <decision id="D2" date="2026-04-09" phase="planning">
+    <title>8-phase roadmap: UI-first vertical slice priority</title>
+    <rationale>Title→Map→Combat gives playable vertical slice by phase 3. Forge/inventory/NPCs layer on top. Build+persist last.</rationale>
   </decision>
-  <decision id="D3" date="2026-04-09" title="Iconify game-icons for all visual assets">
-    <context>G3 requires no raw ASCII. Need icons for rooms, items, spells, entities.</context>
-    <choice>Use @iconify-json/game-icons via iconify-icon web component for all game visuals. Supplement with CSS gradients for backgrounds.</choice>
-    <rationale>Already installed. 4000+ game-relevant icons. Web component = easy DOM integration.</rationale>
+  <decision id="D3" date="2026-04-09" phase="planning">
+    <title>Auto-resolve combat (UO style) with action policy configuration</title>
+    <rationale>R-v5.13 mandates auto-resolve. Player configures loadout+policies before encounter, combat plays out with visible log, pause to adjust.</rationale>
+  </decision>
+  <decision id="D4" date="2026-04-09" phase="1">
+    <title>Iconify game-icons for all visual assets</title>
+    <rationale>@iconify-json/game-icons provides 4000+ game-themed SVG icons. Lightweight, npm-installable, consistent visual style. Satisfies G3 asset sourcing preference order.</rationale>
+  </decision>
+  <decision id="D5" date="2026-04-09" phase="1">
+    <title>Dark fantasy color theme with CSS custom properties</title>
+    <rationale>Consistent dark panel backgrounds, gold accents, color-coded elements. Professional UI feel for G3.</rationale>
+  </decision>
+  <decision id="D6" date="2026-04-09" phase="3">
+    <title>Combat auto-plays at 1.2s intervals with PAUSE button</title>
+    <rationale>Gives player time to read the log and pause to adjust. Policies evaluated in priority order each turn.</rationale>
+  </decision>
+  <decision id="D7" date="2026-04-09" phase="4">
+    <title>12 spell recipes covering all rune combinations + spell-as-ingredient</title>
+    <rationale>All 5 runes create 10 pairwise combinations + 2 spell+rune combos. Satisfies G2 (3+ valid combinations) with margin.</rationale>
+  </decision>
+  <decision id="D8" date="2026-04-09" phase="4">
+    <title>Affinity increases from casting, not menu training</title>
+    <rationale>R-v5.01 explicitly requires affinity gain through casting. Training dummies provide safe casting environment.</rationale>
+  </decision>
+  <decision id="D9" date="2026-04-09" phase="7">
+    <title>Floor 1 enemies resist raw physical → need fire/crafted spells; Floor 2 enemies reflect direct → need status/indirect</title>
+    <rationale>Each floor introduces a mechanical constraint requiring adaptation per requirements. Forces forge use for G2 ingenuity gate.</rationale>
+  </decision>
+  <decision id="D10" date="2026-04-09" phase="7">
+    <title>Four pressure systems: resource (limited mana/stamina/rest), counterplay (resistances/immunities), encounter (bosses requiring crafted spells), build (loadout limits)</title>
+    <rationale>Satisfies G4 requirement for 2+ pressure mechanics, provides 4 for margin.</rationale>
   </decision>
 </decisions>

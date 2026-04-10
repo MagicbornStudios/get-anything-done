@@ -1,58 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<task-registry project="escape-the-dungeon" version="v11">
+<task-registry project="escape-the-dungeon" version="v12">
   <!-- Phase 1: Foundation + Title Screen -->
-  <task id="T1.1" phase="1" status="done">Vite + TS + Kaplay config, index.html, main entry</task>
-  <task id="T1.2" phase="1" status="done">Core data models: GameState, Entity, Item, Spell, Rune, Room, Floor</task>
-  <task id="T1.3" phase="1" status="done">Event bus for event-driven rendering (R-v5.21)</task>
-  <task id="T1.4" phase="1" status="done">Title screen scene with New Game / Continue buttons</task>
+  <task id="P1-T1" phase="1" status="done">Vite+TS config, index.html, CSS foundation</task>
+  <task id="P1-T2" phase="1" status="done">Core type definitions (entities, items, spells, rooms, floors)</task>
+  <task id="P1-T3" phase="1" status="done">Event bus + event-driven renderer</task>
+  <task id="P1-T4" phase="1" status="done">Game state manager with initial player state</task>
+  <task id="P1-T5" phase="1" status="done">Title screen scene (New Game / Continue)</task>
 
   <!-- Phase 2: Dungeon Navigation + Map -->
-  <task id="T2.1" phase="2" status="done">Author Floor 1 data (8 rooms: entrance, combat, forge, training, rest, combat2, elite, boss)</task>
-  <task id="T2.2" phase="2" status="done">Author Floor 2 data (9 rooms: entrance, combat, merchant, event, forge, combat2, rest, elite, boss)</task>
-  <task id="T2.3" phase="2" status="done">Visual map renderer with room icons, SVG connections, player position</task>
-  <task id="T2.4" phase="2" status="done">Click-to-navigate + room transition scenes</task>
-  <task id="T2.5" phase="2" status="done">HUD: HP bar, mana bar, stamina bar, XP bar, floor indicator, gold, game clock</task>
+  <task id="P2-T1" phase="2" status="done">Authored floor data (2 floors, 5-8 rooms each)</task>
+  <task id="P2-T2" phase="2" status="done">Visual map scene with room icons, connections, player position</task>
+  <task id="P2-T3" phase="2" status="done">HUD component (HP/mana bars, floor, gold, game clock)</task>
+  <task id="P2-T4" phase="2" status="done">Room navigation (click to move, discover rooms)</task>
 
   <!-- Phase 3: Auto-Resolve Combat + Traits -->
-  <task id="T3.1" phase="3" status="done">Combat scene with player vs enemy visual layout (R-v5.18)</task>
-  <task id="T3.2" phase="3" status="done">Auto-resolve engine: action policies, loadout-based resolution (R-v5.13)</task>
-  <task id="T3.3" phase="3" status="done">Combat log with real-time action display</task>
-  <task id="T3.4" phase="3" status="done">Pause combat to adjust loadout/policies</task>
-  <task id="T3.5" phase="3" status="done">Trait system: numeric traits on all entities, shift from combat (R-v5.14)</task>
-  <task id="T3.6" phase="3" status="done">Combat rewards: XP, gold, loot drops, affinity gains</task>
+  <task id="P3-T1" phase="3" status="done">Combat engine (auto-resolve with action policies)</task>
+  <task id="P3-T2" phase="3" status="done">Combat scene UI (player vs enemy, combat log, pause)</task>
+  <task id="P3-T3" phase="3" status="done">Trait system with numeric values and shift mechanics</task>
+  <task id="P3-T4" phase="3" status="done">XP/level up and combat rewards</task>
 
-  <!-- Phase 4: Forge + Spell Crafting -->
-  <task id="T4.1" phase="4" status="done">Rune data + discovery system (starter runes + floor drops) (R-v5.02)</task>
-  <task id="T4.2" phase="4" status="done">Forge UI: select ingredients, craft spell, procedural naming (R-v5.19)</task>
-  <task id="T4.3" phase="4" status="done">Spells-as-ingredients + unique ingredient constraint (R-v5.19, R-v5.20)</task>
-  <task id="T4.4" phase="4" status="done">Affinity tracking by casting, threshold rewards (R-v5.01, R-v5.16)</task>
-  <task id="T4.5" phase="4" status="done">Integrate crafted spells into combat loadout</task>
+  <!-- Phase 4: Forge + Spell Crafting + Runes -->
+  <task id="P4-T1" phase="4" status="done">Rune data and discovery system</task>
+  <task id="P4-T2" phase="4" status="done">Forge scene UI with crafting interface</task>
+  <task id="P4-T3" phase="4" status="done">Spell crafting engine (runes+spells as ingredients, unique per recipe)</task>
+  <task id="P4-T4" phase="4" status="done">Affinity tracking (by casting) with milestone rewards</task>
+  <task id="P4-T5" phase="4" status="done">Procedural spell naming system</task>
 
   <!-- Phase 5: Inventory, Equipment, Character Sheet -->
-  <task id="T5.1" phase="5" status="done">Inventory grid UI with item categories (R-v5.05)</task>
-  <task id="T5.2" phase="5" status="done">Equipment slots: main-hand, off-hand, body, trinket (R-v5.05)</task>
-  <task id="T5.3" phase="5" status="done">Character sheet panel with stats, traits, affinities (R-v5.06)</task>
-  <task id="T5.4" phase="5" status="done">Physical skill tree (separate from spells) (R-v5.06)</task>
-  <task id="T5.5" phase="5" status="done">Loadout management: spell slots + skill slots (R-v5.07)</task>
+  <task id="P5-T1" phase="5" status="done">Inventory scene with grid and item management</task>
+  <task id="P5-T2" phase="5" status="done">Equipment system with 4 slots affecting stats</task>
+  <task id="P5-T3" phase="5" status="done">Character sheet scene (stats, traits, affinities, skills)</task>
+  <task id="P5-T4" phase="5" status="done">Loadout scene (spell/skill slot management)</task>
 
   <!-- Phase 6: NPCs, Merchants, Dialogue -->
-  <task id="T6.1" phase="6" status="done">NPC dialogue system with branching + trait reactivity (R-v5.04, R-v5.14)</task>
-  <task id="T6.2" phase="6" status="done">Author 3 NPCs: Old Sage Miren, Kira the Shadow, Galen the Freed</task>
-  <task id="T6.3" phase="6" status="done">Merchant UI: buy/sell/trade (R-v5.03)</task>
-  <task id="T6.4" phase="6" status="done">Event room interactions</task>
-  <task id="T6.5" phase="6" status="done">Rest room action (heal + loadout change) (R-v5.11)</task>
+  <task id="P6-T1" phase="6" status="done">NPC dialogue system with branching and trait effects</task>
+  <task id="P6-T2" phase="6" status="done">Merchant scene (buy/sell/trade)</task>
+  <task id="P6-T3" phase="6" status="done">Rest room scene with rest action + loadout access</task>
+  <task id="P6-T4" phase="6" status="done">Event room interactions</task>
 
-  <!-- Phase 7: Pressure + Bosses + Clock -->
-  <task id="T7.1" phase="7" status="done">Floor bosses: The Warden (F1), The Lich Archon (F2)</task>
-  <task id="T7.2" phase="7" status="done">Encounters requiring crafted spells (Crystal Golem, Mirror Knight)</task>
-  <task id="T7.3" phase="7" status="done">Resource pressure: limited mana, limited healing at rest rooms</task>
-  <task id="T7.4" phase="7" status="done">Enemy counterplay: resistances, immunities, reflect mechanics</task>
-  <task id="T7.5" phase="7" status="done">Game clock (real-time, day/night display)</task>
+  <!-- Phase 7: Pressure + Boss Design + Polish -->
+  <task id="P7-T1" phase="7" status="done">Floor bosses with unique mechanics</task>
+  <task id="P7-T2" phase="7" status="done">Pressure mechanics (resource, counterplay, encounter, build)</task>
+  <task id="P7-T3" phase="7" status="done">Game clock system</task>
+  <task id="P7-T4" phase="7" status="done">Toast/notification system</task>
 
-  <!-- Phase 8: Polish + Build -->
-  <task id="T8.1" phase="8" status="done">localStorage save/load with checkpoints (R-v5.09)</task>
-  <task id="T8.2" phase="8" status="done">Transient UI feedback toasts, auto-dismiss (R-v5.10)</task>
-  <task id="T8.3" phase="8" status="done">Icon/sprite pass with @iconify-json/game-icons</task>
-  <task id="T8.4" phase="8" status="done">Visual polish: CSS variables, themed rooms, gradients, styled buttons</task>
-  <task id="T8.5" phase="8" status="done">Production build (npx vite build --base ./)</task>
+  <!-- Phase 8: Persistence + Production Build -->
+  <task id="P8-T1" phase="8" status="done">localStorage save/load with checkpoints</task>
+  <task id="P8-T2" phase="8" status="done">Victory scene</task>
+  <task id="P8-T3" phase="8" status="done">Production build and final polish</task>
 </task-registry>
