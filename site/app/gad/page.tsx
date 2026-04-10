@@ -25,7 +25,7 @@ const CORE_CONCEPTS = [
     title: "Skills",
     count: SKILLS.length,
     description:
-      "Methodology docs the agent follows. Each skill describes a trigger (when to use it), a pattern (what to do), a rationale (why), failure modes, and related skills. Skills are the durable memory of an agent that has no other framework.",
+      "Methodology docs the agent follows. Each skill describes a trigger (when to use it), a pattern (what to do), a rationale (why), failure modes, and related skills — authored to the Anthropic skills guide + agentskills.io convention (see /standards). Skills are the durable memory of an agent that has no other framework.",
     href: "/#catalog",
     chip: "→ browse skills",
   },

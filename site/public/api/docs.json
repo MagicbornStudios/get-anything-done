@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-10T05:31:05.977Z",
+    "generated": "2026-04-10T05:52:57.872Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },

@@ -239,7 +239,11 @@ export default function EmergentPage() {
               <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
                 No framework, but inherits skills from previous runs. Authors a CHANGELOG
                 documenting disposition (kept / evolved / deprecated / replaced) of each
-                inherited skill. Tests the CSH.
+                inherited skill. Tests the CSH. See{" "}
+                <Link href="/standards" className="text-accent underline decoration-dotted">
+                  /standards
+                </Link>{" "}
+                for the SKILL.md format these skills follow.
               </CardContent>
             </Card>
             <Card>

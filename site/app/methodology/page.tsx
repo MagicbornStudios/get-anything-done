@@ -332,7 +332,12 @@ export default function MethodologyPage() {
               </Link>{" "}
               skill: every measurement must answer a specific research question, expose its
               inputs, be comparable across runs, and be decomposable. A number that fails any
-              of those tests isn&apos;t ready to publish.
+              of those tests isn&apos;t ready to publish. See{" "}
+              <Link href="/standards" className="text-accent underline decoration-dotted">
+                /standards
+              </Link>{" "}
+              for the Anthropic skills guide + agentskills.io convention that governs
+              how individual skills are authored and evaluated.
             </p>
           </div>
         </div>

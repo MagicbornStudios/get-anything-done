@@ -196,6 +196,11 @@ export default function FreedomHypothesisPage() {
                 Bare starts cold every time. Emergent starts warm with
                 inherited skills from prior runs. Both have no framework, but
                 emergent tests compounding (CSH) while bare tests freedom.
+                See{" "}
+                <Link href="/standards" className="text-accent underline decoration-dotted">
+                  /standards
+                </Link>{" "}
+                for the Anthropic skills guide + agentskills.io convention.
               </CardContent>
             </Card>
           </div>
