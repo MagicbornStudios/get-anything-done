@@ -106,6 +106,22 @@ const PROJECT_FAMILIES: Array<{
 
 const ROUND_OPTIONS = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"] as const;
 
+function fmtTokensShort(t: number | null | undefined): string {
+  if (t == null) return "\u2014";
+  if (t >= 1000) return `${Math.round(t / 1000)}K`;
+  return String(t);
+}
+
+function fmtTokensLong(t: number | null | undefined): string {
+  if (t == null) return "\u2014";
+  return t.toLocaleString("en-US");
+}
+
+function fmtDuration(m: number | null | undefined): string {
+  if (m == null) return "\u2014";
+  return `${m} min`;
+}
+
 /** Parse round number from URL hash like #play?round=4 */
 function parseRoundFromHash(): string | null {
   if (typeof window === "undefined") return null;
@@ -452,6 +468,16 @@ export default function Playable() {
                           {round.replace("Round ", "R")}
                         </span>
                       )}
+                      {r.tokenUsage?.total_tokens != null && (
+                        <span className={[
+                          "rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
+                          active
+                            ? "text-accent-foreground/60"
+                            : "text-muted-foreground/60",
+                        ].join(" ")}>
+                          {fmtTokensShort(r.tokenUsage.total_tokens)}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -558,11 +584,15 @@ export default function Playable() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wider text-muted-foreground">Duration</dt>
+                  <dt className="text-xs uppercase tracking-wider text-muted-foreground">Tokens</dt>
                   <dd className="text-sm font-medium tabular-nums text-foreground">
-                    {selected.timing?.duration_minutes != null
-                      ? `${selected.timing.duration_minutes}m`
-                      : "—"}
+                    {fmtTokensLong(selected.tokenUsage?.total_tokens)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wider text-muted-foreground">Build time</dt>
+                  <dd className="text-sm font-medium tabular-nums text-foreground">
+                    {fmtDuration(selected.timing?.duration_minutes)}
                   </dd>
                 </div>
                 <div>
