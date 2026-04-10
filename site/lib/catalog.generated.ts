@@ -1845,11 +1845,6 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) S…"
     },
     {
-      "id": "22-48",
-      "status": "planned",
-      "goal": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what…"
-    },
-    {
       "id": "22-49",
       "status": "planned",
       "goal": "Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a \"coll…"
@@ -1865,7 +1860,7 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 s…"
     }
   ],
-  "doneTasksCount": 140,
+  "doneTasksCount": 141,
   "recentDecisions": [
     {
       "id": "gad-61",

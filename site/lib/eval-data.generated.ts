@@ -3058,8 +3058,28 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
     "bytes": 22
   },
   {
+    "project": "gad-explainer-video-bare",
+    "zipPath": "/downloads/eval-gad-explainer-video-bare-template.zip",
+    "bytes": 22
+  },
+  {
+    "project": "gad-explainer-video-emergent",
+    "zipPath": "/downloads/eval-gad-explainer-video-emergent-template.zip",
+    "bytes": 22
+  },
+  {
     "project": "gad-requirements-gui",
     "zipPath": "/downloads/eval-gad-requirements-gui-template.zip",
+    "bytes": 22
+  },
+  {
+    "project": "gad-requirements-gui-bare",
+    "zipPath": "/downloads/eval-gad-requirements-gui-bare-template.zip",
+    "bytes": 22
+  },
+  {
+    "project": "gad-requirements-gui-emergent",
+    "zipPath": "/downloads/eval-gad-requirements-gui-emergent-template.zip",
     "bytes": 22
   },
   {
@@ -3478,6 +3498,54 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     }
   },
   {
+    "id": "gad-explainer-video-bare",
+    "name": "gad-explainer-video-bare",
+    "description": "gad-explainer-video-bare — tests the same hypotheses as gad-explainer-video but under the bare workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
+    "evalMode": "greenfield",
+    "workflow": "bare",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_scratch": true,
+      "target_runtime": "@remotion/player + @remotion/cli",
+      "video_duration_seconds_max": 180
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.15,
+      "video_polish": 0.2,
+      "pedagogical_clarity": 0.15,
+      "workflow_quality": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.15
+    },
+    "humanReviewRubric": null
+  },
+  {
+    "id": "gad-explainer-video-emergent",
+    "name": "gad-explainer-video-emergent",
+    "description": "gad-explainer-video-emergent — tests the same hypotheses as gad-explainer-video but under the emergent workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
+    "evalMode": "greenfield",
+    "workflow": "emergent",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_scratch": true,
+      "target_runtime": "@remotion/player + @remotion/cli",
+      "video_duration_seconds_max": 180
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.15,
+      "video_polish": 0.2,
+      "pedagogical_clarity": 0.15,
+      "workflow_quality": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.15
+    },
+    "humanReviewRubric": null
+  },
+  {
     "id": "gad-planning-loop",
     "name": "gad-planning-loop",
     "description": "GAD self-evaluation: measures planning loop fidelity across a phase",
@@ -3544,6 +3612,52 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
         }
       ]
     }
+  },
+  {
+    "id": "gad-requirements-gui-bare",
+    "name": "gad-requirements-gui-bare",
+    "description": "gad-requirements-gui-bare — tests the same hypotheses as gad-requirements-gui but under the bare workflow condition. See gad-requirements-gui/gad.json for the full rubric and gad-requirements-gui/REQUIREMENTS.md for the task spec.",
+    "evalMode": "greenfield",
+    "workflow": "bare",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_scratch": true,
+      "target_runtime": "Next.js 16 + React 19 + tailwind v4",
+      "deploy_target": "Vercel static export",
+      "no_backend": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.15,
+      "implementation_quality": 0.15,
+      "workflow_quality": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.55
+    },
+    "humanReviewRubric": null
+  },
+  {
+    "id": "gad-requirements-gui-emergent",
+    "name": "gad-requirements-gui-emergent",
+    "description": "gad-requirements-gui-emergent — tests the same hypotheses as gad-requirements-gui but under the emergent workflow condition. See gad-requirements-gui/gad.json for the full rubric and gad-requirements-gui/REQUIREMENTS.md for the task spec.",
+    "evalMode": "greenfield",
+    "workflow": "emergent",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": false,
+      "starts_from_scratch": true,
+      "target_runtime": "Next.js 16 + React 19 + tailwind v4",
+      "deploy_target": "Vercel static export",
+      "no_backend": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.15,
+      "implementation_quality": 0.15,
+      "workflow_quality": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.55
+    },
+    "humanReviewRubric": null
   },
   {
     "id": "planning-migration",
@@ -3891,7 +4005,7 @@ export const OPEN_QUESTIONS: OpenQuestion[] = [
     "id": "worktree-isolation-verification",
     "title": "Do eval worktrees actually inherit state from the parent monorepo, and does that contaminate the results?",
     "category": "evaluation",
-    "status": "open",
+    "status": "resolved",
     "priority": "critical",
     "context": "User concern 2026-04-09: 'a concern of mine when running the evals and rounds is that we might be polluting the experiments with our repo and monorepo installation.' Decision gad-82 commits us to eval isolation but does not yet verify whether Claude Code's worktree mechanism actually inherits parent-repo .claude/settings.json, skills, hooks, PATH, env vars. If it does, every eval score through round 4 may be contaminated by implicit access to GAD affordances the bare condition was not supposed to have. Isolation audit script queued as task 22-48. Round 5 is blocked on either passing the audit or documenting which parent-repo state is explicitly allowed.",
     "related_decisions": [
@@ -3901,8 +4015,8 @@ export const OPEN_QUESTIONS: OpenQuestion[] = [
     ],
     "related_requirements": [],
     "opened_on": "2026-04-09",
-    "resolved_on": null,
-    "resolution": null
+    "resolved_on": "2026-04-10",
+    "resolution": "PASSES with explicit allowlist. Audit written at .planning/docs/ISOLATION-AUDIT-2026-04-10.md. Key findings: (1) git worktrees have separate working trees, so .agents/skills/ and .planning/ do NOT inherit — the bare condition stays clean of framework skills, (2) .claude/settings.json IS inherited by Claude Code worktrees at .claude/worktrees/agent-*/ (the settings search walks up), but this is acceptable because the only settings are the trace hook handler which is instrumentation not framework assistance, (3) gad eval run creates worktrees at os.tmpdir() which is entirely outside the repo — even cleaner. The secondary vector (globally-installed user skills at ~/.claude/skills/) is mitigated by adding a bare-eval-prompt line: 'Do NOT load or reference any globally-installed skills.' Round 5 is UNBLOCKED."
   },
   {
     "id": "thinking-block-extraction",
@@ -7419,14 +7533,14 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-48",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. Output structured report. ROUND 5 IS BLOCKED on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are NOT allowed because bare condition requires zero framework affordances).",
     "keywords": [
       "isolation",
       "worktree",
       "audit",
-      "round-5-blocker"
+      "round-5-unblocked"
     ],
     "depends": [
       "gad-82"
@@ -9437,7 +9551,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-is",
     "kind": "task",
     "href": "/tasks#22-48",
-    "body": "22-48 worktree isolation audit script (gad-82, open question worktree-isolation-verification). write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on path, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. output structured report. round 5 is blocked on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are not allowed because bare condition requires zero framework affordances). isolation worktree audit round-5-blocker"
+    "body": "22-48 worktree isolation audit script (gad-82, open question worktree-isolation-verification). write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on path, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. output structured report. round 5 is blocked on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are not allowed because bare condition requires zero framework affordances). isolation worktree audit round-5-unblocked"
   },
   {
     "id": "22-49",

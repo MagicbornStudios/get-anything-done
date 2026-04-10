@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-10T04:57:43.564Z
+Generated: 2026-04-10T05:31:05.972Z
 
 
 ---
@@ -5537,9 +5537,11 @@ All projects register under GAD via planning-config.toml. rp-* skills are deprec
 
 **Do eval worktrees actually inherit state from the parent monorepo, and does that contaminate the results?**
 
-Status: open | Priority: critical | Category: evaluation
+Status: resolved | Priority: critical | Category: evaluation
 
 User concern 2026-04-09: 'a concern of mine when running the evals and rounds is that we might be polluting the experiments with our repo and monorepo installation.' Decision gad-82 commits us to eval isolation but does not yet verify whether Claude Code's worktree mechanism actually inherits parent-repo .claude/settings.json, skills, hooks, PATH, env vars. If it does, every eval score through round 4 may be contaminated by implicit access to GAD affordances the bare condition was not supposed to have. Isolation audit script queued as task 22-48. Round 5 is blocked on either passing the audit or documenting which parent-repo state is explicitly allowed.
+
+**Resolution:** PASSES with explicit allowlist. Audit written at .planning/docs/ISOLATION-AUDIT-2026-04-10.md. Key findings: (1) git worktrees have separate working trees, so .agents/skills/ and .planning/ do NOT inherit — the bare condition stays clean of framework skills, (2) .claude/settings.json IS inherited by Claude Code worktrees at .claude/worktrees/agent-*/ (the settings search walks up), but this is acceptable because the only settings are the trace hook handler which is instrumentation not framework assistance, (3) gad eval run creates worktrees at os.tmpdir() which is entirely outside the repo — even cleaner. The secondary vector (globally-installed user skills at ~/.claude/skills/) is mitigated by adding a bare-eval-prompt line: 'Do NOT load or reference any globally-installed skills.' Round 5 is UNBLOCKED.
 
 ## thinking-block-extraction
 
@@ -6240,7 +6242,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **22-47** [planned]: Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluati
 
-- **22-48** [planned]: Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skill
+- **22-48** [done]: Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skill
 
 - **22-49** [planned]: Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a "collision candidates" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not y
 
