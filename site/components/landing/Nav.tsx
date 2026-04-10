@@ -25,6 +25,7 @@ const GROUPS: NavGroup[] = [
       { href: "/methodology", label: "Methodology", note: "rubric, gates, rounds" },
       { href: "/hypotheses", label: "Hypotheses", note: "every claim wired to its eval track" },
       { href: "/skeptic", label: "Skeptic", note: "devils advocate against our claims" },
+      { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
       { href: "/glossary", label: "Glossary", note: "every domain term" },
     ],
   },

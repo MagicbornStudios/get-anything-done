@@ -140,9 +140,32 @@ export default function SkillsIndexPage() {
             >
               gad-76
             </Link>
-            . Q6-B from the IA conversation: parsed frontmatter + markdown +
-            copy buttons + lineage surface.
+            . GAD skills follow the format specified in the{" "}
+            <Link href="/standards" className="text-accent underline decoration-dotted">
+              Anthropic skills guide + agentskills.io standard
+            </Link>{" "}
+            — read <Link href="/standards" className="text-accent underline decoration-dotted">/standards</Link>{" "}
+            for progressive disclosure, discovery conventions, collision
+            handling, and the per-skill evaluation methodology.
           </p>
+          <div className="mt-4 max-w-3xl rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-[13px] leading-6 text-rose-200">
+            <strong className="text-rose-100">Findability warning:</strong>{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5 text-xs">gad install</code>{" "}
+            does NOT copy these workspace skills to user projects today. They
+            are only visible to agents working inside the GAD repo itself.
+            The fix is tracked as task 22-46 (adopt{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5 text-xs">.agents/skills/</code>{" "}
+            convention). Full writeup in{" "}
+            <a
+              href="https://github.com/MagicbornStudios/get-anything-done/blob/main/.planning/docs/SKILL-FINDABILITY-2026-04-09.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-rose-100 underline decoration-dotted"
+            >
+              .planning/docs/SKILL-FINDABILITY-2026-04-09.md
+            </a>
+            .
+          </div>
 
           <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
             <Stat label="Total skills" value={summaries.length.toString()} />

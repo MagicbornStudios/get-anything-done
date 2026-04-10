@@ -1812,6 +1812,31 @@ export const PLANNING_STATE: PlanningState = {
       "id": "22-45",
       "status": "planned",
       "goal": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-exp…"
+    },
+    {
+      "id": "22-46",
+      "status": "planned",
+      "goal": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-ski…"
+    },
+    {
+      "id": "22-47",
+      "status": "planned",
+      "goal": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) S…"
+    },
+    {
+      "id": "22-48",
+      "status": "planned",
+      "goal": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what…"
+    },
+    {
+      "id": "22-49",
+      "status": "planned",
+      "goal": "Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a \"coll…"
+    },
+    {
+      "id": "22-50",
+      "status": "planned",
+      "goal": "Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json…"
     }
   ],
   "doneTasksCount": 136,

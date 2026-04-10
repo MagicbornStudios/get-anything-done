@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-10T02:30:25.960Z",
+    "generated": "2026-04-10T03:37:27.309Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -317,6 +317,36 @@
     }
   ],
   "decisions": [
+    {
+      "id": "gad-84",
+      "title": "Hook-level introspection during evals — what \"thoughts\" can we actually capture?",
+      "summary": "User question 2026-04-09: \"what are some of the thoughts that claude or an agent is having that we can hook in to and analyze during evaluations.\" Concrete answer based on what Claude Code's hook system exposes today: (1) PreToolUse + PostToolUse hooks fire on every tool call with the tool name, arguments, and result. Captured by our trace v4 handler (gad-58, gad-50). This gives us observable ACTION, not thought. (2) Extended thinking blocks — when the Anthropic API emits `thinking` content blocks in a response, these appear in Claude Code's session.jsonl but are NOT exposed via hooks today. They are the closest thing to \"agent thought\" we can get. Currently we can access them POST-HOC by reading session.jsonl but cannot act on them during a run. (3) Message text between tool calls — the agent's natural-language output when explaining or planning. Captured in session.jsonl, also not hooked. (4) Permission/approval events — when the agent requests a permission, we see the request and the user's response. Captured via hooks. What we CAN do today: read session.jsonl after a run completes and extract the thinking blocks + message text as an offline enrichment of TRACE.json, annotate each thinking block with the tool uses that followed it, and use that as a signal for \"agent reasoning quality\" during a run. What we CANNOT do today: interrupt a run based on thinking content, steer it via the thinking stream, or measure thought quality in real time. The gap is Claude Code's hook surface, not the framework's.",
+      "impact": "(1) New programmatic-eval gap captured in GAPS.md as G13: extract thinking blocks and message text from session.jsonl post-hoc and attach to TRACE.json under a new `derived.reasoning_trace` field. Offline enrichment — no new hooks required. Feasibility: high. Severity: medium (it's agent self-narrative which is suspect, but having it is better than not having it). (2) New open question: is there a programmatic signal we can extract from thinking blocks that correlates with run quality? Candidate: ratio of \"exploration\" thoughts to \"execution\" thoughts, thought-to-tool-use interval, thought length variance. Needs exploratory data analysis once we have the extraction pipeline. (3) Does NOT commit us to interrupting runs mid-flight based on thinking — that would require hooking the message stream, which Claude Code doesn't expose today."
+    },
+    {
+      "id": "gad-83",
+      "title": "find-skills scope — installed skills in user workspace + pointer to install sources, not a global crawl",
+      "summary": "Per gad-73 the fundamental triumvirate is find-skills + merge-skill + create-skill. User clarification 2026-04-09: \"our find-skills should probably just be for installed skills and giving us suitable options to merge or to point us to installing some skills from skill.sh or the gad cli and we just install from the gad github repo since its public.\" Concrete scope for find-skills (to be built): (1) scan the USER'S current workspace at `.agents/skills/` and `.claude/skills/` (the standard-conformant convention + Claude Code's native path, per gad-80), (2) scan the USER'S global skills at `~/.agents/skills/` and `~/.claude/skills/`, (3) return a ranked list of relevant skills for the current task based on description matching, (4) when no suitable skill is found, suggest candidate skills from external sources — skill.sh, the GAD github repo (github.com/MagicbornStudios/get-anything-done/tree/main/skills/), and Anthropic's official examples repo (github.com/anthropics/skills) — with install commands. find-skills does NOT: (a) crawl the network looking for skills unsupervised, (b) auto-install anything (the user approves), (c) return skills from external sources alongside local ones without clearly labeling origin. This keeps find-skills scoped to \"what do I have access to RIGHT NOW, and what should I install if I want more.\" The triumvirate audit task (queued from gad-73) must now include building find-skills to this spec.",
+      "impact": "(1) Task for triumvirate audit extended: find-skills spec is the scope defined above. create-skill and merge-skill specs still TBD. (2) When find-skills is built, it becomes the primary entry point for the skill-evolution loop. The agent runs find-skills first, then merge-skill if a suitable fundamental exists, then create-skill only if no merge candidate was found. (3) find-skills output format: structured JSON with `installed: [...]`, `suggested_from_external: [...]` with origin labels, so the user can see which are trusted (installed locally) vs unverified (external suggestions). (4) External-source integration with github.com/MagicbornStudios/get-anything-done is trivial — same-owner public repo, no auth needed. skill.sh and anthropics/skills integration is a follow-up."
+    },
+    {
+      "id": "gad-82",
+      "title": "Eval isolation — worktrees must not inherit parent monorepo skills, hooks, or settings",
+      "summary": "User concern 2026-04-09: \"a concern of mine when running the evals and rounds is that we might be polluting the experiments with our repo and monorepo installation.\" Valid concern. Eval runs currently live under `.claude/worktrees/agent-*/` spawned by `gad worktree`. Inside that worktree, the agent may inherit: (a) the parent repo's `.claude/settings.json` (including our trace hook handler absolute path), (b) workspace skills at `vendor/get-anything-done/skills/` (reachable via parent-directory scan or symlink), (c) GAD CLI tooling on PATH, (d) any environment variables set in the parent session. For the bare eval condition — which is supposed to test \"no framework\" — any of these leakages would contaminate the experiment by giving the bare agent implicit access to GAD affordances it shouldn't have. This decision commits us to eval isolation: (1) Eval worktrees run with an explicit-include list of files — the agent sees ONLY the eval project's requirements, the AGENTS.md for its workflow condition, and whatever skills the condition explicitly declares inherited. (2) The trace hook handler is ALLOWED (it's the instrumentation layer per gad-50 — not a framework affordance). (3) Everything else from the parent repo is either hidden, removed from PATH, or explicitly blocklisted. (4) An isolation audit runs before every round 5+ eval verifying no parent-repo state is reachable from inside the worktree.",
+      "impact": "(1) New open question captured: does Claude Code actually honor `.claude/settings.json` from parent directories inside a worktree, or only the worktree's own? Needs concrete verification. (2) Task 22-48 queued: write an isolation audit script `scripts/audit-worktree-isolation.mjs` that walks a fresh worktree and reports every file + env var + path entry the agent could see. Run it before round 5. (3) SKEPTIC gains a new cross-cutting critique: \"eval isolation is unverified — previous eval scores may be contaminated by parent-repo state.\" (4) Round 5 prerequisite: pass the isolation audit OR document exactly which parent-repo affordances are allowed + why. (5) New tasks under phase 22 capturing the investigation + fix."
+    },
+    {
+      "id": "gad-81",
+      "title": "Skill count policy — hard cap 3-7 active per task, uniqueness enforced, collision detection required",
+      "summary": "Per the ChatGPT analysis the user shared (2026-04-09) and the agentskills.io progressive disclosure architecture, more skills does NOT equal more capability. The failure modes are: (1) context window saturation when many skills are injected or considered, (2) skill selection ambiguity when descriptions overlap, (3) latent prompt interference even when only one skill is used, (4) retrieval noise (for embedding-based lookup — not applicable to us yet). The agentskills.io progressive-disclosure model mitigates the biggest failure mode (saturation) by loading only the catalog at startup, but collision and ambiguity are still our responsibility. Policy committed: (A) Hard cap of 3-7 actively-loaded skills per task. The agent should select deliberately and explain why each is loaded. (B) Each skill must answer \"what can this do that no other skill can?\" — if the answer is unclear, the skill is a merge candidate. (C) Skill collision detection runs at prebuild: scan every SKILL.md description for overlapping trigger patterns, emit warnings, propose merge candidates. (D) Skill effectiveness is measured per the agentskills.io methodology: with_skill vs without_skill baseline runs per skill, stored in `evals/evals.json` inside each skill directory, aggregated into a `benchmark.json` per iteration. This is the per-skill equivalent of our eval-project rubric. (E) More skills = more pruning required. Use merge-skill (when it exists per gad-73) to fuse overlapping skills rather than accumulate them.",
+      "impact": "(1) New task queued: scan `skills/*/SKILL.md` descriptions for overlapping trigger keywords, emit a collision report. (2) New task queued: adopt the agentskills.io eval format for per-skill evaluation — author `evals/evals.json` templates for the fundamental triumvirate skills once they exist. (3) The agent-authored evaluation framework for the escape-the-dungeon family remains the rubric-based GAD eval; the per-skill evaluation is the agentskills.io methodology. These are complementary, not competing. (4) Skills directory site page gains a \"collision candidates\" section if any are detected. (5) Data provenance surface on /data gains a new source: \"skill-collision-scan\"."
+    },
+    {
+      "id": "gad-80",
+      "title": "Adopt agentskills.io standard — .agents/skills/ convention + cross-client interoperability",
+      "summary": "The Agent Skills standard at agentskills.io defines a client-agnostic format and discovery convention for skills: every skill is a folder containing a SKILL.md with YAML frontmatter (name + description required) and a markdown body. Progressive disclosure is a three-tier load strategy — catalog (name+description only, ~50-100 tokens/skill, loaded at session start), instructions (full SKILL.md body, loaded on activation), resources (scripts/references/assets, on-demand). The standard's discovery convention for cross-client interoperability is `&lt;project&gt;/.agents/skills/` and `~/.agents/skills/` — widely adopted so skills installed by one compliant client become visible to any other. GAD currently uses `skills/` at the repo root, which is neither the Claude-Code native path (`.claude/skills/`) nor the cross-client convention (`.agents/skills/`). This decision adopts agentskills.io as a co-equal canonical reference alongside the Anthropic skills guide (gad-70), commits us to the `.agents/skills/` convention for installable skills, and mandates citation of both sources on every skill-related page on the site. Does NOT replace our existing `skills/` workspace directory — workspace skills remain at that location for in-repo use — but new installable skills go to `.agents/skills/` and `install.js` is extended to copy both when supported by the target runtime.",
+      "impact": "(1) New `.planning/docs/SKILL-FINDABILITY-2026-04-09.md` captures the full findability investigation. (2) The SKEPTIC cross-cutting critique about \"one-person research framework\" gains an orthogonal defense: we align with an open standard, so our skill format is auditable against external convention. (3) Task 22-46 queued: adopt `.agents/skills/` convention, extend install.js to copy to both `.claude/skills/` and `.agents/skills/` for supported runtimes, migrate fundamental triumvirate (when built) to `.agents/skills/`. (4) Task 22-47 queued: cite agentskills.io + Anthropic PDF on every skill-related site page (/security, /skills, /methodology, /gad) via a new /standards page referenced from all of them. (5) New open question: do we need to verify skills against the agentskills.io specification validator at prebuild?"
+    },
     {
       "id": "gad-79",
       "title": "task_pressure operationalized — programmatic, structural, Shannon-inspired",
@@ -793,6 +823,40 @@
     }
   ],
   "questions": [
+    {
+      "id": "worktree-isolation-verification",
+      "title": "Do eval worktrees actually inherit state from the parent monorepo, and does that contaminate the results?",
+      "category": "evaluation",
+      "status": "open",
+      "priority": "critical",
+      "context": "User concern 2026-04-09: 'a concern of mine when running the evals and rounds is that we might be polluting the experiments with our repo and monorepo installation.' Decision gad-82 commits us to eval isolation but does not yet verify whether Claude Code's worktree mechanism actually inherits parent-repo .claude/settings.json, skills, hooks, PATH, env vars. If it does, every eval score through round 4 may be contaminated by implicit access to GAD affordances the bare condition was not supposed to have. Isolation audit script queued as task 22-48. Round 5 is blocked on either passing the audit or documenting which parent-repo state is explicitly allowed.",
+      "related_decisions": [
+        "gad-82",
+        "gad-62",
+        "gad-67"
+      ],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
+    {
+      "id": "thinking-block-extraction",
+      "title": "Can we extract meaningful signal from Claude Code thinking blocks post-hoc?",
+      "category": "evaluation",
+      "status": "open",
+      "priority": "medium",
+      "context": "Per decision gad-84, Claude Code's hook system exposes tool calls but not thinking blocks or inter-tool message text. Those artifacts exist in session.jsonl. Open research question: can we extract them post-hoc and derive quality signal from them? Candidate metrics — thought-to-tool-use interval, thought length variance, ratio of 'exploration' to 'execution' phrases, thought-before-action vs thought-after-action ordering. All hypothetical until we have the extraction pipeline and look at real data. Feasibility assessment: high for extraction, unknown for signal.",
+      "related_decisions": [
+        "gad-84",
+        "gad-69",
+        "gad-50"
+      ],
+      "related_requirements": [],
+      "opened_on": "2026-04-09",
+      "resolved_on": null,
+      "resolution": null
+    },
     {
       "id": "pressure-score-formula",
       "title": "How do we compute a pressure score per eval operationally?",
@@ -3681,6 +3745,83 @@
       "depends": [
         "22-43"
       ]
+    },
+    {
+      "id": "22-46",
+      "phaseId": "22",
+      "status": "planned",
+      "agentId": "",
+      "goal": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. Also honor the excluded-from-default-install:true frontmatter flag I added to the emergent skill — the installer must skip those.",
+      "keywords": [
+        "agentskills",
+        "cross-client",
+        "install",
+        "discovery-convention"
+      ],
+      "depends": [
+        "gad-80"
+      ]
+    },
+    {
+      "id": "22-47",
+      "phaseId": "22",
+      "status": "planned",
+      "agentId": "",
+      "goal": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). This becomes the reference page every skill-related section of the site cites instead of repeating the content inline.",
+      "keywords": [
+        "standards",
+        "documentation",
+        "citations",
+        "skills-page"
+      ],
+      "depends": []
+    },
+    {
+      "id": "22-48",
+      "phaseId": "22",
+      "status": "planned",
+      "agentId": "",
+      "goal": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. Output structured report. ROUND 5 IS BLOCKED on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are NOT allowed because bare condition requires zero framework affordances).",
+      "keywords": [
+        "isolation",
+        "worktree",
+        "audit",
+        "round-5-blocker"
+      ],
+      "depends": [
+        "gad-82"
+      ]
+    },
+    {
+      "id": "22-49",
+      "phaseId": "22",
+      "status": "planned",
+      "agentId": "",
+      "goal": "Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a \"collision candidates\" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not yet built — link falls back to a manual-review prompt). Also: a keyword index for every skill so users searching can see what terms trigger each.",
+      "keywords": [
+        "skill-collision",
+        "prebuild",
+        "keyword-audit"
+      ],
+      "depends": [
+        "gad-81"
+      ]
+    },
+    {
+      "id": "22-50",
+      "phaseId": "22",
+      "status": "planned",
+      "agentId": "",
+      "goal": "Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. This is the highest-leverage way to get \"agent reasoning\" signal without Claude Code exposing new hook surfaces.",
+      "keywords": [
+        "thinking-blocks",
+        "session-jsonl",
+        "reasoning-trace",
+        "post-hoc"
+      ],
+      "depends": [
+        "gad-84"
+      ]
     }
   ],
   "phases": [
@@ -3910,6 +4051,41 @@
     }
   ],
   "searchIndex": [
+    {
+      "id": "gad-84",
+      "title": "Hook-level introspection during evals — what \"thoughts\" can we actually capture?",
+      "kind": "decision",
+      "href": "/decisions#gad-84",
+      "body": "gad-84 hook-level introspection during evals — what \"thoughts\" can we actually capture? user question 2026-04-09: \"what are some of the thoughts that claude or an agent is having that we can hook in to and analyze during evaluations.\" concrete answer based on what claude code's hook system exposes today: (1) pretooluse + posttooluse hooks fire on every tool call with the tool name, arguments, and result. captured by our trace v4 handler (gad-58, gad-50). this gives us observable acti"
+    },
+    {
+      "id": "gad-83",
+      "title": "find-skills scope — installed skills in user workspace + pointer to install sources, not a global crawl",
+      "kind": "decision",
+      "href": "/decisions#gad-83",
+      "body": "gad-83 find-skills scope — installed skills in user workspace + pointer to install sources, not a global crawl per gad-73 the fundamental triumvirate is find-skills + merge-skill + create-skill. user clarification 2026-04-09: \"our find-skills should probably just be for installed skills and giving us suitable options to merge or to point us to installing some skills from skill.sh or the gad cli and we just install from the gad github repo since its public.\" concrete scope for find-skills (to be built): (1)"
+    },
+    {
+      "id": "gad-82",
+      "title": "Eval isolation — worktrees must not inherit parent monorepo skills, hooks, or settings",
+      "kind": "decision",
+      "href": "/decisions#gad-82",
+      "body": "gad-82 eval isolation — worktrees must not inherit parent monorepo skills, hooks, or settings user concern 2026-04-09: \"a concern of mine when running the evals and rounds is that we might be polluting the experiments with our repo and monorepo installation.\" valid concern. eval runs currently live under `.claude/worktrees/agent-*/` spawned by `gad worktree`. inside that worktree, the agent may inherit: (a) the parent repo's `.claude/settings.json` (including our trace hook handler absolut"
+    },
+    {
+      "id": "gad-81",
+      "title": "Skill count policy — hard cap 3-7 active per task, uniqueness enforced, collision detection required",
+      "kind": "decision",
+      "href": "/decisions#gad-81",
+      "body": "gad-81 skill count policy — hard cap 3-7 active per task, uniqueness enforced, collision detection required per the chatgpt analysis the user shared (2026-04-09) and the agentskills.io progressive disclosure architecture, more skills does not equal more capability. the failure modes are: (1) context window saturation when many skills are injected or considered, (2) skill selection ambiguity when descriptions overlap, (3) latent prompt interference even when only one skill is used, (4) retrieval noise (f"
+    },
+    {
+      "id": "gad-80",
+      "title": "Adopt agentskills.io standard — .agents/skills/ convention + cross-client interoperability",
+      "kind": "decision",
+      "href": "/decisions#gad-80",
+      "body": "gad-80 adopt agentskills.io standard — .agents/skills/ convention + cross-client interoperability the agent skills standard at agentskills.io defines a client-agnostic format and discovery convention for skills: every skill is a folder containing a skill.md with yaml frontmatter (name + description required) and a markdown body. progressive disclosure is a three-tier load strategy — catalog (name+description only, ~50-100 tokens/skill, loaded at session start), instructions (full skill.md body"
+    },
     {
       "id": "gad-79",
       "title": "task_pressure operationalized — programmatic, structural, Shannon-inspired",
@@ -5514,6 +5690,41 @@
       "body": "22-45 site/remotion/ runtime scaffold (second half of task 22-31): create root.tsx composition registry, one placeholder composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, videoembed.tsx wrapper component. this unblocks the gad-explainer-video eval project (22-43) being run for the first time. remotion runtime videos-route scaffold"
     },
     {
+      "id": "22-46",
+      "title": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (",
+      "kind": "task",
+      "href": "/tasks#22-46",
+      "body": "22-46 adopt agentskills.io .agents/skills/ convention (gad-80). extend bin/install.js to copy skills to both .claude/skills/ (native) and .agents/skills/ (cross-client) for supported runtimes. migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. required for the codex-vs-claude comparison eval (task 89) because codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. also honor the excluded-from-default-install:true frontmatter flag i added to the emergent skill — the installer must skip those. agentskills cross-client install discovery-convention"
+    },
+    {
+      "id": "22-47",
+      "title": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-G",
+      "kind": "task",
+      "href": "/tasks#22-47",
+      "body": "22-47 build a /standards page on the site citing both the anthropic skills guide (resources.anthropic.com/hubfs/the-complete-guide-to-building-skill-for-claude.pdf) and agentskills.io. link from /skills, /security, /methodology, /gad. the page must summarize: (a) skill.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). this becomes the reference page every skill-related section of the site cites instead of repeating the content inline. standards documentation citations skills-page"
+    },
+    {
+      "id": "22-48",
+      "title": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-is",
+      "kind": "task",
+      "href": "/tasks#22-48",
+      "body": "22-48 worktree isolation audit script (gad-82, open question worktree-isolation-verification). write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on path, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. output structured report. round 5 is blocked on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are not allowed because bare condition requires zero framework affordances). isolation worktree audit round-5-blocker"
+    },
+    {
+      "id": "22-49",
+      "title": "Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keyword",
+      "kind": "task",
+      "href": "/tasks#22-49",
+      "body": "22-49 skill collision detection at prebuild (gad-81). scan every skills/*/skill.md description for overlapping trigger keywords. compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. add a \"collision candidates\" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not yet built — link falls back to a manual-review prompt). also: a keyword index for every skill so users searching can see what terms trigger each. skill-collision prebuild keyword-audit"
+    },
+    {
+      "id": "22-50",
+      "title": "Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline ",
+      "kind": "task",
+      "href": "/tasks#22-50",
+      "body": "22-50 extract thinking blocks from session.jsonl into trace.json derived.reasoning_trace (gad-84, gaps g13). post-hoc offline enrichment — no new hooks required. walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to trace.json with timestamps tying thoughts to subsequent tool uses. first exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. this is the highest-leverage way to get \"agent reasoning\" signal without claude code exposing new hook surfaces. thinking-blocks session-jsonl reasoning-trace post-hoc"
+    },
+    {
       "id": "01",
       "title": "Phase 01 — Foundation",
       "kind": "phase",
@@ -5897,6 +6108,20 @@
       "kind": "glossary",
       "href": "/glossary#planning-loop",
       "body": "gad planning loop gad loop plan execute verify commit snapshot → pick one task → implement → update planning docs → commit. the durable iteration cycle gad enforces."
+    },
+    {
+      "id": "worktree-isolation-verification",
+      "title": "Do eval worktrees actually inherit state from the parent monorepo, and does that contaminate the results?",
+      "kind": "question",
+      "href": "/questions#worktree-isolation-verification",
+      "body": "do eval worktrees actually inherit state from the parent monorepo, and does that contaminate the results? user concern 2026-04-09: 'a concern of mine when running the evals and rounds is that we might be polluting the experiments with our repo and monorepo installation.' decision gad-82 commits us to eval isolation but does not yet verify whether claude code's worktree mechanism actually inherits parent-repo .claude/settings.json, skills, hooks, path, env vars. if it does, every eval score through rou"
+    },
+    {
+      "id": "thinking-block-extraction",
+      "title": "Can we extract meaningful signal from Claude Code thinking blocks post-hoc?",
+      "kind": "question",
+      "href": "/questions#thinking-block-extraction",
+      "body": "can we extract meaningful signal from claude code thinking blocks post-hoc? per decision gad-84, claude code's hook system exposes tool calls but not thinking blocks or inter-tool message text. those artifacts exist in session.jsonl. open research question: can we extract them post-hoc and derive quality signal from them? candidate metrics — thought-to-tool-use interval, thought length variance, ratio of 'exploration' to 'execution' phrases, thought-before-action vs thoug"
     },
     {
       "id": "pressure-score-formula",

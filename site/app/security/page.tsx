@@ -40,7 +40,8 @@ export default function SecurityPage() {
           </p>
           <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
             Anchor decision:{" "}
-            <Ref id="gad-70" /> (Anthropic skills guide as canonical reference),
+            <Ref id="gad-70" /> (Anthropic skills guide as canonical reference) · see also{" "}
+            <Link href="/standards" className="text-accent underline decoration-dotted">/standards</Link>,
             related:{" "}
             <Ref id="gad-73" /> (fundamental skills triumvirate) &amp;{" "}
             <Ref id="gad-74" /> (GAD&apos;s value prop includes skill security

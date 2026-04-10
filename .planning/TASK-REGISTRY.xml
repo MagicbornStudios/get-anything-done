@@ -741,5 +741,29 @@
       <depends>22-43</depends>
       <keywords>remotion,runtime,videos-route,scaffold</keywords>
     </task>
+    <task id="22-46" agent-id="" status="planned">
+      <goal>Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. Also honor the excluded-from-default-install:true frontmatter flag I added to the emergent skill — the installer must skip those.</goal>
+      <depends>gad-80</depends>
+      <keywords>agentskills,cross-client,install,discovery-convention</keywords>
+    </task>
+    <task id="22-47" agent-id="" status="planned">
+      <goal>Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). This becomes the reference page every skill-related section of the site cites instead of repeating the content inline.</goal>
+      <keywords>standards,documentation,citations,skills-page</keywords>
+    </task>
+    <task id="22-48" agent-id="" status="planned">
+      <goal>Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. Output structured report. ROUND 5 IS BLOCKED on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are NOT allowed because bare condition requires zero framework affordances).</goal>
+      <depends>gad-82</depends>
+      <keywords>isolation,worktree,audit,round-5-blocker</keywords>
+    </task>
+    <task id="22-49" agent-id="" status="planned">
+      <goal>Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a "collision candidates" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not yet built — link falls back to a manual-review prompt). Also: a keyword index for every skill so users searching can see what terms trigger each.</goal>
+      <depends>gad-81</depends>
+      <keywords>skill-collision,prebuild,keyword-audit</keywords>
+    </task>
+    <task id="22-50" agent-id="" status="planned">
+      <goal>Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. This is the highest-leverage way to get "agent reasoning" signal without Claude Code exposing new hook surfaces.</goal>
+      <depends>gad-84</depends>
+      <keywords>thinking-blocks,session-jsonl,reasoning-trace,post-hoc</keywords>
+    </task>
   </phase>
 </task-registry>
