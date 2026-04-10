@@ -1,0 +1,39 @@
+{
+  "type": "eval",
+  "name": "escape-the-dungeon-planning-only",
+  "description": "Planning-only condition: agent gets the full .planning/ XML scaffold (ROADMAP, TASK-REGISTRY, DECISIONS, STATE) but only bootstrap skills (create-skill, find-sprites) — NO GAD framework skills. Tests whether the planning STRUCTURE alone (without skill methodology) improves outcomes vs bare. Isolates the variable: does having a roadmap + task registry + decision log help, even without the skills to execute against them?",
+  "eval_mode": "greenfield",
+  "workflow": "bare",
+  "baseline": null,
+  "trace": true,
+  "template": "template/",
+  "compare_to": ["escape-the-dungeon", "escape-the-dungeon-bare", "escape-the-dungeon-emergent", "escape-the-dungeon-gad-emergent"],
+  "constraints": {
+    "uses_gad_framework": false,
+    "has_planning_artifacts": true,
+    "starts_from_scratch": true,
+    "inherits_previous_skills": false,
+    "skill_count": 2
+  },
+  "scoring": {
+    "weights": {
+      "requirement_coverage": 0.20,
+      "implementation_quality": 0.15,
+      "skill_reuse": 0.15,
+      "workflow_quality": 0.10,
+      "iteration_evidence": 0.05,
+      "time_efficiency": 0.05,
+      "human_review": 0.30
+    }
+  },
+  "human_review_rubric": {
+    "version": "v1",
+    "dimensions": [
+      { "key": "playability", "label": "Playability", "weight": 0.30, "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks." },
+      { "key": "ui_polish", "label": "UI polish", "weight": 0.20, "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type differentiation, styled controls." },
+      { "key": "mechanics_implementation", "label": "Mechanics implementation", "weight": 0.20, "description": "Are combat, forge, rune crafting, resistances functional and coherent?" },
+      { "key": "ingenuity_requirement_met", "label": "Ingenuity requirement met", "weight": 0.20, "description": "v4+ principle: do starter abilities feel insufficient? Is the forge necessary, not cosmetic?" },
+      { "key": "stability", "label": "Stability", "weight": 0.10, "description": "Crashes? Stale state? Save/load works? Finish a run without reload?" }
+    ]
+  }
+}

@@ -1459,35 +1459,65 @@ export const SKILL_INHERITANCE: Record<string, string[]> = {
   "auto-conventions": [],
   "check-todos": [],
   "create-skill": [
+    "escape-the-dungeon",
     "escape-the-dungeon-bare",
-    "escape-the-dungeon-emergent"
+    "escape-the-dungeon-emergent",
+    "escape-the-dungeon-gad-emergent",
+    "escape-the-dungeon-planning-only"
   ],
-  "debug": [],
+  "debug": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
   "eval-bootstrap": [],
   "eval-report": [],
   "eval-run": [],
   "eval-suite": [],
-  "execute-phase": [],
+  "execute-phase": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
   "find-skills": [],
   "find-sprites": [
+    "escape-the-dungeon",
     "escape-the-dungeon-bare",
-    "escape-the-dungeon-emergent"
+    "escape-the-dungeon-emergent",
+    "escape-the-dungeon-gad-emergent",
+    "escape-the-dungeon-planning-only"
   ],
   "framework-upgrade": [],
   "manuscript": [],
-  "map-codebase": [],
-  "merge-skill": [],
+  "map-codebase": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
+  "merge-skill": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
   "milestone": [],
   "new-project": [],
   "objective-eval-design": [],
-  "plan-phase": [],
+  "plan-phase": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
   "portfolio-sync": [],
   "reverse-engineer": [],
   "session": [],
   "snapshot-optimize": [],
-  "task-checkpoint": [],
-  "verify-phase": [],
-  "write-feature-doc": [],
+  "task-checkpoint": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
+  "verify-phase": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
+  "write-feature-doc": [
+    "escape-the-dungeon",
+    "escape-the-dungeon-gad-emergent"
+  ],
   "write-intent": [],
   "write-tech-doc": [],
   "session-discipline": []

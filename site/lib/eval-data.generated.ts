@@ -3025,17 +3025,27 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
   {
     "project": "escape-the-dungeon",
     "zipPath": "/downloads/eval-escape-the-dungeon-template.zip",
-    "bytes": 20763
+    "bytes": 44240
   },
   {
     "project": "escape-the-dungeon-bare",
     "zipPath": "/downloads/eval-escape-the-dungeon-bare-template.zip",
-    "bytes": 22962
+    "bytes": 17755
   },
   {
     "project": "escape-the-dungeon-emergent",
     "zipPath": "/downloads/eval-escape-the-dungeon-emergent-template.zip",
-    "bytes": 28666
+    "bytes": 23459
+  },
+  {
+    "project": "escape-the-dungeon-gad-emergent",
+    "zipPath": "/downloads/eval-escape-the-dungeon-gad-emergent-template.zip",
+    "bytes": 49625
+  },
+  {
+    "project": "escape-the-dungeon-planning-only",
+    "zipPath": "/downloads/eval-escape-the-dungeon-planning-only-template.zip",
+    "bytes": 29671
   },
   {
     "project": "etd-brownfield-bare",
@@ -3093,20 +3103,32 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
   {
     "project": "escape-the-dungeon",
     "zipPath": "/downloads/planning/eval-escape-the-dungeon-planning.zip",
-    "bytes": 20763,
-    "files": 8
+    "bytes": 44240,
+    "files": 16
   },
   {
     "project": "escape-the-dungeon-bare",
     "zipPath": "/downloads/planning/eval-escape-the-dungeon-bare-planning.zip",
-    "bytes": 22962,
-    "files": 6
+    "bytes": 17755,
+    "files": 4
   },
   {
     "project": "escape-the-dungeon-emergent",
     "zipPath": "/downloads/planning/eval-escape-the-dungeon-emergent-planning.zip",
-    "bytes": 28666,
-    "files": 11
+    "bytes": 23459,
+    "files": 9
+  },
+  {
+    "project": "escape-the-dungeon-gad-emergent",
+    "zipPath": "/downloads/planning/eval-escape-the-dungeon-gad-emergent-planning.zip",
+    "bytes": 49625,
+    "files": 21
+  },
+  {
+    "project": "escape-the-dungeon-planning-only",
+    "zipPath": "/downloads/planning/eval-escape-the-dungeon-planning-only-planning.zip",
+    "bytes": 29671,
+    "files": 9
   },
   {
     "project": "etd-brownfield-bare",
@@ -3355,6 +3377,131 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "label": "Skill inheritance effectiveness",
           "weight": 0.2,
           "description": "EMERGENT-SPECIFIC: did the agent productively apply inherited skills? Did it evolve or author new skills worth inheriting by the next run? Did CHANGELOG.md document the disposition of each inherited skill? This is the compound-skills hypothesis check — is the skill library compounding in usefulness?"
+        }
+      ]
+    }
+  },
+  {
+    "id": "escape-the-dungeon-gad-emergent",
+    "name": "escape-the-dungeon-gad-emergent",
+    "description": "GAD+Emergent combined condition: agent gets the full .planning/ XML scaffold AND GAD framework skills AND inherited skills from prior emergent runs. The maximally-scaffolded condition. Tests whether combining framework planning + methodology skills + inherited project-specific skills produces the best outcomes — or whether the overhead of ALL that context drowns the agent. If this beats both GAD-alone and Emergent-alone, it validates the emergent-evolution hypothesis (gad-68) in its strongest form: fundamentals + inheritance + planning = mastery. If it underperforms, the overhead hypothesis gets another data point: more scaffolding ≠ better output.",
+    "evalMode": "greenfield",
+    "workflow": "gad",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": true,
+      "has_planning_artifacts": true,
+      "starts_from_scratch": true,
+      "inherits_previous_skills": true,
+      "agent_iterates_on_workflow": true,
+      "skill_count": "10 GAD + 6 inherited = 16 total"
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.15,
+      "skill_reuse": 0.15,
+      "workflow_quality": 0.1,
+      "iteration_evidence": 0.05,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "playability",
+          "label": "Playability",
+          "weight": 0.25,
+          "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks."
+        },
+        {
+          "key": "ui_polish",
+          "label": "UI polish",
+          "weight": 0.15,
+          "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type differentiation, styled controls."
+        },
+        {
+          "key": "mechanics_implementation",
+          "label": "Mechanics implementation",
+          "weight": 0.15,
+          "description": "Are combat, forge, rune crafting, resistances functional and coherent?"
+        },
+        {
+          "key": "ingenuity_requirement_met",
+          "label": "Ingenuity requirement met",
+          "weight": 0.15,
+          "description": "v4+ principle: do starter abilities feel insufficient? Is the forge necessary, not cosmetic?"
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.1,
+          "description": "Crashes? Stale state? Save/load works? Finish a run without reload?"
+        },
+        {
+          "key": "skill_inheritance_effectiveness",
+          "label": "Skill inheritance effectiveness",
+          "weight": 0.2,
+          "description": "GAD+EMERGENT-SPECIFIC: did the agent productively apply BOTH GAD framework skills AND inherited emergent skills? Did it use GAD skills (plan-phase, execute-phase, verify-phase) to structure its work AND inherited skills (game-loop-verification, state-composition) to improve its implementation? Did the two skill sets interact or conflict?"
+        }
+      ]
+    }
+  },
+  {
+    "id": "escape-the-dungeon-planning-only",
+    "name": "escape-the-dungeon-planning-only",
+    "description": "Planning-only condition: agent gets the full .planning/ XML scaffold (ROADMAP, TASK-REGISTRY, DECISIONS, STATE) but only bootstrap skills (create-skill, find-sprites) — NO GAD framework skills. Tests whether the planning STRUCTURE alone (without skill methodology) improves outcomes vs bare. Isolates the variable: does having a roadmap + task registry + decision log help, even without the skills to execute against them?",
+    "evalMode": "greenfield",
+    "workflow": "bare",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": false,
+      "has_planning_artifacts": true,
+      "starts_from_scratch": true,
+      "inherits_previous_skills": false,
+      "skill_count": 2
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.15,
+      "skill_reuse": 0.15,
+      "workflow_quality": 0.1,
+      "iteration_evidence": 0.05,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "playability",
+          "label": "Playability",
+          "weight": 0.3,
+          "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks."
+        },
+        {
+          "key": "ui_polish",
+          "label": "UI polish",
+          "weight": 0.2,
+          "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type differentiation, styled controls."
+        },
+        {
+          "key": "mechanics_implementation",
+          "label": "Mechanics implementation",
+          "weight": 0.2,
+          "description": "Are combat, forge, rune crafting, resistances functional and coherent?"
+        },
+        {
+          "key": "ingenuity_requirement_met",
+          "label": "Ingenuity requirement met",
+          "weight": 0.2,
+          "description": "v4+ principle: do starter abilities feel insufficient? Is the forge necessary, not cosmetic?"
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.1,
+          "description": "Crashes? Stale state? Save/load works? Finish a run without reload?"
         }
       ]
     }
