@@ -41,6 +41,10 @@ interface Props {
   title?: string;
   /** Optional caption below the chart */
   caption?: string;
+  /** Fired when a round on the X-axis is clicked */
+  onRoundClick?: (round: string) => void;
+  /** Currently selected round (highlighted) */
+  activeRound?: string | null;
 }
 
 const STROKE_COLORS: Record<string, string> = {
@@ -59,7 +63,7 @@ const SERIES_LABELS: Record<string, string> = {
   codex: "Codex runtime (planned)",
 };
 
-export function HypothesisTracksChart({ data, title, caption }: Props) {
+export function HypothesisTracksChart({ data, title, caption, onRoundClick, activeRound }: Props) {
   // Find which series actually have data points so we can gate the legend
   const hasData = (key: keyof HypothesisTrackPoint) =>
     data.some((d) => typeof d[key] === "number" && d[key] !== null);
@@ -74,7 +78,16 @@ export function HypothesisTracksChart({ data, title, caption }: Props) {
       )}
       <div className="h-[320px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 20, right: 20, bottom: 10, left: -10 }}>
+          <LineChart
+            data={data}
+            margin={{ top: 20, right: 20, bottom: 10, left: -10 }}
+            onClick={(state) => {
+              if (onRoundClick && state?.activeLabel) {
+                onRoundClick(String(state.activeLabel));
+              }
+            }}
+            style={onRoundClick ? { cursor: "pointer" } : undefined}
+          >
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="rgba(255, 255, 255, 0.08)"
@@ -82,7 +95,29 @@ export function HypothesisTracksChart({ data, title, caption }: Props) {
             />
             <XAxis
               dataKey="round"
-              tick={{ fontSize: 11, fill: "rgba(255, 255, 255, 0.6)" }}
+              tick={(props: Record<string, unknown>) => {
+                const x = Number(props.x) || 0;
+                const y = Number(props.y) || 0;
+                const value = String((props.payload as Record<string, unknown>)?.value ?? "");
+                const isActive = activeRound === value;
+                return (
+                  <text
+                    x={x}
+                    y={y + 12}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill={isActive ? "#a78bfa" : "rgba(255, 255, 255, 0.6)"}
+                    fontWeight={isActive ? 700 : 400}
+                  >
+                    {value}
+                    {isActive && (
+                      <tspan x={x} dy={14} fontSize={9} fill="#a78bfa">
+                        &#9660; filtered
+                      </tspan>
+                    )}
+                  </text>
+                );
+              }}
               tickLine={false}
               axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
             />

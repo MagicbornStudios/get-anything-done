@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HypothesisTracksChart, type HypothesisTrackPoint } from "@/components/charts/HypothesisTracksChart";
@@ -5,29 +8,38 @@ import { EVAL_RUNS, type EvalRunRecord } from "@/lib/eval-data";
 
 /**
  * Landing-page section rendering the interactive hypothesis-tracks chart.
+ * Clicking a round on the chart scrolls to and filters the Playable Archive.
+ *
  * Duplicates the buildTrackData helper from /roadmap intentionally — the
  * landing page and /roadmap both need the chart and neither should pull
  * logic from the other. If the mapping changes, update both.
  */
 
-function buildTrackData(): HypothesisTrackPoint[] {
-  const roundForVersion: Record<string, string> = {
+/** Maps eval-run version → round label. Exported for Playable to reuse. */
+export const ROUND_VERSION_MAP: Record<string, Record<string, string>> = {
+  "escape-the-dungeon": {
     v1: "Round 1", v2: "Round 1", v3: "Round 1", v4: "Round 1", v5: "Round 1",
     v6: "Round 2", v7: "Round 2",
     v8: "Round 3",
     v9: "Round 4", v10: "Round 4",
-  };
-  const bareRoundForVersion: Record<string, string> = {
+  },
+  "escape-the-dungeon-bare": {
     v1: "Round 2", v2: "Round 2",
     v3: "Round 3",
     v4: "Round 4", v5: "Round 4",
-  };
-  const emergentRoundForVersion: Record<string, string> = {
+  },
+  "escape-the-dungeon-emergent": {
     v1: "Round 2",
     v2: "Round 3",
     v3: "Round 4", v4: "Round 4",
-  };
+  },
+};
 
+export function roundForRun(r: { project: string; version: string }): string | null {
+  return ROUND_VERSION_MAP[r.project]?.[r.version] ?? null;
+}
+
+function buildTrackData(): HypothesisTrackPoint[] {
   const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
   const points: HypothesisTrackPoint[] = rounds.map((round) => ({
     round,
@@ -52,13 +64,13 @@ function buildTrackData(): HypothesisTrackPoint[] {
     let series: "gad" | "freedom" | "csh" | undefined;
 
     if (run.project === "escape-the-dungeon") {
-      round = roundForVersion[run.version];
+      round = ROUND_VERSION_MAP["escape-the-dungeon"][run.version];
       series = "gad";
     } else if (run.project === "escape-the-dungeon-bare") {
-      round = bareRoundForVersion[run.version];
+      round = ROUND_VERSION_MAP["escape-the-dungeon-bare"][run.version];
       series = "freedom";
     } else if (run.project === "escape-the-dungeon-emergent") {
-      round = emergentRoundForVersion[run.version];
+      round = ROUND_VERSION_MAP["escape-the-dungeon-emergent"][run.version];
       series = "csh";
     }
 
@@ -80,6 +92,28 @@ function buildTrackData(): HypothesisTrackPoint[] {
 
 export default function HypothesisTracksSection() {
   const data = buildTrackData();
+  const [activeRound, setActiveRound] = useState<string | null>(null);
+
+  const handleRoundClick = useCallback((round: string) => {
+    // Toggle: clicking same round deselects
+    const next = activeRound === round ? null : round;
+    setActiveRound(next);
+
+    // Encode into URL hash for Playable to read
+    if (next) {
+      const roundNum = next.replace("Round ", "");
+      window.history.replaceState(null, "", `#play?round=${roundNum}`);
+      // Smooth-scroll to Playable section
+      const el = document.getElementById("play");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    // Dispatch a custom event so Playable picks up the change without polling
+    window.dispatchEvent(new CustomEvent("round-filter", { detail: next }));
+  }, [activeRound]);
 
   return (
     <section id="tracks" className="border-t border-border/60 bg-card/20">
@@ -94,13 +128,38 @@ export default function HypothesisTracksSection() {
           workflow. CSH = emergent workflow. GAD framework = full framework.
           Planned tracks (content-driven, codex runtime) show as dashed ghost
           lines so you can see the research plan even where no data exists
-          yet. Read <Link href="/skeptic" className="text-accent underline decoration-dotted">/skeptic</Link>{" "}
+          yet. <strong className="text-foreground">Click a round</strong> to
+          filter the Playable Archive below. Read{" "}
+          <Link href="/skeptic" className="text-accent underline decoration-dotted">/skeptic</Link>{" "}
           before trusting any individual point — sample sizes are small.
         </p>
 
         <div className="mt-10">
-          <HypothesisTracksChart data={data} />
+          <HypothesisTracksChart
+            data={data}
+            onRoundClick={handleRoundClick}
+            activeRound={activeRound}
+          />
         </div>
+
+        {activeRound && (
+          <div className="mt-4 flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-4 py-2 text-sm font-semibold text-purple-300">
+              Filtering: {activeRound}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveRound(null);
+                window.history.replaceState(null, "", window.location.pathname);
+                window.dispatchEvent(new CustomEvent("round-filter", { detail: null }));
+              }}
+              className="text-xs text-muted-foreground underline decoration-dotted hover:text-foreground"
+            >
+              Clear filter
+            </button>
+          </div>
+        )}
 
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <Link

@@ -12,7 +12,7 @@ import { GlobalSearch } from "@/components/search/GlobalSearch";
  * secondary is the indie dev (target C); nav prioritizes scanning clarity.
  */
 
-type NavLink = { href: string; label: string; note?: string };
+type NavLink = { href: string; label: string; note?: string; tint?: string };
 
 type NavGroup = { label: string; links: NavLink[] };
 
@@ -72,7 +72,18 @@ const GROUPS: NavGroup[] = [
   },
 ];
 
-const TOP_LEVEL: NavLink[] = [{ href: "/emergent", label: "Emergent" }];
+const TOP_LEVEL: NavLink[] = [
+  {
+    href: "/emergent",
+    label: "Emergent",
+    tint: "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:border-amber-400 hover:bg-amber-500/20",
+  },
+  {
+    href: "/skeptic",
+    label: "Skeptic",
+    tint: "border-rose-500/30 bg-rose-500/10 text-rose-300 hover:border-rose-400 hover:bg-rose-500/20",
+  },
+];
 
 export default function Nav() {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -168,7 +179,7 @@ export default function Nav() {
             <Link
               key={link.href}
               href={link.href}
-              className="inline-flex items-center rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-300 transition-colors hover:border-amber-400 hover:bg-amber-500/20"
+              className={`inline-flex items-center rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${link.tint ?? ""}`}
             >
               {link.label}
             </Link>
@@ -231,16 +242,16 @@ export default function Nav() {
                 </ul>
               </div>
             ))}
-            <div className="mb-4">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
-                Compound-skills hypothesis
+            <div className="mb-4 space-y-2">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Highlights
               </p>
               {TOP_LEVEL.map((link) => (
                 <Link
                   key={`mobile-top-${link.href}`}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="block rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-300"
+                  className={`block rounded-md border px-3 py-2 text-sm font-semibold ${link.tint ?? ""}`}
                 >
                   {link.label}
                 </Link>
