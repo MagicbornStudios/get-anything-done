@@ -1,163 +1,142 @@
-import { registerScene, el, icon } from '../renderer';
-import { getState, equipItem, removeItem, healPlayer, showToast, setScene, saveGame } from '../state';
-import { createHUD } from '../hud';
-import type { Item } from '../types';
+// ============================================================
+// Inventory Scene (R-v5.05)
+// ============================================================
 
-registerScene('inventory', (container) => {
-  const state = getState();
-  const p = state.player;
-  let selectedItem: Item | null = null;
+import { registerScene, renderScene, icon, elementColor } from '../renderer';
+import { getState, saveGame, removeItem } from '../state';
+import { emit } from '../events';
+import type { Item, EquipSlot } from '../types';
 
-  container.appendChild(createHUD());
+registerScene('inventory', () => {
+  const app = document.getElementById('app')!;
+  const s = getState();
 
-  const scene = el('div', { className: 'char-sheet' });
+  const equipSlots: EquipSlot[] = ['main-hand', 'off-hand', 'body', 'trinket'];
 
-  function renderInventory() {
-    scene.innerHTML = '';
+  // Equipment display
+  const equipHtml = equipSlots.map(slot => {
+    const item = s.player.equipment[slot];
+    return `
+      <div class="equip-slot-panel" data-slot="${slot}">
+        <div class="slot-label">${slot}</div>
+        ${item ? `
+          <div class="equipped-item-card">
+            ${icon(item.icon, 24)} ${item.name}
+            <button class="btn btn-small btn-danger" data-unequip="${slot}">Unequip</button>
+          </div>
+        ` : '<div class="empty-slot-msg">Empty</div>'}
+      </div>
+    `;
+  }).join('');
 
-    const main = el('div', { className: 'char-main' });
+  // Inventory grid
+  const invHtml = s.player.inventory.filter(i => i.quantity > 0).map(item => {
+    const canEquip = item.category === 'equipment' && item.equipSlot;
+    const canUse = item.category === 'consumable';
+    return `
+      <div class="inv-item" data-item-id="${item.id}">
+        <div class="inv-icon">${icon(item.icon, 28)}</div>
+        <div class="inv-details">
+          <div class="inv-name">${item.name} ${item.element ? `<span style="color:${elementColor(item.element)}">(${item.element})</span>` : ''}</div>
+          <div class="inv-desc">${item.description}</div>
+          <div class="inv-qty">x${item.quantity}</div>
+        </div>
+        <div class="inv-actions">
+          ${canEquip ? `<button class="btn btn-small btn-primary" data-equip-id="${item.id}">Equip</button>` : ''}
+          ${canUse ? `<button class="btn btn-small btn-primary" data-use-id="${item.id}">Use</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
 
-    main.appendChild(el('div', { className: 'panel-header' },
-      el('h2', {}, icon('game-icons:knapsack', 'icon-lg'), ' Inventory'),
-      el('button', { className: 'btn btn-sm', onclick: () => setScene('map') }, 'Back'),
-    ));
+  app.innerHTML = `
+    <div class="scene inventory-scene">
+      <div class="scene-header">
+        <h2>${icon('game-icons:knapsack', 28)} Inventory</h2>
+        <button class="btn btn-secondary" id="btn-back">${icon('game-icons:return-arrow', 16)} Back</button>
+      </div>
 
-    // Inventory grid (R-v5.05)
-    const grid = el('div', { className: 'inventory-grid' });
-    const totalSlots = 24;
+      <div class="inventory-layout">
+        <div class="equipment-panel">
+          <h3>Equipment</h3>
+          ${equipHtml}
+        </div>
+        <div class="inventory-grid-panel">
+          <h3>Bag</h3>
+          <div class="inventory-grid">${invHtml || '<p>Your bag is empty.</p>'}</div>
+        </div>
+      </div>
+    </div>
+  `;
 
-    for (let i = 0; i < totalSlots; i++) {
-      const item = p.inventory[i];
-      const slot = el('div', {
-        className: `inv-slot ${item ? 'filled' : ''}`,
-        onclick: () => {
-          if (item) {
-            selectedItem = item;
-            renderInventory();
-          }
-        },
-        style: selectedItem?.id === item?.id ? { borderColor: 'var(--accent-gold)' } : {},
-      });
+  // Equip
+  app.querySelectorAll('[data-equip-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const itemId = (btn as HTMLElement).dataset.equipId!;
+      const item = s.player.inventory.find(i => i.id === itemId);
+      if (!item || !item.equipSlot) return;
 
-      if (item) {
-        slot.appendChild(icon(item.icon));
-        if (item.quantity > 1) {
-          slot.appendChild(el('span', { className: 'qty' }, `${item.quantity}`));
-        }
-      }
-      grid.appendChild(slot);
-    }
-    main.appendChild(grid);
-
-    // Item details
-    if (selectedItem) {
-      const detail = el('div', { className: 'panel', style: { marginTop: '12px' } });
-      detail.appendChild(el('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' } },
-        icon(selectedItem.icon, 'icon-lg'),
-        el('div', {},
-          el('h3', {}, selectedItem.name),
-          el('p', { style: { fontSize: '12px', color: 'var(--text-dim)' } }, selectedItem.description),
-          el('p', { style: { fontSize: '11px', color: 'var(--text-dim)' } },
-            `Category: ${selectedItem.category} | Value: ${selectedItem.value}g | Qty: ${selectedItem.quantity}`),
-          selectedItem.statBonuses ? el('p', { style: { fontSize: '11px', color: 'var(--accent-heal)' } },
-            Object.entries(selectedItem.statBonuses).map(([k, v]) => `+${v} ${k}`).join(', ')) : el('span', {}),
-        ),
-      ));
-
-      const actions = el('div', { style: { display: 'flex', gap: '8px' } });
-
-      if (selectedItem.equipSlot) {
-        actions.appendChild(el('button', {
-          className: 'btn btn-primary btn-sm',
-          onclick: () => {
-            equipItem(selectedItem!);
-            selectedItem = null;
-            showToast(`Equipped ${selectedItem?.name || 'item'}`, 'success');
-            saveGame();
-            renderInventory();
-          },
-        }, 'Equip'));
-      }
-
-      if (selectedItem.category === 'consumable') {
-        actions.appendChild(el('button', {
-          className: 'btn btn-sm',
-          onclick: () => {
-            useConsumable(selectedItem!);
-            selectedItem = null;
-            saveGame();
-            renderInventory();
-          },
-        }, 'Use'));
+      // Unequip current
+      const current = s.player.equipment[item.equipSlot];
+      if (current) {
+        s.player.inventory.push({ ...current, quantity: 1 });
       }
 
-      actions.appendChild(el('button', {
-        className: 'btn btn-sm btn-danger',
-        onclick: () => {
-          removeItem(selectedItem!.id);
-          showToast(`Discarded ${selectedItem!.name}`, 'info');
-          selectedItem = null;
-          saveGame();
-          renderInventory();
-        },
-      }, 'Discard'));
+      // Equip new
+      s.player.equipment[item.equipSlot] = { ...item, quantity: 1 };
+      removeItem(itemId, 1);
+      emit('toast', `Equipped ${item.name}`, 'success');
+      emit('state-changed');
+      saveGame();
+      renderScene('inventory');
+    });
+  });
 
-      detail.appendChild(actions);
-      main.appendChild(detail);
-    }
+  // Unequip
+  app.querySelectorAll('[data-unequip]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const slot = (btn as HTMLElement).dataset.unequip as EquipSlot;
+      const item = s.player.equipment[slot];
+      if (!item) return;
+      s.player.inventory.push({ ...item, quantity: 1 });
+      s.player.equipment[slot] = null;
+      emit('toast', `Unequipped ${item.name}`, 'info');
+      emit('state-changed');
+      saveGame();
+      renderScene('inventory');
+    });
+  });
 
-    scene.appendChild(main);
+  // Use consumable
+  app.querySelectorAll('[data-use-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const itemId = (btn as HTMLElement).dataset.useId!;
+      const item = s.player.inventory.find(i => i.id === itemId);
+      if (!item || item.quantity <= 0) return;
 
-    // Equipment sidebar
-    const sidebar = el('div', { className: 'char-sidebar' });
-    sidebar.appendChild(el('h3', { style: { marginBottom: '8px' } }, 'Equipment'));
+      // Apply consumable effects
+      switch (itemId) {
+        case 'item-health-potion':
+          s.player.stats.hp = Math.min(s.player.stats.maxHp, s.player.stats.hp + 30);
+          emit('toast', 'Restored 30 HP', 'success');
+          break;
+        case 'item-mana-potion':
+          s.player.stats.mana = Math.min(s.player.stats.maxMana, s.player.stats.mana + 20);
+          emit('toast', 'Restored 20 MP', 'success');
+          break;
+        case 'item-stamina-tonic':
+          s.player.stats.stamina = Math.min(s.player.stats.maxStamina, s.player.stats.stamina + 15);
+          emit('toast', 'Restored 15 SP', 'success');
+          break;
+      }
+      removeItem(itemId, 1);
+      emit('state-changed');
+      saveGame();
+      renderScene('inventory');
+    });
+  });
 
-    const equipSlots = el('div', { className: 'equip-slots' });
-    for (const [slotName, item] of Object.entries(p.equipment) as [string, any][]) {
-      equipSlots.appendChild(el('div', { className: `equip-slot ${item ? 'filled' : ''}` },
-        item ? icon(item.icon, 'icon-sm') : icon('game-icons:perspective-dice-five', 'icon-sm'),
-        el('div', {},
-          el('div', { className: 'slot-label' }, slotName),
-          el('div', { style: { fontSize: '12px' } }, item ? item.name : 'Empty'),
-        ),
-      ));
-    }
-    sidebar.appendChild(equipSlots);
-
-    // Gold
-    sidebar.appendChild(el('div', { className: 'panel', style: { marginTop: '12px' } },
-      el('div', { style: { display: 'flex', alignItems: 'center', gap: '6px' } },
-        icon('game-icons:two-coins', 'icon-lg'),
-        el('span', { style: { fontSize: '18px', fontWeight: '600', color: 'var(--accent-gold)' } }, `${p.gold} Gold`),
-      ),
-    ));
-
-    scene.appendChild(sidebar);
-  }
-
-  renderInventory();
-  container.appendChild(scene);
+  document.getElementById('btn-back')?.addEventListener('click', () => {
+    s.currentScene = 'map'; renderScene('map');
+  });
 });
-
-function useConsumable(item: Item): void {
-  switch (item.id) {
-    case 'item-hp-potion':
-      healPlayer(30, 0, 0);
-      showToast('Restored 30 HP', 'success');
-      break;
-    case 'item-mana-potion':
-      healPlayer(0, 20, 0);
-      showToast('Restored 20 MP', 'success');
-      break;
-    case 'item-stamina-potion':
-      healPlayer(0, 0, 20);
-      showToast('Restored 20 SP', 'success');
-      break;
-    case 'item-antidote':
-      showToast('Cured poison', 'success');
-      break;
-    default:
-      showToast(`Used ${item.name}`, 'info');
-  }
-  removeItem(item.id);
-}

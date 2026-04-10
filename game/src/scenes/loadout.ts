@@ -1,196 +1,207 @@
-import { registerScene, el, icon } from '../renderer';
-import { getState, setScene, showToast, saveGame } from '../state';
-import { createHUD } from '../hud';
-import type { Spell, PhysicalSkill, ActionPolicy } from '../types';
+// ============================================================
+// Loadout Scene — Spell/Skill Slot Management (R-v5.07)
+// ============================================================
 
-registerScene('loadout', (container) => {
-  const state = getState();
-  const p = state.player;
+import { registerScene, renderScene, icon, elementColor } from '../renderer';
+import { getState, saveGame } from '../state';
+import { emit } from '../events';
 
-  container.appendChild(createHUD());
+registerScene('loadout', () => {
+  const app = document.getElementById('app')!;
+  const s = getState();
 
-  const scene = el('div', { className: 'char-sheet' });
+  // Spell loadout
+  const spellSlotsHtml = s.player.spellLoadout.map((slotId, idx) => {
+    const spell = slotId ? s.player.spells.find(sp => sp.id === slotId) : null;
+    return `
+      <div class="loadout-slot" data-slot-type="spell" data-slot-idx="${idx}">
+        <div class="slot-number">Slot ${idx + 1}</div>
+        ${spell ? `
+          <div class="slot-content" style="border-color:${elementColor(spell.elements[0])}">
+            ${icon(spell.icon, 24)} ${spell.name}
+            <span class="slot-cost">${spell.manaCost} MP</span>
+            <button class="btn btn-small btn-danger" data-clear-spell="${idx}">&times;</button>
+          </div>
+        ` : '<div class="slot-empty">Empty — click a spell below to assign</div>'}
+      </div>
+    `;
+  }).join('');
 
-  function renderLoadout() {
-    scene.innerHTML = '';
+  // Available spells
+  const availableSpellsHtml = s.player.spells.map(sp => {
+    const isEquipped = s.player.spellLoadout.includes(sp.id);
+    return `
+      <div class="loadout-option ${isEquipped ? 'equipped' : ''}" data-assign-spell="${sp.id}">
+        <span style="color:${elementColor(sp.elements[0])}">${icon(sp.icon, 20)}</span>
+        ${sp.name} <span class="option-tier">T${sp.tier}</span> <span class="option-cost">${sp.manaCost} MP</span>
+        ${sp.elements.map(el => `<span class="el-badge" style="background:${elementColor(el)}">${el}</span>`).join('')}
+      </div>
+    `;
+  }).join('');
 
-    const main = el('div', { className: 'char-main' });
+  // Skill loadout
+  const skillSlotsHtml = s.player.skillLoadout.map((slotId, idx) => {
+    const skill = slotId ? s.player.physicalSkills.find(sk => sk.id === slotId) : null;
+    return `
+      <div class="loadout-slot" data-slot-type="skill" data-slot-idx="${idx}">
+        <div class="slot-number">Slot ${idx + 1}</div>
+        ${skill ? `
+          <div class="slot-content">
+            ${icon(skill.icon, 24)} ${skill.name}
+            <span class="slot-cost">${skill.staminaCost} SP</span>
+            <button class="btn btn-small btn-danger" data-clear-skill="${idx}">&times;</button>
+          </div>
+        ` : '<div class="slot-empty">Empty</div>'}
+      </div>
+    `;
+  }).join('');
 
-    main.appendChild(el('div', { className: 'panel-header' },
-      el('h2', {}, icon('game-icons:spell-book', 'icon-lg'), ' Loadout & Policies'),
-      el('button', { className: 'btn btn-sm', onclick: () => setScene('map') }, 'Back'),
-    ));
+  // Available skills
+  const availableSkillsHtml = s.player.physicalSkills.filter(sk => sk.unlocked).map(sk => {
+    const isEquipped = s.player.skillLoadout.includes(sk.id);
+    return `
+      <div class="loadout-option ${isEquipped ? 'equipped' : ''}" data-assign-skill="${sk.id}">
+        ${icon(sk.icon, 20)} ${sk.name} <span class="option-cost">${sk.staminaCost} SP</span>
+      </div>
+    `;
+  }).join('');
 
-    // Spell Loadout (R-v5.07 — 4 slots)
-    const spellSection = el('div', { className: 'panel' });
-    spellSection.appendChild(el('h3', {}, `Spell Loadout (${p.spellLoadout.filter(Boolean).length}/4)`));
-    spellSection.appendChild(el('p', { style: { fontSize: '11px', color: 'var(--text-dim)', marginBottom: '8px' } },
-      'Equipped spells are used in auto-combat based on action policies.'));
+  // Action policies
+  const policiesHtml = s.player.actionPolicies.map(p => `
+    <div class="policy-row">
+      <label class="policy-check">
+        <input type="checkbox" data-pol-id="${p.id}" ${p.enabled ? 'checked' : ''}>
+        <span class="policy-pri">P${p.priority}</span>
+        <span class="policy-cond">${p.condition}</span> → <span class="policy-act">${p.action}</span>
+      </label>
+    </div>
+  `).join('');
 
-    const spellSlots = el('div', { className: 'loadout-slots' });
-    for (let i = 0; i < 4; i++) {
-      const spell = p.spellLoadout[i];
-      spellSlots.appendChild(el('div', {
-        className: `loadout-slot ${spell ? 'filled' : ''}`,
-        onclick: () => {
-          if (spell) {
-            p.spellLoadout[i] = null;
-            saveGame();
-            renderLoadout();
-          }
-        },
-      },
-        spell ? el('span', { style: { fontSize: '9px', textAlign: 'center' } },
-          icon(spell.icon, 'icon-sm'), el('br', {}), spell.name) :
-          el('span', { style: { fontSize: '10px', color: 'var(--text-dim)' } }, `${i + 1}`),
-      ));
-    }
-    spellSection.appendChild(spellSlots);
+  app.innerHTML = `
+    <div class="scene loadout-scene">
+      <div class="scene-header">
+        <h2>${icon('game-icons:spell-book', 28)} Loadout Configuration</h2>
+        <button class="btn btn-secondary" id="btn-back">${icon('game-icons:return-arrow', 16)} Back</button>
+      </div>
 
-    // All known spells to equip
-    spellSection.appendChild(el('div', { style: { marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' } },
-      ...p.spells.map(spell => {
-        const equipped = p.spellLoadout.some(s => s?.id === spell.id);
-        return el('button', {
-          className: `btn btn-sm ${equipped ? 'btn-gold' : ''}`,
-          onclick: () => {
-            if (equipped) {
-              const idx = p.spellLoadout.findIndex(s => s?.id === spell.id);
-              if (idx !== -1) p.spellLoadout[idx] = null;
-            } else {
-              const emptyIdx = p.spellLoadout.indexOf(null);
-              if (emptyIdx !== -1) {
-                p.spellLoadout[emptyIdx] = spell;
-              } else {
-                showToast('All spell slots full — remove one first', 'danger');
-                return;
-              }
-            }
-            saveGame();
-            renderLoadout();
-          },
-        }, icon(spell.icon, 'icon-sm'), `${spell.name} (${spell.manaCost}MP)`);
-      }),
-    ));
-    main.appendChild(spellSection);
+      <div class="loadout-layout">
+        <div class="loadout-section">
+          <h3>Spell Loadout (4 slots)</h3>
+          <div class="loadout-slots">${spellSlotsHtml}</div>
+          <h4>Available Spells</h4>
+          <div class="loadout-options">${availableSpellsHtml}</div>
+        </div>
 
-    // Skill Loadout (R-v5.07 — 3 slots)
-    const skillSection = el('div', { className: 'panel' });
-    skillSection.appendChild(el('h3', {}, `Physical Skill Loadout (${p.skillLoadout.filter(Boolean).length}/3)`));
-    skillSection.appendChild(el('p', { style: { fontSize: '11px', color: 'var(--text-dim)', marginBottom: '8px' } },
-      'Physical skills use Stamina instead of Mana.'));
+        <div class="loadout-section">
+          <h3>Skill Loadout (3 slots)</h3>
+          <div class="loadout-slots">${skillSlotsHtml}</div>
+          <h4>Available Skills</h4>
+          <div class="loadout-options">${availableSkillsHtml}</div>
+        </div>
 
-    const skillSlots = el('div', { className: 'loadout-slots' });
-    for (let i = 0; i < 3; i++) {
-      const skill = p.skillLoadout[i];
-      skillSlots.appendChild(el('div', {
-        className: `loadout-slot ${skill ? 'filled' : ''}`,
-        onclick: () => {
-          if (skill) {
-            p.skillLoadout[i] = null;
-            saveGame();
-            renderLoadout();
-          }
-        },
-      },
-        skill ? el('span', { style: { fontSize: '9px', textAlign: 'center' } },
-          icon(skill.icon, 'icon-sm'), el('br', {}), skill.name) :
-          el('span', { style: { fontSize: '10px', color: 'var(--text-dim)' } }, `${i + 1}`),
-      ));
-    }
-    skillSection.appendChild(skillSlots);
+        <div class="loadout-section">
+          <h3>Action Policies (Combat AI)</h3>
+          <p class="policy-info">Configure how auto-combat resolves. Lower priority number = checked first.</p>
+          ${policiesHtml}
+        </div>
+      </div>
+    </div>
+  `;
 
-    // Unlocked skills to equip
-    const unlocked = p.physicalSkills.filter(s => s.unlocked);
-    skillSection.appendChild(el('div', { style: { marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' } },
-      ...unlocked.map(skill => {
-        const equipped = p.skillLoadout.some(s => s?.id === skill.id);
-        return el('button', {
-          className: `btn btn-sm ${equipped ? 'btn-gold' : ''}`,
-          onclick: () => {
-            if (equipped) {
-              const idx = p.skillLoadout.findIndex(s => s?.id === skill.id);
-              if (idx !== -1) p.skillLoadout[idx] = null;
-            } else {
-              const emptyIdx = p.skillLoadout.indexOf(null);
-              if (emptyIdx !== -1) {
-                p.skillLoadout[emptyIdx] = skill;
-              } else {
-                showToast('All skill slots full — remove one first', 'danger');
-                return;
-              }
-            }
-            saveGame();
-            renderLoadout();
-          },
-        }, icon(skill.icon, 'icon-sm'), `${skill.name} (${skill.staminaCost}SP)`);
-      }),
-    ));
-    main.appendChild(skillSection);
+  // Track which slot is being assigned
+  let activeSpellSlot = -1;
+  let activeSkillSlot = -1;
 
-    // Action Policies (R-v5.13)
-    const policySection = el('div', { className: 'panel' });
-    policySection.appendChild(el('h3', {}, 'Action Policies (Auto-Combat Rules)'));
-    policySection.appendChild(el('p', { style: { fontSize: '11px', color: 'var(--text-dim)', marginBottom: '8px' } },
-      'Combat resolves automatically. Policies determine what actions your hero takes. Lower priority = checked first.'));
+  // Click spell slot to select it
+  app.querySelectorAll('[data-slot-type="spell"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('[data-clear-spell]')) return;
+      activeSpellSlot = parseInt((el as HTMLElement).dataset.slotIdx || '-1');
+      activeSkillSlot = -1;
+      // Highlight
+      app.querySelectorAll('.loadout-slot').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
 
-    const policyEditor = el('div', { className: 'policy-editor' });
-    const sortedPolicies = [...p.actionPolicies].sort((a, b) => a.priority - b.priority);
+  // Click skill slot to select it
+  app.querySelectorAll('[data-slot-type="skill"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('[data-clear-skill]')) return;
+      activeSkillSlot = parseInt((el as HTMLElement).dataset.slotIdx || '-1');
+      activeSpellSlot = -1;
+      app.querySelectorAll('.loadout-slot').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
 
-    for (const policy of sortedPolicies) {
-      const row = el('div', { className: 'policy-rule' },
-        el('span', { style: { minWidth: '40px', color: 'var(--accent-gold)', fontWeight: '600' } }, `#${policy.priority}`),
-        el('span', { style: { minWidth: '140px' } }, `IF ${formatCondition(policy.condition)}`),
-        el('span', { style: { color: 'var(--accent-ice)' } }, `THEN ${formatAction(policy.action)}`),
-        el('button', {
-          className: 'btn btn-sm',
-          onclick: () => {
-            // Move priority up (lower number)
-            policy.priority = Math.max(1, policy.priority - 1);
-            saveGame();
-            renderLoadout();
-          },
-        }, '\u2191'),
-        el('button', {
-          className: 'btn btn-sm',
-          onclick: () => {
-            policy.priority++;
-            saveGame();
-            renderLoadout();
-          },
-        }, '\u2193'),
-      );
-      policyEditor.appendChild(row);
-    }
+  // Assign spell to slot
+  app.querySelectorAll('[data-assign-spell]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (activeSpellSlot < 0) {
+        // Find first empty slot
+        activeSpellSlot = s.player.spellLoadout.indexOf(null);
+        if (activeSpellSlot < 0) activeSpellSlot = 0;
+      }
+      const spellId = (el as HTMLElement).dataset.assignSpell!;
+      // Remove from other slots if already equipped
+      s.player.spellLoadout = s.player.spellLoadout.map(id => id === spellId ? null : id);
+      s.player.spellLoadout[activeSpellSlot] = spellId;
+      saveGame();
+      emit('state-changed');
+      renderScene('loadout');
+    });
+  });
 
-    policySection.appendChild(policyEditor);
-    main.appendChild(policySection);
+  // Assign skill to slot
+  app.querySelectorAll('[data-assign-skill]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (activeSkillSlot < 0) {
+        activeSkillSlot = s.player.skillLoadout.indexOf(null);
+        if (activeSkillSlot < 0) activeSkillSlot = 0;
+      }
+      const skillId = (el as HTMLElement).dataset.assignSkill!;
+      s.player.skillLoadout = s.player.skillLoadout.map(id => id === skillId ? null : id);
+      s.player.skillLoadout[activeSkillSlot] = skillId;
+      saveGame();
+      emit('state-changed');
+      renderScene('loadout');
+    });
+  });
 
-    scene.appendChild(main);
-  }
+  // Clear spell slot
+  app.querySelectorAll('[data-clear-spell]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt((btn as HTMLElement).dataset.clearSpell || '0');
+      s.player.spellLoadout[idx] = null;
+      saveGame();
+      renderScene('loadout');
+    });
+  });
 
-  renderLoadout();
-  container.appendChild(scene);
+  // Clear skill slot
+  app.querySelectorAll('[data-clear-skill]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt((btn as HTMLElement).dataset.clearSkill || '0');
+      s.player.skillLoadout[idx] = null;
+      saveGame();
+      renderScene('loadout');
+    });
+  });
+
+  // Policy toggles
+  app.querySelectorAll('[data-pol-id]').forEach(input => {
+    input.addEventListener('change', () => {
+      const polId = (input as HTMLInputElement).dataset.polId!;
+      const policy = s.player.actionPolicies.find(p => p.id === polId);
+      if (policy) policy.enabled = (input as HTMLInputElement).checked;
+      saveGame();
+    });
+  });
+
+  document.getElementById('btn-back')?.addEventListener('click', () => {
+    s.currentScene = 'map'; renderScene('map');
+  });
 });
-
-function formatCondition(c: string): string {
-  const map: Record<string, string> = {
-    hp_below_30: 'HP below 30%',
-    enemy_has_weakness: 'Enemy has elemental weakness',
-    has_mana: 'Have enough mana',
-    has_stamina: 'Have enough stamina',
-    always: 'Always (fallback)',
-  };
-  return map[c] || c;
-}
-
-function formatAction(a: string): string {
-  const map: Record<string, string> = {
-    heal: 'Use Health Potion',
-    exploit_weakness: 'Cast spell that exploits weakness',
-    use_spell: 'Cast equipped spell',
-    use_skill: 'Use physical skill',
-    attack: 'Basic attack',
-  };
-  return map[a] || a;
-}

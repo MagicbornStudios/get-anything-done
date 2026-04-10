@@ -1,141 +1,121 @@
-import { registerScene, el, icon, barHTML } from '../renderer';
-import { getState, setScene, unlockSkill, saveGame, showToast } from '../state';
-import { createHUD } from '../hud';
+// ============================================================
+// Character Sheet Scene (R-v5.06)
+// ============================================================
 
-registerScene('character', (container) => {
-  const state = getState();
-  const p = state.player;
-  const s = p.stats;
+import { registerScene, renderScene, icon, bar, elementColor } from '../renderer';
+import { getState, getEffectiveStats, saveGame } from '../state';
 
-  container.appendChild(createHUD());
+registerScene('character', () => {
+  const app = document.getElementById('app')!;
+  const s = getState();
+  const stats = getEffectiveStats();
 
-  const scene = el('div', { className: 'char-sheet' });
-
-  const main = el('div', { className: 'char-main' });
-
-  // Header
-  main.appendChild(el('div', { className: 'panel-header' },
-    el('h2', {}, icon('game-icons:character', 'icon-lg'), ` ${p.name} — Level ${s.level}`),
-    el('button', { className: 'btn btn-sm', onclick: () => setScene('map') }, 'Back'),
-  ));
-
-  // Combat Stats
-  const statsPanel = el('div', { className: 'panel' });
-  statsPanel.appendChild(el('h3', {}, 'Combat Stats'));
-  const statRows: [string, number, string][] = [
-    ['Attack', s.attack, 'game-icons:sword-brandish'],
-    ['Defense', s.defense, 'game-icons:shield-reflect'],
-    ['Speed', s.speed, 'game-icons:running-ninja'],
-    ['Level', s.level, 'game-icons:level-four-advanced'],
-  ];
-  for (const [name, val, ic] of statRows) {
-    statsPanel.appendChild(el('div', { className: 'stat-row' },
-      el('span', { style: { display: 'flex', alignItems: 'center', gap: '4px' } }, icon(ic, 'icon-sm'), name),
-      el('span', { className: 'stat-val' }, String(val)),
-    ));
-  }
-  // Resource bars
-  statsPanel.appendChild(el('div', { style: { marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' } },
-    barHTML(s.hp, s.maxHp, 'bar-hp', `HP ${s.hp}/${s.maxHp}`),
-    barHTML(s.mana, s.maxMana, 'bar-mana', `MP ${s.mana}/${s.maxMana}`),
-    barHTML(s.stamina, s.maxStamina, 'bar-stamina', `SP ${s.stamina}/${s.maxStamina}`),
-    barHTML(s.xp, s.xpToLevel, 'bar-xp', `XP ${s.xp}/${s.xpToLevel}`),
-  ));
-  main.appendChild(statsPanel);
-
-  // Traits (R-v5.14 — visible numeric values)
-  const traitsPanel = el('div', { className: 'panel' });
-  traitsPanel.appendChild(el('h3', {}, 'Traits'));
-  for (const [key, val] of Object.entries(p.traits)) {
-    const v = val as number;
-    const color = v > 0.6 ? 'var(--accent-fire)' : v > 0.3 ? 'var(--accent-gold)' : 'var(--accent-ice)';
-    traitsPanel.appendChild(el('div', { className: 'trait-row' },
-      el('span', {}, key.replace(/([A-Z])/g, ' $1').trim()),
-      el('span', { style: { color, fontWeight: '600' } }, v.toFixed(2)),
-      el('div', { className: 'trait-bar' },
-        el('div', { className: 'trait-bar-fill', style: { width: `${v * 100}%`, background: color } }),
-      ),
-    ));
-  }
-  main.appendChild(traitsPanel);
-
-  // Equipment
-  const equipPanel = el('div', { className: 'panel' });
-  equipPanel.appendChild(el('h3', {}, 'Equipment'));
-  const slots = el('div', { className: 'equip-slots' });
-  for (const [slotName, item] of Object.entries(p.equipment) as [string, any][]) {
-    slots.appendChild(el('div', { className: `equip-slot ${item ? 'filled' : ''}` },
-      item ? icon(item.icon, 'icon-sm') : icon('game-icons:perspective-dice-five', 'icon-sm'),
-      el('div', {},
-        el('div', { className: 'slot-label' }, slotName),
-        el('div', { style: { fontSize: '12px' } }, item ? item.name : 'Empty'),
-      ),
-    ));
-  }
-  equipPanel.appendChild(slots);
-  main.appendChild(equipPanel);
-
-  // Known Spells
-  const spellPanel = el('div', { className: 'panel' });
-  spellPanel.appendChild(el('h3', {}, `Known Spells (${p.spells.length})`));
-  for (const spell of p.spells) {
-    spellPanel.appendChild(el('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0', borderBottom: '1px solid var(--border)' } },
-      icon(spell.icon, 'icon-sm'),
-      el('span', { style: { fontWeight: '600', fontSize: '12px' } }, spell.name),
-      el('span', { style: { fontSize: '11px', color: 'var(--text-dim)' } }, `T${spell.tier} | ${spell.elements.join(',')} | ${spell.manaCost} MP | ${spell.power} pow`),
-    ));
-  }
-  main.appendChild(spellPanel);
-
-  scene.appendChild(main);
-
-  // Sidebar — Skill Tree
-  const sidebar = el('div', { className: 'char-sidebar' });
-  sidebar.appendChild(el('h3', { style: { marginBottom: '8px' } }, 'Physical Skill Tree'));
-  sidebar.appendChild(el('p', { style: { fontSize: '11px', color: 'var(--text-dim)', marginBottom: '8px' } },
-    'Skills cost Stamina (not Mana). Unlock with XP.'));
-
-  const tree = el('div', { className: 'skill-tree-grid' });
-  for (const skill of p.physicalSkills) {
-    const canUnlock = !skill.unlocked && skill.prerequisites.every(
-      pid => p.physicalSkills.find(s => s.id === pid)?.unlocked
-    );
-    const node = el('div', {
-      className: `skill-node ${skill.unlocked ? 'unlocked' : canUnlock ? '' : 'locked'}`,
-      onclick: () => {
-        if (canUnlock) {
-          // Cost: 15 XP per tier
-          const cost = skill.tier * 15;
-          if (s.xp >= cost) {
-            s.xp -= cost;
-            unlockSkill(skill.id);
-            saveGame();
-            setScene('character');
-          } else {
-            showToast(`Need ${cost} XP to unlock (have ${s.xp})`, 'danger');
-          }
-        }
-      },
-    },
-      icon(skill.icon),
-      el('div', { className: 'skill-name' }, skill.name),
-      el('div', { style: { fontSize: '10px', color: 'var(--text-dim)' } }, `${skill.staminaCost} SP`),
-      !skill.unlocked ? el('div', { className: 'skill-cost' }, canUnlock ? `Unlock: ${skill.tier * 15} XP` : 'Locked') : el('div', { style: { fontSize: '10px', color: 'var(--accent-heal)' } }, 'Unlocked'),
-    );
-    tree.appendChild(node);
-  }
-  sidebar.appendChild(tree);
+  // Traits display
+  const traitsHtml = Object.entries(s.player.traits).map(([key, val]) => `
+    <div class="trait-row">
+      <span class="trait-name">${key}</span>
+      <div class="trait-bar-container">
+        ${bar(Math.round(val * 100), 100, val > 0.6 ? '#ff9800' : val > 0.3 ? '#4caf50' : '#9e9e9e', `${(val as number).toFixed(2)}`, 14)}
+      </div>
+    </div>
+  `).join('');
 
   // Affinities
-  sidebar.appendChild(el('h3', { style: { marginTop: '16px', marginBottom: '8px' } }, 'Rune Affinities'));
-  for (const rune of p.runes.filter(r => r.discovered)) {
-    sidebar.appendChild(el('div', { className: 'affinity-row' },
-      icon(rune.icon, 'icon-sm'),
-      el('span', { className: `elem-${rune.element}`, style: { fontSize: '11px', minWidth: '60px' } }, rune.name),
-      el('div', { style: { flex: '1' } }, barHTML(rune.affinityLevel, 100, 'bar-xp')),
-    ));
-  }
+  const affinityHtml = s.player.runes.filter(r => r.discovered).map(r => `
+    <div class="affinity-row">
+      <span class="affinity-icon" style="color:${elementColor(r.element)}">${icon(r.icon, 20)} ${r.name}</span>
+      ${bar(r.affinityLevel, 100, elementColor(r.element), `${r.affinityLevel}/100`, 14)}
+      <div class="affinity-milestones">
+        ${r.affinityMilestones.map(m => `<span class="ms ${m.claimed ? 'ms-claimed' : r.affinityLevel >= m.level ? 'ms-reached' : 'ms-locked'}">${m.level}: ${m.reward}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
 
-  scene.appendChild(sidebar);
-  container.appendChild(scene);
+  // Skills tree
+  const skillsHtml = s.player.physicalSkills.map(sk => `
+    <div class="skill-node ${sk.unlocked ? 'unlocked' : 'locked'}">
+      <div class="skill-icon">${icon(sk.icon, 24)}</div>
+      <div class="skill-info">
+        <div class="skill-name">${sk.name} <span class="skill-tier">T${sk.tier}</span></div>
+        <div class="skill-cost">${sk.staminaCost} SP | ${sk.damage} dmg</div>
+        ${!sk.unlocked ? `<div class="skill-prereq">Requires: ${sk.prerequisites.map(p => s.player.physicalSkills.find(ps => ps.id === p)?.name || p).join(', ') || `Level ${sk.tier}`}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  // Equipment
+  const equipSlots = ['main-hand', 'off-hand', 'body', 'trinket'] as const;
+  const equipHtml = equipSlots.map(slot => {
+    const item = s.player.equipment[slot];
+    return `
+      <div class="equip-slot">
+        <span class="slot-name">${slot}</span>
+        ${item ? `
+          <span class="equipped-item">${icon(item.icon, 20)} ${item.name}</span>
+        ` : '<span class="empty-slot">Empty</span>'}
+      </div>
+    `;
+  }).join('');
+
+  // Known spells
+  const spellsHtml = s.player.spells.map(sp => `
+    <div class="spell-card" style="border-color:${elementColor(sp.elements[0])}">
+      <div class="spell-icon" style="color:${elementColor(sp.elements[0])}">${icon(sp.icon, 24)}</div>
+      <div class="spell-name">${sp.name}</div>
+      <div class="spell-cost">${sp.manaCost} MP | Pwr ${sp.power}</div>
+      <div class="spell-tier">T${sp.tier}</div>
+    </div>
+  `).join('');
+
+  app.innerHTML = `
+    <div class="scene character-scene">
+      <div class="scene-header">
+        <h2>${icon('game-icons:character-sheet', 28)} Character Sheet</h2>
+        <button class="btn btn-secondary" id="btn-back">${icon('game-icons:return-arrow', 16)} Back</button>
+      </div>
+
+      <div class="character-layout">
+        <div class="char-section">
+          <h3>${icon('game-icons:person', 20)} ${s.player.name} — Level ${stats.level}</h3>
+          <div class="stat-grid">
+            <div class="stat">${icon('game-icons:hearts', 16)} HP: ${s.player.stats.hp}/${stats.maxHp}</div>
+            <div class="stat">${icon('game-icons:spell-book', 16)} MP: ${s.player.stats.mana}/${stats.maxMana}</div>
+            <div class="stat">${icon('game-icons:running-shoe', 16)} SP: ${s.player.stats.stamina}/${stats.maxStamina}</div>
+            <div class="stat">${icon('game-icons:broadsword', 16)} ATK: ${stats.attack}</div>
+            <div class="stat">${icon('game-icons:shield', 16)} DEF: ${stats.defense}</div>
+            <div class="stat">${icon('game-icons:sprint', 16)} SPD: ${stats.speed}</div>
+          </div>
+        </div>
+
+        <div class="char-section">
+          <h3>${icon('game-icons:brain', 20)} Traits</h3>
+          ${traitsHtml}
+        </div>
+
+        <div class="char-section">
+          <h3>${icon('game-icons:fire-ring', 20)} Affinities</h3>
+          ${affinityHtml}
+        </div>
+
+        <div class="char-section">
+          <h3>${icon('game-icons:sword-clash', 20)} Physical Skills</h3>
+          <div class="skill-tree">${skillsHtml}</div>
+        </div>
+
+        <div class="char-section">
+          <h3>${icon('game-icons:gem-pendant', 20)} Equipment</h3>
+          ${equipHtml}
+        </div>
+
+        <div class="char-section">
+          <h3>${icon('game-icons:spell-book', 20)} Known Spells</h3>
+          <div class="spell-grid">${spellsHtml}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-back')?.addEventListener('click', () => {
+    s.currentScene = 'map'; renderScene('map');
+  });
 });
