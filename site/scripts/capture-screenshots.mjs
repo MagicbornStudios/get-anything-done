@@ -36,6 +36,10 @@ const PUBLIC_DIR = path.join(SITE_ROOT, 'public');
 const SCREENSHOTS_DIR = path.join(PUBLIC_DIR, 'screenshots');
 const PLAYABLE_DIR = path.join(PUBLIC_DIR, 'playable');
 
+// Base URL: use the deployed site by default so games render properly.
+// Override with SCREENSHOT_BASE_URL for local dev server.
+const BASE_URL = process.env.SCREENSHOT_BASE_URL || 'https://get-anything-done.vercel.app';
+
 // ENV FLAG — off by default
 if (process.env.CAPTURE_SCREENSHOTS !== '1') {
   console.log('capture-screenshots: CAPTURE_SCREENSHOTS not set to 1, skipping.');
@@ -129,9 +133,9 @@ for (const build of playableBuilds) {
   fs.mkdirSync(screenshotDir, { recursive: true });
 
   try {
-    // Load the game's index.html directly via file:// protocol
-    const fileUrl = `file:///${build.indexHtml.replace(/\\/g, '/')}`;
-    await page.goto(fileUrl, { waitUntil: 'networkidle0', timeout: 15000 });
+    // Load from the deployed site so games render with all assets
+    const url = `${BASE_URL}/playable/${build.project}/${build.version}/index.html`;
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
 
     // Wait 3 seconds for the title screen to render
     await new Promise((r) => setTimeout(r, 3000));

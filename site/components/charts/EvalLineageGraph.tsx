@@ -129,7 +129,7 @@ function buildGraph(): { nodes: GraphNode[]; edges: Array<{ from: string; to: st
       evalMode: "brownfield",
       workflow: r.workflow,
       score,
-      baseline,
+      baseline: baseline ?? null,
       x,
       y: 160,
     });
