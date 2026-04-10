@@ -2,12 +2,12 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-10T03:46:25.498Z
+Generated: 2026-04-10T04:57:43.564Z
 
 
 ---
 
-# Skills (28)
+# Skills (30)
 
 ## gad:add-todo
 id: add-todo
@@ -1372,6 +1372,156 @@ Never silently skip a verify step. If verify is broken, that's more important to
 - `references/commit-conventions.md` — commit message format and examples
 
 
+## find-skills
+id: find-skills
+description: >- Discover installed skills relevant to the current task and suggest external skills worth installing when no local match exists. Use when you are about to attempt a non-trivial task and want to check whether an existing skill already solves it, or when you notice you are repeating yourself and suspect there should be a skill for this. GAD's find-skills is a thin methodology wrapper around the vercel-labs/skills CLI — it delegates actual search and listing to npx skills and adds GAD-specific guidance on how to interpret the results and which external sources to prefer. Per decisions gad-73 and gad-85 this is one of the three fundamental skills (find-skills + merge-skill + create-skill) that enable the emergent-evolution hypothesis to be tested in practice.
+origin: human-authored
+
+
+# find-skills
+
+**Experimental — awaiting evaluation harness per decision gad-86.**
+
+## The one-sentence procedure
+
+**`npx skills find "<keywords>"` is the answer.** Everything below is the methodology wrapped around that call.
+
+## Why this skill is a thin wrapper
+
+vercel-labs/skills ([github.com/vercel-labs/skills](https://github.com/vercel-labs/skills)) is the canonical CLI for the open agent-skills ecosystem. It supports 40+ coding agents including every runtime GAD cares about, respects the `.agents/skills/` convention from gad-80, handles add/list/find/remove/update/check, and understands GitHub shorthand (`owner/repo`), full URLs, GitLab URLs, and local paths. Per decision gad-85, GAD does NOT reimplement skill discovery — we delegate to `npx skills` and add GAD-specific guidance on when to use it, how to interpret results, and which external sources to trust.
+
+This keeps the skill simple, the installation story consistent with the ecosystem, and GAD's unique value (methodology + evaluation framework + hypothesis testing) is where we put effort instead of reinventing distribution.
+
+## When to load this skill
+
+- You are about to attempt a non-trivial task (a multi-step procedure, a domain-specific workflow, a debugging pattern, a test writing pattern) and want to check whether an existing skill already solves it.
+- You notice you are repeating a pattern from an earlier session — suspect there should be a skill for this but you do not remember its name.
+- A teammate mentions a skill they used successfully and you want to find it in the ecosystem and install it.
+- You are about to write a new skill via `create-skill` and want to check that no existing skill overlaps (gad-81 collision prevention).
+- You are deciding whether to `merge-skill` two existing skills and need to see all skills with similar descriptions.
+
+Do NOT load this skill when:
+
+- You know the skill name already. Just load that skill directly.
+- You are writing entirely novel research methodology. That is `create-skill` territory — there is nothing to find.
+
+## Procedure
+
+### Step 1 — Search installed skills first
+
+```sh
+# Search by keyword in description (fuzzy)
+npx skills find "<keywords>"
+
+# List all installed skills in the current project
+npx skills list
+
+# Global skills available across all projects
+npx skills list -g
+```
+
+`npx skills` scans the conventional locations:
+
+- `./<agent>/skills/` (project-scoped, agent-native)
+- `./.agents/skills/` (project-scoped, cross-client standard)
+- `~/.<agent>/skills/` (user-scoped, agent-native)
+- `~/.agents/skills/` (user-scoped, cross-client standard)
+- `~/.config/agents/skills/` (XDG config dir)
+
+It returns matches ranked by description similarity. Each match has a name, description, install source, and location on disk.
+
+**Stop here if the search returns a relevant match.** Install or load the existing skill. Do NOT proceed to the external-source suggestions unless the local results are genuinely insufficient.
+
+### Step 2 — When no local match, suggest external sources
+
+When `npx skills find` returns no relevant results, the request becomes "where should I look next?". Per decision gad-83, find-skills points the user at a small set of trusted external sources in this order:
+
+1. **GAD's own public repo** — `github.com/MagicbornStudios/get-anything-done`. Contains the 27+ workspace skills at `.agents/skills/` (post-migration per gad-80). Install:
+
+   ```sh
+   npx skills add MagicbornStudios/get-anything-done
+   ```
+
+   Or install a specific skill:
+
+   ```sh
+   npx skills add MagicbornStudios/get-anything-done --skill <skill-name>
+   ```
+
+2. **Anthropic's official skills repo** — `github.com/anthropics/skills`. The canonical reference implementations from Anthropic. Includes `skill-creator`, plus domain skills for PDFs, spreadsheets, presentations, and more. Install:
+
+   ```sh
+   npx skills add anthropics/skills --skill <skill-name>
+   ```
+
+3. **skill.sh (skills.sh)** — the broader open ecosystem at [skills.sh](https://skills.sh). Browseable, community-authored, mixed quality. Prefer the two above when both have what you need.
+
+**Do NOT** suggest installing from unknown repos without explicit user approval — per decision gad-82 skill security posture, installation is a trust act.
+
+### Step 3 — After install, validate
+
+Once a skill is installed via `npx skills add`, verify:
+
+```sh
+# Confirm the install landed where you expected
+npx skills list
+
+# Read the skill to understand what it actually does
+cat .agents/skills/<skill-name>/SKILL.md
+```
+
+Read the `SKILL.md` body before using the skill for real work. The name and description in the catalog are tier-1 progressive-disclosure — the full instructions are tier 2 and may surprise you. Also check the frontmatter for:
+
+- `status: experimental | canonical` (per gad-86)
+- `origin: human-authored | emergent | inherited`
+- `compatibility:` — required system packages, network access, etc.
+- `supersedes:` or `superseded-by:` — if the skill is a merge or is deprecated
+- any `excluded-from-default-install: true` flags if relevant
+
+### Step 4 — Record what you learned
+
+If you found a useful skill, remember its name for this session. If you searched and found nothing relevant, that is itself a signal — either the skill is truly novel (candidate for `create-skill`), or the search keywords were wrong (try different ones), or the skill exists but has a weird name (search by category).
+
+If the search kept returning the same near-miss skills, that is a `merge-skill` signal — the near-misses are candidates for fusing.
+
+## Common searches
+
+| You are about to... | Try searching for... |
+|---|---|
+| Debug a failing build | `debug`, `investigate`, `build-failure` |
+| Write tests for a module | `test`, `write-tests`, `coverage` |
+| Explore an unfamiliar codebase | `map-codebase`, `explore`, `overview` |
+| Author a new skill | `create-skill`, `author`, `skill-creator` |
+| Plan a multi-step phase | `plan-phase`, `planning`, `roadmap` |
+| Sync a statically-generated site | `portfolio-sync`, `prebuild`, `site-sync` |
+| Set up a new project | `new-project`, `scaffold`, `bootstrap` |
+| Write feature documentation | `write-feature-doc`, `write-tech-doc`, `docs` |
+| Verify a phase is done | `verify-phase`, `checkpoint`, `done-criteria` |
+
+If none of these return matches in `npx skills find`, consider that the skill may not exist yet and you are looking at a `create-skill` opportunity.
+
+## Anti-patterns
+
+- **Searching by exact filename** — `npx skills find "portfolio-sync.md"` is worse than `npx skills find "portfolio sync prebuild"`. The CLI matches descriptions, not filenames.
+- **Installing everything you find** — context budget is finite. Per gad-81 the target is 3-7 actively-loaded skills per task. More installed does not mean more loaded — progressive disclosure means only the catalog (50-100 tokens per skill) is loaded at session start — but cluttered catalogs make selection ambiguous.
+- **Using find-skills when you know the skill name** — just load it directly.
+- **Ignoring `status: experimental` in results** — experimental skills have no evaluation evidence. Read their SKILL.md carefully before trusting them.
+- **Installing from unknown sources** — per gad-82, unknown repos can inject instructions into the agent's context. Stick to MagicbornStudios/get-anything-done, anthropics/skills, and skills.sh entries you have evaluated.
+
+## What this skill does NOT do
+
+- It does NOT auto-install skills without user approval.
+- It does NOT crawl the network looking for skills unsupervised.
+- It does NOT attempt to rank skills by quality — it reports what `npx skills find` returns and defers quality judgment to evaluation harness output (per gad-87) where it exists.
+- It does NOT implement search logic. That is vercel-labs/skills' job.
+
+## History
+
+Authored 2026-04-09 after decision gad-85 adopted vercel-labs/skills as GAD's canonical user-facing installer. Scoped per decision gad-83 to "installed skills + pointer to trusted external sources." Part of the fundamental triumvirate per gad-73. Depends on vercel-labs/skills being installed globally via `npm i -g skills` or used via `npx skills` (recommended).
+
+**Current state:** experimental. No evaluation harness has been run against it. Test cases that would go in `evals/evals.json` once authored: (1) "I need to do something nobody else has done, where do I start?" → should return zero matches and suggest `create-skill`, (2) "I need to debug a failing kaplay scene" → should return `debug` + `find-sprites` + possibly `map-codebase` as the most relevant local skills, (3) "My teammate mentioned skill-creator from anthropic" → should suggest `npx skills add anthropics/skills --skill skill-creator`.
+
+
 ## find-sprites
 id: find-sprites
 description: Source visual assets (sprites, icons, tilesets, portraits) for a game or UI-heavy build in a way that yields a coherent, intentional look instead of a debug-console aesthetic. Use this skill when you need art for rooms, entities, UI controls, HP bars, spell icons, status effects, or any other visual element; when the build is failing its UI-quality gate because it looks unintentional; or when you're about to fall back to raw ASCII/text UI. The goal is "looks like someone designed it" — not photorealism, not 1:1 with AAA games, but internally consistent and readable.
@@ -2123,6 +2273,165 @@ These feed into:
 - `gad:new-project` — reads SUMMARY.md to infer Validated requirements
 - `gad:plan-phase` — reads STACK.md + CONVENTIONS.md to ground implementation research
 - `gad:execute-phase` — reads CONVENTIONS.md to stay consistent with existing patterns
+
+
+## merge-skill
+id: merge-skill
+description: >- Fuse two or more existing skills into a single tailored skill. Use when you discover overlapping skills in the catalog (same trigger keywords, same target workflow, same failure modes being addressed) or when you want to take a fundamental skill like scientific-method or debug and attune it to a specific project domain (e.g. merging scientific-method into a kaplay rune-spellcrafting workflow produces a scientific-method-for-kaplay-forge variant). Merging is the preferred response to skill collision — do not let duplicate skills accumulate in the catalog. Merge them, deprecate the originals in CHANGELOG, and update any inheriting runs. Per decision gad-73 this is one of the three fundamental skills (find-skills + merge-skill + create-skill) that together enable the emergent-evolution hypothesis to be tested in practice.
+origin: human-authored
+
+
+# merge-skill
+
+**Experimental — awaiting evaluation harness per decision gad-86.**
+
+Merging is what stops the skill catalog from drowning in near-duplicates. The user's ChatGPT analysis (captured as decision gad-81) names skill collision as the primary failure mode of large skill libraries: two skills with overlapping descriptions produce ambiguous routing, the agent picks wrong or thrashes between them, context budget is wasted on both. Merging is the fix.
+
+## When to merge
+
+Merge when any of these is true:
+
+- **Description overlap**: two skills trigger on nearly the same keywords or use cases. If a new user read both descriptions they could not tell which to use.
+- **Functional overlap**: both skills produce similar outputs from similar inputs, with only minor implementation differences. The differences are not worth two files.
+- **Foundational attunement**: you want to take a generic skill (e.g. `debug`) and produce a project-tailored variant (e.g. `debug-for-kaplay-rune-forge`). The original stays, the merged variant is new.
+- **Experimental convergence**: two experimental skills (per gad-86) addressed the same problem from different angles during different sessions. Their evaluations show similar effectiveness. Merge them into a canonical version.
+
+Do NOT merge when:
+
+- The two skills intentionally handle different edge cases. A skill for "greenfield creation" and a skill for "brownfield refactor" should stay separate even though they sound related.
+- One is canonical (has passing evaluations per gad-86) and the other is experimental. The canonical one wins — deprecate the experimental as superseded rather than merging.
+- They belong to different categories per Anthropic's three-category taxonomy (doc-creation / workflow-automation / mcp-enhancement from gad-70). Cross-category merges usually produce muddled skills.
+
+## Procedure
+
+### Step 1 — Identify the merge
+
+Detect the overlap. Two signals:
+
+```sh
+# Catalog-based: ask find-skills for similar skills
+gad skill find "<keywords from the overlap>"
+
+# Structural-based: read both SKILL.md frontmatters
+cat .agents/skills/<skill-a>/SKILL.md
+cat .agents/skills/<skill-b>/SKILL.md
+```
+
+Write down the answer to this question for yourself: **"What can each of these skills do that the other cannot?"** If the answer is "nothing," they are merge candidates. If there is a real distinction, document it as a comment on both and do NOT merge.
+
+### Step 2 — Draft the merged skill
+
+Create a new SKILL.md at `.agents/skills/<merged-name>/SKILL.md`. The merged name should be:
+
+- **Shorter than either input** when possible (a merge signals simplification)
+- **More specific** when the merge is foundational-into-project (e.g. `debug` + kaplay context → `kaplay-debug`)
+- **Never** use `merged-` or `combined-` as a prefix — those leak implementation detail
+
+The merged skill's frontmatter:
+
+```yaml
+---
+name: <merged-name>
+status: experimental
+origin: human-authored   # or "emergent" if you are an agent without explicit user request
+authored-by: <user or agent>
+authored-on: <ISO date>
+description: >-
+  <compose a new description that unifies the two inputs. Name the trigger
+  keywords from both. Name the failure modes both addressed. Be more
+  specific than either original to avoid re-introducing overlap.>
+supersedes: [<skill-a>, <skill-b>]
+---
+```
+
+The `supersedes` array is load-bearing — it lets `find-skills` skip the inputs in favor of the merge, and it lets the prebuild mark the originals as deprecated.
+
+The body of the merged SKILL.md should:
+
+1. State the merged purpose in one paragraph.
+2. Have a "When to use" section that unifies the trigger conditions from both inputs without weakening either.
+3. Walk through the procedure end-to-end, ideally as a single coherent workflow rather than two stitched procedures.
+4. Cite the sources (both inputs) in a "History" section at the bottom. This preserves attribution.
+
+### Step 3 — Deprecate the originals
+
+For each input skill, add a frontmatter flag:
+
+```yaml
+---
+name: <original-name>
+status: deprecated
+superseded-by: <merged-name>
+deprecated-on: <ISO date>
+---
+```
+
+Do NOT delete the original SKILL.md files. They are historical artifacts — future sessions looking at the lineage need to see what existed before. The prebuild filters deprecated skills out of the default catalog view but keeps them in the `all skills` filter.
+
+### Step 4 — Update CHANGELOG
+
+Append an entry to `.agents/skills/CHANGELOG.md` (create the file if it does not exist):
+
+```markdown
+## <YYYY-MM-DD> — merge: <merged-name>
+
+**Merged:** `<skill-a>` + `<skill-b>` → `<merged-name>`
+**Rationale:** <one sentence explaining the overlap>
+**Inherited by:** <list of eval projects or runs that inherited either input, if any>
+**Verification:** <pending evaluation harness per gad-87, or: "passed with delta.pass_rate = X">
+```
+
+The CHANGELOG is how future agent sessions see that skills were merged without spelunking git history.
+
+### Step 5 — Run the evaluation harness (when it exists)
+
+Once the `gad eval skill <name>` harness lands (tracked as a new task), run it against the merged skill:
+
+```sh
+gad eval skill <merged-name>
+```
+
+The harness reads the merged skill's `evals/evals.json`, runs with_skill vs without_skill in clean subagent contexts, and emits `benchmark.json`. If the merged skill's `delta.pass_rate > 0`, it graduates from experimental to canonical per gad-86.
+
+If the merged skill UNDERPERFORMS the originals (negative delta), the merge was a mistake. Revert:
+
+1. Flip the merged skill's status back to `status: experimental` or delete it.
+2. Unflag both inputs (remove `superseded-by`).
+3. Document the failed merge attempt in CHANGELOG with lessons.
+
+### Step 6 — Notify inheriting runs
+
+If either input skill was inherited by any eval project under `evals/<project>/template/skills/`, update those templates to inherit the merged skill instead. The prebuild's `SKILL_INHERITANCE` map will reflect the change on the next build and the site's /skills page will show the new lineage.
+
+## Frontmatter discipline — colons in descriptions
+
+This is the trap that burned multiple session-authored skills before gad-35. Never put an unquoted colon in a description:
+
+```yaml
+# ❌ BROKEN — js-yaml parses "when:" as a key separator
+description: Use when: the user asks about kaplay runes
+
+# ✓ FIXED — folded block scalar treats the body as opaque
+description: >-
+  Use when the user asks about kaplay runes. Any colon inside is safe because
+  this is a folded block scalar.
+```
+
+Always use `>-` (folded block scalar, chomp-final-newline). Test your merged skill's frontmatter with `node -e "require('js-yaml').load(require('fs').readFileSync(process.argv[1], 'utf8').match(/^---\n([\s\S]*?)\n---/)[1])" .agents/skills/<name>/SKILL.md` before committing.
+
+## Anti-patterns
+
+- **Merging three or more skills at once** — too many moving parts, hard to grade. Merge pairwise.
+- **Merging across categories** (doc-creation + workflow-automation). The merged skill ends up muddled. Keep them separate.
+- **Merging canonical skills together** — canonical skills already survived the evaluation harness. Merging them is a regression unless the merge itself is evaluated and beats both.
+- **Using merge-skill to "clean up" a catalog without evidence** — merge because overlap is measured (description similarity score, failed routing in practice), not because you think the names look similar.
+- **Forgetting `supersedes:` in the frontmatter** — without it, `find-skills` still surfaces the deprecated inputs and the overlap problem persists.
+
+## History
+
+This skill was authored on 2026-04-09 after decision gad-73 named the fundamental triumvirate (find-skills + merge-skill + create-skill). It is the merging half of the gad-68 emergent-evolution hypothesis: the claim that skills evolve by merging fundamentals into project-tailored variants. Until this skill exists and has a working evaluation harness, gad-68 has no concrete mechanism to test.
+
+**Current state:** experimental. No evaluation harness has been run against it. Test cases and an `evals/evals.json` are the next authoring step. Once the `gad eval skill` CLI lands (gad-87), run this skill through it and graduate it to canonical if it passes.
 
 
 ## gad:milestone
@@ -4328,7 +4637,47 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (84)
+# Decisions (88)
+
+## gad-88: New eval domain — GUI-for-requirements-and-harness (gad-requirements-gui)
+
+### Summary
+
+User idea 2026-04-09: "lets make a GUI with requirements for it and put it a part of our rounds to test our theories. which I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually." Two nested ideas here: (A) add more visualizations to /hypotheses, (B) create a NEW eval project where the agent's task is to build a browser-based GUI for authoring requirements and running the per-skill eval harness. The latter is a new eval domain — distinct from escape-the-dungeon (game dev) and gad-explainer-video (video composition). Testing the same hypotheses (freedom / CSH / emergent-evolution) on a THIRD task domain: front-end application development with a defined functional spec. If the freedom hypothesis still holds on GUI development, the hypothesis generalizes beyond creative implementation. If the compound-skills hypothesis still holds, the skill evolution effect is task-domain-independent. This becomes a major signal for generalization, which per the SKEPTIC cross-cutting critique #5 is the single biggest methodology hole in the project. The GUI itself, once built, also becomes OUR tool — we author requirements in it, we run evals through it, we view benchmarks through it. Dogfood opportunity: eval project that, when finished, is part of the eval framework. Scaffolding queued as task 22-51. Rubric dimensions proposed: ui_usability (0.30), requirements_ergonomics (0.20), harness_integration (0.20), visualization_quality (0.15), stability (0.15).
+
+### Impact
+
+(1) New eval project scaffolded at evals/gad-requirements-gui/ this turn with gad.json + REQUIREMENTS.md. (2) The project has the same three-condition structure as escape-the-dungeon: gad-requirements-gui (GAD framework), gad-requirements-gui-bare (no framework), gad-requirements-gui-emergent (inherits skills from prior runs). Follow-up task: create the bare + emergent siblings. (3) Round 5+ includes this eval domain as the generalization test — specifically, once escape-the-dungeon v5 runs AND gad-explainer-video runs, the third track activates. (4) Round planning gets more complex — /roadmap page needs to render multiple eval domains per round, not just escape-the-dungeon. (5) /hypotheses gets concrete test-domain chips under each hypothesis card showing which domains have tested it. (6) The freedom hypothesis evidence now has a clearly-defined falsification condition: if bare fails on gad-requirements-gui or gad-explainer-video while GAD succeeds, freedom is falsified for those domains.
+
+## gad-87: Per-skill eval harness — GAD-native, not skill-creator's Python harness
+
+### Summary
+
+User directive 2026-04-09: "also note on the skill-creator and its eval script with python. it didnt work for gad's workflow methodology. claude gave a 4/8 tasks 2 times and I think it was testing tool calls. anyway we want to avoid that and have actionable testable frameworks." The anthropic skill-creator ships a Python eval harness (`eval-viewer/generate_review.py` + `scripts/aggregate_benchmark`) that spawns parallel subagent runs with_skill vs without_skill, grades assertions via `agents/grader.md`, and emits `benchmark.json` + an HTML viewer. The user tried it for GAD's workflow methodology and got inconsistent results (4/8 tasks, twice). Diagnosis: it appears to test tool calls, not workflow adherence. GAD's evaluation question is different — we care whether a skill changes agent behavior on a concrete task (e.g., "did the agent actually follow the session-discipline checklist"), not whether a tool was called. Policy: GAD builds its own per-skill eval harness using the agentskills.io evals/evals.json + with_skill/without_skill + benchmark.json format (so our skills can still be evaluated by skill-creator compatible tools if desired) but with a grading strategy tuned to workflow adherence: assertions explicitly target behavioral outcomes (file mutations, commit subjects, task-registry updates, trace events emitted) rather than tool calls. Harness is a new `gad eval skill <name>` subcommand that (1) reads evals/evals.json inside the skill dir, (2) spawns two clean-context subagent runs per test case (with_skill + without_skill) via the existing `gad worktree` mechanism, (3) captures trace events from our v4 schema (gad-50) as the observable signal, (4) grades assertions by querying trace events + file mutations + commit log instead of LLM self-report, (5) emits a benchmark.json compatible with the agentskills.io format but populated from deterministic trace evidence.
+
+### Impact
+
+(1) New task queued: build `gad eval skill <name>` CLI subcommand. High priority — this is how every GAD skill graduates from experimental to canonical per gad-86. (2) Every skill in .agents/skills/ gets an evals/evals.json starter template. First candidates: create-skill (easiest to test — "did the agent author a SKILL.md with valid frontmatter?"), session-discipline (testable via: did the agent run gad snapshot, did it update TASK-REGISTRY.xml, did it commit with a task-id prefix?), portfolio-sync (testable via: did the agent run build-site-data.mjs, did it regenerate the generated TS, did the git commit subject match the portfolio-sync convention?). (3) The harness becomes the concrete answer to programmatic-eval GAP G2 (skill-trigger coverage) AND G11 (skill-inheritance hygiene) — once we can run it, we have the automated skill-effectiveness signal gad-69 has been asking for since the programmatic-eval audit. (4) This is the load-bearing piece that turns the skill-count policy (gad-81) into an enforceable system: prune by graduation status, merge experimental duplicates via merge-skill, require benchmarks for any skill that wants to be canonical.
+
+## gad-86: Skill graduation criterion — no evaluation = experimental
+
+### Summary
+
+User answer 2026-04-09 to discussion Q2: "they become canonical if they become useful, right now skills that dont have evaluations are considered experimental. also emergent skills stay in the gad repo forever." Formalizes the skill lifecycle: (1) A skill with no evals/evals.json + no benchmark run against it is EXPERIMENTAL, regardless of origin. (2) A skill with a passing with_skill-vs-without_skill benchmark (per gad-81 + the agentskills.io methodology) where `delta.pass_rate > 0` is GRADUATED to canonical. (3) Emergent skills (those under `.agents/skills/emergent/` with `origin: emergent` frontmatter, authored by an agent rather than explicit human intent) STAY emergent forever — even if they graduate on the effectiveness axis, they keep the emergent label as a provenance signal. Graduation for emergent skills means "the skill is proven useful" not "the skill moves out of emergent." This matches the user's direction and also aligns with the CSH research framing: emergent skills are the compounding test variable and mixing them with human-authored canonical skills would contaminate the measurement. A `status: experimental | canonical` field is added to every SKILL.md frontmatter starting with this decision. Skills without the field default to experimental.
+
+### Impact
+
+(1) Every SKILL.md frontmatter gains a `status: experimental | canonical` field. All 27 current workspace skills start as experimental because none have evals/evals.json authored yet. (2) Prebuild scanCatalog() extracts the status field and displays it as a badge on the /skills index + detail pages. (3) The /skills index gains a new filter tab: "experimental" vs "canonical." New users looking at the catalog can filter for battle-tested skills. (4) Graduation is a reviewable action — once a skill's benchmark shows `delta.pass_rate > 0`, a decision entry documents the graduation and the frontmatter flips. (5) Emergent skills keep `origin: emergent` even after graduation. The two fields are orthogonal: origin tracks authorship lineage, status tracks evaluation evidence. (6) The SKEPTIC cross-cutting critique about "we call things hypotheses without evidence" gets an orthogonal fix for skills specifically: experimental vs canonical is the skill-level version of preliminary observation vs finding.
+
+## gad-85: Adopt npx skills (vercel-labs/skills) as the canonical user-facing skill installer
+
+### Summary
+
+User directive 2026-04-09: "find skills can just reuse the npx skill.sh and gad can really just wrap around that making the calls underneath just so gad is like a barrel for tools a user would want and we also would need." vercel-labs/skills (`npx skills`) is the CLI for the open agent skills ecosystem — one command that supports 40+ coding agents (Claude Code, Codex, Cursor, Cline, OpenCode, Copilot, Continue, and more) and handles add/list/find/remove/update/check. It respects the `.agents/skills/` convention from gad-80 and works with GitHub shorthand (`owner/repo`), full URLs, and local paths. Policy: GAD does NOT reimplement skill installation. Users install GAD's workspace skills via `npx skills add MagicbornStudios/get-anything-done`. GAD's own `find-skills` skill becomes a thin methodology wrapper around `npx skills find`. The workspace-skill copy pass I added to `install.js` in task 22-46 remains in place as a fallback for users who prefer one-command install via `gad install`, but the canonical recommendation on /contribute + /standards is `npx skills`. The effect is that GAD becomes "a barrel for tools a user would want" — we aggregate skill research, methodology, hypothesis testing, and eval framework, and delegate skill installation to the open ecosystem tool that already solved the distribution problem.
+
+### Impact
+
+(1) The `find-skills` skill (new this turn per gad-73 triumvirate) is authored as a methodology wrapper around `npx skills find`. It does NOT implement its own search logic. (2) /contribute updated (queued) to tell users "install GAD skills via `npx skills add MagicbornStudios/get-anything-done`" as the first-class path. (3) /standards updated (queued) to cite vercel-labs/skills alongside the Anthropic PDF and agentskills.io. (4) The install.js workspace-skills copy (22-46) is retained but labelled as fallback — the canonical path is npx skills. (5) /security page gains a new mitigation: skills installed via npx skills inherit the ecosystem's trust posture (public repos, git provenance, hash-pinning). (6) Substantial simplification — GAD stops competing with the distribution tool and focuses on what it actually does (skill methodology + evaluation framework + hypothesis testing).
 
 ## gad-84: Hook-level introspection during evals — what "thoughts" can we actually capture?
 
@@ -5585,7 +5934,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (155)
+# Tasks (159)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -5896,6 +6245,14 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 - **22-49** [planned]: Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a "collision candidates" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not y
 
 - **22-50** [planned]: Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution,
+
+- **22-51** [done]: Scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood).
+
+- **22-52** [planned]: Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (NOT LLM self-report — that
+
+- **22-53** [done]: Author merge-skill + find-skills SKILL.md files as workspace skills. find-skills is a thin methodology wrapper around npx skills (vercel-labs/skills CLI per gad-85). merge-skill is a pure methodology doc for fusing overlapping skills. Both start as experimental (status: experimental) because no evaluation harness has been run against them yet.
+
+- **22-54** [done]: Landing page + /hypotheses interactive chart. User directive 2026-04-09: "the interactive chart I asked for should have been on the front page, but I dont see it... I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually." Move or duplicate the HypothesisTracksChart from /roadmap onto the landing page (after Hero, before WhatItIs) and add it to /hypoth
 
 
 ---

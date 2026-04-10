@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
 import { Ref } from "@/components/refs/Ref";
+import { HypothesisTracksChart, type HypothesisTrackPoint } from "@/components/charts/HypothesisTracksChart";
+import { EVAL_RUNS, type EvalRunRecord } from "@/lib/eval-data";
 
 export const metadata = {
   title: "Hypotheses — GAD",
@@ -113,7 +115,54 @@ const TRACK_TINT: Record<string, string> = {
   "All tracks (metadata, not a rubric dimension)": "border-sky-500/40 bg-sky-500/5",
 };
 
+function buildTrackData(): HypothesisTrackPoint[] {
+  const roundForVersion: Record<string, string> = {
+    v1: "Round 1", v2: "Round 1", v3: "Round 1", v4: "Round 1", v5: "Round 1",
+    v6: "Round 2", v7: "Round 2", v8: "Round 3", v9: "Round 4", v10: "Round 4",
+  };
+  const bareRoundForVersion: Record<string, string> = {
+    v1: "Round 2", v2: "Round 2", v3: "Round 3", v4: "Round 4", v5: "Round 4",
+  };
+  const emergentRoundForVersion: Record<string, string> = {
+    v1: "Round 2", v2: "Round 3", v3: "Round 4", v4: "Round 4",
+  };
+  const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
+  const points: HypothesisTrackPoint[] = rounds.map((round) => ({
+    round, freedom: null, csh: null, gad: null, contentDriven: null, codex: null,
+  }));
+  const byRound = new Map(points.map((p) => [p.round, p]));
+
+  function scoreOf(r: EvalRunRecord): number | null {
+    return r.humanReviewNormalized?.aggregate_score ?? r.humanReview?.score ?? null;
+  }
+
+  for (const run of EVAL_RUNS) {
+    let round: string | undefined;
+    let series: "gad" | "freedom" | "csh" | undefined;
+    if (run.project === "escape-the-dungeon") {
+      round = roundForVersion[run.version];
+      series = "gad";
+    } else if (run.project === "escape-the-dungeon-bare") {
+      round = bareRoundForVersion[run.version];
+      series = "freedom";
+    } else if (run.project === "escape-the-dungeon-emergent") {
+      round = emergentRoundForVersion[run.version];
+      series = "csh";
+    }
+    if (!round || !series) continue;
+    const point = byRound.get(round);
+    if (!point) continue;
+    const s = scoreOf(run);
+    if (s == null) continue;
+    const existing = point[series];
+    if (existing == null || s > existing) point[series] = s;
+  }
+  return points;
+}
+
 export default function HypothesesIndexPage() {
+  const chartData = buildTrackData();
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
@@ -144,6 +193,24 @@ export default function HypothesesIndexPage() {
             it has a concrete computable definition. <strong className="text-foreground">not yet tested</strong>{" "}
             means no runs have produced data against it.
           </p>
+        </div>
+      </section>
+
+      <section className="border-b border-border/60">
+        <div className="section-shell">
+          <p className="section-kicker">All tracks, one chart</p>
+          <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+            Highest human-review score per round, per hypothesis track.
+            Solid lines have real data. Dashed lines are planned tracks —
+            content-driven (gad-66) and codex runtime (task 89) — with no
+            runs yet. Read{" "}
+            <Link href="/skeptic" className="text-rose-300 underline decoration-dotted">
+              /skeptic
+            </Link>{" "}
+            before trusting any individual point: N=2-5 runs per condition,
+            one human reviewer, one task domain so far.
+          </p>
+          <HypothesisTracksChart data={chartData} />
         </div>
       </section>
 

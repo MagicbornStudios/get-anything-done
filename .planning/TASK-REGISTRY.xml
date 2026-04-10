@@ -766,5 +766,27 @@
       <depends>gad-84</depends>
       <keywords>thinking-blocks,session-jsonl,reasoning-trace,post-hoc</keywords>
     </task>
+    <task id="22-51" agent-id="" status="done">
+      <goal>Scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood).</goal>
+      <resolution>Shipped 2026-04-09. evals/gad-requirements-gui/gad.json with 5-dimension rubric (ui_usability 0.30, requirements_ergonomics 0.20, harness_integration 0.20, visualization_quality 0.15, stability 0.15), workflow:gad, compare_to bare + emergent siblings. evals/gad-requirements-gui/REQUIREMENTS.md with full scope, 4 mandatory gate frames (G1 requirements load, G2 pressure preview live, G3 harness viewer live, G4 mobile responsive), pre-run checklist. Siblings (gad-requirements-gui-bare, -emergent) still to be scaffolded in a follow-up.</resolution>
+      <keywords>gad-requirements-gui,new-eval-domain,generalization-test,gad-88</keywords>
+    </task>
+    <task id="22-52" agent-id="" status="planned">
+      <goal>Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (NOT LLM self-report — that's what skill-creator's Python harness does and it didn't work for us), emits benchmark.json compatible with agentskills.io format. This is the load-bearing piece that lets every GAD skill graduate from experimental to canonical per gad-86. Directly answers programmatic-eval GAPS G2 + the hygiene half of G11.</goal>
+      <depends>gad-87</depends>
+      <keywords>gad-eval-skill,harness,experimental-to-canonical,trace-based-grading</keywords>
+    </task>
+    <task id="22-53" agent-id="" status="done">
+      <goal>Author merge-skill + find-skills SKILL.md files as workspace skills. find-skills is a thin methodology wrapper around npx skills (vercel-labs/skills CLI per gad-85). merge-skill is a pure methodology doc for fusing overlapping skills. Both start as experimental (status: experimental) because no evaluation harness has been run against them yet.</goal>
+      <resolution>Shipped 2026-04-09. .agents/skills/merge-skill/SKILL.md authored with full procedure (6 steps: identify merge → draft merged skill → deprecate originals → update CHANGELOG → run harness → notify inheriting runs). .agents/skills/find-skills/SKILL.md authored as thin wrapper around npx skills find, with 4-step procedure, common-searches table, external-source suggestions (MagicbornStudios/get-anything-done, anthropics/skills, skills.sh). Both marked status:experimental pending the harness from 22-52. Completes 2 of 3 triumvirate members — create-skill was already present.</resolution>
+      <depends>gad-73,gad-85</depends>
+      <keywords>triumvirate,merge-skill,find-skills,gad-73,workspace-skills</keywords>
+    </task>
+    <task id="22-54" agent-id="" status="done">
+      <goal>Landing page + /hypotheses interactive chart. User directive 2026-04-09: "the interactive chart I asked for should have been on the front page, but I dont see it... I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually." Move or duplicate the HypothesisTracksChart from /roadmap onto the landing page (after Hero, before WhatItIs) and add it to /hypotheses above the hypothesis cards.</goal>
+      <resolution>Shipped 2026-04-09. New site/components/landing/HypothesisTracksSection.tsx component rendering the chart with buildTrackData helper + CTA links to /hypotheses /emergent /freedom /roadmap. Wired into site/app/page.tsx between Hero and WhatItIs. /hypotheses page gets the same chart at the top before the card list with a skeptic disclaimer. Both use the same HypothesisTracksChart client component from 22-40 so changes propagate to all three surfaces (landing, hypotheses, roadmap).</resolution>
+      <depends>22-40</depends>
+      <keywords>landing,hypotheses,interactive-chart,visibility</keywords>
+    </task>
   </phase>
 </task-registry>

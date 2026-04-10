@@ -1,5 +1,6 @@
 import Nav from "@/components/landing/Nav";
 import Hero from "@/components/landing/Hero";
+import HypothesisTracksSection from "@/components/landing/HypothesisTracksSection";
 import WhatItIs from "@/components/landing/WhatItIs";
 import Lineage from "@/components/landing/Lineage";
 import Workflow from "@/components/landing/Workflow";
@@ -20,6 +21,7 @@ export default function Page() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
       <Hero />
+      <HypothesisTracksSection />
       <WhatItIs />
       <Lineage />
       <Workflow />

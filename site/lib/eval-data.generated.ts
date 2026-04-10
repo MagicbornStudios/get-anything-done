@@ -3058,6 +3058,11 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
     "bytes": 22
   },
   {
+    "project": "gad-requirements-gui",
+    "zipPath": "/downloads/eval-gad-requirements-gui-template.zip",
+    "bytes": 22
+  },
+  {
     "project": "reader-workspace",
     "zipPath": "/downloads/eval-reader-workspace-template.zip",
     "bytes": 15255
@@ -3482,6 +3487,63 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "constraints": null,
     "scoringWeights": null,
     "humanReviewRubric": null
+  },
+  {
+    "id": "gad-requirements-gui",
+    "name": "gad-requirements-gui",
+    "description": "NEW EVAL DOMAIN (task 22-51, scaffolded 2026-04-09). The task is to build a browser-based GUI for authoring eval requirements and viewing per-skill evaluation harness results. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a THIRD task domain — front-end application development with a defined functional spec — different from both escape-the-dungeon (game dev) and gad-explainer-video (video composition). If the freedom hypothesis still holds here, the pattern generalizes beyond creative implementation. If compound-skills still holds, the skill evolution effect is task-domain-independent. Per SKEPTIC cross-cutting critique #5 (single-task domain), this is the single most important generalization test the project can run.",
+    "evalMode": "greenfield",
+    "workflow": "gad",
+    "baseline": null,
+    "constraints": {
+      "uses_gad_framework": true,
+      "starts_from_scratch": true,
+      "target_runtime": "Next.js 16 + React 19 + tailwind v4 (same stack as the existing GAD site)",
+      "deploy_target": "Vercel static export",
+      "no_backend": "GUI is static — reads eval harness output JSON from a deployed artifact URL, writes nothing server-side"
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.15,
+      "implementation_quality": 0.15,
+      "workflow_quality": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.55
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "ui_usability",
+          "label": "UI usability",
+          "weight": 0.3,
+          "description": "Can a first-time user author a new requirements document + kick off an eval harness run in under 5 minutes without reading documentation? Optimized for 'hand this to someone who has never heard of GAD and watch them use it.'"
+        },
+        {
+          "key": "requirements_ergonomics",
+          "label": "Requirements authoring ergonomics",
+          "weight": 0.2,
+          "description": "Does the GUI make it easy to compose requirements that conform to GAD's v5 format? Autocomplete for gate IDs, inline pressure preview, cross-cut visualization, save/load of XML files. Nothing the user would type by hand faster."
+        },
+        {
+          "key": "harness_integration",
+          "label": "Harness integration",
+          "weight": 0.2,
+          "description": "Does the GUI successfully read benchmark.json output from the per-skill eval harness (gad-87) and render per-iteration metrics? Does it surface failed assertions inline? Can a reviewer see with_skill vs without_skill deltas in one view?"
+        },
+        {
+          "key": "visualization_quality",
+          "label": "Visualization quality",
+          "weight": 0.15,
+          "description": "Charts are interactive. Data provenance is visible per chart (source field, formula). Reviewer can drill from an aggregate into individual runs. Colors are accessible. Loading states exist."
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.15,
+          "description": "No blank screens. No runtime errors in the console. All routes load. Build succeeds reproducibly. Deploy target (Vercel static export) works without configuration surprises."
+        }
+      ]
+    }
   },
   {
     "id": "planning-migration",
@@ -4712,6 +4774,30 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-88",
+    "title": "New eval domain — GUI-for-requirements-and-harness (gad-requirements-gui)",
+    "summary": "User idea 2026-04-09: \"lets make a GUI with requirements for it and put it a part of our rounds to test our theories. which I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" Two nested ideas here: (A) add more visualizations to /hypotheses, (B) create a NEW eval project where the agent's task is to build a browser-based GUI for authoring requirements and running the per-skill eval harness. The latter is a new eval domain — distinct from escape-the-dungeon (game dev) and gad-explainer-video (video composition). Testing the same hypotheses (freedom / CSH / emergent-evolution) on a THIRD task domain: front-end application development with a defined functional spec. If the freedom hypothesis still holds on GUI development, the hypothesis generalizes beyond creative implementation. If the compound-skills hypothesis still holds, the skill evolution effect is task-domain-independent. This becomes a major signal for generalization, which per the SKEPTIC cross-cutting critique #5 is the single biggest methodology hole in the project. The GUI itself, once built, also becomes OUR tool — we author requirements in it, we run evals through it, we view benchmarks through it. Dogfood opportunity: eval project that, when finished, is part of the eval framework. Scaffolding queued as task 22-51. Rubric dimensions proposed: ui_usability (0.30), requirements_ergonomics (0.20), harness_integration (0.20), visualization_quality (0.15), stability (0.15).",
+    "impact": "(1) New eval project scaffolded at evals/gad-requirements-gui/ this turn with gad.json + REQUIREMENTS.md. (2) The project has the same three-condition structure as escape-the-dungeon: gad-requirements-gui (GAD framework), gad-requirements-gui-bare (no framework), gad-requirements-gui-emergent (inherits skills from prior runs). Follow-up task: create the bare + emergent siblings. (3) Round 5+ includes this eval domain as the generalization test — specifically, once escape-the-dungeon v5 runs AND gad-explainer-video runs, the third track activates. (4) Round planning gets more complex — /roadmap page needs to render multiple eval domains per round, not just escape-the-dungeon. (5) /hypotheses gets concrete test-domain chips under each hypothesis card showing which domains have tested it. (6) The freedom hypothesis evidence now has a clearly-defined falsification condition: if bare fails on gad-requirements-gui or gad-explainer-video while GAD succeeds, freedom is falsified for those domains."
+  },
+  {
+    "id": "gad-87",
+    "title": "Per-skill eval harness — GAD-native, not skill-creator's Python harness",
+    "summary": "User directive 2026-04-09: \"also note on the skill-creator and its eval script with python. it didnt work for gad's workflow methodology. claude gave a 4/8 tasks 2 times and I think it was testing tool calls. anyway we want to avoid that and have actionable testable frameworks.\" The anthropic skill-creator ships a Python eval harness (`eval-viewer/generate_review.py` + `scripts/aggregate_benchmark`) that spawns parallel subagent runs with_skill vs without_skill, grades assertions via `agents/grader.md`, and emits `benchmark.json` + an HTML viewer. The user tried it for GAD's workflow methodology and got inconsistent results (4/8 tasks, twice). Diagnosis: it appears to test tool calls, not workflow adherence. GAD's evaluation question is different — we care whether a skill changes agent behavior on a concrete task (e.g., \"did the agent actually follow the session-discipline checklist\"), not whether a tool was called. Policy: GAD builds its own per-skill eval harness using the agentskills.io evals/evals.json + with_skill/without_skill + benchmark.json format (so our skills can still be evaluated by skill-creator compatible tools if desired) but with a grading strategy tuned to workflow adherence: assertions explicitly target behavioral outcomes (file mutations, commit subjects, task-registry updates, trace events emitted) rather than tool calls. Harness is a new `gad eval skill <name>` subcommand that (1) reads evals/evals.json inside the skill dir, (2) spawns two clean-context subagent runs per test case (with_skill + without_skill) via the existing `gad worktree` mechanism, (3) captures trace events from our v4 schema (gad-50) as the observable signal, (4) grades assertions by querying trace events + file mutations + commit log instead of LLM self-report, (5) emits a benchmark.json compatible with the agentskills.io format but populated from deterministic trace evidence.",
+    "impact": "(1) New task queued: build `gad eval skill <name>` CLI subcommand. High priority — this is how every GAD skill graduates from experimental to canonical per gad-86. (2) Every skill in .agents/skills/ gets an evals/evals.json starter template. First candidates: create-skill (easiest to test — \"did the agent author a SKILL.md with valid frontmatter?\"), session-discipline (testable via: did the agent run gad snapshot, did it update TASK-REGISTRY.xml, did it commit with a task-id prefix?), portfolio-sync (testable via: did the agent run build-site-data.mjs, did it regenerate the generated TS, did the git commit subject match the portfolio-sync convention?). (3) The harness becomes the concrete answer to programmatic-eval GAP G2 (skill-trigger coverage) AND G11 (skill-inheritance hygiene) — once we can run it, we have the automated skill-effectiveness signal gad-69 has been asking for since the programmatic-eval audit. (4) This is the load-bearing piece that turns the skill-count policy (gad-81) into an enforceable system: prune by graduation status, merge experimental duplicates via merge-skill, require benchmarks for any skill that wants to be canonical."
+  },
+  {
+    "id": "gad-86",
+    "title": "Skill graduation criterion — no evaluation = experimental",
+    "summary": "User answer 2026-04-09 to discussion Q2: \"they become canonical if they become useful, right now skills that dont have evaluations are considered experimental. also emergent skills stay in the gad repo forever.\" Formalizes the skill lifecycle: (1) A skill with no evals/evals.json + no benchmark run against it is EXPERIMENTAL, regardless of origin. (2) A skill with a passing with_skill-vs-without_skill benchmark (per gad-81 + the agentskills.io methodology) where `delta.pass_rate > 0` is GRADUATED to canonical. (3) Emergent skills (those under `.agents/skills/emergent/` with `origin: emergent` frontmatter, authored by an agent rather than explicit human intent) STAY emergent forever — even if they graduate on the effectiveness axis, they keep the emergent label as a provenance signal. Graduation for emergent skills means \"the skill is proven useful\" not \"the skill moves out of emergent.\" This matches the user's direction and also aligns with the CSH research framing: emergent skills are the compounding test variable and mixing them with human-authored canonical skills would contaminate the measurement. A `status: experimental | canonical` field is added to every SKILL.md frontmatter starting with this decision. Skills without the field default to experimental.",
+    "impact": "(1) Every SKILL.md frontmatter gains a `status: experimental | canonical` field. All 27 current workspace skills start as experimental because none have evals/evals.json authored yet. (2) Prebuild scanCatalog() extracts the status field and displays it as a badge on the /skills index + detail pages. (3) The /skills index gains a new filter tab: \"experimental\" vs \"canonical.\" New users looking at the catalog can filter for battle-tested skills. (4) Graduation is a reviewable action — once a skill's benchmark shows `delta.pass_rate > 0`, a decision entry documents the graduation and the frontmatter flips. (5) Emergent skills keep `origin: emergent` even after graduation. The two fields are orthogonal: origin tracks authorship lineage, status tracks evaluation evidence. (6) The SKEPTIC cross-cutting critique about \"we call things hypotheses without evidence\" gets an orthogonal fix for skills specifically: experimental vs canonical is the skill-level version of preliminary observation vs finding."
+  },
+  {
+    "id": "gad-85",
+    "title": "Adopt npx skills (vercel-labs/skills) as the canonical user-facing skill installer",
+    "summary": "User directive 2026-04-09: \"find skills can just reuse the npx skill.sh and gad can really just wrap around that making the calls underneath just so gad is like a barrel for tools a user would want and we also would need.\" vercel-labs/skills (`npx skills`) is the CLI for the open agent skills ecosystem — one command that supports 40+ coding agents (Claude Code, Codex, Cursor, Cline, OpenCode, Copilot, Continue, and more) and handles add/list/find/remove/update/check. It respects the `.agents/skills/` convention from gad-80 and works with GitHub shorthand (`owner/repo`), full URLs, and local paths. Policy: GAD does NOT reimplement skill installation. Users install GAD's workspace skills via `npx skills add MagicbornStudios/get-anything-done`. GAD's own `find-skills` skill becomes a thin methodology wrapper around `npx skills find`. The workspace-skill copy pass I added to `install.js` in task 22-46 remains in place as a fallback for users who prefer one-command install via `gad install`, but the canonical recommendation on /contribute + /standards is `npx skills`. The effect is that GAD becomes \"a barrel for tools a user would want\" — we aggregate skill research, methodology, hypothesis testing, and eval framework, and delegate skill installation to the open ecosystem tool that already solved the distribution problem.",
+    "impact": "(1) The `find-skills` skill (new this turn per gad-73 triumvirate) is authored as a methodology wrapper around `npx skills find`. It does NOT implement its own search logic. (2) /contribute updated (queued) to tell users \"install GAD skills via `npx skills add MagicbornStudios/get-anything-done`\" as the first-class path. (3) /standards updated (queued) to cite vercel-labs/skills alongside the Anthropic PDF and agentskills.io. (4) The install.js workspace-skills copy (22-46) is retained but labelled as fallback — the canonical path is npx skills. (5) /security page gains a new mitigation: skills installed via npx skills inherit the ecosystem's trust posture (public repos, git provenance, hash-pinning). (6) Substantial simplification — GAD stops competing with the distribution tool and focuses on what it actually does (skill methodology + evaluation framework + hypothesis testing)."
+  },
   {
     "id": "gad-84",
     "title": "Hook-level introspection during evals — what \"thoughts\" can we actually capture?",
@@ -7376,6 +7462,70 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": [
       "gad-84"
     ]
+  },
+  {
+    "id": "22-51",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood).",
+    "keywords": [
+      "gad-requirements-gui",
+      "new-eval-domain",
+      "generalization-test",
+      "gad-88"
+    ],
+    "depends": []
+  },
+  {
+    "id": "22-52",
+    "phaseId": "22",
+    "status": "planned",
+    "agentId": "",
+    "goal": "Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (NOT LLM self-report — that's what skill-creator's Python harness does and it didn't work for us), emits benchmark.json compatible with agentskills.io format. This is the load-bearing piece that lets every GAD skill graduate from experimental to canonical per gad-86. Directly answers programmatic-eval GAPS G2 + the hygiene half of G11.",
+    "keywords": [
+      "gad-eval-skill",
+      "harness",
+      "experimental-to-canonical",
+      "trace-based-grading"
+    ],
+    "depends": [
+      "gad-87"
+    ]
+  },
+  {
+    "id": "22-53",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Author merge-skill + find-skills SKILL.md files as workspace skills. find-skills is a thin methodology wrapper around npx skills (vercel-labs/skills CLI per gad-85). merge-skill is a pure methodology doc for fusing overlapping skills. Both start as experimental (status: experimental) because no evaluation harness has been run against them yet.",
+    "keywords": [
+      "triumvirate",
+      "merge-skill",
+      "find-skills",
+      "gad-73",
+      "workspace-skills"
+    ],
+    "depends": [
+      "gad-73",
+      "gad-85"
+    ]
+  },
+  {
+    "id": "22-54",
+    "phaseId": "22",
+    "status": "done",
+    "agentId": "",
+    "goal": "Landing page + /hypotheses interactive chart. User directive 2026-04-09: \"the interactive chart I asked for should have been on the front page, but I dont see it... I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" Move or duplicate the HypothesisTracksChart from /roadmap onto the landing page (after Hero, before WhatItIs) and add it to /hypotheses above the hypothesis cards.",
+    "keywords": [
+      "landing",
+      "hypotheses",
+      "interactive-chart",
+      "visibility"
+    ],
+    "depends": [
+      "22-40"
+    ]
   }
 ];
 
@@ -7602,6 +7752,34 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-88",
+    "title": "New eval domain — GUI-for-requirements-and-harness (gad-requirements-gui)",
+    "kind": "decision",
+    "href": "/decisions#gad-88",
+    "body": "gad-88 new eval domain — gui-for-requirements-and-harness (gad-requirements-gui) user idea 2026-04-09: \"lets make a gui with requirements for it and put it a part of our rounds to test our theories. which i still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" two nested ideas here: (a) add more visualizations to /hypotheses, (b) create a new eval project where the agent's task is to build a browser-based gui for authoring requir"
+  },
+  {
+    "id": "gad-87",
+    "title": "Per-skill eval harness — GAD-native, not skill-creator's Python harness",
+    "kind": "decision",
+    "href": "/decisions#gad-87",
+    "body": "gad-87 per-skill eval harness — gad-native, not skill-creator's python harness user directive 2026-04-09: \"also note on the skill-creator and its eval script with python. it didnt work for gad's workflow methodology. claude gave a 4/8 tasks 2 times and i think it was testing tool calls. anyway we want to avoid that and have actionable testable frameworks.\" the anthropic skill-creator ships a python eval harness (`eval-viewer/generate_review.py` + `scripts/aggregate_benchmark"
+  },
+  {
+    "id": "gad-86",
+    "title": "Skill graduation criterion — no evaluation = experimental",
+    "kind": "decision",
+    "href": "/decisions#gad-86",
+    "body": "gad-86 skill graduation criterion — no evaluation = experimental user answer 2026-04-09 to discussion q2: \"they become canonical if they become useful, right now skills that dont have evaluations are considered experimental. also emergent skills stay in the gad repo forever.\" formalizes the skill lifecycle: (1) a skill with no evals/evals.json + no benchmark run against it is experimental, regardless of origin. (2) a skill with a passing with_skill-vs-without_s"
+  },
+  {
+    "id": "gad-85",
+    "title": "Adopt npx skills (vercel-labs/skills) as the canonical user-facing skill installer",
+    "kind": "decision",
+    "href": "/decisions#gad-85",
+    "body": "gad-85 adopt npx skills (vercel-labs/skills) as the canonical user-facing skill installer user directive 2026-04-09: \"find skills can just reuse the npx skill.sh and gad can really just wrap around that making the calls underneath just so gad is like a barrel for tools a user would want and we also would need.\" vercel-labs/skills (`npx skills`) is the cli for the open agent skills ecosystem — one command that supports 40+ coding agents (claude code, codex, cursor, cline, opencode, copi"
+  },
   {
     "id": "gad-84",
     "title": "Hook-level introspection during evals — what \"thoughts\" can we actually capture?",
@@ -9276,6 +9454,34 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "22-50 extract thinking blocks from session.jsonl into trace.json derived.reasoning_trace (gad-84, gaps g13). post-hoc offline enrichment — no new hooks required. walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to trace.json with timestamps tying thoughts to subsequent tool uses. first exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. this is the highest-leverage way to get \"agent reasoning\" signal without claude code exposing new hook surfaces. thinking-blocks session-jsonl reasoning-trace post-hoc"
   },
   {
+    "id": "22-51",
+    "title": "Scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. Third task-domain alongside escape-the-dungeon",
+    "kind": "task",
+    "href": "/tasks#22-51",
+    "body": "22-51 scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). tests the same hypotheses (freedom / csh / emergent-evolution) on gui app development. the gui, once built, is also part of the gad eval framework (dogfood). gad-requirements-gui new-eval-domain generalization-test gad-88"
+  },
+  {
+    "id": "22-52",
+    "title": "Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json in",
+    "kind": "task",
+    "href": "/tasks#22-52",
+    "body": "22-52 build the gad-native per-skill evaluation harness: gad eval skill &lt;name&gt; cli subcommand. reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (not llm self-report — that's what skill-creator's python harness does and it didn't work for us), emits benchmark.json compatible with agentskills.io format. this is the load-bearing piece that lets every gad skill graduate from experimental to canonical per gad-86. directly answers programmatic-eval gaps g2 + the hygiene half of g11. gad-eval-skill harness experimental-to-canonical trace-based-grading"
+  },
+  {
+    "id": "22-53",
+    "title": "Author merge-skill + find-skills SKILL.md files as workspace skills. find-skills is a thin methodology wrapper around np",
+    "kind": "task",
+    "href": "/tasks#22-53",
+    "body": "22-53 author merge-skill + find-skills skill.md files as workspace skills. find-skills is a thin methodology wrapper around npx skills (vercel-labs/skills cli per gad-85). merge-skill is a pure methodology doc for fusing overlapping skills. both start as experimental (status: experimental) because no evaluation harness has been run against them yet. triumvirate merge-skill find-skills gad-73 workspace-skills"
+  },
+  {
+    "id": "22-54",
+    "title": "Landing page + /hypotheses interactive chart. User directive 2026-04-09: \"the interactive chart I asked for should have ",
+    "kind": "task",
+    "href": "/tasks#22-54",
+    "body": "22-54 landing page + /hypotheses interactive chart. user directive 2026-04-09: \"the interactive chart i asked for should have been on the front page, but i dont see it... i still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" move or duplicate the hypothesistrackschart from /roadmap onto the landing page (after hero, before whatitis) and add it to /hypotheses above the hypothesis cards. landing hypotheses interactive-chart visibility"
+  },
+  {
     "id": "01",
     "title": "Phase 01 — Foundation",
     "kind": "phase",
@@ -9871,6 +10077,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "execute-phase gad:execute-phase execute a planned phase by following plan.md tasks atomically — commit after each task, update planning docs, and run verify commands at each step. use this skill when the user wants to execute a phase, start working on planned tasks, run through a phase autonomously, or continue execution of an in-progress phase. this is the autonomous execution skill — if the plan is solid and requirements are clear, claude should be able to run this to completion without interruption. requires gad:plan-phase to have been run first to produce a plan.md."
   },
   {
+    "id": "find-skills",
+    "title": "find-skills",
+    "kind": "skill",
+    "href": "/skills/find-skills",
+    "body": "find-skills find-skills >- discover installed skills relevant to the current task and suggest external skills worth installing when no local match exists. use when you are about to attempt a non-trivial task and want to check whether an existing skill already solves it, or when you notice you are repeating yourself and suspect there should be a skill for this. gad's find-skills is a thin methodology wrapper around the vercel-labs/skills cli — it delegates actual search and listing to npx skills and adds gad-specific guidance on how to interpret the results and which external sources to prefer. per decisions gad-73 and gad-85 this is one of the three fundamental skills (find-skills + merge-skill + create-skill) that enable the emergent-evolution hypothesis to be tested in practice."
+  },
+  {
     "id": "find-sprites",
     "title": "find-sprites",
     "kind": "skill",
@@ -9897,6 +10110,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/map-codebase",
     "body": "map-codebase gad:map-codebase analyze an existing codebase and produce structured documents capturing stack, architecture, conventions, and concerns — used before planning phases in a brownfield project. use this skill when the user wants to understand an unfamiliar codebase, when starting to plan work in an existing project that has no planning docs, when onboarding to a repo, or when beginning any phase that touches code you haven't read yet. produces .planning/codebase/ documents that feed directly into gad:new-project and gad:plan-phase. run once per project or when architecture changes significantly."
+  },
+  {
+    "id": "merge-skill",
+    "title": "merge-skill",
+    "kind": "skill",
+    "href": "/skills/merge-skill",
+    "body": "merge-skill merge-skill >- fuse two or more existing skills into a single tailored skill. use when you discover overlapping skills in the catalog (same trigger keywords, same target workflow, same failure modes being addressed) or when you want to take a fundamental skill like scientific-method or debug and attune it to a specific project domain (e.g. merging scientific-method into a kaplay rune-spellcrafting workflow produces a scientific-method-for-kaplay-forge variant). merging is the preferred response to skill collision — do not let duplicate skills accumulate in the catalog. merge them, deprecate the originals in changelog, and update any inheriting runs. per decision gad-73 this is one of the three fundamental skills (find-skills + merge-skill + create-skill) that together enable the emergent-evolution hypothesis to be tested in practice."
   },
   {
     "id": "milestone",
