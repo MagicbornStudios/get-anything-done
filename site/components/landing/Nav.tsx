@@ -68,6 +68,7 @@ const GROUPS: NavGroup[] = [
       { href: "/requirements", label: "Requirements", note: "v5 + history" },
       { href: "/security", label: "Security", note: "skill risks + certification" },
       { href: "/contribute", label: "Contribute", note: "clone and run your own" },
+      { href: "/feature-requests", label: "Feature Requests", note: "what we need from others" },
     ],
   },
 ];

@@ -1,0 +1,26 @@
+{
+  "_schema": {
+    "file": "data/feature-requests.json",
+    "purpose": "Public record of feature requests submitted to external projects. Shown on /feature-requests page so our community can see what we depend on and track resolution.",
+    "written_by": "human + agent",
+    "read_by": "site prebuild + /feature-requests page"
+  },
+  "_last_updated": "2026-04-10",
+  "requests": [
+    {
+      "id": "claude-code-worktree-hooks",
+      "title": "Worktree-spawned agents should inherit parent session's hooks",
+      "target": "anthropics/claude-code",
+      "issue_number": 46279,
+      "url": "https://github.com/anthropics/claude-code/issues/46279",
+      "status": "submitted",
+      "submitted_on": "2026-04-10",
+      "priority": "critical",
+      "blocks": ["Behavioral trace capture for eval runs using worktree isolation"],
+      "description": "When using the Agent tool with isolation: 'worktree', the spawned subagent does not inherit the parent session's PreToolUse/PostToolUse hooks. This means no trace events are captured for isolated eval runs — we get the code output but zero process data (tool calls, skill invocations, file mutations). This blocks our core evaluation methodology.",
+      "workaround": "Clone to a separate repo instead of using worktree isolation. Hooks fire if .claude/settings.json is set up in the clone. More setup overhead but functional.",
+      "related_decisions": ["gad-82", "gad-84"],
+      "impact_on_gad": "Without this, every eval run produces builds but no behavioral traces. We cannot compare HOW agents work across conditions (GAD vs bare vs emergent) — only WHAT they produce. This undermines the scientific rigor of the evaluation framework."
+    }
+  ]
+}
