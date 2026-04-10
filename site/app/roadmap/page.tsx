@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
-import { ROUND_SUMMARIES, EVAL_RUNS, TASK_PRESSURE } from "@/lib/eval-data";
+import { ROUND_SUMMARIES, EVAL_RUNS, TASK_PRESSURE, type EvalRunRecord } from "@/lib/eval-data";
+import { HypothesisTracksChart, type HypothesisTrackPoint } from "@/components/charts/HypothesisTracksChart";
 
 export const metadata = {
   title: "Roadmap — GAD",
@@ -66,6 +67,82 @@ const ROUND_TO_VERSION: Record<string, string> = {
   "Round 5": "v5",
 };
 
+/**
+ * Build the hypothesis-tracks chart data by grouping EVAL_RUNS per round and
+ * per workflow, then extracting the aggregate human review score per
+ * (round × workflow) cell. Missing cells become null (chart renders gap).
+ */
+function buildTrackData(): HypothesisTrackPoint[] {
+  const roundForVersion: Record<string, string> = {
+    v1: "Round 1", v2: "Round 1", v3: "Round 1", v4: "Round 1", v5: "Round 1",
+    v6: "Round 2", v7: "Round 2",
+    v8: "Round 3",
+    v9: "Round 4", v10: "Round 4",
+  };
+  const bareRoundForVersion: Record<string, string> = {
+    v1: "Round 2", v2: "Round 2",
+    v3: "Round 3",
+    v4: "Round 4", v5: "Round 4",
+  };
+  const emergentRoundForVersion: Record<string, string> = {
+    v1: "Round 2",
+    v2: "Round 3",
+    v3: "Round 4", v4: "Round 4",
+  };
+
+  const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
+  const points: HypothesisTrackPoint[] = rounds.map((round) => ({
+    round,
+    freedom: null,
+    csh: null,
+    gad: null,
+    contentDriven: null,
+    codex: null,
+  }));
+  const byRound = new Map(points.map((p) => [p.round, p]));
+
+  // Pick the best-scoring run of each workflow per round. "Best" = highest
+  // aggregate_score from the normalized rubric, falling back to legacy score.
+  function scoreOf(r: EvalRunRecord): number | null {
+    const agg = r.humanReviewNormalized?.aggregate_score;
+    if (typeof agg === "number") return agg;
+    const legacy = r.humanReview?.score;
+    if (typeof legacy === "number") return legacy;
+    return null;
+  }
+
+  for (const run of EVAL_RUNS) {
+    let round: string | undefined;
+    let series: "gad" | "freedom" | "csh" | undefined;
+
+    if (run.project === "escape-the-dungeon") {
+      round = roundForVersion[run.version];
+      series = "gad";
+    } else if (run.project === "escape-the-dungeon-bare") {
+      round = bareRoundForVersion[run.version];
+      series = "freedom";
+    } else if (run.project === "escape-the-dungeon-emergent") {
+      round = emergentRoundForVersion[run.version];
+      series = "csh";
+    }
+
+    if (!round || !series) continue;
+    const point = byRound.get(round);
+    if (!point) continue;
+
+    const s = scoreOf(run);
+    if (s == null) continue;
+
+    // Keep the best score per cell
+    const existing = point[series];
+    if (existing == null || s > existing) {
+      point[series] = s;
+    }
+  }
+
+  return points;
+}
+
 function pressureForRound(round: string): { value: number; tier: string; note: string; source: "computed" | "authored" } {
   const annotation = PRESSURE_ANNOTATIONS[round];
   const version = ROUND_TO_VERSION[round];
@@ -109,6 +186,7 @@ const FUTURE_ROUNDS = [
 
 export default function RoadmapPage() {
   const roundedRuns = EVAL_RUNS.length;
+  const trackData = buildTrackData();
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -161,6 +239,23 @@ export default function RoadmapPage() {
               runs preserved
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Hypothesis tracks chart — task 22-24 */}
+      <section className="border-b border-border/60">
+        <div className="section-shell">
+          <div className="mb-6 flex items-center gap-3">
+            <p className="section-kicker !mb-0">Hypothesis tracks across rounds</p>
+          </div>
+          <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+            One line per hypothesis track. Freedom = bare condition.
+            CSH = emergent (compound-skills). GAD = full-framework condition.
+            Content-driven and Codex runtime are planned tracks with no scored
+            runs yet — shown as dashed lines to make the research plan visible.
+            Round 5 is queued pending the HTTP 529 investigation.
+          </p>
+          <HypothesisTracksChart data={trackData} />
         </div>
       </section>
 

@@ -9,7 +9,7 @@ import { Ref } from "@/components/refs/Ref";
 export const metadata = {
   title: "Skeptic — devils-advocate critique of every hypothesis",
   description:
-    "Every hypothesis we've claimed, held to its strongest critique. The credibility move is admitting what we don't know. Source: .planning/SKEPTIC.md.",
+    "Every hypothesis we've claimed, held to its strongest critique. The credibility move is admitting what we don't know. Source: .planning/docs/SKEPTIC.md.",
 };
 
 const REPO = "https://github.com/MagicbornStudios/get-anything-done";
@@ -265,12 +265,12 @@ export default function SkepticPage() {
           <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
             Source:{" "}
             <a
-              href={`${REPO}/blob/main/.planning/SKEPTIC.md`}
+              href={`${REPO}/blob/main/.planning/docs/SKEPTIC.md`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent underline decoration-dotted"
             >
-              .planning/SKEPTIC.md
+              .planning/docs/SKEPTIC.md
             </a>
             . This document gets updated as the critique deepens, not as the
             hypotheses get more confident.

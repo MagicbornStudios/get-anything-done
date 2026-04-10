@@ -403,8 +403,17 @@ function scanProducedArtifacts() {
         if (!exists(skillDir)) continue;
         for (const f of fs.readdirSync(skillDir)) {
           if (f.endsWith(".md")) {
-            const size = fs.statSync(path.join(skillDir, f)).size;
-            entry.skillFiles.push({ name: f, bytes: size });
+            const fullPath = path.join(skillDir, f);
+            const size = fs.statSync(fullPath).size;
+            let content = null;
+            try {
+              // Cap at 64KB to keep the generated TS reasonable
+              if (size <= 64 * 1024) {
+                content = fs.readFileSync(fullPath, "utf8");
+              }
+            } catch {}
+            const relFile = path.relative(REPO_ROOT, fullPath).replace(/\\/g, "/");
+            entry.skillFiles.push({ name: f, bytes: size, content, file: relFile });
           }
         }
       }
@@ -632,23 +641,52 @@ function scanCatalog() {
   const catalog = { skills: [], agents: [], commands: [], templates: [] };
 
   if (exists(SKILLS_DIR)) {
+    // Walk skills/ AND skills/emergent/ as two separate tiers.
+    // Regular skills are human-authored and part of the default install.
+    // Emergent skills live in skills/emergent/ and are agent-authored; they
+    // are excluded from the default install but surfaced on the site with
+    // an "emergent" tag so the agent-authored corpus stays discoverable.
+    function readSkill(skillDir, id, origin) {
+      const file = path.join(skillDir, "SKILL.md");
+      if (!exists(file)) return null;
+      const src = fs.readFileSync(file, "utf8");
+      const { data, body } = parseFrontmatter(src);
+      const declaredOrigin = data.origin || origin;
+      return {
+        id,
+        name: data.name || id,
+        description: data.description || firstParagraph(body, 280),
+        origin: declaredOrigin,
+        authoredBy: data["authored-by"] || null,
+        authoredOn: data["authored-on"] || null,
+        excludedFromDefaultInstall: data["excluded-from-default-install"] === true || declaredOrigin === "emergent",
+        file: origin === "emergent"
+          ? `vendor/get-anything-done/skills/emergent/${id}/SKILL.md`
+          : `vendor/get-anything-done/skills/${id}/SKILL.md`,
+        bodyHtml: renderMarkdown(body),
+        bodyRaw: body,
+      };
+    }
+
+    const emergentDir = path.join(SKILLS_DIR, "emergent");
+
     for (const entry of fs.readdirSync(SKILLS_DIR, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-      if (entry.isDirectory()) {
-        const file = path.join(SKILLS_DIR, entry.name, "SKILL.md");
-        if (exists(file)) {
-          const src = fs.readFileSync(file, "utf8");
-          const { data, body } = parseFrontmatter(src);
-          catalog.skills.push({
-            id: entry.name,
-            name: data.name || entry.name,
-            description: data.description || firstParagraph(body, 280),
-            file: `vendor/get-anything-done/skills/${entry.name}/SKILL.md`,
-            bodyHtml: renderMarkdown(body),
-            bodyRaw: body,
-          });
-        }
+      if (!entry.isDirectory()) continue;
+      if (entry.name === "emergent") continue; // handled separately
+      const skill = readSkill(path.join(SKILLS_DIR, entry.name), entry.name, "human-authored");
+      if (skill) catalog.skills.push(skill);
+    }
+
+    if (exists(emergentDir)) {
+      for (const entry of fs.readdirSync(emergentDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+        if (!entry.isDirectory()) continue;
+        const skill = readSkill(path.join(emergentDir, entry.name), entry.name, "emergent");
+        if (skill) catalog.skills.push(skill);
       }
     }
+
+    const emergentCount = catalog.skills.filter((s) => s.origin === "emergent").length;
+    console.log(`  [skills] ${catalog.skills.length} total (${emergentCount} emergent, excluded from default install)`);
   }
 
   if (exists(AGENTS_DIR)) {
@@ -828,6 +866,210 @@ function parseAllTasks() {
   }
   console.log(`  [tasks] parsed ${out.length} task(s) for cross-ref index`);
   return out;
+}
+
+function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pseudoDb, currentRequirements, searchIndex }) {
+  // Task 22-39: agent-crawlable documentation export.
+  // Writes three artifacts so external agents evaluating GAD can ingest the
+  // full system without crawling the HTML:
+  //
+  //   public/llms.txt            — concise index following the emerging
+  //                                llms.txt convention (https://llmstxt.org/)
+  //                                listing the key pages with one-line notes.
+  //   public/llms-full.txt       — full-text markdown dump of every skill,
+  //                                decision, question, bug, glossary term,
+  //                                task, phase, and current requirements XML.
+  //   public/api/docs.json       — structured JSON of everything above plus
+  //                                the search index, so other agents can
+  //                                parse it as structured data.
+  console.log("[2j/4] Writing agent-crawlable docs (llms.txt, llms-full.txt, api/docs.json)");
+
+  const PUBLIC = path.join(SITE_ROOT, "public");
+  const API_DIR = path.join(PUBLIC, "api");
+  ensureDir(API_DIR);
+
+  const SITE_URL = "https://get-anything-done.vercel.app";
+
+  // ---------- llms.txt (concise index) ----------
+  const llmsTxt = `# Get Anything Done — llms.txt
+
+> A research framework for evaluating and evolving AI coding agents under measurable pressure. Everything in this site is backed by files in the repo at https://github.com/MagicbornStudios/get-anything-done. This file follows the llmstxt.org convention.
+
+## Core thesis
+
+- [Home](${SITE_URL}/): Evaluate and evolve agents under measurable pressure
+- [Methodology](${SITE_URL}/methodology): How we score, what the rubric is, how rounds work
+- [Glossary](${SITE_URL}/glossary): Every domain term (CSH, freedom hypothesis, pressure, etc.)
+- [Skeptic](${SITE_URL}/skeptic): Devils-advocate critique of every hypothesis — read this first before trusting any number
+- [Lineage](${SITE_URL}/lineage): GSD → RepoPlanner → GAD
+
+## Evaluation
+
+- [Findings](${SITE_URL}/findings): Per-round writeups
+- [Rubric](${SITE_URL}/rubric): Per-project scoring dimensions
+- [Decisions](${SITE_URL}/decisions): Every entry in DECISIONS.xml (${allDecisions.length} decisions)
+- [Questions](${SITE_URL}/questions): Open research questions
+- [Roadmap](${SITE_URL}/roadmap): Round-by-round timeline with pressure progression
+- [Data provenance](${SITE_URL}/data): Where every number on the site comes from
+- [Emergent](${SITE_URL}/emergent): Compound-Skills Hypothesis evidence rollup
+
+## Catalog
+
+- [Skills](${SITE_URL}/skills): ${catalog.skills.length} skills (some are emergent, agent-authored, excluded from default install)
+- [Requirements](${SITE_URL}/requirements): Every eval project's current REQUIREMENTS.xml
+- [Playable archive](${SITE_URL}/#play): Every scored build playable in-browser
+
+## System
+
+- [Contribute](${SITE_URL}/contribute): Human-first workflow (clone → install → open in Claude → talk)
+- [Security](${SITE_URL}/security): Skill attack surfaces, mitigations, future certification model
+- [Tasks](${SITE_URL}/tasks): ${allTasks.length} entries in TASK-REGISTRY.xml
+- [Phases](${SITE_URL}/phases): ${allPhases.length} phases in ROADMAP.xml
+- [Bugs](${SITE_URL}/bugs): Observed across eval runs
+
+## Machine-readable
+
+- [llms-full.txt](${SITE_URL}/llms-full.txt): Full text dump of skills, decisions, questions, bugs, glossary, requirements
+- [api/docs.json](${SITE_URL}/api/docs.json): Structured JSON with everything above plus the search index
+
+## Canonical repository
+
+${SITE_URL.replace(/\/$/, "")} is a view. The source of truth is the git repository. Clone it:
+
+\`\`\`
+git clone https://github.com/MagicbornStudios/get-anything-done
+\`\`\`
+`;
+  fs.writeFileSync(path.join(PUBLIC, "llms.txt"), llmsTxt, "utf8");
+
+  // ---------- llms-full.txt (full content dump) ----------
+  const sections = [];
+
+  sections.push(`# Get Anything Done — full text export
+
+This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
+
+Generated: ${new Date().toISOString()}
+`);
+
+  // Skills
+  sections.push(`\n\n---\n\n# Skills (${catalog.skills.length})\n`);
+  for (const s of catalog.skills) {
+    sections.push(`\n## ${s.name}${s.origin === "emergent" ? " (emergent)" : ""}\n`);
+    sections.push(`id: ${s.id}\n`);
+    sections.push(`description: ${s.description}\n`);
+    if (s.origin) sections.push(`origin: ${s.origin}\n`);
+    if (s.authoredOn) sections.push(`authored: ${s.authoredOn}\n`);
+    sections.push(`\n${s.bodyRaw}\n`);
+  }
+
+  // Decisions
+  sections.push(`\n\n---\n\n# Decisions (${allDecisions.length})\n`);
+  for (const d of allDecisions) {
+    sections.push(`\n## ${d.id}: ${d.title}\n\n`);
+    sections.push(`### Summary\n\n${d.summary}\n\n`);
+    if (d.impact) sections.push(`### Impact\n\n${d.impact}\n`);
+  }
+
+  // Open questions
+  const questions = pseudoDb.openQuestions?.questions ?? [];
+  sections.push(`\n\n---\n\n# Open research questions (${questions.length})\n`);
+  for (const q of questions) {
+    sections.push(`\n## ${q.id}\n\n`);
+    sections.push(`**${q.title}**\n\n`);
+    sections.push(`Status: ${q.status} | Priority: ${q.priority} | Category: ${q.category}\n\n`);
+    sections.push(`${q.context}\n`);
+    if (q.resolution) sections.push(`\n**Resolution:** ${q.resolution}\n`);
+  }
+
+  // Bugs
+  const bugs = pseudoDb.bugs?.bugs ?? [];
+  sections.push(`\n\n---\n\n# Observed bugs (${bugs.length})\n`);
+  for (const b of bugs) {
+    sections.push(`\n## ${b.id}\n\n`);
+    sections.push(`**${b.title}** — ${b.project}/${b.version} — ${b.severity} — ${b.status}\n\n`);
+    sections.push(`${b.description}\n\n**Expected:** ${b.expected}\n\n**Reproduction:** ${b.reproduction}\n`);
+  }
+
+  // Glossary
+  const glossary = pseudoDb.glossary?.terms ?? [];
+  sections.push(`\n\n---\n\n# Glossary (${glossary.length})\n`);
+  for (const g of glossary) {
+    sections.push(`\n## ${g.term} (${g.id})\n\n`);
+    if (g.aliases?.length) sections.push(`Aliases: ${g.aliases.join(", ")}\n\n`);
+    sections.push(`${g.short}\n\n${g.full}\n`);
+  }
+
+  // Tasks (summary only — 140 full goals would blow up the file)
+  sections.push(`\n\n---\n\n# Tasks (${allTasks.length})\n`);
+  for (const t of allTasks) {
+    sections.push(`\n- **${t.id}** [${t.status}]: ${t.goal.slice(0, 400)}\n`);
+  }
+
+  // Phases
+  sections.push(`\n\n---\n\n# Phases (${allPhases.length})\n`);
+  for (const p of allPhases) {
+    sections.push(`\n## Phase ${p.id}: ${p.title}\n\nStatus: ${p.status}\n\n${p.goal}\n`);
+  }
+
+  // Current requirements (condensed)
+  sections.push(`\n\n---\n\n# Current requirements\n`);
+  for (const req of currentRequirements) {
+    if (!req.content) continue;
+    sections.push(`\n## ${req.project} ${req.version}\n\n`);
+    sections.push(`Source: ${req.sourcePath}\n\n`);
+    sections.push("```xml\n");
+    sections.push(req.content);
+    sections.push("\n```\n");
+  }
+
+  const llmsFullTxt = sections.join("");
+  fs.writeFileSync(path.join(PUBLIC, "llms-full.txt"), llmsFullTxt, "utf8");
+
+  // ---------- api/docs.json (structured) ----------
+  const docsJson = {
+    meta: {
+      site: SITE_URL,
+      repo: "https://github.com/MagicbornStudios/get-anything-done",
+      generated: new Date().toISOString(),
+      schema: "gad-docs-v1",
+      description: "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework.",
+    },
+    skills: catalog.skills.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      origin: s.origin ?? "human-authored",
+      authoredBy: s.authoredBy ?? null,
+      authoredOn: s.authoredOn ?? null,
+      excludedFromDefaultInstall: !!s.excludedFromDefaultInstall,
+      bodyRaw: s.bodyRaw,
+      file: s.file,
+    })),
+    decisions: allDecisions,
+    questions,
+    bugs,
+    glossary,
+    tasks: allTasks,
+    phases: allPhases,
+    requirements: currentRequirements.map((req) => ({
+      project: req.project,
+      version: req.version,
+      sourcePath: req.sourcePath,
+      content: req.content,
+    })),
+    searchIndex: searchIndex,
+  };
+  fs.writeFileSync(
+    path.join(API_DIR, "docs.json"),
+    JSON.stringify(docsJson, null, 2),
+    "utf8"
+  );
+
+  const sizeKb = (p) => (fs.statSync(p).size / 1024).toFixed(1);
+  console.log(`  [agent-docs] llms.txt (${sizeKb(path.join(PUBLIC, "llms.txt"))} KB)`);
+  console.log(`  [agent-docs] llms-full.txt (${sizeKb(path.join(PUBLIC, "llms-full.txt"))} KB)`);
+  console.log(`  [agent-docs] api/docs.json (${sizeKb(path.join(API_DIR, "docs.json"))} KB)`);
 }
 
 function computeTaskPressure(xml) {
@@ -1110,6 +1352,10 @@ export interface CatalogSkill {
   id: string;
   name: string;
   description: string;
+  origin?: "human-authored" | "emergent" | "inherited" | null;
+  authoredBy?: string | null;
+  authoredOn?: string | null;
+  excludedFromDefaultInstall?: boolean;
   file: string;
   bodyHtml: string;
   bodyRaw: string;
@@ -1791,7 +2037,7 @@ export interface EvalProjectMeta {
 }
 
 export interface ProducedArtifacts {
-  skillFiles: Array<{ name: string; bytes: number }>;
+  skillFiles: Array<{ name: string; bytes: number; content?: string | null; file?: string | null }>;
   agentFiles: Array<{ name: string; bytes: number }>;
   planningFiles: Array<{ name: string; bytes: number }>;
   workflowNotes: Array<{ name: string; bytes: number }>;
@@ -2049,6 +2295,15 @@ function main() {
     taskPressureByVersion,
   });
   writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState);
+  writeAgentIngestFiles({
+    catalog,
+    allDecisions,
+    allTasks,
+    allPhases,
+    pseudoDb,
+    currentRequirements,
+    searchIndex,
+  });
   auditPlayable();
 
   console.log("=== done ===");

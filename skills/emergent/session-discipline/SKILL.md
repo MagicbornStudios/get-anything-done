@@ -1,5 +1,9 @@
 ---
 name: session-discipline
+origin: emergent
+authored-by: agent
+authored-on: 2026-04-09
+excluded-from-default-install: true
 description: >-
   Hard-start procedure for any agent about to touch the GAD repo in a new turn
   or session. Forces the agent to rehydrate state, check existing planned work,
@@ -11,6 +15,12 @@ description: >-
   picking up new user instructions, or noticing you have drifted into ad-hoc
   execution.
 ---
+
+> **Emergent skill.** This skill was authored by an agent (Claude Code) in response
+> to a dogfood failure, not by the repo owner. It lives under `skills/emergent/`
+> and is excluded from the default install. Agents working inside this repo load
+> it automatically; users who install GAD into their own workspace do not get it
+> by default. See decision gad-80 for the emergent-vs-authored skill policy.
 
 # session-discipline
 

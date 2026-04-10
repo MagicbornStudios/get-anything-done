@@ -258,12 +258,12 @@ export default function DataPage() {
             self-report sources toward deterministic ones &mdash; the gaps
             are tracked in{" "}
             <a
-              href={`${REPO}/blob/main/.planning/GAPS.md`}
+              href={`${REPO}/blob/main/.planning/docs/GAPS.md`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent underline decoration-dotted"
             >
-              .planning/GAPS.md
+              .planning/docs/GAPS.md
             </a>
             .
           </p>

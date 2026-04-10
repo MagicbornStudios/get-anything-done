@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
+import { SkillLineageCard } from "@/components/emergent/SkillLineageCard";
 import {
   EVAL_RUNS,
   PRODUCED_ARTIFACTS,
@@ -195,68 +196,22 @@ export default function EmergentPage() {
             {runs.map((r) => {
               const artifacts = PRODUCED_ARTIFACTS[runKey(r)];
               const skillFiles = artifacts?.skillFiles ?? [];
-              const hasContent = skillFiles.length > 0;
-
               return (
-                <Card key={runKey(r)} id={r.version} className="scroll-mt-24">
-                  <CardHeader className="pb-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline" className="font-mono">
-                        {r.version}
-                      </Badge>
-                      <CardTitle className="text-base">{r.date}</CardTitle>
-                      {PLAYABLE_INDEX[runKey(r)] && (
-                        <Link
-                          href={`/#play`}
-                          className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 hover:bg-emerald-500/20"
-                        >
-                          Playable
-                          <ArrowRight size={9} aria-hidden />
-                        </Link>
-                      )}
-                      <Link
-                        href={`/runs/${r.project}/${r.version}`}
-                        className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
-                      >
-                        Full breakdown
-                        <ArrowRight size={11} aria-hidden />
-                      </Link>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    {hasContent ? (
-                      <div>
-                        <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                          Skills authored or carried forward this run
-                        </p>
-                        <ul className="space-y-1 text-xs">
-                          {skillFiles.map((s) => (
-                            <li
-                              key={s.name}
-                              className="flex items-center justify-between gap-3 rounded border border-border/40 bg-background/40 px-3 py-2 font-mono text-muted-foreground"
-                            >
-                              <span className="flex items-center gap-2">
-                                <Sparkles
-                                  size={10}
-                                  className="text-amber-400"
-                                  aria-hidden
-                                />
-                                {s.name}
-                              </span>
-                              <span className="text-[10px] opacity-60 tabular-nums">
-                                {(s.bytes / 1024).toFixed(1)} KB
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground opacity-70">
-                        No preserved skill artifacts for this run.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                <SkillLineageCard
+                  key={runKey(r)}
+                  runKey={runKey(r)}
+                  version={r.version}
+                  date={r.date}
+                  playable={!!PLAYABLE_INDEX[runKey(r)]}
+                  projectHref={`/#play`}
+                  runHref={`/runs/${r.project}/${r.version}`}
+                  skills={skillFiles.map((s) => ({
+                    name: s.name,
+                    bytes: s.bytes,
+                    content: s.content ?? null,
+                    file: s.file ?? null,
+                  }))}
+                />
               );
             })}
           </div>
