@@ -419,8 +419,10 @@
       Enemy behavior in auto-resolve combat is governed by their traits: an aggressive
       enemy prioritizes attack, a territorial enemy holds position, a cowardly enemy
       flees at low HP. NPC dialogue options expand or contract based on trait alignment
-      between the player and the NPC. Trait shifts must be visible to the player (a
-      character sheet panel or a combat-log note when a trait changes).
+      between the player and the NPC. Traits have visible NUMERIC values on the
+      character sheet (e.g. aggression: 0.7, compassion: 0.3, arcane affinity: 0.8).
+      When a trait shifts, the numeric change is shown inline (combat log or a brief
+      HUD notification like "+0.1 aggression").
     </requirement>
 
     <requirement id="R-v5.15" title="Real-time game clock">

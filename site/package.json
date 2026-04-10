@@ -27,6 +27,7 @@
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
+    "@remotion/cli": "^4.0.447",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
