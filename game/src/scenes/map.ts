@@ -145,12 +145,16 @@ registerScene('map', (container) => {
       ),
       icon(ROOM_ICONS[current.type] || 'game-icons:dungeon-gate', 'icon-lg'),
       el('p', { style: { fontSize: '12px', marginTop: '8px', lineHeight: '1.5' } }, current.description),
-      ...(current.type !== 'combat' && current.type !== 'elite' && current.type !== 'boss' && !current.cleared ? [
-        el('button', {
-          className: 'btn btn-primary',
-          style: { marginTop: '12px', width: '100%' },
-          onclick: () => handleRoomClick(current),
-        }, 'Enter Room'),
+      ...(!current.cleared ? [
+        (() => {
+          const isCombatType = current.type === 'combat' || current.type === 'elite' || current.type === 'boss' || current.type === 'training';
+          const btn = el('button', {
+            className: `btn ${isCombatType ? 'btn-danger' : 'btn-primary'}`,
+            style: { marginTop: '12px', width: '100%' },
+            onclick: () => handleRoomClick(current),
+          }, isCombatType ? 'Enter Combat' : 'Enter Room');
+          return btn;
+        })(),
       ] : []),
       ...(current.cleared && floor.bossRoomId === current.id && !floor.cleared ? [
         el('button', {
