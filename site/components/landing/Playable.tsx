@@ -54,6 +54,29 @@ const REVIEW_STATE_LABEL: Record<ReviewState, string> = {
   excluded: "Excluded (interrupted)",
 };
 
+/** 5 cycling round colors — round N uses color[(N-1) % 5] */
+const ROUND_COLORS = [
+  "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",  // Round 1, 6, 11...
+  "border-purple-500/40 bg-purple-500/10 text-purple-400",     // Round 2, 7, 12...
+  "border-sky-500/40 bg-sky-500/10 text-sky-400",              // Round 3, 8, 13...
+  "border-amber-500/40 bg-amber-500/10 text-amber-400",        // Round 4, 9, 14...
+  "border-rose-500/40 bg-rose-500/10 text-rose-400",           // Round 5, 10, 15...
+];
+
+function roundColor(round: string | null): string {
+  if (!round) return "border-border/40 bg-card/20 text-muted-foreground";
+  const num = parseInt(round.replace("Round ", ""), 10);
+  if (isNaN(num)) return ROUND_COLORS[0];
+  return ROUND_COLORS[(num - 1) % ROUND_COLORS.length];
+}
+
+/** Map workflow to hypothesis name for tagging */
+const WORKFLOW_HYPOTHESIS: Record<string, string> = {
+  gad: "GAD framework",
+  bare: "Freedom",
+  emergent: "CSH",
+};
+
 const STATUS_CHIP_STYLES: Record<"all" | ReviewState, { base: string; active: string }> = {
   all: {
     base: "border-border/70 text-muted-foreground hover:border-foreground/40",
@@ -146,6 +169,7 @@ export default function Playable() {
   const [roundFilter, setRoundFilter] = useState<string | null>(null);
   const [domainFilter, setDomainFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | ReviewState>("all");
+  const [hypothesisFilter, setHypothesisFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modal, setModal] = useState<"requirements" | "skill" | null>(null);
@@ -195,6 +219,9 @@ export default function Playable() {
     if (statusFilter !== "all") {
       filtered = filtered.filter((r) => reviewStateFor(r) === statusFilter);
     }
+    if (hypothesisFilter) {
+      filtered = filtered.filter((r) => r.workflow === hypothesisFilter);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       filtered = filtered.filter(
@@ -206,7 +233,7 @@ export default function Playable() {
       );
     }
     return filtered;
-  }, [allRuns, roundFilter, domainFilter, statusFilter, searchQuery]);
+  }, [allRuns, roundFilter, domainFilter, statusFilter, hypothesisFilter, searchQuery]);
 
   // Group filtered runs by project family
   const groupedRuns = useMemo(() => {
@@ -231,12 +258,13 @@ export default function Playable() {
     return defaultRun ?? runs[0] ?? null;
   }, [runs, selectedKey]);
 
-  const hasActiveFilters = roundFilter != null || domainFilter != null || statusFilter !== "all" || searchQuery.trim() !== "";
+  const hasActiveFilters = roundFilter != null || domainFilter != null || statusFilter !== "all" || hypothesisFilter != null || searchQuery.trim() !== "";
 
   function clearAllFilters() {
     setRoundFilter(null);
     setDomainFilter(null);
     setStatusFilter("all");
+    setHypothesisFilter(null);
     setSearchQuery("");
     setSelectedKey(null);
     window.history.replaceState(null, "", window.location.pathname + "#play");
@@ -334,6 +362,43 @@ export default function Playable() {
                       <span className={`size-1.5 rounded-full ${REVIEW_STATE_DOT[s]}`} aria-hidden />
                     )}
                     {s === "all" ? "All statuses" : REVIEW_STATE_LABEL[s]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className="hidden h-6 w-px bg-border/60 sm:block" />
+
+            {/* Hypothesis filter chips */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setHypothesisFilter(null)}
+                className={[
+                  "inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                  !hypothesisFilter
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60",
+                ].join(" ")}
+              >
+                All hypotheses
+              </button>
+              {(["bare", "gad", "emergent"] as const).map((wf) => {
+                const isActive = hypothesisFilter === wf;
+                return (
+                  <button
+                    key={wf}
+                    type="button"
+                    onClick={() => setHypothesisFilter(isActive ? null : wf)}
+                    className={[
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                      isActive
+                        ? WORKFLOW_TINT[wf].replace(/\/15/g, "/30").replace(/\/40/g, "/60")
+                        : `${WORKFLOW_TINT[wf]} hover:brightness-125`,
+                    ].join(" ")}
+                  >
+                    {WORKFLOW_HYPOTHESIS[wf] ?? wf}
                   </button>
                 );
               })}
@@ -463,7 +528,7 @@ export default function Playable() {
                           "rounded-full border px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
                           active
                             ? "border-background/30 text-accent-foreground/80"
-                            : "border-purple-500/30 bg-purple-500/10 text-purple-400/80",
+                            : roundColor(round),
                         ].join(" ")}>
                           {round.replace("Round ", "R")}
                         </span>

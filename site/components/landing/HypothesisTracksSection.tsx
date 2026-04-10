@@ -22,16 +22,22 @@ export const ROUND_VERSION_MAP: Record<string, Record<string, string>> = {
     v6: "Round 2", v7: "Round 2",
     v8: "Round 3",
     v9: "Round 4", v10: "Round 4",
+    v11: "Round 5", v12: "Round 5",
   },
   "escape-the-dungeon-bare": {
     v1: "Round 2", v2: "Round 2",
     v3: "Round 3",
     v4: "Round 4", v5: "Round 4",
+    v6: "Round 5",
   },
   "escape-the-dungeon-emergent": {
     v1: "Round 2",
     v2: "Round 3",
     v3: "Round 4", v4: "Round 4",
+    v5: "Round 5", v6: "Round 5",
+  },
+  "gad-explainer-video": {
+    v1: "Round 5",
   },
 };
 
