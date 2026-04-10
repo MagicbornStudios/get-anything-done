@@ -62,6 +62,17 @@ function findProjectRoot(startDir) {
 }
 
 function getTraceFile(projectRoot) {
+  // Per-run trace: if GAD_EVAL_TRACE_DIR is set, write events there instead
+  // of the default .planning/ location. This env var is set by `gad eval run
+  // --execute` so each eval run gets its own trace JSONL, not the global one.
+  const evalTraceDir = process.env.GAD_EVAL_TRACE_DIR;
+  if (evalTraceDir) {
+    if (!fs.existsSync(evalTraceDir)) {
+      fs.mkdirSync(evalTraceDir, { recursive: true });
+    }
+    return path.join(evalTraceDir, '.trace-events.jsonl');
+  }
+
   const planningDir = path.join(projectRoot, '.planning');
   if (!fs.existsSync(planningDir)) {
     fs.mkdirSync(planningDir, { recursive: true });

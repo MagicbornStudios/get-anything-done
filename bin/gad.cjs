@@ -1489,11 +1489,12 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
 }
 
 const evalRun = defineCommand({
-  meta: { name: 'run', description: 'Run eval project in isolated git worktree' },
+  meta: { name: 'run', description: 'Run eval project — generates prompt, creates worktree, optionally spawns agent' },
   args: {
     project: { type: 'string', description: 'Eval project name', default: '' },
     baseline: { type: 'string', description: 'Git baseline (default: HEAD)', default: 'HEAD' },
     'prompt-only': { type: 'boolean', description: 'Only generate the bootstrap prompt, do not create worktree', default: false },
+    execute: { type: 'boolean', description: 'Output JSON for the orchestrating agent to spawn a worktree agent with full tracing', default: false },
   },
   async run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
@@ -1503,6 +1504,7 @@ const evalRun = defineCommand({
 
     if (!fs.existsSync(projectDir)) {
       outputError(`Eval project '${args.project}' not found. Run \`gad eval list\` to see available projects.`);
+      return;
     }
 
     // Next run number
@@ -1515,11 +1517,57 @@ const evalRun = defineCommand({
 
     const now = new Date().toISOString();
 
+    // Load gad.json for metadata
+    let gadJson = {};
+    try {
+      gadJson = JSON.parse(fs.readFileSync(path.join(projectDir, 'gad.json'), 'utf8'));
+    } catch {}
+
     // Build the bootstrap prompt from template files
     const prompt = buildEvalPrompt(projectDir, args.project, runNum);
 
     // Write prompt to run directory
     fs.writeFileSync(path.join(runDir, 'PROMPT.md'), prompt);
+
+    // Create a full TRACE.json scaffold with all the fields the prebuild expects
+    const traceScaffold = {
+      project: args.project,
+      version: `v${runNum}`,
+      date: now.split('T')[0],
+      gad_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
+      framework_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
+      trace_schema_version: 4,
+      eval_type: gadJson.eval_mode || 'greenfield',
+      workflow: gadJson.workflow || 'unknown',
+      requirements_version: 'v5',
+      context_mode: 'fresh',
+      timing: {
+        started: now,
+        ended: null,
+        duration_minutes: null,
+        phases_completed: null,
+        tasks_completed: null,
+      },
+      token_usage: {
+        total_tokens: null,
+        tool_uses: null,
+      },
+      scores: {
+        requirement_coverage: null,
+        human_review: null,
+        composite: null,
+      },
+      human_review: null,
+      git_analysis: null,
+      planning_quality: null,
+      requirement_coverage: null,
+      workflow_emergence: null,
+      gad_commands: [],
+      skill_triggers: [],
+      trace_events_file: path.join(runDir, '.trace-events.jsonl'),
+    };
+
+    fs.writeFileSync(path.join(runDir, 'TRACE.json'), JSON.stringify(traceScaffold, null, 2));
 
     // Write RUN.md
     fs.writeFileSync(path.join(runDir, 'RUN.md'), [
@@ -1528,7 +1576,10 @@ const evalRun = defineCommand({
       `project: ${args.project}`,
       `baseline: ${args.baseline}`,
       `started: ${now}`,
-      `status: ${args['prompt-only'] ? 'prompt-generated' : 'running'}`,
+      `status: ${args['prompt-only'] ? 'prompt-generated' : args.execute ? 'execute-ready' : 'running'}`,
+      `eval_type: ${gadJson.eval_mode || 'greenfield'}`,
+      `workflow: ${gadJson.workflow || 'unknown'}`,
+      `trace_dir: ${runDir}`,
     ].join('\n') + '\n');
 
     if (args['prompt-only']) {
@@ -1536,6 +1587,55 @@ const evalRun = defineCommand({
       console.log(`\n✓ Bootstrap prompt written: evals/${args.project}/v${runNum}/PROMPT.md`);
       console.log(`  ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
       console.log(`\nTo run: copy the prompt into your AI agent with worktree isolation.`);
+      return;
+    }
+
+    // --execute mode: output structured JSON for the orchestrating agent
+    // to spawn a Claude Code Agent with the correct prompt + env + worktree
+    if (args.execute) {
+      const execPayload = {
+        command: 'eval-execute',
+        project: args.project,
+        version: `v${runNum}`,
+        runDir: runDir,
+        traceDir: runDir,
+        prompt: prompt,
+        promptFile: path.join(runDir, 'PROMPT.md'),
+        traceJsonFile: path.join(runDir, 'TRACE.json'),
+        envVars: {
+          GAD_EVAL_TRACE_DIR: runDir,
+          GAD_EVAL_PROJECT: args.project,
+          GAD_EVAL_VERSION: `v${runNum}`,
+        },
+        agentDescription: `Eval: ${args.project} v${runNum}`,
+        postSteps: [
+          `After the agent completes:`,
+          `1. Update TRACE.json timing.ended + timing.duration_minutes + token_usage from agent result`,
+          `2. Run: gad eval preserve ${args.project} v${runNum} --from <worktree-path>`,
+          `3. Regenerate site data: cd site && node scripts/build-site-data.mjs`,
+          `4. Build + commit + push`,
+        ],
+      };
+
+      // Write the exec payload for the orchestrator to read
+      fs.writeFileSync(path.join(runDir, 'EXEC.json'), JSON.stringify(execPayload, null, 2));
+
+      console.log(`\nEval run: ${args.project} v${runNum} (execute mode)`);
+      console.log(`\n✓ TRACE.json scaffold: evals/${args.project}/v${runNum}/TRACE.json`);
+      console.log(`✓ EXEC.json: evals/${args.project}/v${runNum}/EXEC.json`);
+      console.log(`✓ Bootstrap prompt: ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
+      console.log(`\nThe orchestrating agent should:`);
+      console.log(`  1. Read EXEC.json for the spawn configuration`);
+      console.log(`  2. Set env: GAD_EVAL_TRACE_DIR=${runDir}`);
+      console.log(`  3. Spawn an Agent with isolation: "worktree" using the prompt`);
+      console.log(`  4. On completion: update TRACE.json with timing + tokens`);
+      console.log(`  5. Run: gad eval preserve ${args.project} v${runNum} --from <worktree>`);
+      console.log(`  6. Regenerate site data + push`);
+
+      // Output JSON to stdout for machine parsing
+      console.log('\n--- EXEC_JSON_START ---');
+      console.log(JSON.stringify(execPayload));
+      console.log('--- EXEC_JSON_END ---');
       return;
     }
 
@@ -1552,7 +1652,7 @@ const evalRun = defineCommand({
       console.log(`  ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
       console.log(`\nAgent should work in: ${worktreePath}`);
       console.log(`After agent completes, run:`);
-      console.log(`  gad eval trace reconstruct --project ${args.project} --version v${runNum}`);
+      console.log(`  gad eval preserve ${args.project} v${runNum} --from ${worktreePath}`);
     } finally {
       try {
         execSync(`git worktree remove --force "${worktreePath}"`, { stdio: 'pipe' });
