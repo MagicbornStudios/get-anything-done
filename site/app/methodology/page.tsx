@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { AlertTriangle, Calculator, CheckCircle2, Database, FileJson, Gauge, Plug, XCircle } from "lucide-react";
+import { AlertTriangle, Calculator, CheckCircle2, Database, FileJson, Gauge, Plug, XCircle, GitBranch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/Nav";
 import Footer from "@/components/landing/Footer";
+import { EvalLineageGraph } from "@/components/charts/EvalLineageGraph";
 import { EVAL_PROJECTS, EVAL_RUNS } from "@/lib/eval-data";
 
 export const metadata = {
@@ -470,6 +471,98 @@ export default function MethodologyPage() {
           </div>
         </section>
       )}
+
+      {/* Greenfield → Brownfield lineage (gad-90) */}
+      <section className="border-b border-border/60 bg-card/20">
+        <div className="section-shell">
+          <div className="mb-6 flex items-center gap-3">
+            <GitBranch size={18} className="text-accent" aria-hidden />
+            <p className="section-kicker !mb-0">Greenfield → brownfield lineage</p>
+          </div>
+          <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+            Brownfield evals branch from a specific greenfield run&apos;s preserved
+            output. The agent starts with the greenfield&apos;s source code and extends
+            it against new or expanded requirements. This tests the same 5 hypotheses
+            (bare / planning-only / GAD / emergent / GAD+emergent) but for code{" "}
+            <strong className="text-foreground">extension</strong> instead of creation.
+            Decision{" "}
+            <Link href="/decisions#gad-90" className="text-accent underline decoration-dotted">
+              gad-90
+            </Link>{" "}
+            formalizes the lineage model.
+          </p>
+          <EvalLineageGraph />
+          <p className="mt-4 text-[11px] text-muted-foreground">
+            <strong className="text-foreground">Data provenance:</strong> nodes are
+            the latest run per eval project from{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5">EVAL_RUNS</code>.
+            Brownfield baselines read from each project&apos;s{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5">gad.json baseline</code>{" "}
+            field. Edges show the source-code inheritance path.
+          </p>
+        </div>
+      </section>
+
+      {/* Template matrix (gad-89) */}
+      <section className="border-b border-border/60">
+        <div className="section-shell">
+          <p className="section-kicker">What each condition template contains</p>
+          <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+            Transparency about what the eval agent receives. Each column is one
+            condition. ✓ means the file is present in the template; — means absent.
+            This is the full input set — the agent sees nothing else.
+          </p>
+          <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/40">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-border/60 bg-card/60">
+                <tr>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">File</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Bare</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-purple-300">Planning</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-sky-300">GAD</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-amber-300">Emergent</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-pink-300">GAD+Emrg</th>
+                </tr>
+              </thead>
+              <tbody className="text-xs text-muted-foreground">
+                {[
+                  ["AGENTS.md", "✓", "✓", "✓", "✓", "✓"],
+                  ["REQUIREMENTS.xml", "✓", "✓", "✓", "✓", "✓"],
+                  [".planning/ROADMAP.xml", "—", "✓", "✓", "—", "✓"],
+                  [".planning/TASK-REGISTRY.xml", "—", "✓", "✓", "—", "✓"],
+                  [".planning/DECISIONS.xml", "—", "✓", "✓", "—", "✓"],
+                  [".planning/STATE.xml", "—", "✓", "✓", "—", "✓"],
+                  ["skills/ (bootstrap: 2)", "✓", "✓", "—", "—", "—"],
+                  ["skills/ (GAD: 10)", "—", "—", "✓", "—", "✓"],
+                  ["skills/ (inherited: 6)", "—", "—", "—", "✓", "✓"],
+                  ["Total skills", "2", "2", "10", "6", "16"],
+                ].map(([file, ...vals], i) => (
+                  <tr key={i} className={i % 2 === 0 ? "bg-transparent" : "bg-background/30"}>
+                    <td className="px-3 py-2 font-mono text-foreground/80">{file}</td>
+                    {vals.map((v, j) => (
+                      <td
+                        key={j}
+                        className={`px-3 py-2 text-center ${
+                          v === "✓" ? "text-emerald-400" : v === "—" ? "text-muted-foreground/40" : "font-semibold text-foreground"
+                        }`}
+                      >
+                        {v}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-4 text-[11px] text-muted-foreground">
+            Source: the <code className="rounded bg-background/60 px-1 py-0.5">template/</code>{" "}
+            directory of each eval project under{" "}
+            <code className="rounded bg-background/60 px-1 py-0.5">evals/escape-the-dungeon*/</code>.
+            This table shows the greenfield setup. Brownfield conditions additionally receive
+            the preserved source code from their baseline greenfield run.
+          </p>
+        </div>
+      </section>
 
       <Footer />
     </main>
