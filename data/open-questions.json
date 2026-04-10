@@ -26,14 +26,14 @@
       "id": "worktree-isolation-verification",
       "title": "Do eval worktrees actually inherit state from the parent monorepo, and does that contaminate the results?",
       "category": "evaluation",
-      "status": "open",
+      "status": "resolved",
       "priority": "critical",
       "context": "User concern 2026-04-09: 'a concern of mine when running the evals and rounds is that we might be polluting the experiments with our repo and monorepo installation.' Decision gad-82 commits us to eval isolation but does not yet verify whether Claude Code's worktree mechanism actually inherits parent-repo .claude/settings.json, skills, hooks, PATH, env vars. If it does, every eval score through round 4 may be contaminated by implicit access to GAD affordances the bare condition was not supposed to have. Isolation audit script queued as task 22-48. Round 5 is blocked on either passing the audit or documenting which parent-repo state is explicitly allowed.",
       "related_decisions": ["gad-82", "gad-62", "gad-67"],
       "related_requirements": [],
       "opened_on": "2026-04-09",
-      "resolved_on": null,
-      "resolution": null
+      "resolved_on": "2026-04-10",
+      "resolution": "PASSES with explicit allowlist. Audit written at .planning/docs/ISOLATION-AUDIT-2026-04-10.md. Key findings: (1) git worktrees have separate working trees, so .agents/skills/ and .planning/ do NOT inherit — the bare condition stays clean of framework skills, (2) .claude/settings.json IS inherited by Claude Code worktrees at .claude/worktrees/agent-*/ (the settings search walks up), but this is acceptable because the only settings are the trace hook handler which is instrumentation not framework assistance, (3) gad eval run creates worktrees at os.tmpdir() which is entirely outside the repo — even cleaner. The secondary vector (globally-installed user skills at ~/.claude/skills/) is mitigated by adding a bare-eval-prompt line: 'Do NOT load or reference any globally-installed skills.' Round 5 is UNBLOCKED."
     },
     {
       "id": "thinking-block-extraction",

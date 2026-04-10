@@ -84,9 +84,9 @@ cd get-anything-done`}
             />
             <Step
               num="2"
-              title="Install dependencies"
-              code="npm install"
-              note="Or pnpm/yarn — we use npm in CI. The lockfile is committed."
+              title="Install GAD skills (canonical path)"
+              code={`npx skills add MagicbornStudios/get-anything-done`}
+              note="Installs all GAD workspace skills to .agents/skills/ + .claude/skills/ via the open-standard skills CLI (vercel-labs/skills). Works with Claude Code, Codex, Cursor, Windsurf, and 40+ other agents. Emergent skills are excluded automatically."
             />
             <Step
               num="3"

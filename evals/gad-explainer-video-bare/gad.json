@@ -1,0 +1,29 @@
+{
+  "type": "eval",
+  "name": "gad-explainer-video-bare",
+  "description": "gad-explainer-video-bare — tests the same hypotheses as gad-explainer-video but under the bare workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
+  "eval_mode": "greenfield",
+  "workflow": "bare",
+  "baseline": null,
+  "trace": true,
+  "template": "template/",
+  "compare_to": ["gad-explainer-video", "gad-explainer-video-emergent"],
+  "status": "scaffolded — no runs yet",
+  "constraints": {
+    "uses_gad_framework": false,
+    "starts_from_scratch": true,
+    "target_runtime": "@remotion/player + @remotion/cli",
+    "video_duration_seconds_max": 180
+  },
+  "scoring": {
+    "weights": {
+      "requirement_coverage": 0.20,
+      "implementation_quality": 0.15,
+      "video_polish": 0.20,
+      "pedagogical_clarity": 0.15,
+      "workflow_quality": 0.10,
+      "time_efficiency": 0.05,
+      "human_review": 0.15
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "type": "eval",
+  "name": "gad-requirements-gui-bare",
+  "description": "gad-requirements-gui-bare — tests the same hypotheses as gad-requirements-gui but under the bare workflow condition. See gad-requirements-gui/gad.json for the full rubric and gad-requirements-gui/REQUIREMENTS.md for the task spec.",
+  "eval_mode": "greenfield",
+  "workflow": "bare",
+  "baseline": null,
+  "trace": true,
+  "template": "template/",
+  "compare_to": ["gad-requirements-gui", "gad-requirements-gui-emergent"],
+  "status": "scaffolded — no runs yet",
+  "constraints": {
+    "uses_gad_framework": false,
+    "starts_from_scratch": true,
+    "target_runtime": "Next.js 16 + React 19 + tailwind v4",
+    "deploy_target": "Vercel static export",
+    "no_backend": true
+  },
+  "scoring": {
+    "weights": {
+      "requirement_coverage": 0.15,
+      "implementation_quality": 0.15,
+      "workflow_quality": 0.10,
+      "time_efficiency": 0.05,
+      "human_review": 0.55
+    }
+  }
+}
