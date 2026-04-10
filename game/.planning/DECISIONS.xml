@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decisions project="escape-the-dungeon" version="v11">
+  <decision id="D1" date="2026-04-09" title="DOM-based UI with Kaplay for sprites only">
+    <context>R-v5.21 mandates event-driven rendering. Full Kaplay canvas UI makes event-driven harder.</context>
+    <choice>Use DOM/HTML+CSS for all UI panels, menus, HUD. Use Kaplay only for map visualization and combat scene sprites. This gives us event-driven rendering naturally via DOM updates.</choice>
+    <rationale>Previous eval rounds had glitchy redraws from canvas-based UI. DOM updates are inherently event-driven.</rationale>
+  </decision>
+  <decision id="D2" date="2026-04-09" title="Single-page app with scene manager">
+    <context>Need scene transitions without page reloads for persistence.</context>
+    <choice>Custom scene manager that swaps DOM content. Scenes: title, map, combat, forge, merchant, dialogue, character-sheet, inventory.</choice>
+    <rationale>Simpler than Kaplay scenes for DOM-heavy UI. Full control over transitions.</rationale>
+  </decision>
+  <decision id="D3" date="2026-04-09" title="Iconify game-icons for all visual assets">
+    <context>G3 requires no raw ASCII. Need icons for rooms, items, spells, entities.</context>
+    <choice>Use @iconify-json/game-icons via iconify-icon web component for all game visuals. Supplement with CSS gradients for backgrounds.</choice>
+    <rationale>Already installed. 4000+ game-relevant icons. Web component = easy DOM integration.</rationale>
+  </decision>
+</decisions>

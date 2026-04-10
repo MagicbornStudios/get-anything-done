@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roadmap project="escape-the-dungeon" version="v11">
+  <phase id="1" name="Foundation + Title Screen" status="planned">
+    <goal>Vite+TS+Kaplay scaffold, core data models (entities, items, spells, runes, rooms, floors), title screen with New Game / Continue, event-driven rendering architecture</goal>
+    <gates>G1 partial, G3 partial, R-v5.09, R-v5.21</gates>
+  </phase>
+  <phase id="2" name="Dungeon Navigation + Map" status="planned">
+    <goal>Floor/room data for 2 authored floors (5-8 rooms each), visual map with room types, player position, click-to-navigate, room transitions, HUD with HP/mana/floor</goal>
+    <gates>G1 (room transitions), G3 (map + UI), R-v5.12, R-v5.17</gates>
+  </phase>
+  <phase id="3" name="Auto-Resolve Combat + Traits" status="planned">
+    <goal>Unicorn Overlord style auto-combat with loadout, action policies, combat log, pause to adjust. Trait system with numeric values, trait shifts from combat. Visual player vs enemy.</goal>
+    <gates>G1 (combat resolution), G4 (pressure), R-v5.13, R-v5.14, R-v5.18</gates>
+  </phase>
+  <phase id="4" name="Forge + Spell Crafting + Runes" status="planned">
+    <goal>Forge UI, rune discovery loop, spell crafting with 2+ ingredients, spells-as-ingredients, unique ingredients per spell, procedural naming, affinity by casting, affinity rewards</goal>
+    <gates>G2, G4, R-v5.01, R-v5.02, R-v5.16, R-v5.19, R-v5.20</gates>
+  </phase>
+  <phase id="5" name="Inventory, Equipment, Character Sheet, Skill Tree" status="planned">
+    <goal>Inventory grid, equippable items (weapon/armor/trinket/focus), character sheet with stats/traits/affinities, physical skill tree separate from spells, loadout slots</goal>
+    <gates>R-v5.05, R-v5.06, R-v5.07</gates>
+  </phase>
+  <phase id="6" name="NPCs, Merchants, Dialogue, Events" status="planned">
+    <goal>3+ NPCs with branching dialogue, trait-reactive dialogue, merchants with buy/sell/trade, event rooms, rest rooms with actual rest action</goal>
+    <gates>R-v5.03, R-v5.04, R-v5.11, R-v5.14 (NPC traits)</gates>
+  </phase>
+  <phase id="7" name="Pressure Mechanics + Boss Design + Game Clock" status="planned">
+    <goal>Floor bosses gating progression, encounters requiring crafted spells, resource pressure, enemy counterplay, build pressure from loadout limits, game clock</goal>
+    <gates>G4, R-v5.15, floor-mechanical-constraint</gates>
+  </phase>
+  <phase id="8" name="Polish, Persistence, Build" status="planned">
+    <goal>localStorage save/load, transient UI feedback, icon sourcing pass, visual polish, production build</goal>
+    <gates>R-v5.09, R-v5.10, G3 final, production build</gates>
+  </phase>
+</roadmap>
