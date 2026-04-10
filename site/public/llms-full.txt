@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-10T06:32:03.438Z
+Generated: 2026-04-10T07:04:32.787Z
 
 
 ---
@@ -4637,7 +4637,17 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (89)
+# Decisions (90)
+
+## gad-91: CLI-as-a-variable — GAD skills that use the CLI need the CLI installed in the eval template
+
+### Summary
+
+User observation 2026-04-10: "are we including the CLI in these templates. if the gad skills are using the gad cli, then that must also be used to fully implement GAD. just using GAD artifacts is one thing also, adding the CLI and snapshot is something I want to test as well." This is correct: several GAD skills (execute-phase, plan-phase, verify-phase, task-checkpoint, snapshot-optimize) invoke `gad` CLI commands like `gad snapshot`, `gad state`, `gad tasks`. If those skills are in the template but the CLI is not installed, the skills fail silently. The CLI is CURRENTLY available in eval worktrees (because the worktree is a git checkout of the same repo that contains `bin/gad.cjs`), but it's not DOCUMENTED as a deliberate inclusion. Policy: (1) For the GAD and GAD+Emergent conditions, the CLI is explicitly allowed and skills may invoke it. (2) For the Planning-only condition, the CLI is NOT included — the agent has the XML artifacts but not the tooling. This tests whether the artifacts alone help. (3) For Bare and Emergent conditions, the CLI is NOT available. (4) A future 6th condition — "CLI-only" (CLI + snapshot + no skills, no planning artifacts) — could test whether just the CLI loop (`gad snapshot` → `gad state` → work → commit) helps without any of the planning XML or skill methodology. Queued as a possible round-6 addition.
+
+### Impact
+
+(1) GAD template's AGENTS.md should explicitly tell the agent to use `gad snapshot` and `gad state` commands. (2) Planning-only template's AGENTS.md should NOT mention the CLI. (3) The template matrix table on /methodology gains a new row: "GAD CLI available". (4) Future 6th condition (CLI-only) deferred to planning — not scaffolded yet. (5) The existing eval worktrees already have the CLI available via `bin/gad.cjs` in the git checkout, so no file-copy change is needed — just documentation clarity about what's allowed per condition.
 
 ## gad-90: Greenfield → brownfield lineage model — branching visualization + same 5 hypotheses retested
 

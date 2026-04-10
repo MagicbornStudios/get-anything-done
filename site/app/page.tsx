@@ -21,17 +21,21 @@ export default function Page() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
       <Hero />
+      {/* PRIMARY: graph + playable archive adjacent — the research showcase */}
       <HypothesisTracksSection />
+      <Playable />
+      {/* CONTEXT: what the project is + how it works */}
       <WhatItIs />
+      <Rounds />
+      <Results />
+      <Graphs />
+      {/* BACKGROUND: lineage + methodology */}
       <Lineage />
       <Workflow />
       <Framework />
-      <Rounds />
       <Projects />
-      <Results />
-      <Graphs />
-      <Playable />
       <Requirements />
+      {/* CATALOG + ACTION */}
       <Catalog />
       <Templates />
       <RunIt />

@@ -535,6 +535,7 @@ export default function MethodologyPage() {
                   ["skills/ (bootstrap: 2)", "✓", "✓", "—", "—", "—"],
                   ["skills/ (GAD: 10)", "—", "—", "✓", "—", "✓"],
                   ["skills/ (inherited: 6)", "—", "—", "—", "✓", "✓"],
+                  ["GAD CLI available", "—", "—", "✓", "—", "✓"],
                   ["Total skills", "2", "2", "10", "6", "16"],
                 ].map(([file, ...vals], i) => (
                   <tr key={i} className={i % 2 === 0 ? "bg-transparent" : "bg-background/30"}>

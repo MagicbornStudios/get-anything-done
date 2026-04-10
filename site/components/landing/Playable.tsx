@@ -107,6 +107,7 @@ export default function Playable() {
   );
 
   const [roundFilter, setRoundFilter] = useState<string | null>(null);
+  const [domainFilter, setDomainFilter] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modal, setModal] = useState<"requirements" | "skill" | null>(null);
 
@@ -115,38 +116,56 @@ export default function Playable() {
     setRoundFilter(parseRoundFromHash());
   }, []);
 
-  // Listen for round-filter custom events from the chart
+  // Listen for round-filter AND domain-filter custom events from the chart
   useEffect(() => {
     function onRoundFilter(e: Event) {
       const detail = (e as CustomEvent).detail as string | null;
       setRoundFilter(detail);
-      // Reset selection when filter changes
+      setSelectedKey(null);
+    }
+    function onDomainFilter(e: Event) {
+      const detail = (e as CustomEvent).detail as string | null;
+      setDomainFilter(detail);
       setSelectedKey(null);
     }
     function onHashChange() {
       setRoundFilter(parseRoundFromHash());
     }
     window.addEventListener("round-filter", onRoundFilter);
+    window.addEventListener("domain-filter", onDomainFilter);
     window.addEventListener("hashchange", onHashChange);
     return () => {
       window.removeEventListener("round-filter", onRoundFilter);
+      window.removeEventListener("domain-filter", onDomainFilter);
       window.removeEventListener("hashchange", onHashChange);
     };
   }, []);
 
-  // Filter runs by round
+  // Filter runs by round AND domain
   const runs = useMemo(() => {
-    if (!roundFilter) return allRuns;
-    return allRuns.filter((r) => roundForRun(r) === roundFilter);
-  }, [allRuns, roundFilter]);
+    let filtered = allRuns;
+    if (roundFilter) {
+      filtered = filtered.filter((r) => roundForRun(r) === roundFilter);
+    }
+    if (domainFilter) {
+      const family = PROJECT_FAMILIES.find((f) => f.id === domainFilter);
+      if (family) {
+        filtered = filtered.filter((r) => family.projects.includes(r.project));
+      }
+    }
+    return filtered;
+  }, [allRuns, roundFilter, domainFilter]);
 
-  // Group filtered runs by project family
+  // Group filtered runs by project family — show ALL families (even empty when domain is selected)
   const groupedRuns = useMemo(() => {
-    return PROJECT_FAMILIES.map((family) => {
+    const families = domainFilter
+      ? PROJECT_FAMILIES.filter((f) => f.id === domainFilter)
+      : PROJECT_FAMILIES;
+    return families.map((family) => {
       const familyRuns = runs.filter((r) => family.projects.includes(r.project));
       return { ...family, runs: familyRuns };
-    }).filter((g) => g.runs.length > 0);
-  }, [runs]);
+    });
+  }, [runs, domainFilter]);
 
   // Resolve selected run
   const selected = useMemo(() => {

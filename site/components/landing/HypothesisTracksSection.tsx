@@ -90,9 +90,18 @@ function buildTrackData(): HypothesisTrackPoint[] {
   return points;
 }
 
+const EVAL_DOMAINS = [
+  { id: "escape-the-dungeon", label: "Escape the Dungeon", hasData: true },
+  { id: "gad-explainer-video", label: "GAD Explainer Video", hasData: false },
+  { id: "gad-requirements-gui", label: "GAD Requirements GUI", hasData: false },
+] as const;
+
 export default function HypothesisTracksSection() {
+  const [selectedDomain, setSelectedDomain] = useState("escape-the-dungeon");
   const data = buildTrackData();
   const [activeRound, setActiveRound] = useState<string | null>(null);
+
+  const currentDomain = EVAL_DOMAINS.find((d) => d.id === selectedDomain)!;
 
   const handleRoundClick = useCallback((round: string) => {
     // Toggle: clicking same round deselects
@@ -134,7 +143,40 @@ export default function HypothesisTracksSection() {
           before trusting any individual point — sample sizes are small.
         </p>
 
-        <div className="mt-10">
+        {/* Eval domain selector */}
+        <div className="mt-8 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Domain:
+          </span>
+          {EVAL_DOMAINS.map((domain) => (
+            <button
+              key={domain.id}
+              type="button"
+              onClick={() => {
+                setSelectedDomain(domain.id);
+                setActiveRound(null);
+                window.dispatchEvent(
+                  new CustomEvent("domain-filter", { detail: domain.id })
+                );
+              }}
+              className={[
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
+                selectedDomain === domain.id
+                  ? "border-accent bg-accent text-accent-foreground"
+                  : domain.hasData
+                    ? "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60"
+                    : "border-border/40 bg-card/20 text-muted-foreground/50",
+              ].join(" ")}
+            >
+              {domain.label}
+              {!domain.hasData && (
+                <span className="text-[9px] opacity-60">(planned)</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6">
           <HypothesisTracksChart
             data={data}
             onRoundClick={handleRoundClick}

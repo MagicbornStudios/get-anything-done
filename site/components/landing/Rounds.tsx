@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ROUND_SUMMARIES } from "@/lib/eval-data";
 
@@ -107,7 +111,14 @@ function renderInline(text: string): React.ReactNode {
 }
 
 export default function Rounds() {
-  if (ROUND_SUMMARIES.length === 0) return null;
+  const total = ROUND_SUMMARIES.length;
+  // Default to the latest round
+  const [currentIndex, setCurrentIndex] = useState(total - 1);
+
+  if (total === 0) return null;
+
+  const r = ROUND_SUMMARIES[currentIndex];
+
   return (
     <section id="rounds" className="border-t border-border/60 bg-card/20">
       <div className="section-shell">
@@ -119,26 +130,62 @@ export default function Rounds() {
         <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
           The experiment log is append-only. Each entry captures the requirements version, the
           workflow conditions that ran, the scores, and the key finding that drove the next
-          round&apos;s changes. This is the raw appendix — scroll the{" "}
-          <a href="#requirements" className="text-accent underline-offset-4 hover:underline">
-            requirements lineage
-          </a>{" "}
-          to see the specs that resulted.
+          round&apos;s changes.
         </p>
 
-        <div className="mt-12 space-y-6">
-          {ROUND_SUMMARIES.map((r) => (
-            <article
-              key={r.round}
-              className={`rounded-2xl border border-l-4 bg-card/40 p-6 md:p-8 ${ROUND_TINT[r.round] ?? "border-l-border"}`}
-            >
-              <div className="mb-4 flex flex-wrap items-center gap-3">
-                <Badge variant="default">{r.round}</Badge>
-                <h3 className="text-xl font-semibold tracking-tight text-foreground">{r.title}</h3>
-              </div>
-              {renderBody(r.body)}
-            </article>
-          ))}
+        {/* Pagination controls */}
+        <div className="mt-8 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+            disabled={currentIndex === 0}
+            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border/70 disabled:hover:text-muted-foreground"
+          >
+            <ChevronLeft size={12} aria-hidden />
+            Prev
+          </button>
+          <div className="flex gap-1.5">
+            {ROUND_SUMMARIES.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setCurrentIndex(i)}
+                className={[
+                  "size-8 rounded-full text-xs font-semibold transition-colors",
+                  i === currentIndex
+                    ? "border border-accent bg-accent text-accent-foreground"
+                    : "border border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60",
+                ].join(" ")}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setCurrentIndex((i) => Math.min(total - 1, i + 1))}
+            disabled={currentIndex === total - 1}
+            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border/70 disabled:hover:text-muted-foreground"
+          >
+            Next
+            <ChevronRight size={12} aria-hidden />
+          </button>
+          <span className="text-xs text-muted-foreground">
+            {currentIndex + 1} of {total}
+          </span>
+        </div>
+
+        {/* Single round card */}
+        <div className="mt-6">
+          <article
+            className={`rounded-2xl border border-l-4 bg-card/40 p-6 md:p-8 ${ROUND_TINT[r.round] ?? "border-l-border"}`}
+          >
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <Badge variant="default">{r.round}</Badge>
+              <h3 className="text-xl font-semibold tracking-tight text-foreground">{r.title}</h3>
+            </div>
+            {renderBody(r.body)}
+          </article>
         </div>
       </div>
     </section>
