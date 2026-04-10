@@ -1,6 +1,6 @@
 # v5 Requirements Addendum — Round 4 Playtest Feedback
 
-**Status:** draft. To be merged into `escape-the-dungeon{,-bare,-emergent}/template/.planning/REQUIREMENTS.xml` as a full v5 promotion before round 5 is run. Captured live from user playtest of Bare v5 and Emergent v4 on 2026-04-09.
+**Status:** PROMOTED. This addendum has been merged into the template REQUIREMENTS.xml files as a structured `<addendum version="v5">` block. The canonical version is now at `evals/escape-the-dungeon/template/.planning/REQUIREMENTS.xml` (and the bare + emergent templates which are identical). This markdown file is retained as the human-readable prose source — it is NOT read by `gad eval run` and is NOT given to eval agents. Only the template XML is.
 
 **Anchor decisions:** gad-41 (pressure over features), gad-65 (compound-skills hypothesis). v5 refines v4's pressure direction with progression, inventory, and NPC loops demanded by actual play.
 
