@@ -1,0 +1,408 @@
+{
+  "floors": [
+    {
+      "id": "f1",
+      "name": "The Sunken Crypts",
+      "theme": "crypt",
+      "pressure_note": "Enemies resist direct damage. Craft a DoT spell (fire+blood = Ember Hemorrhage, or nature+blood = Rotbloom) at the Forge to bypass their armor.",
+      "rooms": [
+        {
+          "id": "f1_entry",
+          "name": "Crypt Entrance",
+          "type": "entrance",
+          "icon": "game-icons:dungeon-gate",
+          "description": "Cold air rushes from the broken gate. Moss-covered stone stairs descend into darkness.",
+          "exits": ["f1_corridor1"]
+        },
+        {
+          "id": "f1_corridor1",
+          "name": "Mossy Corridor",
+          "type": "corridor",
+          "icon": "game-icons:stone-path",
+          "description": "Water drips from overhead. The walls are slick with algae.",
+          "exits": ["f1_entry", "f1_combat1", "f1_merchant"]
+        },
+        {
+          "id": "f1_combat1",
+          "name": "Skeleton Guardroom",
+          "type": "combat",
+          "icon": "game-icons:skeleton-inside",
+          "description": "Bones clatter in the darkness. Skeletal warriors rise from their resting places.",
+          "enemy": {
+            "name": "Skeleton Warrior",
+            "icon": "game-icons:skeleton-inside",
+            "hp": 45,
+            "maxHp": 45,
+            "attack": 8,
+            "defense": 4,
+            "directResist": 0.3,
+            "dotResist": 0.0,
+            "reflectDamage": 0.0,
+            "xpReward": 25,
+            "goldReward": 15,
+            "traits": { "aggression": 0.6, "cunning": 0.2 },
+            "loot": [{ "type": "rune", "id": "rune_fire", "chance": 0.5 }]
+          },
+          "exits": ["f1_corridor1"]
+        },
+        {
+          "id": "f1_merchant",
+          "name": "Wandering Trader's Alcove",
+          "type": "merchant",
+          "icon": "game-icons:trade",
+          "description": "A hooded figure crouches beside a worn carpet laden with curiosities.",
+          "merchant": {
+            "name": "Vareth the Collector",
+            "icon": "game-icons:hooded-figure",
+            "inventory": [
+              { "id": "health_potion", "name": "Health Potion", "type": "consumable", "icon": "game-icons:health-potion", "cost": 20, "effect": { "heal": 30 } },
+              { "id": "mana_crystal", "name": "Mana Crystal", "type": "consumable", "icon": "game-icons:crystal-ball", "cost": 15, "effect": { "restoreMana": 20 } },
+              { "id": "iron_shield", "name": "Iron Shield", "type": "equipment", "slot": "offhand", "icon": "game-icons:round-shield", "cost": 35, "stats": { "defense": 3 } }
+            ]
+          },
+          "exits": ["f1_corridor1", "f1_npc"]
+        },
+        {
+          "id": "f1_npc",
+          "name": "Prisoner's Cell",
+          "type": "dialogue",
+          "icon": "game-icons:prisoner",
+          "description": "A ragged prisoner clings to the bars, eyes wild with fear.",
+          "npc": {
+            "name": "Elara the Lost",
+            "icon": "game-icons:female-face",
+            "greeting": "Please... you must help me. The warden carries the key. If you face him, beware his stone skin.",
+            "branches": [
+              {
+                "text": "I'll find the key. Tell me about the warden.",
+                "traitShift": { "compassion": 0.1 },
+                "response": "The Stone Golem Warden is nearly impervious to direct strikes. You need something that eats away at him slowly -- fire, poison, rot. Check the forge if you find one.",
+                "reward": { "type": "info", "value": "warden_weakness" }
+              },
+              {
+                "text": "What's in it for me?",
+                "traitShift": { "aggression": 0.1, "compassion": -0.05 },
+                "response": "I... I have a rune. A blood rune, from the old rituals. Take it, just set me free.",
+                "reward": { "type": "item", "value": { "id": "rune_blood", "name": "Blood Rune", "type": "rune", "icon": "game-icons:drop", "element": "blood" } }
+              },
+              {
+                "text": "You're on your own. [Leave]",
+                "traitShift": { "aggression": 0.05, "compassion": -0.15 },
+                "response": "No! Please, don't leave me here...",
+                "reward": null
+              }
+            ]
+          },
+          "exits": ["f1_merchant", "f1_forge"]
+        },
+        {
+          "id": "f1_forge",
+          "name": "Ancient Runforge",
+          "type": "forge",
+          "icon": "game-icons:anvil",
+          "description": "A glowing anvil pulses with arcane energy. Rune channels are carved into its surface.",
+          "exits": ["f1_npc", "f1_combat2"]
+        },
+        {
+          "id": "f1_combat2",
+          "name": "The Lurking Hollow",
+          "type": "combat",
+          "icon": "game-icons:spider-face",
+          "description": "Webs blanket the ceiling. Something large shifts in the darkness above.",
+          "enemy": {
+            "name": "Crypt Spider",
+            "icon": "game-icons:spider-face",
+            "hp": 35,
+            "maxHp": 35,
+            "attack": 10,
+            "defense": 2,
+            "directResist": 0.15,
+            "dotResist": 0.0,
+            "reflectDamage": 0.0,
+            "xpReward": 20,
+            "goldReward": 10,
+            "traits": { "aggression": 0.8, "cunning": 0.5 },
+            "loot": [{ "type": "rune", "id": "rune_nature", "chance": 0.6 }]
+          },
+          "exits": ["f1_forge", "f1_boss_gate"]
+        },
+        {
+          "id": "f1_boss_gate",
+          "name": "Warden's Chamber",
+          "type": "boss",
+          "icon": "game-icons:stone-golem",
+          "description": "The chamber trembles. A massive stone construct blocks the stairs to the deeper levels.",
+          "enemy": {
+            "name": "Stone Golem Warden",
+            "icon": "game-icons:stone-golem",
+            "hp": 90,
+            "maxHp": 90,
+            "attack": 14,
+            "defense": 8,
+            "directResist": 0.55,
+            "dotResist": 0.0,
+            "reflectDamage": 0.0,
+            "xpReward": 60,
+            "goldReward": 40,
+            "traits": { "aggression": 0.4, "cunning": 0.1 },
+            "loot": [
+              { "type": "rune", "id": "rune_shadow", "chance": 1.0 },
+              { "type": "equipment", "value": { "id": "golem_gauntlets", "name": "Golem Gauntlets", "type": "equipment", "slot": "weapon", "icon": "game-icons:gauntlet", "stats": { "attack": 5, "defense": 2 } } }
+            ]
+          },
+          "exits": ["f1_combat2"],
+          "bossGateToFloor": "f2"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "name": "The Reflecting Depths",
+      "theme": "crystal",
+      "pressure_note": "Enemies reflect direct damage back at you. Use DoT-only spells (shadow+nature = Hexroot, or Rotbloom) to avoid hurting yourself. The Manaweaver drains mana -- conserve it!",
+      "rooms": [
+        {
+          "id": "f2_entry",
+          "name": "Crystal Antechamber",
+          "type": "entrance",
+          "icon": "game-icons:crystal-growth",
+          "description": "Jagged crystals line every surface, casting prismatic reflections of your own image.",
+          "exits": ["f2_corridor1"]
+        },
+        {
+          "id": "f2_corridor1",
+          "name": "Mirrored Passage",
+          "type": "corridor",
+          "icon": "game-icons:mirror-mirror",
+          "description": "Your reflection follows from every facet. Which is real?",
+          "exits": ["f2_entry", "f2_combat1", "f2_merchant"]
+        },
+        {
+          "id": "f2_combat1",
+          "name": "Thornwretch Nest",
+          "type": "combat",
+          "icon": "game-icons:thorn-helix",
+          "description": "Twisted thorny creatures writhe in a nest of crystallized vines.",
+          "enemy": {
+            "name": "Thornwretch",
+            "icon": "game-icons:thorn-helix",
+            "hp": 55,
+            "maxHp": 55,
+            "attack": 12,
+            "defense": 5,
+            "directResist": 0.2,
+            "dotResist": 0.0,
+            "reflectDamage": 0.35,
+            "xpReward": 35,
+            "goldReward": 20,
+            "traits": { "aggression": 0.7, "cunning": 0.3 },
+            "loot": [{ "type": "rune", "id": "rune_nature", "chance": 0.5 }]
+          },
+          "exits": ["f2_corridor1"]
+        },
+        {
+          "id": "f2_merchant",
+          "name": "Crystal Hermit's Grotto",
+          "type": "merchant",
+          "icon": "game-icons:hooded-figure",
+          "description": "An old hermit has made a home among the crystals, trading in rare artifacts.",
+          "merchant": {
+            "name": "Crystalis the Hermit",
+            "icon": "game-icons:hooded-figure",
+            "inventory": [
+              { "id": "greater_health_potion", "name": "Greater Health Potion", "type": "consumable", "icon": "game-icons:health-potion", "cost": 40, "effect": { "heal": 60 } },
+              { "id": "mana_elixir", "name": "Mana Elixir", "type": "consumable", "icon": "game-icons:potion-ball", "cost": 30, "effect": { "restoreMana": 40 } },
+              { "id": "crystal_amulet", "name": "Crystal Amulet", "type": "equipment", "slot": "accessory", "icon": "game-icons:gem-pendant", "cost": 50, "stats": { "maxMana": 15, "spellPower": 3 } }
+            ]
+          },
+          "exits": ["f2_corridor1", "f2_npc"]
+        },
+        {
+          "id": "f2_npc",
+          "name": "The Shattered Oracle",
+          "type": "dialogue",
+          "icon": "game-icons:crystal-ball",
+          "description": "A floating crystal shard speaks with a fractured voice.",
+          "npc": {
+            "name": "The Oracle Fragment",
+            "icon": "game-icons:crystal-ball",
+            "greeting": "I... see... fragments of your path. The Manaweaver feeds on your magic. The Crystal Warden reflects all it receives.",
+            "branches": [
+              {
+                "text": "How do I defeat the Crystal Warden?",
+                "traitShift": { "cunning": 0.1 },
+                "response": "Indirect harm. Poison, rot, necrotic decay -- anything that works from within, not without. Your direct spells will be your undoing here.",
+                "reward": { "type": "info", "value": "crystal_warden_weakness" }
+              },
+              {
+                "text": "Give me power. I don't need advice.",
+                "traitShift": { "aggression": 0.15, "cunning": -0.05 },
+                "response": "Power without wisdom... very well. Take this shard. It burns with shadow.",
+                "reward": { "type": "item", "value": { "id": "rune_shadow", "name": "Shadow Rune", "type": "rune", "icon": "game-icons:death-zone", "element": "shadow" } }
+              },
+              {
+                "text": "Rest in peace, Oracle. [Shatter the crystal]",
+                "traitShift": { "aggression": 0.2, "compassion": -0.2 },
+                "response": "The crystal screams as it breaks apart, releasing a pulse of dark energy.",
+                "reward": { "type": "xp", "value": 30 }
+              }
+            ]
+          },
+          "exits": ["f2_merchant", "f2_forge"]
+        },
+        {
+          "id": "f2_forge",
+          "name": "Deep Runforge",
+          "type": "forge",
+          "icon": "game-icons:anvil",
+          "description": "A more powerful forge, its channels glow with deeper, older magic.",
+          "exits": ["f2_npc", "f2_combat2"]
+        },
+        {
+          "id": "f2_combat2",
+          "name": "Manaweaver's Domain",
+          "type": "combat",
+          "icon": "game-icons:magic-swirl",
+          "description": "The air crackles with stolen magic. A spectral creature feeds on ambient mana.",
+          "enemy": {
+            "name": "Manaweaver",
+            "icon": "game-icons:magic-swirl",
+            "hp": 50,
+            "maxHp": 50,
+            "attack": 9,
+            "defense": 3,
+            "directResist": 0.1,
+            "dotResist": 0.1,
+            "reflectDamage": 0.25,
+            "manaDrainPerTurn": 8,
+            "xpReward": 40,
+            "goldReward": 25,
+            "traits": { "aggression": 0.3, "cunning": 0.9 },
+            "loot": [{ "type": "rune", "id": "rune_arcane", "chance": 0.7 }]
+          },
+          "exits": ["f2_forge", "f2_boss_gate"]
+        },
+        {
+          "id": "f2_boss_gate",
+          "name": "Crystal Warden's Throne",
+          "type": "boss",
+          "icon": "game-icons:crystal-bars",
+          "description": "A towering crystal sentinel guards the final passage. Light bends around its reflective body.",
+          "enemy": {
+            "name": "Crystal Warden",
+            "icon": "game-icons:crystal-bars",
+            "hp": 110,
+            "maxHp": 110,
+            "attack": 16,
+            "defense": 10,
+            "directResist": 0.3,
+            "dotResist": 0.0,
+            "reflectDamage": 0.5,
+            "xpReward": 80,
+            "goldReward": 60,
+            "traits": { "aggression": 0.5, "cunning": 0.4 },
+            "loot": [
+              { "type": "rune", "id": "rune_arcane", "chance": 1.0 },
+              { "type": "equipment", "value": { "id": "crystal_crown", "name": "Crystal Crown", "type": "equipment", "slot": "accessory", "icon": "game-icons:crown", "stats": { "spellPower": 5, "maxHp": 10, "maxMana": 10 } } }
+            ]
+          },
+          "exits": ["f2_combat2"],
+          "bossGateToFloor": "victory"
+        }
+      ]
+    }
+  ],
+  "runes": [
+    { "id": "rune_fire", "name": "Fire Rune", "element": "fire", "icon": "game-icons:fire-ring" },
+    { "id": "rune_blood", "name": "Blood Rune", "element": "blood", "icon": "game-icons:drop" },
+    { "id": "rune_nature", "name": "Nature Rune", "element": "nature", "icon": "game-icons:oak-leaf" },
+    { "id": "rune_shadow", "name": "Shadow Rune", "element": "shadow", "icon": "game-icons:death-zone" },
+    { "id": "rune_arcane", "name": "Arcane Rune", "element": "arcane", "icon": "game-icons:crystal-wand" }
+  ],
+  "recipes": [
+    {
+      "id": "ember_hemorrhage",
+      "name": "Ember Hemorrhage",
+      "icon": "game-icons:fire-spell-cast",
+      "elements": ["fire", "blood"],
+      "manaCost": 12,
+      "description": "Inflicts a burning wound that bleeds fire. Deals damage over time, bypassing armor.",
+      "effect": { "type": "dot", "damage": 8, "turns": 4, "element": "fire" }
+    },
+    {
+      "id": "rotbloom",
+      "name": "Rotbloom",
+      "icon": "game-icons:poison-cloud",
+      "elements": ["nature", "blood"],
+      "manaCost": 10,
+      "description": "A parasitic growth that decays from within. Strong against armored foes.",
+      "effect": { "type": "dot", "damage": 7, "turns": 5, "element": "nature" }
+    },
+    {
+      "id": "hexroot",
+      "name": "Hexroot",
+      "icon": "game-icons:root-tip",
+      "elements": ["shadow", "nature"],
+      "manaCost": 14,
+      "description": "Shadow tendrils root into the target, draining life. Bypasses reflective shields.",
+      "effect": { "type": "dot", "damage": 9, "turns": 4, "element": "shadow", "bypassReflect": true }
+    },
+    {
+      "id": "arcane_tempest",
+      "name": "Arcane Tempest",
+      "icon": "game-icons:lightning-storm",
+      "elements": ["arcane", "fire"],
+      "manaCost": 18,
+      "description": "A devastating burst of arcane fire. High direct damage.",
+      "effect": { "type": "direct", "damage": 35, "element": "arcane" }
+    },
+    {
+      "id": "blood_pact",
+      "name": "Blood Pact",
+      "icon": "game-icons:heart-inside",
+      "elements": ["blood", "shadow"],
+      "manaCost": 8,
+      "description": "Sacrifice health to restore mana and empower next spell.",
+      "effect": { "type": "buff", "hpCost": 15, "manaRestore": 25, "spellPowerBuff": 5, "buffTurns": 3 }
+    },
+    {
+      "id": "natures_ward",
+      "name": "Nature's Ward",
+      "icon": "game-icons:shield-bash",
+      "elements": ["nature", "arcane"],
+      "manaCost": 15,
+      "description": "A protective barrier of living crystal. Absorbs damage.",
+      "effect": { "type": "shield", "absorb": 30, "turns": 4 }
+    }
+  ],
+  "starterSpells": [
+    {
+      "id": "arcane_bolt",
+      "name": "Arcane Bolt",
+      "icon": "game-icons:magic-missile",
+      "manaCost": 5,
+      "description": "A basic bolt of arcane energy. Subject to enemy resistances and reflections.",
+      "effect": { "type": "direct", "damage": 12, "element": "arcane" },
+      "isStarter": true
+    },
+    {
+      "id": "minor_heal",
+      "name": "Minor Heal",
+      "icon": "game-icons:health-increase",
+      "manaCost": 8,
+      "description": "Restore a small amount of health.",
+      "effect": { "type": "heal", "amount": 20 },
+      "isStarter": true
+    }
+  ],
+  "skillTree": [
+    { "id": "vitality1", "name": "Vitality I", "icon": "game-icons:hearts", "description": "+10 Max HP", "cost": 1, "effect": { "maxHp": 10 }, "requires": [] },
+    { "id": "vitality2", "name": "Vitality II", "icon": "game-icons:hearts", "description": "+15 Max HP", "cost": 2, "effect": { "maxHp": 15 }, "requires": ["vitality1"] },
+    { "id": "arcane_focus1", "name": "Arcane Focus I", "icon": "game-icons:magic-lamp", "description": "+5 Max Mana", "cost": 1, "effect": { "maxMana": 5 }, "requires": [] },
+    { "id": "arcane_focus2", "name": "Arcane Focus II", "icon": "game-icons:magic-lamp", "description": "+10 Max Mana", "cost": 2, "effect": { "maxMana": 10 }, "requires": ["arcane_focus1"] },
+    { "id": "spell_mastery", "name": "Spell Mastery", "icon": "game-icons:spell-book", "description": "+3 Spell Power", "cost": 2, "effect": { "spellPower": 3 }, "requires": ["arcane_focus1"] },
+    { "id": "toughness", "name": "Toughness", "icon": "game-icons:armor-vest", "description": "+3 Defense", "cost": 1, "effect": { "defense": 3 }, "requires": [] },
+    { "id": "blade_training", "name": "Blade Training", "icon": "game-icons:broadsword", "description": "+3 Attack", "cost": 1, "effect": { "attack": 3 }, "requires": [] },
+    { "id": "rune_affinity", "name": "Rune Affinity", "icon": "game-icons:rune-stone", "description": "Crafted spells cost 2 less mana", "cost": 2, "effect": { "craftedManaCostReduction": 2 }, "requires": ["arcane_focus1"] }
+  ]
+}

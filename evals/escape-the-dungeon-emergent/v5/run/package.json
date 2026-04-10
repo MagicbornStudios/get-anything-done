@@ -1,0 +1,19 @@
+{
+  "name": "game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@iconify-json/game-icons": "^1.2.3",
+    "iconify-icon": "^3.0.2",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.8"
+  }
+}
