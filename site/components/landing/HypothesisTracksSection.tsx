@@ -93,7 +93,7 @@ function buildTrackData(): HypothesisTrackPoint[] {
 const EVAL_DOMAINS = [
   { id: "escape-the-dungeon", label: "Escape the Dungeon", hasData: true },
   { id: "gad-explainer-video", label: "GAD Explainer Video", hasData: false },
-  { id: "gad-requirements-gui", label: "GAD Requirements GUI", hasData: false },
+  { id: "skill-evaluation-app", label: "Skill Evaluation App", hasData: false },
 ] as const;
 
 export default function HypothesisTracksSection() {

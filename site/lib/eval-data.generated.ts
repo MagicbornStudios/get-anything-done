@@ -3078,24 +3078,24 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
     "bytes": 22
   },
   {
-    "project": "gad-requirements-gui",
-    "zipPath": "/downloads/eval-gad-requirements-gui-template.zip",
-    "bytes": 22
-  },
-  {
-    "project": "gad-requirements-gui-bare",
-    "zipPath": "/downloads/eval-gad-requirements-gui-bare-template.zip",
-    "bytes": 22
-  },
-  {
-    "project": "gad-requirements-gui-emergent",
-    "zipPath": "/downloads/eval-gad-requirements-gui-emergent-template.zip",
-    "bytes": 22
-  },
-  {
     "project": "reader-workspace",
     "zipPath": "/downloads/eval-reader-workspace-template.zip",
     "bytes": 15255
+  },
+  {
+    "project": "skill-evaluation-app",
+    "zipPath": "/downloads/eval-skill-evaluation-app-template.zip",
+    "bytes": 22
+  },
+  {
+    "project": "skill-evaluation-app-bare",
+    "zipPath": "/downloads/eval-skill-evaluation-app-bare-template.zip",
+    "bytes": 22
+  },
+  {
+    "project": "skill-evaluation-app-emergent",
+    "zipPath": "/downloads/eval-skill-evaluation-app-emergent-template.zip",
+    "bytes": 22
   }
 ];
 
@@ -3704,8 +3704,50 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "humanReviewRubric": null
   },
   {
-    "id": "gad-requirements-gui",
-    "name": "gad-requirements-gui",
+    "id": "planning-migration",
+    "name": "planning-migration",
+    "description": "Lossless migration of all vendor project .planning/ dirs and portfolio planning sink to unified GAD format. Evaluates format compliance, sink sync, trace coverage, and data preservation across the compile/decompile round-trip.",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": "planning-sink-backup-20260404",
+    "constraints": null,
+    "scoringWeights": null,
+    "humanReviewRubric": null
+  },
+  {
+    "id": "portfolio-bare",
+    "name": "portfolio-bare",
+    "description": "Portfolio monorepo planning eval. Agent opens a fresh template directory, plans and executes phases from requirements, declares context mode (fresh/loaded) at session start. Runs accumulate over time — context_delta emerges from the comparison.",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": "v1",
+    "constraints": {
+      "planning_only": true,
+      "no_app_code": true,
+      "no_external_services": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.4,
+      "task_alignment": 0.25,
+      "state_hygiene": 0.2,
+      "decision_coverage": 0.15
+    },
+    "humanReviewRubric": null
+  },
+  {
+    "id": "project-migration",
+    "name": "project-migration",
+    "description": "Measures quality and completeness of migrating a project from a legacy planning framework (RP) to GAD. Scores planning continuity, skill coverage, and context efficiency before and after.",
+    "evalMode": null,
+    "workflow": null,
+    "baseline": null,
+    "constraints": null,
+    "scoringWeights": null,
+    "humanReviewRubric": null
+  },
+  {
+    "id": "skill-evaluation-app",
+    "name": "skill-evaluation-app",
     "description": "NEW EVAL DOMAIN (task 22-51, scaffolded 2026-04-09). The task is to build a browser-based GUI for authoring eval requirements and viewing per-skill evaluation harness results. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a THIRD task domain — front-end application development with a defined functional spec — different from both escape-the-dungeon (game dev) and gad-explainer-video (video composition). If the freedom hypothesis still holds here, the pattern generalizes beyond creative implementation. If compound-skills still holds, the skill evolution effect is task-domain-independent. Per SKEPTIC cross-cutting critique #5 (single-task domain), this is the single most important generalization test the project can run.",
     "evalMode": "greenfield",
     "workflow": "gad",
@@ -3761,9 +3803,9 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     }
   },
   {
-    "id": "gad-requirements-gui-bare",
-    "name": "gad-requirements-gui-bare",
-    "description": "gad-requirements-gui-bare — tests the same hypotheses as gad-requirements-gui but under the bare workflow condition. See gad-requirements-gui/gad.json for the full rubric and gad-requirements-gui/REQUIREMENTS.md for the task spec.",
+    "id": "skill-evaluation-app-bare",
+    "name": "skill-evaluation-app-bare",
+    "description": "skill-evaluation-app-bare — tests the same hypotheses as skill-evaluation-app but under the bare workflow condition. See skill-evaluation-app/gad.json for the full rubric and skill-evaluation-app/REQUIREMENTS.md for the task spec.",
     "evalMode": "greenfield",
     "workflow": "bare",
     "baseline": null,
@@ -3784,9 +3826,9 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "humanReviewRubric": null
   },
   {
-    "id": "gad-requirements-gui-emergent",
-    "name": "gad-requirements-gui-emergent",
-    "description": "gad-requirements-gui-emergent — tests the same hypotheses as gad-requirements-gui but under the emergent workflow condition. See gad-requirements-gui/gad.json for the full rubric and gad-requirements-gui/REQUIREMENTS.md for the task spec.",
+    "id": "skill-evaluation-app-emergent",
+    "name": "skill-evaluation-app-emergent",
+    "description": "skill-evaluation-app-emergent — tests the same hypotheses as skill-evaluation-app but under the emergent workflow condition. See skill-evaluation-app/gad.json for the full rubric and skill-evaluation-app/REQUIREMENTS.md for the task spec.",
     "evalMode": "greenfield",
     "workflow": "emergent",
     "baseline": null,
@@ -3804,48 +3846,6 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.55
     },
-    "humanReviewRubric": null
-  },
-  {
-    "id": "planning-migration",
-    "name": "planning-migration",
-    "description": "Lossless migration of all vendor project .planning/ dirs and portfolio planning sink to unified GAD format. Evaluates format compliance, sink sync, trace coverage, and data preservation across the compile/decompile round-trip.",
-    "evalMode": null,
-    "workflow": null,
-    "baseline": "planning-sink-backup-20260404",
-    "constraints": null,
-    "scoringWeights": null,
-    "humanReviewRubric": null
-  },
-  {
-    "id": "portfolio-bare",
-    "name": "portfolio-bare",
-    "description": "Portfolio monorepo planning eval. Agent opens a fresh template directory, plans and executes phases from requirements, declares context mode (fresh/loaded) at session start. Runs accumulate over time — context_delta emerges from the comparison.",
-    "evalMode": null,
-    "workflow": null,
-    "baseline": "v1",
-    "constraints": {
-      "planning_only": true,
-      "no_app_code": true,
-      "no_external_services": true
-    },
-    "scoringWeights": {
-      "requirement_coverage": 0.4,
-      "task_alignment": 0.25,
-      "state_hygiene": 0.2,
-      "decision_coverage": 0.15
-    },
-    "humanReviewRubric": null
-  },
-  {
-    "id": "project-migration",
-    "name": "project-migration",
-    "description": "Measures quality and completeness of migrating a project from a legacy planning framework (RP) to GAD. Scores planning continuity, skill coverage, and context efficiency before and after.",
-    "evalMode": null,
-    "workflow": null,
-    "baseline": null,
-    "constraints": null,
-    "scoringWeights": null,
     "humanReviewRubric": null
   },
   {
@@ -5067,9 +5067,9 @@ export const ALL_DECISIONS: DecisionRecord[] = [
   },
   {
     "id": "gad-88",
-    "title": "New eval domain — GUI-for-requirements-and-harness (gad-requirements-gui)",
+    "title": "New eval domain — GUI-for-requirements-and-harness (skill-evaluation-app)",
     "summary": "User idea 2026-04-09: \"lets make a GUI with requirements for it and put it a part of our rounds to test our theories. which I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" Two nested ideas here: (A) add more visualizations to /hypotheses, (B) create a NEW eval project where the agent's task is to build a browser-based GUI for authoring requirements and running the per-skill eval harness. The latter is a new eval domain — distinct from escape-the-dungeon (game dev) and gad-explainer-video (video composition). Testing the same hypotheses (freedom / CSH / emergent-evolution) on a THIRD task domain: front-end application development with a defined functional spec. If the freedom hypothesis still holds on GUI development, the hypothesis generalizes beyond creative implementation. If the compound-skills hypothesis still holds, the skill evolution effect is task-domain-independent. This becomes a major signal for generalization, which per the SKEPTIC cross-cutting critique #5 is the single biggest methodology hole in the project. The GUI itself, once built, also becomes OUR tool — we author requirements in it, we run evals through it, we view benchmarks through it. Dogfood opportunity: eval project that, when finished, is part of the eval framework. Scaffolding queued as task 22-51. Rubric dimensions proposed: ui_usability (0.30), requirements_ergonomics (0.20), harness_integration (0.20), visualization_quality (0.15), stability (0.15).",
-    "impact": "(1) New eval project scaffolded at evals/gad-requirements-gui/ this turn with gad.json + REQUIREMENTS.md. (2) The project has the same three-condition structure as escape-the-dungeon: gad-requirements-gui (GAD framework), gad-requirements-gui-bare (no framework), gad-requirements-gui-emergent (inherits skills from prior runs). Follow-up task: create the bare + emergent siblings. (3) Round 5+ includes this eval domain as the generalization test — specifically, once escape-the-dungeon v5 runs AND gad-explainer-video runs, the third track activates. (4) Round planning gets more complex — /roadmap page needs to render multiple eval domains per round, not just escape-the-dungeon. (5) /hypotheses gets concrete test-domain chips under each hypothesis card showing which domains have tested it. (6) The freedom hypothesis evidence now has a clearly-defined falsification condition: if bare fails on gad-requirements-gui or gad-explainer-video while GAD succeeds, freedom is falsified for those domains."
+    "impact": "(1) New eval project scaffolded at evals/skill-evaluation-app/ this turn with gad.json + REQUIREMENTS.md. (2) The project has the same three-condition structure as escape-the-dungeon: skill-evaluation-app (GAD framework), skill-evaluation-app-bare (no framework), skill-evaluation-app-emergent (inherits skills from prior runs). Follow-up task: create the bare + emergent siblings. (3) Round 5+ includes this eval domain as the generalization test — specifically, once escape-the-dungeon v5 runs AND gad-explainer-video runs, the third track activates. (4) Round planning gets more complex — /roadmap page needs to render multiple eval domains per round, not just escape-the-dungeon. (5) /hypotheses gets concrete test-domain chips under each hypothesis card showing which domains have tested it. (6) The freedom hypothesis evidence now has a clearly-defined falsification condition: if bare fails on skill-evaluation-app or gad-explainer-video while GAD succeeds, freedom is falsified for those domains."
   },
   {
     "id": "gad-87",
@@ -7759,9 +7759,9 @@ export const ALL_TASKS: TaskRecord[] = [
     "phaseId": "22",
     "status": "done",
     "agentId": "",
-    "goal": "Scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood).",
+    "goal": "Scaffold new eval domain evals/skill-evaluation-app/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood).",
     "keywords": [
-      "gad-requirements-gui",
+      "skill-evaluation-app",
       "new-eval-domain",
       "generalization-test",
       "gad-88"
@@ -8080,10 +8080,10 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "gad-88",
-    "title": "New eval domain — GUI-for-requirements-and-harness (gad-requirements-gui)",
+    "title": "New eval domain — GUI-for-requirements-and-harness (skill-evaluation-app)",
     "kind": "decision",
     "href": "/decisions#gad-88",
-    "body": "gad-88 new eval domain — gui-for-requirements-and-harness (gad-requirements-gui) user idea 2026-04-09: \"lets make a gui with requirements for it and put it a part of our rounds to test our theories. which i still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" two nested ideas here: (a) add more visualizations to /hypotheses, (b) create a new eval project where the agent's task is to build a browser-based gui for authoring requir"
+    "body": "gad-88 new eval domain — gui-for-requirements-and-harness (skill-evaluation-app) user idea 2026-04-09: \"lets make a gui with requirements for it and put it a part of our rounds to test our theories. which i still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" two nested ideas here: (a) add more visualizations to /hypotheses, (b) create a new eval project where the agent's task is to build a browser-based gui for authoring requir"
   },
   {
     "id": "gad-87",
@@ -9781,10 +9781,10 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "22-51",
-    "title": "Scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. Third task-domain alongside escape-the-dungeon",
+    "title": "Scaffold new eval domain evals/skill-evaluation-app/ per decision gad-88. Third task-domain alongside escape-the-dungeon",
     "kind": "task",
     "href": "/tasks#22-51",
-    "body": "22-51 scaffold new eval domain evals/gad-requirements-gui/ per decision gad-88. third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). tests the same hypotheses (freedom / csh / emergent-evolution) on gui app development. the gui, once built, is also part of the gad eval framework (dogfood). gad-requirements-gui new-eval-domain generalization-test gad-88"
+    "body": "22-51 scaffold new eval domain evals/skill-evaluation-app/ per decision gad-88. third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). tests the same hypotheses (freedom / csh / emergent-evolution) on gui app development. the gui, once built, is also part of the gad eval framework (dogfood). skill-evaluation-app new-eval-domain generalization-test gad-88"
   },
   {
     "id": "22-52",

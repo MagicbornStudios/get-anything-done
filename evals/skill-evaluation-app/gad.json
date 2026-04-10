@@ -1,13 +1,13 @@
 {
   "type": "eval",
-  "name": "gad-requirements-gui",
+  "name": "skill-evaluation-app",
   "description": "NEW EVAL DOMAIN (task 22-51, scaffolded 2026-04-09). The task is to build a browser-based GUI for authoring eval requirements and viewing per-skill evaluation harness results. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a THIRD task domain — front-end application development with a defined functional spec — different from both escape-the-dungeon (game dev) and gad-explainer-video (video composition). If the freedom hypothesis still holds here, the pattern generalizes beyond creative implementation. If compound-skills still holds, the skill evolution effect is task-domain-independent. Per SKEPTIC cross-cutting critique #5 (single-task domain), this is the single most important generalization test the project can run.",
   "eval_mode": "greenfield",
   "workflow": "gad",
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": ["gad-requirements-gui-bare", "gad-requirements-gui-emergent"],
+  "compare_to": ["skill-evaluation-app-bare", "skill-evaluation-app-emergent"],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": true,
@@ -62,9 +62,9 @@
   },
   "notes": [
     "Scaffolded 2026-04-09 per decision gad-88.",
-    "THREE-DOMAIN TRIPTYCH: escape-the-dungeon (game dev) + gad-explainer-video (video composition) + gad-requirements-gui (GUI app). Round 5+ tests hypotheses across all three domains simultaneously — the first round with domain-level generalization signal.",
+    "THREE-DOMAIN TRIPTYCH: escape-the-dungeon (game dev) + gad-explainer-video (video composition) + skill-evaluation-app (GUI app). Round 5+ tests hypotheses across all three domains simultaneously — the first round with domain-level generalization signal.",
     "The GUI, once built, becomes part of the eval framework itself. Dogfood opportunity: we author v6 requirements IN this GUI, and the GUI displays its own eval harness output. Second-order CSH experiment.",
-    "Siblings (gad-requirements-gui-bare, gad-requirements-gui-emergent) not yet scaffolded — follow-up task. Their gad.json inherits from this template with workflow field swapped.",
+    "Siblings (skill-evaluation-app-bare, skill-evaluation-app-emergent) not yet scaffolded — follow-up task. Their gad.json inherits from this template with workflow field swapped.",
     "PRE-RUN CHECKLIST: (1) confirm per-skill eval harness CLI exists (gad-87 / task 22-52), (2) author template/REQUIREMENTS.xml v1 with functional spec, (3) scaffold bare + emergent siblings, (4) add to EXPERIMENT-LOG.md as planned round 6 domain, (5) ensure gad eval run can target this project."
   ]
 }

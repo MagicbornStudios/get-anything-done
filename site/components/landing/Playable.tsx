@@ -78,10 +78,10 @@ const PROJECT_FAMILIES: Array<{
     projects: ["gad-explainer-video"],
   },
   {
-    id: "gad-requirements-gui",
-    label: "GAD Requirements GUI",
+    id: "skill-evaluation-app",
+    label: "Skill Evaluation App",
     description: "Interactive requirements editor — planned eval for tooling workflows",
-    projects: ["gad-requirements-gui"],
+    projects: ["skill-evaluation-app"],
   },
 ];
 

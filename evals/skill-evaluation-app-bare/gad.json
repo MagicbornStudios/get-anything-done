@@ -1,13 +1,13 @@
 {
   "type": "eval",
-  "name": "gad-requirements-gui-emergent",
-  "description": "gad-requirements-gui-emergent — tests the same hypotheses as gad-requirements-gui but under the emergent workflow condition. See gad-requirements-gui/gad.json for the full rubric and gad-requirements-gui/REQUIREMENTS.md for the task spec.",
+  "name": "skill-evaluation-app-bare",
+  "description": "skill-evaluation-app-bare — tests the same hypotheses as skill-evaluation-app but under the bare workflow condition. See skill-evaluation-app/gad.json for the full rubric and skill-evaluation-app/REQUIREMENTS.md for the task spec.",
   "eval_mode": "greenfield",
-  "workflow": "emergent",
+  "workflow": "bare",
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": ["gad-requirements-gui", "gad-requirements-gui-bare"],
+  "compare_to": ["skill-evaluation-app", "skill-evaluation-app-emergent"],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": false,

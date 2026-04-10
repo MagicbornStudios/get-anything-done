@@ -1,4 +1,4 @@
-# gad-requirements-gui — requirements
+# skill-evaluation-app — requirements
 
 **Status:** scaffolded, no runs yet.
 **Anchor task:** 22-51 (gad-88, new eval domain).
@@ -89,11 +89,11 @@ See `gad.json` `human_review_rubric`. Summary:
 
 Before the first run of this eval:
 
-1. Scaffold siblings: `evals/gad-requirements-gui-bare/gad.json` + `evals/gad-requirements-gui-emergent/gad.json` with workflow field swapped.
+1. Scaffold siblings: `evals/skill-evaluation-app-bare/gad.json` + `evals/skill-evaluation-app-emergent/gad.json` with workflow field swapped.
 2. Author `template/REQUIREMENTS.xml` v1 (XML version of this markdown) with gate structure.
 3. Author `template/fixtures/REQUIREMENTS.xml` and `template/fixtures/benchmark.json` as sample inputs.
 4. Confirm `gad eval skill <name>` CLI exists (per gad-87, task 22-52) so the viewer has real output to render.
-5. Write the eval prompt file `gad-requirements-gui-eval-prompt.md`.
+5. Write the eval prompt file `skill-evaluation-app-eval-prompt.md`.
 6. Mark task 22-51 as `in-progress` in TASK-REGISTRY.xml.
 
 After the first run:
