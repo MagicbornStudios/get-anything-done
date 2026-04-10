@@ -4740,7 +4740,7 @@ export const ALL_DECISIONS: DecisionRecord[] = [
     "id": "gad-80",
     "title": "Adopt agentskills.io standard — .agents/skills/ convention + cross-client interoperability",
     "summary": "The Agent Skills standard at agentskills.io defines a client-agnostic format and discovery convention for skills: every skill is a folder containing a SKILL.md with YAML frontmatter (name + description required) and a markdown body. Progressive disclosure is a three-tier load strategy — catalog (name+description only, ~50-100 tokens/skill, loaded at session start), instructions (full SKILL.md body, loaded on activation), resources (scripts/references/assets, on-demand). The standard's discovery convention for cross-client interoperability is `&lt;project&gt;/.agents/skills/` and `~/.agents/skills/` — widely adopted so skills installed by one compliant client become visible to any other. GAD currently uses `skills/` at the repo root, which is neither the Claude-Code native path (`.claude/skills/`) nor the cross-client convention (`.agents/skills/`). This decision adopts agentskills.io as a co-equal canonical reference alongside the Anthropic skills guide (gad-70), commits us to the `.agents/skills/` convention for installable skills, and mandates citation of both sources on every skill-related page on the site. Does NOT replace our existing `skills/` workspace directory — workspace skills remain at that location for in-repo use — but new installable skills go to `.agents/skills/` and `install.js` is extended to copy both when supported by the target runtime.",
-    "impact": "(1) New `.planning/docs/SKILL-FINDABILITY-2026-04-09.md` captures the full findability investigation. (2) The SKEPTIC cross-cutting critique about \"one-person research framework\" gains an orthogonal defense: we align with an open standard, so our skill format is auditable against external convention. (3) Task 22-46 queued: adopt `.agents/skills/` convention, extend install.js to copy to both `.claude/skills/` and `.agents/skills/` for supported runtimes, migrate fundamental triumvirate (when built) to `.agents/skills/`. (4) Task 22-47 queued: cite agentskills.io + Anthropic PDF on every skill-related site page (/security, /skills, /methodology, /gad) via a new /standards page referenced from all of them. (5) New open question: do we need to verify skills against the agentskills.io specification validator at prebuild?"
+    "impact": "(1) MIGRATION COMPLETE 2026-04-09: moved `skills/` → `.agents/skills/` via git mv preserving all 28 skills (27 human-authored + 1 emergent). Prebuild SKILLS_DIR updated to read from the new canonical path. Site page file references bumped to `.agents/skills/...`. (2) New `.planning/docs/SKILL-FINDABILITY-2026-04-09.md` captures the full findability investigation. (3) The SKEPTIC cross-cutting critique about \"one-person research framework\" gains an orthogonal defense: we align with an open standard, so our skill format is auditable against external convention. (4) STILL PENDING on task 22-46: install.js must be extended to copy `.agents/skills/` contents (minus emergent) to user workspaces when `gad install` runs. (5) Task 22-47 queued: cite agentskills.io + Anthropic PDF on every skill-related site page via the new /standards page. (6) Emergent skill lives at `.agents/skills/emergent/session-discipline/SKILL.md` — the subdirectory structure is the signal that marks it emergent, mirrored by the `origin: emergent` frontmatter flag."
   },
   {
     "id": "gad-79",
@@ -7302,14 +7302,15 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-46",
     "phaseId": "22",
-    "status": "planned",
+    "status": "done",
     "agentId": "",
     "goal": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. Also honor the excluded-from-default-install:true frontmatter flag I added to the emergent skill — the installer must skip those.",
     "keywords": [
       "agentskills",
       "cross-client",
       "install",
-      "discovery-convention"
+      "discovery-convention",
+      "migration"
     ],
     "depends": [
       "gad-80"
@@ -9244,7 +9245,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (",
     "kind": "task",
     "href": "/tasks#22-46",
-    "body": "22-46 adopt agentskills.io .agents/skills/ convention (gad-80). extend bin/install.js to copy skills to both .claude/skills/ (native) and .agents/skills/ (cross-client) for supported runtimes. migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. required for the codex-vs-claude comparison eval (task 89) because codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. also honor the excluded-from-default-install:true frontmatter flag i added to the emergent skill — the installer must skip those. agentskills cross-client install discovery-convention"
+    "body": "22-46 adopt agentskills.io .agents/skills/ convention (gad-80). extend bin/install.js to copy skills to both .claude/skills/ (native) and .agents/skills/ (cross-client) for supported runtimes. migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. required for the codex-vs-claude comparison eval (task 89) because codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. also honor the excluded-from-default-install:true frontmatter flag i added to the emergent skill — the installer must skip those. agentskills cross-client install discovery-convention migration"
   },
   {
     "id": "22-47",

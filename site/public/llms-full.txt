@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-10T03:37:27.306Z
+Generated: 2026-04-10T03:46:25.498Z
 
 
 ---
@@ -4378,7 +4378,7 @@ The Agent Skills standard at agentskills.io defines a client-agnostic format and
 
 ### Impact
 
-(1) New `.planning/docs/SKILL-FINDABILITY-2026-04-09.md` captures the full findability investigation. (2) The SKEPTIC cross-cutting critique about "one-person research framework" gains an orthogonal defense: we align with an open standard, so our skill format is auditable against external convention. (3) Task 22-46 queued: adopt `.agents/skills/` convention, extend install.js to copy to both `.claude/skills/` and `.agents/skills/` for supported runtimes, migrate fundamental triumvirate (when built) to `.agents/skills/`. (4) Task 22-47 queued: cite agentskills.io + Anthropic PDF on every skill-related site page (/security, /skills, /methodology, /gad) via a new /standards page referenced from all of them. (5) New open question: do we need to verify skills against the agentskills.io specification validator at prebuild?
+(1) MIGRATION COMPLETE 2026-04-09: moved `skills/` → `.agents/skills/` via git mv preserving all 28 skills (27 human-authored + 1 emergent). Prebuild SKILLS_DIR updated to read from the new canonical path. Site page file references bumped to `.agents/skills/...`. (2) New `.planning/docs/SKILL-FINDABILITY-2026-04-09.md` captures the full findability investigation. (3) The SKEPTIC cross-cutting critique about "one-person research framework" gains an orthogonal defense: we align with an open standard, so our skill format is auditable against external convention. (4) STILL PENDING on task 22-46: install.js must be extended to copy `.agents/skills/` contents (minus emergent) to user workspaces when `gad install` runs. (5) Task 22-47 queued: cite agentskills.io + Anthropic PDF on every skill-related site page via the new /standards page. (6) Emergent skill lives at `.agents/skills/emergent/session-discipline/SKILL.md` — the subdirectory structure is the signal that marks it emergent, mirrored by the `origin: emergent` frontmatter flag.
 
 ## gad-79: task_pressure operationalized — programmatic, structural, Shannon-inspired
 
@@ -5887,7 +5887,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **22-45** [planned]: Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time.
 
-- **22-46** [planned]: Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses di
+- **22-46** [done]: Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses di
 
 - **22-47** [planned]: Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluati
 

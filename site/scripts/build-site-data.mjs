@@ -41,7 +41,12 @@ const __dirname = path.dirname(__filename);
 const SITE_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 const TEMPLATES_DIR = path.join(REPO_ROOT, "templates");
-const SKILLS_DIR = path.join(REPO_ROOT, "skills");
+// Skills live at .agents/skills/ per the agentskills.io cross-client
+// interoperability convention (decision gad-80). Migrated from the legacy
+// repo-root skills/ location on 2026-04-09. For backward compatibility during
+// the migration, the scanner also checks the legacy path.
+const SKILLS_DIR = path.join(REPO_ROOT, ".agents", "skills");
+const LEGACY_SKILLS_DIR = path.join(REPO_ROOT, "skills");
 const AGENTS_DIR = path.join(REPO_ROOT, "agents");
 const COMMANDS_DIR = path.join(REPO_ROOT, "commands", "gad");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
@@ -661,8 +666,8 @@ function scanCatalog() {
         authoredOn: data["authored-on"] || null,
         excludedFromDefaultInstall: data["excluded-from-default-install"] === true || declaredOrigin === "emergent",
         file: origin === "emergent"
-          ? `vendor/get-anything-done/skills/emergent/${id}/SKILL.md`
-          : `vendor/get-anything-done/skills/${id}/SKILL.md`,
+          ? `vendor/get-anything-done/.agents/skills/emergent/${id}/SKILL.md`
+          : `vendor/get-anything-done/.agents/skills/${id}/SKILL.md`,
         bodyHtml: renderMarkdown(body),
         bodyRaw: body,
       };

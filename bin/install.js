@@ -4709,6 +4709,65 @@ function install(isGlobal, runtime = 'claude') {
     console.log(`  ${yellow}⚠${reset} Skipping get-anything-done skill (not found in source — local checkout?)`);
   }
 
+  // Copy workspace skills from .agents/skills/ to the target's skills/ directory
+  // per the agentskills.io cross-client convention (decision gad-80). Skips
+  // the emergent/ subdirectory because emergent skills are agent-authored
+  // for the GAD repo itself and should not leak into user workspaces
+  // (excluded-from-default-install: true in frontmatter + directory position).
+  // For Claude Code, skills go to skills/ (native). For .agents/skills/ we
+  // also write a mirror for cross-client reachability.
+  const workspaceSkillsSrc = path.join(src, '.agents', 'skills');
+  if (fs.existsSync(workspaceSkillsSrc) && !isOpencode) {
+    const skillsDir = path.join(targetDir, 'skills');
+    const agentsSkillsDir = path.join(targetDir, '.agents', 'skills');
+    fs.mkdirSync(skillsDir, { recursive: true });
+    fs.mkdirSync(agentsSkillsDir, { recursive: true });
+
+    let copiedCount = 0;
+    const skippedEmergent = [];
+    for (const entry of fs.readdirSync(workspaceSkillsSrc, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name === 'emergent') {
+        // Walk emergent/ just to report what was skipped, don't copy
+        try {
+          const emergentInner = fs.readdirSync(path.join(workspaceSkillsSrc, 'emergent'), { withFileTypes: true });
+          for (const e of emergentInner) {
+            if (e.isDirectory()) skippedEmergent.push(e.name);
+          }
+        } catch {}
+        continue;
+      }
+
+      const srcSkill = path.join(workspaceSkillsSrc, entry.name);
+      const srcSkillMd = path.join(srcSkill, 'SKILL.md');
+      if (!fs.existsSync(srcSkillMd)) continue;
+
+      // Check frontmatter for excluded-from-default-install flag
+      let excluded = false;
+      try {
+        const content = fs.readFileSync(srcSkillMd, 'utf8');
+        if (/^excluded-from-default-install:\s*true/m.test(content)) {
+          excluded = true;
+        }
+      } catch {}
+      if (excluded) continue;
+
+      // Copy to both skills/<name>/ (native) and .agents/skills/<name>/ (standard)
+      const nativeDest = path.join(skillsDir, entry.name);
+      const standardDest = path.join(agentsSkillsDir, entry.name);
+      copyWithPathReplacement(srcSkill, nativeDest, pathPrefix, runtime, false, isGlobal);
+      copyWithPathReplacement(srcSkill, standardDest, pathPrefix, runtime, false, isGlobal);
+      copiedCount++;
+    }
+
+    if (copiedCount > 0) {
+      console.log(`  ${green}✓${reset} Installed ${copiedCount} workspace skills to skills/ + .agents/skills/ (agentskills.io convention)`);
+    }
+    if (skippedEmergent.length > 0) {
+      console.log(`  ${dim}  skipped ${skippedEmergent.length} emergent skill(s): ${skippedEmergent.join(', ')}${reset}`);
+    }
+  }
+
   // Copy agents to agents directory
   const agentsSrc = path.join(src, 'agents');
   if (fs.existsSync(agentsSrc)) {
