@@ -223,6 +223,22 @@ function resolveRoots(args, baseDir, allRoots) {
     }
     return found;
   }
+  // Downward compilation: cwd-based auto-scope FIRST (decision gad-127)
+  // CWD takes priority over session — you're physically in the project directory.
+  const cwd = process.cwd();
+  const cwdResolved = path.resolve(cwd);
+  for (const root of allRoots) {
+    const rootResolved = path.resolve(baseDir, root.path);
+    if (cwdResolved.startsWith(rootResolved) && root.id !== 'global') {
+      // We're inside this project — compile it and any sub-projects
+      const scoped = allRoots.filter(r => {
+        const rPath = path.resolve(baseDir, r.path);
+        return rPath.startsWith(rootResolved) || r.id === root.id;
+      });
+      if (scoped.length > 0) return scoped;
+    }
+  }
+  // Session-based scoping (fallback after cwd check)
   const sessionId = getActiveSessionProjectId(baseDir, allRoots);
   if (sessionId) {
     const found = allRoots.filter(r => r.id === sessionId);
