@@ -1,23 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { NavActions } from "@/components/landing/nav/NavActions";
 import { NavBrand } from "@/components/landing/nav/NavBrand";
 import { NavDesktop } from "@/components/landing/nav/NavDesktop";
 import { NavMobileMenu } from "@/components/landing/nav/NavMobileMenu";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    function onEscape(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setMobileOpen(false);
-      }
-    }
-    document.addEventListener("keydown", onEscape);
-    return () => document.removeEventListener("keydown", onEscape);
-  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -32,7 +23,15 @@ export default function Nav() {
         />
       </div>
 
-      {mobileOpen && <NavMobileMenu onNavigate={() => setMobileOpen(false)} />}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent
+          side="left"
+          className="flex w-[min(100vw-1.5rem,22rem)] max-w-[22rem] flex-col gap-0 border-border/60 bg-background/95 p-0 sm:max-w-sm"
+        >
+          <SheetTitle className="sr-only">Site navigation</SheetTitle>
+          <NavMobileMenu onNavigate={() => setMobileOpen(false)} />
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }

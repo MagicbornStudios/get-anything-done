@@ -1,6 +1,7 @@
 "use client";
 
 import { Filter, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   filteredCount: number;
@@ -31,14 +32,16 @@ export function ExperimentLogFilterSummary({
         )}
       </p>
       {hasActiveFilters && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={onClearLocalFilters}
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:text-foreground"
+          className="h-auto gap-1 p-0 text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:bg-transparent hover:text-foreground"
         >
-          <X size={10} aria-hidden />
+          <X className="size-2.5" aria-hidden />
           Clear filters
-        </button>
+        </Button>
       )}
     </div>
   );

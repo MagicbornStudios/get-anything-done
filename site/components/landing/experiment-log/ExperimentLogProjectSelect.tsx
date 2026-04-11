@@ -1,6 +1,15 @@
 "use client";
 
 import { ALL_PROJECTS } from "@/components/landing/experiment-log/experiment-log-shared";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const ALL_KEY = "__all";
 
 type Props = {
   projectFilter: string | null;
@@ -9,17 +18,23 @@ type Props = {
 
 export function ExperimentLogProjectSelect({ projectFilter, onProjectChange }: Props) {
   return (
-    <div className="relative">
-      <select
-        value={projectFilter ?? ""}
-        onChange={(e) => onProjectChange(e.target.value || null)}
-        className="appearance-none rounded-lg border border-border/70 bg-background/60 py-2 pl-3 pr-8 text-xs font-medium text-foreground transition-colors hover:border-accent/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
-      >
-        <option value="">All projects</option>
+    <Select
+      value={projectFilter ?? ALL_KEY}
+      onValueChange={(v) => onProjectChange(v === ALL_KEY ? null : v)}
+    >
+      <SelectTrigger className="h-9 w-[min(12rem,42vw)] rounded-lg border-border/70 bg-background/60 text-xs font-medium shadow-none focus:ring-accent/40">
+        <SelectValue placeholder="All projects" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={ALL_KEY} className="text-xs">
+          All projects
+        </SelectItem>
         {ALL_PROJECTS.map((p) => (
-          <option key={p} value={p}>{p}</option>
+          <SelectItem key={p} value={p} className="font-mono text-xs">
+            {p}
+          </SelectItem>
         ))}
-      </select>
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

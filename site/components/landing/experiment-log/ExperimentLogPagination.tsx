@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   effectiveIndex: number;
@@ -17,27 +18,31 @@ export function ExperimentLogPagination({
 }: Props) {
   return (
     <div className="mt-6 flex items-center gap-3">
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={onPrev}
         disabled={effectiveIndex === 0}
-        className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border/70 disabled:hover:text-muted-foreground"
+        className="h-auto gap-1 rounded-full px-3 py-1.5 text-xs font-semibold"
       >
         <ChevronLeft size={12} aria-hidden />
         Prev
-      </button>
+      </Button>
       <span className="text-xs text-muted-foreground">
         {effectiveIndex + 1} of {filteredLength}
       </span>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={onNext}
         disabled={effectiveIndex === filteredLength - 1}
-        className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border/70 disabled:hover:text-muted-foreground"
+        className="h-auto gap-1 rounded-full px-3 py-1.5 text-xs font-semibold"
       >
         Next
         <ChevronRight size={12} aria-hidden />
-      </button>
+      </Button>
     </div>
   );
 }
