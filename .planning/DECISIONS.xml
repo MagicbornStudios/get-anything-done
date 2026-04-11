@@ -865,4 +865,10 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>New /evals route. Landing page playable archive becomes a compact preview. Full catalog on dedicated page.</impact>
   </decision>
 
+  <decision id="gad-125">
+    <title>ID format: GAD-D-NNN for decisions, GAD-T-PHASE-NN for tasks, with file abbreviation</title>
+    <summary>IDs should encode what you're looking at: GAD-D-119 = GAD decision 119, GAD-T-22-01 = GAD task phase 22 task 01, GAD-P-22 = GAD phase 22. The prefix tells you the artifact type (D=decision, T=task, P=phase, R=requirement). The namespace (GAD) tells you the project. On the site, each segment of the ID should be color-coded (namespace=accent, type=by-type-color, number=foreground). On hover, an info panel shows the full artifact details — same pattern as eval HoverCard panels.</summary>
+    <impact>Major refactor: all XML files, parsers, CLI output, site Ref component. Plan as a dedicated phase or batch. Backward compatibility needed during transition. The Ref component on the site gains HoverCard with color-coded segments.</impact>
+  </decision>
+
 </decisions>

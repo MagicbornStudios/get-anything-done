@@ -1955,6 +1955,11 @@ export const PLANNING_STATE: PlanningState = {
   "doneTasksCount": 141,
   "recentDecisions": [
     {
+      "id": "gad-125",
+      "title": "ID format: GAD-D-NNN for decisions, GAD-T-PHASE-NN for tasks, with file abbreviation",
+      "summary": "IDs should encode what you're looking at: GAD-D-119 = GAD decision 119, GAD-T-22-01 = GAD task phase 22 task 01, GAD-P-22 = GAD phase 22. The prefix tells you the artifact type (D=decision, T=task, P=phase, R=requirement). The namespace (GAD) tells you the project. On the site, each segment of the ID should be color-coded (namespace=accent, type=by-type-color, number=foreground). On hover, an info"
+    },
+    {
       "id": "gad-124",
       "title": "Playable archive becomes a dedicated /evals page — catalog/marketplace pattern",
       "summary": "The current playable archive on the landing page works for showing the last 5 rounds of game builds. But we need a dedicated /evals page that shows ALL evals across ALL rounds as a catalog/marketplace. Filter by domain, tech stack, round, workflow, review status. Show build size + source size. Show skill provenance. Show eval relationships (e.g., reverse-engineer → build-from-requirements). Everyt"
@@ -2008,11 +2013,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-114",
       "title": "Human time estimation vs agent time — comparison metric per eval",
       "summary": "Before each eval run, the agent estimates how long the requirements would take a human developer to implement (without AI tools). This goes into TRACE.json as `human_estimate_hours`. After the run, we have actual agent duration. The ratio (estimate / actual) shows the speedup factor. This is publishable data — \"this eval's requirements would take a human ~40 hours, the agent did it in 23 minutes.\""
-    },
-    {
-      "id": "gad-113",
-      "title": "Evals have timestamps, build requirements, and completion gates",
-      "summary": "Every eval run is timestamped (started, ended) in TRACE.json. An eval is only \"done\" when: (1) the build requirement is produced (game build, requirements file, composition, running app), (2) human review is submitted. Build requirement is defined per domain in gad.json as `build_requirement` field. For reverse-engineer, the build is the requirements file — but it's gated until a second eval imple"
     }
   ]
 };

@@ -1490,6 +1490,51 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   return sections.join('\n\n');
 }
 
+/** Build skills provenance snapshot for eval run (decision gad-120) */
+function buildSkillsProvenance(projectDir) {
+  const templateSkillsDir = path.join(projectDir, 'template', 'skills');
+  const installedMeta = path.join(projectDir, 'template', '.installed-skills.json');
+  const inheritedMeta = path.join(projectDir, 'template', '.inherited-skills.json');
+
+  const provenance = { installed: [], inherited: [], start_snapshot: [] };
+
+  // Read installed skills metadata
+  if (fs.existsSync(installedMeta)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(installedMeta, 'utf8'));
+      provenance.installed = (meta.skills || []).map(s => ({
+        name: s.name,
+        source: s.source || 'local',
+        type: 'installed',
+      }));
+    } catch {}
+  }
+
+  // Read inherited skills metadata
+  if (fs.existsSync(inheritedMeta)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(inheritedMeta, 'utf8'));
+      provenance.inherited = (meta.skills || []).map(s => ({
+        name: s.name,
+        source: meta.source || 'unknown',
+        type: 'inherited',
+      }));
+    } catch {}
+  }
+
+  // Snapshot all skills present at start
+  if (fs.existsSync(templateSkillsDir)) {
+    try {
+      const skills = fs.readdirSync(templateSkillsDir, { withFileTypes: true })
+        .filter(e => e.isDirectory())
+        .map(e => e.name);
+      provenance.start_snapshot = skills;
+    } catch {}
+  }
+
+  return provenance;
+}
+
 const evalRun = defineCommand({
   meta: { name: 'run', description: 'Run eval project — generates prompt, creates worktree, optionally spawns agent' },
   args: {
@@ -1613,6 +1658,7 @@ const evalRun = defineCommand({
       workflow_emergence: null,
       gad_commands: [],
       skill_triggers: [],
+      skills_provenance: buildSkillsProvenance(projectDir),
       trace_events_file: path.join(runDir, '.trace-events.jsonl'),
     };
 

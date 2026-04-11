@@ -1,0 +1,48 @@
+import { Badge } from "@/components/ui/badge";
+import { BUGS } from "@/lib/eval-data";
+
+export function ProjectBugsSection({ projectId }: { projectId: string }) {
+  // Match bugs to this project or any in its family (e.g., escape-the-dungeon-bare matches escape-the-dungeon)
+  const bugs = BUGS.filter(
+    (b) => b.project === projectId || projectId.startsWith(b.project + "-") || b.project?.startsWith(projectId)
+  );
+
+  if (bugs.length === 0) return null;
+
+  return (
+    <section className="border-t border-border/60">
+      <div className="section-shell">
+        <p className="section-kicker">Known bugs</p>
+        <h2 className="text-2xl font-semibold tracking-tight">
+          {bugs.length} bug{bugs.length !== 1 ? "s" : ""} reported
+        </h2>
+        <div className="mt-6 space-y-3">
+          {bugs.map((b) => (
+            <div
+              key={b.id}
+              className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4"
+            >
+              <Badge
+                variant={b.status === "resolved" ? "success" : b.status === "wontfix" ? "outline" : "danger"}
+                className="shrink-0"
+              >
+                {b.status}
+              </Badge>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground">{b.title}</p>
+                {b.version && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Found in {b.project}/{b.version}
+                  </p>
+                )}
+                {b.description && (
+                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{b.description}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

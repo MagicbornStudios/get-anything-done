@@ -11,6 +11,8 @@ import { ProjectHeroSection } from "@/app/projects/[id]/ProjectHeroSection";
 import { ProjectRunsSection } from "@/app/projects/[id]/ProjectRunsSection";
 import { ProjectScoringWeightsSection } from "@/app/projects/[id]/ProjectScoringWeightsSection";
 import { ProjectSkillsScopeSection } from "@/app/projects/[id]/ProjectSkillsScopeSection";
+import { ProjectBugsSection } from "@/app/projects/[id]/ProjectBugsSection";
+import { ProjectRequirementsSection } from "@/app/projects/[id]/ProjectRequirementsSection";
 import { projectRuns } from "@/app/projects/[id]/project-detail-shared";
 
 export const dynamicParams = false;
@@ -55,6 +57,8 @@ export default async function ProjectPage({
       {project.workflow === "emergent" && runs.length > 0 && (
         <ProjectEmergentLineageSection runs={runs} />
       )}
+      <ProjectRequirementsSection projectId={project.id} />
+      <ProjectBugsSection projectId={project.id} />
       <ProjectScoringWeightsSection project={project} />
       <Footer />
     </main>
