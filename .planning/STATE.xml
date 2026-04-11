@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>22</current-phase>
+  <current-phase>28</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-11 complete. Project market spec ready for handoff at .planning/specs/PROJECT-MARKET-SPEC.md.
+  <next-action>Phase 28 task 28-01 complete: /project-market page shipped (commit 292c621). Build passes.
 
-=== HANDOFF ===
-.planning/specs/PROJECT-MARKET-SPEC.md — full implementation spec for /project-market page.
-Decisions gad-128 through gad-134 captured.
+=== DONE THIS SESSION ===
+- /project-market route with all EVAL_PROJECTS, featured badges, per-project round filtering
+- PlayableTeaser on home page (latest ETD round only)
+- Nav, hero CTA, footer updated to point to /project-market
 
 === NEXT ===
-1. Implement /project-market from spec
-2. GAD CLI build/release pipeline (Windows)
-3. Merge /gad page: framework + catalog + hypothesis matrix
-4. Move rubric to project detail
-5. Site reusability review
-6. Run evals (round 5, tech-stacks, reverse-engineer)</next-action>
-  <last-updated>2026-04-11</last-updated>
+1. GAD CLI build/release pipeline (Windows) — phase 29
+2. Merge /gad page: framework + catalog + hypothesis matrix
+3. Move rubric to project detail (gad-131)
+4. Site reusability review (gad-134)
+5. Run evals (round 5, tech-stacks, reverse-engineer)</next-action>
+  <last-updated>2026-04-10</last-updated>
 </state>

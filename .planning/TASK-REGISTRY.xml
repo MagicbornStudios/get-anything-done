@@ -790,4 +790,11 @@
       <keywords>landing,hypotheses,interactive-chart,visibility</keywords>
     </task>
   </phase>
+  <phase id="28">
+    <task id="28-01" status="done" skill="execute-phase" agent="gad-executor" type="site">
+      <goal>Create /project-market route listing all EVAL_PROJECTS with featured badges for ETD family + gad-explainer-video. Default filter: last 5 rounds per project. Domain, workflow, round, status, search filters. Reuse PlayableEmbed/PlayableSelectedPanel for iframe embed. Replace home page full Playable with PlayableTeaser (latest ETD round only). Update nav, hero CTA, footer to point to /project-market.</goal>
+      <resolution>Shipped 2026-04-10. Created site/app/project-market/page.tsx route, 7 new components under site/components/project-market/ (ProjectMarket, ProjectMarketHeader, ProjectMarketFilterBar, ProjectMarketGrid, ProjectCard, ProjectMarketRuns, use-project-market, project-market-shared). PlayableTeaser replaces full Playable on home. Nav Play dropdown, hero CTA, footer link all updated. Build passes. Commit 292c621.</resolution>
+      <keywords>project-market,catalog,eval-projects,featured,per-project-rounds,nav,teaser</keywords>
+    </task>
+  </phase>
 </task-registry>
