@@ -5,6 +5,7 @@ import { GlobalSearchFooter } from "@/components/search/global-search/GlobalSear
 import { GlobalSearchInputBar } from "@/components/search/global-search/GlobalSearchInputBar";
 import { GlobalSearchScrollBody } from "@/components/search/global-search/GlobalSearchScrollBody";
 import type { SearchResultsByKind } from "@/components/search/global-search/global-search-shared";
+import { DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 type Props = {
   inputRef: RefObject<HTMLInputElement | null>;
@@ -24,30 +25,25 @@ export function GlobalSearchModal({
   onPickResult,
 }: Props) {
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-start justify-center bg-background/80 p-4 pt-[10vh] backdrop-blur-sm"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Global search"
+    <DialogContent
+      hideClose
+      overlayClassName="z-[60] bg-background/80 backdrop-blur-sm"
+      className="left-[50%] top-[10vh] z-[60] flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-2xl translate-x-[-50%] translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border border-border/70 p-0 shadow-2xl shadow-black/60 sm:rounded-2xl"
+      aria-describedby={undefined}
     >
-      <div
-        className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border/70 bg-background shadow-2xl shadow-black/60"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GlobalSearchInputBar
-          inputRef={inputRef}
-          query={query}
-          onQueryChange={onQueryChange}
-          onClose={onClose}
-        />
+      <DialogTitle className="sr-only">Global search</DialogTitle>
+      <GlobalSearchInputBar
+        inputRef={inputRef}
+        query={query}
+        onQueryChange={onQueryChange}
+        onClose={onClose}
+      />
 
-        <div className="max-h-[60vh] overflow-y-auto">
-          <GlobalSearchScrollBody query={query} results={results} onPickResult={onPickResult} />
-        </div>
-
-        <GlobalSearchFooter />
+      <div className="max-h-[60vh] overflow-y-auto">
+        <GlobalSearchScrollBody query={query} results={results} onPickResult={onPickResult} />
       </div>
-    </div>
+
+      <GlobalSearchFooter />
+    </DialogContent>
   );
 }

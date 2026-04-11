@@ -2,6 +2,8 @@
 
 import type { RefObject } from "react";
 import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Props = {
   inputRef: RefObject<HTMLInputElement | null>;
@@ -14,22 +16,24 @@ export function GlobalSearchInputBar({ inputRef, query, onQueryChange, onClose }
   return (
     <div className="flex items-center gap-3 border-b border-border/60 px-4 py-3">
       <Search size={16} className="shrink-0 text-muted-foreground" aria-hidden />
-      <input
+      <Input
         ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         placeholder="Search decisions, tasks, glossary, bugs, skills..."
-        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        className="h-auto flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
       />
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         onClick={onClose}
-        className="rounded-full border border-border/60 p-1 text-muted-foreground hover:border-accent hover:text-accent"
+        className="h-7 w-7 shrink-0 rounded-full border-border/60"
         aria-label="Close search"
       >
-        <X size={12} aria-hidden />
-      </button>
+        <X className="size-3" aria-hidden />
+      </Button>
     </div>
   );
 }

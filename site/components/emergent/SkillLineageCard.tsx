@@ -51,15 +51,13 @@ export function SkillLineageCard({
         <SkillLineageSkillBody skills={skills} onSelectSkill={setOpenSkill} />
       </div>
 
-      {openSkill && (
-        <SkillLineageSkillModal
-          skill={openSkill}
-          runKey={runKey}
-          copied={copied}
-          onCopy={copy}
-          onClose={() => setOpenSkill(null)}
-        />
-      )}
+      <SkillLineageSkillModal
+        skill={openSkill}
+        runKey={runKey}
+        copied={copied}
+        onCopy={copy}
+        onClose={() => setOpenSkill(null)}
+      />
     </>
   );
 }

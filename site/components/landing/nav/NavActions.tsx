@@ -1,5 +1,6 @@
 import { Github, Menu, X } from "lucide-react";
 import { GlobalSearch } from "@/components/search/global-search/GlobalSearch";
+import { Button } from "@/components/ui/button";
 import { NAV_GITHUB_HREF } from "@/components/landing/nav/nav-shared";
 
 type Props = {
@@ -13,25 +14,29 @@ export function NavActions({ mobileOpen, onToggleMobile }: Props) {
       <div className="hidden md:block">
         <GlobalSearch />
       </div>
-      <a
-        href={NAV_GITHUB_HREF}
-        rel="noopener noreferrer"
-        target="_blank"
-        className="hidden items-center gap-2 rounded-full border border-border/70 bg-card/40 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:border-accent hover:text-accent md:inline-flex"
+      <Button
+        variant="outline"
+        size="sm"
+        className="hidden gap-2 rounded-full border-border/70 bg-card/40 text-xs font-medium md:inline-flex"
+        asChild
       >
-        <Github size={14} aria-hidden />
-        GitHub
-      </a>
+        <a href={NAV_GITHUB_HREF} rel="noopener noreferrer" target="_blank">
+          <Github className="size-3.5" aria-hidden />
+          GitHub
+        </a>
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         onClick={onToggleMobile}
-        className="rounded-md border border-border/70 bg-card/40 p-2 text-foreground md:hidden"
+        className="border-border/70 bg-card/40 md:hidden"
         aria-expanded={mobileOpen}
         aria-label="Toggle navigation"
       >
-        {mobileOpen ? <X size={16} /> : <Menu size={16} />}
-      </button>
+        {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+      </Button>
     </div>
   );
 }
