@@ -147,7 +147,7 @@
   <phase id="24">
     <title>Round 1 brownfield — bare v3 baseline + v4 extensions</title>
     <goal>Run the first brownfield experiment. All three conditions (etd-brownfield-gad/bare/emergent) start from escape-the-dungeon-bare v3 as baseline and extend it with v4 feature requirements. Tests whether GAD's overhead pays off on codebase extension vs fresh creation. This is the experiment that could validate or refute the freedom hypothesis if GAD wins.</goal>
-    <status>planned</status>
+    <status>cancelled</status>
     <depends>23</depends>
   </phase>
   <phase id="25">
@@ -159,7 +159,7 @@
   <phase id="26">
     <title>Research-grade visualization + Remotion video compositions</title>
     <goal>Expand the public site from text + tables into interactive visualizations and embedded video explainers. Two tracks: (a) static SVG / React-rendered charts for score comparisons, trigger timelines, agent loops, trace breakdowns — lightweight, ship with every prebuild; (b) Remotion React compositions embedded via @remotion/player (free for teams ≤3, no MP4 export required — plays React frames live in the browser). Video topics to scope: GAD loop walkthrough, a failure-case dissection (v8 broken-crafting with tracing overlay), freedom hypothesis explanation, bare vs emergent workflow emergence comparison, per-eval "what the agent built for itself" retrospectives. Compositions reuse existing site React components (SiteHeader, score cards, etc) so video = composable React, no separate asset pipeline. Scaffold landed in phase 22 session 4 (registry, Player wrapper, /videos route, inline embed on per-run pages, v8 dissection placeholder). Authoring real video content blocked on phase 25 landing so we're animating honest data, not v3-era lossy aggregates.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>22,25</depends>
   </phase>
   <phase id="27">
@@ -167,5 +167,41 @@
     <goal>The eval framework's primary output is no longer "a score per run" — it's "structured data that yields insights." Phase 27 ships the data production pipeline that makes that possible. Five tracks: (1) **Structured human review rubric** — replace the single human_review.score number with a dimensions object (playability, ui_polish, mechanics_implementation, ingenuity_requirement_met, stability, etc) and a rubric_version. Each dimension scored and annotated independently so reviewers can disagree about playability without throwing out the rest. Aggregate score is a weighted sum defined in rubric config, keeping current composite math intact. (2) **Automated gate checks** — playwright tests per eval project that boot the built game and programmatically verify G1 (game loop transitions work), G3 (UI has sprites not ASCII), G4 (pressure mechanics observable). Gate status becomes mostly objective; human reviewers only judge what playwright can't check. (3) **Derived metrics from trace events** — tool-use mix (Read vs Edit vs Bash distribution), commit rhythm (time between commits, size distribution), plan-adherence delta (PLAN.md task count vs actually-completed tasks), skill-to-tool ratio, subagent utilization. All computed from trace v4 once phase 25 ships. (4) **Cross-run aggregate queries** — SQL-like queries against the trace dataset: "average time-to-first-commit by workflow", "percent of runs that triggered gad:plan-phase before writing code", "distribution of produced-artifact counts for bare runs". Ships as a `gad eval query` subcommand + a /insights page on the site. (5) **Visualization patterns** — not just more charts, but a discipline: every new metric gets a chart that answers a specific research question, not just shows the number. Divergence scatter already exists; phase 27 adds tool-mix donuts, commit-rhythm timelines, rubric-dimension radar charts, trigger-timeline strips per skill. Phase 27 runs parallel to phase 25 — the rubric work can land against v3 trace data today and get richer inputs when v4 arrives.</goal>
     <status>planned</status>
     <depends>22</depends>
+  </phase>
+  <phase id="28">
+    <title>/project-market + site architecture overhaul</title>
+    <goal>Ship /project-market as the dedicated eval catalog. All eval projects listed, ETD + explainer featured. Per-project 5-round filtering. Home page lightened. Rubric on project detail pages. Site reusability review. ID format HoverCards sitewide. Gantt chart wired to planning page. Spec at .planning/specs/PROJECT-MARKET-SPEC.md. Decisions: GAD-D-116, GAD-D-119, GAD-D-124, GAD-D-125, GAD-D-130, GAD-D-131, GAD-D-134.</goal>
+    <status>planned</status>
+    <depends>22</depends>
+  </phase>
+  <phase id="29">
+    <title>GAD CLI build/release pipeline + operational distinction</title>
+    <goal>Official build/release pipeline for the GAD CLI. Windows binary built locally, Mac/Linux via GitHub Actions. npx install flow. Quick start guide on site. Clear messaging: GAD CLI is operational tooling for the framework, not a coding agent CLI. Decisions: GAD-D-117, GAD-D-123, GAD-D-128, GAD-D-129.</goal>
+    <status>planned</status>
+    <depends>28</depends>
+  </phase>
+  <phase id="30">
+    <title>Eval framework v2 — domains, tech stacks, rounds per project</title>
+    <goal>Formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. Rounds per project (not global). Project → eval → round hierarchy in data model and UI. Decisions: GAD-D-110, GAD-D-111, GAD-D-113, GAD-D-114, GAD-D-121, GAD-D-132.</goal>
+    <status>planned</status>
+    <depends>28</depends>
+  </phase>
+  <phase id="31">
+    <title>Skill ecosystem — provenance, creation workflow, evaluation</title>
+    <goal>Skill provenance tags (installed/inherited/authored/3rd-party/gad-framework). Skill creation immediately scaffolds eval. GAD skill creator from Anthropic base. Skill inheritance CLI (done). Skill installation CLI (done). Decisions: GAD-D-100, GAD-D-102, GAD-D-107, GAD-D-112, GAD-D-120.</goal>
+    <status>planned</status>
+    <depends>30</depends>
+  </phase>
+  <phase id="32">
+    <title>Self-eval + trace analysis pipeline maturity</title>
+    <goal>Self-evaluation from real brownfield data displayed on site. Computed metrics append-only and long-lived. Pressure per phase drives skill creation. GAD discipline scoring for framework evals. gad self-eval CLI (done). Decisions: GAD-D-95, GAD-D-103, GAD-D-115, GAD-D-118, GAD-D-122.</goal>
+    <status>planned</status>
+    <depends>30</depends>
+  </phase>
+  <phase id="33">
+    <title>Reverse-engineer eval + methodology evaluation</title>
+    <goal>Run reverse-engineer eval on grime-time and visualeditor-payloadcms targets. Methodology must be tied to buildable project with artifacts. Two-phase eval: produce requirements then build from them. Decisions: GAD-D-96, GAD-D-133.</goal>
+    <status>planned</status>
+    <depends>31</depends>
   </phase>
 </roadmap>

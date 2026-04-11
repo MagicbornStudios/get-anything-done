@@ -7,10 +7,16 @@
 1. `gad snapshot --projectid <id>` — one command, full context
 2. Pick one task from TASK-REGISTRY.xml (status=planned)
 3. Implement it
-4. Update TASK-REGISTRY.xml (mark done), STATE.xml (next-action), DECISIONS.xml (if new decisions)
-5. Commit
+4. Update TASK-REGISTRY.xml:
+   - Set `status="done"`
+   - Set `skill="<skill-used>"` — which skill(s) you used (comma-separated if multiple). Use empty string if none.
+   - Set `agent="<agent-name>"` — `default` for main session, named agent otherwise (e.g. `gad-planner`, `gad-executor`)
+   - Set `type="<category>"` — one of: `framework`, `cli`, `site`, `eval`, `pipeline`, `skill`, `cleanup`, `docs`
+   - Example: `<task id="22-50" status="done" skill="execute-phase" agent="default" type="site">`
+5. Update STATE.xml (next-action), DECISIONS.xml (if new decisions — use GAD-D-NNN format per GAD-D-125)
+6. Commit
 
-That's it. No reading 15 files. No fresh sessions. No memory-based task tracking.
+**Task attribution is mandatory (GAD-D-104).** Every completed task must have skill, agent, and type attributes. This feeds the self-eval pipeline and site data. Empty skill/agent is OK if genuinely no skill or agent was involved — but type is always required.
 
 ## Context exhaustion (gad-17)
 
