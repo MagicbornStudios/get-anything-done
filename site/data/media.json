@@ -1,0 +1,12 @@
+{
+  "videos": {
+    "lineage_talk": {
+      "type": "youtube",
+      "id": "958hJe-AcvU",
+      "start_sec": 610,
+      "title": "GSD → RepoPlanner → GAD lineage talk",
+      "description": "Conference talk covering the evolution from GSD to RepoPlanner to Get Anything Done"
+    }
+  },
+  "images": {}
+}

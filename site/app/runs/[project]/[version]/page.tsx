@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, ArrowLeft, CheckCircle2, Circle, ExternalLink, Film, Gamepad2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import VideoEmbed from "@/components/video/VideoEmbed";
 import RubricRadar, { type RubricDimension } from "@/components/charts/RubricRadar";

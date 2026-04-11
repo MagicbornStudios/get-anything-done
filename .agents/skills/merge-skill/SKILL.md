@@ -55,6 +55,10 @@ cat .agents/skills/<skill-b>/SKILL.md
 
 Write down the answer to this question for yourself: **"What can each of these skills do that the other cannot?"** If the answer is "nothing," they are merge candidates. If there is a real distinction, document it as a comment on both and do NOT merge.
 
+### Step 1b — Consult agentskills.io guidance
+
+Before drafting the merge, check the agentskills.io standard (https://agentskills.io/home) for professional guidance on skill structure, naming, and interoperability. The Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf, decision gad-70) is also canonical reference. Use these as the quality bar — the merged skill should meet or exceed the standards described in both documents.
+
 ### Step 2 — Draft the merged skill
 
 Create a new SKILL.md at `.agents/skills/<merged-name>/SKILL.md`. The merged name should be:

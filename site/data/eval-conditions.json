@@ -1,0 +1,59 @@
+{
+  "workflows": {
+    "gad": {
+      "label": "GAD (full framework)",
+      "hypothesis": "GAD framework",
+      "description": "Full GAD framework with .planning/ XML, AGENTS.md loop, skill triggers, per-task planning doc maintenance",
+      "constraint_level": "high",
+      "key_features": ["Planning docs", "Task tracking", "Skill triggers", "State management"]
+    },
+    "bare": {
+      "label": "Bare (no framework)",
+      "hypothesis": "Freedom",
+      "description": "No framework — agent creates its own workflow. Only receives AGENTS.md with requirements and game/.planning/ layout mandate.",
+      "constraint_level": "none",
+      "key_features": ["Self-directed", "No overhead", "Maximum creative freedom"]
+    },
+    "emergent": {
+      "label": "Emergent (inherited skills)",
+      "hypothesis": "CSH (Compound-Skills)",
+      "description": "No framework but inherits skills from previous runs. Tests whether skill accumulation improves outcomes over rounds.",
+      "constraint_level": "low",
+      "key_features": ["Inherited skills", "Skill evolution", "Cross-run learning"]
+    }
+  },
+  "modes": {
+    "greenfield": {
+      "label": "Greenfield",
+      "description": "Agent builds from scratch — no existing codebase"
+    },
+    "brownfield": {
+      "label": "Brownfield",
+      "description": "Agent inherits a baseline codebase from a previous run and extends it"
+    }
+  },
+  "project_families": [
+    {
+      "id": "escape-the-dungeon",
+      "label": "Escape the Dungeon",
+      "description": "Roguelike dungeon crawler — primary eval vehicle across all rounds",
+      "projects": [
+        "escape-the-dungeon",
+        "escape-the-dungeon-bare",
+        "escape-the-dungeon-emergent"
+      ]
+    },
+    {
+      "id": "gad-explainer-video",
+      "label": "GAD Explainer Video",
+      "description": "Remotion composition — planned eval for video generation workflows",
+      "projects": ["gad-explainer-video"]
+    },
+    {
+      "id": "skill-evaluation-app",
+      "label": "Skill Evaluation App",
+      "description": "Interactive requirements editor — planned eval for tooling workflows",
+      "projects": ["skill-evaluation-app"]
+    }
+  ]
+}

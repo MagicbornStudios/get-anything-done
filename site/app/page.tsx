@@ -1,19 +1,18 @@
-import Nav from "@/components/landing/Nav";
-import Hero from "@/components/landing/Hero";
-import HypothesisTracksSection from "@/components/landing/HypothesisTracksSection";
-import WhatItIs from "@/components/landing/WhatItIs";
-import Lineage from "@/components/landing/Lineage";
-import Workflow from "@/components/landing/Workflow";
-import Framework from "@/components/landing/Framework";
-import Rounds from "@/components/landing/Rounds";
-import Projects from "@/components/landing/Projects";
-import Results from "@/components/landing/Results";
-import Graphs from "@/components/landing/Graphs";
-import Playable from "@/components/landing/Playable";
-import Requirements from "@/components/landing/Requirements";
-import Catalog from "@/components/landing/Catalog";
-import Templates from "@/components/landing/Templates";
-import RunIt from "@/components/landing/RunIt";
+import Nav from "@/components/landing/nav/Nav";
+import Hero from "@/components/landing/hero/Hero";
+import HypothesisTracksSection from "@/components/landing/hypothesis-tracks/HypothesisTracksSection";
+import Lineage from "@/components/landing/lineage/Lineage";
+import Workflow from "@/components/landing/workflow/Workflow";
+import Framework from "@/components/landing/framework/Framework";
+import ExperimentLog from "@/components/landing/experiment-log/ExperimentLog";
+import Projects from "@/components/landing/projects/Projects";
+import RoundResults from "@/components/landing/round-results/RoundResults";
+import Graphs from "@/components/landing/graphs/Graphs";
+import Playable from "@/components/landing/playable/Playable";
+import Requirements from "@/components/landing/requirements/Requirements";
+import Catalog from "@/components/landing/catalog/Catalog";
+import Templates from "@/components/landing/templates/Templates";
+import RunIt from "@/components/landing/run-it/RunIt";
 import Footer from "@/components/landing/Footer";
 
 export default function Page() {
@@ -25,9 +24,8 @@ export default function Page() {
       <HypothesisTracksSection />
       <Playable />
       {/* CONTEXT: what the project is + how it works */}
-      <WhatItIs />
-      <Rounds />
-      <Results />
+      <ExperimentLog />
+      <RoundResults />
       <Graphs />
       {/* BACKGROUND: lineage + methodology */}
       <Lineage />

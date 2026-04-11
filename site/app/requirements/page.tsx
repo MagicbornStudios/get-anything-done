@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FileText, Github, Download, Gauge, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import { CURRENT_REQUIREMENTS, REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
 

@@ -1,0 +1,220 @@
+{
+  "latest": {
+    "period": {
+      "start": "2026-04-07",
+      "end": "2026-04-10",
+      "days": 4
+    },
+    "totals": {
+      "events": 2403,
+      "sessions": 5,
+      "gad_cli_calls": 157
+    },
+    "tool_distribution": [
+      {
+        "tool": "Bash",
+        "count": 687
+      },
+      {
+        "tool": "unknown",
+        "count": 408
+      },
+      {
+        "tool": "Edit",
+        "count": 362
+      },
+      {
+        "tool": "Read",
+        "count": 333
+      },
+      {
+        "tool": "TaskUpdate",
+        "count": 192
+      },
+      {
+        "tool": "Write",
+        "count": 151
+      },
+      {
+        "tool": "TaskCreate",
+        "count": 150
+      },
+      {
+        "tool": "Grep",
+        "count": 74
+      },
+      {
+        "tool": "Agent",
+        "count": 31
+      },
+      {
+        "tool": "ToolSearch",
+        "count": 5
+      },
+      {
+        "tool": "WebFetch",
+        "count": 5
+      },
+      {
+        "tool": "WebSearch",
+        "count": 3
+      },
+      {
+        "tool": "Glob",
+        "count": 2
+      }
+    ],
+    "per_day": [
+      {
+        "day": "2026-04-07",
+        "count": 607
+      },
+      {
+        "day": "2026-04-08",
+        "count": 678
+      },
+      {
+        "day": "2026-04-09",
+        "count": 637
+      },
+      {
+        "day": "2026-04-10",
+        "count": 481
+      }
+    ],
+    "framework_overhead": {
+      "planning_ops": 166,
+      "source_ops": 744,
+      "ratio": 0.182,
+      "score": 0.7
+    },
+    "loop_compliance": {
+      "snapshot_starts": 4,
+      "total_sessions": 5,
+      "score": 0.8
+    },
+    "gad_cli_breakdown": {
+      "snapshot": 25,
+      "eval": 82,
+      "other": 50
+    },
+    "computed_at": "2026-04-10T22:16:55.128Z",
+    "tasks": {
+      "done": 163,
+      "planned": 13,
+      "in_progress": 4,
+      "total": 180
+    },
+    "decisions": 102
+  },
+  "snapshots": [
+    {
+      "period": {
+        "start": "2026-04-07",
+        "end": "2026-04-10",
+        "days": 4
+      },
+      "totals": {
+        "events": 2403,
+        "sessions": 5,
+        "gad_cli_calls": 157
+      },
+      "tool_distribution": [
+        {
+          "tool": "Bash",
+          "count": 687
+        },
+        {
+          "tool": "unknown",
+          "count": 408
+        },
+        {
+          "tool": "Edit",
+          "count": 362
+        },
+        {
+          "tool": "Read",
+          "count": 333
+        },
+        {
+          "tool": "TaskUpdate",
+          "count": 192
+        },
+        {
+          "tool": "Write",
+          "count": 151
+        },
+        {
+          "tool": "TaskCreate",
+          "count": 150
+        },
+        {
+          "tool": "Grep",
+          "count": 74
+        },
+        {
+          "tool": "Agent",
+          "count": 31
+        },
+        {
+          "tool": "ToolSearch",
+          "count": 5
+        },
+        {
+          "tool": "WebFetch",
+          "count": 5
+        },
+        {
+          "tool": "WebSearch",
+          "count": 3
+        },
+        {
+          "tool": "Glob",
+          "count": 2
+        }
+      ],
+      "per_day": [
+        {
+          "day": "2026-04-07",
+          "count": 607
+        },
+        {
+          "day": "2026-04-08",
+          "count": 678
+        },
+        {
+          "day": "2026-04-09",
+          "count": 637
+        },
+        {
+          "day": "2026-04-10",
+          "count": 481
+        }
+      ],
+      "framework_overhead": {
+        "planning_ops": 166,
+        "source_ops": 744,
+        "ratio": 0.182,
+        "score": 0.7
+      },
+      "loop_compliance": {
+        "snapshot_starts": 4,
+        "total_sessions": 5,
+        "score": 0.8
+      },
+      "gad_cli_breakdown": {
+        "snapshot": 25,
+        "eval": 82,
+        "other": 50
+      },
+      "computed_at": "2026-04-10T22:16:55.128Z",
+      "tasks": {
+        "done": 163,
+        "planned": 13,
+        "in_progress": 4,
+        "total": 180
+      },
+      "decisions": 102
+    }
+  ]
+}

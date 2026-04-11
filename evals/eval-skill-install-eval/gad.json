@@ -1,0 +1,21 @@
+{
+  "type": "eval",
+  "name": "eval-skill-install-eval",
+  "description": "Evaluates the eval-skill-install skill — measures whether installing skills into eval projects correctly and running with/without comparisons works",
+  "eval_mode": "greenfield",
+  "workflow": "gad",
+  "baseline": null,
+  "trace": true,
+  "template": "template/",
+  "compare_to": [],
+  "framework_skill": true,
+  "scoring": {
+    "weights": {
+      "install_success": 0.20,
+      "comparison_valid": 0.20,
+      "cli_usage": 0.15,
+      "preservation_complete": 0.10,
+      "human_review": 0.35
+    }
+  }
+}

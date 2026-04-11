@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 
 const REPO = "https://github.com/MagicbornStudios/get-anything-done";

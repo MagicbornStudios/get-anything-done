@@ -3469,6 +3469,11 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
     "project": "reader-workspace",
     "zipPath": "/downloads/eval-reader-workspace-template.zip",
     "bytes": 15255
+  },
+  {
+    "project": "reverse-engineer-eval",
+    "zipPath": "/downloads/eval-reverse-engineer-eval-template.zip",
+    "bytes": 1009
   }
 ];
 
@@ -3532,6 +3537,12 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
     "zipPath": "/downloads/planning/eval-reader-workspace-planning.zip",
     "bytes": 15255,
     "files": 6
+  },
+  {
+    "project": "reverse-engineer-eval",
+    "zipPath": "/downloads/planning/eval-reverse-engineer-eval-planning.zip",
+    "bytes": 1009,
+    "files": 1
   }
 ];
 
@@ -4123,6 +4134,67 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "constraints": null,
     "scoringWeights": null,
     "humanReviewRubric": null
+  },
+  {
+    "id": "reverse-engineer-eval",
+    "name": "reverse-engineer-eval",
+    "description": "Evaluates the reverse-engineer skill by measuring requirements quality — reverse-engineer a target codebase, then build from the generated requirements, score the result against the original.",
+    "evalMode": "greenfield",
+    "workflow": "gad",
+    "baseline": null,
+    "constraints": {
+      "two_phase_eval": true,
+      "phase_1": "reverse-engineer target into REQUIREMENTS.xml",
+      "phase_2": "fresh agent builds from REQUIREMENTS.xml only (no access to original source)"
+    },
+    "scoringWeights": {
+      "requirements_completeness": 0.25,
+      "requirements_accuracy": 0.2,
+      "build_success": 0.15,
+      "functional_fidelity": 0.1,
+      "human_review": 0.3
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "requirements_completeness",
+          "label": "Requirements completeness",
+          "weight": 0.25,
+          "description": "Were all significant features of the original captured in the requirements? Count missing features."
+        },
+        {
+          "key": "requirements_accuracy",
+          "label": "Requirements accuracy",
+          "weight": 0.2,
+          "description": "Do the requirements correctly describe what the original does? No hallucinated features, no mischaracterizations."
+        },
+        {
+          "key": "build_success",
+          "label": "Build success (gate)",
+          "weight": 0.15,
+          "description": "Does the rebuild compile, run, and render? If it has a GUI, can you interact with it? If CLI, does it execute?"
+        },
+        {
+          "key": "functional_fidelity",
+          "label": "Functional fidelity",
+          "weight": 0.2,
+          "description": "Does the rebuild do the same things as the original? Compare user flows, features, data handling."
+        },
+        {
+          "key": "presentation",
+          "label": "Presentation",
+          "weight": 0.1,
+          "description": "For GUI builds: is it playable/viewable in-browser (iframe)? For non-GUI: does the README explain what was built and how to run it?"
+        },
+        {
+          "key": "skill_quality",
+          "label": "Skill quality",
+          "weight": 0.1,
+          "description": "Did the reverse-engineer skill work well? Was the requirements file well-structured, properly scoped, with testable criteria?"
+        }
+      ]
+    }
   },
   {
     "id": "skill-evaluation-app",
@@ -5523,6 +5595,60 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-103",
+    "title": "Computed trace metrics are long-lived — raw logs are capped",
+    "summary": "Raw trace logs (.gad-log/*.jsonl, .trace-events.jsonl) have caps (1000 events for trace, daily rotation for gad-log). But computed/mined values from those logs are long-lived static data — once computed, they persist in site/data/self-eval.json and don't need recomputation. The compute-self-eval pipeline runs during prebuild and produces snapshots. Key metrics to mine per computation window: tokens used per phase, tokens for the whole project thus far, number of tasks completed, pressure score (per gad-75/gad-79 definitions), skill invocation counts, framework overhead ratio, loop compliance. These are expensive to compute from raw logs so we gather everything we can during the computation window and store the results permanently.",
+    "impact": "self-eval.json grows over time as an append-only metrics store. Each prebuild adds a new snapshot. Raw logs can rotate freely because the computed values survive independently. The pipeline needs to capture per-phase token counts and pressure scores in addition to current metrics."
+  },
+  {
+    "id": "gad-102",
+    "title": "Skill creation immediately produces an eval project on the site",
+    "summary": "When a skill is created via gad:create-skill, immediately scaffold an eval project for it (`gad eval setup`) and register it on the site. GAD framework skills (skills/commands/agents related to the framework itself) must be labeled as framework-level and require formal evaluation. Non-framework skills used in real workflow still show usage data on the site from trace logs — the data is already being collected. The distinction: framework skills get formal controlled evals, all skills get observational usage data from real work.",
+    "impact": "gad:create-skill workflow now includes `gad eval setup --project <skill-name>` as a mandatory step. Site shows two data types: formal eval scores (controlled) and real-workflow usage metrics (observational). Framework skills are tagged for identification."
+  },
+  {
+    "id": "gad-101",
+    "title": "gad data — CRUD subcommand for site/data/ and data/ JSON pseudo-database",
+    "summary": "Add `gad data list|get|set|add|remove` subcommand for CRUD operations on the JSON files in data/ (repo-level pseudo-db) and site/data/ (site-level static data). Treat it like a local database with CLI access. Examples: `gad data list` shows all collections, `gad data get hypotheses.freedom` reads a specific entry, `gad data set rounds.\"Round 5\".status awaiting_review` updates a field. This replaces manual JSON editing and makes data operations traceable in the log.",
+    "impact": "New CLI subcommand. Skills and agents use `gad data` instead of reading/writing JSON directly. All data mutations are logged, making self-eval metrics more accurate."
+  },
+  {
+    "id": "gad-100",
+    "title": "GAD-specific skill creator built from Anthropic's skill-creator + our artifacts/CLI",
+    "summary": "Install the Anthropic skill-creator (`npx skills add https://github.com/anthropics/skills --skill skill-creator`) and use it to create a GAD-specific derivative. The GAD skill creator knows our planning artifacts (STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml), our CLI commands, our eval framework, and the agentskills.io conventions. It doesn't create more skills for our artifacts — it creates skills tailored to how we work WITH our artifacts and CLI. When 3 sequential CLI commands solve a workflow, the GAD skill creator recognizes that pattern and produces a skill that chains them. merge-skill must reference agentskills.io docs as professional guidance during merges.",
+    "impact": "New skill: gad-skill-creator (in .agents/skills/). Built using the Anthropic skill-creator's references and methodology. merge-skill updated to reference agentskills.io. Skills become lighter as CLI grows."
+  },
+  {
+    "id": "gad-99",
+    "title": "Skills prefer CLI commands but use good judgment — methodology skills are valid",
+    "summary": "Skills should use CLI commands when they exist — `gad eval setup` not manual file creation. But this is judgment, not a rule. Toolless methodology skills are perfectly valid. The goal is to pack utility into the CLI and have skills leverage it, creating a cycle: CLI grows → skills chain commands → overlapping skills get merged → CLI absorbs proven patterns. When 3 sequential commands solve a workflow, that's a skill. But pure instructional skills (like self-eval rubrics or debugging methodology) don't need tooling to be useful or evaluable — we evaluate through rounds.",
+    "impact": "CLI and skills co-evolve. Neither is mandatory. Good judgment about when to use tooling vs methodology. Every new CLI command should be checked against existing skills for replacement opportunities."
+  },
+  {
+    "id": "gad-98",
+    "title": "Remove /gad:join-discord — dead command",
+    "summary": "The /gad:join-discord command is not useful. Remove it from the help reference and skill registry.",
+    "impact": "One fewer command in the help output. No workflow impact."
+  },
+  {
+    "id": "gad-97",
+    "title": "Skills that measure GAD are framework-level, not private",
+    "summary": "trace-analysis and self-eval are public framework skills in .agents/skills/ — they measure GAD itself, which is useful to any GAD user. Private project-local skills (.claude/private-skills/) are reserved for truly project-specific workflow automation that has no value outside the specific repo. Skills don't need tooling to be evaluated — they can be evaluated through rounds by observing whether agents use them effectively. The \"skill invocation gap\" in hook traces is a methodology observation, not a bug to fix.",
+    "impact": "trace-analysis and self-eval moved to .agents/skills/. The private tier (.claude/private-skills/) remains available but only for genuinely project-specific automation. Skill evaluation happens through rounds, not through mandated tooling."
+  },
+  {
+    "id": "gad-96",
+    "title": "Reverse-engineer eval: requirements quality measured by build success",
+    "summary": "The reverse-engineer skill produces requirements from an existing codebase. The only way to know if those requirements are good is to build from them — same methodology as game evals. Eval flow: reverse-engineer a project → agent builds from the generated requirements → score the result against the original. This is a new eval project (reverse-engineer-eval) with its own scoring rubric focused on requirements completeness and fidelity. The reverse-engineer skill should work in conjunction with map-codebase — map gives structural understanding, reverse-engineer distills actionable requirements. If the target has GAD planning docs, those should be consumed as additional signal.",
+    "impact": "New eval project: reverse-engineer-eval. New skill tooling: reverse-engineer + map-codebase integration. The eval for reverse-engineer is inherently two-phase (produce requirements, then build from them) which makes it the first eval that tests a GAD skill rather than a game implementation workflow."
+  },
+  {
+    "id": "gad-95",
+    "title": "GAD self-evaluation — real-world brownfield data from building GAD itself",
+    "summary": "Building GAD + the site IS a GAD project. We have 7 GAD workspaces in this monorepo, 2320+ tool call events across 4 days, 1000+ trace events, 93 decisions, 141 done tasks. This is real brownfield data — not isolated game evals. We should be scoring ourselves per \"round\" of GAD framework development: how well did GAD help us build GAD? Per-round metrics from the trace data (tool mix, commit rhythm, context compactions, skill invocations) become the first brownfield eval that isn't escape-the-dungeon. Every GAD project in the monorepo (grime-time, repub-builder, mb-cli-framework, etc.) is potential eval data for the framework.",
+    "impact": "New data source for the site: real-world GAD usage metrics alongside the controlled game evals. The landing page should show both: \"here's how 3 workflows compare on a game\" AND \"here's how GAD performs on real multi-project work.\" This is the most credible evidence for or against GAD because there's no cherry-picking — it's our actual work."
+  },
   {
     "id": "gad-94",
     "title": ".agents/ convention extended — agents/ and commands/ should follow the same cross-client pattern as skills/",
@@ -8532,6 +8658,69 @@ export interface SearchEntry {
  */
 export const SEARCH_INDEX: SearchEntry[] = [
   {
+    "id": "gad-103",
+    "title": "Computed trace metrics are long-lived — raw logs are capped",
+    "kind": "decision",
+    "href": "/decisions#gad-103",
+    "body": "gad-103 computed trace metrics are long-lived — raw logs are capped raw trace logs (.gad-log/*.jsonl, .trace-events.jsonl) have caps (1000 events for trace, daily rotation for gad-log). but computed/mined values from those logs are long-lived static data — once computed, they persist in site/data/self-eval.json and don't need recomputation. the compute-self-eval pipeline runs during prebuild and produces snapshots. key metrics to mine per computation window: token"
+  },
+  {
+    "id": "gad-102",
+    "title": "Skill creation immediately produces an eval project on the site",
+    "kind": "decision",
+    "href": "/decisions#gad-102",
+    "body": "gad-102 skill creation immediately produces an eval project on the site when a skill is created via gad:create-skill, immediately scaffold an eval project for it (`gad eval setup`) and register it on the site. gad framework skills (skills/commands/agents related to the framework itself) must be labeled as framework-level and require formal evaluation. non-framework skills used in real workflow still show usage data on the site from trace logs — the data is already bei"
+  },
+  {
+    "id": "gad-101",
+    "title": "gad data — CRUD subcommand for site/data/ and data/ JSON pseudo-database",
+    "kind": "decision",
+    "href": "/decisions#gad-101",
+    "body": "gad-101 gad data — crud subcommand for site/data/ and data/ json pseudo-database add `gad data list|get|set|add|remove` subcommand for crud operations on the json files in data/ (repo-level pseudo-db) and site/data/ (site-level static data). treat it like a local database with cli access. examples: `gad data list` shows all collections, `gad data get hypotheses.freedom` reads a specific entry, `gad data set rounds.\"round 5\".status awaiting_review` updates a field. this replace"
+  },
+  {
+    "id": "gad-100",
+    "title": "GAD-specific skill creator built from Anthropic's skill-creator + our artifacts/CLI",
+    "kind": "decision",
+    "href": "/decisions#gad-100",
+    "body": "gad-100 gad-specific skill creator built from anthropic's skill-creator + our artifacts/cli install the anthropic skill-creator (`npx skills add https://github.com/anthropics/skills --skill skill-creator`) and use it to create a gad-specific derivative. the gad skill creator knows our planning artifacts (state.xml, task-registry.xml, decisions.xml), our cli commands, our eval framework, and the agentskills.io conventions. it doesn't create more skills for our artifacts — it creates skill"
+  },
+  {
+    "id": "gad-99",
+    "title": "Skills prefer CLI commands but use good judgment — methodology skills are valid",
+    "kind": "decision",
+    "href": "/decisions#gad-99",
+    "body": "gad-99 skills prefer cli commands but use good judgment — methodology skills are valid skills should use cli commands when they exist — `gad eval setup` not manual file creation. but this is judgment, not a rule. toolless methodology skills are perfectly valid. the goal is to pack utility into the cli and have skills leverage it, creating a cycle: cli grows → skills chain commands → overlapping skills get merged → cli absorbs proven patterns. when 3 sequential commands solve a workf"
+  },
+  {
+    "id": "gad-98",
+    "title": "Remove /gad:join-discord — dead command",
+    "kind": "decision",
+    "href": "/decisions#gad-98",
+    "body": "gad-98 remove /gad:join-discord — dead command the /gad:join-discord command is not useful. remove it from the help reference and skill registry."
+  },
+  {
+    "id": "gad-97",
+    "title": "Skills that measure GAD are framework-level, not private",
+    "kind": "decision",
+    "href": "/decisions#gad-97",
+    "body": "gad-97 skills that measure gad are framework-level, not private trace-analysis and self-eval are public framework skills in .agents/skills/ — they measure gad itself, which is useful to any gad user. private project-local skills (.claude/private-skills/) are reserved for truly project-specific workflow automation that has no value outside the specific repo. skills don't need tooling to be evaluated — they can be evaluated through rounds by observing whether ag"
+  },
+  {
+    "id": "gad-96",
+    "title": "Reverse-engineer eval: requirements quality measured by build success",
+    "kind": "decision",
+    "href": "/decisions#gad-96",
+    "body": "gad-96 reverse-engineer eval: requirements quality measured by build success the reverse-engineer skill produces requirements from an existing codebase. the only way to know if those requirements are good is to build from them — same methodology as game evals. eval flow: reverse-engineer a project → agent builds from the generated requirements → score the result against the original. this is a new eval project (reverse-engineer-eval) with its own scoring rubric focused on "
+  },
+  {
+    "id": "gad-95",
+    "title": "GAD self-evaluation — real-world brownfield data from building GAD itself",
+    "kind": "decision",
+    "href": "/decisions#gad-95",
+    "body": "gad-95 gad self-evaluation — real-world brownfield data from building gad itself building gad + the site is a gad project. we have 7 gad workspaces in this monorepo, 2320+ tool call events across 4 days, 1000+ trace events, 93 decisions, 141 done tasks. this is real brownfield data — not isolated game evals. we should be scoring ourselves per \"round\" of gad framework development: how well did gad help us build gad? per-round metrics from the trace data (tool mix, commit rhythm"
+  },
+  {
     "id": "gad-94",
     "title": ".agents/ convention extended — agents/ and commands/ should follow the same cross-client pattern as skills/",
     "kind": "decision",
@@ -10975,6 +11164,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "reverse-engineer gad:reverse-engineer analyze any codebase (local path or github url) and produce gad planning docs for clean-room reimplementation. removes dependencies by capturing requirements, not code."
   },
   {
+    "id": "self-eval",
+    "title": "self-eval",
+    "kind": "skill",
+    "href": "/skills/self-eval",
+    "body": "self-eval self-eval score a round of gad development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics."
+  },
+  {
     "id": "session",
     "title": "gad:session",
     "kind": "skill",
@@ -10994,6 +11190,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/task-checkpoint",
     "body": "task-checkpoint gad:task-checkpoint verify planning doc updates before proceeding to the next task. called between tasks during execute-phase to enforce per-task tracking. checks task-registry.xml and state.xml are current."
+  },
+  {
+    "id": "trace-analysis",
+    "title": "trace-analysis",
+    "kind": "skill",
+    "href": "/skills/trace-analysis",
+    "body": "trace-analysis trace-analysis analyze gad trace data (.gad-log/ jsonl + .trace-events.jsonl) to produce usage reports — tool mix, skill invocations, commit rhythm, context compactions, per-project breakdowns."
   },
   {
     "id": "verify-phase",

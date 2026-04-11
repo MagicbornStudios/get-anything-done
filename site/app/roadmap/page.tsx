@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Rocket, Flame, ArrowRight, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import { ROUND_SUMMARIES, EVAL_RUNS, TASK_PRESSURE, type EvalRunRecord } from "@/lib/eval-data";
 import { HypothesisTracksChart, type HypothesisTrackPoint } from "@/components/charts/HypothesisTracksChart";

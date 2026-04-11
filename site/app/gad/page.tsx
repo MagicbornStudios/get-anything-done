@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Bot, FileText, Gauge, Package, Sparkles, Terminal, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import {
   AGENTS,

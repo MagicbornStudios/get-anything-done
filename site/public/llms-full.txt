@@ -2,12 +2,12 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-10T16:47:05.068Z
+Generated: 2026-04-10T22:16:54.948Z
 
 
 ---
 
-# Skills (30)
+# Skills (32)
 
 ## gad:add-todo
 id: add-todo
@@ -2319,6 +2319,10 @@ cat .agents/skills/<skill-b>/SKILL.md
 
 Write down the answer to this question for yourself: **"What can each of these skills do that the other cannot?"** If the answer is "nothing," they are merge candidates. If there is a real distinction, document it as a comment on both and do NOT merge.
 
+### Step 1b — Consult agentskills.io guidance
+
+Before drafting the merge, check the agentskills.io standard (https://agentskills.io/home) for professional guidance on skill structure, naming, and interoperability. The Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf, decision gad-70) is also canonical reference. Use these as the quality bar — the merged skill should meet or exceed the standards described in both documents.
+
 ### Step 2 — Draft the merged skill
 
 Create a new SKILL.md at `.agents/skills/<merged-name>/SKILL.md`. The merged name should be:
@@ -3574,6 +3578,81 @@ Copy REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml into the eval 
 6. No source code was copied — only requirements and architecture
 
 
+## self-eval
+id: self-eval
+description: Score a round of GAD development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics.
+origin: human-authored
+
+
+# self-eval
+
+Score how well GAD performed on its own development. This is the brownfield eval that uses real work data, not isolated game experiments.
+
+## Context
+
+We use GAD to build GAD. 7 workspaces, 93+ decisions, 141+ completed tasks, 2300+ traced tool calls. This is the most honest test of whether GAD helps or hurts productivity — no cherry-picking, no controlled conditions, just actual work.
+
+## Dimensions (rubric)
+
+### 1. Framework overhead ratio (0.0 – 1.0)
+What percentage of tool calls target .planning/ files vs source code?
+- < 15% overhead = 1.0 (framework stays out of the way)
+- 15-25% = 0.7 (acceptable)
+- 25-40% = 0.4 (concerning)
+- > 40% = 0.1 (framework is the bottleneck)
+
+### 2. Loop compliance (0.0 – 1.0)
+How many sessions follow the GAD loop? (snapshot → work → update docs → commit)
+- Check: does each session start with `gad snapshot`?
+- Check: are planning docs updated before or with each commit?
+- Score = compliant sessions / total sessions
+
+### 3. Planning doc freshness (0.0 – 1.0)
+Are STATE.xml and TASK-REGISTRY.xml current?
+- Check: last-updated timestamp vs last commit date
+- Check: next-action describes actual current state
+- Check: task statuses match git history (done tasks have commits)
+
+### 4. Decision capture rate (0.0 – 1.0)
+Are decisions being captured as they happen?
+- Count decisions created per session vs decisions implied by changes
+- Check: do decisions reference the context that created them?
+
+### 5. Cross-project coherence (0.0 – 1.0)
+Do the 7 workspaces maintain consistent state?
+- Check: are all workspace STATE.xml files current?
+- Check: does the global workspace reflect all sub-project states?
+- Check: are decisions in the right project (not leaked to global)?
+
+### 6. Delivery velocity (qualitative)
+What shipped per round? Not a numeric score — a narrative:
+- Features shipped
+- Bugs fixed
+- Decisions made
+- Evals run
+- Site pages published
+
+## How to compute
+
+1. Run trace-analysis skill first to get raw metrics
+2. Parse git log for the round's date range
+3. Read all workspace STATE.xml files
+4. Compute each dimension score
+5. Produce a structured report with evidence
+
+## Output
+
+SELF-EVAL-ROUND-N.md in .planning/ with:
+- Per-dimension scores with evidence
+- Aggregate score (weighted)
+- Comparison to previous rounds
+- Actionable findings (what to improve)
+
+## Integration with the site
+
+Self-eval reports should appear alongside game eval reports on the landing page. The "Results" section should show both controlled (game evals) and real-world (self-eval) data. This is what makes the Freedom hypothesis credible — we're not just testing on toys.
+
+
 ## gad:session
 id: session
 description: Save and restore full planning context across sessions — creates a handoff file when pausing and restores from it when resuming. Use this skill when the user is about to stop work mid-phase, wants to hand off to a new context window, is starting a new session and needs to orient fully, or when gad:check-todos alone isn't enough because there's in-progress work, unresolved decisions, or active blockers that aren't captured in the living planning docs. Essential for the autonomous execution loop — call it at pause and resume to maintain continuity.
@@ -3987,6 +4066,72 @@ for each task in phase:
 ## Why this matters
 
 Eval v2 showed 34 tasks completed with 0 per-task commits and 0 state updates. The agent batched everything at the end. This checkpoint prevents that by making step 5 a hard gate.
+
+
+## trace-analysis
+id: trace-analysis
+description: Analyze GAD trace data (.gad-log/ JSONL + .trace-events.jsonl) to produce usage reports — tool mix, skill invocations, commit rhythm, context compactions, per-project breakdowns.
+origin: human-authored
+
+
+# trace-analysis
+
+Analyze the trace data that GAD hooks capture during every session. Produces structured reports showing how GAD is actually being used across all projects in this monorepo.
+
+## Data sources
+
+1. **`.planning/.gad-log/*.jsonl`** — Tool call log from the tool-trace.js hook. One file per day. Fields: ts, tool, session_id, input_summary, gad_command, agent_type, skill.
+2. **`.planning/.trace-events.jsonl`** — Trace events from gad-trace-hook.cjs. Fields: event_type (tool_use, skill_invocation, subagent_spawn, file_mutation), seq, tool, inputs, outputs.
+3. **`vendor/get-anything-done/.planning/.trace-events.jsonl`** — GAD project-specific trace events (1000 event max with rotation).
+
+## What to produce
+
+### Per-session report
+```
+Session: <session_id>
+Duration: <first_event_ts> → <last_event_ts>
+Tool calls: <count> (Read: N, Edit: N, Bash: N, Grep: N, Agent: N, Skill: N)
+GAD CLI calls: <count> (snapshot: N, state: N, tasks: N, decisions: N)
+Skills invoked: <list with counts>
+Subagents spawned: <count> (types: ...)
+Files mutated: <count> (created: N, edited: N)
+Commits: <count from git log in time range>
+```
+
+### Per-day report
+Aggregate of all sessions that day. Same metrics plus:
+- Projects touched (from file paths in mutations)
+- Decision count delta (from DECISIONS.xml git diff)
+- Task completion rate
+
+### Per-round report (the self-eval)
+A "round" of GAD development = a milestone or sprint. Aggregate:
+- Total sessions, total tool calls, total tokens (if available)
+- Skill usage distribution — which skills are used, which are never invoked
+- GAD loop compliance — how many sessions start with `gad snapshot`?
+- Planning doc update rate — are STATE.xml and TASK-REGISTRY.xml updated per commit?
+- Ratio of framework overhead to implementation (Read/Edit on .planning/ files vs source files)
+
+## How to run
+
+```
+# Analyze today's trace data
+Read .planning/.gad-log/2026-04-10.jsonl, count and categorize events.
+
+# Analyze all trace data
+Read all files in .planning/.gad-log/, aggregate across days.
+
+# Check GAD loop compliance
+For each session, check: did it start with a gad snapshot call? Did it update planning docs before committing?
+```
+
+## Output format
+
+Structured markdown report. Can be rendered on the site under /data or /methodology.
+
+## Future: CLI integration
+
+When stable, this should become `gad trace report` CLI command with the same analysis logic available programmatically.
 
 
 ## gad:verify-phase
@@ -4637,7 +4782,97 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (93)
+# Decisions (102)
+
+## gad-103: Computed trace metrics are long-lived — raw logs are capped
+
+### Summary
+
+Raw trace logs (.gad-log/*.jsonl, .trace-events.jsonl) have caps (1000 events for trace, daily rotation for gad-log). But computed/mined values from those logs are long-lived static data — once computed, they persist in site/data/self-eval.json and don't need recomputation. The compute-self-eval pipeline runs during prebuild and produces snapshots. Key metrics to mine per computation window: tokens used per phase, tokens for the whole project thus far, number of tasks completed, pressure score (per gad-75/gad-79 definitions), skill invocation counts, framework overhead ratio, loop compliance. These are expensive to compute from raw logs so we gather everything we can during the computation window and store the results permanently.
+
+### Impact
+
+self-eval.json grows over time as an append-only metrics store. Each prebuild adds a new snapshot. Raw logs can rotate freely because the computed values survive independently. The pipeline needs to capture per-phase token counts and pressure scores in addition to current metrics.
+
+## gad-102: Skill creation immediately produces an eval project on the site
+
+### Summary
+
+When a skill is created via gad:create-skill, immediately scaffold an eval project for it (`gad eval setup`) and register it on the site. GAD framework skills (skills/commands/agents related to the framework itself) must be labeled as framework-level and require formal evaluation. Non-framework skills used in real workflow still show usage data on the site from trace logs — the data is already being collected. The distinction: framework skills get formal controlled evals, all skills get observational usage data from real work.
+
+### Impact
+
+gad:create-skill workflow now includes `gad eval setup --project <skill-name>` as a mandatory step. Site shows two data types: formal eval scores (controlled) and real-workflow usage metrics (observational). Framework skills are tagged for identification.
+
+## gad-101: gad data — CRUD subcommand for site/data/ and data/ JSON pseudo-database
+
+### Summary
+
+Add `gad data list|get|set|add|remove` subcommand for CRUD operations on the JSON files in data/ (repo-level pseudo-db) and site/data/ (site-level static data). Treat it like a local database with CLI access. Examples: `gad data list` shows all collections, `gad data get hypotheses.freedom` reads a specific entry, `gad data set rounds."Round 5".status awaiting_review` updates a field. This replaces manual JSON editing and makes data operations traceable in the log.
+
+### Impact
+
+New CLI subcommand. Skills and agents use `gad data` instead of reading/writing JSON directly. All data mutations are logged, making self-eval metrics more accurate.
+
+## gad-100: GAD-specific skill creator built from Anthropic's skill-creator + our artifacts/CLI
+
+### Summary
+
+Install the Anthropic skill-creator (`npx skills add https://github.com/anthropics/skills --skill skill-creator`) and use it to create a GAD-specific derivative. The GAD skill creator knows our planning artifacts (STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml), our CLI commands, our eval framework, and the agentskills.io conventions. It doesn't create more skills for our artifacts — it creates skills tailored to how we work WITH our artifacts and CLI. When 3 sequential CLI commands solve a workflow, the GAD skill creator recognizes that pattern and produces a skill that chains them. merge-skill must reference agentskills.io docs as professional guidance during merges.
+
+### Impact
+
+New skill: gad-skill-creator (in .agents/skills/). Built using the Anthropic skill-creator's references and methodology. merge-skill updated to reference agentskills.io. Skills become lighter as CLI grows.
+
+## gad-99: Skills prefer CLI commands but use good judgment — methodology skills are valid
+
+### Summary
+
+Skills should use CLI commands when they exist — `gad eval setup` not manual file creation. But this is judgment, not a rule. Toolless methodology skills are perfectly valid. The goal is to pack utility into the CLI and have skills leverage it, creating a cycle: CLI grows → skills chain commands → overlapping skills get merged → CLI absorbs proven patterns. When 3 sequential commands solve a workflow, that's a skill. But pure instructional skills (like self-eval rubrics or debugging methodology) don't need tooling to be useful or evaluable — we evaluate through rounds.
+
+### Impact
+
+CLI and skills co-evolve. Neither is mandatory. Good judgment about when to use tooling vs methodology. Every new CLI command should be checked against existing skills for replacement opportunities.
+
+## gad-98: Remove /gad:join-discord — dead command
+
+### Summary
+
+The /gad:join-discord command is not useful. Remove it from the help reference and skill registry.
+
+### Impact
+
+One fewer command in the help output. No workflow impact.
+
+## gad-97: Skills that measure GAD are framework-level, not private
+
+### Summary
+
+trace-analysis and self-eval are public framework skills in .agents/skills/ — they measure GAD itself, which is useful to any GAD user. Private project-local skills (.claude/private-skills/) are reserved for truly project-specific workflow automation that has no value outside the specific repo. Skills don't need tooling to be evaluated — they can be evaluated through rounds by observing whether agents use them effectively. The "skill invocation gap" in hook traces is a methodology observation, not a bug to fix.
+
+### Impact
+
+trace-analysis and self-eval moved to .agents/skills/. The private tier (.claude/private-skills/) remains available but only for genuinely project-specific automation. Skill evaluation happens through rounds, not through mandated tooling.
+
+## gad-96: Reverse-engineer eval: requirements quality measured by build success
+
+### Summary
+
+The reverse-engineer skill produces requirements from an existing codebase. The only way to know if those requirements are good is to build from them — same methodology as game evals. Eval flow: reverse-engineer a project → agent builds from the generated requirements → score the result against the original. This is a new eval project (reverse-engineer-eval) with its own scoring rubric focused on requirements completeness and fidelity. The reverse-engineer skill should work in conjunction with map-codebase — map gives structural understanding, reverse-engineer distills actionable requirements. If the target has GAD planning docs, those should be consumed as additional signal.
+
+### Impact
+
+New eval project: reverse-engineer-eval. New skill tooling: reverse-engineer + map-codebase integration. The eval for reverse-engineer is inherently two-phase (produce requirements, then build from them) which makes it the first eval that tests a GAD skill rather than a game implementation workflow.
+
+## gad-95: GAD self-evaluation — real-world brownfield data from building GAD itself
+
+### Summary
+
+Building GAD + the site IS a GAD project. We have 7 GAD workspaces in this monorepo, 2320+ tool call events across 4 days, 1000+ trace events, 93 decisions, 141 done tasks. This is real brownfield data — not isolated game evals. We should be scoring ourselves per "round" of GAD framework development: how well did GAD help us build GAD? Per-round metrics from the trace data (tool mix, commit rhythm, context compactions, skill invocations) become the first brownfield eval that isn't escape-the-dungeon. Every GAD project in the monorepo (grime-time, repub-builder, mb-cli-framework, etc.) is potential eval data for the framework.
+
+### Impact
+
+New data source for the site: real-world GAD usage metrics alongside the controlled game evals. The landing page should show both: "here's how 3 workflows compare on a game" AND "here's how GAD performs on real multi-project work." This is the most credible evidence for or against GAD because there's no cherry-picking — it's our actual work.
 
 ## gad-94: .agents/ convention extended — agents/ and commands/ should follow the same cross-client pattern as skills/
 

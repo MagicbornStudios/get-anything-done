@@ -4,7 +4,7 @@ import { Player } from "@remotion/player";
 import Link from "next/link";
 import { Play, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import { GadExplainer } from "@/remotion/GadExplainer";
 

@@ -1,0 +1,21 @@
+{
+  "type": "eval",
+  "name": "gad-skill-creator-eval",
+  "description": "Evaluates the gad-skill-creator skill — measures whether skills created using this methodology produce better agent outcomes than ad-hoc skill creation",
+  "eval_mode": "greenfield",
+  "workflow": "gad",
+  "baseline": null,
+  "trace": true,
+  "template": "template/",
+  "compare_to": [],
+  "framework_skill": true,
+  "scoring": {
+    "weights": {
+      "skill_quality": 0.25,
+      "eval_scaffolded": 0.15,
+      "cli_usage": 0.15,
+      "attribution_tagged": 0.10,
+      "human_review": 0.35
+    }
+  }
+}

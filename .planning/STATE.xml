@@ -4,62 +4,50 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>SITE FIXES — NON-NEGOTIABLE BEFORE ANYTHING ELSE. Session 2026-04-10 ended with 5+ broken promises due to worktree branch confusion (now resolved — main branch clean, no worktrees, 32 runs, 19 playable). NEXT SESSION MUST RUN gad snapshot FIRST per session-discipline skill, then execute these in order:
+  <next-action>Session 2026-04-10 — massive session. 11 decisions (gad-95→gad-107), 5 new skills, 4 eval projects, self-eval pipeline, site fixes + shadcn.
 
-=== PRIORITY 1: LANDING PAGE FIXES (asked 5+ times, never shipped) ===
+=== SKILLS CREATED THIS SESSION ===
+1. trace-analysis (.agents/skills/) — analyze .gad-log/ trace data
+2. self-eval (.agents/skills/) — score GAD development rounds
+3. gad-skill-creator (.agents/skills/) — create GAD-tailored skills using Anthropic skill-creator methodology + GAD CLI/artifacts
+4. eval-skill-install (.agents/skills/) — install skills into eval templates, run with/without comparisons
+5. reverse-engineer-eval design (in .claude/private-skills/ → moved concept to evals/)
 
-(A) EXPERIMENT LOG (was "Rounds" component, rename to ExperimentLog):
-- Paginate by round with project + hypothesis filters
-- Keyword search across log entries (narrow search just for this section)
-- Tags + references linking to source evals/findings
-- Show TBD for unreviewed rounds
-- Filter by project (escape-the-dungeon, gad-explainer-video, etc)
-- Filter by hypothesis (freedom, CSH, emergent-evolution, etc)
-- Round conclusions per round (not just "Round 3 results" forever)
+=== EVAL PROJECTS SCAFFOLDED (via gad eval setup CLI) ===
+1. reverse-engineer-eval — two targets: grime-time + visualeditor-payloadcms
+2. gad-skill-creator-eval — measures skill creation quality
+3. eval-skill-install-eval — measures skill installation + comparison workflow
 
-(B) RESULTS SECTION: Must update dynamically per round, not hardcoded to Round 3. Same filtering as experiment log. Per-round conclusions.
+=== DECISIONS (gad-95 through gad-107) ===
+95: Self-evaluation from real brownfield data
+96: Reverse-engineer eval — two-phase methodology
+97: trace-analysis + self-eval are public framework skills
+98: Remove /gad:join-discord
+99: Skills prefer CLI but use judgment — methodology skills valid
+100: GAD skill creator from Anthropic base
+101: gad data CRUD (DEFERRED per gad-106)
+102: Skill creation → immediate eval project + framework labeling
+103: Computed trace metrics long-lived, raw logs capped
+104: Task-skill-agent attribution as formal tags in artifacts
+105: Enhance workflow — review tasks for repetitive patterns → script/CLI/skill
+106: Defer gad data CLI — keep it light
+107: gad eval --input for skill installation into eval projects
 
-(C) HOVER INFO PANELS on eval components in Playable Archive — use shadcn HoverCard or Popover. On hover of any eval badge/card, show detailed panel with tokens, duration, hypothesis, condition, trace status, review status.
+=== SELF-EVAL (real data) ===
+2403 events | 180 tasks (163 done) | 102 decisions | 18.2% overhead | 80% loop compliance
 
-(D) LOOP SECTION pagination showing different hypothesis loops and how they evolve.
+=== SITE FIXES ===
+ExperimentLog, RoundResults, HoverCard, Mermaid diagrams, shadcn (12 components + tw-animate-css), zustand store, data/*.json, hook error handling, self-eval pipeline with append-only snapshots
 
-=== PRIORITY 2: TECHNICAL STACK ===
-
-(A) Install zustand + zustand/immer for shared state (stop prop drilling + custom events). Use for filter state shared between chart, playable archive, experiment log, results.
-
-(B) Install react-query (@tanstack/react-query) for any client-side data fetching + caching if needed.
-
-(C) Install lucide-animated icons: pnpm dlx shadcn@latest registry add @lucide-animated. Use animated icons throughout the site for visual energy.
-
-(D) Use shadcn components properly: HoverCard for info panels, Popover for filter dropdowns, Dialog for modals, Charts for interactive graphs. Stop reinventing.
-
-(E) Rename Rounds component to ExperimentLog everywhere.
-
-=== PRIORITY 3: DATA ARCHITECTURE ===
-
-(A) data/ IS the pseudo-database. Move ALL hardcoded site data into data/*.json:
-- data/hypotheses.json — hypothesis definitions, status, evidence summary
-- data/rounds.json — round conclusions, findings references, status
-- data/eval-conditions.json — the 5-condition matrix descriptions
-- data/graph-series.json — precomputed chart data points
-- data/media.json — video/image references for the site
-Keep existing: open-questions.json, bugs.json, glossary.json, feature-requests.json
-
-(B) data/ should also reference media (videos, images). Media FILES live in starter repos or external URLs (NOT in the GAD repo to avoid bloat). data/media.json holds URLs + metadata.
-
-(C) Remove broken screenshot references from GitHub starter repo READMEs. The image URLs point at screenshots we deleted from the GAD repo. Remove the img tags.
-
-=== PRIORITY 4: HOOK ERROR HANDLING ===
-
-(A) gad-trace-hook.cjs: create .planning/ dir if it doesn't exist (don't error). The user accepted the hook on install — it should work silently.
-
-(B) Log rotation: keep last 1000 events max in .trace-events.jsonl. Truncate oldest when limit reached. Don't let logs grow unbounded.
-
-(C) Hook error logging: write which hook failed + what the error was to a separate .claude/hooks.log with timestamps. Don't just print "hook error" — say what happened.
-
-=== CONTEXT ===
-
-Round 5: 19 playable builds deployed. TRACE data is stub-only (no behavioral events). Feature request anthropics/claude-code#46279 submitted for worktree hook inheritance. Clone-based eval runner exists (scripts/eval-clone-run.sh) but untested. User has NOT played round 5 builds yet — waiting for site fixes first. Do NOT run more evals until site is fixed and user has reviewed round 5. Follow the session-discipline skill. Follow the GAD loop. Do NOT use worktree isolation for subagents — use the clone-based approach or run changes directly on main.</next-action>
+=== NEXT SESSION ===
+1. Build landing page component for self-eval display
+2. First reverse-engineer eval run (grime-time target)
+3. Make gad:merge-skill and gad:create-skill invokable as slash commands
+4. Remove /gad:join-discord
+5. Add gad rounds CLI command
+6. User plays round 5 builds
+7. Playable.tsx + Nav.tsx + RoundResults.tsx refactored by user — respect subcomponent structure
+8. Test gad-skill-creator by using it to create the next skill we need</next-action>
   <last-updated>2026-04-10</last-updated>
-  <sink-compiled sink="apps/portfolio/content/docs/get-anything-done/planning/" at="2026-04-07T20:03:13.950Z" />
+  <sink-compiled sink="apps/portfolio/content/docs/get-anything-done/planning/" at="2026-04-10T18:21:34.402Z" />
 </state>

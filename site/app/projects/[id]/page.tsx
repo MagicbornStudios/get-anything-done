@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Download, ExternalLink, FileCode2, Gamepad2, Package, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import {
   EVAL_PROJECTS,

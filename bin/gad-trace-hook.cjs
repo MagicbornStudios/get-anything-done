@@ -100,7 +100,7 @@ function readNextSeq(projectRoot) {
   try {
     fs.writeFileSync(seqFile, String(next));
   } catch (err) {
-    process.stderr.write(`gad-trace-hook: failed to write seq file: ${err.message}\n`);
+    logHookError('gad-trace-hook:write-seq', err);
   }
   return next;
 }
@@ -128,9 +128,58 @@ function readStdin() {
   });
 }
 
+/** Max events before log rotation truncates the oldest */
+const MAX_TRACE_EVENTS = 1000;
+
 function appendEvent(projectRoot, event) {
   const traceFile = getTraceFile(projectRoot);
   fs.appendFileSync(traceFile, JSON.stringify(event) + '\n');
+
+  // Log rotation: truncate oldest events when over limit
+  try {
+    const content = fs.readFileSync(traceFile, 'utf8');
+    const lines = content.split('\n').filter(Boolean);
+    if (lines.length > MAX_TRACE_EVENTS) {
+      const trimmed = lines.slice(lines.length - MAX_TRACE_EVENTS);
+      fs.writeFileSync(traceFile, trimmed.join('\n') + '\n');
+    }
+  } catch {
+    // Best-effort rotation — don't fail the hook
+  }
+}
+
+/**
+ * Write a descriptive error to ~/.claude/hooks.log with timestamp.
+ * Falls back to stderr if the log file can't be written.
+ */
+function logHookError(hookName, error) {
+  const timestamp = new Date().toISOString();
+  const msg = `[${timestamp}] ${hookName}: ${error.message || error}\n`;
+  process.stderr.write(msg);
+
+  try {
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    if (!homeDir) return;
+    const claudeDir = path.join(homeDir, '.claude');
+    if (!fs.existsSync(claudeDir)) {
+      fs.mkdirSync(claudeDir, { recursive: true });
+    }
+    const logFile = path.join(claudeDir, 'hooks.log');
+    fs.appendFileSync(logFile, msg);
+
+    // Keep hooks.log from growing unbounded — cap at 100KB
+    try {
+      const stat = fs.statSync(logFile);
+      if (stat.size > 100 * 1024) {
+        const content = fs.readFileSync(logFile, 'utf8');
+        const lines = content.split('\n');
+        const trimmed = lines.slice(Math.floor(lines.length / 2));
+        fs.writeFileSync(logFile, trimmed.join('\n'));
+      }
+    } catch { /* best effort */ }
+  } catch {
+    // Can't write to log file — stderr is already written, move on
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -244,7 +293,7 @@ function maybeSkillInvocationEvent(projectRoot, seq) {
   try {
     fs.writeFileSync(lastSkillFile, currentSkill || '');
   } catch (err) {
-    process.stderr.write(`gad-trace-hook: failed to write last-skill file: ${err.message}\n`);
+    logHookError('gad-trace-hook:write-last-skill', err);
   }
 
   // Only emit an event if there's actually a new active skill. Transitioning
@@ -283,7 +332,7 @@ async function main() {
     }
     payload = JSON.parse(raw);
   } catch (err) {
-    process.stderr.write(`gad-trace-hook: failed to parse stdin: ${err.message}\n`);
+    logHookError('gad-trace-hook:parse-stdin', err);
     return;
   }
 
@@ -322,11 +371,11 @@ async function main() {
     }
   } catch (err) {
     // Never let the hook crash the main agent. Log and exit 0.
-    process.stderr.write(`gad-trace-hook: hook handler failed: ${err.message}\n`);
+    logHookError('gad-trace-hook:handler', err);
   }
 }
 
 main().catch((err) => {
-  process.stderr.write(`gad-trace-hook: unhandled error: ${err.message}\n`);
+  logHookError('gad-trace-hook:unhandled', err);
   // Still exit 0 so the main tool call succeeds.
 });

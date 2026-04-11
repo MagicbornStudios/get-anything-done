@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Bug, Github } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/Nav";
+import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import { BUGS, BUGS_UPDATED, type BugRecord } from "@/lib/eval-data";
 import { Ref } from "@/components/refs/Ref";

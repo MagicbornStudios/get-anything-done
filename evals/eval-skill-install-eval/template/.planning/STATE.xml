@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<state>
+  <current-phase></current-phase>
+  <current-plan></current-plan>
+  <milestone>eval-skill-install-eval-eval</milestone>
+  <status>not-started</status>
+  <next-action>Read REQUIREMENTS.xml. Use /gad:discuss-phase to collect requirements and open questions before planning phases.</next-action>
+  <last-updated>2026-04-10</last-updated>
+</state>

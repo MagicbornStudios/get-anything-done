@@ -2313,8 +2313,50 @@ function main() {
     searchIndex,
   });
   auditPlayable();
+  computeSelfEval();
+  validateSiteData();
 
   console.log("=== done ===");
+}
+
+/**
+ * Validate site/data/*.json files exist and parse correctly.
+ * These are static, hand-curated data files for the landing page
+ * (hypotheses, rounds metadata, eval conditions, media refs).
+ * Unlike eval-data.generated.ts, these are NOT auto-generated —
+ * they're imported directly by components as JSON modules.
+ *
+ * Boundary:
+ *   COMPUTED (auto-generated): lib/eval-data.generated.ts, lib/catalog.generated.ts
+ *   STATIC  (hand-curated):    site/data/*.json, data/*.json (repo-level pseudo-db)
+ */
+function computeSelfEval() {
+  try {
+    execSync("node scripts/compute-self-eval.mjs", { cwd: SITE_ROOT, stdio: "inherit" });
+  } catch (err) {
+    console.warn("  [self-eval] failed:", err.message);
+  }
+}
+
+function validateSiteData() {
+  const siteDataDir = path.join(SITE_ROOT, "data");
+  if (!fs.existsSync(siteDataDir)) {
+    console.log("  [site-data] no site/data/ directory — skipping validation");
+    return;
+  }
+  const files = fs.readdirSync(siteDataDir).filter((f) => f.endsWith(".json"));
+  let valid = 0;
+  let invalid = 0;
+  for (const f of files) {
+    try {
+      JSON.parse(fs.readFileSync(path.join(siteDataDir, f), "utf8"));
+      valid++;
+    } catch (err) {
+      console.warn(`  [site-data] INVALID JSON: ${f} — ${err.message}`);
+      invalid++;
+    }
+  }
+  console.log(`  [site-data] validated ${valid} file(s)${invalid ? `, ${invalid} INVALID` : ""}`);
 }
 
 main();
