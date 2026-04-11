@@ -6,46 +6,50 @@
       "days": 5
     },
     "totals": {
-      "events": 2879,
+      "events": 3250,
       "sessions": 5,
-      "gad_cli_calls": 210
+      "gad_cli_calls": 243
     },
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 814
+        "count": 967
       },
       {
         "tool": "unknown",
-        "count": 483
+        "count": 516
       },
       {
         "tool": "Read",
-        "count": 407
+        "count": 501
       },
       {
         "tool": "Edit",
-        "count": 400
+        "count": 436
       },
       {
         "tool": "TaskUpdate",
         "count": 247
       },
       {
+        "tool": "Write",
+        "count": 194
+      },
+      {
         "tool": "TaskCreate",
         "count": 183
       },
       {
-        "tool": "Write",
-        "count": 181
-      },
-      {
         "tool": "Grep",
-        "count": 116
+        "count": 150
       },
       {
         "tool": "Agent",
-        "count": 32
+        "count": 36
+      },
+      {
+        "tool": "Glob",
+        "count": 7
       },
       {
         "tool": "ToolSearch",
@@ -57,10 +61,6 @@
       },
       {
         "tool": "WebSearch",
-        "count": 3
-      },
-      {
-        "tool": "Glob",
         "count": 3
       }
     ],
@@ -83,13 +83,13 @@
       },
       {
         "day": "2026-04-11",
-        "count": 456
+        "count": 827
       }
     ],
     "framework_overhead": {
-      "planning_ops": 212,
-      "source_ops": 863,
-      "ratio": 0.197,
+      "planning_ops": 232,
+      "source_ops": 1003,
+      "ratio": 0.188,
       "score": 0.7
     },
     "loop_compliance": {
@@ -98,16 +98,16 @@
       "score": 0.8
     },
     "gad_cli_breakdown": {
-      "snapshot": 38,
-      "eval": 92,
-      "other": 80
+      "snapshot": 46,
+      "eval": 96,
+      "other": 101
     },
-    "computed_at": "2026-04-11T21:30:48.776Z",
+    "computed_at": "2026-04-11T22:28:04.004Z",
     "tasks": {
-      "done": 163,
-      "planned": 11,
-      "in_progress": 4,
-      "total": 178
+      "done": 166,
+      "planned": 1,
+      "in_progress": 2,
+      "total": 169
     },
     "decisions": 131,
     "phases_pressure": [
@@ -202,7 +202,7 @@
       {
         "phase": "21",
         "tasks_total": 28,
-        "tasks_done": 25,
+        "tasks_done": 26,
         "crosscuts": 14,
         "pressure_score": 56,
         "high_pressure": true
@@ -210,7 +210,7 @@
       {
         "phase": "22",
         "tasks_total": 58,
-        "tasks_done": 44,
+        "tasks_done": 46,
         "crosscuts": 26,
         "pressure_score": 110,
         "high_pressure": true
@@ -333,46 +333,50 @@
         "days": 5
       },
       "totals": {
-        "events": 2879,
+        "events": 3250,
         "sessions": 5,
-        "gad_cli_calls": 210
+        "gad_cli_calls": 243
       },
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 814
+          "count": 967
         },
         {
           "tool": "unknown",
-          "count": 483
+          "count": 516
         },
         {
           "tool": "Read",
-          "count": 407
+          "count": 501
         },
         {
           "tool": "Edit",
-          "count": 400
+          "count": 436
         },
         {
           "tool": "TaskUpdate",
           "count": 247
         },
         {
+          "tool": "Write",
+          "count": 194
+        },
+        {
           "tool": "TaskCreate",
           "count": 183
         },
         {
-          "tool": "Write",
-          "count": 181
-        },
-        {
           "tool": "Grep",
-          "count": 116
+          "count": 150
         },
         {
           "tool": "Agent",
-          "count": 32
+          "count": 36
+        },
+        {
+          "tool": "Glob",
+          "count": 7
         },
         {
           "tool": "ToolSearch",
@@ -384,10 +388,6 @@
         },
         {
           "tool": "WebSearch",
-          "count": 3
-        },
-        {
-          "tool": "Glob",
           "count": 3
         }
       ],
@@ -410,13 +410,13 @@
         },
         {
           "day": "2026-04-11",
-          "count": 456
+          "count": 827
         }
       ],
       "framework_overhead": {
-        "planning_ops": 212,
-        "source_ops": 863,
-        "ratio": 0.197,
+        "planning_ops": 232,
+        "source_ops": 1003,
+        "ratio": 0.188,
         "score": 0.7
       },
       "loop_compliance": {
@@ -425,16 +425,16 @@
         "score": 0.8
       },
       "gad_cli_breakdown": {
-        "snapshot": 38,
-        "eval": 92,
-        "other": 80
+        "snapshot": 46,
+        "eval": 96,
+        "other": 101
       },
-      "computed_at": "2026-04-11T21:30:48.776Z",
+      "computed_at": "2026-04-11T22:28:04.004Z",
       "tasks": {
-        "done": 163,
-        "planned": 11,
-        "in_progress": 4,
-        "total": 178
+        "done": 166,
+        "planned": 1,
+        "in_progress": 2,
+        "total": 169
       },
       "decisions": 131,
       "phases_pressure": [
@@ -529,7 +529,7 @@
         {
           "phase": "21",
           "tasks_total": 28,
-          "tasks_done": 25,
+          "tasks_done": 26,
           "crosscuts": 14,
           "pressure_score": 56,
           "high_pressure": true
@@ -537,7 +537,7 @@
         {
           "phase": "22",
           "tasks_total": 58,
-          "tasks_done": 44,
+          "tasks_done": 46,
           "crosscuts": 26,
           "pressure_score": 110,
           "high_pressure": true

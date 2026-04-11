@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-11T21:30:48.604Z",
+    "generated": "2026-04-11T22:28:03.781Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -3766,10 +3766,10 @@
     {
       "id": "21-23",
       "phaseId": "21",
-      "status": "in-progress",
+      "status": "done",
       "agentId": null,
-      "skill": null,
-      "type": null,
+      "skill": "eval-run",
+      "type": "eval",
       "goal": "Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates.",
       "keywords": [
         "round-4",
@@ -3807,10 +3807,10 @@
     {
       "id": "21-24",
       "phaseId": "21",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "eval",
       "goal": "Run round 1 brownfield experiments. Three conditions using bare v3 baseline + v4 extensions. BLOCKED on portfolio documentation (21-28).",
       "keywords": [
         "round-1",
@@ -4156,10 +4156,10 @@
     {
       "id": "22-22",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a \"tracing gap\" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schema overhaul).",
       "keywords": [
         "per-run",
@@ -4226,10 +4226,10 @@
     {
       "id": "22-26",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math.",
       "keywords": [
         "scoring-weights",
@@ -4288,10 +4288,10 @@
     {
       "id": "22-30",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for GAD evaluation.",
       "keywords": [
         "agent-runtimes",
@@ -4304,10 +4304,10 @@
     {
       "id": "22-31",
       "phaseId": "22",
-      "status": "in-progress",
+      "status": "done",
       "agentId": null,
-      "skill": null,
-      "type": null,
+      "skill": "execute-phase",
+      "type": "site",
       "goal": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content — the scaffold establishes the pattern and the first composition is a placeholder.",
       "keywords": [
         "remotion",
@@ -4581,10 +4581,10 @@
     {
       "id": "22-44",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in Claude → talk conversationally), document everything that breaks, update /contribute with the friction points, remove the \"fresh-clone test still open\" amber warning. Goal: make contribution actually work for a human who has never touched GAD before.",
       "keywords": [
         "contribution",
@@ -4597,10 +4597,10 @@
     {
       "id": "22-45",
       "phaseId": "22",
-      "status": "planned",
+      "status": "done",
       "agentId": null,
-      "skill": null,
-      "type": null,
+      "skill": "execute-phase",
+      "type": "site",
       "goal": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time.",
       "keywords": [
         "remotion",
@@ -4634,10 +4634,10 @@
     {
       "id": "22-47",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). This becomes the reference page every skill-related section of the site cites instead of repeating the content inline.",
       "keywords": [
         "standards",
@@ -4668,10 +4668,10 @@
     {
       "id": "22-49",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a \"collision candidates\" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not yet built — link falls back to a manual-review prompt). Also: a keyword index for every skill so users searching can see what terms trigger each.",
       "keywords": [
         "skill-collision",
@@ -4685,10 +4685,10 @@
     {
       "id": "22-50",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. This is the highest-leverage way to get \"agent reasoning\" signal without Claude Code exposing new hook surfaces.",
       "keywords": [
         "thinking-blocks",
@@ -4719,10 +4719,10 @@
     {
       "id": "22-52",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
-      "type": null,
+      "type": "site",
       "goal": "Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (NOT LLM self-report — that's what skill-creator's Python harness does and it didn't work for us), emits benchmark.json compatible with agentskills.io format. This is the load-bearing piece that lets every GAD skill graduate from experimental to canonical per gad-86. Directly answers programmatic-eval GAPS G2 + the hygiene half of G11.",
       "keywords": [
         "gad-eval-skill",
@@ -4910,7 +4910,7 @@
     {
       "id": "19",
       "title": "Milestone close and v1.1 planning",
-      "status": "planned",
+      "status": "cancelled",
       "goal": "Formally close gad-v1-cli milestone. Run final eval pass across all projects. Define gad-v1.1 milestone scope (domain translators, multi-agent eval, publishing pipeline, reverse-engineer refinement).",
       "outcome": null
     },
@@ -4924,14 +4924,14 @@
     {
       "id": "21",
       "title": "Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield",
-      "status": "active",
+      "status": "done",
       "goal": "Evolve the eval framework to produce trustworthy measurements of agent workflows on creative implementation tasks. Deliver: (1) requirements versioning with v1→v2→v3 history; (2) gate criteria enforcement (game-loop, spell-crafting, UI quality); (3) composite formula v3 with human_review weight 0.30 and low-score caps; (4) preservation contract with gad eval preserve/verify commands and tests/eval-preservation.test.cjs; (5) game/.planning/ layout mandate for all eval conditions; (6) gad worktree management commands; (7) brownfield eval mode with baseline inheritance; (8) three new brownfield eval projects (etd-brownfield-gad/bare/emergent) extending bare v3. Discovered the freedom hypothesis: bare workflow consistently beats GAD on greenfield creative implementation (round 3 human scores: bare v3=0.70, emergent v2=0.50, GAD v8=0.20). Brownfield experiments are next to test whether GAD's overhead pays off on codebase extension.",
       "outcome": null
     },
     {
       "id": "22",
       "title": "Portfolio experiment documentation — hub, per-project, per-run, findings, graphs",
-      "status": "active",
+      "status": "cancelled",
       "goal": "Publish all eval experiment documentation on the portfolio before further experimentation. User wants to showcase the work publicly: hub explaining methodology, per-eval-project pages with version history, per-run detail pages with scores and links to playable builds + source code, per-round experiment summaries, visualizations/graphs comparing conditions over time, requirements version history, decisions index, findings (freedom hypothesis). All compiled into apps/portfolio/content/docs/get-anything-done/evals/ via gad sink pipeline. BLOCKS round 4 and brownfield round 1 per user directive.",
       "outcome": null
     },
@@ -4945,7 +4945,7 @@
     {
       "id": "24",
       "title": "Round 1 brownfield — bare v3 baseline + v4 extensions",
-      "status": "planned",
+      "status": "cancelled",
       "goal": "Run the first brownfield experiment. All three conditions (etd-brownfield-gad/bare/emergent) start from escape-the-dungeon-bare v3 as baseline and extend it with v4 feature requirements. Tests whether GAD's overhead pays off on codebase extension vs fresh creation. This is the experiment that could validate or refute the freedom hypothesis if GAD wins.",
       "outcome": null
     },
@@ -4959,15 +4959,57 @@
     {
       "id": "26",
       "title": "Research-grade visualization + Remotion video compositions",
-      "status": "planned",
+      "status": "done",
       "goal": "Expand the public site from text + tables into interactive visualizations and embedded video explainers. Two tracks: (a) static SVG / React-rendered charts for score comparisons, trigger timelines, agent loops, trace breakdowns — lightweight, ship with every prebuild; (b) Remotion React compositions embedded via @remotion/player (free for teams ≤3, no MP4 export required — plays React frames live in the browser). Video topics to scope: GAD loop walkthrough, a failure-case dissection (v8 broken-crafting with tracing overlay), freedom hypothesis explanation, bare vs emergent workflow emergence comparison, per-eval \"what the agent built for itself\" retrospectives. Compositions reuse existing site React components (SiteHeader, score cards, etc) so video = composable React, no separate asset pipeline. Scaffold landed in phase 22 session 4 (registry, Player wrapper, /videos route, inline embed on per-run pages, v8 dissection placeholder). Authoring real video content blocked on phase 25 landing so we're animating honest data, not v3-era lossy aggregates.",
       "outcome": null
     },
     {
       "id": "27",
       "title": "Structured objective data production for evaluations",
-      "status": "planned",
+      "status": "done",
       "goal": "The eval framework's primary output is no longer \"a score per run\" — it's \"structured data that yields insights.\" Phase 27 ships the data production pipeline that makes that possible. Five tracks: (1) **Structured human review rubric** — replace the single human_review.score number with a dimensions object (playability, ui_polish, mechanics_implementation, ingenuity_requirement_met, stability, etc) and a rubric_version. Each dimension scored and annotated independently so reviewers can disagree about playability without throwing out the rest. Aggregate score is a weighted sum defined in rubric config, keeping current composite math intact. (2) **Automated gate checks** — playwright tests per eval project that boot the built game and programmatically verify G1 (game loop transitions work), G3 (UI has sprites not ASCII), G4 (pressure mechanics observable). Gate status becomes mostly objective; human reviewers only judge what playwright can't check. (3) **Derived metrics from trace events** — tool-use mix (Read vs Edit vs Bash distribution), commit rhythm (time between commits, size distribution), plan-adherence delta (PLAN.md task count vs actually-completed tasks), skill-to-tool ratio, subagent utilization. All computed from trace v4 once phase 25 ships. (4) **Cross-run aggregate queries** — SQL-like queries against the trace dataset: \"average time-to-first-commit by workflow\", \"percent of runs that triggered gad:plan-phase before writing code\", \"distribution of produced-artifact counts for bare runs\". Ships as a `gad eval query` subcommand + a /insights page on the site. (5) **Visualization patterns** — not just more charts, but a discipline: every new metric gets a chart that answers a specific research question, not just shows the number. Divergence scatter already exists; phase 27 adds tool-mix donuts, commit-rhythm timelines, rubric-dimension radar charts, trigger-timeline strips per skill. Phase 27 runs parallel to phase 25 — the rubric work can land against v3 trace data today and get richer inputs when v4 arrives.",
+      "outcome": null
+    },
+    {
+      "id": "28",
+      "title": "/project-market + site architecture overhaul",
+      "status": "planned",
+      "goal": "Ship /project-market as the dedicated eval catalog. All eval projects listed, ETD + explainer featured. Per-project 5-round filtering. Home page lightened. Rubric on project detail pages. Site reusability review. ID format HoverCards sitewide. Gantt chart wired to planning page. Spec at .planning/specs/PROJECT-MARKET-SPEC.md. Decisions: GAD-D-116, GAD-D-119, GAD-D-124, GAD-D-125, GAD-D-130, GAD-D-131, GAD-D-134.",
+      "outcome": null
+    },
+    {
+      "id": "29",
+      "title": "GAD CLI build/release pipeline + operational distinction",
+      "status": "planned",
+      "goal": "Official build/release pipeline for the GAD CLI. Windows binary built locally, Mac/Linux via GitHub Actions. npx install flow. Quick start guide on site. Clear messaging: GAD CLI is operational tooling for the framework, not a coding agent CLI. Decisions: GAD-D-117, GAD-D-123, GAD-D-128, GAD-D-129.",
+      "outcome": null
+    },
+    {
+      "id": "30",
+      "title": "Eval framework v2 — domains, tech stacks, rounds per project",
+      "status": "planned",
+      "goal": "Formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. Rounds per project (not global). Project → eval → round hierarchy in data model and UI. Decisions: GAD-D-88, GAD-D-90, GAD-D-110, GAD-D-111, GAD-D-113, GAD-D-114, GAD-D-121, GAD-D-132.",
+      "outcome": null
+    },
+    {
+      "id": "31",
+      "title": "Skill ecosystem — provenance, creation workflow, evaluation",
+      "status": "planned",
+      "goal": "Skill provenance tags (installed/inherited/authored/3rd-party/gad-framework). Skill creation immediately scaffolds eval. GAD skill creator from Anthropic base. Skill inheritance CLI (done). Skill installation CLI (done). Decisions: GAD-D-100, GAD-D-102, GAD-D-107, GAD-D-112, GAD-D-120.",
+      "outcome": null
+    },
+    {
+      "id": "32",
+      "title": "Self-eval + trace analysis pipeline maturity",
+      "status": "done",
+      "goal": "Self-evaluation from real brownfield data displayed on site. Computed metrics append-only and long-lived. Pressure per phase drives skill creation. GAD discipline scoring for framework evals. gad self-eval CLI (done). Decisions: GAD-D-95, GAD-D-103, GAD-D-115, GAD-D-118, GAD-D-122.",
+      "outcome": null
+    },
+    {
+      "id": "33",
+      "title": "Reverse-engineer eval + methodology evaluation",
+      "status": "planned",
+      "goal": "Run reverse-engineer eval on grime-time and visualeditor-payloadcms targets. Methodology must be tied to buildable project with artifacts. Two-phase eval: produce requirements then build from them. Decisions: GAD-D-96, GAD-D-133.",
       "outcome": null
     }
   ],
@@ -7225,6 +7267,48 @@
       "kind": "phase",
       "href": "/planning?tab=phases#27",
       "body": "27 structured objective data production for evaluations the eval framework's primary output is no longer \"a score per run\" — it's \"structured data that yields insights.\" phase 27 ships the data production pipeline that makes that possible. five tracks: (1) **structured human review rubric** — replace the single human_review.score number with a dimensions object (playability, ui_polish, mechanics_implementation, ingenuity_requirement_met, stability, etc) and a rubric_version. each dimension scored and annotated independently so reviewers can disagree about playability without throwing out the rest. aggregate score is a weighted sum defined in rubric config, keeping current composite math intact. (2) **automated gate checks** — playwright tests per eval project that boot the built game and programmatically verify g1 (game loop transitions work), g3 (ui has sprites not ascii), g4 (pressure mechanics observable). gate status becomes mostly objective; human reviewers only judge what playwright can't check. (3) **derived metrics from trace events** — tool-use mix (read vs edit vs bash distribution), commit rhythm (time between commits, size distribution), plan-adherence delta (plan.md task count vs actually-completed tasks), skill-to-tool ratio, subagent utilization. all computed from trace v4 once phase 25 ships. (4) **cross-run aggregate queries** — sql-like queries against the trace dataset: \"average time-to-first-commit by workflow\", \"percent of runs that triggered gad:plan-phase before writing code\", \"distribution of produced-artifact counts for bare runs\". ships as a `gad eval query` subcommand + a /insights page on the site. (5) **visualization patterns** — not just more charts, but a discipline: every new metric gets a chart that answers a specific research question, not just shows the number. divergence scatter already exists; phase 27 adds tool-mix donuts, commit-rhythm timelines, rubric-dimension radar charts, trigger-timeline strips per skill. phase 27 runs parallel to phase 25 — the rubric work can land against v3 trace data today and get richer inputs when v4 arrives."
+    },
+    {
+      "id": "28",
+      "title": "Phase 28 — /project-market + site architecture overhaul",
+      "kind": "phase",
+      "href": "/planning?tab=phases#28",
+      "body": "28 /project-market + site architecture overhaul ship /project-market as the dedicated eval catalog. all eval projects listed, etd + explainer featured. per-project 5-round filtering. home page lightened. rubric on project detail pages. site reusability review. id format hovercards sitewide. gantt chart wired to planning page. spec at .planning/specs/project-market-spec.md. decisions: gad-d-116, gad-d-119, gad-d-124, gad-d-125, gad-d-130, gad-d-131, gad-d-134."
+    },
+    {
+      "id": "29",
+      "title": "Phase 29 — GAD CLI build/release pipeline + operational distinction",
+      "kind": "phase",
+      "href": "/planning?tab=phases#29",
+      "body": "29 gad cli build/release pipeline + operational distinction official build/release pipeline for the gad cli. windows binary built locally, mac/linux via github actions. npx install flow. quick start guide on site. clear messaging: gad cli is operational tooling for the framework, not a coding agent cli. decisions: gad-d-117, gad-d-123, gad-d-128, gad-d-129."
+    },
+    {
+      "id": "30",
+      "title": "Phase 30 — Eval framework v2 — domains, tech stacks, rounds per project",
+      "kind": "phase",
+      "href": "/planning?tab=phases#30",
+      "body": "30 eval framework v2 — domains, tech stacks, rounds per project formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. rounds per project (not global). project → eval → round hierarchy in data model and ui. decisions: gad-d-88, gad-d-90, gad-d-110, gad-d-111, gad-d-113, gad-d-114, gad-d-121, gad-d-132."
+    },
+    {
+      "id": "31",
+      "title": "Phase 31 — Skill ecosystem — provenance, creation workflow, evaluation",
+      "kind": "phase",
+      "href": "/planning?tab=phases#31",
+      "body": "31 skill ecosystem — provenance, creation workflow, evaluation skill provenance tags (installed/inherited/authored/3rd-party/gad-framework). skill creation immediately scaffolds eval. gad skill creator from anthropic base. skill inheritance cli (done). skill installation cli (done). decisions: gad-d-100, gad-d-102, gad-d-107, gad-d-112, gad-d-120."
+    },
+    {
+      "id": "32",
+      "title": "Phase 32 — Self-eval + trace analysis pipeline maturity",
+      "kind": "phase",
+      "href": "/planning?tab=phases#32",
+      "body": "32 self-eval + trace analysis pipeline maturity self-evaluation from real brownfield data displayed on site. computed metrics append-only and long-lived. pressure per phase drives skill creation. gad discipline scoring for framework evals. gad self-eval cli (done). decisions: gad-d-95, gad-d-103, gad-d-115, gad-d-118, gad-d-122."
+    },
+    {
+      "id": "33",
+      "title": "Phase 33 — Reverse-engineer eval + methodology evaluation",
+      "kind": "phase",
+      "href": "/planning?tab=phases#33",
+      "body": "33 reverse-engineer eval + methodology evaluation run reverse-engineer eval on grime-time and visualeditor-payloadcms targets. methodology must be tied to buildable project with artifacts. two-phase eval: produce requirements then build from them. decisions: gad-d-96, gad-d-133."
     },
     {
       "id": "compound-skills-hypothesis",

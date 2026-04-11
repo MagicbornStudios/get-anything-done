@@ -372,6 +372,9 @@ function scanEvalProjects() {
         constraints: data.constraints || null,
         scoringWeights: data.scoring?.weights || null,
         humanReviewRubric: data.human_review_rubric || null,
+        domain: data.domain || null,
+        techStack: data.tech_stack || null,
+        buildRequirement: data.build_requirement || null,
       });
     } catch (err) {
       console.warn(`  [warn] failed to parse ${gadJsonPath}: ${err.message}`);
@@ -675,6 +678,7 @@ function scanCatalog() {
         authoredBy: data["authored-by"] || null,
         authoredOn: data["authored-on"] || null,
         excludedFromDefaultInstall: data["excluded-from-default-install"] === true || declaredOrigin === "emergent",
+        frameworkSkill: data["framework_skill"] === true || data["framework-skill"] === true,
         file: origin === "emergent"
           ? `vendor/get-anything-done/.agents/skills/emergent/${id}/SKILL.md`
           : `vendor/get-anything-done/.agents/skills/${id}/SKILL.md`,
@@ -1320,6 +1324,7 @@ export interface CatalogSkill {
   authoredBy?: string | null;
   authoredOn?: string | null;
   excludedFromDefaultInstall?: boolean;
+  frameworkSkill?: boolean;
   file: string;
   bodyHtml: string;
   bodyRaw: string;
@@ -1760,6 +1765,15 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       humanReview: d.human_review ?? null,
       humanReviewNormalized: normalizeHumanReviewPrebuild(d.human_review),
       skillAccuracyBreakdown,
+      skillsProvenance: d.skills_provenance
+        ? {
+            installed: Array.isArray(d.skills_provenance.installed) ? d.skills_provenance.installed : [],
+            inherited: Array.isArray(d.skills_provenance.inherited) ? d.skills_provenance.inherited : [],
+            startSnapshot: Array.isArray(d.skills_provenance.start_snapshot) ? d.skills_provenance.start_snapshot : [],
+            endSnapshot: Array.isArray(d.skills_provenance.end_snapshot) ? d.skills_provenance.end_snapshot : [],
+            skillsAuthored: Array.isArray(d.skills_provenance.skills_authored) ? d.skills_provenance.skills_authored : [],
+          }
+        : null,
       requirementsDoc: loadRequirementsForRun(t.project, d.requirements_version ?? 'v4'),
       topSkill: loadTopSkillForRun(t.project, t.version, extras.producedArtifacts ?? {}),
     };
@@ -1959,6 +1973,15 @@ export interface EvalRunRecord {
         accuracy: number | null;
       }
     | null;
+  skillsProvenance:
+    | {
+        installed: Array<{ name: string; source: string; type: string }>;
+        inherited: Array<{ name: string; source: string; type: string }>;
+        startSnapshot: string[];
+        endSnapshot: string[];
+        skillsAuthored: string[];
+      }
+    | null;
 }
 
 export interface EvalTemplateAsset {
@@ -1998,6 +2021,9 @@ export interface EvalProjectMeta {
       description: string;
     }>;
   } | null;
+  domain: string | null;
+  techStack: string | null;
+  buildRequirement: string | null;
 }
 
 export interface ProducedArtifacts {

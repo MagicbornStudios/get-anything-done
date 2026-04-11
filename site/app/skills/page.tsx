@@ -27,6 +27,7 @@ interface SkillSummary {
   description: string;
   inheritedBy: string[];
   isFundamental: boolean;
+  isFrameworkSkill: boolean;
   authoredByEvals: string[];
 }
 
@@ -53,6 +54,7 @@ function buildSkillSummaries(): SkillSummary[] {
       description: s.description,
       inheritedBy: SKILL_INHERITANCE[s.id] ?? [],
       isFundamental: FUNDAMENTAL_IDS.has(s.id),
+      isFrameworkSkill: s.frameworkSkill === true,
       authoredByEvals,
     };
   });
@@ -218,10 +220,15 @@ function SkillCard({ skill }: { skill: SkillSummary }) {
     <Link href={`/skills/${skill.id}`} className="block">
       <Card className="h-full transition-colors hover:border-accent/60">
         <CardHeader className="pb-2">
-          <div className="mb-2 flex items-center gap-2">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
             {skill.isFundamental && (
               <Badge variant="default" className="bg-amber-500/15 text-amber-300">
                 fundamental
+              </Badge>
+            )}
+            {skill.isFrameworkSkill && (
+              <Badge variant="outline" className="border-violet-500/50 text-violet-300">
+                Framework
               </Badge>
             )}
             {skill.authoredByEvals.length > 0 && (

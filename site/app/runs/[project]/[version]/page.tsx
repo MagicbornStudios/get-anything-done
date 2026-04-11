@@ -20,6 +20,7 @@ import { RunProcessMetricsSection } from "@/app/runs/[project]/[version]/RunProc
 import { RunProducedArtifactsSection } from "@/app/runs/[project]/[version]/RunProducedArtifactsSection";
 import { RunRubricSection } from "@/app/runs/[project]/[version]/RunRubricSection";
 import { RunSkillAccuracySection } from "@/app/runs/[project]/[version]/RunSkillAccuracySection";
+import { RunSkillProvenanceSection } from "@/app/runs/[project]/[version]/RunSkillProvenanceSection";
 import { RunVideosSection } from "@/app/runs/[project]/[version]/RunVideosSection";
 import { SCORE_ORDER, type RunScores } from "@/app/runs/[project]/[version]/run-detail-shared";
 
@@ -141,6 +142,7 @@ export default async function RunPage({
         tracingGap={tracingGap}
         skillAccuracyValue={skillAccuracyValue}
       />
+      <RunSkillProvenanceSection run={run} />
       {hasRubricScores && rubricDef && (
         <RunRubricSection
           run={run}
