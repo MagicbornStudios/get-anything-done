@@ -4,12 +4,13 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 28 task 28-01 complete: /project-market page shipped (commit 292c621). Build passes.
+  <next-action>Phase 31 complete: skill ecosystem — provenance diffing, badges, creation workflow, framework labeling (commit 318d576). Build passes.
 
 === DONE THIS SESSION ===
-- /project-market route with all EVAL_PROJECTS, featured badges, per-project round filtering
-- PlayableTeaser on home page (latest ETD round only)
-- Nav, hero CTA, footer updated to point to /project-market
+- Skill provenance diffing in gad eval preserve (compares start vs end snapshots, writes skills_authored to TRACE.json)
+- RunSkillProvenanceSection on per-run page with installed/inherited/authored badges
+- gad:create-skill command now mandates eval project scaffold (step 6)
+- Framework skill labeling on /skills page (violet badge for framework_skill: true)
 
 === NEXT ===
 1. GAD CLI build/release pipeline (Windows) — phase 29

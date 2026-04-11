@@ -797,4 +797,26 @@
       <keywords>project-market,catalog,eval-projects,featured,per-project-rounds,nav,teaser</keywords>
     </task>
   </phase>
+  <phase id="31">
+    <task id="31-01" status="done" skill="execute-phase" agent="gad-executor" type="skill">
+      <goal>Skill provenance diffing: after eval preserve, compare skills_provenance.start_snapshot vs preserved run's skills directory. Skills at end but not start = authored. Write skills_authored array to TRACE.json.</goal>
+      <resolution>Shipped 2026-04-10. Added provenance diffing to evalPreserve in gad.cjs — reads TRACE.json start_snapshot, scans preserved run's .planning/skills/ and skills/, computes authored set, writes skills_authored + end_snapshot back to TRACE.json. Commit 318d576.</resolution>
+      <keywords>skill-provenance,diffing,trace,eval-preserve,gad-120</keywords>
+    </task>
+    <task id="31-02" status="done" skill="execute-phase" agent="gad-executor" type="skill">
+      <goal>Site: skill provenance badges on per-run page. Show installed (blue), inherited (green), authored (amber) badges with full start/end snapshot collapsible.</goal>
+      <resolution>Shipped 2026-04-10. Created RunSkillProvenanceSection.tsx component with three colored cards (sky/emerald/amber). Added skillsProvenance field to EvalRunRecord interface and build-site-data pipeline. Wired into run detail page between skill accuracy and rubric sections. Commit 318d576.</resolution>
+      <keywords>skill-provenance,badges,per-run-page,site,gad-120</keywords>
+    </task>
+    <task id="31-03" status="done" skill="execute-phase" agent="gad-executor" type="skill">
+      <goal>Skill creation to eval scaffold: update gad:create-skill command to mandate gad eval setup --project as step 6 with verification.</goal>
+      <resolution>Shipped 2026-04-10. Added mandatory step 6 (gad eval setup --project) and step 7 (verify via gad snapshot) to commands/gad/create-skill.md. Enforces decision gad-102. Commit 318d576.</resolution>
+      <keywords>create-skill,eval-scaffold,gad-102,mandatory</keywords>
+    </task>
+    <task id="31-04" status="done" skill="execute-phase" agent="gad-executor" type="skill">
+      <goal>Framework skill labeling: skills with framework_skill: true in SKILL.md frontmatter show a violet "Framework" badge on the /skills page.</goal>
+      <resolution>Shipped 2026-04-10. Added frameworkSkill field to CatalogSkill interface, parsed framework_skill/framework-skill frontmatter in build-site-data.mjs readSkill(), added violet "Framework" badge to SkillCard on /skills page. Build passes. Commit 318d576.</resolution>
+      <keywords>framework-skill,badge,skills-page,catalog,site</keywords>
+    </task>
+  </phase>
 </task-registry>
