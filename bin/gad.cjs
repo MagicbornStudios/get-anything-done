@@ -3612,6 +3612,32 @@ const evalPreserve = defineCommand({
       }
     }
 
+    // Compute source + build sizes and write to TRACE.json (phase 30)
+    if (fs.existsSync(traceJsonPath)) {
+      try {
+        const trace = JSON.parse(fs.readFileSync(traceJsonPath, 'utf8'));
+        // Source size: total size of src/ in preserved run
+        const srcDir = path.join(runTargetDir, 'src');
+        const sourceSizeBytes = fs.existsSync(srcDir) ? dirSizeBytes(srcDir) : 0;
+        // Build size: preserved build in public/evals/ or run/dist/
+        const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, args.version);
+        let buildSizeBytes = 0;
+        if (buildPreserved && fs.existsSync(buildTarget)) {
+          buildSizeBytes = dirSizeBytes(buildTarget);
+        } else {
+          const runDist = path.join(runTargetDir, 'dist');
+          if (fs.existsSync(runDist)) buildSizeBytes = dirSizeBytes(runDist);
+        }
+        trace.source_size_bytes = sourceSizeBytes;
+        trace.build_size_bytes = buildSizeBytes;
+        fs.writeFileSync(traceJsonPath, JSON.stringify(trace, null, 2));
+        console.log(`  Source size:      ${(sourceSizeBytes / 1024).toFixed(1)} KB`);
+        console.log(`  Build size:       ${(buildSizeBytes / 1024).toFixed(1)} KB`);
+      } catch (err) {
+        console.warn(`  [warn] size computation failed: ${err.message}`);
+      }
+    }
+
     // Update RUN.md
     const runMdPath = path.join(runDir, 'RUN.md');
     const runMdLine = `preserved: ${new Date().toISOString()} (from ${from})\n`;
@@ -3636,6 +3662,22 @@ function copyRecursive(src, dst, flatten = false) {
     fs.mkdirSync(path.dirname(dst), { recursive: true });
     fs.copyFileSync(src, dst);
   }
+}
+
+// Helper: compute total size of a directory in bytes (recursive, excludes node_modules/.git)
+function dirSizeBytes(dirPath) {
+  let total = 0;
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.name === 'node_modules' || entry.name === '.git') continue;
+    const fullPath = path.join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      total += dirSizeBytes(fullPath);
+    } else if (entry.isFile()) {
+      total += fs.statSync(fullPath).size;
+    }
+  }
+  return total;
 }
 
 // gad eval verify — audit preservation of all eval runs
