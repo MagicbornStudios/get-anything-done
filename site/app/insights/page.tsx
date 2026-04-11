@@ -1,13 +1,14 @@
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
-import { EVAL_RUNS, ALL_DECISIONS, ALL_TASKS, ALL_PHASES, WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
+import { EVAL_RUNS, ALL_DECISIONS, ALL_TASKS, ALL_PHASES, WORKFLOW_LABELS } from "@/lib/eval-data";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import selfEvalData from "@/data/self-eval.json";
 
 export const metadata = {
   title: "Insights — structured data from GAD evals + self-evaluation",
-  description: "Curated queries against eval traces, planning artifacts, and self-evaluation metrics. Every number has a source.",
+  description:
+    "Curated queries against eval traces, planning artifacts, and self-evaluation metrics. Every number has a source.",
 };
 
 /** Compute a query result at build time */
@@ -28,8 +29,10 @@ function buildInsights() {
       return scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(3) : "—";
     }),
     query("Best human review score", () => {
-      const best = completedRuns.reduce((a, b) =>
-        (a.humanReview?.score ?? 0) > (b.humanReview?.score ?? 0) ? a : b, completedRuns[0]);
+      const best = completedRuns.reduce(
+        (a, b) => ((a.humanReview?.score ?? 0) > (b.humanReview?.score ?? 0) ? a : b),
+        completedRuns[0]
+      );
       return best ? `${(best.humanReview?.score ?? 0).toFixed(2)} (${best.project} ${best.version})` : "—";
     }),
     query("Eval projects", () => {
@@ -51,20 +54,45 @@ function buildInsights() {
     query("GAD CLI calls", () => selfEval.totals.gad_cli_calls),
     query("Highest pressure phase", () => {
       const sorted = [...selfEval.phases_pressure].sort((a, b) => b.pressure_score - a.pressure_score);
-      return sorted[0] ? `Phase ${sorted[0].phase} (score: ${sorted[0].pressure_score}, ${sorted[0].tasks_total} tasks, ${sorted[0].crosscuts} crosscuts)` : "—";
+      return sorted[0]
+        ? `Phase ${sorted[0].phase} (score: ${sorted[0].pressure_score}, ${sorted[0].tasks_total} tasks, ${sorted[0].crosscuts} crosscuts)`
+        : "—";
     }),
     query("Bare vs GAD (best human scores)", () => {
-      const bare = completedRuns.filter((r) => r.workflow === "bare").reduce((a, b) =>
-        (a.humanReview?.score ?? 0) > (b.humanReview?.score ?? 0) ? a : b, completedRuns.find((r) => r.workflow === "bare")!);
-      const gad = completedRuns.filter((r) => r.workflow === "gad").reduce((a, b) =>
-        (a.humanReview?.score ?? 0) > (b.humanReview?.score ?? 0) ? a : b, completedRuns.find((r) => r.workflow === "gad")!);
+      const bare = completedRuns
+        .filter((r) => r.workflow === "bare")
+        .reduce(
+          (a, b) => ((a.humanReview?.score ?? 0) > (b.humanReview?.score ?? 0) ? a : b),
+          completedRuns.find((r) => r.workflow === "bare")!
+        );
+      const gad = completedRuns
+        .filter((r) => r.workflow === "gad")
+        .reduce(
+          (a, b) => ((a.humanReview?.score ?? 0) > (b.humanReview?.score ?? 0) ? a : b),
+          completedRuns.find((r) => r.workflow === "gad")!
+        );
       return `Bare: ${bare?.humanReview?.score?.toFixed(2) ?? "—"} | GAD: ${gad?.humanReview?.score?.toFixed(2) ?? "—"}`;
     }),
   ];
 }
 
+function buildDataSources() {
+  return [
+    { id: "eval-runs", label: "EVAL_RUNS", caption: `${EVAL_RUNS.length} runs from evals/*/TRACE.json` },
+    { id: "decisions", label: "ALL_DECISIONS", caption: `${ALL_DECISIONS.length} decisions from DECISIONS.xml` },
+    { id: "tasks", label: "ALL_TASKS", caption: `${ALL_TASKS.length} tasks from TASK-REGISTRY.xml` },
+    {
+      id: "self-eval",
+      label: "self-eval.json",
+      caption: `${selfEvalData.latest.totals.events.toLocaleString()} trace events from .gad-log/`,
+    },
+    { id: "phases", label: "ALL_PHASES", caption: `${ALL_PHASES.length} phases from ROADMAP.xml` },
+  ] as const;
+}
+
 export default function InsightsPage() {
   const insights = buildInsights();
+  const dataSources = buildDataSources();
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -75,8 +103,8 @@ export default function InsightsPage() {
           Structured data from every eval, <span className="gradient-text">every session.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-          Curated queries against eval traces, planning artifacts, and self-evaluation metrics.
-          Every number on this page has a source — computed from TRACE.json, TASK-REGISTRY.xml,
+          Curated queries against eval traces, planning artifacts, and self-evaluation metrics. Every
+          number on this page has a source — computed from TRACE.json, TASK-REGISTRY.xml,
           DECISIONS.xml, and .gad-log/ trace data at build time.
         </p>
 
@@ -91,31 +119,23 @@ export default function InsightsPage() {
           ))}
         </div>
 
-        <div className="mt-12 rounded-2xl border border-accent/40 bg-accent/5 p-6">
-          <p className="section-kicker">Data sources</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-xs text-muted-foreground">
-            <div>
-              <Badge variant="outline">EVAL_RUNS</Badge>
-              <p className="mt-1">{EVAL_RUNS.length} runs from evals/*/TRACE.json</p>
-            </div>
-            <div>
-              <Badge variant="outline">ALL_DECISIONS</Badge>
-              <p className="mt-1">{ALL_DECISIONS.length} decisions from DECISIONS.xml</p>
-            </div>
-            <div>
-              <Badge variant="outline">ALL_TASKS</Badge>
-              <p className="mt-1">{ALL_TASKS.length} tasks from TASK-REGISTRY.xml</p>
-            </div>
-            <div>
-              <Badge variant="outline">self-eval.json</Badge>
-              <p className="mt-1">{selfEvalData.latest.totals.events} trace events from .gad-log/</p>
-            </div>
-            <div>
-              <Badge variant="outline">ALL_PHASES</Badge>
-              <p className="mt-1">{ALL_PHASES.length} phases from ROADMAP.xml</p>
-            </div>
-          </div>
-        </div>
+        <Card className="mt-12 border-accent/40 bg-accent/5 shadow-none">
+          <CardHeader className="pb-2">
+            <p className="section-kicker !mb-0">Data sources</p>
+          </CardHeader>
+          <CardContent>
+            <ul className="grid list-none gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {dataSources.map((src) => (
+                <li key={src.id} className="space-y-1.5">
+                  <Badge variant="outline" className="font-mono text-[10px] normal-case tracking-normal">
+                    {src.label}
+                  </Badge>
+                  <p className="text-xs leading-snug text-muted-foreground">{src.caption}</p>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       </div>
       <Footer />
     </main>
