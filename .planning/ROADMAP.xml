@@ -171,7 +171,7 @@
   <phase id="28">
     <title>/project-market + site architecture overhaul</title>
     <goal>Ship /project-market as the dedicated eval catalog. All eval projects listed, ETD + explainer featured. Per-project 5-round filtering. Home page lightened. Rubric on project detail pages. Site reusability review. ID format HoverCards sitewide. Gantt chart wired to planning page. Spec at .planning/specs/PROJECT-MARKET-SPEC.md. Decisions: GAD-D-116, GAD-D-119, GAD-D-124, GAD-D-125, GAD-D-130, GAD-D-131, GAD-D-134.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>22</depends>
   </phase>
   <phase id="29">
@@ -189,7 +189,7 @@
   <phase id="31">
     <title>Skill ecosystem — provenance, creation workflow, evaluation</title>
     <goal>Skill provenance tags (installed/inherited/authored/3rd-party/gad-framework). Skill creation immediately scaffolds eval. GAD skill creator from Anthropic base. Skill inheritance CLI (done). Skill installation CLI (done). Decisions: GAD-D-100, GAD-D-102, GAD-D-107, GAD-D-112, GAD-D-120.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>30</depends>
   </phase>
   <phase id="32">
