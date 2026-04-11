@@ -2,7 +2,14 @@
 
 import { Sparkles, X, Copy, Check, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { REPO } from "./skill-lineage-shared";
 import type { SkillArtifact } from "./skill-lineage-shared";
 
@@ -28,12 +35,12 @@ export default function SkillLineageSkillModal({
           className="z-[70] flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-3xl translate-x-[-50%] translate-y-[-50%] flex-col gap-0 overflow-hidden rounded-2xl border border-amber-500/40 bg-card p-0 shadow-2xl shadow-black/60 sm:rounded-2xl"
           aria-describedby={undefined}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-border/60 bg-amber-500/5 px-6 py-4">
+          <DialogHeader className="flex flex-row items-start justify-between gap-4 space-y-0 border-b border-border/60 bg-amber-500/5 px-6 py-4 text-left">
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wider text-amber-300">
+              <DialogDescription className="text-xs uppercase tracking-wider text-amber-300">
                 <Sparkles size={10} className="mr-1 inline" aria-hidden />
                 Skill · {runKey}
-              </p>
+              </DialogDescription>
               <DialogTitle className="mt-1 truncate font-mono text-lg font-semibold leading-snug text-foreground">
                 {skill.name}
               </DialogTitle>
@@ -76,12 +83,14 @@ export default function SkillLineageSkillModal({
                 <X className="size-3" aria-hidden />
               </Button>
             </div>
-          </div>
-          <div className="flex-1 overflow-auto bg-background/60 p-6">
-            <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-6 text-muted-foreground">
-              {skill.content ?? "(skill file content unavailable)"}
-            </pre>
-          </div>
+          </DialogHeader>
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-6">
+              <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-6 text-muted-foreground">
+                {skill.content ?? "(skill file content unavailable)"}
+              </pre>
+            </div>
+          </ScrollArea>
         </DialogContent>
       )}
     </Dialog>
