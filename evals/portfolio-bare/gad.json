@@ -12,17 +12,23 @@
     "no_app_code": true,
     "no_external_services": true
   },
-  "context_modes": ["fresh", "loaded"],
+  "context_modes": [
+    "fresh",
+    "loaded"
+  ],
   "scoring": {
     "weights": {
-      "requirement_coverage": 0.40,
+      "requirement_coverage": 0.4,
       "task_alignment": 0.25,
-      "state_hygiene": 0.20,
+      "state_hygiene": 0.2,
       "decision_coverage": 0.15
     },
     "context_delta": {
       "description": "loaded_score - fresh_score across matched task sets. Positive = context helps. Target: report only (no pass/fail threshold — accumulates over runs).",
       "requires_both_modes": true
     }
-  }
+  },
+  "domain": "software",
+  "build_requirement": "running Next.js site",
+  "tech_stack": "next.js"
 }

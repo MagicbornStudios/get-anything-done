@@ -4,9 +4,11 @@
   "description": "GAD self-evaluation: measures planning loop fidelity across a phase",
   "trace": true,
   "weights": {
-    "task_completeness": 0.40,
-    "state_hygiene": 0.30,
-    "sink_sync_compliance": 0.20,
-    "decision_capture": 0.10
-  }
+    "task_completeness": 0.4,
+    "state_hygiene": 0.3,
+    "sink_sync_compliance": 0.2,
+    "decision_capture": 0.1
+  },
+  "domain": "tooling",
+  "build_requirement": "planning doc quality metrics"
 }

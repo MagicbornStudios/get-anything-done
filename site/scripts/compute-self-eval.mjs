@@ -140,6 +140,57 @@ function computeMetrics(events) {
   };
 }
 
+/** Compute pressure per phase from TASK-REGISTRY.xml (gad-75/gad-79/gad-115) */
+function computePhasesPressure() {
+  const regFile = path.join(REPO_ROOT, ".planning", "TASK-REGISTRY.xml");
+  if (!fs.existsSync(regFile)) return [];
+  const content = fs.readFileSync(regFile, "utf8");
+
+  // Parse phases and their tasks
+  const phaseRe = /<phase id="([^"]*)">([\s\S]*?)<\/phase>/g;
+  const taskRe = /<task\s[^>]*>([\s\S]*?)<\/task>/g;
+  const phases = [];
+  let m;
+
+  while ((m = phaseRe.exec(content)) !== null) {
+    const phaseId = m[1];
+    const phaseBody = m[2];
+    const tasks = [];
+    let tm;
+    const taskReLocal = /<task\s([^>]*)>([\s\S]*?)<\/task>/g;
+    while ((tm = taskReLocal.exec(phaseBody)) !== null) {
+      const attrs = tm[1];
+      const statusMatch = attrs.match(/status="([^"]*)"/);
+      const status = statusMatch ? statusMatch[1] : "planned";
+      const goalMatch = tm[2].match(/<goal>([\s\S]*?)<\/goal>/);
+      const goal = goalMatch ? goalMatch[1].trim() : "";
+      tasks.push({ status, goal });
+    }
+
+    const done = tasks.filter(t => t.status === "done").length;
+    const total = tasks.length;
+    // Simple pressure: task count * crosscut estimate (goals mentioning multiple systems)
+    const crosscuts = tasks.filter(t => {
+      const words = t.goal.toLowerCase();
+      const systems = ["cli", "site", "eval", "skill", "agent", "trace", "hook", "planning", "state", "decision"];
+      return systems.filter(s => words.includes(s)).length >= 2;
+    }).length;
+
+    const pressure = total + (crosscuts * 2); // tasks + weighted crosscuts
+
+    phases.push({
+      phase: phaseId,
+      tasks_total: total,
+      tasks_done: done,
+      crosscuts,
+      pressure_score: pressure,
+      high_pressure: pressure > 10, // flag for skill creation review
+    });
+  }
+
+  return phases;
+}
+
 /** Count tasks from TASK-REGISTRY.xml across all workspaces */
 function countTasks() {
   const result = { done: 0, planned: 0, in_progress: 0, total: 0 };
@@ -175,9 +226,14 @@ const events = readAllEvents();
 const metrics = computeMetrics(events);
 
 if (metrics) {
-  // Add task and decision counts
+  // Add task and decision counts + per-phase pressure
   metrics.tasks = countTasks();
   metrics.decisions = countDecisions();
+  metrics.phases_pressure = computePhasesPressure();
+  const highPressure = metrics.phases_pressure.filter(p => p.high_pressure);
+  if (highPressure.length > 0) {
+    console.log(`  [self-eval] High-pressure phases (skill creation candidates): ${highPressure.map(p => p.phase).join(', ')}`);
+  }
 
   // Append-only: load existing snapshots, add new one (gad-103)
   let existing = { snapshots: [] };

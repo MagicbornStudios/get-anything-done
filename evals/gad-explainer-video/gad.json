@@ -7,7 +7,10 @@
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": ["gad-explainer-video-bare", "gad-explainer-video-emergent"],
+  "compare_to": [
+    "gad-explainer-video-bare",
+    "gad-explainer-video-emergent"
+  ],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": true,
@@ -18,11 +21,11 @@
   },
   "scoring": {
     "weights": {
-      "requirement_coverage": 0.20,
+      "requirement_coverage": 0.2,
       "implementation_quality": 0.15,
-      "video_polish": 0.20,
+      "video_polish": 0.2,
       "pedagogical_clarity": 0.15,
-      "workflow_quality": 0.10,
+      "workflow_quality": 0.1,
       "time_efficiency": 0.05,
       "human_review": 0.15
     }
@@ -33,7 +36,7 @@
       {
         "key": "pedagogical_clarity",
         "label": "Pedagogical clarity",
-        "weight": 0.30,
+        "weight": 0.3,
         "description": "After watching the video, can a first-time viewer explain back to you what GAD is, what the freedom hypothesis is, and why the compound-skills hypothesis matters? Optimized for new-user comprehension, not insider accuracy."
       },
       {
@@ -45,7 +48,7 @@
       {
         "key": "accuracy",
         "label": "Accuracy",
-        "weight": 0.20,
+        "weight": 0.2,
         "description": "Does the video accurately represent the current state of the project? Hypotheses named correctly, round numbers right, skeptic disclaimers present, no overclaiming of findings."
       },
       {
@@ -57,7 +60,7 @@
       {
         "key": "stability",
         "label": "Stability",
-        "weight": 0.10,
+        "weight": 0.1,
         "description": "Renders without errors. No @remotion/cli crashes. Deterministic output across renders."
       }
     ]
@@ -67,5 +70,8 @@
     "The runtime / composition scaffold belongs at vendor/get-anything-done/site/remotion/ per task 22-31, NOT under evals/gad-explainer-video/template/. The eval project here holds the requirements, rubric, and future run outputs; the actual runtime lives on the site.",
     "NO RUNS YET. This is a template + rubric only. Before the first run, we need to: (1) install @remotion/cli if not present, (2) scaffold site/remotion/Root.tsx with a placeholder composition, (3) author REQUIREMENTS.xml v1 for the explainer video script, (4) write an eval prompt for the agent (probably via the existing gad eval run command).",
     "This eval tests the same hypotheses (freedom / CSH / emergent-evolution) on a DIFFERENT task domain. It is the generalization test the /skeptic page says we need."
-  ]
+  ],
+  "domain": "stories",
+  "build_requirement": "Remotion composition (src is build)",
+  "tech_stack": "remotion"
 }

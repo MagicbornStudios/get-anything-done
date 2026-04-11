@@ -10,9 +10,11 @@
   },
   "scoring": {
     "weights": {
-      "token_reduction": 0.40,
+      "token_reduction": 0.4,
       "context_completeness": 0.35,
       "information_loss": 0.25
     }
-  }
+  },
+  "domain": "tooling",
+  "build_requirement": "benchmark report"
 }

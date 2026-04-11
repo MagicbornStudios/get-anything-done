@@ -7,7 +7,10 @@
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": ["skill-evaluation-app-bare", "skill-evaluation-app-emergent"],
+  "compare_to": [
+    "skill-evaluation-app-bare",
+    "skill-evaluation-app-emergent"
+  ],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": true,
@@ -20,7 +23,7 @@
     "weights": {
       "requirement_coverage": 0.15,
       "implementation_quality": 0.15,
-      "workflow_quality": 0.10,
+      "workflow_quality": 0.1,
       "time_efficiency": 0.05,
       "human_review": 0.55
     }
@@ -31,19 +34,19 @@
       {
         "key": "ui_usability",
         "label": "UI usability",
-        "weight": 0.30,
+        "weight": 0.3,
         "description": "Can a first-time user author a new requirements document + kick off an eval harness run in under 5 minutes without reading documentation? Optimized for 'hand this to someone who has never heard of GAD and watch them use it.'"
       },
       {
         "key": "requirements_ergonomics",
         "label": "Requirements authoring ergonomics",
-        "weight": 0.20,
+        "weight": 0.2,
         "description": "Does the GUI make it easy to compose requirements that conform to GAD's v5 format? Autocomplete for gate IDs, inline pressure preview, cross-cut visualization, save/load of XML files. Nothing the user would type by hand faster."
       },
       {
         "key": "harness_integration",
         "label": "Harness integration",
-        "weight": 0.20,
+        "weight": 0.2,
         "description": "Does the GUI successfully read benchmark.json output from the per-skill eval harness (gad-87) and render per-iteration metrics? Does it surface failed assertions inline? Can a reviewer see with_skill vs without_skill deltas in one view?"
       },
       {
@@ -66,5 +69,8 @@
     "The GUI, once built, becomes part of the eval framework itself. Dogfood opportunity: we author v6 requirements IN this GUI, and the GUI displays its own eval harness output. Second-order CSH experiment.",
     "Siblings (skill-evaluation-app-bare, skill-evaluation-app-emergent) not yet scaffolded — follow-up task. Their gad.json inherits from this template with workflow field swapped.",
     "PRE-RUN CHECKLIST: (1) confirm per-skill eval harness CLI exists (gad-87 / task 22-52), (2) author template/REQUIREMENTS.xml v1 with functional spec, (3) scaffold bare + emergent siblings, (4) add to EXPERIMENT-LOG.md as planned round 6 domain, (5) ensure gad eval run can target this project."
-  ]
+  ],
+  "domain": "software",
+  "build_requirement": "running web app",
+  "tech_stack": "next.js"
 }

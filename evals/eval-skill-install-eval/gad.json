@@ -11,11 +11,13 @@
   "framework_skill": true,
   "scoring": {
     "weights": {
-      "install_success": 0.20,
-      "comparison_valid": 0.20,
+      "install_success": 0.2,
+      "comparison_valid": 0.2,
       "cli_usage": 0.15,
-      "preservation_complete": 0.10,
+      "preservation_complete": 0.1,
       "human_review": 0.35
     }
-  }
+  },
+  "domain": "skill",
+  "build_requirement": "working skill installation + comparison data"
 }

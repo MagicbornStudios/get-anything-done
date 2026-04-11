@@ -4,45 +4,57 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-10 — all 10 planned tasks completed.
+  <next-action>Session 2026-04-11 — eval framework evolution batch completed.
 
-=== COMPLETED THIS BATCH ===
+=== COMPLETED ===
 
 | # | Type | Task | Status |
 |---|---|---|---|
-| 1 | Framework | gad-104: skill/agent/type attributes in TASK-REGISTRY.xml | done |
-| 2 | Framework | gad-108: pipeline as formal task type | done |
-| 3 | CLI | gad eval --install-skills (copy skill into eval template) | done |
-| 4 | CLI | gad rounds (list/show/json round data) | done |
-| 5 | Skill | gad:create-skill slash command | done |
-| 6 | Skill | gad:merge-skill slash command | done |
-| 7 | CLI | gad data list/get/set (CRUD for data/*.json) | done |
-| 8 | Site | SelfEval component (components/landing/self-eval/) | done |
-| 9 | Eval | reverse-engineer-eval v1 prompt generated with skill installed | ready |
-| 10 | Cleanup | /gad:join-discord removed | done |
+| 1 | Framework | domain + tech_stack + build_requirement + human_estimate in gad.json | done |
+| 2 | CLI | gad eval inherit-skills (copy emergent skills between runs) | done |
+| 3 | Eval | Categorized all 26 eval projects by domain | done |
+| 4 | Eval | Scaffolded 4 tech-stack evals: Phaser, PixiJS, Three.js, Babylon.js | done |
+| 5 | Pipeline | Per-phase pressure scores in self-eval (10 high-pressure phases found) | done |
+| 6 | Site | GanttChart component (click to expand, hover for stats) | done |
+| 7 | Docs | quick-start.md + eval-guide.md | done |
+| 8 | CLI | gad eval readme (inject scores into project README) | done |
 
-=== NEW CLI COMMANDS ===
-- gad data list — show all data collections
-- gad data get &lt;file.key&gt; — read value (dot notation)
-- gad data set &lt;file.key&gt; &lt;value&gt; — write value
-- gad rounds — list experiment rounds
-- gad rounds --round N — show round detail
-- gad rounds --json — JSON output
-- gad eval run --install-skills &lt;paths&gt; — install skills into eval template before running
+=== DECISIONS (gad-110 through gad-119) ===
+110: Eval domain categories (game/skill/software/business/stories/tooling)
+111: Tech stack comparison evals
+112: gad eval inherit-skills CLI
+113: Eval timestamps + build requirements + completion gates
+114: Human time estimation vs agent time comparison
+115: Pressure per phase drives skill creation opportunities
+116: Playable archive redesign for thousands of evals (queued Phase 28+)
+117: Quick start guide — no repo clone required
+118: GAD discipline scoring for framework evals
+119: Interactive Gantt chart for phases and rounds
 
-=== DECISIONS THIS SESSION (gad-95 through gad-109) ===
-15 total decisions captured covering: self-evaluation, reverse-engineer eval, skills taxonomy, attribution tagging, enhance workflow, pipeline types, lowdb data CLI, eval skill installation
+=== PRESSURE DATA (top 5 phases) ===
+Phase 22: 110 (58 tasks, 26 crosscuts) — HIGHEST
+Phase 21: 56 (28 tasks, 14 crosscuts)
+Phase 14.5: 21 (7 tasks, 7 crosscuts)
+Phase 20: 20 (8 tasks, 6 crosscuts)
+Phase 14: 19 (7 tasks, 6 crosscuts)
 
-=== SELF-EVAL (growing) ===
-2,562 events | 180 tasks (163 done) | 108 decisions | 19.0% overhead | 80% loop compliance
+=== NEW CLI SURFACE ===
+gad eval inherit-skills --from project/vN --to project
+gad eval readme --project name
+gad eval list now shows DOMAIN column
+TRACE.json gains: domain, tech_stack, build_requirement, human_estimate_hours, source_size_bytes, build_size_bytes
+
+=== EVAL PROJECTS: 30 total (was 26) ===
+4 new: etd-phaser, etd-pixijs, etd-threejs, etd-babylonjs
 
 === NEXT SESSION ===
-1. Run reverse-engineer-eval v1 agent on grime-time target
-2. Wire SelfEval component into page.tsx (user is refactoring landing page)
-3. Test gad:create-skill by creating the next skill needed
-4. Test gad:merge-skill on overlapping skills
-5. User plays round 5 builds and scores them
-6. Add per-phase token metrics to compute-self-eval pipeline (gad-103)
-7. Respect user's component refactoring (Playable split into subcomponents, Nav refactored, etc.)</next-action>
-  <last-updated>2026-04-10</last-updated>
+1. Wire GanttChart into Workflow + RoundResults sections (user refactoring landing page)
+2. Wire SelfEval component into page
+3. Run round 5 skills testing: GAD+Skills with/without inheritance
+4. Run tech-stack comparison evals
+5. First reverse-engineer eval on grime-time
+6. Playable archive redesign for multi-domain + thousands of evals (Phase 28)
+7. User plays round 5 builds and scores them</next-action>
+  <last-updated>2026-04-11</last-updated>
+  <sink-compiled sink="apps/portfolio/content/docs/get-anything-done/planning/" at="2026-04-11T16:31:38.779Z" />
 </state>

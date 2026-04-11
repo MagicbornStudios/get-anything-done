@@ -32,10 +32,10 @@
   "scoring": {
     "weights": {
       "requirements_completeness": 0.25,
-      "requirements_accuracy": 0.20,
+      "requirements_accuracy": 0.2,
       "build_success": 0.15,
-      "functional_fidelity": 0.10,
-      "human_review": 0.30
+      "functional_fidelity": 0.1,
+      "human_review": 0.3
     }
   },
   "human_review_rubric": {
@@ -50,7 +50,7 @@
       {
         "key": "requirements_accuracy",
         "label": "Requirements accuracy",
-        "weight": 0.20,
+        "weight": 0.2,
         "description": "Do the requirements correctly describe what the original does? No hallucinated features, no mischaracterizations."
       },
       {
@@ -62,19 +62,19 @@
       {
         "key": "functional_fidelity",
         "label": "Functional fidelity",
-        "weight": 0.20,
+        "weight": 0.2,
         "description": "Does the rebuild do the same things as the original? Compare user flows, features, data handling."
       },
       {
         "key": "presentation",
         "label": "Presentation",
-        "weight": 0.10,
+        "weight": 0.1,
         "description": "For GUI builds: is it playable/viewable in-browser (iframe)? For non-GUI: does the README explain what was built and how to run it?"
       },
       {
         "key": "skill_quality",
         "label": "Skill quality",
-        "weight": 0.10,
+        "weight": 0.1,
         "description": "Did the reverse-engineer skill work well? Was the requirements file well-structured, properly scoped, with testable criteria?"
       }
     ]
@@ -83,5 +83,7 @@
     "gui_builds": "iframe (same as game evals)",
     "non_gui_builds": "README rendered as markdown",
     "notes": "Complex integrations should use mock data to keep builds self-contained and displayable"
-  }
+  },
+  "domain": "skill",
+  "build_requirement": "REQUIREMENTS.xml (gated: needs implementation eval)"
 }

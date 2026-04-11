@@ -1731,7 +1731,7 @@ export const FINDINGS: Finding[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "22",
   "milestone": "gad-v1.1",
-  "nextAction": "Session 2026-04-10 — massive session. 11 decisions (gad-95→gad-107), 5 new skills, 4 eval projects, self-eval pipeline, site fixes + shadcn.\n\n=== SKILLS CREATED THIS SESSION ===\n1. trace-analysis (.agents/skills/) — analyze .gad-log/ trace data\n2. self-eval (.agents/skills/) — score GAD development rounds\n3. gad-skill-creator (.agents/skills/) — create GAD-tailored skills using Anthropic skill-creator methodology + GAD CLI/artifacts\n4. eval-skill-install (.agents/skills/) — install skills into eval templates, run with/without comparisons\n5. reverse-engineer-eval design (in .claude/private-skills/ → moved concept to evals/)\n\n=== EVAL PROJECTS SCAFFOLDED (via gad eval setup CLI) ===\n1. reverse-engineer-eval — two targets: grime-time + visualeditor-payloadcms\n2. gad-skill-creator-eval — measures skill creation quality\n3. eval-skill-install-eval — measures skill installation + comparison workflow\n\n=== DECISIONS (gad-95 through gad-107) ===\n95: Self-evaluation from real brownfield data\n96: Reverse-engineer eval — two-phase methodology\n97: trace-analysis + self-eval are public framework skills\n98: Remove /gad:join-discord\n99: Skills prefer CLI but use judgment — methodology skills valid\n100: GAD skill creator from Anthropic base\n101: gad data CRUD (DEFERRED per gad-106)\n102: Skill creation → immediate eval project + framework labeling\n103: Computed trace metrics long-lived, raw logs capped\n104: Task-skill-agent attribution as formal tags in artifacts\n105: Enhance workflow — review tasks for repetitive patterns → script/CLI/skill\n106: Defer gad data CLI — keep it light\n107: gad eval --input for skill installation into eval projects\n\n=== SELF-EVAL (real data) ===\n2403 events | 180 tasks (163 done) | 102 decisions | 18.2% overhead | 80% loop compliance\n\n=== SITE FIXES ===\nExperimentLog, RoundResults, HoverCard, Mermaid diagrams, shadcn (12 components + tw-animate-css), zustand store, data/*.json, hook error handling, self-eval pipeline with append-only snapshots\n\n=== NEXT SESSION ===\n1. Build landing page component for self-eval display\n2. First reverse-engineer eval run (grime-time target)\n3. Make gad:merge-skill and gad:create-skill invokable as slash commands\n4. Remove /gad:join-discord\n5. Add gad rounds CLI command\n6. User plays round 5 builds\n7. Playable.tsx + Nav.tsx + RoundResults.tsx refactored by user — respect subcomponent structure\n8. Test gad-skill-creator by using it to create the next skill we need",
+  "nextAction": "Session 2026-04-10 — all 10 planned tasks completed.\n\n=== COMPLETED THIS BATCH ===\n\n| # | Type | Task | Status |\n|---|---|---|---|\n| 1 | Framework | gad-104: skill/agent/type attributes in TASK-REGISTRY.xml | done |\n| 2 | Framework | gad-108: pipeline as formal task type | done |\n| 3 | CLI | gad eval --install-skills (copy skill into eval template) | done |\n| 4 | CLI | gad rounds (list/show/json round data) | done |\n| 5 | Skill | gad:create-skill slash command | done |\n| 6 | Skill | gad:merge-skill slash command | done |\n| 7 | CLI | gad data list/get/set (CRUD for data/*.json) | done |\n| 8 | Site | SelfEval component (components/landing/self-eval/) | done |\n| 9 | Eval | reverse-engineer-eval v1 prompt generated with skill installed | ready |\n| 10 | Cleanup | /gad:join-discord removed | done |\n\n=== NEW CLI COMMANDS ===\n- gad data list — show all data collections\n- gad data get &lt;file.key&gt; — read value (dot notation)\n- gad data set &lt;file.key&gt; &lt;value&gt; — write value\n- gad rounds — list experiment rounds\n- gad rounds --round N — show round detail\n- gad rounds --json — JSON output\n- gad eval run --install-skills &lt;paths&gt; — install skills into eval template before running\n\n=== DECISIONS THIS SESSION (gad-95 through gad-109) ===\n15 total decisions captured covering: self-evaluation, reverse-engineer eval, skills taxonomy, attribution tagging, enhance workflow, pipeline types, lowdb data CLI, eval skill installation\n\n=== SELF-EVAL (growing) ===\n2,562 events | 180 tasks (163 done) | 108 decisions | 19.0% overhead | 80% loop compliance\n\n=== NEXT SESSION ===\n1. Run reverse-engineer-eval v1 agent on grime-time target\n2. Wire SelfEval component into page.tsx (user is refactoring landing page)\n3. Test gad:create-skill by creating the next skill needed\n4. Test gad:merge-skill on overlapping skills\n5. User plays round 5 builds and scores them\n6. Add per-phase token metrics to compute-self-eval pipeline (gad-103)\n7. Respect user's component refactoring (Playable split into subcomponents, Nav refactored, etc.)",
   "lastUpdated": "2026-04-10",
   "phases": [
     {
@@ -1955,6 +1955,56 @@ export const PLANNING_STATE: PlanningState = {
   "doneTasksCount": 141,
   "recentDecisions": [
     {
+      "id": "gad-119",
+      "title": "Interactive Gantt chart for phases and rounds with hover stats",
+      "summary": "Replace or augment the current phase/round displays with interactive Gantt charts. Phases as horizontal bars on a timeline. Click a phase to expand tasks. Hover for stats (pressure score, token count, task count, duration). Same pattern for RoundResults — Gantt chart of rounds, click shows results, hover shows summary stats. Use recharts or a lightweight Gantt library compatible with the existing "
+    },
+    {
+      "id": "gad-118",
+      "title": "GAD discipline scoring for evals using the framework",
+      "summary": "Evals running with the GAD workflow should compute GAD discipline scores from their traces — same metrics as self-eval (overhead ratio, loop compliance, planning doc freshness, decision capture rate). These scores live in the eval's TRACE.json and are displayed on the run detail page. The eval's source files retain trace data for future reference. README of each eval repo should include scores whe"
+    },
+    {
+      "id": "gad-117",
+      "title": "Quick start guide + simplified install — no repo clone required",
+      "summary": "GAD needs a quick start guide for onboarding: install Claude Code or Codex CLI, install GAD (`npx get-anything-done`), run first eval. No repo clone required for users — the eval framework should work from any project. Documentation priority: quick start, eval setup guide, skill creation guide, CLI reference."
+    },
+    {
+      "id": "gad-116",
+      "title": "Playable archive redesign for thousands of evals across domains",
+      "summary": "The Playable Archive needs redesign for scale — thousands of evaluations across game/skill/software/business/stories domains, with relationships between evals (e.g., reverse-engineer → build-from-requirements). Non-GUI builds show their README. Multi-domain filtering. Tech stack badges. Source + build size display. Related eval linking. This is a Phase 28+ project."
+    },
+    {
+      "id": "gad-115",
+      "title": "Pressure per phase drives skill creation opportunities",
+      "summary": "When pressure is high on a phase (many tasks, many crosscuts per gad-75/gad-79), that signals skill creation opportunities — the complexity required more work, meaning patterns exist that could be captured as skills. After completing a high-pressure phase, review for: repeated commands (→ script/CLI), repeated patterns (→ skill), repeated coordination (→ agent). Pressure scores should be computed "
+    },
+    {
+      "id": "gad-114",
+      "title": "Human time estimation vs agent time — comparison metric per eval",
+      "summary": "Before each eval run, the agent estimates how long the requirements would take a human developer to implement (without AI tools). This goes into TRACE.json as `human_estimate_hours`. After the run, we have actual agent duration. The ratio (estimate / actual) shows the speedup factor. This is publishable data — \"this eval's requirements would take a human ~40 hours, the agent did it in 23 minutes.\""
+    },
+    {
+      "id": "gad-113",
+      "title": "Evals have timestamps, build requirements, and completion gates",
+      "summary": "Every eval run is timestamped (started, ended) in TRACE.json. An eval is only \"done\" when: (1) the build requirement is produced (game build, requirements file, composition, running app), (2) human review is submitted. Build requirement is defined per domain in gad.json as `build_requirement` field. For reverse-engineer, the build is the requirements file — but it's gated until a second eval imple"
+    },
+    {
+      "id": "gad-112",
+      "title": "gad eval inherit-skills — CLI command to copy emergent skills from one eval into another",
+      "summary": "Easy CLI command to inherit skills from a completed eval run into a new eval template. `gad eval inherit-skills --from escape-the-dungeon-bare/v5 --to escape-the-dungeon-emergent`. This is the mechanism for testing GAD+Skills (with inheritance). The command copies skills from the source run's game/.planning/skills/ into the target template, records the lineage in metadata. Distinct from --install-"
+    },
+    {
+      "id": "gad-111",
+      "title": "Tech stack comparison evals: same requirements, different frameworks",
+      "summary": "For game evals, compare tech stacks: Phaser, PixiJS, Three.js, Babylon.js alongside existing Kaplay/DOM builds. Same requirements, different stack in the template. The tech stack is metadata in gad.json (`tech_stack` field). Eval matrix: requirements with tech stack specified, requirements without tech stack (agent chooses), requirements with skills, requirements with skills + tech stack. This pro"
+    },
+    {
+      "id": "gad-110",
+      "title": "Eval domain categories: game, skill, software, business, stories",
+      "summary": "Eval projects are categorized by domain — not just mode (greenfield/brownfield) and workflow (gad/bare/emergent). Domains: game (escape-the-dungeon, tech-stack comparisons), skill (reverse-engineer, gad-skill-creator), software (business apps, CMS templates), business (productivity tools), stories (narrative content, compositions). The domain determines the build requirement — games need a playabl"
+    },
+    {
       "id": "gad-109",
       "title": "gad data uses lowdb with /data as the managed database",
       "summary": "The gad data CLI subcommand uses lowdb (https://github.com/typicode/lowdb) with the data/ folder as the database. JSON files in data/ are both the database AND version-controlled codebase artifacts — lowdb reads/writes them directly. This gives us CRUD operations via CLI while keeping the data human-readable and git-tracked. Implement after eval --install-skills ships."
@@ -1963,56 +2013,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-108",
       "title": "Pipeline is a formal artifact category alongside skill, agent, eval",
       "summary": "Pipeline tasks (compute-self-eval, build-site-data, etc.) are a distinct category in our artifact tracking. The table format with Type column (skill, eval, pipeline) is the standard for listing artifacts. Pipeline tasks should be tagged in TASK-REGISTRY.xml same as skills and agents. Decoupled piping with the GAD CLI is the design goal — pipelines are composable CLI command chains."
-    },
-    {
-      "id": "gad-107",
-      "title": "gad eval --input for skill installation into eval projects",
-      "summary": "The eval CLI should support installing skills into eval project templates before or after runs. `gad eval run --install-skills path/to/skill [...]` installs skill(s) into the eval template, populates the data (AGENTS.md skill references, template/skills/ directory), and tracks what was installed. This enables: (1) point at any skill folder and wrap it as an eval, (2) install skills into existing e"
-    },
-    {
-      "id": "gad-106",
-      "title": "Defer gad data CLI — keep it light",
-      "summary": "The gad data CRUD subcommand (gad-101) is deferred. Keep the CLI light. JSON files are readable and editable directly. Add data commands only when there's a proven workflow need, not speculatively."
-    },
-    {
-      "id": "gad-105",
-      "title": "Enhance workflow: review task, find repetitive commands, propose script/CLI/skill",
-      "summary": "Add \"enhance\" as a workflow alongside merge. When reviewing a completed task: (1) what repetitive commands were there? (2) should we create a script and invoke that? (3) or stack commands and keep instructions? (4) or officially add to the gad CLI because it's workflow-related? This is the feedback loop from usage to tooling. A task that used 5 sequential Bash commands is a candidate for a script."
-    },
-    {
-      "id": "gad-104",
-      "title": "Task-skill-agent attribution is a formal tag in GAD artifacts",
-      "summary": "Every task in TASK-REGISTRY.xml should tag which skill(s) and agent(s) were involved. Format: `skill=\"skill-name\"` and `agent=\"agent-name\"` attributes on the task element. Named agents (gad-planner, gad-verifier, etc.) use their name; unnamed/default agents use \"default\". Multiple skills on one task signals a merge/enhance opportunity. The AI knows during the session which skills and agents are ac"
-    },
-    {
-      "id": "gad-103",
-      "title": "Computed trace metrics are long-lived — raw logs are capped",
-      "summary": "Raw trace logs (.gad-log/*.jsonl, .trace-events.jsonl) have caps (1000 events for trace, daily rotation for gad-log). But computed/mined values from those logs are long-lived static data — once computed, they persist in site/data/self-eval.json and don't need recomputation. The compute-self-eval pipeline runs during prebuild and produces snapshots. Key metrics to mine per computation window: token"
-    },
-    {
-      "id": "gad-102",
-      "title": "Skill creation immediately produces an eval project on the site",
-      "summary": "When a skill is created via gad:create-skill, immediately scaffold an eval project for it (`gad eval setup`) and register it on the site. GAD framework skills (skills/commands/agents related to the framework itself) must be labeled as framework-level and require formal evaluation. Non-framework skills used in real workflow still show usage data on the site from trace logs — the data is already bei"
-    },
-    {
-      "id": "gad-101",
-      "title": "gad data — CRUD subcommand for site/data/ and data/ JSON pseudo-database",
-      "summary": "Add `gad data list|get|set|add|remove` subcommand for CRUD operations on the JSON files in data/ (repo-level pseudo-db) and site/data/ (site-level static data). Treat it like a local database with CLI access. Examples: `gad data list` shows all collections, `gad data get hypotheses.freedom` reads a specific entry, `gad data set rounds.\"Round 5\".status awaiting_review` updates a field. This replace"
-    },
-    {
-      "id": "gad-100",
-      "title": "GAD-specific skill creator built from Anthropic's skill-creator + our artifacts/CLI",
-      "summary": "Install the Anthropic skill-creator (`npx skills add https://github.com/anthropics/skills --skill skill-creator`) and use it to create a GAD-specific derivative. The GAD skill creator knows our planning artifacts (STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml), our CLI commands, our eval framework, and the agentskills.io conventions. It doesn't create more skills for our artifacts — it creates skill"
-    },
-    {
-      "id": "gad-99",
-      "title": "Skills prefer CLI commands but use good judgment — methodology skills are valid",
-      "summary": "Skills should use CLI commands when they exist — `gad eval setup` not manual file creation. But this is judgment, not a rule. Toolless methodology skills are perfectly valid. The goal is to pack utility into the CLI and have skills leverage it, creating a cycle: CLI grows → skills chain commands → overlapping skills get merged → CLI absorbs proven patterns. When 3 sequential commands solve a workf"
-    },
-    {
-      "id": "gad-98",
-      "title": "Remove /gad:join-discord — dead command",
-      "summary": "The /gad:join-discord command is not useful. Remove it from the help reference and skill registry."
     }
   ]
 };

@@ -7,7 +7,10 @@
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": ["gad-explainer-video", "gad-explainer-video-emergent"],
+  "compare_to": [
+    "gad-explainer-video",
+    "gad-explainer-video-emergent"
+  ],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": false,
@@ -17,13 +20,16 @@
   },
   "scoring": {
     "weights": {
-      "requirement_coverage": 0.20,
+      "requirement_coverage": 0.2,
       "implementation_quality": 0.15,
-      "video_polish": 0.20,
+      "video_polish": 0.2,
       "pedagogical_clarity": 0.15,
-      "workflow_quality": 0.10,
+      "workflow_quality": 0.1,
       "time_efficiency": 0.05,
       "human_review": 0.15
     }
-  }
+  },
+  "domain": "stories",
+  "build_requirement": "Remotion composition",
+  "tech_stack": "remotion"
 }

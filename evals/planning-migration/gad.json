@@ -5,11 +5,13 @@
   "baseline": "planning-sink-backup-20260404",
   "methodology_version": "1.0.0",
   "scoring": {
-    "format_compliance": 0.30,
+    "format_compliance": 0.3,
     "lossless_roundtrip": 0.35,
-    "trace_coverage": 0.20,
+    "trace_coverage": 0.2,
     "sink_alignment": 0.15
   },
   "trace": true,
-  "color": "active"
+  "color": "active",
+  "domain": "tooling",
+  "build_requirement": "migrated planning files"
 }

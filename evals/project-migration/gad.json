@@ -4,9 +4,11 @@
   "description": "Measures quality and completeness of migrating a project from a legacy planning framework (RP) to GAD. Scores planning continuity, skill coverage, and context efficiency before and after.",
   "scoring": {
     "planning_continuity": 0.35,
-    "skill_coverage": 0.30,
-    "context_efficiency": 0.20,
+    "skill_coverage": 0.3,
+    "context_efficiency": 0.2,
     "docs_sink_alignment": 0.15
   },
-  "trace": true
+  "trace": true,
+  "domain": "tooling",
+  "build_requirement": "migrated project files"
 }

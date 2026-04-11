@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-11T02:13:35.641Z",
+    "generated": "2026-04-11T16:22:59.774Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -383,6 +383,66 @@
     }
   ],
   "decisions": [
+    {
+      "id": "gad-119",
+      "title": "Interactive Gantt chart for phases and rounds with hover stats",
+      "summary": "Replace or augment the current phase/round displays with interactive Gantt charts. Phases as horizontal bars on a timeline. Click a phase to expand tasks. Hover for stats (pressure score, token count, task count, duration). Same pattern for RoundResults — Gantt chart of rounds, click shows results, hover shows summary stats. Use recharts or a lightweight Gantt library compatible with the existing site stack.",
+      "impact": "New component: GanttChart in components/charts/. Used in both Workflow section (phases) and RoundResults section (rounds). Pressure data feeds the visualization."
+    },
+    {
+      "id": "gad-118",
+      "title": "GAD discipline scoring for evals using the framework",
+      "summary": "Evals running with the GAD workflow should compute GAD discipline scores from their traces — same metrics as self-eval (overhead ratio, loop compliance, planning doc freshness, decision capture rate). These scores live in the eval's TRACE.json and are displayed on the run detail page. The eval's source files retain trace data for future reference. README of each eval repo should include scores when reviewed. CLI automates score injection into READMEs.",
+      "impact": "Eval TRACE.json gains gad_discipline section. CLI command to inject scores into README. Site displays discipline scores alongside quality scores for GAD workflow evals."
+    },
+    {
+      "id": "gad-117",
+      "title": "Quick start guide + simplified install — no repo clone required",
+      "summary": "GAD needs a quick start guide for onboarding: install Claude Code or Codex CLI, install GAD (`npx get-anything-done`), run first eval. No repo clone required for users — the eval framework should work from any project. Documentation priority: quick start, eval setup guide, skill creation guide, CLI reference.",
+      "impact": "New docs: quick-start.md, eval-guide.md. Install flow simplified. Site gets /quickstart route."
+    },
+    {
+      "id": "gad-116",
+      "title": "Playable archive redesign for thousands of evals across domains",
+      "summary": "The Playable Archive needs redesign for scale — thousands of evaluations across game/skill/software/business/stories domains, with relationships between evals (e.g., reverse-engineer → build-from-requirements). Non-GUI builds show their README. Multi-domain filtering. Tech stack badges. Source + build size display. Related eval linking. This is a Phase 28+ project.",
+      "impact": "Major site redesign queued. Current playable archive works for dozens of game builds but won't scale to thousands of multi-domain evals."
+    },
+    {
+      "id": "gad-115",
+      "title": "Pressure per phase drives skill creation opportunities",
+      "summary": "When pressure is high on a phase (many tasks, many crosscuts per gad-75/gad-79), that signals skill creation opportunities — the complexity required more work, meaning patterns exist that could be captured as skills. After completing a high-pressure phase, review for: repeated commands (→ script/CLI), repeated patterns (→ skill), repeated coordination (→ agent). Pressure scores should be computed per phase and displayed on the site with interactive visualization. The Gantt chart idea: phases as horizontal bars, click for tasks, hover for stats (pressure, tokens, task count).",
+      "impact": "Pressure computed per phase in the self-eval pipeline. Site gets interactive Gantt chart component for phases and rounds. High-pressure phases flagged for skill creation review."
+    },
+    {
+      "id": "gad-114",
+      "title": "Human time estimation vs agent time — comparison metric per eval",
+      "summary": "Before each eval run, the agent estimates how long the requirements would take a human developer to implement (without AI tools). This goes into TRACE.json as `human_estimate_hours`. After the run, we have actual agent duration. The ratio (estimate / actual) shows the speedup factor. This is publishable data — \"this eval's requirements would take a human ~40 hours, the agent did it in 23 minutes.\" Time estimation is part of the eval prompt, not a separate step.",
+      "impact": "TRACE.json gains human_estimate_hours. Eval prompt includes estimation instruction. Site shows speedup ratio. Powerful marketing data."
+    },
+    {
+      "id": "gad-113",
+      "title": "Evals have timestamps, build requirements, and completion gates",
+      "summary": "Every eval run is timestamped (started, ended) in TRACE.json. An eval is only \"done\" when: (1) the build requirement is produced (game build, requirements file, composition, running app), (2) human review is submitted. Build requirement is defined per domain in gad.json as `build_requirement` field. For reverse-engineer, the build is the requirements file — but it's gated until a second eval implements those requirements and produces a working build. For video evals, the build is the Remotion composition (src is the build until mp4 export exists). Eval data includes source file sizes alongside build sizes.",
+      "impact": "gad.json gains build_requirement field. TRACE.json gains source_size_bytes and build_size_bytes. Eval completion is gated on build + review. Site shows both sizes."
+    },
+    {
+      "id": "gad-112",
+      "title": "gad eval inherit-skills — CLI command to copy emergent skills from one eval into another",
+      "summary": "Easy CLI command to inherit skills from a completed eval run into a new eval template. `gad eval inherit-skills --from escape-the-dungeon-bare/v5 --to escape-the-dungeon-emergent`. This is the mechanism for testing GAD+Skills (with inheritance). The command copies skills from the source run's game/.planning/skills/ into the target template, records the lineage in metadata. Distinct from --install-skills which installs framework skills — this inherits agent-authored runtime skills.",
+      "impact": "New CLI command. Enables easy emergent skill testing. Skills lineage tracked in eval metadata."
+    },
+    {
+      "id": "gad-111",
+      "title": "Tech stack comparison evals: same requirements, different frameworks",
+      "summary": "For game evals, compare tech stacks: Phaser, PixiJS, Three.js, Babylon.js alongside existing Kaplay/DOM builds. Same requirements, different stack in the template. The tech stack is metadata in gad.json (`tech_stack` field). Eval matrix: requirements with tech stack specified, requirements without tech stack (agent chooses), requirements with skills, requirements with skills + tech stack. This produces data on whether framework choice or skill availability matters more for output quality.",
+      "impact": "New eval projects per tech stack. gad.json gains tech_stack field. Eval comparison includes tech stack as a variable. Site shows tech stack badges on eval cards."
+    },
+    {
+      "id": "gad-110",
+      "title": "Eval domain categories: game, skill, software, business, stories",
+      "summary": "Eval projects are categorized by domain — not just mode (greenfield/brownfield) and workflow (gad/bare/emergent). Domains: game (escape-the-dungeon, tech-stack comparisons), skill (reverse-engineer, gad-skill-creator), software (business apps, CMS templates), business (productivity tools), stories (narrative content, compositions). The domain determines the build requirement — games need a playable build, skills need a requirements file, software needs a running app, stories need a composition. Domain is a field in gad.json.",
+      "impact": "gad.json gains `domain` field. gad eval list shows domain column. Site groups evals by domain. Playable archive becomes multi-domain (games + software + readmes)."
+    },
     {
       "id": "gad-109",
       "title": "gad data uses lowdb with /data as the managed database",
@@ -4326,6 +4386,76 @@
     }
   ],
   "searchIndex": [
+    {
+      "id": "gad-119",
+      "title": "Interactive Gantt chart for phases and rounds with hover stats",
+      "kind": "decision",
+      "href": "/decisions#gad-119",
+      "body": "gad-119 interactive gantt chart for phases and rounds with hover stats replace or augment the current phase/round displays with interactive gantt charts. phases as horizontal bars on a timeline. click a phase to expand tasks. hover for stats (pressure score, token count, task count, duration). same pattern for roundresults — gantt chart of rounds, click shows results, hover shows summary stats. use recharts or a lightweight gantt library compatible with the existing "
+    },
+    {
+      "id": "gad-118",
+      "title": "GAD discipline scoring for evals using the framework",
+      "kind": "decision",
+      "href": "/decisions#gad-118",
+      "body": "gad-118 gad discipline scoring for evals using the framework evals running with the gad workflow should compute gad discipline scores from their traces — same metrics as self-eval (overhead ratio, loop compliance, planning doc freshness, decision capture rate). these scores live in the eval's trace.json and are displayed on the run detail page. the eval's source files retain trace data for future reference. readme of each eval repo should include scores whe"
+    },
+    {
+      "id": "gad-117",
+      "title": "Quick start guide + simplified install — no repo clone required",
+      "kind": "decision",
+      "href": "/decisions#gad-117",
+      "body": "gad-117 quick start guide + simplified install — no repo clone required gad needs a quick start guide for onboarding: install claude code or codex cli, install gad (`npx get-anything-done`), run first eval. no repo clone required for users — the eval framework should work from any project. documentation priority: quick start, eval setup guide, skill creation guide, cli reference."
+    },
+    {
+      "id": "gad-116",
+      "title": "Playable archive redesign for thousands of evals across domains",
+      "kind": "decision",
+      "href": "/decisions#gad-116",
+      "body": "gad-116 playable archive redesign for thousands of evals across domains the playable archive needs redesign for scale — thousands of evaluations across game/skill/software/business/stories domains, with relationships between evals (e.g., reverse-engineer → build-from-requirements). non-gui builds show their readme. multi-domain filtering. tech stack badges. source + build size display. related eval linking. this is a phase 28+ project."
+    },
+    {
+      "id": "gad-115",
+      "title": "Pressure per phase drives skill creation opportunities",
+      "kind": "decision",
+      "href": "/decisions#gad-115",
+      "body": "gad-115 pressure per phase drives skill creation opportunities when pressure is high on a phase (many tasks, many crosscuts per gad-75/gad-79), that signals skill creation opportunities — the complexity required more work, meaning patterns exist that could be captured as skills. after completing a high-pressure phase, review for: repeated commands (→ script/cli), repeated patterns (→ skill), repeated coordination (→ agent). pressure scores should be computed "
+    },
+    {
+      "id": "gad-114",
+      "title": "Human time estimation vs agent time — comparison metric per eval",
+      "kind": "decision",
+      "href": "/decisions#gad-114",
+      "body": "gad-114 human time estimation vs agent time — comparison metric per eval before each eval run, the agent estimates how long the requirements would take a human developer to implement (without ai tools). this goes into trace.json as `human_estimate_hours`. after the run, we have actual agent duration. the ratio (estimate / actual) shows the speedup factor. this is publishable data — \"this eval's requirements would take a human ~40 hours, the agent did it in 23 minutes.\""
+    },
+    {
+      "id": "gad-113",
+      "title": "Evals have timestamps, build requirements, and completion gates",
+      "kind": "decision",
+      "href": "/decisions#gad-113",
+      "body": "gad-113 evals have timestamps, build requirements, and completion gates every eval run is timestamped (started, ended) in trace.json. an eval is only \"done\" when: (1) the build requirement is produced (game build, requirements file, composition, running app), (2) human review is submitted. build requirement is defined per domain in gad.json as `build_requirement` field. for reverse-engineer, the build is the requirements file — but it's gated until a second eval imple"
+    },
+    {
+      "id": "gad-112",
+      "title": "gad eval inherit-skills — CLI command to copy emergent skills from one eval into another",
+      "kind": "decision",
+      "href": "/decisions#gad-112",
+      "body": "gad-112 gad eval inherit-skills — cli command to copy emergent skills from one eval into another easy cli command to inherit skills from a completed eval run into a new eval template. `gad eval inherit-skills --from escape-the-dungeon-bare/v5 --to escape-the-dungeon-emergent`. this is the mechanism for testing gad+skills (with inheritance). the command copies skills from the source run's game/.planning/skills/ into the target template, records the lineage in metadata. distinct from --install-"
+    },
+    {
+      "id": "gad-111",
+      "title": "Tech stack comparison evals: same requirements, different frameworks",
+      "kind": "decision",
+      "href": "/decisions#gad-111",
+      "body": "gad-111 tech stack comparison evals: same requirements, different frameworks for game evals, compare tech stacks: phaser, pixijs, three.js, babylon.js alongside existing kaplay/dom builds. same requirements, different stack in the template. the tech stack is metadata in gad.json (`tech_stack` field). eval matrix: requirements with tech stack specified, requirements without tech stack (agent chooses), requirements with skills, requirements with skills + tech stack. this pro"
+    },
+    {
+      "id": "gad-110",
+      "title": "Eval domain categories: game, skill, software, business, stories",
+      "kind": "decision",
+      "href": "/decisions#gad-110",
+      "body": "gad-110 eval domain categories: game, skill, software, business, stories eval projects are categorized by domain — not just mode (greenfield/brownfield) and workflow (gad/bare/emergent). domains: game (escape-the-dungeon, tech-stack comparisons), skill (reverse-engineer, gad-skill-creator), software (business apps, cms templates), business (productivity tools), stories (narrative content, compositions). the domain determines the build requirement — games need a playabl"
+    },
     {
       "id": "gad-109",
       "title": "gad data uses lowdb with /data as the managed database",

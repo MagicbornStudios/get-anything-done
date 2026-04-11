@@ -12,7 +12,10 @@
   "trace": true,
   "template": "template/",
   "extends": "_brownfield-extensions-v4.md",
-  "compare_to": ["etd-brownfield-gad", "etd-brownfield-emergent"],
+  "compare_to": [
+    "etd-brownfield-gad",
+    "etd-brownfield-emergent"
+  ],
   "constraints": {
     "uses_gad_framework": false,
     "starts_from_existing_codebase": true,
@@ -20,12 +23,14 @@
   },
   "scoring": {
     "weights": {
-      "requirement_coverage": 0.20,
-      "implementation_quality": 0.20,
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.2,
       "workflow_emergence": 0.15,
-      "iteration_evidence": 0.10,
+      "iteration_evidence": 0.1,
       "time_efficiency": 0.05,
-      "human_review": 0.30
+      "human_review": 0.3
     }
-  }
+  },
+  "domain": "game",
+  "build_requirement": "playable HTML game"
 }

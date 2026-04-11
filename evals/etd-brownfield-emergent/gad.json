@@ -12,7 +12,10 @@
   "trace": true,
   "template": "template/",
   "extends": "_brownfield-extensions-v4.md",
-  "compare_to": ["etd-brownfield-gad", "etd-brownfield-bare"],
+  "compare_to": [
+    "etd-brownfield-gad",
+    "etd-brownfield-bare"
+  ],
   "inherits_from": "escape-the-dungeon-emergent",
   "constraints": {
     "uses_gad_framework": false,
@@ -22,13 +25,15 @@
   },
   "scoring": {
     "weights": {
-      "requirement_coverage": 0.20,
+      "requirement_coverage": 0.2,
       "implementation_quality": 0.15,
       "skill_reuse": 0.15,
-      "workflow_quality": 0.10,
+      "workflow_quality": 0.1,
       "iteration_evidence": 0.05,
       "time_efficiency": 0.05,
-      "human_review": 0.30
+      "human_review": 0.3
     }
-  }
+  },
+  "domain": "game",
+  "build_requirement": "playable HTML game"
 }
