@@ -1,4 +1,5 @@
 import { Download, FileText, GitCommit } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBytes } from "@/components/landing/requirements/requirements-shared";
 import { CURRENT_REQUIREMENTS } from "@/lib/catalog.generated";
@@ -28,14 +29,17 @@ export function RequirementsDownloads() {
               <span className="text-xs text-muted-foreground tabular-nums">
                 {formatBytes(req.bytes)}
               </span>
-              <a
-                href={req.path}
-                download
-                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-auto gap-2 rounded-full border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold [&_svg]:size-3"
+                asChild
               >
-                <Download size={12} aria-hidden />
-                XML
-              </a>
+                <a href={req.path} download>
+                  <Download size={12} aria-hidden />
+                  XML
+                </a>
+              </Button>
             </CardContent>
           </Card>
         ))}
@@ -49,14 +53,17 @@ export function RequirementsDownloads() {
           </CardHeader>
           <CardContent className="flex items-center justify-between gap-3">
             <span className="text-xs text-muted-foreground">REQUIREMENTS-VERSIONS.md</span>
-            <a
-              href="/downloads/requirements/REQUIREMENTS-VERSIONS.md"
-              download
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-2 rounded-full border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold [&_svg]:size-3"
+              asChild
             >
-              <Download size={12} aria-hidden />
-              MD
-            </a>
+              <a href="/downloads/requirements/REQUIREMENTS-VERSIONS.md" download>
+                <Download size={12} aria-hidden />
+                MD
+              </a>
+            </Button>
           </CardContent>
         </Card>
       </div>

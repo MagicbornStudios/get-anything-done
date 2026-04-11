@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { EvalProjectMeta } from "@/lib/eval-data";
 import { SKILLS } from "@/lib/catalog.generated";
 import { scopedSkillsFor } from "@/app/projects/[id]/project-detail-shared";
@@ -17,17 +19,23 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
         <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">{scope.description}</p>
 
         {scope.kind === "framework" && (
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-sky-500/40 bg-sky-500/5 px-4 py-2 text-xs font-semibold text-sky-300">
+          <Badge
+            variant="outline"
+            className="mt-4 gap-2 border-sky-500/40 bg-sky-500/5 px-4 py-2 text-xs font-semibold normal-case tracking-normal text-sky-300"
+          >
             <Sparkles size={12} aria-hidden />
             Full framework catalog — {SKILLS.length} skills available
-          </p>
+          </Badge>
         )}
         {scope.kind === "bootstrap-only" && (
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/5 px-4 py-2 text-xs font-semibold text-emerald-300">
+          <Badge
+            variant="outline"
+            className="mt-4 gap-2 border-emerald-500/40 bg-emerald-500/5 px-4 py-2 text-xs font-semibold normal-case tracking-normal text-emerald-300"
+          >
             <Sparkles size={12} aria-hidden />
             Bootstrap set — {scope.skills.length} skill{scope.skills.length === 1 ? "" : "s"}{" "}
             inherited
-          </p>
+          </Badge>
         )}
 
         {scope.kind !== "framework" && scope.skills.length > 0 && (
@@ -45,12 +53,14 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
           </div>
         )}
         {scope.kind === "framework" && (
-          <Link
-            href="/gad"
-            className="mt-8 inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-5 py-2.5 text-xs font-semibold text-foreground hover:border-accent hover:text-accent transition-colors"
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-8 gap-2 rounded-full border-border/70 bg-card/40 px-5 py-2.5 text-xs font-semibold hover:border-accent hover:text-accent"
+            asChild
           >
-            Browse the full GAD catalog →
-          </Link>
+            <Link href="/gad">Browse the full GAD catalog →</Link>
+          </Button>
         )}
       </div>
     </section>

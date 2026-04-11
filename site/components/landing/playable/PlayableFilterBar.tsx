@@ -11,6 +11,7 @@ import {
   WORKFLOW_TINT,
 } from "@/components/landing/playable/playable-shared";
 import type { ReviewState } from "@/lib/filter-store";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -218,15 +219,21 @@ export function PlayableFilterBar({
           of <span className="font-semibold text-foreground tabular-nums">{allRunsLength}</span>{" "}
           build{allRunsLength !== 1 ? "s" : ""}
           {roundFilter && (
-            <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold text-purple-300">
+            <Badge
+              variant="outline"
+              className="ml-2 gap-1 border-purple-500/40 bg-purple-500/10 py-0.5 pl-1.5 pr-2 text-[10px] font-semibold normal-case tracking-normal text-purple-300"
+            >
               <Filter size={9} aria-hidden />
               {roundFilter}
-            </span>
+            </Badge>
           )}
           {domainFilter && (
-            <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-300">
+            <Badge
+              variant="outline"
+              className="ml-2 border-sky-500/40 bg-sky-500/10 py-0.5 px-2 text-[10px] font-semibold normal-case tracking-normal text-sky-300"
+            >
               {PROJECT_FAMILIES.find((f) => f.id === domainFilter)?.label}
-            </span>
+            </Badge>
           )}
         </p>
         {hasActiveFilters && (

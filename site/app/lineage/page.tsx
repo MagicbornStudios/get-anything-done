@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { AlertTriangle, ExternalLink, GitBranch, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 
@@ -145,15 +146,17 @@ export default function LineagePage() {
                     </div>
                     <p className="text-sm italic text-muted-foreground">{p.tagline}</p>
                   </div>
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/50 px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 rounded-full border-border/70 bg-background/50 px-4 py-2 text-xs font-semibold hover:border-accent hover:text-accent [&_svg]:size-3"
+                    asChild
                   >
-                    Visit project
-                    <ExternalLink size={12} aria-hidden />
-                  </a>
+                    <a href={p.url} target="_blank" rel="noopener noreferrer">
+                      Visit project
+                      <ExternalLink size={12} aria-hidden />
+                    </a>
+                  </Button>
                 </div>
                 <div className="grid gap-6 lg:grid-cols-2">
                   <div>

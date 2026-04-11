@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Bot, FileText, Gauge, Package, Sparkles, Terminal, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
@@ -89,29 +90,38 @@ export default function GADOverviewPage() {
           </p>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <a
-              href={GITHUB_REPO}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5"
+            <Button
+              size="lg"
+              className="gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5 hover:bg-accent/90"
+              asChild
             >
-              <Terminal size={16} aria-hidden />
-              Source on GitHub
-            </a>
-            <Link
-              href="/methodology"
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+              <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer">
+                <Terminal size={16} aria-hidden />
+                Source on GitHub
+              </a>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold hover:border-accent hover:text-accent"
+              asChild
             >
-              <Gauge size={16} aria-hidden />
-              How we score
-            </Link>
-            <Link
-              href="/planning"
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+              <Link href="/methodology">
+                <Gauge size={16} aria-hidden />
+                How we score
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold hover:border-accent hover:text-accent"
+              asChild
             >
-              <FileText size={16} aria-hidden />
-              Current planning state
-            </Link>
+              <Link href="/planning">
+                <FileText size={16} aria-hidden />
+                Current planning state
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -142,13 +152,16 @@ export default function GADOverviewPage() {
                     <CardDescription className="text-base leading-7">
                       {c.description}
                     </CardDescription>
-                    <Link
-                      href={c.href}
-                      className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+                    <Button
+                      variant="link"
+                      className="mt-4 h-auto gap-1 p-0 text-xs font-semibold text-accent"
+                      asChild
                     >
-                      {c.chip}
-                      <ArrowRight size={12} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
-                    </Link>
+                      <Link href={c.href}>
+                        {c.chip}
+                        <ArrowRight size={12} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
+                      </Link>
+                    </Button>
                   </CardContent>
                 </Card>
               );

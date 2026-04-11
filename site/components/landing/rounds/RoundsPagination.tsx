@@ -1,4 +1,8 @@
+"use client";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Props = {
   total: number;
@@ -17,41 +21,46 @@ export function RoundsPagination({
 }: Props) {
   return (
     <div className="mt-8 flex items-center gap-3">
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={onPrev}
         disabled={currentIndex === 0}
-        className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border/70 disabled:hover:text-muted-foreground"
+        className="h-auto gap-1 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
       >
         <ChevronLeft size={12} aria-hidden />
         Prev
-      </button>
+      </Button>
       <div className="flex gap-1.5">
         {Array.from({ length: total }, (_, i) => (
-          <button
+          <Button
             key={i}
             type="button"
+            variant="outline"
             onClick={() => onSelectIndex(i)}
-            className={[
-              "size-8 rounded-full text-xs font-semibold transition-colors",
+            className={cn(
+              "size-8 shrink-0 rounded-full p-0 text-xs font-semibold shadow-none",
               i === currentIndex
-                ? "border border-accent bg-accent text-accent-foreground"
-                : "border border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60",
-            ].join(" ")}
+                ? "border-accent bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground"
+                : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60"
+            )}
           >
             {i + 1}
-          </button>
+          </Button>
         ))}
       </div>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={onNext}
         disabled={currentIndex === total - 1}
-        className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40 disabled:hover:border-border/70 disabled:hover:text-muted-foreground"
+        className="h-auto gap-1 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
       >
         Next
         <ChevronRight size={12} aria-hidden />
-      </button>
+      </Button>
       <span className="text-xs text-muted-foreground">
         {currentIndex + 1} of {total}
       </span>

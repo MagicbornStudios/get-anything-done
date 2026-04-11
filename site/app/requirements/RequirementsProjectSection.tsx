@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Github, Download, Gauge, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   parseAddendum,
@@ -37,23 +38,29 @@ export function RequirementsProjectSection({
 
         <div className="mt-5 flex flex-wrap gap-2">
           {file.sourcePath && (
-            <a
-              href={`${REPO}/blob/main/${file.sourcePath}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1 text-xs font-medium transition-colors hover:border-accent hover:text-accent"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-3 py-1 text-xs font-medium hover:border-accent hover:text-accent [&_svg]:size-2.5"
+              asChild
             >
-              <Github size={11} aria-hidden />
-              View on GitHub
-            </a>
+              <a href={`${REPO}/blob/main/${file.sourcePath}`} target="_blank" rel="noopener noreferrer">
+                <Github size={11} aria-hidden />
+                View on GitHub
+              </a>
+            </Button>
           )}
-          <a
-            href={file.path}
-            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1 text-xs font-medium transition-colors hover:border-accent hover:text-accent"
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-3 py-1 text-xs font-medium hover:border-accent hover:text-accent [&_svg]:size-2.5"
+            asChild
           >
-            <Download size={11} aria-hidden />
-            Download .xml
-          </a>
+            <a href={file.path}>
+              <Download size={11} aria-hidden />
+              Download .xml
+            </a>
+          </Button>
         </div>
 
         {v4Base.goal && (
@@ -127,12 +134,14 @@ export function RequirementsProjectSection({
                         )}
                         <CardTitle className="text-base leading-tight">{req.title}</CardTitle>
                       </div>
-                      <Link
-                        href={`#${req.id}`}
-                        className="inline-flex items-center gap-1 rounded border border-border/60 px-2 py-0.5 text-[10px] text-muted-foreground hover:border-accent hover:text-accent"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto rounded border-border/60 px-2 py-0.5 text-[10px] font-normal text-muted-foreground hover:border-accent hover:text-accent"
+                        asChild
                       >
-                        #{req.id}
-                      </Link>
+                        <Link href={`#${req.id}`}>#{req.id}</Link>
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">

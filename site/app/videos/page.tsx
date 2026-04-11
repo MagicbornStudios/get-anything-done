@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import VideoEmbed from "@/components/video/VideoEmbed";
@@ -76,18 +77,22 @@ export default function VideosPage() {
       <section className="border-b border-border/60 bg-card/20">
         <div className="section-shell">
           <div className="flex flex-wrap gap-3 text-sm">
-            <Link
-              href="/hypotheses"
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-4 py-2 font-semibold transition-colors hover:border-accent hover:text-accent"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-4 py-2 font-semibold hover:border-accent hover:text-accent"
+              asChild
             >
-              What this explains
-            </Link>
-            <Link
-              href="/skeptic"
-              className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-4 py-2 font-semibold text-rose-300 transition-colors hover:bg-rose-500/20"
+              <Link href="/hypotheses">What this explains</Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-rose-500/40 bg-rose-500/10 px-4 py-2 font-semibold text-rose-300 hover:bg-rose-500/20"
+              asChild
             >
-              Skeptic critique
-            </Link>
+              <Link href="/skeptic">Skeptic critique</Link>
+            </Button>
           </div>
         </div>
       </section>

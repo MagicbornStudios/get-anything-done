@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TrendingUp, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
@@ -268,34 +269,50 @@ export default function FreedomHypothesisPage() {
         <div className="section-shell">
           <p className="section-kicker">Related</p>
           <div className="flex flex-wrap gap-3 text-sm">
-            <Link
-              href="/hypotheses"
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 hover:border-accent hover:text-accent"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-3 py-1.5 font-semibold hover:border-accent hover:text-accent [&_svg]:size-3"
+              asChild
             >
-              All hypotheses
-              <ArrowRight size={12} aria-hidden />
-            </Link>
-            <Link
-              href="/emergent"
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 hover:border-accent hover:text-accent"
+              <Link href="/hypotheses">
+                All hypotheses
+                <ArrowRight size={12} aria-hidden />
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-3 py-1.5 font-semibold hover:border-accent hover:text-accent [&_svg]:size-3"
+              asChild
             >
-              Compound-Skills Hypothesis (/emergent)
-              <ArrowRight size={12} aria-hidden />
-            </Link>
-            <Link
-              href="/content-driven"
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 hover:border-accent hover:text-accent"
+              <Link href="/emergent">
+                Compound-Skills Hypothesis (/emergent)
+                <ArrowRight size={12} aria-hidden />
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-3 py-1.5 font-semibold hover:border-accent hover:text-accent [&_svg]:size-3"
+              asChild
             >
-              Content-driven (planned)
-              <ArrowRight size={12} aria-hidden />
-            </Link>
-            <Link
-              href="/projects/escape-the-dungeon-bare"
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 hover:border-accent hover:text-accent"
+              <Link href="/content-driven">
+                Content-driven (planned)
+                <ArrowRight size={12} aria-hidden />
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-3 py-1.5 font-semibold hover:border-accent hover:text-accent [&_svg]:size-3"
+              asChild
             >
-              escape-the-dungeon-bare project
-              <ArrowRight size={12} aria-hidden />
-            </Link>
+              <Link href="/projects/escape-the-dungeon-bare">
+                escape-the-dungeon-bare project
+                <ArrowRight size={12} aria-hidden />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

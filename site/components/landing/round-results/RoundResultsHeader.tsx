@@ -1,4 +1,6 @@
 import { Filter, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ROUND_RESULTS_DEFAULT_HEADLINE,
@@ -48,14 +50,16 @@ export function RoundResultsHeader({
           </Select>
         </div>
         {effectiveRound && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => onLocalRoundChange(null)}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+            className="h-auto gap-1 p-0 text-[11px] font-medium text-muted-foreground hover:bg-transparent hover:text-foreground"
           >
             <X size={10} aria-hidden />
             Show all
-          </button>
+          </Button>
         )}
       </div>
 
@@ -65,10 +69,13 @@ export function RoundResultsHeader({
       <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">{headline.description}</p>
 
       {globalRoundFilter && !localRoundFilter && (
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-300">
+        <Badge
+          variant="outline"
+          className="mt-4 gap-2 border-purple-500/40 bg-purple-500/10 py-1 pl-2 pr-3 text-xs font-semibold normal-case tracking-normal text-purple-300"
+        >
           <Filter size={10} aria-hidden />
           Filtered to {globalRoundFilter} from chart
-        </div>
+        </Badge>
       )}
     </>
   );

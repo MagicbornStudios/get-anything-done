@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
 
 type RequirementsVersion = (typeof REQUIREMENTS_HISTORY)[number];
@@ -26,41 +28,47 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
 
         {/* Version pagination */}
         <div className="mt-6 flex items-center gap-3">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
             disabled={currentIdx === 0}
-            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+            className="h-auto gap-1 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
           >
-            <ChevronLeft size={12} />
+            <ChevronLeft size={12} aria-hidden />
             Prev
-          </button>
-          <div className="flex gap-1.5">
+          </Button>
+          <div className="flex max-w-full flex-wrap gap-1.5">
             {versions.map((v, i) => (
-              <button
+              <Button
                 key={v.version}
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setCurrentIdx(i)}
-                className={[
-                  "size-8 rounded-full text-xs font-semibold transition-colors",
+                className={cn(
+                  "h-8 min-w-8 shrink-0 rounded-full px-2 text-xs font-semibold shadow-none",
                   i === currentIdx
-                    ? "border border-accent bg-accent text-accent-foreground"
-                    : "border border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60",
-                ].join(" ")}
+                    ? "border-accent bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground"
+                    : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60"
+                )}
               >
                 {v.version}
-              </button>
+              </Button>
             ))}
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => setCurrentIdx((i) => Math.min(versions.length - 1, i + 1))}
             disabled={currentIdx === versions.length - 1}
-            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+            className="h-auto gap-1 rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
           >
             Next
-            <ChevronRight size={12} />
-          </button>
+            <ChevronRight size={12} aria-hidden />
+          </Button>
           <span className="text-xs text-muted-foreground">
             {currentIdx + 1} of {versions.length}
           </span>

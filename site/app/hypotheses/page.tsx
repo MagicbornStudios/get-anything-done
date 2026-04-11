@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FlaskConical, ArrowRight, CheckCircle2, CircleDashed, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
@@ -255,27 +256,37 @@ export default function HypothesesIndexPage() {
                       </p>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Link
-                        href={h.detailHref}
-                        className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/5 px-3 py-1 text-xs font-semibold text-accent transition-colors hover:bg-accent/15"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto gap-1 rounded-full border-accent/40 bg-accent/5 px-3 py-1 text-xs font-semibold text-accent hover:bg-accent/15 [&_svg]:size-2.5"
+                        asChild
                       >
-                        Evidence page
-                        <ArrowRight size={11} aria-hidden />
-                      </Link>
-                      <Link
-                        href={h.skepticLink}
-                        className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/5 px-3 py-1 text-xs font-semibold text-rose-300 transition-colors hover:bg-rose-500/15"
-                      >
-                        Critique
-                        <ArrowRight size={11} aria-hidden />
-                      </Link>
-                      {h.evalProject && (
-                        <Link
-                          href={`/projects/${h.evalProject}`}
-                          className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-accent hover:text-accent"
-                        >
-                          {h.evalProject}
+                        <Link href={h.detailHref}>
+                          Evidence page
+                          <ArrowRight size={11} aria-hidden />
                         </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto gap-1 rounded-full border-rose-500/40 bg-rose-500/5 px-3 py-1 text-xs font-semibold text-rose-300 hover:bg-rose-500/15 [&_svg]:size-2.5"
+                        asChild
+                      >
+                        <Link href={h.skepticLink}>
+                          Critique
+                          <ArrowRight size={11} aria-hidden />
+                        </Link>
+                      </Button>
+                      {h.evalProject && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-3 py-1 text-xs font-medium text-muted-foreground hover:border-accent hover:text-accent"
+                          asChild
+                        >
+                          <Link href={`/projects/${h.evalProject}`}>{h.evalProject}</Link>
+                        </Button>
                       )}
                     </div>
                   </CardContent>
