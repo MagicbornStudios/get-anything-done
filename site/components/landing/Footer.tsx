@@ -1,4 +1,5 @@
 import { Github } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function Footer() {
@@ -16,38 +17,96 @@ export default function Footer() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Source</p>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
-                <a
-                  href="https://github.com/MagicbornStudios/get-anything-done"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  className="inline-flex items-center gap-2 text-foreground transition-colors hover:text-accent"
+                <Button
+                  variant="ghost"
+                  className="h-auto gap-2 p-0 text-foreground hover:bg-transparent hover:text-accent"
+                  asChild
                 >
-                  <Github size={14} aria-hidden />
-                  MagicbornStudios / get-anything-done
-                </a>
+                  <a href="https://github.com/MagicbornStudios/get-anything-done" rel="noopener noreferrer" target="_blank">
+                    <Github size={14} aria-hidden />
+                    MagicbornStudios / get-anything-done
+                  </a>
+                </Button>
               </li>
               <li>
-                <a
-                  href="https://github.com/gsd-build/get-shit-done"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  className="text-muted-foreground transition-colors hover:text-foreground"
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
                 >
-                  Upstream: gsd-build / get-shit-done
-                </a>
+                  <a href="https://github.com/gsd-build/get-shit-done" rel="noopener noreferrer" target="_blank">
+                    Upstream: gsd-build / get-shit-done
+                  </a>
+                </Button>
               </li>
             </ul>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jump to</p>
             <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <li><a href="/#what" className="text-muted-foreground transition-colors hover:text-foreground">What it is</a></li>
-              <li><a href="/#lineage" className="text-muted-foreground transition-colors hover:text-foreground">Lineage</a></li>
-              <li><a href="/#framework" className="text-muted-foreground transition-colors hover:text-foreground">Framework</a></li>
-              <li><a href="/#results" className="text-muted-foreground transition-colors hover:text-foreground">Results</a></li>
-              <li><a href="/#play" className="text-muted-foreground transition-colors hover:text-foreground">Play</a></li>
-              <li><a href="/#templates" className="text-muted-foreground transition-colors hover:text-foreground">Downloads</a></li>
-              <li><a href="/#run" className="text-muted-foreground transition-colors hover:text-foreground">Run it</a></li>
+              <li>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
+                >
+                  <a href="/#what">What it is</a>
+                </Button>
+              </li>
+              <li>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
+                >
+                  <a href="/#lineage">Lineage</a>
+                </Button>
+              </li>
+              <li>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
+                >
+                  <a href="/#framework">Framework</a>
+                </Button>
+              </li>
+              <li>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
+                >
+                  <a href="/#results">Results</a>
+                </Button>
+              </li>
+              <li>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
+                >
+                  <a href="/#play">Play</a>
+                </Button>
+              </li>
+              <li>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
+                >
+                  <a href="/#templates">Downloads</a>
+                </Button>
+              </li>
+              <li>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                  asChild
+                >
+                  <a href="/#run">Run it</a>
+                </Button>
+              </li>
             </ul>
           </div>
         </div>

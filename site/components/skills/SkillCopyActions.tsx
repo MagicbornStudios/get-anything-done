@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SkillCopyActionsProps {
   /** Full SKILL.md content (frontmatter + body) */
@@ -29,27 +30,31 @@ export function SkillCopyActions({ raw }: SkillCopyActionsProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={() => copy(raw, "full")}
-        className="inline-flex items-center gap-1.5 rounded-full border border-accent/50 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent transition-colors hover:bg-accent/20"
+        className="h-auto gap-1.5 rounded-full border-accent/50 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20"
       >
-        {copied === "full" ? <Check size={11} aria-hidden /> : <Copy size={11} aria-hidden />}
+        {copied === "full" ? <Check className="size-2.5" aria-hidden /> : <Copy className="size-2.5" aria-hidden />}
         {copied === "full" ? "Copied" : "Copy SKILL.md"}
-      </button>
+      </Button>
       {frontmatter && (
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => copy(frontmatter, "frontmatter")}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+          className="h-auto gap-1.5 rounded-full border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-accent hover:text-accent"
         >
           {copied === "frontmatter" ? (
-            <Check size={11} aria-hidden />
+            <Check className="size-2.5" aria-hidden />
           ) : (
-            <Copy size={11} aria-hidden />
+            <Copy className="size-2.5" aria-hidden />
           )}
           {copied === "frontmatter" ? "Copied" : "Copy frontmatter"}
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function DetailShellBackLink({
   backHref,
@@ -9,12 +10,15 @@ export default function DetailShellBackLink({
   backLabel: string;
 }) {
   return (
-    <Link
-      href={backHref}
-      className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+    <Button
+      variant="ghost"
+      className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:text-foreground"
+      asChild
     >
-      <ArrowLeft size={14} aria-hidden />
-      {backLabel}
-    </Link>
+      <Link href={backHref}>
+        <ArrowLeft size={14} aria-hidden />
+        {backLabel}
+      </Link>
+    </Button>
   );
 }

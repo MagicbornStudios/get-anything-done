@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function SkillDetailSidebarBackLink() {
   return (
-    <Link
-      href="/skills"
-      className="block rounded-2xl border border-border/70 bg-card/30 p-5 text-center text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+    <Button
+      variant="outline"
+      className="h-auto w-full rounded-2xl border-border/70 bg-card/30 py-5 text-center text-xs font-semibold text-muted-foreground hover:border-accent hover:text-accent"
+      asChild
     >
-      ← Back to skills
-    </Link>
+      <Link href="/skills">← Back to skills</Link>
+    </Button>
   );
 }
