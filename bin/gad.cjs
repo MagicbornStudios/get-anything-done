@@ -1531,6 +1531,7 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   if (sourceDocs.length > 0) sections.push(`## Source documents\n\n${sourceDocs.join('\n\n')}`);
 
   sections.push(`\n## Instructions\n`);
+  sections.push(`0. **FIRST:** Before writing any code, estimate how long these requirements would take a mid-senior human developer to implement WITHOUT AI tools. Consider the full scope: architecture, implementation, testing, debugging. Write your estimate to TRACE.json field \`human_estimate_hours\`. This is required — do it before starting implementation.`);
   sections.push(`1. Copy the .planning/ directory from the template into your working directory`);
   sections.push(`2. Implement the project following the ROADMAP.xml phases`);
   sections.push(`3. For EACH task: update TASK-REGISTRY.xml, update STATE.xml, commit with task ID — one commit per task, not per phase`);
@@ -3556,6 +3557,59 @@ const evalPreserve = defineCommand({
     if (!buildPreserved) {
       console.log(`\n⚠  No build was preserved. Agent did not produce game/dist/.`);
       console.log(`    This may be a gate failure — verify and record.`);
+    }
+
+    // Skill provenance diffing (decision gad-120, phase 31)
+    // Compare skills at start (from TRACE.json skills_provenance.start_snapshot)
+    // vs skills at end (preserved run's skills directories). New skills = authored.
+    const traceJsonPath = path.join(runDir, 'TRACE.json');
+    if (fs.existsSync(traceJsonPath)) {
+      try {
+        const trace = JSON.parse(fs.readFileSync(traceJsonPath, 'utf8'));
+        const startSnapshot = new Set(
+          (trace.skills_provenance?.start_snapshot || []).map(s => String(s))
+        );
+
+        // Collect all skill names from the preserved run's skills directories
+        const endSkills = new Set();
+        const skillCandidates = [
+          path.join(runTargetDir, '.planning', 'skills'),
+          path.join(runTargetDir, 'skills'),
+        ];
+        for (const skillDir of skillCandidates) {
+          if (fs.existsSync(skillDir)) {
+            for (const entry of fs.readdirSync(skillDir, { withFileTypes: true })) {
+              if (entry.isDirectory()) {
+                endSkills.add(entry.name);
+              } else if (entry.name.endsWith('.md') && entry.name !== 'README.md') {
+                endSkills.add(entry.name.replace(/\.md$/, ''));
+              }
+            }
+          }
+        }
+
+        // Skills that exist at end but not at start are authored
+        const authored = [];
+        for (const skill of endSkills) {
+          if (!startSnapshot.has(skill)) {
+            authored.push(skill);
+          }
+        }
+
+        // Update TRACE.json with skills_authored
+        if (!trace.skills_provenance) trace.skills_provenance = {};
+        trace.skills_provenance.end_snapshot = [...endSkills].sort();
+        trace.skills_provenance.skills_authored = authored.sort();
+        fs.writeFileSync(traceJsonPath, JSON.stringify(trace, null, 2));
+
+        if (authored.length > 0) {
+          console.log(`  Skills authored:  ${authored.length} (${authored.join(', ')})`);
+        } else {
+          console.log(`  Skills authored:  0 (no new skills created during run)`);
+        }
+      } catch (err) {
+        console.warn(`  [warn] skill provenance diff failed: ${err.message}`);
+      }
     }
 
     // Update RUN.md
