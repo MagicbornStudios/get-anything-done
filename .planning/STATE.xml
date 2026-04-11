@@ -4,19 +4,19 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 31 complete: skill ecosystem — provenance diffing, badges, creation workflow, framework labeling (commit 318d576). Build passes.
+  <next-action>Phase 30 complete: eval framework v2 — domains, tech stacks, rounds per project (5 tasks, 5 commits). All CLI and site features shipped, build passes.
 
 === DONE THIS SESSION ===
-- Skill provenance diffing in gad eval preserve (compares start vs end snapshots, writes skills_authored to TRACE.json)
-- RunSkillProvenanceSection on per-run page with installed/inherited/authored badges
-- gad:create-skill command now mandates eval project scaffold (step 6)
-- Framework skill labeling on /skills page (violet badge for framework_skill: true)
+- gad rounds --project: per-project rounds derived from TRACE.json requirements_version
+- Build requirement gate in gad eval score (checks preserved build, shows pass/fail)
+- Human time estimation instruction in eval prompt (step 0)
+- Source + build size computation in gad eval preserve (writes to TRACE.json)
+- Domain + tech stack badges on ProjectHeroSection.tsx (site)
 
 === NEXT ===
 1. GAD CLI build/release pipeline (Windows) — phase 29
-2. Merge /gad page: framework + catalog + hypothesis matrix
-3. Move rubric to project detail (gad-131)
-4. Site reusability review (gad-134)
-5. Run evals (round 5, tech-stacks, reverse-engineer)</next-action>
+2. Run evals (round 5, tech-stacks, reverse-engineer)
+3. Phase 27: structured objective data production
+4. Phase 33: reverse-engineer eval methodology</next-action>
   <last-updated>2026-04-10</last-updated>
 </state>

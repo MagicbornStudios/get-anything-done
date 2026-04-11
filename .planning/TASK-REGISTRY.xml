@@ -819,4 +819,26 @@
       <keywords>framework-skill,badge,skills-page,catalog,site</keywords>
     </task>
   </phase>
+  <phase id="30">
+    <task id="30-01" status="done"><goal>gad rounds --project shows per-project rounds derived from TRACE.json requirements_version changes across runs.</goal>
+      <resolution>Shipped 2026-04-10. Added --project arg to roundsCmd. Groups runs by requirements_version transitions, shows version/date/workflow/composite/human_review per run. Commit 5386b03.</resolution>
+      <keywords>rounds,per-project,requirements-version,TRACE.json</keywords>
+    </task>
+    <task id="30-02" status="done"><goal>Build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. Failed gate = eval incomplete.</goal>
+      <resolution>Shipped 2026-04-10. score-generator.cjs loads gad.json, checks preserved build path. SCORE.md shows gate table with pass/fail. scores.json includes build_gate_passed. Commit d94d944.</resolution>
+      <keywords>build-gate,score,build-requirement,gate</keywords>
+    </task>
+    <task id="30-03" status="done"><goal>Human time estimation in eval prompt — buildEvalPrompt() includes instruction for agent to estimate human_estimate_hours before coding.</goal>
+      <resolution>Shipped 2026-04-10. Added step 0 to eval instructions: estimate human dev time, write to TRACE.json. Commit 884036d.</resolution>
+      <keywords>human-estimate,eval-prompt,speedup-ratio</keywords>
+    </task>
+    <task id="30-04" status="done"><goal>Source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.json.</goal>
+      <resolution>Shipped 2026-04-10. Added dirSizeBytes() helper. After preservation, computes src/ and dist/ sizes. Writes to TRACE.json. Commit 747a5b7.</resolution>
+      <keywords>source-size,build-size,preserve,TRACE.json</keywords>
+    </task>
+    <task id="30-05" status="done"><goal>Site project detail shows domain badge + tech stack from eval project metadata.</goal>
+      <resolution>Shipped 2026-04-10. Added domain/techStack/buildRequirement to EvalProjectMeta, scanEvalProjects(), ProjectHeroSection.tsx. Site build passes. Commit d65b5dc.</resolution>
+      <keywords>domain,tech-stack,badge,site,project-detail</keywords>
+    </task>
+  </phase>
 </task-registry>

@@ -183,7 +183,7 @@
   <phase id="30">
     <title>Eval framework v2 — domains, tech stacks, rounds per project</title>
     <goal>Formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. Rounds per project (not global). Project → eval → round hierarchy in data model and UI. Decisions: GAD-D-88, GAD-D-90, GAD-D-110, GAD-D-111, GAD-D-113, GAD-D-114, GAD-D-121, GAD-D-132.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>28</depends>
   </phase>
   <phase id="31">
