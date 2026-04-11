@@ -1731,103 +1731,103 @@ export const FINDINGS: Finding[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "22",
   "milestone": "gad-v1.1",
-  "nextAction": "Session 2026-04-10 — all 10 planned tasks completed.\n\n=== COMPLETED THIS BATCH ===\n\n| # | Type | Task | Status |\n|---|---|---|---|\n| 1 | Framework | gad-104: skill/agent/type attributes in TASK-REGISTRY.xml | done |\n| 2 | Framework | gad-108: pipeline as formal task type | done |\n| 3 | CLI | gad eval --install-skills (copy skill into eval template) | done |\n| 4 | CLI | gad rounds (list/show/json round data) | done |\n| 5 | Skill | gad:create-skill slash command | done |\n| 6 | Skill | gad:merge-skill slash command | done |\n| 7 | CLI | gad data list/get/set (CRUD for data/*.json) | done |\n| 8 | Site | SelfEval component (components/landing/self-eval/) | done |\n| 9 | Eval | reverse-engineer-eval v1 prompt generated with skill installed | ready |\n| 10 | Cleanup | /gad:join-discord removed | done |\n\n=== NEW CLI COMMANDS ===\n- gad data list — show all data collections\n- gad data get &lt;file.key&gt; — read value (dot notation)\n- gad data set &lt;file.key&gt; &lt;value&gt; — write value\n- gad rounds — list experiment rounds\n- gad rounds --round N — show round detail\n- gad rounds --json — JSON output\n- gad eval run --install-skills &lt;paths&gt; — install skills into eval template before running\n\n=== DECISIONS THIS SESSION (gad-95 through gad-109) ===\n15 total decisions captured covering: self-evaluation, reverse-engineer eval, skills taxonomy, attribution tagging, enhance workflow, pipeline types, lowdb data CLI, eval skill installation\n\n=== SELF-EVAL (growing) ===\n2,562 events | 180 tasks (163 done) | 108 decisions | 19.0% overhead | 80% loop compliance\n\n=== NEXT SESSION ===\n1. Run reverse-engineer-eval v1 agent on grime-time target\n2. Wire SelfEval component into page.tsx (user is refactoring landing page)\n3. Test gad:create-skill by creating the next skill needed\n4. Test gad:merge-skill on overlapping skills\n5. User plays round 5 builds and scores them\n6. Add per-phase token metrics to compute-self-eval pipeline (gad-103)\n7. Respect user's component refactoring (Playable split into subcomponents, Nav refactored, etc.)",
-  "lastUpdated": "2026-04-10",
+  "nextAction": "Session 2026-04-11 — eval framework evolution batch completed.\n\n=== COMPLETED ===\n\n| # | Type | Task | Status |\n|---|---|---|---|\n| 1 | Framework | domain + tech_stack + build_requirement + human_estimate in gad.json | done |\n| 2 | CLI | gad eval inherit-skills (copy emergent skills between runs) | done |\n| 3 | Eval | Categorized all 26 eval projects by domain | done |\n| 4 | Eval | Scaffolded 4 tech-stack evals: Phaser, PixiJS, Three.js, Babylon.js | done |\n| 5 | Pipeline | Per-phase pressure scores in self-eval (10 high-pressure phases found) | done |\n| 6 | Site | GanttChart component (click to expand, hover for stats) | done |\n| 7 | Docs | quick-start.md + eval-guide.md | done |\n| 8 | CLI | gad eval readme (inject scores into project README) | done |\n\n=== DECISIONS (gad-110 through gad-119) ===\n110: Eval domain categories (game/skill/software/business/stories/tooling)\n111: Tech stack comparison evals\n112: gad eval inherit-skills CLI\n113: Eval timestamps + build requirements + completion gates\n114: Human time estimation vs agent time comparison\n115: Pressure per phase drives skill creation opportunities\n116: Playable archive redesign for thousands of evals (queued Phase 28+)\n117: Quick start guide — no repo clone required\n118: GAD discipline scoring for framework evals\n119: Interactive Gantt chart for phases and rounds\n\n=== PRESSURE DATA (top 5 phases) ===\nPhase 22: 110 (58 tasks, 26 crosscuts) — HIGHEST\nPhase 21: 56 (28 tasks, 14 crosscuts)\nPhase 14.5: 21 (7 tasks, 7 crosscuts)\nPhase 20: 20 (8 tasks, 6 crosscuts)\nPhase 14: 19 (7 tasks, 6 crosscuts)\n\n=== NEW CLI SURFACE ===\ngad eval inherit-skills --from project/vN --to project\ngad eval readme --project name\ngad eval list now shows DOMAIN column\nTRACE.json gains: domain, tech_stack, build_requirement, human_estimate_hours, source_size_bytes, build_size_bytes\n\n=== EVAL PROJECTS: 30 total (was 26) ===\n4 new: etd-phaser, etd-pixijs, etd-threejs, etd-babylonjs\n\n=== NEXT SESSION ===\n1. Wire GanttChart into Workflow + RoundResults sections (user refactoring landing page)\n2. Wire SelfEval component into page\n3. Run round 5 skills testing: GAD+Skills with/without inheritance\n4. Run tech-stack comparison evals\n5. First reverse-engineer eval on grime-time\n6. Playable archive redesign for multi-domain + thousands of evals (Phase 28)\n7. User plays round 5 builds and scores them",
+  "lastUpdated": "2026-04-11",
   "phases": [
     {
       "id": "01",
       "title": "Foundation",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "02",
       "title": "Session management",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "03",
       "title": "Planning readers — state, roadmap, tasks",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "04",
       "title": "Extended readers — decisions, requirements, errors, blockers",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "05",
       "title": "Docs sink pipeline",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "06",
       "title": "Eval framework",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "07",
       "title": "Parser 100% coverage + tests",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "08",
       "title": "Full repo planning coverage",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "09",
       "title": "Scoping and discoverability",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "10",
       "title": "GAD eats its own dogfood + planning packs",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "11",
       "title": "AGENTS.md and context system",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "12",
       "title": "Kill GSD, formalize GAD loop, reduce startup redundancy",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "13",
       "title": "Docs commands, skill content, DOCS-MAP rollout",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "14",
       "title": "Eval framework: escape-the-dungeon + tracing",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "14.5",
       "title": "Eval findings: enforce the loop, automate tracing, auto-scaffold conventions",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "15",
       "title": "GSD→GAD migration: port workflows, delete legacy",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "16",
       "title": "Sprint context window + snapshot optimization",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "17",
       "title": "Reverse-engineer skill + reader-workspace eval",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "18",
       "title": "Eval suite — parallel runs + iteration cycle",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "19",
@@ -1837,17 +1837,17 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "20",
       "title": "Real-time tooling, MCP bridge, and tooling evals",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "21",
       "title": "Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield",
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "22",
       "title": "Portfolio experiment documentation — hub, per-project, per-run, findings, graphs",
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "23",
@@ -1955,6 +1955,31 @@ export const PLANNING_STATE: PlanningState = {
   "doneTasksCount": 141,
   "recentDecisions": [
     {
+      "id": "gad-124",
+      "title": "Playable archive becomes a dedicated /evals page — catalog/marketplace pattern",
+      "summary": "The current playable archive on the landing page works for showing the last 5 rounds of game builds. But we need a dedicated /evals page that shows ALL evals across ALL rounds as a catalog/marketplace. Filter by domain, tech stack, round, workflow, review status. Show build size + source size. Show skill provenance. Show eval relationships (e.g., reverse-engineer → build-from-requirements). Everyt"
+    },
+    {
+      "id": "gad-123",
+      "title": "Docs must be on the site — docs/ markdown files need site routes",
+      "summary": "Documentation in docs/ (quick-start.md, eval-guide.md) must be rendered as routes on the site, not just exist as markdown files in the repo. The site is the primary documentation surface. Docs routes: /quickstart, /eval-guide. These should be built from the markdown files during prebuild, same as other content."
+    },
+    {
+      "id": "gad-122",
+      "title": "gad self-eval CLI command for pressure and framework metrics",
+      "summary": "Add `gad self-eval` CLI command that runs the compute-self-eval pipeline and prints findings. Pipeline scripts should have corresponding CLI commands so agents and users can invoke them. `gad self-eval` runs compute-self-eval.mjs and outputs: pressure per phase, overhead ratio, loop compliance, high-pressure phases. This is the CLI-first principle from gad-99."
+    },
+    {
+      "id": "gad-121",
+      "title": "Rounds are per-project, defined by requirements version changes",
+      "summary": "A \"round\" for a project is defined when its requirements document changes version. Each eval project has its own round timeline, not a single global round number. The current global rounds (1-5) are specific to the escape-the-dungeon family. Other projects (reverse-engineer, skill-evaluation-app, etc.) have their own round 1 when they first run. Round number is derived from the requirements_versio"
+    },
+    {
+      "id": "gad-120",
+      "title": "Skill provenance tags: installed, inherited, authored, 3rd-party, gad-framework",
+      "summary": "Skills in an eval run have provenance: (1) installed — put in template via --install-skills before the run, (2) inherited — copied from a prior run via inherit-skills, (3) authored — created by the agent during the run (didn't exist at start), (4) 3rd-party — from external sources (npx skills), (5) gad-framework — official GAD skills. Provenance is tracked in .installed-skills.json and diffed agai"
+    },
+    {
       "id": "gad-119",
       "title": "Interactive Gantt chart for phases and rounds with hover stats",
       "summary": "Replace or augment the current phase/round displays with interactive Gantt charts. Phases as horizontal bars on a timeline. Click a phase to expand tasks. Hover for stats (pressure score, token count, task count, duration). Same pattern for RoundResults — Gantt chart of rounds, click shows results, hover shows summary stats. Use recharts or a lightweight Gantt library compatible with the existing "
@@ -1988,31 +2013,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-113",
       "title": "Evals have timestamps, build requirements, and completion gates",
       "summary": "Every eval run is timestamped (started, ended) in TRACE.json. An eval is only \"done\" when: (1) the build requirement is produced (game build, requirements file, composition, running app), (2) human review is submitted. Build requirement is defined per domain in gad.json as `build_requirement` field. For reverse-engineer, the build is the requirements file — but it's gated until a second eval imple"
-    },
-    {
-      "id": "gad-112",
-      "title": "gad eval inherit-skills — CLI command to copy emergent skills from one eval into another",
-      "summary": "Easy CLI command to inherit skills from a completed eval run into a new eval template. `gad eval inherit-skills --from escape-the-dungeon-bare/v5 --to escape-the-dungeon-emergent`. This is the mechanism for testing GAD+Skills (with inheritance). The command copies skills from the source run's game/.planning/skills/ into the target template, records the lineage in metadata. Distinct from --install-"
-    },
-    {
-      "id": "gad-111",
-      "title": "Tech stack comparison evals: same requirements, different frameworks",
-      "summary": "For game evals, compare tech stacks: Phaser, PixiJS, Three.js, Babylon.js alongside existing Kaplay/DOM builds. Same requirements, different stack in the template. The tech stack is metadata in gad.json (`tech_stack` field). Eval matrix: requirements with tech stack specified, requirements without tech stack (agent chooses), requirements with skills, requirements with skills + tech stack. This pro"
-    },
-    {
-      "id": "gad-110",
-      "title": "Eval domain categories: game, skill, software, business, stories",
-      "summary": "Eval projects are categorized by domain — not just mode (greenfield/brownfield) and workflow (gad/bare/emergent). Domains: game (escape-the-dungeon, tech-stack comparisons), skill (reverse-engineer, gad-skill-creator), software (business apps, CMS templates), business (productivity tools), stories (narrative content, compositions). The domain determines the build requirement — games need a playabl"
-    },
-    {
-      "id": "gad-109",
-      "title": "gad data uses lowdb with /data as the managed database",
-      "summary": "The gad data CLI subcommand uses lowdb (https://github.com/typicode/lowdb) with the data/ folder as the database. JSON files in data/ are both the database AND version-controlled codebase artifacts — lowdb reads/writes them directly. This gives us CRUD operations via CLI while keeping the data human-readable and git-tracked. Implement after eval --install-skills ships."
-    },
-    {
-      "id": "gad-108",
-      "title": "Pipeline is a formal artifact category alongside skill, agent, eval",
-      "summary": "Pipeline tasks (compute-self-eval, build-site-data, etc.) are a distinct category in our artifact tracking. The table format with Type column (skill, eval, pipeline) is the standard for listing artifacts. Pipeline tasks should be tagged in TASK-REGISTRY.xml same as skills and agents. Decoupled piping with the GAD CLI is the design goal — pipelines are composable CLI command chains."
     }
   ]
 };

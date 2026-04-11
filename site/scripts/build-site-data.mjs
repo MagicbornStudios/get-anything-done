@@ -1288,13 +1288,19 @@ function parsePlanningState() {
   const roadmapPath = path.join(planningDir, "ROADMAP.xml");
   if (exists(roadmapPath)) {
     const src = fs.readFileSync(roadmapPath, "utf8");
-    const phaseRegex = /<phase\s+id="(\d+(?:\.\d+)?)"[^>]*>[\s\S]*?<title>([^<]*)<\/title>[\s\S]*?(?:<status>([^<]*)<\/status>)?[\s\S]*?<\/phase>/g;
+    // Parse phases with a two-pass approach: first find each <phase> block,
+    // then extract title and status from within it.
+    const phaseBlockRe = /<phase\s+id="(\d+(?:\.\d+)?)"[^>]*>([\s\S]*?)<\/phase>/g;
     let m;
-    while ((m = phaseRegex.exec(src)) !== null) {
+    while ((m = phaseBlockRe.exec(src)) !== null) {
+      const id = m[1];
+      const body = m[2];
+      const titleMatch = body.match(/<title>([^<]*)<\/title>/);
+      const statusMatch = body.match(/<status>([^<]*)<\/status>/);
       state.phases.push({
-        id: m[1],
-        title: m[2].trim(),
-        status: (m[3] || "planned").trim(),
+        id,
+        title: titleMatch ? titleMatch[1].trim() : "",
+        status: statusMatch ? statusMatch[1].trim() : "planned",
       });
     }
   }
