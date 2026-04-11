@@ -10,7 +10,7 @@
  *   1. Create site/remotion/compositions/<name>.tsx exporting a React component
  *      that takes props as its inputProps (all props optional + defaulted).
  *   2. Add an entry to COMPOSITIONS below with slug, title, tags, author note.
- *   3. It shows up on /videos automatically. Embed inline via <VideoEmbed slug="..." />.
+ *   3. It shows up on /videos automatically. Embed inline via <VideoEmbed composition={...} />.
  */
 
 import { V8DissectionComposition } from "./compositions/V8Dissection";
