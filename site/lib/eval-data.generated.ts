@@ -184,6 +184,9 @@ export interface EvalProjectMeta {
       description: string;
     }>;
   } | null;
+  domain: string | null;
+  techStack: string | null;
+  buildRequirement: string | null;
 }
 
 export interface ProducedArtifacts {
@@ -3830,7 +3833,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "context_completeness": 0.35,
       "information_loss": 0.25
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "tooling",
+    "techStack": null,
+    "buildRequirement": "benchmark report"
   },
   {
     "id": "escape-the-dungeon",
@@ -3885,7 +3891,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "Does the game crash? Do scene transitions leave stale state? Does save/load work? Can you finish a run start-to-end without reload?"
         }
       ]
-    }
+    },
+    "domain": "game",
+    "techStack": "kaplay",
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "escape-the-dungeon-bare",
@@ -3941,7 +3950,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "Crashes? Stale state? Save/load works? Finish a run without reload?"
         }
       ]
-    }
+    },
+    "domain": "game",
+    "techStack": null,
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "escape-the-dungeon-emergent",
@@ -4005,7 +4017,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "EMERGENT-SPECIFIC: did the agent productively apply inherited skills? Did it evolve or author new skills worth inheriting by the next run? Did CHANGELOG.md document the disposition of each inherited skill? This is the compound-skills hypothesis check — is the skill library compounding in usefulness?"
         }
       ]
-    }
+    },
+    "domain": "game",
+    "techStack": null,
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "escape-the-dungeon-gad-emergent",
@@ -4071,7 +4086,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "GAD+EMERGENT-SPECIFIC: did the agent productively apply BOTH GAD framework skills AND inherited emergent skills? Did it use GAD skills (plan-phase, execute-phase, verify-phase) to structure its work AND inherited skills (game-loop-verification, state-composition) to improve its implementation? Did the two skill sets interact or conflict?"
         }
       ]
-    }
+    },
+    "domain": "game",
+    "techStack": null,
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "escape-the-dungeon-planning-only",
@@ -4130,7 +4148,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "Crashes? Stale state? Save/load works? Finish a run without reload?"
         }
       ]
-    }
+    },
+    "domain": "game",
+    "techStack": null,
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "etd-babylonjs",
@@ -4141,7 +4162,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "game",
+    "techStack": "babylonjs",
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "etd-brownfield-bare",
@@ -4167,7 +4191,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.3
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "game",
+    "techStack": null,
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "etd-brownfield-emergent",
@@ -4195,7 +4222,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.3
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "game",
+    "techStack": null,
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "etd-brownfield-gad",
@@ -4220,7 +4250,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.3
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "game",
+    "techStack": null,
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "etd-phaser",
@@ -4231,7 +4264,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "game",
+    "techStack": "phaser",
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "etd-pixijs",
@@ -4242,7 +4278,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "game",
+    "techStack": "pixijs",
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "etd-threejs",
@@ -4253,7 +4292,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "game",
+    "techStack": "threejs",
+    "buildRequirement": "playable HTML game"
   },
   {
     "id": "eval-skill-install-eval",
@@ -4270,7 +4312,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "preservation_complete": 0.1,
       "human_review": 0.35
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "skill",
+    "techStack": null,
+    "buildRequirement": "working skill installation + comparison data"
   },
   {
     "id": "gad-explainer-video",
@@ -4329,7 +4374,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "Renders without errors. No @remotion/cli crashes. Deterministic output across renders."
         }
       ]
-    }
+    },
+    "domain": "stories",
+    "techStack": "remotion",
+    "buildRequirement": "Remotion composition (src is build)"
   },
   {
     "id": "gad-explainer-video-bare",
@@ -4353,7 +4401,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.15
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "stories",
+    "techStack": "remotion",
+    "buildRequirement": "Remotion composition"
   },
   {
     "id": "gad-explainer-video-emergent",
@@ -4377,7 +4428,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.15
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "stories",
+    "techStack": "remotion",
+    "buildRequirement": "Remotion composition"
   },
   {
     "id": "gad-planning-loop",
@@ -4388,7 +4442,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "tooling",
+    "techStack": null,
+    "buildRequirement": "planning doc quality metrics"
   },
   {
     "id": "gad-skill-creator-eval",
@@ -4405,7 +4462,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "attribution_tagged": 0.1,
       "human_review": 0.35
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "skill",
+    "techStack": null,
+    "buildRequirement": "well-structured SKILL.md + evals.json"
   },
   {
     "id": "planning-migration",
@@ -4416,7 +4476,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": "planning-sink-backup-20260404",
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "tooling",
+    "techStack": null,
+    "buildRequirement": "migrated planning files"
   },
   {
     "id": "portfolio-bare",
@@ -4436,7 +4499,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "state_hygiene": 0.2,
       "decision_coverage": 0.15
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "software",
+    "techStack": "next.js",
+    "buildRequirement": "running Next.js site"
   },
   {
     "id": "project-migration",
@@ -4447,7 +4513,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "tooling",
+    "techStack": null,
+    "buildRequirement": "migrated project files"
   },
   {
     "id": "reverse-engineer-eval",
@@ -4508,7 +4577,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "Did the reverse-engineer skill work well? Was the requirements file well-structured, properly scoped, with testable criteria?"
         }
       ]
-    }
+    },
+    "domain": "skill",
+    "techStack": null,
+    "buildRequirement": "REQUIREMENTS.xml (gated: needs implementation eval)"
   },
   {
     "id": "skill-evaluation-app",
@@ -4565,7 +4637,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "description": "No blank screens. No runtime errors in the console. All routes load. Build succeeds reproducibly. Deploy target (Vercel static export) works without configuration surprises."
         }
       ]
-    }
+    },
+    "domain": "software",
+    "techStack": "next.js",
+    "buildRequirement": "running web app"
   },
   {
     "id": "skill-evaluation-app-bare",
@@ -4588,7 +4663,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.55
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "software",
+    "techStack": null,
+    "buildRequirement": "running web app"
   },
   {
     "id": "skill-evaluation-app-emergent",
@@ -4611,7 +4689,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       "time_efficiency": 0.05,
       "human_review": 0.55
     },
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "software",
+    "techStack": null,
+    "buildRequirement": "running web app"
   },
   {
     "id": "subagent-utility",
@@ -4622,7 +4703,10 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
-    "humanReviewRubric": null
+    "humanReviewRubric": null,
+    "domain": "tooling",
+    "techStack": null,
+    "buildRequirement": "subagent coordination metrics"
   }
 ];
 
@@ -9239,6 +9323,25 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": [
       "22-40"
     ]
+  },
+  {
+    "id": "28-01",
+    "phaseId": "28",
+    "status": "done",
+    "agentId": null,
+    "skill": "execute-phase",
+    "type": "site",
+    "goal": "Create /project-market route listing all EVAL_PROJECTS with featured badges for ETD family + gad-explainer-video. Default filter: last 5 rounds per project. Domain, workflow, round, status, search filters. Reuse PlayableEmbed/PlayableSelectedPanel for iframe embed. Replace home page full Playable with PlayableTeaser (latest ETD round only). Update nav, hero CTA, footer to point to /project-market.",
+    "keywords": [
+      "project-market",
+      "catalog",
+      "eval-projects",
+      "featured",
+      "per-project-rounds",
+      "nav",
+      "teaser"
+    ],
+    "depends": []
   }
 ];
 
@@ -11536,6 +11639,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#22-54",
     "body": "22-54 landing page + /hypotheses interactive chart. user directive 2026-04-09: \"the interactive chart i asked for should have been on the front page, but i dont see it... i still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" move or duplicate the hypothesistrackschart from /roadmap onto the landing page (after hero, before whatitis) and add it to /hypotheses above the hypothesis cards. landing hypotheses interactive-chart visibility"
+  },
+  {
+    "id": "28-01",
+    "title": "Create /project-market route listing all EVAL_PROJECTS with featured badges for ETD family + gad-explainer-video. Defaul",
+    "kind": "task",
+    "href": "/planning?tab=tasks#28-01",
+    "body": "28-01 create /project-market route listing all eval_projects with featured badges for etd family + gad-explainer-video. default filter: last 5 rounds per project. domain, workflow, round, status, search filters. reuse playableembed/playableselectedpanel for iframe embed. replace home page full playable with playableteaser (latest etd round only). update nav, hero cta, footer to point to /project-market. project-market catalog eval-projects featured per-project-rounds nav teaser"
   },
   {
     "id": "01",

@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-11T22:28:03.781Z",
+    "generated": "2026-04-11T22:31:10.096Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -4771,6 +4771,25 @@
       "depends": [
         "22-40"
       ]
+    },
+    {
+      "id": "28-01",
+      "phaseId": "28",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "site",
+      "goal": "Create /project-market route listing all EVAL_PROJECTS with featured badges for ETD family + gad-explainer-video. Default filter: last 5 rounds per project. Domain, workflow, round, status, search filters. Reuse PlayableEmbed/PlayableSelectedPanel for iframe embed. Replace home page full Playable with PlayableTeaser (latest ETD round only). Update nav, hero CTA, footer to point to /project-market.",
+      "keywords": [
+        "project-market",
+        "catalog",
+        "eval-projects",
+        "featured",
+        "per-project-rounds",
+        "nav",
+        "teaser"
+      ],
+      "depends": []
     }
   ],
   "phases": [
@@ -7071,6 +7090,13 @@
       "kind": "task",
       "href": "/planning?tab=tasks#22-54",
       "body": "22-54 landing page + /hypotheses interactive chart. user directive 2026-04-09: \"the interactive chart i asked for should have been on the front page, but i dont see it... i still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" move or duplicate the hypothesistrackschart from /roadmap onto the landing page (after hero, before whatitis) and add it to /hypotheses above the hypothesis cards. landing hypotheses interactive-chart visibility"
+    },
+    {
+      "id": "28-01",
+      "title": "Create /project-market route listing all EVAL_PROJECTS with featured badges for ETD family + gad-explainer-video. Defaul",
+      "kind": "task",
+      "href": "/planning?tab=tasks#28-01",
+      "body": "28-01 create /project-market route listing all eval_projects with featured badges for etd family + gad-explainer-video. default filter: last 5 rounds per project. domain, workflow, round, status, search filters. reuse playableembed/playableselectedpanel for iframe embed. replace home page full playable with playableteaser (latest etd round only). update nav, hero cta, footer to point to /project-market. project-market catalog eval-projects featured per-project-rounds nav teaser"
     },
     {
       "id": "01",

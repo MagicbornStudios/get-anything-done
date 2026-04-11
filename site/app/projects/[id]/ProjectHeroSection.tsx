@@ -38,6 +38,12 @@ export function ProjectHeroSection({
 
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="default">eval project</Badge>
+          {project.domain && (
+            <Badge variant="secondary">{project.domain}</Badge>
+          )}
+          {project.techStack && (
+            <Badge variant="secondary">{project.techStack}</Badge>
+          )}
           {project.workflow && (
             <Badge variant="outline">
               {WORKFLOW_LABELS[project.workflow as Workflow] ?? project.workflow}

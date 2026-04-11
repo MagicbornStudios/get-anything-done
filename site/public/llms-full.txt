@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-11T22:28:03.775Z
+Generated: 2026-04-11T22:31:10.089Z
 
 
 ---
@@ -6796,7 +6796,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (159)
+# Tasks (160)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -7115,6 +7115,8 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 - **22-53** [done]: Author merge-skill + find-skills SKILL.md files as workspace skills. find-skills is a thin methodology wrapper around npx skills (vercel-labs/skills CLI per gad-85). merge-skill is a pure methodology doc for fusing overlapping skills. Both start as experimental (status: experimental) because no evaluation harness has been run against them yet.
 
 - **22-54** [done]: Landing page + /hypotheses interactive chart. User directive 2026-04-09: "the interactive chart I asked for should have been on the front page, but I dont see it... I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually." Move or duplicate the HypothesisTracksChart from /roadmap onto the landing page (after Hero, before WhatItIs) and add it to /hypoth
+
+- **28-01** [done]: Create /project-market route listing all EVAL_PROJECTS with featured badges for ETD family + gad-explainer-video. Default filter: last 5 rounds per project. Domain, workflow, round, status, search filters. Reuse PlayableEmbed/PlayableSelectedPanel for iframe embed. Replace home page full Playable with PlayableTeaser (latest ETD round only). Update nav, hero CTA, footer to point to /project-market.
 
 
 ---
