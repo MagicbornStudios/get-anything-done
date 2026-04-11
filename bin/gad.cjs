@@ -67,6 +67,45 @@ function findRepoRoot(start) {
   return process.cwd();
 }
 
+/**
+ * Resolve a project ID to its namespace prefix for the new ID format (decision gad-125).
+ * Examples: get-anything-done → GAD, escape-the-dungeon → ETD, grime-time → GRIME
+ */
+const PROJECT_NAMESPACE_MAP = {
+  'get-anything-done': 'GAD',
+  'escape-the-dungeon': 'ETD',
+  'escape-the-dungeon-bare': 'ETD',
+  'escape-the-dungeon-emergent': 'ETD',
+  'escape-the-dungeon-gad-emergent': 'ETD',
+  'escape-the-dungeon-planning-only': 'ETD',
+  'etd-brownfield-bare': 'ETD',
+  'etd-brownfield-emergent': 'ETD',
+  'etd-brownfield-gad': 'ETD',
+  'etd-phaser': 'ETD',
+  'etd-pixijs': 'ETD',
+  'etd-threejs': 'ETD',
+  'etd-babylonjs': 'ETD',
+  'grime-time': 'GRIME',
+  'grime-time-site': 'GRIME',
+  'repo-planner': 'RP',
+  'repub-builder': 'REPUB',
+  'mb-cli-framework': 'MBCLI',
+  'gad-manuscript': 'GADMS',
+  'global': 'GLOBAL',
+};
+
+function projectNamespace(projectId) {
+  if (PROJECT_NAMESPACE_MAP[projectId]) return PROJECT_NAMESPACE_MAP[projectId];
+  // Auto-derive: take first letters of hyphen-separated words, uppercase
+  return projectId.split('-').map(w => w[0] || '').join('').toUpperCase().slice(0, 5) || 'UNK';
+}
+
+/** Format an ID in the new gad-125 format */
+function formatId(projectId, type, number) {
+  const ns = projectNamespace(projectId);
+  return `${ns}-${type}-${number}`;
+}
+
 function output(rows, opts = {}) {
   const fmt = shouldUseJson() ? 'json' : (opts.format || 'table');
   console.log(render(rows, { ...opts, format: fmt }));
@@ -724,10 +763,11 @@ const decisionsCmd = defineCommand({
     if (fmt === 'json') {
       console.log(JSON.stringify(rows, null, 2));
     } else {
-      // Table: truncate summary for readability
+      // Table: truncate summary for readability. Show new ID format (gad-125).
       const tableRows = rows.map(r => ({
         project: r.project,
-        id: r.id,
+        id: formatId(r.project, 'D', r.id.replace(/^gad-/, '')),
+        'legacy-id': r.id,
         title: r.title.length > 50 ? r.title.slice(0, 47) + '...' : r.title,
         summary: r.summary.length > 80 ? r.summary.slice(0, 77) + '...' : r.summary,
       }));
@@ -1143,7 +1183,8 @@ const tasksCmd = defineCommand({
         const limit = args.full ? Infinity : 200;
         rows.push({
           project: root.id,
-          id: t.id,
+          id: formatId(root.id, 'T', t.id),
+          'legacy-id': t.id,
           goal: t.goal.length > limit ? t.goal.slice(0, limit - 1) + '…' : t.goal,
           status: t.status,
           phase: t.phase,
