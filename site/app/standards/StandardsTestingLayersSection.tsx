@@ -1,0 +1,66 @@
+import { ClipboardCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export default function StandardsTestingLayersSection() {
+  return (
+    <section className="border-b border-border/60">
+      <div className="section-shell">
+        <div className="mb-6 flex items-center gap-3">
+          <ClipboardCheck size={18} className="text-accent" aria-hidden />
+          <p className="section-kicker !mb-0">
+            Three testing layers (Anthropic guide)
+          </p>
+        </div>
+        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+          From the Anthropic skills guide. Complementary to the
+          agentskills.io with_skill vs without_skill methodology — this
+          taxonomy distinguishes what you&apos;re testing.
+        </p>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <Badge variant="outline" className="mb-1 w-fit text-[10px]">
+                layer 1
+              </Badge>
+              <CardTitle className="text-base">Triggering tests</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
+              Does the skill load when it should? Test with obvious prompts,
+              paraphrased prompts, and negative (unrelated) prompts. The
+              skill should trigger on the first two and NOT trigger on the
+              third.
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <Badge variant="outline" className="mb-1 w-fit text-[10px]">
+                layer 2
+              </Badge>
+              <CardTitle className="text-base">Functional tests</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
+              Does the skill produce correct outputs? Valid outputs, API
+              calls succeed, error handling works, edge cases covered. This
+              is where the agentskills.io assertion-based grading fits.
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <Badge variant="outline" className="mb-1 w-fit text-[10px]">
+                layer 3
+              </Badge>
+              <CardTitle className="text-base">Performance comparison</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
+              Does the skill actually improve results vs baseline? The
+              with_skill vs without_skill pattern. Improvements in task
+              completion rate, reduction in back-and-forth messages, fewer
+              failed API calls, lower token usage.
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
+  );
+}
