@@ -9,7 +9,8 @@ import {
   BUGS,
 } from "@/lib/eval-data";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 /**
  * Resolve a structured planning ID to its anchor URL on the site.
@@ -208,24 +209,38 @@ export function Ref({ id, children, chip = true }: RefProps) {
   const resolved = resolveRef(id);
   const label = children ?? <ColorCodedId segments={resolved.segments} />;
 
-  const chipBase = "inline-flex items-center rounded border px-1.5 py-0.5 transition-colors";
   const stateClass = resolved.found
     ? KIND_TINT[resolved.kind] ?? KIND_TINT.unknown
     : "border-rose-500/40 bg-rose-500/5 text-rose-400";
 
+  /** Shared token stack only — chip stays a <span> inside Link so HoverCardTrigger asChild keeps a single ref-forwarding child. */
   const chipContent = (
-    <span className={`${chipBase} ${stateClass}`}>
+    <span
+      className={cn(
+        badgeVariants({ variant: "outline" }),
+        "rounded-md px-1.5 py-0.5 text-[10px] font-medium normal-case tracking-normal shadow-none focus:outline-none focus:ring-0",
+        stateClass
+      )}
+    >
       {label}
     </span>
   );
+
+  const linkChipClassName =
+    "inline-flex max-w-full rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
   // Wrap in HoverCard when we have detail or preview
   const hasHoverContent = resolved.preview || resolved.detail;
 
   if (chip) {
-    const inner = resolved.href && resolved.found ? (
-      <Link href={resolved.href}>{chipContent}</Link>
-    ) : chipContent;
+    const inner =
+      resolved.href && resolved.found ? (
+        <Link href={resolved.href} className={linkChipClassName}>
+          {chipContent}
+        </Link>
+      ) : (
+        chipContent
+      );
 
     if (!hasHoverContent) return inner;
 
@@ -233,7 +248,9 @@ export function Ref({ id, children, chip = true }: RefProps) {
       <HoverCard openDelay={200} closeDelay={100}>
         <HoverCardTrigger asChild>
           {resolved.href && resolved.found ? (
-            <Link href={resolved.href}>{chipContent}</Link>
+            <Link href={resolved.href} className={linkChipClassName}>
+              {chipContent}
+            </Link>
           ) : (
             chipContent
           )}
@@ -242,7 +259,9 @@ export function Ref({ id, children, chip = true }: RefProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <ColorCodedId segments={resolved.segments} />
-              <Badge variant="outline" className="text-[9px]">{resolved.kind}</Badge>
+              <Badge variant="outline" className="text-[9px] normal-case tracking-normal">
+                {resolved.kind}
+              </Badge>
             </div>
             {resolved.preview && (
               <p className="text-xs font-medium text-foreground">{resolved.preview}</p>

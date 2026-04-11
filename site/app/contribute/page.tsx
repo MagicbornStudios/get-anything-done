@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GitFork, Terminal, MessageSquare, Bot, AlertTriangle, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
@@ -239,15 +240,12 @@ cd get-anything-done`}
           <p className="section-kicker">Useful starting points</p>
           <div className="space-y-3 text-sm leading-6">
             <p>
-              <a
-                href={REPO}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-accent hover:underline"
-              >
-                Repository on GitHub
-                <ExternalLink size={11} aria-hidden />
-              </a>
+              <Button variant="link" className="h-auto gap-1 p-0 text-sm font-normal text-accent" asChild>
+                <a href={REPO} target="_blank" rel="noopener noreferrer">
+                  Repository on GitHub
+                  <ExternalLink size={11} aria-hidden />
+                </a>
+              </Button>
             </p>
             <p>
               <Link
@@ -312,9 +310,12 @@ function Step({
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
-          <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-accent/40 bg-accent/10 font-mono text-sm font-semibold text-accent">
+          <Badge
+            variant="outline"
+            className="size-7 shrink-0 justify-center rounded-full border-accent/40 bg-accent/10 p-0 font-mono text-sm font-semibold normal-case tracking-normal text-accent"
+          >
             {num}
-          </span>
+          </Badge>
           <CardTitle className="text-base">{title}</CardTitle>
         </div>
       </CardHeader>
