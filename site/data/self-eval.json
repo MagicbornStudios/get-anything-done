@@ -6,26 +6,26 @@
       "days": 5
     },
     "totals": {
-      "events": 3276,
+      "events": 3344,
       "sessions": 5,
-      "gad_cli_calls": 245
+      "gad_cli_calls": 256
     },
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 983
+        "count": 1016
       },
       {
         "tool": "unknown",
-        "count": 518
+        "count": 531
       },
       {
         "tool": "Read",
-        "count": 505
+        "count": 515
       },
       {
         "tool": "Edit",
-        "count": 438
+        "count": 446
       },
       {
         "tool": "TaskUpdate",
@@ -41,7 +41,7 @@
       },
       {
         "tool": "Grep",
-        "count": 151
+        "count": 155
       },
       {
         "tool": "Agent",
@@ -83,13 +83,13 @@
       },
       {
         "day": "2026-04-11",
-        "count": 853
+        "count": 921
       }
     ],
     "framework_overhead": {
-      "planning_ops": 244,
-      "source_ops": 1004,
-      "ratio": 0.196,
+      "planning_ops": 270,
+      "source_ops": 1006,
+      "ratio": 0.212,
       "score": 0.7
     },
     "loop_compliance": {
@@ -99,15 +99,15 @@
     },
     "gad_cli_breakdown": {
       "snapshot": 46,
-      "eval": 97,
-      "other": 102
+      "eval": 98,
+      "other": 112
     },
-    "computed_at": "2026-04-11T22:31:10.785Z",
+    "computed_at": "2026-04-11T22:47:15.415Z",
     "tasks": {
-      "done": 167,
+      "done": 180,
       "planned": 1,
       "in_progress": 2,
-      "total": 170
+      "total": 183
     },
     "decisions": 131,
     "phases_pressure": [
@@ -221,6 +221,30 @@
         "tasks_done": 1,
         "crosscuts": 0,
         "pressure_score": 1,
+        "high_pressure": false
+      },
+      {
+        "phase": "31",
+        "tasks_total": 4,
+        "tasks_done": 4,
+        "crosscuts": 3,
+        "pressure_score": 10,
+        "high_pressure": false
+      },
+      {
+        "phase": "30",
+        "tasks_total": 5,
+        "tasks_done": 5,
+        "crosscuts": 3,
+        "pressure_score": 11,
+        "high_pressure": true
+      },
+      {
+        "phase": "29",
+        "tasks_total": 4,
+        "tasks_done": 4,
+        "crosscuts": 0,
+        "pressure_score": 4,
         "high_pressure": false
       }
     ]
@@ -341,26 +365,26 @@
         "days": 5
       },
       "totals": {
-        "events": 3276,
+        "events": 3344,
         "sessions": 5,
-        "gad_cli_calls": 245
+        "gad_cli_calls": 256
       },
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 983
+          "count": 1016
         },
         {
           "tool": "unknown",
-          "count": 518
+          "count": 531
         },
         {
           "tool": "Read",
-          "count": 505
+          "count": 515
         },
         {
           "tool": "Edit",
-          "count": 438
+          "count": 446
         },
         {
           "tool": "TaskUpdate",
@@ -376,7 +400,7 @@
         },
         {
           "tool": "Grep",
-          "count": 151
+          "count": 155
         },
         {
           "tool": "Agent",
@@ -418,13 +442,13 @@
         },
         {
           "day": "2026-04-11",
-          "count": 853
+          "count": 921
         }
       ],
       "framework_overhead": {
-        "planning_ops": 244,
-        "source_ops": 1004,
-        "ratio": 0.196,
+        "planning_ops": 270,
+        "source_ops": 1006,
+        "ratio": 0.212,
         "score": 0.7
       },
       "loop_compliance": {
@@ -434,15 +458,15 @@
       },
       "gad_cli_breakdown": {
         "snapshot": 46,
-        "eval": 97,
-        "other": 102
+        "eval": 98,
+        "other": 112
       },
-      "computed_at": "2026-04-11T22:31:10.785Z",
+      "computed_at": "2026-04-11T22:47:15.415Z",
       "tasks": {
-        "done": 167,
+        "done": 180,
         "planned": 1,
         "in_progress": 2,
-        "total": 170
+        "total": 183
       },
       "decisions": 131,
       "phases_pressure": [
@@ -556,6 +580,30 @@
           "tasks_done": 1,
           "crosscuts": 0,
           "pressure_score": 1,
+          "high_pressure": false
+        },
+        {
+          "phase": "31",
+          "tasks_total": 4,
+          "tasks_done": 4,
+          "crosscuts": 3,
+          "pressure_score": 10,
+          "high_pressure": false
+        },
+        {
+          "phase": "30",
+          "tasks_total": 5,
+          "tasks_done": 5,
+          "crosscuts": 3,
+          "pressure_score": 11,
+          "high_pressure": true
+        },
+        {
+          "phase": "29",
+          "tasks_total": 4,
+          "tasks_done": 4,
+          "crosscuts": 0,
+          "pressure_score": 4,
           "high_pressure": false
         }
       ]

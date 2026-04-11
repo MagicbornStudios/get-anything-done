@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-11T22:31:10.089Z
+Generated: 2026-04-11T22:47:15.263Z
 
 
 ---
@@ -6796,7 +6796,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (160)
+# Tasks (173)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -7118,6 +7118,32 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **28-01** [done]: Create /project-market route listing all EVAL_PROJECTS with featured badges for ETD family + gad-explainer-video. Default filter: last 5 rounds per project. Domain, workflow, round, status, search filters. Reuse PlayableEmbed/PlayableSelectedPanel for iframe embed. Replace home page full Playable with PlayableTeaser (latest ETD round only). Update nav, hero CTA, footer to point to /project-market.
 
+- **31-01** [done]: Skill provenance diffing: after eval preserve, compare skills_provenance.start_snapshot vs preserved run's skills directory. Skills at end but not start = authored. Write skills_authored array to TRACE.json.
+
+- **31-02** [done]: Site: skill provenance badges on per-run page. Show installed (blue), inherited (green), authored (amber) badges with full start/end snapshot collapsible.
+
+- **31-03** [done]: Skill creation to eval scaffold: update gad:create-skill command to mandate gad eval setup --project as step 6 with verification.
+
+- **31-04** [done]: Framework skill labeling: skills with framework_skill: true in SKILL.md frontmatter show a violet "Framework" badge on the /skills page.
+
+- **30-01** [done]: gad rounds --project shows per-project rounds derived from TRACE.json requirements_version changes across runs.
+
+- **30-02** [done]: Build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. Failed gate = eval incomplete.
+
+- **30-03** [done]: Human time estimation in eval prompt — buildEvalPrompt() includes instruction for agent to estimate human_estimate_hours before coding.
+
+- **30-04** [done]: Source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.json.
+
+- **30-05** [done]: Site project detail shows domain badge + tech stack from eval project metadata.
+
+- **29-01** [done]: Create CLI build script (scripts/build-cli.mjs) using esbuild to bundle bin/gad.cjs + all lib/*.cjs into dist/gad.cjs — single distributable file.
+
+- **29-02** [done]: Update package.json: add dist/ and lib/ to files array, add build:cli script, update prepublishOnly to include CLI bundle.
+
+- **29-03** [done]: Quick start verification — verify node bin/gad.cjs --help and node dist/gad.cjs version both work. Confirm npx pathway is correct.
+
+- **29-04** [done]: Portfolio /gad page — operational distinction messaging, hypothesis matrix, framework catalog, CLI reference, GAD loop diagram.
+
 
 ---
 
@@ -7299,13 +7325,13 @@ Ship /project-market as the dedicated eval catalog. All eval projects listed, ET
 
 ## Phase 29: GAD CLI build/release pipeline + operational distinction
 
-Status: planned
+Status: done
 
 Official build/release pipeline for the GAD CLI. Windows binary built locally, Mac/Linux via GitHub Actions. npx install flow. Quick start guide on site. Clear messaging: GAD CLI is operational tooling for the framework, not a coding agent CLI. Decisions: GAD-D-117, GAD-D-123, GAD-D-128, GAD-D-129.
 
 ## Phase 30: Eval framework v2 — domains, tech stacks, rounds per project
 
-Status: planned
+Status: done
 
 Formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. Rounds per project (not global). Project → eval → round hierarchy in data model and UI. Decisions: GAD-D-88, GAD-D-90, GAD-D-110, GAD-D-111, GAD-D-113, GAD-D-114, GAD-D-121, GAD-D-132.
 

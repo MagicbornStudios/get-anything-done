@@ -6817,23 +6817,46 @@ const installAll = defineCommand({
   },
   args: {
     claude: { type: 'boolean' },
+    opencode: { type: 'boolean' },
+    gemini: { type: 'boolean' },
     cursor: { type: 'boolean' },
     codex: { type: 'boolean' },
+    copilot: { type: 'boolean' },
+    antigravity: { type: 'boolean' },
+    windsurf: { type: 'boolean' },
+    augment: { type: 'boolean' },
+    all: { type: 'boolean' },
     local: { type: 'boolean' },
     global: { type: 'boolean' },
+    sdk: { type: 'boolean' },
+    uninstall: { type: 'boolean' },
+    'force-statusline': { type: 'boolean' },
+    'config-dir': { type: 'string', description: 'Custom runtime config directory', default: '' },
   },
   run: ({ args }) => {
     const { spawnSync } = require('child_process');
     const installerPath = path.resolve(__dirname, 'install.js');
     const flagArgs = [];
     if (args.claude) flagArgs.push('--claude');
+    if (args.opencode) flagArgs.push('--opencode');
+    if (args.gemini) flagArgs.push('--gemini');
     if (args.cursor) flagArgs.push('--cursor');
     if (args.codex) flagArgs.push('--codex');
+    if (args.copilot) flagArgs.push('--copilot');
+    if (args.antigravity) flagArgs.push('--antigravity');
+    if (args.windsurf) flagArgs.push('--windsurf');
+    if (args.augment) flagArgs.push('--augment');
+    if (args.all) flagArgs.push('--all');
     if (args.local) flagArgs.push('--local');
     if (args.global) flagArgs.push('--global');
+    if (args.sdk) flagArgs.push('--sdk');
+    if (args.uninstall) flagArgs.push('--uninstall');
+    if (args['force-statusline']) flagArgs.push('--force-statusline');
+    if (args['config-dir']) flagArgs.push('--config-dir', args['config-dir']);
     if (flagArgs.length === 0) {
-      console.log('Usage: gad install all [--claude] [--cursor] [--codex] [--local|--global]');
-      console.log('       runs bin/install.js with the given flags');
+      console.log('Usage: gad install all [runtime flags] [--local|--global] [--config-dir <path>]');
+      console.log('       passes through to bin/install.js');
+      console.log('       runtimes: --claude --opencode --gemini --codex --copilot --antigravity --cursor --windsurf --augment --all');
       return;
     }
     const result = spawnSync('node', [installerPath, ...flagArgs], { stdio: 'inherit' });

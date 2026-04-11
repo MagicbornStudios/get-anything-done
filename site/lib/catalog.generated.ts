@@ -1764,10 +1764,10 @@ export const FINDINGS: Finding[] = [
 ];
 
 export const PLANNING_STATE: PlanningState = {
-  "currentPhase": "22",
+  "currentPhase": "29",
   "milestone": "gad-v1.1",
-  "nextAction": "Session 2026-04-11 complete. Project market spec ready for handoff at .planning/specs/PROJECT-MARKET-SPEC.md.\n\n=== HANDOFF ===\n.planning/specs/PROJECT-MARKET-SPEC.md — full implementation spec for /project-market page.\nDecisions gad-128 through gad-134 captured.\n\n=== NEXT ===\n1. Implement /project-market from spec\n2. GAD CLI build/release pipeline (Windows)\n3. Merge /gad page: framework + catalog + hypothesis matrix\n4. Move rubric to project detail\n5. Site reusability review\n6. Run evals (round 5, tech-stacks, reverse-engineer)",
-  "lastUpdated": "2026-04-11",
+  "nextAction": "Phase 29 complete: GAD CLI build/release pipeline + operational distinction (4 tasks, 2 commits). esbuild bundles CLI into single dist/gad.cjs (484KB). Portfolio /gad page live with operational distinction, hypothesis matrix, catalog.\n\n=== DONE THIS SESSION ===\n- scripts/build-cli.mjs — esbuild bundler for dist/gad.cjs\n- package.json: build:cli, prepublishOnly, dist/ + lib/ in files\n- Quick start verified: source and bundled CLI both work\n- Portfolio /gad page: operational CLI distinction, hypothesis matrix, catalog, loop, CLI ref\n\n=== NEXT ===\n1. Run evals (round 5, tech-stacks, reverse-engineer)\n2. Phase 27: structured objective data production\n3. Phase 33: reverse-engineer eval methodology\n4. Phase 28: /project-market + site architecture overhaul",
+  "lastUpdated": "2026-04-10",
   "phases": [
     {
       "id": "01",
@@ -1917,12 +1917,12 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "29",
       "title": "GAD CLI build/release pipeline + operational distinction",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "30",
       "title": "Eval framework v2 — domains, tech stacks, rounds per project",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "31",
@@ -1947,7 +1947,7 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's …"
     }
   ],
-  "doneTasksCount": 144,
+  "doneTasksCount": 158,
   "recentDecisions": [
     {
       "id": "gad-134",

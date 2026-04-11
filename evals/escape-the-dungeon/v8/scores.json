@@ -1,0 +1,16 @@
+{
+  "eval": "escape-the-dungeon",
+  "version": "v8",
+  "eval_type": "implementation",
+  "trace_schema_version": 3,
+  "composite": 0.177,
+  "build_gate_passed": true,
+  "build_requirement": "playable HTML game",
+  "dimensions": {
+    "requirement_coverage": 0.33,
+    "planning_quality": 0,
+    "per_task_discipline": 0,
+    "skill_accuracy": 0.17,
+    "time_efficiency": 0.967
+  }
+}

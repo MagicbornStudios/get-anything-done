@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-11T22:31:10.096Z",
+    "generated": "2026-04-11T22:47:15.266Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -4790,6 +4790,218 @@
         "teaser"
       ],
       "depends": []
+    },
+    {
+      "id": "31-01",
+      "phaseId": "31",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "skill",
+      "goal": "Skill provenance diffing: after eval preserve, compare skills_provenance.start_snapshot vs preserved run's skills directory. Skills at end but not start = authored. Write skills_authored array to TRACE.json.",
+      "keywords": [
+        "skill-provenance",
+        "diffing",
+        "trace",
+        "eval-preserve",
+        "gad-120"
+      ],
+      "depends": []
+    },
+    {
+      "id": "31-02",
+      "phaseId": "31",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "skill",
+      "goal": "Site: skill provenance badges on per-run page. Show installed (blue), inherited (green), authored (amber) badges with full start/end snapshot collapsible.",
+      "keywords": [
+        "skill-provenance",
+        "badges",
+        "per-run-page",
+        "site",
+        "gad-120"
+      ],
+      "depends": []
+    },
+    {
+      "id": "31-03",
+      "phaseId": "31",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "skill",
+      "goal": "Skill creation to eval scaffold: update gad:create-skill command to mandate gad eval setup --project as step 6 with verification.",
+      "keywords": [
+        "create-skill",
+        "eval-scaffold",
+        "gad-102",
+        "mandatory"
+      ],
+      "depends": []
+    },
+    {
+      "id": "31-04",
+      "phaseId": "31",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "skill",
+      "goal": "Framework skill labeling: skills with framework_skill: true in SKILL.md frontmatter show a violet \"Framework\" badge on the /skills page.",
+      "keywords": [
+        "framework-skill",
+        "badge",
+        "skills-page",
+        "catalog",
+        "site"
+      ],
+      "depends": []
+    },
+    {
+      "id": "30-01",
+      "phaseId": "30",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": null,
+      "goal": "gad rounds --project shows per-project rounds derived from TRACE.json requirements_version changes across runs.",
+      "keywords": [
+        "rounds",
+        "per-project",
+        "requirements-version",
+        "TRACE.json"
+      ],
+      "depends": []
+    },
+    {
+      "id": "30-02",
+      "phaseId": "30",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": null,
+      "goal": "Build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. Failed gate = eval incomplete.",
+      "keywords": [
+        "build-gate",
+        "score",
+        "build-requirement",
+        "gate"
+      ],
+      "depends": []
+    },
+    {
+      "id": "30-03",
+      "phaseId": "30",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": null,
+      "goal": "Human time estimation in eval prompt — buildEvalPrompt() includes instruction for agent to estimate human_estimate_hours before coding.",
+      "keywords": [
+        "human-estimate",
+        "eval-prompt",
+        "speedup-ratio"
+      ],
+      "depends": []
+    },
+    {
+      "id": "30-04",
+      "phaseId": "30",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": null,
+      "goal": "Source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.json.",
+      "keywords": [
+        "source-size",
+        "build-size",
+        "preserve",
+        "TRACE.json"
+      ],
+      "depends": []
+    },
+    {
+      "id": "30-05",
+      "phaseId": "30",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": null,
+      "goal": "Site project detail shows domain badge + tech stack from eval project metadata.",
+      "keywords": [
+        "domain",
+        "tech-stack",
+        "badge",
+        "site",
+        "project-detail"
+      ],
+      "depends": []
+    },
+    {
+      "id": "29-01",
+      "phaseId": "29",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "cli",
+      "goal": "Create CLI build script (scripts/build-cli.mjs) using esbuild to bundle bin/gad.cjs + all lib/*.cjs into dist/gad.cjs — single distributable file.",
+      "keywords": [
+        "build",
+        "esbuild",
+        "bundle",
+        "dist",
+        "cli"
+      ],
+      "depends": []
+    },
+    {
+      "id": "29-02",
+      "phaseId": "29",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "cli",
+      "goal": "Update package.json: add dist/ and lib/ to files array, add build:cli script, update prepublishOnly to include CLI bundle.",
+      "keywords": [
+        "package.json",
+        "npm",
+        "publish",
+        "bin"
+      ],
+      "depends": []
+    },
+    {
+      "id": "29-03",
+      "phaseId": "29",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "cli",
+      "goal": "Quick start verification — verify node bin/gad.cjs --help and node dist/gad.cjs version both work. Confirm npx pathway is correct.",
+      "keywords": [
+        "quick-start",
+        "npx",
+        "verify"
+      ],
+      "depends": []
+    },
+    {
+      "id": "29-04",
+      "phaseId": "29",
+      "status": "done",
+      "agentId": null,
+      "skill": "execute-phase",
+      "type": "cli",
+      "goal": "Portfolio /gad page — operational distinction messaging, hypothesis matrix, framework catalog, CLI reference, GAD loop diagram.",
+      "keywords": [
+        "site",
+        "gad-page",
+        "operational-distinction",
+        "hypothesis-matrix",
+        "catalog"
+      ],
+      "depends": []
     }
   ],
   "phases": [
@@ -4999,14 +5211,14 @@
     {
       "id": "29",
       "title": "GAD CLI build/release pipeline + operational distinction",
-      "status": "planned",
+      "status": "done",
       "goal": "Official build/release pipeline for the GAD CLI. Windows binary built locally, Mac/Linux via GitHub Actions. npx install flow. Quick start guide on site. Clear messaging: GAD CLI is operational tooling for the framework, not a coding agent CLI. Decisions: GAD-D-117, GAD-D-123, GAD-D-128, GAD-D-129.",
       "outcome": null
     },
     {
       "id": "30",
       "title": "Eval framework v2 — domains, tech stacks, rounds per project",
-      "status": "planned",
+      "status": "done",
       "goal": "Formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. Rounds per project (not global). Project → eval → round hierarchy in data model and UI. Decisions: GAD-D-88, GAD-D-90, GAD-D-110, GAD-D-111, GAD-D-113, GAD-D-114, GAD-D-121, GAD-D-132.",
       "outcome": null
     },
@@ -7097,6 +7309,97 @@
       "kind": "task",
       "href": "/planning?tab=tasks#28-01",
       "body": "28-01 create /project-market route listing all eval_projects with featured badges for etd family + gad-explainer-video. default filter: last 5 rounds per project. domain, workflow, round, status, search filters. reuse playableembed/playableselectedpanel for iframe embed. replace home page full playable with playableteaser (latest etd round only). update nav, hero cta, footer to point to /project-market. project-market catalog eval-projects featured per-project-rounds nav teaser"
+    },
+    {
+      "id": "31-01",
+      "title": "Skill provenance diffing: after eval preserve, compare skills_provenance.start_snapshot vs preserved run's skills direct",
+      "kind": "task",
+      "href": "/planning?tab=tasks#31-01",
+      "body": "31-01 skill provenance diffing: after eval preserve, compare skills_provenance.start_snapshot vs preserved run's skills directory. skills at end but not start = authored. write skills_authored array to trace.json. skill-provenance diffing trace eval-preserve gad-120"
+    },
+    {
+      "id": "31-02",
+      "title": "Site: skill provenance badges on per-run page. Show installed (blue), inherited (green), authored (amber) badges with fu",
+      "kind": "task",
+      "href": "/planning?tab=tasks#31-02",
+      "body": "31-02 site: skill provenance badges on per-run page. show installed (blue), inherited (green), authored (amber) badges with full start/end snapshot collapsible. skill-provenance badges per-run-page site gad-120"
+    },
+    {
+      "id": "31-03",
+      "title": "Skill creation to eval scaffold: update gad:create-skill command to mandate gad eval setup --project as step 6 with veri",
+      "kind": "task",
+      "href": "/planning?tab=tasks#31-03",
+      "body": "31-03 skill creation to eval scaffold: update gad:create-skill command to mandate gad eval setup --project as step 6 with verification. create-skill eval-scaffold gad-102 mandatory"
+    },
+    {
+      "id": "31-04",
+      "title": "Framework skill labeling: skills with framework_skill: true in SKILL.md frontmatter show a violet \"Framework\" badge on t",
+      "kind": "task",
+      "href": "/planning?tab=tasks#31-04",
+      "body": "31-04 framework skill labeling: skills with framework_skill: true in skill.md frontmatter show a violet \"framework\" badge on the /skills page. framework-skill badge skills-page catalog site"
+    },
+    {
+      "id": "30-01",
+      "title": "gad rounds --project shows per-project rounds derived from TRACE.json requirements_version changes across runs.",
+      "kind": "task",
+      "href": "/planning?tab=tasks#30-01",
+      "body": "30-01 gad rounds --project shows per-project rounds derived from trace.json requirements_version changes across runs. rounds per-project requirements-version trace.json"
+    },
+    {
+      "id": "30-02",
+      "title": "Build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. Failed gate = eval inc",
+      "kind": "task",
+      "href": "/planning?tab=tasks#30-02",
+      "body": "30-02 build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. failed gate = eval incomplete. build-gate score build-requirement gate"
+    },
+    {
+      "id": "30-03",
+      "title": "Human time estimation in eval prompt — buildEvalPrompt() includes instruction for agent to estimate human_estimate_hours",
+      "kind": "task",
+      "href": "/planning?tab=tasks#30-03",
+      "body": "30-03 human time estimation in eval prompt — buildevalprompt() includes instruction for agent to estimate human_estimate_hours before coding. human-estimate eval-prompt speedup-ratio"
+    },
+    {
+      "id": "30-04",
+      "title": "Source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.jso",
+      "kind": "task",
+      "href": "/planning?tab=tasks#30-04",
+      "body": "30-04 source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to trace.json. source-size build-size preserve trace.json"
+    },
+    {
+      "id": "30-05",
+      "title": "Site project detail shows domain badge + tech stack from eval project metadata.",
+      "kind": "task",
+      "href": "/planning?tab=tasks#30-05",
+      "body": "30-05 site project detail shows domain badge + tech stack from eval project metadata. domain tech-stack badge site project-detail"
+    },
+    {
+      "id": "29-01",
+      "title": "Create CLI build script (scripts/build-cli.mjs) using esbuild to bundle bin/gad.cjs + all lib/*.cjs into dist/gad.cjs — ",
+      "kind": "task",
+      "href": "/planning?tab=tasks#29-01",
+      "body": "29-01 create cli build script (scripts/build-cli.mjs) using esbuild to bundle bin/gad.cjs + all lib/*.cjs into dist/gad.cjs — single distributable file. build esbuild bundle dist cli"
+    },
+    {
+      "id": "29-02",
+      "title": "Update package.json: add dist/ and lib/ to files array, add build:cli script, update prepublishOnly to include CLI bundl",
+      "kind": "task",
+      "href": "/planning?tab=tasks#29-02",
+      "body": "29-02 update package.json: add dist/ and lib/ to files array, add build:cli script, update prepublishonly to include cli bundle. package.json npm publish bin"
+    },
+    {
+      "id": "29-03",
+      "title": "Quick start verification — verify node bin/gad.cjs --help and node dist/gad.cjs version both work. Confirm npx pathway i",
+      "kind": "task",
+      "href": "/planning?tab=tasks#29-03",
+      "body": "29-03 quick start verification — verify node bin/gad.cjs --help and node dist/gad.cjs version both work. confirm npx pathway is correct. quick-start npx verify"
+    },
+    {
+      "id": "29-04",
+      "title": "Portfolio /gad page — operational distinction messaging, hypothesis matrix, framework catalog, CLI reference, GAD loop d",
+      "kind": "task",
+      "href": "/planning?tab=tasks#29-04",
+      "body": "29-04 portfolio /gad page — operational distinction messaging, hypothesis matrix, framework catalog, cli reference, gad loop diagram. site gad-page operational-distinction hypothesis-matrix catalog"
     },
     {
       "id": "01",
