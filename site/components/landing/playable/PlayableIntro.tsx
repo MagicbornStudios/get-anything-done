@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 export function PlayableIntro() {
   return (
     <>
@@ -8,9 +10,11 @@ export function PlayableIntro() {
         Every build we scored. <span className="gradient-text">Playable in your browser.</span>
       </h2>
       <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-        These are the exact production builds the human reviewers scored — no rebuilds, no
-        tweaks. Click a round on the{" "}
-        <a href="#tracks" className="text-accent underline decoration-dotted">hypothesis chart above</a>{" "}
+        These are the exact production builds the human reviewers scored — no rebuilds, no tweaks.
+        Click a round on the{" "}
+        <Button variant="link" className="h-auto p-0 text-lg font-normal text-accent" asChild>
+          <a href="#tracks">hypothesis chart above</a>
+        </Button>{" "}
         to filter, or use the controls below to search and filter. Hover any build badge for details.
       </p>
     </>

@@ -1,4 +1,5 @@
 import { WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
+import { Badge } from "@/components/ui/badge";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import {
   fmtDuration,
@@ -18,10 +19,10 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <Badge variant="outline" className="inline-flex w-fit items-center gap-2 border-border/70 bg-card/50 py-1 text-xs font-semibold normal-case">
         <span className={`size-2 rounded-full ${REVIEW_STATE_DOT[state]}`} />
-        <span className="text-xs font-semibold text-foreground">{REVIEW_STATE_LABEL[state]}</span>
-      </div>
+        {REVIEW_STATE_LABEL[state]}
+      </Badge>
 
       <div className="text-xs font-semibold text-foreground">
         {r.project} · {r.version}

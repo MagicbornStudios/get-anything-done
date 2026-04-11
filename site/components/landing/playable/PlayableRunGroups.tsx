@@ -53,15 +53,16 @@ export function PlayableRunGroups({ groupedRuns, selected, onSelectRun }: Props)
                 return (
                   <HoverCard key={key} openDelay={200} closeDelay={100}>
                     <HoverCardTrigger asChild>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => onSelectRun(key)}
-                        className={[
-                          "group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors",
+                        className={cn(
+                          "group h-auto gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-none",
                           active
-                            ? "border-accent bg-accent text-accent-foreground shadow-md shadow-accent/20"
-                            : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60 hover:text-foreground",
-                        ].join(" ")}
+                            ? "border-accent bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:bg-accent/90 hover:text-accent-foreground"
+                            : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60 hover:text-foreground"
+                        )}
                       >
                         <span
                           className={`size-2 shrink-0 rounded-full ${REVIEW_STATE_DOT[state]}`}
@@ -97,7 +98,7 @@ export function PlayableRunGroups({ groupedRuns, selected, onSelectRun }: Props)
                             {fmtTokensShort(r.tokenUsage.total_tokens)}
                           </span>
                         )}
-                      </button>
+                      </Button>
                     </HoverCardTrigger>
                     <HoverCardContent side="bottom" align="start" className="w-80">
                       <RunInfoPanel r={r} />

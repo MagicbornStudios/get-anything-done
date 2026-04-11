@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function SkillLineageRunHeader({
   version,
@@ -16,26 +18,33 @@ export default function SkillLineageRunHeader({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center rounded-full border border-border/60 bg-background/60 px-2 py-0.5 font-mono text-[11px]">
+      <Badge variant="outline" className="font-mono text-[11px] font-normal normal-case">
         {version}
-      </span>
+      </Badge>
       <span className="text-sm text-muted-foreground">{date}</span>
       {playable && (
-        <Link
-          href={projectHref}
-          className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 hover:bg-emerald-500/20"
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-auto gap-1 rounded-full border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 hover:bg-emerald-500/20"
+          asChild
         >
-          Playable
-          <ArrowRight size={9} aria-hidden />
-        </Link>
+          <Link href={projectHref}>
+            Playable
+            <ArrowRight size={9} aria-hidden />
+          </Link>
+        </Button>
       )}
-      <Link
-        href={runHref}
-        className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+      <Button
+        variant="link"
+        className="ml-auto h-auto gap-1 p-0 text-xs font-semibold text-accent"
+        asChild
       >
-        Full breakdown
-        <ArrowRight size={11} aria-hidden />
-      </Link>
+        <Link href={runHref}>
+          Full breakdown
+          <ArrowRight size={11} aria-hidden />
+        </Link>
+      </Button>
     </div>
   );
 }
