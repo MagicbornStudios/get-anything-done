@@ -14,9 +14,7 @@
 
 - [Findings](https://get-anything-done.vercel.app/findings): Per-round writeups
 - [Rubric](https://get-anything-done.vercel.app/rubric): Per-project scoring dimensions
-- [Decisions](https://get-anything-done.vercel.app/decisions): Every entry in DECISIONS.xml (124 decisions)
 - [Questions](https://get-anything-done.vercel.app/questions): Open research questions
-- [Roadmap](https://get-anything-done.vercel.app/roadmap): Round-by-round timeline with pressure progression
 - [Data provenance](https://get-anything-done.vercel.app/data): Where every number on the site comes from
 - [Emergent](https://get-anything-done.vercel.app/emergent): Compound-Skills Hypothesis evidence rollup
 
@@ -30,7 +28,7 @@
 
 - [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone → install → open in Claude → talk)
 - [Security](https://get-anything-done.vercel.app/security): Skill attack surfaces, mitigations, future certification model
-- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (159), phases (28), bugs (4)
+- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (159), phases (28), decisions (124), roadmap, requirements, bugs (4)
 
 ## Machine-readable
 

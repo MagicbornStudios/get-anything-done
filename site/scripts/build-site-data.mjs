@@ -879,9 +879,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 
 - [Findings](${SITE_URL}/findings): Per-round writeups
 - [Rubric](${SITE_URL}/rubric): Per-project scoring dimensions
-- [Decisions](${SITE_URL}/decisions): Every entry in DECISIONS.xml (${allDecisions.length} decisions)
 - [Questions](${SITE_URL}/questions): Open research questions
-- [Roadmap](${SITE_URL}/roadmap): Round-by-round timeline with pressure progression
 - [Data provenance](${SITE_URL}/data): Where every number on the site comes from
 - [Emergent](${SITE_URL}/emergent): Compound-Skills Hypothesis evidence rollup
 
@@ -895,7 +893,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 
 - [Contribute](${SITE_URL}/contribute): Human-first workflow (clone → install → open in Claude → talk)
 - [Security](${SITE_URL}/security): Skill attack surfaces, mitigations, future certification model
-- [Planning](${SITE_URL}/planning): State + tabs for tasks (${allTasks.length}), phases (${allPhases.length}), bugs (${(pseudoDb.bugs?.bugs ?? []).length})
+- [Planning](${SITE_URL}/planning): State + tabs for tasks (${allTasks.length}), phases (${allPhases.length}), decisions (${allDecisions.length}), roadmap, requirements, bugs (${(pseudoDb.bugs?.bugs ?? []).length})
 
 ## Machine-readable
 
@@ -2097,13 +2095,15 @@ export interface DecisionRecord {
  * Every decision in .planning/DECISIONS.xml parsed in full. Source of truth
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
-export const ALL_DECISIONS: DecisionRecord[] = ${JSON.stringify(extras.allDecisions ?? [], null, 2)};
+export const ALL_DECISIONS: DecisionRecord[] = ${JSON.stringify((extras.allDecisions ?? []).map(d => ({ id: d.id, title: d.title, summary: d.summary, impact: d.impact })), null, 2)};
 
 export interface TaskRecord {
   id: string;
   phaseId: string;
   status: string;
   agentId: string | null;
+  skill: string | null;
+  type: string | null;
   goal: string;
   keywords: string[];
   depends: string[];

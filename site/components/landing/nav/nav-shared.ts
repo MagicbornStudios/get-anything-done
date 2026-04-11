@@ -29,9 +29,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/rubric", label: "Rubric", note: "how we score" },
       { href: "/#results", label: "Round results", note: "per-round scored runs" },
       { href: "/#graphs", label: "Graphs", note: "quality + pressure scatters" },
-      { href: "/decisions", label: "Decisions", note: "DECISIONS.xml rendered" },
       { href: "/questions", label: "Questions", note: "open research questions" },
-      { href: "/roadmap", label: "Roadmap", note: "round timeline" },
       { href: "/data", label: "Data provenance", note: "every number's source" },
     ],
   },
@@ -54,7 +52,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "System",
     links: [
-      { href: "/planning", label: "Planning", note: "state, tasks, phases, bugs" },
+      { href: "/planning", label: "Planning", note: "state, tasks, phases, decisions, roadmap, bugs" },
       { href: "/requirements", label: "Requirements", note: "v5 + history" },
       { href: "/security", label: "Security", note: "skill risks + certification" },
       { href: "/contribute", label: "Contribute", note: "clone and run your own" },
