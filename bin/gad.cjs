@@ -4413,20 +4413,43 @@ const evalReadme = defineCommand({
 });
 
 const evalInheritSkills = defineCommand({
-  meta: { name: 'inherit-skills', description: 'Copy agent-authored skills from a completed eval run into another eval template (decision gad-112)' },
+  meta: { name: 'inherit-skills', description: 'Copy agent-authored skills from a completed eval into another eval template (decision gad-112)' },
   args: {
-    from: { type: 'string', description: 'Source: project/vN (e.g. escape-the-dungeon-bare/v5)', required: true },
+    from: { type: 'string', description: 'Source eval project (or project/vN for a specific run)', required: true },
     to: { type: 'string', description: 'Target eval project name', required: true },
+    'latest-only': { type: 'boolean', description: 'Only inherit skills from the latest run (not accumulated)', default: false },
   },
   run({ args }) {
     const gadDir = path.join(__dirname, '..');
     const evalsDir = path.join(gadDir, 'evals');
 
-    // Parse --from as project/version
-    const [srcProject, srcVersion] = (args.from || '').split('/');
-    if (!srcProject || !srcVersion) {
-      outputError('Usage: gad eval inherit-skills --from project/vN --to target-project');
+    // Parse --from: either "project" (latest run) or "project/vN" (specific run)
+    const parts = (args.from || '').split('/');
+    const srcProject = parts[0];
+    let srcVersion = parts[1] || null;
+
+    if (!srcProject) {
+      outputError('Usage: gad eval inherit-skills --from eval-project --to target-project');
       return;
+    }
+
+    // If no version specified, find the latest run
+    if (!srcVersion) {
+      const projectDir = path.join(evalsDir, srcProject);
+      if (!fs.existsSync(projectDir)) {
+        outputError(`Eval project '${srcProject}' not found.`);
+        return;
+      }
+      const runs = fs.readdirSync(projectDir, { withFileTypes: true })
+        .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
+        .map(r => ({ name: r.name, num: parseInt(r.name.slice(1), 10) }))
+        .sort((a, b) => b.num - a.num);
+      if (runs.length === 0) {
+        outputError(`No runs found for ${srcProject}. Run an eval first.`);
+        return;
+      }
+      srcVersion = runs[0].name;
+      console.log(`  Using latest run: ${srcProject}/${srcVersion}`);
     }
 
     const srcRunDir = path.join(evalsDir, srcProject, srcVersion, 'run');
@@ -6634,6 +6657,68 @@ const uninstallCmd = defineCommand({
   },
 });
 
+// ── gad self-eval — run pressure/metrics pipeline (decision gad-122) ──
+const selfEvalCmd = defineCommand({
+  meta: { name: 'self-eval', description: 'Compute and display framework self-evaluation metrics — pressure per phase, overhead, compliance' },
+  args: {
+    json: { type: 'boolean', description: 'Output as JSON', default: false },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const siteDir = path.join(gadDir, 'site');
+    const scriptPath = path.join(siteDir, 'scripts', 'compute-self-eval.mjs');
+
+    if (!fs.existsSync(scriptPath)) {
+      outputError('compute-self-eval.mjs not found. Is the site directory present?');
+      return;
+    }
+
+    // Run the pipeline
+    const { execSync: exec } = require('child_process');
+    try {
+      exec(`node "${scriptPath}"`, { cwd: siteDir, stdio: 'pipe' });
+    } catch (err) {
+      outputError('Pipeline failed: ' + (err.message || err));
+      return;
+    }
+
+    // Read the output
+    const outputPath = path.join(siteDir, 'data', 'self-eval.json');
+    if (!fs.existsSync(outputPath)) {
+      console.log('No self-eval data produced.');
+      return;
+    }
+
+    const data = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+    const m = data.latest;
+
+    if (args.json) {
+      console.log(JSON.stringify(m, null, 2));
+      return;
+    }
+
+    console.log('GAD Self-Eval Metrics\n');
+    console.log(`Period: ${m.period.start} → ${m.period.end} (${m.period.days} days)`);
+    console.log(`Events: ${m.totals.events} | Sessions: ${m.totals.sessions} | CLI calls: ${m.totals.gad_cli_calls}`);
+    console.log(`Tasks: ${m.tasks.done}/${m.tasks.total} done | Decisions: ${m.decisions}`);
+    console.log(`\nFramework overhead: ${(m.framework_overhead.ratio * 100).toFixed(1)}% (score: ${m.framework_overhead.score})`);
+    console.log(`Loop compliance: ${(m.loop_compliance.score * 100).toFixed(0)}% (${m.loop_compliance.snapshot_starts}/${m.loop_compliance.total_sessions} sessions)`);
+
+    if (m.phases_pressure && m.phases_pressure.length > 0) {
+      console.log('\nPressure per phase (top 10):');
+      console.log('PHASE  TASKS  CROSSCUTS  PRESSURE');
+      console.log('─'.repeat(40));
+      const sorted = [...m.phases_pressure].sort((a, b) => b.pressure_score - a.pressure_score).slice(0, 10);
+      for (const p of sorted) {
+        const flag = p.high_pressure ? ' ⚠ HIGH' : '';
+        console.log(`${String(p.phase).padEnd(7)}${String(p.tasks_total).padStart(5)}  ${String(p.crosscuts).padStart(9)}  ${String(p.pressure_score).padStart(8)}${flag}`);
+      }
+    }
+
+    console.log('\nGAD CLI breakdown: snapshot=' + m.gad_cli_breakdown.snapshot + ' eval=' + m.gad_cli_breakdown.eval + ' other=' + m.gad_cli_breakdown.other);
+  },
+});
+
 // ── gad data — CRUD for data/*.json using lowdb (decision gad-109) ──
 const dataListCmd = defineCommand({
   meta: { name: 'list', description: 'List all data collections in data/' },
@@ -6811,6 +6896,7 @@ const main = defineCommand({
     refs: refsCmd,
     pack: packCmd,
     docs: docsCmd,
+    'self-eval': selfEvalCmd,
     data: dataCmd,
     eval: evalCmd,
     rounds: roundsCmd,
