@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Download, FileArchive, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   findPlanning,
@@ -37,9 +38,9 @@ export function ProjectEvalCard({ project: p }: Props) {
           )}
         </div>
         <CardTitle className="text-lg">
-          <Link href={`/projects/${p.project}`} className="transition-colors hover:text-accent">
-            {PROJECT_LABELS[p.project] ?? p.project}
-          </Link>
+          <Button variant="link" className="h-auto p-0 text-lg font-semibold text-foreground hover:text-accent" asChild>
+            <Link href={`/projects/${p.project}`}>{PROJECT_LABELS[p.project] ?? p.project}</Link>
+          </Button>
         </CardTitle>
         <CardDescription className="font-mono text-[11px]">{p.project}</CardDescription>
       </CardHeader>
@@ -49,51 +50,63 @@ export function ProjectEvalCard({ project: p }: Props) {
         {runs.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {runs.map((r) => (
-              <Link
+              <Button
                 key={r.version}
-                href={`/runs/${r.project}/${r.version}`}
-                className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground transition-colors hover:border-accent/60 hover:text-accent"
+                variant="outline"
+                size="sm"
+                className="h-auto gap-1 rounded-full border-border/70 bg-background/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground hover:border-accent/60 hover:text-accent [&_svg]:size-2.5"
+                asChild
               >
-                {r.version}
-                {r.humanReview?.score != null && (
-                  <span className="text-accent">· {r.humanReview.score.toFixed(2)}</span>
-                )}
-              </Link>
+                <Link href={`/runs/${r.project}/${r.version}`}>
+                  {r.version}
+                  {r.humanReview?.score != null && (
+                    <span className="text-accent">· {r.humanReview.score.toFixed(2)}</span>
+                  )}
+                </Link>
+              </Button>
             ))}
           </div>
         )}
 
         <div className="mt-auto flex flex-wrap gap-2 border-t border-border/60 pt-4 text-[11px]">
           {planning && (
-            <a
-              href={planning.zipPath}
-              download
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/50 px-3 py-1.5 font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1.5 rounded-full border-border/70 bg-background/50 px-3 py-1.5 font-semibold text-foreground hover:border-accent hover:text-accent [&_svg]:size-2.5"
+              asChild
             >
-              <Download size={10} aria-hidden />
-              planning ({formatBytes(planning.bytes)})
-            </a>
+              <a href={planning.zipPath} download>
+                <Download size={10} aria-hidden />
+                Planning ({formatBytes(planning.bytes)})
+              </a>
+            </Button>
           )}
           {template && (
-            <a
-              href={template.zipPath}
-              download
-              className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/50 px-3 py-1.5 font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1.5 rounded-full border-border/70 bg-background/50 px-3 py-1.5 font-semibold text-muted-foreground hover:border-accent hover:text-accent [&_svg]:size-2.5"
+              asChild
             >
-              <FileArchive size={10} aria-hidden />
-              template
-            </a>
+              <a href={template.zipPath} download>
+                <FileArchive size={10} aria-hidden />
+                Template
+              </a>
+            </Button>
           )}
           {playable && (
-            <a
-              href={playable}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 font-semibold text-accent transition-colors hover:bg-accent/20"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1.5 rounded-full border-accent/40 bg-accent/10 px-3 py-1.5 font-semibold text-accent hover:bg-accent/20 [&_svg]:size-2.5"
+              asChild
             >
-              <Play size={10} aria-hidden />
-              play latest
-            </a>
+              <a href={playable} target="_blank" rel="noopener noreferrer">
+                <Play size={10} aria-hidden />
+                Play latest
+              </a>
+            </Button>
           )}
         </div>
       </CardContent>

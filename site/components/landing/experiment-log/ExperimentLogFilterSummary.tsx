@@ -1,6 +1,7 @@
 "use client";
 
 import { Filter, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -25,10 +26,13 @@ export function ExperimentLogFilterSummary({
         of <span className="font-semibold text-foreground tabular-nums">{total}</span>{" "}
         round{total !== 1 ? "s" : ""}
         {globalRoundFilter && (
-          <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold text-purple-300">
+          <Badge
+            variant="outline"
+            className="ml-2 gap-1 border-purple-500/40 bg-purple-500/10 py-0.5 pl-1.5 pr-2 text-[10px] font-semibold normal-case tracking-normal text-purple-300"
+          >
             <Filter size={9} aria-hidden />
             {globalRoundFilter} (from chart)
-          </span>
+          </Badge>
         )}
       </p>
       {hasActiveFilters && (
