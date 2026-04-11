@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import { GanttChart, type GanttItem } from "@/components/charts/GanttChart";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Ref } from "@/components/refs/Ref";
 import type { PlanningPhase } from "@/lib/catalog.generated";
 import { ALL_TASKS } from "@/lib/eval-data";
@@ -72,45 +73,53 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
           {/* Sprint controls */}
           <div className="flex items-center gap-2">
             {/* Sprint size controls */}
-            <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-card/40 px-2 py-1">
-              <button
+            <div className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-card/40 px-1 py-0.5">
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground"
                 onClick={() => setSprintSize((s) => Math.max(3, s - 1))}
-                className="p-0.5 text-muted-foreground hover:text-foreground"
                 title="Fewer phases per sprint"
               >
-                <Minus size={12} />
-              </button>
+                <Minus className="size-3" />
+              </Button>
               <span className="px-1 text-xs tabular-nums text-muted-foreground">{sprintSize} phases</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground"
                 onClick={() => setSprintSize((s) => Math.min(15, s + 1))}
-                className="p-0.5 text-muted-foreground hover:text-foreground"
                 title="More phases per sprint"
               >
-                <Plus size={12} />
-              </button>
+                <Plus className="size-3" />
+              </Button>
             </div>
 
             {/* Sprint navigation */}
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full border-border/70 bg-card/40 text-xs font-semibold text-muted-foreground hover:border-accent hover:text-accent"
               onClick={prevSprint}
               disabled={sprintOffset === 0}
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
             >
-              <ChevronLeft size={12} />
+              <ChevronLeft className="size-3" />
               Prev
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full border-border/70 bg-card/40 text-xs font-semibold text-muted-foreground hover:border-accent hover:text-accent"
               onClick={nextSprint}
               disabled={sprintOffset + sprintSize >= phases.length}
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
             >
               Next
-              <ChevronRight size={12} />
-            </button>
+              <ChevronRight className="size-3" />
+            </Button>
           </div>
         </div>
 

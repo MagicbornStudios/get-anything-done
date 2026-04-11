@@ -1,6 +1,7 @@
 "use client";
 
 import type { CompositionEntry } from "@/remotion/registry";
+import { Card, CardContent } from "@/components/ui/card";
 import VideoEmbedChromeBar from "./VideoEmbedChromeBar";
 import VideoEmbedRemotionPlayer from "./VideoEmbedRemotionPlayer";
 import VideoEmbedMeta from "./VideoEmbedMeta";
@@ -25,14 +26,16 @@ export default function VideoEmbed({
 }: VideoEmbedProps) {
   return (
     <div className={className}>
-      <div className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-2xl shadow-black/40">
+      <Card className="overflow-hidden rounded-2xl border-border/70 bg-background shadow-2xl shadow-black/40">
         <VideoEmbedChromeBar
           slug={composition.slug}
           durationInFrames={composition.durationInFrames}
           fps={composition.fps}
         />
-        <VideoEmbedRemotionPlayer composition={composition} autoPlay={autoPlay} loop={loop} />
-      </div>
+        <CardContent className="p-0">
+          <VideoEmbedRemotionPlayer composition={composition} autoPlay={autoPlay} loop={loop} />
+        </CardContent>
+      </Card>
       <VideoEmbedMeta composition={composition} />
     </div>
   );

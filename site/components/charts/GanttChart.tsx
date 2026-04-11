@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 
 export interface GanttItem {
@@ -51,12 +52,14 @@ export function GanttChart({ items, columns, title, onItemClick, selectedId }: G
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/60 bg-card/30">
+    <Card className="overflow-hidden border-border/60 bg-card/30">
       {title && (
-        <div className="border-b border-border/60 px-4 py-2.5">
+        <CardHeader className="space-y-0 border-b border-border/60 p-0 px-4 py-2.5">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
-        </div>
+        </CardHeader>
       )}
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
       {/* Column headers */}
       <div className="flex border-b border-border/40">
         <div className="w-40 shrink-0 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -179,6 +182,8 @@ export function GanttChart({ items, columns, title, onItemClick, selectedId }: G
           ))}
         </div>
       ))}
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
