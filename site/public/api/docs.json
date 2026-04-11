@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-11T16:22:59.774Z",
+    "generated": "2026-04-11T17:45:01.384Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -383,6 +383,42 @@
     }
   ],
   "decisions": [
+    {
+      "id": "gad-125",
+      "title": "ID format: GAD-D-NNN for decisions, GAD-T-PHASE-NN for tasks, with file abbreviation",
+      "summary": "IDs should encode what you're looking at: GAD-D-119 = GAD decision 119, GAD-T-22-01 = GAD task phase 22 task 01, GAD-P-22 = GAD phase 22. The prefix tells you the artifact type (D=decision, T=task, P=phase, R=requirement). The namespace (GAD) tells you the project. On the site, each segment of the ID should be color-coded (namespace=accent, type=by-type-color, number=foreground). On hover, an info panel shows the full artifact details — same pattern as eval HoverCard panels.",
+      "impact": "Major refactor: all XML files, parsers, CLI output, site Ref component. Plan as a dedicated phase or batch. Backward compatibility needed during transition. The Ref component on the site gains HoverCard with color-coded segments."
+    },
+    {
+      "id": "gad-124",
+      "title": "Playable archive becomes a dedicated /evals page — catalog/marketplace pattern",
+      "summary": "The current playable archive on the landing page works for showing the last 5 rounds of game builds. But we need a dedicated /evals page that shows ALL evals across ALL rounds as a catalog/marketplace. Filter by domain, tech stack, round, workflow, review status. Show build size + source size. Show skill provenance. Show eval relationships (e.g., reverse-engineer → build-from-requirements). Everything is free — no paywalling. The landing page keeps a compact \"latest\" view linking to the full /evals page.",
+      "impact": "New /evals route. Landing page playable archive becomes a compact preview. Full catalog on dedicated page."
+    },
+    {
+      "id": "gad-123",
+      "title": "Docs must be on the site — docs/ markdown files need site routes",
+      "summary": "Documentation in docs/ (quick-start.md, eval-guide.md) must be rendered as routes on the site, not just exist as markdown files in the repo. The site is the primary documentation surface. Docs routes: /quickstart, /eval-guide. These should be built from the markdown files during prebuild, same as other content.",
+      "impact": "New site routes. Build pipeline renders docs/*.md to site pages."
+    },
+    {
+      "id": "gad-122",
+      "title": "gad self-eval CLI command for pressure and framework metrics",
+      "summary": "Add `gad self-eval` CLI command that runs the compute-self-eval pipeline and prints findings. Pipeline scripts should have corresponding CLI commands so agents and users can invoke them. `gad self-eval` runs compute-self-eval.mjs and outputs: pressure per phase, overhead ratio, loop compliance, high-pressure phases. This is the CLI-first principle from gad-99.",
+      "impact": "New CLI command. Replaces needing to run node scripts/compute-self-eval.mjs manually."
+    },
+    {
+      "id": "gad-121",
+      "title": "Rounds are per-project, defined by requirements version changes",
+      "summary": "A \"round\" for a project is defined when its requirements document changes version. Each eval project has its own round timeline, not a single global round number. The current global rounds (1-5) are specific to the escape-the-dungeon family. Other projects (reverse-engineer, skill-evaluation-app, etc.) have their own round 1 when they first run. Round number is derived from the requirements_version field progression in TRACE.json across runs.",
+      "impact": "gad rounds gains --project flag for per-project rounds. Site shows per-project round timelines. Global rounds remain as the escape-the-dungeon view for backward compatibility."
+    },
+    {
+      "id": "gad-120",
+      "title": "Skill provenance tags: installed, inherited, authored, 3rd-party, gad-framework",
+      "summary": "Skills in an eval run have provenance: (1) installed — put in template via --install-skills before the run, (2) inherited — copied from a prior run via inherit-skills, (3) authored — created by the agent during the run (didn't exist at start), (4) 3rd-party — from external sources (npx skills), (5) gad-framework — official GAD skills. Provenance is tracked in .installed-skills.json and diffed against the post-run skill directory to identify authored skills. The site displays provenance tags on skill badges. GAD framework skills have a formal visual treatment distinct from inherited/authored.",
+      "impact": "Eval TRACE.json gains skills_provenance section. Site shows provenance badges. inherit-skills gains --latest-only flag option."
+    },
     {
       "id": "gad-119",
       "title": "Interactive Gantt chart for phases and rounds with hover stats",
@@ -4386,6 +4422,48 @@
     }
   ],
   "searchIndex": [
+    {
+      "id": "gad-125",
+      "title": "ID format: GAD-D-NNN for decisions, GAD-T-PHASE-NN for tasks, with file abbreviation",
+      "kind": "decision",
+      "href": "/decisions#gad-125",
+      "body": "gad-125 id format: gad-d-nnn for decisions, gad-t-phase-nn for tasks, with file abbreviation ids should encode what you're looking at: gad-d-119 = gad decision 119, gad-t-22-01 = gad task phase 22 task 01, gad-p-22 = gad phase 22. the prefix tells you the artifact type (d=decision, t=task, p=phase, r=requirement). the namespace (gad) tells you the project. on the site, each segment of the id should be color-coded (namespace=accent, type=by-type-color, number=foreground). on hover, an info"
+    },
+    {
+      "id": "gad-124",
+      "title": "Playable archive becomes a dedicated /evals page — catalog/marketplace pattern",
+      "kind": "decision",
+      "href": "/decisions#gad-124",
+      "body": "gad-124 playable archive becomes a dedicated /evals page — catalog/marketplace pattern the current playable archive on the landing page works for showing the last 5 rounds of game builds. but we need a dedicated /evals page that shows all evals across all rounds as a catalog/marketplace. filter by domain, tech stack, round, workflow, review status. show build size + source size. show skill provenance. show eval relationships (e.g., reverse-engineer → build-from-requirements). everyt"
+    },
+    {
+      "id": "gad-123",
+      "title": "Docs must be on the site — docs/ markdown files need site routes",
+      "kind": "decision",
+      "href": "/decisions#gad-123",
+      "body": "gad-123 docs must be on the site — docs/ markdown files need site routes documentation in docs/ (quick-start.md, eval-guide.md) must be rendered as routes on the site, not just exist as markdown files in the repo. the site is the primary documentation surface. docs routes: /quickstart, /eval-guide. these should be built from the markdown files during prebuild, same as other content."
+    },
+    {
+      "id": "gad-122",
+      "title": "gad self-eval CLI command for pressure and framework metrics",
+      "kind": "decision",
+      "href": "/decisions#gad-122",
+      "body": "gad-122 gad self-eval cli command for pressure and framework metrics add `gad self-eval` cli command that runs the compute-self-eval pipeline and prints findings. pipeline scripts should have corresponding cli commands so agents and users can invoke them. `gad self-eval` runs compute-self-eval.mjs and outputs: pressure per phase, overhead ratio, loop compliance, high-pressure phases. this is the cli-first principle from gad-99."
+    },
+    {
+      "id": "gad-121",
+      "title": "Rounds are per-project, defined by requirements version changes",
+      "kind": "decision",
+      "href": "/decisions#gad-121",
+      "body": "gad-121 rounds are per-project, defined by requirements version changes a \"round\" for a project is defined when its requirements document changes version. each eval project has its own round timeline, not a single global round number. the current global rounds (1-5) are specific to the escape-the-dungeon family. other projects (reverse-engineer, skill-evaluation-app, etc.) have their own round 1 when they first run. round number is derived from the requirements_versio"
+    },
+    {
+      "id": "gad-120",
+      "title": "Skill provenance tags: installed, inherited, authored, 3rd-party, gad-framework",
+      "kind": "decision",
+      "href": "/decisions#gad-120",
+      "body": "gad-120 skill provenance tags: installed, inherited, authored, 3rd-party, gad-framework skills in an eval run have provenance: (1) installed — put in template via --install-skills before the run, (2) inherited — copied from a prior run via inherit-skills, (3) authored — created by the agent during the run (didn't exist at start), (4) 3rd-party — from external sources (npx skills), (5) gad-framework — official gad skills. provenance is tracked in .installed-skills.json and diffed agai"
+    },
     {
       "id": "gad-119",
       "title": "Interactive Gantt chart for phases and rounds with hover stats",

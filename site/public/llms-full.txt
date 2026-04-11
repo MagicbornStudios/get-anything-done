@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-11T16:22:59.769Z
+Generated: 2026-04-11T17:45:01.380Z
 
 
 ---
@@ -5059,7 +5059,67 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (118)
+# Decisions (124)
+
+## gad-125: ID format: GAD-D-NNN for decisions, GAD-T-PHASE-NN for tasks, with file abbreviation
+
+### Summary
+
+IDs should encode what you're looking at: GAD-D-119 = GAD decision 119, GAD-T-22-01 = GAD task phase 22 task 01, GAD-P-22 = GAD phase 22. The prefix tells you the artifact type (D=decision, T=task, P=phase, R=requirement). The namespace (GAD) tells you the project. On the site, each segment of the ID should be color-coded (namespace=accent, type=by-type-color, number=foreground). On hover, an info panel shows the full artifact details — same pattern as eval HoverCard panels.
+
+### Impact
+
+Major refactor: all XML files, parsers, CLI output, site Ref component. Plan as a dedicated phase or batch. Backward compatibility needed during transition. The Ref component on the site gains HoverCard with color-coded segments.
+
+## gad-124: Playable archive becomes a dedicated /evals page — catalog/marketplace pattern
+
+### Summary
+
+The current playable archive on the landing page works for showing the last 5 rounds of game builds. But we need a dedicated /evals page that shows ALL evals across ALL rounds as a catalog/marketplace. Filter by domain, tech stack, round, workflow, review status. Show build size + source size. Show skill provenance. Show eval relationships (e.g., reverse-engineer → build-from-requirements). Everything is free — no paywalling. The landing page keeps a compact "latest" view linking to the full /evals page.
+
+### Impact
+
+New /evals route. Landing page playable archive becomes a compact preview. Full catalog on dedicated page.
+
+## gad-123: Docs must be on the site — docs/ markdown files need site routes
+
+### Summary
+
+Documentation in docs/ (quick-start.md, eval-guide.md) must be rendered as routes on the site, not just exist as markdown files in the repo. The site is the primary documentation surface. Docs routes: /quickstart, /eval-guide. These should be built from the markdown files during prebuild, same as other content.
+
+### Impact
+
+New site routes. Build pipeline renders docs/*.md to site pages.
+
+## gad-122: gad self-eval CLI command for pressure and framework metrics
+
+### Summary
+
+Add `gad self-eval` CLI command that runs the compute-self-eval pipeline and prints findings. Pipeline scripts should have corresponding CLI commands so agents and users can invoke them. `gad self-eval` runs compute-self-eval.mjs and outputs: pressure per phase, overhead ratio, loop compliance, high-pressure phases. This is the CLI-first principle from gad-99.
+
+### Impact
+
+New CLI command. Replaces needing to run node scripts/compute-self-eval.mjs manually.
+
+## gad-121: Rounds are per-project, defined by requirements version changes
+
+### Summary
+
+A "round" for a project is defined when its requirements document changes version. Each eval project has its own round timeline, not a single global round number. The current global rounds (1-5) are specific to the escape-the-dungeon family. Other projects (reverse-engineer, skill-evaluation-app, etc.) have their own round 1 when they first run. Round number is derived from the requirements_version field progression in TRACE.json across runs.
+
+### Impact
+
+gad rounds gains --project flag for per-project rounds. Site shows per-project round timelines. Global rounds remain as the escape-the-dungeon view for backward compatibility.
+
+## gad-120: Skill provenance tags: installed, inherited, authored, 3rd-party, gad-framework
+
+### Summary
+
+Skills in an eval run have provenance: (1) installed — put in template via --install-skills before the run, (2) inherited — copied from a prior run via inherit-skills, (3) authored — created by the agent during the run (didn't exist at start), (4) 3rd-party — from external sources (npx skills), (5) gad-framework — official GAD skills. Provenance is tracked in .installed-skills.json and diffed against the post-run skill directory to identify authored skills. The site displays provenance tags on skill badges. GAD framework skills have a formal visual treatment distinct from inherited/authored.
+
+### Impact
+
+Eval TRACE.json gains skills_provenance section. Site shows provenance badges. inherit-skills gains --latest-only flag option.
 
 ## gad-119: Interactive Gantt chart for phases and rounds with hover stats
 

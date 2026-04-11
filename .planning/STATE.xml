@@ -4,57 +4,50 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-11 — eval framework evolution batch completed.
+  <next-action>Session 2026-04-11 — cleanup done, planning page redesigned, ID format decided.
 
 === COMPLETED ===
+- Planning page: GanttChart at top + tabbed view (Phases/Tasks/Decisions/Bugs)
+- Bugs moved to eval project detail pages (ProjectBugsSection)
+- Requirements version history on project detail (paginated, shows what changed per round)
+- Skill provenance tracking in TRACE.json (start_snapshot, installed, inherited)
+- Phase status fix on /planning page (regex bug in parsePlanningState)
+- gad self-eval CLI command
+- /quickstart and /eval-guide site routes
+- ID format decided (GAD-125): per-project namespace + type prefix (GAD-D-119, ETD-T-3-01)
 
-| # | Type | Task | Status |
-|---|---|---|---|
-| 1 | Framework | domain + tech_stack + build_requirement + human_estimate in gad.json | done |
-| 2 | CLI | gad eval inherit-skills (copy emergent skills between runs) | done |
-| 3 | Eval | Categorized all 26 eval projects by domain | done |
-| 4 | Eval | Scaffolded 4 tech-stack evals: Phaser, PixiJS, Three.js, Babylon.js | done |
-| 5 | Pipeline | Per-phase pressure scores in self-eval (10 high-pressure phases found) | done |
-| 6 | Site | GanttChart component (click to expand, hover for stats) | done |
-| 7 | Docs | quick-start.md + eval-guide.md | done |
-| 8 | CLI | gad eval readme (inject scores into project README) | done |
+=== CLEANUP RESULTS ===
+Archived to .planning/archive/session-2026-04-09/:
+- DISCUSS-PHASE-25.md, DISCUSS-PHASE-27.md (pre-planning discussion notes)
+- ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-2026-04-09.md, SKILL-FINDABILITY-2026-04-09.md
+Kept: ISOLATION-AUDIT-2026-04-10.md (valuable reference)
+Kept: plans/phase-25/PLAN.md, plans/phase-27/PLAN.md (enhance review content)
 
-=== DECISIONS (gad-110 through gad-119) ===
-110: Eval domain categories (game/skill/software/business/stories/tooling)
-111: Tech stack comparison evals
-112: gad eval inherit-skills CLI
-113: Eval timestamps + build requirements + completion gates
-114: Human time estimation vs agent time comparison
-115: Pressure per phase drives skill creation opportunities
-116: Playable archive redesign for thousands of evals (queued Phase 28+)
-117: Quick start guide — no repo clone required
-118: GAD discipline scoring for framework evals
-119: Interactive Gantt chart for phases and rounds
+=== ENHANCE FINDINGS FROM PLANS ===
+Phase 25 (trace v4): Most tasks DONE (25-01 through 25-10 shipped). NOT done: site rendering tasks 25-15 through 25-22, e2e tests. Consider closing phase 25 as substantially complete.
+Phase 27 (structured data): Partially done (rubric radar exists, human review rubric in gad.json). NOT done: gad eval query, /insights page, derived metrics pipeline, chart components.
 
-=== PRESSURE DATA (top 5 phases) ===
-Phase 22: 110 (58 tasks, 26 crosscuts) — HIGHEST
-Phase 21: 56 (28 tasks, 14 crosscuts)
-Phase 14.5: 21 (7 tasks, 7 crosscuts)
-Phase 20: 20 (8 tasks, 6 crosscuts)
-Phase 14: 19 (7 tasks, 6 crosscuts)
-
-=== NEW CLI SURFACE ===
-gad eval inherit-skills --from project/vN --to project
-gad eval readme --project name
-gad eval list now shows DOMAIN column
-TRACE.json gains: domain, tech_stack, build_requirement, human_estimate_hours, source_size_bytes, build_size_bytes
-
-=== EVAL PROJECTS: 30 total (was 26) ===
-4 new: etd-phaser, etd-pixijs, etd-threejs, etd-babylonjs
+=== OPEN PLANNED TASKS (15 remaining) ===
+21-23b: Retry GAD v11 (api-interrupted investigation)
+21-24: Brownfield round 1
+22-22: Per-run page composite formula breakdown
+22-26: Scoring weights per project
+22-27: framework-upgrade skill (already exists, task may be stale)
+22-30: Agent runtimes comparison table
+22-33: gad install CLI wrapper
+22-44: Fresh-clone contribution test
+22-45: Remotion scaffold (second half)
+22-47: /standards page
+22-49: Skill collision detection at prebuild
+22-50: Extract thinking blocks from session.jsonl
+22-52: Per-skill evaluation harness
 
 === NEXT SESSION ===
-1. Wire GanttChart into Workflow + RoundResults sections (user refactoring landing page)
-2. Wire SelfEval component into page
-3. Run round 5 skills testing: GAD+Skills with/without inheritance
-4. Run tech-stack comparison evals
-5. First reverse-engineer eval on grime-time
-6. Playable archive redesign for multi-domain + thousands of evals (Phase 28)
-7. User plays round 5 builds and scores them</next-action>
+1. Implement new ID format in CLI output + new IDs going forward
+2. Build HoverCard Ref component with color-coded ID segments
+3. Review 15 open planned tasks — cancel stale ones
+4. Consider closing phases 20 and 25 as substantially done
+5. Run first eval with skills installed (round 5 GAD+Skills test)
+6. User plays round 5 builds</next-action>
   <last-updated>2026-04-11</last-updated>
-  <sink-compiled sink="apps/portfolio/content/docs/get-anything-done/planning/" at="2026-04-11T16:31:38.779Z" />
 </state>

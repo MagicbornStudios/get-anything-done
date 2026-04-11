@@ -866,9 +866,9 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
   </decision>
 
   <decision id="gad-125">
-    <title>ID format: GAD-D-NNN for decisions, GAD-T-PHASE-NN for tasks, with file abbreviation</title>
-    <summary>IDs should encode what you're looking at: GAD-D-119 = GAD decision 119, GAD-T-22-01 = GAD task phase 22 task 01, GAD-P-22 = GAD phase 22. The prefix tells you the artifact type (D=decision, T=task, P=phase, R=requirement). The namespace (GAD) tells you the project. On the site, each segment of the ID should be color-coded (namespace=accent, type=by-type-color, number=foreground). On hover, an info panel shows the full artifact details — same pattern as eval HoverCard panels.</summary>
-    <impact>Major refactor: all XML files, parsers, CLI output, site Ref component. Plan as a dedicated phase or batch. Backward compatibility needed during transition. The Ref component on the site gains HoverCard with color-coded segments.</impact>
+    <title>ID format: per-project namespace + type prefix + number</title>
+    <summary>IDs encode project, artifact type, and number. Format: PROJECT-TYPE-NUMBER. Examples: GAD-D-119 (GAD decision 119), GAD-T-22-01 (GAD task phase 22 task 01), GAD-P-22 (GAD phase 22), ETD-T-3-01 (escape-the-dungeon task). Type codes: D=decision, T=task, P=phase, R=requirement, B=bug, S=skill. Namespace is per-project (GAD, ETD, GRIME, etc.) not always "GAD" — GAD is the project name, not a framework prefix. New IDs use this format; old IDs stay until a migration script handles them as a batch. On the site: each segment color-coded (namespace=accent, type=type-color, number=foreground). HoverCard on every ID shows full artifact details with segment breakdown (e.g., "22 = phase, 01 = task"). Traceability over brevity — full IDs everywhere, no abbreviations in cross-references.</summary>
+    <impact>New IDs in DECISIONS.xml, TASK-REGISTRY.xml use new format going forward. CLI output shows new format. Site Ref component gains HoverCard + color-coded segments. Migration script (gad migrate-ids) for batch conversion when ready.</impact>
   </decision>
 
 </decisions>
