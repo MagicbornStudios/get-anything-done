@@ -4,51 +4,18 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-11 — cleanup done, planning page redesigned, ID format decided.
+  <next-action>Session 2026-04-11 complete. Project market spec ready for handoff at .planning/specs/PROJECT-MARKET-SPEC.md.
 
-=== COMPLETED ===
-- Planning page: GanttChart at top + tabbed view (Phases/Tasks/Decisions/Bugs)
-- Bugs moved to eval project detail pages (ProjectBugsSection)
-- Requirements version history on project detail (paginated, shows what changed per round)
-- Skill provenance tracking in TRACE.json (start_snapshot, installed, inherited)
-- Phase status fix on /planning page (regex bug in parsePlanningState)
-- gad self-eval CLI command
-- /quickstart and /eval-guide site routes
-- ID format decided (GAD-125): per-project namespace + type prefix (GAD-D-119, ETD-T-3-01)
+=== HANDOFF ===
+.planning/specs/PROJECT-MARKET-SPEC.md — full implementation spec for /project-market page.
+Decisions gad-128 through gad-134 captured.
 
-=== CLEANUP RESULTS ===
-Archived to .planning/archive/session-2026-04-09/:
-- DISCUSS-PHASE-25.md, DISCUSS-PHASE-27.md (pre-planning discussion notes)
-- ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-2026-04-09.md, SKILL-FINDABILITY-2026-04-09.md
-Kept: ISOLATION-AUDIT-2026-04-10.md (valuable reference)
-Kept: plans/phase-25/PLAN.md, plans/phase-27/PLAN.md (enhance review content)
-
-=== ENHANCE FINDINGS FROM PLANS ===
-Phase 25 (trace v4): Most tasks DONE (25-01 through 25-10 shipped). NOT done: site rendering tasks 25-15 through 25-22, e2e tests. Consider closing phase 25 as substantially complete.
-Phase 27 (structured data): Partially done (rubric radar exists, human review rubric in gad.json). NOT done: gad eval query, /insights page, derived metrics pipeline, chart components.
-
-=== OPEN PLANNED TASKS (15 remaining) ===
-21-23b: Retry GAD v11 (api-interrupted investigation)
-21-24: Brownfield round 1
-22-22: Per-run page composite formula breakdown
-22-26: Scoring weights per project
-22-27: framework-upgrade skill (already exists, task may be stale)
-22-30: Agent runtimes comparison table
-22-33: gad install CLI wrapper
-22-44: Fresh-clone contribution test
-22-45: Remotion scaffold (second half)
-22-47: /standards page
-22-49: Skill collision detection at prebuild
-22-50: Extract thinking blocks from session.jsonl
-22-52: Per-skill evaluation harness
-
-=== NEXT SESSION ===
-1. Implement new ID format in CLI output + new IDs going forward
-2. Build HoverCard Ref component with color-coded ID segments
-3. Review 15 open planned tasks — cancel stale ones
-4. Consider closing phases 20 and 25 as substantially done
-5. Run first eval with skills installed (round 5 GAD+Skills test)
-6. User plays round 5 builds</next-action>
+=== NEXT ===
+1. Implement /project-market from spec
+2. GAD CLI build/release pipeline (Windows)
+3. Merge /gad page: framework + catalog + hypothesis matrix
+4. Move rubric to project detail
+5. Site reusability review
+6. Run evals (round 5, tech-stacks, reverse-engineer)</next-action>
   <last-updated>2026-04-11</last-updated>
-  <sink-compiled sink="apps/portfolio/content/docs/get-anything-done/planning/" at="2026-04-11T19:41:13.142Z" />
 </state>

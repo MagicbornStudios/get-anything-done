@@ -871,4 +871,46 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>New IDs in DECISIONS.xml, TASK-REGISTRY.xml use new format going forward. CLI output shows new format. Site Ref component gains HoverCard + color-coded segments. Migration script (gad migrate-ids) for batch conversion when ready.</impact>
   </decision>
 
+  <decision id="gad-128">
+    <title>GAD CLI is an operational CLI — distinct from coding agent CLIs</title>
+    <summary>The GAD CLI (gad) is an operational CLI for the GAD framework and ecosystem. It is NOT a coding agent CLI like Claude Code CLI or Codex CLI. Those are coding agent runtimes. GAD provides commands, agents, skills, and artifacts FOR those coding agent CLIs. The site must make this distinction clear — framework + catalog on the same page, with the GAD CLI described as operational tooling that agents and users invoke, not the agent itself. The /gad page skill bootstrap sets should show the various hypotheses and what artifacts/tools are available per hypothesis condition.</summary>
+    <impact>Site /gad page redesigned. Framework + catalog merged. Clear copy distinguishing operational CLI from coding agent CLIs. Build/release pipeline for the GAD CLI as a distributable.</impact>
+  </decision>
+
+  <decision id="gad-129">
+    <title>Official build/release pipeline for GAD CLI — Windows first, publish ourselves</title>
+    <summary>Ship an official build/release pipeline for the GAD CLI. Windows first (build on this machine, publish ourselves). Mac and Linux can use GitHub workflows. Users install via npx get-anything-done or a published binary. The CLI should let users set up blank projects or eval projects. The /quickstart flow: install coding agent CLI → install GAD → set up project or eval → run.</summary>
+    <impact>New release pipeline. Windows binary published manually. Mac/Linux via GitHub Actions. npx install flow verified end-to-end.</impact>
+  </decision>
+
+  <decision id="gad-130">
+    <title>/project-market — dedicated catalog page for all eval projects</title>
+    <summary>Ship /project-market as the dedicated catalog page listing ALL eval projects (not just ETD + explainer). ETD and explainer are featured/canonical (pinned, badged) but not exclusive. Default filter: last 5 rounds per project (not global). Home page playable archive shrinks to a teaser linking to /project-market. Full handoff spec committed as PROJECT-MARKET-SPEC.md. Projects own rounds. Requirements change → new round. In-round edits allowed until new evals branch.</summary>
+    <impact>New /project-market route. Home page lightened. All 30+ eval projects browsable with default filtering. Featured canonical projects visible.</impact>
+  </decision>
+
+  <decision id="gad-131">
+    <title>Rubric belongs on project detail and eval pages, not standalone /rubric</title>
+    <summary>The /rubric page content should live on project detail pages and eval run pages where it's contextual. A standalone /rubric page may remain as a methodology reference but the primary rubric experience is per-project and per-run.</summary>
+    <impact>Rubric display on project detail + run pages. /rubric becomes secondary reference.</impact>
+  </decision>
+
+  <decision id="gad-132">
+    <title>Projects have evals, evals have rounds, rounds triggered by requirements changes</title>
+    <summary>Conceptual hierarchy: Project → eval projects → rounds. A round is triggered when requirements change. Within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. Per-project round windows for display filtering.</summary>
+    <impact>Data model clarification. Per-project round timelines on site. CLI round numbering per-project.</impact>
+  </decision>
+
+  <decision id="gad-133">
+    <title>Methodology must be tied to a buildable project with artifacts</title>
+    <summary>Even methodology-only tracks must implement a buildable project. No catalog entry without a concrete eval project and evaluation path. If methodology produces signals (pressure, compliance, traces), artifacts must ship. GAD-on-GAD is the reference. Vibes-only theory is not a catalog entry.</summary>
+    <impact>Project market listing requirement: must have build or artifact set.</impact>
+  </decision>
+
+  <decision id="gad-134">
+    <title>Site reusability review needed — cut down on duplicate edits</title>
+    <summary>The site needs a reusability pass: shared patterns reimplemented across pages, duplicate components, data shape changes requiring edits everywhere. Pipeline-generated data should drive generic components. Queued for future session.</summary>
+    <impact>Reduces maintenance burden as eval count grows to hundreds.</impact>
+  </decision>
+
 </decisions>
