@@ -1,0 +1,36 @@
+{
+  "project": "reverse-engineer-eval",
+  "version": "v1",
+  "date": "2026-04-11",
+  "gad_version": "1.32.0",
+  "framework_version": "1.32.0",
+  "trace_schema_version": 4,
+  "eval_type": "greenfield",
+  "workflow": "gad",
+  "requirements_version": "v5",
+  "context_mode": "fresh",
+  "timing": {
+    "started": "2026-04-11T02:13:09.003Z",
+    "ended": null,
+    "duration_minutes": null,
+    "phases_completed": null,
+    "tasks_completed": null
+  },
+  "token_usage": {
+    "total_tokens": null,
+    "tool_uses": null
+  },
+  "scores": {
+    "requirement_coverage": null,
+    "human_review": null,
+    "composite": null
+  },
+  "human_review": null,
+  "git_analysis": null,
+  "planning_quality": null,
+  "requirement_coverage": null,
+  "workflow_emergence": null,
+  "gad_commands": [],
+  "skill_triggers": [],
+  "trace_events_file": "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\get-anything-done\\evals\\reverse-engineer-eval\\v1\\.trace-events.jsonl"
+}

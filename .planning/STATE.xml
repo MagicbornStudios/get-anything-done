@@ -4,50 +4,45 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-10 — massive session. 11 decisions (gad-95→gad-107), 5 new skills, 4 eval projects, self-eval pipeline, site fixes + shadcn.
+  <next-action>Session 2026-04-10 — all 10 planned tasks completed.
 
-=== SKILLS CREATED THIS SESSION ===
-1. trace-analysis (.agents/skills/) — analyze .gad-log/ trace data
-2. self-eval (.agents/skills/) — score GAD development rounds
-3. gad-skill-creator (.agents/skills/) — create GAD-tailored skills using Anthropic skill-creator methodology + GAD CLI/artifacts
-4. eval-skill-install (.agents/skills/) — install skills into eval templates, run with/without comparisons
-5. reverse-engineer-eval design (in .claude/private-skills/ → moved concept to evals/)
+=== COMPLETED THIS BATCH ===
 
-=== EVAL PROJECTS SCAFFOLDED (via gad eval setup CLI) ===
-1. reverse-engineer-eval — two targets: grime-time + visualeditor-payloadcms
-2. gad-skill-creator-eval — measures skill creation quality
-3. eval-skill-install-eval — measures skill installation + comparison workflow
+| # | Type | Task | Status |
+|---|---|---|---|
+| 1 | Framework | gad-104: skill/agent/type attributes in TASK-REGISTRY.xml | done |
+| 2 | Framework | gad-108: pipeline as formal task type | done |
+| 3 | CLI | gad eval --install-skills (copy skill into eval template) | done |
+| 4 | CLI | gad rounds (list/show/json round data) | done |
+| 5 | Skill | gad:create-skill slash command | done |
+| 6 | Skill | gad:merge-skill slash command | done |
+| 7 | CLI | gad data list/get/set (CRUD for data/*.json) | done |
+| 8 | Site | SelfEval component (components/landing/self-eval/) | done |
+| 9 | Eval | reverse-engineer-eval v1 prompt generated with skill installed | ready |
+| 10 | Cleanup | /gad:join-discord removed | done |
 
-=== DECISIONS (gad-95 through gad-107) ===
-95: Self-evaluation from real brownfield data
-96: Reverse-engineer eval — two-phase methodology
-97: trace-analysis + self-eval are public framework skills
-98: Remove /gad:join-discord
-99: Skills prefer CLI but use judgment — methodology skills valid
-100: GAD skill creator from Anthropic base
-101: gad data CRUD (DEFERRED per gad-106)
-102: Skill creation → immediate eval project + framework labeling
-103: Computed trace metrics long-lived, raw logs capped
-104: Task-skill-agent attribution as formal tags in artifacts
-105: Enhance workflow — review tasks for repetitive patterns → script/CLI/skill
-106: Defer gad data CLI — keep it light
-107: gad eval --input for skill installation into eval projects
+=== NEW CLI COMMANDS ===
+- gad data list — show all data collections
+- gad data get &lt;file.key&gt; — read value (dot notation)
+- gad data set &lt;file.key&gt; &lt;value&gt; — write value
+- gad rounds — list experiment rounds
+- gad rounds --round N — show round detail
+- gad rounds --json — JSON output
+- gad eval run --install-skills &lt;paths&gt; — install skills into eval template before running
 
-=== SELF-EVAL (real data) ===
-2403 events | 180 tasks (163 done) | 102 decisions | 18.2% overhead | 80% loop compliance
+=== DECISIONS THIS SESSION (gad-95 through gad-109) ===
+15 total decisions captured covering: self-evaluation, reverse-engineer eval, skills taxonomy, attribution tagging, enhance workflow, pipeline types, lowdb data CLI, eval skill installation
 
-=== SITE FIXES ===
-ExperimentLog, RoundResults, HoverCard, Mermaid diagrams, shadcn (12 components + tw-animate-css), zustand store, data/*.json, hook error handling, self-eval pipeline with append-only snapshots
+=== SELF-EVAL (growing) ===
+2,562 events | 180 tasks (163 done) | 108 decisions | 19.0% overhead | 80% loop compliance
 
 === NEXT SESSION ===
-1. Build landing page component for self-eval display
-2. First reverse-engineer eval run (grime-time target)
-3. Make gad:merge-skill and gad:create-skill invokable as slash commands
-4. Remove /gad:join-discord
-5. Add gad rounds CLI command
-6. User plays round 5 builds
-7. Playable.tsx + Nav.tsx + RoundResults.tsx refactored by user — respect subcomponent structure
-8. Test gad-skill-creator by using it to create the next skill we need</next-action>
+1. Run reverse-engineer-eval v1 agent on grime-time target
+2. Wire SelfEval component into page.tsx (user is refactoring landing page)
+3. Test gad:create-skill by creating the next skill needed
+4. Test gad:merge-skill on overlapping skills
+5. User plays round 5 builds and scores them
+6. Add per-phase token metrics to compute-self-eval pipeline (gad-103)
+7. Respect user's component refactoring (Playable split into subcomponents, Nav refactored, etc.)</next-action>
   <last-updated>2026-04-10</last-updated>
-  <sink-compiled sink="apps/portfolio/content/docs/get-anything-done/planning/" at="2026-04-10T18:21:34.402Z" />
 </state>

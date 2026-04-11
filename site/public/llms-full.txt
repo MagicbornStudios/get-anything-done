@@ -2,12 +2,12 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-10T22:16:54.948Z
+Generated: 2026-04-11T02:13:35.638Z
 
 
 ---
 
-# Skills (32)
+# Skills (34)
 
 ## gad:add-todo
 id: add-todo
@@ -1063,6 +1063,111 @@ If you add a new impl eval project, update `IMPL_EVAL_PROJECTS` and
 - **Build renders blank** — still preserve it, but score human_review = 0.0 (caps will apply)
 
 
+## eval-skill-install
+id: eval-skill-install
+description: >- Install skills into eval project templates and run evaluations with them. Use when the user wants to evaluate a skill by running agents with and without it, install a skill from a path or URL into an eval template, point at a skill folder and wrap it as an eval, or compare skill versions. Triggers on "evaluate this skill", "test this skill", "install skill into eval", "run eval with skill", "compare skill versions".
+origin: human-authored
+
+
+# eval-skill-install
+
+Install skills into GAD eval project templates and run evaluations to measure
+their impact. This is the bridge between skill creation and skill evaluation.
+
+## When to use
+
+- You have a skill and want to know if it helps agents
+- You want to compare agent performance with vs without a specific skill
+- You want to install a skill from a local path, URL, or npx skills format
+- You want to add skills to an existing eval project that already has runs
+
+## Workflow
+
+### 1. Identify the skill to evaluate
+
+```sh
+# Local skill
+ls .agents/skills/<name>/SKILL.md
+
+# Or download from external source
+npx skills add <url> --skill <name>
+```
+
+### 2. Choose or create an eval project
+
+```sh
+# List existing projects
+gad eval list
+
+# Create a new one for this skill
+gad eval setup --project <skill-name>-eval
+```
+
+### 3. Install the skill into the eval template
+
+Copy the skill directory into the eval template:
+
+```sh
+cp -r .agents/skills/<skill-name> evals/<project>/template/skills/<skill-name>
+```
+
+Update the eval's `template/AGENTS.md` to reference the installed skill.
+
+### 4. Run with-skill vs without-skill
+
+Run the eval twice:
+- **With skill**: template includes the skill in its skills/ directory
+- **Without skill**: template has no skills/ directory (baseline)
+
+```sh
+gad eval run <project>  # with skill installed
+```
+
+For baseline, temporarily remove the skill from template/ and run again.
+
+### 5. Score and compare
+
+```sh
+gad eval score --project <project>
+gad eval scores <project>   # compare across runs
+gad eval diff v1 v2         # detailed comparison
+```
+
+### 6. Preserve results
+
+```sh
+gad eval preserve <project> v<N> --from <worktree-path>
+```
+
+## Installing skills from external sources
+
+### Local path
+```sh
+cp -r /path/to/skill evals/<project>/template/skills/
+```
+
+### GitHub URL
+```sh
+npx skills add https://github.com/<org>/<repo> --skill <name>
+# Then copy the installed skill to the eval template
+```
+
+### Into an existing eval with source code
+If the eval project already has runs with source code, install the skill
+into a new run's template to test the skill on the same codebase:
+
+```sh
+# Copy previous run's source as starting point
+cp -r evals/<project>/v<N>/run/src evals/<project>/template/src
+
+# Install skill
+cp -r .agents/skills/<name> evals/<project>/template/skills/
+
+# Run
+gad eval run <project>
+```
+
+
 ## gad:eval-suite
 id: eval-suite
 description: Run multiple eval projects in parallel and compare results across all projects
@@ -1759,6 +1864,178 @@ The trace schema itself is versioned in `trace_schema_version`. When you add a f
 Framework upgrades should be rare and deliberate. If you're touching this skill more than once a month, you're iterating on the framework while running experiments — that's how you poison your dataset. Batch framework changes into proper version bumps, cut a branch, freeze, move on.
 
 The invariant: **you should always be able to tell a reader which framework version each score was recorded against, and what changed between versions.** If you can't answer that, you've lost the ability to interpret your own results.
+
+
+## gad-skill-creator
+id: gad-skill-creator
+description: >- Create GAD-tailored skills that use the GAD CLI, planning artifacts, and eval framework. Use when the user wants to create a new skill for the GAD workflow, turn a repetitive CLI pattern into a skill, evaluate an existing skill, or enhance a workflow by reviewing tasks for repeated commands. Also triggers on "make a skill for", "create skill", "we should have a skill that", "turn this into a skill", or when a task completion reveals repetitive CLI patterns. Immediately scaffolds an eval project for framework skills.
+origin: human-authored
+
+
+# gad-skill-creator
+
+Create skills tailored to the GAD workflow. Built on top of the Anthropic
+skill-creator methodology (see `references/anthropic-skill-creator.md`) but
+specialized for GAD's CLI, planning artifacts, and evaluation framework.
+
+## What makes a GAD skill different
+
+GAD skills prefer CLI commands over manual file operations (decision gad-99,
+use good judgment). They chain `gad` CLI commands when possible. They know about
+planning artifacts (STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml). Framework
+skills get formal evaluation and are labeled as such.
+
+A GAD skill is NOT just instructions with GAD references. It should:
+1. Use `gad` CLI commands where they exist
+2. Reference planning artifacts by their standard names
+3. Tag its tasks with skill/agent attribution (decision gad-104)
+4. Have an eval project scaffolded immediately (decision gad-102)
+
+## Workflow
+
+### 1. Identify what the skill should do
+
+Sources of skill ideas:
+- **User request**: "make a skill for X"
+- **Task review (enhance)**: Review completed tasks for repetitive CLI patterns.
+  If 3+ tasks used the same sequence of commands, that's a skill candidate.
+  (decision gad-105)
+- **Merge opportunity**: `gad:merge-skill` detected overlapping skills
+- **CLI pattern**: A `gad` CLI command sequence that agents keep repeating
+
+### 2. Check existing CLI coverage
+
+Before creating a skill, check if the GAD CLI already handles it:
+
+```sh
+gad --help 2>&1 | grep -i "<keyword>"
+gad eval --help 2>&1
+gad <subcommand> --help 2>&1
+```
+
+If a CLI command exists, the skill should wrap/chain it, not reimplement.
+If multiple CLI commands need chaining, that IS the skill.
+
+### 3. Check existing skills
+
+```sh
+ls .agents/skills/
+```
+
+Read any similar skills. If overlap exists, use `gad:merge-skill` instead of
+creating a new one.
+
+### 4. Draft the skill
+
+Follow the Anthropic skill-creator's SKILL.md anatomy:
+
+```
+skill-name/
+├── SKILL.md          # Required: frontmatter + instructions
+├── references/       # Docs loaded as needed
+├── scripts/          # Executable automation
+└── evals/
+    └── evals.json    # Test cases
+```
+
+GAD-specific additions to frontmatter:
+```yaml
+---
+name: skill-name
+description: >-
+  Descriptive trigger text. Be pushy per Anthropic guidelines.
+framework_skill: true|false    # true = formal evaluation required
+uses_cli: [gad eval, gad state] # CLI commands this skill chains
+---
+```
+
+### 5. Scaffold the eval project immediately
+
+For framework skills (or any skill the user wants evaluated):
+
+```sh
+gad eval setup --project <skill-name>
+```
+
+This creates `evals/<skill-name>/gad.json` and `template/`. The eval measures
+whether the skill improves agent outcomes vs not having the skill.
+
+### 6. Write test cases
+
+Create `evals/evals.json` inside the skill directory with 2-3 realistic
+test prompts. Follow the Anthropic skill-creator format:
+
+```json
+{
+  "skill_name": "my-gad-skill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Realistic user task that should trigger this skill",
+      "expected_output": "What success looks like",
+      "expectations": ["Verifiable outcome 1", "Verifiable outcome 2"]
+    }
+  ]
+}
+```
+
+### 7. Run and evaluate
+
+Use the Anthropic skill-creator's evaluation methodology:
+- Read `references/anthropic-skill-creator.md` for the full eval loop
+- Spawn with-skill and without-skill runs
+- Grade, aggregate, review with user
+- Iterate until satisfied
+
+### 8. Enhance review (post-creation)
+
+After the skill is in use, periodically review tasks that used it:
+1. What repetitive commands appeared?
+2. Should we create a script for them?
+3. Should we stack CLI commands instead?
+4. Should this become a `gad` CLI command?
+
+This feeds the cycle: CLI grows → skills thin → merge overlapping → repeat.
+
+## Installing skills into eval projects
+
+To evaluate a skill by installing it into an existing eval project:
+
+```sh
+# Install a local skill into an eval template
+gad eval run --install-skills path/to/skill <project>
+
+# Install from npx skills format
+npx skills add <url> --skill <name>
+# Then point the eval at it
+```
+
+The CLI handles copying the skill into the eval template, updating AGENTS.md
+skill references, and recording the installation in TRACE.json (decision gad-107).
+
+## Framework vs non-framework skills
+
+**Framework skills** (tagged `framework_skill: true`):
+- Related to GAD CLI, planning artifacts, eval framework, or core workflow
+- Require formal controlled evaluation
+- Labeled and identifiable on the site
+- Examples: trace-analysis, self-eval, snapshot-optimize
+
+**Workflow skills** (default):
+- Project-specific or domain-specific
+- Evaluated through rounds (observational data from real usage)
+- Still show usage metrics on the site from trace logs
+- Examples: find-sprites, frontend-design
+
+## Reference
+
+Read `references/anthropic-skill-creator.md` for the full Anthropic skill-creator
+methodology — this GAD skill creator follows the same eval loop but adds:
+- CLI-first design
+- Immediate eval project scaffolding
+- Task attribution tagging
+- Enhance review workflow
+- Framework/workflow skill distinction
 
 
 ## gad:manuscript
@@ -4782,7 +5059,67 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (102)
+# Decisions (108)
+
+## gad-109: gad data uses lowdb with /data as the managed database
+
+### Summary
+
+The gad data CLI subcommand uses lowdb (https://github.com/typicode/lowdb) with the data/ folder as the database. JSON files in data/ are both the database AND version-controlled codebase artifacts — lowdb reads/writes them directly. This gives us CRUD operations via CLI while keeping the data human-readable and git-tracked. Implement after eval --install-skills ships.
+
+### Impact
+
+Add lowdb as a dependency. data/*.json files gain programmatic CRUD via gad data. Still human-editable and git-tracked.
+
+## gad-108: Pipeline is a formal artifact category alongside skill, agent, eval
+
+### Summary
+
+Pipeline tasks (compute-self-eval, build-site-data, etc.) are a distinct category in our artifact tracking. The table format with Type column (skill, eval, pipeline) is the standard for listing artifacts. Pipeline tasks should be tagged in TASK-REGISTRY.xml same as skills and agents. Decoupled piping with the GAD CLI is the design goal — pipelines are composable CLI command chains.
+
+### Impact
+
+TASK-REGISTRY.xml gains type="pipeline" alongside type="skill" and type="agent". Artifact tables include Pipeline as a category.
+
+## gad-107: gad eval --input for skill installation into eval projects
+
+### Summary
+
+The eval CLI should support installing skills into eval project templates before or after runs. `gad eval run --install-skills path/to/skill [...]` installs skill(s) into the eval template, populates the data (AGENTS.md skill references, template/skills/ directory), and tracks what was installed. This enables: (1) point at any skill folder and wrap it as an eval, (2) install skills into existing eval projects that already have source from prior runs, (3) run evaluations with vs without specific skills. The CLI handles the automation of copying skills, updating AGENTS.md, and recording the installation in TRACE.json. Works with npx skills format, local paths, and GitHub URLs.
+
+### Impact
+
+New eval CLI flag. Enables skill evaluation without manual template editing. Tracks skill installations as eval metadata. Prioritize before gad data CLI.
+
+## gad-106: Defer gad data CLI — keep it light
+
+### Summary
+
+The gad data CRUD subcommand (gad-101) is deferred. Keep the CLI light. JSON files are readable and editable directly. Add data commands only when there's a proven workflow need, not speculatively.
+
+### Impact
+
+gad-101 deprioritized. Focus CLI work on eval and rounds commands instead.
+
+## gad-105: Enhance workflow: review task, find repetitive commands, propose script/CLI/skill
+
+### Summary
+
+Add "enhance" as a workflow alongside merge. When reviewing a completed task: (1) what repetitive commands were there? (2) should we create a script and invoke that? (3) or stack commands and keep instructions? (4) or officially add to the gad CLI because it's workflow-related? This is the feedback loop from usage to tooling. A task that used 5 sequential Bash commands is a candidate for a script. A task that chained 3 gad CLI calls is a candidate for a new composite command. Enhance doesn't replace merge — merge handles overlapping skills, enhance handles graduating patterns from tasks into reusable tooling.
+
+### Impact
+
+New workflow step after task completion: enhance review. Feeds the CLI-grows → skills-thin cycle from gad-99.
+
+## gad-104: Task-skill-agent attribution is a formal tag in GAD artifacts
+
+### Summary
+
+Every task in TASK-REGISTRY.xml should tag which skill(s) and agent(s) were involved. Format: `skill="skill-name"` and `agent="agent-name"` attributes on the task element. Named agents (gad-planner, gad-verifier, etc.) use their name; unnamed/default agents use "default". Multiple skills on one task signals a merge/enhance opportunity. The AI knows during the session which skills and agents are active — capture it in artifacts since we can't always rely on trace logs. Standard naming convention follows existing GAD patterns: lowercase-kebab-case for skills/agents.
+
+### Impact
+
+TASK-REGISTRY.xml tasks gain skill="" and agent="" attributes. Planning doc updates include attribution. Enables querying "which skills were used for which tasks" from artifacts alone without trace logs.
 
 ## gad-103: Computed trace metrics are long-lived — raw logs are capped
 

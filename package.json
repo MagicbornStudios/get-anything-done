@@ -43,7 +43,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "citty": "^0.1.6"
+    "citty": "^0.1.6",
+    "lowdb": "^7.0.1"
   },
   "devDependencies": {
     "c8": "^11.0.0",

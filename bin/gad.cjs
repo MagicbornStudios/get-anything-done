@@ -1495,6 +1495,7 @@ const evalRun = defineCommand({
     baseline: { type: 'string', description: 'Git baseline (default: HEAD)', default: 'HEAD' },
     'prompt-only': { type: 'boolean', description: 'Only generate the bootstrap prompt, do not create worktree', default: false },
     execute: { type: 'boolean', description: 'Output JSON for the orchestrating agent to spawn a worktree agent with full tracing', default: false },
+    'install-skills': { type: 'string', description: 'Comma-separated paths to skills to install into the eval template before running', default: '' },
   },
   async run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
@@ -1505,6 +1506,46 @@ const evalRun = defineCommand({
     if (!fs.existsSync(projectDir)) {
       outputError(`Eval project '${args.project}' not found. Run \`gad eval list\` to see available projects.`);
       return;
+    }
+
+    // Install skills into template if requested (decision gad-107)
+    if (args['install-skills']) {
+      const templateDir = path.join(projectDir, 'template');
+      const skillsDir = path.join(templateDir, 'skills');
+      fs.mkdirSync(skillsDir, { recursive: true });
+
+      const skillPaths = args['install-skills'].split(',').map(s => s.trim()).filter(Boolean);
+      const installed = [];
+      for (const skillPath of skillPaths) {
+        const resolved = path.resolve(skillPath);
+        if (!fs.existsSync(resolved)) {
+          console.warn(`  [warn] Skill not found: ${skillPath}`);
+          continue;
+        }
+        const skillName = path.basename(resolved);
+        const dest = path.join(skillsDir, skillName);
+        // Copy skill directory
+        fs.cpSync(resolved, dest, { recursive: true });
+        installed.push(skillName);
+        console.log(`  ✓ Installed skill: ${skillName} → template/skills/${skillName}`);
+      }
+
+      // Update template/AGENTS.md if it exists to reference installed skills
+      const agentsMd = path.join(templateDir, 'AGENTS.md');
+      if (fs.existsSync(agentsMd) && installed.length > 0) {
+        let content = fs.readFileSync(agentsMd, 'utf8');
+        const skillsSection = `\n\n## Installed Skills\n\n${installed.map(s => `- \`skills/${s}/SKILL.md\``).join('\n')}\n`;
+        if (!content.includes('## Installed Skills')) {
+          content += skillsSection;
+          fs.writeFileSync(agentsMd, content);
+          console.log(`  ✓ Updated AGENTS.md with ${installed.length} skill reference(s)`);
+        }
+      }
+
+      // Record installation metadata
+      const metaFile = path.join(templateDir, '.installed-skills.json');
+      const meta = { installed_at: new Date().toISOString(), skills: installed.map(s => ({ name: s, source: skillPaths[installed.indexOf(s)] })) };
+      fs.writeFileSync(metaFile, JSON.stringify(meta, null, 2));
     }
 
     // Next run number
@@ -4827,7 +4868,13 @@ const snapshotCmd = defineCommand({
           tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
         }
         const goalText = (t.goal || '').slice(0, 200);
-        tasksSection += `    <task id="${t.id}" status="${t.status}"><goal>${goalText}</goal></task>\n`;
+        const extraAttrs = [
+          t.skill ? `skill="${t.skill}"` : '',
+          t.type ? `type="${t.type}"` : '',
+          t.agentId ? `agent-id="${t.agentId}"` : '',
+        ].filter(Boolean).join(' ');
+        const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
+        tasksSection += `    <task id="${t.id}" status="${t.status}"${attrStr}><goal>${goalText}</goal></task>\n`;
       }
     }
     const doneCount = allTasks.length - openTasks.length;
@@ -6429,6 +6476,160 @@ const uninstallCmd = defineCommand({
   },
 });
 
+// ── gad data — CRUD for data/*.json using lowdb (decision gad-109) ──
+const dataListCmd = defineCommand({
+  meta: { name: 'list', description: 'List all data collections in data/' },
+  run() {
+    const gadDir = path.join(__dirname, '..');
+    const dataDir = path.join(gadDir, 'data');
+    if (!fs.existsSync(dataDir)) { console.log('No data/ directory found.'); return; }
+    const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
+    console.log(`Data collections (${files.length}):\n`);
+    for (const f of files) {
+      try {
+        const content = JSON.parse(fs.readFileSync(path.join(dataDir, f), 'utf8'));
+        const keys = Array.isArray(content) ? `${content.length} items` : `${Object.keys(content).length} keys`;
+        console.log(`  ${f.padEnd(30)} ${keys}`);
+      } catch {
+        console.log(`  ${f.padEnd(30)} (invalid JSON)`);
+      }
+    }
+  },
+});
+
+const dataGetCmd = defineCommand({
+  meta: { name: 'get', description: 'Read a value from a data collection (dot notation)' },
+  args: {
+    path: { type: 'positional', description: 'Dot path: file.key.subkey', required: true },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const dataDir = path.join(gadDir, 'data');
+    const parts = (args.path || args._[0] || '').split('.');
+    if (parts.length < 1) { console.log('Usage: gad data get <file>.<key>'); return; }
+    const file = parts[0].endsWith('.json') ? parts[0] : `${parts[0]}.json`;
+    const filePath = path.join(dataDir, file);
+    if (!fs.existsSync(filePath)) { outputError(`Collection not found: ${file}`); return; }
+    let data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    for (let i = 1; i < parts.length; i++) {
+      if (data == null || typeof data !== 'object') { outputError(`Path not found: ${parts.slice(0, i + 1).join('.')}`); return; }
+      data = data[parts[i]];
+    }
+    console.log(typeof data === 'object' ? JSON.stringify(data, null, 2) : String(data));
+  },
+});
+
+const dataSetCmd = defineCommand({
+  meta: { name: 'set', description: 'Set a value in a data collection (dot notation)' },
+  args: {
+    path: { type: 'positional', description: 'Dot path: file.key.subkey', required: true },
+    value: { type: 'positional', description: 'Value to set (JSON or string)', required: true },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const dataDir = path.join(gadDir, 'data');
+    const rawPath = args.path || args._[0] || '';
+    const rawValue = args.value || args._[1] || '';
+    const parts = rawPath.split('.');
+    if (parts.length < 2) { console.log('Usage: gad data set <file>.<key> <value>'); return; }
+    const file = parts[0].endsWith('.json') ? parts[0] : `${parts[0]}.json`;
+    const filePath = path.join(dataDir, file);
+    if (!fs.existsSync(filePath)) { outputError(`Collection not found: ${file}`); return; }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    // Navigate to parent
+    let target = data;
+    for (let i = 1; i < parts.length - 1; i++) {
+      if (target[parts[i]] == null) target[parts[i]] = {};
+      target = target[parts[i]];
+    }
+    // Parse value as JSON if possible, otherwise string
+    let parsed;
+    try { parsed = JSON.parse(rawValue); } catch { parsed = rawValue; }
+    target[parts[parts.length - 1]] = parsed;
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
+    console.log(`✓ Set ${rawPath} = ${JSON.stringify(parsed)}`);
+  },
+});
+
+const dataCmd = defineCommand({
+  meta: { name: 'data', description: 'CRUD operations on data/*.json collections (decision gad-109)' },
+  subCommands: { list: dataListCmd, get: dataGetCmd, set: dataSetCmd },
+});
+
+// ── gad rounds — query experiment round data ──────────────────
+const roundsCmd = defineCommand({
+  meta: { name: 'rounds', description: 'List and query experiment rounds from EXPERIMENT-LOG.md' },
+  args: {
+    round: { type: 'string', description: 'Show a specific round (e.g. "3")', default: '' },
+    json: { type: 'boolean', description: 'Output as JSON', default: false },
+  },
+  run({ args }) {
+    const gadDir = path.join(__dirname, '..');
+    const logFile = path.join(gadDir, 'evals', 'EXPERIMENT-LOG.md');
+    if (!fs.existsSync(logFile)) {
+      outputError('No EXPERIMENT-LOG.md found in evals/');
+      return;
+    }
+    const content = fs.readFileSync(logFile, 'utf8');
+    // Parse rounds from markdown headers: ## Round N — Title
+    const roundRe = /^## (Round \d+)\s*—\s*(.+)$/gm;
+    const rounds = [];
+    let match;
+    const indices = [];
+    while ((match = roundRe.exec(content)) !== null) {
+      indices.push({ start: match.index, label: match[1], title: match[2].trim() });
+    }
+    for (let i = 0; i < indices.length; i++) {
+      const start = indices[i].start;
+      const end = i + 1 < indices.length ? indices[i + 1].start : content.length;
+      const body = content.slice(start, end).trim();
+      // Extract key fields
+      const dateMatch = body.match(/\*\*Date:\*\*\s*(.+)/);
+      const reqMatch = body.match(/\*\*Requirements version:\*\*\s*(.+)/);
+      const condMatch = body.match(/\*\*Conditions?:\*\*\s*(.+)/);
+      rounds.push({
+        round: indices[i].label,
+        number: parseInt(indices[i].label.replace('Round ', ''), 10),
+        title: indices[i].title,
+        date: dateMatch ? dateMatch[1].trim() : null,
+        requirements: reqMatch ? reqMatch[1].trim() : null,
+        conditions: condMatch ? condMatch[1].trim() : null,
+        body: body,
+      });
+    }
+
+    if (args.round) {
+      const num = parseInt(args.round, 10);
+      const r = rounds.find(r => r.number === num);
+      if (!r) {
+        outputError(`Round ${args.round} not found. Available: ${rounds.map(r => r.number).join(', ')}`);
+        return;
+      }
+      if (args.json) {
+        console.log(JSON.stringify(r, null, 2));
+      } else {
+        console.log(r.body);
+      }
+      return;
+    }
+
+    // List all rounds
+    if (args.json) {
+      console.log(JSON.stringify(rounds.map(({ body, ...r }) => r), null, 2));
+      return;
+    }
+    console.log(`Experiment Rounds (${rounds.length})\n`);
+    const header = `${'ROUND'.padEnd(10)}${'TITLE'.padEnd(55)}${'DATE'.padEnd(25)}REQS`;
+    console.log(header);
+    console.log('─'.repeat(header.length));
+    for (const r of rounds) {
+      console.log(
+        `${r.round.padEnd(10)}${(r.title || '').slice(0, 53).padEnd(55)}${(r.date || '—').slice(0, 23).padEnd(25)}${r.requirements || '—'}`
+      );
+    }
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -6452,7 +6653,9 @@ const main = defineCommand({
     refs: refsCmd,
     pack: packCmd,
     docs: docsCmd,
+    data: dataCmd,
     eval: evalCmd,
+    rounds: roundsCmd,
     verify: verifyCmd,
     snapshot: snapshotCmd,
     sprint: sprintCmd,

@@ -2657,6 +2657,72 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     }
   },
   {
+    "project": "gad-skill-creator-eval",
+    "version": "v1",
+    "workflow": "gad",
+    "requirementsVersion": "v5",
+    "date": "2026-04-11",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 4,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
+    "evalType": "greenfield",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-11T02:05:40.614Z",
+      "ended": null,
+      "duration_minutes": null,
+      "phases_completed": null,
+      "tasks_completed": null
+    },
+    "tokenUsage": {
+      "total_tokens": null,
+      "tool_uses": null
+    },
+    "gitAnalysis": null,
+    "requirementCoverage": null,
+    "workflowEmergence": null,
+    "planningQuality": null,
+    "scores": {
+      "requirement_coverage": null,
+      "human_review": null,
+      "composite": null
+    },
+    "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
+    "skillAccuracyBreakdown": null,
+    "requirementsDoc": {
+      "filename": "REQUIREMENTS.md (eval meta)",
+      "path": "evals/gad-skill-creator-eval/REQUIREMENTS.md",
+      "content": "# Eval: gad-skill-creator-eval\n\n## What this eval measures\n\n1. **Skill trigger accuracy** — are /gad:* skills triggered at the right moments\n2. **Planning quality** — coherent phases, tasks, decisions from requirements\n3. **CLI context efficiency** — gad snapshot delivers what the agent needs\n4. **End-to-end loop** — discuss → plan → execute → verify → score\n5. **Time-to-completion** — wall clock and token counts\n\n## Eval flow\n\n1. Pre-planning: `/gad:discuss-phase` — collect open questions, clarify requirements\n2. Planning: `/gad:plan-phase` — break into implementable phases with tasks\n3. Execution: `/gad:execute-phase` — implement, update planning docs, commit\n4. Verification: `/gad:verify-work` — check against definition of done\n5. Scoring: TRACE.json + SCORE.md\n\n## Human review\n\nAfter eval agent completes, human reviews output quality.\nManual score added to SCORE.md.\n",
+      "format": "md"
+    },
+    "topSkill": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": null,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
+      "commit_discipline": null
+    }
+  },
+  {
     "project": "planning-migration",
     "version": "v1",
     "workflow": "gad",
@@ -3416,6 +3482,67 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "total_commits": 23,
       "commit_discipline": 0.4782608695652174
     }
+  },
+  {
+    "project": "reverse-engineer-eval",
+    "version": "v1",
+    "workflow": "gad",
+    "requirementsVersion": "v5",
+    "date": "2026-04-11",
+    "gadVersion": "1.32.0",
+    "traceSchemaVersion": 4,
+    "frameworkVersion": "1.32.0",
+    "frameworkCommit": null,
+    "frameworkBranch": null,
+    "frameworkCommitTs": null,
+    "frameworkStamp": null,
+    "traceEvents": null,
+    "evalType": "greenfield",
+    "contextMode": "fresh",
+    "timing": {
+      "started": "2026-04-11T02:13:09.003Z",
+      "ended": null,
+      "duration_minutes": null,
+      "phases_completed": null,
+      "tasks_completed": null
+    },
+    "tokenUsage": {
+      "total_tokens": null,
+      "tool_uses": null
+    },
+    "gitAnalysis": null,
+    "requirementCoverage": null,
+    "workflowEmergence": null,
+    "planningQuality": null,
+    "scores": {
+      "requirement_coverage": null,
+      "human_review": null,
+      "composite": null
+    },
+    "humanReview": null,
+    "humanReviewNormalized": {
+      "rubric_version": "none",
+      "dimensions": {},
+      "aggregate_score": null,
+      "notes": null,
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "is_legacy": true,
+      "is_empty": true
+    },
+    "skillAccuracyBreakdown": null,
+    "requirementsDoc": null,
+    "topSkill": null,
+    "derived": {
+      "divergence_score": null,
+      "plan_adherence_delta": null,
+      "produced_artifact_density": null,
+      "tool_use_mix": null,
+      "skill_to_tool_ratio": null,
+      "subagent_utilization": null,
+      "total_commits": null,
+      "commit_discipline": null
+    }
   }
 ];
 
@@ -3461,9 +3588,19 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
     "bytes": 1410
   },
   {
+    "project": "eval-skill-install-eval",
+    "zipPath": "/downloads/eval-eval-skill-install-eval-template.zip",
+    "bytes": 1150
+  },
+  {
     "project": "gad-explainer-video",
     "zipPath": "/downloads/eval-gad-explainer-video-template.zip",
     "bytes": 2950
+  },
+  {
+    "project": "gad-skill-creator-eval",
+    "zipPath": "/downloads/eval-gad-skill-creator-eval-template.zip",
+    "bytes": 4842
   },
   {
     "project": "reader-workspace",
@@ -3473,7 +3610,7 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
   {
     "project": "reverse-engineer-eval",
     "zipPath": "/downloads/eval-reverse-engineer-eval-template.zip",
-    "bytes": 1009
+    "bytes": 4278
   }
 ];
 
@@ -3527,10 +3664,22 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
     "files": 1
   },
   {
+    "project": "eval-skill-install-eval",
+    "zipPath": "/downloads/planning/eval-eval-skill-install-eval-planning.zip",
+    "bytes": 1150,
+    "files": 4
+  },
+  {
     "project": "gad-explainer-video",
     "zipPath": "/downloads/planning/eval-gad-explainer-video-planning.zip",
     "bytes": 2950,
     "files": 2
+  },
+  {
+    "project": "gad-skill-creator-eval",
+    "zipPath": "/downloads/planning/eval-gad-skill-creator-eval-planning.zip",
+    "bytes": 4567,
+    "files": 6
   },
   {
     "project": "reader-workspace",
@@ -3541,8 +3690,8 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
   {
     "project": "reverse-engineer-eval",
     "zipPath": "/downloads/planning/eval-reverse-engineer-eval-planning.zip",
-    "bytes": 1009,
-    "files": 1
+    "bytes": 4003,
+    "files": 2
   }
 ];
 
@@ -3976,6 +4125,23 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "humanReviewRubric": null
   },
   {
+    "id": "eval-skill-install-eval",
+    "name": "eval-skill-install-eval",
+    "description": "Evaluates the eval-skill-install skill — measures whether installing skills into eval projects correctly and running with/without comparisons works",
+    "evalMode": "greenfield",
+    "workflow": "gad",
+    "baseline": null,
+    "constraints": null,
+    "scoringWeights": {
+      "install_success": 0.2,
+      "comparison_valid": 0.2,
+      "cli_usage": 0.15,
+      "preservation_complete": 0.1,
+      "human_review": 0.35
+    },
+    "humanReviewRubric": null
+  },
+  {
     "id": "gad-explainer-video",
     "name": "gad-explainer-video",
     "description": "NEW EVAL DOMAIN (task 22-31, scaffolded 2026-04-09). The task is to produce a Remotion video that explains the GAD framework, its hypotheses, and its current state. The video requirements evolve across rounds the same way the escape-the-dungeon game requirements did — each round adds clarity, constraints, and complexity to the explainer script. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a completely different task domain: video composition instead of game implementation. If bare still outperforms GAD here, freedom hypothesis generalizes beyond game dev. If not, freedom may be specific to creative implementation.",
@@ -4091,6 +4257,23 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "baseline": null,
     "constraints": null,
     "scoringWeights": null,
+    "humanReviewRubric": null
+  },
+  {
+    "id": "gad-skill-creator-eval",
+    "name": "gad-skill-creator-eval",
+    "description": "Evaluates the gad-skill-creator skill — measures whether skills created using this methodology produce better agent outcomes than ad-hoc skill creation",
+    "evalMode": "greenfield",
+    "workflow": "gad",
+    "baseline": null,
+    "constraints": null,
+    "scoringWeights": {
+      "skill_quality": 0.25,
+      "eval_scaffolded": 0.15,
+      "cli_usage": 0.15,
+      "attribution_tagged": 0.1,
+      "human_review": 0.35
+    },
     "humanReviewRubric": null
   },
   {
@@ -5595,6 +5778,42 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-109",
+    "title": "gad data uses lowdb with /data as the managed database",
+    "summary": "The gad data CLI subcommand uses lowdb (https://github.com/typicode/lowdb) with the data/ folder as the database. JSON files in data/ are both the database AND version-controlled codebase artifacts — lowdb reads/writes them directly. This gives us CRUD operations via CLI while keeping the data human-readable and git-tracked. Implement after eval --install-skills ships.",
+    "impact": "Add lowdb as a dependency. data/*.json files gain programmatic CRUD via gad data. Still human-editable and git-tracked."
+  },
+  {
+    "id": "gad-108",
+    "title": "Pipeline is a formal artifact category alongside skill, agent, eval",
+    "summary": "Pipeline tasks (compute-self-eval, build-site-data, etc.) are a distinct category in our artifact tracking. The table format with Type column (skill, eval, pipeline) is the standard for listing artifacts. Pipeline tasks should be tagged in TASK-REGISTRY.xml same as skills and agents. Decoupled piping with the GAD CLI is the design goal — pipelines are composable CLI command chains.",
+    "impact": "TASK-REGISTRY.xml gains type=\"pipeline\" alongside type=\"skill\" and type=\"agent\". Artifact tables include Pipeline as a category."
+  },
+  {
+    "id": "gad-107",
+    "title": "gad eval --input for skill installation into eval projects",
+    "summary": "The eval CLI should support installing skills into eval project templates before or after runs. `gad eval run --install-skills path/to/skill [...]` installs skill(s) into the eval template, populates the data (AGENTS.md skill references, template/skills/ directory), and tracks what was installed. This enables: (1) point at any skill folder and wrap it as an eval, (2) install skills into existing eval projects that already have source from prior runs, (3) run evaluations with vs without specific skills. The CLI handles the automation of copying skills, updating AGENTS.md, and recording the installation in TRACE.json. Works with npx skills format, local paths, and GitHub URLs.",
+    "impact": "New eval CLI flag. Enables skill evaluation without manual template editing. Tracks skill installations as eval metadata. Prioritize before gad data CLI."
+  },
+  {
+    "id": "gad-106",
+    "title": "Defer gad data CLI — keep it light",
+    "summary": "The gad data CRUD subcommand (gad-101) is deferred. Keep the CLI light. JSON files are readable and editable directly. Add data commands only when there's a proven workflow need, not speculatively.",
+    "impact": "gad-101 deprioritized. Focus CLI work on eval and rounds commands instead."
+  },
+  {
+    "id": "gad-105",
+    "title": "Enhance workflow: review task, find repetitive commands, propose script/CLI/skill",
+    "summary": "Add \"enhance\" as a workflow alongside merge. When reviewing a completed task: (1) what repetitive commands were there? (2) should we create a script and invoke that? (3) or stack commands and keep instructions? (4) or officially add to the gad CLI because it's workflow-related? This is the feedback loop from usage to tooling. A task that used 5 sequential Bash commands is a candidate for a script. A task that chained 3 gad CLI calls is a candidate for a new composite command. Enhance doesn't replace merge — merge handles overlapping skills, enhance handles graduating patterns from tasks into reusable tooling.",
+    "impact": "New workflow step after task completion: enhance review. Feeds the CLI-grows → skills-thin cycle from gad-99."
+  },
+  {
+    "id": "gad-104",
+    "title": "Task-skill-agent attribution is a formal tag in GAD artifacts",
+    "summary": "Every task in TASK-REGISTRY.xml should tag which skill(s) and agent(s) were involved. Format: `skill=\"skill-name\"` and `agent=\"agent-name\"` attributes on the task element. Named agents (gad-planner, gad-verifier, etc.) use their name; unnamed/default agents use \"default\". Multiple skills on one task signals a merge/enhance opportunity. The AI knows during the session which skills and agents are active — capture it in artifacts since we can't always rely on trace logs. Standard naming convention follows existing GAD patterns: lowercase-kebab-case for skills/agents.",
+    "impact": "TASK-REGISTRY.xml tasks gain skill=\"\" and agent=\"\" attributes. Planning doc updates include attribution. Enables querying \"which skills were used for which tasks\" from artifacts alone without trace logs."
+  },
   {
     "id": "gad-103",
     "title": "Computed trace metrics are long-lived — raw logs are capped",
@@ -8658,6 +8877,48 @@ export interface SearchEntry {
  */
 export const SEARCH_INDEX: SearchEntry[] = [
   {
+    "id": "gad-109",
+    "title": "gad data uses lowdb with /data as the managed database",
+    "kind": "decision",
+    "href": "/decisions#gad-109",
+    "body": "gad-109 gad data uses lowdb with /data as the managed database the gad data cli subcommand uses lowdb (https://github.com/typicode/lowdb) with the data/ folder as the database. json files in data/ are both the database and version-controlled codebase artifacts — lowdb reads/writes them directly. this gives us crud operations via cli while keeping the data human-readable and git-tracked. implement after eval --install-skills ships."
+  },
+  {
+    "id": "gad-108",
+    "title": "Pipeline is a formal artifact category alongside skill, agent, eval",
+    "kind": "decision",
+    "href": "/decisions#gad-108",
+    "body": "gad-108 pipeline is a formal artifact category alongside skill, agent, eval pipeline tasks (compute-self-eval, build-site-data, etc.) are a distinct category in our artifact tracking. the table format with type column (skill, eval, pipeline) is the standard for listing artifacts. pipeline tasks should be tagged in task-registry.xml same as skills and agents. decoupled piping with the gad cli is the design goal — pipelines are composable cli command chains."
+  },
+  {
+    "id": "gad-107",
+    "title": "gad eval --input for skill installation into eval projects",
+    "kind": "decision",
+    "href": "/decisions#gad-107",
+    "body": "gad-107 gad eval --input for skill installation into eval projects the eval cli should support installing skills into eval project templates before or after runs. `gad eval run --install-skills path/to/skill [...]` installs skill(s) into the eval template, populates the data (agents.md skill references, template/skills/ directory), and tracks what was installed. this enables: (1) point at any skill folder and wrap it as an eval, (2) install skills into existing e"
+  },
+  {
+    "id": "gad-106",
+    "title": "Defer gad data CLI — keep it light",
+    "kind": "decision",
+    "href": "/decisions#gad-106",
+    "body": "gad-106 defer gad data cli — keep it light the gad data crud subcommand (gad-101) is deferred. keep the cli light. json files are readable and editable directly. add data commands only when there's a proven workflow need, not speculatively."
+  },
+  {
+    "id": "gad-105",
+    "title": "Enhance workflow: review task, find repetitive commands, propose script/CLI/skill",
+    "kind": "decision",
+    "href": "/decisions#gad-105",
+    "body": "gad-105 enhance workflow: review task, find repetitive commands, propose script/cli/skill add \"enhance\" as a workflow alongside merge. when reviewing a completed task: (1) what repetitive commands were there? (2) should we create a script and invoke that? (3) or stack commands and keep instructions? (4) or officially add to the gad cli because it's workflow-related? this is the feedback loop from usage to tooling. a task that used 5 sequential bash commands is a candidate for a script."
+  },
+  {
+    "id": "gad-104",
+    "title": "Task-skill-agent attribution is a formal tag in GAD artifacts",
+    "kind": "decision",
+    "href": "/decisions#gad-104",
+    "body": "gad-104 task-skill-agent attribution is a formal tag in gad artifacts every task in task-registry.xml should tag which skill(s) and agent(s) were involved. format: `skill=\"skill-name\"` and `agent=\"agent-name\"` attributes on the task element. named agents (gad-planner, gad-verifier, etc.) use their name; unnamed/default agents use \"default\". multiple skills on one task signals a merge/enhance opportunity. the ai knows during the session which skills and agents are ac"
+  },
+  {
     "id": "gad-103",
     "title": "Computed trace metrics are long-lived — raw logs are capped",
     "kind": "decision",
@@ -11066,6 +11327,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "eval-run eval-run run a gad evaluation with full preservation of code, builds, and planning docs"
   },
   {
+    "id": "eval-skill-install",
+    "title": "eval-skill-install",
+    "kind": "skill",
+    "href": "/skills/eval-skill-install",
+    "body": "eval-skill-install eval-skill-install >- install skills into eval project templates and run evaluations with them. use when the user wants to evaluate a skill by running agents with and without it, install a skill from a path or url into an eval template, point at a skill folder and wrap it as an eval, or compare skill versions. triggers on \"evaluate this skill\", \"test this skill\", \"install skill into eval\", \"run eval with skill\", \"compare skill versions\"."
+  },
+  {
     "id": "eval-suite",
     "title": "gad:eval-suite",
     "kind": "skill",
@@ -11099,6 +11367,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/framework-upgrade",
     "body": "framework-upgrade framework-upgrade ship a change to the gad framework itself (new skill, new subagent, reworked command, altered loop) in a way that preserves the ability to interpret eval results across versions. trigger this skill whenever a framework change could affect how an agent behaves during an eval run — e.g. adding a mandatory skill, changing a command's spawned subagent, rewording agents.md, changing the plan-phase flow, anything that would make \"the same agent prompt\" produce different output. the goal is to make framework drift visible so we don't mistake a framework improvement for an agent improvement (or vice versa) when scores move."
+  },
+  {
+    "id": "gad-skill-creator",
+    "title": "gad-skill-creator",
+    "kind": "skill",
+    "href": "/skills/gad-skill-creator",
+    "body": "gad-skill-creator gad-skill-creator >- create gad-tailored skills that use the gad cli, planning artifacts, and eval framework. use when the user wants to create a new skill for the gad workflow, turn a repetitive cli pattern into a skill, evaluate an existing skill, or enhance a workflow by reviewing tasks for repeated commands. also triggers on \"make a skill for\", \"create skill\", \"we should have a skill that\", \"turn this into a skill\", or when a task completion reveals repetitive cli patterns. immediately scaffolds an eval project for framework skills."
   },
   {
     "id": "manuscript",
@@ -11458,6 +11733,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "complete-milestone gad:complete-milestone archive completed milestone and prepare for next version"
   },
   {
+    "id": "create-skill",
+    "title": "gad:create-skill",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "create-skill gad:create-skill >- create a gad-tailored skill using the gad-skill-creator methodology. immediately scaffolds an eval project. use when creating a new skill, turning a repetitive cli pattern into a skill, or when a task review reveals repeated commands."
+  },
+  {
     "id": "debug",
     "title": "gad:debug",
     "kind": "command",
@@ -11563,13 +11845,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "insert-phase gad:insert-phase insert urgent work as decimal phase (e.g., 72.1) between existing phases"
   },
   {
-    "id": "join-discord",
-    "title": "gad:join-discord",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "join-discord gad:join-discord join the gad discord community"
-  },
-  {
     "id": "list-phase-assumptions",
     "title": "gad:list-phase-assumptions",
     "kind": "command",
@@ -11596,6 +11871,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "command",
     "href": "/#catalog",
     "body": "map-codebase gad:map-codebase analyze codebase with parallel mapper agents to produce .planning/codebase/ documents"
+  },
+  {
+    "id": "merge-skill",
+    "title": "gad:merge-skill",
+    "kind": "command",
+    "href": "/#catalog",
+    "body": "merge-skill gad:merge-skill >- fuse two or more overlapping skills into a single tailored skill. use when skills have overlapping descriptions, redundant functionality, or when attaining a generic skill to a specific project domain. references agentskills.io and anthropic skills guide for professional quality standards."
   },
   {
     "id": "migrate-schema",

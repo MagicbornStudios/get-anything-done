@@ -78,9 +78,18 @@
       "reproduction": "Click any menu button in any round-4 build. Observe brief UI flicker.",
       "related_requirement": "R-v5.21",
       "related_runs": [
-        { "project": "escape-the-dungeon", "version": "v9" },
-        { "project": "escape-the-dungeon-bare", "version": "v5" },
-        { "project": "escape-the-dungeon-emergent", "version": "v4" }
+        {
+          "project": "escape-the-dungeon",
+          "version": "v9"
+        },
+        {
+          "project": "escape-the-dungeon-bare",
+          "version": "v5"
+        },
+        {
+          "project": "escape-the-dungeon-emergent",
+          "version": "v4"
+        }
       ]
     }
   ]

@@ -760,7 +760,19 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
   <decision id="gad-107">
     <title>gad eval --input for skill installation into eval projects</title>
     <summary>The eval CLI should support installing skills into eval project templates before or after runs. `gad eval run --install-skills path/to/skill [...]` installs skill(s) into the eval template, populates the data (AGENTS.md skill references, template/skills/ directory), and tracks what was installed. This enables: (1) point at any skill folder and wrap it as an eval, (2) install skills into existing eval projects that already have source from prior runs, (3) run evaluations with vs without specific skills. The CLI handles the automation of copying skills, updating AGENTS.md, and recording the installation in TRACE.json. Works with npx skills format, local paths, and GitHub URLs.</summary>
-    <impact>New eval CLI flag. Enables skill evaluation without manual template editing. Tracks skill installations as eval metadata.</impact>
+    <impact>New eval CLI flag. Enables skill evaluation without manual template editing. Tracks skill installations as eval metadata. Prioritize before gad data CLI.</impact>
+  </decision>
+
+  <decision id="gad-108">
+    <title>Pipeline is a formal artifact category alongside skill, agent, eval</title>
+    <summary>Pipeline tasks (compute-self-eval, build-site-data, etc.) are a distinct category in our artifact tracking. The table format with Type column (skill, eval, pipeline) is the standard for listing artifacts. Pipeline tasks should be tagged in TASK-REGISTRY.xml same as skills and agents. Decoupled piping with the GAD CLI is the design goal — pipelines are composable CLI command chains.</summary>
+    <impact>TASK-REGISTRY.xml gains type="pipeline" alongside type="skill" and type="agent". Artifact tables include Pipeline as a category.</impact>
+  </decision>
+
+  <decision id="gad-109">
+    <title>gad data uses lowdb with /data as the managed database</title>
+    <summary>The gad data CLI subcommand uses lowdb (https://github.com/typicode/lowdb) with the data/ folder as the database. JSON files in data/ are both the database AND version-controlled codebase artifacts — lowdb reads/writes them directly. This gives us CRUD operations via CLI while keeping the data human-readable and git-tracked. Implement after eval --install-skills ships.</summary>
+    <impact>Add lowdb as a dependency. data/*.json files gain programmatic CRUD via gad data. Still human-editable and git-tracked.</impact>
   </decision>
 
 </decisions>

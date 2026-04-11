@@ -41,3 +41,8 @@ A SEPARATE agent (no access to original source) receives only the REQUIREMENTS.x
 ## Scoring
 The eval is scored by comparing the Phase 2 build against the original target.
 See gad.json for the rubric dimensions and weights.
+
+
+## Installed Skills
+
+- `skills/reverse-engineer/SKILL.md`

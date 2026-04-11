@@ -1,0 +1,9 @@
+{
+  "installed_at": "2026-04-11T02:05:40.611Z",
+  "skills": [
+    {
+      "name": "gad-skill-creator",
+      "source": "vendor/get-anything-done/.agents/skills/gad-skill-creator"
+    }
+  ]
+}
