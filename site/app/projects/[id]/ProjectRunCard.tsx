@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FileCode2, Gamepad2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PRODUCED_ARTIFACTS, playableUrl, type EvalRunRecord } from "@/lib/eval-data";
 
@@ -27,42 +28,55 @@ export function ProjectRunCard({ run }: { run: EvalRunRecord }) {
           <p className="line-clamp-3 text-xs text-muted-foreground">{run.humanReview.notes}</p>
         )}
         {produced && (
-          <div className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
+          <div className="flex flex-wrap gap-1.5 text-[10px]">
             {produced.skillFiles.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-2 py-0.5 text-emerald-300">
+              <Badge
+                variant="outline"
+                className="gap-1 border-emerald-500/30 bg-emerald-500/5 px-2 py-0.5 font-medium normal-case tracking-normal text-emerald-300"
+              >
                 <FileCode2 size={9} aria-hidden />
                 {produced.skillFiles.length} skill{produced.skillFiles.length === 1 ? "" : "s"}
-              </span>
+              </Badge>
             )}
             {produced.agentFiles.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/30 bg-sky-500/5 px-2 py-0.5 text-sky-300">
+              <Badge
+                variant="outline"
+                className="border-sky-500/30 bg-sky-500/5 px-2 py-0.5 font-medium normal-case tracking-normal text-sky-300"
+              >
                 {produced.agentFiles.length} agent{produced.agentFiles.length === 1 ? "" : "s"}
-              </span>
+              </Badge>
             )}
             {produced.planningFiles.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/5 px-2 py-0.5 text-amber-300">
+              <Badge
+                variant="outline"
+                className="border-amber-500/30 bg-amber-500/5 px-2 py-0.5 font-medium normal-case tracking-normal text-amber-300"
+              >
                 {produced.planningFiles.length} planning
-              </span>
+              </Badge>
             )}
           </div>
         )}
         <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
-          <Link
-            href={`/runs/${run.project}/${run.version}`}
-            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/50 px-3 py-1.5 font-semibold text-accent hover:underline"
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto rounded-full border-border/70 bg-background/50 px-3 py-1.5 font-semibold text-accent hover:text-accent"
+            asChild
           >
-            full breakdown →
-          </Link>
+            <Link href={`/runs/${run.project}/${run.version}`}>Full breakdown →</Link>
+          </Button>
           {playable && (
-            <a
-              href={playable}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 font-semibold text-accent hover:bg-accent/20"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 rounded-full border-accent/40 bg-accent/10 px-3 py-1.5 font-semibold text-accent hover:bg-accent/20 [&_svg]:size-2.5"
+              asChild
             >
-              <Gamepad2 size={10} aria-hidden />
-              play
-            </a>
+              <a href={playable} target="_blank" rel="noopener noreferrer">
+                <Gamepad2 size={10} aria-hidden />
+                Play
+              </a>
+            </Button>
           )}
         </div>
       </CardContent>

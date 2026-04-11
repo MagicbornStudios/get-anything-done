@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Download, ExternalLink, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   PROJECT_LABELS,
   WORKFLOW_LABELS,
@@ -24,13 +25,16 @@ export function ProjectHeroSection({
   return (
     <section className="border-b border-border/60">
       <div className="section-shell">
-        <Link
-          href="/#projects"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        <Button
+          variant="ghost"
+          className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+          asChild
         >
-          <ArrowLeft size={14} aria-hidden />
-          Back to projects
-        </Link>
+          <Link href="/#projects">
+            <ArrowLeft size={14} aria-hidden />
+            Back to projects
+          </Link>
+        </Button>
 
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="default">eval project</Badge>
@@ -60,34 +64,41 @@ export function ProjectHeroSection({
 
         <div className="mt-10 flex flex-wrap gap-3">
           {planning && (
-            <a
-              href={planning.zipPath}
-              download
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-xs font-semibold text-accent-foreground hover:-translate-y-0.5 transition-transform"
+            <Button
+              size="sm"
+              className="gap-2 rounded-full bg-accent px-5 py-2.5 text-xs font-semibold text-accent-foreground transition-transform hover:-translate-y-0.5 hover:bg-accent/90 [&_svg]:size-3.5"
+              asChild
             >
-              <Download size={14} aria-hidden />
-              planning.zip ({formatBytes(planning.bytes)})
-            </a>
+              <a href={planning.zipPath} download>
+                <Download size={14} aria-hidden />
+                planning.zip ({formatBytes(planning.bytes)})
+              </a>
+            </Button>
           )}
           {template && (
-            <a
-              href={template.zipPath}
-              download
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-5 py-2.5 text-xs font-semibold text-foreground hover:border-accent hover:text-accent transition-colors"
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-full border-border/70 bg-card/40 px-5 py-2.5 text-xs font-semibold hover:border-accent hover:text-accent [&_svg]:size-3.5"
+              asChild
             >
-              <Package size={14} aria-hidden />
-              template.zip ({formatBytes(template.bytes)})
-            </a>
+              <a href={template.zipPath} download>
+                <Package size={14} aria-hidden />
+                template.zip ({formatBytes(template.bytes)})
+              </a>
+            </Button>
           )}
-          <a
-            href={`${REPO}/tree/main/evals/${project.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-5 py-2.5 text-xs font-semibold text-foreground hover:border-accent hover:text-accent transition-colors"
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-full border-border/70 bg-card/40 px-5 py-2.5 text-xs font-semibold hover:border-accent hover:text-accent [&_svg]:size-3"
+            asChild
           >
-            <ExternalLink size={12} aria-hidden />
-            Source on GitHub
-          </a>
+            <a href={`${REPO}/tree/main/evals/${project.id}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={12} aria-hidden />
+              Source on GitHub
+            </a>
+          </Button>
         </div>
       </div>
     </section>

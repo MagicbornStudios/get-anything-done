@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, ExternalLink, Gamepad2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PROJECT_LABELS, WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
 import { REPO, formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
 import { RunScoreBar } from "@/app/runs/[project]/[version]/RunScoreBar";
@@ -31,13 +32,16 @@ export function RunHeroSection({
   return (
     <section className="border-b border-border/60">
       <div className="section-shell">
-        <Link
-          href="/#results"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        <Button
+          variant="ghost"
+          className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+          asChild
         >
-          <ArrowLeft size={14} aria-hidden />
-          Back to results
-        </Link>
+          <Link href="/#results">
+            <ArrowLeft size={14} aria-hidden />
+            Back to results
+          </Link>
+        </Button>
 
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="default">{WORKFLOW_LABELS[run.workflow]}</Badge>
@@ -157,12 +161,13 @@ export function RunHeroSection({
                     <strong>Details:</strong> {interruptionNote}
                   </p>
                 )}
-                <Link
-                  href="/findings/2026-04-09-round-4-complete"
-                  className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+                <Button
+                  variant="link"
+                  className="mt-4 h-auto gap-1 p-0 text-xs font-semibold text-accent"
+                  asChild
                 >
-                  Full round 4 findings →
-                </Link>
+                  <Link href="/findings/2026-04-09-round-4-complete">Full round 4 findings →</Link>
+                </Button>
               </div>
             )}
 
@@ -200,34 +205,47 @@ export function RunHeroSection({
 
           <div className="flex flex-col gap-3">
             {playable && (
+              <Button
+                size="lg"
+                className="gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5 hover:bg-accent/90"
+                asChild
+              >
+                <a href={playable} target="_blank" rel="noopener noreferrer">
+                  <Gamepad2 size={16} aria-hidden />
+                  Play this build
+                </a>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold hover:border-accent hover:text-accent"
+              asChild
+            >
               <a
-                href={playable}
+                href={`${REPO}/tree/main/evals/${run.project}/${run.version}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5"
               >
-                <Gamepad2 size={16} aria-hidden />
-                Play this build
+                <ExternalLink size={14} aria-hidden />
+                Source on GitHub
               </a>
-            )}
-            <a
-              href={`${REPO}/tree/main/evals/${run.project}/${run.version}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold hover:border-accent hover:text-accent"
+              asChild
             >
-              <ExternalLink size={14} aria-hidden />
-              Source on GitHub
-            </a>
-            <a
-              href={`${REPO}/blob/main/evals/${run.project}/${run.version}/TRACE.json`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
-            >
-              <ExternalLink size={14} aria-hidden />
-              Raw TRACE.json
-            </a>
+              <a
+                href={`${REPO}/blob/main/evals/${run.project}/${run.version}/TRACE.json`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink size={14} aria-hidden />
+                Raw TRACE.json
+              </a>
+            </Button>
           </div>
         </div>
       </div>
