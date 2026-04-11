@@ -129,7 +129,7 @@
   <phase id="21">
     <title>Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield</title>
     <goal>Evolve the eval framework to produce trustworthy measurements of agent workflows on creative implementation tasks. Deliver: (1) requirements versioning with v1→v2→v3 history; (2) gate criteria enforcement (game-loop, spell-crafting, UI quality); (3) composite formula v3 with human_review weight 0.30 and low-score caps; (4) preservation contract with gad eval preserve/verify commands and tests/eval-preservation.test.cjs; (5) game/.planning/ layout mandate for all eval conditions; (6) gad worktree management commands; (7) brownfield eval mode with baseline inheritance; (8) three new brownfield eval projects (etd-brownfield-gad/bare/emergent) extending bare v3. Discovered the freedom hypothesis: bare workflow consistently beats GAD on greenfield creative implementation (round 3 human scores: bare v3=0.70, emergent v2=0.50, GAD v8=0.20). Brownfield experiments are next to test whether GAD's overhead pays off on codebase extension.</goal>
-    <status>active</status>
+    <status>done</status>
     <depends>20</depends>
   </phase>
   <phase id="22">
@@ -165,7 +165,7 @@
   <phase id="27">
     <title>Structured objective data production for evaluations</title>
     <goal>The eval framework's primary output is no longer "a score per run" — it's "structured data that yields insights." Phase 27 ships the data production pipeline that makes that possible. Five tracks: (1) **Structured human review rubric** — replace the single human_review.score number with a dimensions object (playability, ui_polish, mechanics_implementation, ingenuity_requirement_met, stability, etc) and a rubric_version. Each dimension scored and annotated independently so reviewers can disagree about playability without throwing out the rest. Aggregate score is a weighted sum defined in rubric config, keeping current composite math intact. (2) **Automated gate checks** — playwright tests per eval project that boot the built game and programmatically verify G1 (game loop transitions work), G3 (UI has sprites not ASCII), G4 (pressure mechanics observable). Gate status becomes mostly objective; human reviewers only judge what playwright can't check. (3) **Derived metrics from trace events** — tool-use mix (Read vs Edit vs Bash distribution), commit rhythm (time between commits, size distribution), plan-adherence delta (PLAN.md task count vs actually-completed tasks), skill-to-tool ratio, subagent utilization. All computed from trace v4 once phase 25 ships. (4) **Cross-run aggregate queries** — SQL-like queries against the trace dataset: "average time-to-first-commit by workflow", "percent of runs that triggered gad:plan-phase before writing code", "distribution of produced-artifact counts for bare runs". Ships as a `gad eval query` subcommand + a /insights page on the site. (5) **Visualization patterns** — not just more charts, but a discipline: every new metric gets a chart that answers a specific research question, not just shows the number. Divergence scatter already exists; phase 27 adds tool-mix donuts, commit-rhythm timelines, rubric-dimension radar charts, trigger-timeline strips per skill. Phase 27 runs parallel to phase 25 — the rubric work can land against v3 trace data today and get richer inputs when v4 arrives.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>22</depends>
   </phase>
   <phase id="28">

@@ -469,7 +469,7 @@
       <depends>21-22</depends>
       <keywords>sprite-sourcing,skill,web-search,assets</keywords>
     </task>
-    <task id="21-23" agent-id="" status="in-progress">
+    <task id="21-23" agent-id="" status="done" skill="eval-run" agent="default" type="eval">
       <goal>Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates.</goal>
       <resolution>Attempt #1 (parallel): rate-limited — escape-the-dungeon v9, escape-the-dungeon-bare v4, escape-the-dungeon-emergent v3 all hit shared account rate limit at ~14 min. Preserved partial, decisions gad-62 (serial default) and gad-63 (exclude rate-limited from comparisons). Attempt #2 (serial): Bare v5 + Emergent v4 completed cleanly with green builds, GAD v10 API-interrupted twice (HTTP 529 overloaded) at phases 01+02 completion. Partial GAD preserved with api_interrupted flag + decision gad-64. Round 4 data is two completed + one api-interrupted; freedom hypothesis holds under v4. Remaining: GAD v11 retry pending 529 investigation (task 21-23b).</resolution>
       <depends>21-22,21-25,21-26,21-27,22-10</depends>
@@ -480,7 +480,7 @@
       <depends>21-23</depends>
       <keywords>round-4,gad-retry,529-investigation,api-overload</keywords>
     </task>
-    <task id="21-24" agent-id="" status="planned">
+    <task id="21-24" agent-id="" status="cancelled" skill="" agent="" type="eval">
       <goal>Run round 1 brownfield experiments. Three conditions using bare v3 baseline + v4 extensions. BLOCKED on portfolio documentation (21-28).</goal>
       <depends>21-23,22-10</depends>
       <keywords>round-1,brownfield,experiment,blocked-on-portfolio</keywords>
@@ -602,7 +602,7 @@
       <resolution>Shipped earlier as site/app/methodology/page.tsx. Linked from Theory dropdown.</resolution>
       <keywords>methodology,formulas,tracing,scoring</keywords>
     </task>
-    <task id="22-22" agent-id="" status="planned">
+    <task id="22-22" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a "tracing gap" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schema overhaul).</goal>
       <keywords>per-run,formulas,trace-breakdown,tracing-gap</keywords>
     </task>
@@ -622,7 +622,7 @@
       <depends>22-20,22-21,22-23</depends>
       <keywords>nav,navigation,dropdown,refactor</keywords>
     </task>
-    <task id="22-26" agent-id="" status="planned">
+    <task id="22-26" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math.</goal>
       <keywords>scoring-weights,gad-json,prebuild</keywords>
     </task>
@@ -641,11 +641,11 @@
       <resolution>Shipped earlier as site/app/lineage/page.tsx. Linked from Theory dropdown.</resolution>
       <keywords>lineage,context-rot,gsd,repoplanner,attribution</keywords>
     </task>
-    <task id="22-30" agent-id="" status="planned">
+    <task id="22-30" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for GAD evaluation.</goal>
       <keywords>agent-runtimes,hooks,methodology,decision-gad-53</keywords>
     </task>
-    <task id="22-31" agent-id="" status="in-progress">
+    <task id="22-31" agent-id="" status="done" skill="execute-phase" agent="default" type="site">
       <goal>Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content — the scaffold establishes the pattern and the first composition is a placeholder.</goal>
       <resolution>Partially shipped 2026-04-09: (1) @remotion/player and remotion already in site/package.json, (2) NEW eval domain scaffolded at evals/gad-explainer-video/ with gad.json + REQUIREMENTS.md — this extends the original task to test freedom/CSH/emergent-evolution hypotheses on a video-composition task instead of game implementation, (3) site/remotion/Root.tsx + /videos route + VideoEmbed.tsx composition registry still pending — tracked in the new eval's pre-run checklist. Remains in-progress until the runtime scaffold lands.</resolution>
       <keywords>remotion,scaffold,videos-route,player-embed,eval-domain</keywords>
@@ -732,11 +732,11 @@
       <resolution>Shipped 2026-04-09. evals/gad-explainer-video/gad.json + REQUIREMENTS.md authored. 5-dimension rubric with pedagogical_clarity weighted 0.30. Mandatory gate frames G1-G4 including a forced skeptic disclosure frame. No runs yet — pre-run checklist in REQUIREMENTS.md queues site/remotion/ runtime scaffold and eval prompt authoring. This extends task 22-31.</resolution>
       <keywords>remotion,eval-domain,generalization,gad-explainer,task-22-31</keywords>
     </task>
-    <task id="22-44" agent-id="" status="planned">
+    <task id="22-44" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in Claude → talk conversationally), document everything that breaks, update /contribute with the friction points, remove the "fresh-clone test still open" amber warning. Goal: make contribution actually work for a human who has never touched GAD before.</goal>
       <keywords>contribution,fresh-clone,gad-77,manual-test</keywords>
     </task>
-    <task id="22-45" agent-id="" status="planned">
+    <task id="22-45" agent-id="" status="done" skill="execute-phase" agent="default" type="site">
       <goal>Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time.</goal>
       <depends>22-43</depends>
       <keywords>remotion,runtime,videos-route,scaffold</keywords>
@@ -747,7 +747,7 @@
       <depends>gad-80</depends>
       <keywords>agentskills,cross-client,install,discovery-convention,migration</keywords>
     </task>
-    <task id="22-47" agent-id="" status="planned">
+    <task id="22-47" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). This becomes the reference page every skill-related section of the site cites instead of repeating the content inline.</goal>
       <keywords>standards,documentation,citations,skills-page</keywords>
     </task>
@@ -757,12 +757,12 @@
       <depends>gad-82</depends>
       <keywords>isolation,worktree,audit,round-5-unblocked</keywords>
     </task>
-    <task id="22-49" agent-id="" status="planned">
+    <task id="22-49" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a "collision candidates" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not yet built — link falls back to a manual-review prompt). Also: a keyword index for every skill so users searching can see what terms trigger each.</goal>
       <depends>gad-81</depends>
       <keywords>skill-collision,prebuild,keyword-audit</keywords>
     </task>
-    <task id="22-50" agent-id="" status="planned">
+    <task id="22-50" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. This is the highest-leverage way to get "agent reasoning" signal without Claude Code exposing new hook surfaces.</goal>
       <depends>gad-84</depends>
       <keywords>thinking-blocks,session-jsonl,reasoning-trace,post-hoc</keywords>
@@ -772,7 +772,7 @@
       <resolution>Shipped 2026-04-09. evals/skill-evaluation-app/gad.json with 5-dimension rubric (ui_usability 0.30, requirements_ergonomics 0.20, harness_integration 0.20, visualization_quality 0.15, stability 0.15), workflow:gad, compare_to bare + emergent siblings. evals/skill-evaluation-app/REQUIREMENTS.md with full scope, 4 mandatory gate frames (G1 requirements load, G2 pressure preview live, G3 harness viewer live, G4 mobile responsive), pre-run checklist. Siblings (skill-evaluation-app-bare, -emergent) still to be scaffolded in a follow-up.</resolution>
       <keywords>skill-evaluation-app,new-eval-domain,generalization-test,gad-88</keywords>
     </task>
-    <task id="22-52" agent-id="" status="planned">
+    <task id="22-52" agent-id="" status="cancelled" skill="" agent="default" type="site">
       <goal>Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (NOT LLM self-report — that's what skill-creator's Python harness does and it didn't work for us), emits benchmark.json compatible with agentskills.io format. This is the load-bearing piece that lets every GAD skill graduate from experimental to canonical per gad-86. Directly answers programmatic-eval GAPS G2 + the hygiene half of G11.</goal>
       <depends>gad-87</depends>
       <keywords>gad-eval-skill,harness,experimental-to-canonical,trace-based-grading</keywords>
