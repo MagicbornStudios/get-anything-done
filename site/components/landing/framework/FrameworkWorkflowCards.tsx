@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WORKFLOW_DESCRIPTIONS, WORKFLOW_LABELS } from "@/lib/eval-data";
 import { FRAMEWORK_WORKFLOW_ORDER } from "@/components/landing/framework/framework-shared";
@@ -8,9 +9,12 @@ export function FrameworkWorkflowCards() {
       {FRAMEWORK_WORKFLOW_ORDER.map((wf) => (
         <Card key={wf} className="flex h-full flex-col">
           <CardHeader>
-            <div className="mb-2 inline-flex w-fit items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
+            <Badge
+              variant="default"
+              className="mb-2 w-fit border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold normal-case tracking-normal text-accent"
+            >
               Workflow
-            </div>
+            </Badge>
             <CardTitle className="text-2xl">{WORKFLOW_LABELS[wf]}</CardTitle>
           </CardHeader>
           <CardContent className="flex-1">

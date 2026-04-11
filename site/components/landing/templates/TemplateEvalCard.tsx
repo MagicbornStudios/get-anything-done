@@ -1,4 +1,5 @@
 import { Download, FileArchive } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBytes } from "@/components/landing/templates/templates-shared";
 import { PROJECT_LABELS, type EvalTemplateAsset } from "@/lib/eval-data";
@@ -19,14 +20,17 @@ export function TemplateEvalCard({ template: tpl }: Props) {
       </CardHeader>
       <CardContent className="flex items-center justify-between gap-3">
         <span className="text-xs text-muted-foreground tabular-nums">{formatBytes(tpl.bytes)}</span>
-        <a
-          href={tpl.zipPath}
-          download
-          className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-auto gap-2 rounded-full border-border/70 bg-card/40 px-3 py-1.5 text-xs font-semibold [&_svg]:size-3"
+          asChild
         >
-          <Download size={12} aria-hidden />
-          ZIP
-        </a>
+          <a href={tpl.zipPath} download>
+            <Download size={12} aria-hidden />
+            ZIP
+          </a>
+        </Button>
       </CardContent>
     </Card>
   );
