@@ -90,6 +90,35 @@ function buildDataSources() {
   ] as const;
 }
 
+function InsightsPageIntro() {
+  return (
+    <header className="max-w-3xl">
+      <p className="section-kicker">Insights</p>
+      <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+        Structured data from every eval, <span className="gradient-text">every session.</span>
+      </h1>
+      <p className="mt-5 text-lg leading-8 text-muted-foreground">
+        Curated queries against eval traces, planning artifacts, and self-evaluation metrics. Every
+        number on this page has a source — computed from TRACE.json, TASK-REGISTRY.xml, DECISIONS.xml,
+        and .gad-log/ trace data at build time.
+      </p>
+    </header>
+  );
+}
+
+function InsightMetricCard({ label, value }: { label: string; value: unknown }) {
+  return (
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <CardDescription className="text-xs uppercase tracking-wider">{label}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <CardTitle className="text-2xl font-semibold tabular-nums leading-none">{String(value)}</CardTitle>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function InsightsPage() {
   const insights = buildInsights();
   const dataSources = buildDataSources();
@@ -98,26 +127,15 @@ export default function InsightsPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
       <div className="section-shell">
-        <p className="section-kicker">Insights</p>
-        <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-          Structured data from every eval, <span className="gradient-text">every session.</span>
-        </h1>
-        <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-          Curated queries against eval traces, planning artifacts, and self-evaluation metrics. Every
-          number on this page has a source — computed from TRACE.json, TASK-REGISTRY.xml,
-          DECISIONS.xml, and .gad-log/ trace data at build time.
-        </p>
+        <InsightsPageIntro />
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {insights.map((q) => (
-            <Card key={q.label}>
-              <CardHeader className="pb-2">
-                <CardDescription className="text-xs uppercase tracking-wider">{q.label}</CardDescription>
-                <CardTitle className="text-2xl tabular-nums">{String(q.result)}</CardTitle>
-              </CardHeader>
-            </Card>
+            <li key={q.label}>
+              <InsightMetricCard label={q.label} value={q.result} />
+            </li>
           ))}
-        </div>
+        </ul>
 
         <Card className="mt-12 border-accent/40 bg-accent/5 shadow-none">
           <CardHeader className="pb-2">
