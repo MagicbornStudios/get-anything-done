@@ -54,10 +54,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "System",
     links: [
-      { href: "/planning", label: "Planning", note: "in-repo state + tasks" },
-      { href: "/tasks", label: "Tasks", note: "every task in TASK-REGISTRY" },
-      { href: "/phases", label: "Phases", note: "ROADMAP.xml rendered" },
-      { href: "/bugs", label: "Bugs", note: "tracked across runs" },
+      { href: "/planning", label: "Planning", note: "state, tasks, phases, bugs" },
       { href: "/requirements", label: "Requirements", note: "v5 + history" },
       { href: "/security", label: "Security", note: "skill risks + certification" },
       { href: "/contribute", label: "Contribute", note: "clone and run your own" },

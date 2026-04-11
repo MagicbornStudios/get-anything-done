@@ -30,9 +30,7 @@
 
 - [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone → install → open in Claude → talk)
 - [Security](https://get-anything-done.vercel.app/security): Skill attack surfaces, mitigations, future certification model
-- [Tasks](https://get-anything-done.vercel.app/tasks): 159 entries in TASK-REGISTRY.xml
-- [Phases](https://get-anything-done.vercel.app/phases): 28 phases in ROADMAP.xml
-- [Bugs](https://get-anything-done.vercel.app/bugs): Observed across eval runs
+- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (159), phases (28), bugs (4)
 
 ## Machine-readable
 

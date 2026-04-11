@@ -17,10 +17,17 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import AdmZip from "adm-zip";
 import { marked } from "marked";
+
+// Import CLI lib/ readers (CJS) via createRequire for parser consolidation (gad-126)
+const require = createRequire(import.meta.url);
+const { readDecisions } = require("../../lib/decisions-reader.cjs");
+const { readPhases } = require("../../lib/roadmap-reader.cjs");
+const { readTasks } = require("../../lib/task-registry-reader.cjs");
 
 // Render markdown to HTML deterministically. GitHub flavoured, no sanitizer
 // because the content is authored in this repo and static at build time.
@@ -783,96 +790,53 @@ function scanCatalog() {
 // -------------------------------------------------------------------------
 
 function parseAllDecisions() {
-  // Richer parse than parsePlanningState's recentDecisions — captures EVERY
-  // decision with full title/summary/impact for the /decisions page and for
-  // the <Ref id="gad-xx" /> component. Source of truth for decision cross-refs.
-  const planningDir = path.join(REPO_ROOT, ".planning");
-  const decisionsPath = path.join(planningDir, "DECISIONS.xml");
-  if (!exists(decisionsPath)) return [];
-  const src = fs.readFileSync(decisionsPath, "utf8");
-  const decisionRegex = /<decision\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/decision>/g;
-  const all = [];
-  let m;
-  while ((m = decisionRegex.exec(src)) !== null) {
-    const id = m[1];
-    const inner = m[2];
-    const title = (inner.match(/<title>([\s\S]*?)<\/title>/) || [])[1]?.trim() || id;
-    const summary = (inner.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1]?.trim() || "";
-    const impact = (inner.match(/<impact>([\s\S]*?)<\/impact>/) || [])[1]?.trim() || "";
-    all.push({ id, title, summary, impact });
-  }
+  // Uses CLI lib/decisions-reader.cjs via consolidation (gad-126)
+  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  const all = readDecisions(root, "", {});
   // Sort by numeric suffix on gad-NN so the newest appear first.
   all.sort((a, b) => {
     const na = parseInt((a.id.match(/(\d+)/) || [])[1] || "0", 10);
     const nb = parseInt((b.id.match(/(\d+)/) || [])[1] || "0", 10);
     return nb - na;
   });
-  console.log(`  [decisions] parsed ${all.length} decision(s) for cross-ref index`);
+  console.log(`  [decisions] parsed ${all.length} decision(s) via lib/decisions-reader.cjs`);
   return all;
 }
 
 function parseAllPhases() {
-  // Full parse of ROADMAP.xml — every phase with title, status, goal, tasks[].
-  // Feeds /phases page + Ref component phase resolution.
-  const planningDir = path.join(REPO_ROOT, ".planning");
-  const roadmapPath = path.join(planningDir, "ROADMAP.xml");
-  if (!exists(roadmapPath)) return [];
-  const src = fs.readFileSync(roadmapPath, "utf8");
-  const phaseRegex = /<phase\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/phase>/g;
-  const out = [];
-  let m;
-  while ((m = phaseRegex.exec(src)) !== null) {
-    const id = m[1];
-    const inner = m[2];
-    const title = (inner.match(/<title>([\s\S]*?)<\/title>/) || [])[1]?.trim() ?? id;
-    const status = (inner.match(/<status>([\s\S]*?)<\/status>/) || [])[1]?.trim() ?? "planned";
-    const goal = (inner.match(/<goal>([\s\S]*?)<\/goal>/) || [])[1]?.trim() ?? "";
-    const outcome = (inner.match(/<outcome>([\s\S]*?)<\/outcome>/) || [])[1]?.trim() ?? null;
-    out.push({ id, title, status, goal, outcome });
-  }
-  console.log(`  [phases] parsed ${out.length} phase(s) for cross-ref index`);
+  // Uses CLI lib/roadmap-reader.cjs via consolidation (gad-126)
+  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  const phases = readPhases(root, "");
+  // The CLI reader returns { id, title, goal, status, depends, description }
+  // Map to the shape the site expects (add outcome from goal if available)
+  const out = phases.map((p) => ({
+    id: p.id,
+    title: p.title,
+    status: p.status || "planned",
+    goal: p.goal || p.description || "",
+    outcome: null,
+  }));
+  console.log(`  [phases] parsed ${out.length} phase(s) via lib/roadmap-reader.cjs`);
   return out;
 }
 
 function parseAllTasks() {
-  // Full parse of TASK-REGISTRY.xml — every task with full goal text, keywords,
-  // status, and the phase it belongs to (via the nearest preceding <phase id="">).
-  const planningDir = path.join(REPO_ROOT, ".planning");
-  const taskPath = path.join(planningDir, "TASK-REGISTRY.xml");
-  if (!exists(taskPath)) return [];
-  const src = fs.readFileSync(taskPath, "utf8");
-  const out = [];
-
-  // Walk phase blocks and capture tasks inside each so we know the phase
-  // association without nested regex.
-  const phaseBlockRegex = /<phase\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/phase>/g;
-  let pm;
-  while ((pm = phaseBlockRegex.exec(src)) !== null) {
-    const phaseId = pm[1];
-    const phaseInner = pm[2];
-    const taskRegex = /<task\s+id="([^"]+)"([^>]*)>([\s\S]*?)<\/task>/g;
-    let tm;
-    while ((tm = taskRegex.exec(phaseInner)) !== null) {
-      const id = tm[1];
-      const attrs = tm[2];
-      const inner = tm[3];
-      const status = (attrs.match(/status="([^"]*)"/) || [])[1] ?? "planned";
-      const agentId = (attrs.match(/agent-id="([^"]*)"/) || [])[1] ?? null;
-      const goal = (inner.match(/<goal>([\s\S]*?)<\/goal>/) || [])[1]?.trim() ?? "";
-      const keywords = (inner.match(/<keywords>([\s\S]*?)<\/keywords>/) || [])[1]?.trim() ?? "";
-      const depends = (inner.match(/<depends>([\s\S]*?)<\/depends>/) || [])[1]?.trim() ?? "";
-      out.push({
-        id,
-        phaseId,
-        status,
-        agentId,
-        goal,
-        keywords: keywords ? keywords.split(",").map((s) => s.trim()).filter(Boolean) : [],
-        depends: depends ? depends.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      });
-    }
-  }
-  console.log(`  [tasks] parsed ${out.length} task(s) for cross-ref index`);
+  // Uses CLI lib/task-registry-reader.cjs via consolidation (gad-126)
+  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  const tasks = readTasks(root, "", {});
+  // Map to the shape the site expects
+  const out = tasks.map((t) => ({
+    id: t.id,
+    phaseId: t.phase,
+    status: t.status,
+    agentId: t.agentId || null,
+    skill: t.skill || null,
+    type: t.type || null,
+    goal: t.goal,
+    keywords: t.keywords ? t.keywords.split(",").map((s) => s.trim()).filter(Boolean) : [],
+    depends: t.depends ? t.depends.split(",").map((s) => s.trim()).filter(Boolean) : [],
+  }));
+  console.log(`  [tasks] parsed ${out.length} task(s) via lib/task-registry-reader.cjs`);
   return out;
 }
 
@@ -931,9 +895,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 
 - [Contribute](${SITE_URL}/contribute): Human-first workflow (clone → install → open in Claude → talk)
 - [Security](${SITE_URL}/security): Skill attack surfaces, mitigations, future certification model
-- [Tasks](${SITE_URL}/tasks): ${allTasks.length} entries in TASK-REGISTRY.xml
-- [Phases](${SITE_URL}/phases): ${allPhases.length} phases in ROADMAP.xml
-- [Bugs](${SITE_URL}/bugs): Observed across eval runs
+- [Planning](${SITE_URL}/planning): State + tabs for tasks (${allTasks.length}), phases (${allPhases.length}), bugs (${(pseudoDb.bugs?.bugs ?? []).length})
 
 ## Machine-readable
 
@@ -1174,7 +1136,7 @@ function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs,
       id: t.id,
       title: t.goal.slice(0, 120),
       kind: "task",
-      href: `/tasks#${t.id}`,
+      href: `/planning?tab=tasks#${t.id}`,
       body: `${t.id} ${t.goal} ${(t.keywords ?? []).join(" ")}`,
     });
   }
@@ -1184,7 +1146,7 @@ function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs,
       id: p.id,
       title: `Phase ${p.id} — ${p.title}`,
       kind: "phase",
-      href: `/phases#${p.id}`,
+      href: `/planning?tab=phases#${p.id}`,
       body: `${p.id} ${p.title} ${p.goal ?? ""}`,
     });
   }
@@ -1214,7 +1176,7 @@ function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs,
       id: b.id,
       title: b.title,
       kind: "bug",
-      href: `/bugs#${b.id}`,
+      href: `/planning?tab=bugs#${b.id}`,
       body: `${b.title} ${b.description?.slice(0, 300) ?? ""}`,
     });
   }
@@ -1284,25 +1246,15 @@ function parsePlanningState() {
     if (state.nextAction) state.nextAction = state.nextAction.trim();
   }
 
-  // ROADMAP.xml — high-level phase list
-  const roadmapPath = path.join(planningDir, "ROADMAP.xml");
-  if (exists(roadmapPath)) {
-    const src = fs.readFileSync(roadmapPath, "utf8");
-    // Parse phases with a two-pass approach: first find each <phase> block,
-    // then extract title and status from within it.
-    const phaseBlockRe = /<phase\s+id="(\d+(?:\.\d+)?)"[^>]*>([\s\S]*?)<\/phase>/g;
-    let m;
-    while ((m = phaseBlockRe.exec(src)) !== null) {
-      const id = m[1];
-      const body = m[2];
-      const titleMatch = body.match(/<title>([^<]*)<\/title>/);
-      const statusMatch = body.match(/<status>([^<]*)<\/status>/);
-      state.phases.push({
-        id,
-        title: titleMatch ? titleMatch[1].trim() : "",
-        status: statusMatch ? statusMatch[1].trim() : "planned",
-      });
-    }
+  // ROADMAP.xml — high-level phase list (uses CLI lib/roadmap-reader.cjs, gad-126)
+  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  const phases = readPhases(root, "");
+  for (const p of phases) {
+    state.phases.push({
+      id: p.id,
+      title: p.title,
+      status: p.status || "planned",
+    });
   }
 
   // TASK-REGISTRY.xml — tasks (open vs done)
@@ -2158,7 +2110,7 @@ export interface TaskRecord {
 }
 
 /**
- * Every task in .planning/TASK-REGISTRY.xml. Feeds /tasks page + Ref resolution.
+ * Every task in .planning/TASK-REGISTRY.xml. Feeds /planning (tasks tab) + Ref resolution.
  */
 export const ALL_TASKS: TaskRecord[] = ${JSON.stringify(extras.allTasks ?? [], null, 2)};
 
@@ -2171,7 +2123,7 @@ export interface PhaseRecord {
 }
 
 /**
- * Every phase in .planning/ROADMAP.xml. Feeds /phases page + Ref resolution.
+ * Every phase in .planning/ROADMAP.xml. Feeds /planning (phases tab) + Ref resolution.
  */
 export const ALL_PHASES: PhaseRecord[] = ${JSON.stringify(extras.allPhases ?? [], null, 2)};
 

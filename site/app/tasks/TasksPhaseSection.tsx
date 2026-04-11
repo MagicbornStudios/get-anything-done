@@ -21,7 +21,7 @@ export default function TasksPhaseSection({
           <ListTodo size={18} className="text-accent" aria-hidden />
           <p className="section-kicker !mb-0">Phase {phaseId}</p>
           <Link
-            href={`/phases#${phaseId}`}
+            href={`/planning?tab=phases#${phaseId}`}
             className="inline-flex items-center rounded border border-purple-500/40 bg-purple-500/5 px-1.5 py-0.5 font-mono text-[10px] text-purple-300 hover:bg-purple-500/15"
           >
             P-{phaseId}

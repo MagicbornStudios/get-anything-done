@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,17 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
   const openTasks = allTasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   const doneTasks = allTasks.filter((t) => t.status === "done");
   const versions = REQUIREMENTS_HISTORY ?? [];
+  const topOpen = openTasks.slice(0, 40);
+  const topOpenIds = new Set(topOpen.map((t) => t.id));
+
+  useEffect(() => {
+    const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+    if (!hash) return;
+    const t = window.setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [defaultTab, allTasks.length, state.phases.length, gadBugs.length]);
 
   return (
     <section className="border-b border-border/60">
@@ -59,7 +71,8 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
               {state.phases.map((phase) => (
                 <div
                   key={phase.id}
-                  className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4"
+                  id={phase.id}
+                  className="flex scroll-mt-24 items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4"
                 >
                   <span className="mt-0.5 inline-flex min-w-10 shrink-0 items-center justify-center rounded-full bg-background/60 px-2 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
                     {phase.id}
@@ -89,8 +102,12 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
               <span><strong className="text-foreground">{allTasks.length}</strong> total</span>
             </div>
             <div className="space-y-2">
-              {openTasks.slice(0, 40).map((t) => (
-                <div key={t.id} className="flex items-start gap-3 rounded-lg border border-border/50 bg-card/30 p-3">
+              {topOpen.map((t) => (
+                <div
+                  key={t.id}
+                  id={t.id}
+                  className="flex scroll-mt-24 items-start gap-3 rounded-lg border border-border/50 bg-card/30 p-3"
+                >
                   <Ref id={t.id} />
                   <div className="min-w-0 flex-1">
                     <RichText text={t.goal} className="text-xs text-foreground line-clamp-3" />
@@ -103,6 +120,13 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
               {openTasks.length > 40 && (
                 <p className="text-xs text-muted-foreground">+ {openTasks.length - 40} more open tasks</p>
               )}
+              {allTasks
+                .filter((t) => !topOpenIds.has(t.id))
+                .map((t) => (
+                  <span key={t.id} id={t.id} className="sr-only" aria-hidden>
+                    {t.id}
+                  </span>
+                ))}
             </div>
           </TabsContent>
 
@@ -187,7 +211,11 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
             <TabsContent value="bugs">
               <div className="space-y-2">
                 {gadBugs.map((b) => (
-                  <div key={b.id} className="flex items-start gap-3 rounded-lg border border-border/50 bg-card/30 p-3">
+                  <div
+                    key={b.id}
+                    id={b.id}
+                    className="flex scroll-mt-24 items-start gap-3 rounded-lg border border-border/50 bg-card/30 p-3"
+                  >
                     <Badge variant={b.status === "resolved" ? "success" : "danger"} className="shrink-0 text-[10px]">
                       {b.status}
                     </Badge>

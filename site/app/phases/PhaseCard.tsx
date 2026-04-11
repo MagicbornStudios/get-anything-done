@@ -48,7 +48,7 @@ export function PhaseCard({ phase }: { phase: PhaseRecord }) {
                 </span>
               </div>
               <Link
-                href={`/tasks#phase-${phase.id}`}
+                href="/planning?tab=tasks"
                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:underline"
               >
                 View all tasks

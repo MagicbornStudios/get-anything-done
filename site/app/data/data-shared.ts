@@ -135,21 +135,21 @@ export function buildDataSources(): DataSource[] {
     },
     {
       id: "tasks-count",
-      surface: "/tasks",
+      surface: "/planning (tasks tab)",
       number: `Total tasks (${ALL_TASKS.length})`,
       source: "ALL_TASKS",
       formula: "parseAllTasks() walks .planning/TASK-REGISTRY.xml",
       trust: "deterministic",
-      page: "/tasks",
+      page: "/planning?tab=tasks",
     },
     {
       id: "phases-count",
-      surface: "/phases",
+      surface: "/planning (phases tab)",
       number: `Total phases (${ALL_PHASES.length})`,
       source: "ALL_PHASES",
       formula: "parseAllPhases() walks .planning/ROADMAP.xml",
       trust: "deterministic",
-      page: "/phases",
+      page: "/planning?tab=phases",
     },
     {
       id: "glossary-count",
@@ -171,12 +171,12 @@ export function buildDataSources(): DataSource[] {
     },
     {
       id: "bugs-count",
-      surface: "/bugs",
+      surface: "/planning (bugs tab)",
       number: `Tracked bugs (${BUGS.length})`,
       source: "BUGS",
       formula: "data/bugs.json bugs[]",
       trust: "authored",
-      page: "/bugs",
+      page: "/planning?tab=bugs",
     },
   ];
 }

@@ -14,13 +14,15 @@ import { Badge } from "@/components/ui/badge";
 /**
  * Resolve a structured planning ID to its anchor URL on the site.
  *
+ * Tasks, phases, and bugs open under /planning (tab + hash); /tasks, /phases, /bugs redirect there.
+ *
  * Supported id patterns:
  *   gad-NN / GAD-D-NN     → /decisions#gad-NN
- *   NN-NN / GAD-T-NN-NN   → /tasks#NN-NN
- *   P-NN / GAD-P-NN       → /phases#NN
+ *   NN-NN / GAD-T-NN-NN   → /planning?tab=tasks#NN-NN
+ *   P-NN / GAD-P-NN       → /planning?tab=phases#NN
  *   R-vX.YY               → /requirements#R-vX.YY
- *   Q-slug / kebab         → /questions#slug
- *   B-slug / kebab         → /bugs#slug
+ *   Q-slug / kebab        → /questions#slug
+ *   B-slug / kebab        → /planning?tab=bugs#slug
  */
 
 type RefKind = "decision" | "task" | "phase" | "requirement" | "question" | "bug" | "unknown";
@@ -64,7 +66,7 @@ function resolveRef(id: string): ResolvedRef {
       const parts = num.split("-");
       return {
         ...base,
-        href: `/tasks#${num}`,
+        href: `/planning?tab=tasks#${num}`,
         label: id,
         preview: task ? task.goal.slice(0, 180) : null,
         detail: task ? { Phase: parts[0] || "", Status: task.status, Goal: task.goal.slice(0, 150) } : null,
@@ -77,7 +79,7 @@ function resolveRef(id: string): ResolvedRef {
       const phase = ALL_PHASES.find((p) => p.id === num);
       return {
         ...base,
-        href: `/phases#${num}`,
+        href: `/planning?tab=phases#${num}`,
         label: id,
         preview: phase?.title ?? null,
         detail: phase ? { Status: phase.status, Title: phase.title } : null,
@@ -110,7 +112,7 @@ function resolveRef(id: string): ResolvedRef {
     const parts = id.split("-");
     return {
       ...base,
-      href: `/tasks#${id}`,
+      href: `/planning?tab=tasks#${id}`,
       label: `T-${id}`,
       preview: task ? task.goal.slice(0, 180) : null,
       detail: task ? { Phase: parts[0], Status: task.status, Goal: task.goal.slice(0, 150) } : null,
@@ -127,7 +129,7 @@ function resolveRef(id: string): ResolvedRef {
     const phase = ALL_PHASES.find((p) => p.id === phaseId);
     return {
       ...base,
-      href: `/phases#${phaseId}`,
+      href: `/planning?tab=phases#${phaseId}`,
       label: `P-${phaseId}`,
       preview: phase?.title ?? null,
       detail: phase ? { Status: phase.status, Title: phase.title } : null,
@@ -153,7 +155,7 @@ function resolveRef(id: string): ResolvedRef {
   const bugId = id.replace(/^B-/, "");
   const bug = (BUGS ?? []).find((b) => b.id === bugId);
   if (bug) {
-    return { ...base, href: `/bugs#${bug.id}`, label: `B-${bug.id}`, preview: bug.title, found: true, kind: "bug", segments: { type: "B", number: bug.id } };
+    return { ...base, href: `/planning?tab=bugs#${bug.id}`, label: `B-${bug.id}`, preview: bug.title, found: true, kind: "bug", segments: { type: "B", number: bug.id } };
   }
 
   return { ...base, href: null, label: id, preview: null, found: false, kind: "unknown", segments: { number: id } };
