@@ -135,7 +135,7 @@
   <phase id="22">
     <title>Portfolio experiment documentation — hub, per-project, per-run, findings, graphs</title>
     <goal>Publish all eval experiment documentation on the portfolio before further experimentation. User wants to showcase the work publicly: hub explaining methodology, per-eval-project pages with version history, per-run detail pages with scores and links to playable builds + source code, per-round experiment summaries, visualizations/graphs comparing conditions over time, requirements version history, decisions index, findings (freedom hypothesis). All compiled into apps/portfolio/content/docs/get-anything-done/evals/ via gad sink pipeline. BLOCKS round 4 and brownfield round 1 per user directive.</goal>
-    <status>active</status>
+    <status>cancelled</status>
     <depends>21</depends>
   </phase>
   <phase id="23">
@@ -182,7 +182,7 @@
   </phase>
   <phase id="30">
     <title>Eval framework v2 — domains, tech stacks, rounds per project</title>
-    <goal>Formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. Rounds per project (not global). Project → eval → round hierarchy in data model and UI. Decisions: GAD-D-110, GAD-D-111, GAD-D-113, GAD-D-114, GAD-D-121, GAD-D-132.</goal>
+    <goal>Formalize eval domain categories, tech stack metadata, build requirements, completion gates, human time estimation. Rounds per project (not global). Project → eval → round hierarchy in data model and UI. Decisions: GAD-D-88, GAD-D-90, GAD-D-110, GAD-D-111, GAD-D-113, GAD-D-114, GAD-D-121, GAD-D-132.</goal>
     <status>planned</status>
     <depends>28</depends>
   </phase>
@@ -195,7 +195,7 @@
   <phase id="32">
     <title>Self-eval + trace analysis pipeline maturity</title>
     <goal>Self-evaluation from real brownfield data displayed on site. Computed metrics append-only and long-lived. Pressure per phase drives skill creation. GAD discipline scoring for framework evals. gad self-eval CLI (done). Decisions: GAD-D-95, GAD-D-103, GAD-D-115, GAD-D-118, GAD-D-122.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>30</depends>
   </phase>
   <phase id="33">
