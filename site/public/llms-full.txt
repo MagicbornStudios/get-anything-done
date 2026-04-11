@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-11T19:21:14.958Z
+Generated: 2026-04-11T21:30:48.599Z
 
 
 ---
@@ -1384,7 +1384,15 @@ Example: `feat(app-auth-01): add JWT signing and verification helpers`
 
 In PLAN.md, mark the task `done`.
 
-In TASK-REGISTRY (XML or MD), find the matching task and mark it `done`.
+In TASK-REGISTRY (XML or MD), find the matching task and:
+- Set `status="done"`
+- Set `skill="<skill-name>"` — which skill(s) you used for this task (e.g. `execute-phase`, `frontend-design`). Comma-separated if multiple.
+- Set `agent="<agent-name>"` — which agent ran this (e.g. `gad-executor`, `default`, `gad-planner`). Use `default` for the main session agent.
+- Set `type="<category>"` — task category (e.g. `framework`, `cli`, `site`, `eval`, `pipeline`, `skill`, `cleanup`, `docs`).
+
+**Example:** `<task id="22-50" status="done" skill="execute-phase,frontend-design" agent="default" type="site">`
+
+This attribution is required (decision GAD-D-104). It feeds the self-eval pipeline and site data. If you skip it, the trace data has gaps.
 
 In STATE (XML or MD), advance the next-action to the next task.
 
@@ -5059,7 +5067,77 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (124)
+# Decisions (131)
+
+## gad-134: Site reusability review needed — cut down on duplicate edits
+
+### Summary
+
+The site needs a reusability pass: shared patterns reimplemented across pages, duplicate components, data shape changes requiring edits everywhere. Pipeline-generated data should drive generic components. Queued for future session.
+
+### Impact
+
+Reduces maintenance burden as eval count grows to hundreds.
+
+## gad-133: Methodology must be tied to a buildable project with artifacts
+
+### Summary
+
+Even methodology-only tracks must implement a buildable project. No catalog entry without a concrete eval project and evaluation path. If methodology produces signals (pressure, compliance, traces), artifacts must ship. GAD-on-GAD is the reference. Vibes-only theory is not a catalog entry.
+
+### Impact
+
+Project market listing requirement: must have build or artifact set.
+
+## gad-132: Projects have evals, evals have rounds, rounds triggered by requirements changes
+
+### Summary
+
+Conceptual hierarchy: Project → eval projects → rounds. A round is triggered when requirements change. Within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. Per-project round windows for display filtering.
+
+### Impact
+
+Data model clarification. Per-project round timelines on site. CLI round numbering per-project.
+
+## gad-131: Rubric belongs on project detail and eval pages, not standalone /rubric
+
+### Summary
+
+The /rubric page content should live on project detail pages and eval run pages where it's contextual. A standalone /rubric page may remain as a methodology reference but the primary rubric experience is per-project and per-run.
+
+### Impact
+
+Rubric display on project detail + run pages. /rubric becomes secondary reference.
+
+## gad-130: /project-market — dedicated catalog page for all eval projects
+
+### Summary
+
+Ship /project-market as the dedicated catalog page listing ALL eval projects (not just ETD + explainer). ETD and explainer are featured/canonical (pinned, badged) but not exclusive. Default filter: last 5 rounds per project (not global). Home page playable archive shrinks to a teaser linking to /project-market. Full handoff spec committed as PROJECT-MARKET-SPEC.md. Projects own rounds. Requirements change → new round. In-round edits allowed until new evals branch.
+
+### Impact
+
+New /project-market route. Home page lightened. All 30+ eval projects browsable with default filtering. Featured canonical projects visible.
+
+## gad-129: Official build/release pipeline for GAD CLI — Windows first, publish ourselves
+
+### Summary
+
+Ship an official build/release pipeline for the GAD CLI. Windows first (build on this machine, publish ourselves). Mac and Linux can use GitHub workflows. Users install via npx get-anything-done or a published binary. The CLI should let users set up blank projects or eval projects. The /quickstart flow: install coding agent CLI → install GAD → set up project or eval → run.
+
+### Impact
+
+New release pipeline. Windows binary published manually. Mac/Linux via GitHub Actions. npx install flow verified end-to-end.
+
+## gad-128: GAD CLI is an operational CLI — distinct from coding agent CLIs
+
+### Summary
+
+The GAD CLI (gad) is an operational CLI for the GAD framework and ecosystem. It is NOT a coding agent CLI like Claude Code CLI or Codex CLI. Those are coding agent runtimes. GAD provides commands, agents, skills, and artifacts FOR those coding agent CLIs. The site must make this distinction clear — framework + catalog on the same page, with the GAD CLI described as operational tooling that agents and users invoke, not the agent itself. The /gad page skill bootstrap sets should show the various hypotheses and what artifacts/tools are available per hypothesis condition.
+
+### Impact
+
+Site /gad page redesigned. Framework + catalog merged. Clear copy distinguishing operational CLI from coding agent CLIs. Build/release pipeline for the GAD CLI as a distributable.
 
 ## gad-125: ID format: per-project namespace + type prefix + number
 
@@ -6974,7 +7052,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **22-26** [planned]: Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math.
 
-- **22-27** [planned]: New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work.
+- **22-27** [cancelled]: New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work.
 
 - **22-28** [done]: Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed.
 
@@ -6986,7 +7064,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **22-32** [done]: Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output.
 
-- **22-33** [planned]: `gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modu
+- **22-33** [cancelled]: `gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modu
 
 - **22-34** [done]: Fix path resolution bug in bin/install.js for local git checkouts.
 
@@ -7183,7 +7261,7 @@ Publish all eval experiment documentation on the portfolio before further experi
 
 ## Phase 23: Round 4 greenfield with v4 pressure-oriented requirements
 
-Status: planned
+Status: done
 
 Run round 4 greenfield experiment with v4 requirements (pressure-oriented design, forge gate with per-floor adaptation requirement, authored dungeon with 5-8 rooms per floor and boss gates, ingenuity scoring). Three conditions: GAD, Bare, Emergent. Updated AGENTS.md for bare/emergent is minimal (only mandate .planning/ location and create_skill reference). Preserve all runs. Re-examine freedom hypothesis with new data.
 
@@ -7195,7 +7273,7 @@ Run the first brownfield experiment. All three conditions (etd-brownfield-gad/ba
 
 ## Phase 25: Framework versioning workflow + trace schema overhaul
 
-Status: planned
+Status: done
 
 Formalize how we ship new versions of the GAD framework itself and re-run evals across versions. Deliverables: (1) branching strategy (main = current, version/v1.1, version/v1.2 etc as frozen snapshots) so evals can pin to a framework version; (2) `gad version` command to stamp TRACE.json with the commit hash + branch it ran against; (3) trace schema v4 capturing every tool_use, skill invocation with trigger context, subagent spawn with inputs/outputs, file mutation — today's TRACE.json has a bare `skill_accuracy: 0.17` with no breakdown of WHICH skills fired and when; (4) methodology for re-running past evals against the current framework to see if framework changes affect scores; (5) new skill `framework-upgrade` documenting the upgrade + re-eval procedure. Precondition for interpreting any cross-version eval data honestly — right now we can't tell whether a score change is the agent or the framework.
 

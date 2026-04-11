@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-11T19:21:14.963Z",
+    "generated": "2026-04-11T21:30:48.604Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -125,7 +125,7 @@
       "authoredBy": null,
       "authoredOn": null,
       "excludedFromDefaultInstall": false,
-      "bodyRaw": "\n# Execute Phase\n\nExecute all tasks in a planned phase, following PLAN.md atomically. Each task is a discrete unit: implement → verify → commit → update planning docs → next task.\n\n**Trace marker (when running under eval hooks):** write `execute-phase` to\n`.planning/.trace-active-skill` at start, clear at end. See\n`skills/create-skill/SKILL.md` → \"Trace marker contract\".\n\nThe goal is uninterrupted execution from first task to phase close. If the kickoff and plan are solid, this should run to completion without needing to ask questions.\n\n## Step 1: Bootstrap context\n\n```bash\nnode vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>\n```\n\nThis gives you state, roadmap, tasks, decisions, and file refs in one low-token command. Identify the current phase and its tasks from the snapshot output.\n\nThen read the phase-specific plan:\n1. `.planning/phases/<phase-id>/KICKOFF.md` — goal, scope, DoD, open questions\n2. `.planning/phases/<phase-id>/PLAN.md` — task list, verify commands, dependencies\n\nIf no PLAN.md exists, stop: \"Phase `<id>` has no plan. Run `gad:plan-phase` first.\"\n\nIf KICKOFF.md has unresolved open questions that affect execution, surface them before starting.\n\n**Do NOT manually read STATE, ROADMAP, DECISIONS, or TASK-REGISTRY files** — the snapshot already gave you that. Pull individual files with `gad tasks`, `gad decisions`, etc. only if you need more detail on a specific item. If they're non-blocking, continue and note them.\n\n## Step 2: Determine the starting point\n\nCheck task statuses in PLAN.md. Find the first task that is not `done`:\n- `planned` — not started\n- `active` — in progress (resume from here)\n- `blocked` — surface the blocker before starting\n\nIf any task is `blocked`, report it: \"Task `<id>` is blocked: `<reason>`. Resolve this before execution can continue.\"\n\nUpdate STATE (XML or MD, whichever the project uses) to mark the phase as `active` with next-action describing the current task.\n\n## Step 3: Execute tasks in order\n\nFor each task (respecting dependency order):\n\n### 3a. Mark task active\n\nIn PLAN.md, change the task status from `planned` to `active`.\n\nUpdate STATE next-action to reflect the active task.\n\n### 3b. Implement the task\n\nDo the actual work. Stay within the task's stated scope — don't refactor adjacent code, don't add features not listed. If you discover the task is larger than expected, implement the minimum needed to satisfy the task goal.\n\nThe snapshot already gave you decisions — check them for rules that apply to this task. If a decision exists that covers this area, follow it without relitigating.\n\nCheck ERRORS-AND-ATTEMPTS (if it exists) for any recorded failures in this area before choosing an approach.\n\n### 3b-ii. Capture decisions as you make them\n\nIf you chose between alternatives during implementation (framework, pattern, data model, architecture), that's a decision. Write it to DECISIONS (XML or MD) **before committing this task** — not at the end of the phase:\n\n```xml\n<decision id=\"<phase>-d<N>\">\n  <title>Chose X over Y</title>\n  <summary>What you picked and why — what was the alternative?</summary>\n  <impact>How this affects future tasks</impact>\n</decision>\n```\n\nThis is not optional. Every non-obvious choice is a decision. If you installed a library, picked a file structure, chose a state management pattern, or decided how to model data — record it. Aim for 1-2 decisions per phase minimum.\n\n### 3c. Run the verify command\n\nRun the verify command from the task row. Examples:\n- `pnpm test`\n- `pnpm test && pnpm build`\n- `pnpm exec tsc --noEmit`\n\n**If verify passes:** continue to commit.\n\n**If verify fails:**\n1. Fix the issue (within the task's scope)\n2. Run verify again\n3. If still failing after 2 attempts: record the failure in ERRORS-AND-ATTEMPTS.md and surface it to the user — don't silently loop\n\n### 3d. Commit\n\n```bash\ngit add -p  # stage only the files touched by this task\ngit commit -m \"<type>(<phase-id>): <task goal summary>\"\n```\n\nCommit message types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`\n\nExample: `feat(app-auth-01): add JWT signing and verification helpers`\n\n### 3e. Update planning docs\n\nIn PLAN.md, mark the task `done`.\n\nIn TASK-REGISTRY (XML or MD), find the matching task and mark it `done`.\n\nIn STATE (XML or MD), advance the next-action to the next task.\n\n### 3f. Next task\n\nContinue to the next task (3a). No pause between tasks unless a blocker is encountered.\n\n## Step 4: Phase close\n\nWhen all tasks are `done`, run the definition-of-done check:\n\nRead the `definition-of-done` field from KICKOFF.md. For each criterion:\n- Run any stated commands (tests, build)\n- Verify observable conditions\n- If anything fails, surface it — do not silently mark the phase done\n\n**If DoD passes:**\n\n0. Write or append to `.planning/VERIFICATION.md`:\n\n```markdown\n## Phase <phase-id>: <name>\n- Build: PASS (exit 0)\n- Tasks: N/N done\n- State: current\n```\n\nCommit: `git commit -m \"verify: phase <phase-id> verified\"`\n\n1. Write a brief SUMMARY.md in `.planning/phases/<phase-id>/SUMMARY.md`:\n\n```markdown\n## Summary: `<phase-id>`\n\n**Completed:** <date>\n**Goal achieved:** <restate the goal and confirm it's done>\n\n## What was built\n- [key things implemented]\n\n## Decisions made\n- [any new stable rules; add them to DECISIONS.md]\n\n## Notes for next phase\n- [anything the next phase should know]\n```\n\n2. Update ROADMAP (XML or MD): phase status → `done`\n\n3. Update STATE (XML or MD): advance to next phase\n\n4. Add any new decisions to DECISIONS (XML or MD)\n\n5. Add any failed approaches to ERRORS-AND-ATTEMPTS (if it exists)\n\n6. Commit:\n```bash\ngit add .planning/\ngit commit -m \"docs(<phase-id>): close phase\"\n```\n\n**If DoD fails:**\nReport exactly which criteria failed and what needs to be fixed. Do not mark the phase done.\n\n## Step 5: Present outcome\n\n```\nPhase `<phase-id>` complete.\n\nTasks executed: N\nCommits: N\nVerify: all passed\n\nDefinition of done: [passed / N criteria failed]\n\nNext: run gad:check-todos to find the next phase.\n```\n\n## Handling blockers during execution\n\nIf you hit something unexpected mid-execution:\n- **Missing dependency** — a task depends on something that doesn't exist yet: record in ERRORS-AND-ATTEMPTS.md, surface to user\n- **Scope creep** — the task turns out to require changes far outside its stated scope: do the minimum, note in SUMMARY.md what the follow-up task should address\n- **Test infrastructure broken** — verify commands fail for reasons unrelated to this task: record the failure, surface before continuing\n\nNever silently skip a verify step. If verify is broken, that's more important to surface than forward progress.\n\n## Reference\n\n- `references/commit-conventions.md` — commit message format and examples\n",
+      "bodyRaw": "\n# Execute Phase\n\nExecute all tasks in a planned phase, following PLAN.md atomically. Each task is a discrete unit: implement → verify → commit → update planning docs → next task.\n\n**Trace marker (when running under eval hooks):** write `execute-phase` to\n`.planning/.trace-active-skill` at start, clear at end. See\n`skills/create-skill/SKILL.md` → \"Trace marker contract\".\n\nThe goal is uninterrupted execution from first task to phase close. If the kickoff and plan are solid, this should run to completion without needing to ask questions.\n\n## Step 1: Bootstrap context\n\n```bash\nnode vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>\n```\n\nThis gives you state, roadmap, tasks, decisions, and file refs in one low-token command. Identify the current phase and its tasks from the snapshot output.\n\nThen read the phase-specific plan:\n1. `.planning/phases/<phase-id>/KICKOFF.md` — goal, scope, DoD, open questions\n2. `.planning/phases/<phase-id>/PLAN.md` — task list, verify commands, dependencies\n\nIf no PLAN.md exists, stop: \"Phase `<id>` has no plan. Run `gad:plan-phase` first.\"\n\nIf KICKOFF.md has unresolved open questions that affect execution, surface them before starting.\n\n**Do NOT manually read STATE, ROADMAP, DECISIONS, or TASK-REGISTRY files** — the snapshot already gave you that. Pull individual files with `gad tasks`, `gad decisions`, etc. only if you need more detail on a specific item. If they're non-blocking, continue and note them.\n\n## Step 2: Determine the starting point\n\nCheck task statuses in PLAN.md. Find the first task that is not `done`:\n- `planned` — not started\n- `active` — in progress (resume from here)\n- `blocked` — surface the blocker before starting\n\nIf any task is `blocked`, report it: \"Task `<id>` is blocked: `<reason>`. Resolve this before execution can continue.\"\n\nUpdate STATE (XML or MD, whichever the project uses) to mark the phase as `active` with next-action describing the current task.\n\n## Step 3: Execute tasks in order\n\nFor each task (respecting dependency order):\n\n### 3a. Mark task active\n\nIn PLAN.md, change the task status from `planned` to `active`.\n\nUpdate STATE next-action to reflect the active task.\n\n### 3b. Implement the task\n\nDo the actual work. Stay within the task's stated scope — don't refactor adjacent code, don't add features not listed. If you discover the task is larger than expected, implement the minimum needed to satisfy the task goal.\n\nThe snapshot already gave you decisions — check them for rules that apply to this task. If a decision exists that covers this area, follow it without relitigating.\n\nCheck ERRORS-AND-ATTEMPTS (if it exists) for any recorded failures in this area before choosing an approach.\n\n### 3b-ii. Capture decisions as you make them\n\nIf you chose between alternatives during implementation (framework, pattern, data model, architecture), that's a decision. Write it to DECISIONS (XML or MD) **before committing this task** — not at the end of the phase:\n\n```xml\n<decision id=\"<phase>-d<N>\">\n  <title>Chose X over Y</title>\n  <summary>What you picked and why — what was the alternative?</summary>\n  <impact>How this affects future tasks</impact>\n</decision>\n```\n\nThis is not optional. Every non-obvious choice is a decision. If you installed a library, picked a file structure, chose a state management pattern, or decided how to model data — record it. Aim for 1-2 decisions per phase minimum.\n\n### 3c. Run the verify command\n\nRun the verify command from the task row. Examples:\n- `pnpm test`\n- `pnpm test && pnpm build`\n- `pnpm exec tsc --noEmit`\n\n**If verify passes:** continue to commit.\n\n**If verify fails:**\n1. Fix the issue (within the task's scope)\n2. Run verify again\n3. If still failing after 2 attempts: record the failure in ERRORS-AND-ATTEMPTS.md and surface it to the user — don't silently loop\n\n### 3d. Commit\n\n```bash\ngit add -p  # stage only the files touched by this task\ngit commit -m \"<type>(<phase-id>): <task goal summary>\"\n```\n\nCommit message types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`\n\nExample: `feat(app-auth-01): add JWT signing and verification helpers`\n\n### 3e. Update planning docs\n\nIn PLAN.md, mark the task `done`.\n\nIn TASK-REGISTRY (XML or MD), find the matching task and:\n- Set `status=\"done\"`\n- Set `skill=\"<skill-name>\"` — which skill(s) you used for this task (e.g. `execute-phase`, `frontend-design`). Comma-separated if multiple.\n- Set `agent=\"<agent-name>\"` — which agent ran this (e.g. `gad-executor`, `default`, `gad-planner`). Use `default` for the main session agent.\n- Set `type=\"<category>\"` — task category (e.g. `framework`, `cli`, `site`, `eval`, `pipeline`, `skill`, `cleanup`, `docs`).\n\n**Example:** `<task id=\"22-50\" status=\"done\" skill=\"execute-phase,frontend-design\" agent=\"default\" type=\"site\">`\n\nThis attribution is required (decision GAD-D-104). It feeds the self-eval pipeline and site data. If you skip it, the trace data has gaps.\n\nIn STATE (XML or MD), advance the next-action to the next task.\n\n### 3f. Next task\n\nContinue to the next task (3a). No pause between tasks unless a blocker is encountered.\n\n## Step 4: Phase close\n\nWhen all tasks are `done`, run the definition-of-done check:\n\nRead the `definition-of-done` field from KICKOFF.md. For each criterion:\n- Run any stated commands (tests, build)\n- Verify observable conditions\n- If anything fails, surface it — do not silently mark the phase done\n\n**If DoD passes:**\n\n0. Write or append to `.planning/VERIFICATION.md`:\n\n```markdown\n## Phase <phase-id>: <name>\n- Build: PASS (exit 0)\n- Tasks: N/N done\n- State: current\n```\n\nCommit: `git commit -m \"verify: phase <phase-id> verified\"`\n\n1. Write a brief SUMMARY.md in `.planning/phases/<phase-id>/SUMMARY.md`:\n\n```markdown\n## Summary: `<phase-id>`\n\n**Completed:** <date>\n**Goal achieved:** <restate the goal and confirm it's done>\n\n## What was built\n- [key things implemented]\n\n## Decisions made\n- [any new stable rules; add them to DECISIONS.md]\n\n## Notes for next phase\n- [anything the next phase should know]\n```\n\n2. Update ROADMAP (XML or MD): phase status → `done`\n\n3. Update STATE (XML or MD): advance to next phase\n\n4. Add any new decisions to DECISIONS (XML or MD)\n\n5. Add any failed approaches to ERRORS-AND-ATTEMPTS (if it exists)\n\n6. Commit:\n```bash\ngit add .planning/\ngit commit -m \"docs(<phase-id>): close phase\"\n```\n\n**If DoD fails:**\nReport exactly which criteria failed and what needs to be fixed. Do not mark the phase done.\n\n## Step 5: Present outcome\n\n```\nPhase `<phase-id>` complete.\n\nTasks executed: N\nCommits: N\nVerify: all passed\n\nDefinition of done: [passed / N criteria failed]\n\nNext: run gad:check-todos to find the next phase.\n```\n\n## Handling blockers during execution\n\nIf you hit something unexpected mid-execution:\n- **Missing dependency** — a task depends on something that doesn't exist yet: record in ERRORS-AND-ATTEMPTS.md, surface to user\n- **Scope creep** — the task turns out to require changes far outside its stated scope: do the minimum, note in SUMMARY.md what the follow-up task should address\n- **Test infrastructure broken** — verify commands fail for reasons unrelated to this task: record the failure, surface before continuing\n\nNever silently skip a verify step. If verify is broken, that's more important to surface than forward progress.\n\n## Reference\n\n- `references/commit-conventions.md` — commit message format and examples\n",
       "file": "vendor/get-anything-done/.agents/skills/execute-phase/SKILL.md"
     },
     {
@@ -383,6 +383,55 @@
     }
   ],
   "decisions": [
+    {
+      "id": "gad-134",
+      "title": "Site reusability review needed — cut down on duplicate edits",
+      "summary": "The site needs a reusability pass: shared patterns reimplemented across pages, duplicate components, data shape changes requiring edits everywhere. Pipeline-generated data should drive generic components. Queued for future session.",
+      "impact": "Reduces maintenance burden as eval count grows to hundreds.",
+      "references": []
+    },
+    {
+      "id": "gad-133",
+      "title": "Methodology must be tied to a buildable project with artifacts",
+      "summary": "Even methodology-only tracks must implement a buildable project. No catalog entry without a concrete eval project and evaluation path. If methodology produces signals (pressure, compliance, traces), artifacts must ship. GAD-on-GAD is the reference. Vibes-only theory is not a catalog entry.",
+      "impact": "Project market listing requirement: must have build or artifact set.",
+      "references": []
+    },
+    {
+      "id": "gad-132",
+      "title": "Projects have evals, evals have rounds, rounds triggered by requirements changes",
+      "summary": "Conceptual hierarchy: Project → eval projects → rounds. A round is triggered when requirements change. Within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. Per-project round windows for display filtering.",
+      "impact": "Data model clarification. Per-project round timelines on site. CLI round numbering per-project.",
+      "references": []
+    },
+    {
+      "id": "gad-131",
+      "title": "Rubric belongs on project detail and eval pages, not standalone /rubric",
+      "summary": "The /rubric page content should live on project detail pages and eval run pages where it's contextual. A standalone /rubric page may remain as a methodology reference but the primary rubric experience is per-project and per-run.",
+      "impact": "Rubric display on project detail + run pages. /rubric becomes secondary reference.",
+      "references": []
+    },
+    {
+      "id": "gad-130",
+      "title": "/project-market — dedicated catalog page for all eval projects",
+      "summary": "Ship /project-market as the dedicated catalog page listing ALL eval projects (not just ETD + explainer). ETD and explainer are featured/canonical (pinned, badged) but not exclusive. Default filter: last 5 rounds per project (not global). Home page playable archive shrinks to a teaser linking to /project-market. Full handoff spec committed as PROJECT-MARKET-SPEC.md. Projects own rounds. Requirements change → new round. In-round edits allowed until new evals branch.",
+      "impact": "New /project-market route. Home page lightened. All 30+ eval projects browsable with default filtering. Featured canonical projects visible.",
+      "references": []
+    },
+    {
+      "id": "gad-129",
+      "title": "Official build/release pipeline for GAD CLI — Windows first, publish ourselves",
+      "summary": "Ship an official build/release pipeline for the GAD CLI. Windows first (build on this machine, publish ourselves). Mac and Linux can use GitHub workflows. Users install via npx get-anything-done or a published binary. The CLI should let users set up blank projects or eval projects. The /quickstart flow: install coding agent CLI → install GAD → set up project or eval → run.",
+      "impact": "New release pipeline. Windows binary published manually. Mac/Linux via GitHub Actions. npx install flow verified end-to-end.",
+      "references": []
+    },
+    {
+      "id": "gad-128",
+      "title": "GAD CLI is an operational CLI — distinct from coding agent CLIs",
+      "summary": "The GAD CLI (gad) is an operational CLI for the GAD framework and ecosystem. It is NOT a coding agent CLI like Claude Code CLI or Codex CLI. Those are coding agent runtimes. GAD provides commands, agents, skills, and artifacts FOR those coding agent CLIs. The site must make this distinction clear — framework + catalog on the same page, with the GAD CLI described as operational tooling that agents and users invoke, not the agent itself. The /gad page skill bootstrap sets should show the various hypotheses and what artifacts/tools are available per hypothesis condition.",
+      "impact": "Site /gad page redesigned. Framework + catalog merged. Clear copy distinguishing operational CLI from coding agent CLIs. Build/release pipeline for the GAD CLI as a distributable.",
+      "references": []
+    },
     {
       "id": "gad-125",
       "title": "ID format: per-project namespace + type prefix + number",
@@ -4192,7 +4241,7 @@
     {
       "id": "22-27",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
       "type": null,
@@ -4288,7 +4337,7 @@
     {
       "id": "22-33",
       "phaseId": "22",
-      "status": "planned",
+      "status": "cancelled",
       "agentId": null,
       "skill": null,
       "type": null,
@@ -4889,7 +4938,7 @@
     {
       "id": "23",
       "title": "Round 4 greenfield with v4 pressure-oriented requirements",
-      "status": "planned",
+      "status": "done",
       "goal": "Run round 4 greenfield experiment with v4 requirements (pressure-oriented design, forge gate with per-floor adaptation requirement, authored dungeon with 5-8 rooms per floor and boss gates, ingenuity scoring). Three conditions: GAD, Bare, Emergent. Updated AGENTS.md for bare/emergent is minimal (only mandate .planning/ location and create_skill reference). Preserve all runs. Re-examine freedom hypothesis with new data.",
       "outcome": null
     },
@@ -4903,7 +4952,7 @@
     {
       "id": "25",
       "title": "Framework versioning workflow + trace schema overhaul",
-      "status": "planned",
+      "status": "done",
       "goal": "Formalize how we ship new versions of the GAD framework itself and re-run evals across versions. Deliverables: (1) branching strategy (main = current, version/v1.1, version/v1.2 etc as frozen snapshots) so evals can pin to a framework version; (2) `gad version` command to stamp TRACE.json with the commit hash + branch it ran against; (3) trace schema v4 capturing every tool_use, skill invocation with trigger context, subagent spawn with inputs/outputs, file mutation — today's TRACE.json has a bare `skill_accuracy: 0.17` with no breakdown of WHICH skills fired and when; (4) methodology for re-running past evals against the current framework to see if framework changes affect scores; (5) new skill `framework-upgrade` documenting the upgrade + re-eval procedure. Precondition for interpreting any cross-version eval data honestly — right now we can't tell whether a score change is the agent or the framework.",
       "outcome": null
     },
@@ -4951,6 +5000,55 @@
     }
   ],
   "searchIndex": [
+    {
+      "id": "gad-134",
+      "title": "Site reusability review needed — cut down on duplicate edits",
+      "kind": "decision",
+      "href": "/decisions#gad-134",
+      "body": "gad-134 site reusability review needed — cut down on duplicate edits the site needs a reusability pass: shared patterns reimplemented across pages, duplicate components, data shape changes requiring edits everywhere. pipeline-generated data should drive generic components. queued for future session."
+    },
+    {
+      "id": "gad-133",
+      "title": "Methodology must be tied to a buildable project with artifacts",
+      "kind": "decision",
+      "href": "/decisions#gad-133",
+      "body": "gad-133 methodology must be tied to a buildable project with artifacts even methodology-only tracks must implement a buildable project. no catalog entry without a concrete eval project and evaluation path. if methodology produces signals (pressure, compliance, traces), artifacts must ship. gad-on-gad is the reference. vibes-only theory is not a catalog entry."
+    },
+    {
+      "id": "gad-132",
+      "title": "Projects have evals, evals have rounds, rounds triggered by requirements changes",
+      "kind": "decision",
+      "href": "/decisions#gad-132",
+      "body": "gad-132 projects have evals, evals have rounds, rounds triggered by requirements changes conceptual hierarchy: project → eval projects → rounds. a round is triggered when requirements change. within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. per-project round windows for display filtering."
+    },
+    {
+      "id": "gad-131",
+      "title": "Rubric belongs on project detail and eval pages, not standalone /rubric",
+      "kind": "decision",
+      "href": "/decisions#gad-131",
+      "body": "gad-131 rubric belongs on project detail and eval pages, not standalone /rubric the /rubric page content should live on project detail pages and eval run pages where it's contextual. a standalone /rubric page may remain as a methodology reference but the primary rubric experience is per-project and per-run."
+    },
+    {
+      "id": "gad-130",
+      "title": "/project-market — dedicated catalog page for all eval projects",
+      "kind": "decision",
+      "href": "/decisions#gad-130",
+      "body": "gad-130 /project-market — dedicated catalog page for all eval projects ship /project-market as the dedicated catalog page listing all eval projects (not just etd + explainer). etd and explainer are featured/canonical (pinned, badged) but not exclusive. default filter: last 5 rounds per project (not global). home page playable archive shrinks to a teaser linking to /project-market. full handoff spec committed as project-market-spec.md. projects own rounds. requirement"
+    },
+    {
+      "id": "gad-129",
+      "title": "Official build/release pipeline for GAD CLI — Windows first, publish ourselves",
+      "kind": "decision",
+      "href": "/decisions#gad-129",
+      "body": "gad-129 official build/release pipeline for gad cli — windows first, publish ourselves ship an official build/release pipeline for the gad cli. windows first (build on this machine, publish ourselves). mac and linux can use github workflows. users install via npx get-anything-done or a published binary. the cli should let users set up blank projects or eval projects. the /quickstart flow: install coding agent cli → install gad → set up project or eval → run."
+    },
+    {
+      "id": "gad-128",
+      "title": "GAD CLI is an operational CLI — distinct from coding agent CLIs",
+      "kind": "decision",
+      "href": "/decisions#gad-128",
+      "body": "gad-128 gad cli is an operational cli — distinct from coding agent clis the gad cli (gad) is an operational cli for the gad framework and ecosystem. it is not a coding agent cli like claude code cli or codex cli. those are coding agent runtimes. gad provides commands, agents, skills, and artifacts for those coding agent clis. the site must make this distinction clear — framework + catalog on the same page, with the gad cli described as operational tooling that agents "
+    },
     {
       "id": "gad-125",
       "title": "ID format: per-project namespace + type prefix + number",

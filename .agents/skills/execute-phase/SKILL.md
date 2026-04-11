@@ -103,7 +103,15 @@ Example: `feat(app-auth-01): add JWT signing and verification helpers`
 
 In PLAN.md, mark the task `done`.
 
-In TASK-REGISTRY (XML or MD), find the matching task and mark it `done`.
+In TASK-REGISTRY (XML or MD), find the matching task and:
+- Set `status="done"`
+- Set `skill="<skill-name>"` — which skill(s) you used for this task (e.g. `execute-phase`, `frontend-design`). Comma-separated if multiple.
+- Set `agent="<agent-name>"` — which agent ran this (e.g. `gad-executor`, `default`, `gad-planner`). Use `default` for the main session agent.
+- Set `type="<category>"` — task category (e.g. `framework`, `cli`, `site`, `eval`, `pipeline`, `skill`, `cleanup`, `docs`).
+
+**Example:** `<task id="22-50" status="done" skill="execute-phase,frontend-design" agent="default" type="site">`
+
+This attribution is required (decision GAD-D-104). It feeds the self-eval pipeline and site data. If you skip it, the trace data has gaps.
 
 In STATE (XML or MD), advance the next-action to the next task.
 

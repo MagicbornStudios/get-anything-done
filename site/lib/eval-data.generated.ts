@@ -5867,6 +5867,48 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
   {
+    "id": "gad-134",
+    "title": "Site reusability review needed — cut down on duplicate edits",
+    "summary": "The site needs a reusability pass: shared patterns reimplemented across pages, duplicate components, data shape changes requiring edits everywhere. Pipeline-generated data should drive generic components. Queued for future session.",
+    "impact": "Reduces maintenance burden as eval count grows to hundreds."
+  },
+  {
+    "id": "gad-133",
+    "title": "Methodology must be tied to a buildable project with artifacts",
+    "summary": "Even methodology-only tracks must implement a buildable project. No catalog entry without a concrete eval project and evaluation path. If methodology produces signals (pressure, compliance, traces), artifacts must ship. GAD-on-GAD is the reference. Vibes-only theory is not a catalog entry.",
+    "impact": "Project market listing requirement: must have build or artifact set."
+  },
+  {
+    "id": "gad-132",
+    "title": "Projects have evals, evals have rounds, rounds triggered by requirements changes",
+    "summary": "Conceptual hierarchy: Project → eval projects → rounds. A round is triggered when requirements change. Within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. Per-project round windows for display filtering.",
+    "impact": "Data model clarification. Per-project round timelines on site. CLI round numbering per-project."
+  },
+  {
+    "id": "gad-131",
+    "title": "Rubric belongs on project detail and eval pages, not standalone /rubric",
+    "summary": "The /rubric page content should live on project detail pages and eval run pages where it's contextual. A standalone /rubric page may remain as a methodology reference but the primary rubric experience is per-project and per-run.",
+    "impact": "Rubric display on project detail + run pages. /rubric becomes secondary reference."
+  },
+  {
+    "id": "gad-130",
+    "title": "/project-market — dedicated catalog page for all eval projects",
+    "summary": "Ship /project-market as the dedicated catalog page listing ALL eval projects (not just ETD + explainer). ETD and explainer are featured/canonical (pinned, badged) but not exclusive. Default filter: last 5 rounds per project (not global). Home page playable archive shrinks to a teaser linking to /project-market. Full handoff spec committed as PROJECT-MARKET-SPEC.md. Projects own rounds. Requirements change → new round. In-round edits allowed until new evals branch.",
+    "impact": "New /project-market route. Home page lightened. All 30+ eval projects browsable with default filtering. Featured canonical projects visible."
+  },
+  {
+    "id": "gad-129",
+    "title": "Official build/release pipeline for GAD CLI — Windows first, publish ourselves",
+    "summary": "Ship an official build/release pipeline for the GAD CLI. Windows first (build on this machine, publish ourselves). Mac and Linux can use GitHub workflows. Users install via npx get-anything-done or a published binary. The CLI should let users set up blank projects or eval projects. The /quickstart flow: install coding agent CLI → install GAD → set up project or eval → run.",
+    "impact": "New release pipeline. Windows binary published manually. Mac/Linux via GitHub Actions. npx install flow verified end-to-end."
+  },
+  {
+    "id": "gad-128",
+    "title": "GAD CLI is an operational CLI — distinct from coding agent CLIs",
+    "summary": "The GAD CLI (gad) is an operational CLI for the GAD framework and ecosystem. It is NOT a coding agent CLI like Claude Code CLI or Codex CLI. Those are coding agent runtimes. GAD provides commands, agents, skills, and artifacts FOR those coding agent CLIs. The site must make this distinction clear — framework + catalog on the same page, with the GAD CLI described as operational tooling that agents and users invoke, not the agent itself. The /gad page skill bootstrap sets should show the various hypotheses and what artifacts/tools are available per hypothesis condition.",
+    "impact": "Site /gad page redesigned. Framework + catalog merged. Clear copy distinguishing operational CLI from coding agent CLIs. Build/release pipeline for the GAD CLI as a distributable."
+  },
+  {
     "id": "gad-125",
     "title": "ID format: per-project namespace + type prefix + number",
     "summary": "IDs encode project, artifact type, and number. Format: PROJECT-TYPE-NUMBER. Examples: GAD-D-119 (GAD decision 119), GAD-T-22-01 (GAD task phase 22 task 01), GAD-P-22 (GAD phase 22), ETD-T-3-01 (escape-the-dungeon task). Type codes: D=decision, T=task, P=phase, R=requirement, B=bug, S=skill. Namespace is per-project (GAD, ETD, GRIME, etc.) not always \"GAD\" — GAD is the project name, not a framework prefix. New IDs use this format; old IDs stay until a migration script handles them as a batch. On the site: each segment color-coded (namespace=accent, type=type-color, number=foreground). HoverCard on every ID shows full artifact details with segment breakdown (e.g., \"22 = phase, 01 = task\"). Traceability over brevity — full IDs everywhere, no abbreviations in cross-references.",
@@ -8624,7 +8666,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-27",
     "phaseId": "22",
-    "status": "planned",
+    "status": "cancelled",
     "agentId": null,
     "skill": null,
     "type": null,
@@ -8720,7 +8762,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "22-33",
     "phaseId": "22",
-    "status": "planned",
+    "status": "cancelled",
     "agentId": null,
     "skill": null,
     "type": null,
@@ -9333,7 +9375,7 @@ export const ALL_PHASES: PhaseRecord[] = [
   {
     "id": "23",
     "title": "Round 4 greenfield with v4 pressure-oriented requirements",
-    "status": "planned",
+    "status": "done",
     "goal": "Run round 4 greenfield experiment with v4 requirements (pressure-oriented design, forge gate with per-floor adaptation requirement, authored dungeon with 5-8 rooms per floor and boss gates, ingenuity scoring). Three conditions: GAD, Bare, Emergent. Updated AGENTS.md for bare/emergent is minimal (only mandate .planning/ location and create_skill reference). Preserve all runs. Re-examine freedom hypothesis with new data.",
     "outcome": null
   },
@@ -9347,7 +9389,7 @@ export const ALL_PHASES: PhaseRecord[] = [
   {
     "id": "25",
     "title": "Framework versioning workflow + trace schema overhaul",
-    "status": "planned",
+    "status": "done",
     "goal": "Formalize how we ship new versions of the GAD framework itself and re-run evals across versions. Deliverables: (1) branching strategy (main = current, version/v1.1, version/v1.2 etc as frozen snapshots) so evals can pin to a framework version; (2) `gad version` command to stamp TRACE.json with the commit hash + branch it ran against; (3) trace schema v4 capturing every tool_use, skill invocation with trigger context, subagent spawn with inputs/outputs, file mutation — today's TRACE.json has a bare `skill_accuracy: 0.17` with no breakdown of WHICH skills fired and when; (4) methodology for re-running past evals against the current framework to see if framework changes affect scores; (5) new skill `framework-upgrade` documenting the upgrade + re-eval procedure. Precondition for interpreting any cross-version eval data honestly — right now we can't tell whether a score change is the agent or the framework.",
     "outcome": null
   },
@@ -9380,6 +9422,55 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-134",
+    "title": "Site reusability review needed — cut down on duplicate edits",
+    "kind": "decision",
+    "href": "/decisions#gad-134",
+    "body": "gad-134 site reusability review needed — cut down on duplicate edits the site needs a reusability pass: shared patterns reimplemented across pages, duplicate components, data shape changes requiring edits everywhere. pipeline-generated data should drive generic components. queued for future session."
+  },
+  {
+    "id": "gad-133",
+    "title": "Methodology must be tied to a buildable project with artifacts",
+    "kind": "decision",
+    "href": "/decisions#gad-133",
+    "body": "gad-133 methodology must be tied to a buildable project with artifacts even methodology-only tracks must implement a buildable project. no catalog entry without a concrete eval project and evaluation path. if methodology produces signals (pressure, compliance, traces), artifacts must ship. gad-on-gad is the reference. vibes-only theory is not a catalog entry."
+  },
+  {
+    "id": "gad-132",
+    "title": "Projects have evals, evals have rounds, rounds triggered by requirements changes",
+    "kind": "decision",
+    "href": "/decisions#gad-132",
+    "body": "gad-132 projects have evals, evals have rounds, rounds triggered by requirements changes conceptual hierarchy: project → eval projects → rounds. a round is triggered when requirements change. within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. per-project round windows for display filtering."
+  },
+  {
+    "id": "gad-131",
+    "title": "Rubric belongs on project detail and eval pages, not standalone /rubric",
+    "kind": "decision",
+    "href": "/decisions#gad-131",
+    "body": "gad-131 rubric belongs on project detail and eval pages, not standalone /rubric the /rubric page content should live on project detail pages and eval run pages where it's contextual. a standalone /rubric page may remain as a methodology reference but the primary rubric experience is per-project and per-run."
+  },
+  {
+    "id": "gad-130",
+    "title": "/project-market — dedicated catalog page for all eval projects",
+    "kind": "decision",
+    "href": "/decisions#gad-130",
+    "body": "gad-130 /project-market — dedicated catalog page for all eval projects ship /project-market as the dedicated catalog page listing all eval projects (not just etd + explainer). etd and explainer are featured/canonical (pinned, badged) but not exclusive. default filter: last 5 rounds per project (not global). home page playable archive shrinks to a teaser linking to /project-market. full handoff spec committed as project-market-spec.md. projects own rounds. requirement"
+  },
+  {
+    "id": "gad-129",
+    "title": "Official build/release pipeline for GAD CLI — Windows first, publish ourselves",
+    "kind": "decision",
+    "href": "/decisions#gad-129",
+    "body": "gad-129 official build/release pipeline for gad cli — windows first, publish ourselves ship an official build/release pipeline for the gad cli. windows first (build on this machine, publish ourselves). mac and linux can use github workflows. users install via npx get-anything-done or a published binary. the cli should let users set up blank projects or eval projects. the /quickstart flow: install coding agent cli → install gad → set up project or eval → run."
+  },
+  {
+    "id": "gad-128",
+    "title": "GAD CLI is an operational CLI — distinct from coding agent CLIs",
+    "kind": "decision",
+    "href": "/decisions#gad-128",
+    "body": "gad-128 gad cli is an operational cli — distinct from coding agent clis the gad cli (gad) is an operational cli for the gad framework and ecosystem. it is not a coding agent cli like claude code cli or codex cli. those are coding agent runtimes. gad provides commands, agents, skills, and artifacts for those coding agent clis. the site must make this distinction clear — framework + catalog on the same page, with the gad cli described as operational tooling that agents "
+  },
   {
     "id": "gad-125",
     "title": "ID format: per-project namespace + type prefix + number",

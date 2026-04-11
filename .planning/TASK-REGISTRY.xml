@@ -626,7 +626,7 @@
       <goal>Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math.</goal>
       <keywords>scoring-weights,gad-json,prebuild</keywords>
     </task>
-    <task id="22-27" agent-id="" status="planned">
+    <task id="22-27" agent-id="" status="cancelled">
       <goal>New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work.</goal>
       <keywords>skill,framework-upgrade,versioning</keywords>
     </task>
@@ -655,7 +655,7 @@
       <resolution>Full discuss-phase output written with 9 answered questions + 4-milestone breakdown. Session 5 then updated it with confirmed answers (hybrid file+hook skill marker, framework-versioned handler, 4KB cap, defer Remotion). Session 6 converted this into the concrete PLAN.md at .planning/plans/phase-25/PLAN.md with 22 atomic tasks across 4 milestones.</resolution>
       <keywords>phase-25,discuss-phase,trace-schema-v4,planning-doc</keywords>
     </task>
-    <task id="22-33" agent-id="" status="planned">
+    <task id="22-33" agent-id="" status="cancelled">
       <goal>`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modules/get-anything-done/get-anything-done/`). This task wraps it in a `gad install` subcommand that resolves paths correctly whether running from a git checkout (vendor/get-anything-done/) or an npm install. Related to 22-34 (fix install.js directly) — this task may become a no-op if 22-34 fixes the path resolution at the install.js level.</goal>
       <keywords>gad-install,cli,wrapper,infrastructure</keywords>
     </task>
