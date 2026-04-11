@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>28</current-phase>
+  <current-phase>29</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 30 complete: eval framework v2 — domains, tech stacks, rounds per project (5 tasks, 5 commits). All CLI and site features shipped, build passes.
+  <next-action>Phase 29 complete: GAD CLI build/release pipeline + operational distinction (4 tasks, 2 commits). esbuild bundles CLI into single dist/gad.cjs (484KB). Portfolio /gad page live with operational distinction, hypothesis matrix, catalog.
 
 === DONE THIS SESSION ===
-- gad rounds --project: per-project rounds derived from TRACE.json requirements_version
-- Build requirement gate in gad eval score (checks preserved build, shows pass/fail)
-- Human time estimation instruction in eval prompt (step 0)
-- Source + build size computation in gad eval preserve (writes to TRACE.json)
-- Domain + tech stack badges on ProjectHeroSection.tsx (site)
+- scripts/build-cli.mjs — esbuild bundler for dist/gad.cjs
+- package.json: build:cli, prepublishOnly, dist/ + lib/ in files
+- Quick start verified: source and bundled CLI both work
+- Portfolio /gad page: operational CLI distinction, hypothesis matrix, catalog, loop, CLI ref
 
 === NEXT ===
-1. GAD CLI build/release pipeline (Windows) — phase 29
-2. Run evals (round 5, tech-stacks, reverse-engineer)
-3. Phase 27: structured objective data production
-4. Phase 33: reverse-engineer eval methodology</next-action>
+1. Run evals (round 5, tech-stacks, reverse-engineer)
+2. Phase 27: structured objective data production
+3. Phase 33: reverse-engineer eval methodology
+4. Phase 28: /project-market + site architecture overhaul</next-action>
   <last-updated>2026-04-10</last-updated>
 </state>

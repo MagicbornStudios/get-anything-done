@@ -177,7 +177,7 @@
   <phase id="29">
     <title>GAD CLI build/release pipeline + operational distinction</title>
     <goal>Official build/release pipeline for the GAD CLI. Windows binary built locally, Mac/Linux via GitHub Actions. npx install flow. Quick start guide on site. Clear messaging: GAD CLI is operational tooling for the framework, not a coding agent CLI. Decisions: GAD-D-117, GAD-D-123, GAD-D-128, GAD-D-129.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>28</depends>
   </phase>
   <phase id="30">

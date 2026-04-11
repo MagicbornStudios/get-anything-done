@@ -841,4 +841,22 @@
       <keywords>domain,tech-stack,badge,site,project-detail</keywords>
     </task>
   </phase>
+  <phase id="29">
+    <task id="29-01" status="done" skill="execute-phase" agent="gad-executor" type="cli"><goal>Create CLI build script (scripts/build-cli.mjs) using esbuild to bundle bin/gad.cjs + all lib/*.cjs into dist/gad.cjs — single distributable file.</goal>
+      <resolution>Shipped 2026-04-10. esbuild bundles all CJS modules into 484KB single file. node dist/gad.cjs --help works. Commit 292c621.</resolution>
+      <keywords>build,esbuild,bundle,dist,cli</keywords>
+    </task>
+    <task id="29-02" status="done" skill="execute-phase" agent="gad-executor" type="cli"><goal>Update package.json: add dist/ and lib/ to files array, add build:cli script, update prepublishOnly to include CLI bundle.</goal>
+      <resolution>Shipped 2026-04-10. package.json bin field already had "gad": "bin/gad.cjs". Added dist/ + lib/ to files, build:cli script, prepublishOnly chain. Commit 292c621.</resolution>
+      <keywords>package.json,npm,publish,bin</keywords>
+    </task>
+    <task id="29-03" status="done" skill="execute-phase" agent="gad-executor" type="cli"><goal>Quick start verification — verify node bin/gad.cjs --help and node dist/gad.cjs version both work. Confirm npx pathway is correct.</goal>
+      <resolution>Shipped 2026-04-10. Both source and bundled CLI verified. bin field correct for npx get-anything-done. Commit 292c621.</resolution>
+      <keywords>quick-start,npx,verify</keywords>
+    </task>
+    <task id="29-04" status="done" skill="execute-phase" agent="gad-executor" type="cli"><goal>Portfolio /gad page — operational distinction messaging, hypothesis matrix, framework catalog, CLI reference, GAD loop diagram.</goal>
+      <resolution>Shipped 2026-04-10. Created apps/portfolio/app/gad/page.tsx with operational CLI distinction, 4-lane hypothesis matrix (GAD/Bare/Emergent/Injected), catalog counts, 5-step loop, CLI commands table, install section. Commit 97f717b.</resolution>
+      <keywords>site,gad-page,operational-distinction,hypothesis-matrix,catalog</keywords>
+    </task>
+  </phase>
 </task-registry>
