@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import type { SkillArtifact, SkillLineageCardProps } from "./skill-lineage-shared";
 import SkillLineageRunHeader from "./SkillLineageRunHeader";
 import SkillLineageSkillBody from "./SkillLineageSkillBody";
@@ -37,19 +38,18 @@ export function SkillLineageCard({
 
   return (
     <>
-      <div
-        id={version}
-        className="scroll-mt-24 rounded-2xl border border-border/70 bg-card/40 p-6"
-      >
-        <SkillLineageRunHeader
-          version={version}
-          date={date}
-          playable={playable}
-          projectHref={projectHref}
-          runHref={runHref}
-        />
-        <SkillLineageSkillBody skills={skills} onSelectSkill={setOpenSkill} />
-      </div>
+      <Card id={version} className="scroll-mt-24 border-border/70 bg-card/40">
+        <CardContent className="p-6">
+          <SkillLineageRunHeader
+            version={version}
+            date={date}
+            playable={playable}
+            projectHref={projectHref}
+            runHref={runHref}
+          />
+          <SkillLineageSkillBody skills={skills} onSelectSkill={setOpenSkill} />
+        </CardContent>
+      </Card>
 
       <SkillLineageSkillModal
         skill={openSkill}

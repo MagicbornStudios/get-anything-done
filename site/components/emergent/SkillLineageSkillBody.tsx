@@ -1,4 +1,7 @@
+"use client";
+
 import { Sparkles, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { SkillArtifact } from "./skill-lineage-shared";
 
 export default function SkillLineageSkillBody({
@@ -26,11 +29,13 @@ export default function SkillLineageSkillBody({
       <ul className="space-y-1">
         {skills.map((s) => (
           <li key={s.name}>
-            <button
+            <Button
               type="button"
-              onClick={() => onSelectSkill(s)}
+              variant="outline"
+              size="sm"
               disabled={!s.content}
-              className="flex w-full items-center justify-between gap-3 rounded border border-border/40 bg-background/40 px-3 py-2 text-left font-mono text-xs text-muted-foreground transition-colors hover:border-amber-500/40 hover:bg-amber-500/5 hover:text-amber-200 disabled:opacity-60 disabled:hover:border-border/40 disabled:hover:bg-background/40 disabled:hover:text-muted-foreground"
+              className="h-auto w-full justify-between gap-3 border-border/40 bg-background/40 px-3 py-2 text-left font-mono text-xs font-normal text-muted-foreground hover:border-amber-500/40 hover:bg-amber-500/5 hover:text-amber-200 disabled:opacity-60 disabled:hover:border-border/40 disabled:hover:bg-background/40 disabled:hover:text-muted-foreground"
+              onClick={() => onSelectSkill(s)}
             >
               <span className="flex items-center gap-2">
                 <Sparkles size={10} className="text-amber-400" aria-hidden />
@@ -38,11 +43,9 @@ export default function SkillLineageSkillBody({
               </span>
               <span className="flex items-center gap-2 text-[10px] opacity-60 tabular-nums">
                 {(s.bytes / 1024).toFixed(1)} KB
-                {s.content && (
-                  <ExternalLink size={9} className="opacity-80" aria-hidden />
-                )}
+                {s.content && <ExternalLink size={9} className="opacity-80" aria-hidden />}
               </span>
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

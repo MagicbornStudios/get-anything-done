@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Code2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DataSource } from "./data-shared";
 import { TRUST_TINT } from "./data-shared";
@@ -13,12 +14,14 @@ export default function DataSourceCard({ source }: { source: DataSource }) {
           <CardTitle className="text-base leading-tight">{source.number}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant={TRUST_TINT[source.trust]}>{source.trust}</Badge>
-            <Link
-              href={source.page}
-              className="inline-flex items-center gap-1 rounded border border-border/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground hover:border-accent hover:text-accent"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-auto gap-1 px-2 py-0.5 font-mono text-[10px] font-normal text-muted-foreground hover:border-accent hover:text-accent"
+              asChild
             >
-              {source.page}
-            </Link>
+              <Link href={source.page}>{source.page}</Link>
+            </Button>
           </div>
         </div>
       </CardHeader>
