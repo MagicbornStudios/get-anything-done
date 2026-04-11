@@ -1,37 +1,44 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function HypothesisTracksRelatedLinks() {
   return (
     <div className="mt-6 flex flex-wrap gap-3 text-sm">
-      <Link
-        href="/hypotheses"
-        className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-4 py-2 font-semibold transition-colors hover:border-accent hover:text-accent"
+      <Button variant="outline" size="sm" className="rounded-full border-border/70 bg-card/40 font-semibold hover:border-accent hover:text-accent" asChild>
+        <Link href="/hypotheses">
+          All hypotheses
+          <ArrowRight className="size-3.5" aria-hidden />
+        </Link>
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full border-amber-500/40 bg-amber-500/10 font-semibold text-amber-300 hover:bg-amber-500/20"
+        asChild
       >
-        All hypotheses
-        <ArrowRight size={13} aria-hidden />
-      </Link>
-      <Link
-        href="/emergent"
-        className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-2 font-semibold text-amber-300 transition-colors hover:bg-amber-500/20"
+        <Link href="/emergent">
+          CSH evidence
+          <ArrowRight className="size-3.5" aria-hidden />
+        </Link>
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full border-emerald-500/40 bg-emerald-500/10 font-semibold text-emerald-300 hover:bg-emerald-500/20"
+        asChild
       >
-        CSH evidence
-        <ArrowRight size={13} aria-hidden />
-      </Link>
-      <Link
-        href="/freedom"
-        className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/20"
-      >
-        Freedom evidence
-        <ArrowRight size={13} aria-hidden />
-      </Link>
-      <Link
-        href="/roadmap"
-        className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/40 px-4 py-2 font-semibold transition-colors hover:border-accent hover:text-accent"
-      >
-        Full roadmap
-        <ArrowRight size={13} aria-hidden />
-      </Link>
+        <Link href="/freedom">
+          Freedom evidence
+          <ArrowRight className="size-3.5" aria-hidden />
+        </Link>
+      </Button>
+      <Button variant="outline" size="sm" className="rounded-full border-border/70 bg-card/40 font-semibold hover:border-accent hover:text-accent" asChild>
+        <Link href="/roadmap">
+          Full roadmap
+          <ArrowRight className="size-3.5" aria-hidden />
+        </Link>
+      </Button>
     </div>
   );
 }
