@@ -6,42 +6,42 @@
       "days": 5
     },
     "totals": {
-      "events": 2783,
+      "events": 2814,
       "sessions": 5,
-      "gad_cli_calls": 199
+      "gad_cli_calls": 202
     },
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 788
+        "count": 794
       },
       {
         "tool": "unknown",
-        "count": 455
+        "count": 459
       },
       {
         "tool": "Read",
-        "count": 392
+        "count": 398
       },
       {
         "tool": "Edit",
-        "count": 389
+        "count": 395
       },
       {
         "tool": "TaskUpdate",
-        "count": 242
+        "count": 245
       },
       {
         "tool": "TaskCreate",
-        "count": 180
+        "count": 183
       },
       {
         "tool": "Write",
-        "count": 178
+        "count": 179
       },
       {
         "tool": "Grep",
-        "count": 111
+        "count": 113
       },
       {
         "tool": "Agent",
@@ -83,13 +83,13 @@
       },
       {
         "day": "2026-04-11",
-        "count": 360
+        "count": 391
       }
     ],
     "framework_overhead": {
-      "planning_ops": 194,
-      "source_ops": 841,
-      "ratio": 0.187,
+      "planning_ops": 197,
+      "source_ops": 852,
+      "ratio": 0.188,
       "score": 0.7
     },
     "loop_compliance": {
@@ -98,11 +98,11 @@
       "score": 0.8
     },
     "gad_cli_breakdown": {
-      "snapshot": 33,
+      "snapshot": 35,
       "eval": 92,
-      "other": 74
+      "other": 75
     },
-    "computed_at": "2026-04-11T18:52:01.708Z",
+    "computed_at": "2026-04-11T19:21:15.195Z",
     "tasks": {
       "done": 163,
       "planned": 13,
@@ -333,42 +333,42 @@
         "days": 5
       },
       "totals": {
-        "events": 2783,
+        "events": 2814,
         "sessions": 5,
-        "gad_cli_calls": 199
+        "gad_cli_calls": 202
       },
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 788
+          "count": 794
         },
         {
           "tool": "unknown",
-          "count": 455
+          "count": 459
         },
         {
           "tool": "Read",
-          "count": 392
+          "count": 398
         },
         {
           "tool": "Edit",
-          "count": 389
+          "count": 395
         },
         {
           "tool": "TaskUpdate",
-          "count": 242
+          "count": 245
         },
         {
           "tool": "TaskCreate",
-          "count": 180
+          "count": 183
         },
         {
           "tool": "Write",
-          "count": 178
+          "count": 179
         },
         {
           "tool": "Grep",
-          "count": 111
+          "count": 113
         },
         {
           "tool": "Agent",
@@ -410,13 +410,13 @@
         },
         {
           "day": "2026-04-11",
-          "count": 360
+          "count": 391
         }
       ],
       "framework_overhead": {
-        "planning_ops": 194,
-        "source_ops": 841,
-        "ratio": 0.187,
+        "planning_ops": 197,
+        "source_ops": 852,
+        "ratio": 0.188,
         "score": 0.7
       },
       "loop_compliance": {
@@ -425,11 +425,11 @@
         "score": 0.8
       },
       "gad_cli_breakdown": {
-        "snapshot": 33,
+        "snapshot": 35,
         "eval": 92,
-        "other": 74
+        "other": 75
       },
-      "computed_at": "2026-04-11T18:52:01.708Z",
+      "computed_at": "2026-04-11T19:21:15.195Z",
       "tasks": {
         "done": 163,
         "planned": 13,
