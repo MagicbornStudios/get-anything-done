@@ -1,6 +1,8 @@
 "use client";
 
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { RunInfoPanel } from "@/components/landing/playable/RunInfoPanel";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import {
@@ -13,6 +15,7 @@ import {
   WORKFLOW_TINT,
 } from "@/components/landing/playable/playable-shared";
 import { WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
+import { cn } from "@/lib/utils";
 
 export type PlayableRunGroup = {
   id: string;

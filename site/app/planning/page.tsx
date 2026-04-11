@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
 import { PLANNING_STATE } from "@/lib/catalog.generated";
@@ -9,13 +10,11 @@ import { PlanningTabbedContent } from "@/app/planning/PlanningTabbedContent";
 export const metadata = {
   title: "Planning state — GAD self-transparency",
   description:
-    "Phases, tasks, decisions, and bugs driving the get-anything-done framework. Parsed directly from .planning/ XML files.",
+    "Phases, tasks, decisions, roadmap, requirements, and bugs driving the get-anything-done framework.",
 };
 
 export default function PlanningStatePage() {
   const state = PLANNING_STATE;
-
-  // Separate GAD-level bugs (no project) from eval bugs (have project)
   const gadBugs = (BUGS ?? []).filter((b) => !b.project || b.project === "gad");
 
   return (
@@ -23,13 +22,15 @@ export default function PlanningStatePage() {
       <Nav />
       <PlanningOverviewSection state={state} />
       <PlanningGanttSection phases={state.phases} />
-      <PlanningTabbedContent
-        state={state}
-        allTasks={ALL_TASKS}
-        allPhases={ALL_PHASES}
-        allDecisions={ALL_DECISIONS}
-        gadBugs={gadBugs}
-      />
+      <Suspense>
+        <PlanningTabbedContent
+          state={state}
+          allTasks={ALL_TASKS}
+          allPhases={ALL_PHASES}
+          allDecisions={ALL_DECISIONS}
+          gadBugs={gadBugs}
+        />
+      </Suspense>
       <Footer />
     </main>
   );

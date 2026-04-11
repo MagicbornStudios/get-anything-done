@@ -61,15 +61,6 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
             <CardContent className="pt-0 text-xs text-muted-foreground">STATE.xml</CardContent>
           </Card>
         </div>
-
-        {state.nextAction && (
-          <div className="mt-12 rounded-2xl border border-accent/40 bg-accent/5 p-6 md:p-8">
-            <p className="section-kicker">Next action</p>
-            <p className="mt-3 text-base leading-7 text-foreground whitespace-pre-line">
-              {state.nextAction}
-            </p>
-          </div>
-        )}
       </div>
     </section>
   );
