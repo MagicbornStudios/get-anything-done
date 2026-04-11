@@ -8,7 +8,7 @@ import ExperimentLog from "@/components/landing/experiment-log/ExperimentLog";
 import Projects from "@/components/landing/projects/Projects";
 import RoundResults from "@/components/landing/round-results/RoundResults";
 import Graphs from "@/components/landing/graphs/Graphs";
-import Playable from "@/components/landing/playable/Playable";
+import PlayableTeaser from "@/components/landing/playable/PlayableTeaser";
 import Requirements from "@/components/landing/requirements/Requirements";
 import Catalog from "@/components/landing/catalog/Catalog";
 import Templates from "@/components/landing/templates/Templates";
@@ -22,7 +22,7 @@ export default function Page() {
       <Hero />
       {/* PRIMARY: graph + playable archive adjacent — the research showcase */}
       <HypothesisTracksSection />
-      <Playable />
+      <PlayableTeaser />
       {/* CONTEXT: what the project is + how it works */}
       <ExperimentLog />
       <RoundResults />

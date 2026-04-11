@@ -10,11 +10,11 @@ export function HeroCtaRow() {
         className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5 hover:bg-accent/90"
         asChild
       >
-        <a href="#play">
+        <Link href="/project-market">
           <Gauge size={18} aria-hidden />
-          Play an eval
+          Project market
           <ArrowRight size={16} aria-hidden />
-        </a>
+        </Link>
       </Button>
 
       <Button

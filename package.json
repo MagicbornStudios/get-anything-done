@@ -9,9 +9,11 @@
   "files": [
     "bin",
     "commands",
+    "dist",
     "get-shit-done",
     "agents",
     "hooks/dist",
+    "lib",
     "scripts"
   ],
   "keywords": [
@@ -52,8 +54,9 @@
     "vitest": "^4.1.2"
   },
   "scripts": {
+    "build:cli": "node scripts/build-cli.mjs",
     "build:hooks": "node scripts/build-hooks.js",
-    "prepublishOnly": "npm run build:hooks",
+    "prepublishOnly": "npm run build:hooks && npm run build:cli",
     "test": "node scripts/run-tests.cjs",
     "test:coverage": "c8 --check-coverage --lines 70 --reporter text --include 'get-shit-done/bin/lib/*.cjs' --exclude 'tests/**' --all node scripts/run-tests.cjs"
   }

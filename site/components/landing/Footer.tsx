@@ -86,7 +86,7 @@ export default function Footer() {
                   className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
                   asChild
                 >
-                  <a href="/#play">Play</a>
+                  <a href="/project-market">Project Market</a>
                 </Button>
               </li>
               <li>

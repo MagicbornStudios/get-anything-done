@@ -203,7 +203,7 @@ export default function EmergentPage() {
                   version={r.version}
                   date={r.date}
                   playable={!!PLAYABLE_INDEX[runKey(r)]}
-                  projectHref={`/#play`}
+                  projectHref={`/project-market`}
                   runHref={`/runs/${r.project}/${r.version}`}
                   skills={skillFiles.map((s) => ({
                     name: s.name,

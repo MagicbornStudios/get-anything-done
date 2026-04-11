@@ -45,7 +45,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Play",
     links: [
-      { href: "/#play", label: "Playable Archive", note: "play every scored build" },
+      { href: "/project-market", label: "Project Market", note: "browse all eval projects + playable builds" },
       { href: "/videos", label: "Videos", note: "walkthroughs" },
     ],
   },
