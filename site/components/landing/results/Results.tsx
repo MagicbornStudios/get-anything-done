@@ -1,5 +1,5 @@
+import { Round4PressureCallout } from "@/components/landing/shared/Round4PressureCallout";
 import { ResultsIntro } from "@/components/landing/results/ResultsIntro";
-import { ResultsRound4Callout } from "@/components/landing/results/ResultsRound4Callout";
 import { ResultsRunCard } from "@/components/landing/results/ResultsRunCard";
 import { RESULT_DISPLAY_RUNS } from "@/components/landing/results/results-shared";
 import { SiteSection } from "@/components/site";
@@ -15,7 +15,7 @@ export default function Results() {
         ))}
       </div>
 
-      <ResultsRound4Callout />
+      <Round4PressureCallout />
     </SiteSection>
   );
 }

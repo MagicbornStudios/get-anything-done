@@ -25,7 +25,7 @@ GAD-D-144: Skill candidates quarantine and review workflow
 GAD-D-146: Claude-facing model profiles use aliases and stay off by default
 
 === NEXT ===
-1. Phase 39 (site DRY): pick planned tasks 39-01 → 39-03 first (low-risk); then 39-04 → 39-06 (medium). Re-run duplication grep after each merge.
+1. Phase 39 (site DRY): 39-01 and 39-02 done. Next: 39-03 (dup grep audit) or 39-04–39-06 (medium).
 2. Finish phase 35-03: surface runtime identity more explicitly in eval report/self-eval/site UI
 3. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap
 4. Execute phase 36 (per-eval repos + command split)

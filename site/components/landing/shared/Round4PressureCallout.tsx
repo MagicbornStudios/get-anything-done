@@ -1,6 +1,7 @@
 import { SiteProse, SiteSectionHeading } from "@/components/site";
 
-export function ResultsRound4Callout() {
+/** Shared copy block: v4 pressure framing (used on Results landing strip and Round Results default state). */
+export function Round4PressureCallout() {
   return (
     <div className="mt-12 rounded-2xl border border-accent/40 bg-accent/5 p-6 md:p-8">
       <SiteSectionHeading
