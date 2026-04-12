@@ -4897,7 +4897,7 @@ function install(isGlobal, runtime = 'claude') {
   if (fs.existsSync(canonicalSkillsSrc) && !isOpencode) {
     const copiedCount = installCanonicalSkillsMirror(canonicalSkillsSrc, targetDir, pathPrefix, runtime, isGlobal);
     if (copiedCount > 0) {
-      console.log('  Installed ' + copiedCount + ' canonical workspace skills to skills/ + .agents/skills/');
+      console.log('  Installed ' + copiedCount + ' canonical skills to skills/ (+ .agents/skills compatibility mirror where supported)');
     }
   }
 

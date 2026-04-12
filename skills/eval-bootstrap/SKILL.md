@@ -20,13 +20,15 @@ gad-21: Prompting an agent to "use gad snapshot" doesn't work — the agent igno
 
 ```sh
 # For a single project:
-gad eval run --project <name> --prompt-only
+gad eval run --project <name> --prompt-only --runtime <claude-code|codex|cursor|...>
 
 # For all runnable evals:
 gad eval suite
 ```
 
 This reads all template files (AGENTS.md, REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, STATE.xml) and constructs a complete prompt with everything inline.
+The runtime argument also stamps `TRACE.json.runtime_identity` and tells the operator
+which hook install path must be active for the run.
 
 The prompt is written to:
 - Single: `evals/<project>/v<N>/PROMPT.md`
@@ -45,6 +47,14 @@ Agent(
 ```
 
 For suite runs, launch ALL agents in a single message (parallel, not sequential).
+Before launch, make sure the target runtime install succeeded and that the run inherits
+the eval env from the prompt:
+
+```text
+GAD_RUNTIME=<runtime-id>
+GAD_LOG_DIR=<eval-run-dir>/.gad-log
+GAD_EVAL_TRACE_DIR=<eval-run-dir>
+```
 
 ## Step 3 — After completion (PRESERVATION IS MANDATORY)
 
@@ -83,7 +93,7 @@ When the agent finishes, **BEFORE the worktree is cleaned up**:
 
 ## The preservation contract
 
-Every impl eval run MUST preserve: TRACE.json, run/ (code), build (under apps/portfolio/public/evals/), and .gad-log/ (CLI calls). `tests/eval-preservation.test.cjs` enforces this — the test suite will fail if any recent run is missing artifacts. See `gad:eval-run` skill for the full procedure.
+Every impl eval run MUST preserve: TRACE.json, runtime identity, run/ (code), build (under apps/portfolio/public/evals/), and .gad-log/ (CLI calls). `gad eval verify` now treats missing runtime identity as a preservation failure for new runs. See `gad:eval-run` skill for the full procedure.
 
 ## What this replaces
 
@@ -94,6 +104,7 @@ This replaces the old approach of manually reading template files and constructi
 An eval is properly bootstrapped when:
 - Agent prompt includes full AGENTS.md, REQUIREMENTS.xml, DECISIONS.xml, and STATE
 - Agent works in isolated worktree
+- Runtime identity and per-run log directory are configured before the agent starts
 - Agent updates TASK-REGISTRY.xml per task (verifiable via git log)
 - Agent commits with task ids in messages
 - TRACE.json can be reconstructed from git history after completion

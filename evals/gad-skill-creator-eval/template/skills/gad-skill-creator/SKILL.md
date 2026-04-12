@@ -57,7 +57,7 @@ If multiple CLI commands need chaining, that IS the skill.
 ### 3. Check existing skills
 
 ```sh
-ls .agents/skills/
+ls skills/
 ```
 
 Read any similar skills. If overlap exists, use `gad:merge-skill` instead of

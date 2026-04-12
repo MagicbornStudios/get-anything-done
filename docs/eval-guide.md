@@ -41,7 +41,7 @@ Skills and the GAD executable are different install paths.
 npx skills add https://github.com/MagicbornStudios/get-anything-done
 
 # Install a local skill into the eval template
-gad eval run --project my-eval --install-skills .agents/skills/my-skill
+gad eval run --project my-eval --install-skills skills/my-skill
 
 # Inherit skills from another run
 gad eval inherit-skills --from other-project/v3 --to my-eval
@@ -49,16 +49,32 @@ gad eval inherit-skills --from other-project/v3 --to my-eval
 
 ## Run flow
 
-Generate the bootstrap prompt:
+Generate the bootstrap prompt and declare the runtime doing the work:
 
 ```bash
-gad eval run --project my-eval --prompt-only
+gad eval run --project my-eval --prompt-only --runtime codex
 ```
 
 Or create the executable payload/worktree flow:
 
 ```bash
-gad eval run --project my-eval --execute
+gad eval run --project my-eval --execute --runtime codex
+```
+
+`gad eval run` now attempts to ensure the selected runtime is installed globally before the run starts. If you want to verify or repair it manually:
+
+```bash
+gad install all --codex --global
+# or:
+gad install all --claude --global
+```
+
+The generated prompt now includes the required per-run env:
+
+```text
+GAD_RUNTIME=<runtime-id>
+GAD_LOG_DIR=<eval-run-dir>/.gad-log
+GAD_EVAL_TRACE_DIR=<eval-run-dir>
 ```
 
 The coding agent performs the work in the eval worktree. When it stops:
@@ -77,9 +93,11 @@ Canonical preserved data:
 - `evals/<project>/<version>/TRACE.json`
 - `evals/<project>/<version>/run/`
 - `evals/<project>/<version>/.gad-log/` when raw logs exist
+- `TRACE.json.runtime_identity` for the actual runtime that performed the run
 - preserved build output for GUI/app evals
 
 The normal cadence is one preserve step per completed run, not every commit.
+`gad eval verify` now treats missing runtime identity as a preservation failure for new runs.
 
 ## Review and scoring
 

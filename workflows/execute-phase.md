@@ -283,7 +283,7 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
        - ${prior_wave_summaries} (SUMMARY.md files from earlier waves in this phase — what was already built)
        ` : ''}
        - ./CLAUDE.md (Project instructions, if exists — follow project-specific guidelines and coding conventions)
-       - .claude/skills/ or .agents/skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
+       - .claude/skills/ or skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
        </files_to_read>
 
        ${AGENT_SKILLS}

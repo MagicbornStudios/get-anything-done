@@ -28,9 +28,8 @@ Executable release work is only required for shipped CLI surface changes:
 
 - `bin/`
 - `lib/`
-- `commands/`
+- `commands/` (generated compatibility output)
 - `agents/`
-- `.agents/skills/`
 - `hooks/`
 - `references/`
 - `templates/`
@@ -63,13 +62,16 @@ node scripts/publish-release.mjs --tag v<version>
 
 ```text
 bin/                    Installer and CLI entrypoints
-commands/gad/           Runtime skill/command sources
-.agents/skills/         Workspace skill catalog
-agents/                 Agent definitions
+skills/                 Canonical authored skills (source of truth)
+commands/gad/           Generated compatibility output for runtimes that still need commands
+agents/                 Canonical agent definitions
 hooks/                  Runtime hooks
-references/             Reference docs used by commands/agents
+references/             Reference docs used by skills/agents
 templates/              Planning and workflow templates
 workflows/              Workflow docs
 scripts/                Build, release, and maintenance scripts
 tests/                  Test suite
 ```
+
+`.agents/` is not canonical repo content for GAD. It is an external/runtime compatibility
+layout and should not be committed from this repo.

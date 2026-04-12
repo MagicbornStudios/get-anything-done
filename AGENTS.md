@@ -69,6 +69,8 @@ GAD does **not** infer paths from TypeScript or imports — only explicit string
 ## Skills
 
 Skills are methodology documents in `skills/`. Agents read SKILL.md and follow the methodology. Skills are NOT CLI commands.
+Repo-local `.agents/` is not canonical source in GAD. Treat runtime-specific `.agents/`,
+`.claude/`, `.codex/`, or generated `commands/` layouts as install/build outputs only.
 
 | Skill | Purpose |
 |-------|---------|

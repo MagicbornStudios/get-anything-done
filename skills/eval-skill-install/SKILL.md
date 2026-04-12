@@ -29,7 +29,7 @@ their impact. This is the bridge between skill creation and skill evaluation.
 
 ```sh
 # Local skill
-ls .agents/skills/<name>/SKILL.md
+ls skills/<name>/SKILL.md
 
 # Or download from external source
 npx skills add <url> --skill <name>
@@ -50,7 +50,7 @@ gad eval setup --project <skill-name>-eval
 Copy the skill directory into the eval template:
 
 ```sh
-cp -r .agents/skills/<skill-name> evals/<project>/template/skills/<skill-name>
+cp -r skills/<skill-name> evals/<project>/template/skills/<skill-name>
 ```
 
 Update the eval's `template/AGENTS.md` to reference the installed skill.
@@ -103,7 +103,7 @@ into a new run's template to test the skill on the same codebase:
 cp -r evals/<project>/v<N>/run/src evals/<project>/template/src
 
 # Install skill
-cp -r .agents/skills/<name> evals/<project>/template/skills/
+cp -r skills/<name> evals/<project>/template/skills/
 
 # Run
 gad eval run <project>

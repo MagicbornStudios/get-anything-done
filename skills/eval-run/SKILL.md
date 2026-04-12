@@ -16,6 +16,7 @@ Every eval run on an implementation project MUST end with these artifacts preser
 2. **Code + planning docs** at `evals/<project>/v<N>/run/` — what the agent built
 3. **Build output** at `apps/portfolio/public/evals/<project>/v<N>/` — playable demo
 4. **CLI logs** at `evals/<project>/v<N>/.gad-log/` — what commands the agent ran
+5. **Runtime attribution** in `TRACE.json.runtime_identity` — which coding agent/runtime actually performed the run
 
 **If any of these are missing, the run is invalid and must be re-executed.**
 Verify with `gad eval verify`. The test suite enforces this via `tests/eval-preservation.test.cjs`.
@@ -51,7 +52,7 @@ but workflow files MUST NOT be mixed into source directories or placed at the pr
 ### Step 1 — Generate the bootstrap prompt
 
 ```sh
-gad eval run --project <project-name> --prompt-only
+gad eval run --project <project-name> --prompt-only --runtime <claude-code|codex|cursor|...>
 ```
 
 This creates `evals/<project>/v<N>/PROMPT.md` by inlining:
@@ -62,6 +63,8 @@ This creates `evals/<project>/v<N>/PROMPT.md` by inlining:
 - Any inherited skills in `template/skills/` (for emergent evals)
 
 The generated `v<N>` directory becomes the canonical home for this run's artifacts.
+The runtime argument is mandatory for trustworthy telemetry. It stamps `TRACE.json`,
+sets the expected hook target, and tells the operator which runtime must have GAD hooks installed.
 
 ### Step 2 — Spawn an isolated agent
 
@@ -69,6 +72,23 @@ Use the Agent tool with `isolation: "worktree"` to run the prompt in an isolated
 worktree. The agent should build the project under `game/` in the worktree root.
 
 Pass the prompt file path in the agent's instructions so they can re-read it if needed.
+`gad eval run` now attempts to ensure the target runtime install globally before the run starts. You can still verify or repair it manually:
+
+```sh
+gad install all --claude --global   # Claude Code
+gad install all --codex --global    # Codex
+gad install all --cursor --global   # Cursor
+```
+
+And ensure the run executes with:
+
+```text
+GAD_RUNTIME=<runtime-id>
+GAD_LOG_DIR=<eval-run-dir>/.gad-log
+GAD_EVAL_TRACE_DIR=<eval-run-dir>
+```
+
+New `gad eval run` prompts include both POSIX and PowerShell snippets for this.
 
 ### Step 3 — Preserve outputs (MANDATORY)
 
@@ -82,6 +102,7 @@ This copies:
 - `<worktree>/game/src/`, `public/`, `.planning/`, `skills/`, config files → `evals/<project>/v<N>/run/`
 - `<worktree>/game/dist/` → `apps/portfolio/public/evals/<project>/v<N>/`
 - `<worktree>/.planning/.gad-log/` → `evals/<project>/v<N>/.gad-log/` (if present)
+- runtime-attributed eval logs routed via `GAD_LOG_DIR` → `evals/<project>/v<N>/.gad-log/`
 
 **Do this for every run, without exception.** If you skip it, the outputs are lost
 when the worktree is cleaned up. The test suite will fail if preservation is missing
@@ -94,7 +115,9 @@ gad eval verify
 ```
 
 Shows a table of all runs and flags any missing artifacts. Every recent run should
-show OK. Legacy runs (before the preservation contract) are exempt.
+show OK. Runtime identity is now part of that contract. Legacy runs may still fail
+verification because they predate runtime attribution; treat that as historical debt,
+not as a reason to weaken the contract for new runs.
 
 ### Step 5 — Write or reconstruct TRACE.json
 

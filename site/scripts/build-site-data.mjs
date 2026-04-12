@@ -50,9 +50,7 @@ const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 const TEMPLATES_DIR = path.join(REPO_ROOT, "templates");
 // Canonical authored skills live at repo-root skills/. Installers transpile
 // this tree into runtime-native command/skills layouts as needed.
-// Keep .agents/skills as a legacy fallback while the migration completes.
 const SKILLS_DIR = path.join(REPO_ROOT, "skills");
-const LEGACY_SKILLS_DIR = path.join(REPO_ROOT, ".agents", "skills");
 const AGENTS_DIR = path.join(REPO_ROOT, "agents");
 const COMMANDS_DIR = path.join(REPO_ROOT, "commands", "gad");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");

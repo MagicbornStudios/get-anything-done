@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
-const LEGACY_WORKSPACE_SKILLS = path.join(ROOT, '.agents', 'skills');
 const CANONICAL_SKILLS = path.join(ROOT, 'skills');
 const COMMANDS_ROOT = path.join(ROOT, 'commands', 'gad');
 
@@ -51,20 +50,6 @@ function walkMarkdownFiles(rootDir, rel = '') {
     }
   }
   return found;
-}
-
-function copyCanonicalWorkspaceSkills() {
-  if (!existsSync(LEGACY_WORKSPACE_SKILLS)) return 0;
-  const skillDirs = walkDirs(LEGACY_WORKSPACE_SKILLS);
-  let count = 0;
-  for (const rel of skillDirs) {
-    const srcDir = path.join(LEGACY_WORKSPACE_SKILLS, rel);
-    const destDir = path.join(CANONICAL_SKILLS, rel);
-    ensureDir(path.dirname(destDir));
-    cpSync(srcDir, destDir, { recursive: true, force: true });
-    count++;
-  }
-  return count;
 }
 
 function commandRelToSkillName(commandRel) {
@@ -127,12 +112,10 @@ function syncGeneratedCommandsFromSkills() {
 
 function main() {
   ensureDir(CANONICAL_SKILLS);
-  const copiedWorkspace = copyCanonicalWorkspaceSkills();
   const syncedCommands = syncCommandBackedSkills();
   const generatedCommands = syncGeneratedCommandsFromSkills();
   const skillDirs = existsSync(CANONICAL_SKILLS) ? walkDirs(CANONICAL_SKILLS).length : 0;
   console.log(`Synced canonical skills in ${path.relative(ROOT, CANONICAL_SKILLS)}`);
-  console.log(`  workspace skills copied: ${copiedWorkspace}`);
   console.log(`  command-backed skills:   ${syncedCommands}`);
   console.log(`  total skill directories: ${skillDirs}`);
   console.log(`  generated commands:      ${generatedCommands}`);

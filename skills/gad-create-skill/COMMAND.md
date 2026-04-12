@@ -23,15 +23,15 @@ project scaffolded immediately.
 </objective>
 
 <process>
-1. Read the gad-skill-creator SKILL.md at `.agents/skills/gad-skill-creator/SKILL.md`
+1. Read the gad-skill-creator SKILL.md at `skills/gad-skill-creator/SKILL.md`
 2. Follow its workflow exactly — it references the Anthropic skill-creator methodology
 3. Key GAD additions:
    - Check existing CLI commands first (`gad --help`)
-   - Check existing skills for overlap (`ls .agents/skills/`)
+   - Check existing skills for overlap (`ls skills/`)
    - Add `framework_skill: true` if it's a framework skill (use `--framework` flag)
    - Add `uses_cli:` frontmatter listing CLI commands the skill chains
-4. Write the skill to `.agents/skills/<skill-name>/SKILL.md`
-5. Create test cases in `.agents/skills/<skill-name>/evals/evals.json`
+4. Write the skill to `skills/<skill-name>/SKILL.md`
+5. Create test cases in `skills/<skill-name>/evals/evals.json`
 6. **MANDATORY: Scaffold eval project immediately after skill creation:**
    ```bash
    gad eval setup --project <skill-name>-eval

@@ -49,15 +49,15 @@ Detect the overlap. Two signals:
 gad skill find "<keywords from the overlap>"
 
 # Structural-based: read both SKILL.md frontmatters
-cat .agents/skills/<skill-a>/SKILL.md
-cat .agents/skills/<skill-b>/SKILL.md
+cat skills/<skill-a>/SKILL.md
+cat skills/<skill-b>/SKILL.md
 ```
 
 Write down the answer to this question for yourself: **"What can each of these skills do that the other cannot?"** If the answer is "nothing," they are merge candidates. If there is a real distinction, document it as a comment on both and do NOT merge.
 
 ### Step 2 — Draft the merged skill
 
-Create a new SKILL.md at `.agents/skills/<merged-name>/SKILL.md`. The merged name should be:
+Create a new SKILL.md at `skills/<merged-name>/SKILL.md`. The merged name should be:
 
 - **Shorter than either input** when possible (a merge signals simplification)
 - **More specific** when the merge is foundational-into-project (e.g. `debug` + kaplay context → `kaplay-debug`)
@@ -106,7 +106,7 @@ Do NOT delete the original SKILL.md files. They are historical artifacts — fut
 
 ### Step 4 — Update CHANGELOG
 
-Append an entry to `.agents/skills/CHANGELOG.md` (create the file if it does not exist):
+Append an entry to `skills/CHANGELOG.md` (create the file if it does not exist):
 
 ```markdown
 ## <YYYY-MM-DD> — merge: <merged-name>
@@ -153,7 +153,7 @@ description: >-
   this is a folded block scalar.
 ```
 
-Always use `>-` (folded block scalar, chomp-final-newline). Test your merged skill's frontmatter with `node -e "require('js-yaml').load(require('fs').readFileSync(process.argv[1], 'utf8').match(/^---\n([\s\S]*?)\n---/)[1])" .agents/skills/<name>/SKILL.md` before committing.
+Always use `>-` (folded block scalar, chomp-final-newline). Test your merged skill's frontmatter with `node -e "require('js-yaml').load(require('fs').readFileSync(process.argv[1], 'utf8').match(/^---\n([\s\S]*?)\n---/)[1])" skills/<name>/SKILL.md` before committing.
 
 ## Anti-patterns
 

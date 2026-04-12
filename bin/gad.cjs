@@ -165,6 +165,50 @@ function runtimeInstallHint(runtimeId) {
   return 'gad install all --<runtime> --global';
 }
 
+function runtimeInstallFlag(runtimeId) {
+  if (runtimeId === 'claude-code') return '--claude';
+  if (runtimeId === 'codex') return '--codex';
+  if (runtimeId === 'cursor') return '--cursor';
+  if (runtimeId === 'windsurf') return '--windsurf';
+  if (runtimeId === 'gemini-cli') return '--gemini';
+  return null;
+}
+
+function ensureEvalRuntimeHooks(runtimeIdentity) {
+  const runtimeId = runtimeIdentity?.id || 'unknown';
+  const flag = runtimeInstallFlag(runtimeId);
+  if (!flag) {
+    return {
+      attempted: false,
+      ok: false,
+      runtime: runtimeId,
+      note: `No automatic installer mapping for runtime '${runtimeId}'. Run ${runtimeInstallHint(runtimeId)} manually before starting the eval.`,
+    };
+  }
+
+  const { spawnSync } = require('child_process');
+  const packaged = Boolean(process.env.GAD_PACKAGED_EXECUTABLE || process.env.GAD_PACKAGED_ROOT);
+  const command = packaged ? (process.env.GAD_PACKAGED_EXECUTABLE || process.execPath) : process.execPath;
+  const commandArgs = packaged
+    ? ['__gad_internal_install__', flag, '--global']
+    : [__filename, 'install', 'all', flag, '--global'];
+  const result = spawnSync(command, commandArgs, {
+    stdio: 'inherit',
+    env: process.env,
+  });
+
+  if (result.status !== 0) {
+    outputError(`Failed to install/verify GAD hooks for runtime '${runtimeId}'.`);
+  }
+
+  return {
+    attempted: true,
+    ok: true,
+    runtime: runtimeId,
+    note: `Ensured runtime install for ${runtimeId} via ${flag}.`,
+  };
+}
+
 function getLogDir() {
   if (_logDir) return _logDir;
   if (GAD_LOG_DIR) {
@@ -1703,6 +1747,7 @@ const evalRun = defineCommand({
     const runDir = path.join(projectDir, `v${runNum}`);
     fs.mkdirSync(runDir, { recursive: true });
     const evalRuntime = normalizeEvalRuntime(args.runtime);
+    const hookSetup = ensureEvalRuntimeHooks(evalRuntime);
 
     const now = new Date().toISOString();
 
@@ -1727,6 +1772,7 @@ const evalRun = defineCommand({
       framework_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
       trace_schema_version: 5,
       runtime_identity: evalRuntime,
+      runtime_install: hookSetup,
       eval_type: gadJson.eval_mode || 'greenfield',
       workflow: gadJson.workflow || 'unknown',
       domain: gadJson.domain || null,
@@ -1777,6 +1823,7 @@ const evalRun = defineCommand({
       `eval_type: ${gadJson.eval_mode || 'greenfield'}`,
       `workflow: ${gadJson.workflow || 'unknown'}`,
       `runtime: ${evalRuntime.id}`,
+      `runtime_hooks: ${hookSetup.ok ? 'ensured' : hookSetup.attempted ? 'attempted' : 'manual-required'}`,
       `trace_dir: ${runDir}`,
     ].join('\n') + '\n');
 
@@ -1784,6 +1831,8 @@ const evalRun = defineCommand({
       console.log(`\nEval run: ${args.project} v${runNum} (prompt only)`);
       console.log(`\n✓ Bootstrap prompt written: evals/${args.project}/v${runNum}/PROMPT.md`);
       console.log(`  ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
+      console.log(`  runtime: ${evalRuntime.id}`);
+      console.log(`  hooks: ${hookSetup.note}`);
       console.log(`\nTo run: copy the prompt into your AI agent with worktree isolation.`);
       return;
     }
@@ -1825,6 +1874,7 @@ const evalRun = defineCommand({
       console.log(`\n✓ TRACE.json scaffold: evals/${args.project}/v${runNum}/TRACE.json`);
       console.log(`✓ EXEC.json: evals/${args.project}/v${runNum}/EXEC.json`);
       console.log(`✓ Bootstrap prompt: ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
+      console.log(`✓ Runtime hooks: ${hookSetup.note}`);
       console.log(`\nThe orchestrating agent should:`);
       console.log(`  1. Read EXEC.json for the spawn configuration`);
       console.log(`  2. Set env: GAD_RUNTIME=${evalRuntime.id}`);
@@ -4101,13 +4151,13 @@ const evalOpen = defineCommand({
 // Phase 2 (future): automated subagent-spawn + trace-based grading.
 // ---------------------------------------------------------------------------
 
-const SKILLS_ROOT = path.join(__dirname, '..', '.agents', 'skills');
+const SKILLS_ROOT = path.join(__dirname, '..', 'skills');
 
 const evalSkillList = defineCommand({
   meta: { name: 'list', description: 'Show all skills with their eval status (has evals/evals.json or not)' },
   run() {
     if (!fs.existsSync(SKILLS_ROOT)) {
-      outputError('No .agents/skills/ directory found');
+      outputError('No skills/ directory found');
       return;
     }
 
@@ -4191,7 +4241,7 @@ const evalSkillInit = defineCommand({
         : null;
 
     if (!resolvedDir) {
-      outputError(`Skill "${args.name}" not found at .agents/skills/${args.name}/SKILL.md or .agents/skills/emergent/${args.name}/SKILL.md`);
+      outputError(`Skill "${args.name}" not found at skills/${args.name}/SKILL.md or skills/emergent/${args.name}/SKILL.md`);
       return;
     }
 

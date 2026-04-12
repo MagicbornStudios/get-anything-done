@@ -405,7 +405,7 @@ ${RESEARCH_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-RESEARCH.md (Research fi
 
 ${AGENT_SKILLS_PLANNER}
 
-**Project skills:** Check .claude/skills/ or .agents/skills/ directory (if either exists) — read SKILL.md files, plans should account for project skill rules
+**Project skills:** Check .claude/skills/ or skills/ directory (if either exists) — read SKILL.md files, plans should account for project skill rules
 
 </planning_context>
 
@@ -561,7 +561,7 @@ Execute quick task ${quick_id}.
 - ${QUICK_DIR}/${quick_id}-PLAN.md (Plan)
 - .planning/STATE.md (Project state)
 - ./CLAUDE.md (Project instructions, if exists)
-- .claude/skills/ or .agents/skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
+- .claude/skills/ or skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
 </files_to_read>
 
 ${AGENT_SKILLS_EXECUTOR}

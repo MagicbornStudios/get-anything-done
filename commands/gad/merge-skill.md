@@ -23,7 +23,7 @@ methodology. Consult agentskills.io and Anthropic guidelines for quality.
 </objective>
 
 <process>
-1. Read the merge-skill SKILL.md at `.agents/skills/merge-skill/SKILL.md`
+1. Read the merge-skill SKILL.md at `skills/merge-skill/SKILL.md`
 2. Follow its 6-step procedure exactly:
    - Step 1: Identify the overlap
    - Step 1b: Consult agentskills.io guidance (https://agentskills.io/home)

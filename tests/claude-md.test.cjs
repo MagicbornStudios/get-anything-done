@@ -130,7 +130,7 @@ describe('generate-claude-md skills section', () => {
     assert.ok(content.includes('## Project Skills'));
   });
 
-  test('discovers skills from .agents/skills/ directory', () => {
+  test('discovers skills from skills/ directory', () => {
     const skillDir = path.join(tmpDir, '.agents', 'skills', 'data-sync');
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(
@@ -187,7 +187,7 @@ describe('generate-claude-md skills section', () => {
   });
 
   test('deduplicates skills found in multiple directories', () => {
-    // Same skill in both .claude/skills/ and .agents/skills/
+    // Same skill in both .claude/skills/ and skills/
     const dir1 = path.join(tmpDir, '.claude', 'skills', 'shared-skill');
     const dir2 = path.join(tmpDir, '.agents', 'skills', 'shared-skill');
     fs.mkdirSync(dir1, { recursive: true });

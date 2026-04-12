@@ -50,7 +50,7 @@ Before promoting this candidate to a real skill, answer:
 
 ## Review actions
 
-- **Promote** — move to `.agents/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
+- **Promote** — move to `skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
 - **Merge** — combine with an existing skill via `gad:merge-skill`.
 - **Discard** — delete the candidate file and log why in the skills changelog.
 

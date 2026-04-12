@@ -26,7 +26,7 @@ description: >-
 
 ## Why this skill is a thin wrapper
 
-vercel-labs/skills ([github.com/vercel-labs/skills](https://github.com/vercel-labs/skills)) is the canonical CLI for the open agent-skills ecosystem. It supports 40+ coding agents including every runtime GAD cares about, respects the `.agents/skills/` convention from gad-80, handles add/list/find/remove/update/check, and understands GitHub shorthand (`owner/repo`), full URLs, GitLab URLs, and local paths. Per decision gad-85, GAD does NOT reimplement skill discovery — we delegate to `npx skills` and add GAD-specific guidance on when to use it, how to interpret results, and which external sources to trust.
+vercel-labs/skills ([github.com/vercel-labs/skills](https://github.com/vercel-labs/skills)) is the canonical CLI for the open agent-skills ecosystem. It supports 40+ coding agents including every runtime GAD cares about, respects the `skills/` convention from gad-80, handles add/list/find/remove/update/check, and understands GitHub shorthand (`owner/repo`), full URLs, GitLab URLs, and local paths. Per decision gad-85, GAD does NOT reimplement skill discovery — we delegate to `npx skills` and add GAD-specific guidance on when to use it, how to interpret results, and which external sources to trust.
 
 This keeps the skill simple, the installation story consistent with the ecosystem, and GAD's unique value (methodology + evaluation framework + hypothesis testing) is where we put effort instead of reinventing distribution.
 
@@ -61,9 +61,9 @@ npx skills list -g
 `npx skills` scans the conventional locations:
 
 - `./<agent>/skills/` (project-scoped, agent-native)
-- `./.agents/skills/` (project-scoped, cross-client standard)
+- `./skills/` (project-scoped, cross-client standard)
 - `~/.<agent>/skills/` (user-scoped, agent-native)
-- `~/.agents/skills/` (user-scoped, cross-client standard)
+- `~/skills/` (user-scoped, cross-client standard)
 - `~/.config/agents/skills/` (XDG config dir)
 
 It returns matches ranked by description similarity. Each match has a name, description, install source, and location on disk.
@@ -74,7 +74,7 @@ It returns matches ranked by description similarity. Each match has a name, desc
 
 When `npx skills find` returns no relevant results, the request becomes "where should I look next?". Per decision gad-83, find-skills points the user at a small set of trusted external sources in this order:
 
-1. **GAD's own public repo** — `github.com/MagicbornStudios/get-anything-done`. Contains the 27+ workspace skills at `.agents/skills/` (post-migration per gad-80). Install:
+1. **GAD's own public repo** — `github.com/MagicbornStudios/get-anything-done`. Contains the 27+ workspace skills at `skills/` (post-migration per gad-80). Install:
 
    ```sh
    npx skills add MagicbornStudios/get-anything-done
@@ -105,7 +105,7 @@ Once a skill is installed via `npx skills add`, verify:
 npx skills list
 
 # Read the skill to understand what it actually does
-cat .agents/skills/<skill-name>/SKILL.md
+cat skills/<skill-name>/SKILL.md
 ```
 
 Read the `SKILL.md` body before using the skill for real work. The name and description in the catalog are tier-1 progressive-disclosure — the full instructions are tier 2 and may surprise you. Also check the frontmatter for:
