@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { DevIdProvider } from "@/components/devid/DevIdProvider";
 
 export const metadata: Metadata = {
   title: "Get Anything Done — measurable AI agent workflows",
@@ -17,7 +18,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body>{children}</body>
+      <body>
+        <DevIdProvider>{children}</DevIdProvider>
+      </body>
     </html>
   );
 }

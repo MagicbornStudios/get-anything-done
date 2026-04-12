@@ -11,6 +11,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { marked } from "marked";
+
+marked.setOptions({ gfm: true, breaks: false });
+function renderMarkdown(src) {
+  if (!src) return "";
+  try { return marked.parse(src, { async: false }); }
+  catch { return `<pre>${src.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</pre>`; }
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = path.resolve(__dirname, "..");
@@ -19,6 +27,7 @@ const MONOREPO_ROOT = path.resolve(REPO_ROOT, "..", "..");
 const LOG_DIR = path.join(MONOREPO_ROOT, ".planning", ".gad-log");
 const OUTPUT = path.join(SITE_ROOT, "data", "self-eval.json");
 const CONFIG_PATH = path.join(SITE_ROOT, "data", "self-eval-config.json");
+const EVALS_DIR = path.join(REPO_ROOT, "evals");
 
 /** Load pressure + crosscut config with sensible fallbacks (GAD-D-145) */
 function loadConfig() {
@@ -58,6 +67,165 @@ function readAllEvents() {
   return events;
 }
 
+function getRuntimeId(runtime) {
+  if (!runtime || typeof runtime !== "object") return "unknown";
+  if (typeof runtime.id === "string" && runtime.id.trim()) return runtime.id.trim();
+  return "unknown";
+}
+
+function inferRuntimeIdFromEvent(event) {
+  const explicit = getRuntimeId(event?.runtime);
+  if (explicit !== "unknown") return explicit;
+
+  const claudeTools = new Set([
+    "Agent",
+    "Bash",
+    "Edit",
+    "Glob",
+    "Grep",
+    "Read",
+    "TaskCreate",
+    "TaskUpdate",
+    "ToolSearch",
+    "WebFetch",
+    "WebSearch",
+    "Write",
+  ]);
+
+  if (event?.type === "tool_call" && claudeTools.has(event.tool)) {
+    return "claude-code";
+  }
+
+  return "unknown";
+}
+
+function incrementCounter(map, key, amount = 1) {
+  map[key] = (map[key] || 0) + amount;
+}
+
+function readEvalTraces() {
+  if (!fs.existsSync(EVALS_DIR)) return [];
+  const traces = [];
+  const projects = fs.readdirSync(EVALS_DIR, { withFileTypes: true }).filter((entry) => entry.isDirectory());
+  for (const project of projects) {
+    const projectDir = path.join(EVALS_DIR, project.name);
+    const versions = fs.readdirSync(projectDir, { withFileTypes: true }).filter((entry) => entry.isDirectory());
+    for (const version of versions) {
+      const traceFile = path.join(projectDir, version.name, "TRACE.json");
+      if (!fs.existsSync(traceFile)) continue;
+      try {
+        const trace = JSON.parse(fs.readFileSync(traceFile, "utf8"));
+        traces.push({ project: project.name, version: version.name, trace });
+      } catch {}
+    }
+  }
+  return traces;
+}
+
+function computeEvalMetrics(traces) {
+  if (traces.length === 0) {
+    return {
+      runs: 0,
+      projects: 0,
+      reviewed_runs: 0,
+      tokens: {
+        total: 0,
+        tracked_runs: 0,
+        missing_runs: 0,
+        avg_per_tracked_run: null,
+      },
+      tool_uses: {
+        total: 0,
+        tracked_runs: 0,
+      },
+      runtime_distribution: [],
+      project_breakdown: [],
+      latest_run_date: null,
+    };
+  }
+
+  const runtimeCounts = {};
+  const projectAgg = {};
+  let reviewedRuns = 0;
+  let totalTokens = 0;
+  let trackedTokenRuns = 0;
+  let missingTokenRuns = 0;
+  let totalToolUses = 0;
+  let trackedToolRuns = 0;
+  let latestRunDate = null;
+
+  for (const { project, version, trace } of traces) {
+    if (!projectAgg[project]) {
+      projectAgg[project] = {
+        project,
+        runs: 0,
+        reviewed_runs: 0,
+        total_tokens: 0,
+        tracked_token_runs: 0,
+        total_tool_uses: 0,
+      };
+    }
+    const agg = projectAgg[project];
+    agg.runs += 1;
+    agg.latest_version = version;
+
+    if (trace?.human_review?.score != null) {
+      reviewedRuns += 1;
+      agg.reviewed_runs += 1;
+    }
+
+    const totalRunTokens = trace?.token_usage?.total_tokens;
+    if (Number.isFinite(totalRunTokens)) {
+      totalTokens += totalRunTokens;
+      trackedTokenRuns += 1;
+      agg.total_tokens += totalRunTokens;
+      agg.tracked_token_runs += 1;
+    } else {
+      missingTokenRuns += 1;
+    }
+
+    const toolUses = trace?.token_usage?.tool_uses;
+    if (Number.isFinite(toolUses)) {
+      totalToolUses += toolUses;
+      trackedToolRuns += 1;
+      agg.total_tool_uses += toolUses;
+    }
+
+    const runtimes = [];
+    if (trace?.runtime_identity) runtimes.push(trace.runtime_identity);
+    if (Array.isArray(trace?.runtimes_involved)) runtimes.push(...trace.runtimes_involved);
+    const uniqueRuntimeIds = new Set(runtimes.map(getRuntimeId).filter(Boolean));
+    if (uniqueRuntimeIds.size === 0) uniqueRuntimeIds.add("unknown");
+    for (const runtimeId of uniqueRuntimeIds) incrementCounter(runtimeCounts, runtimeId);
+
+    if (typeof trace?.date === "string" && (!latestRunDate || trace.date > latestRunDate)) {
+      latestRunDate = trace.date;
+    }
+  }
+
+  return {
+    runs: traces.length,
+    projects: Object.keys(projectAgg).length,
+    reviewed_runs: reviewedRuns,
+    tokens: {
+      total: totalTokens,
+      tracked_runs: trackedTokenRuns,
+      missing_runs: missingTokenRuns,
+      avg_per_tracked_run: trackedTokenRuns > 0 ? Math.round(totalTokens / trackedTokenRuns) : null,
+    },
+    tool_uses: {
+      total: totalToolUses,
+      tracked_runs: trackedToolRuns,
+    },
+    runtime_distribution: Object.entries(runtimeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([runtime, count]) => ({ runtime, count })),
+    project_breakdown: Object.values(projectAgg)
+      .sort((a, b) => (b.total_tokens || 0) - (a.total_tokens || 0)),
+    latest_run_date: latestRunDate,
+  };
+}
+
 function computeMetrics(events) {
   if (events.length === 0) return null;
 
@@ -65,19 +233,28 @@ function computeMetrics(events) {
   const byTool = {};
   const byDay = {};
   const gadCmds = {};
+  const byRuntime = {};
   const sessions = new Set();
+  const sessionsByRuntime = {};
   let planningOps = 0;
   let sourceOps = 0;
 
   for (const e of events) {
     const tool = e.tool || "unknown";
-    byTool[tool] = (byTool[tool] || 0) + 1;
+    incrementCounter(byTool, tool);
 
     const day = e.ts?.slice(0, 10) || "unknown";
-    byDay[day] = (byDay[day] || 0) + 1;
+    incrementCounter(byDay, day);
+
+    const runtimeId = inferRuntimeIdFromEvent(e);
+    incrementCounter(byRuntime, runtimeId);
+    if (e.session_id) {
+      if (!sessionsByRuntime[runtimeId]) sessionsByRuntime[runtimeId] = new Set();
+      sessionsByRuntime[runtimeId].add(e.session_id);
+    }
 
     if (e.session_id) sessions.add(e.session_id);
-    if (e.gad_command) gadCmds[e.gad_command] = (gadCmds[e.gad_command] || 0) + 1;
+    if (e.gad_command) incrementCounter(gadCmds, e.gad_command);
 
     // Framework overhead calculation
     if (e.input_summary) {
@@ -138,6 +315,12 @@ function computeMetrics(events) {
       sessions: sessions.size,
       gad_cli_calls: Object.values(gadCmds).reduce((a, b) => a + b, 0),
     },
+    runtime_distribution: Object.entries(byRuntime)
+      .sort((a, b) => b[1] - a[1])
+      .map(([runtime, count]) => ({ runtime, count })),
+    runtime_sessions: Object.entries(sessionsByRuntime)
+      .sort((a, b) => b[1].size - a[1].size)
+      .map(([runtime, runtimeSessions]) => ({ runtime, sessions: runtimeSessions.size })),
     tool_distribution: Object.entries(byTool)
       .sort((a, b) => b[1] - a[1])
       .map(([tool, count]) => ({ tool, count })),
@@ -340,7 +523,7 @@ This file was auto-generated by \`site/scripts/compute-self-eval.mjs\` during th
 
 /** Write skill candidates for high-pressure phases (GAD-D-144, GAD-D-145) */
 function writeSkillCandidates(phasesPressure) {
-  const candidatesDir = path.join(REPO_ROOT, ".agents", "skills", "candidates");
+  const candidatesDir = path.join(REPO_ROOT, "skills", "candidates");
   if (!fs.existsSync(candidatesDir)) {
     fs.mkdirSync(candidatesDir, { recursive: true });
   }
@@ -363,6 +546,7 @@ function writeSkillCandidates(phasesPressure) {
     // review verdict sticky. Still surface it on the site with the reviewed state.
     if (reviewState.reviewed !== false) {
       skipped.push({ name, reviewed: reviewState.reviewed });
+      const existingBody = fs.existsSync(skillFile) ? fs.readFileSync(skillFile, "utf8") : body;
       candidates.push({
         name,
         source_phase: phase.phase,
@@ -371,10 +555,12 @@ function writeSkillCandidates(phasesPressure) {
         tasks_total: phase.tasks_total,
         tasks_done: phase.tasks_done,
         crosscuts: phase.crosscuts,
-        file_path: `.agents/skills/candidates/${name}/SKILL.md`,
+        file_path: `skills/candidates/${name}/SKILL.md`,
         reviewed: reviewState.reviewed,
         reviewed_on: reviewState.reviewed_on,
         reviewed_notes: reviewState.reviewed_notes,
+        body_raw: existingBody,
+        body_html: renderMarkdown(existingBody),
         tasks: phase.tasks.filter(t => t.goal).map(t => ({ id: t.id, status: t.status, goal: t.goal })),
       });
       continue;
@@ -399,10 +585,12 @@ function writeSkillCandidates(phasesPressure) {
       tasks_total: phase.tasks_total,
       tasks_done: phase.tasks_done,
       crosscuts: phase.crosscuts,
-      file_path: `.agents/skills/candidates/${name}/SKILL.md`,
+      file_path: `skills/candidates/${name}/SKILL.md`,
       reviewed: false,
       reviewed_on: null,
       reviewed_notes: null,
+      body_raw: body,
+      body_html: renderMarkdown(body),
       tasks: phase.tasks.filter(t => t.goal).map(t => ({ id: t.id, status: t.status, goal: t.goal })),
     });
   }
@@ -450,6 +638,7 @@ function countDecisions() {
 
 const events = readAllEvents();
 const metrics = computeMetrics(events);
+const evalMetrics = computeEvalMetrics(readEvalTraces());
 
 if (metrics) {
   // Add task and decision counts + per-phase pressure
@@ -465,6 +654,7 @@ if (metrics) {
   metrics.skill_candidates = writeSkillCandidates(metrics.phases_pressure);
   // Strip the heavy task data from phases_pressure in the persisted output (candidates already have it)
   metrics.phases_pressure = metrics.phases_pressure.map(({ tasks, ...rest }) => rest);
+  metrics.evals = evalMetrics;
 
   // Append-only: load existing snapshots, add new one (gad-103)
   let existing = { snapshots: [] };

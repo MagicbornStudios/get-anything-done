@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useMemo } from "react";
-import { Info } from "lucide-react";
+import { Info, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Ref } from "@/components/refs/Ref";
@@ -26,6 +27,7 @@ export interface SkillCandidate {
   reviewed: ReviewState;
   reviewed_on: string | null;
   reviewed_notes: string | null;
+  body_raw?: string;
   tasks: SkillCandidateTask[];
 }
 
@@ -83,7 +85,7 @@ export function PlanningSkillCandidatesTab({ candidates }: { candidates: SkillCa
               </p>
               <p className="text-xs leading-5 text-muted-foreground">
                 Candidates are <strong>quarantined</strong> — they live in{" "}
-                <code className="rounded bg-card/60 px-1 text-accent">.agents/skills/candidates/</code>{" "}
+                <code className="rounded bg-card/60 px-1 text-accent">skills/candidates/</code>{" "}
                 with <code className="rounded bg-card/60 px-1 text-accent">status: candidate</code> in their frontmatter,
                 excluded from the catalog scan, and unavailable to GAD until promoted.
               </p>
@@ -202,13 +204,21 @@ export function PlanningSkillCandidatesTab({ candidates }: { candidates: SkillCa
                   </div>
                 </dl>
 
-                <button
-                  type="button"
-                  onClick={() => setSelected(isOpen ? null : candidate.name)}
-                  className="mt-4 text-[11px] font-semibold text-accent hover:underline"
-                >
-                  {isOpen ? "Hide" : "Show"} source phase tasks ({candidate.tasks.length})
-                </button>
+                <div className="mt-4 flex items-center gap-3 text-[11px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setSelected(isOpen ? null : candidate.name)}
+                    className="text-accent hover:underline"
+                  >
+                    {isOpen ? "Hide" : "Show"} source phase tasks ({candidate.tasks.length})
+                  </button>
+                  <Link
+                    href={`/skills/candidates/${candidate.name}`}
+                    className="inline-flex items-center gap-1 text-accent hover:underline"
+                  >
+                    View full candidate <ExternalLink size={11} />
+                  </Link>
+                </div>
 
                 {isOpen && (
                   <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
