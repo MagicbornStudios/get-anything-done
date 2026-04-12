@@ -5333,6 +5333,14 @@ const snapshotCmd = defineCommand({
     const planDir = path.join(baseDir, root.path, root.planningDir);
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
+    const sdkAssetAliases = {
+      '@skills': 'sdk/skills',
+      '@workflows': 'sdk/workflows',
+      '@templates': 'sdk/templates',
+      '@references': 'sdk/references',
+      '@agents': 'sdk/agents',
+      '@hooks': 'sdk/hooks',
+    };
 
     if (useFull) {
       // Full dump — original behavior
@@ -5368,10 +5376,15 @@ const snapshotCmd = defineCommand({
           try { content = fs.readFileSync(path.join(planDir, rel), 'utf8'); } catch {}
           return { path: `${root.planningDir}/${rel}`, content };
         });
-        console.log(JSON.stringify({ project: root.id, mode: 'full', planningDir: root.planningDir, files }, null, 2));
+        console.log(JSON.stringify({ project: root.id, mode: 'full', planningDir: root.planningDir, sdkAssetAliases, files }, null, 2));
         return;
       }
       console.log(`\nSnapshot (full): ${root.id}  —  ${allFiles.length} files\n`);
+      console.log('SDK asset aliases:');
+      for (const [alias, relPath] of Object.entries(sdkAssetAliases)) {
+        console.log(`- ${alias}/... -> ${relPath}/...`);
+      }
+      console.log('');
       for (const rel of allFiles) {
         console.log(`${'═'.repeat(70)}`);
         console.log(`## ${root.planningDir}/${rel}`);
@@ -5391,6 +5404,12 @@ const snapshotCmd = defineCommand({
     const sprintPhaseIds = getSprintPhaseIds(phases, sprintSize, k);
 
     const sections = [];
+    sections.push({
+      title: 'SDK ASSET ALIASES',
+      content: Object.entries(sdkAssetAliases)
+        .map(([alias, relPath]) => `${alias}/... -> ${relPath}/...`)
+        .join('\n'),
+    });
 
     // 1. STATE.xml — full (compact already)
     if (stateXml) {

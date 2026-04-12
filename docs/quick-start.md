@@ -66,6 +66,10 @@ gad eval setup --project my-eval
 gad eval run --project my-eval --prompt-only
 ```
 
+If snapshot output or SDK skills reference alias paths like `@references/...`,
+`@workflows/...`, `@templates/...`, `@agents/...`, or `@hooks/...`, resolve them from the GAD
+framework root under `sdk/`. Example: `@references/checkpoints.md` → `sdk/references/checkpoints.md`.
+
 ## 6. Preserve and review evals
 
 ```bash

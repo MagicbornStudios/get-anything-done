@@ -81,6 +81,27 @@ Terminology:
 - `workflow` — a reusable long-form execution spec used by skills, agents, and prompts; canonical source under `sdk/workflows/`
 - `command` — a runtime-specific wrapper shape generated from skills only when a coding agent still needs command files
 
+### SDK asset aliases
+
+Canonical SDK content uses repo-relative alias refs instead of runtime-local install paths.
+Resolve them from the GAD framework root:
+
+- `@skills/...` ? `sdk/skills/...`
+- `@workflows/...` ? `sdk/workflows/...`
+- `@templates/...` ? `sdk/templates/...`
+- `@references/...` ? `sdk/references/...`
+- `@agents/...` ? `sdk/agents/...`
+- `@hooks/...` ? `sdk/hooks/...`
+
+Example:
+
+- `@references/checkpoints.md` resolves to `vendor/get-anything-done/sdk/references/checkpoints.md` in this monorepo
+- in a consumer install, the same alias resolves from that installed GAD framework root
+
+When a skill, workflow, or agent prompt mentions one of these aliases, read that file from the
+SDK tree before checking any runtime-local installed layout. These aliases are canonical and
+`gad snapshot` should be treated as carrying this resolution contract with it.
+
 | Skill | Purpose |
 |-------|---------|
 | `manuscript` | Fiction/book creation methodology |
