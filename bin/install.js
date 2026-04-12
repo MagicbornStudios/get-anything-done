@@ -5361,20 +5361,63 @@ function shouldSkipPeerBootstrap() {
   );
 }
 
+function getOfficialBinaryCandidates() {
+  const candidates = [];
+
+  if (process.env.GAD_PACKAGED_EXECUTABLE) {
+    candidates.push(process.env.GAD_PACKAGED_EXECUTABLE);
+  }
+
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
+    const installDir = path.join(localAppData, 'Programs', 'gad', 'bin');
+    candidates.push(
+      path.join(installDir, 'gad.exe'),
+      path.join(installDir, 'get-anything-done.exe')
+    );
+  } else {
+    const installDir = path.join(os.homedir(), '.local', 'bin');
+    candidates.push(
+      path.join(installDir, 'gad'),
+      path.join(installDir, 'get-anything-done')
+    );
+  }
+
+  return [...new Set(candidates)];
+}
+
+function findOfficialGadBinary() {
+  for (const candidate of getOfficialBinaryCandidates()) {
+    if (candidate && fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
 /**
  * Legacy npm bootstrap path kept only for environments that truly need it.
  * @param {string[]} runtimes - Selected runtimes (e.g. ['claude', 'gemini'])
  * @param {boolean} isGlobal - Whether this is a global install
  * @returns {boolean} true if GAD was installed successfully
  */
-function ensureGsdInstalled(runtimes, isGlobal) {
+function ensureGadInstalled(runtimes, isGlobal) {
   const { execSync } = require('child_process');
+  const existingBinary = findOfficialGadBinary();
+
+  if (existingBinary) {
+    console.log(`\n  ${green}âœ“${reset} Found official gad executable`);
+    console.log(`  ${dim}${existingBinary}${reset}`);
+    console.log(`  ${dim}Skipping GitHub bootstrap and continuing with runtime installation.${reset}`);
+    return true;
+  }
 
   const locationFlag = isGlobal ? '--global' : '--local';
   const runtimeFlags = runtimes.map(r => '--' + r).join(' ');
-  const cmd = `npx get-anything-done@latest ${runtimeFlags} ${locationFlag}`;
+  const repoRef = 'github:MagicbornStudios/get-anything-done';
+  const cmd = `npx ${repoRef} ${runtimeFlags} ${locationFlag}`.trim();
 
-  console.log(`\n  ${cyan}Installing legacy npm peer dependency...${reset}`);
+  console.log(`\n  ${cyan}Bootstrapping GAD from GitHub...${reset}`);
   console.log(`  ${dim}${cmd}${reset}\n`);
 
   try {
