@@ -13,12 +13,14 @@ Display the complete GSD command reference. Output ONLY the reference content. D
 2. `/gsd:plan-phase 1` - Create detailed plan for first phase
 3. `/gsd:execute-phase 1` - Execute the phase
 
-## Staying Updated
+## Install and updates
 
-GSD evolves fast. Update periodically:
+Primary path: download the current GAD executable from GitHub Releases.
+If you're working from a GitHub checkout with Node available, rebuild with:
 
 ```bash
-npx get-anything-done@latest
+node scripts/build-cli.mjs
+node dist/gad.cjs --help
 ```
 
 ## Core Workflow

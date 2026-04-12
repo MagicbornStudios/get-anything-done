@@ -6724,6 +6724,41 @@ function writeJsonPretty(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
 }
 
+function isPackagedExecutableRuntime() {
+  return Boolean(process.env.GAD_PACKAGED_EXECUTABLE || process.env.GAD_PACKAGED_ROOT);
+}
+
+function getPackagedExecutablePath() {
+  return process.env.GAD_PACKAGED_EXECUTABLE || process.execPath;
+}
+
+function getDefaultSelfInstallDir() {
+  const os = require('os');
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
+    return path.join(localAppData, 'Programs', 'gad', 'bin');
+  }
+  return path.join(os.homedir(), '.local', 'bin');
+}
+
+function updateWindowsUserPath(targetDir) {
+  const { spawnSync } = require('child_process');
+  const command = [
+    `$target='${targetDir.replace(/'/g, "''")}';`,
+    `$current=[Environment]::GetEnvironmentVariable('Path','User');`,
+    `$parts=@();`,
+    `if ($current) { $parts=$current.Split(';') | Where-Object { $_ -and $_.Trim() -ne '' }; }`,
+    `if ($parts -notcontains $target) {`,
+    `  $newPath = if ($current -and $current.Trim() -ne '') { "$current;$target" } else { $target };`,
+    `  [Environment]::SetEnvironmentVariable('Path', $newPath, 'User');`,
+    `}`,
+  ].join(' ');
+  const result = spawnSync('powershell', ['-NoProfile', '-Command', command], { stdio: 'inherit' });
+  if (result.status !== 0) {
+    throw new Error('Failed to update user PATH.');
+  }
+}
+
 const installHooks = defineCommand({
   meta: {
     name: 'hooks',
@@ -6859,8 +6894,52 @@ const installAll = defineCommand({
       console.log('       runtimes: --claude --opencode --gemini --codex --copilot --antigravity --cursor --windsurf --augment --all');
       return;
     }
-    const result = spawnSync('node', [installerPath, ...flagArgs], { stdio: 'inherit' });
+    const command = isPackagedExecutableRuntime()
+      ? getPackagedExecutablePath()
+      : process.execPath;
+    const commandArgs = isPackagedExecutableRuntime()
+      ? ['__gad_internal_install__', ...flagArgs]
+      : [installerPath, ...flagArgs];
+    const result = spawnSync(command, commandArgs, { stdio: 'inherit', env: process.env });
     process.exit(result.status || 0);
+  },
+});
+
+const installSelf = defineCommand({
+  meta: {
+    name: 'self',
+    description: 'Install the packaged gad executable into a user bin directory and add it to PATH',
+  },
+  args: {
+    dir: { type: 'string', description: 'Target install directory', default: '' },
+  },
+  run: ({ args }) => {
+    if (!isPackagedExecutableRuntime()) {
+      console.error('gad install self is only available from a packaged gad executable.');
+      process.exit(1);
+    }
+
+    const targetDir = args.dir ? path.resolve(args.dir) : getDefaultSelfInstallDir();
+    const sourceExecutable = getPackagedExecutablePath();
+    const executableName = process.platform === 'win32' ? 'gad.exe' : 'gad';
+    const targetExecutable = path.join(targetDir, executableName);
+
+    fs.mkdirSync(targetDir, { recursive: true });
+    fs.copyFileSync(sourceExecutable, targetExecutable);
+    if (process.platform === 'win32') {
+      fs.copyFileSync(sourceExecutable, path.join(targetDir, 'get-anything-done.exe'));
+      updateWindowsUserPath(targetDir);
+    }
+
+    console.log(`✓ Installed gad executable`);
+    console.log(`  source: ${sourceExecutable}`);
+    console.log(`  target: ${targetExecutable}`);
+    if (process.platform === 'win32') {
+      console.log(`  path:   ${targetDir}`);
+      console.log(`\nOpen a new terminal and run: gad --help`);
+    } else {
+      console.log(`\nAdd ${targetDir} to PATH if it is not already present.`);
+    }
   },
 });
 
@@ -6869,6 +6948,7 @@ const installCmd = defineCommand({
   subCommands: {
     hooks: installHooks,
     all: installAll,
+    self: installSelf,
   },
 });
 

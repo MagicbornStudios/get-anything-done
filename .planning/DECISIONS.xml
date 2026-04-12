@@ -913,4 +913,28 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Reduces maintenance burden as eval count grows to hundreds.</impact>
   </decision>
 
+  <decision id="gad-135">
+    <title>GAD distribution is GitHub-first: executable releases + skills.sh, not npm publish</title>
+    <summary>GAD should not rely on public npm publication as the primary distribution path. The official install story is: (1) download a GitHub Release executable for the gad operational CLI, and (2) install the published GAD skills from the GitHub repo via skills.sh / `npx skills add`. Users who already have Node may optionally install or run the CLI directly from the GitHub repo, but that is a secondary convenience path, not the canonical onboarding. Existing docs that assume `npx get-anything-done@latest` from the public npm registry are now stale.</summary>
+    <impact>Quick start, install docs, and release messaging must move from npm-first to GitHub-first. Release assets target standalone executables. Skill installation instructions point at skills.sh + GitHub repo installs.</impact>
+  </decision>
+
+  <decision id="gad-136">
+    <title>Executable release overhead is gated to shipped CLI surface changes only</title>
+    <summary>Building and publishing new GAD executables should happen only when the shipped CLI surface changes. Triggering inputs include changes under bin/, lib/, hooks/, package.json, build/release scripts, or any file bundled into the released artifact. Site content, eval results, planning docs, starters, and other non-shipped repo changes must not force a new executable release. Windows remains the primary authoritative local release build; macOS and Linux can be built in GitHub Actions or locally when needed.</summary>
+    <impact>Release automation and operator workflow become path-aware. The project avoids paying binary rebuild cost on ordinary docs/site/eval commits while still enforcing executable rebuilds for real CLI changes.</impact>
+  </decision>
+
+  <decision id="gad-137">
+    <title>Runtime identity in eval telemetry is runtime-derived first, self-declared second</title>
+    <summary>Eval telemetry must distinguish the coding agent runtime that produced a run: Claude Code, Codex, Cursor, and future supported agents. The preferred source is runtime-derived metadata from hooks, config, or environment. A secondary self-declared identity may be recorded by the agent at task/session start, but self-report alone is not sufficient for trustworthy evaluation data. TRACE.json and related logs should preserve runtime name, model when available, token/tool/skill/agent usage, and provenance for how the identity was determined. Claude Code and Codex are the first-class targets; the schema should remain extensible for additional runtimes.</summary>
+    <impact>TRACE.json, raw logs, and reporting need explicit runtime fields and provenance. Hook wiring and install flows must preserve enough metadata to attribute runs to a specific coding agent runtime so Claude vs Codex comparisons are trustworthy.</impact>
+  </decision>
+
+  <decision id="gad-138">
+    <title>Standalone gad executables use Node SEA with an injected support payload</title>
+    <summary>The executable distribution for gad is implemented as a standalone binary built with Node SEA and postject. The binary embeds a packaged support payload containing the CLI bundle, installer entrypoint, hooks, commands, templates, workflows, references, agents, and skills. On first run, the executable extracts that payload into a versioned runtime directory under the user's profile and dispatches the extracted CLI or installer from there. End users do not need Node installed to run the packaged gad executable.</summary>
+    <impact>Release scripts, install flows, and docs assume a packaged-runtime model rather than a loose JS bundle. Packaged builds can self-install globally on Windows and keep their shipped support assets versioned together.</impact>
+  </decision>
+
 </decisions>

@@ -119,7 +119,7 @@ Please install a Linux-native Node.js inside WSL:
   curl -fsSL https://fnm.vercel.app/install | bash
   fnm install --lts
 
-Then re-run: npx get-anything-done@latest
+Then re-run the packaged executable or this repo checkout installer.
 `);
     process.exit(1);
   }
@@ -345,8 +345,8 @@ if (hasUninstall) {
 
 // Show help if requested
 if (hasHelp) {
-  console.log(`  ${yellow}Usage:${reset} npx get-anything-done [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only
-    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}--sdk${reset}                     Also install GAD SDK CLI (gad-sdk)\n    ${cyan}-u, --uninstall${reset}           Uninstall GAD (remove all GAD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    npx get-anything-done\n\n    ${dim}# Install for Claude Code globally${reset}\n    npx get-anything-done --claude --global\n\n    ${dim}# Install for Gemini globally${reset}\n    npx get-anything-done --gemini --global\n\n    ${dim}# Install for Codex globally${reset}\n    npx get-anything-done --codex --global\n\n    ${dim}# Install for Copilot globally${reset}\n    npx get-anything-done --copilot --global\n\n    ${dim}# Install for Copilot locally${reset}\n    npx get-anything-done --copilot --local\n\n    ${dim}# Install for Antigravity globally${reset}\n    npx get-anything-done --antigravity --global\n\n    ${dim}# Install for Antigravity locally${reset}\n    npx get-anything-done --antigravity --local\n\n    ${dim}# Install for Cursor globally${reset}\n    npx get-anything-done --cursor --global\n\n    ${dim}# Install for Cursor locally${reset}\n    npx get-anything-done --cursor --local\n\n    ${dim}# Install for Windsurf globally${reset}\n    npx get-anything-done --windsurf --global\n\n    ${dim}# Install for Windsurf locally${reset}\n    npx get-anything-done --windsurf --local\n\n    ${dim}# Install for all runtimes globally${reset}\n    npx get-anything-done --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    npx get-anything-done --codex --global --config-dir ~/.codex-work\n\n    ${dim}# Install to current project only${reset}\n    npx get-anything-done --claude --local\n\n    ${dim}# Uninstall GAD from Cursor globally${reset}\n    npx get-anything-done --cursor --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The --config-dir option is useful when you have multiple configurations.\n    It takes priority over CLAUDE_CONFIG_DIR / GEMINI_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR environment variables.\n`);
+  console.log(`  ${yellow}Usage:${reset} node bin/install.js [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only
+    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}--sdk${reset}                     Also install GAD SDK CLI (gad-sdk)\n    ${cyan}-u, --uninstall${reset}           Uninstall GAD (remove all GAD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    node bin/install.js\n\n    ${dim}# Install for Claude Code globally${reset}\n    node bin/install.js --claude --global\n\n    ${dim}# Install for Codex globally${reset}\n    node bin/install.js --codex --global\n\n    ${dim}# Install for all runtimes globally${reset}\n    node bin/install.js --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    node bin/install.js --codex --global --config-dir ~/.codex-work\n\n    ${dim}# Uninstall GAD from Cursor globally${reset}\n    node bin/install.js --cursor --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The packaged GitHub Release executable delegates here through ${cyan}gad install all${reset}.\n    The --config-dir option takes priority over CLAUDE_CONFIG_DIR / GEMINI_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR.\n`);
   process.exit(0);
 }
 
@@ -1307,7 +1307,9 @@ function convertClaudeToCodexMarkdown(content) {
   converted = converted.replace(/\$ARGUMENTS\b/g, '{{GAD_ARGS}}');
   // Path replacement: .claude → .codex (#1430)
   converted = converted.replace(/\$HOME\/\.claude\//g, '$HOME/.codex/');
+  converted = converted.replace(/\$HOME\/\.claude\b/g, '$HOME/.codex');
   converted = converted.replace(/~\/\.claude\//g, '~/.codex/');
+  converted = converted.replace(/~\/\.claude\b/g, '~/.codex');
   converted = converted.replace(/\.\/\.claude\//g, './.codex/');
   // Runtime-neutral agent name replacement (#766)
   converted = neutralizeAgentReferences(converted, 'AGENTS.md');
@@ -5342,9 +5344,26 @@ function handleStatusline(settings, isInteractive, callback) {
 }
 
 /**
- * Ensure the GAD peer dependency is installed before the GAD layer.
- * Runs `npx get-anything-done@latest` with the same runtime/location flags
- * that were passed to this installer.
+ * Decide whether the legacy npm peer bootstrap should be skipped.
+ * Packaged executable releases and local/source installs already contain the
+ * framework payload, so the public npm bootstrap is both unnecessary and wrong
+ * for the GitHub-first distribution model.
+ */
+function shouldSkipPeerBootstrap() {
+  if (process.env.GAD_PACKAGED_ROOT || process.env.GAD_PACKAGED_EXECUTABLE) {
+    return true;
+  }
+
+  const src = path.join(__dirname, '..');
+  return (
+    fs.existsSync(path.join(src, 'commands', 'gad')) &&
+    fs.existsSync(path.join(src, 'agents')) &&
+    fs.existsSync(path.join(src, '.agents', 'skills'))
+  );
+}
+
+/**
+ * Legacy npm bootstrap path kept only for environments that truly need it.
  * @param {string[]} runtimes - Selected runtimes (e.g. ['claude', 'gemini'])
  * @param {boolean} isGlobal - Whether this is a global install
  * @returns {boolean} true if GAD was installed successfully
@@ -5356,16 +5375,16 @@ function ensureGsdInstalled(runtimes, isGlobal) {
   const runtimeFlags = runtimes.map(r => '--' + r).join(' ');
   const cmd = `npx get-anything-done@latest ${runtimeFlags} ${locationFlag}`;
 
-  console.log(`\n  ${cyan}Installing GAD peer dependency...${reset}`);
+  console.log(`\n  ${cyan}Installing legacy npm peer dependency...${reset}`);
   console.log(`  ${dim}${cmd}${reset}\n`);
 
   try {
     execSync(cmd, { stdio: 'inherit' });
-    console.log(`\n  ${green}✓${reset} GAD installed`);
+    console.log(`\n  ${green}✓${reset} Legacy npm peer installed`);
     return true;
   } catch (e) {
-    console.log(`\n  ${yellow}⚠${reset} GAD install failed: ${e.message}`);
-    console.log(`  ${dim}You can install it manually: npx get-anything-done@latest${reset}`);
+    console.log(`\n  ${yellow}⚠${reset} Legacy npm peer install failed: ${e.message}`);
+    console.log(`  ${dim}Skipping npm bootstrap. GitHub-first packaged/source installs already contain the framework payload.${reset}`);
     return false;
   }
 }
@@ -5579,8 +5598,10 @@ function installAllRuntimes(runtimes, isGlobal, isInteractive) {
   const results = [];
 
   // Step 1: ensure GAD is installed as the runtime layer
-  if (!process.env.GAD_TEST_MODE) {
+  if (!process.env.GAD_TEST_MODE && !shouldSkipPeerBootstrap()) {
     ensureGsdInstalled(runtimes, isGlobal);
+  } else if (!process.env.GAD_TEST_MODE) {
+    console.log(`\n  ${green}✓${reset} Skipping npm peer bootstrap (packaged/source install already contains the framework payload)`);
   }
 
   for (const runtime of runtimes) {

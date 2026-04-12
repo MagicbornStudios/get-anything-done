@@ -859,4 +859,37 @@
       <keywords>site,gad-page,operational-distinction,hypothesis-matrix,catalog</keywords>
     </task>
   </phase>
+  <phase id="34">
+    <task id="34-01" status="done"><goal>Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packaging toolchain, output artifact names, signing/notarization assumptions, and which runtime files (CLI bundle, hooks, templates, skills) must ship alongside the executable.</goal>
+      <resolution>Shipped 2026-04-11. Implemented standalone packaging with Node SEA + postject via scripts/build-release.mjs, scripts/build-release-support.mjs, and scripts/sea-bootstrap.cjs. Packaged builds extract a versioned support tree, route installer execution through the executable, and emit gad-v&lt;version&gt;-windows|linux|macos-&lt;arch&gt; artifact names. Verified a local Windows x64 build and packaged install-all flow.</resolution>
+      <keywords>release,binary,packaging,distribution</keywords>
+    </task>
+    <task id="34-02" status="done"><goal>Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub repo/Node install. Remove or rewrite remaining npm-first copy in quick start, README, starter READMEs, and site pages.</goal>
+      <resolution>Shipped 2026-04-11. Rewrote README.md, docs/quick-start.md, docs/eval-guide.md, CONTRIBUTING.md, docs/release-guide.md, and workflows/help.md so GitHub Release executables are the primary install path, GitHub checkout + Node is the secondary path, and Windows packaged install/self-install behavior is documented explicitly.</resolution>
+      <keywords>install,docs,github-releases,quick-start</keywords>
+    </task>
+    <task id="34-03" status="done"><goal>Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verify the repo is listable/installable from skills.sh, and make skill installation distinct from CLI installation throughout the docs.</goal>
+      <resolution>Shipped 2026-04-11. Documented GitHub repo skill installation separately from CLI installation across the primary docs. Verified the skills.sh path with `npx skills add https://github.com/MagicbornStudios/get-anything-done --list`, which cloned the repo and discovered 33 installable skills.</resolution>
+      <keywords>skills.sh,skills,distribution,github</keywords>
+    </task>
+    <task id="34-04" status="done"><goal>Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json, build/release scripts, and bundled assets). Non-shipping docs/site/eval/planning commits must not require a new release.</goal>
+      <resolution>Shipped 2026-04-11. Added scripts/release-surface.cjs as the source of truth for shipped release inputs, scripts/release-should-build.mjs for diff-based gating, and wired path filters into .github/workflows/release-posix.yml. Verified the gate reports a release is required when shipped CLI files change.</resolution>
+      <keywords>release-gating,cli-surface,path-filter</keywords>
+    </task>
+    <task id="34-05" status="done"><goal>Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publication/update. Document the operator flow for releasing after CLI-shipping changes.</goal>
+      <resolution>Shipped 2026-04-11. Added the Windows-local release pipeline, packaged self-install/global-install support in bin/gad.cjs, a PowerShell installer script, the GitHub Release upload helper, and the POSIX GitHub Actions build workflow. Built dist/release/gad-v1.32.0-windows-x64.exe locally and installed gad.exe globally to %LOCALAPPDATA%\Programs\gad\bin.</resolution>
+      <keywords>windows,macos,linux,github-actions,release-assets</keywords>
+    </task>
+  </phase>
+  <phase id="35">
+    <task id="35-01" status="planned"><goal>Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly.</goal>
+      <keywords>trace,runtime-identity,claude,codex</keywords>
+    </task>
+    <task id="35-02" status="planned"><goal>Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json.</goal>
+      <keywords>hooks,codex,claude,telemetry</keywords>
+    </task>
+    <task id="35-03" status="planned"><goal>Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.</goal>
+      <keywords>reporting,self-eval,site,runtime-comparison</keywords>
+    </task>
+  </phase>
 </task-registry>

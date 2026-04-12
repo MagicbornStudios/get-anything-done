@@ -204,4 +204,16 @@
     <status>planned</status>
     <depends>31</depends>
   </phase>
+<phase id="34">
+  <title>Executable release pipeline + GitHub-first distribution</title>
+  <goal>Replace the npm-first release/install story with a GitHub-first distribution model. Ship standalone executables for Windows, macOS, and Linux, with Windows as the primary authoritative local build and optional GitHub Actions builds for macOS/Linux. Document direct GitHub repo/Node install as an optional secondary path. Publish GAD skills via skills.sh / `npx skills add`. Add path-gated release rules so only shipped CLI surface changes trigger executable rebuild/release work. Decisions: GAD-D-129, GAD-D-135, GAD-D-136.</goal>
+  <status>done</status>
+  <depends>29</depends>
+</phase>
+  <phase id="35">
+    <title>Cross-runtime identity + telemetry attribution</title>
+    <goal>Extend eval telemetry so TRACE.json and related logs record coding agent runtime identity, provenance, token/tool/skill/agent usage, and clean Claude-vs-Codex comparisons. Runtime-derived identity is the primary source; self-declared identity is secondary metadata. Claude Code and Codex are the first-class targets, with a schema extensible to additional runtimes. Decisions: GAD-D-137 and the existing trace-schema decisions.</goal>
+    <status>planned</status>
+    <depends>32</depends>
+  </phase>
 </roadmap>

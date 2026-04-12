@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>29</current-phase>
-  <current-plan></current-plan>
+  <current-phase>34</current-phase>
+  <current-plan>.planning/plans/phase-34/PLAN.md</current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 29 complete: GAD CLI build/release pipeline + operational distinction (4 tasks, 2 commits). esbuild bundles CLI into single dist/gad.cjs (484KB). Portfolio /gad page live with operational distinction, hypothesis matrix, catalog.
+  <next-action>Phase 34 shipped on 2026-04-11 from .planning/plans/phase-34/PLAN.md.
 
-=== DONE THIS SESSION ===
-- scripts/build-cli.mjs — esbuild bundler for dist/gad.cjs
-- package.json: build:cli, prepublishOnly, dist/ + lib/ in files
-- Quick start verified: source and bundled CLI both work
-- Portfolio /gad page: operational CLI distinction, hypothesis matrix, catalog, loop, CLI ref
+=== SHIPPED ===
+- Windows standalone executable built at dist/release/gad-v1.32.0-windows-x64.exe
+- Global Windows install flow landed; gad.exe is installed at %LOCALAPPDATA%\Programs\gad\bin
+- GitHub-first install docs landed with skills.sh separated from CLI installation
+- Release-surface gating and GitHub Actions POSIX release workflow landed
 
 === NEXT ===
-1. Run evals (round 5, tech-stacks, reverse-engineer)
-2. Phase 27: structured objective data production
-3. Phase 33: reverse-engineer eval methodology
-4. Phase 28: /project-market + site architecture overhaul</next-action>
-  <last-updated>2026-04-10</last-updated>
+1. Plan and execute phase 35 runtime identity + telemetry attribution work
+2. Thread Claude Code and Codex runtime identity through raw logs and TRACE.json
+3. Revisit signing/notarization only after the executable distribution path is stable</next-action>
+  <last-updated>2026-04-11</last-updated>
 </state>

@@ -1,98 +1,82 @@
 # GAD Quick Start
 
-Get from zero to running your first eval in 5 minutes.
+Primary install path: GitHub Release executable. Skills are installed separately through
+`skills.sh`.
 
 ## 1. Install a coding agent
 
 Pick one:
 
 ```bash
-# Claude Code (recommended)
+# Claude Code
 npm install -g @anthropic-ai/claude-code
 
 # OpenAI Codex CLI
 npm install -g @openai/codex
 ```
 
-## 2. Install GAD
+## 2. Install the GAD executable
 
-```bash
-npx get-anything-done@latest
+Download the current release asset for your platform from GitHub Releases.
+
+Windows global install:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-gad-windows.ps1 -Artifact .\gad-v1.32.0-windows-x64.exe
 ```
 
-This installs the GAD CLI, skills, and hooks into your agent runtime.
+Portable use:
 
-## 3. Start a new project
+```powershell
+.\gad-v1.32.0-windows-x64.exe --help
+```
+
+Optional Node/GitHub path if you already have Node:
 
 ```bash
-# Interactive setup — answers questions about what you're building
-/gad:new-project
+git clone https://github.com/MagicbornStudios/get-anything-done.git
+cd get-anything-done
+npm install
+node scripts/build-cli.mjs
+node dist/gad.cjs --help
+```
 
-# Or skip the questions and jump straight to planning
+## 3. Install skills if you want them
+
+```bash
+npx skills add https://github.com/MagicbornStudios/get-anything-done
+```
+
+This installs the skill catalog. It does not install the `gad` executable.
+
+## 4. Install GAD into your runtime
+
+```bash
+gad install all --codex --global
+gad install all --claude --global
+```
+
+Use the runtime flags you actually need.
+
+## 5. Start a project or eval
+
+```bash
 gad snapshot --projectid <your-project>
-```
-
-## 4. Plan and execute
-
-```bash
-/gad:plan-phase 1    # Create a detailed plan
-/gad:execute-phase 1 # Execute it with commit tracking
-```
-
-## 5. Run an eval
-
-```bash
-# List available eval projects
-gad eval list
-
-# Scaffold a new eval
 gad eval setup --project my-eval
-
-# Generate bootstrap prompt
 gad eval run --project my-eval --prompt-only
+```
 
-# Install skills into the eval
-gad eval run --project my-eval --install-skills .agents/skills/my-skill
+## 6. Preserve and review evals
 
-# After the agent completes, preserve the run
+```bash
 gad eval preserve my-eval v1 --from <worktree-path>
-
-# Submit human review
+gad eval verify
 gad eval review my-eval v1 --score 0.7
+gad eval report
 ```
 
-## 6. Check your work
+## Key split
 
-```bash
-gad snapshot --projectid <id>  # Full context
-gad rounds                     # Experiment history
-gad eval report                # Cross-project comparison
-```
-
-## Project structure
-
-```
-.planning/
-├── STATE.xml           # Current state + next action
-├── TASK-REGISTRY.xml   # All tasks with status
-├── DECISIONS.xml       # Architectural decisions
-├── ROADMAP.xml         # Phase breakdown
-└── .gad-log/           # Trace data for self-eval
-```
-
-## Key concepts
-
-- **Skills**: Methodology documents that agents follow (`.agents/skills/`)
-- **Evals**: Controlled experiments measuring agent performance (`evals/`)
-- **Domains**: game, skill, software, business, stories, tooling
-- **The loop**: snapshot → work → update docs → commit
-
-## CLI reference
-
-```bash
-gad --help              # All commands
-gad eval --help         # Eval framework
-gad data list           # Browse data collections
-gad rounds              # Experiment rounds
-/gad:help               # Full command reference
-```
+- `gad` executable: operational CLI, installed from GitHub Releases
+- GAD skills: methodology docs, installed from GitHub with `npx skills add`
+- Coding agent runtime: Claude Code, Codex, Cursor, or another supported runtime
