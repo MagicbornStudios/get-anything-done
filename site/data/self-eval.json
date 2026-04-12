@@ -6,26 +6,26 @@
       "days": 6
     },
     "totals": {
-      "events": 3450,
+      "events": 3483,
       "sessions": 5,
-      "gad_cli_calls": 270
+      "gad_cli_calls": 272
     },
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 1063
+        "count": 1071
       },
       {
         "tool": "unknown",
-        "count": 567
+        "count": 569
       },
       {
         "tool": "Read",
-        "count": 525
+        "count": 536
       },
       {
         "tool": "Edit",
-        "count": 450
+        "count": 459
       },
       {
         "tool": "TaskUpdate",
@@ -33,7 +33,7 @@
       },
       {
         "tool": "Write",
-        "count": 199
+        "count": 201
       },
       {
         "tool": "TaskCreate",
@@ -41,7 +41,7 @@
       },
       {
         "tool": "Grep",
-        "count": 158
+        "count": 159
       },
       {
         "tool": "Agent",
@@ -87,12 +87,12 @@
       },
       {
         "day": "2026-04-12",
-        "count": 74
+        "count": 107
       }
     ],
     "framework_overhead": {
-      "planning_ops": 307,
-      "source_ops": 1012,
+      "planning_ops": 313,
+      "source_ops": 1028,
       "ratio": 0.233,
       "score": 0.7
     },
@@ -102,18 +102,18 @@
       "score": 0.8
     },
     "gad_cli_breakdown": {
-      "snapshot": 49,
+      "snapshot": 50,
       "eval": 100,
-      "other": 121
+      "other": 122
     },
-    "computed_at": "2026-04-12T09:17:17.607Z",
+    "computed_at": "2026-04-12T09:37:21.758Z",
     "tasks": {
       "done": 185,
       "planned": 4,
       "in_progress": 2,
       "total": 191
     },
-    "decisions": 140,
+    "decisions": 141,
     "phases_pressure": [
       {
         "phase": "10",
@@ -266,6 +266,917 @@
         "crosscuts": 3,
         "pressure_score": 9,
         "high_pressure": false
+      }
+    ],
+    "skill_candidates": [
+      {
+        "name": "phase-10-gad-eats-its-own-dogfood-planning-packs",
+        "source_phase": "10",
+        "source_phase_title": "GAD eats its own dogfood + planning packs",
+        "pressure_score": 16,
+        "tasks_total": 8,
+        "tasks_done": 8,
+        "crosscuts": 4,
+        "file_path": ".agents/skills/candidates/phase-10-gad-eats-its-own-dogfood-planning-packs/SKILL.md",
+        "tasks": [
+          {
+            "id": "10-01",
+            "status": "done",
+            "goal": "Create .planning/ scaffold for get-anything-done and register in planning-config.toml."
+          },
+          {
+            "id": "10-02",
+            "status": "done",
+            "goal": "Migrate gad-01 through gad-15 decisions from root DECISIONS.xml into vendor/get-anything-done/.planning/DECISIONS.xml. Add gad-16 (no subagents until evaluated) and gad-17 (context handoff via planning docs)."
+          },
+          {
+            "id": "10-03",
+            "status": "done",
+            "goal": "Add gad pack command that bundles .planning data into a repo-planner-compatible planning pack format (JSON bundle with state, phases, tasks, decisions, requirements, docRefs)."
+          },
+          {
+            "id": "10-04",
+            "status": "done",
+            "goal": "Create vendor/get-anything-done/AGENTS.md using GAD's own workflow — gad CLI commands, planning loop, context re-hydration, skill references."
+          },
+          {
+            "id": "10-05",
+            "status": "done",
+            "goal": "Create skill stubs: skills/write-intent/SKILL.md, skills/write-feature-doc/SKILL.md, skills/write-tech-doc/SKILL.md."
+          },
+          {
+            "id": "10-06",
+            "status": "done",
+            "goal": "Update gadConfig.load() to read [[docs.projects]] from planning-config.toml and expose as config.docsProjects. Update gad sink status and gad refs to include docs.projects entries."
+          },
+          {
+            "id": "10-07",
+            "status": "done",
+            "goal": "Create docs-map-reader.cjs and DOCS-MAP.xml per planning root. Extend gad refs to include docs-map entries. Update gad sink compile to handle DOCS-MAP.xml."
+          },
+          {
+            "id": "10-08",
+            "status": "done",
+            "goal": "Create eval documentation in sink: apps/portfolio/content/docs/get-anything-done/evals.mdx covering what GAD evals are, how they work, the DEFINITIONS.md model, cli-efficiency results, portfolio-bare concept."
+          }
+        ]
+      },
+      {
+        "name": "phase-12-kill-gsd-formalize-gad-loop-reduce-start",
+        "source_phase": "12",
+        "source_phase_title": "Kill GSD, formalize GAD loop, reduce startup redundancy",
+        "pressure_score": 13,
+        "tasks_total": 9,
+        "tasks_done": 9,
+        "crosscuts": 2,
+        "file_path": ".agents/skills/candidates/phase-12-kill-gsd-formalize-gad-loop-reduce-start/SKILL.md",
+        "tasks": [
+          {
+            "id": "12-01",
+            "status": "done",
+            "goal": "Add decisions gad-17 (revised: auto-compact over fresh sessions), gad-18 (canonical loop: snapshot → work → update → commit), gad-19 (GSD is dead, GAD only)."
+          },
+          {
+            "id": "12-02",
+            "status": "done",
+            "goal": "Delete .claude/commands/gsd/ directory entirely (30 command files)."
+          },
+          {
+            "id": "12-03",
+            "status": "done",
+            "goal": "Rebrand .claude/hooks/ for GAD: remove gsd-check-update.js (checks npm for get-shit-done-cc). Rename gsd-context-monitor.js → context-monitor.js, strip GSD references from warning messages. Rename gsd-statusline.js → statusline.js, strip GSD update check and branding. Update .claude/settings.json to reference new hook filenames."
+          },
+          {
+            "id": "12-04",
+            "status": "done",
+            "goal": "Simplify root AGENTS.md: remove the 15-file mandatory read order. Agents use gad snapshot on session start, not manual file reads. Remove GSD section. Keep build/lint/verify gates, conventions, site copy guide. Reference vendor/get-anything-done/AGENTS.md as the canonical loop definition."
+          },
+          {
+            "id": "12-05",
+            "status": "done",
+            "goal": "Simplify .planning/AGENTS.md: remove redundant loop definition, trigger phrase table, and pattern examples that duplicate root AGENTS.md and vendor GAD AGENTS.md. Keep XML schema reference and planning-config.toml pointers. Reference gad-18 for the loop."
+          },
+          {
+            "id": "12-06",
+            "status": "done",
+            "goal": "Update vendor/get-anything-done/AGENTS.md: mark as canonical loop source per gad-18. Update \"Current work\" section to reference phase 12. Fix gad-17 reference to reflect auto-compact over fresh sessions."
+          },
+          {
+            "id": "12-07",
+            "status": "done",
+            "goal": "Uninstall GSD globally: delete ~/.claude/get-shit-done/, ~/.claude/commands/gsd/ (56 files), ~/.claude/hooks/gsd-*.js (5 files). Clean ~/.claude/settings.json — remove all GSD hooks and statusline, keep permissions and preferences."
+          },
+          {
+            "id": "12-08",
+            "status": "done",
+            "goal": "Install all 56 GAD commands from vendor/get-anything-done/commands/gad/ as Claude Code slash commands in .claude/commands/gad/. Includes the full planning loop: plan-phase, execute-phase, discuss-phase, progress, check-todos, next, plus project lifecycle, debug, health, verify, stats, and all other commands."
+          },
+          {
+            "id": "12-09",
+            "status": "done",
+            "goal": "Clean all GSD/get-shit-done references in vendor/get-anything-done/commands/gad/*.md and propagate to .claude/commands/gad/. Replace GSD→GAD, get-shit-done→get-anything-done, /gsd:→/gad: throughout. Note: 115 references to get-shit-done remain as literal directory/file paths (the actual folder is named that)."
+          }
+        ]
+      },
+      {
+        "name": "phase-13-docs-commands-skill-content-docs-map-rol",
+        "source_phase": "13",
+        "source_phase_title": "Docs commands, skill content, DOCS-MAP rollout",
+        "pressure_score": 16,
+        "tasks_total": 8,
+        "tasks_done": 8,
+        "crosscuts": 4,
+        "file_path": ".agents/skills/candidates/phase-13-docs-commands-skill-content-docs-map-rol/SKILL.md",
+        "tasks": [
+          {
+            "id": "13-01",
+            "status": "done",
+            "goal": "Extend gad docs command: add `gad docs list --projectid &lt;id&gt;` that shows all docs for a project — planning files from sink status, DOCS-MAP entries, and docs.projects entries. Add --all flag."
+          },
+          {
+            "id": "13-02",
+            "status": "done",
+            "goal": "Create DOCS-MAP.xml for get-anything-done with entries for evals.mdx and any other non-planning feature docs in the sink. Reader (docs-map-reader.cjs) already exists — this creates the actual data files."
+          },
+          {
+            "id": "13-03",
+            "status": "done",
+            "goal": "Create DOCS-MAP.xml for grime-time, repo-planner, and any other roots that have feature docs in their sink paths. Check each root's sink directory for non-planning MDX files."
+          },
+          {
+            "id": "13-04",
+            "status": "done",
+            "goal": "Flesh out write-intent SKILL.md: add concrete examples, template output, edge cases. The skill should be usable by any agent reading it cold — currently too abstract."
+          },
+          {
+            "id": "13-05",
+            "status": "done",
+            "goal": "Flesh out write-feature-doc SKILL.md: add concrete examples of good feature docs, MDX frontmatter template, sink path resolution logic. Currently steps are correct but thin."
+          },
+          {
+            "id": "13-06",
+            "status": "done",
+            "goal": "Flesh out write-tech-doc SKILL.md: add concrete examples, mermaid diagram patterns, decision-referencing conventions. Currently steps are correct but thin."
+          },
+          {
+            "id": "13-07",
+            "status": "done",
+            "goal": "CLI error hardening: audit all gad.cjs commands for gad-12 compliance (missing-arg UX prints choices + rerun hint). Test edge cases: missing .planning/ dirs, malformed XML, empty files."
+          },
+          {
+            "id": "13-08",
+            "status": "done",
+            "goal": "Run gad sink compile to sync the 7 stale files (get-anything-done and grime-time). Verify sink is fully up to date after phase 12 changes."
+          }
+        ]
+      },
+      {
+        "name": "phase-14-eval-framework-escape-the-dungeon-tracin",
+        "source_phase": "14",
+        "source_phase_title": "Eval framework: escape-the-dungeon + tracing",
+        "pressure_score": 19,
+        "tasks_total": 7,
+        "tasks_done": 7,
+        "crosscuts": 6,
+        "file_path": ".agents/skills/candidates/phase-14-eval-framework-escape-the-dungeon-tracin/SKILL.md",
+        "tasks": [
+          {
+            "id": "14-01",
+            "status": "done",
+            "goal": "Create a gad eval project \"escape-the-dungeon\" from GAMEPLAY-DESIGN.xml and STAT-AND-BEHAVIOUR-TAXONOMY.md. Convert these source docs into a GAD REQUIREMENTS.xml in the eval project directory (evals/escape-the-dungeon/). The requirements should be structured for an agent to plan phases and implement from — not a raw XML dump."
+          },
+          {
+            "id": "14-02",
+            "status": "done",
+            "goal": "Create bin/gad-tools.cjs — the GAD equivalent of gsd-tools.cjs. Provides the core commands that workflows depend on: init (phase-op, execute-phase, plan-phase), commit, config-get, config-set, state (load, update, record-session), phase (find, add, complete), roadmap (get-phase, analyze), generate-slug, current-timestamp, scaffold, agent-skills. Reads from XML planning files instead of MD. This replaces all gsd-tools.cjs references in workflows."
+          },
+          {
+            "id": "14-03",
+            "status": "done",
+            "goal": "Define the eval trace format for real implementations: track which gad commands were called, which gad skills were triggered, arguments passed, token counts, time-to-completion. Extend TRACE.json schema beyond the current unit-coverage model to include tool_calls[] and skill_triggers[]."
+          },
+          {
+            "id": "14-04",
+            "status": "done",
+            "goal": "Define the eval scoring rubric for real implementations: CLI efficiency (same as v6), skill trigger accuracy (were the right skills triggered at the right time), planning quality (task coverage, state hygiene), and time-to-completion. Human feedback is a separate manual score added after."
+          },
+          {
+            "id": "14-05",
+            "status": "done",
+            "goal": "Run the escape-the-dungeon eval: fresh agent session, agent reads requirements, plans phases, implements using the GAD loop, traces everything. Produce TRACE.json and SCORE.md. This validates the full loop end-to-end on a real project."
+          },
+          {
+            "id": "14-06",
+            "status": "done",
+            "goal": "Run the portfolio-bare eval with updated tracing. Compare against prior runs. Tighten portfolio-bare based on findings from the escape-the-dungeon eval."
+          },
+          {
+            "id": "14-07",
+            "status": "done",
+            "goal": "Review CONTEXT.md: what it is, how discuss-phase produces it, how downstream agents (researcher, planner) consume it. Evaluate whether gad CLI should have a `gad context-doc` command or if gad-tools.cjs scaffold is sufficient. Decide if CONTEXT.md should be a GAD skill output or a planning file type. Update skills and CLI to integrate CONTEXT.md into the loop if valuable."
+          }
+        ]
+      },
+      {
+        "name": "phase-14.5-eval-findings-enforce-the-loop-automate-",
+        "source_phase": "14.5",
+        "source_phase_title": "Eval findings: enforce the loop, automate tracing, auto-scaffold conventions",
+        "pressure_score": 21,
+        "tasks_total": 7,
+        "tasks_done": 7,
+        "crosscuts": 7,
+        "file_path": ".agents/skills/candidates/phase-14.5-eval-findings-enforce-the-loop-automate-/SKILL.md",
+        "tasks": [
+          {
+            "id": "14.5-01",
+            "status": "done",
+            "goal": "Create eval template AGENTS.md that enforces the GAD loop. The eval template's .planning/ directory must include an AGENTS.md that tells the agent: (1) run gad snapshot first, (2) plan phases in ROADMAP.xml before coding, (3) update TASK-REGISTRY.xml per task, (4) update STATE.xml after each phase, (5) capture decisions. This file is what the agent reads to know how to work — not a prompt instruction it ignores."
+          },
+          {
+            "id": "14.5-02",
+            "status": "done",
+            "goal": "Update eval-run skill/command to inject snapshot context INTO the agent prompt. Instead of telling the agent \"run gad snapshot\", the eval-run workflow should run the snapshot itself and include the output in the agent's initial context. The agent starts with context, not instructions to get context."
+          },
+          {
+            "id": "14.5-03",
+            "status": "done",
+            "goal": "Create gad eval trace reconstruct --project &lt;name&gt; command. Parses git log + planning doc state to build TRACE.json after the fact. Detects: which files were created/modified per commit, which planning docs were updated, time between commits (phase duration), task completion count from TASK-REGISTRY.xml diff. This replaces manual log-cmd/log-skill with post-hoc reconstruction."
+          },
+          {
+            "id": "14.5-04",
+            "status": "done",
+            "goal": "Add checkpoint enforcement to execute-phase workflow. Before the agent can start the next task, it must have: (1) updated TASK-REGISTRY.xml for the previous task, (2) updated STATE.xml next-action. The workflow checks these preconditions. If not met, it prompts the agent to update before continuing. Not a hook — a step in the workflow that reads the planning docs and verifies."
+          },
+          {
+            "id": "14.5-05",
+            "status": "done",
+            "goal": "Auto-scaffold CONVENTIONS.md after first implementation phase of greenfield projects. When phase 01 (or first phase with code output) completes in a project with no existing CONVENTIONS.md, run a lightweight codebase scan (file structure, naming patterns, import style, content pack format) and write .planning/CONVENTIONS.md. Integrate with gad:map-codebase skill output."
+          },
+          {
+            "id": "14.5-06",
+            "status": "done",
+            "goal": "Define expected_triggers for implementation evals. The TRACE.json skill_accuracy field needs expected_triggers populated before the eval runs — defining which skills SHOULD fire and when. Create a template expected_triggers list for implementation evals: discuss-phase before planning, plan-phase before execution, execute-phase per phase, verify-work after phases, map-codebase after first implementation."
+          },
+          {
+            "id": "14.5-07",
+            "status": "done",
+            "goal": "Re-run escape-the-dungeon eval with fixes applied (template AGENTS.md, snapshot injection, checkpoint enforcement). Compare v3 TRACE.json against v2. Validate that: gad CLI is actually used, task-level tracking happens, conventions are generated, trace has real data not backfilled."
+          }
+        ]
+      },
+      {
+        "name": "phase-17-reverse-engineer-skill-reader-workspace-",
+        "source_phase": "17",
+        "source_phase_title": "Reverse-engineer skill + reader-workspace eval",
+        "pressure_score": 12,
+        "tasks_total": 4,
+        "tasks_done": 4,
+        "crosscuts": 4,
+        "file_path": ".agents/skills/candidates/phase-17-reverse-engineer-skill-reader-workspace-/SKILL.md",
+        "tasks": [
+          {
+            "id": "17-01",
+            "status": "done",
+            "goal": "Run gad:reverse-engineer on vendor/repub-builder/src/reader to produce REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml for the reader-workspace eval."
+          },
+          {
+            "id": "17-02",
+            "status": "done",
+            "goal": "Create reader-workspace eval project with REQUIREMENTS.md, template/, and AGENTS.md."
+          },
+          {
+            "id": "17-03",
+            "status": "done",
+            "goal": "Run reader-workspace eval v1: fresh agent builds the EPUB reader from reverse-engineered requirements alone. Produce TRACE.json and SCORE.md. Validates the full reverse-engineer → implement cycle."
+          },
+          {
+            "id": "17-04",
+            "status": "done",
+            "goal": "Score reader-workspace v1: requirement coverage (51 criteria), architecture alignment (12 decisions), state hygiene, convention adherence. Compare output against reference implementation quality."
+          }
+        ]
+      },
+      {
+        "name": "phase-18-eval-suite-parallel-runs-iteration-cycle",
+        "source_phase": "18",
+        "source_phase_title": "Eval suite — parallel runs + iteration cycle",
+        "pressure_score": 18,
+        "tasks_total": 6,
+        "tasks_done": 6,
+        "crosscuts": 6,
+        "file_path": ".agents/skills/candidates/phase-18-eval-suite-parallel-runs-iteration-cycle/SKILL.md",
+        "tasks": [
+          {
+            "id": "18-01",
+            "status": "done",
+            "goal": "Replace the stub in `gad eval run` with a prompt generator: read the eval template (AGENTS.md, REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, STATE.xml), construct a full bootstrap prompt, and output it to stdout + eval-output.txt. The user/agent copies this prompt into their AI tool. Agent-agnostic per gad-01."
+          },
+          {
+            "id": "18-02",
+            "status": "done",
+            "goal": "Add `gad eval suite` CLI command: lists all eval projects with templates, generates bootstrap prompts for each, outputs them as separate files in a timestamped suite run directory. Shows a summary table of what will be run."
+          },
+          {
+            "id": "18-03",
+            "status": "done",
+            "goal": "Add `gad eval report` cross-project comparison: reads TRACE.json from latest run of each project, produces a comparison table (phases, tasks, discipline, scores) across all projects. Supports --all flag for all projects or specific --project list."
+          },
+          {
+            "id": "18-03b",
+            "status": "done",
+            "goal": "Add comprehensive logging: GAD CLI call logger (JSONL per day), PostToolUse hook for tool tracing (Bash/Read/Write/Edit/Agent/Skill/Grep/Glob), `gad log show|stats|clear` commands, `gad eval trace from-log` for definitive trace building from actual logs, GAD_LOG_DIR env for eval-scoped logs."
+          },
+          {
+            "id": "18-04",
+            "status": "done",
+            "goal": "Run the full eval suite: portfolio-bare v3, escape-the-dungeon v4, reader-workspace v2. Launch all three in parallel worktree agents. Reconstruct traces and produce cross-project report."
+          },
+          {
+            "id": "18-05",
+            "status": "done",
+            "goal": "Iterate on findings: review eval results, tighten at least one skill based on patterns, update eval-suite SKILL.md with lessons learned, add any new eval criteria discovered."
+          }
+        ]
+      },
+      {
+        "name": "phase-20-real-time-tooling-mcp-bridge-and-tooling",
+        "source_phase": "20",
+        "source_phase_title": "Real-time tooling, MCP bridge, and tooling evals",
+        "pressure_score": 20,
+        "tasks_total": 8,
+        "tasks_done": 7,
+        "crosscuts": 6,
+        "file_path": ".agents/skills/candidates/phase-20-real-time-tooling-mcp-bridge-and-tooling/SKILL.md",
+        "tasks": [
+          {
+            "id": "20-01",
+            "status": "done",
+            "goal": "Document tooling eval contract: extend TRACE.json with eval_type tooling|mcp, trace_schema_version, nested tooling or mcp metrics blocks, optional metrics.json for granular histograms. Record gad-26–gad-28 in DECISIONS.xml. Add a short section to vendor/get-anything-done/AGENTS.md (or evals/README) describing implementation vs tooling evals and how regressions are compared."
+          },
+          {
+            "id": "20-02",
+            "status": "done",
+            "goal": "Implement `gad dev` or `gad watch planning`: debounced watch on .planning/**/*.xml (configurable), invoke existing refs verify logic, print one JSON summary line per run (ok, missing paths, timing) for scripts and terminal/CI consumers. Optional --poll for unreliable FS watchers. No network by default."
+          },
+          {
+            "id": "20-03",
+            "status": "done",
+            "goal": "Add evals/tooling-watch-baseline (or equivalent): fixed fixture repo with known good/bad paths, automated Node harness that starts watcher, performs scripted edits, asserts correctness + latency percentiles, writes evals/&lt;project&gt;/vN/TRACE.json with eval_type tooling. Runnable in CI without an LLM."
+          },
+          {
+            "id": "20-04",
+            "status": "done",
+            "goal": "Harden implementation eval scoring automation: generate scores.json alongside SCORE.md from score-generator; change gad eval scores to prefer JSON totals over SCORE.md regex. Prepare same pattern for tooling composite (tooling_composite) so weights can evolve without breaking old runs."
+          },
+          {
+            "id": "20-05",
+            "status": "done",
+            "goal": "Optional MCP server package: thin adapter over the same core as CLI (verify, snapshot summary, session status). Stdio MCP; document Cursor config. Agents may use it; primary user remains human IDE workflows."
+          },
+          {
+            "id": "20-06",
+            "status": "done",
+            "goal": "MCP tooling eval: golden tool invocations, cold-start and per-tool latency, error rate on bad args. Produces eval_type mcp TRACE.json; compare across gad releases."
+          },
+          {
+            "id": "20-07",
+            "status": "cancelled",
+            "goal": "IDE integration: document VS Code / Cursor Tasks (background watch), optional problem matcher mapping JSON errors to Problems panel. Update portfolio sink evals.mdx when behavior is stable."
+          },
+          {
+            "id": "20-08",
+            "status": "done",
+            "goal": "Extend gad eval report and gad eval diff to include tooling/mcp runs (filter by eval_type, compare tooling.metrics and composite). Ensure suite or follow-up command can run implementation + tooling evals in one report."
+          }
+        ]
+      },
+      {
+        "name": "phase-21-eval-framework-evolution-v3-scoring-gate",
+        "source_phase": "21",
+        "source_phase_title": "Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield",
+        "pressure_score": 56,
+        "tasks_total": 28,
+        "tasks_done": 26,
+        "crosscuts": 14,
+        "file_path": ".agents/skills/candidates/phase-21-eval-framework-evolution-v3-scoring-gate/SKILL.md",
+        "tasks": [
+          {
+            "id": "21-01",
+            "status": "done",
+            "goal": "Fix MCP UTF-8 buffer bug: Content-Length counts bytes but handleData used string.length. tools/list responses with em dashes broke the parser. Switch to Buffer throughout MCP harness and server."
+          },
+          {
+            "id": "21-02",
+            "status": "done",
+            "goal": "Speed up planning-ref-verify by reading from planning-config roots instead of full tree walk, plus cache fs.statSync results."
+          },
+          {
+            "id": "21-03",
+            "status": "done",
+            "goal": "Standardize implementation eval composite formula. Replace inconsistent per-eval weights with a single v3 formula: requirement_coverage + planning_quality + per_task_discipline + skill_accuracy + time_efficiency + human_review. Document in DEFINITIONS.md."
+          },
+          {
+            "id": "21-04",
+            "status": "done",
+            "goal": "Clean skill_accuracy: remove methodology behaviors (decisions-captured, multi-phase-planning, phase-completion, task-lifecycle) from expected_triggers. Only actual /gad:* skill invocations count."
+          },
+          {
+            "id": "21-05",
+            "status": "done",
+            "goal": "Add gad eval review CLI command to record human review scores that get folded into the composite with the v3 weights."
+          },
+          {
+            "id": "21-06",
+            "status": "done",
+            "goal": "Add gad eval open CLI command to serve eval build output via local HTTP server (file:// doesn't work for ES module bundles from Vite/KAPLAY)."
+          },
+          {
+            "id": "21-07",
+            "status": "done",
+            "goal": "Create escape-the-dungeon-bare eval project: same game requirements, no GAD framework, agent creates own workflow. Baseline A/B comparison for the freedom hypothesis."
+          },
+          {
+            "id": "21-08",
+            "status": "done",
+            "goal": "Create escape-the-dungeon-emergent eval project: no framework, but inherits skills from the previous run. Tests whether self-created systems improve iteratively."
+          },
+          {
+            "id": "21-09",
+            "status": "done",
+            "goal": "Version game requirements. Document v1→v2→v3 history inside REQUIREMENTS.xml. Each eval round should reference the requirements version it used."
+          },
+          {
+            "id": "21-10",
+            "status": "done",
+            "goal": "Build requirements v3: add gate criteria (game loop, spell crafting, UI quality) that override requirement_coverage to 0 if failed. Trim source gameplay design doc from 640 → 120 lines for the vertical slice focus."
+          },
+          {
+            "id": "21-11",
+            "status": "done",
+            "goal": "Run round 2 greenfield evals with v2 requirements. Three conditions: GAD v7, Bare v2, Emergent v1."
+          },
+          {
+            "id": "21-12",
+            "status": "done",
+            "goal": "Run round 3 greenfield evals with v3 requirements (gates). GAD v8, Bare v3, Emergent v2."
+          },
+          {
+            "id": "21-13",
+            "status": "done",
+            "goal": "Document the freedom hypothesis finding: GAD framework constraint correlates inversely with creative output quality on greenfield game implementation. Capture in FINDINGS doc and decision."
+          },
+          {
+            "id": "21-14",
+            "status": "done",
+            "goal": "Build eval preservation contract: gad eval preserve command that copies code+planning+build+logs to canonical per-version locations. Enforce via tests/eval-preservation.test.cjs."
+          },
+          {
+            "id": "21-15",
+            "status": "done",
+            "goal": "Fix eval preserve to copy the ENTIRE project (not cherry-picked files). Agent may create files we don't anticipate."
+          },
+          {
+            "id": "21-16",
+            "status": "done",
+            "goal": "Mandate game/.planning/ as the home for all eval workflow artifacts regardless of framework. Bare and emergent must put workflow files there too, not at project root."
+          },
+          {
+            "id": "21-17",
+            "status": "done",
+            "goal": "Add gad worktree management commands: list, show, clean, prune. User had no visibility into .claude/worktrees/agent-* directories."
+          },
+          {
+            "id": "21-18",
+            "status": "done",
+            "goal": "Categorize evals by eval_mode (greenfield|brownfield) and workflow (gad|bare|emergent). Show in gad eval list."
+          },
+          {
+            "id": "21-19",
+            "status": "done",
+            "goal": "Create three brownfield eval projects (etd-brownfield-gad/bare/emergent) using bare v3 as baseline. Shared extension requirements (_brownfield-extensions-v4.md) describing v4 features (floor progression, respawning encounters, forge affinity, skills system, visual upgrade)."
+          },
+          {
+            "id": "21-20",
+            "status": "done",
+            "goal": "Port session tracking into TASK-REGISTRY.xml instead of Claude Code Task tool. Stop using ephemeral session tasks for GAD-tracked work."
+          },
+          {
+            "id": "21-21",
+            "status": "done",
+            "goal": "Create an experiment log doc (evals/EXPERIMENT-LOG.md) that tracks every round: conditions, requirements version, results, findings. Running ledger across all rounds."
+          },
+          {
+            "id": "21-22",
+            "status": "done",
+            "goal": "Build requirements v4: pressure-oriented design (not features checklist). Authored dungeon with floors → 5-8 rooms → boss gate. Room types: Combat, Elite, Forge, Rest, Event. Each floor must introduce a mechanical constraint that can't be brute-forced with default spells. Forge is gate with at least one encounter per floor that favors crafted/adapted spells. Pressure mechanics required from at least 2 of 4 categories. Starter abilities explicitly insufficient. Skills scored but not gate (combat needs non-spell action category only). Sprites: attempt sourcing first, coherent fallback allowed. Traits label in UI, narrativeStats in code. Add ingenuity/adaptation scoring dimension."
+          },
+          {
+            "id": "21-25",
+            "status": "done",
+            "goal": "Create create_skill skill doc (skills/create-skill/SKILL.md) that documents how bare/emergent agents can define their own reusable skills. Only skill bare starts with; emergent starts with create_skill + inherited skills from previous runs."
+          },
+          {
+            "id": "21-26",
+            "status": "done",
+            "goal": "Rewrite bare and emergent AGENTS.md to be truly minimal. Stop mandating ARCHITECTURE.md, CHANGELOG.md, or any specific artifact. Only mandate: (1) all workflow artifacts in game/.planning/, (2) reference create_skill skill for defining new skills. Everything else is agent-defined. This defeats the previous round's too-prescriptive guidance and lets us observe what emergent workflows actually produce."
+          },
+          {
+            "id": "21-27",
+            "status": "done",
+            "goal": "Create gad:find-sprites skill (skills/find-sprites/SKILL.md) that documents the asset sourcing workflow: web search for free/open-license sprites and icons, preference order (npm packs → web search → generated → geometric fallback), integration tips, license verification. Referenced by v4 AGENTS.md for all 3 greenfield conditions."
+          },
+          {
+            "id": "21-23",
+            "status": "done",
+            "goal": "Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates."
+          },
+          {
+            "id": "21-23b",
+            "status": "planned",
+            "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's setup-heavy phases (snapshot + planning XML writes) spend proportionally more time in server-dependent states during peak load periods. Investigation needed: (1) check Anthropic status page for correlation with our crash timestamps; (2) test whether spreading the snapshot + plan calls across shorter API invocations reduces 529 exposure; (3) consider a retry-with-backoff wrapper in the eval runner for 529 specifically (not for rate limits). Only retry GAD v11 after investigation produces a mitigation or explicit \"try again, the API was just overloaded that hour\" conclusion."
+          },
+          {
+            "id": "21-24",
+            "status": "cancelled",
+            "goal": "Run round 1 brownfield experiments. Three conditions using bare v3 baseline + v4 extensions. BLOCKED on portfolio documentation (21-28)."
+          }
+        ]
+      },
+      {
+        "name": "phase-22-portfolio-experiment-documentation-hub-p",
+        "source_phase": "22",
+        "source_phase_title": "Portfolio experiment documentation — hub, per-project, per-run, findings, graphs",
+        "pressure_score": 110,
+        "tasks_total": 58,
+        "tasks_done": 46,
+        "crosscuts": 26,
+        "file_path": ".agents/skills/candidates/phase-22-portfolio-experiment-documentation-hub-p/SKILL.md",
+        "tasks": [
+          {
+            "id": "22-01",
+            "status": "done",
+            "goal": "Plan the portfolio experiment documentation structure — pivoted to a standalone Next.js site at vendor/get-anything-done/site/ instead of apps/portfolio docs. Designed single-page sections (workflow, rounds, projects, results, playable, requirements, catalog, templates) plus dynamic per-run pages."
+          },
+          {
+            "id": "22-02",
+            "status": "done",
+            "goal": "Hub/home page explaining the experiment, freedom hypothesis, methodology, and linking to every section."
+          },
+          {
+            "id": "22-03",
+            "status": "done",
+            "goal": "Per-eval-project cards for all six projects with greenfield/brownfield split."
+          },
+          {
+            "id": "22-04",
+            "status": "done",
+            "goal": "Per-run detail pages for every eval run with TRACE.json breakdown, dimension scores, gate report, process metrics, playable link."
+          },
+          {
+            "id": "22-05",
+            "status": "done",
+            "goal": "Per-round experiment summary sections that compare conditions."
+          },
+          {
+            "id": "22-06",
+            "status": "cancelled",
+            "goal": "Visualizations/graphs across rounds. Deferred — score bars on the per-run page and run cards cover the \"at a glance\" comparison for now; a dedicated charts section can be revived later if we decide we're missing the signal."
+          },
+          {
+            "id": "22-07",
+            "status": "done",
+            "goal": "Requirements version history (v1 → v4 lineage with diffs)."
+          },
+          {
+            "id": "22-08",
+            "status": "cancelled",
+            "goal": "Decisions index page. Deferred — decisions referenced inline in Rounds and Requirements sections; full decisions index can be a dedicated /decisions route later when the list is big enough to warrant it."
+          },
+          {
+            "id": "22-09",
+            "status": "done",
+            "goal": "Findings as standalone pages: /findings index + /findings/[slug] per finding."
+          },
+          {
+            "id": "22-10",
+            "status": "done",
+            "goal": "Build pipeline so the site data stays in sync with the repo."
+          },
+          {
+            "id": "22-11",
+            "status": "done",
+            "goal": "Extract v1 and v2 REQUIREMENTS.md snapshots from git history."
+          },
+          {
+            "id": "22-12",
+            "status": "done",
+            "goal": "Markdown rendering via marked in prebuild."
+          },
+          {
+            "id": "22-13",
+            "status": "done",
+            "goal": "Per-skill detail pages app/skills/[id]/page.tsx."
+          },
+          {
+            "id": "22-14",
+            "status": "done",
+            "goal": "Per-agent detail pages app/agents/[id]/page.tsx."
+          },
+          {
+            "id": "22-15",
+            "status": "done",
+            "goal": "Per-command detail pages app/commands/[id]/page.tsx."
+          },
+          {
+            "id": "22-16",
+            "status": "done",
+            "goal": "Findings routes at /findings and /findings/[slug]."
+          },
+          {
+            "id": "22-17",
+            "status": "done",
+            "goal": "Framework vs eval-inherited catalog split."
+          },
+          {
+            "id": "22-18",
+            "status": "done",
+            "goal": "/planning meta-transparency page."
+          },
+          {
+            "id": "22-19",
+            "status": "done",
+            "goal": "skills/portfolio-sync/SKILL.md — methodology for keeping the public site in sync with evals."
+          },
+          {
+            "id": "22-20",
+            "status": "done",
+            "goal": "Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no standalone \"what is GAD\" reference page someone can deep-link to. The catalog cards work but users have asked for a top-level GAD explainer + index that links into skills/agents/commands as a single navigation hub."
+          },
+          {
+            "id": "22-21",
+            "status": "done",
+            "goal": "/methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. This is the \"how we measure\" appendix users have been asking for. Includes concrete worked examples showing how a composite score was derived."
+          },
+          {
+            "id": "22-22",
+            "status": "cancelled",
+            "goal": "Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a \"tracing gap\" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schema overhaul)."
+          },
+          {
+            "id": "22-23",
+            "status": "done",
+            "goal": "Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, \"what the agent built for itself\" per run (scan run/.planning/skills/*.md and similar)."
+          },
+          {
+            "id": "22-24",
+            "status": "done",
+            "goal": "Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library — pure React-rendered SVG so it ships in every prebuild."
+          },
+          {
+            "id": "22-25",
+            "status": "done",
+            "goal": "Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary nav row or drop items."
+          },
+          {
+            "id": "22-26",
+            "status": "cancelled",
+            "goal": "Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math."
+          },
+          {
+            "id": "22-27",
+            "status": "cancelled",
+            "goal": "New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work."
+          },
+          {
+            "id": "22-28",
+            "status": "done",
+            "goal": "Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed."
+          },
+          {
+            "id": "22-29",
+            "status": "done",
+            "goal": "/lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. Captures decision gad-56."
+          },
+          {
+            "id": "22-30",
+            "status": "cancelled",
+            "goal": "Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for GAD evaluation."
+          },
+          {
+            "id": "22-31",
+            "status": "done",
+            "goal": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content — the scaffold establishes the pattern and the first composition is a placeholder."
+          },
+          {
+            "id": "22-32",
+            "status": "done",
+            "goal": "Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output."
+          },
+          {
+            "id": "22-33",
+            "status": "cancelled",
+            "goal": "`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modules/get-anything-done/get-anything-done/`). This task wraps it in a `gad install` subcommand that resolves paths correctly whether running from a git checkout (vendor/get-anything-done/) or an npm install. Related to 22-34 (fix install.js directly) — this task may become a no-op if 22-34 fixes the path resolution at the install.js level."
+          },
+          {
+            "id": "22-34",
+            "status": "done",
+            "goal": "Fix path resolution bug in bin/install.js for local git checkouts."
+          },
+          {
+            "id": "25-01",
+            "status": "done",
+            "goal": "Design trace event envelope + 4 event types as a reusable library in lib/trace-schema.cjs."
+          },
+          {
+            "id": "25-02",
+            "status": "done",
+            "goal": "Write the hook handler script at bin/gad-trace-hook.cjs that Claude Code invokes for PreToolUse/PostToolUse."
+          },
+          {
+            "id": "25-03",
+            "status": "done",
+            "goal": "4 KB truncation helper with head+tail split for trace event outputs."
+          },
+          {
+            "id": "25-04",
+            "status": "done",
+            "goal": "`gad install hooks` CLI subcommand that wires the trace hook into Claude Code settings.json."
+          },
+          {
+            "id": "22-35",
+            "status": "done",
+            "goal": "Fix YAML parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). Descriptions with embedded colons like \"methodology:\" and \"discipline:\" were parsed by js-yaml as key-value separators, breaking skill loading in Claude Code. Fix by converting plain scalar descriptions to YAML folded block scalar form (`description: &gt;- ...`) which treats the body as opaque."
+          },
+          {
+            "id": "22-36",
+            "status": "done",
+            "goal": "Dogfood-failure recovery: author skills/emergent/session-discipline/SKILL.md as an agent-authored hard-start checklist. Move agent-authored skills into skills/emergent/ so default install can skip them. Add origin + authored-by + authored-on + excluded-from-default-install fields to CatalogSkill. Capture gad-78 (dogfood failure) + gad-79 (task_pressure programmatic) decisions."
+          },
+          {
+            "id": "22-37",
+            "status": "done",
+            "goal": "Reorganize .planning/ root: move ad-hoc markdown docs (ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-*.md) into a new .planning/docs/ subdirectory per user directive. Rationale: .planning/ root should hold the formal XML artifacts that gad snapshot surfaces; ad-hoc human-written docs that are not formal (but still project-relevant) belong in a peer docs/ folder. Update all site page references to the new paths."
+          },
+          {
+            "id": "22-38",
+            "status": "done",
+            "goal": "Retroactively update TASK-REGISTRY.xml to mark 22-20/22-21/22-23/22-24/22-25/22-29 as done (work shipped in prior sessions without registry updates — dogfood failure per gad-78). Add new tasks 22-36/22-37/22-38/22-39/22-40/22-41/22-42/22-43 for this session's work."
+          },
+          {
+            "id": "22-39",
+            "status": "done",
+            "goal": "Agent-crawlable documentation export: emit public/llms.txt (concise index per llmstxt.org convention), public/llms-full.txt (full-text dump of skills/decisions/questions/bugs/glossary/tasks/phases/current-requirements), public/api/docs.json (structured JSON with schema gad-docs-v1) at prebuild. Provides a full API reference for external agents evaluating or reviewing GAD without needing to crawl HTML."
+          },
+          {
+            "id": "22-40",
+            "status": "done",
+            "goal": "Interactive chart on /roadmap showing human review across rounds broken out by hypothesis track. Solid lines for tracks with real data (freedom/csh/gad). Dashed ghost lines for planned tracks without runs yet (content-driven, codex runtime) so the research plan is visible."
+          },
+          {
+            "id": "22-41",
+            "status": "done",
+            "goal": "/hypotheses index page + /freedom evidence page + /content-driven planned-hypothesis page. Every hypothesis the project tracks gets wired to its eval track, its latest evidence, and its dedicated evidence page. Status labels: preliminary observation / discussing / operationalized / not-yet-tested."
+          },
+          {
+            "id": "22-42",
+            "status": "done",
+            "goal": "Clickable skills modal on /emergent: convert the static skill-artifact chip list on the emergent page into client-component buttons that open a modal showing the full SKILL.md content with Copy button + GitHub source link. Per user directive 2026-04-09: \"I wish i could click and download or get that pop up of those skills on the page.\""
+          },
+          {
+            "id": "22-43",
+            "status": "done",
+            "goal": "Scaffold evals/gad-explainer-video/ as a new eval project: REQUIREMENTS.md describing the Remotion GAD explainer video task (3-minute explainer, 4 mandatory gate frames, pedagogical clarity as primary rubric dimension), gad.json with workflow:gad + compare_to bare/emergent siblings + rubric weights. Tests freedom/CSH/emergent-evolution hypotheses on a DIFFERENT task domain (video composition instead of game implementation) — the generalization test /skeptic says we need."
+          },
+          {
+            "id": "22-44",
+            "status": "cancelled",
+            "goal": "Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in Claude → talk conversationally), document everything that breaks, update /contribute with the friction points, remove the \"fresh-clone test still open\" amber warning. Goal: make contribution actually work for a human who has never touched GAD before."
+          },
+          {
+            "id": "22-45",
+            "status": "done",
+            "goal": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time."
+          },
+          {
+            "id": "22-46",
+            "status": "done",
+            "goal": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. Also honor the excluded-from-default-install:true frontmatter flag I added to the emergent skill — the installer must skip those."
+          },
+          {
+            "id": "22-47",
+            "status": "cancelled",
+            "goal": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). This becomes the reference page every skill-related section of the site cites instead of repeating the content inline."
+          },
+          {
+            "id": "22-48",
+            "status": "done",
+            "goal": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. Output structured report. ROUND 5 IS BLOCKED on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are NOT allowed because bare condition requires zero framework affordances)."
+          },
+          {
+            "id": "22-49",
+            "status": "cancelled",
+            "goal": "Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a \"collision candidates\" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not yet built — link falls back to a manual-review prompt). Also: a keyword index for every skill so users searching can see what terms trigger each."
+          },
+          {
+            "id": "22-50",
+            "status": "cancelled",
+            "goal": "Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. This is the highest-leverage way to get \"agent reasoning\" signal without Claude Code exposing new hook surfaces."
+          },
+          {
+            "id": "22-51",
+            "status": "done",
+            "goal": "Scaffold new eval domain evals/skill-evaluation-app/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood)."
+          },
+          {
+            "id": "22-52",
+            "status": "cancelled",
+            "goal": "Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (NOT LLM self-report — that's what skill-creator's Python harness does and it didn't work for us), emits benchmark.json compatible with agentskills.io format. This is the load-bearing piece that lets every GAD skill graduate from experimental to canonical per gad-86. Directly answers programmatic-eval GAPS G2 + the hygiene half of G11."
+          },
+          {
+            "id": "22-53",
+            "status": "done",
+            "goal": "Author merge-skill + find-skills SKILL.md files as workspace skills. find-skills is a thin methodology wrapper around npx skills (vercel-labs/skills CLI per gad-85). merge-skill is a pure methodology doc for fusing overlapping skills. Both start as experimental (status: experimental) because no evaluation harness has been run against them yet."
+          },
+          {
+            "id": "22-54",
+            "status": "done",
+            "goal": "Landing page + /hypotheses interactive chart. User directive 2026-04-09: \"the interactive chart I asked for should have been on the front page, but I dont see it... I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" Move or duplicate the HypothesisTracksChart from /roadmap onto the landing page (after Hero, before WhatItIs) and add it to /hypotheses above the hypothesis cards."
+          }
+        ]
+      },
+      {
+        "name": "phase-30-eval-framework-v2-domains-tech-stacks-ro",
+        "source_phase": "30",
+        "source_phase_title": "Eval framework v2 — domains, tech stacks, rounds per project",
+        "pressure_score": 11,
+        "tasks_total": 5,
+        "tasks_done": 5,
+        "crosscuts": 3,
+        "file_path": ".agents/skills/candidates/phase-30-eval-framework-v2-domains-tech-stacks-ro/SKILL.md",
+        "tasks": [
+          {
+            "id": "30-01",
+            "status": "done",
+            "goal": "gad rounds --project shows per-project rounds derived from TRACE.json requirements_version changes across runs."
+          },
+          {
+            "id": "30-02",
+            "status": "done",
+            "goal": "Build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. Failed gate = eval incomplete."
+          },
+          {
+            "id": "30-03",
+            "status": "done",
+            "goal": "Human time estimation in eval prompt — buildEvalPrompt() includes instruction for agent to estimate human_estimate_hours before coding."
+          },
+          {
+            "id": "30-04",
+            "status": "done",
+            "goal": "Source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.json."
+          },
+          {
+            "id": "30-05",
+            "status": "done",
+            "goal": "Site project detail shows domain badge + tech stack from eval project metadata."
+          }
+        ]
+      },
+      {
+        "name": "phase-34-executable-release-pipeline-github-first",
+        "source_phase": "34",
+        "source_phase_title": "Executable release pipeline + GitHub-first distribution",
+        "pressure_score": 13,
+        "tasks_total": 5,
+        "tasks_done": 5,
+        "crosscuts": 4,
+        "file_path": ".agents/skills/candidates/phase-34-executable-release-pipeline-github-first/SKILL.md",
+        "tasks": [
+          {
+            "id": "34-01",
+            "status": "done",
+            "goal": "Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packaging toolchain, output artifact names, signing/notarization assumptions, and which runtime files (CLI bundle, hooks, templates, skills) must ship alongside the executable."
+          },
+          {
+            "id": "34-02",
+            "status": "done",
+            "goal": "Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub repo/Node install. Remove or rewrite remaining npm-first copy in quick start, README, starter READMEs, and site pages."
+          },
+          {
+            "id": "34-03",
+            "status": "done",
+            "goal": "Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verify the repo is listable/installable from skills.sh, and make skill installation distinct from CLI installation throughout the docs."
+          },
+          {
+            "id": "34-04",
+            "status": "done",
+            "goal": "Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json, build/release scripts, and bundled assets). Non-shipping docs/site/eval/planning commits must not require a new release."
+          },
+          {
+            "id": "34-05",
+            "status": "done",
+            "goal": "Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publication/update. Document the operator flow for releasing after CLI-shipping changes."
+          }
+        ]
       }
     ]
   },
@@ -635,26 +1546,26 @@
         "days": 6
       },
       "totals": {
-        "events": 3450,
+        "events": 3483,
         "sessions": 5,
-        "gad_cli_calls": 270
+        "gad_cli_calls": 272
       },
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 1063
+          "count": 1071
         },
         {
           "tool": "unknown",
-          "count": 567
+          "count": 569
         },
         {
           "tool": "Read",
-          "count": 525
+          "count": 536
         },
         {
           "tool": "Edit",
-          "count": 450
+          "count": 459
         },
         {
           "tool": "TaskUpdate",
@@ -662,7 +1573,7 @@
         },
         {
           "tool": "Write",
-          "count": 199
+          "count": 201
         },
         {
           "tool": "TaskCreate",
@@ -670,7 +1581,7 @@
         },
         {
           "tool": "Grep",
-          "count": 158
+          "count": 159
         },
         {
           "tool": "Agent",
@@ -716,12 +1627,12 @@
         },
         {
           "day": "2026-04-12",
-          "count": 74
+          "count": 107
         }
       ],
       "framework_overhead": {
-        "planning_ops": 307,
-        "source_ops": 1012,
+        "planning_ops": 313,
+        "source_ops": 1028,
         "ratio": 0.233,
         "score": 0.7
       },
@@ -731,18 +1642,18 @@
         "score": 0.8
       },
       "gad_cli_breakdown": {
-        "snapshot": 49,
+        "snapshot": 50,
         "eval": 100,
-        "other": 121
+        "other": 122
       },
-      "computed_at": "2026-04-12T09:17:17.607Z",
+      "computed_at": "2026-04-12T09:37:21.758Z",
       "tasks": {
         "done": 185,
         "planned": 4,
         "in_progress": 2,
         "total": 191
       },
-      "decisions": 140,
+      "decisions": 141,
       "phases_pressure": [
         {
           "phase": "10",
@@ -895,6 +1806,917 @@
           "crosscuts": 3,
           "pressure_score": 9,
           "high_pressure": false
+        }
+      ],
+      "skill_candidates": [
+        {
+          "name": "phase-10-gad-eats-its-own-dogfood-planning-packs",
+          "source_phase": "10",
+          "source_phase_title": "GAD eats its own dogfood + planning packs",
+          "pressure_score": 16,
+          "tasks_total": 8,
+          "tasks_done": 8,
+          "crosscuts": 4,
+          "file_path": ".agents/skills/candidates/phase-10-gad-eats-its-own-dogfood-planning-packs/SKILL.md",
+          "tasks": [
+            {
+              "id": "10-01",
+              "status": "done",
+              "goal": "Create .planning/ scaffold for get-anything-done and register in planning-config.toml."
+            },
+            {
+              "id": "10-02",
+              "status": "done",
+              "goal": "Migrate gad-01 through gad-15 decisions from root DECISIONS.xml into vendor/get-anything-done/.planning/DECISIONS.xml. Add gad-16 (no subagents until evaluated) and gad-17 (context handoff via planning docs)."
+            },
+            {
+              "id": "10-03",
+              "status": "done",
+              "goal": "Add gad pack command that bundles .planning data into a repo-planner-compatible planning pack format (JSON bundle with state, phases, tasks, decisions, requirements, docRefs)."
+            },
+            {
+              "id": "10-04",
+              "status": "done",
+              "goal": "Create vendor/get-anything-done/AGENTS.md using GAD's own workflow — gad CLI commands, planning loop, context re-hydration, skill references."
+            },
+            {
+              "id": "10-05",
+              "status": "done",
+              "goal": "Create skill stubs: skills/write-intent/SKILL.md, skills/write-feature-doc/SKILL.md, skills/write-tech-doc/SKILL.md."
+            },
+            {
+              "id": "10-06",
+              "status": "done",
+              "goal": "Update gadConfig.load() to read [[docs.projects]] from planning-config.toml and expose as config.docsProjects. Update gad sink status and gad refs to include docs.projects entries."
+            },
+            {
+              "id": "10-07",
+              "status": "done",
+              "goal": "Create docs-map-reader.cjs and DOCS-MAP.xml per planning root. Extend gad refs to include docs-map entries. Update gad sink compile to handle DOCS-MAP.xml."
+            },
+            {
+              "id": "10-08",
+              "status": "done",
+              "goal": "Create eval documentation in sink: apps/portfolio/content/docs/get-anything-done/evals.mdx covering what GAD evals are, how they work, the DEFINITIONS.md model, cli-efficiency results, portfolio-bare concept."
+            }
+          ]
+        },
+        {
+          "name": "phase-12-kill-gsd-formalize-gad-loop-reduce-start",
+          "source_phase": "12",
+          "source_phase_title": "Kill GSD, formalize GAD loop, reduce startup redundancy",
+          "pressure_score": 13,
+          "tasks_total": 9,
+          "tasks_done": 9,
+          "crosscuts": 2,
+          "file_path": ".agents/skills/candidates/phase-12-kill-gsd-formalize-gad-loop-reduce-start/SKILL.md",
+          "tasks": [
+            {
+              "id": "12-01",
+              "status": "done",
+              "goal": "Add decisions gad-17 (revised: auto-compact over fresh sessions), gad-18 (canonical loop: snapshot → work → update → commit), gad-19 (GSD is dead, GAD only)."
+            },
+            {
+              "id": "12-02",
+              "status": "done",
+              "goal": "Delete .claude/commands/gsd/ directory entirely (30 command files)."
+            },
+            {
+              "id": "12-03",
+              "status": "done",
+              "goal": "Rebrand .claude/hooks/ for GAD: remove gsd-check-update.js (checks npm for get-shit-done-cc). Rename gsd-context-monitor.js → context-monitor.js, strip GSD references from warning messages. Rename gsd-statusline.js → statusline.js, strip GSD update check and branding. Update .claude/settings.json to reference new hook filenames."
+            },
+            {
+              "id": "12-04",
+              "status": "done",
+              "goal": "Simplify root AGENTS.md: remove the 15-file mandatory read order. Agents use gad snapshot on session start, not manual file reads. Remove GSD section. Keep build/lint/verify gates, conventions, site copy guide. Reference vendor/get-anything-done/AGENTS.md as the canonical loop definition."
+            },
+            {
+              "id": "12-05",
+              "status": "done",
+              "goal": "Simplify .planning/AGENTS.md: remove redundant loop definition, trigger phrase table, and pattern examples that duplicate root AGENTS.md and vendor GAD AGENTS.md. Keep XML schema reference and planning-config.toml pointers. Reference gad-18 for the loop."
+            },
+            {
+              "id": "12-06",
+              "status": "done",
+              "goal": "Update vendor/get-anything-done/AGENTS.md: mark as canonical loop source per gad-18. Update \"Current work\" section to reference phase 12. Fix gad-17 reference to reflect auto-compact over fresh sessions."
+            },
+            {
+              "id": "12-07",
+              "status": "done",
+              "goal": "Uninstall GSD globally: delete ~/.claude/get-shit-done/, ~/.claude/commands/gsd/ (56 files), ~/.claude/hooks/gsd-*.js (5 files). Clean ~/.claude/settings.json — remove all GSD hooks and statusline, keep permissions and preferences."
+            },
+            {
+              "id": "12-08",
+              "status": "done",
+              "goal": "Install all 56 GAD commands from vendor/get-anything-done/commands/gad/ as Claude Code slash commands in .claude/commands/gad/. Includes the full planning loop: plan-phase, execute-phase, discuss-phase, progress, check-todos, next, plus project lifecycle, debug, health, verify, stats, and all other commands."
+            },
+            {
+              "id": "12-09",
+              "status": "done",
+              "goal": "Clean all GSD/get-shit-done references in vendor/get-anything-done/commands/gad/*.md and propagate to .claude/commands/gad/. Replace GSD→GAD, get-shit-done→get-anything-done, /gsd:→/gad: throughout. Note: 115 references to get-shit-done remain as literal directory/file paths (the actual folder is named that)."
+            }
+          ]
+        },
+        {
+          "name": "phase-13-docs-commands-skill-content-docs-map-rol",
+          "source_phase": "13",
+          "source_phase_title": "Docs commands, skill content, DOCS-MAP rollout",
+          "pressure_score": 16,
+          "tasks_total": 8,
+          "tasks_done": 8,
+          "crosscuts": 4,
+          "file_path": ".agents/skills/candidates/phase-13-docs-commands-skill-content-docs-map-rol/SKILL.md",
+          "tasks": [
+            {
+              "id": "13-01",
+              "status": "done",
+              "goal": "Extend gad docs command: add `gad docs list --projectid &lt;id&gt;` that shows all docs for a project — planning files from sink status, DOCS-MAP entries, and docs.projects entries. Add --all flag."
+            },
+            {
+              "id": "13-02",
+              "status": "done",
+              "goal": "Create DOCS-MAP.xml for get-anything-done with entries for evals.mdx and any other non-planning feature docs in the sink. Reader (docs-map-reader.cjs) already exists — this creates the actual data files."
+            },
+            {
+              "id": "13-03",
+              "status": "done",
+              "goal": "Create DOCS-MAP.xml for grime-time, repo-planner, and any other roots that have feature docs in their sink paths. Check each root's sink directory for non-planning MDX files."
+            },
+            {
+              "id": "13-04",
+              "status": "done",
+              "goal": "Flesh out write-intent SKILL.md: add concrete examples, template output, edge cases. The skill should be usable by any agent reading it cold — currently too abstract."
+            },
+            {
+              "id": "13-05",
+              "status": "done",
+              "goal": "Flesh out write-feature-doc SKILL.md: add concrete examples of good feature docs, MDX frontmatter template, sink path resolution logic. Currently steps are correct but thin."
+            },
+            {
+              "id": "13-06",
+              "status": "done",
+              "goal": "Flesh out write-tech-doc SKILL.md: add concrete examples, mermaid diagram patterns, decision-referencing conventions. Currently steps are correct but thin."
+            },
+            {
+              "id": "13-07",
+              "status": "done",
+              "goal": "CLI error hardening: audit all gad.cjs commands for gad-12 compliance (missing-arg UX prints choices + rerun hint). Test edge cases: missing .planning/ dirs, malformed XML, empty files."
+            },
+            {
+              "id": "13-08",
+              "status": "done",
+              "goal": "Run gad sink compile to sync the 7 stale files (get-anything-done and grime-time). Verify sink is fully up to date after phase 12 changes."
+            }
+          ]
+        },
+        {
+          "name": "phase-14-eval-framework-escape-the-dungeon-tracin",
+          "source_phase": "14",
+          "source_phase_title": "Eval framework: escape-the-dungeon + tracing",
+          "pressure_score": 19,
+          "tasks_total": 7,
+          "tasks_done": 7,
+          "crosscuts": 6,
+          "file_path": ".agents/skills/candidates/phase-14-eval-framework-escape-the-dungeon-tracin/SKILL.md",
+          "tasks": [
+            {
+              "id": "14-01",
+              "status": "done",
+              "goal": "Create a gad eval project \"escape-the-dungeon\" from GAMEPLAY-DESIGN.xml and STAT-AND-BEHAVIOUR-TAXONOMY.md. Convert these source docs into a GAD REQUIREMENTS.xml in the eval project directory (evals/escape-the-dungeon/). The requirements should be structured for an agent to plan phases and implement from — not a raw XML dump."
+            },
+            {
+              "id": "14-02",
+              "status": "done",
+              "goal": "Create bin/gad-tools.cjs — the GAD equivalent of gsd-tools.cjs. Provides the core commands that workflows depend on: init (phase-op, execute-phase, plan-phase), commit, config-get, config-set, state (load, update, record-session), phase (find, add, complete), roadmap (get-phase, analyze), generate-slug, current-timestamp, scaffold, agent-skills. Reads from XML planning files instead of MD. This replaces all gsd-tools.cjs references in workflows."
+            },
+            {
+              "id": "14-03",
+              "status": "done",
+              "goal": "Define the eval trace format for real implementations: track which gad commands were called, which gad skills were triggered, arguments passed, token counts, time-to-completion. Extend TRACE.json schema beyond the current unit-coverage model to include tool_calls[] and skill_triggers[]."
+            },
+            {
+              "id": "14-04",
+              "status": "done",
+              "goal": "Define the eval scoring rubric for real implementations: CLI efficiency (same as v6), skill trigger accuracy (were the right skills triggered at the right time), planning quality (task coverage, state hygiene), and time-to-completion. Human feedback is a separate manual score added after."
+            },
+            {
+              "id": "14-05",
+              "status": "done",
+              "goal": "Run the escape-the-dungeon eval: fresh agent session, agent reads requirements, plans phases, implements using the GAD loop, traces everything. Produce TRACE.json and SCORE.md. This validates the full loop end-to-end on a real project."
+            },
+            {
+              "id": "14-06",
+              "status": "done",
+              "goal": "Run the portfolio-bare eval with updated tracing. Compare against prior runs. Tighten portfolio-bare based on findings from the escape-the-dungeon eval."
+            },
+            {
+              "id": "14-07",
+              "status": "done",
+              "goal": "Review CONTEXT.md: what it is, how discuss-phase produces it, how downstream agents (researcher, planner) consume it. Evaluate whether gad CLI should have a `gad context-doc` command or if gad-tools.cjs scaffold is sufficient. Decide if CONTEXT.md should be a GAD skill output or a planning file type. Update skills and CLI to integrate CONTEXT.md into the loop if valuable."
+            }
+          ]
+        },
+        {
+          "name": "phase-14.5-eval-findings-enforce-the-loop-automate-",
+          "source_phase": "14.5",
+          "source_phase_title": "Eval findings: enforce the loop, automate tracing, auto-scaffold conventions",
+          "pressure_score": 21,
+          "tasks_total": 7,
+          "tasks_done": 7,
+          "crosscuts": 7,
+          "file_path": ".agents/skills/candidates/phase-14.5-eval-findings-enforce-the-loop-automate-/SKILL.md",
+          "tasks": [
+            {
+              "id": "14.5-01",
+              "status": "done",
+              "goal": "Create eval template AGENTS.md that enforces the GAD loop. The eval template's .planning/ directory must include an AGENTS.md that tells the agent: (1) run gad snapshot first, (2) plan phases in ROADMAP.xml before coding, (3) update TASK-REGISTRY.xml per task, (4) update STATE.xml after each phase, (5) capture decisions. This file is what the agent reads to know how to work — not a prompt instruction it ignores."
+            },
+            {
+              "id": "14.5-02",
+              "status": "done",
+              "goal": "Update eval-run skill/command to inject snapshot context INTO the agent prompt. Instead of telling the agent \"run gad snapshot\", the eval-run workflow should run the snapshot itself and include the output in the agent's initial context. The agent starts with context, not instructions to get context."
+            },
+            {
+              "id": "14.5-03",
+              "status": "done",
+              "goal": "Create gad eval trace reconstruct --project &lt;name&gt; command. Parses git log + planning doc state to build TRACE.json after the fact. Detects: which files were created/modified per commit, which planning docs were updated, time between commits (phase duration), task completion count from TASK-REGISTRY.xml diff. This replaces manual log-cmd/log-skill with post-hoc reconstruction."
+            },
+            {
+              "id": "14.5-04",
+              "status": "done",
+              "goal": "Add checkpoint enforcement to execute-phase workflow. Before the agent can start the next task, it must have: (1) updated TASK-REGISTRY.xml for the previous task, (2) updated STATE.xml next-action. The workflow checks these preconditions. If not met, it prompts the agent to update before continuing. Not a hook — a step in the workflow that reads the planning docs and verifies."
+            },
+            {
+              "id": "14.5-05",
+              "status": "done",
+              "goal": "Auto-scaffold CONVENTIONS.md after first implementation phase of greenfield projects. When phase 01 (or first phase with code output) completes in a project with no existing CONVENTIONS.md, run a lightweight codebase scan (file structure, naming patterns, import style, content pack format) and write .planning/CONVENTIONS.md. Integrate with gad:map-codebase skill output."
+            },
+            {
+              "id": "14.5-06",
+              "status": "done",
+              "goal": "Define expected_triggers for implementation evals. The TRACE.json skill_accuracy field needs expected_triggers populated before the eval runs — defining which skills SHOULD fire and when. Create a template expected_triggers list for implementation evals: discuss-phase before planning, plan-phase before execution, execute-phase per phase, verify-work after phases, map-codebase after first implementation."
+            },
+            {
+              "id": "14.5-07",
+              "status": "done",
+              "goal": "Re-run escape-the-dungeon eval with fixes applied (template AGENTS.md, snapshot injection, checkpoint enforcement). Compare v3 TRACE.json against v2. Validate that: gad CLI is actually used, task-level tracking happens, conventions are generated, trace has real data not backfilled."
+            }
+          ]
+        },
+        {
+          "name": "phase-17-reverse-engineer-skill-reader-workspace-",
+          "source_phase": "17",
+          "source_phase_title": "Reverse-engineer skill + reader-workspace eval",
+          "pressure_score": 12,
+          "tasks_total": 4,
+          "tasks_done": 4,
+          "crosscuts": 4,
+          "file_path": ".agents/skills/candidates/phase-17-reverse-engineer-skill-reader-workspace-/SKILL.md",
+          "tasks": [
+            {
+              "id": "17-01",
+              "status": "done",
+              "goal": "Run gad:reverse-engineer on vendor/repub-builder/src/reader to produce REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml for the reader-workspace eval."
+            },
+            {
+              "id": "17-02",
+              "status": "done",
+              "goal": "Create reader-workspace eval project with REQUIREMENTS.md, template/, and AGENTS.md."
+            },
+            {
+              "id": "17-03",
+              "status": "done",
+              "goal": "Run reader-workspace eval v1: fresh agent builds the EPUB reader from reverse-engineered requirements alone. Produce TRACE.json and SCORE.md. Validates the full reverse-engineer → implement cycle."
+            },
+            {
+              "id": "17-04",
+              "status": "done",
+              "goal": "Score reader-workspace v1: requirement coverage (51 criteria), architecture alignment (12 decisions), state hygiene, convention adherence. Compare output against reference implementation quality."
+            }
+          ]
+        },
+        {
+          "name": "phase-18-eval-suite-parallel-runs-iteration-cycle",
+          "source_phase": "18",
+          "source_phase_title": "Eval suite — parallel runs + iteration cycle",
+          "pressure_score": 18,
+          "tasks_total": 6,
+          "tasks_done": 6,
+          "crosscuts": 6,
+          "file_path": ".agents/skills/candidates/phase-18-eval-suite-parallel-runs-iteration-cycle/SKILL.md",
+          "tasks": [
+            {
+              "id": "18-01",
+              "status": "done",
+              "goal": "Replace the stub in `gad eval run` with a prompt generator: read the eval template (AGENTS.md, REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, STATE.xml), construct a full bootstrap prompt, and output it to stdout + eval-output.txt. The user/agent copies this prompt into their AI tool. Agent-agnostic per gad-01."
+            },
+            {
+              "id": "18-02",
+              "status": "done",
+              "goal": "Add `gad eval suite` CLI command: lists all eval projects with templates, generates bootstrap prompts for each, outputs them as separate files in a timestamped suite run directory. Shows a summary table of what will be run."
+            },
+            {
+              "id": "18-03",
+              "status": "done",
+              "goal": "Add `gad eval report` cross-project comparison: reads TRACE.json from latest run of each project, produces a comparison table (phases, tasks, discipline, scores) across all projects. Supports --all flag for all projects or specific --project list."
+            },
+            {
+              "id": "18-03b",
+              "status": "done",
+              "goal": "Add comprehensive logging: GAD CLI call logger (JSONL per day), PostToolUse hook for tool tracing (Bash/Read/Write/Edit/Agent/Skill/Grep/Glob), `gad log show|stats|clear` commands, `gad eval trace from-log` for definitive trace building from actual logs, GAD_LOG_DIR env for eval-scoped logs."
+            },
+            {
+              "id": "18-04",
+              "status": "done",
+              "goal": "Run the full eval suite: portfolio-bare v3, escape-the-dungeon v4, reader-workspace v2. Launch all three in parallel worktree agents. Reconstruct traces and produce cross-project report."
+            },
+            {
+              "id": "18-05",
+              "status": "done",
+              "goal": "Iterate on findings: review eval results, tighten at least one skill based on patterns, update eval-suite SKILL.md with lessons learned, add any new eval criteria discovered."
+            }
+          ]
+        },
+        {
+          "name": "phase-20-real-time-tooling-mcp-bridge-and-tooling",
+          "source_phase": "20",
+          "source_phase_title": "Real-time tooling, MCP bridge, and tooling evals",
+          "pressure_score": 20,
+          "tasks_total": 8,
+          "tasks_done": 7,
+          "crosscuts": 6,
+          "file_path": ".agents/skills/candidates/phase-20-real-time-tooling-mcp-bridge-and-tooling/SKILL.md",
+          "tasks": [
+            {
+              "id": "20-01",
+              "status": "done",
+              "goal": "Document tooling eval contract: extend TRACE.json with eval_type tooling|mcp, trace_schema_version, nested tooling or mcp metrics blocks, optional metrics.json for granular histograms. Record gad-26–gad-28 in DECISIONS.xml. Add a short section to vendor/get-anything-done/AGENTS.md (or evals/README) describing implementation vs tooling evals and how regressions are compared."
+            },
+            {
+              "id": "20-02",
+              "status": "done",
+              "goal": "Implement `gad dev` or `gad watch planning`: debounced watch on .planning/**/*.xml (configurable), invoke existing refs verify logic, print one JSON summary line per run (ok, missing paths, timing) for scripts and terminal/CI consumers. Optional --poll for unreliable FS watchers. No network by default."
+            },
+            {
+              "id": "20-03",
+              "status": "done",
+              "goal": "Add evals/tooling-watch-baseline (or equivalent): fixed fixture repo with known good/bad paths, automated Node harness that starts watcher, performs scripted edits, asserts correctness + latency percentiles, writes evals/&lt;project&gt;/vN/TRACE.json with eval_type tooling. Runnable in CI without an LLM."
+            },
+            {
+              "id": "20-04",
+              "status": "done",
+              "goal": "Harden implementation eval scoring automation: generate scores.json alongside SCORE.md from score-generator; change gad eval scores to prefer JSON totals over SCORE.md regex. Prepare same pattern for tooling composite (tooling_composite) so weights can evolve without breaking old runs."
+            },
+            {
+              "id": "20-05",
+              "status": "done",
+              "goal": "Optional MCP server package: thin adapter over the same core as CLI (verify, snapshot summary, session status). Stdio MCP; document Cursor config. Agents may use it; primary user remains human IDE workflows."
+            },
+            {
+              "id": "20-06",
+              "status": "done",
+              "goal": "MCP tooling eval: golden tool invocations, cold-start and per-tool latency, error rate on bad args. Produces eval_type mcp TRACE.json; compare across gad releases."
+            },
+            {
+              "id": "20-07",
+              "status": "cancelled",
+              "goal": "IDE integration: document VS Code / Cursor Tasks (background watch), optional problem matcher mapping JSON errors to Problems panel. Update portfolio sink evals.mdx when behavior is stable."
+            },
+            {
+              "id": "20-08",
+              "status": "done",
+              "goal": "Extend gad eval report and gad eval diff to include tooling/mcp runs (filter by eval_type, compare tooling.metrics and composite). Ensure suite or follow-up command can run implementation + tooling evals in one report."
+            }
+          ]
+        },
+        {
+          "name": "phase-21-eval-framework-evolution-v3-scoring-gate",
+          "source_phase": "21",
+          "source_phase_title": "Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield",
+          "pressure_score": 56,
+          "tasks_total": 28,
+          "tasks_done": 26,
+          "crosscuts": 14,
+          "file_path": ".agents/skills/candidates/phase-21-eval-framework-evolution-v3-scoring-gate/SKILL.md",
+          "tasks": [
+            {
+              "id": "21-01",
+              "status": "done",
+              "goal": "Fix MCP UTF-8 buffer bug: Content-Length counts bytes but handleData used string.length. tools/list responses with em dashes broke the parser. Switch to Buffer throughout MCP harness and server."
+            },
+            {
+              "id": "21-02",
+              "status": "done",
+              "goal": "Speed up planning-ref-verify by reading from planning-config roots instead of full tree walk, plus cache fs.statSync results."
+            },
+            {
+              "id": "21-03",
+              "status": "done",
+              "goal": "Standardize implementation eval composite formula. Replace inconsistent per-eval weights with a single v3 formula: requirement_coverage + planning_quality + per_task_discipline + skill_accuracy + time_efficiency + human_review. Document in DEFINITIONS.md."
+            },
+            {
+              "id": "21-04",
+              "status": "done",
+              "goal": "Clean skill_accuracy: remove methodology behaviors (decisions-captured, multi-phase-planning, phase-completion, task-lifecycle) from expected_triggers. Only actual /gad:* skill invocations count."
+            },
+            {
+              "id": "21-05",
+              "status": "done",
+              "goal": "Add gad eval review CLI command to record human review scores that get folded into the composite with the v3 weights."
+            },
+            {
+              "id": "21-06",
+              "status": "done",
+              "goal": "Add gad eval open CLI command to serve eval build output via local HTTP server (file:// doesn't work for ES module bundles from Vite/KAPLAY)."
+            },
+            {
+              "id": "21-07",
+              "status": "done",
+              "goal": "Create escape-the-dungeon-bare eval project: same game requirements, no GAD framework, agent creates own workflow. Baseline A/B comparison for the freedom hypothesis."
+            },
+            {
+              "id": "21-08",
+              "status": "done",
+              "goal": "Create escape-the-dungeon-emergent eval project: no framework, but inherits skills from the previous run. Tests whether self-created systems improve iteratively."
+            },
+            {
+              "id": "21-09",
+              "status": "done",
+              "goal": "Version game requirements. Document v1→v2→v3 history inside REQUIREMENTS.xml. Each eval round should reference the requirements version it used."
+            },
+            {
+              "id": "21-10",
+              "status": "done",
+              "goal": "Build requirements v3: add gate criteria (game loop, spell crafting, UI quality) that override requirement_coverage to 0 if failed. Trim source gameplay design doc from 640 → 120 lines for the vertical slice focus."
+            },
+            {
+              "id": "21-11",
+              "status": "done",
+              "goal": "Run round 2 greenfield evals with v2 requirements. Three conditions: GAD v7, Bare v2, Emergent v1."
+            },
+            {
+              "id": "21-12",
+              "status": "done",
+              "goal": "Run round 3 greenfield evals with v3 requirements (gates). GAD v8, Bare v3, Emergent v2."
+            },
+            {
+              "id": "21-13",
+              "status": "done",
+              "goal": "Document the freedom hypothesis finding: GAD framework constraint correlates inversely with creative output quality on greenfield game implementation. Capture in FINDINGS doc and decision."
+            },
+            {
+              "id": "21-14",
+              "status": "done",
+              "goal": "Build eval preservation contract: gad eval preserve command that copies code+planning+build+logs to canonical per-version locations. Enforce via tests/eval-preservation.test.cjs."
+            },
+            {
+              "id": "21-15",
+              "status": "done",
+              "goal": "Fix eval preserve to copy the ENTIRE project (not cherry-picked files). Agent may create files we don't anticipate."
+            },
+            {
+              "id": "21-16",
+              "status": "done",
+              "goal": "Mandate game/.planning/ as the home for all eval workflow artifacts regardless of framework. Bare and emergent must put workflow files there too, not at project root."
+            },
+            {
+              "id": "21-17",
+              "status": "done",
+              "goal": "Add gad worktree management commands: list, show, clean, prune. User had no visibility into .claude/worktrees/agent-* directories."
+            },
+            {
+              "id": "21-18",
+              "status": "done",
+              "goal": "Categorize evals by eval_mode (greenfield|brownfield) and workflow (gad|bare|emergent). Show in gad eval list."
+            },
+            {
+              "id": "21-19",
+              "status": "done",
+              "goal": "Create three brownfield eval projects (etd-brownfield-gad/bare/emergent) using bare v3 as baseline. Shared extension requirements (_brownfield-extensions-v4.md) describing v4 features (floor progression, respawning encounters, forge affinity, skills system, visual upgrade)."
+            },
+            {
+              "id": "21-20",
+              "status": "done",
+              "goal": "Port session tracking into TASK-REGISTRY.xml instead of Claude Code Task tool. Stop using ephemeral session tasks for GAD-tracked work."
+            },
+            {
+              "id": "21-21",
+              "status": "done",
+              "goal": "Create an experiment log doc (evals/EXPERIMENT-LOG.md) that tracks every round: conditions, requirements version, results, findings. Running ledger across all rounds."
+            },
+            {
+              "id": "21-22",
+              "status": "done",
+              "goal": "Build requirements v4: pressure-oriented design (not features checklist). Authored dungeon with floors → 5-8 rooms → boss gate. Room types: Combat, Elite, Forge, Rest, Event. Each floor must introduce a mechanical constraint that can't be brute-forced with default spells. Forge is gate with at least one encounter per floor that favors crafted/adapted spells. Pressure mechanics required from at least 2 of 4 categories. Starter abilities explicitly insufficient. Skills scored but not gate (combat needs non-spell action category only). Sprites: attempt sourcing first, coherent fallback allowed. Traits label in UI, narrativeStats in code. Add ingenuity/adaptation scoring dimension."
+            },
+            {
+              "id": "21-25",
+              "status": "done",
+              "goal": "Create create_skill skill doc (skills/create-skill/SKILL.md) that documents how bare/emergent agents can define their own reusable skills. Only skill bare starts with; emergent starts with create_skill + inherited skills from previous runs."
+            },
+            {
+              "id": "21-26",
+              "status": "done",
+              "goal": "Rewrite bare and emergent AGENTS.md to be truly minimal. Stop mandating ARCHITECTURE.md, CHANGELOG.md, or any specific artifact. Only mandate: (1) all workflow artifacts in game/.planning/, (2) reference create_skill skill for defining new skills. Everything else is agent-defined. This defeats the previous round's too-prescriptive guidance and lets us observe what emergent workflows actually produce."
+            },
+            {
+              "id": "21-27",
+              "status": "done",
+              "goal": "Create gad:find-sprites skill (skills/find-sprites/SKILL.md) that documents the asset sourcing workflow: web search for free/open-license sprites and icons, preference order (npm packs → web search → generated → geometric fallback), integration tips, license verification. Referenced by v4 AGENTS.md for all 3 greenfield conditions."
+            },
+            {
+              "id": "21-23",
+              "status": "done",
+              "goal": "Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates."
+            },
+            {
+              "id": "21-23b",
+              "status": "planned",
+              "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's setup-heavy phases (snapshot + planning XML writes) spend proportionally more time in server-dependent states during peak load periods. Investigation needed: (1) check Anthropic status page for correlation with our crash timestamps; (2) test whether spreading the snapshot + plan calls across shorter API invocations reduces 529 exposure; (3) consider a retry-with-backoff wrapper in the eval runner for 529 specifically (not for rate limits). Only retry GAD v11 after investigation produces a mitigation or explicit \"try again, the API was just overloaded that hour\" conclusion."
+            },
+            {
+              "id": "21-24",
+              "status": "cancelled",
+              "goal": "Run round 1 brownfield experiments. Three conditions using bare v3 baseline + v4 extensions. BLOCKED on portfolio documentation (21-28)."
+            }
+          ]
+        },
+        {
+          "name": "phase-22-portfolio-experiment-documentation-hub-p",
+          "source_phase": "22",
+          "source_phase_title": "Portfolio experiment documentation — hub, per-project, per-run, findings, graphs",
+          "pressure_score": 110,
+          "tasks_total": 58,
+          "tasks_done": 46,
+          "crosscuts": 26,
+          "file_path": ".agents/skills/candidates/phase-22-portfolio-experiment-documentation-hub-p/SKILL.md",
+          "tasks": [
+            {
+              "id": "22-01",
+              "status": "done",
+              "goal": "Plan the portfolio experiment documentation structure — pivoted to a standalone Next.js site at vendor/get-anything-done/site/ instead of apps/portfolio docs. Designed single-page sections (workflow, rounds, projects, results, playable, requirements, catalog, templates) plus dynamic per-run pages."
+            },
+            {
+              "id": "22-02",
+              "status": "done",
+              "goal": "Hub/home page explaining the experiment, freedom hypothesis, methodology, and linking to every section."
+            },
+            {
+              "id": "22-03",
+              "status": "done",
+              "goal": "Per-eval-project cards for all six projects with greenfield/brownfield split."
+            },
+            {
+              "id": "22-04",
+              "status": "done",
+              "goal": "Per-run detail pages for every eval run with TRACE.json breakdown, dimension scores, gate report, process metrics, playable link."
+            },
+            {
+              "id": "22-05",
+              "status": "done",
+              "goal": "Per-round experiment summary sections that compare conditions."
+            },
+            {
+              "id": "22-06",
+              "status": "cancelled",
+              "goal": "Visualizations/graphs across rounds. Deferred — score bars on the per-run page and run cards cover the \"at a glance\" comparison for now; a dedicated charts section can be revived later if we decide we're missing the signal."
+            },
+            {
+              "id": "22-07",
+              "status": "done",
+              "goal": "Requirements version history (v1 → v4 lineage with diffs)."
+            },
+            {
+              "id": "22-08",
+              "status": "cancelled",
+              "goal": "Decisions index page. Deferred — decisions referenced inline in Rounds and Requirements sections; full decisions index can be a dedicated /decisions route later when the list is big enough to warrant it."
+            },
+            {
+              "id": "22-09",
+              "status": "done",
+              "goal": "Findings as standalone pages: /findings index + /findings/[slug] per finding."
+            },
+            {
+              "id": "22-10",
+              "status": "done",
+              "goal": "Build pipeline so the site data stays in sync with the repo."
+            },
+            {
+              "id": "22-11",
+              "status": "done",
+              "goal": "Extract v1 and v2 REQUIREMENTS.md snapshots from git history."
+            },
+            {
+              "id": "22-12",
+              "status": "done",
+              "goal": "Markdown rendering via marked in prebuild."
+            },
+            {
+              "id": "22-13",
+              "status": "done",
+              "goal": "Per-skill detail pages app/skills/[id]/page.tsx."
+            },
+            {
+              "id": "22-14",
+              "status": "done",
+              "goal": "Per-agent detail pages app/agents/[id]/page.tsx."
+            },
+            {
+              "id": "22-15",
+              "status": "done",
+              "goal": "Per-command detail pages app/commands/[id]/page.tsx."
+            },
+            {
+              "id": "22-16",
+              "status": "done",
+              "goal": "Findings routes at /findings and /findings/[slug]."
+            },
+            {
+              "id": "22-17",
+              "status": "done",
+              "goal": "Framework vs eval-inherited catalog split."
+            },
+            {
+              "id": "22-18",
+              "status": "done",
+              "goal": "/planning meta-transparency page."
+            },
+            {
+              "id": "22-19",
+              "status": "done",
+              "goal": "skills/portfolio-sync/SKILL.md — methodology for keeping the public site in sync with evals."
+            },
+            {
+              "id": "22-20",
+              "status": "done",
+              "goal": "Dedicated /gad framework overview page. Currently the home Loop + Catalog sections are entry points but there is no standalone \"what is GAD\" reference page someone can deep-link to. The catalog cards work but users have asked for a top-level GAD explainer + index that links into skills/agents/commands as a single navigation hub."
+            },
+            {
+              "id": "22-21",
+              "status": "done",
+              "goal": "/methodology page that explains how tracing works, what fields TRACE.json captures, all scoring formulas per eval project (pulled from evals/&lt;project&gt;/gad.json), the low-score caps from v3, and the gate logic. This is the \"how we measure\" appendix users have been asking for. Includes concrete worked examples showing how a composite score was derived."
+            },
+            {
+              "id": "22-22",
+              "status": "cancelled",
+              "goal": "Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a \"tracing gap\" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schema overhaul)."
+            },
+            {
+              "id": "22-23",
+              "status": "done",
+              "goal": "Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, \"what the agent built for itself\" per run (scan run/.planning/skills/*.md and similar)."
+            },
+            {
+              "id": "22-24",
+              "status": "done",
+              "goal": "Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library — pure React-rendered SVG so it ships in every prebuild."
+            },
+            {
+              "id": "22-25",
+              "status": "done",
+              "goal": "Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed — may need a secondary nav row or drop items."
+            },
+            {
+              "id": "22-26",
+              "status": "cancelled",
+              "goal": "Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math."
+            },
+            {
+              "id": "22-27",
+              "status": "cancelled",
+              "goal": "New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work."
+            },
+            {
+              "id": "22-28",
+              "status": "done",
+              "goal": "Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed."
+            },
+            {
+              "id": "22-29",
+              "status": "done",
+              "goal": "/lineage page explaining context rot, the GSD upstream, the RepoPlanner predecessor (b2gdevs / https://repo-planner.vercel.app/ — first Ralph Wiggum loop formalization), and how GAD combines both approaches plus measurement. Links to both projects' sources. Captures decision gad-56."
+            },
+            {
+              "id": "22-30",
+              "status": "cancelled",
+              "goal": "Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code ✓ via hooks, Aider ✓ via Python callbacks, Continue.dev ✓ via extension API, Cursor ✗, vanilla Codex CLI ✗ stream-only). Published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for GAD evaluation."
+            },
+            {
+              "id": "22-31",
+              "status": "done",
+              "goal": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content — the scaffold establishes the pattern and the first composition is a placeholder."
+            },
+            {
+              "id": "22-32",
+              "status": "done",
+              "goal": "Write .planning/DISCUSS-PHASE-25.md capturing the trace schema v4 discussion output."
+            },
+            {
+              "id": "22-33",
+              "status": "cancelled",
+              "goal": "`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install — but it's hardcoded for the npm-published package layout (expects to find files under `node_modules/get-anything-done/get-anything-done/`). This task wraps it in a `gad install` subcommand that resolves paths correctly whether running from a git checkout (vendor/get-anything-done/) or an npm install. Related to 22-34 (fix install.js directly) — this task may become a no-op if 22-34 fixes the path resolution at the install.js level."
+            },
+            {
+              "id": "22-34",
+              "status": "done",
+              "goal": "Fix path resolution bug in bin/install.js for local git checkouts."
+            },
+            {
+              "id": "25-01",
+              "status": "done",
+              "goal": "Design trace event envelope + 4 event types as a reusable library in lib/trace-schema.cjs."
+            },
+            {
+              "id": "25-02",
+              "status": "done",
+              "goal": "Write the hook handler script at bin/gad-trace-hook.cjs that Claude Code invokes for PreToolUse/PostToolUse."
+            },
+            {
+              "id": "25-03",
+              "status": "done",
+              "goal": "4 KB truncation helper with head+tail split for trace event outputs."
+            },
+            {
+              "id": "25-04",
+              "status": "done",
+              "goal": "`gad install hooks` CLI subcommand that wires the trace hook into Claude Code settings.json."
+            },
+            {
+              "id": "22-35",
+              "status": "done",
+              "goal": "Fix YAML parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). Descriptions with embedded colons like \"methodology:\" and \"discipline:\" were parsed by js-yaml as key-value separators, breaking skill loading in Claude Code. Fix by converting plain scalar descriptions to YAML folded block scalar form (`description: &gt;- ...`) which treats the body as opaque."
+            },
+            {
+              "id": "22-36",
+              "status": "done",
+              "goal": "Dogfood-failure recovery: author skills/emergent/session-discipline/SKILL.md as an agent-authored hard-start checklist. Move agent-authored skills into skills/emergent/ so default install can skip them. Add origin + authored-by + authored-on + excluded-from-default-install fields to CatalogSkill. Capture gad-78 (dogfood failure) + gad-79 (task_pressure programmatic) decisions."
+            },
+            {
+              "id": "22-37",
+              "status": "done",
+              "goal": "Reorganize .planning/ root: move ad-hoc markdown docs (ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-*.md) into a new .planning/docs/ subdirectory per user directive. Rationale: .planning/ root should hold the formal XML artifacts that gad snapshot surfaces; ad-hoc human-written docs that are not formal (but still project-relevant) belong in a peer docs/ folder. Update all site page references to the new paths."
+            },
+            {
+              "id": "22-38",
+              "status": "done",
+              "goal": "Retroactively update TASK-REGISTRY.xml to mark 22-20/22-21/22-23/22-24/22-25/22-29 as done (work shipped in prior sessions without registry updates — dogfood failure per gad-78). Add new tasks 22-36/22-37/22-38/22-39/22-40/22-41/22-42/22-43 for this session's work."
+            },
+            {
+              "id": "22-39",
+              "status": "done",
+              "goal": "Agent-crawlable documentation export: emit public/llms.txt (concise index per llmstxt.org convention), public/llms-full.txt (full-text dump of skills/decisions/questions/bugs/glossary/tasks/phases/current-requirements), public/api/docs.json (structured JSON with schema gad-docs-v1) at prebuild. Provides a full API reference for external agents evaluating or reviewing GAD without needing to crawl HTML."
+            },
+            {
+              "id": "22-40",
+              "status": "done",
+              "goal": "Interactive chart on /roadmap showing human review across rounds broken out by hypothesis track. Solid lines for tracks with real data (freedom/csh/gad). Dashed ghost lines for planned tracks without runs yet (content-driven, codex runtime) so the research plan is visible."
+            },
+            {
+              "id": "22-41",
+              "status": "done",
+              "goal": "/hypotheses index page + /freedom evidence page + /content-driven planned-hypothesis page. Every hypothesis the project tracks gets wired to its eval track, its latest evidence, and its dedicated evidence page. Status labels: preliminary observation / discussing / operationalized / not-yet-tested."
+            },
+            {
+              "id": "22-42",
+              "status": "done",
+              "goal": "Clickable skills modal on /emergent: convert the static skill-artifact chip list on the emergent page into client-component buttons that open a modal showing the full SKILL.md content with Copy button + GitHub source link. Per user directive 2026-04-09: \"I wish i could click and download or get that pop up of those skills on the page.\""
+            },
+            {
+              "id": "22-43",
+              "status": "done",
+              "goal": "Scaffold evals/gad-explainer-video/ as a new eval project: REQUIREMENTS.md describing the Remotion GAD explainer video task (3-minute explainer, 4 mandatory gate frames, pedagogical clarity as primary rubric dimension), gad.json with workflow:gad + compare_to bare/emergent siblings + rubric weights. Tests freedom/CSH/emergent-evolution hypotheses on a DIFFERENT task domain (video composition instead of game implementation) — the generalization test /skeptic says we need."
+            },
+            {
+              "id": "22-44",
+              "status": "cancelled",
+              "goal": "Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone → install → open in Claude → talk conversationally), document everything that breaks, update /contribute with the friction points, remove the \"fresh-clone test still open\" amber warning. Goal: make contribution actually work for a human who has never touched GAD before."
+            },
+            {
+              "id": "22-45",
+              "status": "done",
+              "goal": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time."
+            },
+            {
+              "id": "22-46",
+              "status": "done",
+              "goal": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses different discovery conventions — if we target .agents/skills/, both runtimes find the same skills. Also honor the excluded-from-default-install:true frontmatter flag I added to the emergent skill — the installer must skip those."
+            },
+            {
+              "id": "22-47",
+              "status": "cancelled",
+              "goal": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). This becomes the reference page every skill-related section of the site cites instead of repeating the content inline."
+            },
+            {
+              "id": "22-48",
+              "status": "done",
+              "goal": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. Output structured report. ROUND 5 IS BLOCKED on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are NOT allowed because bare condition requires zero framework affordances)."
+            },
+            {
+              "id": "22-49",
+              "status": "cancelled",
+              "goal": "Skill collision detection at prebuild (gad-81). Scan every skills/*/SKILL.md description for overlapping trigger keywords. Compute a keyword profile per skill, find overlaps above a threshold, emit a collision report to data/skill-collisions.json. Add a \"collision candidates\" section to the /skills site page showing any detected overlaps with a merge-skill suggestion link (merge-skill itself not yet built — link falls back to a manual-review prompt). Also: a keyword index for every skill so users searching can see what terms trigger each."
+            },
+            {
+              "id": "22-50",
+              "status": "cancelled",
+              "goal": "Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment — no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. This is the highest-leverage way to get \"agent reasoning\" signal without Claude Code exposing new hook surfaces."
+            },
+            {
+              "id": "22-51",
+              "status": "done",
+              "goal": "Scaffold new eval domain evals/skill-evaluation-app/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood)."
+            },
+            {
+              "id": "22-52",
+              "status": "cancelled",
+              "goal": "Build the GAD-native per-skill evaluation harness: gad eval skill &lt;name&gt; CLI subcommand. Reads evals/evals.json inside the skill directory, spawns clean-context subagent runs (with_skill + without_skill) via gad worktree, captures trace events from v4 schema (gad-50) as the observable signal, grades assertions by querying trace events + file mutations + commit log (NOT LLM self-report — that's what skill-creator's Python harness does and it didn't work for us), emits benchmark.json compatible with agentskills.io format. This is the load-bearing piece that lets every GAD skill graduate from experimental to canonical per gad-86. Directly answers programmatic-eval GAPS G2 + the hygiene half of G11."
+            },
+            {
+              "id": "22-53",
+              "status": "done",
+              "goal": "Author merge-skill + find-skills SKILL.md files as workspace skills. find-skills is a thin methodology wrapper around npx skills (vercel-labs/skills CLI per gad-85). merge-skill is a pure methodology doc for fusing overlapping skills. Both start as experimental (status: experimental) because no evaluation harness has been run against them yet."
+            },
+            {
+              "id": "22-54",
+              "status": "done",
+              "goal": "Landing page + /hypotheses interactive chart. User directive 2026-04-09: \"the interactive chart I asked for should have been on the front page, but I dont see it... I still see an emergent page, but not a hypothesis page with graphs and etc detailing it out visually.\" Move or duplicate the HypothesisTracksChart from /roadmap onto the landing page (after Hero, before WhatItIs) and add it to /hypotheses above the hypothesis cards."
+            }
+          ]
+        },
+        {
+          "name": "phase-30-eval-framework-v2-domains-tech-stacks-ro",
+          "source_phase": "30",
+          "source_phase_title": "Eval framework v2 — domains, tech stacks, rounds per project",
+          "pressure_score": 11,
+          "tasks_total": 5,
+          "tasks_done": 5,
+          "crosscuts": 3,
+          "file_path": ".agents/skills/candidates/phase-30-eval-framework-v2-domains-tech-stacks-ro/SKILL.md",
+          "tasks": [
+            {
+              "id": "30-01",
+              "status": "done",
+              "goal": "gad rounds --project shows per-project rounds derived from TRACE.json requirements_version changes across runs."
+            },
+            {
+              "id": "30-02",
+              "status": "done",
+              "goal": "Build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. Failed gate = eval incomplete."
+            },
+            {
+              "id": "30-03",
+              "status": "done",
+              "goal": "Human time estimation in eval prompt — buildEvalPrompt() includes instruction for agent to estimate human_estimate_hours before coding."
+            },
+            {
+              "id": "30-04",
+              "status": "done",
+              "goal": "Source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.json."
+            },
+            {
+              "id": "30-05",
+              "status": "done",
+              "goal": "Site project detail shows domain badge + tech stack from eval project metadata."
+            }
+          ]
+        },
+        {
+          "name": "phase-34-executable-release-pipeline-github-first",
+          "source_phase": "34",
+          "source_phase_title": "Executable release pipeline + GitHub-first distribution",
+          "pressure_score": 13,
+          "tasks_total": 5,
+          "tasks_done": 5,
+          "crosscuts": 4,
+          "file_path": ".agents/skills/candidates/phase-34-executable-release-pipeline-github-first/SKILL.md",
+          "tasks": [
+            {
+              "id": "34-01",
+              "status": "done",
+              "goal": "Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packaging toolchain, output artifact names, signing/notarization assumptions, and which runtime files (CLI bundle, hooks, templates, skills) must ship alongside the executable."
+            },
+            {
+              "id": "34-02",
+              "status": "done",
+              "goal": "Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub repo/Node install. Remove or rewrite remaining npm-first copy in quick start, README, starter READMEs, and site pages."
+            },
+            {
+              "id": "34-03",
+              "status": "done",
+              "goal": "Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verify the repo is listable/installable from skills.sh, and make skill installation distinct from CLI installation throughout the docs."
+            },
+            {
+              "id": "34-04",
+              "status": "done",
+              "goal": "Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json, build/release scripts, and bundled assets). Non-shipping docs/site/eval/planning commits must not require a new release."
+            },
+            {
+              "id": "34-05",
+              "status": "done",
+              "goal": "Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publication/update. Document the operator flow for releasing after CLI-shipping changes."
+            }
+          ]
         }
       ]
     }

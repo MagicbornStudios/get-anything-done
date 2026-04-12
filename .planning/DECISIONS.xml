@@ -967,4 +967,10 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>New top-level gad env command with status + agents subcommands. Eval commands gain a preflight check that calls into the same detection logic. Prevents cryptic command-not-found errors mid-eval. Documented in quick-start.md as step 0.</impact>
   </decision>
 
+  <decision id="gad-144">
+    <title>Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review</title>
+    <summary>When the self-eval pipeline flags a phase as high-pressure (task count + crosscuts above threshold), that's a signal patterns exist that could become skills (per GAD-D-115). Rather than just logging the flag, the pipeline should auto-generate draft SKILL.md files inspired by the phase's tasks and park them in .agents/skills/candidates/ under the System category. Candidates are NOT available to GAD — they have status: candidate in frontmatter and are excluded from the catalog scan. A new /planning tab "Skill candidates" shows them for human review, with each candidate showing: the skill draft content, the source phase it came from, the list of tasks in that phase, and a pressure score. An info icon with HoverCard explains what a candidate is and how it's generated. Reviewer can then: promote the candidate to a real skill (moves to .agents/skills/&lt;name&gt;/), merge it into an existing skill via merge-skill, or discard it. This turns the high-pressure observation into actionable skill creation without polluting the live catalog with untested drafts.</summary>
+    <impact>New .agents/skills/candidates/ directory (gitignored from catalog scan). New planning tab "Skill candidates" on /planning. Candidate detail page shows source phase + tasks. Self-eval pipeline extended to emit candidate drafts for phases above pressure threshold. Info icon HoverCard on the tab explains the feedback loop from pressure to skill creation. Phase 38 implements this.</impact>
+  </decision>
+
 </decisions>

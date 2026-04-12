@@ -1764,9 +1764,9 @@ export const FINDINGS: Finding[] = [
 ];
 
 export const PLANNING_STATE: PlanningState = {
-  "currentPhase": "34",
+  "currentPhase": "36",
   "milestone": "gad-v1.1",
-  "nextAction": "Phase 34 shipped. Phase 36 spec drafted at .planning/specs/PER-EVAL-REPO-SPEC.md.\n\n=== JUST DRAFTED (spec only, no code yet) ===\nPhase 36: Per-eval-repo architecture + gad eval start/auto/finish split + gad env\n  Spec: .planning/specs/PER-EVAL-REPO-SPEC.md\n  Decisions: GAD-D-139 through GAD-D-143\n  - GAD-D-139: One GitHub repo per eval project, runs as round-N/vM/ directories\n  - GAD-D-140: Split gad eval run into start/auto/finish (run becomes deprecated alias)\n  - GAD-D-141: Deprecate gad eval suite in favor of gad project run-round (phase 37)\n  - GAD-D-142: Skill tracking is GAD-workflow-only, trace-active-skill hook is dead code\n  - GAD-D-143: gad env status / gad env agents for runtime availability checks\n\nPhase 37 added to roadmap: gad project top-level command (depends on 36).\n\n=== PHASE ORDER ===\n35 (planned) - Cross-runtime identity + telemetry attribution (needs its own planning)\n36 (planned) - Per-eval-repo architecture (spec ready, needs plan-phase + execute-phase)\n37 (planned) - gad project top-level command (depends on 36)\n\n=== NEXT ===\n1. Run gad:plan-phase 36 to create the executable PLAN.md from the spec\n2. Execute phase 36 via gad:execute-phase\n3. Phase 35 can parallel if scoped to runtime identity only (the TRACE fields 36 consumes)",
+  "nextAction": "Phases 35 + 36 planned in parallel (2026-04-12). PLAN.md written for both. Ready for execute-phase.\n\n=== PLANS LANDED ===\nPhase 35: .planning/plans/phase-35/PLAN.md — 6 tasks, 6 milestones\n  Runtime identity detection lib, TRACE scaffold, hook wiring, self-eval aggregation, site badges, smoke test\n  Schema: runtime.primary / runtime.provenance / runtime.self_declared\n\nPhase 36: .planning/plans/phase-36/PLAN.md — 22 tasks, 6 milestones\n  A: gad env (3 tasks) — runtime detection + preflight\n  B: Dead code removal (2 tasks) — trace-active-skill cleanup\n  C: gad eval start (4 tasks) — per-eval repo + scoped clone\n  D: gad eval auto (3 tasks) — runtime shell-out + streaming\n  E: gad eval finish (5 tasks) — preserve + push + Option C cache + aliases\n  F: Site + docs + smoke (5 tasks) — docs, site pipeline, end-to-end test\n\n=== SELF-EVAL (just ran) ===\n3,450 events | 191 tasks (185 done) | 140 decisions\nFramework overhead: 23.3% (score 0.7)\nLoop compliance: 80%\nHigh-pressure phases: 10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34\n\n=== NEXT ===\n1. Execute phase 35 (runtime identity) — unblocks phase 36 runtime.primary field consumption\n2. Execute phase 36 (per-eval repos + command split) — uses phase 35 output\n3. Phase 35 Milestones A+B can start immediately; Milestone B (dead hook code) is isolated\n4. Phase 37 (gad project) still queued, depends on 36\n\n=== GAPS FLAGGED BY PLANNERS ===\n10 open spec questions for phase 36 (sparse-checkout vs strip, cursor-agent format, TRACE cache shape, flag naming --project vs --projectid, score integration, rollback story)\nThese are tracked in .planning/plans/phase-36/PLAN.md's \"Open questions\" section.",
   "lastUpdated": "2026-04-12",
   "phases": [
     {
@@ -1958,6 +1958,11 @@ export const PLANNING_STATE: PlanningState = {
       "id": "37",
       "title": "gad project — top-level project lifecycle command",
       "status": "planned"
+    },
+    {
+      "id": "38",
+      "title": "Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
+      "status": "planned"
     }
   ],
   "openTasks": [
@@ -1984,6 +1989,11 @@ export const PLANNING_STATE: PlanningState = {
   ],
   "doneTasksCount": 163,
   "recentDecisions": [
+    {
+      "id": "gad-144",
+      "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",
+      "summary": "When the self-eval pipeline flags a phase as high-pressure (task count + crosscuts above threshold), that's a signal patterns exist that could become skills (per GAD-D-115). Rather than just logging the flag, the pipeline should auto-generate draft SKILL.md files inspired by the phase's tasks and park them in .agents/skills/candidates/ under the System category. Candidates are NOT available to GAD"
+    },
     {
       "id": "gad-143",
       "title": "gad env status / gad env agents — runtime availability checks",
@@ -2038,11 +2048,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-133",
       "title": "Methodology must be tied to a buildable project with artifacts",
       "summary": "Even methodology-only tracks must implement a buildable project. No catalog entry without a concrete eval project and evaluation path. If methodology produces signals (pressure, compliance, traces), artifacts must ship. GAD-on-GAD is the reference. Vibes-only theory is not a catalog entry."
-    },
-    {
-      "id": "gad-132",
-      "title": "Projects have evals, evals have rounds, rounds triggered by requirements changes",
-      "summary": "Conceptual hierarchy: Project → eval projects → rounds. A round is triggered when requirements change. Within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. Per-project round windows for display filtering."
     }
   ]
 };

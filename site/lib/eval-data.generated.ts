@@ -5994,6 +5994,12 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
   {
+    "id": "gad-144",
+    "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",
+    "summary": "When the self-eval pipeline flags a phase as high-pressure (task count + crosscuts above threshold), that's a signal patterns exist that could become skills (per GAD-D-115). Rather than just logging the flag, the pipeline should auto-generate draft SKILL.md files inspired by the phase's tasks and park them in .agents/skills/candidates/ under the System category. Candidates are NOT available to GAD — they have status: candidate in frontmatter and are excluded from the catalog scan. A new /planning tab \"Skill candidates\" shows them for human review, with each candidate showing: the skill draft content, the source phase it came from, the list of tasks in that phase, and a pressure score. An info icon with HoverCard explains what a candidate is and how it's generated. Reviewer can then: promote the candidate to a real skill (moves to .agents/skills/&lt;name&gt;/), merge it into an existing skill via merge-skill, or discard it. This turns the high-pressure observation into actionable skill creation without polluting the live catalog with untested drafts.",
+    "impact": "New .agents/skills/candidates/ directory (gitignored from catalog scan). New planning tab \"Skill candidates\" on /planning. Candidate detail page shows source phase + tasks. Self-eval pipeline extended to emit candidate drafts for phases above pressure threshold. Info icon HoverCard on the tab explains the feedback loop from pressure to skill creation. Phase 38 implements this."
+  },
+  {
     "id": "gad-143",
     "title": "gad env status / gad env agents — runtime availability checks",
     "summary": "Before any eval operation (start/auto/finish), the CLI must verify that required runtimes are available. gad env status prints a table of: Claude Code CLI (claude), Codex CLI (codex), Cursor Agent (cursor-agent), GitHub CLI (gh) + auth status, Node version, git version. Missing tools show install links. gad env agents is a shorter alias focused on just coding agent runtimes. gad eval auto fails fast with a helpful error if the requested runtime is not installed or gh is not authenticated. Install links: claude via docs.anthropic.com, codex via github.com/openai/codex, cursor-agent via cursor.com/install, gh via cli.github.com.",
@@ -10014,7 +10020,14 @@ export const ALL_PHASES: PhaseRecord[] = [
     "id": "37",
     "title": "gad project — top-level project lifecycle command",
     "status": "planned",
-    "goal": "Ship gad project as a top-level CLI for real projects AND evals. Subcommands: create (scaffold AGENTS.md + .planning/ + .agents/, optional --claude --codex --cursor flags), update-requirements (trigger new round, auto-create gad+bare eval variants), install-skill (add skill to project, create injected-condition eval within current round), add-content (content-driven condition eval), run-round (execute all evals in a round, optional --runtime for autonomous). Bootstrap a project from an existing eval's round via --from-eval. Project detail page shows all possible eval variants (created or not-yet-created) so users can see the matrix status. Depends on per-eval-repo architecture (phase 36) for install-skill to know where to inject. Decisions: GAD-D-132, GAD-D-144 (new — projects can be real or eval), GAD-D-145 (new — matrix auto-creation rules).",
+    "goal": "Ship gad project as a top-level CLI for real projects AND evals. Subcommands: create (scaffold AGENTS.md + .planning/ + .agents/, optional --claude --codex --cursor flags), update-requirements (trigger new round, auto-create gad+bare eval variants), install-skill (add skill to project, create injected-condition eval within current round), add-content (content-driven condition eval), run-round (execute all evals in a round, optional --runtime for autonomous). Bootstrap a project from an existing eval's round via --from-eval. Project detail page shows all possible eval variants (created or not-yet-created) so users can see the matrix status. Depends on per-eval-repo architecture (phase 36) for install-skill to know where to inject. Decisions: GAD-D-132.",
+    "outcome": null
+  },
+  {
+    "id": "38",
+    "title": "Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
+    "status": "planned",
+    "goal": "Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-D-144). Extend compute-self-eval pipeline to auto-draft SKILL.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. Drafts are quarantined — excluded from catalog scan and unavailable to GAD until promoted. Add a new \"Skill candidates\" tab on /planning with info icon HoverCard explaining what a candidate is and how it comes about. Each candidate shows: draft SKILL.md content, source phase id + title, full task list from that phase, pressure score. Reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. Category on the site is \"System\" so candidates are visually distinct from canonical skills. Decisions: GAD-D-115, GAD-D-144.",
     "outcome": null
   }
 ];
@@ -10032,6 +10045,13 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-144",
+    "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",
+    "kind": "decision",
+    "href": "/decisions#gad-144",
+    "body": "gad-144 skill candidates — auto-author draft skills from high-pressure phases, quarantine for review when the self-eval pipeline flags a phase as high-pressure (task count + crosscuts above threshold), that's a signal patterns exist that could become skills (per gad-d-115). rather than just logging the flag, the pipeline should auto-generate draft skill.md files inspired by the phase's tasks and park them in .agents/skills/candidates/ under the system category. candidates are not available to gad"
+  },
   {
     "id": "gad-143",
     "title": "gad env status / gad env agents — runtime availability checks",
@@ -12543,7 +12563,14 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Phase 37 — gad project — top-level project lifecycle command",
     "kind": "phase",
     "href": "/planning?tab=phases#37",
-    "body": "37 gad project — top-level project lifecycle command ship gad project as a top-level cli for real projects and evals. subcommands: create (scaffold agents.md + .planning/ + .agents/, optional --claude --codex --cursor flags), update-requirements (trigger new round, auto-create gad+bare eval variants), install-skill (add skill to project, create injected-condition eval within current round), add-content (content-driven condition eval), run-round (execute all evals in a round, optional --runtime for autonomous). bootstrap a project from an existing eval's round via --from-eval. project detail page shows all possible eval variants (created or not-yet-created) so users can see the matrix status. depends on per-eval-repo architecture (phase 36) for install-skill to know where to inject. decisions: gad-d-132, gad-d-144 (new — projects can be real or eval), gad-d-145 (new — matrix auto-creation rules)."
+    "body": "37 gad project — top-level project lifecycle command ship gad project as a top-level cli for real projects and evals. subcommands: create (scaffold agents.md + .planning/ + .agents/, optional --claude --codex --cursor flags), update-requirements (trigger new round, auto-create gad+bare eval variants), install-skill (add skill to project, create injected-condition eval within current round), add-content (content-driven condition eval), run-round (execute all evals in a round, optional --runtime for autonomous). bootstrap a project from an existing eval's round via --from-eval. project detail page shows all possible eval variants (created or not-yet-created) so users can see the matrix status. depends on per-eval-repo architecture (phase 36) for install-skill to know where to inject. decisions: gad-d-132."
+  },
+  {
+    "id": "38",
+    "title": "Phase 38 — Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
+    "kind": "phase",
+    "href": "/planning?tab=phases#38",
+    "body": "38 skill candidates — auto-drafted from high-pressure phases, quarantined for review close the loop between pressure observation and skill creation (gad-d-115 + gad-d-144). extend compute-self-eval pipeline to auto-draft skill.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. drafts are quarantined — excluded from catalog scan and unavailable to gad until promoted. add a new \"skill candidates\" tab on /planning with info icon hovercard explaining what a candidate is and how it comes about. each candidate shows: draft skill.md content, source phase id + title, full task list from that phase, pressure score. reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. category on the site is \"system\" so candidates are visually distinct from canonical skills. decisions: gad-d-115, gad-d-144."
   },
   {
     "id": "compound-skills-hypothesis",

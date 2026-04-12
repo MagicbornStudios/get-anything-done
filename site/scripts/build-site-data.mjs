@@ -692,6 +692,7 @@ function scanCatalog() {
     for (const entry of fs.readdirSync(SKILLS_DIR, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
       if (!entry.isDirectory()) continue;
       if (entry.name === "emergent") continue; // handled separately
+      if (entry.name === "candidates") continue; // quarantined drafts (GAD-D-144), excluded from catalog
       const skill = readSkill(path.join(SKILLS_DIR, entry.name), entry.name, "human-authored");
       if (skill) catalog.skills.push(skill);
     }

@@ -12,6 +12,8 @@ import { STATUS_TINT } from "@/app/planning/planning-shared";
 import { RichText } from "@/components/refs/RichText";
 import { cn } from "@/lib/utils";
 import { SiteSection } from "@/components/site";
+import { PlanningSkillCandidatesTab, type SkillCandidate } from "@/app/planning/PlanningSkillCandidatesTab";
+import selfEvalData from "@/data/self-eval.json";
 
 interface Props {
   state: PlanningState;
@@ -30,6 +32,7 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
   const versions = REQUIREMENTS_HISTORY ?? [];
   const topOpen = openTasks.slice(0, 40);
   const topOpenIds = new Set(topOpen.map((t) => t.id));
+  const skillCandidates = (selfEvalData.latest?.skill_candidates ?? []) as SkillCandidate[];
 
   useEffect(() => {
     const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
@@ -64,6 +67,9 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
                 Bugs <span className="ml-1.5 tabular-nums text-muted-foreground">{gadBugs.length}</span>
               </TabsTrigger>
             )}
+            <TabsTrigger value="skill-candidates">
+              Skill candidates <span className="ml-1.5 tabular-nums text-muted-foreground">{skillCandidates.length}</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Phases tab */}
@@ -233,6 +239,11 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
               </div>
             </TabsContent>
           )}
+
+          {/* Skill candidates tab */}
+          <TabsContent value="skill-candidates">
+            <PlanningSkillCandidatesTab candidates={skillCandidates} />
+          </TabsContent>
       </Tabs>
     </SiteSection>
   );
