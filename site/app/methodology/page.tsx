@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { MethodologyAgentRuntimesSection } from "@/app/methodology/MethodologyAgentRuntimesSection";
+import { MarketingShell } from "@/components/site";
 import { MethodologyCompositeSection } from "@/app/methodology/MethodologyCompositeSection";
 import { MethodologyDataPipelineSection } from "@/app/methodology/MethodologyDataPipelineSection";
 import { MethodologyGateSection } from "@/app/methodology/MethodologyGateSection";
@@ -21,8 +20,7 @@ export default function MethodologyPage() {
   const worked = pickWorkedExamples();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <MethodologyHero />
       <MethodologyCompositeSection />
       <MethodologyGateSection />
@@ -32,7 +30,6 @@ export default function MethodologyPage() {
       <MethodologyWorkedExamplesSection worked={worked} />
       <MethodologyLineageSection />
       <MethodologyTemplateMatrixSection />
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

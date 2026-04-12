@@ -2,9 +2,7 @@ import Link from "next/link";
 import { Sparkles, TrendingUp, GitBranch, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { SkillLineageCard } from "@/components/emergent/SkillLineageCard";
 import {
   EVAL_RUNS,
@@ -47,9 +45,7 @@ export default function EmergentPage() {
   const latestScore = latestRun?.humanReviewNormalized?.aggregate_score ?? null;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <div className="mb-6 flex items-center gap-2">
           <Badge
@@ -251,9 +247,7 @@ export default function EmergentPage() {
             </Card>
           </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }
 

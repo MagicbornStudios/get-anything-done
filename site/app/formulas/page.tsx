@@ -1,9 +1,7 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ref } from "@/components/refs/Ref";
-import { SiteSection, SiteSectionHeading, SiteProse } from "@/components/site";
+import { MarketingShell, SiteSection, SiteSectionHeading, SiteProse } from "@/components/site";
 import selfEvalConfig from "@/data/self-eval-config.json";
 import selfEvalData from "@/data/self-eval.json";
 
@@ -28,8 +26,7 @@ export default function FormulasPage() {
   const latest = selfEvalData.latest;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="Formulas"
@@ -330,8 +327,6 @@ export default function FormulasPage() {
           <Ref id="gad-103" />, <Ref id="gad-115" />, <Ref id="gad-144" />, <Ref id="gad-145" />
         </p>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

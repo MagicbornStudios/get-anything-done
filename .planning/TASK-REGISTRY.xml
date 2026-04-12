@@ -890,7 +890,8 @@
       <resolution>Shipped 2026-04-12. Updated `gad-trace-hook.cjs` to emit runtime metadata on every skill/tool/subagent/file event, defaulting Claude hook traffic to `claude-code` and honoring `GAD_RUNTIME` for other runtimes. Verified end-to-end with a synthetic Claude hook event and a Codex-tagged CLI log entry.</resolution>
       <keywords>hooks,codex,claude,telemetry</keywords>
     </task>
-    <task id="35-03" status="planned"><goal>Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.</goal>
+    <task id="35-03" status="in-progress"><goal>Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.</goal>
+      <resolution>Advanced 2026-04-12. The planning page now has a first-class System tab backed by self-eval telemetry, runtime distribution, pressure hotspots, eval token totals, and per-project eval token breakdowns. `compute-self-eval.mjs` now aggregates root `.gad-log` runtime activity plus preserved eval `TRACE.json` token/tool totals. Remaining gap: per-run eval report/detail surfaces still need the same runtime-comparison treatment, and older traces/logs remain partially unattributed.</resolution>
       <keywords>reporting,self-eval,site,runtime-comparison</keywords>
     </task>
     <task id="35-04" status="done"><goal>Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-safe Claude aliases when enabled, and a live verification path that proves a real Claude sub-session changed models.</goal>
@@ -908,16 +909,19 @@
       <keywords>site,dry,intro,landing</keywords>
     </task>
     <task id="39-03" type="site" status="done"><goal>Maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *Intro.tsx bodies, repeated Nav/main/Footer shells, copy-pasted class stacks). File findings under .planning/notes/ or append to phase39 PLAN when created; close task when no trivial hits remain.</goal>
-      <resolution>Baseline 2026-04-12 after 39-01/02: no duplicate Round4 callout symbols; RoundsIntro re-exports ExperimentLogIntro. Remaining obvious dupes: ~29 pages still repeat Nav/main/Footer (tracked as 39-04). Re-run ripgrep when adding new landing sections.</resolution>
+      <resolution>Baseline 2026-04-12 after 39-01/02: no duplicate Round4 callout symbols; RoundsIntro re-exports ExperimentLogIntro. Nav/main/Footer repetition removed in 39-04 via MarketingShell. Re-run ripgrep when adding new landing sections.</resolution>
       <keywords>site,audit,dedup,low-risk</keywords>
     </task>
-    <task id="39-04" type="site" status="planned"><goal>Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate.</goal>
+    <task id="39-04" type="site" status="done"><goal>Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate.</goal>
+      <resolution>Shipped 2026-04-12. Added site/components/site/MarketingShell.tsx (main + Nav + children + Footer). All former Nav/main/Footer pages and DetailShell use it; pnpm exec tsc --noEmit clean.</resolution>
       <keywords>site,layout,nextjs,medium</keywords>
     </task>
-    <task id="39-05" type="site" status="planned"><goal>Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count.</goal>
+    <task id="39-05" type="site" status="done"><goal>Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count.</goal>
+      <resolution>Shipped 2026-04-12. SiteSectionIntro in components/site; landing intros + LineageCopy + InsightsPageIntro + PlayableTeaser use it; optional titleClassName/proseClassName for Lineage.</resolution>
       <keywords>site,component,medium,landing</keywords>
     </task>
-    <task id="39-06" type="site" status="planned"><goal>Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.</goal>
+    <task id="39-06" type="site" status="done"><goal>Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.</goal>
+      <resolution>Shipped 2026-04-12. PlayableEmbedBlock.tsx shares PlayableEmbed + PlayableSelectedPanel grid; PlayableDocModal stays at section level (same wiring). Teaser vs full use different run selectors (chips vs PlayableRunGroups) by design.</resolution>
       <keywords>site,playable,medium,dedup</keywords>
     </task>
   </phase>

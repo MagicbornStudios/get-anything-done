@@ -1,17 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { GSD_UPSTREAM } from "@/components/landing/lineage/lineage-shared";
-import { SiteProse, SiteSectionHeading } from "@/components/site";
+import { SiteProse, SiteSectionIntro } from "@/components/site";
 
 export function LineageCopy() {
   return (
     <div>
-      <SiteSectionHeading
+      <SiteSectionIntro
         kicker="Lineage"
         preset="hero-compact"
         titleClassName="max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl"
         title="Built on the GSD principles, built to be measured."
-      />
-      <SiteProse className="mt-5 max-w-2xl">
+        proseClassName="max-w-2xl"
+      >
         GAD is downstream of{" "}
         <a
           href={GSD_UPSTREAM}
@@ -25,7 +25,7 @@ export function LineageCopy() {
         on why tight planning loops beat ad-hoc prompting alone. We took those principles, wrote
         the CLI to make them cheap, and then bolted on an eval harness so drift and regressions show
         up in benchmarks instead of vibes.
-      </SiteProse>
+      </SiteSectionIntro>
       <SiteProse size="md" className="mt-4 max-w-2xl">
         The video starts at the segment where the structured-planning argument lands. The full talk
         is worth watching if you&apos;ve ever wondered why your agent is confidently producing the

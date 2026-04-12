@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PLAYABLE_INDEX } from "@/lib/eval-data";
 import { PlayableDocModal } from "@/components/landing/playable/PlayableDocModal";
-import { PlayableEmbed } from "@/components/landing/playable/PlayableEmbed";
+import { PlayableEmbedBlock } from "@/components/landing/playable/PlayableEmbedBlock";
 import { PlayableFilterBar } from "@/components/landing/playable/PlayableFilterBar";
 import { PlayableIntro } from "@/components/landing/playable/PlayableIntro";
 import { PlayableNoResults } from "@/components/landing/playable/PlayableNoResults";
@@ -77,18 +77,12 @@ export default function Playable() {
       )}
 
       {selected && iframeSrc && (
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
-          <PlayableEmbed
-            project={selected.project}
-            version={selected.version}
-            iframeSrc={iframeSrc}
-          />
-          <PlayableSelectedPanel
-            selected={selected}
-            onOpenRequirements={() => setModal("requirements")}
-            onOpenSkill={() => setModal("skill")}
-          />
-        </div>
+        <PlayableEmbedBlock
+          selected={selected}
+          iframeSrc={iframeSrc}
+          onOpenRequirements={() => setModal("requirements")}
+          onOpenSkill={() => setModal("skill")}
+        />
       )}
 
       <PlayableDocModal

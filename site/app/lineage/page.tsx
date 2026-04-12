@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { LineageContextRotSection } from "@/app/lineage/LineageContextRotSection";
+import { MarketingShell } from "@/components/site";
 import { LineageMeasurementSection } from "@/app/lineage/LineageMeasurementSection";
 import { LineagePageHero } from "@/app/lineage/LineagePageHero";
 import { LineagePredecessorsSection } from "@/app/lineage/LineagePredecessorsSection";
@@ -13,13 +12,11 @@ export const metadata = {
 
 export default function LineagePage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <LineagePageHero />
       <LineageContextRotSection />
       <LineagePredecessorsSection />
       <LineageMeasurementSection />
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

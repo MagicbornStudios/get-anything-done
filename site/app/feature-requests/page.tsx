@@ -2,9 +2,7 @@ import Link from "next/link";
 import { ExternalLink, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
@@ -27,9 +25,7 @@ export default function FeatureRequestsPage() {
   const requests = featureRequestsData.requests;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="Feature requests"
@@ -124,8 +120,6 @@ export default function FeatureRequestsPage() {
             })}
           </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

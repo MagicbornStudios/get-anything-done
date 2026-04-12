@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { RequirementsHero } from "@/app/requirements/RequirementsHero";
+import { MarketingShell } from "@/components/site";
 import { RequirementsProjectEmptySection } from "@/app/requirements/RequirementsProjectEmptySection";
 import { RequirementsProjectSection } from "@/app/requirements/RequirementsProjectSection";
 import { RequirementsVersionHistorySection } from "@/app/requirements/RequirementsVersionHistorySection";
@@ -16,9 +15,7 @@ export default function RequirementsPage() {
   const byProject = groupRequirementsByProject();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <RequirementsHero />
 
       {[...byProject.entries()].map(([project, files]) => {
@@ -30,8 +27,6 @@ export default function RequirementsPage() {
       })}
 
       <RequirementsVersionHistorySection />
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

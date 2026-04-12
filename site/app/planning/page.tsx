@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
+import { MarketingShell } from "@/components/site";
 import { PLANNING_STATE } from "@/lib/catalog.generated";
 import { ALL_TASKS, ALL_PHASES, ALL_DECISIONS, BUGS } from "@/lib/eval-data";
 import { PlanningOverviewSection } from "@/app/planning/PlanningOverviewSection";
@@ -18,8 +17,7 @@ export default function PlanningStatePage() {
   const gadBugs = (BUGS ?? []).filter((b) => !b.project || b.project === "gad");
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <PlanningOverviewSection state={state} />
       <PlanningGanttSection phases={state.phases} />
       <Suspense>
@@ -31,7 +29,6 @@ export default function PlanningStatePage() {
           gadBugs={gadBugs}
         />
       </Suspense>
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

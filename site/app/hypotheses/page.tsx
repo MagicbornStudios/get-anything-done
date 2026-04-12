@@ -3,9 +3,7 @@ import { FlaskConical, ArrowRight, CheckCircle2, CircleDashed, XCircle } from "l
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 import { HypothesisTracksChart, type HypothesisTrackPoint } from "@/components/charts/HypothesisTracksChart";
 import { EVAL_RUNS, type EvalRunRecord } from "@/lib/eval-data";
@@ -166,9 +164,7 @@ export default function HypothesesIndexPage() {
   const chartData = buildTrackData();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="Hypotheses"
@@ -292,8 +288,6 @@ export default function HypothesesIndexPage() {
             })}
           </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

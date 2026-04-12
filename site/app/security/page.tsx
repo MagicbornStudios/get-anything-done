@@ -8,9 +8,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
@@ -21,9 +19,7 @@ export const metadata = {
 
 export default function SecurityPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="Security"
@@ -277,9 +273,7 @@ export default function SecurityPage() {
             </p>
           </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }
 

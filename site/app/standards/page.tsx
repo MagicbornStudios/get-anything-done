@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import StandardsHeroSection from "./StandardsHeroSection";
+import { MarketingShell } from "@/components/site";
 import StandardsReferencesSection from "./StandardsReferencesSection";
 import StandardsProgressiveDisclosureSection from "./StandardsProgressiveDisclosureSection";
 import StandardsDiscoverySection from "./StandardsDiscoverySection";
@@ -16,9 +15,7 @@ export const metadata = {
 
 export default function StandardsPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <StandardsHeroSection />
       <StandardsReferencesSection />
       <StandardsProgressiveDisclosureSection />
@@ -26,8 +23,6 @@ export default function StandardsPage() {
       <StandardsNameCollisionSection />
       <StandardsEvaluationMethodologySection />
       <StandardsTestingLayersSection />
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

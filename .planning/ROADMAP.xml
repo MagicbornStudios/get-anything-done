@@ -237,7 +237,7 @@
   <phase id="39">
     <title>Site DRY pass — low-risk dedup first, then medium refactors</title>
     <goal>Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **Order:** (1) Burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) Then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared Playable/teaser chunks. (3) Re-scan periodically after other site work. **Defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. Tie-in: gad-134 (site reusability / cut duplicate edits). Depends on phase 28 (site architecture) being done.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>28</depends>
   </phase>
 </roadmap>

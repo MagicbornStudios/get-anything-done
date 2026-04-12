@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { CRITIQUES } from "./skeptic-shared";
+import { MarketingShell } from "@/components/site";
 import SkepticHero from "./SkepticHero";
 import SkepticCrossCuttingSection from "./SkepticCrossCuttingSection";
 import SkepticHypothesisCritiqueSection from "./SkepticHypothesisCritiqueSection";
@@ -15,9 +14,7 @@ export const metadata = {
 
 export default function SkepticPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SkepticHero />
       <SkepticCrossCuttingSection />
       {CRITIQUES.map((c) => (
@@ -25,8 +22,6 @@ export default function SkepticPage() {
       ))}
       <SkepticImprovementsSection />
       <SkepticHowUsedSection />
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

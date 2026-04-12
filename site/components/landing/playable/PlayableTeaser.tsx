@@ -6,8 +6,7 @@ import { ArrowRight, Gamepad2 } from "lucide-react";
 import { EVAL_RUNS, PLAYABLE_INDEX } from "@/lib/eval-data";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { Button } from "@/components/ui/button";
-import { PlayableEmbed } from "@/components/landing/playable/PlayableEmbed";
-import { PlayableSelectedPanel } from "@/components/landing/playable/PlayableSelectedPanel";
+import { PlayableEmbedBlock } from "@/components/landing/playable/PlayableEmbedBlock";
 import { PlayableDocModal } from "@/components/landing/playable/PlayableDocModal";
 import {
   runKey,
@@ -20,7 +19,7 @@ import {
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import { WORKFLOW_LABELS } from "@/lib/eval-data";
 import { cn } from "@/lib/utils";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { SiteSection, SiteSectionIntro } from "@/components/site";
 
 /**
  * Teaser version of Playable for the home page.
@@ -83,7 +82,7 @@ export default function PlayableTeaser() {
 
   return (
     <SiteSection id="play" tone="muted" className="border-t border-border/60">
-      <SiteSectionHeading
+      <SiteSectionIntro
         kicker="Playable preview"
         preset="hero-compact"
         title={
@@ -91,11 +90,10 @@ export default function PlayableTeaser() {
             Try the latest builds. <span className="gradient-text">Right here.</span>
           </>
         }
-      />
-      <SiteProse className="mt-5">
+      >
         A quick taste of the most recent scored builds. For the full catalog of {EVAL_RUNS.length}
         + runs across all domains, visit the project market.
-      </SiteProse>
+      </SiteSectionIntro>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {teaserRuns.map((r) => {
@@ -150,18 +148,12 @@ export default function PlayableTeaser() {
       </div>
 
       {selected && iframeSrc && (
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
-          <PlayableEmbed
-            project={selected.project}
-            version={selected.version}
-            iframeSrc={iframeSrc}
-          />
-          <PlayableSelectedPanel
-            selected={selected}
-            onOpenRequirements={() => setModal("requirements")}
-            onOpenSkill={() => setModal("skill")}
-          />
-        </div>
+        <PlayableEmbedBlock
+          selected={selected}
+          iframeSrc={iframeSrc}
+          onOpenRequirements={() => setModal("requirements")}
+          onOpenSkill={() => setModal("skill")}
+        />
       )}
 
       <div className="mt-8 flex justify-center">

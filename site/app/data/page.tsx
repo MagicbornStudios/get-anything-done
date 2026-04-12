@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { buildDataSources, groupBySurface } from "./data-shared";
+import { MarketingShell } from "@/components/site";
 import DataHeroSection from "./DataHeroSection";
 import DataTrustLevelsSection from "./DataTrustLevelsSection";
 import DataSurfaceSection from "./DataSurfaceSection";
@@ -20,16 +19,12 @@ export default function DataPage() {
   }, {});
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <DataHeroSection totals={totals} />
       <DataTrustLevelsSection />
       {grouped.map(([surface, surfaceSources]) => (
         <DataSurfaceSection key={surface} surface={surface} sources={surfaceSources} />
       ))}
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

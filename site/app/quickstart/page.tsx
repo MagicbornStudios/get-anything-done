@@ -1,9 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteSection } from "@/components/site";
+import { MarketingShell, SiteSection } from "@/components/site";
 
 export const metadata = {
   title: "Quick Start — GAD in 5 minutes",
@@ -22,12 +20,10 @@ export default function QuickStartPage() {
   const html = getContent();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <SiteSection>
         <div className="prose-content" dangerouslySetInnerHTML={{ __html: html }} />
       </SiteSection>
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
+import { MarketingShell } from "@/components/site";
 import { type RubricDimension } from "@/components/charts/RubricRadar";
 import { compositionsForRun } from "@/remotion/registry";
 import {
@@ -114,8 +113,7 @@ export default async function RunPage({
       : null;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <RunHeroSection
         run={run}
         playable={playable}
@@ -155,7 +153,6 @@ export default async function RunPage({
       {produced && <RunProducedArtifactsSection produced={produced} />}
       <RunGateReportSection run={run} />
       <RunProcessMetricsSection run={run} />
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

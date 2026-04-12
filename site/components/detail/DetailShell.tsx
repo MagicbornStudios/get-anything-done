@@ -1,6 +1,4 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteSection } from "@/components/site";
+import { MarketingShell, SiteSection } from "@/components/site";
 import type { DetailShellProps } from "./detail-shell-shared";
 import DetailShellBackLink from "./DetailShellBackLink";
 import DetailShellKindBadges from "./DetailShellKindBadges";
@@ -25,8 +23,7 @@ export default function DetailShell({
   sidebar,
 }: DetailShellProps) {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <SiteSection>
         <DetailShellBackLink backHref={backHref} backLabel={backLabel} />
         <DetailShellKindBadges kind={kind} badges={badges} />
@@ -41,7 +38,6 @@ export default function DetailShell({
           {sidebar && <aside className="space-y-5">{sidebar}</aside>}
         </div>
       </SiteSection>
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

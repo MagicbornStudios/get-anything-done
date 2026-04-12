@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { RubricEmptyState } from "@/app/rubric/RubricEmptyState";
+import { MarketingShell } from "@/components/site";
 import { RubricHero } from "@/app/rubric/RubricHero";
 import { RubricProjectSection } from "@/app/rubric/RubricProjectSection";
 import { RubricWeightsSection } from "@/app/rubric/RubricWeightsSection";
@@ -16,9 +15,7 @@ export default function RubricPage() {
   const projectsWithRubric = getProjectsWithRubric();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <RubricHero />
       <RubricWeightsSection />
 
@@ -27,8 +24,6 @@ export default function RubricPage() {
       ))}
 
       {projectsWithRubric.length === 0 && <RubricEmptyState />}
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

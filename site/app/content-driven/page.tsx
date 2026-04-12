@@ -3,9 +3,7 @@ import { Package, ArrowRight, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
@@ -16,9 +14,7 @@ export const metadata = {
 
 export default function ContentDrivenPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <Badge
@@ -245,8 +241,6 @@ export default function ContentDrivenPage() {
             </Button>
           </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

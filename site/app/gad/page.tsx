@@ -3,9 +3,7 @@ import { ArrowRight, Bot, FileText, Gauge, Package, Sparkles, Terminal, Wrench }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import {
   AGENTS,
   COMMANDS,
@@ -68,8 +66,7 @@ export default function GADOverviewPage() {
   );
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="The framework"
@@ -265,8 +262,6 @@ export default function GADOverviewPage() {
             })}
           </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

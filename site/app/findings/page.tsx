@@ -2,9 +2,7 @@ import Link from "next/link";
 import { ArrowRight, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { FINDINGS } from "@/lib/catalog.generated";
 
 export const metadata = {
@@ -15,8 +13,7 @@ export const metadata = {
 
 export default function FindingsIndexPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="Findings"
@@ -71,7 +68,6 @@ export default function FindingsIndexPage() {
             </div>
           )}
       </SiteSection>
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

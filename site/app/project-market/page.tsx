@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Nav from "@/components/landing/nav/Nav";
+import { MarketingShell } from "@/components/site";
 import ProjectMarket from "@/components/project-market/ProjectMarket";
-import Footer from "@/components/landing/Footer";
 
 export const metadata: Metadata = {
   title: "Project Market - GAD",
@@ -11,10 +10,8 @@ export const metadata: Metadata = {
 
 export default function ProjectMarketPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <ProjectMarket />
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

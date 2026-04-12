@@ -2,9 +2,7 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import VideoEmbed from "@/components/video/VideoEmbed";
 import { COMPOSITIONS } from "@/remotion/registry";
 
@@ -16,9 +14,7 @@ export const metadata = {
 
 export default function VideosPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="Videos"
@@ -84,8 +80,6 @@ export default function VideosPage() {
           </Button>
         </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

@@ -1,6 +1,4 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteMetricCard, SiteSection } from "@/components/site";
+import { MarketingShell, SiteMetricCard, SiteSection } from "@/components/site";
 import { InsightsDataSourcesCard } from "@/app/insights/InsightsDataSourcesCard";
 import { InsightsPageIntro } from "@/app/insights/InsightsPageIntro";
 import { buildDataSources, buildInsights } from "@/app/insights/insights-queries";
@@ -16,8 +14,7 @@ export default function InsightsPage() {
   const dataSources = buildDataSources();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <SiteSection>
         <InsightsPageIntro />
 
@@ -31,7 +28,6 @@ export default function InsightsPage() {
 
         <InsightsDataSourcesCard sources={dataSources} />
       </SiteSection>
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

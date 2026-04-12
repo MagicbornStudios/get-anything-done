@@ -1,6 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
 import { OPEN_QUESTIONS } from "@/lib/eval-data";
+import { MarketingShell } from "@/components/site";
 import { QuestionsCategorySection } from "@/app/questions/QuestionsCategorySection";
 import { QuestionsEmptyState } from "@/app/questions/QuestionsEmptyState";
 import { QuestionsHero } from "@/app/questions/QuestionsHero";
@@ -20,9 +19,7 @@ export default function QuestionsPage() {
   const categories = Object.keys(grouped).sort();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <QuestionsHero
         openCount={open.length}
         resolvedCount={resolved.length}
@@ -36,8 +33,6 @@ export default function QuestionsPage() {
       <QuestionsResolvedSection resolved={resolved} />
 
       {OPEN_QUESTIONS.length === 0 && <QuestionsEmptyState />}
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

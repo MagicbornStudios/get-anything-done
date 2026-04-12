@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
+import { MarketingShell } from "@/components/site";
 import {
   EVAL_PROJECTS,
   EVAL_TEMPLATES,
@@ -49,8 +48,7 @@ export default async function ProjectPage({
   const planning = PLANNING_ZIPS.find((p) => p.project === project.id);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <ProjectHeroSection project={project} planning={planning} template={template} />
       <ProjectSkillsScopeSection project={project} />
       <ProjectRunsSection runs={runs} />
@@ -60,7 +58,6 @@ export default async function ProjectPage({
       <ProjectRequirementsSection projectId={project.id} />
       <ProjectBugsSection projectId={project.id} />
       <ProjectScoringWeightsSection project={project} />
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

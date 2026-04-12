@@ -1,5 +1,5 @@
-import Nav from "@/components/landing/nav/Nav";
 import Hero from "@/components/landing/hero/Hero";
+import { MarketingShell } from "@/components/site";
 import HypothesisTracksSection from "@/components/landing/hypothesis-tracks/HypothesisTracksSection";
 import Lineage from "@/components/landing/lineage/Lineage";
 import Workflow from "@/components/landing/workflow/Workflow";
@@ -13,12 +13,10 @@ import Requirements from "@/components/landing/requirements/Requirements";
 import Catalog from "@/components/landing/catalog/Catalog";
 import Templates from "@/components/landing/templates/Templates";
 import RunIt from "@/components/landing/run-it/RunIt";
-import Footer from "@/components/landing/Footer";
 
 export default function Page() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
+    <MarketingShell>
       <Hero />
       {/* PRIMARY: graph + playable archive adjacent — the research showcase */}
       <HypothesisTracksSection />
@@ -37,7 +35,6 @@ export default function Page() {
       <Catalog />
       <Templates />
       <RunIt />
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

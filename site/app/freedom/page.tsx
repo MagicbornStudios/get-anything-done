@@ -3,9 +3,7 @@ import { TrendingUp, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import {
   EVAL_RUNS,
   PLAYABLE_INDEX,
@@ -55,9 +53,7 @@ export default function FreedomHypothesisPage() {
   const latest = runs[runs.length - 1];
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <div className="mb-6 flex items-center gap-2">
           <Badge
@@ -310,9 +306,7 @@ export default function FreedomHypothesisPage() {
             </Button>
           </div>
       </SiteSection>
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }
 

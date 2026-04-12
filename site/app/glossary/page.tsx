@@ -2,9 +2,7 @@ import Link from "next/link";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Nav from "@/components/landing/nav/Nav";
-import Footer from "@/components/landing/Footer";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { GLOSSARY, GLOSSARY_UPDATED, type GlossaryTerm } from "@/lib/eval-data";
 import { Ref } from "@/components/refs/Ref";
 
@@ -82,9 +80,7 @@ export default function GlossaryPage() {
   const orderedCategories = CATEGORY_ORDER.filter((c) => grouped[c]?.length > 0);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Nav />
-
+    <MarketingShell>
       <SiteSection>
         <SiteSectionHeading
           kicker="Glossary"
@@ -231,8 +227,6 @@ export default function GlossaryPage() {
           </SiteProse>
         </SiteSection>
       )}
-
-      <Footer />
-    </main>
+    </MarketingShell>
   );
 }

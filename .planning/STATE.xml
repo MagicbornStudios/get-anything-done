@@ -7,6 +7,7 @@
   <next-action>Phase 38 shipped (2026-04-12): skill candidates auto-drafted from high-pressure phases.
 Phase 35 runtime telemetry foundation shipped (2026-04-12): trace schema v5 now stamps runtime identity into raw hook events, CLI logs, and TRACE scaffolds for Claude Code vs Codex attribution.
 Canonical repo-root skills/ source shipped (2026-04-12): command-backed gad-* skills and workspace skills now compile from one tree, with runtime install/transpilation sourced from skills/.
+Phase 35-03 advanced (2026-04-12): /planning now has a first-class System dashboard for runtime telemetry, eval token totals, pressure hotspots, and per-project eval spend.
 
 === SHIPPED ===
 - Restored shared model-profile resolution with default off semantics and workflow model emission in gad-tools init
@@ -25,14 +26,14 @@ GAD-D-144: Skill candidates quarantine and review workflow
 GAD-D-146: Claude-facing model profiles use aliases and stay off by default
 
 === NEXT ===
-1. Phase 39 (site DRY): 39-01 and 39-02 done. Next: 39-03 (dup grep audit) or 39-04–39-06 (medium).
-2. Finish phase 35-03: surface runtime identity more explicitly in eval report/self-eval/site UI
+1. Phase 39 (site DRY): 39-01 through 39-06 shipped (MarketingShell, SiteSectionIntro, PlayableEmbedBlock). Close or verify phase 39 against roadmap.
+2. Finish the remaining edge of phase 35-03: push runtime attribution into per-run eval report/detail surfaces and backfill more explicit Claude-vs-Codex comparisons
 3. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap
 4. Execute phase 36 (per-eval repos + command split)
 5. Manually review 12 candidates on the site and decide: promote, merge, or discard
 
 === SELF-EVAL (latest) ===
-3,516 events | 192 tasks (186 done) | 143 decisions
+3,517 events | 198 tasks (191 done) | 143 decisions
 Framework overhead: 23.6% | Loop compliance: 80%
 Skill candidates: 12</next-action>
   <last-updated>2026-04-12</last-updated>
