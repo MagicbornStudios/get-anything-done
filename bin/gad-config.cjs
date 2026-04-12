@@ -152,6 +152,9 @@ function mergeSectionsIntoRoots(roots, sections) {
       path: '.',
       planningDir,
       discover: s.discover === true,
+      // `enabled: false` excludes this root from sink compile + snapshot
+      // discovery. Default true when omitted (backwards compatible).
+      enabled: s.enabled !== false,
     });
   }
   return out;
@@ -209,6 +212,8 @@ function fromToml(tomlPath, root) {
     path: r.path || '.',
     planningDir: r.planningDir || r.planning_dir || '.planning',
     discover: r.discover === true,
+    // `enabled: false` excludes this root from sink compile. Default true.
+    enabled: r.enabled !== false,
   }));
   const rootsMerged = mergeSectionsIntoRoots(rootsTable, planning.sections);
 
@@ -216,6 +221,10 @@ function fromToml(tomlPath, root) {
     configPath: tomlPath,
     roots: rootsMerged,
     docs_sink: planning.docs_sink || null,
+    // Bulk ignore list for `gad sink compile` — project ids skipped
+    // regardless of `enabled` per-root flag. Persistent filter used by
+    // phase 08 to turn off sections without removing them from config.
+    docs_sink_ignore: Array.isArray(planning.docs_sink_ignore) ? planning.docs_sink_ignore : [],
     ignore: planning.ignore || ['**/node_modules/**', '**/dist/**'],
     sprintSize: typeof planning.sprintSize === 'number' ? planning.sprintSize : 5,
     profiles,
@@ -251,6 +260,7 @@ function fromJson(jsonPath, root) {
     path: typeof sr === 'string' ? sr : (sr.path || sr),
     planningDir: sr.planningDir || '.planning',
     discover: false,
+    enabled: sr.enabled !== false,
   }));
 
   // Always include the root itself if no explicit entry for '.'
@@ -260,6 +270,7 @@ function fromJson(jsonPath, root) {
       path: '.',
       planningDir: planning.planningDir || '.planning',
       discover: false,
+      enabled: true,
     });
   }
 
@@ -267,6 +278,7 @@ function fromJson(jsonPath, root) {
     configPath: jsonPath,
     roots,
     docs_sink: planning.docs_sink || null,
+    docs_sink_ignore: Array.isArray(planning.docs_sink_ignore) ? planning.docs_sink_ignore : [],
     ignore: planning.ignore || ['**/node_modules/**', '**/dist/**'],
     sprintSize: typeof planning.sprintSize === 'number' ? planning.sprintSize : 5,
     profiles: {},
@@ -286,8 +298,10 @@ function defaults(root) {
       path: '.',
       planningDir: '.planning',
       discover: false,
+      enabled: true,
     }],
     docs_sink: null,
+    docs_sink_ignore: [],
     ignore: ['**/node_modules/**', '**/dist/**'],
     sprintSize: 5,
     profiles: {},

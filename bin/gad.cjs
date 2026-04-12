@@ -1386,9 +1386,11 @@ const taskCheckpoint = defineCommand({
 // ---------------------------------------------------------------------------
 
 const docsCompile = defineCommand({
-  meta: { name: 'compile', description: 'Compile planning docs → MDX sink' },
+  meta: { name: 'compile', description: 'Compile planning docs → MDX sink (respects per-root `enabled` + `docs_sink_ignore` config)' },
   args: {
     sink: { type: 'string', description: 'Override docs_sink path', default: '' },
+    only: { type: 'string', description: 'Comma-separated project ids to include (ad-hoc override)', default: '' },
+    ignore: { type: 'string', description: 'Comma-separated project ids to skip for this run (in addition to config)', default: '' },
     verbose: { type: 'boolean', alias: 'v', description: 'Verbose output', default: false },
   },
   run({ args }) {
@@ -1400,10 +1402,37 @@ const docsCompile = defineCommand({
       outputError('No docs_sink configured. Pass --sink <path> or set docs_sink in gad-config.toml.');
     }
 
-    console.log(`Compiling ${config.roots.length} roots → ${sink}\n`);
+    // Build filter set from config + CLI args
+    const configIgnore = new Set(config.docs_sink_ignore || []);
+    const cliIgnore = new Set((args.ignore || '').split(',').map((s) => s.trim()).filter(Boolean));
+    const cliOnly = new Set((args.only || '').split(',').map((s) => s.trim()).filter(Boolean));
+
+    const filteredRoots = config.roots.filter((root) => {
+      if (cliOnly.size > 0) return cliOnly.has(root.id);
+      if (root.enabled === false) return false;
+      if (configIgnore.has(root.id)) return false;
+      if (cliIgnore.has(root.id)) return false;
+      return true;
+    });
+
+    const skippedCount = config.roots.length - filteredRoots.length;
+    console.log(`Compiling ${filteredRoots.length} of ${config.roots.length} roots → ${sink}` +
+      (skippedCount > 0 ? ` (${skippedCount} skipped)` : '') + '\n');
+
+    if (args.verbose && skippedCount > 0) {
+      const skipped = config.roots.filter((r) => !filteredRoots.includes(r));
+      for (const r of skipped) {
+        const reason = cliOnly.size > 0 ? 'not in --only'
+          : r.enabled === false ? 'enabled=false'
+          : configIgnore.has(r.id) ? 'docs_sink_ignore'
+          : 'cli --ignore';
+        console.log(`  [skip] ${r.id} (${reason})`);
+      }
+    }
+
     try {
       let total = 0;
-      for (const root of config.roots) {
+      for (const root of filteredRoots) {
         const n = compileDocs(baseDir, root, sink);
         if (args.verbose && n > 0) console.log(`  ✓ ${root.id}: ${n} file(s)`);
         total += n || 0;
