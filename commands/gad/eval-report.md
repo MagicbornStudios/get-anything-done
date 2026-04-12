@@ -14,13 +14,13 @@ Generate a comparison report across all eval projects showing scores, discipline
 
 1. **Run cross-project report:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval report
+   gad eval report
    ```
 
 2. **For deeper analysis on a specific project:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval scores --project <name>
-   node vendor/get-anything-done/bin/gad.cjs eval diff v1 v2 --project <name>
+   gad eval scores --project <name>
+   gad eval diff v1 v2 --project <name>
    ```
 
 3. **Interpret findings** and recommend next actions.
@@ -28,5 +28,5 @@ Generate a comparison report across all eval projects showing scores, discipline
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/eval-report/SKILL.md`.
+Read and follow the companion `eval-report` skill if it is installed.
 </skill>

@@ -27,5 +27,5 @@ Apply the GAD planning loop to fiction and creative writing projects. Manages be
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/manuscript/SKILL.md`.
+Read and follow the companion `manuscript` skill if it is installed.
 </skill>

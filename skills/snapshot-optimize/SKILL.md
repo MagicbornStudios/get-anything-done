@@ -78,23 +78,23 @@ After any snapshot change, run these checks:
 
 ```sh
 # 1. Measure token count
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | wc -c
+gad snapshot --projectid get-anything-done | wc -c
 # Divide by 4 for token estimate. Must be under 12,000 chars (3,000 tokens).
 
 # 2. Verify sprint scoping works
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --sprint
+gad snapshot --projectid get-anything-done --sprint
 # Should show only current sprint phases, not all 17.
 
 # 3. Verify done phases are collapsed
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | grep -c "<goal>"
+gad snapshot --projectid get-anything-done | grep -c "<goal>"
 # Should be much less than total phase count — only active/planned phases have goals.
 
 # 4. Verify no completed tasks appear
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | grep 'status="done"' | wc -l
+gad snapshot --projectid get-anything-done | grep 'status="done"' | wc -l
 # Should be 0 in task-registry section.
 
 # 5. Verify file refs present
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | grep "File refs"
+gad snapshot --projectid get-anything-done | grep "File refs"
 # Should show a section with recent file paths.
 
 # 6. Run parser tests
@@ -102,8 +102,8 @@ node vendor/get-anything-done/tests/parser-coverage.test.cjs
 # All 46+ tests must pass.
 
 # 7. Compare with full dump
-FULL=$(node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --full | wc -c)
-SPRINT=$(node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --sprint | wc -c)
+FULL=$(gad snapshot --projectid get-anything-done --full | wc -c)
+SPRINT=$(gad snapshot --projectid get-anything-done --sprint | wc -c)
 echo "Full: $FULL chars, Sprint: $SPRINT chars, Reduction: $(( (FULL - SPRINT) * 100 / FULL ))%"
 # Reduction should be >60%.
 ```

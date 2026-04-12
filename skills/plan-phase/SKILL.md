@@ -14,7 +14,7 @@ Creates a KICKOFF.md (phase contract) and PLAN.md (task list) for a phase from t
 ## Step 1: Bootstrap context
 
 ```bash
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>
+gad snapshot --projectid <id>
 ```
 
 This gives you state, roadmap, tasks, decisions, and file refs in one low-token command. Identify the target phase from the snapshot.

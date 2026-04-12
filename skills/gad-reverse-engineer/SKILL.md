@@ -36,5 +36,5 @@ Parse from `$ARGUMENTS`:
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/reverse-engineer/SKILL.md`.
+Read and follow the companion `reverse-engineer` skill if it is installed.
 </skill>

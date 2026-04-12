@@ -16,8 +16,8 @@ Use when you know what you want but don't know which `/gad:*` command to run.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/do.md
-@vendor/get-anything-done/references/ui-brand.md
+@workflows/do.md
+@references/ui-brand.md
 </execution_context>
 
 <context>
@@ -25,6 +25,6 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the do workflow from @vendor/get-anything-done/workflows/do.md end-to-end.
+Execute the do workflow from @workflows/do.md end-to-end.
 Route user intent to the best GAD command and invoke it.
 </process>

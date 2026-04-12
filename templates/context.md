@@ -1,14 +1,21 @@
 # Phase Context Template
 
-Template for `.planning/phases/XX-name/{phase_num}-CONTEXT.md` - captures implementation decisions for a phase.
+This is a reusable planning pattern, not a GAD-runtime-specific file format. Keep the structure,
+but adapt filenames and schema details to the planning format the project actually uses.
 
-**Purpose:** Document decisions that downstream agents need. Researcher uses this to know WHAT to investigate. Planner uses this to know WHAT choices are locked vs flexible.
+Template for `.planning/phases/XX-name/{phase_num}-CONTEXT.md` when a project keeps per-phase
+context files.
 
-**Key principle:** Categories are NOT predefined. They emerge from what was actually discussed for THIS phase. A CLI phase has CLI-relevant sections, a UI phase has UI-relevant sections.
+**Purpose:** Document decisions that downstream agents need. The researcher uses this to know what
+to investigate. The planner uses this to know what choices are locked versus flexible.
+
+**Key principle:** Categories are not predefined. They should emerge from what was actually
+discussed for this phase. A CLI phase has CLI-relevant sections. A UI phase has UI-relevant
+sections.
 
 **Downstream consumers:**
-- `gsd-phase-researcher` — Reads decisions to focus research (e.g., "card layout" → research card component patterns)
-- `gsd-planner` — Reads decisions to create specific tasks (e.g., "infinite scroll" → task includes virtualization)
+- `gad-phase-researcher` reads decisions to focus research.
+- `gad-planner` reads decisions to create concrete executable tasks.
 
 ---
 
@@ -23,7 +30,7 @@ Template for `.planning/phases/XX-name/{phase_num}-CONTEXT.md` - captures implem
 <domain>
 ## Phase Boundary
 
-[Clear statement of what this phase delivers — the scope anchor. This comes from ROADMAP.md and is fixed. Discussion clarifies implementation within this boundary.]
+[Clear statement of what this phase delivers - the scope anchor. This comes from the roadmap and is fixed. Discussion clarifies implementation within this boundary.]
 
 </domain>
 
@@ -37,38 +44,32 @@ Template for `.planning/phases/XX-name/{phase_num}-CONTEXT.md` - captures implem
 ### [Area 2 that was discussed]
 - **D-03:** [Specific decision made]
 
-### [Area 3 that was discussed]
-- **D-04:** [Specific decision made]
-
 ### Claude's Discretion
-[Areas where user explicitly said "you decide" — Claude has flexibility here during planning/implementation]
+[Areas where the user explicitly said "you decide" - the implementing agent has flexibility here during planning and execution.]
 
 </decisions>
 
 <specifics>
 ## Specific Ideas
 
-[Any particular references, examples, or "I want it like X" moments from discussion. Product references, specific behaviors, interaction patterns.]
+[Product references, examples, "I want it like X" moments, or exact behaviors.]
 
-[If none: "No specific requirements — open to standard approaches"]
+[If none: "No specific requirements - open to standard approaches"]
 
 </specifics>
 
 <canonical_refs>
 ## Canonical References
 
-**Downstream agents MUST read these before planning or implementing.**
+**Downstream agents must read these before planning or implementing.**
 
-[List every spec, ADR, feature doc, or design doc that defines requirements or constraints for this phase. Use full relative paths so agents can read them directly. Group by topic area when the phase has multiple concerns.]
+[List every spec, ADR, feature doc, or design doc that defines requirements or constraints for this phase. Use full relative paths.]
 
 ### [Topic area 1]
-- `path/to/spec-or-adr.md` — [What this doc decides/defines that's relevant]
-- `path/to/doc.md` §N — [Specific section and what it covers]
+- `path/to/spec-or-adr.md` - [What this doc decides or defines]
+- `path/to/doc.md` §N - [Specific section and what it covers]
 
-### [Topic area 2]
-- `path/to/feature-doc.md` — [What capability this defines]
-
-[If the project has no external specs: "No external specs — requirements are fully captured in decisions above"]
+[If the project has no external specs: "No external specs - requirements are fully captured in decisions above"]
 
 </canonical_refs>
 
@@ -79,274 +80,49 @@ Template for `.planning/phases/XX-name/{phase_num}-CONTEXT.md` - captures implem
 - [Component/hook/utility]: [How it could be used in this phase]
 
 ### Established Patterns
-- [Pattern]: [How it constrains/enables this phase]
+- [Pattern]: [How it constrains or enables this phase]
 
 ### Integration Points
-- [Where new code connects to existing system]
+- [Where new code connects to the existing system]
 
 </code_context>
 
 <deferred>
 ## Deferred Ideas
 
-[Ideas that came up during discussion but belong in other phases. Captured here so they're not lost, but explicitly out of scope for this phase.]
+[Ideas that came up during discussion but belong in other phases.]
 
-[If none: "None — discussion stayed within phase scope"]
+[If none: "None - discussion stayed within phase scope"]
 
 </deferred>
+```
 
 ---
 
-*Phase: XX-name*
-*Context gathered: [date]*
-```
+## Guidance
 
-<good_examples>
+This template captures decisions for downstream agents.
 
-**Example 1: Visual feature (Post Feed)**
-
-```markdown
-# Phase 3: Post Feed - Context
-
-**Gathered:** 2025-01-20
-**Status:** Ready for planning
-
-<domain>
-## Phase Boundary
-
-Display posts from followed users in a scrollable feed. Users can view posts and see engagement counts. Creating posts and interactions are separate phases.
-
-</domain>
-
-<decisions>
-## Implementation Decisions
-
-### Layout style
-- Card-based layout, not timeline or list
-- Each card shows: author avatar, name, timestamp, full post content, reaction counts
-- Cards have subtle shadows, rounded corners — modern feel
-
-### Loading behavior
-- Infinite scroll, not pagination
-- Pull-to-refresh on mobile
-- New posts indicator at top ("3 new posts") rather than auto-inserting
-
-### Empty state
-- Friendly illustration + "Follow people to see posts here"
-- Suggest 3-5 accounts to follow based on interests
-
-### Claude's Discretion
-- Loading skeleton design
-- Exact spacing and typography
-- Error state handling
-
-</decisions>
-
-<canonical_refs>
-## Canonical References
-
-### Feed display
-- `docs/features/social-feed.md` — Feed requirements, post card fields, engagement display rules
-- `docs/decisions/adr-012-infinite-scroll.md` — Scroll strategy decision, virtualization requirements
-
-### Empty states
-- `docs/design/empty-states.md` — Empty state patterns, illustration guidelines
-
-</canonical_refs>
-
-<specifics>
-## Specific Ideas
-
-- "I like how Twitter shows the new posts indicator without disrupting your scroll position"
-- Cards should feel like Linear's issue cards — clean, not cluttered
-
-</specifics>
-
-<deferred>
-## Deferred Ideas
-
-- Commenting on posts — Phase 5
-- Bookmarking posts — add to backlog
-
-</deferred>
-
----
-
-*Phase: 03-post-feed*
-*Context gathered: 2025-01-20*
-```
-
-**Example 2: CLI tool (Database backup)**
-
-```markdown
-# Phase 2: Backup Command - Context
-
-**Gathered:** 2025-01-20
-**Status:** Ready for planning
-
-<domain>
-## Phase Boundary
-
-CLI command to backup database to local file or S3. Supports full and incremental backups. Restore command is a separate phase.
-
-</domain>
-
-<decisions>
-## Implementation Decisions
-
-### Output format
-- JSON for programmatic use, table format for humans
-- Default to table, --json flag for JSON
-- Verbose mode (-v) shows progress, silent by default
-
-### Flag design
-- Short flags for common options: -o (output), -v (verbose), -f (force)
-- Long flags for clarity: --incremental, --compress, --encrypt
-- Required: database connection string (positional or --db)
-
-### Error recovery
-- Retry 3 times on network failure, then fail with clear message
-- --no-retry flag to fail fast
-- Partial backups are deleted on failure (no corrupt files)
-
-### Claude's Discretion
-- Exact progress bar implementation
-- Compression algorithm choice
-- Temp file handling
-
-</decisions>
-
-<canonical_refs>
-## Canonical References
-
-### Backup CLI
-- `docs/features/backup-restore.md` — Backup requirements, supported backends, encryption spec
-- `docs/decisions/adr-007-cli-conventions.md` — Flag naming, exit codes, output format standards
-
-</canonical_refs>
-
-<specifics>
-## Specific Ideas
-
-- "I want it to feel like pg_dump — familiar to database people"
-- Should work in CI pipelines (exit codes, no interactive prompts)
-
-</specifics>
-
-<deferred>
-## Deferred Ideas
-
-- Scheduled backups — separate phase
-- Backup rotation/retention — add to backlog
-
-</deferred>
-
----
-
-*Phase: 02-backup-command*
-*Context gathered: 2025-01-20*
-```
-
-**Example 3: Organization task (Photo library)**
-
-```markdown
-# Phase 1: Photo Organization - Context
-
-**Gathered:** 2025-01-20
-**Status:** Ready for planning
-
-<domain>
-## Phase Boundary
-
-Organize existing photo library into structured folders. Handle duplicates and apply consistent naming. Tagging and search are separate phases.
-
-</domain>
-
-<decisions>
-## Implementation Decisions
-
-### Grouping criteria
-- Primary grouping by year, then by month
-- Events detected by time clustering (photos within 2 hours = same event)
-- Event folders named by date + location if available
-
-### Duplicate handling
-- Keep highest resolution version
-- Move duplicates to _duplicates folder (don't delete)
-- Log all duplicate decisions for review
-
-### Naming convention
-- Format: YYYY-MM-DD_HH-MM-SS_originalname.ext
-- Preserve original filename as suffix for searchability
-- Handle name collisions with incrementing suffix
-
-### Claude's Discretion
-- Exact clustering algorithm
-- How to handle photos with no EXIF data
-- Folder emoji usage
-
-</decisions>
-
-<canonical_refs>
-## Canonical References
-
-### Organization rules
-- `docs/features/photo-organization.md` — Grouping rules, duplicate policy, naming spec
-- `docs/decisions/adr-003-exif-handling.md` — EXIF extraction strategy, fallback for missing metadata
-
-</canonical_refs>
-
-<specifics>
-## Specific Ideas
-
-- "I want to be able to find photos by roughly when they were taken"
-- Don't delete anything — worst case, move to a review folder
-
-</specifics>
-
-<deferred>
-## Deferred Ideas
-
-- Face detection grouping — future phase
-- Cloud sync — out of scope for now
-
-</deferred>
-
----
-
-*Phase: 01-photo-organization*
-*Context gathered: 2025-01-20*
-```
-
-</good_examples>
-
-<guidelines>
-**This template captures DECISIONS for downstream agents.**
-
-The output should answer: "What does the researcher need to investigate? What choices are locked for the planner?"
-
-**Good content (concrete decisions):**
+Good content:
 - "Card-based layout, not timeline"
 - "Retry 3 times on network failure, then fail"
 - "Group by year, then by month"
 - "JSON for programmatic use, table for humans"
 
-**Bad content (too vague):**
+Bad content:
 - "Should feel modern and clean"
 - "Good user experience"
 - "Fast and responsive"
 - "Easy to use"
 
-**After creation:**
-- File lives in phase directory: `.planning/phases/XX-name/{phase_num}-CONTEXT.md`
-- `gsd-phase-researcher` uses decisions to focus investigation AND reads canonical_refs to know WHAT docs to study
-- `gsd-planner` uses decisions + research to create executable tasks AND reads canonical_refs to verify alignment
-- Downstream agents should NOT need to ask the user again about captured decisions
+After creation:
+- The file should live with the project's phase artifacts.
+- `gad-phase-researcher` should be able to focus investigation from it.
+- `gad-planner` should be able to turn it into concrete work without re-asking the user.
 
-**CRITICAL — Canonical references:**
-- The `<canonical_refs>` section is MANDATORY. Every CONTEXT.md must have one.
-- If your project has external specs, ADRs, or design docs, list them with full relative paths grouped by topic
-- If ROADMAP.md lists `Canonical refs:` per phase, extract and expand those
-- Inline mentions like "see ADR-019" scattered in decisions are useless to downstream agents — they need full paths and section references in a dedicated section they can find
-- If no external specs exist, say so explicitly — don't silently omit the section
-</guidelines>
+**Critical - canonical references:**
+- The `<canonical_refs>` section is mandatory.
+- If the project has external specs, ADRs, or design docs, list them with full relative paths.
+- If the roadmap already names canonical refs for the phase, expand them here.
+- Inline mentions like "see ADR-019" are not enough. Downstream agents need full paths.
+- If no external specs exist, say so explicitly.

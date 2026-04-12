@@ -29,14 +29,14 @@ Initialize a new project through unified flow: questioning → research (optiona
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/new-project.md
-@vendor/get-anything-done/references/questioning.md
-@vendor/get-anything-done/references/ui-brand.md
-@vendor/get-anything-done/templates/project.md
-@vendor/get-anything-done/templates/requirements.md
+@workflows/new-project.md
+@references/questioning.md
+@references/ui-brand.md
+@templates/project.md
+@templates/requirements.md
 </execution_context>
 
 <process>
-Execute the new-project workflow from @vendor/get-anything-done/workflows/new-project.md end-to-end.
+Execute the new-project workflow from @workflows/new-project.md end-to-end.
 Preserve all workflow gates (validation, approvals, commits, routing).
 </process>

@@ -15,7 +15,7 @@ current state (phase, milestone progress, last modified).
 
 1. **Load config:**
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning 2>/dev/null
+   gad-tools config-get planning 2>/dev/null
    ```
 
 2. **For each root**, read its STATE.md and ROADMAP.md:

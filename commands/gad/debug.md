@@ -43,13 +43,13 @@ ls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5
 ## 0. Initialize Context
 
 ```bash
-INIT=$(node "vendor/get-anything-done/bin/gad-tools.cjs" state load)
+INIT=$(gad-tools state load)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
 Extract `commit_docs` from init JSON. Resolve debugger model:
 ```bash
-debugger_model=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gad-debugger --raw)
+debugger_model=$(gad-tools resolve-model gad-debugger --raw)
 ```
 
 ## 1. Check Active Sessions

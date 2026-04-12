@@ -18,7 +18,7 @@ Removed directories prompt before deletion.
 
 1. **Load current config:**
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning.roots 2>/dev/null || echo "[]"
+   gad-tools config-get planning.roots 2>/dev/null || echo "[]"
    ```
    Also read `planning-config.toml` directly to get existing roots.
 

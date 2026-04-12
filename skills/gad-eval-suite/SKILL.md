@@ -16,7 +16,7 @@ Generate bootstrap prompts for all runnable eval projects, then launch them as p
 
 1. **Generate prompts:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval suite
+   gad eval suite
    ```
 
 2. **Read each generated prompt** from the suite-runs directory.
@@ -29,7 +29,7 @@ Generate bootstrap prompts for all runnable eval projects, then launch them as p
 
 6. **Run cross-project report:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval report
+   gad eval report
    ```
 
 7. **Report findings** — what improved, what regressed, what skills were triggered or missing.
@@ -37,5 +37,5 @@ Generate bootstrap prompts for all runnable eval projects, then launch them as p
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/eval-suite/SKILL.md`.
+Read and follow the companion `eval-suite` skill if it is installed.
 </skill>

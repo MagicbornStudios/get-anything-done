@@ -19,8 +19,8 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 <execution_context>
 **Load these files NOW (before proceeding):**
 
-- @vendor/get-anything-done/workflows/complete-milestone.md (main workflow)
-- @vendor/get-anything-done/templates/milestone-archive.md (archive template)
+- @workflows/complete-milestone.md (main workflow)
+- @templates/milestone-archive.md (archive template)
   </execution_context>
 
 <context>

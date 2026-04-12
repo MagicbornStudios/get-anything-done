@@ -22,7 +22,7 @@ Output: updated VALIDATION.md + generated test files.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/validate-phase.md
+@workflows/validate-phase.md
 </execution_context>
 
 <context>
@@ -30,6 +30,6 @@ Phase: $ARGUMENTS — optional, defaults to last completed phase.
 </context>
 
 <process>
-Execute @vendor/get-anything-done/workflows/validate-phase.md.
+Execute @workflows/validate-phase.md.
 Preserve all workflow gates.
 </process>

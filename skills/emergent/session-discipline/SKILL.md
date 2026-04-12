@@ -44,7 +44,7 @@ Run these **in order** before executing any user request that touches the repo:
 ### Step 1 — Snapshot
 
 ```sh
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <project-id>
+gad snapshot --projectid <project-id>
 ```
 
 Common project IDs: `get-anything-done` (the framework), `global`, `grime-time-site`, `repub-builder`. If the user didn't name a project, use `get-anything-done` for framework work and ask for anything else.
@@ -58,7 +58,7 @@ Read the output. Pay attention to:
 ### Step 2 — Check TASK-REGISTRY.xml for a matching planned task
 
 ```sh
-node vendor/get-anything-done/bin/gad.cjs tasks --projectid <project-id>
+gad tasks --projectid <project-id>
 ```
 
 Scan the `planned` tasks for anything whose goal matches the user's request. If you find one:
@@ -73,7 +73,7 @@ If nothing matches:
 ### Step 3 — Scan for relevant skills
 
 ```sh
-ls vendor/get-anything-done/skills/
+ls skills/
 ```
 
 For the kind of work about to happen, skim the skill names. If any match, open its SKILL.md and read the "When to use" section:
@@ -96,7 +96,7 @@ If no existing skill matches AND the work is non-obvious or repeatable, **author
 ### Step 4 — Check the active phase in ROADMAP.xml
 
 ```sh
-node vendor/get-anything-done/bin/gad.cjs phases --projectid <project-id>
+gad phases --projectid <project-id>
 ```
 
 Is there a phase that covers this work? If yes, use its id in task + commit references. If no, decide whether a new phase is justified before creating it (new phases are substantial — do not spin one up for routine site work).

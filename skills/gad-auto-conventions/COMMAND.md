@@ -41,5 +41,5 @@ Analyze the codebase after the first implementation phase and generate a CONVENT
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/auto-conventions/SKILL.md`.
+Read and follow the companion `auto-conventions` skill if it is installed.
 </skill>

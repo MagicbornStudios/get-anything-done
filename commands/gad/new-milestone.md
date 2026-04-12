@@ -25,11 +25,11 @@ Brownfield equivalent of new-project. Project exists, PROJECT.md has history. Ga
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/new-milestone.md
-@vendor/get-anything-done/references/questioning.md
-@vendor/get-anything-done/references/ui-brand.md
-@vendor/get-anything-done/templates/project.md
-@vendor/get-anything-done/templates/requirements.md
+@workflows/new-milestone.md
+@references/questioning.md
+@references/ui-brand.md
+@templates/project.md
+@templates/requirements.md
 </execution_context>
 
 <context>
@@ -39,6 +39,6 @@ Project and milestone context files are resolved inside the workflow (`init new-
 </context>
 
 <process>
-Execute the new-milestone workflow from @vendor/get-anything-done/workflows/new-milestone.md end-to-end.
+Execute the new-milestone workflow from @workflows/new-milestone.md end-to-end.
 Preserve all workflow gates (validation, questioning, research, requirements, roadmap approval, commits).
 </process>

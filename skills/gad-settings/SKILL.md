@@ -20,11 +20,11 @@ Routes to the settings workflow which handles:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/settings.md
+@workflows/settings.md
 </execution_context>
 
 <process>
-**Follow the settings workflow** from `@vendor/get-anything-done/workflows/settings.md`.
+**Follow the settings workflow** from `@workflows/settings.md`.
 
 The workflow handles all logic including:
 1. Config file creation with defaults if missing

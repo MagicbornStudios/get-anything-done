@@ -1,7 +1,7 @@
-# Instructions for GSD
+# Instructions for GAD
 
-- Use the get-anything-done skill when the user asks for GAD or uses a `gad:*` command.
-- Treat `/gsd-...` or `gsd-...` as command invocations and load the matching file from `.github/skills/gsd-*`.
-- When a command says to spawn a subagent, prefer a matching custom agent from `.github/agents`.
-- Do not apply GSD workflows unless the user explicitly asks for them.
-- After completing any `gsd-*` command (or any deliverable it triggers: feature, bug fix, tests, docs, etc.), ALWAYS: (1) offer the user the next step by prompting via `ask_user`; repeat this feedback loop until the user explicitly indicates they are done.
+- Use GAD only when the user explicitly asks for GAD, `gad-*`, or `/gad-*` workflows.
+- Treat `/gad-*` or `gad-*` as command invocations and load the matching skill from `.github/skills/gad-*` when available.
+- When a workflow says to spawn a subagent, prefer a matching custom agent from `.github/agents`.
+- Do not assume the framework source repo is present. Prefer installed skills, installed agents, and the `gad` CLI on `PATH`.
+- After completing a GAD command or deliverable, summarize what was done and suggest the next relevant GAD step. Do not force an interactive loop.

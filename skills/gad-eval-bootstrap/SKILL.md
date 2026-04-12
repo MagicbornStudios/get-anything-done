@@ -17,7 +17,7 @@ Generate a bootstrap prompt for a single eval project and launch an agent in an 
 
 1. **Generate the bootstrap prompt:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval run --project $PROJECT --prompt-only
+   gad eval run --project $PROJECT --prompt-only
    ```
 
 2. **Read the generated PROMPT.md** from the eval run directory.
@@ -26,11 +26,11 @@ Generate a bootstrap prompt for a single eval project and launch an agent in an 
 
 4. **After completion**, reconstruct the trace:
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval trace reconstruct --project $PROJECT
+   gad eval trace reconstruct --project $PROJECT
    ```
 
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/eval-bootstrap/SKILL.md`.
+Read and follow the companion `eval-bootstrap` skill if it is installed.
 </skill>

@@ -4,7 +4,8 @@
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by MagicbornStudios.",
   "bin": {
     "get-anything-done": "bin/install.js",
-    "gad": "bin/gad.cjs"
+    "gad": "bin/gad.cjs",
+    "gad-tools": "bin/gad-tools.cjs"
   },
   "files": [
     "bin",
@@ -54,6 +55,7 @@
     "vitest": "^4.1.2"
   },
   "scripts": {
+    "audit:portability": "node scripts/audit-portability.mjs",
     "build:skills": "node scripts/sync-canonical-skills.mjs",
     "build:cli": "node scripts/build-cli.mjs",
     "build:hooks": "node scripts/build-hooks.js",
