@@ -20,7 +20,7 @@
 
 ## Catalog
 
-- [Skills](https://get-anything-done.vercel.app/skills): 34 skills (some are emergent, agent-authored, excluded from default install)
+- [Skills](https://get-anything-done.vercel.app/skills): 95 skills (some are emergent, agent-authored, excluded from default install)
 - [Requirements](https://get-anything-done.vercel.app/requirements): Every eval project's current REQUIREMENTS.xml
 - [Playable archive](https://get-anything-done.vercel.app/#play): Every scored build playable in-browser
 
@@ -28,7 +28,7 @@
 
 - [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone → install → open in Claude → talk)
 - [Security](https://get-anything-done.vercel.app/security): Skill attack surfaces, mitigations, future certification model
-- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (181), phases (39), decisions (142), roadmap, requirements, bugs (4)
+- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (182), phases (39), decisions (143), roadmap, requirements, bugs (4)
 
 ## Machine-readable
 

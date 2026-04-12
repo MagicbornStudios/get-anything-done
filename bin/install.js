@@ -3063,6 +3063,188 @@ function listCodexSkillNames(skillsDir, prefix = 'gad-') {
     .sort();
 }
 
+function readCanonicalSkillRecords(skillsRoot) {
+  if (!fs.existsSync(skillsRoot)) return [];
+  const records = [];
+
+  function recurse(currentDir, relPath = '') {
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const nextRel = relPath ? path.join(relPath, entry.name) : entry.name;
+      const nextDir = path.join(currentDir, entry.name);
+      const skillFile = path.join(nextDir, 'SKILL.md');
+      const commandFile = path.join(nextDir, 'COMMAND.md');
+      const metaFile = path.join(nextDir, 'skill.json');
+      if (fs.existsSync(skillFile)) {
+        let commandPath = null;
+        if (fs.existsSync(metaFile)) {
+          try {
+            const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
+            if (typeof meta.commandPath === 'string' && meta.commandPath) {
+              commandPath = meta.commandPath.replace(/\\/g, '/');
+            }
+          } catch {}
+        }
+        records.push({
+          relPath: nextRel.replace(/\\/g, '/'),
+          id: entry.name,
+          dir: nextDir,
+          skillFile,
+          commandFile: fs.existsSync(commandFile) ? commandFile : null,
+          commandPath,
+        });
+      }
+      recurse(nextDir, nextRel);
+    }
+  }
+
+  recurse(skillsRoot);
+  return records;
+}
+
+function isExcludedSkill(record) {
+  const rel = record.relPath || '';
+  if (rel.startsWith('emergent/') || rel.startsWith('candidates/')) return true;
+  try {
+    const content = fs.readFileSync(record.skillFile, 'utf8');
+    return /^excluded-from-default-install:\s*true/m.test(content);
+  } catch {
+    return false;
+  }
+}
+
+function removeInstalledSkillDirs(skillsDir, skillRecords) {
+  if (!fs.existsSync(skillsDir)) return;
+  for (const record of skillRecords) {
+    const targetDir = path.join(skillsDir, record.id);
+    if (fs.existsSync(targetDir)) {
+      fs.rmSync(targetDir, { recursive: true, force: true });
+    }
+  }
+}
+
+function readCommandBackedSkillContent(record) {
+  return fs.readFileSync(record.commandFile || record.skillFile, 'utf8');
+}
+
+function applyRuntimePathTransforms(content, pathPrefix, runtime) {
+  const globalClaudeRegex = /~\/\.claude\//g;
+  const globalClaudeHomeRegex = /\$HOME\/\.claude\//g;
+  const localClaudeRegex = /\.\/\.claude\//g;
+  const runtimeHomeDir = {
+    claude: '~/.claude/',
+    codex: '~/.codex/',
+    cursor: '~/.cursor/',
+    windsurf: '~/.windsurf/',
+    augment: '~/.augment/',
+    copilot: '~/.copilot/',
+    antigravity: '~/.gemini/antigravity/',
+  }[runtime];
+  let converted = content.replace(globalClaudeRegex, pathPrefix);
+  converted = converted.replace(globalClaudeHomeRegex, pathPrefix);
+  const localRuntimeDir =
+    runtime === 'antigravity' ? './.gemini/antigravity/' :
+    runtime === 'copilot' ? './.copilot/' :
+    runtime === 'codex' ? './.codex/' :
+    runtime === 'cursor' ? './.cursor/' :
+    runtime === 'windsurf' ? './.windsurf/' :
+    runtime === 'augment' ? './.augment/' :
+    './.claude/';
+  converted = converted.replace(localClaudeRegex, localRuntimeDir);
+  if (runtimeHomeDir) {
+    const runtimeDirRegex = new RegExp(runtimeHomeDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    converted = converted.replace(runtimeDirRegex, pathPrefix);
+  }
+  return converted;
+}
+
+function installCanonicalSkills(skillsRoot, skillsDir, runtime, pathPrefix, isGlobal = false) {
+  const records = readCanonicalSkillRecords(skillsRoot).filter((record) => !isExcludedSkill(record));
+  if (records.length === 0) return [];
+  fs.mkdirSync(skillsDir, { recursive: true });
+  removeInstalledSkillDirs(skillsDir, records);
+
+  for (const record of records) {
+    const targetDir = path.join(skillsDir, record.id);
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    if (record.commandFile) {
+      let content = readCommandBackedSkillContent(record);
+      content = applyRuntimePathTransforms(content, pathPrefix, runtime);
+      content = processAttribution(content, getCommitAttribution(runtime));
+
+      if (runtime === 'codex') content = convertClaudeCommandToCodexSkill(content, record.id);
+      else if (runtime === 'cursor') content = convertClaudeCommandToCursorSkill(content, record.id);
+      else if (runtime === 'windsurf') content = convertClaudeCommandToWindsurfSkill(content, record.id);
+      else if (runtime === 'augment') content = convertClaudeCommandToAugmentSkill(content, record.id);
+      else if (runtime === 'copilot') content = convertClaudeCommandToCopilotSkill(content, record.id, isGlobal);
+      else if (runtime === 'antigravity') content = convertClaudeCommandToAntigravitySkill(content, record.id, isGlobal);
+      else content = convertClaudeCommandToClaudeSkill(content, record.id);
+
+      fs.writeFileSync(path.join(targetDir, 'SKILL.md'), content);
+      continue;
+    }
+
+    copyWithPathReplacement(record.dir, targetDir, pathPrefix, runtime, false, isGlobal);
+  }
+
+  return records.map((record) => record.id).sort();
+}
+
+function installCanonicalSkillsMirror(skillsRoot, targetDir, pathPrefix, runtime, isGlobal = false) {
+  const records = readCanonicalSkillRecords(skillsRoot).filter((record) => !isExcludedSkill(record));
+  if (records.length === 0) return 0;
+  const skillsDir = path.join(targetDir, 'skills');
+  const agentsSkillsDir = path.join(targetDir, '.agents', 'skills');
+  fs.mkdirSync(skillsDir, { recursive: true });
+  fs.mkdirSync(agentsSkillsDir, { recursive: true });
+
+  let copiedCount = 0;
+  for (const record of records) {
+    if (record.commandFile) continue;
+    const nativeDest = path.join(skillsDir, record.id);
+    const standardDest = path.join(agentsSkillsDir, record.id);
+    copyWithPathReplacement(record.dir, nativeDest, pathPrefix, runtime, false, isGlobal);
+    copyWithPathReplacement(record.dir, standardDest, pathPrefix, runtime, false, isGlobal);
+    copiedCount++;
+  }
+  return copiedCount;
+}
+
+function installCanonicalCommands(skillsRoot, destDir, pathPrefix, runtime, flatten = false, prefix = 'gad') {
+  const records = readCanonicalSkillRecords(skillsRoot).filter((record) => !isExcludedSkill(record) && record.commandFile);
+  if (records.length === 0) return 0;
+  if (!flatten) {
+    fs.mkdirSync(destDir, { recursive: true });
+    if (fs.existsSync(destDir)) {
+      fs.rmSync(destDir, { recursive: true, force: true });
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+  } else {
+    fs.mkdirSync(destDir, { recursive: true });
+  }
+
+  let count = 0;
+  for (const record of records) {
+    let content = readCommandBackedSkillContent(record);
+    content = applyRuntimePathTransforms(content, pathPrefix, runtime);
+    content = processAttribution(content, getCommitAttribution(runtime));
+    if (flatten) {
+      const fileName = `${prefix}-${record.commandPath.replace(/\.md$/i, '').replace(/[\\/]/g, '-')}.md`;
+      fs.writeFileSync(path.join(destDir, fileName), convertClaudeToOpencodeFrontmatter(content));
+      count++;
+      continue;
+    }
+    const commandPath = record.commandPath || `${record.id.replace(/^gad-/, '')}.md`;
+    const fullDest = path.join(destDir, ...commandPath.split('/'));
+    fs.mkdirSync(path.dirname(fullDest), { recursive: true });
+    fs.writeFileSync(fullDest, content);
+    count++;
+  }
+  return count;
+}
+
 function copyCommandsAsCodexSkills(srcDir, skillsDir, prefix, pathPrefix, runtime) {
   if (!fs.existsSync(srcDir)) {
     return;
@@ -4570,41 +4752,40 @@ function install(isGlobal, runtime = 'claude') {
 
   // Clean up orphaned files from previous versions
   cleanupOrphanedFiles(targetDir);
+  const canonicalSkillsSrc = path.join(src, 'skills');
+  const legacyCommandsSrc = path.join(src, 'commands', 'gad');
 
-  // OpenCode uses command/ (flat), Codex uses skills/, Claude/Gemini use commands/gad/
+  // OpenCode uses command/ (flat), Codex/Cursor/etc use skills/, Gemini uses commands/gad/.
   if (isOpencode) {
-    // OpenCode: flat structure in command/ directory
     const commandDir = path.join(targetDir, 'command');
     fs.mkdirSync(commandDir, { recursive: true });
-    
-    // Copy commands/gad/*.md as command/gad-*.md (flatten structure)
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyFlattenedCommands(gadSrc, commandDir, 'gad', pathPrefix, runtime);
+    const count = fs.existsSync(canonicalSkillsSrc)
+      ? installCanonicalCommands(canonicalSkillsSrc, commandDir, pathPrefix, runtime, true, 'gad')
+      : (copyFlattenedCommands(legacyCommandsSrc, commandDir, 'gad', pathPrefix, runtime), fs.readdirSync(commandDir).filter(f => f.startsWith('gad-')).length);
     if (verifyInstalled(commandDir, 'command/gad-*')) {
-      const count = fs.readdirSync(commandDir).filter(f => f.startsWith('gad-')).length;
-      console.log(`  ${green}✓${reset} Installed ${count} commands to command/`);
+      console.log('  Installed ' + count + ' commands to command/');
     } else {
       failures.push('command/gad-*');
     }
   } else if (isCodex) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyCommandsAsCodexSkills(gadSrc, skillsDir, 'gad', pathPrefix, runtime);
-    const installedSkillNames = listCodexSkillNames(skillsDir);
+    const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
+      ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'codex', pathPrefix, isGlobal)
+      : (copyCommandsAsCodexSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
     if (installedSkillNames.length > 0) {
-      console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
+      console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
       failures.push('skills/gad-*');
     }
   } else if (isCopilot) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyCommandsAsCopilotSkills(gadSrc, skillsDir, 'gad', isGlobal);
+    const count = fs.existsSync(canonicalSkillsSrc)
+      ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'copilot', pathPrefix, isGlobal).length
+      : (copyCommandsAsCopilotSkills(legacyCommandsSrc, skillsDir, 'gad', isGlobal),
+        fs.existsSync(skillsDir) ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter(e => e.isDirectory() && e.name.startsWith('gad-')).length : 0);
     if (fs.existsSync(skillsDir)) {
-      const count = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gad-')).length;
       if (count > 0) {
-        console.log(`  ${green}✓${reset} Installed ${count} skills to skills/`);
+        console.log('  Installed ' + count + ' skills to skills/');
       } else {
         failures.push('skills/gad-*');
       }
@@ -4613,13 +4794,13 @@ function install(isGlobal, runtime = 'claude') {
     }
   } else if (isAntigravity) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyCommandsAsAntigravitySkills(gadSrc, skillsDir, 'gad', isGlobal);
+    const count = fs.existsSync(canonicalSkillsSrc)
+      ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'antigravity', pathPrefix, isGlobal).length
+      : (copyCommandsAsAntigravitySkills(legacyCommandsSrc, skillsDir, 'gad', isGlobal),
+        fs.existsSync(skillsDir) ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter(e => e.isDirectory() && e.name.startsWith('gad-')).length : 0);
     if (fs.existsSync(skillsDir)) {
-      const count = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gad-')).length;
       if (count > 0) {
-        console.log(`  ${green}✓${reset} Installed ${count} skills to skills/`);
+        console.log('  Installed ' + count + ' skills to skills/');
       } else {
         failures.push('skills/gad-*');
       }
@@ -4628,55 +4809,59 @@ function install(isGlobal, runtime = 'claude') {
     }
   } else if (isCursor) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyCommandsAsCursorSkills(gadSrc, skillsDir, 'gad', pathPrefix, runtime);
-    const installedSkillNames = listCodexSkillNames(skillsDir); // reuse — same dir structure
+    const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
+      ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'cursor', pathPrefix, isGlobal)
+      : (copyCommandsAsCursorSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
     if (installedSkillNames.length > 0) {
-      console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
+      console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
       failures.push('skills/gad-*');
     }
   } else if (isWindsurf) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyCommandsAsWindsurfSkills(gadSrc, skillsDir, 'gad', pathPrefix, runtime);
-    const installedSkillNames = listCodexSkillNames(skillsDir); // reuse — same dir structure
+    const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
+      ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'windsurf', pathPrefix, isGlobal)
+      : (copyCommandsAsWindsurfSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
     if (installedSkillNames.length > 0) {
-      console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
+      console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
       failures.push('skills/gad-*');
     }
   } else if (isAugment) {
     const skillsDir = path.join(targetDir, 'skills');
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyCommandsAsAugmentSkills(gadSrc, skillsDir, 'gad', pathPrefix, runtime);
-    const installedSkillNames = listCodexSkillNames(skillsDir);
+    const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
+      ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'augment', pathPrefix, isGlobal)
+      : (copyCommandsAsAugmentSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
     if (installedSkillNames.length > 0) {
-      console.log(`  ${green}✓${reset} Installed ${installedSkillNames.length} skills to skills/`);
+      console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
       failures.push('skills/gad-*');
     }
   } else if (isGemini) {
     const commandsDir = path.join(targetDir, 'commands');
     fs.mkdirSync(commandsDir, { recursive: true });
-    const gadSrc = path.join(src, 'commands', 'gad');
     const gadDest = path.join(commandsDir, 'gad');
-    copyWithPathReplacement(gadSrc, gadDest, pathPrefix, runtime, true, isGlobal);
+    if (fs.existsSync(canonicalSkillsSrc)) {
+      installCanonicalCommands(canonicalSkillsSrc, gadDest, pathPrefix, runtime, false, 'gad');
+    } else {
+      copyWithPathReplacement(legacyCommandsSrc, gadDest, pathPrefix, runtime, true, isGlobal);
+    }
     if (verifyInstalled(gadDest, 'commands/gad')) {
-      console.log(`  ${green}✓${reset} Installed commands/gad`);
+      console.log('  Installed commands/gad');
     } else {
       failures.push('commands/gad');
     }
   } else {
-    // Claude Code: skills/ format (2.1.88+ compatibility)
     const skillsDir = path.join(targetDir, 'skills');
-    const gadSrc = path.join(src, 'commands', 'gad');
-    copyCommandsAsClaudeSkills(gadSrc, skillsDir, 'gad', pathPrefix, runtime, isGlobal);
+    if (fs.existsSync(canonicalSkillsSrc)) {
+      installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'claude', pathPrefix, isGlobal);
+    } else {
+      copyCommandsAsClaudeSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime, isGlobal);
+    }
     if (fs.existsSync(skillsDir)) {
-      const count = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory() && e.name.startsWith('gad-')).length;
+      const count = fs.readdirSync(skillsDir, { withFileTypes: true }).filter(e => e.isDirectory()).length;
       if (count > 0) {
-        console.log(`  ${green}✓${reset} Installed ${count} skills to skills/`);
+        console.log('  Installed ' + count + ' skills to skills/');
       } else {
         failures.push('skills/gad-*');
       }
@@ -4684,11 +4869,10 @@ function install(isGlobal, runtime = 'claude') {
       failures.push('skills/gad-*');
     }
 
-    // Clean up legacy commands/gad/ from previous installs
     const legacyCommandsDir = path.join(targetDir, 'commands', 'gad');
     if (fs.existsSync(legacyCommandsDir)) {
       fs.rmSync(legacyCommandsDir, { recursive: true });
-      console.log(`  ${green}✓${reset} Removed legacy commands/gad/ directory`);
+      console.log('  Removed legacy commands/gad/ directory');
     }
   }
 
@@ -4710,62 +4894,10 @@ function install(isGlobal, runtime = 'claude') {
     console.log(`  ${yellow}⚠${reset} Skipping get-anything-done skill (not found in source — local checkout?)`);
   }
 
-  // Copy workspace skills from .agents/skills/ to the target's skills/ directory
-  // per the agentskills.io cross-client convention (decision gad-80). Skips
-  // the emergent/ subdirectory because emergent skills are agent-authored
-  // for the GAD repo itself and should not leak into user workspaces
-  // (excluded-from-default-install: true in frontmatter + directory position).
-  // For Claude Code, skills go to skills/ (native). For .agents/skills/ we
-  // also write a mirror for cross-client reachability.
-  const workspaceSkillsSrc = path.join(src, '.agents', 'skills');
-  if (fs.existsSync(workspaceSkillsSrc) && !isOpencode) {
-    const skillsDir = path.join(targetDir, 'skills');
-    const agentsSkillsDir = path.join(targetDir, '.agents', 'skills');
-    fs.mkdirSync(skillsDir, { recursive: true });
-    fs.mkdirSync(agentsSkillsDir, { recursive: true });
-
-    let copiedCount = 0;
-    const skippedEmergent = [];
-    for (const entry of fs.readdirSync(workspaceSkillsSrc, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      if (entry.name === 'emergent') {
-        // Walk emergent/ just to report what was skipped, don't copy
-        try {
-          const emergentInner = fs.readdirSync(path.join(workspaceSkillsSrc, 'emergent'), { withFileTypes: true });
-          for (const e of emergentInner) {
-            if (e.isDirectory()) skippedEmergent.push(e.name);
-          }
-        } catch {}
-        continue;
-      }
-
-      const srcSkill = path.join(workspaceSkillsSrc, entry.name);
-      const srcSkillMd = path.join(srcSkill, 'SKILL.md');
-      if (!fs.existsSync(srcSkillMd)) continue;
-
-      // Check frontmatter for excluded-from-default-install flag
-      let excluded = false;
-      try {
-        const content = fs.readFileSync(srcSkillMd, 'utf8');
-        if (/^excluded-from-default-install:\s*true/m.test(content)) {
-          excluded = true;
-        }
-      } catch {}
-      if (excluded) continue;
-
-      // Copy to both skills/<name>/ (native) and .agents/skills/<name>/ (standard)
-      const nativeDest = path.join(skillsDir, entry.name);
-      const standardDest = path.join(agentsSkillsDir, entry.name);
-      copyWithPathReplacement(srcSkill, nativeDest, pathPrefix, runtime, false, isGlobal);
-      copyWithPathReplacement(srcSkill, standardDest, pathPrefix, runtime, false, isGlobal);
-      copiedCount++;
-    }
-
+  if (fs.existsSync(canonicalSkillsSrc) && !isOpencode) {
+    const copiedCount = installCanonicalSkillsMirror(canonicalSkillsSrc, targetDir, pathPrefix, runtime, isGlobal);
     if (copiedCount > 0) {
-      console.log(`  ${green}✓${reset} Installed ${copiedCount} workspace skills to skills/ + .agents/skills/ (agentskills.io convention)`);
-    }
-    if (skippedEmergent.length > 0) {
-      console.log(`  ${dim}  skipped ${skippedEmergent.length} emergent skill(s): ${skippedEmergent.join(', ')}${reset}`);
+      console.log('  Installed ' + copiedCount + ' canonical workspace skills to skills/ + .agents/skills/');
     }
   }
 

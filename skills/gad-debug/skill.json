@@ -1,0 +1,6 @@
+{
+  "id": "gad-debug",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "debug.md"
+}

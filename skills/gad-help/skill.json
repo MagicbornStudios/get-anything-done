@@ -1,0 +1,6 @@
+{
+  "id": "gad-help",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "help.md"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "gad-forensics",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "forensics.md"
+}

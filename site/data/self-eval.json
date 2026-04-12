@@ -6,18 +6,18 @@
       "days": 6
     },
     "totals": {
-      "events": 3509,
+      "events": 3516,
       "sessions": 5,
       "gad_cli_calls": 273
     },
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 1080
+        "count": 1082
       },
       {
         "tool": "unknown",
-        "count": 572
+        "count": 577
       },
       {
         "tool": "Read",
@@ -87,13 +87,13 @@
       },
       {
         "day": "2026-04-12",
-        "count": 133
+        "count": 140
       }
     ],
     "framework_overhead": {
-      "planning_ops": 319,
+      "planning_ops": 320,
       "source_ops": 1038,
-      "ratio": 0.235,
+      "ratio": 0.236,
       "score": 0.7
     },
     "loop_compliance": {
@@ -106,14 +106,14 @@
       "eval": 100,
       "other": 122
     },
-    "computed_at": "2026-04-12T10:27:02.284Z",
+    "computed_at": "2026-04-12T16:41:29.572Z",
     "tasks": {
-      "done": 185,
+      "done": 186,
       "planned": 4,
       "in_progress": 2,
-      "total": 191
+      "total": 192
     },
-    "decisions": 142,
+    "decisions": 143,
     "phases_pressure": [
       {
         "phase": "10",
@@ -261,10 +261,10 @@
       },
       {
         "phase": "35",
-        "tasks_total": 3,
-        "tasks_done": 0,
+        "tasks_total": 4,
+        "tasks_done": 1,
         "crosscuts": 3,
-        "pressure_score": 9,
+        "pressure_score": 10,
         "high_pressure": false
       }
     ],
@@ -1582,18 +1582,18 @@
         "days": 6
       },
       "totals": {
-        "events": 3509,
+        "events": 3516,
         "sessions": 5,
         "gad_cli_calls": 273
       },
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 1080
+          "count": 1082
         },
         {
           "tool": "unknown",
-          "count": 572
+          "count": 577
         },
         {
           "tool": "Read",
@@ -1663,13 +1663,13 @@
         },
         {
           "day": "2026-04-12",
-          "count": 133
+          "count": 140
         }
       ],
       "framework_overhead": {
-        "planning_ops": 319,
+        "planning_ops": 320,
         "source_ops": 1038,
-        "ratio": 0.235,
+        "ratio": 0.236,
         "score": 0.7
       },
       "loop_compliance": {
@@ -1682,14 +1682,14 @@
         "eval": 100,
         "other": 122
       },
-      "computed_at": "2026-04-12T10:27:02.284Z",
+      "computed_at": "2026-04-12T16:41:29.572Z",
       "tasks": {
-        "done": 185,
+        "done": 186,
         "planned": 4,
         "in_progress": 2,
-        "total": 191
+        "total": 192
       },
-      "decisions": 142,
+      "decisions": 143,
       "phases_pressure": [
         {
           "phase": "10",
@@ -1837,10 +1837,10 @@
         },
         {
           "phase": "35",
-          "tasks_total": 3,
-          "tasks_done": 0,
+          "tasks_total": 4,
+          "tasks_done": 1,
           "crosscuts": 3,
-          "pressure_score": 9,
+          "pressure_score": 10,
           "high_pressure": false
         }
       ],

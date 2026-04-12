@@ -1,5 +1,4 @@
 const RELEASE_SURFACE_PREFIXES = [
-  '.agents/skills/',
   '.github/workflows/release-',
   'agents/',
   'bin/',
@@ -7,6 +6,7 @@ const RELEASE_SURFACE_PREFIXES = [
   'hooks/',
   'lib/',
   'references/',
+  'skills/',
   'scripts/build-',
   'scripts/install-gad-',
   'scripts/release-',

@@ -31,6 +31,8 @@ export interface EvalRunRecord {
   frameworkBranch: string | null;
   frameworkCommitTs: string | null;
   frameworkStamp: string | null;
+  runtimeIdentity: Record<string, unknown> | null;
+  runtimesInvolved: Array<Record<string, unknown>>;
   traceEvents: Array<Record<string, unknown>> | null;
   evalType: string;
   contextMode: string | null;
@@ -210,6 +212,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -297,6 +301,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": "main",
     "frameworkCommitTs": null,
     "frameworkStamp": "v1.32.0+459dc36",
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -448,6 +454,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -513,6 +521,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -580,6 +590,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -701,6 +713,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -793,6 +807,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -933,6 +949,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1068,6 +1086,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1202,6 +1222,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1300,6 +1322,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": "main",
     "frameworkCommitTs": null,
     "frameworkStamp": "v1.32.0+3ef0bb5",
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1414,6 +1438,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1520,6 +1546,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1626,6 +1654,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1725,6 +1755,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": "main",
     "frameworkCommitTs": null,
     "frameworkStamp": "v1.32.0+3ef0bb5",
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1842,6 +1874,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": "main",
     "frameworkCommitTs": "2026-04-09T00:22:35-05:00",
     "frameworkStamp": "v1.32.0+459dc36",
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -1974,6 +2008,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -2044,6 +2080,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -2143,6 +2181,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -2245,6 +2285,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": "main",
     "frameworkCommitTs": null,
     "frameworkStamp": "v1.32.0+3ef0bb5",
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -2363,6 +2405,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": "main",
     "frameworkCommitTs": "2026-04-09T00:22:35-05:00",
     "frameworkStamp": "v1.32.0+459dc36",
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -2503,6 +2547,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -2573,6 +2619,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -2640,6 +2688,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -2705,6 +2755,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -2772,6 +2824,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": null,
@@ -2823,6 +2877,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -2910,6 +2966,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -2995,6 +3053,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -3125,6 +3185,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -3191,6 +3253,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -3319,6 +3383,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -3411,6 +3477,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "implementation",
     "contextMode": "fresh",
@@ -3541,6 +3609,8 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "frameworkBranch": null,
     "frameworkCommitTs": null,
     "frameworkStamp": null,
+    "runtimeIdentity": null,
+    "runtimesInvolved": [],
     "traceEvents": null,
     "evalType": "greenfield",
     "contextMode": "fresh",
@@ -5993,6 +6063,12 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-146",
+    "title": "Claude-facing model profiles stay off by default and use runtime-safe aliases when enabled",
+    "summary": "Model profiles were present in prompts and references but had drifted out of the live workflow: gad-tools init no longer emitted the resolved model fields, the SDK default still assumed an always-on profile in some places, and the SDK path used a stale frozen Haiku model ID that failed at runtime. Policy: (1) `model_profile` defaults to `off` so GAD does not silently change models unless the operator opts in. (2) When enabled for Claude-facing runtimes, GAD passes Claude aliases (`opus`, `sonnet`, `haiku`, or `inherit`) instead of frozen full model IDs, allowing the runtime to resolve to a current accessible version. (3) Model switching must be considered real only when verified by runtime events such as Claude SessionInit, not just by prompt interpolation or unit tests. (4) Shared resolver logic lives in GAD and feeds both workflow init payloads and SDK/session paths, so prompt expectations and actual spawn behavior stay aligned.",
+    "impact": "gad-tools init now emits resolved workflow model fields again. Claude SDK sessions no longer fail on a stale Haiku model ID and can be live-verified through SessionInit.model. Docs and tests move from balanced-by-default assumptions to off-by-default semantics. Future runtime-identity work in phase 35 builds on a working model-selection baseline instead of dead fields."
+  },
   {
     "id": "gad-145",
     "title": "Candidate review lifecycle + configurable pressure formula + Shannon framing",
@@ -9748,6 +9824,23 @@ export const ALL_TASKS: TaskRecord[] = [
       "runtime-comparison"
     ],
     "depends": []
+  },
+  {
+    "id": "35-04",
+    "phaseId": "35",
+    "status": "done",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-safe Claude aliases when enabled, and a live verification path that proves a real Claude sub-session changed models.",
+    "keywords": [
+      "model-profiles",
+      "claude",
+      "sdk",
+      "off-by-default",
+      "live-verification"
+    ],
+    "depends": []
   }
 ];
 
@@ -10051,6 +10144,13 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-146",
+    "title": "Claude-facing model profiles stay off by default and use runtime-safe aliases when enabled",
+    "kind": "decision",
+    "href": "/decisions#gad-146",
+    "body": "gad-146 claude-facing model profiles stay off by default and use runtime-safe aliases when enabled model profiles were present in prompts and references but had drifted out of the live workflow: gad-tools init no longer emitted the resolved model fields, the sdk default still assumed an always-on profile in some places, and the sdk path used a stale frozen haiku model id that failed at runtime. policy: (1) `model_profile` defaults to `off` so gad does not silently change models unless the opera"
+  },
   {
     "id": "gad-145",
     "title": "Candidate review lifecycle + configurable pressure formula + Shannon framing",
@@ -12313,6 +12413,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "35-03 update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. claude-vs-codex comparisons must be first-class in the resulting artifacts. reporting self-eval site runtime-comparison"
   },
   {
+    "id": "35-04",
+    "title": "Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-sa",
+    "kind": "task",
+    "href": "/planning?tab=tasks#35-04",
+    "body": "35-04 restore model profile resolution for current gad workflows and claude sdk sessions with `off` as the default, runtime-safe claude aliases when enabled, and a live verification path that proves a real claude sub-session changed models. model-profiles claude sdk off-by-default live-verification"
+  },
+  {
     "id": "01",
     "title": "Phase 01 — Foundation",
     "kind": "phase",
@@ -13013,11 +13120,438 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "framework-upgrade framework-upgrade ship a change to the gad framework itself (new skill, new subagent, reworked command, altered loop) in a way that preserves the ability to interpret eval results across versions. trigger this skill whenever a framework change could affect how an agent behaves during an eval run — e.g. adding a mandatory skill, changing a command's spawned subagent, rewording agents.md, changing the plan-phase flow, anything that would make \"the same agent prompt\" produce different output. the goal is to make framework drift visible so we don't mistake a framework improvement for an agent improvement (or vice versa) when scores move."
   },
   {
+    "id": "gad-add-backlog",
+    "title": "gad:add-backlog",
+    "kind": "skill",
+    "href": "/skills/gad-add-backlog",
+    "body": "gad-add-backlog gad:add-backlog add an idea to the backlog parking lot (999.x numbering)"
+  },
+  {
+    "id": "gad-add-phase",
+    "title": "gad:add-phase",
+    "kind": "skill",
+    "href": "/skills/gad-add-phase",
+    "body": "gad-add-phase gad:add-phase add phase to end of current milestone in roadmap"
+  },
+  {
+    "id": "gad-add-tests",
+    "title": "gad:add-tests",
+    "kind": "skill",
+    "href": "/skills/gad-add-tests",
+    "body": "gad-add-tests gad:add-tests generate tests for a completed phase based on uat criteria and implementation"
+  },
+  {
+    "id": "gad-add-todo",
+    "title": "gad:add-todo",
+    "kind": "skill",
+    "href": "/skills/gad-add-todo",
+    "body": "gad-add-todo gad:add-todo capture idea or task as todo from current conversation context"
+  },
+  {
+    "id": "gad-audit-milestone",
+    "title": "gad:audit-milestone",
+    "kind": "skill",
+    "href": "/skills/gad-audit-milestone",
+    "body": "gad-audit-milestone gad:audit-milestone audit milestone completion against original intent before archiving"
+  },
+  {
+    "id": "gad-audit-uat",
+    "title": "gad:audit-uat",
+    "kind": "skill",
+    "href": "/skills/gad-audit-uat",
+    "body": "gad-audit-uat gad:audit-uat cross-phase audit of all outstanding uat and verification items"
+  },
+  {
+    "id": "gad-auto-conventions",
+    "title": "gad:auto-conventions",
+    "kind": "skill",
+    "href": "/skills/gad-auto-conventions",
+    "body": "gad-auto-conventions gad:auto-conventions auto-scaffold conventions.md from codebase patterns after first implementation phase"
+  },
+  {
+    "id": "gad-autonomous",
+    "title": "gad:autonomous",
+    "kind": "skill",
+    "href": "/skills/gad-autonomous",
+    "body": "gad-autonomous gad:autonomous run all remaining phases autonomously — discuss→plan→execute per phase"
+  },
+  {
+    "id": "gad-check-todos",
+    "title": "gad:check-todos",
+    "kind": "skill",
+    "href": "/skills/gad-check-todos",
+    "body": "gad-check-todos gad:check-todos list pending todos and select one to work on"
+  },
+  {
+    "id": "gad-cleanup",
+    "title": "gad:cleanup",
+    "kind": "skill",
+    "href": "/skills/gad-cleanup",
+    "body": "gad-cleanup gad:cleanup archive accumulated phase directories from completed milestones"
+  },
+  {
+    "id": "gad-complete-milestone",
+    "title": "gad:complete-milestone",
+    "kind": "skill",
+    "href": "/skills/gad-complete-milestone",
+    "body": "gad-complete-milestone gad:complete-milestone archive completed milestone and prepare for next version"
+  },
+  {
+    "id": "gad-create-skill",
+    "title": "gad:create-skill",
+    "kind": "skill",
+    "href": "/skills/gad-create-skill",
+    "body": "gad-create-skill gad:create-skill >- create a gad-tailored skill using the gad-skill-creator methodology. immediately scaffolds an eval project. use when creating a new skill, turning a repetitive cli pattern into a skill, or when a task review reveals repeated commands."
+  },
+  {
+    "id": "gad-debug",
+    "title": "gad:debug",
+    "kind": "skill",
+    "href": "/skills/gad-debug",
+    "body": "gad-debug gad:debug systematic debugging with persistent state across context resets"
+  },
+  {
+    "id": "gad-discuss-phase",
+    "title": "gad:discuss-phase",
+    "kind": "skill",
+    "href": "/skills/gad-discuss-phase",
+    "body": "gad-discuss-phase gad:discuss-phase gather phase context through adaptive questioning before planning. use --auto to skip interactive questions (claude picks recommended defaults). use --chain for interactive discuss followed by automatic plan+execute."
+  },
+  {
+    "id": "gad-do",
+    "title": "gad:do",
+    "kind": "skill",
+    "href": "/skills/gad-do",
+    "body": "gad-do gad:do route freeform text to the right gad command automatically"
+  },
+  {
+    "id": "gad-docs-compile",
+    "title": "gad:docs-compile",
+    "kind": "skill",
+    "href": "/skills/gad-docs-compile",
+    "body": "gad-docs-compile gad:docs-compile compile planning docs from all roots into docs_sink as mdx files"
+  },
+  {
+    "id": "gad-docs-update",
+    "title": "gad:docs-update",
+    "kind": "skill",
+    "href": "/skills/gad-docs-update",
+    "body": "gad-docs-update gad:docs-update generate or update project documentation verified against the codebase"
+  },
+  {
+    "id": "gad-eval-bootstrap",
+    "title": "gad:eval-bootstrap",
+    "kind": "skill",
+    "href": "/skills/gad-eval-bootstrap",
+    "body": "gad-eval-bootstrap gad:eval-bootstrap bootstrap an eval agent with full gad context injected into its prompt"
+  },
+  {
+    "id": "gad-eval-list",
+    "title": "gad:eval-list",
+    "kind": "skill",
+    "href": "/skills/gad-eval-list",
+    "body": "gad-eval-list gad:eval-list list available eval projects and their run history"
+  },
+  {
+    "id": "gad-eval-report",
+    "title": "gad:eval-report",
+    "kind": "skill",
+    "href": "/skills/gad-eval-report",
+    "body": "gad-eval-report gad:eval-report show cross-project eval comparison and findings"
+  },
+  {
+    "id": "gad-eval-run",
+    "title": "gad:eval-run",
+    "kind": "skill",
+    "href": "/skills/gad-eval-run",
+    "body": "gad-eval-run gad:eval-run run an eval project in an isolated git worktree"
+  },
+  {
+    "id": "gad-eval-suite",
+    "title": "gad:eval-suite",
+    "kind": "skill",
+    "href": "/skills/gad-eval-suite",
+    "body": "gad-eval-suite gad:eval-suite run all eval projects in parallel with bootstrap prompts"
+  },
+  {
+    "id": "gad-execute-phase",
+    "title": "gad:execute-phase",
+    "kind": "skill",
+    "href": "/skills/gad-execute-phase",
+    "body": "gad-execute-phase gad:execute-phase execute all plans in a phase with wave-based parallelization"
+  },
+  {
+    "id": "gad-forensics",
+    "title": "gad:forensics",
+    "kind": "skill",
+    "href": "/skills/gad-forensics",
+    "body": "gad-forensics gad:forensics post-mortem investigation for failed gad workflows — analyzes git history, artifacts, and state to diagnose what went wrong"
+  },
+  {
+    "id": "gad-health",
+    "title": "gad:health",
+    "kind": "skill",
+    "href": "/skills/gad-health",
+    "body": "gad-health gad:health diagnose planning directory health and optionally repair issues"
+  },
+  {
+    "id": "gad-help",
+    "title": "gad:help",
+    "kind": "skill",
+    "href": "/skills/gad-help",
+    "body": "gad-help gad:help show available gad commands and usage guide"
+  },
+  {
+    "id": "gad-insert-phase",
+    "title": "gad:insert-phase",
+    "kind": "skill",
+    "href": "/skills/gad-insert-phase",
+    "body": "gad-insert-phase gad:insert-phase insert urgent work as decimal phase (e.g., 72.1) between existing phases"
+  },
+  {
+    "id": "gad-list-phase-assumptions",
+    "title": "gad:list-phase-assumptions",
+    "kind": "skill",
+    "href": "/skills/gad-list-phase-assumptions",
+    "body": "gad-list-phase-assumptions gad:list-phase-assumptions surface claude's assumptions about a phase approach before planning"
+  },
+  {
+    "id": "gad-manager",
+    "title": "gad:manager",
+    "kind": "skill",
+    "href": "/skills/gad-manager",
+    "body": "gad-manager gad:manager interactive command center for managing multiple phases from one terminal"
+  },
+  {
+    "id": "gad-manuscript",
+    "title": "gad:manuscript",
+    "kind": "skill",
+    "href": "/skills/gad-manuscript",
+    "body": "gad-manuscript gad:manuscript fiction writing adaptation of the gad loop for novels and story outlines"
+  },
+  {
+    "id": "gad-map-codebase",
+    "title": "gad:map-codebase",
+    "kind": "skill",
+    "href": "/skills/gad-map-codebase",
+    "body": "gad-map-codebase gad:map-codebase analyze codebase with parallel mapper agents to produce .planning/codebase/ documents"
+  },
+  {
+    "id": "gad-merge-skill",
+    "title": "gad:merge-skill",
+    "kind": "skill",
+    "href": "/skills/gad-merge-skill",
+    "body": "gad-merge-skill gad:merge-skill >- fuse two or more overlapping skills into a single tailored skill. use when skills have overlapping descriptions, redundant functionality, or when attaining a generic skill to a specific project domain. references agentskills.io and anthropic skills guide for professional quality standards."
+  },
+  {
+    "id": "gad-migrate-schema",
+    "title": "gad:migrate-schema",
+    "kind": "skill",
+    "href": "/skills/gad-migrate-schema",
+    "body": "gad-migrate-schema gad:migrate-schema convert rp xml planning files (state.xml, roadmap.xml) to gad markdown format"
+  },
+  {
+    "id": "gad-milestone-summary",
+    "title": "gad:milestone-summary",
+    "kind": "skill",
+    "href": "/skills/gad-milestone-summary",
+    "body": "gad-milestone-summary gad:milestone-summary generate a comprehensive project summary from milestone artifacts for team onboarding and review"
+  },
+  {
+    "id": "gad-new-milestone",
+    "title": "gad:new-milestone",
+    "kind": "skill",
+    "href": "/skills/gad-new-milestone",
+    "body": "gad-new-milestone gad:new-milestone start a new milestone cycle — update project.md and route to requirements"
+  },
+  {
+    "id": "gad-new-project",
+    "title": "gad:new-project",
+    "kind": "skill",
+    "href": "/skills/gad-new-project",
+    "body": "gad-new-project gad:new-project initialize a new project with deep context gathering and project.md"
+  },
+  {
+    "id": "gad-next",
+    "title": "gad:next",
+    "kind": "skill",
+    "href": "/skills/gad-next",
+    "body": "gad-next gad:next automatically advance to the next logical step in the gad workflow"
+  },
+  {
+    "id": "gad-note",
+    "title": "gad:note",
+    "kind": "skill",
+    "href": "/skills/gad-note",
+    "body": "gad-note gad:note zero-friction idea capture. append, list, or promote notes to todos."
+  },
+  {
+    "id": "gad-pause-work",
+    "title": "gad:pause-work",
+    "kind": "skill",
+    "href": "/skills/gad-pause-work",
+    "body": "gad-pause-work gad:pause-work create context handoff when pausing work mid-phase"
+  },
+  {
+    "id": "gad-plan-milestone-gaps",
+    "title": "gad:plan-milestone-gaps",
+    "kind": "skill",
+    "href": "/skills/gad-plan-milestone-gaps",
+    "body": "gad-plan-milestone-gaps gad:plan-milestone-gaps create phases to close all gaps identified by milestone audit"
+  },
+  {
+    "id": "gad-plan-phase",
+    "title": "gad:plan-phase",
+    "kind": "skill",
+    "href": "/skills/gad-plan-phase",
+    "body": "gad-plan-phase gad:plan-phase create detailed phase plan (plan.md) with verification loop"
+  },
+  {
+    "id": "gad-plant-seed",
+    "title": "gad:plant-seed",
+    "kind": "skill",
+    "href": "/skills/gad-plant-seed",
+    "body": "gad-plant-seed gad:plant-seed capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone"
+  },
+  {
+    "id": "gad-progress",
+    "title": "gad:progress",
+    "kind": "skill",
+    "href": "/skills/gad-progress",
+    "body": "gad-progress gad:progress check project progress, show context, and route to next action (execute or plan)"
+  },
+  {
+    "id": "gad-reapply-patches",
+    "title": "gad:reapply-patches",
+    "kind": "skill",
+    "href": "/skills/gad-reapply-patches",
+    "body": "gad-reapply-patches gad:reapply-patches reapply local modifications after a gad update"
+  },
+  {
+    "id": "gad-remove-phase",
+    "title": "gad:remove-phase",
+    "kind": "skill",
+    "href": "/skills/gad-remove-phase",
+    "body": "gad-remove-phase gad:remove-phase remove a future phase from roadmap and renumber subsequent phases"
+  },
+  {
+    "id": "gad-research-phase",
+    "title": "gad:research-phase",
+    "kind": "skill",
+    "href": "/skills/gad-research-phase",
+    "body": "gad-research-phase gad:research-phase research how to implement a phase (standalone - usually use /gad:plan-phase instead)"
+  },
+  {
+    "id": "gad-resume-work",
+    "title": "gad:resume-work",
+    "kind": "skill",
+    "href": "/skills/gad-resume-work",
+    "body": "gad-resume-work gad:resume-work resume work from previous session with full context restoration"
+  },
+  {
+    "id": "gad-reverse-engineer",
+    "title": "gad:reverse-engineer",
+    "kind": "skill",
+    "href": "/skills/gad-reverse-engineer",
+    "body": "gad-reverse-engineer gad:reverse-engineer analyze any codebase (local or github url) and produce requirements for clean-room reimplementation"
+  },
+  {
+    "id": "gad-review",
+    "title": "gad:review",
+    "kind": "skill",
+    "href": "/skills/gad-review",
+    "body": "gad-review gad:review request cross-ai peer review of phase plans from external ai clis"
+  },
+  {
+    "id": "gad-review-backlog",
+    "title": "gad:review-backlog",
+    "kind": "skill",
+    "href": "/skills/gad-review-backlog",
+    "body": "gad-review-backlog gad:review-backlog review and promote backlog items to active milestone"
+  },
+  {
+    "id": "gad-session-report",
+    "title": "gad:session-report",
+    "kind": "skill",
+    "href": "/skills/gad-session-report",
+    "body": "gad-session-report gad:session-report generate a session report with token usage estimates, work summary, and outcomes"
+  },
+  {
+    "id": "gad-set-profile",
+    "title": "gad:set-profile",
+    "kind": "skill",
+    "href": "/skills/gad-set-profile",
+    "body": "gad-set-profile gad:set-profile switch model profile for gad agents (quality/balanced/budget/inherit)"
+  },
+  {
+    "id": "gad-settings",
+    "title": "gad:settings",
+    "kind": "skill",
+    "href": "/skills/gad-settings",
+    "body": "gad-settings gad:settings configure gad workflow toggles and model profile"
+  },
+  {
     "id": "gad-skill-creator",
     "title": "gad-skill-creator",
     "kind": "skill",
     "href": "/skills/gad-skill-creator",
     "body": "gad-skill-creator gad-skill-creator >- create gad-tailored skills that use the gad cli, planning artifacts, and eval framework. use when the user wants to create a new skill for the gad workflow, turn a repetitive cli pattern into a skill, evaluate an existing skill, or enhance a workflow by reviewing tasks for repeated commands. also triggers on \"make a skill for\", \"create skill\", \"we should have a skill that\", \"turn this into a skill\", or when a task completion reveals repetitive cli patterns. immediately scaffolds an eval project for framework skills."
+  },
+  {
+    "id": "gad-stats",
+    "title": "gad:stats",
+    "kind": "skill",
+    "href": "/skills/gad-stats",
+    "body": "gad-stats gad:stats display project statistics — phases, plans, requirements, git metrics, and timeline"
+  },
+  {
+    "id": "gad-thread",
+    "title": "gad:thread",
+    "kind": "skill",
+    "href": "/skills/gad-thread",
+    "body": "gad-thread gad:thread manage persistent context threads for cross-session work"
+  },
+  {
+    "id": "gad-update",
+    "title": "gad:update",
+    "kind": "skill",
+    "href": "/skills/gad-update",
+    "body": "gad-update gad:update update gad to latest version with changelog display"
+  },
+  {
+    "id": "gad-validate-phase",
+    "title": "gad:validate-phase",
+    "kind": "skill",
+    "href": "/skills/gad-validate-phase",
+    "body": "gad-validate-phase gad:validate-phase retroactively audit and fill nyquist validation gaps for a completed phase"
+  },
+  {
+    "id": "gad-verify-work",
+    "title": "gad:verify-work",
+    "kind": "skill",
+    "href": "/skills/gad-verify-work",
+    "body": "gad-verify-work gad:verify-work validate built features through conversational uat"
+  },
+  {
+    "id": "gad-workspace-add",
+    "title": "gad:workspace-add",
+    "kind": "skill",
+    "href": "/skills/gad-workspace-add",
+    "body": "gad-workspace-add gad:workspace-add add a path as a planning root in planning-config.toml"
+  },
+  {
+    "id": "gad-workspace-show",
+    "title": "gad:workspace-show",
+    "kind": "skill",
+    "href": "/skills/gad-workspace-show",
+    "body": "gad-workspace-show gad:workspace-show show all registered planning roots and their current status"
+  },
+  {
+    "id": "gad-workspace-sync",
+    "title": "gad:workspace-sync",
+    "kind": "skill",
+    "href": "/skills/gad-workspace-sync",
+    "body": "gad-workspace-sync gad:workspace-sync crawl monorepo for .planning/ directories and sync planning-config.toml roots"
   },
   {
     "id": "manuscript",

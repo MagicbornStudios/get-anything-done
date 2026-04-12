@@ -1,0 +1,6 @@
+{
+  "id": "gad-merge-skill",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "merge-skill.md"
+}

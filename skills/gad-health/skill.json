@@ -1,0 +1,6 @@
+{
+  "id": "gad-health",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "health.md"
+}

@@ -48,12 +48,11 @@ const __dirname = path.dirname(__filename);
 const SITE_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 const TEMPLATES_DIR = path.join(REPO_ROOT, "templates");
-// Skills live at .agents/skills/ per the agentskills.io cross-client
-// interoperability convention (decision gad-80). Migrated from the legacy
-// repo-root skills/ location on 2026-04-09. For backward compatibility during
-// the migration, the scanner also checks the legacy path.
-const SKILLS_DIR = path.join(REPO_ROOT, ".agents", "skills");
-const LEGACY_SKILLS_DIR = path.join(REPO_ROOT, "skills");
+// Canonical authored skills live at repo-root skills/. Installers transpile
+// this tree into runtime-native command/skills layouts as needed.
+// Keep .agents/skills as a legacy fallback while the migration completes.
+const SKILLS_DIR = path.join(REPO_ROOT, "skills");
+const LEGACY_SKILLS_DIR = path.join(REPO_ROOT, ".agents", "skills");
 const AGENTS_DIR = path.join(REPO_ROOT, "agents");
 const COMMANDS_DIR = path.join(REPO_ROOT, "commands", "gad");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
@@ -680,8 +679,8 @@ function scanCatalog() {
         excludedFromDefaultInstall: data["excluded-from-default-install"] === true || declaredOrigin === "emergent",
         frameworkSkill: data["framework_skill"] === true || data["framework-skill"] === true,
         file: origin === "emergent"
-          ? `vendor/get-anything-done/.agents/skills/emergent/${id}/SKILL.md`
-          : `vendor/get-anything-done/.agents/skills/${id}/SKILL.md`,
+          ? `vendor/get-anything-done/skills/emergent/${id}/SKILL.md`
+          : `vendor/get-anything-done/skills/${id}/SKILL.md`,
         bodyHtml: renderMarkdown(body),
         bodyRaw: body,
       };
@@ -1753,6 +1752,8 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       frameworkBranch: d.framework_branch ?? null,
       frameworkCommitTs: d.framework_commit_ts ?? null,
       frameworkStamp: d.framework_stamp ?? null,
+      runtimeIdentity: d.runtime_identity ?? null,
+      runtimesInvolved: Array.isArray(d.runtimes_involved) ? d.runtimes_involved : [],
       traceEvents: Array.isArray(d.trace_events) ? d.trace_events : null,
       evalType: d.eval_type ?? "implementation",
       contextMode: d.context_mode ?? null,
@@ -1869,6 +1870,8 @@ export interface EvalRunRecord {
   frameworkBranch: string | null;
   frameworkCommitTs: string | null;
   frameworkStamp: string | null;
+  runtimeIdentity: Record<string, unknown> | null;
+  runtimesInvolved: Array<Record<string, unknown>>;
   traceEvents: Array<Record<string, unknown>> | null;
   evalType: string;
   contextMode: string | null;

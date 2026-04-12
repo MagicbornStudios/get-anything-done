@@ -2,12 +2,12 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-12T10:27:02.076Z
+Generated: 2026-04-12T16:41:29.179Z
 
 
 ---
 
-# Skills (34)
+# Skills (95)
 
 ## gad:add-todo
 id: add-todo
@@ -1874,6 +1874,2616 @@ Framework upgrades should be rare and deliberate. If you're touching this skill 
 The invariant: **you should always be able to tell a reader which framework version each score was recorded against, and what changed between versions.** If you can't answer that, you've lost the ability to interpret your own results.
 
 
+## gad:add-backlog
+id: gad-add-backlog
+description: Add an idea to the backlog parking lot (999.x numbering)
+origin: human-authored
+
+
+<objective>
+Add a backlog item to the roadmap using 999.x numbering. Backlog items are
+unsequenced ideas that aren't ready for active planning — they live outside
+the normal phase sequence and accumulate context over time.
+</objective>
+
+<process>
+
+1. **Read ROADMAP.md** to find existing backlog entries:
+   ```bash
+   cat .planning/ROADMAP.md
+   ```
+
+2. **Find next backlog number:**
+   ```bash
+   NEXT=$(node "vendor/get-anything-done/bin/gad-tools.cjs" phase next-decimal 999 --raw)
+   ```
+   If no 999.x phases exist, start at 999.1.
+
+3. **Create the phase directory:**
+   ```bash
+   SLUG=$(node "vendor/get-anything-done/bin/gad-tools.cjs" generate-slug "$ARGUMENTS" --raw)
+   mkdir -p ".planning/phases/${NEXT}-${SLUG}"
+   touch ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
+   ```
+
+4. **Add to ROADMAP.md** under a `## Backlog` section. If the section doesn't exist, create it at the end:
+
+   ```markdown
+   ## Backlog
+
+   ### Phase {NEXT}: {description} (BACKLOG)
+
+   **Goal:** [Captured for future planning]
+   **Requirements:** TBD
+   **Plans:** 0 plans
+
+   Plans:
+   - [ ] TBD (promote with /gad:review-backlog when ready)
+   ```
+
+5. **Commit:**
+   ```bash
+   node "vendor/get-anything-done/bin/gad-tools.cjs" commit "docs: add backlog item ${NEXT} — ${ARGUMENTS}" --files .planning/ROADMAP.md ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
+   ```
+
+6. **Report:**
+   ```
+   ## 📋 Backlog Item Added
+
+   Phase {NEXT}: {description}
+   Directory: .planning/phases/{NEXT}-{slug}/
+
+   This item lives in the backlog parking lot.
+   Use /gad:discuss-phase {NEXT} to explore it further.
+   Use /gad:review-backlog to promote items to active milestone.
+   ```
+
+</process>
+
+<notes>
+- 999.x numbering keeps backlog items out of the active phase sequence
+- Phase directories are created immediately, so /gad:discuss-phase and /gad:plan-phase work on them
+- No `Depends on:` field — backlog items are unsequenced by definition
+- Sparse numbering is fine (999.1, 999.3) — always uses next-decimal
+</notes>
+
+
+## gad:add-phase
+id: gad-add-phase
+description: Add phase to end of current milestone in roadmap
+origin: human-authored
+
+
+<objective>
+Add a new integer phase to the end of the current milestone in the roadmap.
+
+Routes to the add-phase workflow which handles:
+- Phase number calculation (next sequential integer)
+- Directory creation with slug generation
+- Roadmap structure updates
+- STATE.md roadmap evolution tracking
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/add-phase.md
+</execution_context>
+
+<context>
+Arguments: $ARGUMENTS (phase description)
+
+Roadmap and state are resolved in-workflow via `init phase-op` and targeted tool calls.
+</context>
+
+<process>
+**Follow the add-phase workflow** from `@vendor/get-anything-done/workflows/add-phase.md`.
+
+The workflow handles all logic including:
+1. Argument parsing and validation
+2. Roadmap existence checking
+3. Current milestone identification
+4. Next phase number calculation (ignoring decimals)
+5. Slug generation from description
+6. Phase directory creation
+7. Roadmap entry insertion
+8. STATE.md updates
+</process>
+
+
+## gad:add-tests
+id: gad-add-tests
+description: Generate tests for a completed phase based on UAT criteria and implementation
+origin: human-authored
+
+<objective>
+Generate unit and E2E tests for a completed phase, using its SUMMARY.md, CONTEXT.md, and VERIFICATION.md as specifications.
+
+Analyzes implementation files, classifies them into TDD (unit), E2E (browser), or Skip categories, presents a test plan for user approval, then generates tests following RED-GREEN conventions.
+
+Output: Test files committed with message `test(phase-{N}): add unit and E2E tests from add-tests command`
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/add-tests.md
+</execution_context>
+
+<context>
+Phase: $ARGUMENTS
+
+@.planning/STATE.md
+@.planning/ROADMAP.md
+</context>
+
+<process>
+Execute the add-tests workflow from @vendor/get-anything-done/workflows/add-tests.md end-to-end.
+Preserve all workflow gates (classification approval, test plan approval, RED-GREEN verification, gap reporting).
+</process>
+
+
+## gad:add-todo
+id: gad-add-todo
+description: Capture idea or task as todo from current conversation context
+origin: human-authored
+
+
+<objective>
+Capture an idea, task, or issue that surfaces during a GAD session as a structured todo for later work.
+
+Routes to the add-todo workflow which handles:
+- Directory structure creation
+- Content extraction from arguments or conversation
+- Area inference from file paths
+- Duplicate detection and resolution
+- Todo file creation with frontmatter
+- STATE.md updates
+- Git commits
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/add-todo.md
+</execution_context>
+
+<context>
+Arguments: $ARGUMENTS (optional todo description)
+
+State is resolved in-workflow via `init todos` and targeted reads.
+</context>
+
+<process>
+**Follow the add-todo workflow** from `@vendor/get-anything-done/workflows/add-todo.md`.
+
+The workflow handles all logic including:
+1. Directory ensuring
+2. Existing area checking
+3. Content extraction (arguments or conversation)
+4. Area inference
+5. Duplicate checking
+6. File creation with slug generation
+7. STATE.md updates
+8. Git commits
+</process>
+
+
+## gad:audit-milestone
+id: gad-audit-milestone
+description: Audit milestone completion against original intent before archiving
+origin: human-authored
+
+<objective>
+Verify milestone achieved its definition of done. Check requirements coverage, cross-phase integration, and end-to-end flows.
+
+**This command IS the orchestrator.** Reads existing VERIFICATION.md files (phases already verified during execute-phase), aggregates tech debt and deferred gaps, then spawns integration checker for cross-phase wiring.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/audit-milestone.md
+</execution_context>
+
+<context>
+Version: $ARGUMENTS (optional — defaults to current milestone)
+
+Core planning files are resolved in-workflow (`init milestone-op`) and loaded only as needed.
+
+**Completed Work:**
+Glob: .planning/phases/*/*-SUMMARY.md
+Glob: .planning/phases/*/*-VERIFICATION.md
+</context>
+
+<process>
+Execute the audit-milestone workflow from @vendor/get-anything-done/workflows/audit-milestone.md end-to-end.
+Preserve all workflow gates (scope determination, verification reading, integration check, requirements coverage, routing).
+</process>
+
+
+## gad:audit-uat
+id: gad-audit-uat
+description: Cross-phase audit of all outstanding UAT and verification items
+origin: human-authored
+
+<objective>
+Scan all phases for pending, skipped, blocked, and human_needed UAT items. Cross-reference against codebase to detect stale documentation. Produce prioritized human test plan.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/audit-uat.md
+</execution_context>
+
+<context>
+Core planning files are loaded in-workflow via CLI.
+
+**Scope:**
+Glob: .planning/phases/*/*-UAT.md
+Glob: .planning/phases/*/*-VERIFICATION.md
+</context>
+
+
+## gad:auto-conventions
+id: gad-auto-conventions
+description: Auto-scaffold CONVENTIONS.md from codebase patterns after first implementation phase
+origin: human-authored
+
+
+<objective>
+Analyze the codebase after the first implementation phase and generate a CONVENTIONS.md capturing the patterns established — file structure, naming, import/export patterns, store patterns, component patterns, and type conventions.
+</objective>
+
+<process>
+
+1. **Check if CONVENTIONS.md already exists:**
+   ```bash
+   test -f .planning/CONVENTIONS.md && echo "EXISTS" || echo "MISSING"
+   ```
+   If EXISTS, update it with new patterns. If MISSING, create it.
+
+2. **Scan the codebase** for established patterns:
+   - File naming (kebab-case, PascalCase, etc.)
+   - Directory structure
+   - Import/export patterns
+   - State management patterns (zustand, redux, etc.)
+   - Component patterns (functional, class, etc.)
+   - Type conventions (interfaces vs types, naming)
+   - Test patterns
+
+3. **Write .planning/CONVENTIONS.md** with the discovered patterns.
+
+4. **Commit:**
+   ```bash
+   git add .planning/CONVENTIONS.md
+   git commit -m "docs: auto-scaffold CONVENTIONS.md from codebase patterns"
+   ```
+
+</process>
+
+<skill>
+Read and follow the skill at `vendor/get-anything-done/skills/auto-conventions/SKILL.md`.
+</skill>
+
+
+## gad:autonomous
+id: gad-autonomous
+description: Run all remaining phases autonomously — discuss→plan→execute per phase
+origin: human-authored
+
+<objective>
+Execute all remaining milestone phases autonomously. For each phase: discuss → plan → execute. Pauses only for user decisions (grey area acceptance, blockers, validation requests).
+
+Uses ROADMAP.md phase discovery and Skill() flat invocations for each phase command. After all phases complete: milestone audit → complete → cleanup.
+
+**Creates/Updates:**
+- `.planning/STATE.md` — updated after each phase
+- `.planning/ROADMAP.md` — progress updated after each phase
+- Phase artifacts — CONTEXT.md, PLANs, SUMMARYs per phase
+
+**After:** Milestone is complete and cleaned up.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/autonomous.md
+@vendor/get-anything-done/references/ui-brand.md
+</execution_context>
+
+<context>
+Optional flags:
+- `--from N` — start from phase N instead of the first incomplete phase.
+- `--only N` — execute only phase N (single-phase mode).
+- `--interactive` — run discuss inline with questions (not auto-answered), then dispatch plan→execute as background agents. Keeps the main context lean while preserving user input on decisions.
+
+Project context, phase list, and state are resolved inside the workflow using init commands (`gad-tools.cjs init milestone-op`, `gad-tools.cjs roadmap analyze`). No upfront context loading needed.
+</context>
+
+<process>
+Execute the autonomous workflow from @vendor/get-anything-done/workflows/autonomous.md end-to-end.
+Preserve all workflow gates (phase discovery, per-phase execution, blocker handling, progress display).
+</process>
+
+
+## gad:check-todos
+id: gad-check-todos
+description: List pending todos and select one to work on
+origin: human-authored
+
+
+<objective>
+List all pending todos, allow selection, load full context for the selected todo, and route to appropriate action.
+
+Routes to the check-todos workflow which handles:
+- Todo counting and listing with area filtering
+- Interactive selection with full context loading
+- Roadmap correlation checking
+- Action routing (work now, add to phase, brainstorm, create phase)
+- STATE.md updates and git commits
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/check-todos.md
+</execution_context>
+
+<context>
+Arguments: $ARGUMENTS (optional area filter)
+
+Todo state and roadmap correlation are loaded in-workflow using `init todos` and targeted reads.
+</context>
+
+<process>
+**Follow the check-todos workflow** from `@vendor/get-anything-done/workflows/check-todos.md`.
+
+The workflow handles all logic including:
+1. Todo existence checking
+2. Area filtering
+3. Interactive listing and selection
+4. Full context loading with file summaries
+5. Roadmap correlation checking
+6. Action offering and execution
+7. STATE.md updates
+8. Git commits
+</process>
+
+
+## gad:cleanup
+id: gad-cleanup
+description: Archive accumulated phase directories from completed milestones
+origin: human-authored
+
+<objective>
+Archive phase directories from completed milestones into `.planning/milestones/v{X.Y}-phases/`.
+
+Use when `.planning/phases/` has accumulated directories from past milestones.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/cleanup.md
+</execution_context>
+
+<process>
+Follow the cleanup workflow at @vendor/get-anything-done/workflows/cleanup.md.
+Identify completed milestones, show a dry-run summary, and archive on confirmation.
+</process>
+
+
+## gad:complete-milestone
+id: gad-complete-milestone
+description: Archive completed milestone and prepare for next version
+origin: human-authored
+
+
+<objective>
+Mark milestone {{version}} complete, archive to milestones/, and update ROADMAP.md and REQUIREMENTS.md.
+
+Purpose: Create historical record of shipped version, archive milestone artifacts (roadmap + requirements), and prepare for next milestone.
+Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tagged.
+</objective>
+
+<execution_context>
+**Load these files NOW (before proceeding):**
+
+- @vendor/get-anything-done/workflows/complete-milestone.md (main workflow)
+- @vendor/get-anything-done/templates/milestone-archive.md (archive template)
+  </execution_context>
+
+<context>
+**Project files:**
+- `.planning/ROADMAP.md`
+- `.planning/REQUIREMENTS.md`
+- `.planning/STATE.md`
+- `.planning/PROJECT.md`
+
+**User input:**
+
+- Version: {{version}} (e.g., "1.0", "1.1", "2.0")
+  </context>
+
+<process>
+
+**Follow complete-milestone.md workflow:**
+
+0. **Check for audit:**
+
+   - Look for `.planning/v{{version}}-MILESTONE-AUDIT.md`
+   - If missing or stale: recommend `/gad:audit-milestone` first
+   - If audit status is `gaps_found`: recommend `/gad:plan-milestone-gaps` first
+   - If audit status is `passed`: proceed to step 1
+
+   ```markdown
+   ## Pre-flight Check
+
+   {If no v{{version}}-MILESTONE-AUDIT.md:}
+   ⚠ No milestone audit found. Run `/gad:audit-milestone` first to verify
+   requirements coverage, cross-phase integration, and E2E flows.
+
+   {If audit has gaps:}
+   ⚠ Milestone audit found gaps. Run `/gad:plan-milestone-gaps` to create
+   phases that close the gaps, or proceed anyway to accept as tech debt.
+
+   {If audit passed:}
+   ✓ Milestone audit passed. Proceeding with completion.
+   ```
+
+1. **Verify readiness:**
+
+   - Check all phases in milestone have completed plans (SUMMARY.md exists)
+   - Present milestone scope and stats
+   - Wait for confirmation
+
+2. **Gather stats:**
+
+   - Count phases, plans, tasks
+   - Calculate git range, file changes, LOC
+   - Extract timeline from git log
+   - Present summary, confirm
+
+3. **Extract accomplishments:**
+
+   - Read all phase SUMMARY.md files in milestone range
+   - Extract 4-6 key accomplishments
+   - Present for approval
+
+4. **Archive milestone:**
+
+   - Create `.planning/milestones/v{{version}}-ROADMAP.md`
+   - Extract full phase details from ROADMAP.md
+   - Fill milestone-archive.md template
+   - Update ROADMAP.md to one-line summary with link
+
+5. **Archive requirements:**
+
+   - Create `.planning/milestones/v{{version}}-REQUIREMENTS.md`
+   - Mark all v1 requirements as complete (checkboxes checked)
+   - Note requirement outcomes (validated, adjusted, dropped)
+   - Delete `.planning/REQUIREMENTS.md` (fresh one created for next milestone)
+
+6. **Update PROJECT.md:**
+
+   - Add "Current State" section with shipped version
+   - Add "Next Milestone Goals" section
+   - Archive previous content in `<details>` (if v1.1+)
+
+7. **Commit and tag:**
+
+   - Stage: MILESTONES.md, PROJECT.md, ROADMAP.md, STATE.md, archive files
+   - Commit: `chore: archive v{{version}} milestone`
+   - Tag: `git tag -a v{{version}} -m "[milestone summary]"`
+   - Ask about pushing tag
+
+8. **Offer next steps:**
+   - `/gad:new-milestone` — start next milestone (questioning → research → requirements → roadmap)
+
+</process>
+
+<success_criteria>
+
+- Milestone archived to `.planning/milestones/v{{version}}-ROADMAP.md`
+- Requirements archived to `.planning/milestones/v{{version}}-REQUIREMENTS.md`
+- `.planning/REQUIREMENTS.md` deleted (fresh for next milestone)
+- ROADMAP.md collapsed to one-line entry
+- PROJECT.md updated with current state
+- Git tag v{{version}} created
+- Commit successful
+- User knows next steps (including need for fresh requirements)
+  </success_criteria>
+
+<critical_rules>
+
+- **Load workflow first:** Read complete-milestone.md before executing
+- **Verify completion:** All phases must have SUMMARY.md files
+- **User confirmation:** Wait for approval at verification gates
+- **Archive before deleting:** Always create archive files before updating/deleting originals
+- **One-line summary:** Collapsed milestone in ROADMAP.md should be single line with link
+- **Context efficiency:** Archive keeps ROADMAP.md and REQUIREMENTS.md constant size per milestone
+- **Fresh requirements:** Next milestone starts with `/gad:new-milestone` which includes requirements definition
+  </critical_rules>
+
+
+## gad:create-skill
+id: gad-create-skill
+description: >- Create a GAD-tailored skill using the gad-skill-creator methodology. Immediately scaffolds an eval project. Use when creating a new skill, turning a repetitive CLI pattern into a skill, or when a task review reveals repeated commands.
+origin: human-authored
+
+
+<objective>
+Create a new GAD skill using the gad-skill-creator methodology. The skill should
+use GAD CLI commands where they exist, tag task attribution, and have an eval
+project scaffolded immediately.
+</objective>
+
+<process>
+1. Read the gad-skill-creator SKILL.md at `.agents/skills/gad-skill-creator/SKILL.md`
+2. Follow its workflow exactly — it references the Anthropic skill-creator methodology
+3. Key GAD additions:
+   - Check existing CLI commands first (`gad --help`)
+   - Check existing skills for overlap (`ls .agents/skills/`)
+   - Add `framework_skill: true` if it's a framework skill (use `--framework` flag)
+   - Add `uses_cli:` frontmatter listing CLI commands the skill chains
+4. Write the skill to `.agents/skills/<skill-name>/SKILL.md`
+5. Create test cases in `.agents/skills/<skill-name>/evals/evals.json`
+6. **MANDATORY: Scaffold eval project immediately after skill creation:**
+   ```bash
+   gad eval setup --project <skill-name>-eval
+   ```
+   This is NOT optional. Per decision gad-102, every skill must have an eval project
+   on the site. The eval project validates the skill works in isolation. Verify the
+   eval project exists at `evals/<skill-name>-eval/gad.json` before considering the
+   skill creation complete.
+7. Verify skill is discoverable: run `gad snapshot --projectid get-anything-done` and
+   confirm the skill appears in the catalog scan output.
+</process>
+
+
+## gad:debug
+id: gad-debug
+description: Systematic debugging with persistent state across context resets
+origin: human-authored
+
+
+<objective>
+Debug issues using scientific method with subagent isolation.
+
+**Orchestrator role:** Gather symptoms, spawn gad-debugger agent, handle checkpoints, spawn continuations.
+
+**Why subagent:** Investigation burns context fast (reading files, forming hypotheses, testing). Fresh 200k context per investigation. Main context stays lean for user interaction.
+
+**Flags:**
+- `--diagnose` — Diagnose only. Find root cause without applying a fix. Returns a structured Root Cause Report. Use when you want to validate the diagnosis before committing to a fix.
+</objective>
+
+<available_agent_types>
+Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
+- gad-debugger — Diagnoses and fixes issues
+</available_agent_types>
+
+<context>
+User's issue: $ARGUMENTS
+
+Parse flags from $ARGUMENTS:
+- If `--diagnose` is present, set `diagnose_only=true` and remove the flag from the issue description.
+- Otherwise, `diagnose_only=false`.
+
+Check for active sessions:
+```bash
+ls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5
+```
+</context>
+
+<process>
+
+## 0. Initialize Context
+
+```bash
+INIT=$(node "vendor/get-anything-done/bin/gad-tools.cjs" state load)
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
+```
+
+Extract `commit_docs` from init JSON. Resolve debugger model:
+```bash
+debugger_model=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gad-debugger --raw)
+```
+
+## 1. Check Active Sessions
+
+If active sessions exist AND no $ARGUMENTS:
+- List sessions with status, hypothesis, next action
+- User picks number to resume OR describes new issue
+
+If $ARGUMENTS provided OR user describes new issue:
+- Continue to symptom gathering
+
+## 2. Gather Symptoms (if new issue)
+
+Use AskUserQuestion for each:
+
+1. **Expected behavior** - What should happen?
+2. **Actual behavior** - What happens instead?
+3. **Error messages** - Any errors? (paste or describe)
+4. **Timeline** - When did this start? Ever worked?
+5. **Reproduction** - How do you trigger it?
+
+After all gathered, confirm ready to investigate.
+
+## 3. Spawn gad-debugger Agent
+
+Fill prompt and spawn:
+
+```markdown
+<objective>
+Investigate issue: {slug}
+
+**Summary:** {trigger}
+</objective>
+
+<symptoms>
+expected: {expected}
+actual: {actual}
+errors: {errors}
+reproduction: {reproduction}
+timeline: {timeline}
+</symptoms>
+
+<mode>
+symptoms_prefilled: true
+goal: {if diagnose_only: "find_root_cause_only", else: "find_and_fix"}
+</mode>
+
+<debug_file>
+Create: .planning/debug/{slug}.md
+</debug_file>
+```
+
+```
+Task(
+  prompt=filled_prompt,
+  subagent_type="gad-debugger",
+  model="{debugger_model}",
+  description="Debug {slug}"
+)
+```
+
+## 4. Handle Agent Return
+
+**If `## ROOT CAUSE FOUND` (diagnose-only mode):**
+- Display root cause, confidence level, files involved, and suggested fix strategies
+- Offer options:
+  - "Fix now" — spawn a continuation agent with `goal: find_and_fix` to apply the fix (see step 5)
+  - "Plan fix" — suggest `/gad:plan-phase --gaps`
+  - "Manual fix" — done
+
+**If `## DEBUG COMPLETE` (find_and_fix mode):**
+- Display root cause and fix summary
+- Offer options:
+  - "Plan fix" — suggest `/gad:plan-phase --gaps` if further work needed
+  - "Done" — mark resolved
+
+**If `## CHECKPOINT REACHED`:**
+- Present checkpoint details to user
+- Get user response
+- If checkpoint type is `human-verify`:
+  - If user confirms fixed: continue so agent can finalize/resolve/archive
+  - If user reports issues: continue so agent returns to investigation/fixing
+- Spawn continuation agent (see step 5)
+
+**If `## INVESTIGATION INCONCLUSIVE`:**
+- Show what was checked and eliminated
+- Offer options:
+  - "Continue investigating" - spawn new agent with additional context
+  - "Manual investigation" - done
+  - "Add more context" - gather more symptoms, spawn again
+
+## 5. Spawn Continuation Agent (After Checkpoint or "Fix now")
+
+When user responds to checkpoint OR selects "Fix now" from diagnose-only results, spawn fresh agent:
+
+```markdown
+<objective>
+Continue debugging {slug}. Evidence is in the debug file.
+</objective>
+
+<prior_state>
+<files_to_read>
+- .planning/debug/{slug}.md (Debug session state)
+</files_to_read>
+</prior_state>
+
+<checkpoint_response>
+**Type:** {checkpoint_type}
+**Response:** {user_response}
+</checkpoint_response>
+
+<mode>
+goal: find_and_fix
+</mode>
+```
+
+```
+Task(
+  prompt=continuation_prompt,
+  subagent_type="gad-debugger",
+  model="{debugger_model}",
+  description="Continue debug {slug}"
+)
+```
+
+</process>
+
+<success_criteria>
+- [ ] Active sessions checked
+- [ ] Symptoms gathered (if new)
+- [ ] gad-debugger spawned with context
+- [ ] Checkpoints handled correctly
+- [ ] Root cause confirmed before fixing
+</success_criteria>
+
+
+## gad:discuss-phase
+id: gad-discuss-phase
+description: Gather phase context through adaptive questioning before planning. Use --auto to skip interactive questions (Claude picks recommended defaults). Use --chain for interactive discuss followed by automatic plan+execute.
+origin: human-authored
+
+
+<objective>
+Extract implementation decisions that downstream agents need — researcher and planner will use CONTEXT.md to know what to investigate and what choices are locked.
+
+**How it works:**
+1. Load prior context (PROJECT.md, REQUIREMENTS.md, STATE.md, prior CONTEXT.md files)
+2. Scout codebase for reusable assets and patterns
+3. Analyze phase — skip gray areas already decided in prior phases
+4. Present remaining gray areas — user selects which to discuss
+5. Deep-dive each selected area until satisfied
+6. Create CONTEXT.md with decisions that guide research and planning
+
+**Output:** `{phase_num}-CONTEXT.md` — decisions clear enough that downstream agents can act without asking the user again
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/discuss-phase.md
+@vendor/get-anything-done/workflows/discuss-phase-assumptions.md
+@vendor/get-anything-done/templates/context.md
+</execution_context>
+
+<context>
+Phase number: $ARGUMENTS (required)
+
+Context files are resolved in-workflow using `init phase-op` and roadmap/state tool calls.
+</context>
+
+<process>
+**Mode routing:**
+```bash
+DISCUSS_MODE=$(node "vendor/get-anything-done/bin/gad-tools.cjs" config-get workflow.discuss_mode 2>/dev/null || echo "discuss")
+```
+
+If `DISCUSS_MODE` is `"assumptions"`: Read and execute @vendor/get-anything-done/workflows/discuss-phase-assumptions.md end-to-end.
+
+If `DISCUSS_MODE` is `"discuss"` (or unset, or any other value): Read and execute @vendor/get-anything-done/workflows/discuss-phase.md end-to-end.
+
+**MANDATORY:** The execution_context files listed above ARE the instructions. Read the workflow file BEFORE taking any action. The objective and success_criteria sections in this command file are summaries — the workflow file contains the complete step-by-step process with all required behaviors, config checks, and interaction patterns. Do not improvise from the summary.
+</process>
+
+<success_criteria>
+- Prior context loaded and applied (no re-asking decided questions)
+- Gray areas identified through intelligent analysis
+- User chose which areas to discuss
+- Each selected area explored until satisfied
+- Scope creep redirected to deferred ideas
+- CONTEXT.md captures decisions, not vague vision
+- User knows next steps
+</success_criteria>
+
+
+## gad:do
+id: gad-do
+description: Route freeform text to the right GAD command automatically
+origin: human-authored
+
+<objective>
+Analyze freeform natural language input and dispatch to the most appropriate GAD command.
+
+Acts as a smart dispatcher — never does the work itself. Matches intent to the best GAD command using routing rules, confirms the match, then hands off.
+
+Use when you know what you want but don't know which `/gad:*` command to run.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/do.md
+@vendor/get-anything-done/references/ui-brand.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+</context>
+
+<process>
+Execute the do workflow from @vendor/get-anything-done/workflows/do.md end-to-end.
+Route user intent to the best GAD command and invoke it.
+</process>
+
+
+## gad:docs-compile
+id: gad-docs-compile
+description: Compile planning docs from all roots into docs_sink as MDX files
+origin: human-authored
+
+
+<objective>
+Read `STATE.md` and `ROADMAP.md` from every registered `[[planning.roots]]` entry
+and write MDX equivalents to the configured `docs_sink`. The sink is NEVER the
+source — source files in `.planning/` are never modified.
+</objective>
+
+<process>
+
+1. **Load config:**
+   ```bash
+   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning 2>/dev/null
+   ```
+   Also parse `--sink <path>` from `$ARGUMENTS` to override `docs_sink`.
+
+2. **Validate sink:**
+   - If `docs_sink` is not configured and `--sink` not provided, show error:
+     ```
+     No docs_sink configured. Set docs_sink in planning-config.toml or pass --sink <path>.
+     ```
+
+3. **For each root:**
+   a. Read `<root.path>/<root.planningDir>/STATE.md`
+   b. Read `<root.path>/<root.planningDir>/ROADMAP.md`
+   c. Write to `<sink>/<root.id>/STATE.mdx` and `<sink>/<root.id>/ROADMAP.mdx`
+
+   **MDX transformation:**
+   - Add frontmatter header:
+     ```mdx
+     ---
+     title: <root.id> — Planning State
+     description: Auto-compiled from <root.path>/<root.planningDir>/STATE.md
+     generated: <ISO date>
+     source: <root.path>/<root.planningDir>/STATE.md
+     ---
+     ```
+   - Preserve all Markdown content verbatim below the frontmatter
+   - Replace relative links `./phases/` → `<sink>/<root.id>/phases/`
+
+4. **Copy phase subdirs** (if they exist):
+   For each `<root.planningDir>/phases/` directory, compile each phase's
+   `PLAN.md`, `SUMMARY.md`, `KICKOFF.md` → `.mdx` equivalents in
+   `<sink>/<root.id>/phases/<phase>/`.
+
+5. **Summary:**
+   ```
+   ✓ Compiled 3 roots → apps/portfolio/content/docs/planning/
+     global    → STATE.mdx, ROADMAP.mdx, 8 phase files
+     grime-time → STATE.mdx, ROADMAP.mdx, 4 phase files
+     gad       → STATE.mdx, ROADMAP.mdx (no phases yet)
+   ```
+
+</process>
+
+<rules>
+- Never modify source `.planning/` files
+- Overwrite existing sink files (sink is always rebuilt from source)
+- Create sink directories as needed with `mkdir -p`
+- Skip roots where STATE.md or ROADMAP.md don't exist; log a warning
+</rules>
+
+
+## gad:docs-update
+id: gad-docs-update
+description: Generate or update project documentation verified against the codebase
+origin: human-authored
+
+<objective>
+Generate and update up to 9 documentation files for the current project. Each doc type is written by a gad-doc-writer subagent that explores the codebase directly — no hallucinated paths, phantom endpoints, or stale signatures.
+
+Flag handling rule:
+- The optional flags documented below are available behaviors, not implied active behaviors
+- A flag is active only when its literal token appears in `$ARGUMENTS`
+- If a documented flag is absent from `$ARGUMENTS`, treat it as inactive
+- `--force`: skip preservation prompts, regenerate all docs regardless of existing content or GAD markers
+- `--verify-only`: check existing docs for accuracy against codebase, no generation (full verification requires Phase 4 verifier)
+- If `--force` and `--verify-only` both appear in `$ARGUMENTS`, `--force` takes precedence
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/docs-update.md
+</execution_context>
+
+<context>
+Arguments: $ARGUMENTS
+
+**Available optional flags (documentation only — not automatically active):**
+- `--force` — Regenerate all docs. Overwrites hand-written and GAD docs alike. No preservation prompts.
+- `--verify-only` — Check existing docs for accuracy against the codebase. No files are written. Reports VERIFY marker count. Full codebase fact-checking requires the gad-doc-verifier agent (Phase 4).
+
+**Active flags must be derived from `$ARGUMENTS`:**
+- `--force` is active only if the literal `--force` token is present in `$ARGUMENTS`
+- `--verify-only` is active only if the literal `--verify-only` token is present in `$ARGUMENTS`
+- If neither token appears, run the standard full-phase generation flow
+- Do not infer that a flag is active just because it is documented in this prompt
+</context>
+
+<process>
+Execute the docs-update workflow from @vendor/get-anything-done/workflows/docs-update.md end-to-end.
+Preserve all workflow gates (preservation_check, flag handling, wave execution, monorepo dispatch, commit, reporting).
+</process>
+
+
+## gad:eval-bootstrap
+id: gad-eval-bootstrap
+description: Bootstrap an eval agent with full GAD context injected into its prompt
+origin: human-authored
+
+
+<objective>
+Generate a bootstrap prompt for a single eval project and launch an agent in an isolated worktree. The agent starts with all GAD context inline — it does not need to discover the loop.
+</objective>
+
+<process>
+
+1. **Generate the bootstrap prompt:**
+   ```bash
+   node vendor/get-anything-done/bin/gad.cjs eval run --project $PROJECT --prompt-only
+   ```
+
+2. **Read the generated PROMPT.md** from the eval run directory.
+
+3. **Launch an agent** with `isolation: "worktree"` using the prompt content.
+
+4. **After completion**, reconstruct the trace:
+   ```bash
+   node vendor/get-anything-done/bin/gad.cjs eval trace reconstruct --project $PROJECT
+   ```
+
+</process>
+
+<skill>
+Read and follow the skill at `vendor/get-anything-done/skills/eval-bootstrap/SKILL.md`.
+</skill>
+
+
+## gad:eval-list
+id: gad-eval-list
+description: List available eval projects and their run history
+origin: human-authored
+
+
+<objective>
+Display all eval projects in `evals/` with their run count, latest run status,
+and last baseline SHA.
+</objective>
+
+<process>
+
+1. **Find eval projects:**
+   ```bash
+   ls -d evals/*/ 2>/dev/null || echo "NO_PROJECTS"
+   ```
+   If none: `No eval projects found. Create one at evals/<name>/REQUIREMENTS.md.`
+
+2. **For each project**, read its run history:
+   ```bash
+   ls -d "evals/$PROJECT"/v*/ 2>/dev/null | sort -V
+   ```
+   Read the latest `RUN.md` for status and baseline.
+
+3. **Display table:**
+   ```
+   GAD Eval Projects
+
+   NAME              RUNS   LATEST   STATUS     BASELINE
+   ─────────────────────────────────────────────────────────
+   portfolio-bare    2      v2       completed  abc1234
+   my-feature        0      —        —          —
+   ```
+
+4. **Show totals:**
+   ```
+   2 projects, 2 total runs
+   ```
+
+</process>
+
+
+## gad:eval-report
+id: gad-eval-report
+description: Show cross-project eval comparison and findings
+origin: human-authored
+
+
+<objective>
+Generate a comparison report across all eval projects showing scores, discipline, and findings from the latest runs.
+</objective>
+
+<process>
+
+1. **Run cross-project report:**
+   ```bash
+   node vendor/get-anything-done/bin/gad.cjs eval report
+   ```
+
+2. **For deeper analysis on a specific project:**
+   ```bash
+   node vendor/get-anything-done/bin/gad.cjs eval scores --project <name>
+   node vendor/get-anything-done/bin/gad.cjs eval diff v1 v2 --project <name>
+   ```
+
+3. **Interpret findings** and recommend next actions.
+
+</process>
+
+<skill>
+Read and follow the skill at `vendor/get-anything-done/skills/eval-report/SKILL.md`.
+</skill>
+
+
+## gad:eval-run
+id: gad-eval-run
+description: Run an eval project in an isolated git worktree
+origin: human-authored
+
+
+<objective>
+Execute a GAD eval project in an isolated git worktree. Each run gets its own
+worktree, a timestamped output directory, and an agent stub invocation. The
+worktree is cleaned up after the run. Results are saved in `evals/<name>/v<N>/`.
+</objective>
+
+<process>
+
+Parse from `$ARGUMENTS`:
+- `--project <name>` (required)
+- `--baseline <sha>` (optional, defaults to HEAD)
+- `--agent <model>` (optional, defaults to configured default model)
+
+1. **Validate project exists:**
+   ```bash
+   ls "evals/$PROJECT" 2>/dev/null || echo "NOT_FOUND"
+   ```
+   If not found: `Eval project '<name>' not found. Run \`gad eval list\` to see available projects.`
+
+2. **Read project REQUIREMENTS.md:**
+   ```bash
+   cat "evals/$PROJECT/REQUIREMENTS.md"
+   ```
+
+3. **Compute next run number:**
+   Count existing `evals/<name>/v*/` directories. Next = max + 1.
+
+4. **Create git worktree:**
+   ```bash
+   BASELINE="${BASELINE:-HEAD}"
+   WORKTREE_PATH=$(mktemp -d "/tmp/gad-eval-XXXXXX")
+   git worktree add "$WORKTREE_PATH" "$BASELINE"
+   ```
+
+5. **Scaffold output directory:**
+   ```bash
+   mkdir -p "evals/$PROJECT/v$RUN_NUM"
+   cat > "evals/$PROJECT/v$RUN_NUM/RUN.md" << EOF
+   # Eval Run v$RUN_NUM
+
+   project: $PROJECT
+   baseline: $BASELINE
+   started: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+   agent: $AGENT_MODEL
+   status: running
+   EOF
+   ```
+
+6. **Execute agent (stub):**
+   In the worktree, run the eval agent:
+   ```bash
+   cd "$WORKTREE_PATH"
+   # Stub: agent invocation goes here
+   # Full implementation in gad-eval plan
+   echo "STUB: agent run for $PROJECT" > "$WORKTREE_PATH/eval-output.txt"
+   ```
+
+7. **Collect results:**
+   Copy relevant output files from worktree to `evals/<name>/v<N>/`:
+   ```bash
+   cp "$WORKTREE_PATH/eval-output.txt" "evals/$PROJECT/v$RUN_NUM/"
+   ```
+
+8. **Remove worktree:**
+   ```bash
+   git worktree remove --force "$WORKTREE_PATH"
+   ```
+
+9. **Update RUN.md with result:**
+   Set `status: completed` and `ended: <timestamp>`.
+
+10. **Summary:**
+    ```
+    ✓ Eval run complete
+
+    Project:  $PROJECT
+    Run:      v$RUN_NUM
+    Baseline: $BASELINE
+    Output:   evals/$PROJECT/v$RUN_NUM/
+    ```
+
+</process>
+
+<rules>
+- Always remove the worktree, even if the run fails (use trap in bash)
+- Never modify files in the main worktree during an eval run
+- If baseline SHA is invalid, abort before creating the worktree
+</rules>
+
+
+## gad:eval-suite
+id: gad-eval-suite
+description: Run all eval projects in parallel with bootstrap prompts
+origin: human-authored
+
+
+<objective>
+Generate bootstrap prompts for all runnable eval projects, then launch them as parallel agents in isolated worktrees. After completion, reconstruct traces and produce a cross-project comparison report.
+</objective>
+
+<process>
+
+1. **Generate prompts:**
+   ```bash
+   node vendor/get-anything-done/bin/gad.cjs eval suite
+   ```
+
+2. **Read each generated prompt** from the suite-runs directory.
+
+3. **Launch agents in parallel** — one per eval project, each with `isolation: "worktree"` and `run_in_background: true`. Send ALL agent launches in a single message.
+
+4. **Wait for completion** — you will be notified as each agent finishes.
+
+5. **Write TRACE.json** for each completed eval from the agent's reported results.
+
+6. **Run cross-project report:**
+   ```bash
+   node vendor/get-anything-done/bin/gad.cjs eval report
+   ```
+
+7. **Report findings** — what improved, what regressed, what skills were triggered or missing.
+
+</process>
+
+<skill>
+Read and follow the skill at `vendor/get-anything-done/skills/eval-suite/SKILL.md`.
+</skill>
+
+
+## gad:execute-phase
+id: gad-execute-phase
+description: Execute all plans in a phase with wave-based parallelization
+origin: human-authored
+
+<objective>
+Execute all plans in a phase using wave-based parallel execution.
+
+Orchestrator stays lean: discover plans, analyze dependencies, group into waves, spawn subagents, collect results. Each subagent loads the full execute-plan context and handles its own plan.
+
+Optional wave filter:
+- `--wave N` executes only Wave `N` for pacing, quota management, or staged rollout
+- phase verification/completion still only happens when no incomplete plans remain after the selected wave finishes
+
+Flag handling rule:
+- The optional flags documented below are available behaviors, not implied active behaviors
+- A flag is active only when its literal token appears in `$ARGUMENTS`
+- If a documented flag is absent from `$ARGUMENTS`, treat it as inactive
+
+Context budget: ~15% orchestrator, 100% fresh per subagent.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/execute-phase.md
+@vendor/get-anything-done/references/ui-brand.md
+</execution_context>
+
+<context>
+Phase: $ARGUMENTS
+
+**Available optional flags (documentation only — not automatically active):**
+- `--wave N` — Execute only Wave `N` in the phase. Use when you want to pace execution or stay inside usage limits.
+- `--gaps-only` — Execute only gap closure plans (plans with `gap_closure: true` in frontmatter). Use after verify-work creates fix plans.
+- `--interactive` — Execute plans sequentially inline (no subagents) with user checkpoints between tasks. Lower token usage, pair-programming style. Best for small phases, bug fixes, and verification gaps.
+
+**Active flags must be derived from `$ARGUMENTS`:**
+- `--wave N` is active only if the literal `--wave` token is present in `$ARGUMENTS`
+- `--gaps-only` is active only if the literal `--gaps-only` token is present in `$ARGUMENTS`
+- `--interactive` is active only if the literal `--interactive` token is present in `$ARGUMENTS`
+- If none of these tokens appear, run the standard full-phase execution flow with no flag-specific filtering
+- Do not infer that a flag is active just because it is documented in this prompt
+
+Context files are resolved inside the workflow via `gad-tools init execute-phase` and per-subagent `<files_to_read>` blocks.
+</context>
+
+<process>
+Execute the execute-phase workflow from @vendor/get-anything-done/workflows/execute-phase.md end-to-end.
+Preserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).
+</process>
+
+
+## gad:forensics
+id: gad-forensics
+description: Post-mortem investigation for failed GAD workflows — analyzes git history, artifacts, and state to diagnose what went wrong
+origin: human-authored
+
+
+<objective>
+Investigate what went wrong during a GAD workflow execution. Analyzes git history, `.planning/` artifacts, and file system state to detect anomalies and generate a structured diagnostic report.
+
+Purpose: Diagnose failed or stuck workflows so the user can understand root cause and take corrective action.
+Output: Forensic report saved to `.planning/forensics/`, presented inline, with optional issue creation.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/forensics.md
+</execution_context>
+
+<context>
+**Data sources:**
+- `git log` (recent commits, patterns, time gaps)
+- `git status` / `git diff` (uncommitted work, conflicts)
+- `.planning/STATE.md` (current position, session history)
+- `.planning/ROADMAP.md` (phase scope and progress)
+- `.planning/phases/*/` (PLAN.md, SUMMARY.md, VERIFICATION.md, CONTEXT.md)
+- `.planning/reports/SESSION_REPORT.md` (last session outcomes)
+
+**User input:**
+- Problem description: $ARGUMENTS (optional — will ask if not provided)
+</context>
+
+<process>
+Read and execute the forensics workflow from @vendor/get-anything-done/workflows/forensics.md end-to-end.
+</process>
+
+<success_criteria>
+- Evidence gathered from all available data sources
+- At least 4 anomaly types checked (stuck loop, missing artifacts, abandoned work, crash/interruption)
+- Structured forensic report written to `.planning/forensics/report-{timestamp}.md`
+- Report presented inline with findings, anomalies, and recommendations
+- Interactive investigation offered for deeper analysis
+- GitHub issue creation offered if actionable findings exist
+</success_criteria>
+
+<critical_rules>
+- **Read-only investigation:** Do not modify project source files during forensics. Only write the forensic report and update STATE.md session tracking.
+- **Redact sensitive data:** Strip absolute paths, API keys, tokens from reports and issues.
+- **Ground findings in evidence:** Every anomaly must cite specific commits, files, or state data.
+- **No speculation without evidence:** If data is insufficient, say so — do not fabricate root causes.
+</critical_rules>
+
+
+## gad:health
+id: gad-health
+description: Diagnose planning directory health and optionally repair issues
+origin: human-authored
+
+<objective>
+Validate `.planning/` directory integrity and report actionable issues. Checks for missing files, invalid configurations, inconsistent state, and orphaned plans.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/health.md
+</execution_context>
+
+<process>
+Execute the health workflow from @vendor/get-anything-done/workflows/health.md end-to-end.
+Parse --repair flag from arguments and pass to workflow.
+</process>
+
+
+## gad:help
+id: gad-help
+description: Show available GAD commands and usage guide
+origin: human-authored
+
+<objective>
+Display the complete GAD command reference.
+
+Output ONLY the reference content below. Do NOT add:
+- Project-specific analysis
+- Git status or file context
+- Next-step suggestions
+- Any commentary beyond the reference
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/help.md
+</execution_context>
+
+<process>
+Output the complete GAD command reference from @vendor/get-anything-done/workflows/help.md.
+Display the reference content directly — no additions or modifications.
+
+Note: GAD commands use the `gad:` prefix. The following commands have been removed from GAD
+(use the `gad` CLI instead): workstreams, list-workspaces, new-workspace, remove-workspace,
+ui-phase, ui-review, secure-phase, pr-branch, ship, profile-user.
+</process>
+
+
+## gad:insert-phase
+id: gad-insert-phase
+description: Insert urgent work as decimal phase (e.g., 72.1) between existing phases
+origin: human-authored
+
+
+<objective>
+Insert a decimal phase for urgent work discovered mid-milestone that must be completed between existing integer phases.
+
+Uses decimal numbering (72.1, 72.2, etc.) to preserve the logical sequence of planned phases while accommodating urgent insertions.
+
+Purpose: Handle urgent work discovered during execution without renumbering entire roadmap.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/insert-phase.md
+</execution_context>
+
+<context>
+Arguments: $ARGUMENTS (format: <after-phase-number> <description>)
+
+Roadmap and state are resolved in-workflow via `init phase-op` and targeted tool calls.
+</context>
+
+<process>
+Execute the insert-phase workflow from @vendor/get-anything-done/workflows/insert-phase.md end-to-end.
+Preserve all validation gates (argument parsing, phase verification, decimal calculation, roadmap updates).
+</process>
+
+
+## gad:list-phase-assumptions
+id: gad-list-phase-assumptions
+description: Surface Claude's assumptions about a phase approach before planning
+origin: human-authored
+
+
+<objective>
+Analyze a phase and present Claude's assumptions about technical approach, implementation order, scope boundaries, risk areas, and dependencies.
+
+Purpose: Help users see what Claude thinks BEFORE planning begins - enabling course correction early when assumptions are wrong.
+Output: Conversational output only (no file creation) - ends with "What do you think?" prompt
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/list-phase-assumptions.md
+</execution_context>
+
+<context>
+Phase number: $ARGUMENTS (required)
+
+Project state and roadmap are loaded in-workflow using targeted reads.
+</context>
+
+<process>
+1. Validate phase number argument (error if missing or invalid)
+2. Check if phase exists in roadmap
+3. Follow list-phase-assumptions.md workflow:
+   - Analyze roadmap description
+   - Surface assumptions about: technical approach, implementation order, scope, risks, dependencies
+   - Present assumptions clearly
+   - Prompt "What do you think?"
+4. Gather feedback and offer next steps
+</process>
+
+<success_criteria>
+
+- Phase validated against roadmap
+- Assumptions surfaced across five areas
+- User prompted for feedback
+- User knows next steps (discuss context, plan phase, or correct assumptions)
+  </success_criteria>
+
+
+## gad:manager
+id: gad-manager
+description: Interactive command center for managing multiple phases from one terminal
+origin: human-authored
+
+<objective>
+Single-terminal command center for managing a milestone. Shows a dashboard of all phases with visual status indicators, recommends optimal next actions, and dispatches work — discuss runs inline, plan/execute run as background agents.
+
+Designed for power users who want to parallelize work across phases from one terminal: discuss a phase while another plans or executes in the background.
+
+**Creates/Updates:**
+- No files created directly — dispatches to existing GAD commands via Skill() and background Task agents.
+- Reads `.planning/STATE.md`, `.planning/ROADMAP.md`, phase directories for status.
+
+**After:** User exits when done managing, or all phases complete and milestone lifecycle is suggested.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/manager.md
+@vendor/get-anything-done/references/ui-brand.md
+</execution_context>
+
+<context>
+No arguments required. Requires an active milestone with ROADMAP.md and STATE.md.
+
+Project context, phase list, dependencies, and recommendations are resolved inside the workflow using `gad-tools.cjs init manager`. No upfront context loading needed.
+</context>
+
+<process>
+Execute the manager workflow from @vendor/get-anything-done/workflows/manager.md end-to-end.
+Maintain the dashboard refresh loop until the user exits or all phases complete.
+</process>
+
+
+## gad:manuscript
+id: gad-manuscript
+description: Fiction writing adaptation of the GAD loop for novels and story outlines
+origin: human-authored
+
+
+<objective>
+Apply the GAD planning loop to fiction and creative writing projects. Manages beat sheets, chapter drafts, canon locks, forward questions, and narrative state using the standard 5-doc planning structure with fiction-specific vocabulary.
+</objective>
+
+<process>
+
+1. **Check project type** — look for fiction indicators:
+   - Beat sheets, chapter IDs in task registry
+   - MT-* or ML-* decision IDs (manuscript/canon locks)
+   - books/<slug>/ directory structure
+   - AGENTS.md with "fiction" or "manuscript" language
+
+2. **Follow the manuscript loop** as defined in the skill.
+
+</process>
+
+<skill>
+Read and follow the skill at `vendor/get-anything-done/skills/manuscript/SKILL.md`.
+</skill>
+
+
+## gad:map-codebase
+id: gad-map-codebase
+description: Analyze codebase with parallel mapper agents to produce .planning/codebase/ documents
+origin: human-authored
+
+
+<objective>
+Analyze existing codebase using parallel gad-codebase-mapper agents to produce structured codebase documents.
+
+Each mapper agent explores a focus area and **writes documents directly** to `.planning/codebase/`. The orchestrator only receives confirmations, keeping context usage minimal.
+
+Output: .planning/codebase/ folder with 7 structured documents about the codebase state.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/map-codebase.md
+</execution_context>
+
+<context>
+Focus area: $ARGUMENTS (optional - if provided, tells agents to focus on specific subsystem)
+
+**Load project state if exists:**
+Check for .planning/STATE.md - loads context if project already initialized
+
+**This command can run:**
+- Before /gad:new-project (brownfield codebases) - creates codebase map first
+- After /gad:new-project (greenfield codebases) - updates codebase map as code evolves
+- Anytime to refresh codebase understanding
+</context>
+
+<when_to_use>
+**Use map-codebase for:**
+- Brownfield projects before initialization (understand existing code first)
+- Refreshing codebase map after significant changes
+- Onboarding to an unfamiliar codebase
+- Before major refactoring (understand current state)
+- When STATE.md references outdated codebase info
+
+**Skip map-codebase for:**
+- Greenfield projects with no code yet (nothing to map)
+- Trivial codebases (<5 files)
+</when_to_use>
+
+<process>
+1. Check if .planning/codebase/ already exists (offer to refresh or skip)
+2. Create .planning/codebase/ directory structure
+3. Spawn 4 parallel gad-codebase-mapper agents:
+   - Agent 1: tech focus → writes STACK.md, INTEGRATIONS.md
+   - Agent 2: arch focus → writes ARCHITECTURE.md, STRUCTURE.md
+   - Agent 3: quality focus → writes CONVENTIONS.md, TESTING.md
+   - Agent 4: concerns focus → writes CONCERNS.md
+4. Wait for agents to complete, collect confirmations (NOT document contents)
+5. Verify all 7 documents exist with line counts
+6. Commit codebase map
+7. Offer next steps (typically: /gad:new-project or /gad:plan-phase)
+</process>
+
+<success_criteria>
+- [ ] .planning/codebase/ directory created
+- [ ] All 7 codebase documents written by mapper agents
+- [ ] Documents follow template structure
+- [ ] Parallel agents completed without errors
+- [ ] User knows next steps
+</success_criteria>
+
+
+## gad:merge-skill
+id: gad-merge-skill
+description: >- Fuse two or more overlapping skills into a single tailored skill. Use when skills have overlapping descriptions, redundant functionality, or when attaining a generic skill to a specific project domain. References agentskills.io and Anthropic skills guide for professional quality standards.
+origin: human-authored
+
+
+<objective>
+Merge overlapping skills into a single unified skill following the merge-skill
+methodology. Consult agentskills.io and Anthropic guidelines for quality.
+</objective>
+
+<process>
+1. Read the merge-skill SKILL.md at `.agents/skills/merge-skill/SKILL.md`
+2. Follow its 6-step procedure exactly:
+   - Step 1: Identify the overlap
+   - Step 1b: Consult agentskills.io guidance (https://agentskills.io/home)
+   - Step 2: Draft the merged skill
+   - Step 3: Deprecate the originals (add `superseded-by` frontmatter)
+   - Step 4: Update CHANGELOG
+   - Step 5: Run evaluation harness (if available)
+   - Step 6: Notify inheriting eval runs
+3. The merged skill must meet the agentskills.io standard and Anthropic skills guide quality bar
+4. Scaffold an eval project for the merged skill: `gad eval setup --project <merged-name>-eval`
+</process>
+
+
+## gad:migrate-schema
+id: gad-migrate-schema
+description: Convert RP XML planning files (STATE.xml, ROADMAP.xml) to GAD Markdown format
+origin: human-authored
+
+
+<objective>
+Detect and convert repo-planner XML planning files (`STATE.xml`, `ROADMAP.xml`,
+`TASK-REGISTRY.xml`, `REQUIREMENTS.xml`) to GAD Markdown equivalents. Original XML
+files are archived to `<planningDir>/archive/xml/` — never deleted.
+</objective>
+
+<process>
+
+Parse `--path <dir>` from `$ARGUMENTS` (default: `.planning/`).
+
+1. **Detect XML files:**
+   ```bash
+   ls "$PLANNING_DIR"/*.xml 2>/dev/null
+   ```
+   If none found, report: `No XML files found in <path> — nothing to migrate.`
+
+2. **Show migration plan:**
+   ```
+   Migration plan for .planning/
+
+   STATE.xml        → STATE.md
+   ROADMAP.xml      → ROADMAP.md
+   TASK-REGISTRY.xml → (merged into STATE.md performance metrics)
+   REQUIREMENTS.xml  → REQUIREMENTS.md
+
+   Archive: .planning/archive/xml/
+   ```
+   Confirm before proceeding.
+
+3. **Migrate STATE.xml → STATE.md:**
+   Read the XML, extract key fields:
+   - `<current-phase>` → `## Current Position`
+   - `<milestone>` → milestone header
+   - `<completed-phases>` → completed phase list
+   - `<active-issues>` → open issues section
+   - `<performance-metrics>` → metrics table
+
+   Write `STATE.md` following the GAD state template format.
+
+4. **Migrate ROADMAP.xml → ROADMAP.md:**
+   Read `<phase id>`, `<title>`, `<status>`, `<description>` elements.
+   Write `ROADMAP.md` as a Markdown checklist:
+   ```markdown
+   # Roadmap
+
+   ## Milestone N: <name>
+
+   - [x] **Phase 1: <title>** — <description>
+   - [ ] **Phase 2: <title>** — <description>
+   ```
+
+5. **Migrate TASK-REGISTRY.xml → STATE.md metrics section:**
+   Merge task rows into the `## Performance Metrics` section of STATE.md.
+
+6. **Migrate REQUIREMENTS.xml → REQUIREMENTS.md:**
+   Convert requirement nodes to Markdown sections.
+
+7. **Archive originals:**
+   ```bash
+   mkdir -p "$PLANNING_DIR/archive/xml"
+   mv "$PLANNING_DIR"/*.xml "$PLANNING_DIR/archive/xml/"
+   ```
+
+8. **Summary:**
+   ```
+   ✓ Migration complete — .planning/
+
+   Created:  STATE.md, ROADMAP.md, REQUIREMENTS.md
+   Archived: STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, REQUIREMENTS.xml
+             → .planning/archive/xml/
+
+   Review the migrated files before committing.
+   ```
+
+</process>
+
+<rules>
+- Never delete XML files — always archive
+- If a target .md file already exists, create <name>-migrated.md instead and warn
+- Log every field that couldn't be mapped so nothing is silently lost
+- Validate that ROADMAP.md has the same number of phases as ROADMAP.xml
+</rules>
+
+
+## gad:milestone-summary
+id: gad-milestone-summary
+description: Generate a comprehensive project summary from milestone artifacts for team onboarding and review
+origin: human-authored
+
+
+<objective>
+Generate a structured milestone summary for team onboarding and project review. Reads completed milestone artifacts (ROADMAP, REQUIREMENTS, CONTEXT, SUMMARY, VERIFICATION files) and produces a human-friendly overview of what was built, how, and why.
+
+Purpose: Enable new team members to understand a completed project by reading one document and asking follow-up questions.
+Output: MILESTONE_SUMMARY written to `.planning/reports/`, presented inline, optional interactive Q&A.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/milestone-summary.md
+</execution_context>
+
+<context>
+**Project files:**
+- `.planning/ROADMAP.md`
+- `.planning/PROJECT.md`
+- `.planning/STATE.md`
+- `.planning/RETROSPECTIVE.md`
+- `.planning/milestones/v{version}-ROADMAP.md` (if archived)
+- `.planning/milestones/v{version}-REQUIREMENTS.md` (if archived)
+- `.planning/phases/*-*/` (SUMMARY.md, VERIFICATION.md, CONTEXT.md, RESEARCH.md)
+
+**User input:**
+- Version: $ARGUMENTS (optional — defaults to current/latest milestone)
+</context>
+
+<process>
+Read and execute the milestone-summary workflow from @vendor/get-anything-done/workflows/milestone-summary.md end-to-end.
+</process>
+
+<success_criteria>
+- Milestone version resolved (from args, STATE.md, or archive scan)
+- All available artifacts read (ROADMAP, REQUIREMENTS, CONTEXT, SUMMARY, VERIFICATION, RESEARCH, RETROSPECTIVE)
+- Summary document written to `.planning/reports/MILESTONE_SUMMARY-v{version}.md`
+- All 7 sections generated (Overview, Architecture, Phases, Decisions, Requirements, Tech Debt, Getting Started)
+- Summary presented inline to user
+- Interactive Q&A offered
+- STATE.md updated
+</success_criteria>
+
+
+## gad:new-milestone
+id: gad-new-milestone
+description: Start a new milestone cycle — update PROJECT.md and route to requirements
+origin: human-authored
+
+<objective>
+Start a new milestone: questioning → research (optional) → requirements → roadmap.
+
+Brownfield equivalent of new-project. Project exists, PROJECT.md has history. Gathers "what's next", updates PROJECT.md, then runs requirements → roadmap cycle.
+
+**Creates/Updates:**
+- `.planning/PROJECT.md` — updated with new milestone goals
+- `.planning/research/` — domain research (optional, NEW features only)
+- `.planning/REQUIREMENTS.md` — scoped requirements for this milestone
+- `.planning/ROADMAP.md` — phase structure (continues numbering)
+- `.planning/STATE.md` — reset for new milestone
+
+**After:** `/gad:plan-phase [N]` to start execution.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/new-milestone.md
+@vendor/get-anything-done/references/questioning.md
+@vendor/get-anything-done/references/ui-brand.md
+@vendor/get-anything-done/templates/project.md
+@vendor/get-anything-done/templates/requirements.md
+</execution_context>
+
+<context>
+Milestone name: $ARGUMENTS (optional - will prompt if not provided)
+
+Project and milestone context files are resolved inside the workflow (`init new-milestone`) and delegated via `<files_to_read>` blocks where subagents are used.
+</context>
+
+<process>
+Execute the new-milestone workflow from @vendor/get-anything-done/workflows/new-milestone.md end-to-end.
+Preserve all workflow gates (validation, questioning, research, requirements, roadmap approval, commits).
+</process>
+
+
+## gad:new-project
+id: gad-new-project
+description: Initialize a new project with deep context gathering and PROJECT.md
+origin: human-authored
+
+<context>
+**Flags:**
+- `--auto` — Automatic mode. After config questions, runs research → requirements → roadmap without further interaction. Expects idea document via @ reference.
+</context>
+
+<objective>
+Initialize a new project through unified flow: questioning → research (optional) → requirements → roadmap.
+
+**Creates:**
+- `.planning/PROJECT.md` — project context
+- `.planning/config.json` — workflow preferences
+- `.planning/research/` — domain research (optional)
+- `.planning/REQUIREMENTS.md` — scoped requirements
+- `.planning/ROADMAP.md` — phase structure
+- `.planning/STATE.md` — project memory
+
+**After this command:** Run `/gad:plan-phase 1` to start execution.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/new-project.md
+@vendor/get-anything-done/references/questioning.md
+@vendor/get-anything-done/references/ui-brand.md
+@vendor/get-anything-done/templates/project.md
+@vendor/get-anything-done/templates/requirements.md
+</execution_context>
+
+<process>
+Execute the new-project workflow from @vendor/get-anything-done/workflows/new-project.md end-to-end.
+Preserve all workflow gates (validation, approvals, commits, routing).
+</process>
+
+
+## gad:next
+id: gad-next
+description: Automatically advance to the next logical step in the GAD workflow
+origin: human-authored
+
+<objective>
+Detect the current project state and automatically invoke the next logical GAD workflow step.
+No arguments needed — reads STATE.md, ROADMAP.md, and phase directories to determine what comes next.
+
+Designed for rapid multi-project workflows where remembering which phase/step you're on is overhead.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/next.md
+</execution_context>
+
+<process>
+Execute the next workflow from @vendor/get-anything-done/workflows/next.md end-to-end.
+</process>
+
+
+## gad:note
+id: gad-note
+description: Zero-friction idea capture. Append, list, or promote notes to todos.
+origin: human-authored
+
+<objective>
+Zero-friction idea capture — one Write call, one confirmation line.
+
+Three subcommands:
+- **append** (default): Save a timestamped note file. No questions, no formatting.
+- **list**: Show all notes from project and global scopes.
+- **promote**: Convert a note into a structured todo.
+
+Runs inline — no Task, no AskUserQuestion, no Bash.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/note.md
+@vendor/get-anything-done/references/ui-brand.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+</context>
+
+<process>
+Execute the note workflow from @vendor/get-anything-done/workflows/note.md end-to-end.
+Capture the note, list notes, or promote to todo — depending on arguments.
+</process>
+
+
+## gad:pause-work
+id: gad-pause-work
+description: Create context handoff when pausing work mid-phase
+origin: human-authored
+
+
+<objective>
+Create `.continue-here.md` handoff file to preserve complete work state across sessions.
+
+Routes to the pause-work workflow which handles:
+- Current phase detection from recent files
+- Complete state gathering (position, completed work, remaining work, decisions, blockers)
+- Handoff file creation with all context sections
+- Git commit as WIP
+- Resume instructions
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/pause-work.md
+</execution_context>
+
+<context>
+State and phase progress are gathered in-workflow with targeted reads.
+</context>
+
+<process>
+**Follow the pause-work workflow** from `@vendor/get-anything-done/workflows/pause-work.md`.
+
+The workflow handles all logic including:
+1. Phase directory detection
+2. State gathering with user clarifications
+3. Handoff file writing with timestamp
+4. Git commit
+5. Confirmation with resume instructions
+</process>
+
+
+## gad:plan-milestone-gaps
+id: gad-plan-milestone-gaps
+description: Create phases to close all gaps identified by milestone audit
+origin: human-authored
+
+<objective>
+Create all phases necessary to close gaps identified by `/gad:audit-milestone`.
+
+Reads MILESTONE-AUDIT.md, groups gaps into logical phases, creates phase entries in ROADMAP.md, and offers to plan each phase.
+
+One command creates all fix phases — no manual `/gad:add-phase` per gap.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/plan-milestone-gaps.md
+</execution_context>
+
+<context>
+**Audit results:**
+Glob: .planning/v*-MILESTONE-AUDIT.md (use most recent)
+
+Original intent and current planning state are loaded on demand inside the workflow.
+</context>
+
+<process>
+Execute the plan-milestone-gaps workflow from @vendor/get-anything-done/workflows/plan-milestone-gaps.md end-to-end.
+Preserve all workflow gates (audit loading, prioritization, phase grouping, user confirmation, roadmap updates).
+</process>
+
+
+## gad:plan-phase
+id: gad-plan-phase
+description: Create detailed phase plan (PLAN.md) with verification loop
+origin: human-authored
+
+<objective>
+Create executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.
+
+**Default flow:** Research (if needed) → Plan → Verify → Done
+
+**Orchestrator role:** Parse arguments, validate phase, research domain (unless skipped), spawn gad-planner, verify with gad-plan-checker, iterate until pass or max iterations, present results.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/plan-phase.md
+@vendor/get-anything-done/references/ui-brand.md
+</execution_context>
+
+<context>
+Phase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omitted)
+
+**Flags:**
+- `--research` — Force re-research even if RESEARCH.md exists
+- `--skip-research` — Skip research, go straight to planning
+- `--gaps` — Gap closure mode (reads VERIFICATION.md, skips research)
+- `--skip-verify` — Skip verification loop
+- `--prd <file>` — Use a PRD/acceptance criteria file instead of discuss-phase. Parses requirements into CONTEXT.md automatically. Skips discuss-phase entirely.
+- `--reviews` — Replan incorporating cross-AI review feedback from REVIEWS.md (produced by `/gad:review`)
+- `--text` — Use plain-text numbered lists instead of TUI menus (required for `/rc` remote sessions)
+
+Normalize phase input in step 2 before any directory lookups.
+</context>
+
+<process>
+Execute the plan-phase workflow from @vendor/get-anything-done/workflows/plan-phase.md end-to-end.
+Preserve all workflow gates (validation, research, planning, verification loop, routing).
+</process>
+
+
+## gad:plant-seed
+id: gad-plant-seed
+description: Capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone
+origin: human-authored
+
+
+<objective>
+Capture an idea that's too big for now but should surface automatically when the right
+milestone arrives. Seeds solve context rot: instead of a one-liner in Deferred that nobody
+reads, a seed preserves the full WHY, WHEN to surface, and breadcrumbs to details.
+
+Creates: .planning/seeds/SEED-NNN-slug.md
+Consumed by: /gad:new-milestone (scans seeds and presents matches)
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/plant-seed.md
+</execution_context>
+
+<process>
+Execute the plant-seed workflow from @vendor/get-anything-done/workflows/plant-seed.md end-to-end.
+</process>
+
+
+## gad:progress
+id: gad-progress
+description: Check project progress, show context, and route to next action (execute or plan)
+origin: human-authored
+
+<objective>
+Check project progress, summarize recent work and what's ahead, then intelligently route to the next action - either executing an existing plan or creating the next one.
+
+Provides situational awareness before continuing work.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/progress.md
+</execution_context>
+
+<process>
+Execute the progress workflow from @vendor/get-anything-done/workflows/progress.md end-to-end.
+Preserve all routing logic (Routes A through F) and edge case handling.
+</process>
+
+
+## gad:reapply-patches
+id: gad-reapply-patches
+description: Reapply local modifications after a GAD update
+origin: human-authored
+
+
+<purpose>
+After a GAD update wipes and reinstalls files, this command merges user's previously saved local modifications back into the new version. Uses three-way comparison (pristine baseline, user-modified backup, newly installed version) to reliably distinguish user customizations from version drift.
+
+**Critical invariant:** Every file in `gad-local-patches/` was backed up because the installer's hash comparison detected it was modified. The workflow must NEVER conclude "no custom content" for any backed-up file — that is a logical contradiction. When in doubt, classify as CONFLICT requiring user review, not SKIP.
+</purpose>
+
+<process>
+
+## Step 1: Detect backed-up patches
+
+Check for local patches directory:
+
+```bash
+# Global install — detect runtime config directory
+if [ -d "$HOME/.config/opencode/gad-local-patches" ]; then
+  PATCHES_DIR="$HOME/.config/opencode/gad-local-patches"
+elif [ -d "$HOME/.opencode/gad-local-patches" ]; then
+  PATCHES_DIR="$HOME/.opencode/gad-local-patches"
+elif [ -d "$HOME/.gemini/gad-local-patches" ]; then
+  PATCHES_DIR="$HOME/.gemini/gad-local-patches"
+else
+  PATCHES_DIR="$HOME/.claude/gad-local-patches"
+fi
+# Local install fallback — check all runtime directories
+if [ ! -d "$PATCHES_DIR" ]; then
+  for dir in .config/opencode .opencode .gemini .claude; do
+    if [ -d "./$dir/gad-local-patches" ]; then
+      PATCHES_DIR="./$dir/gad-local-patches"
+      break
+    fi
+  done
+fi
+```
+
+Read `backup-meta.json` from the patches directory.
+
+**If no patches found:**
+```
+No local patches found. Nothing to reapply.
+
+Local patches are automatically saved when you run /gad:update
+after modifying any GAD workflow, command, or agent files.
+```
+Exit.
+
+## Step 2: Determine baseline for three-way comparison
+
+The quality of the merge depends on having a **pristine baseline** — the original unmodified version of each file from the pre-update GAD release. This enables three-way comparison:
+- **Pristine baseline** (original GAD file before any user edits)
+- **User's version** (backed up in `gad-local-patches/`)
+- **New version** (freshly installed after update)
+
+Check for baseline sources in priority order:
+
+### Option A: Git history (most reliable)
+If the config directory is a git repository:
+```bash
+CONFIG_DIR=$(dirname "$PATCHES_DIR")
+if git -C "$CONFIG_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+  HAS_GIT=true
+fi
+```
+When `HAS_GIT=true`, use `git log` to find the commit where GAD was originally installed (before user edits). For each file, the pristine baseline can be extracted with:
+```bash
+git -C "$CONFIG_DIR" log --diff-filter=A --format="%H" -- "{file_path}"
+```
+This gives the commit that first added the file (the install commit). Extract the pristine version:
+```bash
+git -C "$CONFIG_DIR" show {install_commit}:{file_path}
+```
+
+### Option B: Pristine snapshot directory
+Check if a `gad-pristine/` directory exists alongside `gad-local-patches/`:
+```bash
+PRISTINE_DIR="$CONFIG_DIR/gad-pristine"
+```
+If it exists, the installer saved pristine copies at install time. Use these as the baseline.
+
+### Option C: No baseline available (two-way fallback)
+If neither git history nor pristine snapshots are available, fall back to two-way comparison — but with **strengthened heuristics** (see Step 3).
+
+## Step 3: Show patch summary
+
+```
+## Local Patches to Reapply
+
+**Backed up from:** v{from_version}
+**Current version:** {read VERSION file}
+**Files modified:** {count}
+**Merge strategy:** {three-way (git) | three-way (pristine) | two-way (enhanced)}
+
+| # | File | Status |
+|---|------|--------|
+| 1 | {file_path} | Pending |
+| 2 | {file_path} | Pending |
+```
+
+## Step 4: Merge each file
+
+For each file in `backup-meta.json`:
+
+1. **Read the backed-up version** (user's modified copy from `gad-local-patches/`)
+2. **Read the newly installed version** (current file after update)
+3. **If available, read the pristine baseline** (from git history or `gad-pristine/`)
+
+### Three-way merge (when baseline is available)
+
+Compare the three versions to isolate changes:
+- **User changes** = diff(pristine → user's version) — these are the customizations to preserve
+- **Upstream changes** = diff(pristine → new version) — these are version updates to accept
+
+**Merge rules:**
+- Sections changed only by user → apply user's version
+- Sections changed only by upstream → accept upstream version
+- Sections changed by both → flag as CONFLICT, show both, ask user
+- Sections unchanged by either → use new version (identical to all three)
+
+### Two-way merge (fallback when no baseline)
+
+When no pristine baseline is available, use these **strengthened heuristics**:
+
+**CRITICAL RULE: Every file in this backup directory was explicitly detected as modified by the installer's SHA-256 hash comparison. "No custom content" is never a valid conclusion.**
+
+For each file:
+a. Read both versions completely
+b. Identify ALL differences, then classify each as:
+   - **Mechanical drift** — path substitutions (e.g. `/Users/xxx/.claude/` → `$HOME/.claude/`), variable additions (`${GSD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)
+   - **User customization** — added steps/sections, removed sections, reordered content, changed behavior, added frontmatter fields, modified instructions
+
+c. **If ANY differences remain after filtering out mechanical drift → those are user customizations. Merge them.**
+d. **If ALL differences appear to be mechanical drift → still flag as CONFLICT.** The installer's hash check already proved this file was modified. Ask the user: "This file appears to only have path/variable differences. Were there intentional customizations?" Do NOT silently skip.
+
+### Git-enhanced two-way merge
+
+When the config directory is a git repo but the pristine install commit can't be found, use commit history to identify user changes:
+```bash
+# Find non-update commits that touched this file
+git -C "$CONFIG_DIR" log --oneline --no-merges -- "{file_path}" | grep -v "gsd:update\|GSD update\|gad-install"
+```
+Each matching commit represents an intentional user modification. Use the commit messages and diffs to understand what was changed and why.
+
+4. **Write merged result** to the installed location
+5. **Report status per file:**
+   - `Merged` — user modifications applied cleanly (show summary of what was preserved)
+   - `Conflict` — user reviewed and chose resolution
+   - `Incorporated` — user's modification was already adopted upstream (only valid when pristine baseline confirms this)
+
+**Never report `Skipped — no custom content`.** If a file is in the backup, it has custom content.
+
+## Step 5: Update manifest
+
+After reapplying, regenerate the file manifest so future updates correctly detect these as user modifications:
+
+```bash
+# The manifest will be regenerated on next /gad:update
+# For now, just note which files were modified
+```
+
+## Step 6: Cleanup option
+
+Ask user:
+- "Keep patch backups for reference?" → preserve `gad-local-patches/`
+- "Clean up patch backups?" → remove `gad-local-patches/` directory
+
+## Step 7: Report
+
+```
+## Patches Reapplied
+
+| # | File | Result | User Changes Preserved |
+|---|------|--------|----------------------|
+| 1 | {file_path} | Merged | Added step X, modified section Y |
+| 2 | {file_path} | Incorporated | Already in upstream v{version} |
+| 3 | {file_path} | Conflict resolved | User chose: keep custom section |
+
+{count} file(s) updated. Your local modifications are active again.
+```
+
+</process>
+
+<success_criteria>
+- [ ] All backed-up patches processed — zero files left unhandled
+- [ ] No file classified as "no custom content" or "SKIP" — every backed-up file is definitionally modified
+- [ ] Three-way merge used when pristine baseline available (git history or gad-pristine/)
+- [ ] User modifications identified and merged into new version
+- [ ] Conflicts surfaced to user with both versions shown
+- [ ] Status reported for each file with summary of what was preserved
+</success_criteria>
+
+
+## gad:remove-phase
+id: gad-remove-phase
+description: Remove a future phase from roadmap and renumber subsequent phases
+origin: human-authored
+
+<objective>
+Remove an unstarted future phase from the roadmap and renumber all subsequent phases to maintain a clean, linear sequence.
+
+Purpose: Clean removal of work you've decided not to do, without polluting context with cancelled/deferred markers.
+Output: Phase deleted, all subsequent phases renumbered, git commit as historical record.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/remove-phase.md
+</execution_context>
+
+<context>
+Phase: $ARGUMENTS
+
+Roadmap and state are resolved in-workflow via `init phase-op` and targeted reads.
+</context>
+
+<process>
+Execute the remove-phase workflow from @vendor/get-anything-done/workflows/remove-phase.md end-to-end.
+Preserve all validation gates (future phase check, work check), renumbering logic, and commit.
+</process>
+
+
+## gad:research-phase
+id: gad-research-phase
+description: Research how to implement a phase (standalone - usually use /gad:plan-phase instead)
+origin: human-authored
+
+
+<objective>
+Research how to implement a phase. Spawns gad-phase-researcher agent with phase context.
+
+**Note:** This is a standalone research command. For most workflows, use `/gad:plan-phase` which integrates research automatically.
+
+**Use this command when:**
+- You want to research without planning yet
+- You want to re-research after planning is complete
+- You need to investigate before deciding if a phase is feasible
+
+**Orchestrator role:** Parse phase, validate against roadmap, check existing research, gather context, spawn researcher agent, present results.
+
+**Why subagent:** Research burns context fast (WebSearch, Context7 queries, source verification). Fresh 200k context for investigation. Main context stays lean for user interaction.
+</objective>
+
+<available_agent_types>
+Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
+- gad-phase-researcher — Researches technical approaches for a phase
+</available_agent_types>
+
+<context>
+Phase number: $ARGUMENTS (required)
+
+Normalize phase input in step 1 before any directory lookups.
+</context>
+
+<process>
+
+## 0. Initialize Context
+
+```bash
+INIT=$(node "vendor/get-anything-done/bin/gad-tools.cjs" init phase-op "$ARGUMENTS")
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
+```
+
+Extract from init JSON: `phase_dir`, `phase_number`, `phase_name`, `phase_found`, `commit_docs`, `has_research`, `state_path`, `requirements_path`, `context_path`, `research_path`.
+
+Resolve researcher model:
+```bash
+RESEARCHER_MODEL=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gad-phase-researcher --raw)
+```
+
+## 1. Validate Phase
+
+```bash
+PHASE_INFO=$(node "vendor/get-anything-done/bin/gad-tools.cjs" roadmap get-phase "${phase_number}")
+```
+
+**If `found` is false:** Error and exit. **If `found` is true:** Extract `phase_number`, `phase_name`, `goal` from JSON.
+
+## 2. Check Existing Research
+
+```bash
+ls .planning/phases/${PHASE}-*/RESEARCH.md 2>/dev/null
+```
+
+**If exists:** Offer: 1) Update research, 2) View existing, 3) Skip. Wait for response.
+
+**If doesn't exist:** Continue.
+
+## 3. Gather Phase Context
+
+Use paths from INIT (do not inline file contents in orchestrator context):
+- `requirements_path`
+- `context_path`
+- `state_path`
+
+Present summary with phase description and what files the researcher will load.
+
+## 4. Spawn gad-phase-researcher Agent
+
+Research modes: ecosystem (default), feasibility, implementation, comparison.
+
+```markdown
+<research_type>
+Phase Research — investigating HOW to implement a specific phase well.
+</research_type>
+
+<key_insight>
+The question is NOT "which library should I use?"
+
+The question is: "What do I not know that I don't know?"
+
+For this phase, discover:
+- What's the established architecture pattern?
+- What libraries form the standard stack?
+- What problems do people commonly hit?
+- What's SOTA vs what Claude's training thinks is SOTA?
+- What should NOT be hand-rolled?
+</key_insight>
+
+<objective>
+Research implementation approach for Phase {phase_number}: {phase_name}
+Mode: ecosystem
+</objective>
+
+<files_to_read>
+- {requirements_path} (Requirements)
+- {context_path} (Phase context from discuss-phase, if exists)
+- {state_path} (Prior project decisions and blockers)
+</files_to_read>
+
+<additional_context>
+**Phase description:** {phase_description}
+</additional_context>
+
+<downstream_consumer>
+Your RESEARCH.md will be loaded by `/gad:plan-phase` which uses specific sections:
+- `## Standard Stack` → Plans use these libraries
+- `## Architecture Patterns` → Task structure follows these
+- `## Don't Hand-Roll` → Tasks NEVER build custom solutions for listed problems
+- `## Common Pitfalls` → Verification steps check for these
+- `## Code Examples` → Task actions reference these patterns
+
+Be prescriptive, not exploratory. "Use X" not "Consider X or Y."
+</downstream_consumer>
+
+<quality_gate>
+Before declaring complete, verify:
+- [ ] All domains investigated (not just some)
+- [ ] Negative claims verified with official docs
+- [ ] Multiple sources for critical claims
+- [ ] Confidence levels assigned honestly
+- [ ] Section names match what plan-phase expects
+</quality_gate>
+
+<output>
+Write to: .planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md
+</output>
+```
+
+```
+Task(
+  prompt=filled_prompt,
+  subagent_type="gad-phase-researcher",
+  model="{researcher_model}",
+  description="Research Phase {phase}"
+)
+```
+
+## 5. Handle Agent Return
+
+**`## RESEARCH COMPLETE`:** Display summary, offer: Plan phase, Dig deeper, Review full, Done.
+
+**`## CHECKPOINT REACHED`:** Present to user, get response, spawn continuation.
+
+**`## RESEARCH INCONCLUSIVE`:** Show what was attempted, offer: Add context, Try different mode, Manual.
+
+## 6. Spawn Continuation Agent
+
+```markdown
+<objective>
+Continue research for Phase {phase_number}: {phase_name}
+</objective>
+
+<prior_state>
+<files_to_read>
+- .planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md (Existing research)
+</files_to_read>
+</prior_state>
+
+<checkpoint_response>
+**Type:** {checkpoint_type}
+**Response:** {user_response}
+</checkpoint_response>
+```
+
+```
+Task(
+  prompt=continuation_prompt,
+  subagent_type="gad-phase-researcher",
+  model="{researcher_model}",
+  description="Continue research Phase {phase}"
+)
+```
+
+</process>
+
+<success_criteria>
+- [ ] Phase validated against roadmap
+- [ ] Existing research checked
+- [ ] gad-phase-researcher spawned with context
+- [ ] Checkpoints handled correctly
+- [ ] User knows next steps
+</success_criteria>
+
+
+## gad:resume-work
+id: gad-resume-work
+description: Resume work from previous session with full context restoration
+origin: human-authored
+
+
+<objective>
+Restore complete project context and resume work seamlessly from previous session.
+
+Routes to the resume-project workflow which handles:
+
+- STATE.md loading (or reconstruction if missing)
+- Checkpoint detection (.continue-here files)
+- Incomplete work detection (PLAN without SUMMARY)
+- Status presentation
+- Context-aware next action routing
+  </objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/resume-project.md
+</execution_context>
+
+<process>
+**Follow the resume-project workflow** from `@vendor/get-anything-done/workflows/resume-project.md`.
+
+The workflow handles all resumption logic including:
+
+1. Project existence verification
+2. STATE.md loading or reconstruction
+3. Checkpoint and incomplete work detection
+4. Visual status presentation
+5. Context-aware option offering (checks CONTEXT.md before suggesting plan vs discuss)
+6. Routing to appropriate next command
+7. Session continuity updates
+   </process>
+
+
+## gad:reverse-engineer
+id: gad-reverse-engineer
+description: Analyze any codebase (local or GitHub URL) and produce requirements for clean-room reimplementation
+origin: human-authored
+
+
+<objective>
+Analyze a codebase and produce GAD planning docs (REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml) for clean-room reimplementation. Supports local paths and GitHub URLs.
+</objective>
+
+<process>
+
+Parse from `$ARGUMENTS`:
+- `--path <local-path>` — analyze a local directory
+- `--repo <github-url>` — clone from GitHub and analyze
+- `--branch <branch>` — branch to clone (default: default branch)
+
+1. **Acquire the target:**
+   - If `--repo`: clone to temp with `git clone --depth 1 <url> /tmp/gad-re-<name>`
+   - If `--path`: use the local path directly
+   - If the URL includes `/tree/<branch>/<path>`, extract the subdirectory
+
+2. **Run the deep analysis** — follow the 5-pass methodology in the skill.
+
+3. **Produce all outputs** — REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, CONTEXT.md
+
+4. **Clean up** — if cloned to temp, remove the temp directory
+
+</process>
+
+<skill>
+Read and follow the skill at `vendor/get-anything-done/skills/reverse-engineer/SKILL.md`.
+</skill>
+
+
+## gad:review
+id: gad-review
+description: Request cross-AI peer review of phase plans from external AI CLIs
+origin: human-authored
+
+
+<objective>
+Invoke external AI CLIs (Gemini, Claude, Codex, OpenCode) to independently review phase plans.
+Produces a structured REVIEWS.md with per-reviewer feedback that can be fed back into
+planning via /gad:plan-phase --reviews.
+
+**Flow:** Detect CLIs → Build review prompt → Invoke each CLI → Collect responses → Write REVIEWS.md
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/review.md
+</execution_context>
+
+<context>
+Phase number: extracted from $ARGUMENTS (required)
+
+**Flags:**
+- `--gemini` — Include Gemini CLI review
+- `--claude` — Include Claude CLI review (uses separate session)
+- `--codex` — Include Codex CLI review
+- `--opencode` — Include OpenCode review (uses model from user's OpenCode config)
+- `--all` — Include all available CLIs
+</context>
+
+<process>
+Execute the review workflow from @vendor/get-anything-done/workflows/review.md end-to-end.
+</process>
+
+
+## gad:review-backlog
+id: gad-review-backlog
+description: Review and promote backlog items to active milestone
+origin: human-authored
+
+
+<objective>
+Review all 999.x backlog items and optionally promote them into the active
+milestone sequence or remove stale entries.
+</objective>
+
+<process>
+
+1. **List backlog items:**
+   ```bash
+   ls -d .planning/phases/999* 2>/dev/null || echo "No backlog items found"
+   ```
+
+2. **Read ROADMAP.md** and extract all 999.x phase entries:
+   ```bash
+   cat .planning/ROADMAP.md
+   ```
+   Show each backlog item with its description, any accumulated context (CONTEXT.md, RESEARCH.md), and creation date.
+
+3. **Present the list to the user** via AskUserQuestion:
+   - For each backlog item, show: phase number, description, accumulated artifacts
+   - Options per item: **Promote** (move to active), **Keep** (leave in backlog), **Remove** (delete)
+
+4. **For items to PROMOTE:**
+   - Find the next sequential phase number in the active milestone
+   - Rename the directory from `999.x-slug` to `{new_num}-slug`:
+     ```bash
+     NEW_NUM=$(node "vendor/get-anything-done/bin/gad-tools.cjs" phase add "${DESCRIPTION}" --raw)
+     ```
+   - Move accumulated artifacts to the new phase directory
+   - Update ROADMAP.md: move the entry from `## Backlog` section to the active phase list
+   - Remove `(BACKLOG)` marker
+   - Add appropriate `**Depends on:**` field
+
+5. **For items to REMOVE:**
+   - Delete the phase directory
+   - Remove the entry from ROADMAP.md `## Backlog` section
+
+6. **Commit changes:**
+   ```bash
+   node "vendor/get-anything-done/bin/gad-tools.cjs" commit "docs: review backlog — promoted N, removed M" --files .planning/ROADMAP.md
+   ```
+
+7. **Report summary:**
+   ```
+   ## 📋 Backlog Review Complete
+
+   Promoted: {list of promoted items with new phase numbers}
+   Kept: {list of items remaining in backlog}
+   Removed: {list of deleted items}
+   ```
+
+</process>
+
+
+## gad:session-report
+id: gad-session-report
+description: Generate a session report with token usage estimates, work summary, and outcomes
+origin: human-authored
+
+<objective>
+Generate a structured SESSION_REPORT.md document capturing session outcomes, work performed, and estimated resource usage. Provides a shareable artifact for post-session review.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/session-report.md
+</execution_context>
+
+<process>
+Execute the session-report workflow from @vendor/get-anything-done/workflows/session-report.md end-to-end.
+</process>
+
+
+## gad:set-profile
+id: gad-set-profile
+description: Switch model profile for GAD agents (quality/balanced/budget/inherit)
+origin: human-authored
+
+
+Show the following output to the user verbatim, with no extra commentary:
+
+!`node "vendor/get-anything-done/bin/gad-tools.cjs" config-set-model-profile $ARGUMENTS --raw`
+
+
+## gad:settings
+id: gad-settings
+description: Configure GAD workflow toggles and model profile
+origin: human-authored
+
+
+<objective>
+Interactive configuration of GAD workflow agents and model profile via multi-question prompt.
+
+Routes to the settings workflow which handles:
+- Config existence ensuring
+- Current settings reading and parsing
+- Interactive 5-question prompt (model, research, plan_check, verifier, branching)
+- Config merging and writing
+- Confirmation display with quick command references
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/settings.md
+</execution_context>
+
+<process>
+**Follow the settings workflow** from `@vendor/get-anything-done/workflows/settings.md`.
+
+The workflow handles all logic including:
+1. Config file creation with defaults if missing
+2. Current config reading
+3. Interactive settings presentation with pre-selection
+4. Answer parsing and config merging
+5. File writing
+6. Confirmation display
+</process>
+
+
 ## gad-skill-creator
 id: gad-skill-creator
 description: >- Create GAD-tailored skills that use the GAD CLI, planning artifacts, and eval framework. Use when the user wants to create a new skill for the GAD workflow, turn a repetitive CLI pattern into a skill, evaluate an existing skill, or enhance a workflow by reviewing tasks for repeated commands. Also triggers on "make a skill for", "create skill", "we should have a skill that", "turn this into a skill", or when a task completion reveals repetitive CLI patterns. Immediately scaffolds an eval project for framework skills.
@@ -2044,6 +4654,407 @@ methodology — this GAD skill creator follows the same eval loop but adds:
 - Task attribution tagging
 - Enhance review workflow
 - Framework/workflow skill distinction
+
+
+## gad:stats
+id: gad-stats
+description: Display project statistics — phases, plans, requirements, git metrics, and timeline
+origin: human-authored
+
+<objective>
+Display comprehensive project statistics including phase progress, plan execution metrics, requirements completion, git history stats, and project timeline.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/stats.md
+</execution_context>
+
+<process>
+Execute the stats workflow from @vendor/get-anything-done/workflows/stats.md end-to-end.
+</process>
+
+
+## gad:thread
+id: gad-thread
+description: Manage persistent context threads for cross-session work
+origin: human-authored
+
+
+<objective>
+Create, list, or resume persistent context threads. Threads are lightweight
+cross-session knowledge stores for work that spans multiple sessions but
+doesn't belong to any specific phase.
+</objective>
+
+<process>
+
+**Parse $ARGUMENTS to determine mode:**
+
+<mode_list>
+**If no arguments or $ARGUMENTS is empty:**
+
+List all threads:
+```bash
+ls .planning/threads/*.md 2>/dev/null
+```
+
+For each thread, read the first few lines to show title and status:
+```
+## Active Threads
+
+| Thread | Status | Last Updated |
+|--------|--------|-------------|
+| fix-deploy-key-auth | OPEN | 2026-03-15 |
+| pasta-tcp-timeout | RESOLVED | 2026-03-12 |
+| perf-investigation | IN PROGRESS | 2026-03-17 |
+```
+
+If no threads exist, show:
+```
+No threads found. Create one with: /gad:thread <description>
+```
+</mode_list>
+
+<mode_resume>
+**If $ARGUMENTS matches an existing thread name (file exists):**
+
+Resume the thread — load its context into the current session:
+```bash
+cat ".planning/threads/${THREAD_NAME}.md"
+```
+
+Display the thread content and ask what the user wants to work on next.
+Update the thread's status to `IN PROGRESS` if it was `OPEN`.
+</mode_resume>
+
+<mode_create>
+**If $ARGUMENTS is a new description (no matching thread file):**
+
+Create a new thread:
+
+1. Generate slug from description:
+   ```bash
+   SLUG=$(node "vendor/get-anything-done/bin/gad-tools.cjs" generate-slug "$ARGUMENTS" --raw)
+   ```
+
+2. Create the threads directory if needed:
+   ```bash
+   mkdir -p .planning/threads
+   ```
+
+3. Write the thread file:
+   ```bash
+   cat > ".planning/threads/${SLUG}.md" << 'EOF'
+   # Thread: {description}
+
+   ## Status: OPEN
+
+   ## Goal
+
+   {description}
+
+   ## Context
+
+   *Created from conversation on {today's date}.*
+
+   ## References
+
+   - *(add links, file paths, or issue numbers)*
+
+   ## Next Steps
+
+   - *(what the next session should do first)*
+   EOF
+   ```
+
+4. If there's relevant context in the current conversation (code snippets,
+   error messages, investigation results), extract and add it to the Context
+   section.
+
+5. Commit:
+   ```bash
+   node "vendor/get-anything-done/bin/gad-tools.cjs" commit "docs: create thread — ${ARGUMENTS}" --files ".planning/threads/${SLUG}.md"
+   ```
+
+6. Report:
+   ```
+   ## 🧵 Thread Created
+
+   Thread: {slug}
+   File: .planning/threads/{slug}.md
+
+   Resume anytime with: /gad:thread {slug}
+   ```
+</mode_create>
+
+</process>
+
+<notes>
+- Threads are NOT phase-scoped — they exist independently of the roadmap
+- Lighter weight than /gad:pause-work — no phase state, no plan context
+- The value is in Context and Next Steps — a cold-start session can pick up immediately
+- Threads can be promoted to phases or backlog items when they mature:
+  /gad:add-phase or /gad:add-backlog with context from the thread
+- Thread files live in .planning/threads/ — no collision with phases or other GAD structures
+</notes>
+
+
+## gad:update
+id: gad-update
+description: Update GAD to latest version with changelog display
+origin: human-authored
+
+
+<objective>
+Check for GAD updates, install if available, and display what changed.
+
+Routes to the update workflow which handles:
+- Version detection (local vs global installation)
+- npm version checking
+- Changelog fetching and display
+- User confirmation with clean install warning
+- Update execution and cache clearing
+- Restart reminder
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/update.md
+</execution_context>
+
+<process>
+**Follow the update workflow** from `@vendor/get-anything-done/workflows/update.md`.
+
+The workflow handles all logic including:
+1. Installed version detection (local/global)
+2. Latest version checking via npm
+3. Version comparison
+4. Changelog fetching and extraction
+5. Clean install warning display
+6. User confirmation
+7. Update execution
+8. Cache clearing
+</process>
+
+
+## gad:validate-phase
+id: gad-validate-phase
+description: Retroactively audit and fill Nyquist validation gaps for a completed phase
+origin: human-authored
+
+<objective>
+Audit Nyquist validation coverage for a completed phase. Three states:
+- (A) VALIDATION.md exists — audit and fill gaps
+- (B) No VALIDATION.md, SUMMARY.md exists — reconstruct from artifacts
+- (C) Phase not executed — exit with guidance
+
+Output: updated VALIDATION.md + generated test files.
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/validate-phase.md
+</execution_context>
+
+<context>
+Phase: $ARGUMENTS — optional, defaults to last completed phase.
+</context>
+
+<process>
+Execute @vendor/get-anything-done/workflows/validate-phase.md.
+Preserve all workflow gates.
+</process>
+
+
+## gad:verify-work
+id: gad-verify-work
+description: Validate built features through conversational UAT
+origin: human-authored
+
+<objective>
+Validate built features through conversational testing with persistent state.
+
+Purpose: Confirm what Claude built actually works from user's perspective. One test at a time, plain text responses, no interrogation. When issues are found, automatically diagnose, plan fixes, and prepare for execution.
+
+Output: {phase_num}-UAT.md tracking all test results. If issues found: diagnosed gaps, verified fix plans ready for /gad:execute-phase
+</objective>
+
+<execution_context>
+@vendor/get-anything-done/workflows/verify-work.md
+@vendor/get-anything-done/templates/UAT.md
+</execution_context>
+
+<context>
+Phase: $ARGUMENTS (optional)
+- If provided: Test specific phase (e.g., "4")
+- If not provided: Check for active sessions or prompt for phase
+
+Context files are resolved inside the workflow (`init verify-work`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+Execute the verify-work workflow from @vendor/get-anything-done/workflows/verify-work.md end-to-end.
+Preserve all workflow gates (session management, test presentation, diagnosis, fix planning, routing).
+</process>
+
+
+## gad:workspace-add
+id: gad-workspace-add
+description: Add a path as a planning root in planning-config.toml
+origin: human-authored
+
+
+<objective>
+Add a new `[[planning.roots]]` entry to `planning-config.toml` for the given path.
+Creates `<path>/.planning/` if it doesn't exist.
+</objective>
+
+<process>
+
+Parse `$ARGUMENTS`:
+- First positional arg = path to add
+- `--id <name>` = optional explicit id (defaults to dirname of path)
+
+1. **Validate path exists:**
+   ```bash
+   ls "$PATH_ARG" 2>/dev/null || echo "PATH_NOT_FOUND"
+   ```
+   If the path doesn't exist, offer to create it.
+
+2. **Check for duplicate:**
+   Read `planning-config.toml` and verify the path isn't already registered.
+   If already present, show the existing entry and exit.
+
+3. **Ensure `.planning/` exists:**
+   ```bash
+   mkdir -p "$PATH_ARG/.planning"
+   ```
+
+4. **Append `[[planning.roots]]` entry** to `planning-config.toml`:
+   ```toml
+   [[planning.roots]]
+   id = "<id>"
+   path = "<path>"
+   planningDir = ".planning"
+   discover = false
+   ```
+
+5. **Confirm:**
+   ```
+   ✓ Added [<id>] → <path>/.planning/
+   ```
+
+</process>
+
+
+## gad:workspace-show
+id: gad-workspace-show
+description: Show all registered planning roots and their current status
+origin: human-authored
+
+
+<objective>
+Display all `[[planning.roots]]` entries from `planning-config.toml` with their
+current state (phase, milestone progress, last modified).
+</objective>
+
+<process>
+
+1. **Load config:**
+   ```bash
+   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning 2>/dev/null
+   ```
+
+2. **For each root**, read its STATE.md and ROADMAP.md:
+   ```bash
+   cat "<root.path>/<root.planningDir>/STATE.md" 2>/dev/null | head -30
+   ```
+
+3. **Display table:**
+   ```
+   GAD Workspaces — 3 roots registered
+
+   ID            PATH                      PHASE      MILESTONE
+   ──────────────────────────────────────────────────────────────
+   global        .                         3 / 8      M2
+   grime-time    vendor/grime-time-site    1 / 4      M1
+   get-anything-done  vendor/get-anything-done  —    —
+   ```
+
+4. Show `docs_sink` if configured:
+   ```
+   Docs sink: apps/portfolio/content/docs/planning
+   ```
+
+</process>
+
+
+## gad:workspace-sync
+id: gad-workspace-sync
+description: Crawl monorepo for .planning/ directories and sync planning-config.toml roots
+origin: human-authored
+
+
+<objective>
+Discover all `.planning/` directories in the repository and sync `[[planning.roots]]` entries
+in `planning-config.toml`. Entries already present are preserved. New entries are added.
+Removed directories prompt before deletion.
+</objective>
+
+<process>
+
+1. **Load current config:**
+   ```bash
+   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning.roots 2>/dev/null || echo "[]"
+   ```
+   Also read `planning-config.toml` directly to get existing roots.
+
+2. **Crawl for .planning/ directories:**
+   Find all `.planning/` directories from the repo root, excluding paths in `planning.ignore`:
+   ```bash
+   find . -name ".planning" -type d \
+     | grep -v node_modules | grep -v dist | grep -v .git \
+     | sort
+   ```
+
+3. **Compute diff:**
+   - For each discovered path not in `[[planning.roots]]`: show as **NEW**
+   - For each `[[planning.roots]]` path whose `.planning/` no longer exists: show as **REMOVED**
+   - For each `[[planning.roots]]` path still present: show as **OK**
+
+4. **Display summary:**
+   ```
+   Workspace sync — found N .planning/ directories
+
+   ✓ OK     [global]   ./.planning
+   + NEW    [?]        vendor/grime-time-site/.planning
+   ! REMOVED [old-sub]  vendor/deprecated/.planning  (dir missing)
+   ```
+   Auto-generate an `id` for new entries from the parent directory name.
+
+5. **Ask to apply** (if any changes):
+   ```
+   Apply changes to planning-config.toml? (y/n)
+   ```
+
+6. **Write updated `[[planning.roots]]`** to `planning-config.toml` (or `.planning/planning-config.toml`
+   following the file's current location).
+   - Add new entries with `discover = false`
+   - Remove confirmed-removed entries
+   - Preserve all other config unchanged
+
+7. **Confirm:**
+   ```
+   ✓ planning-config.toml updated — N roots registered
+   ```
+
+</process>
+
+<rules>
+- Never delete existing roots without explicit user confirmation
+- Preserve entry order: existing roots first, new roots appended
+- Auto-generated id = dirname of the entry's parent path (e.g., `vendor/my-proj` → `my-proj`)
+- If planning-config.toml doesn't exist, create it from the template at
+  `vendor/get-anything-done/templates/planning-config.toml`
+</rules>
 
 
 ## gad:manuscript
@@ -5067,7 +8078,17 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (142)
+# Decisions (143)
+
+## gad-146: Claude-facing model profiles stay off by default and use runtime-safe aliases when enabled
+
+### Summary
+
+Model profiles were present in prompts and references but had drifted out of the live workflow: gad-tools init no longer emitted the resolved model fields, the SDK default still assumed an always-on profile in some places, and the SDK path used a stale frozen Haiku model ID that failed at runtime. Policy: (1) `model_profile` defaults to `off` so GAD does not silently change models unless the operator opts in. (2) When enabled for Claude-facing runtimes, GAD passes Claude aliases (`opus`, `sonnet`, `haiku`, or `inherit`) instead of frozen full model IDs, allowing the runtime to resolve to a current accessible version. (3) Model switching must be considered real only when verified by runtime events such as Claude SessionInit, not just by prompt interpolation or unit tests. (4) Shared resolver logic lives in GAD and feeds both workflow init payloads and SDK/session paths, so prompt expectations and actual spawn behavior stay aligned.
+
+### Impact
+
+gad-tools init now emits resolved workflow model fields again. Claude SDK sessions no longer fail on a stale Haiku model ID and can be live-verified through SessionInit.model. Docs and tests move from balanced-by-default assumptions to off-by-default semantics. Future runtime-identity work in phase 35 builds on a working model-selection baseline instead of dead fields.
 
 ## gad-145: Candidate review lifecycle + configurable pressure formula + Shannon framing
 
@@ -6906,7 +9927,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (181)
+# Tasks (182)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -7269,6 +10290,8 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 - **35-02** [planned]: Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json.
 
 - **35-03** [planned]: Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.
+
+- **35-04** [done]: Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-safe Claude aliases when enabled, and a live verification path that proves a real Claude sub-session changed models.
 
 
 ---

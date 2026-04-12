@@ -882,10 +882,12 @@
     </task>
   </phase>
   <phase id="35">
-    <task id="35-01" status="planned"><goal>Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly.</goal>
+    <task id="35-01" status="done"><goal>Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly.</goal>
+      <resolution>Shipped 2026-04-12. Bumped trace schema to v5 and added a runtime envelope to trace events (`id`, `source`, `model`, `session_id`). Added runtime identity stamping to CLI `.gad-log` entries and TRACE.json scaffolds so eval runs can distinguish Claude Code vs Codex at the raw telemetry layer.</resolution>
       <keywords>trace,runtime-identity,claude,codex</keywords>
     </task>
-    <task id="35-02" status="planned"><goal>Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json.</goal>
+    <task id="35-02" status="done"><goal>Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json.</goal>
+      <resolution>Shipped 2026-04-12. Updated `gad-trace-hook.cjs` to emit runtime metadata on every skill/tool/subagent/file event, defaulting Claude hook traffic to `claude-code` and honoring `GAD_RUNTIME` for other runtimes. Verified end-to-end with a synthetic Claude hook event and a Codex-tagged CLI log entry.</resolution>
       <keywords>hooks,codex,claude,telemetry</keywords>
     </task>
     <task id="35-03" status="planned"><goal>Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.</goal>

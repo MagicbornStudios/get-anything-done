@@ -5,32 +5,34 @@
   <milestone>gad-v1.1</milestone>
   <status>active</status>
   <next-action>Phase 38 shipped (2026-04-12): skill candidates auto-drafted from high-pressure phases.
-Phase 35 model-profile restoration shipped (2026-04-12): off-by-default profile resolution restored for GAD workflows and Claude SDK sessions, with live verification that balanced resolves to Sonnet and budget resolves to Haiku in real Claude sub-sessions.
+Phase 35 runtime telemetry foundation shipped (2026-04-12): trace schema v5 now stamps runtime identity into raw hook events, CLI logs, and TRACE scaffolds for Claude Code vs Codex attribution.
+Canonical repo-root skills/ source shipped (2026-04-12): command-backed gad-* skills and workspace skills now compile from one tree, with runtime install/transpilation sourced from skills/.
 
 === SHIPPED ===
-- Restored shared model-profile resolution with default `off` semantics and workflow model emission in gad-tools init
-- Claude SDK sessions now use live-safe Claude aliases (`sonnet` / `haiku` / `opus`) instead of stale frozen model IDs
+- Restored shared model-profile resolution with default off semantics and workflow model emission in gad-tools init
+- Claude SDK sessions now use live-safe Claude aliases (sonnet / haiku / opus) instead of stale frozen model IDs
 - Added an opt-in live integration test for real model switching plus one-shot manual verification via SessionInit events
 - compute-self-eval.mjs now auto-drafts SKILL.md candidates for every high-pressure phase
-- 12 candidates landed in .agents/skills/candidates/ (phase-10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34)
+- 12 candidates landed in skills/candidates/ (phase-10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34)
 - Candidates have status: candidate, category: System, origin: auto-drafted in frontmatter
-- build-site-data.mjs catalog scanner now excludes candidates/ directory (quarantined from live catalog)
-- PlanningSkillCandidatesTab component with info icon HoverCard explaining the feedback loop
-- New "Skill candidates" tab on /planning page showing draft metadata, source phase, and task list expansion
+- Canonical skills now live at repo-root skills/ with COMMAND.md + skill.json for command-backed gad-* skills
+- gad install all --claude/--codex now installs from canonical skills/ and transpiles into runtime-native layouts
+- build-site-data.mjs, release support, and release-surface gating now read skills/ as the authored source of truth
+- gad-trace-hook now emits runtime metadata on each event; gad CLI logs now stamp runtime identity; TRACE scaffolds/from-log preserve runtime_identity
 
 === DECISIONS ===
 GAD-D-144: Skill candidates quarantine and review workflow
 GAD-D-146: Claude-facing model profiles use aliases and stay off by default
 
 === NEXT ===
-1. Execute phase 35-01 through 35-03 (runtime identity) — model switching now works, telemetry attribution still needs to land
-2. Execute phase 36 (per-eval repos + command split)
-3. Phase 37 (gad project) queued, depends on 36
+1. Finish phase 35-03: surface runtime identity more explicitly in eval report/self-eval/site UI
+2. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap
+3. Execute phase 36 (per-eval repos + command split)
 4. Manually review 12 candidates on the site and decide: promote, merge, or discard
 
 === SELF-EVAL (latest) ===
-3,468 events | 191 tasks (185 done) | 141 decisions
-Framework overhead: 23.5% | Loop compliance: 80%
+3,516 events | 192 tasks (186 done) | 143 decisions
+Framework overhead: 23.6% | Loop compliance: 80%
 Skill candidates: 12</next-action>
   <last-updated>2026-04-12</last-updated>
 </state>

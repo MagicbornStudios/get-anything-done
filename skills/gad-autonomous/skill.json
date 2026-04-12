@@ -1,0 +1,6 @@
+{
+  "id": "gad-autonomous",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "autonomous.md"
+}

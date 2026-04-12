@@ -1,0 +1,6 @@
+{
+  "id": "gad-session-report",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "session-report.md"
+}

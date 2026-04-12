@@ -1,0 +1,6 @@
+{
+  "id": "gad-pause-work",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "pause-work.md"
+}

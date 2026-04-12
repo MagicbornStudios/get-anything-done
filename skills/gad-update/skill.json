@@ -1,0 +1,6 @@
+{
+  "id": "gad-update",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "update.md"
+}

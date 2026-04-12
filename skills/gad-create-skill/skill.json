@@ -1,0 +1,6 @@
+{
+  "id": "gad-create-skill",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "create-skill.md"
+}

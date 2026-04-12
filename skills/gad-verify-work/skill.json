@@ -1,0 +1,6 @@
+{
+  "id": "gad-verify-work",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "verify-work.md"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "gad-reapply-patches",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "reapply-patches.md"
+}

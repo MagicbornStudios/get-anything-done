@@ -1,0 +1,6 @@
+{
+  "id": "gad-cleanup",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "cleanup.md"
+}

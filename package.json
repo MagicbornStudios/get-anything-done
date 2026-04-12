@@ -7,7 +7,6 @@
     "gad": "bin/gad.cjs"
   },
   "files": [
-    ".agents",
     "bin",
     "commands",
     "dist",
@@ -15,6 +14,7 @@
     "hooks/dist",
     "lib",
     "references",
+    "skills",
     "templates",
     "workflows",
     "scripts"
@@ -55,6 +55,7 @@
     "vitest": "^4.1.2"
   },
   "scripts": {
+    "build:skills": "node scripts/sync-canonical-skills.mjs",
     "build:cli": "node scripts/build-cli.mjs",
     "build:hooks": "node scripts/build-hooks.js",
     "build:release-support": "node scripts/build-release-support.mjs",

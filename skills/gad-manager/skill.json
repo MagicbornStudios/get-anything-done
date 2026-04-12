@@ -1,0 +1,6 @@
+{
+  "id": "gad-manager",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "manager.md"
+}

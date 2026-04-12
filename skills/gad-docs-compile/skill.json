@@ -1,0 +1,6 @@
+{
+  "id": "gad-docs-compile",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "docs-compile.md"
+}

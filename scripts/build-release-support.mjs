@@ -13,13 +13,13 @@ const RUNTIME_DIR = join(SUPPORT_DIR, 'get-anything-done');
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
 const SUPPORT_ENTRIES = [
-  '.agents/skills',
   'agents',
   'bin',
   'commands',
   'dist/gad.cjs',
   'hooks/dist',
   'references',
+  'skills',
   'templates',
   'workflows',
   'CHANGELOG.md',

@@ -1,0 +1,6 @@
+{
+  "id": "gad-audit-uat",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "audit-uat.md"
+}

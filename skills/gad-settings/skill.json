@@ -1,0 +1,6 @@
+{
+  "id": "gad-settings",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "settings.md"
+}

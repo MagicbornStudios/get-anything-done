@@ -1,0 +1,6 @@
+{
+  "id": "gad-add-todo",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "add-todo.md"
+}

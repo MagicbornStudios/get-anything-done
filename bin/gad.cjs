@@ -131,6 +131,20 @@ let _logDir = null;
 let _logStart = Date.now();
 let _logCmd = process.argv.slice(2).join(' ');
 
+function detectRuntimeIdentity() {
+  const model = process.env.GAD_MODEL || process.env.CLAUDE_MODEL || process.env.OPENAI_MODEL || null;
+  if (process.env.GAD_RUNTIME) {
+    return { id: process.env.GAD_RUNTIME, source: 'env', model };
+  }
+  if (process.env.CODEX_HOME) {
+    return { id: 'codex', source: 'env', model };
+  }
+  if (process.env.CLAUDE_CONFIG_DIR || process.env.CLAUDECODE || process.env.CLAUDE_CODE_ENTRYPOINT) {
+    return { id: 'claude-code', source: 'env', model };
+  }
+  return { id: 'unknown', source: 'unknown', model };
+}
+
 function getLogDir() {
   if (_logDir) return _logDir;
   if (GAD_LOG_DIR) {
@@ -158,6 +172,7 @@ function logCall(overrides = {}) {
     exit: overrides.exit || 0,
     summary: overrides.summary || '',
     pid: process.pid,
+    runtime: detectRuntimeIdentity(),
   };
   const logFile = path.join(dir, `${new Date().toISOString().slice(0, 10)}.jsonl`);
   try {
@@ -1683,6 +1698,7 @@ const evalRun = defineCommand({
       gad_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
       framework_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
       trace_schema_version: 4,
+      runtime_identity: detectRuntimeIdentity(),
       eval_type: gadJson.eval_mode || 'greenfield',
       workflow: gadJson.workflow || 'unknown',
       domain: gadJson.domain || null,
@@ -2315,6 +2331,7 @@ const evalTraceInit = defineCommand({
       framework_commit_ts: fv.commit_ts,
       framework_stamp: fv.stamp,
       trace_schema_version: 4,
+      runtime_identity: detectRuntimeIdentity(),
       eval_type: 'implementation',
       context_mode: args.mode,
       timing: {
@@ -2812,6 +2829,13 @@ const evalTraceFromLog = defineCommand({
     const readCalls = entries.filter(e => e.tool === 'Read');
     const writeCalls = entries.filter(e => e.tool === 'Write');
     const editCalls = entries.filter(e => e.tool === 'Edit');
+    const runtimeCounts = new Map();
+    for (const entry of entries) {
+      const runtimeId = entry.runtime?.id || entry.runtime_id || 'unknown';
+      runtimeCounts.set(runtimeId, (runtimeCounts.get(runtimeId) || 0) + 1);
+    }
+    const runtimeEntries = Array.from(runtimeCounts.entries()).sort((a, b) => b[1] - a[1]);
+    const primaryRuntime = runtimeEntries[0]?.[0] || 'unknown';
 
     // Time range
     const timestamps = entries.map(e => new Date(e.ts).getTime()).filter(t => !isNaN(t));
@@ -2836,6 +2860,13 @@ const evalTraceFromLog = defineCommand({
       date: new Date().toISOString().slice(0, 10),
       gad_version: pkg.version,
       source: 'call-log',  // distinguishes from 'git-reconstructed'
+      trace_schema_version: 5,
+      runtime_identity: {
+        id: primaryRuntime,
+        source: 'log-derived',
+        model: entries.find(e => e.runtime?.model)?.runtime?.model || null,
+      },
+      runtimes_involved: runtimeEntries.map(([id, count]) => ({ id, count })),
       timing: {
         started: startTime,
         ended: endTime,

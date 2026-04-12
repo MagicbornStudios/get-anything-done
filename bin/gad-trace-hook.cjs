@@ -88,6 +88,15 @@ function getSeqFile(projectRoot) {
   return path.join(projectRoot, '.planning', '.trace-seq');
 }
 
+function detectRuntime(payload) {
+  return {
+    id: process.env.GAD_RUNTIME || payload.runtime || 'claude-code',
+    source: process.env.GAD_RUNTIME ? 'env' : 'hook-runtime',
+    model: payload.model || payload.model_name || null,
+    session_id: payload.session_id || null,
+  };
+}
+
 function readNextSeq(projectRoot) {
   const seqFile = getSeqFile(projectRoot);
   let current = 0;
@@ -188,7 +197,7 @@ function logHookError(hookName, error) {
 
 const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit']);
 
-function eventsForPostToolUse({ seq, toolName, toolInput, toolResponse, triggerSkill }) {
+function eventsForPostToolUse({ seq, runtime, toolName, toolInput, toolResponse, triggerSkill }) {
   const events = [];
 
   // Every PostToolUse produces a tool_use event.
@@ -208,6 +217,7 @@ function eventsForPostToolUse({ seq, toolName, toolInput, toolResponse, triggerS
   events.push(
     makeToolUseEvent({
       seq,
+      runtime,
       tool: toolName || 'unknown',
       inputs,
       outputs: truncated.value,
@@ -230,6 +240,7 @@ function eventsForPostToolUse({ seq, toolName, toolInput, toolResponse, triggerS
     events.push(
       makeSubagentSpawnEvent({
         seq: seq + 0.1, // slight offset so ordering is preserved
+        runtime,
         agentId,
         inputs: taskInputs,
         outputs: truncated.value,
@@ -256,6 +267,7 @@ function eventsForPostToolUse({ seq, toolName, toolInput, toolResponse, triggerS
     events.push(
       makeFileMutationEvent({
         seq: seq + 0.2,
+        runtime,
         filePath,
         op,
         sizeDelta,
@@ -275,7 +287,7 @@ function eventsForPostToolUse({ seq, toolName, toolInput, toolResponse, triggerS
  * The "previously-recorded" state is stored in .planning/.trace-last-skill
  * alongside the marker file itself. On first call it's empty.
  */
-function maybeSkillInvocationEvent(projectRoot, seq) {
+function maybeSkillInvocationEvent(projectRoot, seq, runtime) {
   const currentSkill = readActiveSkill(projectRoot);
   const lastSkillFile = path.join(projectRoot, '.planning', '.trace-last-skill');
   let previousSkill = null;
@@ -301,6 +313,7 @@ function maybeSkillInvocationEvent(projectRoot, seq) {
   if (currentSkill) {
     return makeSkillInvocationEvent({
       seq,
+      runtime,
       skillId: currentSkill,
       parent: previousSkill,
       triggerContext: 'marker_file',
@@ -311,6 +324,7 @@ function maybeSkillInvocationEvent(projectRoot, seq) {
   // downstream aggregator can see the end-of-skill signal.
   return makeSkillInvocationEvent({
     seq,
+    runtime,
     skillId: '',
     parent: previousSkill,
     triggerContext: 'marker_file',
@@ -338,6 +352,7 @@ async function main() {
 
   const cwd = payload.cwd || process.cwd();
   const projectRoot = findProjectRoot(cwd);
+  const runtime = detectRuntime(payload);
   const hookEvent = payload.hook_event_name || '';
   const toolName = payload.tool_name || '';
   const toolInput = payload.tool_input || {};
@@ -347,7 +362,7 @@ async function main() {
     // Always check for skill transitions first so a skill_invocation event
     // (if any) is written before the tool_use event that triggered the hook.
     const skillSeq = readNextSeq(projectRoot);
-    const skillEvent = maybeSkillInvocationEvent(projectRoot, skillSeq);
+    const skillEvent = maybeSkillInvocationEvent(projectRoot, skillSeq, runtime);
     const activeSkill = readActiveSkill(projectRoot);
 
     if (skillEvent) {
@@ -360,6 +375,7 @@ async function main() {
       const toolSeq = readNextSeq(projectRoot);
       const events = eventsForPostToolUse({
         seq: toolSeq,
+        runtime,
         toolName,
         toolInput,
         toolResponse,
