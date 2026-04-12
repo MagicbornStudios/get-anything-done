@@ -1,31 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>34</current-phase>
-  <current-plan>.planning/plans/phase-34/PLAN.md</current-plan>
+  <current-phase>36</current-phase>
+  <current-plan>.planning/plans/phase-36/PLAN.md</current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 34 shipped. Phase 36 spec drafted at .planning/specs/PER-EVAL-REPO-SPEC.md.
+  <next-action>Phases 35 + 36 planned in parallel (2026-04-12). PLAN.md written for both. Ready for execute-phase.
 
-=== JUST DRAFTED (spec only, no code yet) ===
-Phase 36: Per-eval-repo architecture + gad eval start/auto/finish split + gad env
-  Spec: .planning/specs/PER-EVAL-REPO-SPEC.md
-  Decisions: GAD-D-139 through GAD-D-143
-  - GAD-D-139: One GitHub repo per eval project, runs as round-N/vM/ directories
-  - GAD-D-140: Split gad eval run into start/auto/finish (run becomes deprecated alias)
-  - GAD-D-141: Deprecate gad eval suite in favor of gad project run-round (phase 37)
-  - GAD-D-142: Skill tracking is GAD-workflow-only, trace-active-skill hook is dead code
-  - GAD-D-143: gad env status / gad env agents for runtime availability checks
+=== PLANS LANDED ===
+Phase 35: .planning/plans/phase-35/PLAN.md — 6 tasks, 6 milestones
+  Runtime identity detection lib, TRACE scaffold, hook wiring, self-eval aggregation, site badges, smoke test
+  Schema: runtime.primary / runtime.provenance / runtime.self_declared
 
-Phase 37 added to roadmap: gad project top-level command (depends on 36).
+Phase 36: .planning/plans/phase-36/PLAN.md — 22 tasks, 6 milestones
+  A: gad env (3 tasks) — runtime detection + preflight
+  B: Dead code removal (2 tasks) — trace-active-skill cleanup
+  C: gad eval start (4 tasks) — per-eval repo + scoped clone
+  D: gad eval auto (3 tasks) — runtime shell-out + streaming
+  E: gad eval finish (5 tasks) — preserve + push + Option C cache + aliases
+  F: Site + docs + smoke (5 tasks) — docs, site pipeline, end-to-end test
 
-=== PHASE ORDER ===
-35 (planned) - Cross-runtime identity + telemetry attribution (needs its own planning)
-36 (planned) - Per-eval-repo architecture (spec ready, needs plan-phase + execute-phase)
-37 (planned) - gad project top-level command (depends on 36)
+=== SELF-EVAL (just ran) ===
+3,450 events | 191 tasks (185 done) | 140 decisions
+Framework overhead: 23.3% (score 0.7)
+Loop compliance: 80%
+High-pressure phases: 10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34
 
 === NEXT ===
-1. Run gad:plan-phase 36 to create the executable PLAN.md from the spec
-2. Execute phase 36 via gad:execute-phase
-3. Phase 35 can parallel if scoped to runtime identity only (the TRACE fields 36 consumes)</next-action>
+1. Execute phase 35 (runtime identity) — unblocks phase 36 runtime.primary field consumption
+2. Execute phase 36 (per-eval repos + command split) — uses phase 35 output
+3. Phase 35 Milestones A+B can start immediately; Milestone B (dead hook code) is isolated
+4. Phase 37 (gad project) still queued, depends on 36
+
+=== GAPS FLAGGED BY PLANNERS ===
+10 open spec questions for phase 36 (sparse-checkout vs strip, cursor-agent format, TRACE cache shape, flag naming --project vs --projectid, score integration, rollback story)
+These are tracked in .planning/plans/phase-36/PLAN.md's "Open questions" section.</next-action>
   <last-updated>2026-04-12</last-updated>
 </state>

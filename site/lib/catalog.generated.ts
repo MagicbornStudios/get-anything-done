@@ -1764,10 +1764,10 @@ export const FINDINGS: Finding[] = [
 ];
 
 export const PLANNING_STATE: PlanningState = {
-  "currentPhase": "29",
+  "currentPhase": "34",
   "milestone": "gad-v1.1",
-  "nextAction": "Phase 29 complete: GAD CLI build/release pipeline + operational distinction (4 tasks, 2 commits). esbuild bundles CLI into single dist/gad.cjs (484KB). Portfolio /gad page live with operational distinction, hypothesis matrix, catalog.\n\n=== DONE THIS SESSION ===\n- scripts/build-cli.mjs — esbuild bundler for dist/gad.cjs\n- package.json: build:cli, prepublishOnly, dist/ + lib/ in files\n- Quick start verified: source and bundled CLI both work\n- Portfolio /gad page: operational CLI distinction, hypothesis matrix, catalog, loop, CLI ref\n\n=== NEXT ===\n1. Run evals (round 5, tech-stacks, reverse-engineer)\n2. Phase 27: structured objective data production\n3. Phase 33: reverse-engineer eval methodology\n4. Phase 28: /project-market + site architecture overhaul",
-  "lastUpdated": "2026-04-10",
+  "nextAction": "Phase 34 shipped. Phase 36 spec drafted at .planning/specs/PER-EVAL-REPO-SPEC.md.\n\n=== JUST DRAFTED (spec only, no code yet) ===\nPhase 36: Per-eval-repo architecture + gad eval start/auto/finish split + gad env\n  Spec: .planning/specs/PER-EVAL-REPO-SPEC.md\n  Decisions: GAD-D-139 through GAD-D-143\n  - GAD-D-139: One GitHub repo per eval project, runs as round-N/vM/ directories\n  - GAD-D-140: Split gad eval run into start/auto/finish (run becomes deprecated alias)\n  - GAD-D-141: Deprecate gad eval suite in favor of gad project run-round (phase 37)\n  - GAD-D-142: Skill tracking is GAD-workflow-only, trace-active-skill hook is dead code\n  - GAD-D-143: gad env status / gad env agents for runtime availability checks\n\nPhase 37 added to roadmap: gad project top-level command (depends on 36).\n\n=== PHASE ORDER ===\n35 (planned) - Cross-runtime identity + telemetry attribution (needs its own planning)\n36 (planned) - Per-eval-repo architecture (spec ready, needs plan-phase + execute-phase)\n37 (planned) - gad project top-level command (depends on 36)\n\n=== NEXT ===\n1. Run gad:plan-phase 36 to create the executable PLAN.md from the spec\n2. Execute phase 36 via gad:execute-phase\n3. Phase 35 can parallel if scoped to runtime identity only (the TRACE fields 36 consumes)",
+  "lastUpdated": "2026-04-12",
   "phases": [
     {
       "id": "01",
@@ -1912,7 +1912,7 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "28",
       "title": "/project-market + site architecture overhaul",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "29",
@@ -1927,7 +1927,7 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "31",
       "title": "Skill ecosystem — provenance, creation workflow, evaluation",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "32",
@@ -1938,6 +1938,26 @@ export const PLANNING_STATE: PlanningState = {
       "id": "33",
       "title": "Reverse-engineer eval + methodology evaluation",
       "status": "planned"
+    },
+    {
+      "id": "34",
+      "title": "Executable release pipeline + GitHub-first distribution",
+      "status": "done"
+    },
+    {
+      "id": "35",
+      "title": "Cross-runtime identity + telemetry attribution",
+      "status": "planned"
+    },
+    {
+      "id": "36",
+      "title": "Per-eval-repo architecture + gad eval start/auto/finish + gad env",
+      "status": "planned"
+    },
+    {
+      "id": "37",
+      "title": "gad project — top-level project lifecycle command",
+      "status": "planned"
     }
   ],
   "openTasks": [
@@ -1945,10 +1965,70 @@ export const PLANNING_STATE: PlanningState = {
       "id": "21-23b",
       "status": "planned",
       "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's …"
+    },
+    {
+      "id": "35-01",
+      "status": "planned",
+      "goal": "Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly."
+    },
+    {
+      "id": "35-02",
+      "status": "planned",
+      "goal": "Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json."
+    },
+    {
+      "id": "35-03",
+      "status": "planned",
+      "goal": "Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts."
     }
   ],
-  "doneTasksCount": 158,
+  "doneTasksCount": 163,
   "recentDecisions": [
+    {
+      "id": "gad-143",
+      "title": "gad env status / gad env agents — runtime availability checks",
+      "summary": "Before any eval operation (start/auto/finish), the CLI must verify that required runtimes are available. gad env status prints a table of: Claude Code CLI (claude), Codex CLI (codex), Cursor Agent (cursor-agent), GitHub CLI (gh) + auth status, Node version, git version. Missing tools show install links. gad env agents is a shorter alias focused on just coding agent runtimes. gad eval auto fails fa"
+    },
+    {
+      "id": "gad-142",
+      "title": "Skill/agent tracking is GAD-workflow-only, not universal",
+      "summary": "The skill and agent attributes on TASK-REGISTRY.xml tasks (decision GAD-D-104) only apply when the agent is using the full GAD workflow. Bare and emergent conditions have minimal or agent-defined planning artifacts — forcing skill tracking on them would contaminate the Freedom/CSH hypothesis measurements. Non-GAD evals are evaluated on outcomes only: git diffs, file mutations, commit rhythm, build"
+    },
+    {
+      "id": "gad-141",
+      "title": "gad eval suite replaced by gad project run-round",
+      "summary": "The batch eval runner is now project-centric. Instead of gad eval suite (which operates on arbitrary eval project lists), use gad project run-round --projectid &lt;id&gt; --roundnumber &lt;N&gt; [--runtime codex|claude|cursor] which executes all eval variants in the specified round for the specified project. Multiple project ids can be passed for parallel execution. Without --runtime, generates pr"
+    },
+    {
+      "id": "gad-140",
+      "title": "gad eval run → start / auto / finish — explicit command split",
+      "summary": "The existing gad eval run command conflates scaffolding with execution. Split into three commands: gad eval start (scaffold run dir, create eval repo clone if needed, generate PROMPT.md + TRACE.json, hand off to external agent — matches current \"run --execute\" behavior), gad eval auto (scaffold THEN shell out to a coding agent CLI via --runtime codex|claude|cursor, stream output, wait, automatical"
+    },
+    {
+      "id": "gad-139",
+      "title": "Per-eval-repo architecture — one GitHub repo per eval project, directories for runs",
+      "summary": "Each eval project (e.g. escape-the-dungeon-bare) gets its own GitHub repository (private initially). Runs live as directories inside the repo: round-N/vM/. The main monorepo only holds eval metadata (gad.json + lightweight TRACE.json reference), not the actual source/build artifacts. This prevents the monorepo from ballooning as brownfield codebases and content packs are injected. gad eval start/a"
+    },
+    {
+      "id": "gad-138",
+      "title": "Standalone gad executables use Node SEA with an injected support payload",
+      "summary": "The executable distribution for gad is implemented as a standalone binary built with Node SEA and postject. The binary embeds a packaged support payload containing the CLI bundle, installer entrypoint, hooks, commands, templates, workflows, references, agents, and skills. On first run, the executable extracts that payload into a versioned runtime directory under the user's profile and dispatches t"
+    },
+    {
+      "id": "gad-137",
+      "title": "Runtime identity in eval telemetry is runtime-derived first, self-declared second",
+      "summary": "Eval telemetry must distinguish the coding agent runtime that produced a run: Claude Code, Codex, Cursor, and future supported agents. The preferred source is runtime-derived metadata from hooks, config, or environment. A secondary self-declared identity may be recorded by the agent at task/session start, but self-report alone is not sufficient for trustworthy evaluation data. TRACE.json and relat"
+    },
+    {
+      "id": "gad-136",
+      "title": "Executable release overhead is gated to shipped CLI surface changes only",
+      "summary": "Building and publishing new GAD executables should happen only when the shipped CLI surface changes. Triggering inputs include changes under bin/, lib/, hooks/, package.json, build/release scripts, or any file bundled into the released artifact. Site content, eval results, planning docs, starters, and other non-shipped repo changes must not force a new executable release. Windows remains the prima"
+    },
+    {
+      "id": "gad-135",
+      "title": "GAD distribution is GitHub-first: executable releases + skills.sh, not npm publish",
+      "summary": "GAD should not rely on public npm publication as the primary distribution path. The official install story is: (1) download a GitHub Release executable for the gad operational CLI, and (2) install the published GAD skills from the GitHub repo via skills.sh / `npx skills add`. Users who already have Node may optionally install or run the CLI directly from the GitHub repo, but that is a secondary co"
+    },
     {
       "id": "gad-134",
       "title": "Site reusability review needed — cut down on duplicate edits",
@@ -1963,51 +2043,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-132",
       "title": "Projects have evals, evals have rounds, rounds triggered by requirements changes",
       "summary": "Conceptual hierarchy: Project → eval projects → rounds. A round is triggered when requirements change. Within a round, requirements can iterate without triggering a new round until new evals branch or the contract fundamentally changes. Per-project round windows for display filtering."
-    },
-    {
-      "id": "gad-131",
-      "title": "Rubric belongs on project detail and eval pages, not standalone /rubric",
-      "summary": "The /rubric page content should live on project detail pages and eval run pages where it's contextual. A standalone /rubric page may remain as a methodology reference but the primary rubric experience is per-project and per-run."
-    },
-    {
-      "id": "gad-130",
-      "title": "/project-market — dedicated catalog page for all eval projects",
-      "summary": "Ship /project-market as the dedicated catalog page listing ALL eval projects (not just ETD + explainer). ETD and explainer are featured/canonical (pinned, badged) but not exclusive. Default filter: last 5 rounds per project (not global). Home page playable archive shrinks to a teaser linking to /project-market. Full handoff spec committed as PROJECT-MARKET-SPEC.md. Projects own rounds. Requirement"
-    },
-    {
-      "id": "gad-129",
-      "title": "Official build/release pipeline for GAD CLI — Windows first, publish ourselves",
-      "summary": "Ship an official build/release pipeline for the GAD CLI. Windows first (build on this machine, publish ourselves). Mac and Linux can use GitHub workflows. Users install via npx get-anything-done or a published binary. The CLI should let users set up blank projects or eval projects. The /quickstart flow: install coding agent CLI → install GAD → set up project or eval → run."
-    },
-    {
-      "id": "gad-128",
-      "title": "GAD CLI is an operational CLI — distinct from coding agent CLIs",
-      "summary": "The GAD CLI (gad) is an operational CLI for the GAD framework and ecosystem. It is NOT a coding agent CLI like Claude Code CLI or Codex CLI. Those are coding agent runtimes. GAD provides commands, agents, skills, and artifacts FOR those coding agent CLIs. The site must make this distinction clear — framework + catalog on the same page, with the GAD CLI described as operational tooling that agents "
-    },
-    {
-      "id": "gad-125",
-      "title": "ID format: per-project namespace + type prefix + number",
-      "summary": "IDs encode project, artifact type, and number. Format: PROJECT-TYPE-NUMBER. Examples: GAD-D-119 (GAD decision 119), GAD-T-22-01 (GAD task phase 22 task 01), GAD-P-22 (GAD phase 22), ETD-T-3-01 (escape-the-dungeon task). Type codes: D=decision, T=task, P=phase, R=requirement, B=bug, S=skill. Namespace is per-project (GAD, ETD, GRIME, etc.) not always \"GAD\" — GAD is the project name, not a framework"
-    },
-    {
-      "id": "gad-124",
-      "title": "Playable archive becomes a dedicated /evals page — catalog/marketplace pattern",
-      "summary": "The current playable archive on the landing page works for showing the last 5 rounds of game builds. But we need a dedicated /evals page that shows ALL evals across ALL rounds as a catalog/marketplace. Filter by domain, tech stack, round, workflow, review status. Show build size + source size. Show skill provenance. Show eval relationships (e.g., reverse-engineer → build-from-requirements). Everyt"
-    },
-    {
-      "id": "gad-123",
-      "title": "Docs must be on the site — docs/ markdown files need site routes",
-      "summary": "Documentation in docs/ (quick-start.md, eval-guide.md) must be rendered as routes on the site, not just exist as markdown files in the repo. The site is the primary documentation surface. Docs routes: /quickstart, /eval-guide. These should be built from the markdown files during prebuild, same as other content."
-    },
-    {
-      "id": "gad-122",
-      "title": "gad self-eval CLI command for pressure and framework metrics",
-      "summary": "Add `gad self-eval` CLI command that runs the compute-self-eval pipeline and prints findings. Pipeline scripts should have corresponding CLI commands so agents and users can invoke them. `gad self-eval` runs compute-self-eval.mjs and outputs: pressure per phase, overhead ratio, loop compliance, high-pressure phases. This is the CLI-first principle from gad-99."
-    },
-    {
-      "id": "gad-121",
-      "title": "Rounds are per-project, defined by requirements version changes",
-      "summary": "A \"round\" for a project is defined when its requirements document changes version. Each eval project has its own round timeline, not a single global round number. The current global rounds (1-5) are specific to the escape-the-dungeon family. Other projects (reverse-engineer, skill-evaluation-app, etc.) have their own round 1 when they first run. Round number is derived from the requirements_versio"
     }
   ]
 };
