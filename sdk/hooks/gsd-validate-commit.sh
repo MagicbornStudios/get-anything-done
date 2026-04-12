@@ -2,7 +2,7 @@
 # gsd-validate-commit.sh — PreToolUse hook: enforce Conventional Commits format
 # Blocks git commit commands with non-conforming messages (exit 2).
 # Allows conforming messages and all non-commit commands (exit 0).
-# Uses Node.js for JSON parsing (always available in GSD projects, no jq dependency).
+# Uses Node.js for JSON parsing (always available in GAD projects, no jq dependency).
 #
 # OPT-IN: This hook is a no-op unless config.json has hooks.community: true.
 # Enable with: "hooks": { "community": true } in .planning/config.json

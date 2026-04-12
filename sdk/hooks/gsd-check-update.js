@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GSD_VERSION}}
-// Check for GSD updates in background, write result to cache
+// gsd-hook-version: {{GAD_VERSION}}
+// Check for GAD updates in background, write result to cache
 // Called by SessionStart hook - runs once per session
 
 const fs = require('fs');
@@ -14,13 +14,12 @@ const cwd = process.cwd();
 // Detect runtime config directory (supports Claude, OpenCode, Gemini)
 // Respects CLAUDE_CONFIG_DIR for custom config directory setups
 function detectConfigDir(baseDir) {
-  // Check env override first (supports multi-account setups)
   const envDir = process.env.CLAUDE_CONFIG_DIR;
-  if (envDir && fs.existsSync(path.join(envDir, 'get-shit-done', 'VERSION'))) {
+  if (envDir && fs.existsSync(path.join(envDir, 'get-anything-done', 'VERSION'))) {
     return envDir;
   }
   for (const dir of ['.config/opencode', '.opencode', '.gemini', '.claude']) {
-    if (fs.existsSync(path.join(baseDir, dir, 'get-shit-done', 'VERSION'))) {
+    if (fs.existsSync(path.join(baseDir, dir, 'get-anything-done', 'VERSION'))) {
       return path.join(baseDir, dir);
     }
   }
@@ -29,22 +28,16 @@ function detectConfigDir(baseDir) {
 
 const globalConfigDir = detectConfigDir(homeDir);
 const projectConfigDir = detectConfigDir(cwd);
-// Use a shared, tool-agnostic cache directory to avoid multi-runtime
-// resolution mismatches where check-update writes to one runtime's cache
-// but statusline reads from another (#1421).
-const cacheDir = path.join(homeDir, '.cache', 'gsd');
-const cacheFile = path.join(cacheDir, 'gsd-update-check.json');
+const cacheDir = path.join(homeDir, '.cache', 'gad');
+const cacheFile = path.join(cacheDir, 'gad-update-check.json');
 
-// VERSION file locations (check project first, then global)
-const projectVersionFile = path.join(projectConfigDir, 'get-shit-done', 'VERSION');
-const globalVersionFile = path.join(globalConfigDir, 'get-shit-done', 'VERSION');
+const projectVersionFile = path.join(projectConfigDir, 'get-anything-done', 'VERSION');
+const globalVersionFile = path.join(globalConfigDir, 'get-anything-done', 'VERSION');
 
-// Ensure cache directory exists
 if (!fs.existsSync(cacheDir)) {
   fs.mkdirSync(cacheDir, { recursive: true });
 }
 
-// Run check in background (spawn background process, windowsHide prevents console flash)
 const child = spawn(process.execPath, ['-e', `
   const fs = require('fs');
   const path = require('path');
@@ -54,7 +47,6 @@ const child = spawn(process.execPath, ['-e', `
   const projectVersionFile = ${JSON.stringify(projectVersionFile)};
   const globalVersionFile = ${JSON.stringify(globalVersionFile)};
 
-  // Check project directory first (local install), then global
   let installed = '0.0.0';
   let configDir = '';
   try {
@@ -67,8 +59,6 @@ const child = spawn(process.execPath, ['-e', `
     }
   } catch (e) {}
 
-  // Check for stale hooks — compare hook version headers against installed VERSION
-  // Hooks are installed at configDir/hooks/ (e.g. ~/.claude/hooks/) (#1421)
   let staleHooks = [];
   if (configDir) {
     const hooksDir = path.join(configDir, 'hooks');
@@ -85,7 +75,6 @@ const child = spawn(process.execPath, ['-e', `
                 staleHooks.push({ file: hookFile, hookVersion, installedVersion: installed });
               }
             } else {
-              // No version header at all — definitely stale (pre-version-tracking)
               staleHooks.push({ file: hookFile, hookVersion: 'unknown', installedVersion: installed });
             }
           } catch (e) {}
@@ -96,7 +85,7 @@ const child = spawn(process.execPath, ['-e', `
 
   let latest = null;
   try {
-    latest = execSync('npm view get-shit-done-cc version', { encoding: 'utf8', timeout: 10000, windowsHide: true }).trim();
+    latest = execSync('npm view get-anything-done version', { encoding: 'utf8', timeout: 10000, windowsHide: true }).trim();
   } catch (e) {}
 
   const result = {
@@ -111,7 +100,7 @@ const child = spawn(process.execPath, ['-e', `
 `], {
   stdio: 'ignore',
   windowsHide: true,
-  detached: true  // Required on Windows for proper process detachment
+  detached: true
 });
 
 child.unref();

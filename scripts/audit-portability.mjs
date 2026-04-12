@@ -4,7 +4,16 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const TARGETS = ["skills", "workflows", "templates", "agents", "sdk/src", "site/app/security"];
+const TARGETS = [
+  "sdk/skills",
+  "sdk/workflows",
+  "sdk/templates",
+  "sdk/agents",
+  "sdk/references",
+  "sdk/hooks",
+  "sdk/src",
+  "site/app/security"
+];
 const IGNORE_PATTERNS = [
   /(^|\/)skills\/candidates\//,
   /(^|\/)sdk\/src\/.*\.test\.ts$/,

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GSD_VERSION}}
-// Claude Code Statusline - GSD Edition
+// gsd-hook-version: {{GAD_VERSION}}
+// Claude Code Statusline - GAD edition
 // Shows: model | current task | directory | context usage
 
 const fs = require('fs');
@@ -91,21 +91,23 @@ process.stdin.on('end', () => {
       }
     }
 
-    // GSD update available?
-    // Check shared cache first (#1421), fall back to runtime-specific cache for
-    // backward compatibility with older gsd-check-update.js versions.
-    let gsdUpdate = '';
-    const sharedCacheFile = path.join(homeDir, '.cache', 'gsd', 'gsd-update-check.json');
-    const legacyCacheFile = path.join(claudeDir, 'cache', 'gsd-update-check.json');
-    const cacheFile = fs.existsSync(sharedCacheFile) ? sharedCacheFile : legacyCacheFile;
+    // GAD update available?
+    // Check the current GAD cache first, then older legacy locations for compatibility.
+    let gadUpdate = '';
+    const sharedCacheFile = path.join(homeDir, '.cache', 'gad', 'gad-update-check.json');
+    const legacySharedCacheFile = path.join(homeDir, '.cache', 'gsd', 'gsd-update-check.json');
+    const legacyRuntimeCacheFile = path.join(claudeDir, 'cache', 'gsd-update-check.json');
+    const cacheFile = fs.existsSync(sharedCacheFile)
+      ? sharedCacheFile
+      : (fs.existsSync(legacySharedCacheFile) ? legacySharedCacheFile : legacyRuntimeCacheFile);
     if (fs.existsSync(cacheFile)) {
       try {
         const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
         if (cache.update_available) {
-          gsdUpdate = '\x1b[33m⬆ /gsd:update\x1b[0m │ ';
+          gadUpdate = '\x1b[33m⬆ gad update\x1b[0m │ ';
         }
         if (cache.stale_hooks && cache.stale_hooks.length > 0) {
-          gsdUpdate += '\x1b[31m⚠ stale hooks — run /gsd:update\x1b[0m │ ';
+          gadUpdate += '\x1b[31m⚠ stale hooks - run gad update\x1b[0m │ ';
         }
       } catch (e) {}
     }
@@ -113,9 +115,9 @@ process.stdin.on('end', () => {
     // Output
     const dirname = path.basename(dir);
     if (task) {
-      process.stdout.write(`${gsdUpdate}\x1b[2m${model}\x1b[0m │ \x1b[1m${task}\x1b[0m │ \x1b[2m${dirname}\x1b[0m${ctx}`);
+      process.stdout.write(`${gadUpdate}\x1b[2m${model}\x1b[0m │ \x1b[1m${task}\x1b[0m │ \x1b[2m${dirname}\x1b[0m${ctx}`);
     } else {
-      process.stdout.write(`${gsdUpdate}\x1b[2m${model}\x1b[0m │ \x1b[2m${dirname}\x1b[0m${ctx}`);
+      process.stdout.write(`${gadUpdate}\x1b[2m${model}\x1b[0m │ \x1b[2m${dirname}\x1b[0m${ctx}`);
     }
   } catch (e) {
     // Silent fail - don't break statusline on parse errors

@@ -1,7 +1,7 @@
 {
-  "name": "@gsd-build/sdk",
+  "name": "@magicborn/gad-sdk",
   "version": "0.1.0",
-  "description": "GSD SDK — programmatic interface for running GSD plans via the Agent SDK",
+  "description": "GAD SDK - programmatic interface for running GAD plans via the Agent SDK",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,22 +12,25 @@
     }
   },
   "bin": {
-    "gsd-sdk": "./dist/cli.js"
+    "gad-sdk": "./dist/cli.js"
   },
   "files": [
     "dist",
-    "prompts"
+    "agents",
+    "references",
+    "templates",
+    "workflows"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsd-build/get-shit-done.git",
+    "url": "git+https://github.com/MagicbornStudios/get-anything-done.git",
     "directory": "sdk"
   },
-  "homepage": "https://github.com/gsd-build/get-shit-done/tree/main/sdk",
+  "homepage": "https://github.com/MagicbornStudios/get-anything-done/tree/main/sdk",
   "bugs": {
-    "url": "https://github.com/gsd-build/get-shit-done/issues"
+    "url": "https://github.com/MagicbornStudios/get-anything-done/issues"
   },
-  "author": "TÂCHES",
+  "author": "MagicbornStudios",
   "license": "MIT",
   "engines": {
     "node": ">=20"
