@@ -9,12 +9,12 @@ From `$ARGUMENTS`:
 - Extract flags (prefixed with `--`)
 - Remaining text is description (for insert/add commands)
 
-## Using gsd-tools
+## Using gad-tools
 
 The `find-phase` command handles normalization and validation in one step:
 
 ```bash
-PHASE_INFO=$(node "$HOME/.claude/bin/gad-tools.cjs" find-phase "${PHASE}")
+PHASE_INFO=$(gad-tools find-phase "${PHASE}")
 ```
 
 Returns JSON with:
@@ -45,7 +45,7 @@ fi
 Use `roadmap get-phase` to validate phase exists:
 
 ```bash
-PHASE_CHECK=$(node "$HOME/.claude/bin/gad-tools.cjs" roadmap get-phase "${PHASE}" --pick found)
+PHASE_CHECK=$(gad-tools roadmap get-phase "${PHASE}" --pick found)
 if [ "$PHASE_CHECK" = "false" ]; then
   echo "ERROR: Phase ${PHASE} not found in roadmap"
   exit 1
@@ -57,5 +57,5 @@ fi
 Use `find-phase` for directory lookup:
 
 ```bash
-PHASE_DIR=$(node "$HOME/.claude/bin/gad-tools.cjs" find-phase "${PHASE}" --raw)
+PHASE_DIR=$(gad-tools find-phase "${PHASE}" --raw)
 ```

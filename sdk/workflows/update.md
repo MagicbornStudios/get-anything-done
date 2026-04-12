@@ -221,7 +221,7 @@ Exit.
 - `agents/gad-*` files will be replaced
 
 (Paths are relative to the detected runtime config location:
-global: `~/.claude/`, `~/.config/opencode/`, `~/.opencode/`, `~/.gemini/`, or `~/.codex/`
+global runtime config: the agent's global config directory, such as Claude, OpenCode, Gemini, or Codex
 local: `./.claude/`, `./.config/opencode/`, `./.opencode/`, `./.gemini/`, or `./.codex/`)
 
 Your custom files in other locations are preserved:

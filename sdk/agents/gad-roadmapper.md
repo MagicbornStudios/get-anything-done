@@ -363,11 +363,11 @@ This annotation is consumed by downstream workflows (`new-project`, `progress`) 
 | 2. Name | 0/2 | Not started | - |
 ```
 
-Reference full template: `~/.claude/get-anything-done/templates/roadmap.md`
+Reference full template: `@templates/roadmap.md`
 
 ## STATE.md Structure
 
-Use template from `~/.claude/get-anything-done/templates/state.md`.
+Use template from `@templates/state.md`.
 
 Key sections:
 - Project Reference (core value, current focus)

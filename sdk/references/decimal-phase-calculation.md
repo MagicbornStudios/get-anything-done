@@ -2,11 +2,11 @@
 
 Calculate the next decimal phase number for urgent insertions.
 
-## Using gsd-tools
+## Using gad-tools
 
 ```bash
 # Get next decimal phase after phase 6
-node "$HOME/.claude/bin/gad-tools.cjs" phase next-decimal 6
+gad-tools phase next-decimal 6
 ```
 
 Output:
@@ -32,13 +32,13 @@ With existing decimals:
 ## Extract Values
 
 ```bash
-DECIMAL_PHASE=$(node "$HOME/.claude/bin/gad-tools.cjs" phase next-decimal "${AFTER_PHASE}" --pick next)
-BASE_PHASE=$(node "$HOME/.claude/bin/gad-tools.cjs" phase next-decimal "${AFTER_PHASE}" --pick base_phase)
+DECIMAL_PHASE=$(gad-tools phase next-decimal "${AFTER_PHASE}" --pick next)
+BASE_PHASE=$(gad-tools phase next-decimal "${AFTER_PHASE}" --pick base_phase)
 ```
 
 Or with --raw flag:
 ```bash
-DECIMAL_PHASE=$(node "$HOME/.claude/bin/gad-tools.cjs" phase next-decimal "${AFTER_PHASE}" --raw)
+DECIMAL_PHASE=$(gad-tools phase next-decimal "${AFTER_PHASE}" --raw)
 # Returns just: 06.1
 ```
 
@@ -56,7 +56,7 @@ DECIMAL_PHASE=$(node "$HOME/.claude/bin/gad-tools.cjs" phase next-decimal "${AFT
 Decimal phase directories use the full decimal number:
 
 ```bash
-SLUG=$(node "$HOME/.claude/bin/gad-tools.cjs" generate-slug "$DESCRIPTION" --raw)
+SLUG=$(gad-tools generate-slug "$DESCRIPTION" --raw)
 PHASE_DIR=".planning/phases/${DECIMAL_PHASE}-${SLUG}"
 mkdir -p "$PHASE_DIR"
 ```

@@ -486,7 +486,7 @@ issue:
 
 Load phase operation context:
 ```bash
-INIT=$(node "$HOME/.claude/get-anything-done/bin/gad-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(gad-tools init phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -498,7 +498,7 @@ Orchestrator provides CONTEXT.md content in the verification prompt. If provided
 ls "$phase_dir"/*-PLAN.md 2>/dev/null
 # Read research for Nyquist validation data
 cat "$phase_dir"/*-RESEARCH.md 2>/dev/null
-node "$HOME/.claude/get-anything-done/bin/gad-tools.cjs" roadmap get-phase "$phase_number"
+gad-tools roadmap get-phase "$phase_number"
 ls "$phase_dir"/*-BRIEF.md 2>/dev/null
 ```
 
@@ -511,7 +511,7 @@ Use gad-tools to validate plan structure:
 ```bash
 for plan in "$PHASE_DIR"/*-PLAN.md; do
   echo "=== $plan ==="
-  PLAN_STRUCTURE=$(node "$HOME/.claude/get-anything-done/bin/gad-tools.cjs" verify plan-structure "$plan")
+  PLAN_STRUCTURE=$(gad-tools verify plan-structure "$plan")
   echo "$PLAN_STRUCTURE"
 done
 ```
@@ -529,7 +529,7 @@ Map errors/warnings to verification dimensions:
 Extract must_haves from each plan using gad-tools:
 
 ```bash
-MUST_HAVES=$(node "$HOME/.claude/get-anything-done/bin/gad-tools.cjs" frontmatter get "$PLAN_PATH" --field must_haves)
+MUST_HAVES=$(gad-tools frontmatter get "$PLAN_PATH" --field must_haves)
 ```
 
 Returns JSON: `{ truths: [...], artifacts: [...], key_links: [...] }`
@@ -574,7 +574,7 @@ For each requirement: find covering task(s), verify action is specific, flag gap
 Use gad-tools plan-structure verification (already run in Step 2):
 
 ```bash
-PLAN_STRUCTURE=$(node "$HOME/.claude/get-anything-done/bin/gad-tools.cjs" verify plan-structure "$PLAN_PATH")
+PLAN_STRUCTURE=$(gad-tools verify plan-structure "$PLAN_PATH")
 ```
 
 The `tasks` array in the result shows each task's completeness:

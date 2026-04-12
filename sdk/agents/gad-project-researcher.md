@@ -105,7 +105,7 @@ Always include current year. Use multiple query variations. Mark WebSearch-only 
 Check `brave_search` from orchestrator context. If `true`, use Brave Search for higher quality results:
 
 ```bash
-node "$HOME/.claude/get-anything-done/bin/gad-tools.cjs" websearch "your query" --limit 10
+gad-tools websearch "your query" --limit 10
 ```
 
 **Options:**
