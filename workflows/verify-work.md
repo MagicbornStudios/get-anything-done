@@ -1,11 +1,11 @@
 <purpose>
-Validate built features through conversational testing with persistent state. Creates UAT.md that tracks test progress, survives /clear, and feeds gaps into /gsd:plan-phase --gaps.
+Validate built features through conversational testing with persistent state. Creates UAT.md that tracks test progress, survives /clear, and feeds gaps into /gad:plan-phase --gaps.
 
 User tests, Claude records. One test at a time. Plain text responses.
 </purpose>
 
 <available_agent_types>
-Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
 - gad-planner — Creates detailed plans from phase scope
 - gad-plan-checker — Reviews plan quality before execution
 </available_agent_types>
@@ -21,7 +21,7 @@ No Pass/Fail buttons. No severity questions. Just: "Here's what should happen. D
 </philosophy>
 
 <template>
-@~/.claude/templates/UAT.md
+@templates/UAT.md
 </template>
 
 <process>
@@ -30,10 +30,10 @@ No Pass/Fail buttons. No severity questions. Just: "Here's what should happen. D
 If $ARGUMENTS contains a phase number, load context:
 
 ```bash
-INIT=$(node "$HOME/.claude/bin/gad-tools.cjs" init verify-work "${PHASE_ARG}")
+INIT=$(gad-tools init verify-work "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_PLANNER=$(node "$HOME/.claude/bin/gad-tools.cjs" agent-skills gad-planner 2>/dev/null)
-AGENT_SKILLS_CHECKER=$(node "$HOME/.claude/bin/gad-tools.cjs" agent-skills gad-checker 2>/dev/null)
+AGENT_SKILLS_PLANNER=$(gad-tools agent-skills gad-planner 2>/dev/null)
+AGENT_SKILLS_CHECKER=$(gad-tools agent-skills gad-checker 2>/dev/null)
 ```
 
 Parse JSON for: `planner_model`, `checker_model`, `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `has_verification`, `uat_path`.
@@ -78,7 +78,7 @@ If no, continue to `create_uat_file`.
 ```
 No active UAT sessions.
 
-Provide a phase number to start testing (e.g., /gsd:verify-work 4)
+Provide a phase number to start testing (e.g., /gad:verify-work 4)
 ```
 
 **If no active sessions AND $ARGUMENTS provided:**
@@ -197,7 +197,7 @@ Proceed to `present_test`.
 Render the checkpoint from the structured UAT file instead of composing it freehand:
 
 ```bash
-CHECKPOINT=$(node "$HOME/.claude/bin/gad-tools.cjs" uat render-checkpoint --file "$uat_path" --raw)
+CHECKPOINT=$(gad-tools uat render-checkpoint --file "$uat_path" --raw)
 if [[ "$CHECKPOINT" == @file:* ]]; then CHECKPOINT=$(cat "${CHECKPOINT#@file:}"); fi
 ```
 
@@ -353,7 +353,7 @@ Clear Current Test section:
 
 Commit the UAT file:
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" commit "test({phase_num}): complete UAT - {passed} passed, {issues} issues" --files ".planning/phases/XX-name/{phase_num}-UAT.md"
+gad-tools commit "test({phase_num}): complete UAT - {passed} passed, {issues} issues" --files ".planning/phases/XX-name/{phase_num}-UAT.md"
 ```
 
 Present summary:
@@ -377,37 +377,37 @@ Present summary:
 **If issues == 0:**
 
 ```bash
-SECURITY_CFG=$(node "$HOME/.claude/bin/gad-tools.cjs" config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
+SECURITY_CFG=$(gad-tools config-get workflow.security_enforcement --raw 2>/dev/null || echo "true")
 SECURITY_FILE=$(ls "${PHASE_DIR}"/*-SECURITY.md 2>/dev/null | head -1)
 ```
 
 If `SECURITY_CFG` is `true` AND `SECURITY_FILE` is empty:
 ```
-⚠ Security enforcement enabled — /gsd:secure-phase {phase} has not run.
+⚠ Security enforcement enabled — /gad:secure-phase {phase} has not run.
 Run before advancing to the next phase.
 
 All tests passed. Ready to continue.
 
-- `/gsd:secure-phase {phase}` — security review (required before advancing)
-- `/gsd:plan-phase {next}` — Plan next phase
-- `/gsd:execute-phase {next}` — Execute next phase
-- `/gsd:ui-review {phase}` — visual quality audit (if frontend files were modified)
+- `/gad:secure-phase {phase}` — security review (required before advancing)
+- `/gad:plan-phase {next}` — Plan next phase
+- `/gad:execute-phase {next}` — Execute next phase
+- `/gad:ui-review {phase}` — visual quality audit (if frontend files were modified)
 ```
 
 If `SECURITY_CFG` is `true` AND `SECURITY_FILE` exists: check frontmatter `threats_open`. If > 0:
 ```
 ⚠ Security gate: {threats_open} threats open
-  /gsd:secure-phase {phase} — resolve before advancing
+  /gad:secure-phase {phase} — resolve before advancing
 ```
 
 If `SECURITY_CFG` is `false` OR (`SECURITY_FILE` exists AND `threats_open` is `0`):
 ```
 All tests passed. Ready to continue.
 
-- `/gsd:plan-phase {next}` — Plan next phase
-- `/gsd:execute-phase {next}` — Execute next phase
-- `/gsd:secure-phase {phase}` — security review
-- `/gsd:ui-review {phase}` — visual quality audit (if frontend files were modified)
+- `/gad:plan-phase {next}` — Plan next phase
+- `/gad:execute-phase {next}` — Execute next phase
+- `/gad:secure-phase {phase}` — security review
+- `/gad:ui-review {phase}` — visual quality audit (if frontend files were modified)
 ```
 </step>
 
@@ -423,7 +423,7 @@ Spawning parallel debug agents to investigate each issue.
 ```
 
 - Load diagnose-issues workflow
-- Follow @~/.claude/workflows/diagnose-issues.md
+- Follow @workflows/diagnose-issues.md
 - Spawn parallel debug agents for each issue
 - Collect root causes
 - Update UAT.md with root causes
@@ -438,7 +438,7 @@ Diagnosis runs automatically - no user prompt. Parallel agents investigate simul
 Display:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► PLANNING FIXES
+ GAD ► PLANNING FIXES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ◆ Spawning planner for gap closure...
@@ -465,7 +465,7 @@ ${AGENT_SKILLS_PLANNER}
 </planning_context>
 
 <downstream_consumer>
-Output consumed by /gsd:execute-phase
+Output consumed by /gad:execute-phase
 Plans must be executable prompts.
 </downstream_consumer>
 """,
@@ -486,7 +486,7 @@ On return:
 Display:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► VERIFYING FIX PLANS
+ GAD ► VERIFYING FIX PLANS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ◆ Spawning plan checker...
@@ -578,7 +578,7 @@ Display: `Max iterations reached. {N} issues remain.`
 Offer options:
 1. Force proceed (execute despite issues)
 2. Provide guidance (user gives direction, retry)
-3. Abandon (exit, user runs /gsd:plan-phase manually)
+3. Abandon (exit, user runs /gad:plan-phase manually)
 
 Wait for user response.
 </step>
@@ -588,7 +588,7 @@ Wait for user response.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► FIXES READY ✓
+ GAD ► FIXES READY ✓
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Phase {X}: {Name}** — {N} gap(s) diagnosed, {M} fix plan(s) created
@@ -606,7 +606,7 @@ Plans verified and ready for execution.
 
 **Execute fixes** — run fix plans
 
-`/clear` then `/gsd:execute-phase {phase} --gaps-only`
+`/clear` then `/gad:execute-phase {phase} --gaps-only`
 
 ───────────────────────────────────────────────────────────────
 ```
@@ -660,5 +660,5 @@ Default to **major** if unclear. User can correct if needed.
 - [ ] If issues: gad-planner creates fix plans (gap_closure mode)
 - [ ] If issues: gad-plan-checker verifies fix plans
 - [ ] If issues: revision loop until plans pass (max 3 iterations)
-- [ ] Ready for `/gsd:execute-phase --gaps-only` when complete
+- [ ] Ready for `/gad:execute-phase --gaps-only` when complete
 </success_criteria>

@@ -1,8 +1,7 @@
 /**
  * Config reader — loads `.planning/config.json` and merges with defaults.
  *
- * Mirrors the default structure from `get-shit-done/bin/lib/config.cjs`
- * `buildNewProjectConfig()`.
+ * Mirrors the default structure from the current GAD CLI config builder.
  */
 
 import { readFile } from 'node:fs/promises';

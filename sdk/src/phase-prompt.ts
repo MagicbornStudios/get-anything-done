@@ -75,9 +75,9 @@ export class PromptFactory {
     projectAgentsDir?: string;
     sdkPromptsDir?: string;
   }) {
-    const gsdInstallDir = options?.gsdInstallDir ?? join(homedir(), '.claude', 'get-shit-done');
+    const gsdInstallDir = options?.gsdInstallDir ?? join(homedir(), '.gad', 'get-anything-done');
     this.workflowsDir = join(gsdInstallDir, 'workflows');
-    this.agentsDir = options?.agentsDir ?? join(homedir(), '.claude', 'agents');
+    this.agentsDir = options?.agentsDir ?? join(homedir(), '.agents');
     this.projectAgentsDir = options?.projectAgentsDir;
     // SDK prompts dir: explicit override → package-relative default via import.meta.url
     this.sdkPromptsDir =
@@ -149,7 +149,7 @@ export class PromptFactory {
   /**
    * Load the workflow file for a phase type.
    * Tries sdk/prompts/workflows/ first (headless versions), then
-   * falls back to GSD-1 originals in workflowsDir.
+   * falls back to installed GAD workflow files in workflowsDir.
    * Returns the raw content, or undefined if not found.
    */
   async loadWorkflowFile(phaseType: PhaseType): Promise<string | undefined> {

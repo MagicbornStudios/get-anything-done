@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * CLI entry point for gsd-sdk.
+ * CLI entry point for gad-sdk.
  *
- * Usage: gsd-sdk run "<prompt>" [--project-dir <dir>] [--ws-port <port>]
+ * Usage: gad-sdk run "<prompt>" [--project-dir <dir>] [--ws-port <port>]
  *                                [--model <model>] [--max-budget <n>]
  */
 
@@ -77,7 +77,7 @@ export function parseCliArgs(argv: string[]): ParsedCliArgs {
 // ─── Usage ───────────────────────────────────────────────────────────────────
 
 export const USAGE = `
-Usage: gsd-sdk <command> [args] [options]
+Usage: gad-sdk <command> [args] [options]
 
 Commands:
   run <prompt>          Run a full milestone from a text prompt
@@ -155,9 +155,9 @@ async function readStdin(): Promise<string> {
   if (stdin.isTTY) {
     throw new Error(
       'No input provided. Usage:\n' +
-      '  gsd-sdk init @path/to/prd.md\n' +
-      '  gsd-sdk init "build a todo app"\n' +
-      '  cat prd.md | gsd-sdk init'
+      '  gad-sdk init @path/to/prd.md\n' +
+      '  gad-sdk init "build a todo app"\n' +
+      '  cat prd.md | gad-sdk init'
     );
   }
 
@@ -190,19 +190,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   if (args.version) {
     const ver = await getVersion();
-    console.log(`gsd-sdk v${ver}`);
+    console.log(`gad-sdk v${ver}`);
     return;
   }
 
   if (args.command !== 'run' && args.command !== 'init' && args.command !== 'auto') {
-    console.error('Error: Expected "gsd-sdk run <prompt>", "gsd-sdk auto", or "gsd-sdk init [input]"');
+    console.error('Error: Expected "gad-sdk run <prompt>", "gad-sdk auto", or "gad-sdk init [input]"');
     console.error(USAGE);
     process.exitCode = 1;
     return;
   }
 
   if (args.command === 'run' && !args.prompt) {
-    console.error('Error: "gsd-sdk run" requires a prompt');
+    console.error('Error: "gad-sdk run" requires a prompt');
     console.error(USAGE);
     process.exitCode = 1;
     return;

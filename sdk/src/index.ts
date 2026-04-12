@@ -1,5 +1,5 @@
 /**
- * GSD SDK — Public API for running GSD plans programmatically.
+ * GAD SDK — Public API for running GAD plans programmatically.
  *
  * The GSD class composes plan parsing, config loading, prompt building,
  * and session running into a single `executePlan()` call.
@@ -58,7 +58,7 @@ export class GSD {
   }
 
   /**
-   * Execute a single GSD plan file.
+   * Execute a single GAD plan file.
    *
    * Reads the plan from disk, parses it, loads project config,
    * optionally reads the agent definition, then runs a query() session.
@@ -96,14 +96,14 @@ export class GSD {
   }
 
   /**
-   * Subscribe a simple handler to receive all GSD events.
+   * Subscribe a simple handler to receive all GAD events.
    */
   onEvent(handler: (event: GSDEvent) => void): void {
     this.eventStream.on('event', handler);
   }
 
   /**
-   * Subscribe a transport handler to receive all GSD events.
+   * Subscribe a transport handler to receive all GAD events.
    * Transports provide structured onEvent/close lifecycle.
    */
   addTransport(handler: TransportHandler): void {
@@ -111,7 +111,7 @@ export class GSD {
   }
 
   /**
-   * Create a GSDTools instance for state management operations.
+   * Create a GSDTools instance for GAD state-management operations.
    */
   createTools(): GSDTools {
     return new GSDTools({
@@ -255,18 +255,19 @@ export class GSD {
   }
 
   /**
-   * Load the gsd-executor agent definition if available.
+   * Load the gad-executor agent definition if available.
    * Falls back gracefully — returns undefined if not found.
    */
   private async loadAgentDefinition(): Promise<string | undefined> {
     const paths = [
-      // Repo-local GSD installation
-      join(this.projectDir, '.claude', 'get-shit-done', 'agents', 'gsd-executor.md'),
-      // Repo-local agents directory
-      join(this.projectDir, '.claude', 'agents', 'gsd-executor.md'),
+      // Repo-local GAD installation
+      join(this.projectDir, '.gad', 'get-anything-done', 'agents', 'gad-executor.md'),
+      // Repo-local agent directories
+      join(this.projectDir, '.agents', 'gad-executor.md'),
+      join(this.projectDir, '.agents', 'agents', 'gad-executor.md'),
       // Global home directory
-      join(homedir(), '.claude', 'agents', 'gsd-executor.md'),
-      join(this.projectDir, 'agents', 'gsd-executor.md'),
+      join(homedir(), '.agents', 'gad-executor.md'),
+      join(this.projectDir, 'agents', 'gad-executor.md'),
     ];
 
     for (const p of paths) {

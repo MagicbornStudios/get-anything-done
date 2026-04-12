@@ -1,11 +1,11 @@
 /**
- * InitRunner — orchestrates the GSD new-project init workflow.
+ * InitRunner — orchestrates the GAD new-project init workflow.
  *
  * Workflow: setup → config → PROJECT.md → parallel research (4 sessions)
  *         → synthesis → requirements → roadmap
  *
  * Each step calls Agent SDK `query()` via `runPhaseStepSession()` with
- * prompts derived from GSD-1 workflow/agent/template files on disk.
+ * prompts derived from GAD workflow/agent/template files on disk.
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -36,8 +36,8 @@ import { sanitizePrompt } from './prompt-sanitizer.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const GSD_TEMPLATES_DIR = join(homedir(), '.claude', 'get-shit-done', 'templates');
-const GSD_AGENTS_DIR = join(homedir(), '.claude', 'agents');
+const GSD_TEMPLATES_DIR = join(homedir(), '.gad', 'get-anything-done', 'templates');
+const GSD_AGENTS_DIR = join(homedir(), '.agents');
 
 const RESEARCH_TYPES = ['STACK', 'FEATURES', 'ARCHITECTURE', 'PITFALLS'] as const;
 type ResearchType = (typeof RESEARCH_TYPES)[number];
@@ -147,7 +147,7 @@ export class InitRunner {
         await writeFile(configPath, JSON.stringify(AUTO_MODE_CONFIG, null, 2) + '\n', 'utf-8');
         artifacts.push('.planning/config.json');
 
-        // Persist auto_advance via gsd-tools (validates & updates state)
+        // Persist auto_advance via gad-tools (validates & updates state)
         await this.tools.configSet('workflow.auto_advance', 'true');
 
         // Commit config
@@ -409,7 +409,7 @@ export class InitRunner {
     researchType: ResearchType,
     input: string,
   ): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-project-researcher.md');
+    const agentDef = await this.readAgentFile('gad-project-researcher.md');
     const template = await this.readGSDFile(`templates/research-project/${researchType}.md`);
 
     // Read PROJECT.md if it exists (it should by now)
@@ -454,7 +454,7 @@ export class InitRunner {
    * Reads synthesizer agent def and all 4 research outputs.
    */
   private async buildSynthesisPrompt(): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-research-synthesizer.md');
+    const agentDef = await this.readAgentFile('gad-research-synthesizer.md');
     const summaryTemplate = await this.readGSDFile('templates/research-project/SUMMARY.md');
     const researchDir = join(this.projectDir, '.planning', 'research');
 
@@ -547,7 +547,7 @@ export class InitRunner {
    * Reads PROJECT.md + REQUIREMENTS.md + research/SUMMARY.md + config.json.
    */
   private async buildRoadmapPrompt(): Promise<string> {
-    const agentDef = await this.readAgentFile('gsd-roadmapper.md');
+    const agentDef = await this.readAgentFile('gad-roadmapper.md');
     const roadmapTemplate = await this.readGSDFile('templates/roadmap.md');
     const stateTemplate = await this.readGSDFile('templates/state.md');
 
@@ -619,9 +619,9 @@ export class InitRunner {
   // ─── File reading helpers ──────────────────────────────────────────────────
 
   /**
-   * Read a file from the GSD templates directory.
+   * Read a file from the installed GAD templates directory.
    * Tries sdk/prompts/{relativePath} first (headless versions), then
-   * falls back to GSD-1 originals (~/.claude/get-shit-done/).
+   * falls back to installed runtime templates when sdk/prompts does not provide an override.
    */
   private async readGSDFile(relativePath: string): Promise<string> {
     // Try SDK prompts dir first (headless versions)
@@ -629,10 +629,10 @@ export class InitRunner {
     try {
       return await readFile(sdkPath, 'utf-8');
     } catch {
-      // Not in sdk/prompts/, fall through to GSD-1 originals
+      // Not in sdk/prompts/, fall through to installed runtime templates
     }
 
-    // Fall back to GSD-1 originals
+    // Fall back to installed runtime templates
     const fullPath = join(GSD_TEMPLATES_DIR, '..', relativePath);
     try {
       return await readFile(fullPath, 'utf-8');
@@ -645,7 +645,7 @@ export class InitRunner {
   /**
    * Read an agent definition.
    * Tries sdk/prompts/agents/{filename} first (headless versions), then
-   * falls back to GSD-1 originals (~/.claude/agents/).
+   * falls back to installed runtime agent definitions.
    */
   private async readAgentFile(filename: string): Promise<string> {
     // Try SDK prompts dir first (headless versions)
@@ -653,10 +653,10 @@ export class InitRunner {
     try {
       return await readFile(sdkPath, 'utf-8');
     } catch {
-      // Not in sdk/prompts/, fall through to GSD-1 originals
+      // Not in sdk/prompts/, fall through to installed runtime agent definitions
     }
 
-    // Fall back to GSD-1 originals
+    // Fall back to installed runtime agent definitions
     const fullPath = join(GSD_AGENTS_DIR, filename);
     try {
       return await readFile(fullPath, 'utf-8');

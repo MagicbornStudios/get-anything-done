@@ -3,11 +3,11 @@ Retroactive 6-pillar visual audit of implemented frontend code. Standalone comma
 </purpose>
 
 <required_reading>
-@~/.claude/references/ui-brand.md
+@references/ui-brand.md
 </required_reading>
 
 <available_agent_types>
-Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
 - gad-ui-auditor — Audits UI against design requirements
 </available_agent_types>
 
@@ -16,21 +16,21 @@ Valid GSD subagent types (use exact names — do not fall back to 'general-purpo
 ## 0. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/bin/gad-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(gad-tools init phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_UI_REVIEWER=$(node "$HOME/.claude/bin/gad-tools.cjs" agent-skills gad-ui-reviewer 2>/dev/null)
+AGENT_SKILLS_UI_REVIEWER=$(gad-tools agent-skills gad-ui-reviewer 2>/dev/null)
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `commit_docs`.
 
 ```bash
-UI_AUDITOR_MODEL=$(node "$HOME/.claude/bin/gad-tools.cjs" resolve-model gad-ui-auditor --raw)
+UI_AUDITOR_MODEL=$(gad-tools resolve-model gad-ui-auditor --raw)
 ```
 
 Display banner:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► UI AUDIT — PHASE {N}: {name}
+ GAD ► UI AUDIT — PHASE {N}: {name}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -42,7 +42,7 @@ UI_SPEC_FILE=$(ls "${PHASE_DIR}"/*-UI-SPEC.md 2>/dev/null | head -1)
 UI_REVIEW_FILE=$(ls "${PHASE_DIR}"/*-UI-REVIEW.md 2>/dev/null | head -1)
 ```
 
-**If `SUMMARY_FILES` empty:** Exit — "Phase {N} not executed. Run /gsd:execute-phase {N} first."
+**If `SUMMARY_FILES` empty:** Exit — "Phase {N} not executed. Run /gad:execute-phase {N} first."
 
 **If `UI_REVIEW_FILE` non-empty:** Use AskUserQuestion:
 - header: "Existing UI Review"
@@ -71,7 +71,7 @@ Build file list for auditor:
 Build prompt:
 
 ```markdown
-Read ~/.claude/agents/gad-ui-auditor.md for instructions.
+Read @agents/gad-ui-auditor.md for instructions.
 
 <objective>
 Conduct 6-pillar visual audit of Phase {phase_number}: {phase_name}
@@ -113,7 +113,7 @@ Display score summary:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► UI AUDIT COMPLETE ✓
+ GAD ► UI AUDIT COMPLETE ✓
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Phase {N}: {Name}** — Overall: {score}/24
@@ -138,8 +138,8 @@ Full review: {path to UI-REVIEW.md}
 
 ## ▶ Next
 
-- `/gsd:verify-work {N}` — UAT testing
-- `/gsd:plan-phase {N+1}` — plan next phase
+- `/gad:verify-work {N}` — UAT testing
+- `/gad:plan-phase {N+1}` — plan next phase
 
 <sub>/clear first → fresh context window</sub>
 
@@ -149,7 +149,7 @@ Full review: {path to UI-REVIEW.md}
 ## 5. Commit (if configured)
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" commit "docs(${padded_phase}): UI audit review" --files "${PHASE_DIR}/${PADDED_PHASE}-UI-REVIEW.md"
+gad-tools commit "docs(${padded_phase}): UI audit review" --files "${PHASE_DIR}/${PADDED_PHASE}-UI-REVIEW.md"
 ```
 
 </process>

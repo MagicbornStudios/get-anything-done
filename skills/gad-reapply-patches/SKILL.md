@@ -25,7 +25,7 @@ elif [ -d "$HOME/.opencode/gad-local-patches" ]; then
 elif [ -d "$HOME/.gemini/gad-local-patches" ]; then
   PATCHES_DIR="$HOME/.gemini/gad-local-patches"
 else
-  PATCHES_DIR="$HOME/.claude/gad-local-patches"
+  PATCHES_DIR="${GAD_PATCHES_DIR:-$HOME/.config/gad-local-patches}"
 fi
 # Local install fallback — check all runtime directories
 if [ ! -d "$PATCHES_DIR" ]; then
@@ -130,7 +130,7 @@ When no pristine baseline is available, use these **strengthened heuristics**:
 For each file:
 a. Read both versions completely
 b. Identify ALL differences, then classify each as:
-   - **Mechanical drift** — path substitutions (e.g. `/Users/xxx/.claude/` → `$HOME/.claude/`), variable additions (`${GSD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)
+   - **Mechanical drift** — path substitutions between runtime config directories, variable additions (`${GSD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)
    - **User customization** — added steps/sections, removed sections, reordered content, changed behavior, added frontmatter fields, modified instructions
 
 c. **If ANY differences remain after filtering out mechanical drift → those are user customizations. Merge them.**

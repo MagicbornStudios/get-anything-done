@@ -1,5 +1,5 @@
 /**
- * Core type definitions for GSD-1 PLAN.md structures.
+ * Core type definitions for GAD PLAN.md structures.
  *
  * These types model the YAML frontmatter + XML task bodies
  * that make up a GSD plan file.
@@ -88,15 +88,15 @@ export interface ParsedPlan {
 // ─── Init command types ──────────────────────────────────────────────────────
 
 /**
- * JSON output from `gsd-tools.cjs init new-project`.
+ * JSON output from `gad-tools.cjs init new-project`.
  * Describes project state and model configuration for the init workflow.
  */
 export interface InitNewProjectInfo {
-  /** Model resolved for the gsd-project-researcher agent. */
+  /** Model resolved for the gad-project-researcher agent. */
   researcher_model: string;
-  /** Model resolved for the gsd-research-synthesizer agent. */
+  /** Model resolved for the gad-research-synthesizer agent. */
   synthesizer_model: string;
-  /** Model resolved for the gsd-roadmapper agent. */
+  /** Model resolved for the gad-roadmapper agent. */
   roadmapper_model: string;
 
   /** Whether docs should be committed after generation. */
@@ -134,7 +134,7 @@ export interface InitNewProjectInfo {
   /** Absolute project root path (injected by withProjectRoot). */
   project_root?: string;
 
-  /** Allow additional fields from gsd-tools evolution. */
+  /** Allow additional fields from gad-tools evolution. */
   [key: string]: unknown;
 }
 
@@ -192,12 +192,12 @@ export interface PlanResult {
 }
 
 /**
- * Options for creating a GSD instance.
+ * Options for creating a GAD SDK instance.
  */
 export interface GSDOptions {
   /** Root directory of the project. */
   projectDir: string;
-  /** Path to gsd-tools.cjs. Falls back to <projectDir>/.claude/ then ~/.claude/. */
+  /** Path to gad-tools.cjs. Falls back to GAD marker files, local installs, then runtime config dirs. */
   gsdToolsPath?: string;
   /** Model to use for execution sessions. */
   model?: string;
@@ -212,7 +212,7 @@ export interface GSDOptions {
 // ─── S02: Event stream types ─────────────────────────────────────────────────
 
 /**
- * Phase types for GSD execution workflow.
+ * Phase types for GAD execution workflow.
  */
 export enum PhaseType {
   Discuss = 'discuss',
@@ -223,7 +223,7 @@ export enum PhaseType {
 }
 
 /**
- * Event types emitted by the GSD event stream.
+ * Event types emitted by the GAD event stream.
  * Maps from SDKMessage variants to domain-meaningful events.
  */
 export enum GSDEventType {
@@ -259,7 +259,7 @@ export enum GSDEventType {
 }
 
 /**
- * Base fields present on every GSD event.
+ * Base fields present on every GAD event.
  */
 export interface GSDEventBase {
   type: GSDEventType;
@@ -524,7 +524,7 @@ export interface GSDWaveCompleteEvent extends GSDEventBase {
 // ─── S05: Milestone-level types ──────────────────────────────────────────────
 
 /**
- * Single phase entry from `gsd-tools.cjs roadmap analyze`.
+ * Single phase entry from `gad-tools.cjs roadmap analyze`.
  */
 export interface RoadmapPhaseInfo {
   number: string;
@@ -534,7 +534,7 @@ export interface RoadmapPhaseInfo {
 }
 
 /**
- * Structured output from `gsd-tools.cjs roadmap analyze`.
+ * Structured output from `gad-tools.cjs roadmap analyze`.
  */
 export interface RoadmapAnalysis {
   phases: RoadmapPhaseInfo[];
@@ -601,7 +601,7 @@ export type InitStepName =
  * Configuration overrides for InitRunner.
  */
 export interface InitConfig {
-  /** Model for research sessions (overrides gsd-tools detected model). */
+  /** Model for research sessions (overrides gad-tools detected model). */
   researchModel?: string;
   /** Model for synthesis/roadmap sessions. */
   orchestratorModel?: string;
@@ -718,7 +718,7 @@ export type GSDEvent =
   | GSDInitResearchSpawnEvent;
 
 /**
- * Transport handler interface for consuming GSD events.
+ * Transport handler interface for consuming GAD events.
  * Transports receive all events and can write to files, WebSockets, etc.
  */
 export interface TransportHandler {
@@ -781,7 +781,7 @@ export enum PhaseStepType {
 }
 
 /**
- * Structured output from `gsd-tools.cjs init phase-op <N>`.
+ * Structured output from `gad-tools.cjs init phase-op <N>`.
  * Describes the current state of a phase on disk.
  */
 export interface PhaseOpInfo {

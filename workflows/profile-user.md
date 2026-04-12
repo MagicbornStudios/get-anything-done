@@ -8,9 +8,9 @@ This workflow wires Phase 1 (session pipeline) and Phase 2 (profiling engine) in
 Read all files referenced by the invoking prompt's execution_context before starting.
 
 Key references:
-- @$HOME/.claude/references/ui-brand.md (display patterns)
-- @$HOME/.claude/agents/gad-user-profiler.md (profiler agent definition)
-- @$HOME/.claude/references/user-profiling.md (profiling reference doc)
+- @references/ui-brand.md (display patterns)
+- @agents/gad-user-profiler.md (profiler agent definition)
+- @references/user-profiling.md (profiling reference doc)
 </required_reading>
 
 <process>
@@ -24,7 +24,7 @@ Parse flags from $ARGUMENTS:
 Check for existing profile:
 
 ```bash
-PROFILE_PATH="$HOME/.claude/get-anything-done/USER-PROFILE.md"
+PROFILE_PATH="<active runtime config dir>/get-anything-done/USER-PROFILE.md"
 [ -f "$PROFILE_PATH" ] && echo "EXISTS" || echo "NOT_FOUND"
 ```
 
@@ -46,7 +46,7 @@ If "Cancel": Display "No changes made." and exit.
 
 Backup existing profile:
 ```bash
-cp "$HOME/.claude/get-anything-done/USER-PROFILE.md" "$HOME/.claude/get-anything-done/USER-PROFILE.backup.md"
+cp "$PROFILE_PATH" "${PROFILE_PATH%.md}.backup.md"
 ```
 
 Display: "Re-analyzing your sessions to update your profile."
@@ -64,7 +64,7 @@ Display consent screen:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD > PROFILE YOUR CODING STYLE
+ GAD > PROFILE YOUR CODING STYLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Claude starts every conversation generic. A profile teaches Claude
@@ -90,7 +90,7 @@ Your recent Claude Code sessions, looking for patterns in these
 
 ✓ Reads session files locally (read-only, nothing modified)
 ✓ Analyzes message patterns (not content meaning)
-✓ Stores profile at $HOME/.claude/get-anything-done/USER-PROFILE.md
+✓ Stores profile at <active runtime config dir>/get-anything-done/USER-PROFILE.md
 ✗ Nothing is sent to external services
 ✗ Sensitive content (API keys, passwords) is automatically excluded
 ```
@@ -100,7 +100,7 @@ Show abbreviated consent instead:
 
 ```
 Re-analyzing your sessions to update your profile.
-Your existing profile has been backed up to USER-PROFILE.backup.md.
+Your existing profile has been backed up alongside USER-PROFILE.md.
 ```
 
 Use AskUserQuestion:
@@ -118,7 +118,7 @@ Use AskUserQuestion:
 - options:
   - "Let's go" -- Proceed to step 3 (session analysis)
   - "Use questionnaire instead" -- Jump to step 4b (questionnaire path)
-  - "Not now" -- Display "No worries. Run /gsd:profile-user when ready." and exit
+  - "Not now" -- Display "No worries. Run /gad:profile-user when ready." and exit
 
 ---
 
@@ -128,7 +128,7 @@ Display: "◆ Scanning sessions..."
 
 Run session scan:
 ```bash
-SCAN_RESULT=$(node $HOME/.claude/bin/gad-tools.cjs scan-sessions --json 2>/dev/null)
+SCAN_RESULT=$(gad-tools scan-sessions --json 2>/dev/null)
 ```
 
 Parse the JSON output to get session count and project count.
@@ -148,7 +148,7 @@ Display: "◆ Sampling messages..."
 
 Run profile sampling:
 ```bash
-SAMPLE_RESULT=$(node $HOME/.claude/bin/gad-tools.cjs profile-sample --json 2>/dev/null)
+SAMPLE_RESULT=$(gad-tools profile-sample --json 2>/dev/null)
 ```
 
 Parse the JSON output to get the temp directory path and message count.
@@ -161,13 +161,13 @@ Display: "◆ Analyzing patterns..."
 
 Use the Task tool to spawn the `gad-user-profiler` agent. Provide it with:
 - The sampled JSONL file path from profile-sample output
-- The user-profiling reference doc at `$HOME/.claude/references/user-profiling.md`
+- The user-profiling reference doc at `references/user-profiling.md`
 
 The agent prompt should follow this structure:
 ```
 Read the profiling reference document and the sampled session messages, then analyze the developer's behavioral patterns across all 8 dimensions.
 
-Reference: @$HOME/.claude/references/user-profiling.md
+Reference: @references/user-profiling.md
 Session data: @{temp_dir}/profile-sample.jsonl
 
 Analyze these messages and return your analysis in the <analysis> JSON format specified in the reference document.
@@ -199,7 +199,7 @@ Display: "Using questionnaire to build your profile."
 
 **Get questions:**
 ```bash
-QUESTIONS=$(node $HOME/.claude/bin/gad-tools.cjs profile-questionnaire --json 2>/dev/null)
+QUESTIONS=$(gad-tools profile-questionnaire --json 2>/dev/null)
 ```
 
 Parse the questions JSON. It contains 8 questions, one per dimension.
@@ -222,7 +222,7 @@ Write the answers JSON to `$ANSWERS_PATH`.
 
 **Convert answers to analysis:**
 ```bash
-ANALYSIS_RESULT=$(node $HOME/.claude/bin/gad-tools.cjs profile-questionnaire --answers "$ANSWERS_PATH" --json 2>/dev/null)
+ANALYSIS_RESULT=$(gad-tools profile-questionnaire --answers "$ANSWERS_PATH" --json 2>/dev/null)
 ```
 
 Parse the analysis JSON from the result.
@@ -269,10 +269,10 @@ Write updated analysis JSON back to `$ANALYSIS_PATH`.
 Display: "◆ Writing profile..."
 
 ```bash
-node $HOME/.claude/bin/gad-tools.cjs write-profile --input "$ANALYSIS_PATH" --json 2>/dev/null
+gad-tools write-profile --input "$ANALYSIS_PATH" --json 2>/dev/null
 ```
 
-Display: "✓ Profile written to $HOME/.claude/get-anything-done/USER-PROFILE.md"
+Display: "✓ Profile written to the active runtime config under get-anything-done/USER-PROFILE.md"
 
 ---
 
@@ -333,11 +333,11 @@ Use AskUserQuestion with multiSelect:
 - header: "Artifacts"
 - question: "Which artifacts should I generate?"
 - options (ALL pre-selected by default):
-  - "/gsd:dev-preferences command file" -- "Load your preferences in any session"
+  - "/gad:dev-preferences command file" -- "Load your preferences in any session"
   - "CLAUDE.md profile section" -- "Add profile to this project's CLAUDE.md"
-  - "Global CLAUDE.md" -- "Add profile to $HOME/.claude/CLAUDE.md for all projects"
+  - "Global runtime instructions file" -- "Add profile to the runtime-level instructions file for all projects"
 
-**If no artifacts selected:** Display "No artifacts generated. Your profile is saved at $HOME/.claude/get-anything-done/USER-PROFILE.md" and jump to step 10.
+**If no artifacts selected:** Display "No artifacts generated. Your profile is saved under the active runtime config at get-anything-done/USER-PROFILE.md" and jump to step 10.
 
 ---
 
@@ -345,18 +345,18 @@ Use AskUserQuestion with multiSelect:
 
 Generate selected artifacts sequentially (file I/O is fast, no benefit from parallel agents):
 
-**For /gsd:dev-preferences (if selected):**
+**For /gad:dev-preferences (if selected):**
 
 ```bash
-node $HOME/.claude/bin/gad-tools.cjs generate-dev-preferences --analysis "$ANALYSIS_PATH" --json 2>/dev/null
+gad-tools generate-dev-preferences --analysis "$ANALYSIS_PATH" --json 2>/dev/null
 ```
 
-Display: "✓ Generated /gsd:dev-preferences at $HOME/.claude/commands/gsd/dev-preferences.md"
+Display: "✓ Generated /gad:dev-preferences in the active runtime command/skill install"
 
 **For CLAUDE.md profile section (if selected):**
 
 ```bash
-node $HOME/.claude/bin/gad-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --json 2>/dev/null
+gad-tools generate-claude-profile --analysis "$ANALYSIS_PATH" --json 2>/dev/null
 ```
 
 Display: "✓ Added profile section to CLAUDE.md"
@@ -364,10 +364,10 @@ Display: "✓ Added profile section to CLAUDE.md"
 **For Global CLAUDE.md (if selected):**
 
 ```bash
-node $HOME/.claude/bin/gad-tools.cjs generate-claude-profile --analysis "$ANALYSIS_PATH" --global --json 2>/dev/null
+gad-tools generate-claude-profile --analysis "$ANALYSIS_PATH" --global --json 2>/dev/null
 ```
 
-Display: "✓ Added profile section to $HOME/.claude/CLAUDE.md"
+Display: "✓ Added profile section to the global runtime instructions file"
 
 **Error handling:** If any gad-tools.cjs call fails, display the error message and use AskUserQuestion to offer "Retry" or "Skip this artifact". On retry, re-run the command. On skip, continue to next artifact.
 
@@ -381,7 +381,7 @@ Read both old backup and new analysis to compare dimension ratings/confidence.
 
 Read the backed-up profile:
 ```bash
-BACKUP_PATH="$HOME/.claude/get-anything-done/USER-PROFILE.backup.md"
+BACKUP_PATH="${PROFILE_PATH%.md}.backup.md"
 ```
 
 Compare each dimension's rating and confidence between old and new. Display diff table showing only changed dimensions:
@@ -401,18 +401,18 @@ If nothing changed: Display "No changes detected -- your profile is already up t
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD > PROFILE COMPLETE ✓
+ GAD > PROFILE COMPLETE ✓
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Your profile:    $HOME/.claude/get-anything-done/USER-PROFILE.md
+Your profile:    <active runtime config dir>/get-anything-done/USER-PROFILE.md
 ```
 
 Then list paths for each generated artifact:
 ```
 Artifacts:
-  ✓ /gsd:dev-preferences   $HOME/.claude/commands/gsd/dev-preferences.md
+  ✓ /gad:dev-preferences   active runtime command or skill install
   ✓ CLAUDE.md section       ./CLAUDE.md
-  ✓ Global CLAUDE.md        $HOME/.claude/CLAUDE.md
+  ✓ Global instructions     active runtime instructions file
 ```
 
 (Only show artifacts that were actually generated.)

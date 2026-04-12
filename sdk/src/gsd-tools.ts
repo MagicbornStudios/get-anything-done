@@ -1,13 +1,13 @@
 /**
- * GSD Tools Bridge — shells out to `gsd-tools.cjs` for state management.
+ * GAD tools bridge — shells out to `gad-tools.cjs` for state management.
  *
- * All `.planning/` state operations go through gsd-tools.cjs rather than
- * reimplementing 12K+ lines of logic.
+ * All `.planning/` state operations go through gad-tools.cjs rather than
+ * reimplementing the CLI logic in the SDK.
  */
 
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import type { InitNewProjectInfo, PhaseOpInfo, PhasePlanIndex, RoadmapAnalysis } from './types.js';
@@ -47,6 +47,15 @@ export class GSDTools {
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
+  private getExecCommandAndArgs(command: string, args: string[], raw = false): { executable: string; args: string[] } {
+    const commandArgs = [command, ...args];
+    if (raw) commandArgs.push('--raw');
+    if (this.gsdToolsPath.endsWith('.cjs') || this.gsdToolsPath.endsWith('.js')) {
+      return { executable: 'node', args: [this.gsdToolsPath, ...commandArgs] };
+    }
+    return { executable: this.gsdToolsPath, args: commandArgs };
+  }
+
   // ─── Core exec ───────────────────────────────────────────────────────────
 
   /**
@@ -54,12 +63,12 @@ export class GSDTools {
    * Handles the `@file:` prefix pattern for large results.
    */
   async exec(command: string, args: string[] = []): Promise<unknown> {
-    const fullArgs = [this.gsdToolsPath, command, ...args];
+    const execution = this.getExecCommandAndArgs(command, args);
 
     return new Promise<unknown>((resolve, reject) => {
       const child = execFile(
-        'node',
-        fullArgs,
+        execution.executable,
+        execution.args,
         {
           cwd: this.projectDir,
           maxBuffer: 10 * 1024 * 1024, // 10MB
@@ -156,12 +165,12 @@ export class GSDTools {
    * Use for commands like `config-set` that return plain text, not JSON.
    */
   async execRaw(command: string, args: string[] = []): Promise<string> {
-    const fullArgs = [this.gsdToolsPath, command, ...args, '--raw'];
+    const execution = this.getExecCommandAndArgs(command, args, true);
 
     return new Promise<string>((resolve, reject) => {
       const child = execFile(
-        'node',
-        fullArgs,
+        execution.executable,
+        execution.args,
         {
           cwd: this.projectDir,
           maxBuffer: 10 * 1024 * 1024,
@@ -284,12 +293,73 @@ export class GSDTools {
 
 // ─── Path resolution ────────────────────────────────────────────────────────
 
+function readMarkerToolsPath(baseDir: string): string | undefined {
+  const markerPath = join(baseDir, 'get-anything-done', '.gad-env');
+  if (!existsSync(markerPath)) return undefined;
+  try {
+    const raw = readFileSync(markerPath, 'utf8');
+    const parsed = JSON.parse(raw) as { GAD_TOOLS_PATH?: string };
+    return parsed.GAD_TOOLS_PATH;
+  } catch {
+    return undefined;
+  }
+}
+
+function collectRuntimeConfigDirs(rootDir: string): string[] {
+  if (!existsSync(rootDir)) return [];
+  const dirs: string[] = [];
+  for (const entry of readdirSync(rootDir)) {
+    const full = join(rootDir, entry);
+    try {
+      if (!statSync(full).isDirectory()) continue;
+    } catch {
+      continue;
+    }
+    if (entry.startsWith('.')) {
+      dirs.push(full);
+      continue;
+    }
+    if (entry === '.config') {
+      for (const nested of readdirSync(full)) {
+        const nestedFull = join(full, nested);
+        try {
+          if (statSync(nestedFull).isDirectory()) dirs.push(nestedFull);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+  return dirs;
+}
+
 /**
- * Resolve gsd-tools.cjs path with repo-local fallback.
- * Probe order: repo-local → global home directory.
+ * Resolve gad-tools.cjs path with env, marker, repo-local, and runtime-dir fallbacks.
  */
 export function resolveGsdToolsPath(projectDir: string): string {
-  const localPath = join(projectDir, '.claude', 'get-shit-done', 'bin', 'gsd-tools.cjs');
-  if (existsSync(localPath)) return localPath;
-  return join(homedir(), '.claude', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+  if (process.env.GAD_TOOLS_PATH && existsSync(process.env.GAD_TOOLS_PATH)) {
+    return process.env.GAD_TOOLS_PATH;
+  }
+
+  const markerBases = [
+    projectDir,
+    ...collectRuntimeConfigDirs(projectDir),
+    homedir(),
+    ...collectRuntimeConfigDirs(homedir()),
+  ];
+  for (const baseDir of markerBases) {
+    const markerPath = readMarkerToolsPath(baseDir);
+    if (markerPath && existsSync(markerPath)) return markerPath;
+  }
+
+  const candidatePaths = [
+    join(projectDir, 'vendor', 'get-anything-done', 'bin', 'gad-tools.cjs'),
+    join(projectDir, 'get-anything-done', 'bin', 'gad-tools.cjs'),
+    join(projectDir, 'bin', 'gad-tools.cjs'),
+  ];
+  for (const candidate of candidatePaths) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  return 'gad-tools';
 }

@@ -118,7 +118,7 @@ This is required for Claude Code remote sessions (`/rc` mode) where the Claude A
 cannot forward TUI menu selections back to the host.
 
 Enable text mode:
-- Per-session: pass `--text` flag to any command (e.g., `/gsd:discuss-phase --text`)
+- Per-session: pass `--text` flag to any command (e.g., `/gad:discuss-phase --text`)
 - Per-project: `gad-tools config-set workflow.text_mode true`
 
 Text mode applies to ALL workflows in the session, not just discuss-phase.
@@ -126,15 +126,15 @@ Text mode applies to ALL workflows in the session, not just discuss-phase.
 
 <process>
 
-**Express path available:** If you already have a PRD or acceptance criteria document, use `/gsd:plan-phase {phase} --prd path/to/prd.md` to skip this discussion and go straight to planning.
+**Express path available:** If you already have a PRD or acceptance criteria document, use `/gad:plan-phase {phase} --prd path/to/prd.md` to skip this discussion and go straight to planning.
 
 <step name="initialize" priority="first">
 Phase number from argument (required).
 
 ```bash
-INIT=$(node "$HOME/.claude/bin/gad-tools.cjs" init phase-op "${PHASE}")
+INIT=$(gad-tools init phase-op "${PHASE}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_ADVISOR=$(node "$HOME/.claude/bin/gad-tools.cjs" agent-skills gad-advisor 2>/dev/null)
+AGENT_SKILLS_ADVISOR=$(gad-tools agent-skills gad-advisor 2>/dev/null)
 ```
 
 Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `has_research`, `has_context`, `has_plans`, `has_verification`, `plan_count`, `roadmap_exists`, `planning_exists`.
@@ -143,7 +143,7 @@ Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phas
 ```
 Phase [X] not found in roadmap.
 
-Use /gsd:progress ${GSD_WS} to see available phases.
+Use /gad:progress ${GSD_WS} to see available phases.
 ```
 Exit workflow.
 
@@ -215,7 +215,7 @@ Check `has_plans` and `plan_count` from init. **If `has_plans` is true:**
 - header: "Plans exist"
 - question: "Phase [X] already has {plan_count} plan(s) created without user context. Your decisions here won't affect existing plans unless you replan."
 - options:
-  - "Continue and replan after" — Capture context, then run /gsd:plan-phase {X} ${GSD_WS} to replan
+  - "Continue and replan after" — Capture context, then run /gad:plan-phase {X} ${GSD_WS} to replan
   - "View existing plans" — Show plans before deciding
   - "Cancel" — Skip discuss-phase
 
@@ -285,7 +285,7 @@ Check if any pending todos are relevant to this phase's scope. Surfaces backlog 
 
 **Load and match todos:**
 ```bash
-TODO_MATCHES=$(node "$HOME/.claude/bin/gad-tools.cjs" todo match-phase "${PHASE_NUMBER}")
+TODO_MATCHES=$(gad-tools todo match-phase "${PHASE_NUMBER}")
 ```
 
 Parse JSON for: `todo_count`, `matches[]` (each with `file`, `title`, `area`, `score`, `reasons`).
@@ -392,15 +392,15 @@ Analyze the phase to identify gray areas worth discussing. **Use both `prior_dec
 
 Check if advisor mode should activate:
 
-1. Check for USER-PROFILE.md:
+1. Check for the installed global user profile:
    ```bash
-   PROFILE_PATH="$HOME/.claude/get-anything-done/USER-PROFILE.md"
+   PROFILE_PATH="<active runtime config dir>/get-anything-done/USER-PROFILE.md"
    ```
    ADVISOR_MODE = file exists at PROFILE_PATH → true, otherwise → false
 
 2. If ADVISOR_MODE is true, resolve vendor_philosophy calibration tier:
    - Priority 1: Read config.json > preferences.vendor_philosophy (project-level override)
-   - Priority 2: Read USER-PROFILE.md Vendor Choices/Philosophy rating (global)
+   - Priority 2: Read USER-PROFILE.md Vendor Choices/Philosophy rating (global runtime profile)
    - Priority 3: Default to "standard" if neither has a value or value is UNSCORED
 
    Map to calibration tier:
@@ -410,7 +410,7 @@ Check if advisor mode should activate:
 
 3. Resolve model for advisor agents:
    ```bash
-   ADVISOR_MODEL=$(node "$HOME/.claude/bin/gad-tools.cjs" resolve-model gad-advisor-researcher --raw)
+   ADVISOR_MODEL=$(gad-tools resolve-model gad-advisor-researcher --raw)
    ```
 
 If ADVISOR_MODE is false, skip all advisor-specific steps — workflow proceeds with existing conversational flow unchanged.
@@ -517,7 +517,7 @@ After user selects gray areas in present_gray_areas, spawn parallel research age
 2. For EACH user-selected gray area, spawn a Task() in parallel:
 
    Task(
-     prompt="First, read @~/.claude/agents/gad-advisor-researcher.md for your role and instructions.
+     prompt="First, follow the installed gad-advisor-researcher instructions for your role and evaluation style.
 
      <gray_area>{area_name}: {area_description from gray area identification}</gray_area>
      <phase_context>{phase_goal and description from ROADMAP.md}</phase_context>
@@ -670,7 +670,7 @@ In `--auto` mode, the discuss step MUST complete in a **single pass**. After wri
 
 Check the pass cap from config:
 ```bash
-MAX_PASSES=$(node "$HOME/.claude/bin/gad-tools.cjs" config-get workflow.max_discuss_passes 2>/dev/null || echo "3")
+MAX_PASSES=$(gad-tools config-get workflow.max_discuss_passes 2>/dev/null || echo "3")
 ```
 
 If you have already written and committed CONTEXT.md, the discuss step is complete. Move on.
@@ -782,7 +782,7 @@ Write after each area:
 }
 ```
 
-This is a structured checkpoint, not the final CONTEXT.md — the `write_context` step still produces the canonical output. But if the session dies, the next `gsd:discuss-phase` invocation can detect this checkpoint and offer to resume from it instead of starting from scratch.
+This is a structured checkpoint, not the final CONTEXT.md — the `write_context` step still produces the canonical output. But if the session dies, the next `gad:discuss-phase` invocation can detect this checkpoint and offer to resume from it instead of starting from scratch.
 
 **On session resume:** In the `check_existing` step, also check for `*-DISCUSS-CHECKPOINT.json`. If found and no CONTEXT.md exists:
 - Display: "Found interrupted discussion checkpoint ({N} areas completed). Resume from checkpoint?"
@@ -946,16 +946,16 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 
 **Phase ${PHASE}: [Name]** — [Goal from ROADMAP.md]
 
-`/gsd:plan-phase ${PHASE} ${GSD_WS}`
+`/gad:plan-phase ${PHASE} ${GSD_WS}`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:discuss-phase ${PHASE} --chain ${GSD_WS}` — re-run with auto plan+execute after
-- `/gsd:plan-phase ${PHASE} --skip-research ${GSD_WS}` — plan without research
-- `/gsd:ui-phase ${PHASE} ${GSD_WS}` — generate UI design contract before planning (if phase has frontend work)
+- `/gad:discuss-phase ${PHASE} --chain ${GSD_WS}` — re-run with auto plan+execute after
+- `/gad:plan-phase ${PHASE} --skip-research ${GSD_WS}` — plan without research
+- `/gad:ui-phase ${PHASE} ${GSD_WS}` — generate UI design contract before planning (if phase has frontend work)
 - Review/edit CONTEXT.md before continuing
 
 ---
@@ -1016,7 +1016,7 @@ rm -f "${phase_dir}/${padded_phase}-DISCUSS-CHECKPOINT.json"
 Commit phase context and discussion log:
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" commit "docs(${padded_phase}): capture phase context" --files "${phase_dir}/${padded_phase}-CONTEXT.md" "${phase_dir}/${padded_phase}-DISCUSSION-LOG.md"
+gad-tools commit "docs(${padded_phase}): capture phase context" --files "${phase_dir}/${padded_phase}-CONTEXT.md" "${phase_dir}/${padded_phase}-DISCUSSION-LOG.md"
 ```
 
 Confirm: "Committed: docs(${padded_phase}): capture phase context"
@@ -1026,7 +1026,7 @@ Confirm: "Committed: docs(${padded_phase}): capture phase context"
 Update STATE.md with session info:
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" state record-session \
+gad-tools state record-session \
   --stopped-at "Phase ${PHASE} context gathered" \
   --resume-file "${phase_dir}/${padded_phase}-CONTEXT.md"
 ```
@@ -1034,7 +1034,7 @@ node "$HOME/.claude/bin/gad-tools.cjs" state record-session \
 Commit STATE.md:
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" commit "docs(state): record phase ${PHASE} context session" --files .planning/STATE.md
+gad-tools commit "docs(state): record phase ${PHASE} context session" --files .planning/STATE.md
 ```
 </step>
 
@@ -1045,18 +1045,18 @@ Check for auto-advance trigger:
 2. **Sync chain flag with intent** — if user invoked manually (no `--auto` and no `--chain`), clear the ephemeral chain flag from any previous interrupted `--auto` chain. This does NOT touch `workflow.auto_advance` (the user's persistent settings preference):
    ```bash
    if [[ ! "$ARGUMENTS" =~ --auto ]] && [[ ! "$ARGUMENTS" =~ --chain ]]; then
-     node "$HOME/.claude/bin/gad-tools.cjs" config-set workflow._auto_chain_active false 2>/dev/null
+     gad-tools config-set workflow._auto_chain_active false 2>/dev/null
    fi
    ```
 3. Read both the chain flag and user preference:
    ```bash
-   AUTO_CHAIN=$(node "$HOME/.claude/bin/gad-tools.cjs" config-get workflow._auto_chain_active 2>/dev/null || echo "false")
-   AUTO_CFG=$(node "$HOME/.claude/bin/gad-tools.cjs" config-get workflow.auto_advance 2>/dev/null || echo "false")
+   AUTO_CHAIN=$(gad-tools config-get workflow._auto_chain_active 2>/dev/null || echo "false")
+   AUTO_CFG=$(gad-tools config-get workflow.auto_advance 2>/dev/null || echo "false")
    ```
 
 **If `--auto` or `--chain` flag present AND `AUTO_CHAIN` is not true:** Persist chain flag to config (handles direct usage without new-project):
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" config-set workflow._auto_chain_active true
+gad-tools config-set workflow._auto_chain_active true
 ```
 
 **If `--auto` flag present OR `--chain` flag present OR `AUTO_CHAIN` is true OR `AUTO_CFG` is true:**
@@ -1064,7 +1064,7 @@ node "$HOME/.claude/bin/gad-tools.cjs" config-set workflow._auto_chain_active tr
 Display banner:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► AUTO-ADVANCING TO PLAN
+ GAD ► AUTO-ADVANCING TO PLAN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Context captured. Launching plan-phase...
@@ -1072,7 +1072,7 @@ Context captured. Launching plan-phase...
 
 Launch plan-phase using the Skill tool to avoid nested Task sessions (which cause runtime freezes due to deep agent nesting — see #686):
 ```
-Skill(skill="gsd:plan-phase", args="${PHASE} --auto ${GSD_WS}")
+Skill(skill="gad:plan-phase", args="${PHASE} --auto ${GSD_WS}")
 ```
 
 This keeps the auto-advance chain flat — discuss, plan, and execute all run at the same nesting level rather than spawning increasingly deep Task agents.
@@ -1081,28 +1081,28 @@ This keeps the auto-advance chain flat — discuss, plan, and execute all run at
 - **PHASE COMPLETE** → Full chain succeeded. Display:
   ```
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   GSD ► PHASE ${PHASE} COMPLETE
+   GAD ► PHASE ${PHASE} COMPLETE
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Auto-advance pipeline finished: discuss → plan → execute
 
-  Next: /gsd:discuss-phase ${NEXT_PHASE} ${WAS_CHAIN ? "--chain" : "--auto"} ${GSD_WS}
+  Next: /gad:discuss-phase ${NEXT_PHASE} ${WAS_CHAIN ? "--chain" : "--auto"} ${GSD_WS}
   <sub>/clear first → fresh context window</sub>
   ```
 - **PLANNING COMPLETE** → Planning done, execution didn't complete:
   ```
   Auto-advance partial: Planning complete, execution did not finish.
-  Continue: /gsd:execute-phase ${PHASE} ${GSD_WS}
+  Continue: /gad:execute-phase ${PHASE} ${GSD_WS}
   ```
 - **PLANNING INCONCLUSIVE / CHECKPOINT** → Stop chain:
   ```
   Auto-advance stopped: Planning needs input.
-  Continue: /gsd:plan-phase ${PHASE} ${GSD_WS}
+  Continue: /gad:plan-phase ${PHASE} ${GSD_WS}
   ```
 - **GAPS FOUND** → Stop chain:
   ```
   Auto-advance stopped: Gaps found during execution.
-  Continue: /gsd:plan-phase ${PHASE} --gaps ${GSD_WS}
+  Continue: /gad:plan-phase ${PHASE} --gaps ${GSD_WS}
   ```
 
 **If none of `--auto`, `--chain`, nor config enabled:**

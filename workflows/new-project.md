@@ -7,7 +7,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 </required_reading>
 
 <available_agent_types>
-Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+Valid GAD subagent types (use exact names — do not fall back to 'general-purpose'):
 - gad-project-researcher — Researches project-level technical decisions
 - gad-research-synthesizer — Synthesizes findings from parallel research agents
 - gad-roadmapper — Creates phased execution roadmaps
@@ -33,7 +33,7 @@ Check if `--auto` flag is present in $ARGUMENTS.
 **Document requirement:**
 Auto mode requires an idea document — either:
 
-- File reference: `/gsd:new-project --auto @prd.md`
+- File reference: `/gad:new-project --auto @prd.md`
 - Pasted/written text in the prompt
 
 If no document content provided, error:
@@ -42,8 +42,8 @@ If no document content provided, error:
 Error: --auto requires an idea document.
 
 Usage:
-  /gsd:new-project --auto @your-idea.md
-  /gsd:new-project --auto [paste or write your idea here]
+  /gad:new-project --auto @your-idea.md
+  /gad:new-project --auto [paste or write your idea here]
 
 The document should describe what you want to build.
 ```
@@ -57,16 +57,16 @@ The document should describe what you want to build.
 **MANDATORY FIRST STEP — Execute these checks before ANY user interaction:**
 
 ```bash
-INIT=$(node "$HOME/.claude/bin/gad-tools.cjs" init new-project)
+INIT=$(gad-tools init new-project)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_RESEARCHER=$(node "$HOME/.claude/bin/gad-tools.cjs" agent-skills gad-project-researcher 2>/dev/null)
-AGENT_SKILLS_SYNTHESIZER=$(node "$HOME/.claude/bin/gad-tools.cjs" agent-skills gad-synthesizer 2>/dev/null)
-AGENT_SKILLS_ROADMAPPER=$(node "$HOME/.claude/bin/gad-tools.cjs" agent-skills gad-roadmapper 2>/dev/null)
+AGENT_SKILLS_RESEARCHER=$(gad-tools agent-skills gad-project-researcher 2>/dev/null)
+AGENT_SKILLS_SYNTHESIZER=$(gad-tools agent-skills gad-synthesizer 2>/dev/null)
+AGENT_SKILLS_ROADMAPPER=$(gad-tools agent-skills gad-roadmapper 2>/dev/null)
 ```
 
 Parse JSON for: `researcher_model`, `synthesizer_model`, `roadmapper_model`, `commit_docs`, `project_exists`, `has_codebase_map`, `planning_exists`, `has_existing_code`, `has_package_file`, `is_brownfield`, `needs_codebase_map`, `has_git`, `project_path`.
 
-**If `project_exists` is true:** Error — project already initialized. Use `/gsd:progress`.
+**If `project_exists` is true:** Error — project already initialized. Use `/gad:progress`.
 
 **If `has_git` is false:** Initialize git:
 
@@ -85,13 +85,13 @@ Use AskUserQuestion:
 - header: "Codebase"
 - question: "I detected existing code in this directory. Would you like to map the codebase first?"
 - options:
-  - "Map codebase first" — Run /gsd:map-codebase to understand existing architecture (Recommended)
+  - "Map codebase first" — Run /gad:map-codebase to understand existing architecture (Recommended)
   - "Skip mapping" — Proceed with project initialization
 
 **If "Map codebase first":**
 
 ```
-Run `/gsd:map-codebase` first, then return to `/gsd:new-project`
+Run `/gad:map-codebase` first, then return to `/gad:new-project`
 ```
 
 Exit command.
@@ -188,7 +188,7 @@ Create `.planning/config.json` with all settings (CLI fills in remaining default
 
 ```bash
 mkdir -p .planning
-node "$HOME/.claude/bin/gad-tools.cjs" config-new-project '{"mode":"yolo","granularity":"[selected]","parallelization":true|false,"commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false,"nyquist_validation":true|false,"auto_advance":true}}'
+gad-tools config-new-project '{"mode":"yolo","granularity":"[selected]","parallelization":true|false,"commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false,"nyquist_validation":true|false,"auto_advance":true}}'
 ```
 
 **If commit_docs = No:** Add `.planning/` to `.gitignore`.
@@ -197,13 +197,13 @@ node "$HOME/.claude/bin/gad-tools.cjs" config-new-project '{"mode":"yolo","granu
 
 ```bash
 mkdir -p .planning
-node "$HOME/.claude/bin/gad-tools.cjs" commit "chore: add project config" --files .planning/config.json
+gad-tools commit "chore: add project config" --files .planning/config.json
 ```
 
 **Persist auto-advance chain flag to config (survives context compaction):**
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" config-set workflow._auto_chain_active true
+gad-tools config-set workflow._auto_chain_active true
 ```
 
 Proceed to Step 4 (skip Steps 3 and 5).
@@ -216,7 +216,7 @@ Proceed to Step 4 (skip Steps 3 and 5).
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► QUESTIONING
+ GAD ► QUESTIONING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -358,14 +358,14 @@ Initialize with any decisions made during questioning:
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each phase transition** (via `/gsd:transition`):
+**After each phase transition** (via `/gad:transition`):
 1. Requirements invalidated? → Move to Out of Scope with reason
 2. Requirements validated? → Move to Validated with phase reference
 3. New requirements emerged? → Add to Active
 4. Decisions to log? → Add to Key Decisions
 5. "What This Is" still accurate? → Update if drifted
 
-**After each milestone** (via `/gsd:complete-milestone`):
+**After each milestone** (via `/gad:complete-milestone`):
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
@@ -378,19 +378,19 @@ Do not compress. Capture everything gathered.
 
 ```bash
 mkdir -p .planning
-node "$HOME/.claude/bin/gad-tools.cjs" commit "docs: initialize project" --files .planning/PROJECT.md
+gad-tools commit "docs: initialize project" --files .planning/PROJECT.md
 ```
 
 ## 5. Workflow Preferences
 
 **If auto mode:** Skip — config was collected in Step 2a. Proceed to Step 5.5.
 
-**Check for global defaults** at `~/.gsd/defaults.json`. If the file exists, offer to use saved defaults:
+**Check for global defaults** at `~/.gad/defaults.json`. If the file exists, offer to use saved defaults:
 
 ```
 AskUserQuestion([
   {
-    question: "Use your saved default settings? (from ~/.gsd/defaults.json)",
+    question: "Use your saved default settings? (from ~/.gad/defaults.json)",
     header: "Defaults",
     multiSelect: false,
     options: [
@@ -401,9 +401,9 @@ AskUserQuestion([
 ])
 ```
 
-If "Yes": read `~/.gsd/defaults.json`, use those values for config.json, and skip directly to **Commit config.json** below.
+If "Yes": read `~/.gad/defaults.json`, use those values for config.json, and skip directly to **Commit config.json** below.
 
-If "No" or `~/.gsd/defaults.json` doesn't exist: proceed with the questions below.
+If "No" or `~/.gad/defaults.json` doesn't exist: proceed with the questions below.
 
 **Round 1 — Core workflow settings (4 questions):**
 
@@ -508,10 +508,10 @@ Create `.planning/config.json` with all settings (CLI fills in remaining default
 
 ```bash
 mkdir -p .planning
-node "$HOME/.claude/bin/gad-tools.cjs" config-new-project '{"mode":"[yolo|interactive]","granularity":"[selected]","parallelization":true|false,"commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false,"nyquist_validation":[false if granularity=coarse, true otherwise]}}'
+gad-tools config-new-project '{"mode":"[yolo|interactive]","granularity":"[selected]","parallelization":true|false,"commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false,"nyquist_validation":[false if granularity=coarse, true otherwise]}}'
 ```
 
-**Note:** Run `/gsd:settings` anytime to update model profile, workflow agents, branching strategy, and other preferences.
+**Note:** Run `/gad:settings` anytime to update model profile, workflow agents, branching strategy, and other preferences.
 
 **If commit_docs = No:**
 
@@ -525,7 +525,7 @@ node "$HOME/.claude/bin/gad-tools.cjs" config-new-project '{"mode":"[yolo|intera
 **Commit config.json:**
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" commit "chore: add project config" --files .planning/config.json
+gad-tools commit "chore: add project config" --files .planning/config.json
 ```
 
 ## 5.1. Sub-Repo Detection
@@ -545,7 +545,7 @@ Strip the `./` prefix to get directory names (e.g., `./backend` → `backend`).
 Use AskUserQuestion:
 
 - header: "Multi-Repo Workspace"
-- question: "I detected separate git repos in this workspace. Which directories contain code that GSD should commit to?"
+- question: "I detected separate git repos in this workspace. Which directories contain code that GAD should commit to?"
 - multiSelect: true
 - options: one option per detected directory
   - "[directory name]" — Separate git repo
@@ -582,7 +582,7 @@ Display stage banner:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► RESEARCHING
+ GAD ► RESEARCHING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Researching [domain] ecosystem...
@@ -650,7 +650,7 @@ Your STACK.md feeds into roadmap creation. Be prescriptive:
 
 <output>
 Write to: .planning/research/STACK.md
-Use template: ~/.claude/templates/research-project/STACK.md
+Use template: templates/research-project/STACK.md
 </output>
 ", subagent_type="gad-project-researcher", model="{researcher_model}", description="Stack research")
 
@@ -690,7 +690,7 @@ Your FEATURES.md feeds into requirements definition. Categorize clearly:
 
 <output>
 Write to: .planning/research/FEATURES.md
-Use template: ~/.claude/templates/research-project/FEATURES.md
+Use template: templates/research-project/FEATURES.md
 </output>
 ", subagent_type="gad-project-researcher", model="{researcher_model}", description="Features research")
 
@@ -730,7 +730,7 @@ Your ARCHITECTURE.md informs phase structure in roadmap. Include:
 
 <output>
 Write to: .planning/research/ARCHITECTURE.md
-Use template: ~/.claude/templates/research-project/ARCHITECTURE.md
+Use template: templates/research-project/ARCHITECTURE.md
 </output>
 ", subagent_type="gad-project-researcher", model="{researcher_model}", description="Architecture research")
 
@@ -770,7 +770,7 @@ Your PITFALLS.md prevents mistakes in roadmap/planning. For each pitfall:
 
 <output>
 Write to: .planning/research/PITFALLS.md
-Use template: ~/.claude/templates/research-project/PITFALLS.md
+Use template: templates/research-project/PITFALLS.md
 </output>
 ", subagent_type="gad-project-researcher", model="{researcher_model}", description="Pitfalls research")
 ```
@@ -794,7 +794,7 @@ ${AGENT_SKILLS_SYNTHESIZER}
 
 <output>
 Write to: .planning/research/SUMMARY.md
-Use template: ~/.claude/templates/research-project/SUMMARY.md
+Use template: templates/research-project/SUMMARY.md
 Commit after writing.
 </output>
 ", subagent_type="gad-research-synthesizer", model="{synthesizer_model}", description="Synthesize research")
@@ -804,7 +804,7 @@ Display research complete banner and key findings:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► RESEARCH COMPLETE ✓
+ GAD ► RESEARCH COMPLETE ✓
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Key Findings
@@ -824,7 +824,7 @@ Display stage banner:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► DEFINING REQUIREMENTS
+ GAD ► DEFINING REQUIREMENTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -969,7 +969,7 @@ If "adjust": Return to scoping.
 **Commit requirements:**
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" commit "docs: define v1 requirements" --files .planning/REQUIREMENTS.md
+gad-tools commit "docs: define v1 requirements" --files .planning/REQUIREMENTS.md
 ```
 
 ## 8. Create Roadmap
@@ -978,7 +978,7 @@ Display stage banner:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► CREATING ROADMAP
+ GAD ► CREATING ROADMAP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ◆ Spawning roadmapper...
@@ -1109,15 +1109,15 @@ Use AskUserQuestion:
 **Generate or refresh project CLAUDE.md before final commit:**
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" generate-claude-md
+gad-tools generate-claude-md
 ```
 
-This ensures new projects get the default GSD workflow-enforcement guidance and current project context in `CLAUDE.md`.
+This ensures new projects get the default GAD workflow-enforcement guidance and current project context in `CLAUDE.md`.
 
 **Commit roadmap (after approval or auto mode):**
 
 ```bash
-node "$HOME/.claude/bin/gad-tools.cjs" commit "docs: create roadmap ([N] phases)" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md CLAUDE.md
+gad-tools commit "docs: create roadmap ([N] phases)" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md CLAUDE.md
 ```
 
 ## 9. Done
@@ -1126,7 +1126,7 @@ Present completion summary:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► PROJECT INITIALIZED ✓
+ GAD ► PROJECT INITIALIZED ✓
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **[Project Name]**
@@ -1151,14 +1151,14 @@ Present completion summary:
 ╚══════════════════════════════════════════╝
 ```
 
-Exit skill and invoke SlashCommand("/gsd:discuss-phase 1 --auto")
+Exit skill and invoke SlashCommand("/gad:discuss-phase 1 --auto")
 
 **If interactive mode:**
 
 Check if Phase 1 has UI indicators (look for `**UI hint**: yes` in Phase 1 detail section of ROADMAP.md):
 
 ```bash
-PHASE1_SECTION=$(node "$HOME/.claude/bin/gad-tools.cjs" roadmap get-phase 1 2>/dev/null)
+PHASE1_SECTION=$(gad-tools roadmap get-phase 1 2>/dev/null)
 PHASE1_HAS_UI=$(echo "$PHASE1_SECTION" | grep -qi "UI hint.*yes" && echo "true" || echo "false")
 ```
 
@@ -1171,15 +1171,15 @@ PHASE1_HAS_UI=$(echo "$PHASE1_SECTION" | grep -qi "UI hint.*yes" && echo "true" 
 
 **Phase 1: [Phase Name]** — [Goal from ROADMAP.md]
 
-/gsd:discuss-phase 1 — gather context and clarify approach
+/gad:discuss-phase 1 — gather context and clarify approach
 
 <sub>/clear first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- /gsd:ui-phase 1 — generate UI design contract (recommended for frontend phases)
-- /gsd:plan-phase 1 — skip discussion, plan directly
+- /gad:ui-phase 1 — generate UI design contract (recommended for frontend phases)
+- /gad:plan-phase 1 — skip discussion, plan directly
 
 ───────────────────────────────────────────────────────────────
 ```
@@ -1193,14 +1193,14 @@ PHASE1_HAS_UI=$(echo "$PHASE1_SECTION" | grep -qi "UI hint.*yes" && echo "true" 
 
 **Phase 1: [Phase Name]** — [Goal from ROADMAP.md]
 
-/gsd:discuss-phase 1 — gather context and clarify approach
+/gad:discuss-phase 1 — gather context and clarify approach
 
 <sub>/clear first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- /gsd:plan-phase 1 — skip discussion, plan directly
+- /gad:plan-phase 1 — skip discussion, plan directly
 
 ───────────────────────────────────────────────────────────────
 ```
@@ -1242,8 +1242,8 @@ PHASE1_HAS_UI=$(echo "$PHASE1_SECTION" | grep -qi "UI hint.*yes" && echo "true" 
 - [ ] ROADMAP.md created with phases, requirement mappings, success criteria
 - [ ] STATE.md initialized
 - [ ] REQUIREMENTS.md traceability updated
-- [ ] CLAUDE.md generated with GSD workflow guidance
-- [ ] User knows next step is `/gsd:discuss-phase 1`
+- [ ] CLAUDE.md generated with GAD workflow guidance
+- [ ] User knows next step is `/gad:discuss-phase 1`
 
 **Atomic commits:** Each phase commits its artifacts immediately. If context is lost, artifacts persist.
 
