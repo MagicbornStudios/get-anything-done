@@ -898,4 +898,24 @@
       <keywords>model-profiles,claude,sdk,off-by-default,live-verification</keywords>
     </task>
   </phase>
+  <phase id="39">
+    <task id="39-01" type="site" status="planned"><goal>Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.</goal>
+      <keywords>site,dry,dedup,callout</keywords>
+    </task>
+    <task id="39-02" type="site" status="planned"><goal>Deduplicate ExperimentLogIntro and RoundsIntro (identical copy): one canonical component or re-export; remove the extra file.</goal>
+      <keywords>site,dry,intro,landing</keywords>
+    </task>
+    <task id="39-03" type="site" status="planned"><goal>Maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *Intro.tsx bodies, repeated Nav/main/Footer shells, copy-pasted class stacks). File findings under .planning/notes/ or append to phase39 PLAN when created; close task when no trivial hits remain.</goal>
+      <keywords>site,audit,dedup,low-risk</keywords>
+    </task>
+    <task id="39-04" type="site" status="planned"><goal>Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate.</goal>
+      <keywords>site,layout,nextjs,medium</keywords>
+    </task>
+    <task id="39-05" type="site" status="planned"><goal>Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count.</goal>
+      <keywords>site,component,medium,landing</keywords>
+    </task>
+    <task id="39-06" type="site" status="planned"><goal>Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.</goal>
+      <keywords>site,playable,medium,dedup</keywords>
+    </task>
+  </phase>
 </task-registry>
