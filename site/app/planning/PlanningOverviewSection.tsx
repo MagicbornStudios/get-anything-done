@@ -1,8 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import type { PlanningState } from "@/lib/catalog.generated";
+import selfEvalData from "@/data/self-eval.json";
 
 export function PlanningOverviewSection({ state }: { state: PlanningState }) {
+  const selfEval = selfEvalData.latest;
+  const projectTokens = selfEval?.project_tokens;
+  const combinedProjectTokens = projectTokens?.combined_total_tokens ?? selfEval?.evals?.tokens?.total ?? 0;
+  const runtimeCount = selfEval?.runtime_distribution?.length ?? 0;
+  const evalRuns = selfEval?.evals?.runs ?? 0;
+
   return (
     <SiteSection>
       <SiteSectionHeading
@@ -18,14 +25,15 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
       <SiteProse className="mt-5">
         This page is built from{" "}
         <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">.planning/STATE.xml</code>,{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TASK-REGISTRY.xml</code>, and{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">DECISIONS.xml</code> at the
-        get-anything-done repo root. The site — including this very page — is being developed as phase
-        22 of the GAD v1.1 milestone. When we update those files, a redeploy picks up the new state
-        automatically.
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TASK-REGISTRY.xml</code>,{" "}
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">DECISIONS.xml</code>, root{" "}
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">.gad-log</code> telemetry, and preserved eval{" "}
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TRACE.json</code> artifacts. This is the
+        framework&apos;s public operations console: planning state, self-eval metrics, runtime mix, and eval
+        token accounting in one place.
       </SiteProse>
 
-      <div className="mt-12 grid gap-5 md:grid-cols-4">
+      <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Current phase</CardDescription>
@@ -48,11 +56,53 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
+            <CardDescription>Trace events</CardDescription>
+            <CardTitle className="text-4xl tabular-nums text-sky-300">
+              {selfEval?.totals?.events?.toLocaleString?.() ?? "—"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 text-xs text-muted-foreground">
+            {selfEval?.totals?.sessions ?? "—"} sessions in root telemetry
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Project token accounting</CardDescription>
+            <CardTitle className="text-4xl tabular-nums text-violet-300">
+              {combinedProjectTokens.toLocaleString()}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 text-xs text-muted-foreground">
+            {evalRuns} eval runs + live trace estimates
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Runtimes tracked</CardDescription>
+            <CardTitle className="text-4xl tabular-nums text-amber-300">{runtimeCount}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 text-xs text-muted-foreground">
+            from monorepo logs and eval artifacts
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
             <CardDescription>Tasks completed</CardDescription>
             <CardTitle className="text-4xl tabular-nums text-emerald-400">{state.doneTasksCount}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0 text-xs text-muted-foreground">
             across the full project history
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Loop compliance</CardDescription>
+            <CardTitle className="text-4xl tabular-nums text-foreground">
+              {selfEval ? `${(selfEval.loop_compliance.score * 100).toFixed(0)}%` : "—"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 text-xs text-muted-foreground">
+            {selfEval ? `${selfEval.loop_compliance.snapshot_starts}/${selfEval.loop_compliance.total_sessions} sessions start with snapshot` : "self-eval unavailable"}
           </CardContent>
         </Card>
         <Card>

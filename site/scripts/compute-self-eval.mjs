@@ -122,6 +122,92 @@ function readEvalTraces() {
   return traces;
 }
 
+function readProjectTraceEvents() {
+  const candidateFiles = [
+    path.join(MONOREPO_ROOT, ".planning", ".trace-events.jsonl"),
+    path.join(REPO_ROOT, ".planning", ".trace-events.jsonl"),
+  ];
+  const seen = new Set();
+  const traces = [];
+  for (const traceFile of candidateFiles) {
+    if (seen.has(traceFile)) continue;
+    seen.add(traceFile);
+    if (!fs.existsSync(traceFile)) continue;
+    try {
+      const lines = fs.readFileSync(traceFile, "utf8").split("\n").filter(Boolean);
+      const events = [];
+      for (const line of lines) {
+        try {
+          events.push(JSON.parse(line));
+        } catch {}
+      }
+      traces.push({ traceFile, events });
+    } catch {}
+  }
+  return traces;
+}
+
+function estimateTokensFromText(value) {
+  if (!value) return 0;
+  const text = typeof value === "string" ? value : JSON.stringify(value);
+  if (!text) return 0;
+  return Math.ceil(text.length / 4);
+}
+
+function computeProjectTokenMetrics(traceFiles) {
+  if (traceFiles.length === 0) {
+    return {
+      trace_files: 0,
+      trace_events: 0,
+      estimated_input_tokens: 0,
+      estimated_output_tokens: 0,
+      estimated_total_tokens: 0,
+      runtime_distribution: [],
+      sources: [],
+    };
+  }
+
+  const runtimeCounts = {};
+  const sources = [];
+  let traceEvents = 0;
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  for (const { traceFile, events } of traceFiles) {
+    let sourceInputTokens = 0;
+    let sourceOutputTokens = 0;
+    for (const event of events) {
+      traceEvents += 1;
+      const runtimeId = getRuntimeId(event?.runtime);
+      incrementCounter(runtimeCounts, runtimeId);
+
+      sourceInputTokens += estimateTokensFromText(event?.inputs);
+      sourceOutputTokens += estimateTokensFromText(event?.outputs);
+    }
+    inputTokens += sourceInputTokens;
+    outputTokens += sourceOutputTokens;
+    sources.push({
+      path: path.relative(MONOREPO_ROOT, traceFile).replace(/\\/g, "/"),
+      events: events.length,
+      estimated_input_tokens: sourceInputTokens,
+      estimated_output_tokens: sourceOutputTokens,
+      estimated_total_tokens: sourceInputTokens + sourceOutputTokens,
+    });
+  }
+
+  return {
+    trace_files: traceFiles.length,
+    trace_events: traceEvents,
+    estimated_input_tokens: inputTokens,
+    estimated_output_tokens: outputTokens,
+    estimated_total_tokens: inputTokens + outputTokens,
+    runtime_distribution: Object.entries(runtimeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([runtime, count]) => ({ runtime, count })),
+    sources: sources.sort((a, b) => b.estimated_total_tokens - a.estimated_total_tokens),
+  };
+}
+
 function computeEvalMetrics(traces) {
   if (traces.length === 0) {
     return {
@@ -639,6 +725,7 @@ function countDecisions() {
 const events = readAllEvents();
 const metrics = computeMetrics(events);
 const evalMetrics = computeEvalMetrics(readEvalTraces());
+const projectTokenMetrics = computeProjectTokenMetrics(readProjectTraceEvents());
 
 if (metrics) {
   // Add task and decision counts + per-phase pressure
@@ -655,6 +742,17 @@ if (metrics) {
   // Strip the heavy task data from phases_pressure in the persisted output (candidates already have it)
   metrics.phases_pressure = metrics.phases_pressure.map(({ tasks, ...rest }) => rest);
   metrics.evals = evalMetrics;
+  metrics.project_tokens = {
+    exact_eval_tokens: evalMetrics.tokens.total,
+    estimated_live_input_tokens: projectTokenMetrics.estimated_input_tokens,
+    estimated_live_output_tokens: projectTokenMetrics.estimated_output_tokens,
+    estimated_live_total_tokens: projectTokenMetrics.estimated_total_tokens,
+    combined_total_tokens: evalMetrics.tokens.total + projectTokenMetrics.estimated_total_tokens,
+    trace_files: projectTokenMetrics.trace_files,
+    trace_events: projectTokenMetrics.trace_events,
+    runtime_distribution: projectTokenMetrics.runtime_distribution,
+    sources: projectTokenMetrics.sources,
+  };
 
   // Append-only: load existing snapshots, add new one (gad-103)
   let existing = { snapshots: [] };

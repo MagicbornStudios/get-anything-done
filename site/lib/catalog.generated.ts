@@ -2618,9 +2618,9 @@ export const FINDINGS: Finding[] = [
 ];
 
 export const PLANNING_STATE: PlanningState = {
-  "currentPhase": "38",
+  "currentPhase": "39",
   "milestone": "gad-v1.1",
-  "nextAction": "Phase 38 shipped (2026-04-12): skill candidates auto-drafted from high-pressure phases.\nPhase 35 model-profile restoration shipped (2026-04-12): off-by-default profile resolution restored for GAD workflows and Claude SDK sessions, with live verification that balanced resolves to Sonnet and budget resolves to Haiku in real Claude sub-sessions.\n\n=== SHIPPED ===\n- Restored shared model-profile resolution with default `off` semantics and workflow model emission in gad-tools init\n- Claude SDK sessions now use live-safe Claude aliases (`sonnet` / `haiku` / `opus`) instead of stale frozen model IDs\n- Added an opt-in live integration test for real model switching plus one-shot manual verification via SessionInit events\n- compute-self-eval.mjs now auto-drafts SKILL.md candidates for every high-pressure phase\n- 12 candidates landed in .agents/skills/candidates/ (phase-10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34)\n- Candidates have status: candidate, category: System, origin: auto-drafted in frontmatter\n- build-site-data.mjs catalog scanner now excludes candidates/ directory (quarantined from live catalog)\n- PlanningSkillCandidatesTab component with info icon HoverCard explaining the feedback loop\n- New \"Skill candidates\" tab on /planning page showing draft metadata, source phase, and task list expansion\n\n=== DECISIONS ===\nGAD-D-144: Skill candidates quarantine and review workflow\nGAD-D-146: Claude-facing model profiles use aliases and stay off by default\n\n=== NEXT ===\n1. Execute phase 35-01 through 35-03 (runtime identity) — model switching now works, telemetry attribution still needs to land\n2. Execute phase 36 (per-eval repos + command split)\n3. Phase 37 (gad project) queued, depends on 36\n4. Manually review 12 candidates on the site and decide: promote, merge, or discard\n\n=== SELF-EVAL (latest) ===\n3,468 events | 191 tasks (185 done) | 141 decisions\nFramework overhead: 23.5% | Loop compliance: 80%\nSkill candidates: 12",
+  "nextAction": "Phase 38 shipped (2026-04-12): skill candidates auto-drafted from high-pressure phases.\r\nPhase 35 runtime telemetry foundation shipped (2026-04-12): trace schema v5 now stamps runtime identity into raw hook events, CLI logs, and TRACE scaffolds for Claude Code vs Codex attribution.\r\nCanonical repo-root skills/ source shipped (2026-04-12): command-backed gad-* skills and workspace skills now compile from one tree, with runtime install/transpilation sourced from skills/.\nPhase 35-03 advanced (2026-04-12): /planning now has a first-class System dashboard for runtime telemetry, eval token totals, pressure hotspots, and per-project eval spend.\n\r\n=== SHIPPED ===\r\n- Restored shared model-profile resolution with default off semantics and workflow model emission in gad-tools init\r\n- Claude SDK sessions now use live-safe Claude aliases (sonnet / haiku / opus) instead of stale frozen model IDs\r\n- Added an opt-in live integration test for real model switching plus one-shot manual verification via SessionInit events\r\n- compute-self-eval.mjs now auto-drafts SKILL.md candidates for every high-pressure phase\r\n- 12 candidates landed in skills/candidates/ (phase-10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34)\r\n- Candidates have status: candidate, category: System, origin: auto-drafted in frontmatter\r\n- Canonical skills now live at repo-root skills/ with COMMAND.md + skill.json for command-backed gad-* skills\r\n- gad install all --claude/--codex now installs from canonical skills/ and transpiles into runtime-native layouts\r\n- build-site-data.mjs, release support, and release-surface gating now read skills/ as the authored source of truth\r\n- gad-trace-hook now emits runtime metadata on each event; gad CLI logs now stamp runtime identity; TRACE scaffolds/from-log preserve runtime_identity\r\n\r\n=== DECISIONS ===\r\nGAD-D-144: Skill candidates quarantine and review workflow\r\nGAD-D-146: Claude-facing model profiles use aliases and stay off by default\r\n\r\n=== NEXT ===\r\n1. Phase 39 (site DRY): 39-01 and 39-02 done. Next: 39-03 (dup grep audit) or 39-04–39-06 (medium).\r\n2. Finish the remaining edge of phase 35-03: push runtime attribution into per-run eval report/detail surfaces and backfill more explicit Claude-vs-Codex comparisons\n3. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap\r\n4. Execute phase 36 (per-eval repos + command split)\r\n5. Manually review 12 candidates on the site and decide: promote, merge, or discard\r\n\r\n=== SELF-EVAL (latest) ===\r\n3,517 events | 198 tasks (191 done) | 143 decisions\nFramework overhead: 23.6% | Loop compliance: 80%\nSkill candidates: 12",
   "lastUpdated": "2026-04-12",
   "phases": [
     {
@@ -2817,6 +2817,11 @@ export const PLANNING_STATE: PlanningState = {
       "id": "38",
       "title": "Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
       "status": "done"
+    },
+    {
+      "id": "39",
+      "title": "Site DRY pass — low-risk dedup first, then medium refactors",
+      "status": "planned"
     }
   ],
   "openTasks": [
@@ -2826,22 +2831,27 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's …"
     },
     {
-      "id": "35-01",
-      "status": "planned",
-      "goal": "Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly."
-    },
-    {
-      "id": "35-02",
-      "status": "planned",
-      "goal": "Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json."
-    },
-    {
       "id": "35-03",
-      "status": "planned",
+      "status": "in-progress",
       "goal": "Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts."
+    },
+    {
+      "id": "39-04",
+      "status": "planned",
+      "goal": "Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate."
+    },
+    {
+      "id": "39-05",
+      "status": "planned",
+      "goal": "Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count."
+    },
+    {
+      "id": "39-06",
+      "status": "planned",
+      "goal": "Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser."
     }
   ],
-  "doneTasksCount": 164,
+  "doneTasksCount": 169,
   "recentDecisions": [
     {
       "id": "gad-146",

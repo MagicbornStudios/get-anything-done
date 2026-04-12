@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-12T16:41:29.186Z",
+    "generated": "2026-04-12T17:26:57.884Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -5841,7 +5841,7 @@
     {
       "id": "35-01",
       "phaseId": "35",
-      "status": "planned",
+      "status": "done",
       "agentId": null,
       "skill": null,
       "type": null,
@@ -5857,7 +5857,7 @@
     {
       "id": "35-02",
       "phaseId": "35",
-      "status": "planned",
+      "status": "done",
       "agentId": null,
       "skill": null,
       "type": null,
@@ -5873,7 +5873,7 @@
     {
       "id": "35-03",
       "phaseId": "35",
-      "status": "planned",
+      "status": "in-progress",
       "agentId": null,
       "skill": null,
       "type": null,
@@ -5900,6 +5900,102 @@
         "sdk",
         "off-by-default",
         "live-verification"
+      ],
+      "depends": []
+    },
+    {
+      "id": "39-01",
+      "phaseId": "39",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.",
+      "keywords": [
+        "site",
+        "dry",
+        "dedup",
+        "callout"
+      ],
+      "depends": []
+    },
+    {
+      "id": "39-02",
+      "phaseId": "39",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "Deduplicate ExperimentLogIntro and RoundsIntro (identical copy): one canonical component or re-export; remove the extra file.",
+      "keywords": [
+        "site",
+        "dry",
+        "intro",
+        "landing"
+      ],
+      "depends": []
+    },
+    {
+      "id": "39-03",
+      "phaseId": "39",
+      "status": "done",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "Maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *Intro.tsx bodies, repeated Nav/main/Footer shells, copy-pasted class stacks). File findings under .planning/notes/ or append to phase39 PLAN when created; close task when no trivial hits remain.",
+      "keywords": [
+        "site",
+        "audit",
+        "dedup",
+        "low-risk"
+      ],
+      "depends": []
+    },
+    {
+      "id": "39-04",
+      "phaseId": "39",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate.",
+      "keywords": [
+        "site",
+        "layout",
+        "nextjs",
+        "medium"
+      ],
+      "depends": []
+    },
+    {
+      "id": "39-05",
+      "phaseId": "39",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count.",
+      "keywords": [
+        "site",
+        "component",
+        "medium",
+        "landing"
+      ],
+      "depends": []
+    },
+    {
+      "id": "39-06",
+      "phaseId": "39",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.",
+      "keywords": [
+        "site",
+        "playable",
+        "medium",
+        "dedup"
       ],
       "depends": []
     }
@@ -6176,6 +6272,13 @@
       "title": "Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
       "status": "done",
       "goal": "Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-D-144). Extend compute-self-eval pipeline to auto-draft SKILL.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. Drafts are quarantined — excluded from catalog scan and unavailable to GAD until promoted. Add a new \"Skill candidates\" tab on /planning with info icon HoverCard explaining what a candidate is and how it comes about. Each candidate shows: draft SKILL.md content, source phase id + title, full task list from that phase, pressure score. Reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. Category on the site is \"System\" so candidates are visually distinct from canonical skills. Decisions: GAD-D-115, GAD-D-144.",
+      "outcome": null
+    },
+    {
+      "id": "39",
+      "title": "Site DRY pass — low-risk dedup first, then medium refactors",
+      "status": "planned",
+      "goal": "Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **Order:** (1) Burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) Then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared Playable/teaser chunks. (3) Re-scan periodically after other site work. **Defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. Tie-in: gad-134 (site reusability / cut duplicate edits). Depends on phase 28 (site architecture) being done.",
       "outcome": null
     }
   ],
@@ -8484,6 +8587,48 @@
       "body": "35-04 restore model profile resolution for current gad workflows and claude sdk sessions with `off` as the default, runtime-safe claude aliases when enabled, and a live verification path that proves a real claude sub-session changed models. model-profiles claude sdk off-by-default live-verification"
     },
     {
+      "id": "39-01",
+      "title": "Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared co",
+      "kind": "task",
+      "href": "/planning?tab=tasks#39-01",
+      "body": "39-01 merge duplicate round4 pressure callouts: replace resultsround4callout and roundresultsdefaultcallout with one shared component (single file + imports from results and roundresults). verify tsc and visual parity. site dry dedup callout"
+    },
+    {
+      "id": "39-02",
+      "title": "Deduplicate ExperimentLogIntro and RoundsIntro (identical copy): one canonical component or re-export; remove the extra ",
+      "kind": "task",
+      "href": "/planning?tab=tasks#39-02",
+      "body": "39-02 deduplicate experimentlogintro and roundsintro (identical copy): one canonical component or re-export; remove the extra file. site dry intro landing"
+    },
+    {
+      "id": "39-03",
+      "title": "Maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *Intro.tsx bodies, repeated Nav/main/Footer",
+      "kind": "task",
+      "href": "/planning?tab=tasks#39-03",
+      "body": "39-03 maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *intro.tsx bodies, repeated nav/main/footer shells, copy-pasted class stacks). file findings under .planning/notes/ or append to phase39 plan when created; close task when no trivial hits remain. site audit dedup low-risk"
+    },
+    {
+      "id": "39-04",
+      "title": "Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repe",
+      "kind": "task",
+      "href": "/planning?tab=tasks#39-04",
+      "body": "39-04 medium: introduce shared marketing layout — next.js route group layout or sitechrome wrapper so site/app pages stop repeating main + nav + footer boilerplate. site layout nextjs medium"
+    },
+    {
+      "id": "39-05",
+      "title": "Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-",
+      "kind": "task",
+      "href": "/planning?tab=tasks#39-05",
+      "body": "39-05 medium: add sitesectionintro (or equivalent) compound component wrapping sitesectionheading hero-compact + siteprose mt-5; migrate landing *intro.tsx files to shrink line count. site component medium landing"
+    },
+    {
+      "id": "39-06",
+      "title": "Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and Play",
+      "kind": "task",
+      "href": "/planning?tab=tasks#39-06",
+      "body": "39-06 medium: extract shared playable pieces (run chip row, embed + side panel layout, modal wiring) between playable and playableteaser. site playable medium dedup"
+    },
+    {
       "id": "01",
       "title": "Phase 01 — Foundation",
       "kind": "phase",
@@ -8755,6 +8900,13 @@
       "kind": "phase",
       "href": "/planning?tab=phases#38",
       "body": "38 skill candidates — auto-drafted from high-pressure phases, quarantined for review close the loop between pressure observation and skill creation (gad-d-115 + gad-d-144). extend compute-self-eval pipeline to auto-draft skill.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. drafts are quarantined — excluded from catalog scan and unavailable to gad until promoted. add a new \"skill candidates\" tab on /planning with info icon hovercard explaining what a candidate is and how it comes about. each candidate shows: draft skill.md content, source phase id + title, full task list from that phase, pressure score. reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. category on the site is \"system\" so candidates are visually distinct from canonical skills. decisions: gad-d-115, gad-d-144."
+    },
+    {
+      "id": "39",
+      "title": "Phase 39 — Site DRY pass — low-risk dedup first, then medium refactors",
+      "kind": "phase",
+      "href": "/planning?tab=phases#39",
+      "body": "39 site dry pass — low-risk dedup first, then medium refactors continuously reduce duplicated ui and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **order:** (1) burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared playable/teaser chunks. (3) re-scan periodically after other site work. **defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. tie-in: gad-134 (site reusability / cut duplicate edits). depends on phase 28 (site architecture) being done."
     },
     {
       "id": "compound-skills-hypothesis",

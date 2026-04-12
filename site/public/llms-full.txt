@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-12T16:41:29.179Z
+Generated: 2026-04-12T17:26:57.879Z
 
 
 ---
@@ -9927,7 +9927,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (182)
+# Tasks (188)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -10285,18 +10285,30 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **34-05** [done]: Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publication/update. Document the operator flow for releasing after CLI-shipping changes.
 
-- **35-01** [planned]: Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly.
+- **35-01** [done]: Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly.
 
-- **35-02** [planned]: Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json.
+- **35-02** [done]: Update hook/install wiring for Claude Code and Codex so eval runs preserve enough metadata to attribute tool calls, skill usage, agent spawns, and token usage to a specific runtime in raw logs and TRACE.json.
 
-- **35-03** [planned]: Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.
+- **35-03** [in-progress]: Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.
 
 - **35-04** [done]: Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-safe Claude aliases when enabled, and a live verification path that proves a real Claude sub-session changed models.
+
+- **39-01** [done]: Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.
+
+- **39-02** [done]: Deduplicate ExperimentLogIntro and RoundsIntro (identical copy): one canonical component or re-export; remove the extra file.
+
+- **39-03** [done]: Maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *Intro.tsx bodies, repeated Nav/main/Footer shells, copy-pasted class stacks). File findings under .planning/notes/ or append to phase39 PLAN when created; close task when no trivial hits remain.
+
+- **39-04** [planned]: Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate.
+
+- **39-05** [planned]: Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count.
+
+- **39-06** [planned]: Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.
 
 
 ---
 
-# Phases (39)
+# Phases (40)
 
 ## Phase 01: Foundation
 
@@ -10531,6 +10543,12 @@ Ship gad project as a top-level CLI for real projects AND evals. Subcommands: cr
 Status: done
 
 Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-D-144). Extend compute-self-eval pipeline to auto-draft SKILL.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. Drafts are quarantined — excluded from catalog scan and unavailable to GAD until promoted. Add a new "Skill candidates" tab on /planning with info icon HoverCard explaining what a candidate is and how it comes about. Each candidate shows: draft SKILL.md content, source phase id + title, full task list from that phase, pressure score. Reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. Category on the site is "System" so candidates are visually distinct from canonical skills. Decisions: GAD-D-115, GAD-D-144.
+
+## Phase 39: Site DRY pass — low-risk dedup first, then medium refactors
+
+Status: planned
+
+Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **Order:** (1) Burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) Then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared Playable/teaser chunks. (3) Re-scan periodically after other site work. **Defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. Tie-in: gad-134 (site reusability / cut duplicate edits). Depends on phase 28 (site architecture) being done.
 
 
 ---

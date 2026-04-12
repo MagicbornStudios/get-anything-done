@@ -13,6 +13,7 @@ import { RichText } from "@/components/refs/RichText";
 import { cn } from "@/lib/utils";
 import { SiteSection } from "@/components/site";
 import { PlanningSkillCandidatesTab, type SkillCandidate } from "@/app/planning/PlanningSkillCandidatesTab";
+import { PlanningSystemTab } from "@/app/planning/PlanningSystemTab";
 import selfEvalData from "@/data/self-eval.json";
 
 interface Props {
@@ -25,7 +26,7 @@ interface Props {
 
 export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions, gadBugs }: Props) {
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get("tab") || "phases";
+  const defaultTab = searchParams.get("tab") || "system";
 
   const openTasks = allTasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   const doneTasks = allTasks.filter((t) => t.status === "done");
@@ -47,6 +48,9 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
     <SiteSection>
       <Tabs defaultValue={defaultTab}>
           <TabsList className="mb-6 flex-wrap">
+            <TabsTrigger value="system">
+              System
+            </TabsTrigger>
             <TabsTrigger value="phases">
               Phases <span className="ml-1.5 tabular-nums text-muted-foreground">{allPhases.length}</span>
             </TabsTrigger>
@@ -71,6 +75,10 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
               Skill candidates <span className="ml-1.5 tabular-nums text-muted-foreground">{skillCandidates.length}</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="system">
+            <PlanningSystemTab selfEval={selfEvalData.latest} />
+          </TabsContent>
 
           {/* Phases tab */}
           <TabsContent value="phases">
