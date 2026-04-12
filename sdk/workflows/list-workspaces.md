@@ -35,7 +35,7 @@ Done.
 Display a table:
 
 ```
-GSD Workspaces (~/gad-workspaces/)
+GAD Workspaces (~/gad-workspaces/)
 
 | Name | Repos | Strategy | GAD Project |
 |------|-------|----------|-------------|
@@ -51,6 +51,6 @@ For each workspace, show:
 - **Name** — directory name
 - **Repos** — count from init data
 - **Strategy** — from WORKSPACE.md
-- **GSD Project** — whether `.planning/PROJECT.md` exists (Yes/No)
+- **GAD Project** — whether `.planning/PROJECT.md` exists (Yes/No)
 
 </process>

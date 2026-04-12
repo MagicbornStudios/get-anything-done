@@ -30,7 +30,7 @@ NYQUIST_CFG=$(gad-tools config-get workflow.nyquist_validation --raw)
 
 If `NYQUIST_CFG` is `false`: exit with "Nyquist validation is disabled. Enable via /gad:settings."
 
-Display banner: `GSD > VALIDATE PHASE {N}: {name}`
+Display banner: `GAD > VALIDATE PHASE {N}: {name}`
 
 ## 1. Detect Input State
 
@@ -142,14 +142,14 @@ gad-tools commit "docs(phase-${PHASE}): add/update validation strategy"
 
 **Compliant:**
 ```
-GSD > PHASE {N} IS NYQUIST-COMPLIANT
+GAD > PHASE {N} IS NYQUIST-COMPLIANT
 All requirements have automated verification.
 ▶ Next: /gad:audit-milestone ${GSD_WS}
 ```
 
 **Partial:**
 ```
-GSD > PHASE {N} VALIDATED (PARTIAL)
+GAD > PHASE {N} VALIDATED (PARTIAL)
 {M} automated, {K} manual-only.
 ▶ Retry: /gad:validate-phase {N} ${GSD_WS}
 ```

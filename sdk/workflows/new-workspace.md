@@ -220,7 +220,7 @@ Next steps:
 **Offer to initialize GAD (if not `--auto`):**
 
 Use AskUserQuestion:
-- header: "Initialize GSD"
+- header: "Initialize GAD"
 - question: "Would you like to initialize a GAD project in the new workspace?"
 - options:
   - "Yes — run /gad:new-project" → tell user to `cd $TARGET_PATH` first, then run `/gad:new-project`

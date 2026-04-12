@@ -503,5 +503,5 @@ Ready to plan the next milestone.
 - [ ] What's next clearly explained
 - [ ] Smart routing: /gad:execute-phase if plans exist, /gad:plan-phase if not
 - [ ] User confirms before any action
-- [ ] Seamless handoff to appropriate gsd command
+- [ ] Seamless handoff to the appropriate GAD command
       </success_criteria>

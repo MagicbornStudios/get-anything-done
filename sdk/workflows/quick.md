@@ -405,7 +405,7 @@ ${RESEARCH_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-RESEARCH.md (Research fi
 
 ${AGENT_SKILLS_PLANNER}
 
-**Project skills:** Check .claude/skills/ or skills/ directory (if either exists) — read SKILL.md files, plans should account for project skill rules
+**Project skills:** Check `skills/` if it exists — read `SKILL.md` files and account for project skill rules in the plan
 
 </planning_context>
 
@@ -561,7 +561,7 @@ Execute quick task ${quick_id}.
 - ${QUICK_DIR}/${quick_id}-PLAN.md (Plan)
 - .planning/STATE.md (Project state)
 - ./CLAUDE.md (Project instructions, if exists)
-- .claude/skills/ or skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
+- skills/ (Project skills, if present — list skills, read SKILL.md for each, follow relevant rules during implementation)
 </files_to_read>
 
 ${AGENT_SKILLS_EXECUTOR}
@@ -740,7 +740,7 @@ Display completion output:
 ```
 ---
 
-GSD > QUICK TASK COMPLETE (VALIDATED)
+GAD > QUICK TASK COMPLETE (VALIDATED)
 
 Quick Task ${quick_id}: ${DESCRIPTION}
 
@@ -758,7 +758,7 @@ Ready for next task: /gad:quick ${GSD_WS}
 ```
 ---
 
-GSD > QUICK TASK COMPLETE
+GAD > QUICK TASK COMPLETE
 
 Quick Task ${quick_id}: ${DESCRIPTION}
 

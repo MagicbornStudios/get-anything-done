@@ -28,7 +28,7 @@ Read STATE.md before any operation to load project context.
 </required_reading>
 
 <available_agent_types>
-These are the valid GAD subagent types registered in .claude/agents/ (or equivalent for your runtime).
+These are the valid GAD subagent types installed for the active runtime.
 Always use the exact name from this list — do not fall back to 'general-purpose' or other built-in types:
 
 - gad-executor — Executes plan tasks, commits, creates SUMMARY.md
@@ -152,8 +152,8 @@ checkpoints between tasks. The user can review, modify, or redirect work at any 
 **Benefits of interactive mode:**
 - No subagent overhead — dramatically lower token usage
 - User catches mistakes early — saves costly verification cycles
-- Maintains GSD's planning/tracking structure
-- Best for: small phases, bug fixes, verification gaps, learning GSD
+- Maintains GAD's planning/tracking structure
+- Best for: small phases, bug fixes, verification gaps, learning GAD
 
 **Skip to handle_branching step** (interactive plans execute inline after grouping).
 </step>
@@ -283,7 +283,7 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
        - ${prior_wave_summaries} (SUMMARY.md files from earlier waves in this phase — what was already built)
        ` : ''}
        - ./CLAUDE.md (Project instructions, if exists — follow project-specific guidelines and coding conventions)
-       - .claude/skills/ or skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
+       - skills/ (Project skills, if present — list skills, read SKILL.md for each, follow relevant rules during implementation)
        </files_to_read>
 
        ${AGENT_SKILLS}
@@ -1005,7 +1005,7 @@ For 1M+ context models, consider:
 </context_efficiency>
 
 <failure_handling>
-- **classifyHandoffIfNeeded false failure:** Agent reports "failed" but error is `classifyHandoffIfNeeded is not defined` → Claude Code bug, not GSD. Spot-check (SUMMARY exists, commits present) → if pass, treat as success
+- **classifyHandoffIfNeeded false failure:** Agent reports "failed" but error is `classifyHandoffIfNeeded is not defined` → Claude Code bug, not the GAD framework. Spot-check (SUMMARY exists, commits present) → if pass, treat as success
 - **Agent fails mid-plan:** Missing SUMMARY.md → report, ask user how to proceed
 - **Dependency chain breaks:** Wave 1 fails → Wave 2 dependents likely fail → user chooses attempt or skip
 - **All agents in wave fail:** Systemic issue → stop, report for investigation

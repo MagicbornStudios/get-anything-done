@@ -348,7 +348,7 @@ Present the following choice using `AskUserQuestion` if available, or inline pro
 How should this file be handled?
   [1] preserve    -- Skip entirely. Leave unchanged.
   [2] supplement  -- Append only missing sections. Existing content untouched.
-  [3] regenerate  -- Overwrite with a fresh GSD-generated doc.
+  [3] regenerate  -- Overwrite with a fresh GAD-generated doc.
 ```
 
 Record each decision. Update the doc queue:

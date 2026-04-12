@@ -65,8 +65,8 @@ export const CONFIG_DEFAULTS: GSDConfig = {
   exa_search: false,
   git: {
     branching_strategy: 'none',
-    phase_branch_template: 'gsd/phase-{phase}-{slug}',
-    milestone_branch_template: 'gsd/{milestone}-{slug}',
+    phase_branch_template: 'gad/phase-{phase}-{slug}',
+    milestone_branch_template: 'gad/{milestone}-{slug}',
     quick_branch_template: null,
   },
   workflow: {

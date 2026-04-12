@@ -30,7 +30,7 @@ SECURITY_CFG=$(gad-tools config-get workflow.security_enforcement --raw 2>/dev/n
 
 If `SECURITY_CFG` is `false`: exit with "Security enforcement disabled. Enable via /gad:settings."
 
-Display banner: `GSD > SECURE PHASE {N}: {name}`
+Display banner: `GAD > SECURE PHASE {N}: {name}`
 
 ## 1. Detect Input State
 
@@ -121,7 +121,7 @@ Handle return:
 **ENFORCING GATE:** If `threats_open > 0` after all options exhausted (user did not accept, not all verified closed):
 
 ```
-GSD > PHASE {N} SECURITY BLOCKED
+GAD > PHASE {N} SECURITY BLOCKED
 {K} threats open — phase advancement blocked until threats_open: 0
 ▶ Fix mitigations then re-run: /gad:secure-phase {N}
 ▶ Or document accepted risks in SECURITY.md and re-run.
@@ -139,7 +139,7 @@ gad-tools commit "docs(phase-${PHASE}): add/update security threat verification"
 
 **Secured (threats_open: 0):**
 ```
-GSD > PHASE {N} THREAT-SECURE
+GAD > PHASE {N} THREAT-SECURE
 threats_open: 0 — all threats have dispositions.
 ▶ /gad:validate-phase {N}    validate test coverage
 ▶ /gad:verify-work {N}       run UAT

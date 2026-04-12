@@ -216,16 +216,16 @@ Exit.
 ────────────────────────────────────────────────────────────
 
 ⚠️  **Note:** The installer performs a clean install of GAD folders:
-- `commands/gsd/` will be wiped and replaced
+- generated runtime command wrappers will be wiped and replaced
 - `get-anything-done/` will be wiped and replaced
 - `agents/gad-*` files will be replaced
 
-(Paths are relative to detected runtime install location:
+(Paths are relative to the detected runtime config location:
 global: `~/.claude/`, `~/.config/opencode/`, `~/.opencode/`, `~/.gemini/`, or `~/.codex/`
 local: `./.claude/`, `./.config/opencode/`, `./.opencode/`, `./.gemini/`, or `./.codex/`)
 
 Your custom files in other locations are preserved:
-- Custom commands not in `commands/gsd/` ✓
+- Custom runtime commands outside GAD-managed paths ✓
 - Custom agents not prefixed with `gad-` ✓
 - Custom hooks ✓
 - Your CLAUDE.md files ✓

@@ -5,7 +5,7 @@ Display the complete GAD command reference. Output ONLY the reference content. D
 <reference>
 # GAD Command Reference
 
-**GSD** (Get Shit Done) creates hierarchical project plans optimized for solo agentic development with Claude Code.
+**GAD** (get-anything-done) provides project planning, eval, and execution loops for coding agents.
 
 ## Quick Start
 

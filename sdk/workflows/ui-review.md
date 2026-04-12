@@ -1,5 +1,5 @@
 <purpose>
-Retroactive 6-pillar visual audit of implemented frontend code. Standalone command that works on any project — GSD-managed or not. Produces scored UI-REVIEW.md with actionable findings.
+Retroactive 6-pillar visual audit of implemented frontend code. Standalone command that works on any project — GAD-managed or not. Produces scored UI-REVIEW.md with actionable findings.
 </purpose>
 
 <required_reading>
