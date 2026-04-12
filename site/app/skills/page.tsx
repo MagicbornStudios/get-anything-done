@@ -1,13 +1,9 @@
 import Link from "next/link";
-import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MarketingShell, SiteInlineMetric, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { SKILLS, SKILL_INHERITANCE } from "@/lib/catalog.generated";
 import { PRODUCED_ARTIFACTS, ALL_TASKS } from "@/lib/eval-data";
-import {
-  SkillsPageTabs,
-  type SkillSummaryDTO,
-  type SkillUsageDTO,
-  type AgentUsageDTO,
-} from "./SkillsPageTabs";
+import { SkillsPageTabs } from "./SkillsPageTabs";
+import type { AgentUsageDTO, SkillSummaryDTO, SkillUsageDTO } from "./skills-page-types";
 
 export const metadata = {
   title: "Skills — GAD",
@@ -165,12 +161,15 @@ export default function SkillsIndexPage() {
         </SiteProse>
 
         <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
-          <Stat label="Total skills" value={totalSkills.toString()} />
-          <Stat label="Fundamental" value={categoryCount("fundamental").toString()} />
-          <Stat label="Eval-authored" value={categoryCount("eval-authored").toString()} />
-          <Stat label="Framework-inherited" value={categoryCount("framework-inherited").toString()} />
-          <Stat label="Skills used" value={usage.length.toString()} />
-          <Stat label="Agents tracked" value={agents.length.toString()} />
+          <SiteInlineMetric label="Total skills" value={totalSkills.toString()} />
+          <SiteInlineMetric label="Fundamental" value={categoryCount("fundamental").toString()} />
+          <SiteInlineMetric label="Eval-authored" value={categoryCount("eval-authored").toString()} />
+          <SiteInlineMetric
+            label="Framework-inherited"
+            value={categoryCount("framework-inherited").toString()}
+          />
+          <SiteInlineMetric label="Skills used" value={usage.length.toString()} />
+          <SiteInlineMetric label="Agents tracked" value={agents.length.toString()} />
         </div>
       </SiteSection>
 
@@ -178,14 +177,5 @@ export default function SkillsIndexPage() {
         <SkillsPageTabs summaries={summaries} usage={usage} agents={agents} />
       </SiteSection>
     </MarketingShell>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{value}</div>
-    </div>
   );
 }

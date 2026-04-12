@@ -1,71 +1,12 @@
-import type { ReactNode } from "react";
-
-type Block = { type: "para" | "table" | "list"; content: string[] };
-
-function splitRow(line: string): string[] {
-  return line.split("|").slice(1, -1).map((c) => c.trim());
-}
-
-function renderInline(text: string): ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-semibold text-foreground">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    return part;
-  });
-}
-
-// Convert inline markdown table lines into visual rows. Leaves other lines alone.
-function parseBlocks(body: string): Block[] {
-  const lines = body.split("\n");
-  const blocks: Block[] = [];
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (/^\|.*\|$/.test(line)) {
-      const tableLines = [];
-      while (i < lines.length && /^\|.*\|$/.test(lines[i])) {
-        tableLines.push(lines[i]);
-        i++;
-      }
-      blocks.push({ type: "table", content: tableLines });
-    } else if (/^\s*-\s+/.test(line)) {
-      const bullets = [];
-      while (i < lines.length && /^\s*-\s+/.test(lines[i])) {
-        bullets.push(lines[i].replace(/^\s*-\s+/, ""));
-        i++;
-      }
-      blocks.push({ type: "list", content: bullets });
-    } else if (line.trim() === "") {
-      i++;
-    } else {
-      const paraLines = [];
-      while (
-        i < lines.length &&
-        lines[i].trim() !== "" &&
-        !/^\|.*\|$/.test(lines[i]) &&
-        !/^\s*-\s+/.test(lines[i])
-      ) {
-        paraLines.push(lines[i]);
-        i++;
-      }
-      blocks.push({ type: "para", content: paraLines });
-    }
-  }
-  return blocks;
-}
+import { roundsMdParseBlocks, roundsMdSplitRow } from "./rounds-markdown-parse";
+import { roundsMdRenderInline } from "./rounds-markdown-inline";
 
 type Props = {
   body: string;
 };
 
 export function RoundsMarkdownBody({ body }: Props) {
-  const blocks = parseBlocks(body);
+  const blocks = roundsMdParseBlocks(body);
 
   return (
     <div className="space-y-4 text-sm leading-6 text-muted-foreground">
@@ -73,7 +14,7 @@ export function RoundsMarkdownBody({ body }: Props) {
         if (block.type === "para") {
           return (
             <p key={idx} className="whitespace-pre-line">
-              {renderInline(block.content.join("\n"))}
+              {roundsMdRenderInline(block.content.join("\n"))}
             </p>
           );
         }
@@ -81,14 +22,14 @@ export function RoundsMarkdownBody({ body }: Props) {
           return (
             <ul key={idx} className="list-disc space-y-1 pl-5">
               {block.content.map((bullet, j) => (
-                <li key={j}>{renderInline(bullet)}</li>
+                <li key={j}>{roundsMdRenderInline(bullet)}</li>
               ))}
             </ul>
           );
         }
         const [headerLine, , ...dataLines] = block.content;
-        const headerCells = splitRow(headerLine);
-        const rows = dataLines.map(splitRow);
+        const headerCells = roundsMdSplitRow(headerLine);
+        const rows = dataLines.map(roundsMdSplitRow);
         return (
           <div
             key={idx}

@@ -128,6 +128,19 @@ export function fmtDuration(m: number | null | undefined): string {
   return `${m} min`;
 }
 
+export function fmtTimestamp(value: string | null | undefined): string {
+  if (!value) return "\u2014";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export function parseRoundFromHash(): string | null {
   if (typeof window === "undefined") return null;
   const hash = window.location.hash;

@@ -59,7 +59,7 @@ export default function StandardsReferencesSection() {
           <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
             <p className="mb-3">
               The cross-client open format for skills. Specifies the SKILL.md file structure, the{" "}
-              <code className="rounded bg-card/60 px-1 py-0.5 text-xs">.agents/skills/</code>{" "}
+              <code className="rounded bg-card/60 px-1 py-0.5 text-xs">skills/</code>{" "}
               discovery convention for cross-client interoperability, progressive-disclosure three-tier
               loading, name collision handling, trust gating, and a full per-skill evaluation
               methodology. Agents built against this standard should find each other&apos;s skills

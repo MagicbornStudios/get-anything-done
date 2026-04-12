@@ -1,4 +1,5 @@
 export { MarketingShell } from "./MarketingShell";
+export { SiteInlineMetric, type SiteInlineMetricProps } from "./SiteInlineMetric";
 export { SiteMetricCard, type SiteMetricCardProps } from "./SiteMetricCard";
 export { SiteOutboundLinkButton, type SiteOutboundLinkButtonProps } from "./SiteOutboundLinkButton";
 export { SiteSectionIntro, type SiteSectionIntroProps } from "./SiteSectionIntro";

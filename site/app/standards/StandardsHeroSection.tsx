@@ -23,7 +23,7 @@ export default function StandardsHeroSection() {
       <SiteProse size="sm" className="mt-4">
         Anchor decisions: <Ref id="gad-70" /> (Anthropic guide as canonical reference),{" "}
         <Ref id="gad-80" /> (agentskills.io adoption +{" "}
-        <code className="rounded bg-card/60 px-1 py-0.5 text-xs">.agents/skills/</code> convention),{" "}
+        <code className="rounded bg-card/60 px-1 py-0.5 text-xs">skills/</code> convention),{" "}
         <Ref id="gad-81" /> (skill-count policy derived from both sources).
       </SiteProse>
     </SiteSection>

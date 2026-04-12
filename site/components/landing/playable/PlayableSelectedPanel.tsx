@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import {
   fmtDuration,
+  fmtTimestamp,
   fmtTokensLong,
   REPO,
   reviewStateFor,
@@ -27,6 +28,7 @@ export function PlayableSelectedPanel({ selected, onOpenRequirements, onOpenSkil
   const reviewBadgeVariant =
     reviewState === "reviewed" ? "success" : reviewState === "excluded" ? "outline" : "danger";
   const round = roundForRun(selected);
+  const started = typeof selected.timing?.started === "string" ? selected.timing.started : null;
 
   return (
     <Card className="border-border/70 bg-card/40 shadow-none">
@@ -77,6 +79,18 @@ export function PlayableSelectedPanel({ selected, onOpenRequirements, onOpenSkil
             <dd className="text-sm font-medium tabular-nums text-foreground">
               {fmtDuration(selected.timing?.duration_minutes)}
             </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-muted-foreground">Runtime</dt>
+            <dd className="text-sm font-medium text-foreground">
+              {typeof selected.runtimeIdentity?.id === "string" && selected.runtimeIdentity.id
+                ? selected.runtimeIdentity.id
+                : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-muted-foreground">Started</dt>
+            <dd className="text-sm font-medium text-foreground">{fmtTimestamp(started)}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wider text-muted-foreground">Commits</dt>

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import {
   fmtDuration,
+  fmtTimestamp,
   fmtTokensLong,
   reviewStateFor,
   REVIEW_STATE_DOT,
@@ -16,6 +17,8 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
   const state = reviewStateFor(r);
   const human = r.humanReview?.score;
   const composite = r.scores.composite;
+  const started = typeof r.timing?.started === "string" ? r.timing.started : null;
+  const ended = typeof r.timing?.ended === "string" ? r.timing.ended : null;
 
   return (
     <div className="space-y-3">
@@ -56,6 +59,16 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
           <dd className="font-medium tabular-nums text-foreground">{fmtDuration(r.timing?.duration_minutes)}</dd>
         </div>
         <div>
+          <dt className="text-muted-foreground/70 uppercase tracking-wider">Runtime</dt>
+          <dd className="font-medium text-foreground">
+            {typeof r.runtimeIdentity?.id === "string" && r.runtimeIdentity.id ? r.runtimeIdentity.id : "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground/70 uppercase tracking-wider">Started</dt>
+          <dd className="font-medium text-foreground">{fmtTimestamp(started)}</dd>
+        </div>
+        <div>
           <dt className="text-muted-foreground/70 uppercase tracking-wider">Composite</dt>
           <dd className="font-semibold tabular-nums text-foreground">{composite != null ? composite.toFixed(3) : "—"}</dd>
         </div>
@@ -66,6 +79,10 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
         <div>
           <dt className="text-muted-foreground/70 uppercase tracking-wider">Commits</dt>
           <dd className="font-medium tabular-nums text-foreground">{r.gitAnalysis?.total_commits ?? "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground/70 uppercase tracking-wider">Ended</dt>
+          <dd className="font-medium text-foreground">{fmtTimestamp(ended)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground/70 uppercase tracking-wider">Gate</dt>

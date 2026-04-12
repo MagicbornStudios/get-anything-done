@@ -1,64 +1,13 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import selfEvalData from "@/data/self-eval.json";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Identified } from "@/components/devid/Identified";
+import { SelfEvalMetricCard } from "./SelfEvalMetricCard";
+import { SelfEvalToolBar } from "./SelfEvalToolBar";
 
 const data = selfEvalData.latest;
-
-function MetricCard({
-  label,
-  value,
-  subtext,
-  score,
-}: {
-  label: string;
-  value: string;
-  subtext?: string;
-  score?: number;
-}) {
-  const scoreColor =
-    score == null
-      ? ""
-      : score >= 0.7
-        ? "text-emerald-400"
-        : score >= 0.4
-          ? "text-amber-400"
-          : "text-red-400";
-
-  return (
-    <Card className="border-border/50">
-      <CardContent className="p-5">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-        <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{value}</p>
-        {subtext && <p className="mt-0.5 text-xs text-muted-foreground">{subtext}</p>}
-        {score != null && (
-          <p className={`mt-1 text-xs font-semibold tabular-nums ${scoreColor}`}>
-            Score: {score.toFixed(2)}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function ToolBar({ tool, count, max }: { tool: string; count: number; max: number }) {
-  const pct = max > 0 ? (count / max) * 100 : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-20 truncate text-xs text-muted-foreground">{tool}</span>
-      <div className="flex-1 h-2 rounded-full bg-border/40 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-accent/60"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="w-12 text-right text-xs tabular-nums text-muted-foreground">{count}</span>
-    </div>
-  );
-}
 
 export default function SelfEval() {
   if (!data) return null;
@@ -83,9 +32,9 @@ export default function SelfEval() {
         {data.period.days} days. Not a controlled experiment, just real work.
       </SiteProse>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Identified as="SelfEval.MetricGrid" className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Identified as="MetricCard.Overhead">
-          <MetricCard
+          <SelfEvalMetricCard
             label="Framework overhead"
             value={`${(data.framework_overhead.ratio * 100).toFixed(1)}%`}
             subtext={`${data.framework_overhead.planning_ops} planning ops / ${data.framework_overhead.planning_ops + data.framework_overhead.source_ops} total`}
@@ -93,7 +42,7 @@ export default function SelfEval() {
           />
         </Identified>
         <Identified as="MetricCard.LoopCompliance">
-          <MetricCard
+          <SelfEvalMetricCard
             label="Loop compliance"
             value={`${(data.loop_compliance.score * 100).toFixed(0)}%`}
             subtext={`${data.loop_compliance.snapshot_starts} of ${data.loop_compliance.total_sessions} sessions start with snapshot`}
@@ -101,70 +50,84 @@ export default function SelfEval() {
           />
         </Identified>
         <Identified as="MetricCard.Tasks">
-          <MetricCard
+          <SelfEvalMetricCard
             label="Tasks"
             value={`${data.tasks.done} / ${data.tasks.total}`}
             subtext={`${data.tasks.planned} planned · ${data.tasks.in_progress} in progress`}
           />
         </Identified>
         <Identified as="MetricCard.Decisions">
-          <MetricCard
+          <SelfEvalMetricCard
             label="Decisions"
             value={String(data.decisions)}
             subtext="Captured in DECISIONS.xml"
           />
         </Identified>
-      </div>
+      </Identified>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Tool distribution
-          </h3>
-          <div className="mt-4 space-y-2.5">
-            {topTools.map((t) => (
-              <ToolBar key={t.tool} tool={t.tool} count={t.count} max={maxToolCount} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            GAD CLI usage
-          </h3>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
-              <p className="text-2xl font-semibold tabular-nums text-foreground">
-                {data.gad_cli_breakdown.snapshot}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">snapshots</p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
-              <p className="text-2xl font-semibold tabular-nums text-foreground">
-                {data.gad_cli_breakdown.eval}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">eval commands</p>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
-              <p className="text-2xl font-semibold tabular-nums text-foreground">
-                {data.gad_cli_breakdown.other}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">other CLI</p>
-            </div>
-          </div>
-
-          <div className="mt-6">
+        <Identified as="SelfEval.ToolDistribution">
+          <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Period
+              Tool distribution
             </h3>
-            <div className="mt-2 flex items-center gap-2">
-              <Badge variant="outline">{data.period.start}</Badge>
-              <span className="text-xs text-muted-foreground">→</span>
-              <Badge variant="outline">{data.period.end}</Badge>
-              <Badge variant="default">{data.period.days} days</Badge>
+            <div className="mt-4 space-y-2.5">
+              {topTools.map((t) => (
+                <Identified key={t.tool} as={`ToolRow.${t.tool}`}>
+                  <SelfEvalToolBar tool={t.tool} count={t.count} max={maxToolCount} />
+                </Identified>
+              ))}
             </div>
           </div>
-        </div>
+        </Identified>
+
+        <Identified as="SelfEval.CliAndPeriod">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              GAD CLI usage
+            </h3>
+            <div className="mt-4 grid grid-cols-3 gap-4">
+              <Identified as="CliStat.Snapshots">
+                <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
+                  <p className="text-2xl font-semibold tabular-nums text-foreground">
+                    {data.gad_cli_breakdown.snapshot}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">snapshots</p>
+                </div>
+              </Identified>
+              <Identified as="CliStat.Eval">
+                <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
+                  <p className="text-2xl font-semibold tabular-nums text-foreground">
+                    {data.gad_cli_breakdown.eval}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">eval commands</p>
+                </div>
+              </Identified>
+              <Identified as="CliStat.Other">
+                <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
+                  <p className="text-2xl font-semibold tabular-nums text-foreground">
+                    {data.gad_cli_breakdown.other}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">other CLI</p>
+                </div>
+              </Identified>
+            </div>
+
+            <Identified as="SelfEval.Period" className="mt-6">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Period
+                </h3>
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant="outline">{data.period.start}</Badge>
+                  <span className="text-xs text-muted-foreground">→</span>
+                  <Badge variant="outline">{data.period.end}</Badge>
+                  <Badge variant="default">{data.period.days} days</Badge>
+                </div>
+              </div>
+            </Identified>
+          </div>
+        </Identified>
       </div>
 
       <p className="mt-8 text-xs text-muted-foreground">
