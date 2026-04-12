@@ -4,17 +4,28 @@
   <current-plan>.planning/plans/phase-34/PLAN.md</current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 34 shipped on 2026-04-11 from .planning/plans/phase-34/PLAN.md.
+  <next-action>Phase 34 shipped. Phase 36 spec drafted at .planning/specs/PER-EVAL-REPO-SPEC.md.
 
-=== SHIPPED ===
-- Windows standalone executable built at dist/release/gad-v1.32.0-windows-x64.exe
-- Global Windows install flow landed; gad.exe is installed at %LOCALAPPDATA%\Programs\gad\bin
-- GitHub-first install docs landed with skills.sh separated from CLI installation
-- Release-surface gating and GitHub Actions POSIX release workflow landed
+=== JUST DRAFTED (spec only, no code yet) ===
+Phase 36: Per-eval-repo architecture + gad eval start/auto/finish split + gad env
+  Spec: .planning/specs/PER-EVAL-REPO-SPEC.md
+  Decisions: GAD-D-139 through GAD-D-143
+  - GAD-D-139: One GitHub repo per eval project, runs as round-N/vM/ directories
+  - GAD-D-140: Split gad eval run into start/auto/finish (run becomes deprecated alias)
+  - GAD-D-141: Deprecate gad eval suite in favor of gad project run-round (phase 37)
+  - GAD-D-142: Skill tracking is GAD-workflow-only, trace-active-skill hook is dead code
+  - GAD-D-143: gad env status / gad env agents for runtime availability checks
+
+Phase 37 added to roadmap: gad project top-level command (depends on 36).
+
+=== PHASE ORDER ===
+35 (planned) - Cross-runtime identity + telemetry attribution (needs its own planning)
+36 (planned) - Per-eval-repo architecture (spec ready, needs plan-phase + execute-phase)
+37 (planned) - gad project top-level command (depends on 36)
 
 === NEXT ===
-1. Plan and execute phase 35 runtime identity + telemetry attribution work
-2. Thread Claude Code and Codex runtime identity through raw logs and TRACE.json
-3. Revisit signing/notarization only after the executable distribution path is stable</next-action>
-  <last-updated>2026-04-11</last-updated>
+1. Run gad:plan-phase 36 to create the executable PLAN.md from the spec
+2. Execute phase 36 via gad:execute-phase
+3. Phase 35 can parallel if scoped to runtime identity only (the TRACE fields 36 consumes)</next-action>
+  <last-updated>2026-04-12</last-updated>
 </state>

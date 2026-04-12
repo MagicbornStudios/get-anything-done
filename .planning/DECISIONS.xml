@@ -937,4 +937,34 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Release scripts, install flows, and docs assume a packaged-runtime model rather than a loose JS bundle. Packaged builds can self-install globally on Windows and keep their shipped support assets versioned together.</impact>
   </decision>
 
+  <decision id="gad-139">
+    <title>Per-eval-repo architecture — one GitHub repo per eval project, directories for runs</title>
+    <summary>Each eval project (e.g. escape-the-dungeon-bare) gets its own GitHub repository (private initially). Runs live as directories inside the repo: round-N/vM/. The main monorepo only holds eval metadata (gad.json + lightweight TRACE.json reference), not the actual source/build artifacts. This prevents the monorepo from ballooning as brownfield codebases and content packs are injected. gad eval start/auto clones/creates the eval repo, strips to just the current run's scaffold, generates PROMPT.md + TRACE.json. gad eval finish pushes the run back to the eval repo and updates the main repo's metadata reference. gad env status checks github auth + runtime availability before any eval operation. Supersedes the inline evals/project/vN/run/ layout for new evals; existing 49 inline runs stay as legacy until migrated.</summary>
+    <impact>Eval projects become real repos with their own history. Main repo stays lean. Scoped clones for new runs — agents see only their own worktree, not the full eval history. Requires gh auth and runtime checks. Site data pipeline splits: metadata from main repo, artifacts fetched from eval repos as needed. Phase 36 implements this; phase 37 or later handles legacy run migration.</impact>
+  </decision>
+
+  <decision id="gad-140">
+    <title>gad eval run → start / auto / finish — explicit command split</title>
+    <summary>The existing gad eval run command conflates scaffolding with execution. Split into three commands: gad eval start (scaffold run dir, create eval repo clone if needed, generate PROMPT.md + TRACE.json, hand off to external agent — matches current "run --execute" behavior), gad eval auto (scaffold THEN shell out to a coding agent CLI via --runtime codex|claude|cursor, stream output, wait, automatically call finish — closes the loop), gad eval finish (preserve outputs, push to eval repo, compute sizes/scores, mark run done — matches current preserve). gad eval run itself is deprecated but kept as an alias for gad eval start to preserve existing scripts. Naming rationale: "run" is ambiguous (begin a run vs execute a run); "auto" is unambiguous (autonomous end-to-end).</summary>
+    <impact>CLI surface grows but becomes less ambiguous. eval-run skill is renamed/rewritten to eval-start. eval-bootstrap skill becomes eval-auto. eval-preserve becomes an internal step of finish. Docs updated. Suite runs become gad project run-round which expands to parallel auto calls.</impact>
+  </decision>
+
+  <decision id="gad-141">
+    <title>gad eval suite replaced by gad project run-round</title>
+    <summary>The batch eval runner is now project-centric. Instead of gad eval suite (which operates on arbitrary eval project lists), use gad project run-round --projectid &lt;id&gt; --roundnumber &lt;N&gt; [--runtime codex|claude|cursor] which executes all eval variants in the specified round for the specified project. Multiple project ids can be passed for parallel execution. Without --runtime, generates prompts only (start mode for each). With --runtime, runs each via auto mode and streams. This matches the project-round-eval hierarchy and stops requiring users to track eval ids manually.</summary>
+    <impact>gad eval suite command removed (or kept as a thin alias during migration). New gad project run-round implementation. Works only after gad project command lands (phase 37 or later). Until then, gad eval auto --project X is the imperative form.</impact>
+  </decision>
+
+  <decision id="gad-142">
+    <title>Skill/agent tracking is GAD-workflow-only, not universal</title>
+    <summary>The skill and agent attributes on TASK-REGISTRY.xml tasks (decision GAD-D-104) only apply when the agent is using the full GAD workflow. Bare and emergent conditions have minimal or agent-defined planning artifacts — forcing skill tracking on them would contaminate the Freedom/CSH hypothesis measurements. Non-GAD evals are evaluated on outcomes only: git diffs, file mutations, commit rhythm, build artifacts, token usage, duration, human review. The per-tool-use hook (gad-trace-hook.cjs) still captures tool_use/file_mutation/subagent_spawn events for Claude Code regardless of condition, but skill_invocation events from that hook are dead code (the .trace-active-skill marker file was designed but never wired into any skill, so trigger_skill is always null in the trace). Phase 36 removes the dead code.</summary>
+    <impact>Eval guide and project-market docs clarify the observability tradeoff: GAD gives you skill-level visibility in exchange for overhead; bare gives you outcome-only scoring. gad-trace-hook.cjs pruned of skill_invocation logic in phase 36. The trace-active-skill concept retired as never-implemented. Trace events documented as tool-level always, skill-level GAD-only via planning-artifact attribution.</impact>
+  </decision>
+
+  <decision id="gad-143">
+    <title>gad env status / gad env agents — runtime availability checks</title>
+    <summary>Before any eval operation (start/auto/finish), the CLI must verify that required runtimes are available. gad env status prints a table of: Claude Code CLI (claude), Codex CLI (codex), Cursor Agent (cursor-agent), GitHub CLI (gh) + auth status, Node version, git version. Missing tools show install links. gad env agents is a shorter alias focused on just coding agent runtimes. gad eval auto fails fast with a helpful error if the requested runtime is not installed or gh is not authenticated. Install links: claude via docs.anthropic.com, codex via github.com/openai/codex, cursor-agent via cursor.com/install, gh via cli.github.com.</summary>
+    <impact>New top-level gad env command with status + agents subcommands. Eval commands gain a preflight check that calls into the same detection logic. Prevents cryptic command-not-found errors mid-eval. Documented in quick-start.md as step 0.</impact>
+  </decision>
+
 </decisions>
