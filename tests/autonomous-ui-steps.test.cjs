@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const WORKFLOW_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'autonomous.md');
+const WORKFLOW_PATH = path.join(__dirname, '..', 'workflows', 'autonomous.md');
 
 describe('autonomous workflow ui-phase and ui-review integration (#1375)', () => {
   let content;
@@ -51,10 +51,10 @@ describe('autonomous workflow ui-phase and ui-review integration (#1375)', () =>
       );
     });
 
-    test('UI design contract step invokes gsd:ui-phase skill', () => {
+    test('UI design contract step invokes gad:ui-phase skill', () => {
       assert.ok(
-        content.includes('skill="gsd:ui-phase"'),
-        'should invoke gsd:ui-phase via Skill()'
+        content.includes('skill="gad:ui-phase"'),
+        'should invoke gad:ui-phase via Skill()'
       );
     });
 
@@ -92,10 +92,10 @@ describe('autonomous workflow ui-phase and ui-review integration (#1375)', () =>
       );
     });
 
-    test('UI review step invokes gsd:ui-review skill', () => {
+    test('UI review step invokes gad:ui-review skill', () => {
       assert.ok(
-        content.includes('skill="gsd:ui-review"'),
-        'should invoke gsd:ui-review via Skill()'
+        content.includes('skill="gad:ui-review"'),
+        'should invoke gad:ui-review via Skill()'
       );
     });
 

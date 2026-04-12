@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { GLOSSARY, GLOSSARY_UPDATED, type GlossaryTerm } from "@/lib/eval-data";
 import { Ref } from "@/components/refs/Ref";
 
@@ -84,80 +85,87 @@ export default function GlossaryPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Glossary</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Every term, one place.{" "}
-            <span className="gradient-text">No more googling our jargon.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            We use a lot of project-specific language — CSH, freedom hypothesis, gate
-            criterion, rubric, trace schema v4, emergent workflow. This page is the
-            authoritative definition for every term, grouped by category. Any underlined
-            dotted term elsewhere on the site links back here.
-          </p>
-          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
-            Source:{" "}
-            <code className="rounded bg-card/60 px-1 py-0.5 text-xs">
-              data/glossary.json
-            </code>
-            {GLOSSARY_UPDATED && (
-              <>
-                {" · last updated "}
-                <span className="tabular-nums">{GLOSSARY_UPDATED}</span>
-              </>
-            )}
-            {" · "}
-            <Link href="/questions" className="text-accent underline decoration-dotted">
-              see open questions
-            </Link>
-          </p>
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Glossary"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Every term, one place.{" "}
+              <span className="gradient-text">No more googling our jargon.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          We use a lot of project-specific language — CSH, freedom hypothesis, gate criterion, rubric,
+          trace schema v4, emergent workflow. This page is the authoritative definition for every term,
+          grouped by category. Any underlined dotted term elsewhere on the site links back here.
+        </SiteProse>
+        <SiteProse size="sm" className="mt-4">
+          Source:{" "}
+          <code className="rounded bg-card/60 px-1 py-0.5 text-xs">data/glossary.json</code>
+          {GLOSSARY_UPDATED && (
+            <>
+              {" · last updated "}
+              <span className="tabular-nums">{GLOSSARY_UPDATED}</span>
+            </>
+          )}
+          {" · "}
+          <Link href="/questions" className="text-accent underline decoration-dotted">
+            see open questions
+          </Link>
+        </SiteProse>
 
-          <div className="mt-8 flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <div>
-              <span className="text-2xl font-semibold tabular-nums text-foreground">
-                {GLOSSARY.length}
-              </span>{" "}
-              terms
-            </div>
-            <div>
-              <span className="text-2xl font-semibold tabular-nums text-foreground">
-                {orderedCategories.length}
-              </span>{" "}
-              categories
-            </div>
+        <div className="mt-8 flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <div>
+            <span className="text-2xl font-semibold tabular-nums text-foreground">
+              {GLOSSARY.length}
+            </span>{" "}
+            terms
           </div>
-
-          <nav className="mt-6 flex flex-wrap gap-2">
-            {orderedCategories.map((cat) => (
-              <a
-                key={cat}
-                href={`#category-${cat}`}
-                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:brightness-125 ${
-                  CATEGORY_TINT[cat] ?? "border-border/60 text-muted-foreground"
-                }`}
-              >
-                {cat.replace("-", " ")} ({grouped[cat].length})
-              </a>
-            ))}
-          </nav>
+          <div>
+            <span className="text-2xl font-semibold tabular-nums text-foreground">
+              {orderedCategories.length}
+            </span>{" "}
+            categories
+          </div>
         </div>
-      </section>
+
+        <nav className="mt-6 flex flex-wrap gap-2">
+          {orderedCategories.map((cat) => (
+            <a
+              key={cat}
+              href={`#category-${cat}`}
+              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:brightness-125 ${
+                CATEGORY_TINT[cat] ?? "border-border/60 text-muted-foreground"
+              }`}
+            >
+              {cat.replace(/-/g, " ")} ({grouped[cat].length})
+            </a>
+          ))}
+        </nav>
+      </SiteSection>
 
       {orderedCategories.map((cat) => (
-        <section
+        <SiteSection
           key={cat}
           id={`category-${cat}`}
-          className="border-b border-border/60 bg-card/20 last:bg-background last:border-b-0"
+          tone="muted"
+          className="last:border-b-0 last:bg-background"
         >
-          <div className="section-shell">
-            <div className="mb-6 flex items-center gap-3">
-              <BookOpen size={18} className="text-accent" aria-hidden />
-              <p className="section-kicker !mb-0 capitalize">{cat.replace("-", " ")}</p>
-              <Badge variant="outline">{grouped[cat].length}</Badge>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <SiteSectionHeading
+              icon={BookOpen}
+              kicker={cat.replace(/-/g, " ")}
+              kickerRowClassName="mb-0 flex-1 gap-3 capitalize"
+              className="min-w-0 flex-1"
+            />
+            <Badge variant="outline" className="shrink-0">
+              {grouped[cat].length}
+            </Badge>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
               {grouped[cat].map((t) => (
                 <Card key={t.id} id={t.id} className="scroll-mt-24">
                   <CardHeader className="pb-3">
@@ -212,20 +220,16 @@ export default function GlossaryPage() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
           </div>
-        </section>
+        </SiteSection>
       ))}
 
       {GLOSSARY.length === 0 && (
-        <section className="border-b border-border/60">
-          <div className="section-shell">
-            <p className="text-muted-foreground">
-              No glossary terms yet. Add entries to{" "}
-              <code>data/glossary.json</code> and re-run prebuild.
-            </p>
-          </div>
-        </section>
+        <SiteSection>
+          <SiteProse size="sm">
+            No glossary terms yet. Add entries to <code>data/glossary.json</code> and re-run prebuild.
+          </SiteProse>
+        </SiteSection>
       )}
 
       <Footer />

@@ -1,7 +1,7 @@
 /**
  * Execute-phase wave filter tests
  *
- * Validates the /gsd:execute-phase --wave feature contract:
+ * Validates the /gad:execute-phase --wave feature contract:
  * - Command frontmatter advertises --wave
  * - Workflow parses WAVE_FILTER
  * - Workflow enforces lower-wave safety
@@ -13,14 +13,14 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 
-const COMMAND_PATH = path.join(__dirname, '..', 'commands', 'gsd', 'execute-phase.md');
-const WORKFLOW_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'execute-phase.md');
+const COMMAND_PATH = path.join(__dirname, '..', 'commands', 'execute-phase.md');
+const WORKFLOW_PATH = path.join(__dirname, '..', 'workflows', 'execute-phase.md');
 const COMMANDS_DOC_PATH = path.join(__dirname, '..', 'docs', 'COMMANDS.md');
-const HELP_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'help.md');
+const HELP_PATH = path.join(__dirname, '..', 'workflows', 'help.md');
 
 describe('execute-phase command: --wave flag', () => {
   test('command file exists', () => {
-    assert.ok(fs.existsSync(COMMAND_PATH), 'commands/gsd/execute-phase.md should exist');
+    assert.ok(fs.existsSync(COMMAND_PATH), 'commands/execute-phase.md should exist');
   });
 
   test('argument-hint includes --wave, --gaps-only, and --interactive', () => {
@@ -89,7 +89,7 @@ describe('execute-phase docs: user-facing wave flag', () => {
     const content = fs.readFileSync(COMMANDS_DOC_PATH, 'utf-8');
     assert.ok(content.includes('`--wave N`'), 'COMMANDS.md should mention --wave N');
     assert.ok(
-      content.includes('/gsd:execute-phase 1 --wave 2'),
+      content.includes('/gad:execute-phase 1 --wave 2'),
       'COMMANDS.md should include a wave-filter example'
     );
   });
@@ -101,7 +101,7 @@ describe('execute-phase docs: user-facing wave flag', () => {
       'help.md should describe wave-specific execution'
     );
     assert.ok(
-      content.includes('Usage: `/gsd:execute-phase 5 --wave 2`'),
+      content.includes('Usage: `/gad:execute-phase 5 --wave 2`'),
       'help.md should include wave-filter usage'
     );
   });
@@ -124,11 +124,11 @@ describe('execute-phase docs: user-facing wave flag', () => {
 });
 
 describe('use_worktrees config: cross-workflow structural coverage', () => {
-  const QUICK_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'quick.md');
-  const DIAGNOSE_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'diagnose-issues.md');
-  const EXECUTE_PLAN_PATH = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'execute-plan.md');
-  const PLANNING_CONFIG_PATH = path.join(__dirname, '..', 'get-shit-done', 'references', 'planning-config.md');
-  const CONFIG_CJS_PATH = path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'config.cjs');
+  const QUICK_PATH = path.join(__dirname, '..', 'workflows', 'quick.md');
+  const DIAGNOSE_PATH = path.join(__dirname, '..', 'workflows', 'diagnose-issues.md');
+  const EXECUTE_PLAN_PATH = path.join(__dirname, '..', 'workflows', 'execute-plan.md');
+  const PLANNING_CONFIG_PATH = path.join(__dirname, '..', 'references', 'planning-config.md');
+  const CONFIG_CJS_PATH = path.join(__dirname, '..', 'lib', 'config.cjs');
 
   test('quick workflow reads USE_WORKTREES from config', () => {
     const content = fs.readFileSync(QUICK_PATH, 'utf-8');

@@ -306,8 +306,7 @@ const banner = '\n' +
   '  Get Anything Done ' + dim + 'v' + pkg.version + reset + '\n' +
   '  A meta-prompting, context engineering and spec-driven\n' +
   '  development system for Claude Code, OpenCode, Gemini, Codex, Copilot,\n' +
-  '  Antigravity, Cursor, Windsurf, and Augment by ' + red + 'b2gdevs' + reset + '.\n' +
-  dim + '  Based on Get Shit Done (GSD) by TACHES.' + reset + '\n';
+  '  Antigravity, Cursor, Windsurf, and Augment by ' + red + 'MagicbornStudios' + reset + '.\n';
 
 // Parse --config-dir argument
 function parseConfigDirArg() {

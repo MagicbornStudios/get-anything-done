@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-type Props = {
+export type SiteMetricCardProps = {
   label: string;
   value: unknown;
 };
 
-export function InsightMetricCard({ label, value }: Props) {
+export function SiteMetricCard({ label, value }: SiteMetricCardProps) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">

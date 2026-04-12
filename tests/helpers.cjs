@@ -6,10 +6,10 @@ const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const TOOLS_PATH = path.join(__dirname, '..', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const TOOLS_PATH = path.join(__dirname, '..', 'bin', 'gad-tools.cjs');
 
 /**
- * Run gsd-tools command.
+ * Run gad-tools command.
  *
  * @param {string|string[]} args - Command string (shell-interpreted) or array
  *   of arguments (shell-bypassed via execFileSync, safe for JSON and dollar signs).
@@ -48,19 +48,19 @@ function runGsdTools(args, cwd = process.cwd(), env = {}) {
 }
 
 // Create a bare temp directory (no .planning/ structure)
-function createTempDir(prefix = 'gsd-test-') {
+function createTempDir(prefix = 'gad-test-') {
   return fs.mkdtempSync(path.join(require('os').tmpdir(), prefix));
 }
 
 // Create temp directory structure
-function createTempProject(prefix = 'gsd-test-') {
+function createTempProject(prefix = 'gad-test-') {
   const tmpDir = fs.mkdtempSync(path.join(require('os').tmpdir(), prefix));
   fs.mkdirSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true });
   return tmpDir;
 }
 
 // Create temp directory with initialized git repo and at least one commit
-function createTempGitProject(prefix = 'gsd-test-') {
+function createTempGitProject(prefix = 'gad-test-') {
   const tmpDir = fs.mkdtempSync(path.join(require('os').tmpdir(), prefix));
   fs.mkdirSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true });
 

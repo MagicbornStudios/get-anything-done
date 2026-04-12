@@ -153,7 +153,7 @@ describe('state-snapshot command', () => {
     let outsideDir;
 
     beforeEach(() => {
-      outsideDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gsd-test-outside-'));
+      outsideDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gad-test-outside-'));
     });
 
     afterEach(() => {
@@ -537,7 +537,7 @@ milestone: v1.0
 // stateExtractField and stateReplaceField helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-const { stateExtractField, stateReplaceField, stateReplaceFieldWithFallback } = require('../get-shit-done/bin/lib/state.cjs');
+const { stateExtractField, stateReplaceField, stateReplaceFieldWithFallback } = require('../lib/state.cjs');
 
 describe('stateExtractField and stateReplaceField helpers', () => {
   // stateExtractField tests

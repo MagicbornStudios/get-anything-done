@@ -1,7 +1,6 @@
-import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { LineagePredecessor } from "@/app/lineage/lineage-data";
+import { SiteOutboundLinkButton } from "@/components/site";
 
 export function LineagePredecessorArticle({ predecessor }: { predecessor: LineagePredecessor }) {
   const p = predecessor;
@@ -15,17 +14,7 @@ export function LineagePredecessorArticle({ predecessor }: { predecessor: Lineag
           </div>
           <p className="text-sm italic text-muted-foreground">{p.tagline}</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 rounded-full border-border/70 bg-background/50 px-4 py-2 text-xs font-semibold hover:border-accent hover:text-accent [&_svg]:size-3"
-          asChild
-        >
-          <a href={p.url} target="_blank" rel="noopener noreferrer">
-            Visit project
-            <ExternalLink size={12} aria-hidden />
-          </a>
-        </Button>
+        <SiteOutboundLinkButton href={p.url}>Visit project</SiteOutboundLinkButton>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <div>

@@ -1,15 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
 
 export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
-        <p className="section-kicker">Process metrics</p>
-        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          How the agent actually worked
-        </h2>
-        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+    <SiteSection>
+      <SiteSectionHeading kicker="Process metrics" title="How the agent actually worked" />
+      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {run.timing && (
             <Card>
               <CardHeader className="pb-2">
@@ -67,7 +64,6 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
             </Card>
           )}
         </div>
-      </div>
-    </section>
+    </SiteSection>
   );
 }

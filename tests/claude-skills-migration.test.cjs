@@ -1,13 +1,13 @@
 /**
  * GSD Tools Tests - Claude Skills Migration (#1504)
  *
- * Tests for migrating Claude Code from commands/gsd/ to skills/gsd-xxx/SKILL.md
+ * Tests for migrating Claude Code from commands/ to skills/gad-xxx/SKILL.md
  * format for compatibility with Claude Code 2.1.88+.
  *
  * Uses node:test and node:assert (NOT Jest).
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GAD_TEST_MODE = '1';
 
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
@@ -28,7 +28,7 @@ describe('convertClaudeCommandToClaudeSkill', () => {
   test('preserves allowed-tools multiline YAML list', () => {
     const input = [
       '---',
-      'name: gsd:next',
+      'name: gad:next',
       'description: Advance to the next step',
       'allowed-tools:',
       '  - Read',
@@ -39,7 +39,7 @@ describe('convertClaudeCommandToClaudeSkill', () => {
       'Body content here.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-next');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gad-next');
     assert.ok(result.includes('allowed-tools:'), 'allowed-tools field is present');
     assert.ok(result.includes('Read'), 'Read tool preserved');
     assert.ok(result.includes('Bash'), 'Bash tool preserved');
@@ -49,7 +49,7 @@ describe('convertClaudeCommandToClaudeSkill', () => {
   test('preserves argument-hint', () => {
     const input = [
       '---',
-      'name: gsd:debug',
+      'name: gad:debug',
       'description: Debug issues',
       'argument-hint: "[issue description]"',
       'allowed-tools:',
@@ -60,7 +60,7 @@ describe('convertClaudeCommandToClaudeSkill', () => {
       'Debug body.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-debug');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gad-debug');
     assert.ok(result.includes('argument-hint:'), 'argument-hint field is present');
     // The value should be preserved (possibly yaml-quoted)
     assert.ok(
@@ -69,32 +69,32 @@ describe('convertClaudeCommandToClaudeSkill', () => {
     );
   });
 
-  test('converts name format from gsd:xxx to skill naming', () => {
+  test('converts name format from gad:xxx to skill naming', () => {
     const input = [
       '---',
-      'name: gsd:next',
+      'name: gad:next',
       'description: Advance workflow',
       '---',
       '',
       'Body.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-next');
-    assert.ok(result.includes('name: gsd-next'), 'name uses skill naming convention');
-    assert.ok(!result.includes('name: gsd:next'), 'old name format removed');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gad-next');
+    assert.ok(result.includes('name: gad-next'), 'name uses skill naming convention');
+    assert.ok(!result.includes('name: gad:next'), 'old name format removed');
   });
 
   test('preserves body content unchanged', () => {
     const body = '\n<objective>\nDo the thing.\n</objective>\n\n<process>\nStep 1.\nStep 2.\n</process>\n';
     const input = [
       '---',
-      'name: gsd:test',
+      'name: gad:test',
       'description: Test command',
       '---',
       body,
     ].join('');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-test');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gad-test');
     assert.ok(result.includes('<objective>'), 'objective tag preserved');
     assert.ok(result.includes('Do the thing.'), 'body text preserved');
     assert.ok(result.includes('<process>'), 'process tag preserved');
@@ -104,7 +104,7 @@ describe('convertClaudeCommandToClaudeSkill', () => {
   test('preserves agent field', () => {
     const input = [
       '---',
-      'name: gsd:plan-phase',
+      'name: gad:plan-phase',
       'description: Plan a phase',
       'agent: true',
       'allowed-tools:',
@@ -114,20 +114,20 @@ describe('convertClaudeCommandToClaudeSkill', () => {
       'Plan body.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-plan-phase');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gad-plan-phase');
     assert.ok(result.includes('agent:'), 'agent field is present');
   });
 
   test('handles content with no frontmatter', () => {
     const input = 'Just some plain markdown content.';
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-plain');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gad-plain');
     assert.strictEqual(result, input, 'content returned unchanged');
   });
 
   test('preserves allowed-tools as multiline YAML list (not flattened)', () => {
     const input = [
       '---',
-      'name: gsd:debug',
+      'name: gad:debug',
       'description: Debug',
       'allowed-tools:',
       '  - Read',
@@ -139,7 +139,7 @@ describe('convertClaudeCommandToClaudeSkill', () => {
       'Body.',
     ].join('\n');
 
-    const result = convertClaudeCommandToClaudeSkill(input, 'gsd-debug');
+    const result = convertClaudeCommandToClaudeSkill(input, 'gad-debug');
     // Claude Code native format keeps YAML multiline list
     assert.ok(result.includes('  - Read'), 'Read in multiline list');
     assert.ok(result.includes('  - Bash'), 'Bash in multiline list');
@@ -154,24 +154,24 @@ describe('copyCommandsAsClaudeSkills', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-claude-skills-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-claude-skills-test-'));
   });
 
   afterEach(() => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  test('creates correct directory structure skills/gsd-xxx/SKILL.md', () => {
+  test('creates correct directory structure skills/gad-xxx/SKILL.md', () => {
     // Create source commands
     const srcDir = path.join(tmpDir, 'src');
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(
       path.join(srcDir, 'next.md'),
-      '---\nname: gsd:next\ndescription: Advance\nallowed-tools:\n  - Read\n---\n\nBody.'
+      '---\nname: gad:next\ndescription: Advance\nallowed-tools:\n  - Read\n---\n\nBody.'
     );
     fs.writeFileSync(
       path.join(srcDir, 'health.md'),
-      '---\nname: gsd:health\ndescription: Check health\n---\n\nHealth body.'
+      '---\nname: gad:health\ndescription: Check health\n---\n\nHealth body.'
     );
 
     const skillsDir = path.join(tmpDir, 'skills');
@@ -179,12 +179,12 @@ describe('copyCommandsAsClaudeSkills', () => {
 
     // Verify directory structure
     assert.ok(
-      fs.existsSync(path.join(skillsDir, 'gsd-next', 'SKILL.md')),
-      'skills/gsd-next/SKILL.md exists'
+      fs.existsSync(path.join(skillsDir, 'gad-next', 'SKILL.md')),
+      'skills/gad-next/SKILL.md exists'
     );
     assert.ok(
-      fs.existsSync(path.join(skillsDir, 'gsd-health', 'SKILL.md')),
-      'skills/gsd-health/SKILL.md exists'
+      fs.existsSync(path.join(skillsDir, 'gad-health', 'SKILL.md')),
+      'skills/gad-health/SKILL.md exists'
     );
   });
 
@@ -193,12 +193,12 @@ describe('copyCommandsAsClaudeSkills', () => {
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(
       path.join(srcDir, 'next.md'),
-      '---\nname: gsd:next\ndescription: Advance\n---\n\nBody.'
+      '---\nname: gad:next\ndescription: Advance\n---\n\nBody.'
     );
 
     const skillsDir = path.join(tmpDir, 'skills');
     // Create a stale skill that should be removed
-    const staleDir = path.join(skillsDir, 'gsd-old-command');
+    const staleDir = path.join(skillsDir, 'gad-old-command');
     fs.mkdirSync(staleDir, { recursive: true });
     fs.writeFileSync(path.join(staleDir, 'SKILL.md'), 'stale content');
 
@@ -211,7 +211,7 @@ describe('copyCommandsAsClaudeSkills', () => {
     );
     // New skill created
     assert.ok(
-      fs.existsSync(path.join(skillsDir, 'gsd-next', 'SKILL.md')),
+      fs.existsSync(path.join(skillsDir, 'gad-next', 'SKILL.md')),
       'new skill created'
     );
   });
@@ -221,7 +221,7 @@ describe('copyCommandsAsClaudeSkills', () => {
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(
       path.join(srcDir, 'next.md'),
-      '---\nname: gsd:next\ndescription: Advance\n---\n\nBody.'
+      '---\nname: gad:next\ndescription: Advance\n---\n\nBody.'
     );
 
     const skillsDir = path.join(tmpDir, 'skills');
@@ -245,15 +245,15 @@ describe('copyCommandsAsClaudeSkills', () => {
     fs.mkdirSync(subDir, { recursive: true });
     fs.writeFileSync(
       path.join(subDir, 'ready.md'),
-      '---\nname: gsd-wired:ready\ndescription: Show ready tasks\n---\n\nBody.'
+      '---\nname: gad-wired:ready\ndescription: Show ready tasks\n---\n\nBody.'
     );
 
     const skillsDir = path.join(tmpDir, 'skills');
     copyCommandsAsClaudeSkills(srcDir, skillsDir, 'gsd', '$HOME/.claude/', 'claude', true);
 
     assert.ok(
-      fs.existsSync(path.join(skillsDir, 'gsd-wired-ready', 'SKILL.md')),
-      'nested command creates gsd-wired-ready/SKILL.md'
+      fs.existsSync(path.join(skillsDir, 'gad-wired-ready', 'SKILL.md')),
+      'nested command creates gad-wired-ready/SKILL.md'
     );
   });
 
@@ -274,20 +274,20 @@ describe('copyCommandsAsClaudeSkills', () => {
 
 // ─── Legacy cleanup during install ──────────────────────────────────────────
 
-describe('Legacy commands/gsd/ cleanup', () => {
+describe('Legacy commands/ cleanup', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-legacy-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-legacy-test-'));
   });
 
   afterEach(() => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  test('install removes legacy commands/gsd/ directory when present', () => {
-    // Create a mock legacy commands/gsd/ directory
-    const legacyDir = path.join(tmpDir, 'commands', 'gsd');
+  test('install removes legacy commands/ directory when present', () => {
+    // Create a mock legacy commands/ directory
+    const legacyDir = path.join(tmpDir, 'commands');
     fs.mkdirSync(legacyDir, { recursive: true });
     fs.writeFileSync(path.join(legacyDir, 'next.md'), 'legacy content');
 
@@ -296,7 +296,7 @@ describe('Legacy commands/gsd/ cleanup', () => {
     fs.mkdirSync(srcDir, { recursive: true });
     fs.writeFileSync(
       path.join(srcDir, 'next.md'),
-      '---\nname: gsd:next\ndescription: Advance\n---\n\nBody.'
+      '---\nname: gad:next\ndescription: Advance\n---\n\nBody.'
     );
 
     const skillsDir = path.join(tmpDir, 'skills');
@@ -308,9 +308,9 @@ describe('Legacy commands/gsd/ cleanup', () => {
       fs.rmSync(legacyDir, { recursive: true });
     }
 
-    assert.ok(!fs.existsSync(legacyDir), 'legacy commands/gsd/ removed');
+    assert.ok(!fs.existsSync(legacyDir), 'legacy commands/ removed');
     assert.ok(
-      fs.existsSync(path.join(skillsDir, 'gsd-next', 'SKILL.md')),
+      fs.existsSync(path.join(skillsDir, 'gad-next', 'SKILL.md')),
       'new skill installed'
     );
   });
@@ -322,29 +322,29 @@ describe('writeManifest tracks skills/ for Claude', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-manifest-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-manifest-test-'));
   });
 
   afterEach(() => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  test('manifest includes skills/gsd-xxx/SKILL.md entries for Claude runtime', () => {
+  test('manifest includes skills/gad-xxx/SKILL.md entries for Claude runtime', () => {
     // Create skills directory structure (as install would)
     const skillsDir = path.join(tmpDir, 'skills');
-    const skillDir = path.join(skillsDir, 'gsd-next');
+    const skillDir = path.join(skillsDir, 'gad-next');
     fs.mkdirSync(skillDir, { recursive: true });
     fs.writeFileSync(path.join(skillDir, 'SKILL.md'), 'skill content');
 
-    // Create get-shit-done directory (required by writeManifest)
-    const gsdDir = path.join(tmpDir, 'get-shit-done');
+    // Create get-anything-done directory (required by writeManifest)
+    const gsdDir = path.join(tmpDir, 'get-anything-done');
     fs.mkdirSync(gsdDir, { recursive: true });
     fs.writeFileSync(path.join(gsdDir, 'test.md'), 'test');
 
     writeManifest(tmpDir, 'claude');
 
     const manifest = JSON.parse(
-      fs.readFileSync(path.join(tmpDir, 'gsd-file-manifest.json'), 'utf8')
+      fs.readFileSync(path.join(tmpDir, 'gad-file-manifest.json'), 'utf8')
     );
 
     // Should have skills/ entries
@@ -353,15 +353,15 @@ describe('writeManifest tracks skills/ for Claude', () => {
     );
     assert.ok(skillEntries.length > 0, 'manifest has skills/ entries');
     assert.ok(
-      skillEntries.some(k => k === 'skills/gsd-next/SKILL.md'),
-      'manifest has skills/gsd-next/SKILL.md'
+      skillEntries.some(k => k === 'skills/gad-next/SKILL.md'),
+      'manifest has skills/gad-next/SKILL.md'
     );
 
-    // Should NOT have commands/gsd/ entries
+    // Should NOT have commands/ entries
     const cmdEntries = Object.keys(manifest.files).filter(k =>
-      k.startsWith('commands/gsd/')
+      k.startsWith('commands/')
     );
-    assert.strictEqual(cmdEntries.length, 0, 'manifest has no commands/gsd/ entries');
+    assert.strictEqual(cmdEntries.length, 0, 'manifest has no commands/ entries');
   });
 });
 

@@ -1,6 +1,6 @@
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
-import { InsightMetricCard } from "@/app/insights/InsightMetricCard";
+import { SiteMetricCard } from "@/components/site";
 import { InsightsDataSourcesCard } from "@/app/insights/InsightsDataSourcesCard";
 import { InsightsPageIntro } from "@/app/insights/InsightsPageIntro";
 import { buildDataSources, buildInsights } from "@/app/insights/insights-queries";
@@ -24,7 +24,7 @@ export default function InsightsPage() {
         <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {insights.map((q) => (
             <li key={q.label}>
-              <InsightMetricCard label={q.label} value={q.result} />
+              <SiteMetricCard label={q.label} value={q.result} />
             </li>
           ))}
         </ul>

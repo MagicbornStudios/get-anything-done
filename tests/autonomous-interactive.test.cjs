@@ -13,8 +13,8 @@ const fs = require('fs');
 const path = require('path');
 
 describe('autonomous --interactive flag (#1413)', () => {
-  const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'autonomous.md');
-  const commandPath = path.join(__dirname, '..', 'commands', 'gsd', 'autonomous.md');
+  const workflowPath = path.join(__dirname, '..', 'workflows', 'autonomous.md');
+  const commandPath = path.join(__dirname, '..', 'commands', 'autonomous.md');
 
   test('command definition includes --interactive in argument-hint', () => {
     const content = fs.readFileSync(commandPath, 'utf8');
@@ -40,8 +40,8 @@ describe('autonomous --interactive flag (#1413)', () => {
   test('workflow uses discuss-phase skill in interactive mode', () => {
     const content = fs.readFileSync(workflowPath, 'utf8');
     assert.ok(
-      content.includes('gsd:discuss-phase') && content.includes('INTERACTIVE'),
-      'workflow should invoke gsd:discuss-phase when INTERACTIVE is set'
+      content.includes('gad:discuss-phase') && content.includes('INTERACTIVE'),
+      'workflow should invoke gad:discuss-phase when INTERACTIVE is set'
     );
   });
 

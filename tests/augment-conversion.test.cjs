@@ -6,7 +6,7 @@
  * literal parts of skill/subagent names.
  */
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GAD_TEST_MODE = '1';
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
@@ -29,31 +29,31 @@ Test body
 </objective>
 `;
 
-    const result = convertClaudeCommandToAugmentSkill(input, 'gsd-quick');
+    const result = convertClaudeCommandToAugmentSkill(input, 'gad-quick');
     const nameMatch = result.match(/^name:\s*(.+)$/m);
 
     assert.ok(nameMatch, 'frontmatter contains name field');
-    assert.strictEqual(nameMatch[1], 'gsd-quick', 'skill name is plain scalar');
-    assert.ok(!result.includes('name: "gsd-quick"'), 'quoted skill name is not emitted');
+    assert.strictEqual(nameMatch[1], 'gad-quick', 'skill name is plain scalar');
+    assert.ok(!result.includes('name: "gad-quick"'), 'quoted skill name is not emitted');
   });
 
   test('preserves slash for slash commands in markdown body', () => {
     const input = `---
-name: gsd:plan-phase
+name: gad:plan-phase
 description: Plan a phase
 ---
 
 Next:
-/gsd:execute-phase 17
-/gsd-help
-gsd:progress
+/gad:execute-phase 17
+/gad-help
+gad:progress
 `;
 
-    const result = convertClaudeCommandToAugmentSkill(input, 'gsd-plan-phase');
-    // Slash commands: /gsd:execute-phase -> /gsd-execute-phase
-    assert.ok(result.includes('/gsd-execute-phase 17'), 'slash command gsd: -> gsd-');
-    assert.ok(result.includes('/gsd-help'), '/gsd-help preserved');
-    assert.ok(result.includes('gsd-progress'), 'bare gsd: -> gsd-');
+    const result = convertClaudeCommandToAugmentSkill(input, 'gad-plan-phase');
+    // Slash commands: /gad:execute-phase -> /gad-execute-phase
+    assert.ok(result.includes('/gad-execute-phase 17'), 'slash command gad: -> gad-');
+    assert.ok(result.includes('/gad-help'), '/gad-help preserved');
+    assert.ok(result.includes('gad-progress'), 'bare gad: -> gad-');
   });
 
   test('includes augment_skill_adapter block', () => {
@@ -65,7 +65,7 @@ description: A test skill
 Body content.
 `;
 
-    const result = convertClaudeCommandToAugmentSkill(input, 'gsd-test');
+    const result = convertClaudeCommandToAugmentSkill(input, 'gad-test');
     assert.ok(result.includes('<augment_skill_adapter>'), 'adapter header present');
     assert.ok(result.includes('</augment_skill_adapter>'), 'adapter footer present');
     assert.ok(result.includes('launch-process'), 'launch-process tool mentioned');
@@ -83,7 +83,7 @@ Use Edit() to modify files.
 Use Read() to view files.
 `;
 
-    const result = convertClaudeCommandToAugmentSkill(input, 'gsd-test');
+    const result = convertClaudeCommandToAugmentSkill(input, 'gad-test');
     assert.ok(result.includes('launch-process('), 'Bash converted to launch-process');
     assert.ok(result.includes('str-replace-editor('), 'Edit converted to str-replace-editor');
     assert.ok(result.includes('view('), 'Read converted to view');
@@ -93,7 +93,7 @@ Use Read() to view files.
 describe('convertClaudeAgentToAugmentAgent', () => {
   test('converts agent frontmatter with unquoted name', () => {
     const input = `---
-name: gsd-bugfix
+name: gad-bugfix
 description: "Fix bugs automatically"
 tools: Read, Write, Edit, Bash
 color: green
@@ -108,13 +108,13 @@ You are a bug fixer.
     const nameMatch = result.match(/^name:\s*(.+)$/m);
 
     assert.ok(nameMatch, 'frontmatter contains name field');
-    assert.strictEqual(nameMatch[1], 'gsd-bugfix', 'agent name is plain scalar');
-    assert.ok(!result.includes('name: "gsd-bugfix"'), 'quoted agent name is not emitted');
+    assert.strictEqual(nameMatch[1], 'gad-bugfix', 'agent name is plain scalar');
+    assert.ok(!result.includes('name: "gad-bugfix"'), 'quoted agent name is not emitted');
   });
 
   test('removes color and skills from frontmatter', () => {
     const input = `---
-name: gsd-test
+name: gad-test
 description: Test agent
 color: blue
 skills:
@@ -129,7 +129,7 @@ Test role
 
     const result = convertClaudeAgentToAugmentAgent(input);
 
-    assert.ok(result.includes('name: gsd-test'), 'name preserved');
+    assert.ok(result.includes('name: gad-test'), 'name preserved');
     assert.ok(result.includes('description:'), 'description preserved');
     assert.ok(!result.includes('color:'), 'color removed');
     assert.ok(!result.includes('skills:'), 'skills removed');
@@ -137,7 +137,7 @@ Test role
 
   test('replaces CLAUDE.md with .augment/rules/', () => {
     const input = `---
-name: gsd-test
+name: gad-test
 description: Test
 ---
 
@@ -163,9 +163,9 @@ describe('convertClaudeToAugmentMarkdown', () => {
     assert.strictEqual(result, 'Check .augment/skills/ for more info.');
   });
 
-  test('normalizes gsd: to gsd-', () => {
-    const input = 'Run /gsd:new-project for new projects.';
+  test('normalizes gad: to gad-', () => {
+    const input = 'Run /gad:new-project for new projects.';
     const result = convertClaudeToAugmentMarkdown(input);
-    assert.strictEqual(result, 'Run /gsd-new-project for new projects.');
+    assert.strictEqual(result, 'Run /gad-new-project for new projects.');
   });
 });

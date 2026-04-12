@@ -7,7 +7,7 @@
 
 'use strict';
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GAD_TEST_MODE = '1';
 
 const { test, describe } = require('node:test');
 const assert = require('node:assert');
@@ -21,7 +21,7 @@ function clone(obj) {
 }
 
 /** Build a valid command hook entry. */
-function commandEntry(command, matcher = 'gsd-test') {
+function commandEntry(command, matcher = 'gad-test') {
   return {
     matcher,
     hooks: [{ type: 'command', command }],
@@ -29,7 +29,7 @@ function commandEntry(command, matcher = 'gsd-test') {
 }
 
 /** Build a valid agent hook entry. */
-function agentEntry(prompt, matcher = 'gsd-test') {
+function agentEntry(prompt, matcher = 'gad-test') {
   return {
     matcher,
     hooks: [{ type: 'agent', prompt }],

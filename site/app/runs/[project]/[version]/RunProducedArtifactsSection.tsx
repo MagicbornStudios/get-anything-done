@@ -1,22 +1,22 @@
 import { Circle } from "lucide-react";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import type { ProducedArtifacts } from "@/lib/eval-data";
 
 export function RunProducedArtifactsSection({ produced }: { produced: ProducedArtifacts }) {
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
-        <p className="section-kicker">What the agent built for itself</p>
-        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Emergent workflow artifacts
-        </h2>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-          Bare and emergent runs don&apos;t have a framework giving them structure — they author
-          their own methodology on the fly. These are the files the agent wrote into its own{" "}
-          <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">game/.planning/</code> during
-          this run. When a file appears here that isn&apos;t in the inherited bootstrap set, the
-          agent invented it.
-        </p>
-        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+    <SiteSection>
+      <SiteSectionHeading
+        kicker="What the agent built for itself"
+        title="Emergent workflow artifacts"
+      />
+      <SiteProse size="md" className="mt-3">
+        Bare and emergent runs don&apos;t have a framework giving them structure — they author their
+        own methodology on the fly. These are the files the agent wrote into its own{" "}
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">game/.planning/</code> during this
+        run. When a file appears here that isn&apos;t in the inherited bootstrap set, the agent
+        invented it.
+      </SiteProse>
+      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {[
             { label: "Skills written", items: produced.skillFiles },
             { label: "Subagents written", items: produced.agentFiles },
@@ -48,8 +48,7 @@ export function RunProducedArtifactsSection({ produced }: { produced: ProducedAr
                 </ul>
               </div>
             ))}
-        </div>
       </div>
-    </section>
+    </SiteSection>
   );
 }

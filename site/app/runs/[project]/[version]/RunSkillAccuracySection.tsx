@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
 
@@ -13,14 +14,13 @@ export function RunSkillAccuracySection({
   skillAccuracyValue: number | null;
 }) {
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
-        <p className="section-kicker">Skill accuracy breakdown</p>
-        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Did the agent invoke the right skills at the right moments?
-        </h2>
+    <SiteSection>
+      <SiteSectionHeading
+        kicker="Skill accuracy breakdown"
+        title="Did the agent invoke the right skills at the right moments?"
+      />
 
-        {run.skillAccuracyBreakdown && run.skillAccuracyBreakdown.expected_triggers.length > 0 ? (
+      {run.skillAccuracyBreakdown && run.skillAccuracyBreakdown.expected_triggers.length > 0 ? (
           <>
             <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
               For each expected trigger we recorded whether the agent invoked the skill at the right
@@ -101,7 +101,6 @@ export function RunSkillAccuracySection({
             Skill accuracy data isn&apos;t relevant for this run (no expected trigger set).
           </p>
         )}
-      </div>
-    </section>
+    </SiteSection>
   );
 }

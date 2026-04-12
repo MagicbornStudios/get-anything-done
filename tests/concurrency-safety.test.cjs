@@ -24,7 +24,7 @@ const { runGsdTools, createTempProject, cleanup, TOOLS_PATH } = require('./helpe
 
 const {
   normalizeMd,
-} = require('../get-shit-done/bin/lib/core.cjs');
+} = require('../lib/core.cjs');
 
 const execAsync = promisify(exec);
 

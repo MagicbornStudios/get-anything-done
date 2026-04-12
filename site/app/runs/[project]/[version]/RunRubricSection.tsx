@@ -1,4 +1,5 @@
 import RubricRadar, { type RubricDimension } from "@/components/charts/RubricRadar";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
 
 export function RunRubricSection({
@@ -13,25 +14,22 @@ export function RunRubricSection({
   rubric: EvalRunRecord["humanReviewNormalized"];
 }) {
   return (
-    <section className="border-b border-border/60 bg-card/20">
-      <div className="section-shell">
-        <p className="section-kicker">Human review rubric</p>
-        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Where the reviewer scored this run best and worst
-        </h2>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-          Each axis is a rubric dimension from{" "}
-          <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">evals/{run.project}/gad.json</code>{" "}
-          → <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">human_review_rubric</code>. The
-          filled polygon shows the reviewer&apos;s per-dimension scores, 0.0 at center to 1.0 at the
-          edge. The aggregate score (
-          <strong className="text-foreground">
-            {rubric?.aggregate_score?.toFixed(3) ?? "—"}
-          </strong>
-          ) is the weighted sum of the dimensions using weights declared in the rubric.
-        </p>
+    <SiteSection tone="muted">
+      <SiteSectionHeading
+        kicker="Human review rubric"
+        title="Where the reviewer scored this run best and worst"
+      />
+      <SiteProse size="md" className="mt-3">
+        Each axis is a rubric dimension from{" "}
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">evals/{run.project}/gad.json</code> →{" "}
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">human_review_rubric</code>. The
+        filled polygon shows the reviewer&apos;s per-dimension scores, 0.0 at center to 1.0 at the edge.
+        The aggregate score (
+        <strong className="text-foreground">{rubric?.aggregate_score?.toFixed(3) ?? "—"}</strong>) is the
+        weighted sum of the dimensions using weights declared in the rubric.
+      </SiteProse>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+      <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
           <div className="rounded-2xl border border-border/70 bg-background/40 p-6">
             <RubricRadar dimensions={rubricDimensions} workflow={run.workflow} size={360} />
           </div>
@@ -72,7 +70,6 @@ export function RunRubricSection({
             </table>
           </div>
         </div>
-      </div>
-    </section>
+    </SiteSection>
   );
 }

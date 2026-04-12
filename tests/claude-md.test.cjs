@@ -36,9 +36,9 @@ describe('generate-claude-md', () => {
     const claudePath = path.join(tmpDir, 'CLAUDE.md');
     const content = fs.readFileSync(claudePath, 'utf-8');
     assert.ok(content.includes('## GSD Workflow Enforcement'));
-    assert.ok(content.includes('/gsd:quick'));
-    assert.ok(content.includes('/gsd:debug'));
-    assert.ok(content.includes('/gsd:execute-phase'));
+    assert.ok(content.includes('/gad:quick'));
+    assert.ok(content.includes('/gad:debug'));
+    assert.ok(content.includes('/gad:execute-phase'));
     assert.ok(content.includes('Do not make direct repo edits outside a GSD workflow'));
   });
 
@@ -62,7 +62,7 @@ describe('generate-claude-md', () => {
 });
 
 describe('new-project workflow includes CLAUDE.md generation', () => {
-  const workflowPath = path.join(__dirname, '..', 'get-shit-done', 'workflows', 'new-project.md');
+  const workflowPath = path.join(__dirname, '..', 'workflows', 'new-project.md');
   const commandsPath = path.join(__dirname, '..', 'docs', 'COMMANDS.md');
 
   test('new-project workflow generates CLAUDE.md before final commit', () => {
@@ -146,14 +146,14 @@ describe('generate-claude-md skills section', () => {
     assert.ok(content.includes('ERP synchronization flows'));
   });
 
-  test('skips gsd- prefixed skill directories', () => {
-    const gsdSkillDir = path.join(tmpDir, '.claude', 'skills', 'gsd-plan-phase');
+  test('skips gad- prefixed skill directories', () => {
+    const gsdSkillDir = path.join(tmpDir, '.claude', 'skills', 'gad-plan-phase');
     const userSkillDir = path.join(tmpDir, '.claude', 'skills', 'my-feature');
     fs.mkdirSync(gsdSkillDir, { recursive: true });
     fs.mkdirSync(userSkillDir, { recursive: true });
     fs.writeFileSync(
       path.join(gsdSkillDir, 'SKILL.md'),
-      '---\nname: gsd-plan-phase\ndescription: GSD internal skill.\n---\n'
+      '---\nname: gad-plan-phase\ndescription: GSD internal skill.\n---\n'
     );
     fs.writeFileSync(
       path.join(userSkillDir, 'SKILL.md'),
@@ -164,7 +164,7 @@ describe('generate-claude-md skills section', () => {
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
-    assert.ok(!content.includes('gsd-plan-phase'));
+    assert.ok(!content.includes('gad-plan-phase'));
     assert.ok(content.includes('my-feature'));
     assert.ok(content.includes('Custom project skill'));
   });

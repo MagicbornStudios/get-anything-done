@@ -7,13 +7,16 @@
     "gad": "bin/gad.cjs"
   },
   "files": [
+    ".agents",
     "bin",
     "commands",
     "dist",
-    "get-shit-done",
     "agents",
     "hooks/dist",
     "lib",
+    "references",
+    "templates",
+    "workflows",
     "scripts"
   ],
   "keywords": [
@@ -38,9 +41,6 @@
   "bugs": {
     "url": "https://github.com/MagicbornStudios/get-anything-done/issues"
   },
-  "peerDependencies": {
-    "get-shit-done-cc": ">=1.30.0"
-  },
   "engines": {
     "node": ">=20.0.0"
   },
@@ -63,6 +63,6 @@
     "release:check": "node scripts/release-should-build.mjs",
     "prepublishOnly": "npm run build:hooks && npm run build:cli",
     "test": "node scripts/run-tests.cjs",
-    "test:coverage": "c8 --check-coverage --lines 70 --reporter text --include 'get-shit-done/bin/lib/*.cjs' --exclude 'tests/**' --all node scripts/run-tests.cjs"
+    "test:coverage": "c8 --check-coverage --lines 70 --reporter text --exclude 'tests/**' --all node scripts/run-tests.cjs"
   }
 }

@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { createTempDir, cleanup } = require('./helpers.cjs');
 
-process.env.GSD_TEST_MODE = '1';
+process.env.GAD_TEST_MODE = '1';
 const { configureOpencodePermissions } = require('../bin/install.js');
 
 const envKeys = ['OPENCODE_CONFIG_DIR', 'OPENCODE_CONFIG', 'XDG_CONFIG_HOME'];
@@ -30,7 +30,7 @@ function restoreEnv(snapshot) {
 let configDir;
 
 beforeEach(() => {
-  configDir = createTempDir('gsd-opencode-');
+  configDir = createTempDir('gad-opencode-');
 });
 
 afterEach(() => {
@@ -62,7 +62,7 @@ describe('configureOpencodePermissions', () => {
     configureOpencodePermissions(true);
 
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const gsdPath = `${configDir.replace(/\\/g, '/')}/get-shit-done/*`;
+    const gsdPath = `${configDir.replace(/\\/g, '/')}/get-anything-done/*`;
     assert.strictEqual(config.permission.read[gsdPath], 'allow');
     assert.strictEqual(config.permission.external_directory[gsdPath], 'allow');
   });

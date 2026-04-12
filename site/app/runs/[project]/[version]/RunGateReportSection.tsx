@@ -1,15 +1,14 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
 
 export function RunGateReportSection({ run }: { run: EvalRunRecord }) {
   if (!run.requirementCoverage) return null;
   const cov = run.requirementCoverage;
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
-        <p className="section-kicker">Gate report</p>
-        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Requirement coverage</h2>
-        <div className="mt-8 grid gap-5 md:grid-cols-4">
+    <SiteSection>
+      <SiteSectionHeading kicker="Gate report" title="Requirement coverage" />
+      <div className="mt-8 grid gap-5 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total criteria</CardDescription>
@@ -47,7 +46,6 @@ export function RunGateReportSection({ run }: { run: EvalRunRecord }) {
             <p className="mt-2 text-base leading-7 text-foreground">{cov.gate_notes}</p>
           </div>
         )}
-      </div>
-    </section>
+    </SiteSection>
   );
 }

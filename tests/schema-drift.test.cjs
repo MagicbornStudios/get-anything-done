@@ -14,7 +14,7 @@ const { createTempProject, createTempGitProject, cleanup, runGsdTools } = requir
 // ─── Unit: detectSchemaFiles ─────────────────────────────────────────────────
 
 const { detectSchemaFiles, detectSchemaOrm, checkSchemaDrift } = require(
-  path.join(__dirname, '..', 'get-shit-done', 'bin', 'lib', 'schema-detect.cjs')
+  path.join(__dirname, '..', 'lib', 'schema-detect.cjs')
 );
 
 describe('detectSchemaFiles', () => {
@@ -255,7 +255,7 @@ describe('verify schema-drift CLI command', () => {
   let tmpDir;
 
   beforeEach(() => {
-    tmpDir = createTempGitProject('gsd-schema-drift-');
+    tmpDir = createTempGitProject('gad-schema-drift-');
   });
 
   afterEach(() => {

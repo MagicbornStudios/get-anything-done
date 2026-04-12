@@ -11,6 +11,7 @@ import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/e
 import { STATUS_TINT } from "@/app/planning/planning-shared";
 import { RichText } from "@/components/refs/RichText";
 import { cn } from "@/lib/utils";
+import { SiteSection } from "@/components/site";
 
 interface Props {
   state: PlanningState;
@@ -40,9 +41,8 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
   }, [defaultTab, allTasks.length, state.phases.length, gadBugs.length]);
 
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
-        <Tabs defaultValue={defaultTab}>
+    <SiteSection>
+      <Tabs defaultValue={defaultTab}>
           <TabsList className="mb-6 flex-wrap">
             <TabsTrigger value="phases">
               Phases <span className="ml-1.5 tabular-nums text-muted-foreground">{allPhases.length}</span>
@@ -233,8 +233,7 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
               </div>
             </TabsContent>
           )}
-        </Tabs>
-      </div>
-    </section>
+      </Tabs>
+    </SiteSection>
   );
 }

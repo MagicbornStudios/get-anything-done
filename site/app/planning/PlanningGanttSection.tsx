@@ -9,6 +9,7 @@ import { Ref } from "@/components/refs/Ref";
 import type { PlanningPhase } from "@/lib/catalog.generated";
 import { ALL_TASKS } from "@/lib/eval-data";
 import { RichText } from "@/components/refs/RichText";
+import { SiteSection } from "@/components/site";
 
 const DEFAULT_SPRINT_SIZE = 5;
 
@@ -60,9 +61,8 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
   }
 
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <SiteSection>
+      <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="section-kicker">Phase timeline</p>
             <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
@@ -171,7 +171,6 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
             )}
           </div>
         )}
-      </div>
-    </section>
+    </SiteSection>
   );
 }

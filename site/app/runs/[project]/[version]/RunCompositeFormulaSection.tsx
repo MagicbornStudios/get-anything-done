@@ -1,4 +1,5 @@
 import type { EvalRunRecord } from "@/lib/eval-data";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
 
 type ContributionRow = {
@@ -20,20 +21,19 @@ export function RunCompositeFormulaSection({
   weightedSum: number;
 }) {
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
-        <p className="section-kicker">Composite formula</p>
-        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          How {formatNum(composite)} was calculated
-        </h2>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-          The composite score is a weighted sum of the dimensions above. Weights come from{" "}
-          <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">evals/{run.project}/gad.json</code>
-          . Contribution = score × weight; dimensions sorted by contribution so you can see what
-          actually moved the needle.
-        </p>
+    <SiteSection>
+      <SiteSectionHeading
+        kicker="Composite formula"
+        title={<>How {formatNum(composite)} was calculated</>}
+      />
+      <SiteProse size="md" className="mt-3">
+        The composite score is a weighted sum of the dimensions above. Weights come from{" "}
+        <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">evals/{run.project}/gad.json</code>
+        . Contribution = score × weight; dimensions sorted by contribution so you can see what
+        actually moved the needle.
+      </SiteProse>
 
-        <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
+      <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
@@ -90,7 +90,6 @@ export function RunCompositeFormulaSection({
             older scoring pass.
           </p>
         )}
-      </div>
-    </section>
+    </SiteSection>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PROJECT_LABELS, WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
 import { REPO, formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
 import { RunScoreBar } from "@/app/runs/[project]/[version]/RunScoreBar";
+import { SiteSection } from "@/components/site";
 
 export function RunHeroSection({
   run,
@@ -30,8 +31,7 @@ export function RunHeroSection({
   interruptionNote: string | null;
 }) {
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
+    <SiteSection>
         <Button
           variant="ghost"
           className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
@@ -248,7 +248,6 @@ export function RunHeroSection({
             </Button>
           </div>
         </div>
-      </div>
-    </section>
+    </SiteSection>
   );
 }

@@ -17,7 +17,7 @@ const {
   spliceFrontmatter,
   parseMustHavesBlock,
   FRONTMATTER_SCHEMAS,
-} = require('../get-shit-done/bin/lib/frontmatter.cjs');
+} = require('../lib/frontmatter.cjs');
 
 // ─── extractFrontmatter ─────────────────────────────────────────────────────
 

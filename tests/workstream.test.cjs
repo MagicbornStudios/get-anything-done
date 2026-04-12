@@ -36,8 +36,8 @@ describe('planningDir workstream awareness via env var', () => {
 
   after(() => cleanup(tmpDir));
 
-  test('state json returns workstream-scoped state when GSD_WORKSTREAM is set', () => {
-    const result = runGsdTools(['state', 'json', '--raw'], tmpDir, { GSD_WORKSTREAM: 'alpha' });
+  test('state json returns workstream-scoped state when GAD_WORKSTREAM is set', () => {
+    const result = runGsdTools(['state', 'json', '--raw'], tmpDir, { GAD_WORKSTREAM: 'alpha' });
     assert.ok(result.success, `state json failed: ${result.error}`);
     const data = JSON.parse(result.output);
     assert.ok(data.status || data.current_phase !== undefined, 'should return state data');
@@ -46,7 +46,7 @@ describe('planningDir workstream awareness via env var', () => {
   test('state json reads from flat .planning when no workstream set', () => {
     // Clear active-workstream so no auto-detection
     try { fs.unlinkSync(path.join(tmpDir, '.planning', 'active-workstream')); } catch {}
-    const result = runGsdTools(['state', 'json', '--raw'], tmpDir, { GSD_WORKSTREAM: '' });
+    const result = runGsdTools(['state', 'json', '--raw'], tmpDir, { GAD_WORKSTREAM: '' });
     // Should fail or return empty state since flat .planning/ has no STATE.md
     assert.ok(!result.success || result.output.includes('not found') || result.output === '{}',
       'should read from flat .planning/');
@@ -54,13 +54,13 @@ describe('planningDir workstream awareness via env var', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'active-workstream'), 'alpha\n');
   });
 
-  test('--ws flag overrides GSD_WORKSTREAM env var', () => {
+  test('--ws flag overrides GAD_WORKSTREAM env var', () => {
     // Create a second workstream
     const betaDir = path.join(tmpDir, '.planning', 'workstreams', 'beta');
     fs.mkdirSync(path.join(betaDir, 'phases'), { recursive: true });
     fs.writeFileSync(path.join(betaDir, 'STATE.md'), '# State\n**Status:** Beta active\n');
 
-    const result = runGsdTools(['state', 'json', '--raw', '--ws', 'beta'], tmpDir, { GSD_WORKSTREAM: 'alpha' });
+    const result = runGsdTools(['state', 'json', '--raw', '--ws', 'beta'], tmpDir, { GAD_WORKSTREAM: 'alpha' });
     assert.ok(result.success, `state json --ws beta failed: ${result.error}`);
   });
 });
@@ -349,9 +349,9 @@ describe('workstream progress', () => {
   });
 });
 
-// ─── Integration: gsd-tools --ws flag ────────────────────────────────────────
+// ─── Integration: gad-tools --ws flag ────────────────────────────────────────
 
-describe('gsd-tools --ws flag integration', () => {
+describe('gad-tools --ws flag integration', () => {
   let tmpDir;
 
   before(() => {
@@ -419,11 +419,11 @@ describe('path traversal rejection', () => {
     }
   });
 
-  describe('GSD_WORKSTREAM env var rejects traversal attempts', () => {
+  describe('GAD_WORKSTREAM env var rejects traversal attempts', () => {
     for (const name of maliciousNames) {
-      test(`rejects GSD_WORKSTREAM=${name}`, () => {
-        const result = runGsdTools(['workstream', 'list', '--raw'], tmpDir, { GSD_WORKSTREAM: name });
-        assert.ok(!result.success, `should reject GSD_WORKSTREAM=${name}`);
+      test(`rejects GAD_WORKSTREAM=${name}`, () => {
+        const result = runGsdTools(['workstream', 'list', '--raw'], tmpDir, { GAD_WORKSTREAM: name });
+        assert.ok(!result.success, `should reject GAD_WORKSTREAM=${name}`);
         assert.ok(result.error.includes('Invalid workstream name'), `error should mention invalid name for: ${name}`);
       });
     }
@@ -447,7 +447,7 @@ describe('path traversal rejection', () => {
       test(`rejects poisoned file containing ${name}`, () => {
         // Write malicious name directly to the active-workstream file
         fs.writeFileSync(path.join(tmpDir, '.planning', 'active-workstream'), name + '\n');
-        const result = runGsdTools(['workstream', 'get'], tmpDir, { GSD_WORKSTREAM: '' });
+        const result = runGsdTools(['workstream', 'get'], tmpDir, { GAD_WORKSTREAM: '' });
         assert.ok(result.success, 'get should succeed');
         const data = JSON.parse(result.output);
         // getActiveWorkstream should return null for invalid names
@@ -462,7 +462,7 @@ describe('path traversal rejection', () => {
   });
 
   describe('setActiveWorkstream rejects invalid names directly', () => {
-    const { setActiveWorkstream } = require('../get-shit-done/bin/lib/core.cjs');
+    const { setActiveWorkstream } = require('../lib/core.cjs');
     for (const name of maliciousNames) {
       test(`throws for ${name}`, () => {
         assert.throws(
