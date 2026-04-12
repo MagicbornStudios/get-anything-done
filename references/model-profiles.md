@@ -1,23 +1,23 @@
 # Model Profiles
 
-Model profiles control which Claude model each GSD agent uses. This allows balancing quality vs token spend, or inheriting the currently selected session model.
+Model profiles control which Claude model each GAD agent uses. They are off by default, and when enabled they balance quality vs token spend or inherit the currently selected session model.
 
 ## Profile Definitions
 
 | Agent | `quality` | `balanced` | `budget` | `inherit` |
 |-------|-----------|------------|----------|-----------|
-| gsd-planner | opus | opus | sonnet | inherit |
-| gsd-roadmapper | opus | sonnet | sonnet | inherit |
-| gsd-executor | opus | sonnet | sonnet | inherit |
-| gsd-phase-researcher | opus | sonnet | haiku | inherit |
-| gsd-project-researcher | opus | sonnet | haiku | inherit |
-| gsd-research-synthesizer | sonnet | sonnet | haiku | inherit |
-| gsd-debugger | opus | sonnet | sonnet | inherit |
-| gsd-codebase-mapper | sonnet | haiku | haiku | inherit |
-| gsd-verifier | sonnet | sonnet | haiku | inherit |
-| gsd-plan-checker | sonnet | sonnet | haiku | inherit |
-| gsd-integration-checker | sonnet | sonnet | haiku | inherit |
-| gsd-nyquist-auditor | sonnet | sonnet | haiku | inherit |
+| gad-planner | inherit | inherit | sonnet | inherit |
+| gad-roadmapper | inherit | inherit | sonnet | inherit |
+| gad-executor | inherit | sonnet | haiku | inherit |
+| gad-phase-researcher | inherit | sonnet | haiku | inherit |
+| gad-project-researcher | inherit | sonnet | haiku | inherit |
+| gad-research-synthesizer | inherit | sonnet | haiku | inherit |
+| gad-debugger | inherit | inherit | sonnet | inherit |
+| gad-codebase-mapper | sonnet | haiku | haiku | inherit |
+| gad-verifier | inherit | sonnet | haiku | inherit |
+| gad-plan-checker | inherit | sonnet | haiku | inherit |
+| gad-integration-checker | inherit | sonnet | haiku | inherit |
+| gad-nyquist-auditor | inherit | sonnet | haiku | inherit |
 
 ## Profile Philosophy
 
@@ -26,15 +26,15 @@ Model profiles control which Claude model each GSD agent uses. This allows balan
 - Sonnet for read-only verification
 - Use when: quota available, critical architecture work
 
-**balanced** (default) - Smart allocation
-- Opus only for planning (where architecture decisions happen)
-- Sonnet for execution and research (follows explicit instructions)
-- Sonnet for verification (needs reasoning, not just pattern matching)
+**balanced** - Smart allocation
+- Inherit for Opus-tier planning/debugging agents
+- Sonnet for execution, research, and verification
+- Haiku for mapping
 - Use when: normal development, good balance of quality and cost
 
-**budget** - Minimal Opus usage
-- Sonnet for anything that writes code
-- Haiku for research and verification
+**budget** - Minimal expensive-model usage
+- Sonnet only for the heaviest planning/debug roles
+- Haiku for most execution, research, and verification
 - Use when: conserving quota, high-volume work, less critical phases
 
 **inherit** - Follow the current session model
@@ -45,7 +45,7 @@ Model profiles control which Claude model each GSD agent uses. This allows balan
 
 ## Using Non-Claude Runtimes (Codex, OpenCode, Gemini CLI)
 
-When installed for a non-Claude runtime, the GSD installer sets `resolve_model_ids: "omit"` in `~/.gsd/defaults.json`. This returns an empty model parameter for all agents, so each agent uses the runtime's default model. No manual setup is needed.
+When installed for a non-Claude runtime, GAD should omit model selection by default so each agent uses the runtime's default model. No manual setup is needed.
 
 To assign different models to different agents, add `model_overrides` with model IDs your runtime recognizes:
 
@@ -65,7 +65,7 @@ The same tiering logic applies: stronger models for planning and debugging, chea
 
 ## Using Claude Code with Non-Anthropic Providers (OpenRouter, Local)
 
-If you're using Claude Code with OpenRouter, a local model, or any non-Anthropic provider, set the `inherit` profile to prevent GSD from calling Anthropic models for subagents:
+If you're using Claude Code with OpenRouter, a local model, or any non-Anthropic provider, set the `inherit` profile to prevent GAD from calling Anthropic models for subagents:
 
 ```bash
 # Via settings command
@@ -78,7 +78,7 @@ If you're using Claude Code with OpenRouter, a local model, or any non-Anthropic
 }
 ```
 
-Without `inherit`, GSD's default `balanced` profile spawns specific Anthropic models (`opus`, `sonnet`, `haiku`) for each agent type, which can result in additional API costs through your non-Anthropic provider.
+Without `inherit`, an enabled GAD profile spawns specific Anthropic model aliases (`opus`, `sonnet`, `haiku`) for each agent type, which can result in additional API costs through your non-Anthropic provider.
 
 ## Resolution Logic
 
@@ -99,8 +99,8 @@ Override specific agents without changing the entire profile:
 {
   "model_profile": "balanced",
   "model_overrides": {
-    "gsd-executor": "opus",
-    "gsd-planner": "haiku"
+    "gad-executor": "opus",
+    "gad-planner": "haiku"
   }
 }
 ```
@@ -109,31 +109,31 @@ Overrides take precedence over the profile. Valid values: `opus`, `sonnet`, `hai
 
 ## Switching Profiles
 
-Runtime: `/gsd:set-profile <profile>`
+Runtime: `gad config set-model-profile <profile>` or the runtime-specific command wrapper
 
 Per-project default: Set in `.planning/config.json`:
 ```json
 {
-  "model_profile": "balanced"
+  "model_profile": "off"
 }
 ```
 
 ## Design Rationale
 
-**Why Opus for gsd-planner?**
+**Why `inherit` for Opus-tier agents?**
 Planning involves architecture decisions, goal decomposition, and task design. This is where model quality has the highest impact.
 
-**Why Sonnet for gsd-executor?**
+**Why Sonnet for `gad-executor` in balanced?**
 Executors follow explicit PLAN.md instructions. The plan already contains the reasoning; execution is implementation.
 
 **Why Sonnet (not Haiku) for verifiers in balanced?**
 Verification requires goal-backward reasoning - checking if code *delivers* what the phase promised, not just pattern matching. Sonnet handles this well; Haiku may miss subtle gaps.
 
-**Why Haiku for gsd-codebase-mapper?**
+**Why Haiku for `gad-codebase-mapper`?**
 Read-only exploration and pattern extraction. No reasoning required, just structured output from file contents.
 
-**Why `inherit` instead of passing `opus` directly?**
-Claude Code's `"opus"` alias maps to a specific model version. Organizations may block older opus versions while allowing newer ones. GSD returns `"inherit"` for opus-tier agents, causing them to use whatever opus version the user has configured in their session. This avoids version conflicts and silent fallbacks to Sonnet.
+**Why Claude aliases instead of frozen model IDs?**
+Claude Code resolves aliases like `"sonnet"`, `"haiku"`, and `"opus"` to currently available versions. This avoids stale hardcoded IDs and makes model switching observable through `session_init.model`.
 
 **Why `inherit` profile?**
 Some runtimes (including OpenCode) let users switch models at runtime (`/model`). The `inherit` profile keeps all GSD subagents aligned to that live selection.

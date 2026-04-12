@@ -130,18 +130,18 @@ describe('resolveAgentModel', () => {
     );
   });
 
-  test('returns concrete model IDs for SDK runtime', () => {
+  test('returns Claude CLI aliases for SDK runtime', () => {
     assert.strictEqual(
       resolveAgentModel('gad-planner', { profile: 'balanced', target: 'sdk' }),
       undefined
     );
     assert.strictEqual(
       resolveAgentModel('gad-phase-researcher', { profile: 'balanced', target: 'sdk' }),
-      'claude-sonnet-4-6'
+      'sonnet'
     );
     assert.strictEqual(
       resolveAgentModel('gad-codebase-mapper', { profile: 'balanced', target: 'sdk' }),
-      'claude-haiku-3-5'
+      'haiku'
     );
   });
 

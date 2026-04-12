@@ -979,4 +979,10 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Candidates have review state + quarantine persistence. site/data/self-eval-config.json drives weights. /formulas site page documents pressure math and Shannon framing. compute-self-eval.mjs reads config at run time. PlanningSkillCandidatesTab gains Unreviewed/Reviewed filter. Phase 38 retroactively updated to ship these three pieces.</impact>
   </decision>
 
+  <decision id="gad-146">
+    <title>Claude-facing model profiles stay off by default and use runtime-safe aliases when enabled</title>
+    <summary>Model profiles were present in prompts and references but had drifted out of the live workflow: gad-tools init no longer emitted the resolved model fields, the SDK default still assumed an always-on profile in some places, and the SDK path used a stale frozen Haiku model ID that failed at runtime. Policy: (1) `model_profile` defaults to `off` so GAD does not silently change models unless the operator opts in. (2) When enabled for Claude-facing runtimes, GAD passes Claude aliases (`opus`, `sonnet`, `haiku`, or `inherit`) instead of frozen full model IDs, allowing the runtime to resolve to a current accessible version. (3) Model switching must be considered real only when verified by runtime events such as Claude SessionInit, not just by prompt interpolation or unit tests. (4) Shared resolver logic lives in GAD and feeds both workflow init payloads and SDK/session paths, so prompt expectations and actual spawn behavior stay aligned.</summary>
+    <impact>gad-tools init now emits resolved workflow model fields again. Claude SDK sessions no longer fail on a stale Haiku model ID and can be live-verified through SessionInit.model. Docs and tests move from balanced-by-default assumptions to off-by-default semantics. Future runtime-identity work in phase 35 builds on a working model-selection baseline instead of dead fields.</impact>
+  </decision>
+
 </decisions>

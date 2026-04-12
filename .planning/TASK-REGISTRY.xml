@@ -891,5 +891,9 @@
     <task id="35-03" status="planned"><goal>Update eval reporting, self-eval reporting, and site data generation to surface runtime identity alongside token/tool/skill/agent usage. Claude-vs-Codex comparisons must be first-class in the resulting artifacts.</goal>
       <keywords>reporting,self-eval,site,runtime-comparison</keywords>
     </task>
+    <task id="35-04" status="done"><goal>Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-safe Claude aliases when enabled, and a live verification path that proves a real Claude sub-session changed models.</goal>
+      <resolution>Shipped 2026-04-12. Added lib/model-profiles.cjs as a shared resolver, restored model emission in gad-tools init, changed SDK default model_profile to off, switched Claude-facing SDK profile resolution from stale hardcoded IDs to Claude aliases, added targeted unit coverage plus an opt-in live integration test, and manually verified two real Claude sessions via SessionInit events: balanced resolved to claude-sonnet-4-6 and budget resolved to claude-haiku-4-5-20251001.</resolution>
+      <keywords>model-profiles,claude,sdk,off-by-default,live-verification</keywords>
+    </task>
   </phase>
 </task-registry>

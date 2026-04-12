@@ -27,10 +27,10 @@ function resolveModel(options?: SessionOptions, config?: GSDConfig): string | un
   // Map model_profile names to model IDs
   if (config?.model_profile) {
     const profileMap: Record<string, string> = {
-      balanced: 'claude-sonnet-4-6',
-      quality: 'claude-opus-4-6',
-      budget: 'claude-haiku-3-5',
-      speed: 'claude-haiku-3-5',
+      balanced: 'sonnet',
+      quality: 'opus',
+      budget: 'haiku',
+      speed: 'haiku',
     };
     if (config.model_profile === 'off' || config.model_profile === 'inherit') {
       return undefined;

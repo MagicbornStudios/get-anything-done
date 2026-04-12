@@ -5,10 +5,10 @@ Resolve model profile once at the start of orchestration, then use it for all Ta
 ## Resolution Pattern
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "off")
 ```
 
-Default: `balanced` if not set or config missing.
+Default: `off` if not set or config missing.
 
 ## Lookup Table
 
@@ -19,12 +19,12 @@ Look up the agent in the table for the resolved profile. Pass the model paramete
 ```
 Task(
   prompt="...",
-  subagent_type="gsd-planner",
-  model="{resolved_model}"  # "inherit", "sonnet", or "haiku"
+  subagent_type="gad-planner",
+  model="{resolved_model}"  # "inherit", "sonnet", "haiku", or omitted when off
 )
 ```
 
-**Note:** Opus-tier agents resolve to `"inherit"` (not `"opus"`). This causes the agent to use the parent session's model, avoiding conflicts with organization policies that may block specific opus versions.
+**Note:** `off` means omit the `model` parameter entirely. Enabled profiles resolve to Claude aliases rather than frozen model IDs so the runtime can select a current compatible version.
 
 If `model_profile` is `"inherit"`, all agents resolve to `"inherit"` (useful for OpenCode `/model`).
 

@@ -550,10 +550,10 @@ describe('validate health --repair command', () => {
     assert.ok(createAction, `Expected createConfig action: ${JSON.stringify(output.repairs_performed)}`);
     assert.strictEqual(createAction.success, true, 'createConfig should succeed');
 
-    // Verify config.json now exists on disk with valid JSON and balanced profile
+    // Verify config.json now exists on disk with valid JSON and off-by-default profile
     assert.ok(fs.existsSync(configPath), 'config.json should now exist on disk');
     const diskConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    assert.strictEqual(diskConfig.model_profile, 'balanced', 'default model_profile should be balanced');
+    assert.strictEqual(diskConfig.model_profile, 'off', 'default model_profile should be off');
     // Verify nested workflow structure matches config.cjs canonical format
     assert.ok(diskConfig.workflow, 'config should have nested workflow object');
     assert.strictEqual(diskConfig.workflow.research, true, 'workflow.research should default to true');
