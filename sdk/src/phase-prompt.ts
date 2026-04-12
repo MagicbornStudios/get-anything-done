@@ -67,22 +67,21 @@ export class PromptFactory {
   private readonly workflowsDir: string;
   private readonly agentsDir: string;
   private readonly projectAgentsDir?: string;
-  private readonly sdkPromptsDir: string;
+  private readonly sdkRootDir: string;
 
   constructor(options?: {
     gsdInstallDir?: string;
     agentsDir?: string;
     projectAgentsDir?: string;
-    sdkPromptsDir?: string;
+    sdkRootDir?: string;
   }) {
     const gsdInstallDir = options?.gsdInstallDir ?? join(homedir(), '.gad', 'get-anything-done');
     this.workflowsDir = join(gsdInstallDir, 'workflows');
     this.agentsDir = options?.agentsDir ?? join(homedir(), '.agents');
     this.projectAgentsDir = options?.projectAgentsDir;
-    // SDK prompts dir: explicit override → package-relative default via import.meta.url
-    this.sdkPromptsDir =
-      options?.sdkPromptsDir ??
-      join(fileURLToPath(new URL('.', import.meta.url)), '..', 'prompts');
+    this.sdkRootDir =
+      options?.sdkRootDir ??
+      join(fileURLToPath(new URL('.', import.meta.url)), '..');
   }
 
   /**
@@ -148,19 +147,19 @@ export class PromptFactory {
 
   /**
    * Load the workflow file for a phase type.
-   * Tries sdk/prompts/workflows/ first (headless versions), then
+   * Tries sdk/workflows/ first (headless versions), then
    * falls back to installed GAD workflow files in workflowsDir.
    * Returns the raw content, or undefined if not found.
    */
   async loadWorkflowFile(phaseType: PhaseType): Promise<string | undefined> {
     const filename = PHASE_WORKFLOW_MAP[phaseType];
 
-    // Try SDK prompts dir first (headless versions)
-    const sdkPath = join(this.sdkPromptsDir, 'workflows', filename);
+    // Try SDK source dir first (headless versions)
+    const sdkPath = join(this.sdkRootDir, 'workflows', filename);
     try {
       return await readFile(sdkPath, 'utf-8');
     } catch {
-      // Not in sdk/prompts/, fall through to GSD-1 originals
+      // Not in sdk/workflows/, fall through to installed runtime files
     }
 
     // Fall back to GSD-1 originals
@@ -174,7 +173,7 @@ export class PromptFactory {
 
   /**
    * Load the agent definition for a phase type.
-   * Tries sdk/prompts/agents/ first (headless versions), then
+   * Tries sdk/agents/ first, then
    * user-level agents dir, then project-level.
    * Returns undefined if no agent is mapped or file not found.
    */
@@ -182,9 +181,8 @@ export class PromptFactory {
     const agentFilename = PHASE_AGENT_MAP[phaseType];
     if (!agentFilename) return undefined;
 
-    // Try SDK prompts dir first (headless versions)
     const paths = [
-      join(this.sdkPromptsDir, 'agents', agentFilename),
+      join(this.sdkRootDir, 'agents', agentFilename),
       join(this.agentsDir, agentFilename),
     ];
 

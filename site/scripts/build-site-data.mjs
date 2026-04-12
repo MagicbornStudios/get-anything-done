@@ -47,12 +47,11 @@ const __dirname = path.dirname(__filename);
 
 const SITE_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(SITE_ROOT, "..");
-const TEMPLATES_DIR = path.join(REPO_ROOT, "templates");
-// Canonical authored skills live at repo-root skills/. Installers transpile
-// this tree into runtime-native command/skills layouts as needed.
-const SKILLS_DIR = path.join(REPO_ROOT, "skills");
-const AGENTS_DIR = path.join(REPO_ROOT, "agents");
-const COMMANDS_DIR = path.join(REPO_ROOT, "commands", "gad");
+const SDK_DIR = path.join(REPO_ROOT, "sdk");
+const TEMPLATES_DIR = path.join(SDK_DIR, "templates");
+const SDK_SKILLS_DIR = path.join(SDK_DIR, "skills");
+const INTERNAL_SKILLS_DIR = path.join(REPO_ROOT, "skills");
+const AGENTS_DIR = path.join(SDK_DIR, "agents");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
 const DATA_DIR = path.join(REPO_ROOT, "data");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
@@ -634,7 +633,7 @@ function parseRequirementsHistory() {
 }
 
 // -------------------------------------------------------------------------
-// Catalog scanners — skills, agents, commands
+// Catalog scanners - skills, agents, templates
 // -------------------------------------------------------------------------
 
 function scanDirFiles(dir, pattern) {
@@ -652,16 +651,12 @@ function scanDirFiles(dir, pattern) {
 }
 
 function scanCatalog() {
-  console.log("[2e/4] Scanning catalog (skills, agents, commands, templates)");
+  console.log("[2e/4] Scanning catalog (skills, agents, templates)");
   const catalog = { skills: [], agents: [], commands: [], templates: [] };
 
-  if (exists(SKILLS_DIR)) {
-    // Walk skills/ AND skills/emergent/ as two separate tiers.
-    // Regular skills are human-authored and part of the default install.
-    // Emergent skills live in skills/emergent/ and are agent-authored; they
-    // are excluded from the default install but surfaced on the site with
-    // an "emergent" tag so the agent-authored corpus stays discoverable.
-    function readSkill(skillDir, id, origin) {
+  function addSkillsFromDir(baseDir, sourceLabel, defaultOrigin = "human-authored") {
+    if (!exists(baseDir)) return;
+    function readSkill(skillDir, id, origin, fileBase) {
       const file = path.join(skillDir, "SKILL.md");
       if (!exists(file)) return null;
       const src = fs.readFileSync(file, "utf8");
@@ -676,35 +671,45 @@ function scanCatalog() {
         authoredOn: data["authored-on"] || null,
         excludedFromDefaultInstall: data["excluded-from-default-install"] === true || declaredOrigin === "emergent",
         frameworkSkill: data["framework_skill"] === true || data["framework-skill"] === true,
-        file: origin === "emergent"
-          ? `vendor/get-anything-done/skills/emergent/${id}/SKILL.md`
-          : `vendor/get-anything-done/skills/${id}/SKILL.md`,
+        file: `${fileBase}/${id}/SKILL.md`,
+        source: sourceLabel,
         bodyHtml: renderMarkdown(body),
         bodyRaw: body,
       };
     }
 
-    const emergentDir = path.join(SKILLS_DIR, "emergent");
-
-    for (const entry of fs.readdirSync(SKILLS_DIR, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    const emergentDir = path.join(baseDir, "emergent");
+    for (const entry of fs.readdirSync(baseDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
       if (!entry.isDirectory()) continue;
       if (entry.name === "emergent") continue; // handled separately
       if (entry.name === "candidates") continue; // quarantined drafts (GAD-D-144), excluded from catalog
-      const skill = readSkill(path.join(SKILLS_DIR, entry.name), entry.name, "human-authored");
+      const skill = readSkill(
+        path.join(baseDir, entry.name),
+        entry.name,
+        defaultOrigin,
+        sourceLabel === "sdk" ? "vendor/get-anything-done/sdk/skills" : "vendor/get-anything-done/skills"
+      );
       if (skill) catalog.skills.push(skill);
     }
 
     if (exists(emergentDir)) {
       for (const entry of fs.readdirSync(emergentDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
         if (!entry.isDirectory()) continue;
-        const skill = readSkill(path.join(emergentDir, entry.name), entry.name, "emergent");
+        const skill = readSkill(
+          path.join(emergentDir, entry.name),
+          entry.name,
+          "emergent",
+          sourceLabel === "sdk" ? "vendor/get-anything-done/sdk/skills/emergent" : "vendor/get-anything-done/skills/emergent"
+        );
         if (skill) catalog.skills.push(skill);
       }
     }
-
-    const emergentCount = catalog.skills.filter((s) => s.origin === "emergent").length;
-    console.log(`  [skills] ${catalog.skills.length} total (${emergentCount} emergent, excluded from default install)`);
   }
+
+  addSkillsFromDir(SDK_SKILLS_DIR, "sdk", "official");
+  addSkillsFromDir(INTERNAL_SKILLS_DIR, "repo-internal", "internal");
+  const emergentCount = catalog.skills.filter((s) => s.origin === "emergent").length;
+  console.log(`  [skills] ${catalog.skills.length} total (${emergentCount} emergent, excluded from default install)`);
 
   if (exists(AGENTS_DIR)) {
     for (const name of fs.readdirSync(AGENTS_DIR).sort()) {
@@ -719,27 +724,7 @@ function scanCatalog() {
         description: data.description || firstParagraph(body, 280),
         tools: data.tools || null,
         color: data.color || null,
-        file: `vendor/get-anything-done/agents/${name}`,
-        bodyHtml: renderMarkdown(body),
-        bodyRaw: body,
-      });
-    }
-  }
-
-  if (exists(COMMANDS_DIR)) {
-    for (const name of fs.readdirSync(COMMANDS_DIR).sort()) {
-      if (!name.endsWith(".md")) continue;
-      const file = path.join(COMMANDS_DIR, name);
-      const src = fs.readFileSync(file, "utf8");
-      const { data, body } = parseFrontmatter(src);
-      const id = name.replace(/\.md$/, "");
-      catalog.commands.push({
-        id,
-        name: data.name || `gad:${id}`,
-        description: data.description || firstParagraph(body, 280),
-        agent: data.agent || null,
-        argumentHint: data["argument-hint"] || null,
-        file: `vendor/get-anything-done/commands/gad/${name}`,
+        file: `vendor/get-anything-done/sdk/agents/${name}`,
         bodyHtml: renderMarkdown(body),
         bodyRaw: body,
       });
@@ -779,7 +764,7 @@ function scanCatalog() {
   catalog.inheritance = inheritanceMap;
 
   console.log(
-    `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} commands=${catalog.commands.length} templates=${catalog.templates.length}`
+    `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} templates=${catalog.templates.length}`
   );
   const inheritedCount = Object.values(inheritanceMap).filter((v) => v.length > 0).length;
   console.log(`  [scan] ${inheritedCount} skill(s) inherited by at least one eval template`);
@@ -1310,7 +1295,7 @@ function parsePlanningState() {
 function writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState) {
   console.log("  [write] lib/catalog.generated.ts");
   const out = `/**
- * Auto-generated from skills/, agents/, commands/gad/, templates/, and
+ * Auto-generated from sdk/skills/, sdk/agents/, sdk/templates/, root skills/, and
  * evals/REQUIREMENTS-VERSIONS.md. DO NOT EDIT BY HAND.
  */
 
@@ -1318,11 +1303,12 @@ export interface CatalogSkill {
   id: string;
   name: string;
   description: string;
-  origin?: "human-authored" | "emergent" | "inherited" | null;
+  origin?: "human-authored" | "emergent" | "inherited" | "official" | "internal" | null;
   authoredBy?: string | null;
   authoredOn?: string | null;
   excludedFromDefaultInstall?: boolean;
   frameworkSkill?: boolean;
+  source?: "sdk" | "repo-internal" | null;
   file: string;
   bodyHtml: string;
   bodyRaw: string;

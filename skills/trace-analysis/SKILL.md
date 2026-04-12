@@ -1,63 +1,68 @@
 ---
 name: trace-analysis
-description: Analyze GAD trace data (.gad-log/ JSONL + .trace-events.jsonl) to produce usage reports — tool mix, skill invocations, commit rhythm, context compactions, per-project breakdowns.
+description: Analyze GAD trace data (.gad-log JSONL + .trace-events.jsonl + preserved eval traces) to produce usage reports such as tool mix, skill invocations, commit rhythm, token coverage, runtime mix, and per-project breakdowns.
 ---
 
 # trace-analysis
 
-Analyze the trace data that GAD hooks capture during every session. Produces structured reports showing how GAD is actually being used across all projects in this monorepo.
+Analyze the telemetry that GAD captures during sessions and eval runs. This skill is for measurement and reporting, not for syncing roots or compiling docs.
 
 ## Data sources
 
-1. **`.planning/.gad-log/*.jsonl`** — Tool call log from the tool-trace.js hook. One file per day. Fields: ts, tool, session_id, input_summary, gad_command, agent_type, skill.
-2. **`.planning/.trace-events.jsonl`** — Trace events from gad-trace-hook.cjs. Fields: event_type (tool_use, skill_invocation, subagent_spawn, file_mutation), seq, tool, inputs, outputs.
-3. **`vendor/get-anything-done/.planning/.trace-events.jsonl`** — GAD project-specific trace events (1000 event max with rotation).
+1. `.planning/.gad-log/*.jsonl`
+   Raw CLI and hook-adjacent log entries.
+2. `.planning/.trace-events.jsonl`
+   Session trace events such as tool use, skill invocation, subagent spawn, and file mutation.
+3. Project-local `.planning/.trace-events.jsonl`
+   Additional trace logs inside specific tracked projects when those projects maintain their own planning root.
+4. `evals/<project>/<version>/TRACE.json`
+   Preserved eval artifacts with runtime identity, tokens, review outcomes, and derived metrics.
 
 ## What to produce
 
 ### Per-session report
-```
+
+```text
 Session: <session_id>
-Duration: <first_event_ts> → <last_event_ts>
-Tool calls: <count> (Read: N, Edit: N, Bash: N, Grep: N, Agent: N, Skill: N)
-GAD CLI calls: <count> (snapshot: N, state: N, tasks: N, decisions: N)
+Duration: <first_event_ts> -> <last_event_ts>
+Runtime: <claude-code | codex | unknown>
+Tool calls: <count>
+GAD CLI calls: <count>
 Skills invoked: <list with counts>
-Subagents spawned: <count> (types: ...)
-Files mutated: <count> (created: N, edited: N)
-Commits: <count from git log in time range>
+Subagents spawned: <count>
+Files mutated: <count>
 ```
 
-### Per-day report
-Aggregate of all sessions that day. Same metrics plus:
-- Projects touched (from file paths in mutations)
-- Decision count delta (from DECISIONS.xml git diff)
-- Task completion rate
+### Per-day or per-project report
 
-### Per-round report (the self-eval)
-A "round" of GAD development = a milestone or sprint. Aggregate:
-- Total sessions, total tool calls, total tokens (if available)
-- Skill usage distribution — which skills are used, which are never invoked
-- GAD loop compliance — how many sessions start with `gad snapshot`?
-- Planning doc update rate — are STATE.xml and TASK-REGISTRY.xml updated per commit?
-- Ratio of framework overhead to implementation (Read/Edit on .planning/ files vs source files)
+- projects touched
+- runtime mix
+- skill usage distribution
+- planning doc update rate
+- token coverage and missingness
+- commit rhythm or checkpoint discipline
 
-## How to run
+### Self-eval or framework report
 
-```
-# Analyze today's trace data
-Read .planning/.gad-log/2026-04-10.jsonl, count and categorize events.
+- total sessions
+- total tool calls
+- total or estimated tokens
+- eval token totals
+- runtime attribution coverage
+- loop compliance
+- framework-overhead ratio versus implementation work
 
-# Analyze all trace data
-Read all files in .planning/.gad-log/, aggregate across days.
+## How to use it
 
-# Check GAD loop compliance
-For each session, check: did it start with a gad snapshot call? Did it update planning docs before committing?
-```
+- Read the available log files.
+- Group by session, runtime, project, or eval version.
+- Call out where data is exact versus estimated.
+- Highlight missing instrumentation honestly instead of smoothing it over.
 
-## Output format
+## What this is not
 
-Structured markdown report. Can be rendered on the site under /data or /methodology.
+- Not `gad:workspace-sync` — that manages planning roots.
+- Not `gad:docs-compile` — that compiles planning docs into a sink.
+- Not `portfolio-sync` — that publishes public-facing artifacts.
 
-## Future: CLI integration
-
-When stable, this should become `gad trace report` CLI command with the same analysis logic available programmatically.
+This skill answers: "what happened in the framework?" not "where are the roots?" or "what should we publish?"

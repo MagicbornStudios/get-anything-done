@@ -28,12 +28,12 @@ Executable release work is only required for shipped CLI surface changes:
 
 - `bin/`
 - `lib/`
-- `commands/` (generated compatibility output)
-- `agents/`
-- `hooks/`
-- `references/`
-- `templates/`
-- `workflows/`
+- `sdk/agents/`
+- `sdk/hooks/`
+- `sdk/references/`
+- `sdk/skills/`
+- `sdk/templates/`
+- `sdk/workflows/`
 - release/build scripts
 - `package.json` / `package-lock.json`
 
@@ -62,16 +62,22 @@ node scripts/publish-release.mjs --tag v<version>
 
 ```text
 bin/                    Installer and CLI entrypoints
-skills/                 Canonical authored skills (source of truth)
-commands/gad/           Generated compatibility output for runtimes that still need commands
-agents/                 Canonical agent definitions
-hooks/                  Runtime hooks
-references/             Reference docs used by skills/agents
-templates/              Planning and workflow templates
-workflows/              Workflow docs
+sdk/skills/             Canonical official consumer/runtime skills
+sdk/agents/             Canonical official agent definitions
+sdk/hooks/              Canonical runtime hooks
+sdk/references/         Reference docs used by official skills/agents
+sdk/templates/          Planning and workflow templates
+sdk/workflows/          Workflow docs used by official skills and agents
+skills/                 Internal or non-official repo-local skills
 scripts/                Build, release, and maintenance scripts
 tests/                  Test suite
 ```
 
-`.agents/` is not canonical repo content for GAD. It is an external/runtime compatibility
-layout and should not be committed from this repo.
+Tracked `commands/` is gone. Runtime command layouts are generated during install for runtimes
+that still need them. `.agents/` is not canonical repo content for GAD. It is an
+external/runtime compatibility layout and should not be committed from this repo.
+
+Terminology:
+- `skill`: installable/public methodology unit
+- `workflow`: reusable long-form execution spec consumed by skills, agents, and prompts
+- `command`: generated runtime wrapper only, not authored source

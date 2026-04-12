@@ -1,18 +1,18 @@
 const RELEASE_SURFACE_PREFIXES = [
   '.github/workflows/release-',
-  'agents/',
   'bin/',
-  'commands/',
-  'hooks/',
   'lib/',
-  'references/',
   'skills/',
+  'sdk/agents/',
+  'sdk/hooks/',
+  'sdk/references/',
+  'sdk/skills/',
+  'sdk/templates/',
+  'sdk/workflows/',
   'scripts/build-',
   'scripts/install-gad-',
   'scripts/release-',
   'scripts/sea-',
-  'templates/',
-  'workflows/',
 ];
 
 const RELEASE_SURFACE_EXACT = new Set([

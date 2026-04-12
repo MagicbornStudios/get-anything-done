@@ -9,15 +9,15 @@
   },
   "files": [
     "bin",
-    "commands",
     "dist",
-    "agents",
-    "hooks/dist",
     "lib",
-    "references",
     "skills",
-    "templates",
-    "workflows",
+    "sdk/agents",
+    "sdk/hooks/dist",
+    "sdk/references",
+    "sdk/skills",
+    "sdk/templates",
+    "sdk/workflows",
     "scripts"
   ],
   "keywords": [

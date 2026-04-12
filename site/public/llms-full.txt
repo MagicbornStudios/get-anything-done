@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-12T17:26:57.879Z
+Generated: 2026-04-12T20:44:45.164Z
 
 
 ---
@@ -12,7 +12,7 @@ Generated: 2026-04-12T17:26:57.879Z
 ## gad:add-todo
 id: add-todo
 description: Capture an idea, task, or follow-up from the current conversation without losing flow — writes it to .planning/todos/ and updates STATE.md. Use this skill when the user mentions something they want to remember ("we should also...", "don't forget...", "add to the list..."), when execution uncovers work that doesn't belong in the current phase, when a decision surfaces a follow-up task, or when an idea comes up mid-session that shouldn't be forgotten but shouldn't derail the current work. Keeps ideas captured without derailing execution.
-origin: human-authored
+origin: official
 
 
 # Add Todo
@@ -117,7 +117,7 @@ Todos are not permanent — they're staging. Every todo should eventually be act
 ## gad:auto-conventions
 id: auto-conventions
 description: Auto-generate CONVENTIONS.md from codebase patterns after first implementation phase. Use for greenfield projects that have code but no documented conventions.
-origin: human-authored
+origin: official
 
 
 # gad:auto-conventions
@@ -229,7 +229,7 @@ The conventions appear in `gad snapshot` output (via the CONVENTIONS section). F
 ## gad:check-todos
 id: check-todos
 description: Read current planning state and surface the single best next task or action — the re-entry point for any autonomous loop. Use this skill when the user asks "what should I work on next?", "what's the status?", "where are we?", "what's next?", or starts a new session and needs to orient. Also use it to find the next task after completing one, or to decide whether to plan a new phase or execute an existing one. This is the navigation skill — run it between every phase and after any context reset.
-origin: human-authored
+origin: official
 
 
 # Check Todos
@@ -239,7 +239,7 @@ Reads planning state and surfaces the single best next action. This is the re-en
 ## Step 1: Bootstrap context
 
 ```bash
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>
+gad snapshot --projectid <id>
 ```
 
 This gives you state, roadmap, tasks, decisions, and file refs in one command. Extract:
@@ -344,7 +344,7 @@ This is why every skill in the GAD system updates STATE as part of its close ste
 ## create-skill
 id: create-skill
 description: >- Capture a reusable pattern, recipe, or failure-mode fix as a skill document so future agents (including you after a context reset) can apply it without rediscovering it. Use this skill whenever you solve a non-obvious problem, discover a working pattern after two or more failed attempts, hit a bug whose fix isn't self-evident from the code, or finish a piece of work that future runs will likely repeat. Write the skill the moment you learn the lesson — not at the end. In bare/emergent eval conditions this is the primary mechanism for agent-authored methodology. The agent IS the workflow author, and skills are how that authorship persists.
-origin: human-authored
+origin: official
 
 
 # create-skill
@@ -506,7 +506,7 @@ Then continue with the work that prompted the skill. Skill capture should take u
 ## gad:debug
 id: debug
 description: Systematic debugging using the scientific method — form hypotheses, test them, eliminate dead ends, and find root causes. Use this skill whenever the user reports a bug, unexpected behavior, test failure, build error, or anything that "should work but doesn't." Also use it when execution hits an unexpected blocker mid-phase, when a verification command produces confusing output, or when multiple debugging attempts have failed and you need a structured approach. Maintains a persistent debug session file so investigation survives context resets.
-origin: human-authored
+origin: official
 
 
 # Debug
@@ -704,7 +704,7 @@ If the session was started mid-phase (during gad:execute-phase), update STATE.md
 ## eval-bootstrap
 id: eval-bootstrap
 description: Bootstrap an eval agent with full GAD context injected into its prompt. Use instead of gad:eval-run when running implementation evals. Generates the bootstrap prompt via `gad eval run --prompt-only` or reads a suite-generated PROMPT.md, then launches an agent with worktree isolation.
-origin: human-authored
+origin: official
 
 
 
@@ -725,13 +725,15 @@ gad-21: Prompting an agent to "use gad snapshot" doesn't work — the agent igno
 
 ```sh
 # For a single project:
-gad eval run --project <name> --prompt-only
+gad eval run --project <name> --prompt-only --runtime <claude-code|codex|cursor|...>
 
 # For all runnable evals:
 gad eval suite
 ```
 
 This reads all template files (AGENTS.md, REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, STATE.xml) and constructs a complete prompt with everything inline.
+The runtime argument also stamps `TRACE.json.runtime_identity` and tells the operator
+which hook install path must be active for the run.
 
 The prompt is written to:
 - Single: `evals/<project>/v<N>/PROMPT.md`
@@ -750,6 +752,14 @@ Agent(
 ```
 
 For suite runs, launch ALL agents in a single message (parallel, not sequential).
+Before launch, make sure the target runtime install succeeded and that the run inherits
+the eval env from the prompt:
+
+```text
+GAD_RUNTIME=<runtime-id>
+GAD_LOG_DIR=<eval-run-dir>/.gad-log
+GAD_EVAL_TRACE_DIR=<eval-run-dir>
+```
 
 ## Step 3 — After completion (PRESERVATION IS MANDATORY)
 
@@ -788,7 +798,7 @@ When the agent finishes, **BEFORE the worktree is cleaned up**:
 
 ## The preservation contract
 
-Every impl eval run MUST preserve: TRACE.json, run/ (code), build (under apps/portfolio/public/evals/), and .gad-log/ (CLI calls). `tests/eval-preservation.test.cjs` enforces this — the test suite will fail if any recent run is missing artifacts. See `gad:eval-run` skill for the full procedure.
+Every impl eval run MUST preserve: TRACE.json, runtime identity, run/ (code), build (under apps/portfolio/public/evals/), and .gad-log/ (CLI calls). `gad eval verify` now treats missing runtime identity as a preservation failure for new runs. See `gad:eval-run` skill for the full procedure.
 
 ## What this replaces
 
@@ -799,6 +809,7 @@ This replaces the old approach of manually reading template files and constructi
 An eval is properly bootstrapped when:
 - Agent prompt includes full AGENTS.md, REQUIREMENTS.xml, DECISIONS.xml, and STATE
 - Agent works in isolated worktree
+- Runtime identity and per-run log directory are configured before the agent starts
 - Agent updates TASK-REGISTRY.xml per task (verifiable via git log)
 - Agent commits with task ids in messages
 - TRACE.json can be reconstructed from git history after completion
@@ -807,7 +818,7 @@ An eval is properly bootstrapped when:
 ## gad:eval-report
 id: eval-report
 description: Generate comparison reports across eval runs, within a single project or across all projects
-origin: human-authored
+origin: official
 
 
 # gad:eval-report
@@ -899,7 +910,7 @@ After reviewing, update the eval-suite skill or create a decision:
 ## eval-run
 id: eval-run
 description: Run a GAD evaluation with full preservation of code, builds, and planning docs
-origin: human-authored
+origin: official
 
 
 
@@ -916,6 +927,7 @@ Every eval run on an implementation project MUST end with these artifacts preser
 2. **Code + planning docs** at `evals/<project>/v<N>/run/` — what the agent built
 3. **Build output** at `apps/portfolio/public/evals/<project>/v<N>/` — playable demo
 4. **CLI logs** at `evals/<project>/v<N>/.gad-log/` — what commands the agent ran
+5. **Runtime attribution** in `TRACE.json.runtime_identity` — which coding agent/runtime actually performed the run
 
 **If any of these are missing, the run is invalid and must be re-executed.**
 Verify with `gad eval verify`. The test suite enforces this via `tests/eval-preservation.test.cjs`.
@@ -951,7 +963,7 @@ but workflow files MUST NOT be mixed into source directories or placed at the pr
 ### Step 1 — Generate the bootstrap prompt
 
 ```sh
-gad eval run --project <project-name> --prompt-only
+gad eval run --project <project-name> --prompt-only --runtime <claude-code|codex|cursor|...>
 ```
 
 This creates `evals/<project>/v<N>/PROMPT.md` by inlining:
@@ -962,6 +974,8 @@ This creates `evals/<project>/v<N>/PROMPT.md` by inlining:
 - Any inherited skills in `template/skills/` (for emergent evals)
 
 The generated `v<N>` directory becomes the canonical home for this run's artifacts.
+The runtime argument is mandatory for trustworthy telemetry. It stamps `TRACE.json`,
+sets the expected hook target, and tells the operator which runtime must have GAD hooks installed.
 
 ### Step 2 — Spawn an isolated agent
 
@@ -969,6 +983,23 @@ Use the Agent tool with `isolation: "worktree"` to run the prompt in an isolated
 worktree. The agent should build the project under `game/` in the worktree root.
 
 Pass the prompt file path in the agent's instructions so they can re-read it if needed.
+`gad eval run` now attempts to ensure the target runtime install globally before the run starts. You can still verify or repair it manually:
+
+```sh
+gad install all --claude --global   # Claude Code
+gad install all --codex --global    # Codex
+gad install all --cursor --global   # Cursor
+```
+
+And ensure the run executes with:
+
+```text
+GAD_RUNTIME=<runtime-id>
+GAD_LOG_DIR=<eval-run-dir>/.gad-log
+GAD_EVAL_TRACE_DIR=<eval-run-dir>
+```
+
+New `gad eval run` prompts include both POSIX and PowerShell snippets for this.
 
 ### Step 3 — Preserve outputs (MANDATORY)
 
@@ -982,6 +1013,7 @@ This copies:
 - `<worktree>/game/src/`, `public/`, `.planning/`, `skills/`, config files → `evals/<project>/v<N>/run/`
 - `<worktree>/game/dist/` → `apps/portfolio/public/evals/<project>/v<N>/`
 - `<worktree>/.planning/.gad-log/` → `evals/<project>/v<N>/.gad-log/` (if present)
+- runtime-attributed eval logs routed via `GAD_LOG_DIR` → `evals/<project>/v<N>/.gad-log/`
 
 **Do this for every run, without exception.** If you skip it, the outputs are lost
 when the worktree is cleaned up. The test suite will fail if preservation is missing
@@ -994,7 +1026,9 @@ gad eval verify
 ```
 
 Shows a table of all runs and flags any missing artifacts. Every recent run should
-show OK. Legacy runs (before the preservation contract) are exempt.
+show OK. Runtime identity is now part of that contract. Legacy runs may still fail
+verification because they predate runtime attribution; treat that as historical debt,
+not as a reason to weaken the contract for new runs.
 
 ### Step 5 — Write or reconstruct TRACE.json
 
@@ -1066,7 +1100,7 @@ If you add a new impl eval project, update `IMPL_EVAL_PROJECTS` and
 ## eval-skill-install
 id: eval-skill-install
 description: >- Install skills into eval project templates and run evaluations with them. Use when the user wants to evaluate a skill by running agents with and without it, install a skill from a path or URL into an eval template, point at a skill folder and wrap it as an eval, or compare skill versions. Triggers on "evaluate this skill", "test this skill", "install skill into eval", "run eval with skill", "compare skill versions".
-origin: human-authored
+origin: official
 
 
 # eval-skill-install
@@ -1087,7 +1121,7 @@ their impact. This is the bridge between skill creation and skill evaluation.
 
 ```sh
 # Local skill
-ls .agents/skills/<name>/SKILL.md
+ls skills/<name>/SKILL.md
 
 # Or download from external source
 npx skills add <url> --skill <name>
@@ -1108,7 +1142,7 @@ gad eval setup --project <skill-name>-eval
 Copy the skill directory into the eval template:
 
 ```sh
-cp -r .agents/skills/<skill-name> evals/<project>/template/skills/<skill-name>
+cp -r skills/<skill-name> evals/<project>/template/skills/<skill-name>
 ```
 
 Update the eval's `template/AGENTS.md` to reference the installed skill.
@@ -1161,7 +1195,7 @@ into a new run's template to test the skill on the same codebase:
 cp -r evals/<project>/v<N>/run/src evals/<project>/template/src
 
 # Install skill
-cp -r .agents/skills/<name> evals/<project>/template/skills/
+cp -r skills/<name> evals/<project>/template/skills/
 
 # Run
 gad eval run <project>
@@ -1171,7 +1205,7 @@ gad eval run <project>
 ## gad:eval-suite
 id: eval-suite
 description: Run multiple eval projects in parallel and compare results across all projects
-origin: human-authored
+origin: official
 
 
 # gad:eval-suite
@@ -1281,7 +1315,7 @@ Each iteration should:
 ## gad:execute-phase
 id: execute-phase
 description: Execute a planned phase by following PLAN.md tasks atomically — commit after each task, update planning docs, and run verify commands at each step. Use this skill when the user wants to execute a phase, start working on planned tasks, run through a phase autonomously, or continue execution of an in-progress phase. This is the autonomous execution skill — if the plan is solid and requirements are clear, Claude should be able to run this to completion without interruption. Requires gad:plan-phase to have been run first to produce a PLAN.md.
-origin: human-authored
+origin: official
 
 
 # Execute Phase
@@ -1297,7 +1331,7 @@ The goal is uninterrupted execution from first task to phase close. If the kicko
 ## Step 1: Bootstrap context
 
 ```bash
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>
+gad snapshot --projectid <id>
 ```
 
 This gives you state, roadmap, tasks, decisions, and file refs in one low-token command. Identify the current phase and its tasks from the snapshot output.
@@ -1501,7 +1535,7 @@ origin: human-authored
 
 ## Why this skill is a thin wrapper
 
-vercel-labs/skills ([github.com/vercel-labs/skills](https://github.com/vercel-labs/skills)) is the canonical CLI for the open agent-skills ecosystem. It supports 40+ coding agents including every runtime GAD cares about, respects the `.agents/skills/` convention from gad-80, handles add/list/find/remove/update/check, and understands GitHub shorthand (`owner/repo`), full URLs, GitLab URLs, and local paths. Per decision gad-85, GAD does NOT reimplement skill discovery — we delegate to `npx skills` and add GAD-specific guidance on when to use it, how to interpret results, and which external sources to trust.
+vercel-labs/skills ([github.com/vercel-labs/skills](https://github.com/vercel-labs/skills)) is the canonical CLI for the open agent-skills ecosystem. It supports 40+ coding agents including every runtime GAD cares about, respects the `skills/` convention from gad-80, handles add/list/find/remove/update/check, and understands GitHub shorthand (`owner/repo`), full URLs, GitLab URLs, and local paths. Per decision gad-85, GAD does NOT reimplement skill discovery — we delegate to `npx skills` and add GAD-specific guidance on when to use it, how to interpret results, and which external sources to trust.
 
 This keeps the skill simple, the installation story consistent with the ecosystem, and GAD's unique value (methodology + evaluation framework + hypothesis testing) is where we put effort instead of reinventing distribution.
 
@@ -1536,9 +1570,9 @@ npx skills list -g
 `npx skills` scans the conventional locations:
 
 - `./<agent>/skills/` (project-scoped, agent-native)
-- `./.agents/skills/` (project-scoped, cross-client standard)
+- `./skills/` (project-scoped, cross-client standard)
 - `~/.<agent>/skills/` (user-scoped, agent-native)
-- `~/.agents/skills/` (user-scoped, cross-client standard)
+- `~/skills/` (user-scoped, cross-client standard)
 - `~/.config/agents/skills/` (XDG config dir)
 
 It returns matches ranked by description similarity. Each match has a name, description, install source, and location on disk.
@@ -1549,7 +1583,7 @@ It returns matches ranked by description similarity. Each match has a name, desc
 
 When `npx skills find` returns no relevant results, the request becomes "where should I look next?". Per decision gad-83, find-skills points the user at a small set of trusted external sources in this order:
 
-1. **GAD's own public repo** — `github.com/MagicbornStudios/get-anything-done`. Contains the 27+ workspace skills at `.agents/skills/` (post-migration per gad-80). Install:
+1. **GAD's own public repo** — `github.com/MagicbornStudios/get-anything-done`. Contains the 27+ workspace skills at `skills/` (post-migration per gad-80). Install:
 
    ```sh
    npx skills add MagicbornStudios/get-anything-done
@@ -1580,7 +1614,7 @@ Once a skill is installed via `npx skills add`, verify:
 npx skills list
 
 # Read the skill to understand what it actually does
-cat .agents/skills/<skill-name>/SKILL.md
+cat skills/<skill-name>/SKILL.md
 ```
 
 Read the `SKILL.md` body before using the skill for real work. The name and description in the catalog are tier-1 progressive-disclosure — the full instructions are tier 2 and may surprise you. Also check the frontmatter for:
@@ -1638,7 +1672,7 @@ Authored 2026-04-09 after decision gad-85 adopted vercel-labs/skills as GAD's ca
 ## find-sprites
 id: find-sprites
 description: Source visual assets (sprites, icons, tilesets, portraits) for a game or UI-heavy build in a way that yields a coherent, intentional look instead of a debug-console aesthetic. Use this skill when you need art for rooms, entities, UI controls, HP bars, spell icons, status effects, or any other visual element; when the build is failing its UI-quality gate because it looks unintentional; or when you're about to fall back to raw ASCII/text UI. The goal is "looks like someone designed it" — not photorealism, not 1:1 with AAA games, but internally consistent and readable.
-origin: human-authored
+origin: official
 
 
 # find-sprites
@@ -1742,7 +1776,7 @@ Always check the license. CC0 is the simplest — no attribution required, no re
 ## framework-upgrade
 id: framework-upgrade
 description: Ship a change to the GAD framework itself (new skill, new subagent, reworked command, altered loop) in a way that preserves the ability to interpret eval results across versions. Trigger this skill whenever a framework change could affect how an agent behaves during an eval run — e.g. adding a mandatory skill, changing a command's spawned subagent, rewording AGENTS.md, changing the plan-phase flow, anything that would make "the same agent prompt" produce different output. The goal is to make framework drift visible so we don't mistake a framework improvement for an agent improvement (or vice versa) when scores move.
-origin: human-authored
+origin: official
 
 
 # framework-upgrade
@@ -1877,7 +1911,7 @@ The invariant: **you should always be able to tell a reader which framework vers
 ## gad:add-backlog
 id: gad-add-backlog
 description: Add an idea to the backlog parking lot (999.x numbering)
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -1895,13 +1929,13 @@ the normal phase sequence and accumulate context over time.
 
 2. **Find next backlog number:**
    ```bash
-   NEXT=$(node "vendor/get-anything-done/bin/gad-tools.cjs" phase next-decimal 999 --raw)
+   NEXT=$(gad-tools phase next-decimal 999 --raw)
    ```
    If no 999.x phases exist, start at 999.1.
 
 3. **Create the phase directory:**
    ```bash
-   SLUG=$(node "vendor/get-anything-done/bin/gad-tools.cjs" generate-slug "$ARGUMENTS" --raw)
+   SLUG=$(gad-tools generate-slug "$ARGUMENTS" --raw)
    mkdir -p ".planning/phases/${NEXT}-${SLUG}"
    touch ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
    ```
@@ -1923,7 +1957,7 @@ the normal phase sequence and accumulate context over time.
 
 5. **Commit:**
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" commit "docs: add backlog item ${NEXT} — ${ARGUMENTS}" --files .planning/ROADMAP.md ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
+   gad-tools commit "docs: add backlog item ${NEXT} — ${ARGUMENTS}" --files .planning/ROADMAP.md ".planning/phases/${NEXT}-${SLUG}/.gitkeep"
    ```
 
 6. **Report:**
@@ -1951,7 +1985,7 @@ the normal phase sequence and accumulate context over time.
 ## gad:add-phase
 id: gad-add-phase
 description: Add phase to end of current milestone in roadmap
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -1965,7 +1999,7 @@ Routes to the add-phase workflow which handles:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/add-phase.md
+@workflows/add-phase.md
 </execution_context>
 
 <context>
@@ -1975,7 +2009,7 @@ Roadmap and state are resolved in-workflow via `init phase-op` and targeted tool
 </context>
 
 <process>
-**Follow the add-phase workflow** from `@vendor/get-anything-done/workflows/add-phase.md`.
+**Follow the add-phase workflow** from `@workflows/add-phase.md`.
 
 The workflow handles all logic including:
 1. Argument parsing and validation
@@ -1992,7 +2026,7 @@ The workflow handles all logic including:
 ## gad:add-tests
 id: gad-add-tests
 description: Generate tests for a completed phase based on UAT criteria and implementation
-origin: human-authored
+origin: official
 
 <objective>
 Generate unit and E2E tests for a completed phase, using its SUMMARY.md, CONTEXT.md, and VERIFICATION.md as specifications.
@@ -2003,7 +2037,7 @@ Output: Test files committed with message `test(phase-{N}): add unit and E2E tes
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/add-tests.md
+@workflows/add-tests.md
 </execution_context>
 
 <context>
@@ -2014,7 +2048,7 @@ Phase: $ARGUMENTS
 </context>
 
 <process>
-Execute the add-tests workflow from @vendor/get-anything-done/workflows/add-tests.md end-to-end.
+Execute the add-tests workflow from @workflows/add-tests.md end-to-end.
 Preserve all workflow gates (classification approval, test plan approval, RED-GREEN verification, gap reporting).
 </process>
 
@@ -2022,7 +2056,7 @@ Preserve all workflow gates (classification approval, test plan approval, RED-GR
 ## gad:add-todo
 id: gad-add-todo
 description: Capture idea or task as todo from current conversation context
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2039,7 +2073,7 @@ Routes to the add-todo workflow which handles:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/add-todo.md
+@workflows/add-todo.md
 </execution_context>
 
 <context>
@@ -2049,7 +2083,7 @@ State is resolved in-workflow via `init todos` and targeted reads.
 </context>
 
 <process>
-**Follow the add-todo workflow** from `@vendor/get-anything-done/workflows/add-todo.md`.
+**Follow the add-todo workflow** from `@workflows/add-todo.md`.
 
 The workflow handles all logic including:
 1. Directory ensuring
@@ -2066,7 +2100,7 @@ The workflow handles all logic including:
 ## gad:audit-milestone
 id: gad-audit-milestone
 description: Audit milestone completion against original intent before archiving
-origin: human-authored
+origin: official
 
 <objective>
 Verify milestone achieved its definition of done. Check requirements coverage, cross-phase integration, and end-to-end flows.
@@ -2075,7 +2109,7 @@ Verify milestone achieved its definition of done. Check requirements coverage, c
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/audit-milestone.md
+@workflows/audit-milestone.md
 </execution_context>
 
 <context>
@@ -2089,7 +2123,7 @@ Glob: .planning/phases/*/*-VERIFICATION.md
 </context>
 
 <process>
-Execute the audit-milestone workflow from @vendor/get-anything-done/workflows/audit-milestone.md end-to-end.
+Execute the audit-milestone workflow from @workflows/audit-milestone.md end-to-end.
 Preserve all workflow gates (scope determination, verification reading, integration check, requirements coverage, routing).
 </process>
 
@@ -2097,14 +2131,14 @@ Preserve all workflow gates (scope determination, verification reading, integrat
 ## gad:audit-uat
 id: gad-audit-uat
 description: Cross-phase audit of all outstanding UAT and verification items
-origin: human-authored
+origin: official
 
 <objective>
 Scan all phases for pending, skipped, blocked, and human_needed UAT items. Cross-reference against codebase to detect stale documentation. Produce prioritized human test plan.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/audit-uat.md
+@workflows/audit-uat.md
 </execution_context>
 
 <context>
@@ -2119,7 +2153,7 @@ Glob: .planning/phases/*/*-VERIFICATION.md
 ## gad:auto-conventions
 id: gad-auto-conventions
 description: Auto-scaffold CONVENTIONS.md from codebase patterns after first implementation phase
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2154,14 +2188,14 @@ Analyze the codebase after the first implementation phase and generate a CONVENT
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/auto-conventions/SKILL.md`.
+Read and follow the companion `auto-conventions` skill if it is installed.
 </skill>
 
 
 ## gad:autonomous
 id: gad-autonomous
 description: Run all remaining phases autonomously — discuss→plan→execute per phase
-origin: human-authored
+origin: official
 
 <objective>
 Execute all remaining milestone phases autonomously. For each phase: discuss → plan → execute. Pauses only for user decisions (grey area acceptance, blockers, validation requests).
@@ -2177,8 +2211,8 @@ Uses ROADMAP.md phase discovery and Skill() flat invocations for each phase comm
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/autonomous.md
-@vendor/get-anything-done/references/ui-brand.md
+@workflows/autonomous.md
+@references/ui-brand.md
 </execution_context>
 
 <context>
@@ -2191,7 +2225,7 @@ Project context, phase list, and state are resolved inside the workflow using in
 </context>
 
 <process>
-Execute the autonomous workflow from @vendor/get-anything-done/workflows/autonomous.md end-to-end.
+Execute the autonomous workflow from @workflows/autonomous.md end-to-end.
 Preserve all workflow gates (phase discovery, per-phase execution, blocker handling, progress display).
 </process>
 
@@ -2199,7 +2233,7 @@ Preserve all workflow gates (phase discovery, per-phase execution, blocker handl
 ## gad:check-todos
 id: gad-check-todos
 description: List pending todos and select one to work on
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2214,7 +2248,7 @@ Routes to the check-todos workflow which handles:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/check-todos.md
+@workflows/check-todos.md
 </execution_context>
 
 <context>
@@ -2224,7 +2258,7 @@ Todo state and roadmap correlation are loaded in-workflow using `init todos` and
 </context>
 
 <process>
-**Follow the check-todos workflow** from `@vendor/get-anything-done/workflows/check-todos.md`.
+**Follow the check-todos workflow** from `@workflows/check-todos.md`.
 
 The workflow handles all logic including:
 1. Todo existence checking
@@ -2241,7 +2275,7 @@ The workflow handles all logic including:
 ## gad:cleanup
 id: gad-cleanup
 description: Archive accumulated phase directories from completed milestones
-origin: human-authored
+origin: official
 
 <objective>
 Archive phase directories from completed milestones into `.planning/milestones/v{X.Y}-phases/`.
@@ -2250,11 +2284,11 @@ Use when `.planning/phases/` has accumulated directories from past milestones.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/cleanup.md
+@workflows/cleanup.md
 </execution_context>
 
 <process>
-Follow the cleanup workflow at @vendor/get-anything-done/workflows/cleanup.md.
+Follow the cleanup workflow at @workflows/cleanup.md.
 Identify completed milestones, show a dry-run summary, and archive on confirmation.
 </process>
 
@@ -2262,7 +2296,7 @@ Identify completed milestones, show a dry-run summary, and archive on confirmati
 ## gad:complete-milestone
 id: gad-complete-milestone
 description: Archive completed milestone and prepare for next version
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2275,8 +2309,8 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 <execution_context>
 **Load these files NOW (before proceeding):**
 
-- @vendor/get-anything-done/workflows/complete-milestone.md (main workflow)
-- @vendor/get-anything-done/templates/milestone-archive.md (archive template)
+- @workflows/complete-milestone.md (main workflow)
+- @templates/milestone-archive.md (archive template)
   </execution_context>
 
 <context>
@@ -2395,7 +2429,7 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 ## gad:create-skill
 id: gad-create-skill
 description: >- Create a GAD-tailored skill using the gad-skill-creator methodology. Immediately scaffolds an eval project. Use when creating a new skill, turning a repetitive CLI pattern into a skill, or when a task review reveals repeated commands.
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2405,15 +2439,15 @@ project scaffolded immediately.
 </objective>
 
 <process>
-1. Read the gad-skill-creator SKILL.md at `.agents/skills/gad-skill-creator/SKILL.md`
+1. Read the gad-skill-creator SKILL.md at `skills/gad-skill-creator/SKILL.md`
 2. Follow its workflow exactly — it references the Anthropic skill-creator methodology
 3. Key GAD additions:
    - Check existing CLI commands first (`gad --help`)
-   - Check existing skills for overlap (`ls .agents/skills/`)
+   - Check existing skills for overlap (`ls skills/`)
    - Add `framework_skill: true` if it's a framework skill (use `--framework` flag)
    - Add `uses_cli:` frontmatter listing CLI commands the skill chains
-4. Write the skill to `.agents/skills/<skill-name>/SKILL.md`
-5. Create test cases in `.agents/skills/<skill-name>/evals/evals.json`
+4. Write the skill to `skills/<skill-name>/SKILL.md`
+5. Create test cases in `skills/<skill-name>/evals/evals.json`
 6. **MANDATORY: Scaffold eval project immediately after skill creation:**
    ```bash
    gad eval setup --project <skill-name>-eval
@@ -2430,7 +2464,7 @@ project scaffolded immediately.
 ## gad:debug
 id: gad-debug
 description: Systematic debugging with persistent state across context resets
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2467,13 +2501,13 @@ ls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5
 ## 0. Initialize Context
 
 ```bash
-INIT=$(node "vendor/get-anything-done/bin/gad-tools.cjs" state load)
+INIT=$(gad-tools state load)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
 Extract `commit_docs` from init JSON. Resolve debugger model:
 ```bash
-debugger_model=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gad-debugger --raw)
+debugger_model=$(gad-tools resolve-model gad-debugger --raw)
 ```
 
 ## 1. Check Active Sessions
@@ -2613,7 +2647,7 @@ Task(
 ## gad:discuss-phase
 id: gad-discuss-phase
 description: Gather phase context through adaptive questioning before planning. Use --auto to skip interactive questions (Claude picks recommended defaults). Use --chain for interactive discuss followed by automatic plan+execute.
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2631,9 +2665,9 @@ Extract implementation decisions that downstream agents need — researcher and 
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/discuss-phase.md
-@vendor/get-anything-done/workflows/discuss-phase-assumptions.md
-@vendor/get-anything-done/templates/context.md
+@workflows/discuss-phase.md
+@workflows/discuss-phase-assumptions.md
+@templates/context.md
 </execution_context>
 
 <context>
@@ -2645,12 +2679,12 @@ Context files are resolved in-workflow using `init phase-op` and roadmap/state t
 <process>
 **Mode routing:**
 ```bash
-DISCUSS_MODE=$(node "vendor/get-anything-done/bin/gad-tools.cjs" config-get workflow.discuss_mode 2>/dev/null || echo "discuss")
+DISCUSS_MODE=$(gad-tools config-get workflow.discuss_mode 2>/dev/null || echo "discuss")
 ```
 
-If `DISCUSS_MODE` is `"assumptions"`: Read and execute @vendor/get-anything-done/workflows/discuss-phase-assumptions.md end-to-end.
+If `DISCUSS_MODE` is `"assumptions"`: Read and execute @workflows/discuss-phase-assumptions.md end-to-end.
 
-If `DISCUSS_MODE` is `"discuss"` (or unset, or any other value): Read and execute @vendor/get-anything-done/workflows/discuss-phase.md end-to-end.
+If `DISCUSS_MODE` is `"discuss"` (or unset, or any other value): Read and execute @workflows/discuss-phase.md end-to-end.
 
 **MANDATORY:** The execution_context files listed above ARE the instructions. Read the workflow file BEFORE taking any action. The objective and success_criteria sections in this command file are summaries — the workflow file contains the complete step-by-step process with all required behaviors, config checks, and interaction patterns. Do not improvise from the summary.
 </process>
@@ -2669,7 +2703,7 @@ If `DISCUSS_MODE` is `"discuss"` (or unset, or any other value): Read and execut
 ## gad:do
 id: gad-do
 description: Route freeform text to the right GAD command automatically
-origin: human-authored
+origin: official
 
 <objective>
 Analyze freeform natural language input and dispatch to the most appropriate GAD command.
@@ -2680,8 +2714,8 @@ Use when you know what you want but don't know which `/gad:*` command to run.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/do.md
-@vendor/get-anything-done/references/ui-brand.md
+@workflows/do.md
+@references/ui-brand.md
 </execution_context>
 
 <context>
@@ -2689,7 +2723,7 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the do workflow from @vendor/get-anything-done/workflows/do.md end-to-end.
+Execute the do workflow from @workflows/do.md end-to-end.
 Route user intent to the best GAD command and invoke it.
 </process>
 
@@ -2697,7 +2731,7 @@ Route user intent to the best GAD command and invoke it.
 ## gad:docs-compile
 id: gad-docs-compile
 description: Compile planning docs from all roots into docs_sink as MDX files
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2710,7 +2744,7 @@ source — source files in `.planning/` are never modified.
 
 1. **Load config:**
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning 2>/dev/null
+   gad-tools config-get planning 2>/dev/null
    ```
    Also parse `--sink <path>` from `$ARGUMENTS` to override `docs_sink`.
 
@@ -2764,7 +2798,7 @@ source — source files in `.planning/` are never modified.
 ## gad:docs-update
 id: gad-docs-update
 description: Generate or update project documentation verified against the codebase
-origin: human-authored
+origin: official
 
 <objective>
 Generate and update up to 9 documentation files for the current project. Each doc type is written by a gad-doc-writer subagent that explores the codebase directly — no hallucinated paths, phantom endpoints, or stale signatures.
@@ -2779,7 +2813,7 @@ Flag handling rule:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/docs-update.md
+@workflows/docs-update.md
 </execution_context>
 
 <context>
@@ -2797,7 +2831,7 @@ Arguments: $ARGUMENTS
 </context>
 
 <process>
-Execute the docs-update workflow from @vendor/get-anything-done/workflows/docs-update.md end-to-end.
+Execute the docs-update workflow from @workflows/docs-update.md end-to-end.
 Preserve all workflow gates (preservation_check, flag handling, wave execution, monorepo dispatch, commit, reporting).
 </process>
 
@@ -2805,7 +2839,7 @@ Preserve all workflow gates (preservation_check, flag handling, wave execution, 
 ## gad:eval-bootstrap
 id: gad-eval-bootstrap
 description: Bootstrap an eval agent with full GAD context injected into its prompt
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2816,7 +2850,7 @@ Generate a bootstrap prompt for a single eval project and launch an agent in an 
 
 1. **Generate the bootstrap prompt:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval run --project $PROJECT --prompt-only
+   gad eval run --project $PROJECT --prompt-only
    ```
 
 2. **Read the generated PROMPT.md** from the eval run directory.
@@ -2825,20 +2859,20 @@ Generate a bootstrap prompt for a single eval project and launch an agent in an 
 
 4. **After completion**, reconstruct the trace:
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval trace reconstruct --project $PROJECT
+   gad eval trace reconstruct --project $PROJECT
    ```
 
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/eval-bootstrap/SKILL.md`.
+Read and follow the companion `eval-bootstrap` skill if it is installed.
 </skill>
 
 
 ## gad:eval-list
 id: gad-eval-list
 description: List available eval projects and their run history
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2881,7 +2915,7 @@ and last baseline SHA.
 ## gad:eval-report
 id: gad-eval-report
 description: Show cross-project eval comparison and findings
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -2892,13 +2926,13 @@ Generate a comparison report across all eval projects showing scores, discipline
 
 1. **Run cross-project report:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval report
+   gad eval report
    ```
 
 2. **For deeper analysis on a specific project:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval scores --project <name>
-   node vendor/get-anything-done/bin/gad.cjs eval diff v1 v2 --project <name>
+   gad eval scores --project <name>
+   gad eval diff v1 v2 --project <name>
    ```
 
 3. **Interpret findings** and recommend next actions.
@@ -2906,14 +2940,14 @@ Generate a comparison report across all eval projects showing scores, discipline
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/eval-report/SKILL.md`.
+Read and follow the companion `eval-report` skill if it is installed.
 </skill>
 
 
 ## gad:eval-run
 id: gad-eval-run
 description: Run an eval project in an isolated git worktree
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3009,7 +3043,7 @@ Parse from `$ARGUMENTS`:
 ## gad:eval-suite
 id: gad-eval-suite
 description: Run all eval projects in parallel with bootstrap prompts
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3020,7 +3054,7 @@ Generate bootstrap prompts for all runnable eval projects, then launch them as p
 
 1. **Generate prompts:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval suite
+   gad eval suite
    ```
 
 2. **Read each generated prompt** from the suite-runs directory.
@@ -3033,7 +3067,7 @@ Generate bootstrap prompts for all runnable eval projects, then launch them as p
 
 6. **Run cross-project report:**
    ```bash
-   node vendor/get-anything-done/bin/gad.cjs eval report
+   gad eval report
    ```
 
 7. **Report findings** — what improved, what regressed, what skills were triggered or missing.
@@ -3041,14 +3075,14 @@ Generate bootstrap prompts for all runnable eval projects, then launch them as p
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/eval-suite/SKILL.md`.
+Read and follow the companion `eval-suite` skill if it is installed.
 </skill>
 
 
 ## gad:execute-phase
 id: gad-execute-phase
 description: Execute all plans in a phase with wave-based parallelization
-origin: human-authored
+origin: official
 
 <objective>
 Execute all plans in a phase using wave-based parallel execution.
@@ -3068,8 +3102,8 @@ Context budget: ~15% orchestrator, 100% fresh per subagent.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/execute-phase.md
-@vendor/get-anything-done/references/ui-brand.md
+@workflows/execute-phase.md
+@references/ui-brand.md
 </execution_context>
 
 <context>
@@ -3091,7 +3125,7 @@ Context files are resolved inside the workflow via `gad-tools init execute-phase
 </context>
 
 <process>
-Execute the execute-phase workflow from @vendor/get-anything-done/workflows/execute-phase.md end-to-end.
+Execute the execute-phase workflow from @workflows/execute-phase.md end-to-end.
 Preserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).
 </process>
 
@@ -3099,7 +3133,7 @@ Preserve all workflow gates (wave execution, checkpoint handling, verification, 
 ## gad:forensics
 id: gad-forensics
 description: Post-mortem investigation for failed GAD workflows — analyzes git history, artifacts, and state to diagnose what went wrong
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3110,7 +3144,7 @@ Output: Forensic report saved to `.planning/forensics/`, presented inline, with 
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/forensics.md
+@workflows/forensics.md
 </execution_context>
 
 <context>
@@ -3127,7 +3161,7 @@ Output: Forensic report saved to `.planning/forensics/`, presented inline, with 
 </context>
 
 <process>
-Read and execute the forensics workflow from @vendor/get-anything-done/workflows/forensics.md end-to-end.
+Read and execute the forensics workflow from @workflows/forensics.md end-to-end.
 </process>
 
 <success_criteria>
@@ -3150,18 +3184,18 @@ Read and execute the forensics workflow from @vendor/get-anything-done/workflows
 ## gad:health
 id: gad-health
 description: Diagnose planning directory health and optionally repair issues
-origin: human-authored
+origin: official
 
 <objective>
 Validate `.planning/` directory integrity and report actionable issues. Checks for missing files, invalid configurations, inconsistent state, and orphaned plans.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/health.md
+@workflows/health.md
 </execution_context>
 
 <process>
-Execute the health workflow from @vendor/get-anything-done/workflows/health.md end-to-end.
+Execute the health workflow from @workflows/health.md end-to-end.
 Parse --repair flag from arguments and pass to workflow.
 </process>
 
@@ -3169,7 +3203,7 @@ Parse --repair flag from arguments and pass to workflow.
 ## gad:help
 id: gad-help
 description: Show available GAD commands and usage guide
-origin: human-authored
+origin: official
 
 <objective>
 Display the complete GAD command reference.
@@ -3182,11 +3216,11 @@ Output ONLY the reference content below. Do NOT add:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/help.md
+@workflows/help.md
 </execution_context>
 
 <process>
-Output the complete GAD command reference from @vendor/get-anything-done/workflows/help.md.
+Output the complete GAD command reference from @workflows/help.md.
 Display the reference content directly — no additions or modifications.
 
 Note: GAD commands use the `gad:` prefix. The following commands have been removed from GAD
@@ -3198,7 +3232,7 @@ ui-phase, ui-review, secure-phase, pr-branch, ship, profile-user.
 ## gad:insert-phase
 id: gad-insert-phase
 description: Insert urgent work as decimal phase (e.g., 72.1) between existing phases
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3210,7 +3244,7 @@ Purpose: Handle urgent work discovered during execution without renumbering enti
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/insert-phase.md
+@workflows/insert-phase.md
 </execution_context>
 
 <context>
@@ -3220,7 +3254,7 @@ Roadmap and state are resolved in-workflow via `init phase-op` and targeted tool
 </context>
 
 <process>
-Execute the insert-phase workflow from @vendor/get-anything-done/workflows/insert-phase.md end-to-end.
+Execute the insert-phase workflow from @workflows/insert-phase.md end-to-end.
 Preserve all validation gates (argument parsing, phase verification, decimal calculation, roadmap updates).
 </process>
 
@@ -3228,7 +3262,7 @@ Preserve all validation gates (argument parsing, phase verification, decimal cal
 ## gad:list-phase-assumptions
 id: gad-list-phase-assumptions
 description: Surface Claude's assumptions about a phase approach before planning
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3239,7 +3273,7 @@ Output: Conversational output only (no file creation) - ends with "What do you t
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/list-phase-assumptions.md
+@workflows/list-phase-assumptions.md
 </execution_context>
 
 <context>
@@ -3271,7 +3305,7 @@ Project state and roadmap are loaded in-workflow using targeted reads.
 ## gad:manager
 id: gad-manager
 description: Interactive command center for managing multiple phases from one terminal
-origin: human-authored
+origin: official
 
 <objective>
 Single-terminal command center for managing a milestone. Shows a dashboard of all phases with visual status indicators, recommends optimal next actions, and dispatches work — discuss runs inline, plan/execute run as background agents.
@@ -3286,8 +3320,8 @@ Designed for power users who want to parallelize work across phases from one ter
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/manager.md
-@vendor/get-anything-done/references/ui-brand.md
+@workflows/manager.md
+@references/ui-brand.md
 </execution_context>
 
 <context>
@@ -3297,7 +3331,7 @@ Project context, phase list, dependencies, and recommendations are resolved insi
 </context>
 
 <process>
-Execute the manager workflow from @vendor/get-anything-done/workflows/manager.md end-to-end.
+Execute the manager workflow from @workflows/manager.md end-to-end.
 Maintain the dashboard refresh loop until the user exits or all phases complete.
 </process>
 
@@ -3305,7 +3339,7 @@ Maintain the dashboard refresh loop until the user exits or all phases complete.
 ## gad:manuscript
 id: gad-manuscript
 description: Fiction writing adaptation of the GAD loop for novels and story outlines
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3325,14 +3359,14 @@ Apply the GAD planning loop to fiction and creative writing projects. Manages be
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/manuscript/SKILL.md`.
+Read and follow the companion `manuscript` skill if it is installed.
 </skill>
 
 
 ## gad:map-codebase
 id: gad-map-codebase
 description: Analyze codebase with parallel mapper agents to produce .planning/codebase/ documents
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3344,7 +3378,7 @@ Output: .planning/codebase/ folder with 7 structured documents about the codebas
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/map-codebase.md
+@workflows/map-codebase.md
 </execution_context>
 
 <context>
@@ -3398,7 +3432,7 @@ Check for .planning/STATE.md - loads context if project already initialized
 ## gad:merge-skill
 id: gad-merge-skill
 description: >- Fuse two or more overlapping skills into a single tailored skill. Use when skills have overlapping descriptions, redundant functionality, or when attaining a generic skill to a specific project domain. References agentskills.io and Anthropic skills guide for professional quality standards.
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3407,7 +3441,7 @@ methodology. Consult agentskills.io and Anthropic guidelines for quality.
 </objective>
 
 <process>
-1. Read the merge-skill SKILL.md at `.agents/skills/merge-skill/SKILL.md`
+1. Read the merge-skill SKILL.md at `skills/merge-skill/SKILL.md`
 2. Follow its 6-step procedure exactly:
    - Step 1: Identify the overlap
    - Step 1b: Consult agentskills.io guidance (https://agentskills.io/home)
@@ -3424,7 +3458,7 @@ methodology. Consult agentskills.io and Anthropic guidelines for quality.
 ## gad:migrate-schema
 id: gad-migrate-schema
 description: Convert RP XML planning files (STATE.xml, ROADMAP.xml) to GAD Markdown format
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3514,7 +3548,7 @@ Parse `--path <dir>` from `$ARGUMENTS` (default: `.planning/`).
 ## gad:milestone-summary
 id: gad-milestone-summary
 description: Generate a comprehensive project summary from milestone artifacts for team onboarding and review
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3525,7 +3559,7 @@ Output: MILESTONE_SUMMARY written to `.planning/reports/`, presented inline, opt
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/milestone-summary.md
+@workflows/milestone-summary.md
 </execution_context>
 
 <context>
@@ -3543,7 +3577,7 @@ Output: MILESTONE_SUMMARY written to `.planning/reports/`, presented inline, opt
 </context>
 
 <process>
-Read and execute the milestone-summary workflow from @vendor/get-anything-done/workflows/milestone-summary.md end-to-end.
+Read and execute the milestone-summary workflow from @workflows/milestone-summary.md end-to-end.
 </process>
 
 <success_criteria>
@@ -3560,7 +3594,7 @@ Read and execute the milestone-summary workflow from @vendor/get-anything-done/w
 ## gad:new-milestone
 id: gad-new-milestone
 description: Start a new milestone cycle — update PROJECT.md and route to requirements
-origin: human-authored
+origin: official
 
 <objective>
 Start a new milestone: questioning → research (optional) → requirements → roadmap.
@@ -3578,11 +3612,11 @@ Brownfield equivalent of new-project. Project exists, PROJECT.md has history. Ga
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/new-milestone.md
-@vendor/get-anything-done/references/questioning.md
-@vendor/get-anything-done/references/ui-brand.md
-@vendor/get-anything-done/templates/project.md
-@vendor/get-anything-done/templates/requirements.md
+@workflows/new-milestone.md
+@references/questioning.md
+@references/ui-brand.md
+@templates/project.md
+@templates/requirements.md
 </execution_context>
 
 <context>
@@ -3592,7 +3626,7 @@ Project and milestone context files are resolved inside the workflow (`init new-
 </context>
 
 <process>
-Execute the new-milestone workflow from @vendor/get-anything-done/workflows/new-milestone.md end-to-end.
+Execute the new-milestone workflow from @workflows/new-milestone.md end-to-end.
 Preserve all workflow gates (validation, questioning, research, requirements, roadmap approval, commits).
 </process>
 
@@ -3600,7 +3634,7 @@ Preserve all workflow gates (validation, questioning, research, requirements, ro
 ## gad:new-project
 id: gad-new-project
 description: Initialize a new project with deep context gathering and PROJECT.md
-origin: human-authored
+origin: official
 
 <context>
 **Flags:**
@@ -3622,15 +3656,15 @@ Initialize a new project through unified flow: questioning → research (optiona
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/new-project.md
-@vendor/get-anything-done/references/questioning.md
-@vendor/get-anything-done/references/ui-brand.md
-@vendor/get-anything-done/templates/project.md
-@vendor/get-anything-done/templates/requirements.md
+@workflows/new-project.md
+@references/questioning.md
+@references/ui-brand.md
+@templates/project.md
+@templates/requirements.md
 </execution_context>
 
 <process>
-Execute the new-project workflow from @vendor/get-anything-done/workflows/new-project.md end-to-end.
+Execute the new-project workflow from @workflows/new-project.md end-to-end.
 Preserve all workflow gates (validation, approvals, commits, routing).
 </process>
 
@@ -3638,7 +3672,7 @@ Preserve all workflow gates (validation, approvals, commits, routing).
 ## gad:next
 id: gad-next
 description: Automatically advance to the next logical step in the GAD workflow
-origin: human-authored
+origin: official
 
 <objective>
 Detect the current project state and automatically invoke the next logical GAD workflow step.
@@ -3648,18 +3682,18 @@ Designed for rapid multi-project workflows where remembering which phase/step yo
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/next.md
+@workflows/next.md
 </execution_context>
 
 <process>
-Execute the next workflow from @vendor/get-anything-done/workflows/next.md end-to-end.
+Execute the next workflow from @workflows/next.md end-to-end.
 </process>
 
 
 ## gad:note
 id: gad-note
 description: Zero-friction idea capture. Append, list, or promote notes to todos.
-origin: human-authored
+origin: official
 
 <objective>
 Zero-friction idea capture — one Write call, one confirmation line.
@@ -3673,8 +3707,8 @@ Runs inline — no Task, no AskUserQuestion, no Bash.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/note.md
-@vendor/get-anything-done/references/ui-brand.md
+@workflows/note.md
+@references/ui-brand.md
 </execution_context>
 
 <context>
@@ -3682,7 +3716,7 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the note workflow from @vendor/get-anything-done/workflows/note.md end-to-end.
+Execute the note workflow from @workflows/note.md end-to-end.
 Capture the note, list notes, or promote to todo — depending on arguments.
 </process>
 
@@ -3690,7 +3724,7 @@ Capture the note, list notes, or promote to todo — depending on arguments.
 ## gad:pause-work
 id: gad-pause-work
 description: Create context handoff when pausing work mid-phase
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3705,7 +3739,7 @@ Routes to the pause-work workflow which handles:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/pause-work.md
+@workflows/pause-work.md
 </execution_context>
 
 <context>
@@ -3713,7 +3747,7 @@ State and phase progress are gathered in-workflow with targeted reads.
 </context>
 
 <process>
-**Follow the pause-work workflow** from `@vendor/get-anything-done/workflows/pause-work.md`.
+**Follow the pause-work workflow** from `@workflows/pause-work.md`.
 
 The workflow handles all logic including:
 1. Phase directory detection
@@ -3727,7 +3761,7 @@ The workflow handles all logic including:
 ## gad:plan-milestone-gaps
 id: gad-plan-milestone-gaps
 description: Create phases to close all gaps identified by milestone audit
-origin: human-authored
+origin: official
 
 <objective>
 Create all phases necessary to close gaps identified by `/gad:audit-milestone`.
@@ -3738,7 +3772,7 @@ One command creates all fix phases — no manual `/gad:add-phase` per gap.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/plan-milestone-gaps.md
+@workflows/plan-milestone-gaps.md
 </execution_context>
 
 <context>
@@ -3749,7 +3783,7 @@ Original intent and current planning state are loaded on demand inside the workf
 </context>
 
 <process>
-Execute the plan-milestone-gaps workflow from @vendor/get-anything-done/workflows/plan-milestone-gaps.md end-to-end.
+Execute the plan-milestone-gaps workflow from @workflows/plan-milestone-gaps.md end-to-end.
 Preserve all workflow gates (audit loading, prioritization, phase grouping, user confirmation, roadmap updates).
 </process>
 
@@ -3757,7 +3791,7 @@ Preserve all workflow gates (audit loading, prioritization, phase grouping, user
 ## gad:plan-phase
 id: gad-plan-phase
 description: Create detailed phase plan (PLAN.md) with verification loop
-origin: human-authored
+origin: official
 
 <objective>
 Create executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.
@@ -3768,8 +3802,8 @@ Create executable phase prompts (PLAN.md files) for a roadmap phase with integra
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/plan-phase.md
-@vendor/get-anything-done/references/ui-brand.md
+@workflows/plan-phase.md
+@references/ui-brand.md
 </execution_context>
 
 <context>
@@ -3788,7 +3822,7 @@ Normalize phase input in step 2 before any directory lookups.
 </context>
 
 <process>
-Execute the plan-phase workflow from @vendor/get-anything-done/workflows/plan-phase.md end-to-end.
+Execute the plan-phase workflow from @workflows/plan-phase.md end-to-end.
 Preserve all workflow gates (validation, research, planning, verification loop, routing).
 </process>
 
@@ -3796,7 +3830,7 @@ Preserve all workflow gates (validation, research, planning, verification loop, 
 ## gad:plant-seed
 id: gad-plant-seed
 description: Capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -3809,18 +3843,18 @@ Consumed by: /gad:new-milestone (scans seeds and presents matches)
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/plant-seed.md
+@workflows/plant-seed.md
 </execution_context>
 
 <process>
-Execute the plant-seed workflow from @vendor/get-anything-done/workflows/plant-seed.md end-to-end.
+Execute the plant-seed workflow from @workflows/plant-seed.md end-to-end.
 </process>
 
 
 ## gad:progress
 id: gad-progress
 description: Check project progress, show context, and route to next action (execute or plan)
-origin: human-authored
+origin: official
 
 <objective>
 Check project progress, summarize recent work and what's ahead, then intelligently route to the next action - either executing an existing plan or creating the next one.
@@ -3829,11 +3863,11 @@ Provides situational awareness before continuing work.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/progress.md
+@workflows/progress.md
 </execution_context>
 
 <process>
-Execute the progress workflow from @vendor/get-anything-done/workflows/progress.md end-to-end.
+Execute the progress workflow from @workflows/progress.md end-to-end.
 Preserve all routing logic (Routes A through F) and edge case handling.
 </process>
 
@@ -3841,7 +3875,7 @@ Preserve all routing logic (Routes A through F) and edge case handling.
 ## gad:reapply-patches
 id: gad-reapply-patches
 description: Reapply local modifications after a GAD update
-origin: human-authored
+origin: official
 
 
 <purpose>
@@ -3865,7 +3899,7 @@ elif [ -d "$HOME/.opencode/gad-local-patches" ]; then
 elif [ -d "$HOME/.gemini/gad-local-patches" ]; then
   PATCHES_DIR="$HOME/.gemini/gad-local-patches"
 else
-  PATCHES_DIR="$HOME/.claude/gad-local-patches"
+  PATCHES_DIR="${GAD_PATCHES_DIR:-$HOME/.config/gad-local-patches}"
 fi
 # Local install fallback — check all runtime directories
 if [ ! -d "$PATCHES_DIR" ]; then
@@ -3970,7 +4004,7 @@ When no pristine baseline is available, use these **strengthened heuristics**:
 For each file:
 a. Read both versions completely
 b. Identify ALL differences, then classify each as:
-   - **Mechanical drift** — path substitutions (e.g. `/Users/xxx/.claude/` → `$HOME/.claude/`), variable additions (`${GSD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)
+   - **Mechanical drift** — path substitutions between runtime config directories, variable additions (`${GSD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)
    - **User customization** — added steps/sections, removed sections, reordered content, changed behavior, added frontmatter fields, modified instructions
 
 c. **If ANY differences remain after filtering out mechanical drift → those are user customizations. Merge them.**
@@ -4037,7 +4071,7 @@ Ask user:
 ## gad:remove-phase
 id: gad-remove-phase
 description: Remove a future phase from roadmap and renumber subsequent phases
-origin: human-authored
+origin: official
 
 <objective>
 Remove an unstarted future phase from the roadmap and renumber all subsequent phases to maintain a clean, linear sequence.
@@ -4047,7 +4081,7 @@ Output: Phase deleted, all subsequent phases renumbered, git commit as historica
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/remove-phase.md
+@workflows/remove-phase.md
 </execution_context>
 
 <context>
@@ -4057,7 +4091,7 @@ Roadmap and state are resolved in-workflow via `init phase-op` and targeted read
 </context>
 
 <process>
-Execute the remove-phase workflow from @vendor/get-anything-done/workflows/remove-phase.md end-to-end.
+Execute the remove-phase workflow from @workflows/remove-phase.md end-to-end.
 Preserve all validation gates (future phase check, work check), renumbering logic, and commit.
 </process>
 
@@ -4065,7 +4099,7 @@ Preserve all validation gates (future phase check, work check), renumbering logi
 ## gad:research-phase
 id: gad-research-phase
 description: Research how to implement a phase (standalone - usually use /gad:plan-phase instead)
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4099,7 +4133,7 @@ Normalize phase input in step 1 before any directory lookups.
 ## 0. Initialize Context
 
 ```bash
-INIT=$(node "vendor/get-anything-done/bin/gad-tools.cjs" init phase-op "$ARGUMENTS")
+INIT=$(gad-tools init phase-op "$ARGUMENTS")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -4107,13 +4141,13 @@ Extract from init JSON: `phase_dir`, `phase_number`, `phase_name`, `phase_found`
 
 Resolve researcher model:
 ```bash
-RESEARCHER_MODEL=$(node "vendor/get-anything-done/bin/gad-tools.cjs" resolve-model gad-phase-researcher --raw)
+RESEARCHER_MODEL=$(gad-tools resolve-model gad-phase-researcher --raw)
 ```
 
 ## 1. Validate Phase
 
 ```bash
-PHASE_INFO=$(node "vendor/get-anything-done/bin/gad-tools.cjs" roadmap get-phase "${phase_number}")
+PHASE_INFO=$(gad-tools roadmap get-phase "${phase_number}")
 ```
 
 **If `found` is false:** Error and exit. **If `found` is true:** Extract `phase_number`, `phase_name`, `goal` from JSON.
@@ -4258,7 +4292,7 @@ Task(
 ## gad:resume-work
 id: gad-resume-work
 description: Resume work from previous session with full context restoration
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4274,11 +4308,11 @@ Routes to the resume-project workflow which handles:
   </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/resume-project.md
+@workflows/resume-project.md
 </execution_context>
 
 <process>
-**Follow the resume-project workflow** from `@vendor/get-anything-done/workflows/resume-project.md`.
+**Follow the resume-project workflow** from `@workflows/resume-project.md`.
 
 The workflow handles all resumption logic including:
 
@@ -4295,7 +4329,7 @@ The workflow handles all resumption logic including:
 ## gad:reverse-engineer
 id: gad-reverse-engineer
 description: Analyze any codebase (local or GitHub URL) and produce requirements for clean-room reimplementation
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4323,14 +4357,14 @@ Parse from `$ARGUMENTS`:
 </process>
 
 <skill>
-Read and follow the skill at `vendor/get-anything-done/skills/reverse-engineer/SKILL.md`.
+Read and follow the companion `reverse-engineer` skill if it is installed.
 </skill>
 
 
 ## gad:review
 id: gad-review
 description: Request cross-AI peer review of phase plans from external AI CLIs
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4342,7 +4376,7 @@ planning via /gad:plan-phase --reviews.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/review.md
+@workflows/review.md
 </execution_context>
 
 <context>
@@ -4357,14 +4391,14 @@ Phase number: extracted from $ARGUMENTS (required)
 </context>
 
 <process>
-Execute the review workflow from @vendor/get-anything-done/workflows/review.md end-to-end.
+Execute the review workflow from @workflows/review.md end-to-end.
 </process>
 
 
 ## gad:review-backlog
 id: gad-review-backlog
 description: Review and promote backlog items to active milestone
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4393,7 +4427,7 @@ milestone sequence or remove stale entries.
    - Find the next sequential phase number in the active milestone
    - Rename the directory from `999.x-slug` to `{new_num}-slug`:
      ```bash
-     NEW_NUM=$(node "vendor/get-anything-done/bin/gad-tools.cjs" phase add "${DESCRIPTION}" --raw)
+     NEW_NUM=$(gad-tools phase add "${DESCRIPTION}" --raw)
      ```
    - Move accumulated artifacts to the new phase directory
    - Update ROADMAP.md: move the entry from `## Backlog` section to the active phase list
@@ -4406,7 +4440,7 @@ milestone sequence or remove stale entries.
 
 6. **Commit changes:**
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" commit "docs: review backlog — promoted N, removed M" --files .planning/ROADMAP.md
+   gad-tools commit "docs: review backlog — promoted N, removed M" --files .planning/ROADMAP.md
    ```
 
 7. **Report summary:**
@@ -4424,36 +4458,36 @@ milestone sequence or remove stale entries.
 ## gad:session-report
 id: gad-session-report
 description: Generate a session report with token usage estimates, work summary, and outcomes
-origin: human-authored
+origin: official
 
 <objective>
 Generate a structured SESSION_REPORT.md document capturing session outcomes, work performed, and estimated resource usage. Provides a shareable artifact for post-session review.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/session-report.md
+@workflows/session-report.md
 </execution_context>
 
 <process>
-Execute the session-report workflow from @vendor/get-anything-done/workflows/session-report.md end-to-end.
+Execute the session-report workflow from @workflows/session-report.md end-to-end.
 </process>
 
 
 ## gad:set-profile
 id: gad-set-profile
 description: Switch model profile for GAD agents (quality/balanced/budget/inherit)
-origin: human-authored
+origin: official
 
 
 Show the following output to the user verbatim, with no extra commentary:
 
-!`node "vendor/get-anything-done/bin/gad-tools.cjs" config-set-model-profile $ARGUMENTS --raw`
+!`gad-tools config-set-model-profile $ARGUMENTS --raw`
 
 
 ## gad:settings
 id: gad-settings
 description: Configure GAD workflow toggles and model profile
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4468,11 +4502,11 @@ Routes to the settings workflow which handles:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/settings.md
+@workflows/settings.md
 </execution_context>
 
 <process>
-**Follow the settings workflow** from `@vendor/get-anything-done/workflows/settings.md`.
+**Follow the settings workflow** from `@workflows/settings.md`.
 
 The workflow handles all logic including:
 1. Config file creation with defaults if missing
@@ -4487,7 +4521,7 @@ The workflow handles all logic including:
 ## gad-skill-creator
 id: gad-skill-creator
 description: >- Create GAD-tailored skills that use the GAD CLI, planning artifacts, and eval framework. Use when the user wants to create a new skill for the GAD workflow, turn a repetitive CLI pattern into a skill, evaluate an existing skill, or enhance a workflow by reviewing tasks for repeated commands. Also triggers on "make a skill for", "create skill", "we should have a skill that", "turn this into a skill", or when a task completion reveals repetitive CLI patterns. Immediately scaffolds an eval project for framework skills.
-origin: human-authored
+origin: official
 
 
 # gad-skill-creator
@@ -4537,7 +4571,7 @@ If multiple CLI commands need chaining, that IS the skill.
 ### 3. Check existing skills
 
 ```sh
-ls .agents/skills/
+ls skills/
 ```
 
 Read any similar skills. If overlap exists, use `gad:merge-skill` instead of
@@ -4659,25 +4693,25 @@ methodology — this GAD skill creator follows the same eval loop but adds:
 ## gad:stats
 id: gad-stats
 description: Display project statistics — phases, plans, requirements, git metrics, and timeline
-origin: human-authored
+origin: official
 
 <objective>
 Display comprehensive project statistics including phase progress, plan execution metrics, requirements completion, git history stats, and project timeline.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/stats.md
+@workflows/stats.md
 </execution_context>
 
 <process>
-Execute the stats workflow from @vendor/get-anything-done/workflows/stats.md end-to-end.
+Execute the stats workflow from @workflows/stats.md end-to-end.
 </process>
 
 
 ## gad:thread
 id: gad-thread
 description: Manage persistent context threads for cross-session work
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4734,7 +4768,7 @@ Create a new thread:
 
 1. Generate slug from description:
    ```bash
-   SLUG=$(node "vendor/get-anything-done/bin/gad-tools.cjs" generate-slug "$ARGUMENTS" --raw)
+   SLUG=$(gad-tools generate-slug "$ARGUMENTS" --raw)
    ```
 
 2. Create the threads directory if needed:
@@ -4773,7 +4807,7 @@ Create a new thread:
 
 5. Commit:
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" commit "docs: create thread — ${ARGUMENTS}" --files ".planning/threads/${SLUG}.md"
+   gad-tools commit "docs: create thread — ${ARGUMENTS}" --files ".planning/threads/${SLUG}.md"
    ```
 
 6. Report:
@@ -4802,7 +4836,7 @@ Create a new thread:
 ## gad:update
 id: gad-update
 description: Update GAD to latest version with changelog display
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4818,11 +4852,11 @@ Routes to the update workflow which handles:
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/update.md
+@workflows/update.md
 </execution_context>
 
 <process>
-**Follow the update workflow** from `@vendor/get-anything-done/workflows/update.md`.
+**Follow the update workflow** from `@workflows/update.md`.
 
 The workflow handles all logic including:
 1. Installed version detection (local/global)
@@ -4839,7 +4873,7 @@ The workflow handles all logic including:
 ## gad:validate-phase
 id: gad-validate-phase
 description: Retroactively audit and fill Nyquist validation gaps for a completed phase
-origin: human-authored
+origin: official
 
 <objective>
 Audit Nyquist validation coverage for a completed phase. Three states:
@@ -4851,7 +4885,7 @@ Output: updated VALIDATION.md + generated test files.
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/validate-phase.md
+@workflows/validate-phase.md
 </execution_context>
 
 <context>
@@ -4859,7 +4893,7 @@ Phase: $ARGUMENTS — optional, defaults to last completed phase.
 </context>
 
 <process>
-Execute @vendor/get-anything-done/workflows/validate-phase.md.
+Execute @workflows/validate-phase.md.
 Preserve all workflow gates.
 </process>
 
@@ -4867,7 +4901,7 @@ Preserve all workflow gates.
 ## gad:verify-work
 id: gad-verify-work
 description: Validate built features through conversational UAT
-origin: human-authored
+origin: official
 
 <objective>
 Validate built features through conversational testing with persistent state.
@@ -4878,8 +4912,8 @@ Output: {phase_num}-UAT.md tracking all test results. If issues found: diagnosed
 </objective>
 
 <execution_context>
-@vendor/get-anything-done/workflows/verify-work.md
-@vendor/get-anything-done/templates/UAT.md
+@workflows/verify-work.md
+@templates/UAT.md
 </execution_context>
 
 <context>
@@ -4891,7 +4925,7 @@ Context files are resolved inside the workflow (`init verify-work`) and delegate
 </context>
 
 <process>
-Execute the verify-work workflow from @vendor/get-anything-done/workflows/verify-work.md end-to-end.
+Execute the verify-work workflow from @workflows/verify-work.md end-to-end.
 Preserve all workflow gates (session management, test presentation, diagnosis, fix planning, routing).
 </process>
 
@@ -4899,7 +4933,7 @@ Preserve all workflow gates (session management, test presentation, diagnosis, f
 ## gad:workspace-add
 id: gad-workspace-add
 description: Add a path as a planning root in planning-config.toml
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4948,7 +4982,7 @@ Parse `$ARGUMENTS`:
 ## gad:workspace-show
 id: gad-workspace-show
 description: Show all registered planning roots and their current status
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -4960,7 +4994,7 @@ current state (phase, milestone progress, last modified).
 
 1. **Load config:**
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning 2>/dev/null
+   gad-tools config-get planning 2>/dev/null
    ```
 
 2. **For each root**, read its STATE.md and ROADMAP.md:
@@ -4990,7 +5024,7 @@ current state (phase, milestone progress, last modified).
 ## gad:workspace-sync
 id: gad-workspace-sync
 description: Crawl monorepo for .planning/ directories and sync planning-config.toml roots
-origin: human-authored
+origin: official
 
 
 <objective>
@@ -5003,7 +5037,7 @@ Removed directories prompt before deletion.
 
 1. **Load current config:**
    ```bash
-   node "vendor/get-anything-done/bin/gad-tools.cjs" config-get planning.roots 2>/dev/null || echo "[]"
+   gad-tools config-get planning.roots 2>/dev/null || echo "[]"
    ```
    Also read `planning-config.toml` directly to get existing roots.
 
@@ -5052,15 +5086,15 @@ Removed directories prompt before deletion.
 - Never delete existing roots without explicit user confirmation
 - Preserve entry order: existing roots first, new roots appended
 - Auto-generated id = dirname of the entry's parent path (e.g., `vendor/my-proj` → `my-proj`)
-- If planning-config.toml doesn't exist, create it from the template at
-  `vendor/get-anything-done/templates/planning-config.toml`
+- If planning-config.toml doesn't exist, create it from the bundled
+  `templates/planning-config.toml` template that ships with GAD
 </rules>
 
 
 ## gad:manuscript
 id: manuscript
 description: Fiction and creative writing adaptation of the GAD loop for novels and story outlines
-origin: human-authored
+origin: official
 
 
 # Manuscript Loop
@@ -5302,7 +5336,7 @@ books/<slug>/          ← manuscript source
 ## gad:map-codebase
 id: map-codebase
 description: Analyze an existing codebase and produce structured documents capturing stack, architecture, conventions, and concerns — used before planning phases in a brownfield project. Use this skill when the user wants to understand an unfamiliar codebase, when starting to plan work in an existing project that has no planning docs, when onboarding to a repo, or when beginning any phase that touches code you haven't read yet. Produces .planning/codebase/ documents that feed directly into gad:new-project and gad:plan-phase. Run once per project or when architecture changes significantly.
-origin: human-authored
+origin: official
 
 
 # Map Codebase
@@ -5609,8 +5643,8 @@ Detect the overlap. Two signals:
 gad skill find "<keywords from the overlap>"
 
 # Structural-based: read both SKILL.md frontmatters
-cat .agents/skills/<skill-a>/SKILL.md
-cat .agents/skills/<skill-b>/SKILL.md
+cat skills/<skill-a>/SKILL.md
+cat skills/<skill-b>/SKILL.md
 ```
 
 Write down the answer to this question for yourself: **"What can each of these skills do that the other cannot?"** If the answer is "nothing," they are merge candidates. If there is a real distinction, document it as a comment on both and do NOT merge.
@@ -5621,7 +5655,7 @@ Before drafting the merge, check the agentskills.io standard (https://agentskill
 
 ### Step 2 — Draft the merged skill
 
-Create a new SKILL.md at `.agents/skills/<merged-name>/SKILL.md`. The merged name should be:
+Create a new SKILL.md at `skills/<merged-name>/SKILL.md`. The merged name should be:
 
 - **Shorter than either input** when possible (a merge signals simplification)
 - **More specific** when the merge is foundational-into-project (e.g. `debug` + kaplay context → `kaplay-debug`)
@@ -5670,7 +5704,7 @@ Do NOT delete the original SKILL.md files. They are historical artifacts — fut
 
 ### Step 4 — Update CHANGELOG
 
-Append an entry to `.agents/skills/CHANGELOG.md` (create the file if it does not exist):
+Append an entry to `skills/CHANGELOG.md` (create the file if it does not exist):
 
 ```markdown
 ## <YYYY-MM-DD> — merge: <merged-name>
@@ -5717,7 +5751,7 @@ description: >-
   this is a folded block scalar.
 ```
 
-Always use `>-` (folded block scalar, chomp-final-newline). Test your merged skill's frontmatter with `node -e "require('js-yaml').load(require('fs').readFileSync(process.argv[1], 'utf8').match(/^---\n([\s\S]*?)\n---/)[1])" .agents/skills/<name>/SKILL.md` before committing.
+Always use `>-` (folded block scalar, chomp-final-newline). Test your merged skill's frontmatter with `node -e "require('js-yaml').load(require('fs').readFileSync(process.argv[1], 'utf8').match(/^---\n([\s\S]*?)\n---/)[1])" skills/<name>/SKILL.md` before committing.
 
 ## Anti-patterns
 
@@ -5737,7 +5771,7 @@ This skill was authored on 2026-04-09 after decision gad-73 named the fundamenta
 ## gad:milestone
 id: milestone
 description: Manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. Use this skill when the user says "we're starting v2", "let's kick off the next release", "we finished everything in this milestone, what's next", "archive this milestone", or wants to review whether all planned work is actually done before closing. Also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. Covers gsd:new-milestone + gsd:complete-milestone + gsd:audit-milestone.
-origin: human-authored
+origin: official
 
 
 # Milestone Lifecycle
@@ -5983,7 +6017,7 @@ Next: rp-plan-phase for phase <first-v2-phase-id>
 ## gad:new-project
 id: new-project
 description: Initialize a new project or new section with the GAD planning structure. Use this skill when the user wants to start a new project, set up planning docs for a repo that doesn't have them yet, add a new section to a monorepo, or scaffold requirements/roadmap/state/task-registry. Creates the full .planning/ structure and 5-doc loop, asks the right questions about scope and goals, generates requirements with stable IDs, and produces a phased roadmap. Works for simple repos and monorepos.
-origin: human-authored
+origin: official
 
 
 # New Project Init
@@ -6244,7 +6278,7 @@ Use the same section name as the namespace for all phase IDs (`<section>-<stream
 ## objective-eval-design
 id: objective-eval-design
 description: >- Design evals that produce structured, objective, comparable data instead of single opaque scores. Trigger this skill when designing a new eval project, adding a new scoring dimension, deciding whether to measure something with human review vs automation, or when a reviewer or stakeholder asks "why did this run score X?" and the answer isn't immediately visible in the data. The core discipline is that every measurement you add should answer a specific research question, expose its inputs clearly, and be comparable across runs. If a score can't be decomposed into dimensions or traced back to the events that produced it, it isn't objective — it's just a vibe with a number attached.
-origin: human-authored
+origin: official
 
 
 # objective-eval-design
@@ -6401,7 +6435,7 @@ ready to publish.
 ## gad:plan-phase
 id: plan-phase
 description: Plan a phase using the GAD methodology — creates a KICKOFF.md with goal/scope/DoD and a PLAN.md with concrete tasks. Use this skill when the user wants to plan the next phase, start planning a feature or milestone, create a task list for a phase, run a kickoff before implementation, or see what tasks are needed to achieve a phase goal. Also use it when a phase exists in the roadmap but has no tasks yet, or when a phase has been idle and assumptions may be stale. Requires repo-planner skill for the full methodology context.
-origin: human-authored
+origin: official
 
 
 # Plan a Phase
@@ -6415,7 +6449,7 @@ Creates a KICKOFF.md (phase contract) and PLAN.md (task list) for a phase from t
 ## Step 1: Bootstrap context
 
 ```bash
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>
+gad snapshot --projectid <id>
 ```
 
 This gives you state, roadmap, tasks, decisions, and file refs in one low-token command. Identify the target phase from the snapshot.
@@ -6591,118 +6625,10 @@ When all tasks are done:
 - `references/plan-quality.md` — what makes a good task list
 
 
-## portfolio-sync
-id: portfolio-sync
-description: Keep the public-facing get-anything-done landing site at vendor/get-anything-done/site/ in sync with the framework and its evals as they evolve. Trigger this skill whenever an eval run finishes, a new finding is written, a skill/agent/command is added or rewritten, requirements versions change, decisions are captured, or planning state advances. The site reflects the filesystem via a prebuild script — your job is to make sure the filesystem tells the truth and that new surfaces get displayed. This skill is methodology, not a rigid checklist; if you see a better way to organize or refactor the site, take it.
-origin: human-authored
-
-
-# portfolio-sync
-
-The public site at `vendor/get-anything-done/site/` is a statically generated Next.js app that reads directly from the repo at build time. There is no CMS, no database, no API. The source of truth is the filesystem:
-
-| What you changed                                     | Where it lives                                     | How the site picks it up                                       |
-|-------------------------------------------------------|----------------------------------------------------|----------------------------------------------------------------|
-| New eval run (TRACE.json)                            | `evals/<project>/<version>/TRACE.json`              | `build-site-data.mjs` → `lib/eval-data.generated.ts`           |
-| New finding                                          | `evals/FINDINGS-YYYY-MM-DD-slug.md`                 | `build-site-data.mjs` → `FINDINGS` in `catalog.generated.ts` + `/findings/<slug>` route |
-| New skill                                            | `skills/<name>/SKILL.md`                            | Scanned into `SKILLS` catalog + `/skills/<name>` detail page   |
-| New subagent                                         | `agents/<name>.md`                                  | Scanned into `AGENTS` catalog + `/agents/<name>` detail page   |
-| New slash command                                    | `commands/gad/<name>.md`                            | Scanned into `COMMANDS` catalog + `/commands/<name>` detail page |
-| Eval template inherits a skill                       | `evals/<project>/template/skills/<skill>.md`        | `SKILL_INHERITANCE` map → shown on `/skills/<name>` and catalog cards |
-| New phase or task                                    | `.planning/ROADMAP.xml`, `.planning/TASK-REGISTRY.xml` | `PLANNING_STATE` → `/planning` meta-transparency page         |
-| New decision                                         | `.planning/DECISIONS.xml`                           | `PLANNING_STATE.recentDecisions` → `/planning`                 |
-| New experiment round                                 | `evals/EXPERIMENT-LOG.md` (append `## Round N`)     | Parsed into `ROUND_SUMMARIES` → Rounds section on home         |
-| New requirements version                             | `evals/REQUIREMENTS-VERSIONS.md` (append `## vN`)   | Parsed into `REQUIREMENTS_HISTORY` → Requirements section      |
-| New eval project                                     | `evals/<project>/template/` + `evals/<project>/gad.json` | Template zip + planning zip regenerated; add to `Projects.tsx` greenfield/brownfield list manually |
-| New game build to publish                            | `evals/<project>/<version>/run/` (Vite source)      | Run `npm run build:games` locally then commit `site/public/playable/<project>/<version>/` |
-| Game requirements XML changed                        | `evals/<project>/template/.planning/REQUIREMENTS.xml` | Auto-copied to `public/downloads/requirements/<project>-REQUIREMENTS-v4.xml` |
-
-## When to trigger this skill
-
-- After `gad eval preserve` completes a run → regenerate site data so the new run appears.
-- After writing a new FINDING — publishing is a commit, not a ceremony.
-- After creating any new skill / agent / command / template — they should show up in the catalog on the next deploy.
-- After advancing state in `.planning/` (phase transition, task completion, decision captured) → the `/planning` page exists to make this transparent.
-- After a round completes and you want it visible on the home page.
-
-Basically: any time the repo's truth changes and a reader visiting the site today would see a stale version of that truth.
-
-## The sync procedure
-
-**Step 1 — make sure the filesystem is the truth.** Don't hand-edit anything under `site/lib/*.generated.ts` or `site/public/downloads/`. Those files are outputs of `build-site-data.mjs`. If something's wrong on the site, the fix is almost always in `evals/`, `skills/`, `agents/`, `commands/gad/`, or `.planning/`.
-
-**Step 2 — regenerate locally:**
-
-```sh
-cd vendor/get-anything-done/site
-npm run prebuild        # or: node scripts/build-site-data.mjs
-```
-
-This re-zips templates, re-parses traces, re-scans the catalog, re-extracts git history for historical requirements, re-parses STATE/TASKS/DECISIONS, re-renders all markdown bodies to HTML, writes the generated TS files. It's cheap (under 5 seconds) and deterministic.
-
-**Step 3 — build locally to verify:**
-
-```sh
-npx next build
-```
-
-If type-checking fails, it's almost always because a new TRACE.json has a field the generated interface doesn't allow. Loosen the type in `build-site-data.mjs` (prefer `number | null` + `Record<string, unknown>` intersection over restrictive shapes).
-
-**Step 4 — if you added a new playable game build, run:**
-
-```sh
-npm run build:games     # LOCAL ONLY — do not run on Vercel
-```
-
-This walks each `evals/<project>/<version>/run/` directory, runs `npx vite build --base ./` so asset URLs are relative (required for subdirectory serving), and copies the result into `public/playable/<project>/<version>/`. Commit these dists — Vercel won't rebuild them.
-
-**Step 5 — commit with a GAD task id** if this is tracked work, or a `chore(site):` prefix if it's a routine sync.
-
-```sh
-git add site/lib/catalog.generated.ts site/lib/eval-data.generated.ts site/public/
-git commit -m "chore(site): regenerate data after <what changed>"
-```
-
-**Step 6 — push.** The submodule commit needs to be pushed to the get-anything-done repo's main branch. Vercel auto-deploys on push. The parent portfolio repo's submodule pointer bump is separate and optional (it only matters if the portfolio needs to reference this submodule state).
-
-## Patterns to follow when the site needs new surfaces
-
-The site is intentionally not finished. As the experiment grows you'll want new sections. When you're considering adding one:
-
-1. **If the data isn't in a generator yet, add the parser first.** New `build-site-data.mjs` section → new fields in `catalog.generated.ts` or `eval-data.generated.ts` → consumed by the page. Keep the generator the bottleneck so everything stays in sync.
-2. **New detail pages follow the `DetailShell` pattern.** `components/detail/DetailShell.tsx` handles the chrome (breadcrumb, kind badge, metadata card, rendered body, sidebar, source link). Pass it `kind`, `bodyHtml`, optional `meta` + `sidebar`. Don't reinvent the shell.
-3. **New landing sections go under `components/landing/`.** Each section is one file, composed into `app/page.tsx` in whatever order makes the story read. They should be mostly server components; only mark `"use client"` when you need state (selector, search, etc).
-4. **SSG over SSR.** Every new dynamic route should export `generateStaticParams` and `dynamicParams = false`. The site is deployed as static HTML — no serverless functions.
-5. **Markdown rendering happens at build time via `marked` in the prebuild script.** Don't ship a runtime markdown renderer to the client. Emit `bodyHtml: string` and dump it with `dangerouslySetInnerHTML` inside `.prose-content`.
-6. **Refactor when it starts to hurt.** If you're adding the fifth similar landing section and noticing patterns, extract. If a generator function is getting unwieldy, split it. Don't preemptively abstract, but don't let the section list grow to 20 copy-pasted variants either.
-
-## What NOT to do
-
-- **Don't commit generated files by hand.** Always regenerate.
-- **Don't add a CMS.** The filesystem is the CMS.
-- **Don't require API keys for any part of the public site.** It's a static archive; everything that needs auth lives elsewhere.
-- **Don't build the games on Vercel.** 6+ `npm install` + `vite build` calls would balloon the build time. They're pre-built locally and committed.
-- **Don't hide the experiment's failure modes.** If a run scored 0 from a human reviewer, the site shows that honestly, side-by-side with the process metrics. The divergence is the point — it's what led to gad-29.
-- **Don't create MDX files in the site/content directory.** This site doesn't use MDX content at all (that was the old apps/portfolio/ plan). Content comes from scanning the repo.
-
-## How this skill interacts with others
-
-- `create-skill` — when you write a new skill in `skills/<name>/SKILL.md`, it automatically shows up on the site after the next prebuild + deploy. No separate listing step.
-- `find-sprites` — unrelated to site sync, but both are "bootstrap" skills that get inherited into eval templates. If you change which skills are inherited where, the `SKILL_INHERITANCE` map on the site updates to reflect it.
-- Any eval skill (`eval-run`, `eval-preserve`, `eval-report`) — finishing a preserve triggers the sync. The run appears on `/runs/<project>/<version>` on the next deploy.
-- `plan-phase` / `execute-phase` / `verify-work` — if this work lives in a GAD phase (and it should, per gad-18), the `/planning` page surfaces it automatically. Don't maintain parallel docs.
-
-## Expected cadence
-
-The site should update at the same cadence as experimental progress. If you've done real work and the site looks the same, something's stale. If you're making commits without regenerating, you're drifting.
-
-Treat `npm run prebuild && npx next build` as the equivalent of `gad verify` for the public-facing side of the project.
-
-
 ## gad:reverse-engineer
 id: reverse-engineer
 description: Analyze any codebase (local path or GitHub URL) and produce GAD planning docs for clean-room reimplementation. Removes dependencies by capturing requirements, not code.
-origin: human-authored
+origin: official
 
 
 # gad:reverse-engineer
@@ -6874,85 +6800,10 @@ Copy REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml into the eval 
 6. No source code was copied — only requirements and architecture
 
 
-## self-eval
-id: self-eval
-description: Score a round of GAD development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics.
-origin: human-authored
-
-
-# self-eval
-
-Score how well GAD performed on its own development. This is the brownfield eval that uses real work data, not isolated game experiments.
-
-## Context
-
-We use GAD to build GAD. 7 workspaces, 93+ decisions, 141+ completed tasks, 2300+ traced tool calls. This is the most honest test of whether GAD helps or hurts productivity — no cherry-picking, no controlled conditions, just actual work.
-
-## Dimensions (rubric)
-
-### 1. Framework overhead ratio (0.0 – 1.0)
-What percentage of tool calls target .planning/ files vs source code?
-- < 15% overhead = 1.0 (framework stays out of the way)
-- 15-25% = 0.7 (acceptable)
-- 25-40% = 0.4 (concerning)
-- > 40% = 0.1 (framework is the bottleneck)
-
-### 2. Loop compliance (0.0 – 1.0)
-How many sessions follow the GAD loop? (snapshot → work → update docs → commit)
-- Check: does each session start with `gad snapshot`?
-- Check: are planning docs updated before or with each commit?
-- Score = compliant sessions / total sessions
-
-### 3. Planning doc freshness (0.0 – 1.0)
-Are STATE.xml and TASK-REGISTRY.xml current?
-- Check: last-updated timestamp vs last commit date
-- Check: next-action describes actual current state
-- Check: task statuses match git history (done tasks have commits)
-
-### 4. Decision capture rate (0.0 – 1.0)
-Are decisions being captured as they happen?
-- Count decisions created per session vs decisions implied by changes
-- Check: do decisions reference the context that created them?
-
-### 5. Cross-project coherence (0.0 – 1.0)
-Do the 7 workspaces maintain consistent state?
-- Check: are all workspace STATE.xml files current?
-- Check: does the global workspace reflect all sub-project states?
-- Check: are decisions in the right project (not leaked to global)?
-
-### 6. Delivery velocity (qualitative)
-What shipped per round? Not a numeric score — a narrative:
-- Features shipped
-- Bugs fixed
-- Decisions made
-- Evals run
-- Site pages published
-
-## How to compute
-
-1. Run trace-analysis skill first to get raw metrics
-2. Parse git log for the round's date range
-3. Read all workspace STATE.xml files
-4. Compute each dimension score
-5. Produce a structured report with evidence
-
-## Output
-
-SELF-EVAL-ROUND-N.md in .planning/ with:
-- Per-dimension scores with evidence
-- Aggregate score (weighted)
-- Comparison to previous rounds
-- Actionable findings (what to improve)
-
-## Integration with the site
-
-Self-eval reports should appear alongside game eval reports on the landing page. The "Results" section should show both controlled (game evals) and real-world (self-eval) data. This is what makes the Freedom hypothesis credible — we're not just testing on toys.
-
-
 ## gad:session
 id: session
 description: Save and restore full planning context across sessions — creates a handoff file when pausing and restores from it when resuming. Use this skill when the user is about to stop work mid-phase, wants to hand off to a new context window, is starting a new session and needs to orient fully, or when gad:check-todos alone isn't enough because there's in-progress work, unresolved decisions, or active blockers that aren't captured in the living planning docs. Essential for the autonomous execution loop — call it at pause and resume to maintain continuity.
-origin: human-authored
+origin: official
 
 
 # Session Continuity
@@ -7129,151 +6980,10 @@ The handoff file is the bridge. Without it, the loop would have to re-read all p
 If the session ended cleanly (all tasks completed, state updated, no in-progress work), `gad:check-todos` is sufficient for re-entry — no handoff needed. Use `gad:session` only when there's in-flight state that the living docs don't capture.
 
 
-## gad:snapshot-optimize
-id: snapshot-optimize
-description: Verify and optimize gad snapshot output to fit within the sprint context window. Use after modifying snapshot logic, adding new planning file types, or when snapshot token count exceeds the target budget.
-origin: human-authored
-
-
-# gad:snapshot-optimize
-
-Ensures `gad snapshot` output stays within the sprint context window budget. This skill defines what a well-optimized snapshot contains, how to measure it, and the verification gates.
-
-## When to use
-
-- After modifying snapshot logic in `bin/gad.cjs`
-- After adding new planning file types (e.g. DOCS-MAP.xml, CONTEXT.md)
-- When snapshot token count exceeds the 3,000 token target
-- During phase 16 execution
-- Before any cli-efficiency eval run
-
-## Token budget
-
-| Component | Target tokens | Max tokens |
-|-----------|--------------|------------|
-| STATE.xml (full) | 200 | 400 |
-| ROADMAP.xml (sprint-scoped) | 400 | 800 |
-| DECISIONS.xml (active-phase refs only) | 500 | 1,000 |
-| TASK-REGISTRY.xml (open tasks only) | 400 | 800 |
-| File refs + git log | 300 | 500 |
-| DOCS-MAP.xml | 100 | 200 |
-| **Total snapshot** | **~1,900** | **3,000** |
-
-Reference: `docs/context-budget.md` — full baseline analysis with current 26,885 token overhead.
-
-## What a correct sprint-scoped snapshot contains
-
-### 1. STATE.xml — full (no filtering needed, already compact)
-Current phase, milestone, status, next-action, last-updated.
-
-### 2. ROADMAP.xml — sprint-scoped
-- **Done phases outside sprint:** one line per phase: `id | title | done`
-- **Phases in current sprint (active + planned):** full goal text, status, depends
-- **Sprint size:** configurable (default 5), read from planning-config.toml
-
-Example collapsed done phase:
-```
-01 | Foundation | done
-02 | Session management | done
-```
-
-Example active phase (full):
-```xml
-<phase id="14">
-  <title>Eval framework: escape-the-dungeon + tracing</title>
-  <goal>Set up escape-the-dungeon eval project...</goal>
-  <status>active</status>
-  <depends>13</depends>
-</phase>
-```
-
-### 3. TASK-REGISTRY.xml — open tasks only
-- **Completed tasks:** omitted entirely (agent doesn't need them to know what to do next)
-- **Planned/in-progress/blocked tasks:** full goal, status, keywords, commands
-- **Phase grouping preserved:** tasks grouped under their phase id
-
-### 4. DECISIONS.xml — active-phase referenced only
-- Include only decisions referenced by active phase tasks (via keywords or explicit refs)
-- Include decisions marked as "always relevant" (gad-04, gad-17, gad-18)
-- Omit decisions from completed phases that don't affect current work
-
-### 5. File refs (NEW)
-- Code/doc files touched by in-progress and recently completed tasks
-- Source: `<files>` block in TASK-REGISTRY.xml (when present) + `git log --name-only` scoped to project path
-- Recent git log: last 5 commits for the project path
-
-### 6. DOCS-MAP.xml — full (already compact)
-
-## Verification steps
-
-After any snapshot change, run these checks:
-
-```sh
-# 1. Measure token count
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | wc -c
-# Divide by 4 for token estimate. Must be under 12,000 chars (3,000 tokens).
-
-# 2. Verify sprint scoping works
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --sprint
-# Should show only current sprint phases, not all 17.
-
-# 3. Verify done phases are collapsed
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | grep -c "<goal>"
-# Should be much less than total phase count — only active/planned phases have goals.
-
-# 4. Verify no completed tasks appear
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | grep 'status="done"' | wc -l
-# Should be 0 in task-registry section.
-
-# 5. Verify file refs present
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done | grep "File refs"
-# Should show a section with recent file paths.
-
-# 6. Run parser tests
-node vendor/get-anything-done/tests/parser-coverage.test.cjs
-# All 46+ tests must pass.
-
-# 7. Compare with full dump
-FULL=$(node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --full | wc -c)
-SPRINT=$(node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --sprint | wc -c)
-echo "Full: $FULL chars, Sprint: $SPRINT chars, Reduction: $(( (FULL - SPRINT) * 100 / FULL ))%"
-# Reduction should be >60%.
-```
-
-## Snapshot flags after optimization
-
-| Flag | Behavior |
-|------|----------|
-| `--projectid <id>` | Scope to one project (required) |
-| `--sprint` | Sprint-scoped output (default after optimization) |
-| `--full` | Full dump like current behavior (for debugging/evals) |
-| `--json` | JSON output |
-
-## What to check in RepoPlanner for parity
-
-Read `vendor/repo-planner/scripts/loop-cli.mjs`:
-- `getSprintPhaseIds()` — how sprint boundaries are calculated
-- `context sprint` command — what paths and summary it returns
-- Sprint config: `sprintSize` in config, default 5
-
-GAD sprint model should match RP's concept but use XML planning files instead of MD.
-
-## Definition of done
-
-1. `gad snapshot --projectid get-anything-done` fits under 3,000 tokens
-2. Sprint scoping works: only current sprint phases inlined
-3. Done phases collapsed to one-liners
-4. Only open tasks shown
-5. File refs included from git log and task registry
-6. `--full` flag preserves current behavior for comparison
-7. cli-efficiency eval v7 scores >= v6 composite (0.976)
-8. `docs/context-budget.md` updated with new numbers
-
-
 ## gad:task-checkpoint
 id: task-checkpoint
 description: Verify planning doc updates before proceeding to the next task. Called between tasks during execute-phase to enforce per-task tracking. Checks TASK-REGISTRY.xml and STATE.xml are current.
-origin: human-authored
+origin: official
 
 
 # gad:task-checkpoint
@@ -7364,76 +7074,10 @@ for each task in phase:
 Eval v2 showed 34 tasks completed with 0 per-task commits and 0 state updates. The agent batched everything at the end. This checkpoint prevents that by making step 5 a hard gate.
 
 
-## trace-analysis
-id: trace-analysis
-description: Analyze GAD trace data (.gad-log/ JSONL + .trace-events.jsonl) to produce usage reports — tool mix, skill invocations, commit rhythm, context compactions, per-project breakdowns.
-origin: human-authored
-
-
-# trace-analysis
-
-Analyze the trace data that GAD hooks capture during every session. Produces structured reports showing how GAD is actually being used across all projects in this monorepo.
-
-## Data sources
-
-1. **`.planning/.gad-log/*.jsonl`** — Tool call log from the tool-trace.js hook. One file per day. Fields: ts, tool, session_id, input_summary, gad_command, agent_type, skill.
-2. **`.planning/.trace-events.jsonl`** — Trace events from gad-trace-hook.cjs. Fields: event_type (tool_use, skill_invocation, subagent_spawn, file_mutation), seq, tool, inputs, outputs.
-3. **`vendor/get-anything-done/.planning/.trace-events.jsonl`** — GAD project-specific trace events (1000 event max with rotation).
-
-## What to produce
-
-### Per-session report
-```
-Session: <session_id>
-Duration: <first_event_ts> → <last_event_ts>
-Tool calls: <count> (Read: N, Edit: N, Bash: N, Grep: N, Agent: N, Skill: N)
-GAD CLI calls: <count> (snapshot: N, state: N, tasks: N, decisions: N)
-Skills invoked: <list with counts>
-Subagents spawned: <count> (types: ...)
-Files mutated: <count> (created: N, edited: N)
-Commits: <count from git log in time range>
-```
-
-### Per-day report
-Aggregate of all sessions that day. Same metrics plus:
-- Projects touched (from file paths in mutations)
-- Decision count delta (from DECISIONS.xml git diff)
-- Task completion rate
-
-### Per-round report (the self-eval)
-A "round" of GAD development = a milestone or sprint. Aggregate:
-- Total sessions, total tool calls, total tokens (if available)
-- Skill usage distribution — which skills are used, which are never invoked
-- GAD loop compliance — how many sessions start with `gad snapshot`?
-- Planning doc update rate — are STATE.xml and TASK-REGISTRY.xml updated per commit?
-- Ratio of framework overhead to implementation (Read/Edit on .planning/ files vs source files)
-
-## How to run
-
-```
-# Analyze today's trace data
-Read .planning/.gad-log/2026-04-10.jsonl, count and categorize events.
-
-# Analyze all trace data
-Read all files in .planning/.gad-log/, aggregate across days.
-
-# Check GAD loop compliance
-For each session, check: did it start with a gad snapshot call? Did it update planning docs before committing?
-```
-
-## Output format
-
-Structured markdown report. Can be rendered on the site under /data or /methodology.
-
-## Future: CLI integration
-
-When stable, this should become `gad trace report` CLI command with the same analysis logic available programmatically.
-
-
 ## gad:verify-phase
 id: verify-phase
 description: Verify a completed phase achieved its goals. Runs build checks, validates deliverables exist, checks planning doc state, produces VERIFICATION.md. Works automated (eval agents) or interactive (human review). Use after completing a phase, before marking it done in ROADMAP.xml.
-origin: human-authored
+origin: official
 
 
 # gad:verify-phase
@@ -7585,7 +7229,7 @@ When running in an eval, verification results feed into the trace:
 ## gad:write-feature-doc
 id: write-feature-doc
 description: Produce a feature documentation MDX file into the docs sink. Use when a project feature needs clear human-readable documentation that persists across sessions.
-origin: human-authored
+origin: official
 
 
 # gad:write-feature-doc
@@ -7689,7 +7333,7 @@ gad docs list --projectid <id>                   # verify doc appears
 ## gad:write-intent
 id: write-intent
 description: Capture user intent for a project into planning docs. Use when starting a new project, clarifying what a project is for, or when requirements are missing or vague.
-origin: human-authored
+origin: official
 
 
 # gad:write-intent
@@ -7784,7 +7428,7 @@ For a project called "listen" with intent "music portfolio with BandLab integrat
 ## gad:write-tech-doc
 id: write-tech-doc
 description: Produce a technical breakdown doc — architecture, data flow, component design. Use when a system needs to be explained structurally for agent or developer onboarding.
-origin: human-authored
+origin: official
 
 
 # gad:write-tech-doc
@@ -7883,6 +7527,372 @@ gad docs list --projectid <id>
 - Stale diagrams — if the code changed, update the diagram or delete it
 
 
+## portfolio-sync
+id: portfolio-sync
+description: Keep the public-facing GAD site and generated publishing artifacts in sync with the framework as it evolves. Trigger this skill whenever an eval run finishes, a new finding is written, a skill or agent changes, requirements or decisions move, or planning/docs outputs need regeneration.
+origin: internal
+
+
+# portfolio-sync
+
+This skill is effectively the framework publishing sync. Despite the name, it is not just about a portfolio site. Use it for:
+
+- the public GAD site under `site/`
+- generated site catalogs and eval data
+- downloadable templates and planning zips
+- adjacent docs/publication outputs that should reflect the repo's current truth
+
+The public surfaces are built directly from the repo filesystem. There is no CMS, no database, no API. The source of truth is the filesystem.
+
+| What you changed | Where it lives | How the public surface picks it up |
+| --- | --- | --- |
+| New eval run | `evals/<project>/<version>/TRACE.json` | `build-site-data.mjs` -> `lib/eval-data.generated.ts` |
+| New finding | `evals/FINDINGS-YYYY-MM-DD-slug.md` | `build-site-data.mjs` -> findings catalog and route |
+| New skill | `skills/<name>/SKILL.md` | scanned into the skills catalog |
+| New subagent | `agents/<name>.md` | scanned into the agents catalog |
+| Generated compatibility command | `commands/gad/<name>.md` | scanned into the commands catalog |
+| Planning state updates | `.planning/*.xml` | surfaced on `/planning` and related site views |
+| Docs sink outputs | configured `docs_sink` path | produced by `gad docs compile` / docs compiler |
+
+## When to trigger this skill
+
+- After `gad eval preserve` completes a run and the run should appear publicly.
+- After writing a new finding or changing an eval comparison surface.
+- After changing skills, agents, commands, templates, or planning state that the site reflects.
+- After compiling planning docs or regenerating publishable artifacts that should stay aligned with the repo truth.
+- After any work where a visitor would otherwise see stale framework state.
+
+## The sync procedure
+
+1. Make sure the filesystem is the truth.
+   Do not hand-edit generated files under `site/lib/*.generated.ts`, `site/public/downloads/`, or any generated docs sink.
+
+2. Regenerate locally:
+
+```sh
+cd site
+npm run prebuild
+```
+
+3. Build locally to verify:
+
+```sh
+npx next build
+```
+
+4. If playable builds changed, run:
+
+```sh
+npm run build:games
+```
+
+5. If planning docs must be published into a docs sink, run the docs compiler flow as part of the same publishing pass.
+
+6. Commit the regenerated outputs with a task id or `chore(site):` style commit message.
+
+## What not to do
+
+- Do not hand-edit generated site or docs output.
+- Do not hide bad eval results or process failures.
+- Do not let public surfaces drift behind framework truth.
+- Do not treat this as site-only if the real work is publishing generated docs or artifacts.
+
+## Relationship to nearby skills
+
+- `gad:docs-compile` compiles planning docs into a sink.
+- `portfolio-sync` is the broader publication/presentation sync that makes sure the public-facing artifacts match the repo.
+- `trace-analysis` inspects telemetry and reports how the framework was used; it does not publish anything by itself.
+
+Treat `npm run prebuild && npx next build` as the public-surface equivalent of a verification step.
+
+
+## self-eval
+id: self-eval
+description: Score a round of GAD development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics.
+origin: internal
+
+
+# self-eval
+
+Score how well GAD performed on its own development. This is the brownfield eval that uses real work data, not isolated game experiments.
+
+## Context
+
+We use GAD to build GAD. 7 workspaces, 93+ decisions, 141+ completed tasks, 2300+ traced tool calls. This is the most honest test of whether GAD helps or hurts productivity — no cherry-picking, no controlled conditions, just actual work.
+
+## Dimensions (rubric)
+
+### 1. Framework overhead ratio (0.0 – 1.0)
+What percentage of tool calls target .planning/ files vs source code?
+- < 15% overhead = 1.0 (framework stays out of the way)
+- 15-25% = 0.7 (acceptable)
+- 25-40% = 0.4 (concerning)
+- > 40% = 0.1 (framework is the bottleneck)
+
+### 2. Loop compliance (0.0 – 1.0)
+How many sessions follow the GAD loop? (snapshot → work → update docs → commit)
+- Check: does each session start with `gad snapshot`?
+- Check: are planning docs updated before or with each commit?
+- Score = compliant sessions / total sessions
+
+### 3. Planning doc freshness (0.0 – 1.0)
+Are STATE.xml and TASK-REGISTRY.xml current?
+- Check: last-updated timestamp vs last commit date
+- Check: next-action describes actual current state
+- Check: task statuses match git history (done tasks have commits)
+
+### 4. Decision capture rate (0.0 – 1.0)
+Are decisions being captured as they happen?
+- Count decisions created per session vs decisions implied by changes
+- Check: do decisions reference the context that created them?
+
+### 5. Cross-project coherence (0.0 – 1.0)
+Do the 7 workspaces maintain consistent state?
+- Check: are all workspace STATE.xml files current?
+- Check: does the global workspace reflect all sub-project states?
+- Check: are decisions in the right project (not leaked to global)?
+
+### 6. Delivery velocity (qualitative)
+What shipped per round? Not a numeric score — a narrative:
+- Features shipped
+- Bugs fixed
+- Decisions made
+- Evals run
+- Site pages published
+
+## How to compute
+
+1. Run trace-analysis skill first to get raw metrics
+2. Parse git log for the round's date range
+3. Read all workspace STATE.xml files
+4. Compute each dimension score
+5. Produce a structured report with evidence
+
+## Output
+
+SELF-EVAL-ROUND-N.md in .planning/ with:
+- Per-dimension scores with evidence
+- Aggregate score (weighted)
+- Comparison to previous rounds
+- Actionable findings (what to improve)
+
+## Integration with the site
+
+Self-eval reports should appear alongside game eval reports on the landing page. The "Results" section should show both controlled (game evals) and real-world (self-eval) data. This is what makes the Freedom hypothesis credible — we're not just testing on toys.
+
+
+## gad:snapshot-optimize
+id: snapshot-optimize
+description: Verify and optimize gad snapshot output to fit within the sprint context window. Use after modifying snapshot logic, adding new planning file types, or when snapshot token count exceeds the target budget.
+origin: internal
+
+
+# gad:snapshot-optimize
+
+Ensures `gad snapshot` output stays within the sprint context window budget. This skill defines what a well-optimized snapshot contains, how to measure it, and the verification gates.
+
+## When to use
+
+- After modifying snapshot logic in `bin/gad.cjs`
+- After adding new planning file types (e.g. DOCS-MAP.xml, CONTEXT.md)
+- When snapshot token count exceeds the 3,000 token target
+- During phase 16 execution
+- Before any cli-efficiency eval run
+
+## Token budget
+
+| Component | Target tokens | Max tokens |
+|-----------|--------------|------------|
+| STATE.xml (full) | 200 | 400 |
+| ROADMAP.xml (sprint-scoped) | 400 | 800 |
+| DECISIONS.xml (active-phase refs only) | 500 | 1,000 |
+| TASK-REGISTRY.xml (open tasks only) | 400 | 800 |
+| File refs + git log | 300 | 500 |
+| DOCS-MAP.xml | 100 | 200 |
+| **Total snapshot** | **~1,900** | **3,000** |
+
+Reference: `docs/context-budget.md` — full baseline analysis with current 26,885 token overhead.
+
+## What a correct sprint-scoped snapshot contains
+
+### 1. STATE.xml — full (no filtering needed, already compact)
+Current phase, milestone, status, next-action, last-updated.
+
+### 2. ROADMAP.xml — sprint-scoped
+- **Done phases outside sprint:** one line per phase: `id | title | done`
+- **Phases in current sprint (active + planned):** full goal text, status, depends
+- **Sprint size:** configurable (default 5), read from planning-config.toml
+
+Example collapsed done phase:
+```
+01 | Foundation | done
+02 | Session management | done
+```
+
+Example active phase (full):
+```xml
+<phase id="14">
+  <title>Eval framework: escape-the-dungeon + tracing</title>
+  <goal>Set up escape-the-dungeon eval project...</goal>
+  <status>active</status>
+  <depends>13</depends>
+</phase>
+```
+
+### 3. TASK-REGISTRY.xml — open tasks only
+- **Completed tasks:** omitted entirely (agent doesn't need them to know what to do next)
+- **Planned/in-progress/blocked tasks:** full goal, status, keywords, commands
+- **Phase grouping preserved:** tasks grouped under their phase id
+
+### 4. DECISIONS.xml — active-phase referenced only
+- Include only decisions referenced by active phase tasks (via keywords or explicit refs)
+- Include decisions marked as "always relevant" (gad-04, gad-17, gad-18)
+- Omit decisions from completed phases that don't affect current work
+
+### 5. File refs (NEW)
+- Code/doc files touched by in-progress and recently completed tasks
+- Source: `<files>` block in TASK-REGISTRY.xml (when present) + `git log --name-only` scoped to project path
+- Recent git log: last 5 commits for the project path
+
+### 6. DOCS-MAP.xml — full (already compact)
+
+## Verification steps
+
+After any snapshot change, run these checks:
+
+```sh
+# 1. Measure token count
+gad snapshot --projectid get-anything-done | wc -c
+# Divide by 4 for token estimate. Must be under 12,000 chars (3,000 tokens).
+
+# 2. Verify sprint scoping works
+gad snapshot --projectid get-anything-done --sprint
+# Should show only current sprint phases, not all 17.
+
+# 3. Verify done phases are collapsed
+gad snapshot --projectid get-anything-done | grep -c "<goal>"
+# Should be much less than total phase count — only active/planned phases have goals.
+
+# 4. Verify no completed tasks appear
+gad snapshot --projectid get-anything-done | grep 'status="done"' | wc -l
+# Should be 0 in task-registry section.
+
+# 5. Verify file refs present
+gad snapshot --projectid get-anything-done | grep "File refs"
+# Should show a section with recent file paths.
+
+# 6. Run parser tests
+node tests/parser-coverage.test.cjs
+# All 46+ tests must pass.
+
+# 7. Compare with full dump
+FULL=$(gad snapshot --projectid get-anything-done --full | wc -c)
+SPRINT=$(gad snapshot --projectid get-anything-done --sprint | wc -c)
+echo "Full: $FULL chars, Sprint: $SPRINT chars, Reduction: $(( (FULL - SPRINT) * 100 / FULL ))%"
+# Reduction should be >60%.
+```
+
+## Snapshot flags after optimization
+
+| Flag | Behavior |
+|------|----------|
+| `--projectid <id>` | Scope to one project (required) |
+| `--sprint` | Sprint-scoped output (default after optimization) |
+| `--full` | Full dump like current behavior (for debugging/evals) |
+| `--json` | JSON output |
+
+## What to check in RepoPlanner for parity
+
+Read `../repo-planner/scripts/loop-cli.mjs` if that legacy reference is still present in your workspace:
+- `getSprintPhaseIds()` — how sprint boundaries are calculated
+- `context sprint` command — what paths and summary it returns
+- Sprint config: `sprintSize` in config, default 5
+
+GAD sprint model should match RP's concept but use XML planning files instead of MD.
+
+## Definition of done
+
+1. `gad snapshot --projectid get-anything-done` fits under 3,000 tokens
+2. Sprint scoping works: only current sprint phases inlined
+3. Done phases collapsed to one-liners
+4. Only open tasks shown
+5. File refs included from git log and task registry
+6. `--full` flag preserves current behavior for comparison
+7. cli-efficiency eval v7 scores >= v6 composite (0.976)
+8. `docs/context-budget.md` updated with new numbers
+
+
+## trace-analysis
+id: trace-analysis
+description: Analyze GAD trace data (.gad-log JSONL + .trace-events.jsonl + preserved eval traces) to produce usage reports such as tool mix, skill invocations, commit rhythm, token coverage, runtime mix, and per-project breakdowns.
+origin: internal
+
+
+# trace-analysis
+
+Analyze the telemetry that GAD captures during sessions and eval runs. This skill is for measurement and reporting, not for syncing roots or compiling docs.
+
+## Data sources
+
+1. `.planning/.gad-log/*.jsonl`
+   Raw CLI and hook-adjacent log entries.
+2. `.planning/.trace-events.jsonl`
+   Session trace events such as tool use, skill invocation, subagent spawn, and file mutation.
+3. Project-local `.planning/.trace-events.jsonl`
+   Additional trace logs inside specific tracked projects when those projects maintain their own planning root.
+4. `evals/<project>/<version>/TRACE.json`
+   Preserved eval artifacts with runtime identity, tokens, review outcomes, and derived metrics.
+
+## What to produce
+
+### Per-session report
+
+```text
+Session: <session_id>
+Duration: <first_event_ts> -> <last_event_ts>
+Runtime: <claude-code | codex | unknown>
+Tool calls: <count>
+GAD CLI calls: <count>
+Skills invoked: <list with counts>
+Subagents spawned: <count>
+Files mutated: <count>
+```
+
+### Per-day or per-project report
+
+- projects touched
+- runtime mix
+- skill usage distribution
+- planning doc update rate
+- token coverage and missingness
+- commit rhythm or checkpoint discipline
+
+### Self-eval or framework report
+
+- total sessions
+- total tool calls
+- total or estimated tokens
+- eval token totals
+- runtime attribution coverage
+- loop compliance
+- framework-overhead ratio versus implementation work
+
+## How to use it
+
+- Read the available log files.
+- Group by session, runtime, project, or eval version.
+- Call out where data is exact versus estimated.
+- Highlight missing instrumentation honestly instead of smoothing it over.
+
+## What this is not
+
+- Not `gad:workspace-sync` — that manages planning roots.
+- Not `gad:docs-compile` — that compiles planning docs into a sink.
+- Not `portfolio-sync` — that publishes public-facing artifacts.
+
+This skill answers: "what happened in the framework?" not "where are the roots?" or "what should we publish?"
+
+
 ## session-discipline (emergent)
 id: session-discipline
 description: >- Hard-start procedure for any agent about to touch the GAD repo in a new turn or session. Forces the agent to rehydrate state, check existing planned work, load relevant skills, and commit through the formal task registry before running ad-hoc. Load this skill at the start of EVERY turn that writes to the repo. Written after a dogfood failure in session 2026-04-09 where an agent shipped 20+ surfaces without invoking a single skill or updating TASK-REGISTRY.xml. Use when starting a session, resuming after auto-compact, picking up new user instructions, or noticing you have drifted into ad-hoc execution.
@@ -7918,7 +7928,7 @@ Run these **in order** before executing any user request that touches the repo:
 ### Step 1 — Snapshot
 
 ```sh
-node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <project-id>
+gad snapshot --projectid <project-id>
 ```
 
 Common project IDs: `get-anything-done` (the framework), `global`, `grime-time-site`, `repub-builder`. If the user didn't name a project, use `get-anything-done` for framework work and ask for anything else.
@@ -7932,7 +7942,7 @@ Read the output. Pay attention to:
 ### Step 2 — Check TASK-REGISTRY.xml for a matching planned task
 
 ```sh
-node vendor/get-anything-done/bin/gad.cjs tasks --projectid <project-id>
+gad tasks --projectid <project-id>
 ```
 
 Scan the `planned` tasks for anything whose goal matches the user's request. If you find one:
@@ -7947,7 +7957,7 @@ If nothing matches:
 ### Step 3 — Scan for relevant skills
 
 ```sh
-ls vendor/get-anything-done/skills/
+ls skills/
 ```
 
 For the kind of work about to happen, skim the skill names. If any match, open its SKILL.md and read the "When to use" section:
@@ -7970,7 +7980,7 @@ If no existing skill matches AND the work is non-obvious or repeatable, **author
 ### Step 4 — Check the active phase in ROADMAP.xml
 
 ```sh
-node vendor/get-anything-done/bin/gad.cjs phases --projectid <project-id>
+gad phases --projectid <project-id>
 ```
 
 Is there a phase that covers this work? If yes, use its id in task + commit references. If no, decide whether a new phase is justified before creating it (new phases are substantial — do not spin one up for routine site work).
@@ -10299,11 +10309,11 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **39-03** [done]: Maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *Intro.tsx bodies, repeated Nav/main/Footer shells, copy-pasted class stacks). File findings under .planning/notes/ or append to phase39 PLAN when created; close task when no trivial hits remain.
 
-- **39-04** [planned]: Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate.
+- **39-04** [done]: Medium: introduce shared marketing layout — Next.js route group layout or SiteChrome wrapper so site/app pages stop repeating main + Nav + Footer boilerplate.
 
-- **39-05** [planned]: Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count.
+- **39-05** [done]: Medium: add SiteSectionIntro (or equivalent) compound component wrapping SiteSectionHeading hero-compact + SiteProse mt-5; migrate landing *Intro.tsx files to shrink line count.
 
-- **39-06** [planned]: Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.
+- **39-06** [done]: Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.
 
 
 ---
@@ -10546,7 +10556,7 @@ Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-
 
 ## Phase 39: Site DRY pass — low-risk dedup first, then medium refactors
 
-Status: planned
+Status: done
 
 Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **Order:** (1) Burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) Then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared Playable/teaser chunks. (3) Re-scan periodically after other site work. **Defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. Tie-in: gad-134 (site reusability / cut duplicate edits). Depends on phase 28 (site architecture) being done.
 

@@ -3666,7 +3666,7 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
   {
     "project": "escape-the-dungeon",
     "zipPath": "/downloads/eval-escape-the-dungeon-template.zip",
-    "bytes": 44421
+    "bytes": 44416
   },
   {
     "project": "escape-the-dungeon-bare",
@@ -3681,7 +3681,7 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
   {
     "project": "escape-the-dungeon-gad-emergent",
     "zipPath": "/downloads/eval-escape-the-dungeon-gad-emergent-template.zip",
-    "bytes": 49625
+    "bytes": 49620
   },
   {
     "project": "escape-the-dungeon-planning-only",
@@ -3736,7 +3736,7 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
   {
     "project": "gad-skill-creator-eval",
     "zipPath": "/downloads/eval-gad-skill-creator-eval-template.zip",
-    "bytes": 4842
+    "bytes": 4837
   },
   {
     "project": "reader-workspace",
@@ -3754,7 +3754,7 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
   {
     "project": "escape-the-dungeon",
     "zipPath": "/downloads/planning/eval-escape-the-dungeon-planning.zip",
-    "bytes": 44421,
+    "bytes": 44416,
     "files": 16
   },
   {
@@ -3772,7 +3772,7 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
   {
     "project": "escape-the-dungeon-gad-emergent",
     "zipPath": "/downloads/planning/eval-escape-the-dungeon-gad-emergent-planning.zip",
-    "bytes": 49625,
+    "bytes": 49620,
     "files": 21
   },
   {
@@ -3838,7 +3838,7 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
   {
     "project": "gad-skill-creator-eval",
     "zipPath": "/downloads/planning/eval-gad-skill-creator-eval-planning.zip",
-    "bytes": 4567,
+    "bytes": 4562,
     "files": 6
   },
   {
@@ -3857,7 +3857,7 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
 
 export const GAD_PACK_TEMPLATE = {
   "zipPath": "/downloads/gad-pack-template.zip",
-  "bytes": 91146
+  "bytes": 89015
 };
 
 export const ROUND_SUMMARIES: RoundSummary[] = [
@@ -9893,7 +9893,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "39-04",
     "phaseId": "39",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
     "skill": null,
     "type": "site",
@@ -9909,7 +9909,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "39-05",
     "phaseId": "39",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
     "skill": null,
     "type": "site",
@@ -9925,7 +9925,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "39-06",
     "phaseId": "39",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
     "skill": null,
     "type": "site",
@@ -10228,7 +10228,7 @@ export const ALL_PHASES: PhaseRecord[] = [
   {
     "id": "39",
     "title": "Site DRY pass — low-risk dedup first, then medium refactors",
-    "status": "planned",
+    "status": "done",
     "goal": "Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **Order:** (1) Burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) Then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared Playable/teaser chunks. (3) Re-scan periodically after other site work. **Defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. Tie-in: gad-134 (site reusability / cut duplicate edits). Depends on phase 28 (site architecture) being done.",
     "outcome": null
   }
@@ -13755,25 +13755,11 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "plan-phase gad:plan-phase plan a phase using the gad methodology — creates a kickoff.md with goal/scope/dod and a plan.md with concrete tasks. use this skill when the user wants to plan the next phase, start planning a feature or milestone, create a task list for a phase, run a kickoff before implementation, or see what tasks are needed to achieve a phase goal. also use it when a phase exists in the roadmap but has no tasks yet, or when a phase has been idle and assumptions may be stale. requires repo-planner skill for the full methodology context."
   },
   {
-    "id": "portfolio-sync",
-    "title": "portfolio-sync",
-    "kind": "skill",
-    "href": "/skills/portfolio-sync",
-    "body": "portfolio-sync portfolio-sync keep the public-facing get-anything-done landing site at vendor/get-anything-done/site/ in sync with the framework and its evals as they evolve. trigger this skill whenever an eval run finishes, a new finding is written, a skill/agent/command is added or rewritten, requirements versions change, decisions are captured, or planning state advances. the site reflects the filesystem via a prebuild script — your job is to make sure the filesystem tells the truth and that new surfaces get displayed. this skill is methodology, not a rigid checklist; if you see a better way to organize or refactor the site, take it."
-  },
-  {
     "id": "reverse-engineer",
     "title": "gad:reverse-engineer",
     "kind": "skill",
     "href": "/skills/reverse-engineer",
     "body": "reverse-engineer gad:reverse-engineer analyze any codebase (local path or github url) and produce gad planning docs for clean-room reimplementation. removes dependencies by capturing requirements, not code."
-  },
-  {
-    "id": "self-eval",
-    "title": "self-eval",
-    "kind": "skill",
-    "href": "/skills/self-eval",
-    "body": "self-eval self-eval score a round of gad development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics."
   },
   {
     "id": "session",
@@ -13783,25 +13769,11 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "session gad:session save and restore full planning context across sessions — creates a handoff file when pausing and restores from it when resuming. use this skill when the user is about to stop work mid-phase, wants to hand off to a new context window, is starting a new session and needs to orient fully, or when gad:check-todos alone isn't enough because there's in-progress work, unresolved decisions, or active blockers that aren't captured in the living planning docs. essential for the autonomous execution loop — call it at pause and resume to maintain continuity."
   },
   {
-    "id": "snapshot-optimize",
-    "title": "gad:snapshot-optimize",
-    "kind": "skill",
-    "href": "/skills/snapshot-optimize",
-    "body": "snapshot-optimize gad:snapshot-optimize verify and optimize gad snapshot output to fit within the sprint context window. use after modifying snapshot logic, adding new planning file types, or when snapshot token count exceeds the target budget."
-  },
-  {
     "id": "task-checkpoint",
     "title": "gad:task-checkpoint",
     "kind": "skill",
     "href": "/skills/task-checkpoint",
     "body": "task-checkpoint gad:task-checkpoint verify planning doc updates before proceeding to the next task. called between tasks during execute-phase to enforce per-task tracking. checks task-registry.xml and state.xml are current."
-  },
-  {
-    "id": "trace-analysis",
-    "title": "trace-analysis",
-    "kind": "skill",
-    "href": "/skills/trace-analysis",
-    "body": "trace-analysis trace-analysis analyze gad trace data (.gad-log/ jsonl + .trace-events.jsonl) to produce usage reports — tool mix, skill invocations, commit rhythm, context compactions, per-project breakdowns."
   },
   {
     "id": "verify-phase",
@@ -13830,6 +13802,34 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/write-tech-doc",
     "body": "write-tech-doc gad:write-tech-doc produce a technical breakdown doc — architecture, data flow, component design. use when a system needs to be explained structurally for agent or developer onboarding."
+  },
+  {
+    "id": "portfolio-sync",
+    "title": "portfolio-sync",
+    "kind": "skill",
+    "href": "/skills/portfolio-sync",
+    "body": "portfolio-sync portfolio-sync keep the public-facing gad site and generated publishing artifacts in sync with the framework as it evolves. trigger this skill whenever an eval run finishes, a new finding is written, a skill or agent changes, requirements or decisions move, or planning/docs outputs need regeneration."
+  },
+  {
+    "id": "self-eval",
+    "title": "self-eval",
+    "kind": "skill",
+    "href": "/skills/self-eval",
+    "body": "self-eval self-eval score a round of gad development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics."
+  },
+  {
+    "id": "snapshot-optimize",
+    "title": "gad:snapshot-optimize",
+    "kind": "skill",
+    "href": "/skills/snapshot-optimize",
+    "body": "snapshot-optimize gad:snapshot-optimize verify and optimize gad snapshot output to fit within the sprint context window. use after modifying snapshot logic, adding new planning file types, or when snapshot token count exceeds the target budget."
+  },
+  {
+    "id": "trace-analysis",
+    "title": "trace-analysis",
+    "kind": "skill",
+    "href": "/skills/trace-analysis",
+    "body": "trace-analysis trace-analysis analyze gad trace data (.gad-log jsonl + .trace-events.jsonl + preserved eval traces) to produce usage reports such as tool mix, skill invocations, commit rhythm, token coverage, runtime mix, and per-project breakdowns."
   },
   {
     "id": "session-discipline",
@@ -13984,433 +13984,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "agent",
     "href": "/#catalog",
     "body": "gad-verifier gad-verifier verifies phase goal achievement through goal-backward analysis. checks codebase delivers what phase promised, not just that tasks completed. creates verification.md report."
-  },
-  {
-    "id": "add-backlog",
-    "title": "gad:add-backlog",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "add-backlog gad:add-backlog add an idea to the backlog parking lot (999.x numbering)"
-  },
-  {
-    "id": "add-phase",
-    "title": "gad:add-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "add-phase gad:add-phase add phase to end of current milestone in roadmap"
-  },
-  {
-    "id": "add-tests",
-    "title": "gad:add-tests",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "add-tests gad:add-tests generate tests for a completed phase based on uat criteria and implementation"
-  },
-  {
-    "id": "add-todo",
-    "title": "gad:add-todo",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "add-todo gad:add-todo capture idea or task as todo from current conversation context"
-  },
-  {
-    "id": "audit-milestone",
-    "title": "gad:audit-milestone",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "audit-milestone gad:audit-milestone audit milestone completion against original intent before archiving"
-  },
-  {
-    "id": "audit-uat",
-    "title": "gad:audit-uat",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "audit-uat gad:audit-uat cross-phase audit of all outstanding uat and verification items"
-  },
-  {
-    "id": "auto-conventions",
-    "title": "gad:auto-conventions",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "auto-conventions gad:auto-conventions auto-scaffold conventions.md from codebase patterns after first implementation phase"
-  },
-  {
-    "id": "autonomous",
-    "title": "gad:autonomous",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "autonomous gad:autonomous run all remaining phases autonomously — discuss→plan→execute per phase"
-  },
-  {
-    "id": "check-todos",
-    "title": "gad:check-todos",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "check-todos gad:check-todos list pending todos and select one to work on"
-  },
-  {
-    "id": "cleanup",
-    "title": "gad:cleanup",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "cleanup gad:cleanup archive accumulated phase directories from completed milestones"
-  },
-  {
-    "id": "complete-milestone",
-    "title": "gad:complete-milestone",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "complete-milestone gad:complete-milestone archive completed milestone and prepare for next version"
-  },
-  {
-    "id": "create-skill",
-    "title": "gad:create-skill",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "create-skill gad:create-skill >- create a gad-tailored skill using the gad-skill-creator methodology. immediately scaffolds an eval project. use when creating a new skill, turning a repetitive cli pattern into a skill, or when a task review reveals repeated commands."
-  },
-  {
-    "id": "debug",
-    "title": "gad:debug",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "debug gad:debug systematic debugging with persistent state across context resets"
-  },
-  {
-    "id": "discuss-phase",
-    "title": "gad:discuss-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "discuss-phase gad:discuss-phase gather phase context through adaptive questioning before planning. use --auto to skip interactive questions (claude picks recommended defaults). use --chain for interactive discuss followed by automatic plan+execute."
-  },
-  {
-    "id": "do",
-    "title": "gad:do",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "do gad:do route freeform text to the right gad command automatically"
-  },
-  {
-    "id": "docs-compile",
-    "title": "gad:docs-compile",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "docs-compile gad:docs-compile compile planning docs from all roots into docs_sink as mdx files"
-  },
-  {
-    "id": "docs-update",
-    "title": "gad:docs-update",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "docs-update gad:docs-update generate or update project documentation verified against the codebase"
-  },
-  {
-    "id": "eval-bootstrap",
-    "title": "gad:eval-bootstrap",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "eval-bootstrap gad:eval-bootstrap bootstrap an eval agent with full gad context injected into its prompt"
-  },
-  {
-    "id": "eval-list",
-    "title": "gad:eval-list",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "eval-list gad:eval-list list available eval projects and their run history"
-  },
-  {
-    "id": "eval-report",
-    "title": "gad:eval-report",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "eval-report gad:eval-report show cross-project eval comparison and findings"
-  },
-  {
-    "id": "eval-run",
-    "title": "gad:eval-run",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "eval-run gad:eval-run run an eval project in an isolated git worktree"
-  },
-  {
-    "id": "eval-suite",
-    "title": "gad:eval-suite",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "eval-suite gad:eval-suite run all eval projects in parallel with bootstrap prompts"
-  },
-  {
-    "id": "execute-phase",
-    "title": "gad:execute-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "execute-phase gad:execute-phase execute all plans in a phase with wave-based parallelization"
-  },
-  {
-    "id": "forensics",
-    "title": "gad:forensics",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "forensics gad:forensics post-mortem investigation for failed gad workflows — analyzes git history, artifacts, and state to diagnose what went wrong"
-  },
-  {
-    "id": "health",
-    "title": "gad:health",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "health gad:health diagnose planning directory health and optionally repair issues"
-  },
-  {
-    "id": "help",
-    "title": "gad:help",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "help gad:help show available gad commands and usage guide"
-  },
-  {
-    "id": "insert-phase",
-    "title": "gad:insert-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "insert-phase gad:insert-phase insert urgent work as decimal phase (e.g., 72.1) between existing phases"
-  },
-  {
-    "id": "list-phase-assumptions",
-    "title": "gad:list-phase-assumptions",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "list-phase-assumptions gad:list-phase-assumptions surface claude's assumptions about a phase approach before planning"
-  },
-  {
-    "id": "manager",
-    "title": "gad:manager",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "manager gad:manager interactive command center for managing multiple phases from one terminal"
-  },
-  {
-    "id": "manuscript",
-    "title": "gad:manuscript",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "manuscript gad:manuscript fiction writing adaptation of the gad loop for novels and story outlines"
-  },
-  {
-    "id": "map-codebase",
-    "title": "gad:map-codebase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "map-codebase gad:map-codebase analyze codebase with parallel mapper agents to produce .planning/codebase/ documents"
-  },
-  {
-    "id": "merge-skill",
-    "title": "gad:merge-skill",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "merge-skill gad:merge-skill >- fuse two or more overlapping skills into a single tailored skill. use when skills have overlapping descriptions, redundant functionality, or when attaining a generic skill to a specific project domain. references agentskills.io and anthropic skills guide for professional quality standards."
-  },
-  {
-    "id": "migrate-schema",
-    "title": "gad:migrate-schema",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "migrate-schema gad:migrate-schema convert rp xml planning files (state.xml, roadmap.xml) to gad markdown format"
-  },
-  {
-    "id": "milestone-summary",
-    "title": "gad:milestone-summary",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "milestone-summary gad:milestone-summary generate a comprehensive project summary from milestone artifacts for team onboarding and review"
-  },
-  {
-    "id": "new-milestone",
-    "title": "gad:new-milestone",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "new-milestone gad:new-milestone start a new milestone cycle — update project.md and route to requirements"
-  },
-  {
-    "id": "new-project",
-    "title": "gad:new-project",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "new-project gad:new-project initialize a new project with deep context gathering and project.md"
-  },
-  {
-    "id": "next",
-    "title": "gad:next",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "next gad:next automatically advance to the next logical step in the gad workflow"
-  },
-  {
-    "id": "note",
-    "title": "gad:note",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "note gad:note zero-friction idea capture. append, list, or promote notes to todos."
-  },
-  {
-    "id": "pause-work",
-    "title": "gad:pause-work",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "pause-work gad:pause-work create context handoff when pausing work mid-phase"
-  },
-  {
-    "id": "plan-milestone-gaps",
-    "title": "gad:plan-milestone-gaps",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "plan-milestone-gaps gad:plan-milestone-gaps create phases to close all gaps identified by milestone audit"
-  },
-  {
-    "id": "plan-phase",
-    "title": "gad:plan-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "plan-phase gad:plan-phase create detailed phase plan (plan.md) with verification loop"
-  },
-  {
-    "id": "plant-seed",
-    "title": "gad:plant-seed",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "plant-seed gad:plant-seed capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone"
-  },
-  {
-    "id": "progress",
-    "title": "gad:progress",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "progress gad:progress check project progress, show context, and route to next action (execute or plan)"
-  },
-  {
-    "id": "reapply-patches",
-    "title": "gad:reapply-patches",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "reapply-patches gad:reapply-patches reapply local modifications after a gad update"
-  },
-  {
-    "id": "remove-phase",
-    "title": "gad:remove-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "remove-phase gad:remove-phase remove a future phase from roadmap and renumber subsequent phases"
-  },
-  {
-    "id": "research-phase",
-    "title": "gad:research-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "research-phase gad:research-phase research how to implement a phase (standalone - usually use /gad:plan-phase instead)"
-  },
-  {
-    "id": "resume-work",
-    "title": "gad:resume-work",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "resume-work gad:resume-work resume work from previous session with full context restoration"
-  },
-  {
-    "id": "reverse-engineer",
-    "title": "gad:reverse-engineer",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "reverse-engineer gad:reverse-engineer analyze any codebase (local or github url) and produce requirements for clean-room reimplementation"
-  },
-  {
-    "id": "review-backlog",
-    "title": "gad:review-backlog",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "review-backlog gad:review-backlog review and promote backlog items to active milestone"
-  },
-  {
-    "id": "review",
-    "title": "gad:review",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "review gad:review request cross-ai peer review of phase plans from external ai clis"
-  },
-  {
-    "id": "session-report",
-    "title": "gad:session-report",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "session-report gad:session-report generate a session report with token usage estimates, work summary, and outcomes"
-  },
-  {
-    "id": "set-profile",
-    "title": "gad:set-profile",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "set-profile gad:set-profile switch model profile for gad agents (quality/balanced/budget/inherit)"
-  },
-  {
-    "id": "settings",
-    "title": "gad:settings",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "settings gad:settings configure gad workflow toggles and model profile"
-  },
-  {
-    "id": "stats",
-    "title": "gad:stats",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "stats gad:stats display project statistics — phases, plans, requirements, git metrics, and timeline"
-  },
-  {
-    "id": "thread",
-    "title": "gad:thread",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "thread gad:thread manage persistent context threads for cross-session work"
-  },
-  {
-    "id": "update",
-    "title": "gad:update",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "update gad:update update gad to latest version with changelog display"
-  },
-  {
-    "id": "validate-phase",
-    "title": "gad:validate-phase",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "validate-phase gad:validate-phase retroactively audit and fill nyquist validation gaps for a completed phase"
-  },
-  {
-    "id": "verify-work",
-    "title": "gad:verify-work",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "verify-work gad:verify-work validate built features through conversational uat"
-  },
-  {
-    "id": "workspace-add",
-    "title": "gad:workspace-add",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "workspace-add gad:workspace-add add a path as a planning root in planning-config.toml"
-  },
-  {
-    "id": "workspace-show",
-    "title": "gad:workspace-show",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "workspace-show gad:workspace-show show all registered planning roots and their current status"
-  },
-  {
-    "id": "workspace-sync",
-    "title": "gad:workspace-sync",
-    "kind": "command",
-    "href": "/#catalog",
-    "body": "workspace-sync gad:workspace-sync crawl monorepo for .planning/ directories and sync planning-config.toml roots"
   }
 ];
 

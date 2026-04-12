@@ -6,18 +6,18 @@
       "days": 6
     },
     "totals": {
-      "events": 3520,
+      "events": 3673,
       "sessions": 5,
-      "gad_cli_calls": 273
+      "gad_cli_calls": 277
     },
     "runtime_distribution": [
       {
         "runtime": "claude-code",
-        "count": 2941
+        "count": 3083
       },
       {
         "runtime": "unknown",
-        "count": 579
+        "count": 590
       }
     ],
     "runtime_sessions": [
@@ -29,19 +29,19 @@
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 1084
+        "count": 1165
       },
       {
         "tool": "unknown",
-        "count": 579
+        "count": 597
       },
       {
         "tool": "Read",
-        "count": 541
+        "count": 581
       },
       {
         "tool": "Edit",
-        "count": 464
+        "count": 470
       },
       {
         "tool": "TaskUpdate",
@@ -57,19 +57,19 @@
       },
       {
         "tool": "Grep",
-        "count": 159
+        "count": 161
       },
       {
         "tool": "Agent",
-        "count": 38
+        "count": 39
       },
       {
         "tool": "Glob",
-        "count": 7
+        "count": 11
       },
       {
         "tool": "ToolSearch",
-        "count": 5
+        "count": 6
       },
       {
         "tool": "WebFetch",
@@ -103,13 +103,13 @@
       },
       {
         "day": "2026-04-12",
-        "count": 144
+        "count": 297
       }
     ],
     "framework_overhead": {
-      "planning_ops": 320,
-      "source_ops": 1038,
-      "ratio": 0.236,
+      "planning_ops": 337,
+      "source_ops": 1079,
+      "ratio": 0.238,
       "score": 0.7
     },
     "loop_compliance": {
@@ -118,16 +118,16 @@
       "score": 0.8
     },
     "gad_cli_breakdown": {
-      "snapshot": 51,
+      "snapshot": 52,
       "eval": 100,
-      "other": 122
+      "other": 125
     },
-    "computed_at": "2026-04-12T17:34:20.837Z",
+    "computed_at": "2026-04-12T20:44:45.364Z",
     "tasks": {
       "done": 194,
-      "planned": 1,
+      "planned": 10,
       "in_progress": 3,
-      "total": 198
+      "total": 207
     },
     "decisions": 143,
     "phases_pressure": [
@@ -1232,8 +1232,8 @@
         "reviewed": "discarded",
         "reviewed_on": "2026-04-12",
         "reviewed_notes": "test discard — phase 34 release work is one-off, not a reusable pattern",
-        "body_raw": "---\nname: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: \"2026-04-12\"\nreviewed_notes: \"test discard — phase 34 release work is one-off, not a reusable pattern\"\nsource_phase: \"34\"\nsource_phase_title: \"Executable release pipeline + GitHub-first distribution\"\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: \"2026-04-12\"\ndescription: >-\n  Candidate skill auto-drafted from phase 34 \"Executable release pipeline + GitHub-first distribution\" — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.\n---\n\n# Skill Candidate: phase-34\n\n**This is an auto-drafted candidate, not a live skill.** It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.\n\n## Source phase\n\n- **Phase:** 34\n- **Title:** Executable release pipeline + GitHub-first distribution\n- **Pressure score:** 13\n- **Tasks:** 5 total (5 done)\n- **Crosscuts:** 4 tasks touching multiple systems\n\n## Observed task patterns\n\nReview the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:\n\n- **34-01** [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...\n- **34-02** [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...\n- **34-03** [done] Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verif...\n- **34-04** [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...\n- **34-05** [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...\n\n## Review checklist\n\nBefore promoting this candidate to a real skill, answer:\n\n1. **What is the recurring pattern?** Describe the task shape in 1-2 sentences.\n2. **When should an agent use this skill?** List concrete trigger conditions.\n3. **What CLI commands does it chain?** Prefer CLI over manual file operations (decision GAD-D-99).\n4. **Does it overlap with an existing skill?** If yes, use `gad:merge-skill` instead of promoting.\n5. **Can it be tested?** A candidate without testable behavior should be discarded.\n\n## Review actions\n\n- **Promote** — move to `.agents/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.\n- **Merge** — combine with an existing skill via `gad:merge-skill`.\n- **Discard** — delete the candidate file and log why in the skills changelog.\n\n## How this was drafted\n\nThis file was auto-generated by `site/scripts/compute-self-eval.mjs` during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (`status: candidate` frontmatter excludes them from catalog scans) so they don't pollute GAD until a human reviews them (decision GAD-D-144).\n",
-        "body_html": "<hr>\n<h2>name: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: &quot;2026-04-12&quot;\nreviewed_notes: &quot;test discard — phase 34 release work is one-off, not a reusable pattern&quot;\nsource_phase: &quot;34&quot;\nsource_phase_title: &quot;Executable release pipeline + GitHub-first distribution&quot;\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: &quot;2026-04-12&quot;\ndescription: &gt;-\n  Candidate skill auto-drafted from phase 34 &quot;Executable release pipeline + GitHub-first distribution&quot; — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.</h2>\n<h1>Skill Candidate: phase-34</h1>\n<p><strong>This is an auto-drafted candidate, not a live skill.</strong> It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.</p>\n<h2>Source phase</h2>\n<ul>\n<li><strong>Phase:</strong> 34</li>\n<li><strong>Title:</strong> Executable release pipeline + GitHub-first distribution</li>\n<li><strong>Pressure score:</strong> 13</li>\n<li><strong>Tasks:</strong> 5 total (5 done)</li>\n<li><strong>Crosscuts:</strong> 4 tasks touching multiple systems</li>\n</ul>\n<h2>Observed task patterns</h2>\n<p>Review the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:</p>\n<ul>\n<li><strong>34-01</strong> [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...</li>\n<li><strong>34-02</strong> [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...</li>\n<li><strong>34-03</strong> [done] Publish installable GAD skills through skills.sh / <code>npx skills add</code> using the GitHub repo as the source of truth. Document the exact command(s), verif...</li>\n<li><strong>34-04</strong> [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...</li>\n<li><strong>34-05</strong> [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...</li>\n</ul>\n<h2>Review checklist</h2>\n<p>Before promoting this candidate to a real skill, answer:</p>\n<ol>\n<li><strong>What is the recurring pattern?</strong> Describe the task shape in 1-2 sentences.</li>\n<li><strong>When should an agent use this skill?</strong> List concrete trigger conditions.</li>\n<li><strong>What CLI commands does it chain?</strong> Prefer CLI over manual file operations (decision GAD-D-99).</li>\n<li><strong>Does it overlap with an existing skill?</strong> If yes, use <code>gad:merge-skill</code> instead of promoting.</li>\n<li><strong>Can it be tested?</strong> A candidate without testable behavior should be discarded.</li>\n</ol>\n<h2>Review actions</h2>\n<ul>\n<li><strong>Promote</strong> — move to <code>.agents/skills/&lt;final-name&gt;/SKILL.md</code>, remove <code>status: candidate</code>, scaffold eval project per GAD-D-102.</li>\n<li><strong>Merge</strong> — combine with an existing skill via <code>gad:merge-skill</code>.</li>\n<li><strong>Discard</strong> — delete the candidate file and log why in the skills changelog.</li>\n</ul>\n<h2>How this was drafted</h2>\n<p>This file was auto-generated by <code>site/scripts/compute-self-eval.mjs</code> during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (<code>status: candidate</code> frontmatter excludes them from catalog scans) so they don&#39;t pollute GAD until a human reviews them (decision GAD-D-144).</p>\n",
+        "body_raw": "---\nname: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: \"2026-04-12\"\nreviewed_notes: \"test discard — phase 34 release work is one-off, not a reusable pattern\"\nsource_phase: \"34\"\nsource_phase_title: \"Executable release pipeline + GitHub-first distribution\"\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: \"2026-04-12\"\ndescription: >-\n  Candidate skill auto-drafted from phase 34 \"Executable release pipeline + GitHub-first distribution\" — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.\n---\n\n# Skill Candidate: phase-34\n\n**This is an auto-drafted candidate, not a live skill.** It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.\n\n## Source phase\n\n- **Phase:** 34\n- **Title:** Executable release pipeline + GitHub-first distribution\n- **Pressure score:** 13\n- **Tasks:** 5 total (5 done)\n- **Crosscuts:** 4 tasks touching multiple systems\n\n## Observed task patterns\n\nReview the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:\n\n- **34-01** [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...\n- **34-02** [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...\n- **34-03** [done] Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verif...\n- **34-04** [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...\n- **34-05** [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...\n\n## Review checklist\n\nBefore promoting this candidate to a real skill, answer:\n\n1. **What is the recurring pattern?** Describe the task shape in 1-2 sentences.\n2. **When should an agent use this skill?** List concrete trigger conditions.\n3. **What CLI commands does it chain?** Prefer CLI over manual file operations (decision GAD-D-99).\n4. **Does it overlap with an existing skill?** If yes, use `gad:merge-skill` instead of promoting.\n5. **Can it be tested?** A candidate without testable behavior should be discarded.\n\n## Review actions\n\n- **Promote** — move to `skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.\n- **Merge** — combine with an existing skill via `gad:merge-skill`.\n- **Discard** — delete the candidate file and log why in the skills changelog.\n\n## How this was drafted\n\nThis file was auto-generated by `site/scripts/compute-self-eval.mjs` during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (`status: candidate` frontmatter excludes them from catalog scans) so they don't pollute GAD until a human reviews them (decision GAD-D-144).\n",
+        "body_html": "<hr>\n<h2>name: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: &quot;2026-04-12&quot;\nreviewed_notes: &quot;test discard — phase 34 release work is one-off, not a reusable pattern&quot;\nsource_phase: &quot;34&quot;\nsource_phase_title: &quot;Executable release pipeline + GitHub-first distribution&quot;\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: &quot;2026-04-12&quot;\ndescription: &gt;-\n  Candidate skill auto-drafted from phase 34 &quot;Executable release pipeline + GitHub-first distribution&quot; — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.</h2>\n<h1>Skill Candidate: phase-34</h1>\n<p><strong>This is an auto-drafted candidate, not a live skill.</strong> It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.</p>\n<h2>Source phase</h2>\n<ul>\n<li><strong>Phase:</strong> 34</li>\n<li><strong>Title:</strong> Executable release pipeline + GitHub-first distribution</li>\n<li><strong>Pressure score:</strong> 13</li>\n<li><strong>Tasks:</strong> 5 total (5 done)</li>\n<li><strong>Crosscuts:</strong> 4 tasks touching multiple systems</li>\n</ul>\n<h2>Observed task patterns</h2>\n<p>Review the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:</p>\n<ul>\n<li><strong>34-01</strong> [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...</li>\n<li><strong>34-02</strong> [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...</li>\n<li><strong>34-03</strong> [done] Publish installable GAD skills through skills.sh / <code>npx skills add</code> using the GitHub repo as the source of truth. Document the exact command(s), verif...</li>\n<li><strong>34-04</strong> [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...</li>\n<li><strong>34-05</strong> [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...</li>\n</ul>\n<h2>Review checklist</h2>\n<p>Before promoting this candidate to a real skill, answer:</p>\n<ol>\n<li><strong>What is the recurring pattern?</strong> Describe the task shape in 1-2 sentences.</li>\n<li><strong>When should an agent use this skill?</strong> List concrete trigger conditions.</li>\n<li><strong>What CLI commands does it chain?</strong> Prefer CLI over manual file operations (decision GAD-D-99).</li>\n<li><strong>Does it overlap with an existing skill?</strong> If yes, use <code>gad:merge-skill</code> instead of promoting.</li>\n<li><strong>Can it be tested?</strong> A candidate without testable behavior should be discarded.</li>\n</ol>\n<h2>Review actions</h2>\n<ul>\n<li><strong>Promote</strong> — move to <code>skills/&lt;final-name&gt;/SKILL.md</code>, remove <code>status: candidate</code>, scaffold eval project per GAD-D-102.</li>\n<li><strong>Merge</strong> — combine with an existing skill via <code>gad:merge-skill</code>.</li>\n<li><strong>Discard</strong> — delete the candidate file and log why in the skills changelog.</li>\n</ul>\n<h2>How this was drafted</h2>\n<p>This file was auto-generated by <code>site/scripts/compute-self-eval.mjs</code> during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (<code>status: candidate</code> frontmatter excludes them from catalog scans) so they don&#39;t pollute GAD until a human reviews them (decision GAD-D-144).</p>\n",
         "tasks": [
           {
             "id": "34-01",
@@ -1406,36 +1406,36 @@
     },
     "project_tokens": {
       "exact_eval_tokens": 1579764,
-      "estimated_live_input_tokens": 267282,
-      "estimated_live_output_tokens": 605585,
-      "estimated_live_total_tokens": 872867,
-      "combined_total_tokens": 2452631,
+      "estimated_live_input_tokens": 255490,
+      "estimated_live_output_tokens": 620671,
+      "estimated_live_total_tokens": 876161,
+      "combined_total_tokens": 2455925,
       "trace_files": 2,
       "trace_events": 2000,
       "runtime_distribution": [
         {
           "runtime": "unknown",
-          "count": 1901
+          "count": 1681
         },
         {
           "runtime": "claude-code",
-          "count": 99
+          "count": 319
         }
       ],
       "sources": [
         {
-          "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
-          "events": 1000,
-          "estimated_input_tokens": 151650,
-          "estimated_output_tokens": 297705,
-          "estimated_total_tokens": 449355
-        },
-        {
           "path": ".planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 115632,
-          "estimated_output_tokens": 307880,
-          "estimated_total_tokens": 423512
+          "estimated_input_tokens": 115121,
+          "estimated_output_tokens": 329503,
+          "estimated_total_tokens": 444624
+        },
+        {
+          "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
+          "events": 1000,
+          "estimated_input_tokens": 140369,
+          "estimated_output_tokens": 291168,
+          "estimated_total_tokens": 431537
         }
       ]
     }
@@ -1806,18 +1806,18 @@
         "days": 6
       },
       "totals": {
-        "events": 3520,
+        "events": 3673,
         "sessions": 5,
-        "gad_cli_calls": 273
+        "gad_cli_calls": 277
       },
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 2941
+          "count": 3083
         },
         {
           "runtime": "unknown",
-          "count": 579
+          "count": 590
         }
       ],
       "runtime_sessions": [
@@ -1829,19 +1829,19 @@
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 1084
+          "count": 1165
         },
         {
           "tool": "unknown",
-          "count": 579
+          "count": 597
         },
         {
           "tool": "Read",
-          "count": 541
+          "count": 581
         },
         {
           "tool": "Edit",
-          "count": 464
+          "count": 470
         },
         {
           "tool": "TaskUpdate",
@@ -1857,19 +1857,19 @@
         },
         {
           "tool": "Grep",
-          "count": 159
+          "count": 161
         },
         {
           "tool": "Agent",
-          "count": 38
+          "count": 39
         },
         {
           "tool": "Glob",
-          "count": 7
+          "count": 11
         },
         {
           "tool": "ToolSearch",
-          "count": 5
+          "count": 6
         },
         {
           "tool": "WebFetch",
@@ -1903,13 +1903,13 @@
         },
         {
           "day": "2026-04-12",
-          "count": 144
+          "count": 297
         }
       ],
       "framework_overhead": {
-        "planning_ops": 320,
-        "source_ops": 1038,
-        "ratio": 0.236,
+        "planning_ops": 337,
+        "source_ops": 1079,
+        "ratio": 0.238,
         "score": 0.7
       },
       "loop_compliance": {
@@ -1918,16 +1918,16 @@
         "score": 0.8
       },
       "gad_cli_breakdown": {
-        "snapshot": 51,
+        "snapshot": 52,
         "eval": 100,
-        "other": 122
+        "other": 125
       },
-      "computed_at": "2026-04-12T17:34:20.837Z",
+      "computed_at": "2026-04-12T20:44:45.364Z",
       "tasks": {
         "done": 194,
-        "planned": 1,
+        "planned": 10,
         "in_progress": 3,
-        "total": 198
+        "total": 207
       },
       "decisions": 143,
       "phases_pressure": [
@@ -3032,8 +3032,8 @@
           "reviewed": "discarded",
           "reviewed_on": "2026-04-12",
           "reviewed_notes": "test discard — phase 34 release work is one-off, not a reusable pattern",
-          "body_raw": "---\nname: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: \"2026-04-12\"\nreviewed_notes: \"test discard — phase 34 release work is one-off, not a reusable pattern\"\nsource_phase: \"34\"\nsource_phase_title: \"Executable release pipeline + GitHub-first distribution\"\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: \"2026-04-12\"\ndescription: >-\n  Candidate skill auto-drafted from phase 34 \"Executable release pipeline + GitHub-first distribution\" — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.\n---\n\n# Skill Candidate: phase-34\n\n**This is an auto-drafted candidate, not a live skill.** It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.\n\n## Source phase\n\n- **Phase:** 34\n- **Title:** Executable release pipeline + GitHub-first distribution\n- **Pressure score:** 13\n- **Tasks:** 5 total (5 done)\n- **Crosscuts:** 4 tasks touching multiple systems\n\n## Observed task patterns\n\nReview the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:\n\n- **34-01** [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...\n- **34-02** [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...\n- **34-03** [done] Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verif...\n- **34-04** [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...\n- **34-05** [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...\n\n## Review checklist\n\nBefore promoting this candidate to a real skill, answer:\n\n1. **What is the recurring pattern?** Describe the task shape in 1-2 sentences.\n2. **When should an agent use this skill?** List concrete trigger conditions.\n3. **What CLI commands does it chain?** Prefer CLI over manual file operations (decision GAD-D-99).\n4. **Does it overlap with an existing skill?** If yes, use `gad:merge-skill` instead of promoting.\n5. **Can it be tested?** A candidate without testable behavior should be discarded.\n\n## Review actions\n\n- **Promote** — move to `.agents/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.\n- **Merge** — combine with an existing skill via `gad:merge-skill`.\n- **Discard** — delete the candidate file and log why in the skills changelog.\n\n## How this was drafted\n\nThis file was auto-generated by `site/scripts/compute-self-eval.mjs` during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (`status: candidate` frontmatter excludes them from catalog scans) so they don't pollute GAD until a human reviews them (decision GAD-D-144).\n",
-          "body_html": "<hr>\n<h2>name: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: &quot;2026-04-12&quot;\nreviewed_notes: &quot;test discard — phase 34 release work is one-off, not a reusable pattern&quot;\nsource_phase: &quot;34&quot;\nsource_phase_title: &quot;Executable release pipeline + GitHub-first distribution&quot;\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: &quot;2026-04-12&quot;\ndescription: &gt;-\n  Candidate skill auto-drafted from phase 34 &quot;Executable release pipeline + GitHub-first distribution&quot; — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.</h2>\n<h1>Skill Candidate: phase-34</h1>\n<p><strong>This is an auto-drafted candidate, not a live skill.</strong> It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.</p>\n<h2>Source phase</h2>\n<ul>\n<li><strong>Phase:</strong> 34</li>\n<li><strong>Title:</strong> Executable release pipeline + GitHub-first distribution</li>\n<li><strong>Pressure score:</strong> 13</li>\n<li><strong>Tasks:</strong> 5 total (5 done)</li>\n<li><strong>Crosscuts:</strong> 4 tasks touching multiple systems</li>\n</ul>\n<h2>Observed task patterns</h2>\n<p>Review the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:</p>\n<ul>\n<li><strong>34-01</strong> [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...</li>\n<li><strong>34-02</strong> [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...</li>\n<li><strong>34-03</strong> [done] Publish installable GAD skills through skills.sh / <code>npx skills add</code> using the GitHub repo as the source of truth. Document the exact command(s), verif...</li>\n<li><strong>34-04</strong> [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...</li>\n<li><strong>34-05</strong> [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...</li>\n</ul>\n<h2>Review checklist</h2>\n<p>Before promoting this candidate to a real skill, answer:</p>\n<ol>\n<li><strong>What is the recurring pattern?</strong> Describe the task shape in 1-2 sentences.</li>\n<li><strong>When should an agent use this skill?</strong> List concrete trigger conditions.</li>\n<li><strong>What CLI commands does it chain?</strong> Prefer CLI over manual file operations (decision GAD-D-99).</li>\n<li><strong>Does it overlap with an existing skill?</strong> If yes, use <code>gad:merge-skill</code> instead of promoting.</li>\n<li><strong>Can it be tested?</strong> A candidate without testable behavior should be discarded.</li>\n</ol>\n<h2>Review actions</h2>\n<ul>\n<li><strong>Promote</strong> — move to <code>.agents/skills/&lt;final-name&gt;/SKILL.md</code>, remove <code>status: candidate</code>, scaffold eval project per GAD-D-102.</li>\n<li><strong>Merge</strong> — combine with an existing skill via <code>gad:merge-skill</code>.</li>\n<li><strong>Discard</strong> — delete the candidate file and log why in the skills changelog.</li>\n</ul>\n<h2>How this was drafted</h2>\n<p>This file was auto-generated by <code>site/scripts/compute-self-eval.mjs</code> during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (<code>status: candidate</code> frontmatter excludes them from catalog scans) so they don&#39;t pollute GAD until a human reviews them (decision GAD-D-144).</p>\n",
+          "body_raw": "---\nname: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: \"2026-04-12\"\nreviewed_notes: \"test discard — phase 34 release work is one-off, not a reusable pattern\"\nsource_phase: \"34\"\nsource_phase_title: \"Executable release pipeline + GitHub-first distribution\"\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: \"2026-04-12\"\ndescription: >-\n  Candidate skill auto-drafted from phase 34 \"Executable release pipeline + GitHub-first distribution\" — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.\n---\n\n# Skill Candidate: phase-34\n\n**This is an auto-drafted candidate, not a live skill.** It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.\n\n## Source phase\n\n- **Phase:** 34\n- **Title:** Executable release pipeline + GitHub-first distribution\n- **Pressure score:** 13\n- **Tasks:** 5 total (5 done)\n- **Crosscuts:** 4 tasks touching multiple systems\n\n## Observed task patterns\n\nReview the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:\n\n- **34-01** [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...\n- **34-02** [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...\n- **34-03** [done] Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verif...\n- **34-04** [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...\n- **34-05** [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...\n\n## Review checklist\n\nBefore promoting this candidate to a real skill, answer:\n\n1. **What is the recurring pattern?** Describe the task shape in 1-2 sentences.\n2. **When should an agent use this skill?** List concrete trigger conditions.\n3. **What CLI commands does it chain?** Prefer CLI over manual file operations (decision GAD-D-99).\n4. **Does it overlap with an existing skill?** If yes, use `gad:merge-skill` instead of promoting.\n5. **Can it be tested?** A candidate without testable behavior should be discarded.\n\n## Review actions\n\n- **Promote** — move to `skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.\n- **Merge** — combine with an existing skill via `gad:merge-skill`.\n- **Discard** — delete the candidate file and log why in the skills changelog.\n\n## How this was drafted\n\nThis file was auto-generated by `site/scripts/compute-self-eval.mjs` during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (`status: candidate` frontmatter excludes them from catalog scans) so they don't pollute GAD until a human reviews them (decision GAD-D-144).\n",
+          "body_html": "<hr>\n<h2>name: phase-34-executable-release-pipeline-github-first\nstatus: candidate\ncategory: System\norigin: auto-drafted\nreviewed: discarded\nreviewed_on: &quot;2026-04-12&quot;\nreviewed_notes: &quot;test discard — phase 34 release work is one-off, not a reusable pattern&quot;\nsource_phase: &quot;34&quot;\nsource_phase_title: &quot;Executable release pipeline + GitHub-first distribution&quot;\npressure_score: 13\ntasks_total: 5\ncrosscuts: 4\ndrafted_on: &quot;2026-04-12&quot;\ndescription: &gt;-\n  Candidate skill auto-drafted from phase 34 &quot;Executable release pipeline + GitHub-first distribution&quot; — pressure score 13 (5 tasks, 4 crosscuts). Review and promote, merge, or discard.</h2>\n<h1>Skill Candidate: phase-34</h1>\n<p><strong>This is an auto-drafted candidate, not a live skill.</strong> It was generated because phase 34 exceeded the pressure threshold (score 13, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.</p>\n<h2>Source phase</h2>\n<ul>\n<li><strong>Phase:</strong> 34</li>\n<li><strong>Title:</strong> Executable release pipeline + GitHub-first distribution</li>\n<li><strong>Pressure score:</strong> 13</li>\n<li><strong>Tasks:</strong> 5 total (5 done)</li>\n<li><strong>Crosscuts:</strong> 4 tasks touching multiple systems</li>\n</ul>\n<h2>Observed task patterns</h2>\n<p>Review the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:</p>\n<ul>\n<li><strong>34-01</strong> [done] Define the executable packaging target for gad: Windows, macOS, and Linux standalone binaries with no Node requirement. Choose and document the packag...</li>\n<li><strong>34-02</strong> [done] Implement the official GitHub-first install flow in docs and CLI messaging. Primary path: GitHub Release executable. Secondary path: direct GitHub rep...</li>\n<li><strong>34-03</strong> [done] Publish installable GAD skills through skills.sh / <code>npx skills add</code> using the GitHub repo as the source of truth. Document the exact command(s), verif...</li>\n<li><strong>34-04</strong> [done] Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json,...</li>\n<li><strong>34-05</strong> [done] Implement the release pipeline: Windows authoritative local build, optional GitHub Actions builds for macOS/Linux, and GitHub Release asset publicatio...</li>\n</ul>\n<h2>Review checklist</h2>\n<p>Before promoting this candidate to a real skill, answer:</p>\n<ol>\n<li><strong>What is the recurring pattern?</strong> Describe the task shape in 1-2 sentences.</li>\n<li><strong>When should an agent use this skill?</strong> List concrete trigger conditions.</li>\n<li><strong>What CLI commands does it chain?</strong> Prefer CLI over manual file operations (decision GAD-D-99).</li>\n<li><strong>Does it overlap with an existing skill?</strong> If yes, use <code>gad:merge-skill</code> instead of promoting.</li>\n<li><strong>Can it be tested?</strong> A candidate without testable behavior should be discarded.</li>\n</ol>\n<h2>Review actions</h2>\n<ul>\n<li><strong>Promote</strong> — move to <code>skills/&lt;final-name&gt;/SKILL.md</code>, remove <code>status: candidate</code>, scaffold eval project per GAD-D-102.</li>\n<li><strong>Merge</strong> — combine with an existing skill via <code>gad:merge-skill</code>.</li>\n<li><strong>Discard</strong> — delete the candidate file and log why in the skills changelog.</li>\n</ul>\n<h2>How this was drafted</h2>\n<p>This file was auto-generated by <code>site/scripts/compute-self-eval.mjs</code> during the prebuild pipeline. The pressure score is computed from task count plus crosscut count per phase (decisions GAD-D-75, GAD-D-79, GAD-D-115). Candidates are quarantined from the live catalog (<code>status: candidate</code> frontmatter excludes them from catalog scans) so they don&#39;t pollute GAD until a human reviews them (decision GAD-D-144).</p>\n",
           "tasks": [
             {
               "id": "34-01",
@@ -3206,36 +3206,36 @@
       },
       "project_tokens": {
         "exact_eval_tokens": 1579764,
-        "estimated_live_input_tokens": 267282,
-        "estimated_live_output_tokens": 605585,
-        "estimated_live_total_tokens": 872867,
-        "combined_total_tokens": 2452631,
+        "estimated_live_input_tokens": 255490,
+        "estimated_live_output_tokens": 620671,
+        "estimated_live_total_tokens": 876161,
+        "combined_total_tokens": 2455925,
         "trace_files": 2,
         "trace_events": 2000,
         "runtime_distribution": [
           {
             "runtime": "unknown",
-            "count": 1901
+            "count": 1681
           },
           {
             "runtime": "claude-code",
-            "count": 99
+            "count": 319
           }
         ],
         "sources": [
           {
-            "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
-            "events": 1000,
-            "estimated_input_tokens": 151650,
-            "estimated_output_tokens": 297705,
-            "estimated_total_tokens": 449355
-          },
-          {
             "path": ".planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 115632,
-            "estimated_output_tokens": 307880,
-            "estimated_total_tokens": 423512
+            "estimated_input_tokens": 115121,
+            "estimated_output_tokens": 329503,
+            "estimated_total_tokens": 444624
+          },
+          {
+            "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
+            "events": 1000,
+            "estimated_input_tokens": 140369,
+            "estimated_output_tokens": 291168,
+            "estimated_total_tokens": 431537
           }
         ]
       }

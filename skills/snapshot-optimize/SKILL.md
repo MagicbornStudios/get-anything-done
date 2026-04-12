@@ -98,7 +98,7 @@ gad snapshot --projectid get-anything-done | grep "File refs"
 # Should show a section with recent file paths.
 
 # 6. Run parser tests
-node vendor/get-anything-done/tests/parser-coverage.test.cjs
+node tests/parser-coverage.test.cjs
 # All 46+ tests must pass.
 
 # 7. Compare with full dump
@@ -119,7 +119,7 @@ echo "Full: $FULL chars, Sprint: $SPRINT chars, Reduction: $(( (FULL - SPRINT) *
 
 ## What to check in RepoPlanner for parity
 
-Read `vendor/repo-planner/scripts/loop-cli.mjs`:
+Read `../repo-planner/scripts/loop-cli.mjs` if that legacy reference is still present in your workspace:
 - `getSprintPhaseIds()` — how sprint boundaries are calculated
 - `context sprint` command — what paths and summary it returns
 - Sprint config: `sprintSize` in config, default 5

@@ -1,105 +1,76 @@
 ---
 name: portfolio-sync
-description: Keep the public-facing get-anything-done landing site at vendor/get-anything-done/site/ in sync with the framework and its evals as they evolve. Trigger this skill whenever an eval run finishes, a new finding is written, a skill/agent/command is added or rewritten, requirements versions change, decisions are captured, or planning state advances. The site reflects the filesystem via a prebuild script â€” your job is to make sure the filesystem tells the truth and that new surfaces get displayed. This skill is methodology, not a rigid checklist; if you see a better way to organize or refactor the site, take it.
+description: Keep the public-facing GAD site and generated publishing artifacts in sync with the framework as it evolves. Trigger this skill whenever an eval run finishes, a new finding is written, a skill or agent changes, requirements or decisions move, or planning/docs outputs need regeneration.
 ---
 
 # portfolio-sync
 
-The public site at `vendor/get-anything-done/site/` is a statically generated Next.js app that reads directly from the repo at build time. There is no CMS, no database, no API. The source of truth is the filesystem:
+This skill is effectively the framework publishing sync. Despite the name, it is not just about a portfolio site. Use it for:
 
-| What you changed                                     | Where it lives                                     | How the site picks it up                                       |
-|-------------------------------------------------------|----------------------------------------------------|----------------------------------------------------------------|
-| New eval run (TRACE.json)                            | `evals/<project>/<version>/TRACE.json`              | `build-site-data.mjs` â†’ `lib/eval-data.generated.ts`           |
-| New finding                                          | `evals/FINDINGS-YYYY-MM-DD-slug.md`                 | `build-site-data.mjs` â†’ `FINDINGS` in `catalog.generated.ts` + `/findings/<slug>` route |
-| New skill                                            | `skills/<name>/SKILL.md`                            | Scanned into `SKILLS` catalog + `/skills/<name>` detail page   |
-| New subagent                                         | `agents/<name>.md`                                  | Scanned into `AGENTS` catalog + `/agents/<name>` detail page   |
-| Generated compatibility command                      | `commands/gad/<name>.md`                            | Scanned into `COMMANDS` catalog + `/commands/<name>` detail page |
-| Eval template inherits a skill                       | `evals/<project>/template/skills/<skill>.md`        | `SKILL_INHERITANCE` map â†’ shown on `/skills/<name>` and catalog cards |
-| New phase or task                                    | `.planning/ROADMAP.xml`, `.planning/TASK-REGISTRY.xml` | `PLANNING_STATE` â†’ `/planning` meta-transparency page         |
-| New decision                                         | `.planning/DECISIONS.xml`                           | `PLANNING_STATE.recentDecisions` â†’ `/planning`                 |
-| New experiment round                                 | `evals/EXPERIMENT-LOG.md` (append `## Round N`)     | Parsed into `ROUND_SUMMARIES` â†’ Rounds section on home         |
-| New requirements version                             | `evals/REQUIREMENTS-VERSIONS.md` (append `## vN`)   | Parsed into `REQUIREMENTS_HISTORY` â†’ Requirements section      |
-| New eval project                                     | `evals/<project>/template/` + `evals/<project>/gad.json` | Template zip + planning zip regenerated; add to `Projects.tsx` greenfield/brownfield list manually |
-| New game build to publish                            | `evals/<project>/<version>/run/` (Vite source)      | Run `npm run build:games` locally then commit `site/public/playable/<project>/<version>/` |
-| Game requirements XML changed                        | `evals/<project>/template/.planning/REQUIREMENTS.xml` | Auto-copied to `public/downloads/requirements/<project>-REQUIREMENTS-v4.xml` |
+- the public GAD site under `site/`
+- generated site catalogs and eval data
+- downloadable templates and planning zips
+- adjacent docs/publication outputs that should reflect the repo's current truth
+
+The public surfaces are built directly from the repo filesystem. There is no CMS, no database, no API. The source of truth is the filesystem.
+
+| What you changed | Where it lives | How the public surface picks it up |
+| --- | --- | --- |
+| New eval run | `evals/<project>/<version>/TRACE.json` | `build-site-data.mjs` -> `lib/eval-data.generated.ts` |
+| New finding | `evals/FINDINGS-YYYY-MM-DD-slug.md` | `build-site-data.mjs` -> findings catalog and route |
+| New skill | `skills/<name>/SKILL.md` | scanned into the skills catalog |
+| New subagent | `agents/<name>.md` | scanned into the agents catalog |
+| Generated compatibility command | `commands/gad/<name>.md` | scanned into the commands catalog |
+| Planning state updates | `.planning/*.xml` | surfaced on `/planning` and related site views |
+| Docs sink outputs | configured `docs_sink` path | produced by `gad docs compile` / docs compiler |
 
 ## When to trigger this skill
 
-- After `gad eval preserve` completes a run â†’ regenerate site data so the new run appears.
-- After writing a new FINDING â€” publishing is a commit, not a ceremony.
-- After creating any new skill / agent / command / template â€” they should show up in the catalog on the next deploy.
-- After advancing state in `.planning/` (phase transition, task completion, decision captured) â†’ the `/planning` page exists to make this transparent.
-- After a round completes and you want it visible on the home page.
-
-Basically: any time the repo's truth changes and a reader visiting the site today would see a stale version of that truth.
+- After `gad eval preserve` completes a run and the run should appear publicly.
+- After writing a new finding or changing an eval comparison surface.
+- After changing skills, agents, commands, templates, or planning state that the site reflects.
+- After compiling planning docs or regenerating publishable artifacts that should stay aligned with the repo truth.
+- After any work where a visitor would otherwise see stale framework state.
 
 ## The sync procedure
 
-**Step 1 â€” make sure the filesystem is the truth.** Don't hand-edit anything under `site/lib/*.generated.ts` or `site/public/downloads/`. Those files are outputs of `build-site-data.mjs`. If something's wrong on the site, the fix is almost always in `evals/`, `skills/`, `agents/`, `commands/gad/`, or `.planning/`.
+1. Make sure the filesystem is the truth.
+   Do not hand-edit generated files under `site/lib/*.generated.ts`, `site/public/downloads/`, or any generated docs sink.
 
-**Step 2 â€” regenerate locally:**
+2. Regenerate locally:
 
 ```sh
-cd vendor/get-anything-done/site
-npm run prebuild        # or: node scripts/build-site-data.mjs
+cd site
+npm run prebuild
 ```
 
-This re-zips templates, re-parses traces, re-scans the catalog, re-extracts git history for historical requirements, re-parses STATE/TASKS/DECISIONS, re-renders all markdown bodies to HTML, writes the generated TS files. It's cheap (under 5 seconds) and deterministic.
-
-**Step 3 â€” build locally to verify:**
+3. Build locally to verify:
 
 ```sh
 npx next build
 ```
 
-If type-checking fails, it's almost always because a new TRACE.json has a field the generated interface doesn't allow. Loosen the type in `build-site-data.mjs` (prefer `number | null` + `Record<string, unknown>` intersection over restrictive shapes).
-
-**Step 4 â€” if you added a new playable game build, run:**
+4. If playable builds changed, run:
 
 ```sh
-npm run build:games     # LOCAL ONLY â€” do not run on Vercel
+npm run build:games
 ```
 
-This walks each `evals/<project>/<version>/run/` directory, runs `npx vite build --base ./` so asset URLs are relative (required for subdirectory serving), and copies the result into `public/playable/<project>/<version>/`. Commit these dists â€” Vercel won't rebuild them.
+5. If planning docs must be published into a docs sink, run the docs compiler flow as part of the same publishing pass.
 
-**Step 5 â€” commit with a GAD task id** if this is tracked work, or a `chore(site):` prefix if it's a routine sync.
+6. Commit the regenerated outputs with a task id or `chore(site):` style commit message.
 
-```sh
-git add site/lib/catalog.generated.ts site/lib/eval-data.generated.ts site/public/
-git commit -m "chore(site): regenerate data after <what changed>"
-```
+## What not to do
 
-**Step 6 â€” push.** The submodule commit needs to be pushed to the get-anything-done repo's main branch. Vercel auto-deploys on push. The parent portfolio repo's submodule pointer bump is separate and optional (it only matters if the portfolio needs to reference this submodule state).
+- Do not hand-edit generated site or docs output.
+- Do not hide bad eval results or process failures.
+- Do not let public surfaces drift behind framework truth.
+- Do not treat this as site-only if the real work is publishing generated docs or artifacts.
 
-## Patterns to follow when the site needs new surfaces
+## Relationship to nearby skills
 
-The site is intentionally not finished. As the experiment grows you'll want new sections. When you're considering adding one:
+- `gad:docs-compile` compiles planning docs into a sink.
+- `portfolio-sync` is the broader publication/presentation sync that makes sure the public-facing artifacts match the repo.
+- `trace-analysis` inspects telemetry and reports how the framework was used; it does not publish anything by itself.
 
-1. **If the data isn't in a generator yet, add the parser first.** New `build-site-data.mjs` section â†’ new fields in `catalog.generated.ts` or `eval-data.generated.ts` â†’ consumed by the page. Keep the generator the bottleneck so everything stays in sync.
-2. **New detail pages follow the `DetailShell` pattern.** `components/detail/DetailShell.tsx` handles the chrome (breadcrumb, kind badge, metadata card, rendered body, sidebar, source link). Pass it `kind`, `bodyHtml`, optional `meta` + `sidebar`. Don't reinvent the shell.
-3. **New landing sections go under `components/landing/`.** Each section is one file, composed into `app/page.tsx` in whatever order makes the story read. They should be mostly server components; only mark `"use client"` when you need state (selector, search, etc).
-4. **SSG over SSR.** Every new dynamic route should export `generateStaticParams` and `dynamicParams = false`. The site is deployed as static HTML â€” no serverless functions.
-5. **Markdown rendering happens at build time via `marked` in the prebuild script.** Don't ship a runtime markdown renderer to the client. Emit `bodyHtml: string` and dump it with `dangerouslySetInnerHTML` inside `.prose-content`.
-6. **Refactor when it starts to hurt.** If you're adding the fifth similar landing section and noticing patterns, extract. If a generator function is getting unwieldy, split it. Don't preemptively abstract, but don't let the section list grow to 20 copy-pasted variants either.
-
-## What NOT to do
-
-- **Don't commit generated files by hand.** Always regenerate.
-- **Don't add a CMS.** The filesystem is the CMS.
-- **Don't require API keys for any part of the public site.** It's a static archive; everything that needs auth lives elsewhere.
-- **Don't build the games on Vercel.** 6+ `npm install` + `vite build` calls would balloon the build time. They're pre-built locally and committed.
-- **Don't hide the experiment's failure modes.** If a run scored 0 from a human reviewer, the site shows that honestly, side-by-side with the process metrics. The divergence is the point â€” it's what led to gad-29.
-- **Don't create MDX files in the site/content directory.** This site doesn't use MDX content at all (that was the old apps/portfolio/ plan). Content comes from scanning the repo.
-
-## How this skill interacts with others
-
-- `create-skill` â€” when you write a new skill in `skills/<name>/SKILL.md`, it automatically shows up on the site after the next prebuild + deploy. No separate listing step.
-- `find-sprites` â€” unrelated to site sync, but both are "bootstrap" skills that get inherited into eval templates. If you change which skills are inherited where, the `SKILL_INHERITANCE` map on the site updates to reflect it.
-- Any eval skill (`eval-run`, `eval-preserve`, `eval-report`) â€” finishing a preserve triggers the sync. The run appears on `/runs/<project>/<version>` on the next deploy.
-- `plan-phase` / `execute-phase` / `verify-work` â€” if this work lives in a GAD phase (and it should, per gad-18), the `/planning` page surfaces it automatically. Don't maintain parallel docs.
-
-## Expected cadence
-
-The site should update at the same cadence as experimental progress. If you've done real work and the site looks the same, something's stale. If you're making commits without regenerating, you're drifting.
-
-Treat `npm run prebuild && npx next build` as the equivalent of `gad verify` for the public-facing side of the project.
+Treat `npm run prebuild && npx next build` as the public-surface equivalent of a verification step.

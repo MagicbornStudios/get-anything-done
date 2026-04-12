@@ -4752,8 +4752,8 @@ function install(isGlobal, runtime = 'claude') {
 
   // Clean up orphaned files from previous versions
   cleanupOrphanedFiles(targetDir);
-  const canonicalSkillsSrc = path.join(src, 'skills');
-  const legacyCommandsSrc = path.join(src, 'commands', 'gad');
+  const sdkRoot = path.join(src, 'sdk');
+  const canonicalSkillsSrc = path.join(sdkRoot, 'skills');
 
   // OpenCode uses command/ (flat), Codex/Cursor/etc use skills/, Gemini uses commands/gad/.
   if (isOpencode) {
@@ -4761,7 +4761,7 @@ function install(isGlobal, runtime = 'claude') {
     fs.mkdirSync(commandDir, { recursive: true });
     const count = fs.existsSync(canonicalSkillsSrc)
       ? installCanonicalCommands(canonicalSkillsSrc, commandDir, pathPrefix, runtime, true, 'gad')
-      : (copyFlattenedCommands(legacyCommandsSrc, commandDir, 'gad', pathPrefix, runtime), fs.readdirSync(commandDir).filter(f => f.startsWith('gad-')).length);
+      : 0;
     if (verifyInstalled(commandDir, 'command/gad-*')) {
       console.log('  Installed ' + count + ' commands to command/');
     } else {
@@ -4771,7 +4771,7 @@ function install(isGlobal, runtime = 'claude') {
     const skillsDir = path.join(targetDir, 'skills');
     const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
       ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'codex', pathPrefix, isGlobal)
-      : (copyCommandsAsCodexSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
+      : [];
     if (installedSkillNames.length > 0) {
       console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
@@ -4781,8 +4781,7 @@ function install(isGlobal, runtime = 'claude') {
     const skillsDir = path.join(targetDir, 'skills');
     const count = fs.existsSync(canonicalSkillsSrc)
       ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'copilot', pathPrefix, isGlobal).length
-      : (copyCommandsAsCopilotSkills(legacyCommandsSrc, skillsDir, 'gad', isGlobal),
-        fs.existsSync(skillsDir) ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter(e => e.isDirectory() && e.name.startsWith('gad-')).length : 0);
+      : 0;
     if (fs.existsSync(skillsDir)) {
       if (count > 0) {
         console.log('  Installed ' + count + ' skills to skills/');
@@ -4796,8 +4795,7 @@ function install(isGlobal, runtime = 'claude') {
     const skillsDir = path.join(targetDir, 'skills');
     const count = fs.existsSync(canonicalSkillsSrc)
       ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'antigravity', pathPrefix, isGlobal).length
-      : (copyCommandsAsAntigravitySkills(legacyCommandsSrc, skillsDir, 'gad', isGlobal),
-        fs.existsSync(skillsDir) ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter(e => e.isDirectory() && e.name.startsWith('gad-')).length : 0);
+      : 0;
     if (fs.existsSync(skillsDir)) {
       if (count > 0) {
         console.log('  Installed ' + count + ' skills to skills/');
@@ -4811,7 +4809,7 @@ function install(isGlobal, runtime = 'claude') {
     const skillsDir = path.join(targetDir, 'skills');
     const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
       ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'cursor', pathPrefix, isGlobal)
-      : (copyCommandsAsCursorSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
+      : [];
     if (installedSkillNames.length > 0) {
       console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
@@ -4821,7 +4819,7 @@ function install(isGlobal, runtime = 'claude') {
     const skillsDir = path.join(targetDir, 'skills');
     const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
       ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'windsurf', pathPrefix, isGlobal)
-      : (copyCommandsAsWindsurfSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
+      : [];
     if (installedSkillNames.length > 0) {
       console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
@@ -4831,7 +4829,7 @@ function install(isGlobal, runtime = 'claude') {
     const skillsDir = path.join(targetDir, 'skills');
     const installedSkillNames = fs.existsSync(canonicalSkillsSrc)
       ? installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'augment', pathPrefix, isGlobal)
-      : (copyCommandsAsAugmentSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime), listCodexSkillNames(skillsDir));
+      : [];
     if (installedSkillNames.length > 0) {
       console.log('  Installed ' + installedSkillNames.length + ' skills to skills/');
     } else {
@@ -4843,8 +4841,6 @@ function install(isGlobal, runtime = 'claude') {
     const gadDest = path.join(commandsDir, 'gad');
     if (fs.existsSync(canonicalSkillsSrc)) {
       installCanonicalCommands(canonicalSkillsSrc, gadDest, pathPrefix, runtime, false, 'gad');
-    } else {
-      copyWithPathReplacement(legacyCommandsSrc, gadDest, pathPrefix, runtime, true, isGlobal);
     }
     if (verifyInstalled(gadDest, 'commands/gad')) {
       console.log('  Installed commands/gad');
@@ -4855,8 +4851,6 @@ function install(isGlobal, runtime = 'claude') {
     const skillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(canonicalSkillsSrc)) {
       installCanonicalSkills(canonicalSkillsSrc, skillsDir, 'claude', pathPrefix, isGlobal);
-    } else {
-      copyCommandsAsClaudeSkills(legacyCommandsSrc, skillsDir, 'gad', pathPrefix, runtime, isGlobal);
     }
     if (fs.existsSync(skillsDir)) {
       const count = fs.readdirSync(skillsDir, { withFileTypes: true }).filter(e => e.isDirectory()).length;
@@ -4902,7 +4896,7 @@ function install(isGlobal, runtime = 'claude') {
   }
 
   // Copy agents to agents directory
-  const agentsSrc = path.join(src, 'agents');
+  const agentsSrc = path.join(sdkRoot, 'agents');
   if (fs.existsSync(agentsSrc)) {
     const agentsDest = path.join(targetDir, 'agents');
     fs.mkdirSync(agentsDest, { recursive: true });
@@ -4997,7 +4991,7 @@ function install(isGlobal, runtime = 'claude') {
 
     // Copy hooks from dist/ (bundled with dependencies)
     // Template paths for the target runtime (replaces '.claude' with correct config dir)
-    const hooksSrc = path.join(src, 'hooks', 'dist');
+    const hooksSrc = path.join(sdkRoot, 'hooks', 'dist');
     if (fs.existsSync(hooksSrc)) {
       const hooksDest = path.join(targetDir, 'hooks');
       fs.mkdirSync(hooksDest, { recursive: true });
@@ -5487,9 +5481,9 @@ function shouldSkipPeerBootstrap() {
 
   const src = path.join(__dirname, '..');
   return (
-    fs.existsSync(path.join(src, 'commands', 'gad')) &&
-    fs.existsSync(path.join(src, 'agents')) &&
-    fs.existsSync(path.join(src, '.agents', 'skills'))
+    fs.existsSync(path.join(src, 'sdk', 'skills')) &&
+    fs.existsSync(path.join(src, 'sdk', 'agents')) &&
+    fs.existsSync(path.join(src, 'sdk', 'templates'))
   );
 }
 

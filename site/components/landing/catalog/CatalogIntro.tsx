@@ -9,17 +9,17 @@ export function CatalogIntro() {
       preset="hero-compact"
       title={
         <>
-          Every skill, subagent, and command <span className="gradient-text">in the box.</span>
+          Every skill, subagent, and template <span className="gradient-text">in the box.</span>
         </>
       }
     >
       Skills are methodology docs the main agent follows. Subagents are specialised workers the
-      framework spawns for planning, research, verification, UI audits, and more. Commands are the
-      slash-command entry points. All of this is scanned directly out of{" "}
-      <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">skills/</code>,{" "}
-      <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">agents/</code>, and{" "}
-      <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">commands/gad/</code> at build
-      time — this list stays in sync with the repo.
+      framework spawns for planning, research, verification, UI audits, and more. Templates are
+      the planning and workflow scaffolds the CLI uses to bootstrap new work. This catalog is
+      scanned directly out of <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">sdk/skills/</code>,{" "}
+      <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">sdk/agents/</code>, and{" "}
+      <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">sdk/templates/</code> at build
+      time, with root <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">skills/</code> surfaced separately as internal methodology.
     </SiteSectionIntro>
   );
 }

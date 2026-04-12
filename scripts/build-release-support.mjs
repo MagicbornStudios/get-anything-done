@@ -13,25 +13,26 @@ const RUNTIME_DIR = join(SUPPORT_DIR, 'get-anything-done');
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
 const SUPPORT_ENTRIES = [
-  'agents',
   'bin',
-  'commands',
   'dist/gad.cjs',
-  'hooks/dist',
-  'references',
-  'skills',
-  'templates',
-  'workflows',
+  'sdk/agents',
+  'sdk/hooks/dist',
+  'sdk/references',
+  'sdk/skills',
+  'sdk/templates',
+  'sdk/workflows',
   'CHANGELOG.md',
   'package.json',
 ];
 
 const RUNTIME_ENTRIES = [
   'bin',
-  'hooks/dist',
-  'references',
-  'templates',
-  'workflows',
+  'sdk/agents',
+  'sdk/hooks/dist',
+  'sdk/references',
+  'sdk/skills',
+  'sdk/templates',
+  'sdk/workflows',
   'CHANGELOG.md',
   'package.json',
 ];
@@ -68,7 +69,7 @@ function main() {
   if (!existsSync(join(DIST_DIR, 'gad.cjs'))) {
     throw new Error('dist/gad.cjs is missing. Run `node scripts/build-cli.mjs` first.');
   }
-  if (!existsSync(join(ROOT, 'hooks', 'dist'))) {
+  if (!existsSync(join(ROOT, 'sdk', 'hooks', 'dist'))) {
     throw new Error('hooks/dist is missing. Run `node scripts/build-hooks.js` first.');
   }
 
@@ -80,7 +81,11 @@ function main() {
   mkdirSync(RUNTIME_DIR, { recursive: true });
   for (const entry of RUNTIME_ENTRIES) {
     const sourcePath = join(ROOT, entry);
-    const runtimeRelative = entry === 'hooks/dist' ? 'hooks' : entry;
+    const runtimeRelative = entry === 'sdk/hooks/dist'
+      ? 'hooks'
+      : entry.startsWith('sdk/')
+        ? entry.slice(4)
+        : entry;
     const destinationPath = join(RUNTIME_DIR, runtimeRelative);
     mkdirSync(dirname(destinationPath), { recursive: true });
     cpSync(sourcePath, destinationPath, { recursive: true, force: true });
