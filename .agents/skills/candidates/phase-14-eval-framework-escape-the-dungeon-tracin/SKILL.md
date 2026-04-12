@@ -3,6 +3,9 @@ name: phase-14-eval-framework-escape-the-dungeon-tracin
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "14"
 source_phase_title: "Eval framework: escape-the-dungeon + tracing"
 pressure_score: 19

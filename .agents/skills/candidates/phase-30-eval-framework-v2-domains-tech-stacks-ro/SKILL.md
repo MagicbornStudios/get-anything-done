@@ -3,6 +3,9 @@ name: phase-30-eval-framework-v2-domains-tech-stacks-ro
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "30"
 source_phase_title: "Eval framework v2 — domains, tech stacks, rounds per project"
 pressure_score: 11

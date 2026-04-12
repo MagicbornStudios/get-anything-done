@@ -3,6 +3,9 @@ name: phase-13-docs-commands-skill-content-docs-map-rol
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "13"
 source_phase_title: "Docs commands, skill content, DOCS-MAP rollout"
 pressure_score: 16

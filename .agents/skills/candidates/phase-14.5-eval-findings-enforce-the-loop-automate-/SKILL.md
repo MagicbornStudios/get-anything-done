@@ -3,6 +3,9 @@ name: phase-14.5-eval-findings-enforce-the-loop-automate-
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "14.5"
 source_phase_title: "Eval findings: enforce the loop, automate tracing, auto-scaffold conventions"
 pressure_score: 21

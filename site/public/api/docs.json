@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-12T09:37:21.494Z",
+    "generated": "2026-04-12T10:27:02.082Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -383,6 +383,13 @@
     }
   ],
   "decisions": [
+    {
+      "id": "gad-145",
+      "title": "Candidate review lifecycle + configurable pressure formula + Shannon framing",
+      "summary": "Three fixes layered on phase 38 candidate generation. (1) Candidate review lifecycle: each candidate SKILL.md gets a reviewed frontmatter field (default false). A human sets reviewed to promoted, merged, or discarded with reviewed_on and reviewed_notes. The pipeline skips any candidate whose reviewed is not false — reviewed candidates are not regenerated. Eliminates the \"12 candidates regenerate forever\" problem. (2) Configurable pressure formula: hardcoded crosscut_weight = 2 and high_pressure_threshold = 10 become entries in site/data/self-eval-config.json. Pressure formula is pressure = tasks_total + (crosscuts * crosscut_weight). Defaults preserved. Formula becomes tunable as we learn what pressure levels correlate with useful skill candidates. (3) Shannon-inspired framing documented on /formulas site page: tasks_total represents raw complexity of a phase (H entropy approximation), crosscuts represent mutual-information between subsystems (tasks spanning multiple systems indicate cross-cutting concerns), and the weighted sum approximates total information burden the phase imposed on agents. Crosscuts weighted heavily because cross-cutting work is disproportionately hard — a task spanning two systems requires context from both, roughly doubling the mental state agents must hold simultaneously.",
+      "impact": "Candidates have review state + quarantine persistence. site/data/self-eval-config.json drives weights. /formulas site page documents pressure math and Shannon framing. compute-self-eval.mjs reads config at run time. PlanningSkillCandidatesTab gains Unreviewed/Reviewed filter. Phase 38 retroactively updated to ship these three pieces.",
+      "references": []
+    },
     {
       "id": "gad-144",
       "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",
@@ -5472,7 +5479,7 @@
     {
       "id": "38",
       "title": "Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
-      "status": "planned",
+      "status": "done",
       "goal": "Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-D-144). Extend compute-self-eval pipeline to auto-draft SKILL.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. Drafts are quarantined — excluded from catalog scan and unavailable to GAD until promoted. Add a new \"Skill candidates\" tab on /planning with info icon HoverCard explaining what a candidate is and how it comes about. Each candidate shows: draft SKILL.md content, source phase id + title, full task list from that phase, pressure score. Reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. Category on the site is \"System\" so candidates are visually distinct from canonical skills. Decisions: GAD-D-115, GAD-D-144.",
       "outcome": null
     }
@@ -5506,6 +5513,13 @@
     }
   ],
   "searchIndex": [
+    {
+      "id": "gad-145",
+      "title": "Candidate review lifecycle + configurable pressure formula + Shannon framing",
+      "kind": "decision",
+      "href": "/decisions#gad-145",
+      "body": "gad-145 candidate review lifecycle + configurable pressure formula + shannon framing three fixes layered on phase 38 candidate generation. (1) candidate review lifecycle: each candidate skill.md gets a reviewed frontmatter field (default false). a human sets reviewed to promoted, merged, or discarded with reviewed_on and reviewed_notes. the pipeline skips any candidate whose reviewed is not false — reviewed candidates are not regenerated. eliminates the \"12 candidates regenerate f"
+    },
     {
       "id": "gad-144",
       "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",

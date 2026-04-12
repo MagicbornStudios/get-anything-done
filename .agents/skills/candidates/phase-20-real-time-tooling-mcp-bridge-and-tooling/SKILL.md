@@ -3,6 +3,9 @@ name: phase-20-real-time-tooling-mcp-bridge-and-tooling
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "20"
 source_phase_title: "Real-time tooling, MCP bridge, and tooling evals"
 pressure_score: 20

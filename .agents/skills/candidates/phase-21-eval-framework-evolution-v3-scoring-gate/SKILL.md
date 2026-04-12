@@ -3,6 +3,9 @@ name: phase-21-eval-framework-evolution-v3-scoring-gate
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "21"
 source_phase_title: "Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield"
 pressure_score: 56

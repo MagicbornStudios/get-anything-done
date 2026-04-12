@@ -1764,9 +1764,9 @@ export const FINDINGS: Finding[] = [
 ];
 
 export const PLANNING_STATE: PlanningState = {
-  "currentPhase": "36",
+  "currentPhase": "38",
   "milestone": "gad-v1.1",
-  "nextAction": "Phases 35 + 36 planned in parallel (2026-04-12). PLAN.md written for both. Ready for execute-phase.\n\n=== PLANS LANDED ===\nPhase 35: .planning/plans/phase-35/PLAN.md — 6 tasks, 6 milestones\n  Runtime identity detection lib, TRACE scaffold, hook wiring, self-eval aggregation, site badges, smoke test\n  Schema: runtime.primary / runtime.provenance / runtime.self_declared\n\nPhase 36: .planning/plans/phase-36/PLAN.md — 22 tasks, 6 milestones\n  A: gad env (3 tasks) — runtime detection + preflight\n  B: Dead code removal (2 tasks) — trace-active-skill cleanup\n  C: gad eval start (4 tasks) — per-eval repo + scoped clone\n  D: gad eval auto (3 tasks) — runtime shell-out + streaming\n  E: gad eval finish (5 tasks) — preserve + push + Option C cache + aliases\n  F: Site + docs + smoke (5 tasks) — docs, site pipeline, end-to-end test\n\n=== SELF-EVAL (just ran) ===\n3,450 events | 191 tasks (185 done) | 140 decisions\nFramework overhead: 23.3% (score 0.7)\nLoop compliance: 80%\nHigh-pressure phases: 10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34\n\n=== NEXT ===\n1. Execute phase 35 (runtime identity) — unblocks phase 36 runtime.primary field consumption\n2. Execute phase 36 (per-eval repos + command split) — uses phase 35 output\n3. Phase 35 Milestones A+B can start immediately; Milestone B (dead hook code) is isolated\n4. Phase 37 (gad project) still queued, depends on 36\n\n=== GAPS FLAGGED BY PLANNERS ===\n10 open spec questions for phase 36 (sparse-checkout vs strip, cursor-agent format, TRACE cache shape, flag naming --project vs --projectid, score integration, rollback story)\nThese are tracked in .planning/plans/phase-36/PLAN.md's \"Open questions\" section.",
+  "nextAction": "Phase 38 shipped (2026-04-12): skill candidates auto-drafted from high-pressure phases.\n\n=== SHIPPED ===\n- compute-self-eval.mjs now auto-drafts SKILL.md candidates for every high-pressure phase\n- 12 candidates landed in .agents/skills/candidates/ (phase-10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34)\n- Candidates have status: candidate, category: System, origin: auto-drafted in frontmatter\n- build-site-data.mjs catalog scanner now excludes candidates/ directory (quarantined from live catalog)\n- PlanningSkillCandidatesTab component with info icon HoverCard explaining the feedback loop\n- New \"Skill candidates\" tab on /planning page showing draft metadata, source phase, and task list expansion\n\n=== DECISIONS ===\nGAD-D-144: Skill candidates quarantine and review workflow\n\n=== NEXT ===\n1. Execute phase 35 (runtime identity) — unblocks phase 36 runtime.primary consumption\n2. Execute phase 36 (per-eval repos + command split)\n3. Phase 37 (gad project) queued, depends on 36\n4. Manually review 12 candidates on the site and decide: promote, merge, or discard\n\n=== SELF-EVAL (latest) ===\n3,468 events | 191 tasks (185 done) | 141 decisions\nFramework overhead: 23.5% | Loop compliance: 80%\nSkill candidates: 12",
   "lastUpdated": "2026-04-12",
   "phases": [
     {
@@ -1962,7 +1962,7 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "38",
       "title": "Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
-      "status": "planned"
+      "status": "done"
     }
   ],
   "openTasks": [
@@ -1989,6 +1989,11 @@ export const PLANNING_STATE: PlanningState = {
   ],
   "doneTasksCount": 163,
   "recentDecisions": [
+    {
+      "id": "gad-145",
+      "title": "Candidate review lifecycle + configurable pressure formula + Shannon framing",
+      "summary": "Three fixes layered on phase 38 candidate generation. (1) Candidate review lifecycle: each candidate SKILL.md gets a reviewed frontmatter field (default false). A human sets reviewed to promoted, merged, or discarded with reviewed_on and reviewed_notes. The pipeline skips any candidate whose reviewed is not false — reviewed candidates are not regenerated. Eliminates the \"12 candidates regenerate f"
+    },
     {
       "id": "gad-144",
       "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",
@@ -2043,11 +2048,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-134",
       "title": "Site reusability review needed — cut down on duplicate edits",
       "summary": "The site needs a reusability pass: shared patterns reimplemented across pages, duplicate components, data shape changes requiring edits everywhere. Pipeline-generated data should drive generic components. Queued for future session."
-    },
-    {
-      "id": "gad-133",
-      "title": "Methodology must be tied to a buildable project with artifacts",
-      "summary": "Even methodology-only tracks must implement a buildable project. No catalog entry without a concrete eval project and evaluation path. If methodology produces signals (pressure, compliance, traces), artifacts must ship. GAD-on-GAD is the reference. Vibes-only theory is not a catalog entry."
     }
   ]
 };

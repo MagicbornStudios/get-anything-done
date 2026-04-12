@@ -31,6 +31,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { resolveWorkflowModels } = require('../lib/model-profiles.cjs');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -212,6 +213,8 @@ function initPhaseOp(cwd, phaseId) {
     fs.readdirSync(phaseDir).some(f => f.endsWith('-PLAN.md') || f === 'PLAN.md');
   const planCount = hasPlans ?
     fs.readdirSync(phaseDir).filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md').length : 0;
+  const config = loadConfig(cwd);
+  const workflowModels = resolveWorkflowModels(config, 'claude');
 
   return {
     phase_found: !!phase,
@@ -227,7 +230,10 @@ function initPhaseOp(cwd, phaseId) {
     has_verification: fs.existsSync(path.join(phaseDir, `${padded}-VERIFICATION.md`)),
     roadmap_exists: !!roadmapContent,
     planning_exists: fs.existsSync(planDir),
+    research_enabled: config.workflow?.research !== false,
+    model_overrides: config.model_overrides || {},
     commit_docs: true,
+    ...workflowModels,
   };
 }
 

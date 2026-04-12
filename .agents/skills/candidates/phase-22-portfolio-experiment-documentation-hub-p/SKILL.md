@@ -3,6 +3,9 @@ name: phase-22-portfolio-experiment-documentation-hub-p
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "22"
 source_phase_title: "Portfolio experiment documentation — hub, per-project, per-run, findings, graphs"
 pressure_score: 110

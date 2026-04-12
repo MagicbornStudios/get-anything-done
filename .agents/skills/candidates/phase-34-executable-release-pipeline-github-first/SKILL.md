@@ -3,6 +3,9 @@ name: phase-34-executable-release-pipeline-github-first
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: discarded
+reviewed_on: "2026-04-12"
+reviewed_notes: "test discard — phase 34 release work is one-off, not a reusable pattern"
 source_phase: "34"
 source_phase_title: "Executable release pipeline + GitHub-first distribution"
 pressure_score: 13

@@ -5994,6 +5994,12 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
   {
+    "id": "gad-145",
+    "title": "Candidate review lifecycle + configurable pressure formula + Shannon framing",
+    "summary": "Three fixes layered on phase 38 candidate generation. (1) Candidate review lifecycle: each candidate SKILL.md gets a reviewed frontmatter field (default false). A human sets reviewed to promoted, merged, or discarded with reviewed_on and reviewed_notes. The pipeline skips any candidate whose reviewed is not false — reviewed candidates are not regenerated. Eliminates the \"12 candidates regenerate forever\" problem. (2) Configurable pressure formula: hardcoded crosscut_weight = 2 and high_pressure_threshold = 10 become entries in site/data/self-eval-config.json. Pressure formula is pressure = tasks_total + (crosscuts * crosscut_weight). Defaults preserved. Formula becomes tunable as we learn what pressure levels correlate with useful skill candidates. (3) Shannon-inspired framing documented on /formulas site page: tasks_total represents raw complexity of a phase (H entropy approximation), crosscuts represent mutual-information between subsystems (tasks spanning multiple systems indicate cross-cutting concerns), and the weighted sum approximates total information burden the phase imposed on agents. Crosscuts weighted heavily because cross-cutting work is disproportionately hard — a task spanning two systems requires context from both, roughly doubling the mental state agents must hold simultaneously.",
+    "impact": "Candidates have review state + quarantine persistence. site/data/self-eval-config.json drives weights. /formulas site page documents pressure math and Shannon framing. compute-self-eval.mjs reads config at run time. PlanningSkillCandidatesTab gains Unreviewed/Reviewed filter. Phase 38 retroactively updated to ship these three pieces."
+  },
+  {
     "id": "gad-144",
     "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",
     "summary": "When the self-eval pipeline flags a phase as high-pressure (task count + crosscuts above threshold), that's a signal patterns exist that could become skills (per GAD-D-115). Rather than just logging the flag, the pipeline should auto-generate draft SKILL.md files inspired by the phase's tasks and park them in .agents/skills/candidates/ under the System category. Candidates are NOT available to GAD — they have status: candidate in frontmatter and are excluded from the catalog scan. A new /planning tab \"Skill candidates\" shows them for human review, with each candidate showing: the skill draft content, the source phase it came from, the list of tasks in that phase, and a pressure score. An info icon with HoverCard explains what a candidate is and how it's generated. Reviewer can then: promote the candidate to a real skill (moves to .agents/skills/&lt;name&gt;/), merge it into an existing skill via merge-skill, or discard it. This turns the high-pressure observation into actionable skill creation without polluting the live catalog with untested drafts.",
@@ -10026,7 +10032,7 @@ export const ALL_PHASES: PhaseRecord[] = [
   {
     "id": "38",
     "title": "Skill candidates — auto-drafted from high-pressure phases, quarantined for review",
-    "status": "planned",
+    "status": "done",
     "goal": "Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-D-144). Extend compute-self-eval pipeline to auto-draft SKILL.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. Drafts are quarantined — excluded from catalog scan and unavailable to GAD until promoted. Add a new \"Skill candidates\" tab on /planning with info icon HoverCard explaining what a candidate is and how it comes about. Each candidate shows: draft SKILL.md content, source phase id + title, full task list from that phase, pressure score. Reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. Category on the site is \"System\" so candidates are visually distinct from canonical skills. Decisions: GAD-D-115, GAD-D-144.",
     "outcome": null
   }
@@ -10045,6 +10051,13 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-145",
+    "title": "Candidate review lifecycle + configurable pressure formula + Shannon framing",
+    "kind": "decision",
+    "href": "/decisions#gad-145",
+    "body": "gad-145 candidate review lifecycle + configurable pressure formula + shannon framing three fixes layered on phase 38 candidate generation. (1) candidate review lifecycle: each candidate skill.md gets a reviewed frontmatter field (default false). a human sets reviewed to promoted, merged, or discarded with reviewed_on and reviewed_notes. the pipeline skips any candidate whose reviewed is not false — reviewed candidates are not regenerated. eliminates the \"12 candidates regenerate f"
+  },
   {
     "id": "gad-144",
     "title": "Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review",

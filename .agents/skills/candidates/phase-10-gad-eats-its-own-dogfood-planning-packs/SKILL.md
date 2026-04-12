@@ -3,6 +3,9 @@ name: phase-10-gad-eats-its-own-dogfood-planning-packs
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "10"
 source_phase_title: "GAD eats its own dogfood + planning packs"
 pressure_score: 16

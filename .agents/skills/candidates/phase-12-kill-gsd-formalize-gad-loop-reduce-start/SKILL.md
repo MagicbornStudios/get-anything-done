@@ -3,6 +3,9 @@ name: phase-12-kill-gsd-formalize-gad-loop-reduce-start
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "12"
 source_phase_title: "Kill GSD, formalize GAD loop, reduce startup redundancy"
 pressure_score: 13

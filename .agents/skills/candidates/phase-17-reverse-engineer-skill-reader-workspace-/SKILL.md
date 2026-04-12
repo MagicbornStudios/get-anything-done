@@ -3,6 +3,9 @@ name: phase-17-reverse-engineer-skill-reader-workspace-
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "17"
 source_phase_title: "Reverse-engineer skill + reader-workspace eval"
 pressure_score: 12

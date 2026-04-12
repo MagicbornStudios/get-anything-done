@@ -6,26 +6,26 @@
       "days": 6
     },
     "totals": {
-      "events": 3483,
+      "events": 3509,
       "sessions": 5,
-      "gad_cli_calls": 272
+      "gad_cli_calls": 273
     },
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 1071
+        "count": 1080
       },
       {
         "tool": "unknown",
-        "count": 569
+        "count": 572
       },
       {
         "tool": "Read",
-        "count": 536
+        "count": 541
       },
       {
         "tool": "Edit",
-        "count": 459
+        "count": 464
       },
       {
         "tool": "TaskUpdate",
@@ -33,7 +33,7 @@
       },
       {
         "tool": "Write",
-        "count": 201
+        "count": 205
       },
       {
         "tool": "TaskCreate",
@@ -87,13 +87,13 @@
       },
       {
         "day": "2026-04-12",
-        "count": 107
+        "count": 133
       }
     ],
     "framework_overhead": {
-      "planning_ops": 313,
-      "source_ops": 1028,
-      "ratio": 0.233,
+      "planning_ops": 319,
+      "source_ops": 1038,
+      "ratio": 0.235,
       "score": 0.7
     },
     "loop_compliance": {
@@ -102,18 +102,18 @@
       "score": 0.8
     },
     "gad_cli_breakdown": {
-      "snapshot": 50,
+      "snapshot": 51,
       "eval": 100,
       "other": 122
     },
-    "computed_at": "2026-04-12T09:37:21.758Z",
+    "computed_at": "2026-04-12T10:27:02.284Z",
     "tasks": {
       "done": 185,
       "planned": 4,
       "in_progress": 2,
       "total": 191
     },
-    "decisions": 141,
+    "decisions": 142,
     "phases_pressure": [
       {
         "phase": "10",
@@ -278,6 +278,9 @@
         "tasks_done": 8,
         "crosscuts": 4,
         "file_path": ".agents/skills/candidates/phase-10-gad-eats-its-own-dogfood-planning-packs/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "10-01",
@@ -330,6 +333,9 @@
         "tasks_done": 9,
         "crosscuts": 2,
         "file_path": ".agents/skills/candidates/phase-12-kill-gsd-formalize-gad-loop-reduce-start/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "12-01",
@@ -387,6 +393,9 @@
         "tasks_done": 8,
         "crosscuts": 4,
         "file_path": ".agents/skills/candidates/phase-13-docs-commands-skill-content-docs-map-rol/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "13-01",
@@ -439,6 +448,9 @@
         "tasks_done": 7,
         "crosscuts": 6,
         "file_path": ".agents/skills/candidates/phase-14-eval-framework-escape-the-dungeon-tracin/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "14-01",
@@ -486,6 +498,9 @@
         "tasks_done": 7,
         "crosscuts": 7,
         "file_path": ".agents/skills/candidates/phase-14.5-eval-findings-enforce-the-loop-automate-/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "14.5-01",
@@ -533,6 +548,9 @@
         "tasks_done": 4,
         "crosscuts": 4,
         "file_path": ".agents/skills/candidates/phase-17-reverse-engineer-skill-reader-workspace-/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "17-01",
@@ -565,6 +583,9 @@
         "tasks_done": 6,
         "crosscuts": 6,
         "file_path": ".agents/skills/candidates/phase-18-eval-suite-parallel-runs-iteration-cycle/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "18-01",
@@ -607,6 +628,9 @@
         "tasks_done": 7,
         "crosscuts": 6,
         "file_path": ".agents/skills/candidates/phase-20-real-time-tooling-mcp-bridge-and-tooling/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "20-01",
@@ -659,6 +683,9 @@
         "tasks_done": 26,
         "crosscuts": 14,
         "file_path": ".agents/skills/candidates/phase-21-eval-framework-evolution-v3-scoring-gate/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "21-01",
@@ -811,6 +838,9 @@
         "tasks_done": 46,
         "crosscuts": 26,
         "file_path": ".agents/skills/candidates/phase-22-portfolio-experiment-documentation-hub-p/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "22-01",
@@ -1113,6 +1143,9 @@
         "tasks_done": 5,
         "crosscuts": 3,
         "file_path": ".agents/skills/candidates/phase-30-eval-framework-v2-domains-tech-stacks-ro/SKILL.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
         "tasks": [
           {
             "id": "30-01",
@@ -1150,6 +1183,9 @@
         "tasks_done": 5,
         "crosscuts": 4,
         "file_path": ".agents/skills/candidates/phase-34-executable-release-pipeline-github-first/SKILL.md",
+        "reviewed": "discarded",
+        "reviewed_on": "2026-04-12",
+        "reviewed_notes": "test discard — phase 34 release work is one-off, not a reusable pattern",
         "tasks": [
           {
             "id": "34-01",
@@ -1546,26 +1582,26 @@
         "days": 6
       },
       "totals": {
-        "events": 3483,
+        "events": 3509,
         "sessions": 5,
-        "gad_cli_calls": 272
+        "gad_cli_calls": 273
       },
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 1071
+          "count": 1080
         },
         {
           "tool": "unknown",
-          "count": 569
+          "count": 572
         },
         {
           "tool": "Read",
-          "count": 536
+          "count": 541
         },
         {
           "tool": "Edit",
-          "count": 459
+          "count": 464
         },
         {
           "tool": "TaskUpdate",
@@ -1573,7 +1609,7 @@
         },
         {
           "tool": "Write",
-          "count": 201
+          "count": 205
         },
         {
           "tool": "TaskCreate",
@@ -1627,13 +1663,13 @@
         },
         {
           "day": "2026-04-12",
-          "count": 107
+          "count": 133
         }
       ],
       "framework_overhead": {
-        "planning_ops": 313,
-        "source_ops": 1028,
-        "ratio": 0.233,
+        "planning_ops": 319,
+        "source_ops": 1038,
+        "ratio": 0.235,
         "score": 0.7
       },
       "loop_compliance": {
@@ -1642,18 +1678,18 @@
         "score": 0.8
       },
       "gad_cli_breakdown": {
-        "snapshot": 50,
+        "snapshot": 51,
         "eval": 100,
         "other": 122
       },
-      "computed_at": "2026-04-12T09:37:21.758Z",
+      "computed_at": "2026-04-12T10:27:02.284Z",
       "tasks": {
         "done": 185,
         "planned": 4,
         "in_progress": 2,
         "total": 191
       },
-      "decisions": 141,
+      "decisions": 142,
       "phases_pressure": [
         {
           "phase": "10",
@@ -1818,6 +1854,9 @@
           "tasks_done": 8,
           "crosscuts": 4,
           "file_path": ".agents/skills/candidates/phase-10-gad-eats-its-own-dogfood-planning-packs/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "10-01",
@@ -1870,6 +1909,9 @@
           "tasks_done": 9,
           "crosscuts": 2,
           "file_path": ".agents/skills/candidates/phase-12-kill-gsd-formalize-gad-loop-reduce-start/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "12-01",
@@ -1927,6 +1969,9 @@
           "tasks_done": 8,
           "crosscuts": 4,
           "file_path": ".agents/skills/candidates/phase-13-docs-commands-skill-content-docs-map-rol/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "13-01",
@@ -1979,6 +2024,9 @@
           "tasks_done": 7,
           "crosscuts": 6,
           "file_path": ".agents/skills/candidates/phase-14-eval-framework-escape-the-dungeon-tracin/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "14-01",
@@ -2026,6 +2074,9 @@
           "tasks_done": 7,
           "crosscuts": 7,
           "file_path": ".agents/skills/candidates/phase-14.5-eval-findings-enforce-the-loop-automate-/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "14.5-01",
@@ -2073,6 +2124,9 @@
           "tasks_done": 4,
           "crosscuts": 4,
           "file_path": ".agents/skills/candidates/phase-17-reverse-engineer-skill-reader-workspace-/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "17-01",
@@ -2105,6 +2159,9 @@
           "tasks_done": 6,
           "crosscuts": 6,
           "file_path": ".agents/skills/candidates/phase-18-eval-suite-parallel-runs-iteration-cycle/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "18-01",
@@ -2147,6 +2204,9 @@
           "tasks_done": 7,
           "crosscuts": 6,
           "file_path": ".agents/skills/candidates/phase-20-real-time-tooling-mcp-bridge-and-tooling/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "20-01",
@@ -2199,6 +2259,9 @@
           "tasks_done": 26,
           "crosscuts": 14,
           "file_path": ".agents/skills/candidates/phase-21-eval-framework-evolution-v3-scoring-gate/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "21-01",
@@ -2351,6 +2414,9 @@
           "tasks_done": 46,
           "crosscuts": 26,
           "file_path": ".agents/skills/candidates/phase-22-portfolio-experiment-documentation-hub-p/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "22-01",
@@ -2653,6 +2719,9 @@
           "tasks_done": 5,
           "crosscuts": 3,
           "file_path": ".agents/skills/candidates/phase-30-eval-framework-v2-domains-tech-stacks-ro/SKILL.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
           "tasks": [
             {
               "id": "30-01",
@@ -2690,6 +2759,9 @@
           "tasks_done": 5,
           "crosscuts": 4,
           "file_path": ".agents/skills/candidates/phase-34-executable-release-pipeline-github-first/SKILL.md",
+          "reviewed": "discarded",
+          "reviewed_on": "2026-04-12",
+          "reviewed_notes": "test discard — phase 34 release work is one-off, not a reusable pattern",
           "tasks": [
             {
               "id": "34-01",

@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-12T09:37:21.489Z
+Generated: 2026-04-12T10:27:02.076Z
 
 
 ---
@@ -5067,7 +5067,17 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (141)
+# Decisions (142)
+
+## gad-145: Candidate review lifecycle + configurable pressure formula + Shannon framing
+
+### Summary
+
+Three fixes layered on phase 38 candidate generation. (1) Candidate review lifecycle: each candidate SKILL.md gets a reviewed frontmatter field (default false). A human sets reviewed to promoted, merged, or discarded with reviewed_on and reviewed_notes. The pipeline skips any candidate whose reviewed is not false — reviewed candidates are not regenerated. Eliminates the "12 candidates regenerate forever" problem. (2) Configurable pressure formula: hardcoded crosscut_weight = 2 and high_pressure_threshold = 10 become entries in site/data/self-eval-config.json. Pressure formula is pressure = tasks_total + (crosscuts * crosscut_weight). Defaults preserved. Formula becomes tunable as we learn what pressure levels correlate with useful skill candidates. (3) Shannon-inspired framing documented on /formulas site page: tasks_total represents raw complexity of a phase (H entropy approximation), crosscuts represent mutual-information between subsystems (tasks spanning multiple systems indicate cross-cutting concerns), and the weighted sum approximates total information burden the phase imposed on agents. Crosscuts weighted heavily because cross-cutting work is disproportionately hard — a task spanning two systems requires context from both, roughly doubling the mental state agents must hold simultaneously.
+
+### Impact
+
+Candidates have review state + quarantine persistence. site/data/self-eval-config.json drives weights. /formulas site page documents pressure math and Shannon framing. compute-self-eval.mjs reads config at run time. PlanningSkillCandidatesTab gains Unreviewed/Reviewed filter. Phase 38 retroactively updated to ship these three pieces.
 
 ## gad-144: Skill candidates — auto-author draft skills from high-pressure phases, quarantine for review
 
@@ -7495,7 +7505,7 @@ Ship gad project as a top-level CLI for real projects AND evals. Subcommands: cr
 
 ## Phase 38: Skill candidates — auto-drafted from high-pressure phases, quarantined for review
 
-Status: planned
+Status: done
 
 Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-D-144). Extend compute-self-eval pipeline to auto-draft SKILL.md files for high-pressure phases into .agents/skills/candidates/ with status: candidate frontmatter. Drafts are quarantined — excluded from catalog scan and unavailable to GAD until promoted. Add a new "Skill candidates" tab on /planning with info icon HoverCard explaining what a candidate is and how it comes about. Each candidate shows: draft SKILL.md content, source phase id + title, full task list from that phase, pressure score. Reviewer actions (future): promote to real skill, merge into existing skill via merge-skill, or discard. Category on the site is "System" so candidates are visually distinct from canonical skills. Decisions: GAD-D-115, GAD-D-144.
 

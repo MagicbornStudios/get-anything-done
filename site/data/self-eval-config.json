@@ -1,0 +1,35 @@
+{
+  "_description": "Configuration for compute-self-eval.mjs. Edit these values to tune the pressure formula without touching the script. Decisions: GAD-D-75, GAD-D-79, GAD-D-115, GAD-D-145.",
+  "pressure": {
+    "crosscut_weight": 2,
+    "high_pressure_threshold": 10,
+    "_formula": "pressure = tasks_total + (crosscuts * crosscut_weight)",
+    "_high_pressure": "pressure > high_pressure_threshold",
+    "_shannon_framing": "tasks_total is raw phase complexity (H approximation), crosscuts represent mutual-information between subsystems (I(X;Y)), the weighted sum is total information burden on the agent. Crosscut_weight is high because cross-cutting work requires holding multiple system contexts simultaneously, roughly doubling mental state."
+  },
+  "crosscut_detection": {
+    "systems": [
+      "cli",
+      "site",
+      "eval",
+      "skill",
+      "agent",
+      "trace",
+      "hook",
+      "planning",
+      "state",
+      "decision"
+    ],
+    "min_systems_to_count": 2,
+    "_description": "A task counts as a crosscut if its goal text mentions at least `min_systems_to_count` of the `systems` keywords."
+  },
+  "framework_overhead": {
+    "score_thresholds": {
+      "excellent": 0.15,
+      "acceptable": 0.25,
+      "concerning": 0.4
+    },
+    "_formula": "overhead_ratio = planning_ops / (planning_ops + source_ops)",
+    "_scoring": "< excellent = 1.0, < acceptable = 0.7, < concerning = 0.4, else = 0.1"
+  }
+}

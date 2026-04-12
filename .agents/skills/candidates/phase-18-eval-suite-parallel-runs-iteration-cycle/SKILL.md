@@ -3,6 +3,9 @@ name: phase-18-eval-suite-parallel-runs-iteration-cycle
 status: candidate
 category: System
 origin: auto-drafted
+reviewed: false
+reviewed_on: null
+reviewed_notes: null
 source_phase: "18"
 source_phase_title: "Eval suite — parallel runs + iteration cycle"
 pressure_score: 18

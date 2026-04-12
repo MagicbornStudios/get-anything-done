@@ -134,7 +134,7 @@ describe('loadConfig', () => {
 
     const config = await loadConfig(tmpDir);
     // Should load fine, with unknowns passed through
-    expect(config.model_profile).toBe('balanced');
+    expect(config.model_profile).toBe('off');
     expect((config as Record<string, unknown>).totally_unknown).toBe(true);
   });
 

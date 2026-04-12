@@ -5401,7 +5401,7 @@ function findOfficialGadBinary() {
  * @param {boolean} isGlobal - Whether this is a global install
  * @returns {boolean} true if GAD was installed successfully
  */
-function ensureGadInstalled(runtimes, isGlobal) {
+function ensureGadInstalledLegacy(runtimes, isGlobal) {
   const { execSync } = require('child_process');
   const existingBinary = findOfficialGadBinary();
 
@@ -5427,6 +5427,45 @@ function ensureGadInstalled(runtimes, isGlobal) {
   } catch (e) {
     console.log(`\n  ${yellow}⚠${reset} Legacy npm peer install failed: ${e.message}`);
     console.log(`  ${dim}Skipping npm bootstrap. GitHub-first packaged/source installs already contain the framework payload.${reset}`);
+    return false;
+  }
+}
+
+/**
+ * GitHub-first bootstrap path for environments that have neither a packaged
+ * executable nor a full source checkout.
+ * @param {string[]} runtimes - Selected runtimes (e.g. ['claude', 'gemini'])
+ * @param {boolean} isGlobal - Whether this is a global install
+ * @returns {boolean} true if GAD was installed successfully
+ */
+function ensureGadInstalled(runtimes, isGlobal) {
+  const existingBinary = findOfficialGadBinary();
+
+  if (existingBinary) {
+    console.log(`\n  ${green}Found official gad executable${reset}`);
+    console.log(`  ${dim}${existingBinary}${reset}`);
+    console.log(`  ${dim}Skipping GitHub bootstrap and continuing with runtime installation.${reset}`);
+    return true;
+  }
+
+  const { execSync } = require('child_process');
+  const locationFlag = isGlobal ? '--global' : '--local';
+  const runtimeFlags = runtimes.map(r => '--' + r).join(' ');
+  const repoRef = 'github:MagicbornStudios/get-anything-done';
+  const cmd = `npx ${repoRef} ${runtimeFlags} ${locationFlag}`.trim();
+  const releaseUrl = 'https://github.com/MagicbornStudios/get-anything-done/releases/latest';
+
+  console.log(`\n  ${cyan}Bootstrapping GAD from GitHub...${reset}`);
+  console.log(`  ${dim}${cmd}${reset}\n`);
+
+  try {
+    execSync(cmd, { stdio: 'inherit' });
+    console.log(`\n  ${green}Installed GitHub bootstrap${reset}`);
+    return true;
+  } catch (e) {
+    console.log(`\n  ${yellow}GitHub bootstrap failed${reset}: ${e.message}`);
+    console.log(`  ${dim}If you want the standalone installer instead, download the latest release:${reset}`);
+    console.log(`  ${dim}${releaseUrl}${reset}`);
     return false;
   }
 }
@@ -5641,7 +5680,7 @@ function installAllRuntimes(runtimes, isGlobal, isInteractive) {
 
   // Step 1: ensure GAD is installed as the runtime layer
   if (!process.env.GAD_TEST_MODE && !shouldSkipPeerBootstrap()) {
-    ensureGsdInstalled(runtimes, isGlobal);
+    ensureGadInstalled(runtimes, isGlobal);
   } else if (!process.env.GAD_TEST_MODE) {
     console.log(`\n  ${green}✓${reset} Skipping npm peer bootstrap (packaged/source install already contains the framework payload)`);
   }
