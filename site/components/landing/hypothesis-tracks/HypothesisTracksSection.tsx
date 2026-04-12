@@ -7,6 +7,7 @@ import { HypothesisTracksDomainSelector } from "@/components/landing/hypothesis-
 import { HypothesisTracksIntro } from "@/components/landing/hypothesis-tracks/HypothesisTracksIntro";
 import { HypothesisTracksRelatedLinks } from "@/components/landing/hypothesis-tracks/HypothesisTracksRelatedLinks";
 import { buildTrackData } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
+import { SiteSection } from "@/components/site";
 
 /**
  * Landing-page section rendering the interactive hypothesis-tracks chart.
@@ -44,31 +45,29 @@ export default function HypothesisTracksSection() {
   }, []);
 
   return (
-    <section id="tracks" className="border-t border-border/60 bg-card/20">
-      <div className="section-shell">
-        <HypothesisTracksIntro />
+    <SiteSection id="tracks" tone="muted" className="border-t border-border/60">
+      <HypothesisTracksIntro />
 
-        <HypothesisTracksDomainSelector
-          selectedDomain={selectedDomain}
-          onSelectDomain={(domainId) => {
-            setSelectedDomain(domainId);
-            setActiveRound(null);
-            window.dispatchEvent(new CustomEvent("domain-filter", { detail: domainId }));
-          }}
-        />
+      <HypothesisTracksDomainSelector
+        selectedDomain={selectedDomain}
+        onSelectDomain={(domainId) => {
+          setSelectedDomain(domainId);
+          setActiveRound(null);
+          window.dispatchEvent(new CustomEvent("domain-filter", { detail: domainId }));
+        }}
+      />
 
-        <HypothesisTracksChartPanel
-          data={data}
-          onRoundClick={handleRoundClick}
-          activeRound={activeRound}
-        />
+      <HypothesisTracksChartPanel
+        data={data}
+        onRoundClick={handleRoundClick}
+        activeRound={activeRound}
+      />
 
-        {activeRound && (
-          <HypothesisTracksActiveRoundBar activeRound={activeRound} onClear={clearRoundFilter} />
-        )}
+      {activeRound && (
+        <HypothesisTracksActiveRoundBar activeRound={activeRound} onClear={clearRoundFilter} />
+      )}
 
-        <HypothesisTracksRelatedLinks />
-      </div>
-    </section>
+      <HypothesisTracksRelatedLinks />
+    </SiteSection>
   );
 }

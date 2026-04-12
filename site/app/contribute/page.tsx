@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
@@ -20,56 +21,57 @@ export default function ContributePage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Contribute</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Clone, install,{" "}
-            <span className="gradient-text">talk to the agent.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            GAD is forkable. Everything &mdash; planning state, eval results,
-            decisions, the site itself &mdash; lives in the repo. To contribute
-            an experiment or run your own eval, you don&apos;t need to learn the
-            framework. You clone, install, and have a conversation with a coding
-            agent that already has the GAD skills available.
-          </p>
-          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
-            Anchor decision: <Ref id="gad-77" /> &mdash; contribution flow is
-            human-first. <Ref id="gad-74" /> &mdash; the value of GAD is task
-            management at scale, not faster software shipping.
-          </p>
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Contribute"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Clone, install, <span className="gradient-text">talk to the agent.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          GAD is forkable. Everything &mdash; planning state, eval results, decisions, the site itself
+          &mdash; lives in the repo. To contribute an experiment or run your own eval, you don&apos;t
+          need to learn the framework. You clone, install, and have a conversation with a coding agent
+          that already has the GAD skills available.
+        </SiteProse>
+        <SiteProse size="sm" className="mt-4">
+          Anchor decision: <Ref id="gad-77" /> &mdash; contribution flow is human-first.{" "}
+          <Ref id="gad-74" /> &mdash; the value of GAD is task management at scale, not faster software
+          shipping.
+        </SiteProse>
 
-          <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
-            <div className="mb-2 flex items-center gap-2 text-amber-100">
-              <AlertTriangle size={14} aria-hidden />
-              <strong>Fresh-clone test still open</strong>
-            </div>
-            <p className="text-xs leading-5 text-amber-200">
-              We have not yet verified the contribution flow on a clean clone in
-              a new repo. The instructions below describe what{" "}
-              <em>should</em> work; if you hit a missing piece (settings, hooks,
-              env vars), open an issue and tag it{" "}
-              <Link
-                href="/questions#fresh-clone-contribution-test"
-                className="text-amber-100 underline decoration-dotted"
-              >
-                fresh-clone-contribution-test
-              </Link>
-              .
-            </p>
+        <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+          <div className="mb-2 flex items-center gap-2 text-amber-100">
+            <AlertTriangle size={14} aria-hidden />
+            <strong>Fresh-clone test still open</strong>
           </div>
+          <p className="text-xs leading-5 text-amber-200">
+            We have not yet verified the contribution flow on a clean clone in a new repo. The
+            instructions below describe what <em>should</em> work; if you hit a missing piece (settings,
+            hooks, env vars), open an issue and tag it{" "}
+            <Link
+              href="/questions#fresh-clone-contribution-test"
+              className="text-amber-100 underline decoration-dotted"
+            >
+              fresh-clone-contribution-test
+            </Link>
+            .
+          </p>
         </div>
-      </section>
+      </SiteSection>
 
       {/* Human path */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <MessageSquare size={18} className="text-accent" aria-hidden />
-            <p className="section-kicker !mb-0">Human workflow &mdash; what you do</p>
-          </div>
-          <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+      <SiteSection tone="muted">
+        <SiteSectionHeading
+          icon={MessageSquare}
+          kicker="Human workflow — what you do"
+          kickerRowClassName="mb-6 gap-3"
+        />
+        <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
             Five steps. Three of them are setup, two are conversation. You never
             run <code className="rounded bg-background/60 px-1 py-0.5 text-xs">gad snapshot</code>{" "}
             yourself &mdash; that&apos;s for the agent.
@@ -111,17 +113,16 @@ cd get-anything-done`}
               note="When the agent finishes, the site picks up the new data automatically on the next prebuild. Findings, scores, and decisions are all rendered as static pages — open them in your browser and skim."
             />
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Agent path */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <Bot size={18} className="text-accent" aria-hidden />
-            <p className="section-kicker !mb-0">Agent workflow &mdash; what happens behind the scenes</p>
-          </div>
-          <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+      <SiteSection>
+        <SiteSectionHeading
+          icon={Bot}
+          kicker="Agent workflow — what happens behind the scenes"
+          kickerRowClassName="mb-6 gap-3"
+        />
+        <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
             You don&apos;t need to follow this. It&apos;s here so you know the
             difference between human-facing and agent-facing operations.
           </p>
@@ -189,17 +190,12 @@ cd get-anything-done`}
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* What you can contribute */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <GitFork size={18} className="text-accent" aria-hidden />
-            <p className="section-kicker !mb-0">What you can contribute</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
+      <SiteSection tone="muted">
+        <SiteSectionHeading icon={GitFork} kicker="What you can contribute" kickerRowClassName="mb-6 gap-3" />
+        <div className="grid gap-4 md:grid-cols-2">
             <ContributeCard
               title="Run an existing eval"
               description="Pick any greenfield project (escape-the-dungeon, -bare, -emergent) and run it against the current requirements version. Compare your results to ours."
@@ -231,14 +227,12 @@ cd get-anything-done`}
               firstStep={'"Set up a new eval project: escape-the-dungeon-codex. Same requirements as escape-the-dungeon, but the runner is codex-cli instead of claude-code."'}
             />
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Quick links */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Useful starting points</p>
-          <div className="space-y-3 text-sm leading-6">
+      <SiteSection>
+        <SiteSectionHeading kicker="Useful starting points" />
+        <div className="mt-4 space-y-3 text-sm leading-6">
             <p>
               <Button variant="link" className="h-auto gap-1 p-0 text-sm font-normal text-accent" asChild>
                 <a href={REPO} target="_blank" rel="noopener noreferrer">
@@ -285,8 +279,7 @@ cd get-anything-done`}
               &mdash; if a term is confusing, it&apos;s here.
             </p>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

@@ -6,6 +6,7 @@ import { HeroHeadline } from "@/components/landing/hero/HeroHeadline";
 import { HeroLead } from "@/components/landing/hero/HeroLead";
 import { HeroStatsGrid } from "@/components/landing/hero/HeroStatsGrid";
 import { getHeroStats } from "@/components/landing/hero/hero-stats";
+import { SiteSection } from "@/components/site";
 
 /**
  * Hero rewrite 2026-04-09 per decisions gad-74, gad-75, gad-76.
@@ -22,31 +23,37 @@ export default function Hero() {
   const stats = getHeroStats();
 
   return (
-    <section id="top" className="relative overflow-hidden">
-      <div className="absolute inset-0 grid-bg opacity-50" aria-hidden />
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-      <div className="section-shell relative">
-        <div className="max-w-3xl">
-          <HeroBadges currentRequirementsVersion={stats.currentRequirementsVersion} />
+    <SiteSection
+      id="top"
+      className="relative overflow-hidden border-b-0"
+      shellClassName="relative"
+      beforeShell={
+        <>
+          <div className="absolute inset-0 grid-bg opacity-50" aria-hidden />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+        </>
+      }
+    >
+      <div className="max-w-3xl">
+        <HeroBadges currentRequirementsVersion={stats.currentRequirementsVersion} />
 
-          <HeroHeadline />
+        <HeroHeadline />
 
-          <HeroLead />
+        <HeroLead />
 
-          <HeroCtaRow />
+        <HeroCtaRow />
 
-          <HeroStatsGrid
-            playableCount={stats.playableCount}
-            runsScored={stats.runsScored}
-            decisionsLogged={stats.decisionsLogged}
-            currentRequirementsVersion={stats.currentRequirementsVersion}
-          />
+        <HeroStatsGrid
+          playableCount={stats.playableCount}
+          runsScored={stats.runsScored}
+          decisionsLogged={stats.decisionsLogged}
+          currentRequirementsVersion={stats.currentRequirementsVersion}
+        />
 
-          <HeroCalloutCsh />
+        <HeroCalloutCsh />
 
-          <HeroCalloutDisclosure />
-        </div>
+        <HeroCalloutDisclosure />
       </div>
-    </section>
+    </SiteSection>
   );
 }

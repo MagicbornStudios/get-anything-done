@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 import { HypothesisTracksChart, type HypothesisTrackPoint } from "@/components/charts/HypothesisTracksChart";
 import { EVAL_RUNS, type EvalRunRecord } from "@/lib/eval-data";
@@ -168,39 +169,40 @@ export default function HypothesesIndexPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Hypotheses</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Every research hypothesis,{" "}
-            <span className="gradient-text">wired to its eval track.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Each card below is one hypothesis the project is tracking, the eval
-            track that tests it, the latest evidence, and a link to the dedicated
-            page for deeper reading. Every hypothesis also has an entry on{" "}
-            <Link href="/skeptic" className="text-accent underline decoration-dotted">
-              /skeptic
-            </Link>{" "}
-            holding it to its strongest critique — read that before trusting any
-            claim here.
-          </p>
-          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
-            Labels: <strong className="text-foreground">preliminary observation</strong>{" "}
-            means we have seen a pattern and named it, but sample size is too
-            small to call it a finding. <strong className="text-foreground">discussing</strong>{" "}
-            means we are still working out what the hypothesis even claims.{" "}
-            <strong className="text-foreground">operationalized</strong> means
-            it has a concrete computable definition. <strong className="text-foreground">not yet tested</strong>{" "}
-            means no runs have produced data against it.
-          </p>
-        </div>
-      </section>
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Hypotheses"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Every research hypothesis, <span className="gradient-text">wired to its eval track.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          Each card below is one hypothesis the project is tracking, the eval track that tests it,
+          the latest evidence, and a link to the dedicated page for deeper reading. Every hypothesis
+          also has an entry on{" "}
+          <Link href="/skeptic" className="text-accent underline decoration-dotted">
+            /skeptic
+          </Link>{" "}
+          holding it to its strongest critique — read that before trusting any claim here.
+        </SiteProse>
+        <SiteProse size="sm" className="mt-4">
+          Labels: <strong className="text-foreground">preliminary observation</strong> means we have
+          seen a pattern and named it, but sample size is too small to call it a finding.{" "}
+          <strong className="text-foreground">discussing</strong> means we are still working out what
+          the hypothesis even claims. <strong className="text-foreground">operationalized</strong> means
+          it has a concrete computable definition.{" "}
+          <strong className="text-foreground">not yet tested</strong> means no runs have produced data
+          against it.
+        </SiteProse>
+      </SiteSection>
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">All tracks, one chart</p>
-          <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+      <SiteSection>
+        <SiteSectionHeading kicker="All tracks, one chart" className="mb-4" />
+        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
             Highest human-review score per round, per hypothesis track.
             Solid lines have real data. Dashed lines are planned tracks —
             content-driven (gad-66) and codex runtime (task 89) — with no
@@ -211,17 +213,12 @@ export default function HypothesesIndexPage() {
             before trusting any individual point: N=2-5 runs per condition,
             one human reviewer, one task domain so far.
           </p>
-          <HypothesisTracksChart data={chartData} />
-        </div>
-      </section>
+        <HypothesisTracksChart data={chartData} />
+      </SiteSection>
 
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-8 flex items-center gap-3">
-            <FlaskConical size={18} className="text-accent" aria-hidden />
-            <p className="section-kicker !mb-0">Current hypotheses</p>
-          </div>
-          <div className="space-y-5">
+      <SiteSection tone="muted">
+        <SiteSectionHeading icon={FlaskConical} kicker="Current hypotheses" kickerRowClassName="mb-8 gap-3" />
+        <div className="space-y-5">
             {HYPOTHESES.map((h) => {
               const config = STATUS_CONFIG[h.status];
               const Icon = config.icon;
@@ -294,8 +291,7 @@ export default function HypothesesIndexPage() {
               );
             })}
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

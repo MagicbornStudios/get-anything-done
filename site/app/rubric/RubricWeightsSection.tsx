@@ -1,15 +1,16 @@
 import { ClipboardList } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function RubricWeightsSection() {
   return (
-    <section className="border-b border-border/60 bg-card/20">
-      <div className="section-shell">
-        <div className="mb-6 flex items-center gap-2">
-          <ClipboardList size={18} className="text-accent" aria-hidden />
-          <p className="section-kicker !mb-0">How to read the weights</p>
-        </div>
-        <div className="grid gap-5 md:grid-cols-3">
+    <SiteSection tone="muted">
+      <SiteSectionHeading
+        icon={ClipboardList}
+        kicker="How to read the weights"
+        kickerRowClassName="mb-6 gap-3"
+      />
+      <div className="grid gap-5 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Dimensions sum to 1.0</CardTitle>
@@ -41,7 +42,6 @@ export function RubricWeightsSection() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </section>
+    </SiteSection>
   );
 }

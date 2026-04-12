@@ -9,7 +9,7 @@ import { Ref } from "@/components/refs/Ref";
 import type { PlanningPhase } from "@/lib/catalog.generated";
 import { ALL_TASKS } from "@/lib/eval-data";
 import { RichText } from "@/components/refs/RichText";
-import { SiteSection } from "@/components/site";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 const DEFAULT_SPRINT_SIZE = 5;
 
@@ -63,15 +63,15 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
   return (
     <SiteSection>
       <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="section-kicker">Phase timeline</p>
-            <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Sprint {currentSprintNum} of {totalSprints}
-            </h2>
-          </div>
+          <SiteSectionHeading
+            kicker="Phase timeline"
+            title={`Sprint ${currentSprintNum} of ${totalSprints}`}
+            preset="section"
+            className="min-w-0 flex-1"
+          />
 
           {/* Sprint controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {/* Sprint size controls */}
             <div className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-card/40 px-1 py-0.5">
               <Button

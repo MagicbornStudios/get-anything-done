@@ -2,6 +2,7 @@ import { HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { OpenQuestion } from "@/lib/eval-data";
 import { QuestionCard } from "@/app/questions/QuestionCard";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function QuestionsCategorySection({
   category,
@@ -10,23 +11,29 @@ export function QuestionsCategorySection({
   category: string;
   questions: OpenQuestion[];
 }) {
+  const label = category.replace(/-/g, " ");
   return (
-    <section
+    <SiteSection
       id={category}
-      className="border-b border-border/60 bg-card/20 last:bg-background last:border-b-0"
+      tone="muted"
+      className="last:border-b-0 last:bg-background"
     >
-      <div className="section-shell">
-        <div className="mb-6 flex items-center gap-3">
-          <HelpCircle size={18} className="text-accent" aria-hidden />
-          <p className="section-kicker !mb-0 capitalize">{category.replace("-", " ")}</p>
-          <Badge variant="outline">{questions.length}</Badge>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {questions.map((q) => (
-            <QuestionCard key={q.id} q={q} />
-          ))}
-        </div>
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <SiteSectionHeading
+          icon={HelpCircle}
+          kicker={label}
+          kickerRowClassName="mb-0 flex-1 gap-3 capitalize"
+          className="min-w-0 flex-1"
+        />
+        <Badge variant="outline" className="shrink-0">
+          {questions.length}
+        </Badge>
       </div>
-    </section>
+      <div className="grid gap-4 md:grid-cols-2">
+        {questions.map((q) => (
+          <QuestionCard key={q.id} q={q} />
+        ))}
+      </div>
+    </SiteSection>
   );
 }

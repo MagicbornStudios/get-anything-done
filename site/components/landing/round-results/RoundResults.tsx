@@ -10,6 +10,7 @@ import { RoundResultsRoundConclusion } from "@/components/landing/round-results/
 import { RoundResultsRunCard } from "@/components/landing/round-results/RoundResultsRunCard";
 import { RoundResultsTbdSection } from "@/components/landing/round-results/RoundResultsTbdSection";
 import { useRoundResultsRuns } from "@/components/landing/round-results/use-round-results-runs";
+import { SiteSection } from "@/components/site";
 
 export default function RoundResults() {
   const globalRoundFilter = useFilterStore((s) => s.roundFilter);
@@ -23,35 +24,33 @@ export default function RoundResults() {
     : null;
 
   return (
-    <section id="results" className="border-t border-border/60 bg-card/20">
-      <div className="section-shell">
-        <RoundResultsHeader
-          effectiveRound={effectiveRound}
-          localRoundFilter={localRoundFilter}
-          globalRoundFilter={globalRoundFilter}
-          onLocalRoundChange={setLocalRoundFilter}
-        />
+    <SiteSection id="results" tone="muted" className="border-t border-border/60">
+      <RoundResultsHeader
+        effectiveRound={effectiveRound}
+        localRoundFilter={localRoundFilter}
+        globalRoundFilter={globalRoundFilter}
+        onLocalRoundChange={setLocalRoundFilter}
+      />
 
-        {displayRuns.length > 0 && (
-          <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {displayRuns.map((run) => (
-              <RoundResultsRunCard key={`${run.project}-${run.version}`} run={run} />
-            ))}
-          </div>
-        )}
+      {displayRuns.length > 0 && (
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {displayRuns.map((run) => (
+            <RoundResultsRunCard key={`${run.project}-${run.version}`} run={run} />
+          ))}
+        </div>
+      )}
 
-        <RoundResultsTbdSection runs={tbdRuns} />
+      <RoundResultsTbdSection runs={tbdRuns} />
 
-        {displayRuns.length === 0 && tbdRuns.length === 0 && effectiveRound && (
-          <RoundResultsEmptyRound roundLabel={effectiveRound} />
-        )}
+      {displayRuns.length === 0 && tbdRuns.length === 0 && effectiveRound && (
+        <RoundResultsEmptyRound roundLabel={effectiveRound} />
+      )}
 
-        {effectiveRound && roundSummary && (
-          <RoundResultsRoundConclusion roundLabel={effectiveRound} summary={roundSummary} />
-        )}
+      {effectiveRound && roundSummary && (
+        <RoundResultsRoundConclusion roundLabel={effectiveRound} summary={roundSummary} />
+      )}
 
-        {!effectiveRound && <RoundResultsDefaultCallout />}
-      </div>
-    </section>
+      {!effectiveRound && <RoundResultsDefaultCallout />}
+    </SiteSection>
   );
 }

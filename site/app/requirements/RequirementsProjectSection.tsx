@@ -10,6 +10,7 @@ import {
   REPO,
   type CurrentRequirementFile,
 } from "@/app/requirements/requirements-shared";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function RequirementsProjectSection({
   project,
@@ -23,8 +24,7 @@ export function RequirementsProjectSection({
   const addendum = parseAddendum(xml);
 
   return (
-    <section id={project} className="border-b border-border/60 bg-card/20">
-      <div className="section-shell">
+    <SiteSection id={project} tone="muted">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <Badge variant="default" className="inline-flex items-center gap-1.5">
             <Flame size={10} aria-hidden />
@@ -88,8 +88,8 @@ export function RequirementsProjectSection({
         )}
 
         {v4Base.gates.length > 0 && (
-          <div className="mt-6">
-            <p className="section-kicker">Gate criteria (v4 base)</p>
+          <div className="mt-6 space-y-3">
+            <SiteSectionHeading kicker="Gate criteria (v4 base)" />
             <div className="grid gap-3 md:grid-cols-2">
               {v4Base.gates.map((g) => (
                 <Card key={g.id} id={`${project}-${g.id}`}>
@@ -112,12 +112,11 @@ export function RequirementsProjectSection({
 
         {addendum.length > 0 && (
           <div className="mt-10">
-            <div className="mb-4 flex items-center gap-3">
-              <Gauge size={18} className="text-accent" aria-hidden />
-              <p className="section-kicker !mb-0">
-                v5 addendum — {addendum.length} playtest-driven additions
-              </p>
-            </div>
+            <SiteSectionHeading
+              icon={Gauge}
+              kicker={`v5 addendum — ${addendum.length} playtest-driven additions`}
+              kickerRowClassName="mb-4 gap-3"
+            />
             <div className="space-y-3">
               {addendum.map((req) => (
                 <Card key={req.id} id={req.id} className="scroll-mt-24">
@@ -152,7 +151,6 @@ export function RequirementsProjectSection({
             </div>
           </div>
         )}
-      </div>
-    </section>
+    </SiteSection>
   );
 }

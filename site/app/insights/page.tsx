@@ -1,6 +1,6 @@
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
-import { SiteMetricCard } from "@/components/site";
+import { SiteMetricCard, SiteSection } from "@/components/site";
 import { InsightsDataSourcesCard } from "@/app/insights/InsightsDataSourcesCard";
 import { InsightsPageIntro } from "@/app/insights/InsightsPageIntro";
 import { buildDataSources, buildInsights } from "@/app/insights/insights-queries";
@@ -18,7 +18,7 @@ export default function InsightsPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
-      <div className="section-shell">
+      <SiteSection>
         <InsightsPageIntro />
 
         <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -30,7 +30,7 @@ export default function InsightsPage() {
         </ul>
 
         <InsightsDataSourcesCard sources={dataSources} />
-      </div>
+      </SiteSection>
       <Footer />
     </main>
   );

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 type RequirementsVersion = (typeof REQUIREMENTS_HISTORY)[number];
 
@@ -19,15 +20,16 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
   const prev = currentIdx > 0 ? versions[currentIdx - 1] : null;
 
   return (
-    <section className="border-t border-border/60">
-      <div className="section-shell">
-        <p className="section-kicker">Requirements history</p>
-        <h2 className="text-2xl font-semibold tracking-tight">
-          {versions.length} version{versions.length !== 1 ? "s" : ""} — each change triggers a new round
-        </h2>
+    <SiteSection className="border-b-0 border-t border-border/60">
+      <SiteSectionHeading
+        kicker="Requirements history"
+        preset="section"
+        titleClassName="text-2xl font-semibold tracking-tight"
+        title={`${versions.length} version${versions.length !== 1 ? "s" : ""} — each change triggers a new round`}
+      />
 
-        {/* Version pagination */}
-        <div className="mt-6 flex items-center gap-3">
+      {/* Version pagination */}
+      <div className="mt-6 flex items-center gap-3">
           <Button
             type="button"
             variant="outline"
@@ -72,10 +74,10 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
           <span className="text-xs text-muted-foreground">
             {currentIdx + 1} of {versions.length}
           </span>
-        </div>
+      </div>
 
-        {/* Current version detail */}
-        <div className="mt-6 rounded-2xl border border-border/60 bg-card/40 p-6">
+      {/* Current version detail */}
+      <div className="mt-6 rounded-2xl border border-border/60 bg-card/40 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Badge variant="default">{current.version}</Badge>
             {current.date && (
@@ -109,8 +111,7 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
               </p>
             </div>
           )}
-        </div>
       </div>
-    </section>
+    </SiteSection>
   );
 }

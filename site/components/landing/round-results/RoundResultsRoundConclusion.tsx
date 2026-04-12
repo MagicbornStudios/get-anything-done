@@ -1,4 +1,5 @@
 import type { RoundSummary } from "@/lib/eval-data";
+import { SiteSectionHeading } from "@/components/site";
 
 type Props = {
   roundLabel: string;
@@ -24,10 +25,12 @@ function LedToList({ body }: { body: string }) {
 export function RoundResultsRoundConclusion({ roundLabel, summary }: Props) {
   return (
     <div className="mt-12 rounded-2xl border border-accent/40 bg-accent/5 p-6 md:p-8">
-      <p className="section-kicker">{roundLabel} conclusion</p>
-      <h3 className="mt-1 max-w-3xl text-2xl font-semibold tracking-tight md:text-3xl">
-        {summary.title}
-      </h3>
+      <SiteSectionHeading
+        kicker={`${roundLabel} conclusion`}
+        as="h3"
+        title={summary.title}
+        titleClassName="mt-1 max-w-3xl text-2xl font-semibold tracking-tight md:text-3xl"
+      />
       <div className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
         <LedToList body={summary.body} />
       </div>

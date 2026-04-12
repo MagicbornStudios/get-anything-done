@@ -1,11 +1,11 @@
 import { METHODOLOGY_TEMPLATE_ROWS } from "@/app/methodology/methodology-shared";
-import { SiteProse, SiteSection } from "@/components/site";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function MethodologyTemplateMatrixSection() {
   return (
     <SiteSection>
-      <p className="section-kicker">What each condition template contains</p>
-      <SiteProse size="sm" className="mb-6">
+      <SiteSectionHeading kicker="What each condition template contains" />
+      <SiteProse size="sm" className="mb-6 mt-4">
         {`Transparency about what the eval agent receives. Each column is one condition. \u2713 means the file is present in the template; \u2014 means absent. This is the full input set \u2014 the agent sees nothing else.`}
       </SiteProse>
       <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/40">

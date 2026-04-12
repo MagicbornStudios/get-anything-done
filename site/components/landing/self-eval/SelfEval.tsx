@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import selfEvalData from "@/data/self-eval.json";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 const data = selfEvalData.latest;
 
@@ -65,100 +66,102 @@ export default function SelfEval() {
   const maxToolCount = topTools.length > 0 ? topTools[0].count : 1;
 
   return (
-    <section id="self-eval" className="border-t border-border/60 bg-card/20">
-      <div className="section-shell">
-        <p className="section-kicker">Framework usage</p>
-        <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-          Real data from building GAD <span className="gradient-text">with GAD.</span>
-        </h2>
-        <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-          We use GAD to build GAD. These metrics come from our actual trace logs —
-          {data.totals.events.toLocaleString()} tool calls across {data.totals.sessions} sessions
-          over {data.period.days} days. Not a controlled experiment, just real work.
-        </p>
+    <SiteSection id="self-eval" tone="muted" className="border-t border-border/60">
+      <SiteSectionHeading
+        kicker="Framework usage"
+        preset="hero-compact"
+        title={
+          <>
+            Real data from building GAD <span className="gradient-text">with GAD.</span>
+          </>
+        }
+      />
+      <SiteProse className="mt-5">
+        We use GAD to build GAD. These metrics come from our actual trace logs —
+        {data.totals.events.toLocaleString()} tool calls across {data.totals.sessions} sessions over{" "}
+        {data.period.days} days. Not a controlled experiment, just real work.
+      </SiteProse>
 
-        {/* Key metrics grid */}
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            label="Framework overhead"
-            value={`${(data.framework_overhead.ratio * 100).toFixed(1)}%`}
-            subtext={`${data.framework_overhead.planning_ops} planning ops / ${data.framework_overhead.planning_ops + data.framework_overhead.source_ops} total`}
-            score={data.framework_overhead.score}
-          />
-          <MetricCard
-            label="Loop compliance"
-            value={`${(data.loop_compliance.score * 100).toFixed(0)}%`}
-            subtext={`${data.loop_compliance.snapshot_starts} of ${data.loop_compliance.total_sessions} sessions start with snapshot`}
-            score={data.loop_compliance.score}
-          />
-          <MetricCard
-            label="Tasks"
-            value={`${data.tasks.done} / ${data.tasks.total}`}
-            subtext={`${data.tasks.planned} planned · ${data.tasks.in_progress} in progress`}
-          />
-          <MetricCard
-            label="Decisions"
-            value={String(data.decisions)}
-            subtext="Captured in DECISIONS.xml"
-          />
-        </div>
-
-        {/* Tool distribution + GAD CLI breakdown */}
-        <div className="mt-10 grid gap-8 lg:grid-cols-2">
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Tool distribution
-            </h3>
-            <div className="mt-4 space-y-2.5">
-              {topTools.map((t) => (
-                <ToolBar key={t.tool} tool={t.tool} count={t.count} max={maxToolCount} />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              GAD CLI usage
-            </h3>
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
-                <p className="text-2xl font-semibold tabular-nums text-foreground">
-                  {data.gad_cli_breakdown.snapshot}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">snapshots</p>
-              </div>
-              <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
-                <p className="text-2xl font-semibold tabular-nums text-foreground">
-                  {data.gad_cli_breakdown.eval}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">eval commands</p>
-              </div>
-              <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
-                <p className="text-2xl font-semibold tabular-nums text-foreground">
-                  {data.gad_cli_breakdown.other}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">other CLI</p>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Period
-              </h3>
-              <div className="mt-2 flex items-center gap-2">
-                <Badge variant="outline">{data.period.start}</Badge>
-                <span className="text-xs text-muted-foreground">→</span>
-                <Badge variant="outline">{data.period.end}</Badge>
-                <Badge variant="default">{data.period.days} days</Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <p className="mt-8 text-xs text-muted-foreground">
-          Computed at {new Date(data.computed_at).toLocaleString()}. Source: .planning/.gad-log/ trace data.
-        </p>
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Framework overhead"
+          value={`${(data.framework_overhead.ratio * 100).toFixed(1)}%`}
+          subtext={`${data.framework_overhead.planning_ops} planning ops / ${data.framework_overhead.planning_ops + data.framework_overhead.source_ops} total`}
+          score={data.framework_overhead.score}
+        />
+        <MetricCard
+          label="Loop compliance"
+          value={`${(data.loop_compliance.score * 100).toFixed(0)}%`}
+          subtext={`${data.loop_compliance.snapshot_starts} of ${data.loop_compliance.total_sessions} sessions start with snapshot`}
+          score={data.loop_compliance.score}
+        />
+        <MetricCard
+          label="Tasks"
+          value={`${data.tasks.done} / ${data.tasks.total}`}
+          subtext={`${data.tasks.planned} planned · ${data.tasks.in_progress} in progress`}
+        />
+        <MetricCard
+          label="Decisions"
+          value={String(data.decisions)}
+          subtext="Captured in DECISIONS.xml"
+        />
       </div>
-    </section>
+
+      <div className="mt-10 grid gap-8 lg:grid-cols-2">
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Tool distribution
+          </h3>
+          <div className="mt-4 space-y-2.5">
+            {topTools.map((t) => (
+              <ToolBar key={t.tool} tool={t.tool} count={t.count} max={maxToolCount} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            GAD CLI usage
+          </h3>
+          <div className="mt-4 grid grid-cols-3 gap-4">
+            <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
+                {data.gad_cli_breakdown.snapshot}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">snapshots</p>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
+                {data.gad_cli_breakdown.eval}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">eval commands</p>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card/40 p-4 text-center">
+              <p className="text-2xl font-semibold tabular-nums text-foreground">
+                {data.gad_cli_breakdown.other}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">other CLI</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Period
+            </h3>
+            <div className="mt-2 flex items-center gap-2">
+              <Badge variant="outline">{data.period.start}</Badge>
+              <span className="text-xs text-muted-foreground">→</span>
+              <Badge variant="outline">{data.period.end}</Badge>
+              <Badge variant="default">{data.period.days} days</Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-8 text-xs text-muted-foreground">
+        Computed at {new Date(data.computed_at).toLocaleString()}. Source: .planning/.gad-log/ trace
+        data.
+      </p>
+    </SiteSection>
   );
 }

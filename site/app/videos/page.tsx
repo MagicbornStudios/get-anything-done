@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import VideoEmbed from "@/components/video/VideoEmbed";
 import { COMPOSITIONS } from "@/remotion/registry";
 
@@ -18,84 +19,71 @@ export default function VideosPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Videos</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            30-second explainers.{" "}
-            <span className="gradient-text">Built by agents, rendered by Remotion.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Each embed below is a row in{" "}
-            <code className="rounded bg-card/60 px-1 py-0.5 text-sm">
-              remotion/registry.ts
-            </code>
-            — same metadata the per-run pages use when a composition is tied to a preserved
-            eval. Add a composition there and it appears here automatically.
-          </p>
-        </div>
-      </section>
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Videos"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              30-second explainers.{" "}
+              <span className="gradient-text">Built by agents, rendered by Remotion.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          Each embed below is a row in{" "}
+          <code className="rounded bg-card/60 px-1 py-0.5 text-sm">remotion/registry.ts</code> — same
+          metadata the per-run pages use when a composition is tied to a preserved eval. Add a
+          composition there and it appears here automatically.
+        </SiteProse>
+      </SiteSection>
 
       {COMPOSITIONS.length === 0 ? (
-        <section className="border-b border-border/60 bg-card/20">
-          <div className="section-shell">
-            <p className="text-sm text-muted-foreground">
-              No compositions in the registry yet. Follow the checklist in{" "}
-              <code className="rounded bg-card/60 px-1 py-0.5 text-xs">registry.ts</code>{" "}
-              to add one.
-            </p>
-          </div>
-        </section>
+        <SiteSection tone="muted">
+          <SiteProse size="sm">
+            No compositions in the registry yet. Follow the checklist in{" "}
+            <code className="rounded bg-card/60 px-1 py-0.5 text-xs">registry.ts</code> to add one.
+          </SiteProse>
+        </SiteSection>
       ) : (
         COMPOSITIONS.map((c, i) => (
-          <section
-            key={c.slug}
-            id={c.slug}
-            className={
-              i % 2 === 0
-                ? "border-b border-border/60 bg-card/20"
-                : "border-b border-border/60"
-            }
-          >
-            <div className="section-shell">
-              <div className="mb-6 flex flex-wrap items-center gap-3">
-                <Badge variant="default" className="inline-flex items-center gap-1.5">
-                  <Play size={11} aria-hidden />
-                  {c.slug}
-                </Badge>
-                <Badge variant="outline">
-                  {Math.round(c.durationInFrames / c.fps)}s · {c.width}×{c.height} · {c.fps}fps
-                </Badge>
-                <Badge variant="outline">{c.status}</Badge>
-              </div>
-              <VideoEmbed composition={c} />
+          <SiteSection key={c.slug} id={c.slug} tone={i % 2 === 0 ? "muted" : "default"}>
+            <div className="mb-6 flex flex-wrap items-center gap-3">
+              <Badge variant="default" className="inline-flex items-center gap-1.5">
+                <Play size={11} aria-hidden />
+                {c.slug}
+              </Badge>
+              <Badge variant="outline">
+                {Math.round(c.durationInFrames / c.fps)}s · {c.width}×{c.height} · {c.fps}fps
+              </Badge>
+              <Badge variant="outline">{c.status}</Badge>
             </div>
-          </section>
+            <VideoEmbed composition={c} />
+          </SiteSection>
         ))
       )}
 
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-4 py-2 font-semibold hover:border-accent hover:text-accent"
-              asChild
-            >
-              <Link href="/hypotheses">What this explains</Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-auto gap-1 rounded-full border-rose-500/40 bg-rose-500/10 px-4 py-2 font-semibold text-rose-300 hover:bg-rose-500/20"
-              asChild
-            >
-              <Link href="/skeptic">Skeptic critique</Link>
-            </Button>
-          </div>
+      <SiteSection tone="muted">
+        <div className="flex flex-wrap gap-3 text-sm">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-4 py-2 font-semibold hover:border-accent hover:text-accent"
+            asChild
+          >
+            <Link href="/hypotheses">What this explains</Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto gap-1 rounded-full border-rose-500/40 bg-rose-500/10 px-4 py-2 font-semibold text-rose-300 hover:bg-rose-500/20"
+            asChild
+          >
+            <Link href="/skeptic">Skeptic critique</Link>
+          </Button>
         </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

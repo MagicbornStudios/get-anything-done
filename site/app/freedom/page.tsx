@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import {
   EVAL_RUNS,
   PLAYABLE_INDEX,
@@ -57,63 +58,60 @@ export default function FreedomHypothesisPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-2">
-            <Badge
-              variant="default"
-              className="inline-flex items-center gap-1.5 border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-            >
-              Freedom hypothesis
-            </Badge>
-          </div>
-          <p className="section-kicker">Freedom</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Less framework,{" "}
-            <span className="gradient-text">better output?</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The freedom hypothesis (<Ref id="gad-36" />) emerged from round 3: the{" "}
-            <Link
-              href="/glossary#bare-workflow"
-              className="cursor-help underline decoration-dotted decoration-accent/60"
-              title="Bare workflow"
-            >
-              bare condition
-            </Link>{" "}
-            — no framework, no inherited skills, just AGENTS.md + requirements —
-            kept outscoring the full GAD condition on human review. Bare has
-            improved monotonically across rounds. GAD never exceeded 0.30. This
-            page rolls up the evidence, the caveats, and a hard link to the{" "}
-            <Link
-              href="/skeptic#freedom"
-              className="text-rose-300 underline decoration-dotted"
-            >
-              skeptic critique
-            </Link>{" "}
-            — read that too before trusting the pattern.
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
-            <Stat label="Bare runs" value={runs.length.toString()} />
-            <Stat label="Playable" value={playable.length.toString()} />
-            <Stat label="Scored" value={scored.length.toString()} />
-            <Stat
-              label="Latest score"
-              value={latest ? score(latest).toFixed(3) : "—"}
-            />
-          </div>
+      <SiteSection>
+        <div className="mb-6 flex items-center gap-2">
+          <Badge
+            variant="default"
+            className="inline-flex items-center gap-1.5 border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+          >
+            Freedom hypothesis
+          </Badge>
         </div>
-      </section>
+        <SiteSectionHeading
+          kicker="Freedom"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Less framework, <span className="gradient-text">better output?</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          The freedom hypothesis (<Ref id="gad-36" />) emerged from round 3: the{" "}
+          <Link
+            href="/glossary#bare-workflow"
+            className="cursor-help underline decoration-dotted decoration-accent/60"
+            title="Bare workflow"
+          >
+            bare condition
+          </Link>{" "}
+          — no framework, no inherited skills, just AGENTS.md + requirements — kept outscoring the
+          full GAD condition on human review. Bare has improved monotonically across rounds. GAD
+          never exceeded 0.30. This page rolls up the evidence, the caveats, and a hard link to the{" "}
+          <Link href="/skeptic#freedom" className="text-rose-300 underline decoration-dotted">
+            skeptic critique
+          </Link>{" "}
+          — read that too before trusting the pattern.
+        </SiteProse>
+
+        <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
+          <Stat label="Bare runs" value={runs.length.toString()} />
+          <Stat label="Playable" value={playable.length.toString()} />
+          <Stat label="Scored" value={scored.length.toString()} />
+          <Stat label="Latest score" value={latest ? score(latest).toFixed(3) : "—"} />
+        </div>
+      </SiteSection>
 
       {/* Score progression */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <TrendingUp size={18} className="text-emerald-400" aria-hidden />
-            <p className="section-kicker !mb-0">Human review across rounds</p>
-          </div>
-          <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+      <SiteSection tone="muted">
+        <SiteSectionHeading
+          icon={TrendingUp}
+          kicker="Human review across rounds"
+          kickerRowClassName="mb-6 gap-3"
+          iconClassName="text-emerald-400"
+        />
+        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
             Each row is one bare run. If the freedom hypothesis is real, the
             line goes up-and-to-the-right. So far it does — but{" "}
             <strong className="text-foreground">n=5 is not a curve</strong>,
@@ -160,14 +158,12 @@ export default function FreedomHypothesisPage() {
             </code>{" "}
             for runs predating the rubric.
           </p>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* What the bare workflow is */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">What &quot;bare&quot; means</p>
-          <div className="grid gap-4 md:grid-cols-3">
+      <SiteSection>
+        <SiteSectionHeading kicker='What "bare" means' className="mb-6" />
+        <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">No framework</CardTitle>
@@ -205,14 +201,15 @@ export default function FreedomHypothesisPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Caveats */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <p className="section-kicker">Why this is a preliminary observation, not a finding</p>
-          <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-5 text-sm leading-6 text-muted-foreground">
+      <SiteSection tone="muted">
+        <SiteSectionHeading
+          kicker="Why this is a preliminary observation, not a finding"
+          className="mb-6"
+        />
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-5 text-sm leading-6 text-muted-foreground">
             <p className="mb-3 font-semibold text-rose-200">
               Skeptic note (read{" "}
               <Link href="/skeptic#freedom" className="underline">
@@ -261,14 +258,12 @@ export default function FreedomHypothesisPage() {
             replicates per condition, OR a different task domain where GAD
             beats bare. Neither has been run.
           </p>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Related pages */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Related</p>
-          <div className="flex flex-wrap gap-3 text-sm">
+      <SiteSection>
+        <SiteSectionHeading kicker="Related" className="mb-4" />
+        <div className="flex flex-wrap gap-3 text-sm">
             <Button
               variant="outline"
               size="sm"
@@ -314,8 +309,7 @@ export default function FreedomHypothesisPage() {
               </Link>
             </Button>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

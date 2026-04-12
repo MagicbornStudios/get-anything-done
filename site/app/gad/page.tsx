@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import {
   AGENTS,
   COMMANDS,
@@ -69,27 +70,31 @@ export default function GADOverviewPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">The framework</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            <span className="text-foreground">GAD is</span>{" "}
-            <span className="gradient-text">planning + evaluation</span>{" "}
-            <span className="text-foreground">for AI coding agents.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            A small CLI, a strict five-step loop, and an experiment harness stapled to the side.
-            The CLI re-hydrates context in one command. Skills tell the agent <em>what</em> to do.
-            Subagents do the expensive work off the main thread. Commands are the slash entry
-            points. Templates scaffold new projects. Evals measure whether any of this actually
-            helps. Read the{" "}
-            <Link href="/#workflow" className="text-accent hover:underline">
-              loop diagram
-            </Link>{" "}
-            for how it fits together.
-          </p>
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="The framework"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              <span className="text-foreground">GAD is</span>{" "}
+              <span className="gradient-text">planning + evaluation</span>{" "}
+              <span className="text-foreground">for AI coding agents.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          A small CLI, a strict five-step loop, and an experiment harness stapled to the side. The CLI
+          re-hydrates context in one command. Skills tell the agent <em>what</em> to do. Subagents do
+          the expensive work off the main thread. Commands are the slash entry points. Templates
+          scaffold new projects. Evals measure whether any of this actually helps. Read the{" "}
+          <Link href="/#workflow" className="text-accent hover:underline">
+            loop diagram
+          </Link>{" "}
+          for how it fits together.
+        </SiteProse>
 
-          <div className="mt-10 flex flex-wrap gap-3">
+        <div className="mt-10 flex flex-wrap gap-3">
             <Button
               size="lg"
               className="gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5 hover:bg-accent/90"
@@ -123,16 +128,11 @@ export default function GADOverviewPage() {
               </Link>
             </Button>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <p className="section-kicker">Core concepts</p>
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            Four moving parts
-          </h2>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
+      <SiteSection tone="muted">
+        <SiteSectionHeading kicker="Core concepts" title="Four moving parts" preset="section" />
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
             {CORE_CONCEPTS.map((c) => {
               const Icon = c.icon;
               return (
@@ -167,16 +167,15 @@ export default function GADOverviewPage() {
               );
             })}
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Skill bootstrap sets</p>
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            Framework-level vs eval-inherited
-          </h2>
-          <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Skill bootstrap sets"
+          title="Framework-level vs eval-inherited"
+          preset="section"
+        />
+        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
             All {SKILLS.length} skills are available to the main GAD agent via slash commands.
             But eval projects (bare, emergent) don&apos;t get the full framework — they start with
             a minimal bootstrap set copied into their{" "}
@@ -234,16 +233,11 @@ export default function GADOverviewPage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <p className="section-kicker">Jump to</p>
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            Explore the catalog
-          </h2>
-          <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+      <SiteSection tone="muted">
+        <SiteSectionHeading kicker="Jump to" title="Explore the catalog" preset="section" />
+        <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {[
               { label: "Skills", count: SKILLS.length, href: "/#catalog", icon: Sparkles },
               { label: "Subagents", count: AGENTS.length, href: "/#catalog", icon: Bot },
@@ -270,8 +264,7 @@ export default function GADOverviewPage() {
               );
             })}
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

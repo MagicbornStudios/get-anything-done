@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { SkillLineageCard } from "@/components/emergent/SkillLineageCard";
 import {
   EVAL_RUNS,
@@ -49,74 +50,74 @@ export default function EmergentPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-2">
-            <Badge
-              variant="default"
-              className="inline-flex items-center gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-300"
-            >
-              <Sparkles size={11} aria-hidden />
-              Compound-skills hypothesis
-            </Badge>
-          </div>
-          <p className="section-kicker">Emergent</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Does a skill library{" "}
-            <span className="gradient-text">compound in value</span> across rounds?
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The emergent workflow runs with no framework but inherits a skill library from
-            previous runs. It&apos;s allowed to evolve skills in place, author new ones, and
-            deprecate wrong ones via a CHANGELOG. If the{" "}
-            <Link
-              href="/glossary#compound-skills-hypothesis"
-              className="cursor-help underline decoration-dotted decoration-accent/60"
-              title="CSH"
-            >
-              compound-skills hypothesis
-            </Link>{" "}
-            is real, each emergent round should produce measurably better results than the
-            last as the inherited library accumulates craft. This page is the evidence
-            rollup.
-          </p>
-
-          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
-            Anchor decisions:{" "}
-            <Link href="/decisions#gad-65" className="text-accent underline decoration-dotted">
-              gad-65
-            </Link>{" "}
-            (CSH pinned),{" "}
-            <Link href="/decisions#gad-68" className="text-accent underline decoration-dotted">
-              gad-68
-            </Link>{" "}
-            (emergent-evolution synthesis),{" "}
-            <Link href="/decisions#gad-73" className="text-accent underline decoration-dotted">
-              gad-73
-            </Link>{" "}
-            (fundamental skills triumvirate).
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
-            <Stat label="Emergent runs" value={runs.length.toString()} />
-            <Stat label="Playable" value={playableRuns.length.toString()} />
-            <Stat label="Scored" value={scoredRuns.length.toString()} />
-            <Stat
-              label="Latest score"
-              value={latestScore != null ? latestScore.toFixed(3) : "—"}
-            />
-          </div>
+      <SiteSection>
+        <div className="mb-6 flex items-center gap-2">
+          <Badge
+            variant="default"
+            className="inline-flex items-center gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-300"
+          >
+            <Sparkles size={11} aria-hidden />
+            Compound-skills hypothesis
+          </Badge>
         </div>
-      </section>
+        <SiteSectionHeading
+          kicker="Emergent"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Does a skill library <span className="gradient-text">compound in value</span> across
+              rounds?
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          The emergent workflow runs with no framework but inherits a skill library from previous
+          runs. It&apos;s allowed to evolve skills in place, author new ones, and deprecate wrong ones
+          via a CHANGELOG. If the{" "}
+          <Link
+            href="/glossary#compound-skills-hypothesis"
+            className="cursor-help underline decoration-dotted decoration-accent/60"
+            title="CSH"
+          >
+            compound-skills hypothesis
+          </Link>{" "}
+          is real, each emergent round should produce measurably better results than the last as the
+          inherited library accumulates craft. This page is the evidence rollup.
+        </SiteProse>
+
+        <SiteProse size="sm" className="mt-4">
+          Anchor decisions:{" "}
+          <Link href="/decisions#gad-65" className="text-accent underline decoration-dotted">
+            gad-65
+          </Link>{" "}
+          (CSH pinned),{" "}
+          <Link href="/decisions#gad-68" className="text-accent underline decoration-dotted">
+            gad-68
+          </Link>{" "}
+          (emergent-evolution synthesis),{" "}
+          <Link href="/decisions#gad-73" className="text-accent underline decoration-dotted">
+            gad-73
+          </Link>{" "}
+          (fundamental skills triumvirate).
+        </SiteProse>
+
+        <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
+          <Stat label="Emergent runs" value={runs.length.toString()} />
+          <Stat label="Playable" value={playableRuns.length.toString()} />
+          <Stat label="Scored" value={scoredRuns.length.toString()} />
+          <Stat label="Latest score" value={latestScore != null ? latestScore.toFixed(3) : "—"} />
+        </div>
+      </SiteSection>
 
       {/* Score progression */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <TrendingUp size={18} className="text-accent" aria-hidden />
-            <p className="section-kicker !mb-0">CSH signal — human review across rounds</p>
-          </div>
-          <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+      <SiteSection tone="muted">
+        <SiteSectionHeading
+          icon={TrendingUp}
+          kicker="CSH signal — human review across rounds"
+          kickerRowClassName="mb-6 gap-3"
+        />
+        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
             If skills are compounding, the line goes up-and-to-the-right across rounds.
             The sixth rubric dimension, <code className="rounded bg-background/60 px-1 py-0.5">skill_inheritance_effectiveness</code>,
             is the CSH-specific signal (weight 0.20).
@@ -175,17 +176,12 @@ export default function EmergentPage() {
             , computed at prebuild from each run&apos;s rubric submission via{" "}
             <code className="rounded bg-background/60 px-1 py-0.5">gad eval review --rubric</code>.
           </p>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Skill lineage per run */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <GitBranch size={18} className="text-accent" aria-hidden />
-            <p className="section-kicker !mb-0">Skill lineage per run</p>
-          </div>
-          <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+      <SiteSection>
+        <SiteSectionHeading icon={GitBranch} kicker="Skill lineage per run" kickerRowClassName="mb-6 gap-3" />
+        <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
             Every run&apos;s skill footprint — what it inherited from the previous run,
             what new skills it authored, what it deprecated. A healthy CSH signal looks
             like: inherited count goes up, authored count stays positive, deprecated count
@@ -215,14 +211,12 @@ export default function EmergentPage() {
               );
             })}
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Framework explanation */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <p className="section-kicker">How emergent differs from bare and GAD</p>
-          <div className="grid gap-4 md:grid-cols-3">
+      <SiteSection tone="muted">
+        <SiteSectionHeading kicker="How emergent differs from bare and GAD" className="mb-6" />
+        <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Bare</CardTitle>
@@ -256,8 +250,7 @@ export default function EmergentPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

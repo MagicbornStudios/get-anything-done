@@ -1,5 +1,6 @@
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteSection } from "@/components/site";
 import type { DetailShellProps } from "./detail-shell-shared";
 import DetailShellBackLink from "./DetailShellBackLink";
 import DetailShellKindBadges from "./DetailShellKindBadges";
@@ -26,22 +27,20 @@ export default function DetailShell({
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <DetailShellBackLink backHref={backHref} backLabel={backLabel} />
-          <DetailShellKindBadges kind={kind} badges={badges} />
-          <DetailShellTitleBlock name={name} subtitle={subtitle} description={description} />
+      <SiteSection>
+        <DetailShellBackLink backHref={backHref} backLabel={backLabel} />
+        <DetailShellKindBadges kind={kind} badges={badges} />
+        <DetailShellTitleBlock name={name} subtitle={subtitle} description={description} />
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
-            <div>
-              {meta && meta.length > 0 && <DetailShellMetaGrid meta={meta} />}
-              <DetailShellProseArticle bodyHtml={bodyHtml} />
-              {sourcePath && <DetailShellSourceBlock sourcePath={sourcePath} />}
-            </div>
-            {sidebar && <aside className="space-y-5">{sidebar}</aside>}
+        <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+          <div>
+            {meta && meta.length > 0 && <DetailShellMetaGrid meta={meta} />}
+            <DetailShellProseArticle bodyHtml={bodyHtml} />
+            {sourcePath && <DetailShellSourceBlock sourcePath={sourcePath} />}
           </div>
+          {sidebar && <aside className="space-y-5">{sidebar}</aside>}
         </div>
-      </section>
+      </SiteSection>
       <Footer />
     </main>
   );

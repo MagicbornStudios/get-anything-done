@@ -9,6 +9,7 @@ import {
   type RoundHeadlineData,
 } from "@/components/landing/round-results/round-results-shared";
 import { RoundHeadline } from "@/components/landing/round-results/RoundHeadline";
+import { SiteProse, SiteSectionHeading } from "@/components/site";
 
 type Props = {
   effectiveRound: string | null;
@@ -30,7 +31,7 @@ export function RoundResultsHeader({
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
-        <p className="section-kicker">{headline.kicker}</p>
+        <p className="section-kicker !mb-0">{headline.kicker}</p>
         <div className="ml-auto">
           <Select
             value={localRoundFilter ?? "all"}
@@ -63,10 +64,12 @@ export function RoundResultsHeader({
         )}
       </div>
 
-      <h2 className="mt-2 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-        <RoundHeadline data={headline} />
-      </h2>
-      <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">{headline.description}</p>
+      <SiteSectionHeading
+        preset="hero-compact"
+        title={<RoundHeadline data={headline} />}
+        className="mt-2"
+      />
+      <SiteProse className="mt-5">{headline.description}</SiteProse>
 
       {globalRoundFilter && !localRoundFilter && (
         <Badge

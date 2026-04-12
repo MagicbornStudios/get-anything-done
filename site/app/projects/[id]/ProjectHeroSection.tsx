@@ -9,6 +9,7 @@ import {
   type Workflow,
 } from "@/lib/eval-data";
 import { formatBytes, REPO } from "@/app/projects/[id]/project-detail-shared";
+import { SiteSection } from "@/components/site";
 
 type PlanningZip = { zipPath: string; bytes: number } | undefined;
 type TemplateZip = { zipPath: string; bytes: number } | undefined;
@@ -23,8 +24,7 @@ export function ProjectHeroSection({
   template: TemplateZip;
 }) {
   return (
-    <section className="border-b border-border/60">
-      <div className="section-shell">
+    <SiteSection>
         <Button
           variant="ghost"
           className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
@@ -106,7 +106,6 @@ export function ProjectHeroSection({
             </a>
           </Button>
         </div>
-      </div>
-    </section>
+    </SiteSection>
   );
 }

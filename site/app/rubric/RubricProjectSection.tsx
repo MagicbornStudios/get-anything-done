@@ -8,6 +8,7 @@ import {
   WORKFLOW_LABELS,
   WORKFLOW_TINT,
 } from "@/app/rubric/rubric-shared";
+import { SiteSection } from "@/components/site";
 
 export function RubricProjectSection({ project }: { project: EvalProjectMeta }) {
   const rubric = project.humanReviewRubric!;
@@ -16,8 +17,7 @@ export function RubricProjectSection({ project }: { project: EvalProjectMeta }) 
   const exampleJson = buildRubricExampleJson(rubric.dimensions);
 
   return (
-    <section id={project.id} className="border-b border-border/60">
-      <div className="section-shell">
+    <SiteSection id={project.id}>
         <div className="flex flex-wrap items-center gap-3">
           <span
             className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider ${WORKFLOW_TINT[workflow]}`}
@@ -68,7 +68,6 @@ export function RubricProjectSection({ project }: { project: EvalProjectMeta }) 
             <ArrowRight size={11} aria-hidden />
           </Link>
         </div>
-      </div>
-    </section>
+    </SiteSection>
   );
 }

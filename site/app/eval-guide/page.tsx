@@ -3,6 +3,7 @@ import path from "node:path";
 import { marked } from "marked";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteSection } from "@/components/site";
 
 export const metadata = {
   title: "Eval Guide — set up, run, score, and publish evaluations",
@@ -23,9 +24,9 @@ export default function EvalGuidePage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
-      <div className="section-shell">
+      <SiteSection>
         <div className="prose-content" dangerouslySetInnerHTML={{ __html: html }} />
-      </div>
+      </SiteSection>
       <Footer />
     </main>
   );

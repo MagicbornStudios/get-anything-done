@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
@@ -29,26 +30,27 @@ export default function FeatureRequestsPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Feature requests</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            What we need from others.{" "}
-            <span className="gradient-text">Tracked in public.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            GAD depends on features from external tools — Claude Code, Codex,
-            the agentskills.io ecosystem. When we hit a blocker, we submit a
-            feature request and track it here so our community can see what
-            we&apos;re waiting on, what workarounds exist, and how it affects
-            the research.
-          </p>
-        </div>
-      </section>
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Feature requests"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              What we need from others. <span className="gradient-text">Tracked in public.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          GAD depends on features from external tools — Claude Code, Codex, the agentskills.io
+          ecosystem. When we hit a blocker, we submit a feature request and track it here so our
+          community can see what we&apos;re waiting on, what workarounds exist, and how it affects the
+          research.
+        </SiteProse>
+      </SiteSection>
 
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="space-y-4">
+      <SiteSection tone="muted">
+        <div className="space-y-4">
             {requests.map((req: any) => {
               const config = STATUS_CONFIG[req.status] ?? STATUS_CONFIG.submitted;
               const Icon = config.icon;
@@ -121,8 +123,7 @@ export default function FeatureRequestsPage() {
               );
             })}
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

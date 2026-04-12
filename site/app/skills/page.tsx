@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { SKILLS, SKILL_INHERITANCE } from "@/lib/catalog.generated";
 import { PRODUCED_ARTIFACTS } from "@/lib/eval-data";
 
@@ -114,43 +115,44 @@ export default function SkillsIndexPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Skills</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Every authored skill.{" "}
-            <span className="gradient-text">With provenance.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The GAD skill catalog. Each skill is a SKILL.md file authored either
-            inside the framework, inherited from an upstream, or produced by an
-            eval run. Open any skill to read its full markdown and copy it
-            verbatim. Per <Link
-              href="/decisions#gad-73"
-              className="text-accent underline decoration-dotted"
-            >
-              gad-73
-            </Link>{" "}
-            the fundamental triumvirate (find-skills + merge-skill + create-skill)
-            is the foundational set.
-          </p>
-          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
-            Provenance per skill (origin run, inheritance lineage, evaluation
-            performance context) per <Link
-              href="/decisions#gad-76"
-              className="text-accent underline decoration-dotted"
-            >
-              gad-76
-            </Link>
-            . GAD skills follow the format specified in the{" "}
-            <Link href="/standards" className="text-accent underline decoration-dotted">
-              Anthropic skills guide + agentskills.io standard
-            </Link>{" "}
-            — read <Link href="/standards" className="text-accent underline decoration-dotted">/standards</Link>{" "}
-            for progressive disclosure, discovery conventions, collision
-            handling, and the per-skill evaluation methodology.
-          </p>
-          <div className="mt-4 max-w-3xl rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-[13px] leading-6 text-rose-200">
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Skills"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Every authored skill. <span className="gradient-text">With provenance.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          The GAD skill catalog. Each skill is a SKILL.md file authored either inside the framework,
+          inherited from an upstream, or produced by an eval run. Open any skill to read its full
+          markdown and copy it verbatim. Per{" "}
+          <Link href="/decisions#gad-73" className="text-accent underline decoration-dotted">
+            gad-73
+          </Link>{" "}
+          the fundamental triumvirate (find-skills + merge-skill + create-skill) is the foundational
+          set.
+        </SiteProse>
+        <SiteProse size="sm" className="mt-4">
+          Provenance per skill (origin run, inheritance lineage, evaluation performance context) per{" "}
+          <Link href="/decisions#gad-76" className="text-accent underline decoration-dotted">
+            gad-76
+          </Link>
+          . GAD skills follow the format specified in the{" "}
+          <Link href="/standards" className="text-accent underline decoration-dotted">
+            Anthropic skills guide + agentskills.io standard
+          </Link>{" "}
+          — read{" "}
+          <Link href="/standards" className="text-accent underline decoration-dotted">
+            /standards
+          </Link>{" "}
+          for progressive disclosure, discovery conventions, collision handling, and the per-skill
+          evaluation methodology.
+        </SiteProse>
+        <div className="mt-4 max-w-3xl rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-[13px] leading-6 text-rose-200">
             <strong className="text-rose-100">Findability warning:</strong>{" "}
             <code className="rounded bg-background/60 px-1 py-0.5 text-xs">gad install</code>{" "}
             does NOT copy these workspace skills to user projects today. They
@@ -181,33 +183,34 @@ export default function SkillsIndexPage() {
               value={(grouped["framework-inherited"]?.length ?? 0).toString()}
             />
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {CATEGORY_ORDER.filter((c) => grouped[c]?.length > 0).map((cat) => (
-        <section
+        <SiteSection
           key={cat}
           id={`category-${cat}`}
-          className={`border-b border-border/60 last:bg-background ${
-            CATEGORY_TINT[cat] ?? ""
-          }`}
+          className={`last:border-b-0 last:bg-background ${CATEGORY_TINT[cat] ?? ""}`}
         >
-          <div className="section-shell">
-            <div className="mb-4 flex items-center gap-3">
-              <Sparkles size={18} className="text-accent" aria-hidden />
-              <p className="section-kicker !mb-0">{CATEGORY_LABEL[cat]}</p>
-              <Badge variant="outline">{grouped[cat].length}</Badge>
-            </div>
-            <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
-              {CATEGORY_DESCRIPTION[cat]}
-            </p>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {grouped[cat].map((s) => (
-                <SkillCard key={s.id} skill={s} />
-              ))}
-            </div>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <SiteSectionHeading
+              icon={Sparkles}
+              kicker={CATEGORY_LABEL[cat]}
+              kickerRowClassName="mb-0 flex-1 gap-3"
+              className="min-w-0 flex-1"
+            />
+            <Badge variant="outline" className="shrink-0">
+              {grouped[cat].length}
+            </Badge>
           </div>
-        </section>
+          <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+            {CATEGORY_DESCRIPTION[cat]}
+          </p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {grouped[cat].map((s) => (
+              <SkillCard key={s.id} skill={s} />
+            ))}
+          </div>
+        </SiteSection>
       ))}
 
       <Footer />

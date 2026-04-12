@@ -5,6 +5,7 @@ import { RoundsArticle } from "@/components/landing/rounds/RoundsArticle";
 import { RoundsIntro } from "@/components/landing/rounds/RoundsIntro";
 import { RoundsPagination } from "@/components/landing/rounds/RoundsPagination";
 import { ROUND_SUMMARIES } from "@/lib/eval-data";
+import { SiteSection } from "@/components/site";
 
 export default function Rounds() {
   const total = ROUND_SUMMARIES.length;
@@ -15,20 +16,18 @@ export default function Rounds() {
   const r = ROUND_SUMMARIES[currentIndex];
 
   return (
-    <section id="rounds" className="border-t border-border/60 bg-card/20">
-      <div className="section-shell">
-        <RoundsIntro />
+    <SiteSection id="rounds" tone="muted" className="border-t border-border/60">
+      <RoundsIntro />
 
-        <RoundsPagination
-          total={total}
-          currentIndex={currentIndex}
-          onPrev={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-          onNext={() => setCurrentIndex((i) => Math.min(total - 1, i + 1))}
-          onSelectIndex={setCurrentIndex}
-        />
+      <RoundsPagination
+        total={total}
+        currentIndex={currentIndex}
+        onPrev={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+        onNext={() => setCurrentIndex((i) => Math.min(total - 1, i + 1))}
+        onSelectIndex={setCurrentIndex}
+      />
 
-        <RoundsArticle summary={r} />
-      </div>
-    </section>
+      <RoundsArticle summary={r} />
+    </SiteSection>
   );
 }

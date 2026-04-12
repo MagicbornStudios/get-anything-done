@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
@@ -23,50 +24,52 @@ export default function SecurityPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Security</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Skills are code.{" "}
-            <span className="gradient-text">Code is a threat surface.</span>
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Skills extend a coding agent&apos;s prompt with instructions it will
-            follow &mdash; sometimes including the right to run commands, write
-            files, and touch the repo. That makes every skill a potential threat
-            surface. This page documents the attack vectors we&apos;re aware of,
-            the mitigations baked into GAD&apos;s skill format, and where our
-            longer-term certification model is headed.
-          </p>
-          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
-            Anchor decision:{" "}
-            <Ref id="gad-70" /> (Anthropic skills guide as canonical reference) · see also{" "}
-            <Link href="/standards" className="text-accent underline decoration-dotted">/standards</Link>,
-            related:{" "}
-            <Ref id="gad-73" /> (fundamental skills triumvirate) &amp;{" "}
-            <Ref id="gad-74" /> (GAD&apos;s value prop includes skill security
-            as a long-term goal).
-          </p>
+      <SiteSection>
+        <SiteSectionHeading
+          kicker="Security"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Skills are code. <span className="gradient-text">Code is a threat surface.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          Skills extend a coding agent&apos;s prompt with instructions it will follow &mdash;
+          sometimes including the right to run commands, write files, and touch the repo. That makes
+          every skill a potential threat surface. This page documents the attack vectors we&apos;re
+          aware of, the mitigations baked into GAD&apos;s skill format, and where our longer-term
+          certification model is headed.
+        </SiteProse>
+        <SiteProse size="sm" className="mt-4">
+          Anchor decision: <Ref id="gad-70" /> (Anthropic skills guide as canonical reference) · see
+          also{" "}
+          <Link href="/standards" className="text-accent underline decoration-dotted">
+            /standards
+          </Link>
+          , related: <Ref id="gad-73" /> (fundamental skills triumvirate) &amp;{" "}
+          <Ref id="gad-74" /> (GAD&apos;s value prop includes skill security as a long-term goal).
+        </SiteProse>
 
-          <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm leading-6 text-amber-200">
-            <strong className="text-amber-100">Important:</strong> GAD does not
-            currently host third-party skills. Every skill in our catalog was
-            authored inside this repo or inherited from a small set of trusted
-            upstreams (GSD, Anthropic examples). This page describes attacks
-            that apply to the broader coding-agent ecosystem so you know what
-            to watch for when evaluating skills from <em>other</em> sources.
-          </div>
+        <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm leading-6 text-amber-200">
+          <strong className="text-amber-100">Important:</strong> GAD does not currently host
+          third-party skills. Every skill in our catalog was authored inside this repo or inherited
+          from a small set of trusted upstreams (GSD, Anthropic examples). This page describes
+          attacks that apply to the broader coding-agent ecosystem so you know what to watch for
+          when evaluating skills from <em>other</em> sources.
         </div>
-      </section>
+      </SiteSection>
 
       {/* Attack surfaces */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <ShieldAlert size={18} className="text-rose-400" aria-hidden />
-            <p className="section-kicker !mb-0">Attack surfaces</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
+      <SiteSection tone="muted">
+        <SiteSectionHeading
+          icon={ShieldAlert}
+          kicker="Attack surfaces"
+          kickerRowClassName="mb-6 gap-3"
+          iconClassName="text-rose-400"
+        />
+        <div className="grid gap-4 md:grid-cols-2">
             <AttackCard
               title="Prompt injection via skill body"
               severity="high"
@@ -105,17 +108,17 @@ export default function SecurityPage() {
               mitigation="Anthropic's skills guide (gad-70) names over-triggering as one of the three iteration signals. GAD skills are audited against their trigger patterns via the expected-triggers file, and the programmatic-eval gap G2 (see .planning/GAPS.md) builds automated trigger-coverage checks."
             />
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Mitigations + what GAD does */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <ShieldCheck size={18} className="text-emerald-400" aria-hidden />
-            <p className="section-kicker !mb-0">What GAD does today</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
+      <SiteSection>
+        <SiteSectionHeading
+          icon={ShieldCheck}
+          kicker="What GAD does today"
+          kickerRowClassName="mb-6 gap-3"
+          iconClassName="text-emerald-400"
+        />
+        <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Frontmatter discipline</CardTitle>
@@ -165,17 +168,17 @@ export default function SecurityPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Future: skill certification */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <FileWarning size={18} className="text-amber-400" aria-hidden />
-            <p className="section-kicker !mb-0">Where this is headed &mdash; skill certification</p>
-          </div>
-          <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
+      <SiteSection tone="muted">
+        <SiteSectionHeading
+          icon={FileWarning}
+          kicker="Where this is headed — skill certification"
+          kickerRowClassName="mb-6 gap-3"
+          iconClassName="text-amber-400"
+        />
+        <p className="mb-6 max-w-3xl text-sm leading-6 text-muted-foreground">
             A longer-term research direction captured in ASSUMPTIONS.md: a skill
             produced <em>inside</em> this system could eventually carry a
             certification that it was built under measured pressure, passed
@@ -247,17 +250,16 @@ export default function SecurityPage() {
             </Link>{" "}
             on skill security for the current state of the conversation.
           </p>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* External resources */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <AlertTriangle size={18} className="text-accent" aria-hidden />
-            <p className="section-kicker !mb-0">Further reading</p>
-          </div>
-          <div className="space-y-3 text-sm leading-6 text-muted-foreground">
+      <SiteSection>
+        <SiteSectionHeading
+          icon={AlertTriangle}
+          kicker="Further reading"
+          kickerRowClassName="mb-6 gap-3"
+        />
+        <div className="space-y-3 text-sm leading-6 text-muted-foreground">
             <a
               href="https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf"
               target="_blank"
@@ -274,8 +276,7 @@ export default function SecurityPage() {
               (doc-creation / workflow / mcp-enhancement).
             </p>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

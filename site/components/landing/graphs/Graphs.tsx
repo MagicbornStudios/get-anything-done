@@ -3,6 +3,7 @@ import { GraphsIntro } from "@/components/landing/graphs/GraphsIntro";
 import { GraphsProvenance } from "@/components/landing/graphs/GraphsProvenance";
 import { GraphsRunsBarChart } from "@/components/landing/graphs/GraphsRunsBarChart";
 import { barData, runsWithScores } from "@/components/landing/graphs/graphs-shared";
+import { SiteSection } from "@/components/site";
 
 /**
  * Interactive graphs section on the landing page.
@@ -21,17 +22,15 @@ export default function Graphs() {
   if (scatterData.length === 0 && bars.length === 0) return null;
 
   return (
-    <section id="graphs" className="border-t border-border/60">
-      <div className="section-shell">
-        <GraphsIntro />
+    <SiteSection id="graphs" className="border-t border-border/60">
+      <GraphsIntro />
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-2">
-          <GraphsDivergenceScatter scatterData={scatterData} />
-          <GraphsRunsBarChart bars={bars} />
-        </div>
-
-        <GraphsProvenance />
+      <div className="mt-10 grid gap-8 lg:grid-cols-2">
+        <GraphsDivergenceScatter scatterData={scatterData} />
+        <GraphsRunsBarChart bars={bars} />
       </div>
-    </section>
+
+      <GraphsProvenance />
+    </SiteSection>
   );
 }

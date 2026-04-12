@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
+import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export const metadata = {
@@ -18,43 +19,44 @@ export default function ContentDrivenPage() {
     <main className="min-h-screen bg-background text-foreground">
       <Nav />
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-2">
-            <Badge
-              variant="default"
-              className="inline-flex items-center gap-1.5 border-pink-500/40 bg-pink-500/10 text-pink-300"
-            >
-              Content-driven hypothesis
-            </Badge>
-            <Badge variant="outline">planned — no runs yet</Badge>
-          </div>
-          <p className="section-kicker">Content-driven</p>
-          <h1 className="max-w-3xl text-5xl font-semibold tracking-tight md:text-6xl">
-            Give the agent a{" "}
-            <span className="gradient-text">content pack</span> and see what it
-            builds.
-          </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The content-driven hypothesis (<Ref id="gad-66" />) is a planned
-            eval track that gives the agent the usual requirements{" "}
-            <em>plus</em> a pre-authored content pack — spells, runes, items,
-            NPCs, dialogue trees, encounter tables — extracted from a prior
-            successful run. The research question: does the agent produce a
-            more fleshed-out game when the authored canon exists to build on?
-            User framing: &quot;analogous to making a movie based on a book.
-            Derivative, but not all processes are, much like a forger might
-            not use the exact same brush.&quot;
-          </p>
-          <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
-            This track is <strong className="text-pink-300">explicitly distinct</strong>{" "}
-            from freedom and CSH. Content-pack runs and greenfield runs do{" "}
-            <strong>not</strong> share a rubric — they answer different
-            questions. Comparing them on the same score would confound the
-            compound-skills measurement.
-          </p>
+      <SiteSection>
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <Badge
+            variant="default"
+            className="inline-flex items-center gap-1.5 border-pink-500/40 bg-pink-500/10 text-pink-300"
+          >
+            Content-driven hypothesis
+          </Badge>
+          <Badge variant="outline">planned — no runs yet</Badge>
+        </div>
+        <SiteSectionHeading
+          kicker="Content-driven"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Give the agent a <span className="gradient-text">content pack</span> and see what it
+              builds.
+            </>
+          }
+        />
+        <SiteProse className="mt-6">
+          The content-driven hypothesis (<Ref id="gad-66" />) is a planned eval track that gives the
+          agent the usual requirements <em>plus</em> a pre-authored content pack — spells, runes,
+          items, NPCs, dialogue trees, encounter tables — extracted from a prior successful run. The
+          research question: does the agent produce a more fleshed-out game when the authored canon
+          exists to build on? User framing: &quot;analogous to making a movie based on a book.
+          Derivative, but not all processes are, much like a forger might not use the exact same
+          brush.&quot;
+        </SiteProse>
+        <SiteProse size="sm" className="mt-4">
+          This track is <strong className="text-pink-300">explicitly distinct</strong> from freedom
+          and CSH. Content-pack runs and greenfield runs do <strong>not</strong> share a rubric —
+          they answer different questions. Comparing them on the same score would confound the
+          compound-skills measurement.
+        </SiteProse>
 
-          <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm leading-6 text-amber-200">
+        <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm leading-6 text-amber-200">
             <div className="mb-2 flex items-center gap-2 text-amber-100">
               <AlertTriangle size={14} aria-hidden />
               <strong>Not yet tested</strong>
@@ -71,17 +73,17 @@ export default function ContentDrivenPage() {
               &quot;derivative coherence&quot; quality.
             </p>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* What we would measure */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <div className="mb-6 flex items-center gap-3">
-            <Package size={18} className="text-pink-400" aria-hidden />
-            <p className="section-kicker !mb-0">What the content-driven track would measure</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
+      <SiteSection tone="muted">
+        <SiteSectionHeading
+          icon={Package}
+          kicker="What the content-driven track would measure"
+          kickerRowClassName="mb-6 gap-3"
+          iconClassName="text-pink-400"
+        />
+        <div className="grid gap-4 md:grid-cols-3">
             <Card className="border-l-4 border-pink-500/40">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Scope expansion</CardTitle>
@@ -116,14 +118,12 @@ export default function ContentDrivenPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* The book-to-movie analogy */}
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">The derivative-work framing</p>
-          <blockquote className="max-w-3xl border-l-4 border-pink-500/60 pl-5 text-lg italic leading-8 text-foreground/90">
+      <SiteSection>
+        <SiteSectionHeading kicker="The derivative-work framing" className="mb-6" />
+        <blockquote className="max-w-3xl border-l-4 border-pink-500/60 pl-5 text-lg italic leading-8 text-foreground/90">
             &quot;This is a content-driven hypothesis, like starting out with
             some content first — much like making a game or movie based on a
             book or story. It&apos;s derivative, not all the processes are,
@@ -147,14 +147,12 @@ export default function ContentDrivenPage() {
             track will score derivative coherence, integration, and scope
             expansion, not originality.
           </p>
-        </div>
-      </section>
+      </SiteSection>
 
       {/* Current status + next steps */}
-      <section className="border-b border-border/60 bg-card/20">
-        <div className="section-shell">
-          <p className="section-kicker">Current status</p>
-          <div className="grid gap-4 md:grid-cols-2">
+      <SiteSection tone="muted">
+        <SiteSectionHeading kicker="Current status" className="mb-6" />
+        <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Dependencies</CardTitle>
@@ -196,13 +194,11 @@ export default function ContentDrivenPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
-      <section className="border-b border-border/60">
-        <div className="section-shell">
-          <p className="section-kicker">Related</p>
-          <div className="flex flex-wrap gap-3 text-sm">
+      <SiteSection>
+        <SiteSectionHeading kicker="Related" className="mb-4" />
+        <div className="flex flex-wrap gap-3 text-sm">
             <Button
               variant="outline"
               size="sm"
@@ -248,8 +244,7 @@ export default function ContentDrivenPage() {
               </Link>
             </Button>
           </div>
-        </div>
-      </section>
+      </SiteSection>
 
       <Footer />
     </main>

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { BUGS } from "@/lib/eval-data";
 
 export function ProjectBugsSection({ projectId }: { projectId: string }) {
@@ -10,13 +11,14 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
   if (bugs.length === 0) return null;
 
   return (
-    <section className="border-t border-border/60">
-      <div className="section-shell">
-        <p className="section-kicker">Known bugs</p>
-        <h2 className="text-2xl font-semibold tracking-tight">
-          {bugs.length} bug{bugs.length !== 1 ? "s" : ""} reported
-        </h2>
-        <div className="mt-6 space-y-3">
+    <SiteSection className="border-b-0 border-t border-border/60">
+      <SiteSectionHeading
+        kicker="Known bugs"
+        preset="section"
+        titleClassName="text-2xl font-semibold tracking-tight"
+        title={`${bugs.length} bug${bugs.length !== 1 ? "s" : ""} reported`}
+      />
+      <div className="mt-6 space-y-3">
           {bugs.map((b) => (
             <div
               key={b.id}
@@ -41,8 +43,7 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
               </div>
             </div>
           ))}
-        </div>
       </div>
-    </section>
+    </SiteSection>
   );
 }
