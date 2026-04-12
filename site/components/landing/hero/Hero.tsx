@@ -7,6 +7,7 @@ import { HeroLead } from "@/components/landing/hero/HeroLead";
 import { HeroStatsGrid } from "@/components/landing/hero/HeroStatsGrid";
 import { getHeroStats } from "@/components/landing/hero/hero-stats";
 import { SiteSection } from "@/components/site";
+import { Identified } from "@/components/devid/Identified";
 
 /**
  * Hero rewrite 2026-04-09 per decisions gad-74, gad-75, gad-76.
@@ -35,24 +36,38 @@ export default function Hero() {
       }
     >
       <div className="max-w-3xl">
-        <HeroBadges currentRequirementsVersion={stats.currentRequirementsVersion} />
+        <Identified as="HeroBadges">
+          <HeroBadges currentRequirementsVersion={stats.currentRequirementsVersion} />
+        </Identified>
 
-        <HeroHeadline />
+        <Identified as="HeroHeadline">
+          <HeroHeadline />
+        </Identified>
 
-        <HeroLead />
+        <Identified as="HeroLead">
+          <HeroLead />
+        </Identified>
 
-        <HeroCtaRow />
+        <Identified as="HeroCtaRow">
+          <HeroCtaRow />
+        </Identified>
 
-        <HeroStatsGrid
-          playableCount={stats.playableCount}
-          runsScored={stats.runsScored}
-          decisionsLogged={stats.decisionsLogged}
-          currentRequirementsVersion={stats.currentRequirementsVersion}
-        />
+        <Identified as="HeroStatsGrid">
+          <HeroStatsGrid
+            playableCount={stats.playableCount}
+            runsScored={stats.runsScored}
+            decisionsLogged={stats.decisionsLogged}
+            currentRequirementsVersion={stats.currentRequirementsVersion}
+          />
+        </Identified>
 
-        <HeroCalloutCsh />
+        <Identified as="HeroCalloutCsh">
+          <HeroCalloutCsh />
+        </Identified>
 
-        <HeroCalloutDisclosure />
+        <Identified as="HeroCalloutDisclosure">
+          <HeroCalloutDisclosure />
+        </Identified>
       </div>
     </SiteSection>
   );

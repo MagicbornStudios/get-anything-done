@@ -145,6 +145,26 @@ function detectRuntimeIdentity() {
   return { id: 'unknown', source: 'unknown', model };
 }
 
+function normalizeEvalRuntime(runtime) {
+  const value = String(runtime || '').trim().toLowerCase();
+  if (!value) return detectRuntimeIdentity();
+  if (value === 'claude' || value === 'claude-code') return { id: 'claude-code', source: 'eval-arg', model: null };
+  if (value === 'codex') return { id: 'codex', source: 'eval-arg', model: null };
+  if (value === 'cursor') return { id: 'cursor', source: 'eval-arg', model: null };
+  if (value === 'windsurf') return { id: 'windsurf', source: 'eval-arg', model: null };
+  if (value === 'gemini') return { id: 'gemini-cli', source: 'eval-arg', model: null };
+  return { id: value, source: 'eval-arg', model: null };
+}
+
+function runtimeInstallHint(runtimeId) {
+  if (runtimeId === 'claude-code') return 'gad install all --claude --global';
+  if (runtimeId === 'codex') return 'gad install all --codex --global';
+  if (runtimeId === 'cursor') return 'gad install all --cursor --global';
+  if (runtimeId === 'windsurf') return 'gad install all --windsurf --global';
+  if (runtimeId === 'gemini-cli') return 'gad install all --gemini --global';
+  return 'gad install all --<runtime> --global';
+}
+
 function getLogDir() {
   if (_logDir) return _logDir;
   if (GAD_LOG_DIR) {
@@ -1487,7 +1507,7 @@ function readIfExists(p) { return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') 
  * Reads all template planning files and constructs a complete prompt
  * that any AI agent can use to run the eval (agent-agnostic per gad-01).
  */
-function buildEvalPrompt(projectDir, projectName, runNum) {
+function buildEvalPrompt(projectDir, projectName, runNum, runtimeIdentity, runDir) {
   const templateDir = path.join(projectDir, 'template');
   const planDir = path.join(templateDir, '.planning');
 
@@ -1507,6 +1527,9 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   } catch {}
   const isBrownfield = cfg.eval_mode === 'brownfield';
   const baseline = cfg.baseline;
+  const runtimeId = runtimeIdentity?.id || 'unknown';
+  const runDirUnix = runDir.replace(/\\/g, '/');
+  const runLogDirUnix = path.join(runDir, '.gad-log').replace(/\\/g, '/');
 
   // Source docs — REMOVED from eval prompts per decision gad-89.
   // Previously this scanned projectDir for source-*.md and source-*.xml and
@@ -1520,6 +1543,7 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   sections.push(`# Eval: ${projectName} v${runNum}`);
   sections.push(`\n**Mode:** ${cfg.eval_mode || 'unknown'} | **Workflow:** ${cfg.workflow || 'unknown'}\n`);
   sections.push(`\nYou are running a GAD eval. Follow the loop defined in AGENTS.md. Your work is being traced.\n`);
+  sections.push(`\n**Runtime target:** ${runtimeId}\n`);
 
   if (isBrownfield && baseline) {
     sections.push(
@@ -1546,7 +1570,10 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   if (sourceDocs.length > 0) sections.push(`## Source documents\n\n${sourceDocs.join('\n\n')}`);
 
   sections.push(`\n## Instructions\n`);
-  sections.push(`0. **FIRST:** Before writing any code, estimate how long these requirements would take a mid-senior human developer to implement WITHOUT AI tools. Consider the full scope: architecture, implementation, testing, debugging. Write your estimate to TRACE.json field \`human_estimate_hours\`. This is required — do it before starting implementation.`);
+  sections.push(`0. **FIRST:** Before writing any code, estimate how long these requirements would take a mid-senior human developer to implement WITHOUT AI tools. Consider the full scope: architecture, implementation, testing, debugging. Write your estimate to TRACE.json field \`human_estimate_hours\`. This is required before starting implementation.`);
+  sections.push(`0b. **VERIFY RUNTIME TRACING:** This eval should run with GAD hooks installed for the runtime actually doing the work. Expected runtime: \`${runtimeId}\`.`);
+  sections.push(`0c. If hooks are not already installed for this runtime, install them now:\n\`\`\`sh\n${runtimeInstallHint(runtimeId)}\n\`\`\``);
+  sections.push(`0d. Export eval tracing env before running the agent loop.\n\nPOSIX shells:\n\`\`\`sh\nexport GAD_RUNTIME=${runtimeId}\nexport GAD_LOG_DIR=${runLogDirUnix}\nexport GAD_EVAL_TRACE_DIR=${runDirUnix}\n\`\`\`\n\nPowerShell:\n\`\`\`powershell\n$env:GAD_RUNTIME='${runtimeId}'\n$env:GAD_LOG_DIR='${runLogDirUnix}'\n$env:GAD_EVAL_TRACE_DIR='${runDirUnix}'\n\`\`\``);
   sections.push(`1. Copy the .planning/ directory from the template into your working directory`);
   sections.push(`2. Implement the project following the ROADMAP.xml phases`);
   sections.push(`3. For EACH task: update TASK-REGISTRY.xml, update STATE.xml, commit with task ID — one commit per task, not per phase`);
@@ -1556,9 +1583,8 @@ function buildEvalPrompt(projectDir, projectName, runNum) {
   sections.push(`6. When complete: all phases done, build passes, planning docs current`);
   sections.push(`7. FINAL STEP: produce a production build (dist/ directory) and commit it. The build artifact is showcased on the docs site. No dist = eval incomplete.`);
   sections.push(`\n## Logging\n`);
-  sections.push(`Set GAD_LOG_DIR to your eval run directory before running gad commands.`);
-  sections.push(`All gad CLI calls and tool uses will be logged to JSONL files for eval tracing.`);
-  sections.push(`\`\`\`sh\nexport GAD_LOG_DIR=<eval-run-dir>/.gad-log\n\`\`\``);
+  sections.push(`All gad CLI calls and tool uses should land in the eval run directory, not just the root repo log.`);
+  sections.push(`This eval is only considered fully attributed if the preserved run includes runtime identity plus raw logs/trace events.`);
 
   return sections.join('\n\n');
 }
@@ -1613,6 +1639,7 @@ const evalRun = defineCommand({
   args: {
     project: { type: 'string', description: 'Eval project name', default: '' },
     baseline: { type: 'string', description: 'Git baseline (default: HEAD)', default: 'HEAD' },
+    runtime: { type: 'string', description: 'Runtime driving the eval (claude-code, codex, cursor, etc.)', default: '' },
     'prompt-only': { type: 'boolean', description: 'Only generate the bootstrap prompt, do not create worktree', default: false },
     execute: { type: 'boolean', description: 'Output JSON for the orchestrating agent to spawn a worktree agent with full tracing', default: false },
     'install-skills': { type: 'string', description: 'Comma-separated paths to skills to install into the eval template before running', default: '' },
@@ -1675,6 +1702,7 @@ const evalRun = defineCommand({
     const runNum = runs.length > 0 ? Math.max(...runs) + 1 : 1;
     const runDir = path.join(projectDir, `v${runNum}`);
     fs.mkdirSync(runDir, { recursive: true });
+    const evalRuntime = normalizeEvalRuntime(args.runtime);
 
     const now = new Date().toISOString();
 
@@ -1685,7 +1713,7 @@ const evalRun = defineCommand({
     } catch {}
 
     // Build the bootstrap prompt from template files
-    const prompt = buildEvalPrompt(projectDir, args.project, runNum);
+    const prompt = buildEvalPrompt(projectDir, args.project, runNum, evalRuntime, runDir);
 
     // Write prompt to run directory
     fs.writeFileSync(path.join(runDir, 'PROMPT.md'), prompt);
@@ -1697,8 +1725,8 @@ const evalRun = defineCommand({
       date: now.split('T')[0],
       gad_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
       framework_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
-      trace_schema_version: 4,
-      runtime_identity: detectRuntimeIdentity(),
+      trace_schema_version: 5,
+      runtime_identity: evalRuntime,
       eval_type: gadJson.eval_mode || 'greenfield',
       workflow: gadJson.workflow || 'unknown',
       domain: gadJson.domain || null,
@@ -1748,6 +1776,7 @@ const evalRun = defineCommand({
       `status: ${args['prompt-only'] ? 'prompt-generated' : args.execute ? 'execute-ready' : 'running'}`,
       `eval_type: ${gadJson.eval_mode || 'greenfield'}`,
       `workflow: ${gadJson.workflow || 'unknown'}`,
+      `runtime: ${evalRuntime.id}`,
       `trace_dir: ${runDir}`,
     ].join('\n') + '\n');
 
@@ -1772,7 +1801,9 @@ const evalRun = defineCommand({
         promptFile: path.join(runDir, 'PROMPT.md'),
         traceJsonFile: path.join(runDir, 'TRACE.json'),
         envVars: {
+          GAD_RUNTIME: evalRuntime.id,
           GAD_EVAL_TRACE_DIR: runDir,
+          GAD_LOG_DIR: path.join(runDir, '.gad-log'),
           GAD_EVAL_PROJECT: args.project,
           GAD_EVAL_VERSION: `v${runNum}`,
         },
@@ -1780,6 +1811,7 @@ const evalRun = defineCommand({
         postSteps: [
           `After the agent completes:`,
           `1. Update TRACE.json timing.ended + timing.duration_minutes + token_usage from agent result`,
+          `1b. Verify runtime identity / trace files were captured for ${evalRuntime.id}`,
           `2. Run: gad eval preserve ${args.project} v${runNum} --from <worktree-path>`,
           `3. Regenerate site data: cd site && node scripts/build-site-data.mjs`,
           `4. Build + commit + push`,
@@ -1795,11 +1827,13 @@ const evalRun = defineCommand({
       console.log(`✓ Bootstrap prompt: ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
       console.log(`\nThe orchestrating agent should:`);
       console.log(`  1. Read EXEC.json for the spawn configuration`);
-      console.log(`  2. Set env: GAD_EVAL_TRACE_DIR=${runDir}`);
-      console.log(`  3. Spawn an Agent with isolation: "worktree" using the prompt`);
-      console.log(`  4. On completion: update TRACE.json with timing + tokens`);
-      console.log(`  5. Run: gad eval preserve ${args.project} v${runNum} --from <worktree>`);
-      console.log(`  6. Regenerate site data + push`);
+      console.log(`  2. Set env: GAD_RUNTIME=${evalRuntime.id}`);
+      console.log(`  3. Set env: GAD_EVAL_TRACE_DIR=${runDir}`);
+      console.log(`  4. Set env: GAD_LOG_DIR=${path.join(runDir, '.gad-log')}`);
+      console.log(`  5. Spawn an Agent with isolation: "worktree" using the prompt`);
+      console.log(`  6. On completion: update TRACE.json with timing + tokens`);
+      console.log(`  7. Run: gad eval preserve ${args.project} v${runNum} --from <worktree>`);
+      console.log(`  8. Regenerate site data + push`);
 
       // Output JSON to stdout for machine parsing
       console.log('\n--- EXEC_JSON_START ---');
@@ -3764,14 +3798,23 @@ const evalVerify = defineCommand({
       for (const v of versions) {
         totalRuns++;
         const vDir = path.join(projectDir, v);
-        const hasTrace = fs.existsSync(path.join(vDir, 'TRACE.json'));
+        const tracePath = path.join(vDir, 'TRACE.json');
+        const hasTrace = fs.existsSync(tracePath);
         const hasRun = fs.existsSync(path.join(vDir, 'run')) &&
                        fs.readdirSync(path.join(vDir, 'run')).length > 0;
         const hasBuild = fs.existsSync(path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', project, v, 'index.html'));
         const hasLogs = fs.existsSync(path.join(vDir, '.gad-log'));
+        let hasRuntimeIdentity = false;
+        if (hasTrace) {
+          try {
+            const trace = JSON.parse(fs.readFileSync(tracePath, 'utf8'));
+            hasRuntimeIdentity = typeof trace?.runtime_identity?.id === 'string' && trace.runtime_identity.id.trim().length > 0;
+          } catch {}
+        }
 
         const problems = [];
         if (!hasTrace) problems.push('no TRACE.json');
+        if (hasTrace && !hasRuntimeIdentity) problems.push('no runtime identity');
         if (!skipCodeCheck && !hasRun) problems.push('no run/ dir');
         if (!skipCodeCheck && !hasBuild) problems.push('no build');
         if (!skipCodeCheck && !hasLogs) problems.push('no CLI logs');
@@ -4571,9 +4614,31 @@ const evalSkillBenchmark = defineCommand({
   },
 });
 
+const evalSkillDraftCandidates = defineCommand({
+  meta: {
+    name: 'draft-candidates',
+    description: 'Invoke claude CLI to rewrite auto-drafted skill candidate stubs into real bodies (GAD-D-145)',
+  },
+  args: {
+    'dry-run': { type: 'boolean', description: 'Print prompts without spawning claude CLI', default: false },
+    force: { type: 'boolean', description: 'Redraft candidates that already have drafted: true', default: false },
+    only: { type: 'string', description: 'Only draft a single candidate (matches by name substring)' },
+  },
+  run({ args }) {
+    const { draftAllCandidates } = require('../lib/skill-draft.cjs');
+    const repoRoot = path.resolve(__dirname, '..');
+    const stats = draftAllCandidates(repoRoot, {
+      dryRun: args['dry-run'],
+      force: args.force,
+      only: args.only,
+    });
+    if (stats.failed > 0) process.exit(1);
+  },
+});
+
 const evalSkillCmd = defineCommand({
-  meta: { name: 'skill', description: 'Per-skill evaluation harness (gad-87) — list, init, run, grade, benchmark' },
-  subCommands: { list: evalSkillList, init: evalSkillInit, run: evalSkillRun, grade: evalSkillGrade, benchmark: evalSkillBenchmark },
+  meta: { name: 'skill', description: 'Per-skill evaluation harness (gad-87) — list, init, run, grade, benchmark, draft-candidates' },
+  subCommands: { list: evalSkillList, init: evalSkillInit, run: evalSkillRun, grade: evalSkillGrade, benchmark: evalSkillBenchmark, 'draft-candidates': evalSkillDraftCandidates },
 });
 
 const evalReadme = defineCommand({
@@ -7052,7 +7117,7 @@ const selfEvalCmd = defineCommand({
   },
 });
 
-// ── gad data — CRUD for data/*.json using lowdb (decision gad-109) ──
+// ── gad data — CRUD for data/*.json (plain fs + JSON; lowdb was removed) ──
 const dataListCmd = defineCommand({
   meta: { name: 'list', description: 'List all data collections in data/' },
   run() {

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import selfEvalData from "@/data/self-eval.json";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { Identified } from "@/components/devid/Identified";
 
 const data = selfEvalData.latest;
 
@@ -83,28 +84,36 @@ export default function SelfEval() {
       </SiteProse>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          label="Framework overhead"
-          value={`${(data.framework_overhead.ratio * 100).toFixed(1)}%`}
-          subtext={`${data.framework_overhead.planning_ops} planning ops / ${data.framework_overhead.planning_ops + data.framework_overhead.source_ops} total`}
-          score={data.framework_overhead.score}
-        />
-        <MetricCard
-          label="Loop compliance"
-          value={`${(data.loop_compliance.score * 100).toFixed(0)}%`}
-          subtext={`${data.loop_compliance.snapshot_starts} of ${data.loop_compliance.total_sessions} sessions start with snapshot`}
-          score={data.loop_compliance.score}
-        />
-        <MetricCard
-          label="Tasks"
-          value={`${data.tasks.done} / ${data.tasks.total}`}
-          subtext={`${data.tasks.planned} planned · ${data.tasks.in_progress} in progress`}
-        />
-        <MetricCard
-          label="Decisions"
-          value={String(data.decisions)}
-          subtext="Captured in DECISIONS.xml"
-        />
+        <Identified as="MetricCard.Overhead">
+          <MetricCard
+            label="Framework overhead"
+            value={`${(data.framework_overhead.ratio * 100).toFixed(1)}%`}
+            subtext={`${data.framework_overhead.planning_ops} planning ops / ${data.framework_overhead.planning_ops + data.framework_overhead.source_ops} total`}
+            score={data.framework_overhead.score}
+          />
+        </Identified>
+        <Identified as="MetricCard.LoopCompliance">
+          <MetricCard
+            label="Loop compliance"
+            value={`${(data.loop_compliance.score * 100).toFixed(0)}%`}
+            subtext={`${data.loop_compliance.snapshot_starts} of ${data.loop_compliance.total_sessions} sessions start with snapshot`}
+            score={data.loop_compliance.score}
+          />
+        </Identified>
+        <Identified as="MetricCard.Tasks">
+          <MetricCard
+            label="Tasks"
+            value={`${data.tasks.done} / ${data.tasks.total}`}
+            subtext={`${data.tasks.planned} planned · ${data.tasks.in_progress} in progress`}
+          />
+        </Identified>
+        <Identified as="MetricCard.Decisions">
+          <MetricCard
+            label="Decisions"
+            value={String(data.decisions)}
+            subtext="Captured in DECISIONS.xml"
+          />
+        </Identified>
       </div>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
