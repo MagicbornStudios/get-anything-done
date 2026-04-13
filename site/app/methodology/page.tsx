@@ -8,6 +8,8 @@ import { MethodologyLineageSection } from "@/app/methodology/MethodologyLineageS
 import { MethodologyTemplateMatrixSection } from "@/app/methodology/MethodologyTemplateMatrixSection";
 import { MethodologyTraceSection } from "@/app/methodology/MethodologyTraceSection";
 import { MethodologyWorkedExamplesSection } from "@/app/methodology/MethodologyWorkedExamplesSection";
+import { MethodologyCliReviewSection } from "@/app/methodology/MethodologyCliReviewSection";
+import { MethodologyOpenQuestionsSection } from "@/app/methodology/MethodologyOpenQuestionsSection";
 import { pickWorkedExamples } from "@/app/methodology/methodology-shared";
 
 export const metadata = {
@@ -30,6 +32,8 @@ export default function MethodologyPage() {
       <MethodologyWorkedExamplesSection worked={worked} />
       <MethodologyLineageSection />
       <MethodologyTemplateMatrixSection />
+      <MethodologyCliReviewSection />
+      <MethodologyOpenQuestionsSection />
     </MarketingShell>
   );
 }

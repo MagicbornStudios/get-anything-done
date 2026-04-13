@@ -30,7 +30,7 @@ export function ContentDrivenRelatedSection() {
           </Link>
         </Button>
         <Button variant="outline" size="sm" className={linkClass} asChild>
-          <Link href="/questions#content-pack-injection-baseline">
+          <Link href="/methodology#content-pack-injection-baseline">
             Resolved open question
             <ArrowRight size={12} aria-hidden />
           </Link>

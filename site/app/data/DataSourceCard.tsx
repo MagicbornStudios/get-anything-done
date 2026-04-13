@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Code2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ export default function DataSourceCard({ source }: { source: DataSource }) {
               className="h-auto gap-1 px-2 py-0.5 font-mono text-[10px] font-normal text-muted-foreground hover:border-accent hover:text-accent"
               asChild
             >
-              <Link href={source.page}>{source.page}</Link>
+              <a href={source.page.includes("[") ? "#" : source.page}>{source.page}</a>
             </Button>
           </div>
         </div>

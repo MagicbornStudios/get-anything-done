@@ -42,12 +42,14 @@ export function Identified({
   const cid = `${slugify(as)}-${rid.replace(/[^a-z0-9]/gi, "")}`;
   const { enabled, highlightCid, setHighlightCid } = useDevId();
   const registry = useSectionRegistry();
+  const register = registry?.register;
+  const maxDepth = registry?.maxDepth;
 
   useEffect(() => {
-    if (!registry) return;
-    if (depth > registry.maxDepth) return;
-    return registry.register({ cid, label: as, depth });
-  }, [registry, cid, as, depth]);
+    if (!register || maxDepth === undefined) return;
+    if (depth > maxDepth) return;
+    return register({ cid, label: as, depth });
+  }, [register, maxDepth, cid, as, depth]);
 
   const isHighlighted = highlightCid === cid;
 

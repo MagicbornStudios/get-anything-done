@@ -133,7 +133,7 @@ export function resolveRef(id: string): ResolvedRef {
   if (question) {
     return {
       ...base,
-      href: `/questions#${question.id}`,
+      href: `/methodology#${question.id}`,
       label: `Q-${question.id}`,
       preview: question.title,
       found: true,

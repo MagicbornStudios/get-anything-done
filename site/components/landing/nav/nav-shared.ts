@@ -1,8 +1,7 @@
 /**
  * IA refactor (decision gad-76 / ASSUMPTIONS.md): 14 flat nav items were
- * breaking on mobile and confusing on desktop. Grouped into five dropdowns
- * plus top-level Emergent + GitHub. Primary user is the researcher (target A),
- * secondary is the indie dev (target C); nav prioritizes scanning clarity.
+ * breaking on mobile and confusing on desktop. Grouped into dropdowns
+ * plus top-level Emergent + GitHub.
  */
 
 export type NavLink = { href: string; label: string; note?: string; tint?: string };
@@ -14,32 +13,16 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Theory",
     links: [
       { href: "/gad", label: "GAD", note: "what the framework is" },
-      { href: "/lineage", label: "Lineage", note: "GSD → RepoPlanner → GAD" },
-      { href: "/methodology", label: "Methodology", note: "rubric, gates, rounds" },
       { href: "/hypotheses", label: "Hypotheses", note: "every claim wired to its eval track" },
       { href: "/skeptic", label: "Skeptic", note: "devils advocate against our claims" },
-      { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
-      { href: "/glossary", label: "Glossary", note: "every domain term" },
     ],
   },
   {
     label: "Evaluation",
     links: [
-      { href: "/findings", label: "Findings", note: "per-round writeups" },
-      { href: "/rubric", label: "Rubric", note: "how we score" },
-      { href: "/#results", label: "Round results", note: "per-round scored runs" },
+      { href: "/methodology", label: "Methodology", note: "rubric, gates, rounds, open questions, CLI" },
       { href: "/#graphs", label: "Graphs", note: "quality + pressure scatters" },
-      { href: "/questions", label: "Questions", note: "open research questions" },
       { href: "/data", label: "Data provenance", note: "every number's source" },
-    ],
-  },
-  {
-    label: "Catalog",
-    links: [
-      { href: "/skills", label: "Skills", note: "every authored skill + provenance" },
-      { href: "/#catalog", label: "Agents", note: "subagents" },
-      { href: "/#catalog", label: "Commands", note: "gad CLI" },
-      { href: "/#catalog", label: "Templates", note: "eval starting points" },
     ],
   },
   {
@@ -54,6 +37,12 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/planning", label: "Planning", note: "state, tasks, phases, decisions, roadmap, bugs" },
       { href: "/requirements", label: "Requirements", note: "v5 + history" },
+      { href: "/lineage", label: "Lineage", note: "GSD → RepoPlanner → GAD" },
+      { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
+      { href: "/skills", label: "Skills", note: "every authored skill + provenance" },
+      { href: "/#catalog", label: "Agents", note: "subagents" },
+      { href: "/#catalog", label: "Commands", note: "gad CLI" },
+      { href: "/downloads", label: "Downloads", note: "eval templates + planning packs" },
       { href: "/security", label: "Security", note: "skill risks + certification" },
       { href: "/contribute", label: "Contribute", note: "clone and run your own" },
       { href: "/feature-requests", label: "Feature Requests", note: "what we need from others" },

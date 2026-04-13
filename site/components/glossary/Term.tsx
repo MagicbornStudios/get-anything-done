@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { GLOSSARY, type GlossaryTerm } from "@/lib/eval-data";
 
 /**
@@ -54,18 +53,13 @@ export function Term({ id, children, fallbackToPlain = true }: TermProps) {
   const label = children ?? term.term;
 
   return (
-    <Link
-      href={`/glossary#${term.id}`}
+    <abbr
+      title={term.short}
       className="inline cursor-help underline decoration-dotted decoration-accent/60 underline-offset-2 transition-colors hover:decoration-accent hover:text-accent"
+      style={{ textDecoration: "underline dotted" }}
     >
-      <abbr
-        title={term.short}
-        className="no-underline"
-        style={{ textDecoration: "none" }}
-      >
-        {label}
-      </abbr>
-    </Link>
+      {label}
+    </abbr>
   );
 }
 

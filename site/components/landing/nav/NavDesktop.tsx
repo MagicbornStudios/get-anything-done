@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,8 +39,9 @@ export function NavDesktop() {
 }
 
 function NavDesktopGroup({ group }: { group: NavGroup }) {
+  const router = useRouter();
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -57,16 +61,22 @@ function NavDesktopGroup({ group }: { group: NavGroup }) {
         className="w-72 divide-y divide-border/40 rounded-xl border-border/70 bg-background/95 p-0 shadow-2xl shadow-black/40 backdrop-blur-md"
       >
         {group.links.map((link) => (
-          <DropdownMenuItem key={`${group.label}-${link.label}`} className="p-0" asChild>
-            <Link
-              href={link.href}
-              className="block cursor-pointer rounded-none px-4 py-3 text-sm transition-colors hover:bg-card/60 hover:text-foreground focus:bg-card/60 focus:text-foreground data-[highlighted]:bg-card/60"
-            >
-              <div className="font-medium text-foreground">{link.label}</div>
-              {link.note && (
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{link.note}</div>
-              )}
-            </Link>
+          <DropdownMenuItem
+            key={`${group.label}-${link.label}`}
+            className="block cursor-pointer rounded-none px-4 py-3 text-sm transition-colors focus:bg-card/60 focus:text-foreground data-[highlighted]:bg-card/60"
+            onSelect={(e) => {
+              e.preventDefault();
+              if (link.href.startsWith("#") || link.href.startsWith("/#")) {
+                window.location.href = link.href;
+              } else {
+                router.push(link.href);
+              }
+            }}
+          >
+            <div className="font-medium text-foreground">{link.label}</div>
+            {link.note && (
+              <div className="mt-0.5 text-[11px] text-muted-foreground">{link.note}</div>
+            )}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

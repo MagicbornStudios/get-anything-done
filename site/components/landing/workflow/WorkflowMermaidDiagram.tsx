@@ -2,13 +2,33 @@
 
 import { useEffect, useRef } from "react";
 
-declare global {
-  interface Window {
-    mermaid?: {
-      initialize: (cfg: Record<string, unknown>) => void;
-      run: (cfg?: { nodes?: Element[] }) => Promise<void>;
-    };
+type MermaidModule = {
+  initialize: (cfg: Record<string, unknown>) => void;
+  render: (id: string, text: string) => Promise<{ svg: string }>;
+};
+
+let mermaidPromise: Promise<MermaidModule> | null = null;
+function loadMermaid(): Promise<MermaidModule> {
+  if (!mermaidPromise) {
+    mermaidPromise = import("mermaid").then((mod) => {
+      const m = mod.default as unknown as MermaidModule;
+      m.initialize({
+        startOnLoad: false,
+        theme: "dark",
+        themeVariables: {
+          background: "transparent",
+          primaryColor: "#1e3a5f",
+          primaryBorderColor: "#6f88a3",
+          primaryTextColor: "#e0b378",
+          lineColor: "#6f88a3",
+          fontFamily: "inherit",
+        },
+        securityLevel: "loose",
+      });
+      return m;
+    });
   }
+  return mermaidPromise;
 }
 
 type Props = {
@@ -21,49 +41,27 @@ export function WorkflowMermaidDiagram({ diagram, id }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    async function render() {
-      if (!ref.current) return;
-      if (!window.mermaid) {
-        const mod = await import("mermaid");
-        window.mermaid = mod.default as unknown as Window["mermaid"];
-        window.mermaid!.initialize({
-          startOnLoad: false,
-          theme: "dark",
-          themeVariables: {
-            background: "transparent",
-            primaryColor: "#1e3a5f",
-            primaryBorderColor: "#6f88a3",
-            primaryTextColor: "#e0b378",
-            lineColor: "#6f88a3",
-            fontFamily: "inherit",
-          },
-          securityLevel: "loose",
-        });
-      }
-      if (cancelled) return;
-      const node = ref.current;
-      if (!node) return;
-      node.removeAttribute("data-processed");
-      node.innerHTML = diagram;
+    (async () => {
       try {
-        await window.mermaid!.run({ nodes: [node] });
+        const m = await loadMermaid();
+        if (cancelled || !ref.current) return;
+        const safeId = `mmd-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}-${Date.now()}`;
+        const { svg } = await m.render(safeId, diagram);
+        if (!cancelled && ref.current) ref.current.innerHTML = svg;
       } catch (err) {
         console.error("mermaid render failed", err);
       }
-    }
-    render();
+    })();
     return () => {
       cancelled = true;
     };
-  }, [diagram]);
+  }, [diagram, id]);
 
   return (
     <div
       ref={ref}
       id={id}
-      className="mermaid flex w-full items-center justify-center overflow-x-auto [&_svg]:max-w-full"
-    >
-      {diagram}
-    </div>
+      className="flex w-full items-center justify-center overflow-x-auto [&_svg]:max-w-full"
+    />
   );
 }

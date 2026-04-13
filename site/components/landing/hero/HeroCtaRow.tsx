@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Gauge, Github, FileText, ClipboardCheck } from "lucide-react";
+import { ArrowRight, Gauge, Github, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function HeroCtaRow() {
@@ -26,18 +26,6 @@ export function HeroCtaRow() {
         <Link href="/methodology">
           <ClipboardCheck size={16} aria-hidden />
           Methodology
-        </Link>
-      </Button>
-
-      <Button
-        variant="outline"
-        size="lg"
-        className="rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold"
-        asChild
-      >
-        <Link href="/findings">
-          <FileText size={16} aria-hidden />
-          Latest findings
         </Link>
       </Button>
 

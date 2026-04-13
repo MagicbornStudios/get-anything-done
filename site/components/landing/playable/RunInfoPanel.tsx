@@ -92,6 +92,13 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
               : <span className="text-emerald-400">Passed</span>}
           </dd>
         </div>
+        <div className="col-span-2">
+          <dt className="text-muted-foreground/70 uppercase tracking-wider">GAD version</dt>
+          <dd className="font-mono text-[10px] text-foreground">
+            {r.gadVersion ? `v${r.gadVersion}` : "—"}
+            {r.frameworkVersion && r.frameworkVersion !== r.gadVersion ? ` · framework ${r.frameworkVersion}` : ""}
+          </dd>
+        </div>
       </dl>
 
       {r.humanReview?.notes && (
