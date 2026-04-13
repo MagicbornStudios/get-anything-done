@@ -12,6 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { marked } from "marked";
+import { createRequire } from "node:module";
 
 marked.setOptions({ gfm: true, breaks: false });
 function renderMarkdown(src) {
@@ -21,6 +22,8 @@ function renderMarkdown(src) {
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const { readTasks } = require("../../lib/task-registry-reader.cjs");
 const SITE_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 const MONOREPO_ROOT = path.resolve(REPO_ROOT, "..", "..");
@@ -51,6 +54,7 @@ function loadConfig() {
 }
 
 const CONFIG = loadConfig();
+const GAD_ROOT = { id: "get-anything-done", path: ".", planningDir: ".planning" };
 
 function readAllEvents() {
   if (!fs.existsSync(LOG_DIR)) return [];
@@ -205,6 +209,82 @@ function computeProjectTokenMetrics(traceFiles) {
       .sort((a, b) => b[1] - a[1])
       .map(([runtime, count]) => ({ runtime, count })),
     sources: sources.sort((a, b) => b.estimated_total_tokens - a.estimated_total_tokens),
+  };
+}
+
+function computeActiveAssignments() {
+  const lanesFile = path.join(REPO_ROOT, ".planning", ".gad-agent-lanes.json");
+  const tasks = readTasks(GAD_ROOT, REPO_ROOT, {});
+  if (!fs.existsSync(lanesFile)) {
+    return {
+      total_active_agents: 0,
+      total_stale_agents: 0,
+      total_claimed_tasks: tasks.filter((task) => task.agentId && task.status !== "done").length,
+      runtime_distribution: [],
+      depth_distribution: [],
+      active_agents: [],
+      stale_agents: [],
+    };
+  }
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(fs.readFileSync(lanesFile, "utf8"));
+  } catch {
+    parsed = null;
+  }
+
+  const agents = Array.isArray(parsed?.agents) ? parsed.agents : [];
+  const now = Date.now();
+  const runtimeCounts = {};
+  const depthCounts = {};
+  const activeAgents = [];
+  const staleAgents = [];
+
+  for (const rawAgent of agents) {
+    if (rawAgent?.status === "released") continue;
+    const claimedTaskIds = Array.isArray(rawAgent?.claimedTaskIds) ? rawAgent.claimedTaskIds.map(String) : [];
+    const inferredTaskIds = tasks
+      .filter((task) => task.agentId === rawAgent.agentId && task.status !== "done")
+      .map((task) => task.id);
+    const taskIds = Array.from(new Set([...claimedTaskIds, ...inferredTaskIds]));
+    const leaseExpiry = rawAgent?.leaseExpiresAt ? Date.parse(rawAgent.leaseExpiresAt) : Number.NaN;
+    const lastSeen = rawAgent?.lastSeenAt ? Date.parse(rawAgent.lastSeenAt) : Number.NaN;
+    const stale = Number.isFinite(leaseExpiry)
+      ? leaseExpiry <= now
+      : Number.isFinite(lastSeen) && lastSeen > 0 && (now - lastSeen) > 30 * 60 * 1000;
+
+    const lane = {
+      agent_id: rawAgent?.agentId || "unknown",
+      agent_role: rawAgent?.agentRole || "default",
+      runtime: rawAgent?.runtime || "unknown",
+      depth: Number(rawAgent?.depth) || 0,
+      parent_agent_id: rawAgent?.parentAgentId || null,
+      root_agent_id: rawAgent?.rootAgentId || rawAgent?.agentId || null,
+      model_profile: rawAgent?.modelProfile || null,
+      resolved_model: rawAgent?.resolvedModel || null,
+      tasks: taskIds,
+      last_seen_at: rawAgent?.lastSeenAt || null,
+      status: rawAgent?.status || "active",
+    };
+
+    incrementCounter(runtimeCounts, lane.runtime);
+    incrementCounter(depthCounts, String(lane.depth));
+    (stale ? staleAgents : activeAgents).push(lane);
+  }
+
+  return {
+    total_active_agents: activeAgents.length,
+    total_stale_agents: staleAgents.length,
+    total_claimed_tasks: tasks.filter((task) => task.agentId && task.status !== "done").length,
+    runtime_distribution: Object.entries(runtimeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([runtime, count]) => ({ runtime, count })),
+    depth_distribution: Object.entries(depthCounts)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([depth, count]) => ({ depth: Number(depth), count })),
+    active_agents: activeAgents.sort((a, b) => (b.tasks.length - a.tasks.length) || a.agent_id.localeCompare(b.agent_id)),
+    stale_agents: staleAgents.sort((a, b) => (b.tasks.length - a.tasks.length) || a.agent_id.localeCompare(b.agent_id)),
   };
 }
 
@@ -753,6 +833,7 @@ if (metrics) {
     runtime_distribution: projectTokenMetrics.runtime_distribution,
     sources: projectTokenMetrics.sources,
   };
+  metrics.active_assignments = computeActiveAssignments();
 
   // Append-only: load existing snapshots, add new one (gad-103)
   let existing = { snapshots: [] };

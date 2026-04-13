@@ -194,6 +194,23 @@ function detectRuntimeSessionId() {
     || null;
 }
 
+function detectAgentTelemetry() {
+  const agentId = (process.env.GAD_AGENT_ID || '').trim();
+  const parentAgentId = (process.env.GAD_PARENT_AGENT_ID || '').trim();
+  const rootAgentId = (process.env.GAD_ROOT_AGENT_ID || parentAgentId || agentId || '').trim();
+  const depthRaw = process.env.GAD_AGENT_DEPTH;
+  const parsedDepth = Number.parseInt(depthRaw || '', 10);
+  return {
+    agent_id: agentId || null,
+    agent_role: (process.env.GAD_AGENT_ROLE || '').trim() || null,
+    parent_agent_id: parentAgentId || null,
+    root_agent_id: rootAgentId || null,
+    depth: Number.isFinite(parsedDepth) ? parsedDepth : null,
+    model_profile: (process.env.GAD_MODEL_PROFILE || '').trim() || null,
+    resolved_model: (process.env.GAD_RESOLVED_MODEL || '').trim() || null,
+  };
+}
+
 function resolveSnapshotRuntime(runtimeArg, { humanFallback = false } = {}) {
   const normalized = normalizeEvalRuntime(runtimeArg);
   if (runtimeArg && normalized.id !== 'unknown') return normalized;
@@ -328,6 +345,7 @@ function logCall(overrides = {}) {
     summary: overrides.summary || '',
     pid: process.pid,
     runtime: detectRuntimeIdentity(),
+    agent: detectAgentTelemetry(),
   };
   const logFile = path.join(dir, `${new Date().toISOString().slice(0, 10)}.jsonl`);
   try {

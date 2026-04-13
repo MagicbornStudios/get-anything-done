@@ -97,6 +97,20 @@ function detectRuntime(payload) {
   };
 }
 
+function detectAgentContext(payload) {
+  const parentAgentId = process.env.GAD_PARENT_AGENT_ID || payload.parent_agent_id || null;
+  const agentId = process.env.GAD_AGENT_ID || payload.agent_id || null;
+  return {
+    agent_id: agentId,
+    agent_role: process.env.GAD_AGENT_ROLE || payload.agent_role || null,
+    parent_agent_id: parentAgentId,
+    root_agent_id: process.env.GAD_ROOT_AGENT_ID || payload.root_agent_id || parentAgentId || agentId || null,
+    depth: process.env.GAD_AGENT_DEPTH || payload.agent_depth || null,
+    model_profile: process.env.GAD_MODEL_PROFILE || payload.model_profile || null,
+    resolved_model: process.env.GAD_RESOLVED_MODEL || payload.resolved_model || null,
+  };
+}
+
 function readNextSeq(projectRoot) {
   const seqFile = getSeqFile(projectRoot);
   let current = 0;
@@ -197,7 +211,7 @@ function logHookError(hookName, error) {
 
 const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit']);
 
-function eventsForPostToolUse({ seq, runtime, toolName, toolInput, toolResponse, triggerSkill }) {
+function eventsForPostToolUse({ seq, runtime, agent, toolName, toolInput, toolResponse, triggerSkill }) {
   const events = [];
 
   // Every PostToolUse produces a tool_use event.
@@ -218,6 +232,7 @@ function eventsForPostToolUse({ seq, runtime, toolName, toolInput, toolResponse,
     makeToolUseEvent({
       seq,
       runtime,
+      agent,
       tool: toolName || 'unknown',
       inputs,
       outputs: truncated.value,
@@ -241,6 +256,7 @@ function eventsForPostToolUse({ seq, runtime, toolName, toolInput, toolResponse,
       makeSubagentSpawnEvent({
         seq: seq + 0.1, // slight offset so ordering is preserved
         runtime,
+        agent,
         agentId,
         inputs: taskInputs,
         outputs: truncated.value,
@@ -268,6 +284,7 @@ function eventsForPostToolUse({ seq, runtime, toolName, toolInput, toolResponse,
       makeFileMutationEvent({
         seq: seq + 0.2,
         runtime,
+        agent,
         filePath,
         op,
         sizeDelta,
@@ -287,7 +304,7 @@ function eventsForPostToolUse({ seq, runtime, toolName, toolInput, toolResponse,
  * The "previously-recorded" state is stored in .planning/.trace-last-skill
  * alongside the marker file itself. On first call it's empty.
  */
-function maybeSkillInvocationEvent(projectRoot, seq, runtime) {
+function maybeSkillInvocationEvent(projectRoot, seq, runtime, agent) {
   const currentSkill = readActiveSkill(projectRoot);
   const lastSkillFile = path.join(projectRoot, '.planning', '.trace-last-skill');
   let previousSkill = null;
@@ -314,6 +331,7 @@ function maybeSkillInvocationEvent(projectRoot, seq, runtime) {
     return makeSkillInvocationEvent({
       seq,
       runtime,
+      agent,
       skillId: currentSkill,
       parent: previousSkill,
       triggerContext: 'marker_file',
@@ -325,6 +343,7 @@ function maybeSkillInvocationEvent(projectRoot, seq, runtime) {
   return makeSkillInvocationEvent({
     seq,
     runtime,
+    agent,
     skillId: '',
     parent: previousSkill,
     triggerContext: 'marker_file',
@@ -353,6 +372,7 @@ async function main() {
   const cwd = payload.cwd || process.cwd();
   const projectRoot = findProjectRoot(cwd);
   const runtime = detectRuntime(payload);
+  const agent = detectAgentContext(payload);
   const hookEvent = payload.hook_event_name || '';
   const toolName = payload.tool_name || '';
   const toolInput = payload.tool_input || {};
@@ -362,7 +382,7 @@ async function main() {
     // Always check for skill transitions first so a skill_invocation event
     // (if any) is written before the tool_use event that triggered the hook.
     const skillSeq = readNextSeq(projectRoot);
-    const skillEvent = maybeSkillInvocationEvent(projectRoot, skillSeq, runtime);
+    const skillEvent = maybeSkillInvocationEvent(projectRoot, skillSeq, runtime, agent);
     const activeSkill = readActiveSkill(projectRoot);
 
     if (skillEvent) {
@@ -376,6 +396,7 @@ async function main() {
       const events = eventsForPostToolUse({
         seq: toolSeq,
         runtime,
+        agent,
         toolName,
         toolInput,
         toolResponse,

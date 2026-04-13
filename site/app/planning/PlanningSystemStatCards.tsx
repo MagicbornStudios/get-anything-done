@@ -5,6 +5,7 @@ import type { PlanningSelfEvalLatest } from "./planning-system-types";
 export function PlanningSystemStatCards({ selfEval }: { selfEval: PlanningSelfEvalLatest }) {
   const runtimeDistribution = selfEval.runtime_distribution ?? [];
   const projectTokens = selfEval.project_tokens;
+  const activeAssignments = selfEval.active_assignments;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -16,6 +17,19 @@ export function PlanningSystemStatCards({ selfEval }: { selfEval: PlanningSelfEv
         <CardContent className="pt-0 text-xs text-muted-foreground">
           {planningFmtCount(selfEval.totals.sessions)} tracked sessions and{" "}
           {planningFmtCount(selfEval.totals.gad_cli_calls)} gad CLI calls
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60 bg-card/40">
+        <CardHeader className="pb-2">
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Active lanes</p>
+          <CardTitle className="text-3xl tabular-nums">
+            {planningFmtCount(activeAssignments?.total_active_agents ?? 0)}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 text-xs text-muted-foreground">
+          {planningFmtCount(activeAssignments?.total_claimed_tasks ?? 0)} claimed tasks ·{" "}
+          {planningFmtCount(activeAssignments?.total_stale_agents ?? 0)} stale
         </CardContent>
       </Card>
 

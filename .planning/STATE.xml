@@ -31,7 +31,7 @@ GAD-D-149: `gad snapshot` is the normal agent-lane bootstrap handshake
 GAD-D-150: Agent lane depth is capped at one direct child level
 
 === NEXT ===
-1. Execute 41-04: thread agent-id/lineage/assignment context into telemetry, self-eval, and planning/site surfaces
+1. Finish 41-04: thread agent-id/lineage into preserved eval TRACE/report artifacts and run-detail surfaces, not just live planning telemetry
 2. Start consuming `sdk/src/query/` from wider SDK/CLI surfaces instead of duplicating lane/snapshot logic in each layer
 3. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap
 4. Execute phase 36 (per-eval repos + command split)

@@ -31,6 +31,7 @@ export function PlanningSystemTab({ selfEval }: { selfEval: PlanningSelfEvalLate
           topRuntimeCount={topRuntimeCount}
           runtimeDistribution={runtimeDistribution}
           runtimeSessions={runtimeSessions}
+          activeAssignments={selfEval.active_assignments}
         />
         <PlanningSystemEvalTelemetryPanel selfEval={selfEval} topEvalRuntimeCount={topEvalRuntimeCount} />
       </div>

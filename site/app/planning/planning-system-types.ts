@@ -4,6 +4,25 @@ export type PlanningRuntimeCount = {
   sessions?: number;
 };
 
+export type PlanningDepthCount = {
+  depth: number;
+  count: number;
+};
+
+export type PlanningActiveAgentLane = {
+  agent_id: string;
+  agent_role: string;
+  runtime: string;
+  depth: number;
+  parent_agent_id: string | null;
+  root_agent_id: string | null;
+  model_profile: string | null;
+  resolved_model: string | null;
+  tasks: string[];
+  last_seen_at: string | null;
+  status: string;
+};
+
 export type PlanningPhasePressure = {
   phase: string;
   tasks_total: number;
@@ -73,5 +92,14 @@ export type PlanningSelfEvalLatest = {
       estimated_output_tokens: number;
       estimated_total_tokens: number;
     }>;
+  };
+  active_assignments?: {
+    total_active_agents: number;
+    total_stale_agents: number;
+    total_claimed_tasks: number;
+    runtime_distribution: PlanningRuntimeCount[];
+    depth_distribution: PlanningDepthCount[];
+    active_agents: PlanningActiveAgentLane[];
+    stale_agents: PlanningActiveAgentLane[];
   };
 };
