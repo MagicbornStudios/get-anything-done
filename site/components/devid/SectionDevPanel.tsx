@@ -7,7 +7,8 @@
  * Rows use a HoverCard (opens to the left) for id / label / route context.
  * Agent handoff (Update dictation + Delete static) opens from the row action icon.
  *
- * The panel shell uses a fixed stable id (gad-dev-panel) — see dev-panel-constants.
+ * The panel shell uses a fixed stable id (gad-dev-panel) in the header only — see dev-panel-constants.
+ * Registry rows are sorted by depth (section shell / band first).
  */
 
 import { useState } from "react";
@@ -20,6 +21,16 @@ import { DevIdAgentPromptDialog } from "./DevIdAgentPromptDialog";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import { DEV_PANEL_LABEL, DEV_PANEL_STABLE_CID } from "./dev-panel-constants";
+
+function sortRegistryEntries(entries: RegistryEntry[]): RegistryEntry[] {
+  return [...entries]
+    .map((entry, index) => ({ entry, index }))
+    .sort((a, b) => {
+      if (a.entry.depth !== b.entry.depth) return a.entry.depth - b.entry.depth;
+      return a.index - b.index;
+    })
+    .map(({ entry }) => entry);
+}
 
 function scrollTargetIntoView(cid: string) {
   if (typeof document === "undefined") return;
@@ -134,12 +145,6 @@ function RegistryListRow({
   );
 }
 
-const DEV_PANEL_REGISTRY_ROW: RegistryEntry = {
-  cid: DEV_PANEL_STABLE_CID,
-  label: DEV_PANEL_LABEL,
-  depth: 0,
-};
-
 export function SectionDevPanel() {
   const pathname = usePathname() ?? "";
   const { enabled, highlightCid, setHighlightCid, flashComponent } = useDevId();
@@ -149,6 +154,8 @@ export function SectionDevPanel() {
   const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
 
   if (!enabled || !registry) return null;
+
+  const sortedEntries = sortRegistryEntries(registry.entries);
 
   const copy = (cid: string) => {
     navigator.clipboard?.writeText(cid).catch(() => {});
@@ -213,7 +220,7 @@ export function SectionDevPanel() {
                 </button>
                 <span className="text-muted-foreground">
                   {" "}
-                  · {registry.entries.length} listed · depth ≤ {registry.maxDepth}
+                  · {sortedEntries.length} listed · depth ≤ {registry.maxDepth}
                 </span>
               </p>
             </div>
@@ -228,23 +235,17 @@ export function SectionDevPanel() {
           </div>
 
           <ul className="min-h-0 flex-1 overflow-y-auto overflow-x-visible p-2">
-            <RegistryListRow
-              entry={DEV_PANEL_REGISTRY_ROW}
-              pathname={pathname}
-              highlightCid={highlightCid}
-              setHighlightCid={setHighlightCid}
-              justCopied={justCopied}
-              onCopy={copy}
-              onActivate={activateRow}
-              onPrompt={setPromptEntry}
-            />
-            {registry.entries.length === 0 ? (
+            {sortedEntries.length === 0 ? (
               <li className="px-2 py-3 text-[11px] text-muted-foreground">
-                No other &lt;Identified&gt; rows in this section (inner chrome may use{" "}
+                No registered blocks in this section. Add{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">sectionBandCid</code> on{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">SiteSection</code> and/or{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">&lt;Identified&gt;</code> bands (inner
+                chrome may use{" "}
                 <code className="rounded bg-card px-1 font-mono text-[10px]">register=&#123;false&#125;</code>).
               </li>
             ) : (
-              registry.entries.map((entry) => (
+              sortedEntries.map((entry) => (
                 <RegistryListRow
                   key={entry.cid}
                   entry={entry}

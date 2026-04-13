@@ -5,8 +5,11 @@ import { MethodologyCompositeWeightsCatalog } from "./MethodologyCompositeWeight
 
 export function MethodologyCompositeSection() {
   return (
-    <SiteSection tone="muted">
-      <Identified as="MethodologyCompositeSection">
+    <SiteSection
+      tone="muted"
+      sectionBandCid="MethodologyCompositeSection"
+      sectionBandLabel="MethodologyCompositeSection"
+    >
       <Identified as="MethodologyCompositeHeading" register={false}>
         <SiteSectionHeading
           icon={Calculator}
@@ -53,7 +56,6 @@ export function MethodologyCompositeSection() {
       </Identified>
 
       <MethodologyCompositeWeightsCatalog />
-      </Identified>
     </SiteSection>
   );
 }
