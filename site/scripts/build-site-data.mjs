@@ -69,6 +69,7 @@ const SDK_SKILLS_DIR = path.join(SDK_DIR, "skills");
 const INTERNAL_SKILLS_DIR = path.join(REPO_ROOT, "skills");
 const AGENTS_DIR = path.join(SDK_DIR, "agents");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
+const WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "workflows");
 const DATA_DIR = path.join(REPO_ROOT, "data");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
 const DOWNLOADS_DIR = path.join(PUBLIC_DIR, "downloads");
@@ -792,12 +793,65 @@ function scanCatalog() {
   }
   catalog.inheritance = inheritanceMap;
 
+  catalog.workflows = parseWorkflows();
+
   console.log(
-    `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} templates=${catalog.templates.length}`
+    `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} templates=${catalog.templates.length} workflows=${catalog.workflows.length}`
   );
   const inheritedCount = Object.values(inheritanceMap).filter((v) => v.length > 0).length;
   console.log(`  [scan] ${inheritedCount} skill(s) inherited by at least one eval template`);
   return catalog;
+}
+
+// -------------------------------------------------------------------------
+// Workflows — parse hand-authored .planning/workflows/*.md files into
+// a typed WORKFLOWS catalog. Each file has YAML frontmatter + exactly one
+// mermaid fenced block per .planning/workflows/README.md schema.
+// -------------------------------------------------------------------------
+
+function parseWorkflows() {
+  const out = [];
+  if (!exists(WORKFLOWS_DIR)) return out;
+  for (const name of fs.readdirSync(WORKFLOWS_DIR).sort()) {
+    if (!name.endsWith(".md")) continue;
+    if (name === "README.md") continue;
+    const file = path.join(WORKFLOWS_DIR, name);
+    const fullSrc = fs.readFileSync(file, "utf8");
+    const { data: meta, body: src } = parseFrontmatter(fullSrc);
+    const slug = meta.slug || name.replace(/\.md$/, "");
+
+    // Extract the (single) mermaid fenced block.
+    const mermaidMatch = src.match(/```mermaid\n([\s\S]*?)```/);
+    const mermaidBody = mermaidMatch ? mermaidMatch[1].trim() : "";
+    if (!mermaidBody) {
+      console.warn(`  [workflows] ${name} has no mermaid block — skipping`);
+      continue;
+    }
+
+    const participants = meta.participants || {};
+    const asArray = (v) => (Array.isArray(v) ? v : v == null ? [] : [String(v)]);
+
+    out.push({
+      slug,
+      name: meta.name || slug,
+      description: meta.description || "",
+      trigger: meta.trigger || "",
+      participants: {
+        skills: asArray(participants.skills),
+        agents: asArray(participants.agents),
+        cli: asArray(participants.cli),
+        artifacts: asArray(participants.artifacts),
+      },
+      parentWorkflow: meta["parent-workflow"] || meta.parentWorkflow || null,
+      relatedPhases: asArray(meta["related-phases"] || meta.relatedPhases).map(String),
+      origin: meta.origin === "emergent" ? "emergent" : "authored",
+      mermaidBody,
+      bodyHtml: renderMarkdown(src),
+      file: path.relative(REPO_ROOT, file).replace(/\\/g, "/"),
+    });
+  }
+  console.log(`  [workflows] parsed ${out.length} workflow(s) from ${path.relative(REPO_ROOT, WORKFLOWS_DIR)}`);
+  return out;
 }
 
 // -------------------------------------------------------------------------
@@ -1398,6 +1452,26 @@ export interface Finding {
   gadVersion: string | null;
 }
 
+export interface WorkflowParticipants {
+  skills: string[];
+  agents: string[];
+  cli: string[];
+  artifacts: string[];
+}
+export interface Workflow {
+  slug: string;
+  name: string;
+  description: string;
+  trigger: string;
+  participants: WorkflowParticipants;
+  parentWorkflow: string | null;
+  relatedPhases: string[];
+  origin: "authored" | "emergent";
+  mermaidBody: string;
+  bodyHtml: string;
+  file: string;
+}
+
 export interface PlanningTask {
   id: string;
   status: string;
@@ -1441,6 +1515,8 @@ export const REQUIREMENTS_HISTORY: RequirementsVersion[] = ${JSON.stringify(requ
 export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = ${JSON.stringify(currentRequirements, null, 2)};
 
 export const FINDINGS: Finding[] = ${JSON.stringify(findings || [], null, 2)};
+
+export const WORKFLOWS: Workflow[] = ${JSON.stringify(catalog.workflows || [], null, 2)};
 
 export const PLANNING_STATE: PlanningState = ${JSON.stringify(planningState || null, null, 2)};
 
@@ -2378,7 +2454,7 @@ function main() {
  *   STATIC  (hand-curated):    site/data/*.json, data/*.json (repo-level pseudo-db)
  */
 function computeSelfEval() {
-  // Phase 10: self-eval metrics (framework overhead, loop compliance, skill
+  // Phase 10: self-eval metrics (framework overhead, framework compliance, hydration, skill
   // candidates from pressure) are GAD-framework-specific — they read .gad-log/
   // traces, evals/, and GAD's own skill candidates. When compiling for an
   // external project via GAD_PROJECT_ROOT, skip self-eval entirely since the

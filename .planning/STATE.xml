@@ -33,27 +33,34 @@ Cross-cutting follow-up logged from this closeout:
 Decisions locked this turn:
 - gad-171: create-proto-skill uses bulk batching with per-candidate checkpoints
 - gad-172: Workflows are a first-class GAD concept (hand-authored + computed + diff on /planning)
-- gad-173: Workflow validator = expected/actual graph diff = next framework-discipline metric. Answers all three 42.3 open questions: (a) workflows nest via `parent-workflow` frontmatter, rendered as mermaid subgraphs; (b) validator IS the diff, emits `workflow_conformance = (matching − extra − out_of_order) / expected` which UPGRADES the flat presence-based `framework_compliance` (2.2% baseline is on a metric we are replacing); (c) agents emit explicit `workflow_enter`/`workflow_exit` trace events as authoritative hints, sequence inference is the fallback.
+- gad-173: Workflow validator = expected/actual graph diff = next framework-discipline metric; answers nesting/validator/self-report questions
+- gad-174: Emergent workflow detection = DFG + frequent subgraph mining v1 (pure Node); proto-workflow is a first-class permanent type mirroring proto-skill; three-section visualization (Authored / Emergent / Noise); signal vs noise gated by four configurable thresholds (min_support=3, min_length=3, edge_stability=60%, coverage=20%); upgrade path to pm4py sidecar if v1 is insufficient
 
-Shipped this turn (phase 42.3 opening):
-- 42.3-01 done: `.planning/workflows/README.md` — schema, authoring rules, nesting, validator formula, trace event contract
-- 42.3-02 done: all six canonical workflows authored under `.planning/workflows/` — gad-loop, gad-discuss-plan-execute, gad-decide, gad-debug, gad-evolution, gad-findings. Nesting tree: gad-loop → {gad-discuss-plan-execute → {gad-decide, gad-debug}, gad-evolution, gad-findings}.
-- 42.3-06 done: three open design questions resolved in decision gad-173
+Shipped across phase 42.3 opening:
+- 42.3-01 done: `.planning/workflows/README.md` schema
+- 42.3-02 done: six canonical workflows authored (gad-loop, gad-discuss-plan-execute, gad-decide, gad-debug, gad-evolution, gad-findings)
+- 42.3-03 done: build-site-data workflow extractor + WORKFLOWS in catalog.generated.ts — 6 workflows parsed cleanly, tsc clean
+- 42.3-06 done: open design questions resolved (decision gad-173)
 - 42.3-07 done: remaining four workflows shipped alongside 42.3-02
-- 42.3-08 new: rename `framework_compliance` → `workflow_conformance` in self-eval once synthesis + Workflows tab land
 
 Phase 42.3 remaining:
-- 42.3-03 — build-site-data workflow extractor + WORKFLOWS in catalog
-- 42.3-04 — trace synthesis (actual graph from .gad-log events)
+- 42.3-04 — trace synthesis (actual graph from .gad-log events, authored-workflow validator)
 - 42.3-05 — /planning Workflows tab with expected/actual/diff rendering
-- 42.3-08 — metric rename
+- 42.3-08 — metric rename framework_compliance → workflow_conformance
+- 42.3-09 — emergent workflow detector v1 (DFG + frequent subgraph mining, pure Node)
+- 42.3-10 — proto-workflow filesystem layout (.planning/workflows/emergent/)
+- 42.3-11 — `gad workflow status|validate|promote|discard` CLI
+- 42.3-12 — emergent section on /planning Workflows tab (dashed green)
+- 42.3-13 — noise panel (deferred, ships after 42.3-09..12 prove useful)
 
 Also tightened:
 - 44.5-02 dev-server bridge is now "accept any gad/npx in NODE_ENV=development" for the first cut. New task 44.5-02b captures the hardening pass (allow-list, arg sanitization) as a deferred follow-up.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
-    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..08, 44.5-01..04+02b)</reference>
-    <reference>.planning/DECISIONS.xml (gad-160 through gad-173)</reference>
+    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..13, 44.5-01..04+02b)</reference>
+    <reference>.planning/DECISIONS.xml (gad-160 through gad-174)</reference>
+    <reference>site/scripts/build-site-data.mjs (parseWorkflows)</reference>
+    <reference>site/lib/catalog.generated.ts (WORKFLOWS export)</reference>
     <reference>.planning/workflows/README.md</reference>
     <reference>.planning/workflows/gad-loop.md</reference>
     <reference>.planning/workflows/gad-discuss-plan-execute.md</reference>
