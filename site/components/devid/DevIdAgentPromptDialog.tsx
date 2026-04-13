@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Handoff dialog for coding agents: Update (dictation + template) and Delete (static template).
- * Copy targets Claude Code, Codex, Cursor, etc.
+ * Handoff dialog for coding agents: Update and Delete — one large editable prompt
+ * per tab. Dictate inserts at the textarea caret; Dictate + Copy sit on one row
+ * at the bottom of the editor and appear on hover of the prompt surface.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -66,7 +67,14 @@ type SpeechRecInstance = {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
-  onresult: ((ev: { resultIndex: number; results: { length: number; [i: number]: { isFinal: boolean; [0]: { transcript: string } } } }) => void) | null;
+  onresult:
+    | ((
+        ev: {
+          resultIndex: number;
+          results: { length: number; [i: number]: { isFinal: boolean; [0]: { transcript: string } } };
+        },
+      ) => void)
+    | null;
   onerror: (() => void) | null;
   onend: (() => void) | null;
   start: () => void;
@@ -81,6 +89,151 @@ function getSpeechRecognition(): SpeechCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+function insertTranscriptAtCaret(
+  textarea: HTMLTextAreaElement | null,
+  transcript: string,
+  setText: (fn: (prev: string) => string) => void,
+) {
+  if (!textarea || !transcript.trim()) return;
+  const chunk = transcript.trim() + (transcript.trim().endsWith(" ") ? "" : " ");
+  setText((prev) => {
+    const start = textarea.selectionStart ?? prev.length;
+    const end = textarea.selectionEnd ?? prev.length;
+    const before = prev.slice(0, start);
+    const after = prev.slice(end);
+    const next = before + chunk + after;
+    const caret = start + chunk.length;
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(caret, caret);
+    });
+    return next;
+  });
+}
+
+function PromptContextStrip({
+  pathname,
+  cid,
+  label,
+}: {
+  pathname: string;
+  cid: string;
+  label: string;
+}) {
+  return (
+    <div className="grid gap-3 border-b border-border/60 bg-muted/20 px-5 py-4 sm:grid-cols-3">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">App route</p>
+        <p className="mt-1 break-all font-mono text-[11px] text-foreground">{pathname || "—"}</p>
+      </div>
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">data-cid</p>
+        <p className="mt-1 break-all font-mono text-[11px] text-accent">{cid}</p>
+      </div>
+      <div className="sm:col-span-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Identified as</p>
+        <p className="mt-1 text-sm font-medium text-foreground">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function HoverPromptChrome({
+  listening,
+  interim,
+  speechOk,
+  onStartDictation,
+  onStopDictation,
+  onCopy,
+  copied,
+  copyDisabled,
+}: {
+  listening: boolean;
+  interim: string;
+  speechOk: boolean;
+  onStartDictation: () => void;
+  onStopDictation: () => void;
+  onCopy: () => void;
+  copied: boolean;
+  copyDisabled: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-stretch justify-end",
+        "bg-gradient-to-t from-background via-background/98 to-transparent pb-3 pt-20 pl-4 pr-4",
+        "opacity-0 transition-opacity duration-200",
+        "group-hover/prompt:pointer-events-auto group-hover/prompt:opacity-100",
+      )}
+    >
+      {listening && interim ? (
+        <p className="pointer-events-none mb-2 max-h-16 overflow-y-auto rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[11px] text-emerald-100">
+          <span className="font-semibold text-emerald-300">Live · </span>
+          {interim}
+        </p>
+      ) : null}
+      <div className="pointer-events-auto flex flex-row items-center justify-end gap-3">
+        {!listening ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onStartDictation();
+            }}
+            disabled={!speechOk}
+            title={speechOk ? "Dictate at cursor — place caret in the prompt first" : "Speech recognition not available"}
+            className={cn(
+              "relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
+              "bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-lg shadow-emerald-900/40",
+              "transition-transform hover:scale-105 active:scale-95",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              !speechOk && "cursor-not-allowed opacity-40",
+            )}
+            aria-label="Start dictation at cursor"
+          >
+            <Mic className="size-6" strokeWidth={2} aria-hidden />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onStopDictation();
+            }}
+            title="Stop dictation"
+            className={cn(
+              "relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
+              "bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-lg",
+              "ring-4 ring-red-400/50",
+              "animate-[pulse_1.1s_ease-in-out_infinite]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2",
+            )}
+            aria-label="Stop dictation"
+            aria-pressed="true"
+          >
+            <MicOff className="size-6" strokeWidth={2} aria-hidden />
+          </button>
+        )}
+
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          disabled={copyDisabled}
+          className="h-12 gap-2 px-5 text-sm font-semibold shadow-md"
+          onClick={(e) => {
+            e.preventDefault();
+            onCopy();
+          }}
+        >
+          {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
+          Copy
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function DevIdAgentPromptDialog({
   open,
   onOpenChange,
@@ -93,33 +246,39 @@ export function DevIdAgentPromptDialog({
   pathname: string;
 }) {
   const [tab, setTab] = useState<"update" | "delete">("update");
-  const [requestNotes, setRequestNotes] = useState("");
+  const [updateDraft, setUpdateDraft] = useState("");
+  const [deleteDraft, setDeleteDraft] = useState("");
   const [interim, setInterim] = useState("");
   const [listening, setListening] = useState(false);
   const [speechOk, setSpeechOk] = useState(true);
   const recRef = useRef<SpeechRecInstance | null>(null);
+  const updateEditorRef = useRef<HTMLTextAreaElement | null>(null);
+  const deleteEditorRef = useRef<HTMLTextAreaElement | null>(null);
+  const tabRef = useRef<"update" | "delete">(tab);
   const [copied, setCopied] = useState<"update" | "delete" | null>(null);
 
   const label = entry?.label ?? "";
   const cid = entry?.cid ?? "";
 
+  tabRef.current = tab;
+
   useEffect(() => {
-    if (!open) {
-      setRequestNotes("");
-      setInterim("");
-      setTab("update");
-      setCopied(null);
-      if (recRef.current) {
-        try {
-          recRef.current.stop();
-        } catch {
-          /* noop */
-        }
-        recRef.current = null;
+    if (!open || !entry) return;
+    setUpdateDraft(buildUpdatePrompt(pathname, label, cid, "(Describe the change you want.)"));
+    setDeleteDraft(buildDeletePrompt(pathname, label, cid));
+    setInterim("");
+    setTab("update");
+    setCopied(null);
+    if (recRef.current) {
+      try {
+        recRef.current.stop();
+      } catch {
+        /* noop */
       }
-      setListening(false);
+      recRef.current = null;
     }
-  }, [open]);
+    setListening(false);
+  }, [open, entry, pathname, label, cid]);
 
   useEffect(() => {
     return () => {
@@ -167,8 +326,11 @@ export function DevIdAgentPromptDialog({
         piece += res[0]?.transcript ?? "";
         if (res.isFinal) hasFinal = true;
       }
-      if (hasFinal) {
-        setRequestNotes((prev) => (prev ? `${prev.trim()} ${piece.trim()}` : piece.trim()));
+      if (hasFinal && piece.trim()) {
+        const t = tabRef.current;
+        const el = t === "update" ? updateEditorRef.current : deleteEditorRef.current;
+        const setDraft = t === "update" ? setUpdateDraft : setDeleteDraft;
+        insertTranscriptAtCaret(el, piece, setDraft);
         setInterim("");
       } else {
         setInterim(piece);
@@ -192,111 +354,129 @@ export function DevIdAgentPromptDialog({
     }
   }, [stopRecognition]);
 
-  const updateText = buildUpdatePrompt(pathname, label, cid, requestNotes);
-  const deleteText = buildDeletePrompt(pathname, label, cid);
-
-  const copy = (which: "update" | "delete") => {
-    const text = which === "update" ? updateText : deleteText;
+  const copyActive = () => {
+    const text = tab === "update" ? updateDraft : deleteDraft;
     navigator.clipboard?.writeText(text).catch(() => {});
-    setCopied(which);
-    window.setTimeout(() => setCopied(null), 1200);
+    setCopied(tab);
+    window.setTimeout(() => setCopied(null), 1400);
   };
 
   if (!entry) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Agent handoff · {label}</DialogTitle>
-          <DialogDescription className="font-mono text-xs">
-            {pathname} · <span className="text-accent">{cid}</span>
+      <DialogContent
+        overlayClassName="z-[200] bg-black/85"
+        className={cn(
+          "fixed z-[210] flex max-h-[92vh] w-[min(96vw,72rem)] max-w-none flex-col gap-0 overflow-hidden p-0",
+          "translate-x-[-50%] translate-y-[-50%] sm:rounded-xl",
+        )}
+      >
+        <DialogHeader className="shrink-0 space-y-1 border-b border-border/60 px-6 py-5 text-left">
+          <DialogTitle className="text-xl font-semibold tracking-tight">Agent handoff</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            One prompt per tab — edit the text below, then hover the prompt area for <strong className="text-foreground">Dictate</strong>{" "}
+            (inserts at your caret) and <strong className="text-foreground">Copy</strong>.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "update" | "delete")}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="update">Update</TabsTrigger>
-            <TabsTrigger value="delete">Delete</TabsTrigger>
-          </TabsList>
+        <PromptContextStrip pathname={pathname} cid={cid} label={label} />
 
-          <TabsContent value="update" className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Dictate or type what should change. The prompt below includes route, dev id, and your
-              notes—copy it into your coding agent.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {!listening ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={speechOk ? "secondary" : "outline"}
-                  className="gap-1.5"
-                  onClick={startRecognition}
-                >
-                  <Mic size={14} aria-hidden />
-                  Dictate
-                </Button>
-              ) : (
-                <Button type="button" size="sm" variant="destructive" className="gap-1.5" onClick={stopRecognition}>
-                  <MicOff size={14} aria-hidden />
-                  Stop
-                </Button>
-              )}
-              {!speechOk && (
-                <span className="text-xs text-amber-500">Speech recognition not supported in this browser.</span>
-              )}
-            </div>
-            {(listening || interim) && (
-              <p className="rounded-md border border-border/60 bg-card/40 px-2 py-1.5 text-xs text-muted-foreground">
-                {listening ? <span className="text-accent">Listening… </span> : null}
-                {interim || "…"}
-              </p>
-            )}
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Your notes (typed or from dictation)
-            </label>
-            <textarea
-              value={requestNotes}
-              onChange={(e) => setRequestNotes(e.target.value)}
-              rows={4}
-              className={cn(
-                "w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
-                "ring-offset-background placeholder:text-muted-foreground",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              )}
-              placeholder="Example: tighten the subhead copy; add a second CTA; reduce vertical padding…"
-            />
-            <div>
-              <div className="mb-1 flex items-center justify-between gap-2">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            stopRecognition();
+            setTab(v as "update" | "delete");
+          }}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="shrink-0 px-6 pt-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="update">Update</TabsTrigger>
+              <TabsTrigger value="delete">Delete</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
+            <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-4">
+              <div className="mb-2 flex flex-col gap-1">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Full prompt
+                  ① Context (read-only strip above)
                 </span>
-                <Button type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => copy("update")}>
-                  {copied === "update" ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                  Copy
-                </Button>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
+                  ② Full prompt — edit everything your agent should see
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  ③ Hover this area (or keep mouse over it) for Dictate + Copy along the bottom edge
+                </span>
               </div>
-              <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md border border-border/60 bg-muted/30 p-3 text-[11px] leading-relaxed text-foreground">
-                {updateText}
-              </pre>
+              <div className="group/prompt relative min-h-0 flex-1 rounded-lg border border-border/70 bg-muted/15 shadow-inner">
+                <textarea
+                  ref={updateEditorRef}
+                  value={updateDraft}
+                  onChange={(e) => setUpdateDraft(e.target.value)}
+                  spellCheck
+                  className={cn(
+                    "box-border min-h-[min(52vh,28rem)] w-full flex-1 resize-y rounded-lg bg-transparent px-4 py-4",
+                    "font-mono text-[13px] leading-relaxed text-foreground",
+                    "placeholder:text-muted-foreground/50",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
+                  )}
+                  aria-label="Full update prompt for your agent"
+                />
+                <HoverPromptChrome
+                  listening={listening}
+                  interim={interim}
+                  speechOk={speechOk}
+                  onStartDictation={startRecognition}
+                  onStopDictation={stopRecognition}
+                  onCopy={copyActive}
+                  copied={copied === "update"}
+                  copyDisabled={!updateDraft.trim()}
+                />
+              </div>
+              {!speechOk && (
+                <p className="mt-2 text-xs text-amber-500">Speech recognition is not supported in this browser.</p>
+              )}
             </div>
           </TabsContent>
 
-          <TabsContent value="delete" className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Static prompt to remove this <code className="rounded bg-card/60 px-1">Identified</code> band. Copy and
-              paste into your agent.
-            </p>
-            <div className="flex justify-end">
-              <Button type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => copy("delete")}>
-                {copied === "delete" ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                Copy delete prompt
-              </Button>
+          <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
+            <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-4">
+              <div className="mb-2 flex flex-col gap-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  ① Context strip above
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
+                  ② Delete prompt — edit if you need a narrower instruction
+                </span>
+                <span className="text-[10px] text-muted-foreground">③ Hover for Dictate + Copy</span>
+              </div>
+              <div className="group/prompt relative min-h-0 flex-1 rounded-lg border border-border/70 bg-muted/15 shadow-inner">
+                <textarea
+                  ref={deleteEditorRef}
+                  value={deleteDraft}
+                  onChange={(e) => setDeleteDraft(e.target.value)}
+                  spellCheck
+                  className={cn(
+                    "box-border min-h-[min(52vh,28rem)] w-full flex-1 resize-y rounded-lg bg-transparent px-4 py-4",
+                    "font-mono text-[13px] leading-relaxed text-foreground",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
+                  )}
+                  aria-label="Full delete prompt for your agent"
+                />
+                <HoverPromptChrome
+                  listening={listening}
+                  interim={interim}
+                  speechOk={speechOk}
+                  onStartDictation={startRecognition}
+                  onStopDictation={stopRecognition}
+                  onCopy={copyActive}
+                  copied={copied === "delete"}
+                  copyDisabled={!deleteDraft.trim()}
+                />
+              </div>
             </div>
-            <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-md border border-border/60 bg-muted/30 p-3 text-[11px] leading-relaxed text-foreground">
-              {deleteText}
-            </pre>
           </TabsContent>
         </Tabs>
       </DialogContent>
