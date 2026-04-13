@@ -8498,6 +8498,164 @@ const roundsCmd = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// evolution subcommands (phase 42) — validate/promote/discard/status
+// proto-skills produced by gad-evolution-evolve and gad-quick-skill.
+// ---------------------------------------------------------------------------
+
+const evolutionPaths = (repoRoot) => ({
+  candidatesDir: path.join(repoRoot, 'skills', 'candidates'),
+  protoSkillsDir: path.join(repoRoot, 'skills', 'proto-skills'),
+  finalSkillsDir: path.join(repoRoot, 'sdk', 'skills'),
+  evolutionsDir: path.join(repoRoot, 'skills', '.evolutions'),
+});
+
+const evolutionValidate = defineCommand({
+  meta: { name: 'validate', description: 'Run advisory validator on a proto-skill (writes VALIDATION.md)' },
+  args: {
+    slug: { type: 'positional', description: 'proto-skill slug (directory name under skills/proto-skills/)', required: true },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { protoSkillsDir } = evolutionPaths(repoRoot);
+    const dir = path.join(protoSkillsDir, args.slug);
+    const skillPath = path.join(dir, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      console.error(`No proto-skill found at ${skillPath}`);
+      process.exit(1);
+    }
+    const { writeValidation } = require('../lib/evolution-validator.cjs');
+    const { outPath, result } = writeValidation(skillPath, path.resolve(repoRoot, '..', '..'));
+    const okFiles = result.fileRefs.filter((f) => f.exists).length;
+    const okCmds = result.cliCommands.filter((c) => c.valid === true).length;
+    console.log(`Validated ${args.slug}`);
+    console.log(`  File refs: ${okFiles}/${result.fileRefs.length}`);
+    console.log(`  CLI cmds:  ${okCmds}/${result.cliCommands.length}`);
+    console.log(`  → ${outPath}`);
+  },
+});
+
+const evolutionPromote = defineCommand({
+  meta: { name: 'promote', description: 'Promote a proto-skill into sdk/skills/ (joins species DNA)' },
+  args: {
+    slug: { type: 'positional', description: 'proto-skill slug', required: true },
+    name: { type: 'string', description: 'final skill name in sdk/skills/ (defaults to slug)', required: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { protoSkillsDir, finalSkillsDir, candidatesDir } = evolutionPaths(repoRoot);
+    const protoDir = path.join(protoSkillsDir, args.slug);
+    if (!fs.existsSync(protoDir)) {
+      console.error(`No proto-skill at ${protoDir}`);
+      process.exit(1);
+    }
+    const skillPath = path.join(protoDir, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      console.error(`Missing SKILL.md in proto-skill — cannot promote`);
+      process.exit(1);
+    }
+    const finalName = args.name || args.slug;
+    const finalDir = path.join(finalSkillsDir, finalName);
+    if (fs.existsSync(finalDir)) {
+      console.error(`Final skill dir already exists at ${finalDir} — refusing to overwrite. Pass --name <other> or remove it manually.`);
+      process.exit(1);
+    }
+    fs.mkdirSync(finalDir, { recursive: true });
+    fs.copyFileSync(skillPath, path.join(finalDir, 'SKILL.md'));
+    const refsDir = path.join(protoDir, 'references');
+    if (fs.existsSync(refsDir)) {
+      const finalRefsDir = path.join(finalDir, 'references');
+      fs.mkdirSync(finalRefsDir, { recursive: true });
+      for (const file of fs.readdirSync(refsDir)) {
+        fs.copyFileSync(path.join(refsDir, file), path.join(finalRefsDir, file));
+      }
+    }
+    fs.rmSync(protoDir, { recursive: true, force: true });
+    const candidateDir = path.join(candidatesDir, args.slug);
+    if (fs.existsSync(candidateDir)) fs.rmSync(candidateDir, { recursive: true, force: true });
+    console.log(`Promoted ${args.slug} → ${path.relative(repoRoot, finalDir)}`);
+    console.log(`  Removed proto-skill: ${path.relative(repoRoot, protoDir)}`);
+    if (fs.existsSync(candidateDir)) console.log(`  (note: candidate at ${candidateDir} still present)`);
+  },
+});
+
+const evolutionDiscard = defineCommand({
+  meta: { name: 'discard', description: 'Discard a proto-skill (deletes the directory)' },
+  args: {
+    slug: { type: 'positional', description: 'proto-skill slug', required: true },
+    keepCandidate: { type: 'boolean', description: 'keep the candidate file (only delete the proto-skill draft)', required: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { protoSkillsDir, candidatesDir } = evolutionPaths(repoRoot);
+    const protoDir = path.join(protoSkillsDir, args.slug);
+    if (!fs.existsSync(protoDir)) {
+      console.error(`No proto-skill at ${protoDir}`);
+      process.exit(1);
+    }
+    fs.rmSync(protoDir, { recursive: true, force: true });
+    console.log(`Discarded proto-skill: ${path.relative(repoRoot, protoDir)}`);
+    if (!args.keepCandidate) {
+      const candidateDir = path.join(candidatesDir, args.slug);
+      if (fs.existsSync(candidateDir)) {
+        fs.rmSync(candidateDir, { recursive: true, force: true });
+        console.log(`Discarded candidate:    ${path.relative(repoRoot, candidateDir)}`);
+      }
+    }
+  },
+});
+
+const evolutionStatus = defineCommand({
+  meta: { name: 'status', description: 'Show evolution state — pending proto-skills + candidates' },
+  run() {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { candidatesDir, protoSkillsDir, evolutionsDir } = evolutionPaths(repoRoot);
+    const candidates = fs.existsSync(candidatesDir)
+      ? fs.readdirSync(candidatesDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
+      : [];
+    const protoSkills = fs.existsSync(protoSkillsDir)
+      ? fs.readdirSync(protoSkillsDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
+      : [];
+    const evolutions = fs.existsSync(evolutionsDir)
+      ? fs.readdirSync(evolutionsDir).filter((e) => !e.startsWith('.'))
+      : [];
+
+    if (candidates.length === 0 && protoSkills.length === 0) {
+      console.log('No active evolution.');
+      console.log(`  ${evolutions.length} historical evolutions recorded in skills/.evolutions/`);
+      return;
+    }
+    console.log(`Active evolution: ${evolutions[evolutions.length - 1] || '(no marker found)'}`);
+    console.log('');
+    if (candidates.length > 0) {
+      console.log(`Candidates (raw, awaiting drafting): ${candidates.length}`);
+      for (const c of candidates) console.log(`  - skills/candidates/${c}/`);
+      console.log('');
+    }
+    if (protoSkills.length > 0) {
+      console.log(`Proto-skills (drafted, awaiting human review): ${protoSkills.length}`);
+      for (const p of protoSkills) {
+        const hasValidation = fs.existsSync(path.join(protoSkillsDir, p, 'VALIDATION.md'));
+        console.log(`  - skills/proto-skills/${p}/   ${hasValidation ? '[validated]' : '[no validation yet]'}`);
+      }
+      console.log('');
+      console.log('Review then run:');
+      console.log('  gad evolution promote <slug>   # joins species DNA');
+      console.log('  gad evolution discard <slug>   # delete');
+    }
+  },
+});
+
+const evolutionCmd = defineCommand({
+  meta: { name: 'evolution', description: 'Manage GAD evolution proto-skills (validate/promote/discard/status)' },
+  subCommands: {
+    validate: evolutionValidate,
+    promote: evolutionPromote,
+    discard: evolutionDiscard,
+    status: evolutionStatus,
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -8525,6 +8683,7 @@ const main = defineCommand({
     'self-eval': selfEvalCmd,
     data: dataCmd,
     eval: evalCmd,
+    evolution: evolutionCmd,
     rounds: roundsCmd,
     verify: verifyCmd,
     snapshot: snapshotV2Cmd,
