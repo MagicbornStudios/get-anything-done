@@ -38,10 +38,11 @@ const PROJECT_ROOT = path.join(__dirname, '..');
 // Directories to scan — these contain files that become agent context
 const SCAN_DIRS = [
   'agents',
-  'commands',
-  'get-anything-done/workflows',
+  'sdk/workflows',
+  'sdk/skills',
+  'sdk/templates',
   'lib',
-  'hooks',
+  'sdk/hooks',
 ];
 
 // File extensions to scan
@@ -50,7 +51,7 @@ const SCAN_EXTS = new Set(['.md', '.cjs', '.js', '.json']);
 // Files that legitimately reference injection patterns (e.g., security docs, this test)
 const ALLOWLIST = new Set([
   'lib/security.cjs',        // The security module itself
-  'hooks/gad-prompt-guard.js',                  // The prompt guard hook
+  'sdk/hooks/gsd-prompt-guard.js',              // The prompt guard hook
   'tests/security.test.cjs',                    // Security tests
   'tests/prompt-injection-scan.test.cjs',       // This file
 ]);
@@ -74,6 +75,10 @@ function collectFiles(dir) {
   return results;
 }
 
+function relPath(file) {
+  return path.relative(PROJECT_ROOT, file).replace(/\\/g, '/');
+}
+
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 describe('codebase prompt injection scan', () => {
@@ -92,14 +97,14 @@ describe('codebase prompt injection scan', () => {
     const findings = [];
 
     for (const file of agentFiles) {
-      const relPath = path.relative(PROJECT_ROOT, file);
-      if (ALLOWLIST.has(relPath)) continue;
+      const rel = relPath(file);
+      if (ALLOWLIST.has(rel)) continue;
 
       const content = fs.readFileSync(file, 'utf-8');
       const result = scanForInjection(content, { strict: true });
 
       if (!result.clean) {
-        findings.push({ file: relPath, issues: result.findings });
+        findings.push({ file: rel, issues: result.findings });
       }
     }
 
@@ -115,14 +120,14 @@ describe('codebase prompt injection scan', () => {
     const findings = [];
 
     for (const file of workflowFiles) {
-      const relPath = path.relative(PROJECT_ROOT, file);
-      if (ALLOWLIST.has(relPath)) continue;
+      const rel = relPath(file);
+      if (ALLOWLIST.has(rel)) continue;
 
       const content = fs.readFileSync(file, 'utf-8');
       const result = scanForInjection(content, { strict: true });
 
       if (!result.clean) {
-        findings.push({ file: relPath, issues: result.findings });
+        findings.push({ file: rel, issues: result.findings });
       }
     }
 
@@ -133,42 +138,42 @@ describe('codebase prompt injection scan', () => {
     );
   });
 
-  test('command files are clean', () => {
-    const commandFiles = allFiles.filter(f => f.includes('/commands/'));
+  test('skill files are clean', () => {
+    const commandFiles = allFiles.filter(f => f.includes('/sdk/skills/'));
     const findings = [];
 
     for (const file of commandFiles) {
-      const relPath = path.relative(PROJECT_ROOT, file);
-      if (ALLOWLIST.has(relPath)) continue;
+      const rel = relPath(file);
+      if (ALLOWLIST.has(rel)) continue;
 
       const content = fs.readFileSync(file, 'utf-8');
       const result = scanForInjection(content, { strict: true });
 
       if (!result.clean) {
-        findings.push({ file: relPath, issues: result.findings });
+        findings.push({ file: rel, issues: result.findings });
       }
     }
 
     assert.equal(findings.length, 0,
-      `Prompt injection patterns found in command files:\n${findings.map(f =>
+      `Prompt injection patterns found in skill files:\n${findings.map(f =>
         `  ${f.file}:\n${f.issues.map(i => `    - ${i}`).join('\n')}`
       ).join('\n')}`
     );
   });
 
   test('hook files are clean', () => {
-    const hookFiles = allFiles.filter(f => f.includes('/hooks/'));
+    const hookFiles = allFiles.filter(f => f.includes('/sdk/hooks/'));
     const findings = [];
 
     for (const file of hookFiles) {
-      const relPath = path.relative(PROJECT_ROOT, file);
-      if (ALLOWLIST.has(relPath)) continue;
+      const rel = relPath(file);
+      if (ALLOWLIST.has(rel)) continue;
 
       const content = fs.readFileSync(file, 'utf-8');
       const result = scanForInjection(content);
 
       if (!result.clean) {
-        findings.push({ file: relPath, issues: result.findings });
+        findings.push({ file: rel, issues: result.findings });
       }
     }
 
@@ -180,18 +185,18 @@ describe('codebase prompt injection scan', () => {
   });
 
   test('lib source files are clean', () => {
-    const libFiles = allFiles.filter(f => f.includes('/bin/lib/'));
+    const libFiles = allFiles.filter(f => f.includes('/lib/'));
     const findings = [];
 
     for (const file of libFiles) {
-      const relPath = path.relative(PROJECT_ROOT, file);
-      if (ALLOWLIST.has(relPath)) continue;
+      const rel = relPath(file);
+      if (ALLOWLIST.has(rel)) continue;
 
       const content = fs.readFileSync(file, 'utf-8');
       const result = scanForInjection(content);
 
       if (!result.clean) {
-        findings.push({ file: relPath, issues: result.findings });
+        findings.push({ file: rel, issues: result.findings });
       }
     }
 
@@ -207,8 +212,8 @@ describe('codebase prompt injection scan', () => {
     const invisiblePattern = /[\u200B-\u200F\u2028-\u202F\uFEFF\u00AD]/;
 
     for (const file of allFiles) {
-      const relPath = path.relative(PROJECT_ROOT, file);
-      if (ALLOWLIST.has(relPath)) continue;
+      const rel = relPath(file);
+      if (ALLOWLIST.has(rel)) continue;
 
       const content = fs.readFileSync(file, 'utf-8');
       if (invisiblePattern.test(content)) {
@@ -220,7 +225,7 @@ describe('codebase prompt injection scan', () => {
             badLines.push(i + 1);
           }
         });
-        findings.push({ file: relPath, lines: badLines });
+        findings.push({ file: rel, lines: badLines });
       }
     }
 
@@ -236,15 +241,15 @@ describe('codebase prompt injection scan', () => {
     const boundaryPattern = /<\/?(?:system|assistant|human)>/i;
 
     for (const file of allFiles) {
-      const relPath = path.relative(PROJECT_ROOT, file);
-      if (ALLOWLIST.has(relPath)) continue;
+      const rel = relPath(file);
+      if (ALLOWLIST.has(rel)) continue;
       // Allow .md files to use common tags in examples/docs
       // But flag .js/.cjs files that embed these
       if (path.extname(file) !== '.js' && path.extname(file) !== '.cjs') continue;
 
       const content = fs.readFileSync(file, 'utf-8');
       if (boundaryPattern.test(content)) {
-        findings.push(relPath);
+        findings.push(rel);
       }
     }
 
