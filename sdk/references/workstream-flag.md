@@ -1,60 +1,51 @@
 # Workstream Flag (`--ws`)
 
-> Status: historical design note only. Workstreams are not currently implemented in the shipped `gad-tools` command surface, so do not rely on this reference until the feature is formally restored and evaluated.
+> Status: deferred upstream review. The shipped `gad-tools` surface does not currently implement `workstream` commands or a live `--ws` routing contract. Treat this file as a review note, not as an active operator reference.
 
-## Overview
+## Current GAD truth
 
-The `--ws <name>` flag scopes GAD operations to a specific workstream, enabling
-parallel milestone work by multiple Claude Code instances on the same codebase.
+- `gad-tools workstream ...` is not implemented in the current GAD CLI.
+- Workflow and site references must not imply that workstreams are usable today.
+- Any future workstream support must be reviewed against upstream `get-shit-done` first, then reintroduced deliberately.
 
-## Resolution Priority
+## What upstream GSD built
 
-1. `--ws <name>` flag (explicit, highest priority)
-2. `GSD_WORKSTREAM` environment variable (per-instance)
-3. `.planning/active-workstream` file (shared, last-writer-wins)
-4. `null` — flat mode (no workstreams)
+Upstream `get-shit-done` uses `.planning/workstreams/<name>/` to isolate:
 
-## Routing Propagation
+- `STATE`
+- `ROADMAP`
+- `REQUIREMENTS`
+- `phases/`
 
-All workflow routing commands include `${GSD_WS}` which:
-- Expands to `--ws <name>` when a workstream is active
-- Expands to empty string in flat mode (backward compatible)
+while keeping shared files like `PROJECT`, `config`, `milestones`, and `codebase` at the root `.planning/`.
 
-This ensures workstream scope chains automatically through the workflow:
-`new-milestone → discuss-phase → plan-phase → execute-phase → transition`
+The upstream implementation also supports:
 
-## Directory Structure
+- flat-mode fallback when no workstreams exist
+- migration from flat mode into namespaced mode
+- active-workstream selection
+- progress/status across workstreams
+- path validation around workstream names
+- session-scoped active pointers in tests and SDK code
 
-```
-.planning/
-├── PROJECT.md          # Shared
-├── config.json         # Shared
-├── milestones/         # Shared
-├── codebase/           # Shared
-├── active-workstream   # Points to current ws
-└── workstreams/
-    ├── feature-a/      # Workstream A
-    │   ├── STATE.md
-    │   ├── ROADMAP.md
-    │   ├── REQUIREMENTS.md
-    │   └── phases/
-    └── feature-b/      # Workstream B
-        ├── STATE.md
-        ├── ROADMAP.md
-        ├── REQUIREMENTS.md
-        └── phases/
-```
+## Why GAD has not adopted it yet
 
-## CLI Usage
+Workstreams are promising, but they affect too many core surfaces to add casually:
 
-```bash
-# All gad-tools commands accept --ws
-gad-tools state json --ws feature-a
-gad-tools find-phase 3 --ws feature-b
+- multi-root planning
+- eval preservation
+- runtime tracing
+- site reporting
+- milestone completion rules
 
-# Workstream CRUD
-gad-tools workstream create <name>
-gad-tools workstream list
-gad-tools workstream status <name>
-gad-tools workstream complete <name>
-```
+GAD needs a simpler adoption plan than upstream's full workstream surface. Until that review is done, flat planning remains the only supported mode.
+
+## If workstreams return later
+
+The likely minimum contract to reconsider is:
+
+1. backward-compatible flat mode
+2. explicit migration from flat planning
+3. per-session active workstream selection
+4. clear site/eval/reporting behavior
+5. security validation on workstream names and paths

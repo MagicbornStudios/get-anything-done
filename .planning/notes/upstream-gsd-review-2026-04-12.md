@@ -78,6 +78,46 @@ Conclusion:
 - We should not import them blindly
 - GAD should review and likely adopt a simplified version if we add them
 
+## Workstreams: what upstream gets right vs where GAD should diverge
+
+### Clear wins upstream
+
+- Namespacing is explicit on disk rather than hidden in memory.
+- Flat mode fallback keeps old projects valid.
+- Migration is concrete instead of hand-wavy.
+- Session-scoped active pointers solve a real multi-terminal collision problem.
+- The test suite covers path traversal, pointer poisoning, and session separation.
+
+### Where upstream likely overreaches for GAD
+
+- Workstreams are threaded through too many commands and workflows at once.
+- Milestone transition logic becomes harder to reason about when "phase complete"
+  is no longer enough to decide whether the milestone is done.
+- The shared-vs-scoped planning split raises the mental load for operators and
+  for site/eval tooling.
+- Upstream can tolerate more command/workflow surface area than GAD should.
+
+### Provisional GAD adoption shape
+
+If GAD adopts workstreams, the likely right shape is:
+
+1. Flat mode stays the default and remains fully valid.
+2. Workstreams are opt-in, not implied by repo size.
+3. Session-scoped active selection is mandatory.
+4. Eval preservation and trace attribution must record workstream identity.
+5. Site reporting must understand workstream-local progress before the feature
+   is considered shipped.
+6. Transition/milestone workflows should add workstream branching only after the
+   CLI/query layer is stable.
+
+### Immediate repo-truth implication
+
+Until workstreams are restored:
+
+- GAD docs should describe them as deferred.
+- GAD workflows should not suggest `/gad:workstreams ...`.
+- Historical tests/docs can remain as lineage evidence, but not as product truth.
+
 ## Security: what upstream has that GAD should keep or port
 
 `get-shit-done/bin/lib/security.cjs` is still one of the strongest upstream modules.
