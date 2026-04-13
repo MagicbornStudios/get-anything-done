@@ -370,6 +370,28 @@ function buildHookCommand(configDir, hookName) {
 }
 
 /**
+ * Resolve a shell command that runs a .sh hook cross-platform.
+ * On Windows, PowerShell/cmd have no `bash` on PATH, so we locate Git Bash
+ * (installed by Git for Windows) and invoke it by absolute path. Elsewhere,
+ * plain `bash` from PATH is fine.
+ */
+function resolveBashCommand(scriptPath) {
+  const fwd = scriptPath.replace(/\\/g, '/');
+  if (process.platform !== 'win32') {
+    return `bash ${fwd}`;
+  }
+  const candidates = [
+    process.env.GIT_BASH,
+    'C:/Program Files/Git/bin/bash.exe',
+    'C:/Program Files (x86)/Git/bin/bash.exe',
+    process.env.LOCALAPPDATA ? process.env.LOCALAPPDATA.replace(/\\/g, '/') + '/Programs/Git/bin/bash.exe' : null,
+  ].filter(Boolean);
+  const found = candidates.find(p => { try { return fs.existsSync(p); } catch { return false; } });
+  const bashExe = found || 'bash';
+  return `"${bashExe}" ${fwd}`;
+}
+
+/**
  * Resolve the opencode config file path, preferring .jsonc if it exists.
  */
 function resolveOpencodeConfigPath(configDir) {
@@ -5282,8 +5304,8 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure commit validation hook (Conventional Commits enforcement, opt-in)
     const validateCommitCommand = isGlobal
-      ? 'bash ' + targetDir.replace(/\\/g, '/') + '/hooks/gad-validate-commit.sh'
-      : 'bash ' + dirName + '/hooks/gad-validate-commit.sh';
+      ? resolveBashCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-validate-commit.sh')
+      : resolveBashCommand(dirName + '/hooks/gad-validate-commit.sh');
     const hasValidateCommitHook = settings.hooks[preToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gad-validate-commit'))
     );
@@ -5304,8 +5326,8 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure session state orientation hook (opt-in)
     const sessionStateCommand = isGlobal
-      ? 'bash ' + targetDir.replace(/\\/g, '/') + '/hooks/gad-session-state.sh'
-      : 'bash ' + dirName + '/hooks/gad-session-state.sh';
+      ? resolveBashCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-session-state.sh')
+      : resolveBashCommand(dirName + '/hooks/gad-session-state.sh');
     const hasSessionStateHook = settings.hooks.SessionStart.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gad-session-state'))
     );
@@ -5324,8 +5346,8 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure phase boundary detection hook (opt-in)
     const phaseBoundaryCommand = isGlobal
-      ? 'bash ' + targetDir.replace(/\\/g, '/') + '/hooks/gad-phase-boundary.sh'
-      : 'bash ' + dirName + '/hooks/gad-phase-boundary.sh';
+      ? resolveBashCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-phase-boundary.sh')
+      : resolveBashCommand(dirName + '/hooks/gad-phase-boundary.sh');
     const hasPhaseBoundaryHook = settings.hooks[postToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gad-phase-boundary'))
     );
