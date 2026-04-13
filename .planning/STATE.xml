@@ -37,9 +37,16 @@ Decisions locked this turn:
 
 Shipped this turn (phase 42.3 opening):
 - 42.3-01 done: `.planning/workflows/README.md` — schema, authoring rules, nesting, validator formula, trace event contract
-- 42.3-02 in-progress: `.planning/workflows/gad-loop.md` (main execution loop) and `.planning/workflows/gad-decide.md` (the pros/cons→recommend→commit pattern validated this session) authored. Four more workflows queued in 42.3-07.
+- 42.3-02 done: all six canonical workflows authored under `.planning/workflows/` — gad-loop, gad-discuss-plan-execute, gad-decide, gad-debug, gad-evolution, gad-findings. Nesting tree: gad-loop → {gad-discuss-plan-execute → {gad-decide, gad-debug}, gad-evolution, gad-findings}.
 - 42.3-06 done: three open design questions resolved in decision gad-173
+- 42.3-07 done: remaining four workflows shipped alongside 42.3-02
 - 42.3-08 new: rename `framework_compliance` → `workflow_conformance` in self-eval once synthesis + Workflows tab land
+
+Phase 42.3 remaining:
+- 42.3-03 — build-site-data workflow extractor + WORKFLOWS in catalog
+- 42.3-04 — trace synthesis (actual graph from .gad-log events)
+- 42.3-05 — /planning Workflows tab with expected/actual/diff rendering
+- 42.3-08 — metric rename
 
 Also tightened:
 - 44.5-02 dev-server bridge is now "accept any gad/npx in NODE_ENV=development" for the first cut. New task 44.5-02b captures the hardening pass (allow-list, arg sanitization) as a deferred follow-up.</next-action>
@@ -49,7 +56,11 @@ Also tightened:
     <reference>.planning/DECISIONS.xml (gad-160 through gad-173)</reference>
     <reference>.planning/workflows/README.md</reference>
     <reference>.planning/workflows/gad-loop.md</reference>
+    <reference>.planning/workflows/gad-discuss-plan-execute.md</reference>
     <reference>.planning/workflows/gad-decide.md</reference>
+    <reference>.planning/workflows/gad-debug.md</reference>
+    <reference>.planning/workflows/gad-evolution.md</reference>
+    <reference>.planning/workflows/gad-findings.md</reference>
     <reference>tmp/get-shit-done-review-2026-04-13.md</reference>
     <reference>tmp/get-shit-done/</reference>
     <reference>bin/gad-config.cjs</reference>
