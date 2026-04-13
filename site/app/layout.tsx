@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ClientDebugShell } from "@/components/debug/ClientDebugShell";
 import { DevIdProvider } from "@/components/devid/DevIdProvider";
 import { KeyboardShortcutsProvider } from "@/components/devid/KeyboardShortcuts";
 
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <body>
         <DevIdProvider>
-          {children}
+          <ClientDebugShell>{children}</ClientDebugShell>
           <KeyboardShortcutsProvider />
         </DevIdProvider>
       </body>

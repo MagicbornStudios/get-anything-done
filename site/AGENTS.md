@@ -1,5 +1,13 @@
 # GAD marketing site (`site/`) — agent guide
 
+## Client debug overlay (deployed / production review)
+
+Set **`NEXT_PUBLIC_CLIENT_DEBUG=1`** on Vercel (or `.env.local`) and **redeploy**. The app wraps the tree in `ClientDebugShell` (`components/debug/ClientDebugShell.tsx`): a fixed **bottom dock** shows `window` errors, **unhandled promise rejections**, **React render errors** (via an error boundary), and mirrored **`console.error` / `console.warn`**. Lines are also appended to **`window.__GAD_DEBUG_LINES`** for inspection in DevTools.
+
+Optional **`NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE=1`** also mirrors **`console.log` / `console.info`** (noisy on busy pages).
+
+When the env var is unset, the shell renders children only — no extra listeners or UI.
+
 ## UI blocks and `Identified`
 
 `Identified` wraps **stable, named chunks** of the UI (`as="RunProcessMetricsCards"`, `as="ProjectHero"`, …). In dev, those names register for the dev-id panel so people can say “change `RunProcessMetricsCards`” and mean the same DOM region as the code.
