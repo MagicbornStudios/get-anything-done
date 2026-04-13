@@ -1,11 +1,35 @@
 import Link from "next/link";
 import { Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NAV_GROUPS, NAV_TOP_LEVEL, NAV_GITHUB_HREF } from "@/components/landing/nav/nav-shared";
+import {
+  NAV_GROUPS,
+  NAV_TOP_LEVEL,
+  NAV_GITHUB_HREF,
+  type NavLink,
+} from "@/components/landing/nav/nav-shared";
 
 type Props = {
   onNavigate: () => void;
 };
+
+function MobileNavLink({ link, prefix, onNavigate }: { link: NavLink; prefix: string; onNavigate: () => void }) {
+  return (
+    <li key={`${prefix}-${link.label}`}>
+      <Button
+        variant="ghost"
+        className="h-auto w-full justify-start px-2 py-2 text-sm font-normal text-foreground hover:bg-card/60"
+        asChild
+      >
+        <Link href={link.href} onClick={onNavigate}>
+          {link.label}
+          {link.note && (
+            <span className="ml-2 text-[10px] text-muted-foreground">{link.note}</span>
+          )}
+        </Link>
+      </Button>
+    </li>
+  );
+}
 
 export function NavMobileMenu({ onNavigate }: Props) {
   return (
@@ -15,24 +39,38 @@ export function NavMobileMenu({ onNavigate }: Props) {
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {group.label}
           </p>
-          <ul className="space-y-1">
-            {group.links.map((link) => (
-              <li key={`mobile-${group.label}-${link.label}`}>
-                <Button
-                  variant="ghost"
-                  className="h-auto w-full justify-start px-2 py-2 text-sm font-normal text-foreground hover:bg-card/60"
-                  asChild
-                >
-                  <Link href={link.href} onClick={onNavigate}>
-                    {link.label}
-                    {link.note && (
-                      <span className="ml-2 text-[10px] text-muted-foreground">{link.note}</span>
-                    )}
-                  </Link>
-                </Button>
-              </li>
-            ))}
-          </ul>
+          {group.links ? (
+            <ul className="space-y-1">
+              {group.links.map((link) => (
+                <MobileNavLink
+                  key={`mobile-${group.label}-${link.label}`}
+                  link={link}
+                  prefix={`mobile-${group.label}`}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </ul>
+          ) : (
+            <div className="space-y-3 pl-2">
+              {group.subGroups.map((sub) => (
+                <div key={`mobile-${group.label}-${sub.label}`}>
+                  <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    {sub.label}
+                  </p>
+                  <ul className="space-y-1">
+                    {sub.links.map((link) => (
+                      <MobileNavLink
+                        key={`mobile-${group.label}-${sub.label}-${link.label}`}
+                        link={link}
+                        prefix={`mobile-${group.label}-${sub.label}`}
+                        onNavigate={onNavigate}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
       <div className="mb-4 space-y-2">

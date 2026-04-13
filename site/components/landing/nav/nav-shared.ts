@@ -2,11 +2,24 @@
  * IA refactor (decision gad-76 / ASSUMPTIONS.md): 14 flat nav items were
  * breaking on mobile and confusing on desktop. Grouped into dropdowns
  * plus top-level Emergent + GitHub.
+ *
+ * Phase 42 update: the System group got too heavy (11 items). It now
+ * supports nested subgroups via DropdownMenuSub, so System has four
+ * subcategories: Internals / Catalog / Reference / Engage.
  */
 
 export type NavLink = { href: string; label: string; note?: string; tint?: string };
 
-export type NavGroup = { label: string; links: NavLink[] };
+export type NavSubGroup = { label: string; links: NavLink[] };
+
+/**
+ * A NavGroup may have either flat `links` or nested `subGroups` (not both).
+ * NavDesktop renders flat groups as a single dropdown and nested groups as
+ * a dropdown with submenu triggers.
+ */
+export type NavGroup =
+  | { label: string; links: NavLink[]; subGroups?: undefined }
+  | { label: string; links?: undefined; subGroups: NavSubGroup[] };
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -34,18 +47,39 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "System",
-    links: [
-      { href: "/planning", label: "Planning", note: "state, tasks, phases, decisions, roadmap, bugs" },
-      { href: "/requirements", label: "Requirements", note: "v5 + history" },
-      { href: "/lineage", label: "Lineage", note: "GSD → RepoPlanner → GAD" },
-      { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
-      { href: "/skills", label: "Skills", note: "every authored skill + provenance" },
-      { href: "/#catalog", label: "Agents", note: "subagents" },
-      { href: "/#catalog", label: "Commands", note: "gad CLI" },
-      { href: "/downloads", label: "Downloads", note: "eval templates + planning packs" },
-      { href: "/security", label: "Security", note: "skill risks + certification" },
-      { href: "/contribute", label: "Contribute", note: "clone and run your own" },
-      { href: "/feature-requests", label: "Feature Requests", note: "what we need from others" },
+    subGroups: [
+      {
+        label: "Internals",
+        links: [
+          { href: "/planning", label: "Planning", note: "state, tasks, phases, decisions, candidates, proto-skills" },
+          { href: "/requirements", label: "Requirements", note: "v5 + history" },
+        ],
+      },
+      {
+        label: "Catalog",
+        links: [
+          { href: "/skills", label: "Skills", note: "every authored skill + provenance" },
+          { href: "/#catalog", label: "Agents", note: "subagents" },
+          { href: "/#catalog", label: "Commands", note: "gad CLI" },
+          { href: "/downloads", label: "Downloads", note: "eval templates + planning packs" },
+        ],
+      },
+      {
+        label: "Reference",
+        links: [
+          { href: "/lineage", label: "Lineage", note: "GSD → RepoPlanner → GAD" },
+          { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
+          { href: "/findings", label: "Findings", note: "experiment writeups + framework-level lessons" },
+        ],
+      },
+      {
+        label: "Engage",
+        links: [
+          { href: "/security", label: "Security", note: "skill risks + certification" },
+          { href: "/contribute", label: "Contribute", note: "clone and run your own" },
+          { href: "/feature-requests", label: "Feature Requests", note: "what we need from others" },
+        ],
+      },
     ],
   },
 ];

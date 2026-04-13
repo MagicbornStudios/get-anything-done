@@ -8,12 +8,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   NAV_GROUPS,
   NAV_TOP_LEVEL,
   type NavGroup,
+  type NavLink,
 } from "@/components/landing/nav/nav-shared";
 
 export function NavDesktop() {
@@ -40,6 +44,29 @@ export function NavDesktop() {
 
 function NavDesktopGroup({ group }: { group: NavGroup }) {
   const router = useRouter();
+  const navigate = (href: string) => {
+    if (href.startsWith("#") || href.startsWith("/#")) {
+      window.location.href = href;
+    } else {
+      router.push(href);
+    }
+  };
+  const renderItem = (link: NavLink, prefix: string) => (
+    <DropdownMenuItem
+      key={`${prefix}-${link.label}`}
+      className="block cursor-pointer rounded-none px-4 py-3 text-sm transition-colors focus:bg-card/60 focus:text-foreground data-[highlighted]:bg-card/60"
+      onSelect={(e) => {
+        e.preventDefault();
+        navigate(link.href);
+      }}
+    >
+      <div className="font-medium text-foreground">{link.label}</div>
+      {link.note && (
+        <div className="mt-0.5 text-[11px] text-muted-foreground">{link.note}</div>
+      )}
+    </DropdownMenuItem>
+  );
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -60,25 +87,22 @@ function NavDesktopGroup({ group }: { group: NavGroup }) {
         align="start"
         className="w-72 divide-y divide-border/40 rounded-xl border-border/70 bg-background/95 p-0 shadow-2xl shadow-black/40 backdrop-blur-md"
       >
-        {group.links.map((link) => (
-          <DropdownMenuItem
-            key={`${group.label}-${link.label}`}
-            className="block cursor-pointer rounded-none px-4 py-3 text-sm transition-colors focus:bg-card/60 focus:text-foreground data-[highlighted]:bg-card/60"
-            onSelect={(e) => {
-              e.preventDefault();
-              if (link.href.startsWith("#") || link.href.startsWith("/#")) {
-                window.location.href = link.href;
-              } else {
-                router.push(link.href);
-              }
-            }}
-          >
-            <div className="font-medium text-foreground">{link.label}</div>
-            {link.note && (
-              <div className="mt-0.5 text-[11px] text-muted-foreground">{link.note}</div>
-            )}
-          </DropdownMenuItem>
-        ))}
+        {group.links
+          ? group.links.map((link) => renderItem(link, group.label))
+          : group.subGroups.map((sub) => (
+              <DropdownMenuSub key={`${group.label}-${sub.label}`}>
+                <DropdownMenuSubTrigger className="cursor-pointer rounded-none px-4 py-3 text-sm transition-colors focus:bg-card/60 focus:text-foreground data-[state=open]:bg-card/60 data-[highlighted]:bg-card/60">
+                  <span className="font-semibold uppercase tracking-wider text-[11px] text-muted-foreground">
+                    {sub.label}
+                  </span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-72 divide-y divide-border/40 rounded-xl border-border/70 bg-background/95 p-0 shadow-2xl shadow-black/40 backdrop-blur-md">
+                  {sub.links.map((link) =>
+                    renderItem(link, `${group.label}-${sub.label}`),
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
