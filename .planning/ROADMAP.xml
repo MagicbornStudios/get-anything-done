@@ -246,4 +246,28 @@
     <status>planned</status>
     <depends>35,36</depends>
   </phase>
+  <phase id="42">
+    <title>Evolution loop — canonical skill-creator wrapper + evolve/attempt/finish lifecycle</title>
+    <goal>Build the evolution loop on top of Anthropic's canonical skill-creator skill instead of our own half-built drafting code. (1) New skill `gad:skill-creator` — a thin Claude Code skill that ensures the canonical `npx skills add https://github.com/anthropics/skills --skill skill-creator` is installed (idempotent), bundles a context payload (candidate file if any, source phase, tasks, requirements, related decisions, file refs, existing skill refs, GAD CLI surface from `gad --help`, tool refs), and invokes the canonical skill-creator with that payload. Skill-creator writes both SKILL.md and its tests in one session because that's what it's designed to do. The whole point: with a complete enough context bundle, the user never needs to talk to it manually. (2) Three lifecycle commands as Claude Code skills: `gad:evolution:evolve` runs pressure analysis (existing compute-self-eval.mjs) to identify candidates → for each new candidate, builds context payload → invokes `gad:skill-creator` with it → auto-registers a TASK-REGISTRY entry per candidate so it surfaces in `gad snapshot`. `gad:evolution:attempt-evolution` runs the tests the skill-creator wrote against each drafted candidate (verifier agent reads tests file, executes prompts, records pass/fail on candidate frontmatter as `attempted: true, attempt_result: pass|fail|partial`). `gad:evolution:finish-evolution` reviews attempted candidates: promotes passes to sdk/skills/, discards fails, writes a CHANGELOG.md entry under skills/, marks linked TASK-REGISTRY tasks as done, optionally bumps GAD framework version. (3) Deprecate lib/skill-draft.cjs and `gad eval skill draft-candidates` — they were a half-built version of what skill-creator does properly. The infrastructure they touched (compute-self-eval pressure analysis, candidate frontmatter, candidates dir layout) stays; only the drafting prompt + spawn-claude code dies. (4) The canonical skill-creator handles unit tests natively, so we don't need to invent SKILL.test.md format — we use whatever it writes. Tie-in: skills are sections of a species' DNA, so building good skills IS evolving the species, which makes this loop the load-bearing system for everything else.</goal>
+    <status>planned</status>
+    <depends>31,38</depends>
+  </phase>
+  <phase id="43">
+    <title>Domain rename pass — eval projects/eval runs/rounds → species/generation/brood/evolution/DNA/spawn</title>
+    <goal>Rename the entire eval domain model to the new evolutionary terminology in one atomic pass: eval projects (bare/gad/emergent lineage) → species; eval runs (v1, v2…) within a species → generations; all generations across species at the same round → brood; rounds → evolutions (timeline of broods); the skill manifest baked into a species → DNA; everything a generation produces (build + planning + trace + commits + reviews) → spawn. Touch: build-site-data.mjs (data fields, generated TS types), all site components and pages (display strings, nav, hero copy), gad CLI commands and help text, AGENTS.md and the Loop docs, ROADMAP/STATE/DECISIONS prose, eval directory naming where safe (paths stay stable to avoid breaking preserved artifacts; only display labels change). Single commit so we never half-rename. No behavior change — pure naming + display strings + type renames.</goal>
+    <status>planned</status>
+    <depends>42</depends>
+  </phase>
+  <phase id="44">
+    <title>Project Market redesign — Unity Asset Store-style species marketplace</title>
+    <goal>Rebuild /project-market as a real marketplace listing modeled on the Unity Asset Store: card grid with per-species cover image, species badge, generation count, best human review (stars), DNA summary chip, and review excerpt. Add cardImage + tagline + heroImage fields to species (project) metadata. For the existing 27 projects, generate placeholder gradient cards keyed to species color until real images are dropped into public/projects/&lt;id&gt;.png. Faceted filter sidebar by species / domain / tech-stack. Card detail view stays at /projects/[id]. The marketplace should fit naturally next to a Unity Asset Store grid — same density, same affordances — because we already have the underlying data (assets, reviews via rubric scores).</goal>
+    <status>planned</status>
+    <depends>43</depends>
+  </phase>
+  <phase id="45">
+    <title>Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model</title>
+    <goal>The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/brood/spawn/DNA/evolution language. Make the site read playfully (e.g. "the bare species' v4 generation hatched a spawn that crushed the v4 brood"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor.</goal>
+    <status>planned</status>
+    <depends>44</depends>
+  </phase>
 </roadmap>
