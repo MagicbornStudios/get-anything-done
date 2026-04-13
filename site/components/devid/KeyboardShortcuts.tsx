@@ -21,10 +21,15 @@ interface Shortcut {
   when?: string;
 }
 
+const CLIENT_DEBUG_ON = process.env.NEXT_PUBLIC_CLIENT_DEBUG === "1";
+
 const SHORTCUTS: Shortcut[] = [
   { keys: ["?"], label: "Open this keyboard shortcut reference" },
   { keys: ["Alt", "I"], label: "Toggle component IDs overlay" },
   { keys: ["Alt", "click"], label: "Copy component ID + highlight (when DevIds on)" },
+  ...(CLIENT_DEBUG_ON
+    ? [{ keys: ["Alt", "Shift", "D"], label: "Show / hide client debug dock (remembers for this browser)" }]
+    : []),
   { keys: ["Esc"], label: "Close panels / clear highlight / close this sheet" },
 ];
 

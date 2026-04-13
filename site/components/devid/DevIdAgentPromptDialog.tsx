@@ -121,7 +121,7 @@ function PromptContextStrip({
   label: string;
 }) {
   return (
-    <div className="grid gap-3 border-b border-border/60 bg-muted/20 px-5 py-4 sm:grid-cols-3">
+    <div className="grid gap-2 border-b border-border/60 bg-muted/20 px-4 py-2.5 sm:grid-cols-3">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">App route</p>
         <p className="mt-1 break-all font-mono text-[11px] text-foreground">{pathname || "—"}</p>
@@ -161,7 +161,7 @@ function HoverPromptChrome({
     <div
       className={cn(
         "pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-stretch justify-end",
-        "bg-gradient-to-t from-background via-background/98 to-transparent pb-3 pt-20 pl-4 pr-4",
+        "bg-gradient-to-t from-background via-background/98 to-transparent pb-2 pt-14 pl-3 pr-3",
         "opacity-0 transition-opacity duration-200",
         "group-hover/prompt:pointer-events-auto group-hover/prompt:opacity-100",
       )}
@@ -183,15 +183,15 @@ function HoverPromptChrome({
             disabled={!speechOk}
             title={speechOk ? "Dictate at cursor — place caret in the prompt first" : "Speech recognition not available"}
             className={cn(
-              "relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
-              "bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-lg shadow-emerald-900/40",
+              "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
+              "bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-900/40",
               "transition-transform hover:scale-105 active:scale-95",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               !speechOk && "cursor-not-allowed opacity-40",
             )}
             aria-label="Start dictation at cursor"
           >
-            <Mic className="size-6" strokeWidth={2} aria-hidden />
+            <Mic className="size-4" strokeWidth={2} aria-hidden />
           </button>
         ) : (
           <button
@@ -202,31 +202,31 @@ function HoverPromptChrome({
             }}
             title="Stop dictation"
             className={cn(
-              "relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
-              "bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-lg",
-              "ring-4 ring-red-400/50",
+              "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
+              "bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-md",
+              "ring-2 ring-red-400/50",
               "animate-[pulse_1.1s_ease-in-out_infinite]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2",
             )}
             aria-label="Stop dictation"
             aria-pressed="true"
           >
-            <MicOff className="size-6" strokeWidth={2} aria-hidden />
+            <MicOff className="size-4" strokeWidth={2} aria-hidden />
           </button>
         )}
 
         <Button
           type="button"
           variant="secondary"
-          size="lg"
+          size="sm"
           disabled={copyDisabled}
-          className="h-12 gap-2 px-5 text-sm font-semibold shadow-md"
+          className="h-9 gap-1.5 px-3 text-xs font-semibold shadow-sm"
           onClick={(e) => {
             e.preventDefault();
             onCopy();
           }}
         >
-          {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
+          {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
           Copy
         </Button>
       </div>
@@ -368,15 +368,14 @@ export function DevIdAgentPromptDialog({
       <DialogContent
         overlayClassName="z-[200] bg-black/85"
         className={cn(
-          "fixed z-[210] flex max-h-[92vh] w-[min(96vw,72rem)] max-w-none flex-col gap-0 overflow-hidden p-0",
-          "translate-x-[-50%] translate-y-[-50%] sm:rounded-xl",
+          "fixed z-[210] flex max-h-[88vh] w-[min(96vw,38rem)] max-w-none flex-col gap-0 overflow-hidden p-0",
+          "translate-x-[-50%] translate-y-[-50%] sm:rounded-lg",
         )}
       >
-        <DialogHeader className="shrink-0 space-y-1 border-b border-border/60 px-6 py-5 text-left">
-          <DialogTitle className="text-xl font-semibold tracking-tight">Agent handoff</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            One prompt per tab — edit the text below, then hover the prompt area for <strong className="text-foreground">Dictate</strong>{" "}
-            (inserts at your caret) and <strong className="text-foreground">Copy</strong>.
+        <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
+          <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Hover the prompt for <strong className="text-foreground">Dictate</strong> + <strong className="text-foreground">Copy</strong>.
           </DialogDescription>
         </DialogHeader>
 
@@ -390,35 +389,25 @@ export function DevIdAgentPromptDialog({
           }}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="shrink-0 px-6 pt-4">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+          <div className="shrink-0 px-4 pt-2">
+            <TabsList className="grid h-8 w-full max-w-xs grid-cols-2">
               <TabsTrigger value="update">Update</TabsTrigger>
               <TabsTrigger value="delete">Delete</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-4">
-              <div className="mb-2 flex flex-col gap-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  ① Context (read-only strip above)
-                </span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
-                  ② Full prompt — edit everything your agent should see
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  ③ Hover this area (or keep mouse over it) for Dictate + Copy along the bottom edge
-                </span>
-              </div>
-              <div className="group/prompt relative min-h-0 flex-1 rounded-lg border border-border/70 bg-muted/15 shadow-inner">
+            <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
+              <p className="mb-1.5 text-[10px] text-muted-foreground">Edit the full prompt; hover the box for dictation + copy.</p>
+              <div className="group/prompt relative min-h-0 flex-1 rounded-md border border-border/70 bg-muted/15 shadow-inner">
                 <textarea
                   ref={updateEditorRef}
                   value={updateDraft}
                   onChange={(e) => setUpdateDraft(e.target.value)}
                   spellCheck
                   className={cn(
-                    "box-border min-h-[min(52vh,28rem)] w-full flex-1 resize-y rounded-lg bg-transparent px-4 py-4",
-                    "font-mono text-[13px] leading-relaxed text-foreground",
+                    "box-border min-h-[min(42vh,16rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3",
+                    "font-mono text-[12px] leading-relaxed text-foreground",
                     "placeholder:text-muted-foreground/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
                   )}
@@ -442,25 +431,17 @@ export function DevIdAgentPromptDialog({
           </TabsContent>
 
           <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-4">
-              <div className="mb-2 flex flex-col gap-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  ① Context strip above
-                </span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
-                  ② Delete prompt — edit if you need a narrower instruction
-                </span>
-                <span className="text-[10px] text-muted-foreground">③ Hover for Dictate + Copy</span>
-              </div>
-              <div className="group/prompt relative min-h-0 flex-1 rounded-lg border border-border/70 bg-muted/15 shadow-inner">
+            <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
+              <p className="mb-1.5 text-[10px] text-muted-foreground">Delete instruction; hover the box for dictation + copy.</p>
+              <div className="group/prompt relative min-h-0 flex-1 rounded-md border border-border/70 bg-muted/15 shadow-inner">
                 <textarea
                   ref={deleteEditorRef}
                   value={deleteDraft}
                   onChange={(e) => setDeleteDraft(e.target.value)}
                   spellCheck
                   className={cn(
-                    "box-border min-h-[min(52vh,28rem)] w-full flex-1 resize-y rounded-lg bg-transparent px-4 py-4",
-                    "font-mono text-[13px] leading-relaxed text-foreground",
+                    "box-border min-h-[min(42vh,16rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3",
+                    "font-mono text-[12px] leading-relaxed text-foreground",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
                   )}
                   aria-label="Full delete prompt for your agent"

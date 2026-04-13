@@ -2,7 +2,7 @@
 
 ## Client debug overlay (deployed / production review)
 
-Set **`NEXT_PUBLIC_CLIENT_DEBUG=1`** on Vercel (or `.env.local`) and **redeploy**. The app wraps the tree in `ClientDebugShell` (`components/debug/ClientDebugShell.tsx`): a fixed **bottom dock** shows `window` errors, **unhandled promise rejections**, and **React render errors** (via an error boundary). Lines are appended to **`window.__GAD_DEBUG_LINES`** and subscribed with **`useSyncExternalStore`** (`client-debug-log.ts`) so logging never calls **`setState` during render** (that pattern causes **minified React error #185** — maximum update depth).
+Set **`NEXT_PUBLIC_CLIENT_DEBUG=1`** on Vercel (or `.env.local`) and **redeploy**. The app wraps the tree in `ClientDebugShell` (`components/debug/ClientDebugShell.tsx`): a fixed **bottom dock** shows `window` errors, **unhandled promise rejections**, and **React render errors** (via an error boundary). Lines are appended to **`window.__GAD_DEBUG_LINES`** and subscribed with **`useSyncExternalStore`** (`client-debug-log.ts`) so logging never calls **`setState` during render** (that pattern causes **minified React error #185** — maximum update depth). With the dock visible, **`Alt+Shift+D`** (when not typing in an input) toggles the dock off and on; preference is stored in **`localStorage`** key `gadClientDebugDockHidden`. The header **Off** button does the same as hiding completely; a small **Debug off** chip appears when hidden so you can reopen without the shortcut.
 
 Optional **`NEXT_PUBLIC_CLIENT_DEBUG_CONSOLE=1`** mirrors **`console.error` / `console.warn`** into the dock (off by default so production stays safe). With that on, **`NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE=1`** also mirrors **`console.log` / `console.info`**.
 
@@ -14,7 +14,7 @@ Header **Copy** (icon, top-right of the dock) copies the full log as plain text.
 
 `Identified` wraps **stable, named chunks** of the UI (`as="RunProcessMetricsCards"`, `as="ProjectHero"`, …). In dev, those names register for the dev-id panel so people can say “change `RunProcessMetricsCards`” and mean the same DOM region as the code.
 
-**Section dev panel** (`SectionDevPanel.tsx`): With dev IDs on (`Alt+I`), each `SiteSection` that opts in shows a gear. The slide-in panel is titled **Component IDs** and lists registered `<Identified>` rows in **mount order**. Each row: **Eye** toggles persistent outline highlight; **Copy** copies the `data-cid`. Footer: **Alt+I** and Alt-click on a highlighted region to copy. Prefer **`sectionBandCid`** on `SiteSection` and outer **`Identified`** wrappers so the section shell is easy to find; inner chrome may use **`register={false}`** to stay out of the list. (This is the simple panel; **client debug** is separate — `ClientDebugShell` / `NEXT_PUBLIC_CLIENT_DEBUG`.)
+**Section dev panel** (`SectionDevPanel.tsx`): With dev IDs on (`Alt+I`), each `SiteSection` that opts in shows a gear. The slide-in **Dev Panel** has the accent header, stable **`gad-dev-panel`** id (copy from header), list **sorted by registry depth**, **HoverCard** (left) per row for route / id / depth, **Eye** for sticky highlight, row label / **Copy** for clipboard only (**no scroll-into-view** — that path was removed as the source of focus/layout churn). **Message** opens **`DevIdAgentPromptDialog`** (Update / Delete prompts, dictation, copy). Prefer **`sectionBandCid`** on `SiteSection` and outer **`Identified`** bands; inner chrome may use **`register={false}`**.
 
 **Rules of thumb:**
 

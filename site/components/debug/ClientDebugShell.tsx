@@ -35,6 +35,14 @@ const DEBUG_ON = process.env.NEXT_PUBLIC_CLIENT_DEBUG === "1";
 const CONSOLE_MIRROR = process.env.NEXT_PUBLIC_CLIENT_DEBUG_CONSOLE === "1";
 const VERBOSE = process.env.NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE === "1";
 
+const DOCK_HIDDEN_KEY = "gadClientDebugDockHidden";
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable;
+}
+
 function formatConsoleArg(a: unknown): string {
   if (typeof a === "string") return a;
   if (a instanceof Error) return `${a.message}\n${a.stack ?? ""}`;
@@ -92,7 +100,13 @@ class ClientRenderErrorBoundary extends Component<
   }
 }
 
-function DebugDock({ lines }: { lines: readonly DebugLine[] }) {
+function DebugDock({
+  lines,
+  onRequestHide,
+}: {
+  lines: readonly DebugLine[];
+  onRequestHide: () => void;
+}) {
   const [collapsed, setCollapsed] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
 
@@ -113,6 +127,7 @@ function DebugDock({ lines }: { lines: readonly DebugLine[] }) {
         type="button"
         className="fixed bottom-2 right-2 z-[2147483000] rounded-md border border-amber-500/60 bg-black/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-400 shadow-lg"
         onClick={() => setCollapsed(false)}
+        title="Expand dock · Alt+Shift+D hides completely"
       >
         Client debug ({lines.length})
       </button>
@@ -132,6 +147,9 @@ function DebugDock({ lines }: { lines: readonly DebugLine[] }) {
           {VERBOSE && CONSOLE_MIRROR ? " · verbose" : ""}
         </span>
         <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden text-[9px] text-zinc-500 sm:inline" title="Keyboard">
+            Alt+Shift+D
+          </span>
           <span className="tabular-nums text-[10px] text-zinc-500">{lines.length} lines</span>
           <button
             type="button"
@@ -146,6 +164,14 @@ function DebugDock({ lines }: { lines: readonly DebugLine[] }) {
             onClick={() => setCollapsed(true)}
           >
             Hide
+          </button>
+          <button
+            type="button"
+            className="rounded border border-zinc-600 px-2 py-0.5 text-[10px] text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            onClick={onRequestHide}
+            title="Turn off dock (Alt+Shift+D)"
+          >
+            Off
           </button>
           <button
             type="button"
@@ -199,6 +225,45 @@ function DebugDock({ lines }: { lines: readonly DebugLine[] }) {
 
 function ClientDebugEnabled({ children }: { children: ReactNode }) {
   const lines = useSyncExternalStore(subscribeDebugLog, getDebugLogSnapshot, getServerDebugLogSnapshot);
+  const [dockHidden, setDockHidden] = useState(false);
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(DOCK_HIDDEN_KEY);
+      setDockHidden(v === "1");
+    } catch {
+      setDockHidden(false);
+    }
+  }, []);
+
+  const persistHidden = useCallback((hidden: boolean) => {
+    setDockHidden(hidden);
+    try {
+      localStorage.setItem(DOCK_HIDDEN_KEY, hidden ? "1" : "0");
+    } catch {
+      /* noop */
+    }
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || !e.shiftKey) return;
+      if (e.key !== "d" && e.key !== "D") return;
+      if (isTypingTarget(e.target)) return;
+      e.preventDefault();
+      setDockHidden((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem(DOCK_HIDDEN_KEY, next ? "1" : "0");
+        } catch {
+          /* noop */
+        }
+        return next;
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const push = useCallback((line: Omit<DebugLine, "t">) => {
     appendDebugLog({ ...line, t: Date.now() });
@@ -299,7 +364,18 @@ function ClientDebugEnabled({ children }: { children: ReactNode }) {
   return (
     <>
       <ClientRenderErrorBoundary onCatch={onReactCatch}>{children}</ClientRenderErrorBoundary>
-      <DebugDock lines={lines} />
+      {dockHidden ? (
+        <button
+          type="button"
+          className="fixed bottom-4 right-24 z-[2147483000] rounded-md border border-zinc-600 bg-black/90 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-zinc-400 shadow-lg hover:border-amber-600/50 hover:text-amber-300"
+          onClick={() => persistHidden(false)}
+          title="Show client debug dock (Alt+Shift+D)"
+        >
+          Debug off
+        </button>
+      ) : (
+        <DebugDock lines={lines} onRequestHide={() => persistHidden(true)} />
+      )}
     </>
   );
 }
