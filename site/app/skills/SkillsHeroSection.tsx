@@ -18,7 +18,7 @@ export function SkillsHeroSection({
   return (
     <SiteSection>
       <Identified as="SkillsHeroSection">
-      <Identified as="SkillsHeroHeading">
+      <Identified as="SkillsHeroHeading" register={false}>
         <SiteSectionHeading
           kicker="Skills"
           as="h1"

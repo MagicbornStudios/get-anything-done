@@ -13,7 +13,7 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
   return (
     <SiteSection>
       <Identified as="RunProcessMetrics">
-      <Identified as="RunProcessMetricsHeading">
+      <Identified as="RunProcessMetricsHeading" register={false}>
         <SiteSectionHeading kicker="Process metrics" title="How the agent actually worked" />
       </Identified>
       <RunProcessMetricsCardGrid run={run} />

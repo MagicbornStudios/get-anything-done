@@ -6,7 +6,7 @@ export function MethodologyTemplateMatrixSection() {
   return (
     <SiteSection>
       <Identified as="MethodologyTemplateMatrixSection">
-      <Identified as="MethodologyTemplateMatrixHeading">
+      <Identified as="MethodologyTemplateMatrixHeading" register={false}>
         <SiteSectionHeading kicker="What each condition template contains" />
         <SiteProse size="sm" className="mb-6 mt-4">
         {`Transparency about what the eval agent receives. Each column is one condition. \u2713 means the file is present in the template; \u2014 means absent. This is the full input set \u2014 the agent sees nothing else.`}

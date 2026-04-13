@@ -7,7 +7,7 @@ export function MethodologyCompositeSection() {
   return (
     <SiteSection tone="muted">
       <Identified as="MethodologyCompositeSection">
-      <Identified as="MethodologyCompositeHeading">
+      <Identified as="MethodologyCompositeHeading" register={false}>
         <SiteSectionHeading
           icon={Calculator}
           kicker="Composite formula"

@@ -29,6 +29,13 @@ interface IdentifiedProps {
   depth?: number;
   className?: string;
   children?: React.ReactNode;
+  /**
+   * When false, does not appear in the section dev panel list (still gets data-cid + highlight when enabled).
+   * Use for inner chrome (e.g. headings) when an outer `Identified` represents the whole band.
+   */
+  register?: boolean;
+  /** Fixed `data-cid` / clipboard id (no React useId suffix). Implies a stable landmark, e.g. the dev panel shell. */
+  stableCid?: string;
 }
 
 export function Identified({
@@ -37,19 +44,23 @@ export function Identified({
   depth = 1,
   className,
   children,
+  register = true,
+  stableCid,
 }: IdentifiedProps) {
   const rid = useId();
-  const cid = `${slugify(as)}-${rid.replace(/[^a-z0-9]/gi, "")}`;
+  const autoCid = `${slugify(as)}-${rid.replace(/[^a-z0-9]/gi, "")}`;
+  const cid = stableCid ?? autoCid;
   const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
   const registry = useSectionRegistry();
-  const register = registry?.register;
+  const registerFn = registry?.register;
   const maxDepth = registry?.maxDepth;
 
   useEffect(() => {
-    if (!register || maxDepth === undefined) return;
+    if (!register) return;
+    if (!registerFn || maxDepth === undefined) return;
     if (depth > maxDepth) return;
-    return register({ cid, label: as, depth });
-  }, [register, maxDepth, cid, as, depth]);
+    return registerFn({ cid, label: as, depth });
+  }, [register, registerFn, maxDepth, cid, as, depth]);
 
   const isHighlighted = highlightCid === cid;
   const isFlash = flashCid === cid;

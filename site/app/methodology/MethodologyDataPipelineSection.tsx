@@ -9,7 +9,7 @@ export function MethodologyDataPipelineSection() {
   return (
     <SiteSection>
       <Identified as="MethodologyDataPipelineSection">
-      <Identified as="MethodologyDataPipelineHeading">
+      <Identified as="MethodologyDataPipelineHeading" register={false}>
         <SiteSectionHeading
           icon={Database}
           kicker="Data production pipeline"

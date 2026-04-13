@@ -5,7 +5,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 export default function SkepticHowUsedSection() {
   return (
     <SiteSection>
-      <Identified as="SkepticHowUsedHeading">
+      <Identified as="SkepticHowUsedHeading" register={false}>
         <SiteSectionHeading kicker="How this page is used" />
       </Identified>
       <Identified as="SkepticHowUsedList" tag="ul" className="space-y-2 text-sm leading-6 text-muted-foreground">

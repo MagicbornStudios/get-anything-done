@@ -11,7 +11,7 @@ export function GadCoreConceptsSection() {
   return (
     <SiteSection tone="muted">
       <Identified as="GadCoreConceptsSection">
-      <Identified as="GadCoreConceptsHeading">
+      <Identified as="GadCoreConceptsHeading" register={false}>
         <SiteSectionHeading kicker="Core concepts" title="Three moving parts" preset="section" />
       </Identified>
       <div className="mt-10 grid gap-5 md:grid-cols-2">

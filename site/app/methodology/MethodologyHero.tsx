@@ -5,7 +5,7 @@ export function MethodologyHero() {
   return (
     <SiteSection>
       <Identified as="MethodologyHeroSection">
-      <Identified as="MethodologyHeroHeading">
+      <Identified as="MethodologyHeroHeading" register={false}>
         <SiteSectionHeading
           kicker="Methodology"
           as="h1"
@@ -17,7 +17,7 @@ export function MethodologyHero() {
           }
         />
       </Identified>
-      <Identified as="MethodologyHeroProse">
+      <Identified as="MethodologyHeroProse" register={false}>
         <SiteProse className="mt-6">
           This page is the appendix. Every number on the site — every bar, every composite, every
           &quot;gate passed&quot; badge — traces back to one of the formulas below. If you want to verify a

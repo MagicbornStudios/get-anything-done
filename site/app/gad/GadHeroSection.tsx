@@ -9,7 +9,7 @@ export function GadHeroSection() {
   return (
     <SiteSection>
       <Identified as="GadHeroSection">
-      <Identified as="GadHeroHeading">
+      <Identified as="GadHeroHeading" register={false}>
         <SiteSectionHeading
           kicker="The framework"
           as="h1"

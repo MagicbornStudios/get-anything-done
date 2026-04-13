@@ -8,7 +8,7 @@ import { CROSS_CUTTING } from "./skeptic-shared";
 export default function SkepticCrossCuttingSection() {
   return (
     <SiteSection tone="muted">
-      <Identified as="SkepticCrossCuttingHeading">
+      <Identified as="SkepticCrossCuttingHeading" register={false}>
         <SiteSectionHeading
         icon={AlertOctagon}
         kicker="Critiques that hit every claim"

@@ -7,7 +7,8 @@ import { HypothesesHypothesisCard } from "./HypothesesHypothesisCard";
 export function HypothesesListSection() {
   return (
     <SiteSection tone="muted">
-      <Identified as="HypothesesListHeading">
+      <Identified as="HypothesesListSection">
+      <Identified as="HypothesesListHeading" register={false}>
         <SiteSectionHeading icon={FlaskConical} kicker="Current hypotheses" kickerRowClassName="mb-8 gap-3" />
       </Identified>
       <Identified as="HypothesesHypothesisCards" className="space-y-5">
@@ -16,6 +17,7 @@ export function HypothesesListSection() {
             <HypothesesHypothesisCard h={h} />
           </Identified>
         ))}
+      </Identified>
       </Identified>
     </SiteSection>
   );

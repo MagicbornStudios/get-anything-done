@@ -6,7 +6,7 @@ import { REPO } from "./skeptic-shared";
 export default function SkepticHero() {
   return (
     <SiteSection>
-      <Identified as="SkepticHeroHeading">
+      <Identified as="SkepticHeroHeading" register={false}>
         <SiteSectionHeading
         icon={ShieldQuestion}
         kicker="Skeptic"

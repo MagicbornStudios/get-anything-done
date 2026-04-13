@@ -7,7 +7,8 @@ import { TRUST_DESCRIPTION, TRUST_TINT } from "./data-shared";
 export default function DataTrustLevelsSection() {
   return (
     <SiteSection tone="muted">
-      <Identified as="DataTrustLevelsHeading">
+      <Identified as="DataTrustLevelsSection">
+      <Identified as="DataTrustLevelsHeading" register={false}>
         <SiteSectionHeading kicker="Trust levels explained" />
       </Identified>
       <div className="grid gap-3 md:grid-cols-2">
@@ -26,6 +27,7 @@ export default function DataTrustLevelsSection() {
           </Identified>
         ))}
       </div>
+      </Identified>
     </SiteSection>
   );
 }

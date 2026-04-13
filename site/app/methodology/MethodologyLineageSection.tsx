@@ -8,7 +8,7 @@ export function MethodologyLineageSection() {
   return (
     <SiteSection tone="muted">
       <Identified as="MethodologyLineageSection">
-      <Identified as="MethodologyLineageHeading">
+      <Identified as="MethodologyLineageHeading" register={false}>
         <SiteSectionHeading
           icon={GitBranch}
           kicker="Greenfield → brownfield lineage"

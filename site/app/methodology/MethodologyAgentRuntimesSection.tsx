@@ -8,7 +8,7 @@ export function MethodologyAgentRuntimesSection() {
   return (
     <SiteSection>
       <Identified as="MethodologyAgentRuntimesSection">
-      <Identified as="MethodologyAgentRuntimesHeading">
+      <Identified as="MethodologyAgentRuntimesHeading" register={false}>
         <SiteSectionHeading
           icon={Plug}
           kicker="Agent runtimes"

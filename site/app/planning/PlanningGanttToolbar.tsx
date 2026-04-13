@@ -28,7 +28,7 @@ export function PlanningGanttToolbar({
 }: PlanningGanttToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <Identified as="PlanningGanttToolbarHeading" className="min-w-0 flex-1">
+      <Identified as="PlanningGanttToolbarHeading" register={false} className="min-w-0 flex-1">
         <SiteSectionHeading
           kicker="Phase timeline"
           title={`Sprint ${currentSprintNum} of ${totalSprints}`}

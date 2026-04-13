@@ -34,7 +34,7 @@ export function GadCatalogJumpSection() {
   return (
     <SiteSection tone="muted">
       <Identified as="GadCatalogJumpSection">
-      <Identified as="GadCatalogJumpHeading">
+      <Identified as="GadCatalogJumpHeading" register={false}>
         <SiteSectionHeading kicker="Jump to" title="Explore the catalog" preset="section" />
       </Identified>
       <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-3">

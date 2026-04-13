@@ -9,7 +9,7 @@ export function MethodologyWorkedExamplesSection({ worked }: { worked: EvalRunRe
   return (
     <SiteSection>
       <Identified as="MethodologyWorkedExamplesSection">
-      <Identified as="MethodologyWorkedExamplesHeading">
+      <Identified as="MethodologyWorkedExamplesHeading" register={false}>
         <SiteSectionHeading kicker="Worked examples" title="Two runs, end to end" />
         <SiteProse size="md" className="mt-3">
         Two runs picked as         walkthroughs — one process-vs-reality divergence, one highest-scoring bare

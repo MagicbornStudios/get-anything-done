@@ -12,7 +12,8 @@ export default function DataHeroSection({
 }) {
   return (
     <SiteSection>
-      <Identified as="DataHeroHeading">
+      <Identified as="DataHeroSection">
+      <Identified as="DataHeroHeading" register={false}>
         <SiteSectionHeading
           kicker="Local DB"
           as="h1"
@@ -66,6 +67,7 @@ export default function DataHeroSection({
           count={totals["self-report"] ?? 0}
           tint="danger"
         />
+      </Identified>
       </Identified>
     </SiteSection>
   );

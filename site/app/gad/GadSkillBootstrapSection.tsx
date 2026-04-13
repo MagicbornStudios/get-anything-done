@@ -12,7 +12,7 @@ export function GadSkillBootstrapSection() {
   return (
     <SiteSection>
       <Identified as="GadSkillBootstrapSection">
-      <Identified as="GadSkillBootstrapHeading">
+      <Identified as="GadSkillBootstrapHeading" register={false}>
         <SiteSectionHeading
           kicker="Skill bootstrap sets"
           title="Framework-level vs eval-inherited"

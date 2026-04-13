@@ -6,7 +6,7 @@ export function MethodologyGateSection() {
   return (
     <SiteSection>
       <Identified as="MethodologyGateSection">
-      <Identified as="MethodologyGateHeading">
+      <Identified as="MethodologyGateHeading" register={false}>
         <SiteSectionHeading icon={Gauge} kicker="Gate logic" title="Gates override everything" />
       </Identified>
       <Identified as="MethodologyGateProseGateLogic">
