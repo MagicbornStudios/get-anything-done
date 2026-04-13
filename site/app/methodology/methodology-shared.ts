@@ -84,55 +84,6 @@ export const AGENT_RUNTIMES = [
   },
 ] as const;
 
-export const TRACE_FIELDS = [
-  {
-    name: "timing",
-    title: "Wall-clock duration",
-    description: "Start/end timestamps plus duration in minutes. Used for time_efficiency.",
-  },
-  {
-    name: "token_usage",
-    title: "Tokens + tool uses",
-    description: "Total tokens and total tool_uses. Does not record per-tool breakdown.",
-  },
-  {
-    name: "git_analysis",
-    title: "Commit discipline",
-    description: "Total commits, how many had task ids, how many were batch commits. Drives per_task_discipline.",
-  },
-  {
-    name: "planning_quality",
-    title: "Planning doc production",
-    description: "Phases planned, tasks planned vs completed, decisions captured, state updates.",
-  },
-  {
-    name: "requirement_coverage",
-    title: "Gate + criteria coverage",
-    description: "Total criteria, fully/partially/not met counts, coverage_ratio, gate_failed, gate_notes.",
-  },
-  {
-    name: "skill_accuracy",
-    title: "Expected skill triggers",
-    description: "Object form: array of expected_triggers with per-skill triggered bool. Aggregate form: bare number.",
-  },
-  {
-    name: "workflow_emergence",
-    title: "Bare/emergent workflow invention",
-    description:
-      "Booleans for whether the agent wrote task lists, state tracking, architecture docs, reusable skills. Used to score bare/emergent runs.",
-  },
-  {
-    name: "scores",
-    title: "Final normalised scores",
-    description: "Every dimension as a number 0.0 – 1.0, plus composite. The single source of truth the site reads.",
-  },
-  {
-    name: "human_review",
-    title: "Reviewer verdict",
-    description: "Score 0.0 – 1.0, notes, reviewer, timestamp. 30% of composite by design.",
-  },
-];
-
 export const METHODOLOGY_TEMPLATE_ROWS: [string, string, string, string, string, string][] = [
   ["AGENTS.md", "✓", "✓", "✓", "✓", "✓"],
   ["REQUIREMENTS.xml", "✓", "✓", "✓", "✓", "✓"],

@@ -12,7 +12,7 @@ import {
   type EvalRunRecord,
   type Workflow,
 } from "@/lib/eval-data";
-import { ProjectMarketFilterBar } from "@/components/project-market/ProjectMarketFilterBar";
+import { ProjectFilterBar } from "@/components/project-market/ProjectFilterBar";
 import {
   applyPerProjectRoundWindow,
   domainForProject,
@@ -175,7 +175,7 @@ export function MethodologyCompositeWeightsCatalog() {
         </summary>
 
         <div className="border-t border-border/60 px-4 pb-5 pt-2">
-          <ProjectMarketFilterBar
+          <ProjectFilterBar
             domainFilter={domainFilter}
             workflowFilter={workflowFilter}
             roundFilter={roundFilter}

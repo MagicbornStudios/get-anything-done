@@ -30,7 +30,7 @@ const DOMAINS: ProjectDomain[] = ["game", "video", "software", "tooling", "plann
 const WORKFLOWS = ["bare", "gad", "emergent"] as const;
 
 /** When set, replaces the default “playable builds” summary line (e.g. methodology weights catalog). */
-export type ProjectMarketCountSummary = {
+export type ProjectFilterBarCountSummary = {
   filtered: number;
   total: number;
   nounSingular: string;
@@ -58,11 +58,11 @@ type Props = {
   onShowAllRoundsChange: (v: boolean) => void;
   onClearAll: () => void;
   /** Override summary counts/labels; still uses round/domain badges from filters. */
-  countSummary?: ProjectMarketCountSummary;
+  countSummary?: ProjectFilterBarCountSummary;
   searchPlaceholder?: string;
 };
 
-export function ProjectMarketFilterBar({
+export function ProjectFilterBar({
   domainFilter,
   workflowFilter,
   roundFilter,

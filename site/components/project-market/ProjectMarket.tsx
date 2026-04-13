@@ -1,7 +1,7 @@
 "use client";
 
 import { ProjectMarketHeader } from "@/components/project-market/ProjectMarketHeader";
-import { ProjectMarketFilterBar } from "@/components/project-market/ProjectMarketFilterBar";
+import { ProjectFilterBar } from "@/components/project-market/ProjectFilterBar";
 import { ProjectMarketGrid } from "@/components/project-market/ProjectMarketGrid";
 import { ProjectMarketRuns } from "@/components/project-market/ProjectMarketRuns";
 import { useProjectMarket } from "@/components/project-market/use-project-market";
@@ -40,33 +40,31 @@ export default function ProjectMarket() {
       </Identified>
 
       <SiteSection className="border-b-0" shellClassName="py-8">
-        <Identified as="ProjectMarketFilterBar">
-          <ProjectMarketFilterBar
-          domainFilter={domainFilter}
-          workflowFilter={workflowFilter}
-          roundFilter={roundFilter}
-          statusFilter={statusFilter}
-          searchQuery={searchQuery}
-          showAllRounds={showAllRounds}
-          allRounds={allRounds}
-          filteredRunCount={filteredRuns.length}
-          totalRunCount={allPlayableRuns.length}
-          hasActiveFilters={hasActiveFilters}
-          onDomainChange={setDomainFilter}
-          onWorkflowChange={setWorkflowFilter}
-          onRoundChange={setRoundFilter}
-          onStatusChange={setStatusFilter}
-          onSearchChange={setSearchQuery}
-          onShowAllRoundsChange={setShowAllRounds}
-          onClearAll={clearAllFilters}
-        />
-        </Identified>
+        <Identified as="ProjectMarketBody">
+          <ProjectFilterBar
+            domainFilter={domainFilter}
+            workflowFilter={workflowFilter}
+            roundFilter={roundFilter}
+            statusFilter={statusFilter}
+            searchQuery={searchQuery}
+            showAllRounds={showAllRounds}
+            allRounds={allRounds}
+            filteredRunCount={filteredRuns.length}
+            totalRunCount={allPlayableRuns.length}
+            hasActiveFilters={hasActiveFilters}
+            onDomainChange={setDomainFilter}
+            onWorkflowChange={setWorkflowFilter}
+            onRoundChange={setRoundFilter}
+            onStatusChange={setStatusFilter}
+            onSearchChange={setSearchQuery}
+            onShowAllRoundsChange={setShowAllRounds}
+            onClearAll={clearAllFilters}
+          />
 
-        <Identified as="ProjectMarketGrid" className="mt-8">
-          <ProjectMarketGrid featured={featuredProjects} other={otherProjects} />
-        </Identified>
+          <div className="mt-8">
+            <ProjectMarketGrid featured={featuredProjects} other={otherProjects} />
+          </div>
 
-        <Identified as="ProjectMarketRuns">
           <ProjectMarketRuns
             runs={filteredRuns}
             selected={selected}
