@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { PRODUCED_ARTIFACTS, type EvalRunRecord } from "@/lib/eval-data";
@@ -11,7 +12,8 @@ export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] 
         preset="section"
         title="The compound-skills hypothesis in action"
       />
-      <SiteProse size="md" className="mt-3">
+      <Identified as="ProjectEmergentLineageProse">
+        <SiteProse size="md" className="mt-3">
         Decision <strong>gad-65</strong> pins the compound-skills hypothesis: as the emergent
         workflow iterates on the same project domain, the inherited skill library should grow more
         specialized and the resulting game should improve in quality and requirements-alignment per
@@ -19,9 +21,10 @@ export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] 
         of the specific kind of blade they keep forging. Each row below is one emergent run; the
         columns show what the run inherited from the previous round, what it authored itself, and
         what it marked deprecated.
-      </SiteProse>
+        </SiteProse>
+      </Identified>
 
-      <div className="mt-10 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
+      <Identified as="ProjectEmergentLineageTable" className="mt-10 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -102,8 +105,9 @@ export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] 
             })}
           </tbody>
         </table>
-      </div>
+      </Identified>
 
+      <Identified as="ProjectEmergentLineageLegend">
       <SiteProse size="sm" className="mt-6 max-w-3xl text-xs leading-5 text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <span className="inline-block size-2 rounded-full bg-amber-400" />
@@ -114,6 +118,7 @@ export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] 
           carried over from previous run
         </span>
       </SiteProse>
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { Identified } from "@/components/devid/Identified";
-import { Search, X } from "lucide-react";
+import { EvalFilterSearchField } from "@/components/eval-filters/EvalFilterSearchField";
+import { EvalReviewStatusFilterChips } from "@/components/eval-filters/EvalReviewStatusFilterChips";
+import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,11 +24,6 @@ import {
   WORKFLOW_HYPOTHESIS,
 } from "@/components/landing/playable/playable-shared";
 import type { ReviewState } from "@/lib/filter-store";
-import {
-  STATUS_CHIP_STYLES,
-  REVIEW_STATE_DOT,
-  REVIEW_STATE_LABEL,
-} from "@/components/landing/playable/playable-shared";
 
 const ALL = "__all";
 
@@ -76,7 +72,7 @@ export function ProjectMarketFilterBar({
   return (
     <div className="rounded-xl border border-border/60 bg-card/30 p-4">
       <Identified as="ProjectMarketFilterBarControls" className="flex flex-wrap items-center gap-3">
-        {/* Domain filter */}
+        <Identified as="ProjectMarketFilterDomain">
         <Select
           value={domainFilter ?? ALL}
           onValueChange={(v) => onDomainChange(v === ALL ? null : (v as ProjectDomain))}
@@ -93,8 +89,9 @@ export function ProjectMarketFilterBar({
             ))}
           </SelectContent>
         </Select>
+        </Identified>
 
-        {/* Round filter */}
+        <Identified as="ProjectMarketFilterRound">
         <Select
           value={roundFilter ?? ALL}
           onValueChange={(v) => onRoundChange(v === ALL ? null : v)}
@@ -109,39 +106,17 @@ export function ProjectMarketFilterBar({
             ))}
           </SelectContent>
         </Select>
+        </Identified>
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        {/* Status chips */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {(["all", "reviewed", "needs-review", "excluded"] as const).map((s) => {
-            const isActive = statusFilter === s;
-            const styles = STATUS_CHIP_STYLES[s];
-            return (
-              <Button
-                key={s}
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onStatusChange(s)}
-                className={cn(
-                  "h-auto gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-none",
-                  isActive ? styles.active : styles.base,
-                )}
-              >
-                {s !== "all" && (
-                  <span className={`size-1.5 rounded-full ${REVIEW_STATE_DOT[s]}`} aria-hidden />
-                )}
-                {s === "all" ? "All statuses" : REVIEW_STATE_LABEL[s]}
-              </Button>
-            );
-          })}
-        </div>
+        <Identified as="ProjectMarketFilterStatusChips">
+        <EvalReviewStatusFilterChips statusFilter={statusFilter} onStatusChange={onStatusChange} />
+        </Identified>
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        {/* Workflow/hypothesis chips */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <Identified as="ProjectMarketFilterWorkflowChips" className="flex flex-wrap items-center gap-1.5">
           <Button
             type="button"
             variant="ghost"
@@ -176,37 +151,17 @@ export function ProjectMarketFilterBar({
               </Button>
             );
           })}
-        </div>
+        </Identified>
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        {/* Search */}
-        <div className="relative min-w-[180px] flex-1">
-          <Search
-            size={13}
-            className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search projects or runs..."
-            className="h-9 rounded-lg border-border/70 bg-background/60 py-2 pl-8 pr-8 text-xs shadow-none focus-visible:ring-accent/40"
-          />
-          {searchQuery && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => onSearchChange("")}
-              className="absolute right-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X className="size-3" aria-hidden />
-            </Button>
-          )}
-        </div>
+        <Identified as="ProjectMarketFilterSearch">
+        <EvalFilterSearchField
+          value={searchQuery}
+          onChange={onSearchChange}
+          placeholder="Search projects or runs..."
+        />
+        </Identified>
       </Identified>
 
       {/* Summary row */}

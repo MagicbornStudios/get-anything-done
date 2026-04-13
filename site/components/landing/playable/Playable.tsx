@@ -12,6 +12,7 @@ import { PlayableRunGroups } from "@/components/landing/playable/PlayableRunGrou
 import { PlayableSelectedPanel } from "@/components/landing/playable/PlayableSelectedPanel";
 import { runKey } from "@/components/landing/playable/playable-shared";
 import { usePlayableArchive } from "@/components/landing/playable/use-playable-archive";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 
 export default function Playable() {
@@ -45,8 +46,11 @@ export default function Playable() {
 
   return (
     <SiteSection id="play" tone="muted" className="border-t border-border/60">
-      <PlayableIntro />
+      <Identified as="PlayableIntro">
+        <PlayableIntro />
+      </Identified>
 
+      <Identified as="PlayableFilterBar">
       <PlayableFilterBar
         roundFilter={roundFilter}
         domainFilter={domainFilter}
@@ -63,28 +67,38 @@ export default function Playable() {
         onSearchChange={setSearchQuery}
         onClearAllFilters={clearAllFilters}
       />
+      </Identified>
 
-      <PlayableReviewLegend />
+      <Identified as="PlayableReviewLegend">
+        <PlayableReviewLegend />
+      </Identified>
 
+      <Identified as="PlayableRunGroups">
       <PlayableRunGroups
         groupedRuns={groupedRuns}
         selected={selected}
         onSelectRun={setSelectedRunKey}
       />
+      </Identified>
 
-      {runs.length === 0 && (
-        <PlayableNoResults roundFilter={roundFilter} onClearAllFilters={clearAllFilters} />
-      )}
+      {runs.length === 0 ? (
+        <Identified as="PlayableNoResults">
+          <PlayableNoResults roundFilter={roundFilter} onClearAllFilters={clearAllFilters} />
+        </Identified>
+      ) : null}
 
-      {selected && iframeSrc && (
-        <PlayableEmbedBlock
+      {selected && iframeSrc ? (
+        <Identified as="PlayableEmbedBlock">
+          <PlayableEmbedBlock
           selected={selected}
           iframeSrc={iframeSrc}
           onOpenRequirements={() => setModal("requirements")}
           onOpenSkill={() => setModal("skill")}
         />
-      )}
+        </Identified>
+      ) : null}
 
+      <Identified as="PlayableDocModal">
       <PlayableDocModal
         modal={modal}
         selected={selected}
@@ -92,6 +106,7 @@ export default function Playable() {
           if (!open) setModal(null);
         }}
       />
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { FINDINGS, type Finding } from "@/lib/catalog.generated";
 import { SiteSection } from "@/components/site";
@@ -11,16 +12,20 @@ export function ProjectFindingsSection({ projectId }: { projectId: string }) {
 
   return (
     <SiteSection id="findings" className="border-t border-border/60">
-      <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Findings</h2>
-      <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-        Per-round writeups that reference this project. Each finding is stamped with the GAD
-        version it was observed under, so comparisons across versions stay honest.
-      </p>
+      <Identified as="ProjectFindingsHeader">
+        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Findings</h2>
+        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
+          Per-round writeups that reference this project. Each finding is stamped with the GAD
+          version it was observed under, so comparisons across versions stay honest.
+        </p>
+      </Identified>
 
-      <div className="mt-8 space-y-6">
+      <Identified as="ProjectFindingsArticles" className="mt-8 space-y-6">
         {findings.map((f) => (
-          <article
+          <Identified
             key={f.slug}
+            as={`ProjectFinding-${f.slug}`}
+            tag="article"
             className="rounded-2xl border border-border/70 bg-card/40 p-6"
           >
             <div className="flex flex-wrap items-center gap-2">
@@ -42,9 +47,9 @@ export function ProjectFindingsSection({ projectId }: { projectId: string }) {
               className="prose prose-invert prose-sm mt-4 max-w-none prose-headings:text-foreground prose-a:text-accent"
               dangerouslySetInnerHTML={{ __html: f.bodyHtml }}
             />
-          </article>
+          </Identified>
         ))}
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

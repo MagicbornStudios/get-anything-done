@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +18,13 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
         preset="section"
         title="What skills this project can use"
       />
-      <SiteProse size="md" className="mt-3">
-        {scope.description}
-      </SiteProse>
+      <Identified as="ProjectSkillsScopeProse">
+        <SiteProse size="md" className="mt-3">
+          {scope.description}
+        </SiteProse>
+      </Identified>
 
-      {scope.kind === "framework" && (
+      {scope.kind === "framework" ? (
         <Badge
           variant="outline"
           className="mt-4 gap-2 border-sky-500/40 bg-sky-500/5 px-4 py-2 text-xs font-semibold normal-case tracking-normal text-sky-300"
@@ -29,8 +32,8 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
           <Sparkles size={12} aria-hidden />
           Full framework catalog — {SKILLS.length} skills available
         </Badge>
-      )}
-      {scope.kind === "bootstrap-only" && (
+      ) : null}
+      {scope.kind === "bootstrap-only" ? (
         <Badge
           variant="outline"
           className="mt-4 gap-2 border-emerald-500/40 bg-emerald-500/5 px-4 py-2 text-xs font-semibold normal-case tracking-normal text-emerald-300"
@@ -39,10 +42,10 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
           Bootstrap set — {scope.skills.length} skill{scope.skills.length === 1 ? "" : "s"}{" "}
           inherited
         </Badge>
-      )}
+      ) : null}
 
-      {scope.kind !== "framework" && scope.skills.length > 0 && (
-        <div className="mt-8 grid gap-3 md:grid-cols-2">
+      {scope.kind !== "framework" && scope.skills.length > 0 ? (
+        <Identified as="ProjectSkillsScopeGrid" className="mt-8 grid gap-3 md:grid-cols-2">
           {scope.skills.map((s) => (
             <Link
               key={s.id}
@@ -53,9 +56,9 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
               <p className="mt-2 line-clamp-3 text-xs text-muted-foreground">{s.description}</p>
             </Link>
           ))}
-        </div>
-      )}
-      {scope.kind === "framework" && (
+        </Identified>
+      ) : null}
+      {scope.kind === "framework" ? (
         <Button
           variant="outline"
           size="sm"
@@ -64,7 +67,7 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
         >
           <Link href="/gad">Browse the full GAD catalog →</Link>
         </Button>
-      )}
+      ) : null}
     </SiteSection>
   );
 }

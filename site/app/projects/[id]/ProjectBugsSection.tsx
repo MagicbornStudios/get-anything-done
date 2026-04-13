@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { BUGS } from "@/lib/eval-data";
@@ -18,10 +19,11 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
         titleClassName="text-2xl font-semibold tracking-tight"
         title={`${bugs.length} bug${bugs.length !== 1 ? "s" : ""} reported`}
       />
-      <div className="mt-6 space-y-3">
+      <Identified as="ProjectBugsList" className="mt-6 space-y-3">
           {bugs.map((b) => (
-            <div
+            <Identified
               key={b.id}
+              as={`ProjectBug-${b.id}`}
               className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4"
             >
               <Badge
@@ -41,9 +43,9 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
                   <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{b.description}</p>
                 )}
               </div>
-            </div>
+            </Identified>
           ))}
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Identified } from "@/components/devid/Identified";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +29,7 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
         title={`${versions.length} version${versions.length !== 1 ? "s" : ""} — each change triggers a new round`}
       />
 
-      {/* Version pagination */}
-      <div className="mt-6 flex items-center gap-3">
+      <Identified as="ProjectRequirementsPagination" className="mt-6 flex items-center gap-3">
           <Button
             type="button"
             variant="outline"
@@ -74,10 +74,9 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
           <span className="text-xs text-muted-foreground">
             {currentIdx + 1} of {versions.length}
           </span>
-      </div>
+      </Identified>
 
-      {/* Current version detail */}
-      <div className="mt-6 rounded-2xl border border-border/60 bg-card/40 p-6">
+      <Identified as="ProjectRequirementsDetail" className="mt-6 rounded-2xl border border-border/60 bg-card/40 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Badge variant="default">{current.version}</Badge>
             {current.date && (
@@ -111,7 +110,7 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
               </p>
             </div>
           )}
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

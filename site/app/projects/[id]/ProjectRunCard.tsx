@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
 import { FileCode2, Gamepad2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -14,21 +15,25 @@ export function ProjectRunCard({ run }: { run: EvalRunRecord }) {
   return (
     <Card className="transition-colors hover:border-accent/60">
       <CardHeader>
-        <div className="flex items-center justify-between gap-3">
+        <Identified as="ProjectRunCardHeaderRow" className="flex items-center justify-between gap-3">
           <Badge variant="default">{run.version}</Badge>
           <Badge variant="outline">reqs {run.requirementsVersion}</Badge>
-        </div>
+        </Identified>
+        <Identified as="ProjectRunCardScores">
         <CardTitle className="mt-2 text-lg">composite {composite.toFixed(3)}</CardTitle>
         <CardDescription>
           {human != null ? `human ${human.toFixed(2)}` : "human review pending"}
         </CardDescription>
+        </Identified>
       </CardHeader>
       <CardContent className="space-y-3">
-        {run.humanReview?.notes && (
-          <p className="line-clamp-3 text-xs text-muted-foreground">{run.humanReview.notes}</p>
-        )}
-        {produced && (
-          <div className="flex flex-wrap gap-1.5 text-[10px]">
+        {run.humanReview?.notes ? (
+          <Identified as="ProjectRunCardNotes" className="line-clamp-3 text-xs text-muted-foreground" tag="p">
+            {run.humanReview.notes}
+          </Identified>
+        ) : null}
+        {produced ? (
+        <Identified as="ProjectRunCardProducedBadges" className="flex flex-wrap gap-1.5 text-[10px]">
             {produced.skillFiles.length > 0 && (
               <Badge
                 variant="outline"
@@ -54,9 +59,9 @@ export function ProjectRunCard({ run }: { run: EvalRunRecord }) {
                 {produced.planningFiles.length} planning
               </Badge>
             )}
-          </div>
-        )}
-        <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
+        </Identified>
+        ) : null}
+        <Identified as="ProjectRunCardActions" className="flex flex-wrap gap-2 pt-1 text-[11px]">
           <Button
             variant="outline"
             size="sm"
@@ -78,7 +83,7 @@ export function ProjectRunCard({ run }: { run: EvalRunRecord }) {
               </a>
             </Button>
           )}
-        </div>
+        </Identified>
       </CardContent>
     </Card>
   );

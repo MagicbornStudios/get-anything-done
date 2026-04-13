@@ -1,5 +1,6 @@
 "use client";
 
+import { Identified } from "@/components/devid/Identified";
 import { ExternalLink, FileText, Sparkles, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,7 @@ export function PlayableSelectedPanel({ selected, onOpenRequirements, onOpenSkil
   return (
     <Card className="border-border/70 bg-card/40 shadow-none">
       <CardContent className="space-y-5 p-6">
-        <div className="flex flex-wrap items-center gap-2">
+        <Identified as="PlayableSelectedBadges" className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{WORKFLOW_LABELS[selected.workflow]} · {selected.version}</Badge>
           <Badge variant={reviewBadgeVariant} className="inline-flex items-center gap-1.5">
             <span className={`size-1.5 rounded-full ${REVIEW_STATE_DOT[reviewState]}`} aria-hidden />
@@ -49,13 +50,16 @@ export function PlayableSelectedPanel({ selected, onOpenRequirements, onOpenSkil
               {round}
             </Badge>
           )}
-        </div>
-        <h3 className="text-lg font-semibold leading-tight">{selected.project}</h3>
-        <p className="text-xs text-muted-foreground">
-          requirements {selected.requirementsVersion} · {selected.date}
-        </p>
+        </Identified>
+        <Identified as="PlayableSelectedTitle">
+          <h3 className="text-lg font-semibold leading-tight">{selected.project}</h3>
+          <p className="text-xs text-muted-foreground">
+            requirements {selected.requirementsVersion} · {selected.date}
+          </p>
+        </Identified>
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+        <Identified as="PlayableSelectedStats">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <div>
             <dt className="text-xs uppercase tracking-wider text-muted-foreground">Composite</dt>
             <dd className="text-xl font-semibold tabular-nums text-foreground">
@@ -98,15 +102,20 @@ export function PlayableSelectedPanel({ selected, onOpenRequirements, onOpenSkil
               {selected.gitAnalysis?.total_commits ?? "—"}
             </dd>
           </div>
-        </dl>
+          </dl>
+        </Identified>
 
-        {selected.humanReview?.notes && (
-          <p className="border-t border-border/60 pt-5 text-sm leading-6 text-muted-foreground">
+        {selected.humanReview?.notes ? (
+          <Identified
+            as="PlayableSelectedHumanNotes"
+            className="border-t border-border/60 pt-5 text-sm leading-6 text-muted-foreground"
+            tag="p"
+          >
             {selected.humanReview.notes}
-          </p>
-        )}
+          </Identified>
+        ) : null}
 
-        <div className="flex flex-col gap-1">
+        <Identified as="PlayableSelectedLinks" className="flex flex-col gap-1">
           <Button
             variant="link"
             className="h-auto justify-start gap-1 p-0 text-xs font-semibold text-accent"
@@ -168,7 +177,7 @@ export function PlayableSelectedPanel({ selected, onOpenRequirements, onOpenSkil
               )}
             </Button>
           )}
-        </div>
+        </Identified>
       </CardContent>
     </Card>
   );
