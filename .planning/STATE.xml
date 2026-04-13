@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>40</current-phase>
+  <current-phase>41</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
@@ -8,6 +8,7 @@
 Phase 35 runtime telemetry foundation shipped (2026-04-12): trace schema v5 now stamps runtime identity into raw hook events, CLI logs, and TRACE scaffolds for Claude Code vs Codex attribution.
 Canonical repo-root skills/ source shipped (2026-04-12): command-backed gad-* skills and workspace skills now compile from one tree, with runtime install/transpilation sourced from skills/.
 Phase 35-03 shipped (2026-04-12): /planning, per-run eval pages, and landing/playable panels now surface runtime attribution plus eval timing metadata. `gad eval run` also auto-ensures runtime installs for supported agents before scaffolding new runs.
+Phase 41 first slice shipped (2026-04-13): `gad snapshot` now supports scoped `--phaseid/--taskid/--agentid` bootstraps with auto-registered agent lanes, active-assignment awareness, and hard depth enforcement. `gad tasks claim|release|active` now manage live concurrent task ownership through TASK-REGISTRY.xml plus `.planning/.gad-agent-lanes.json`.
 
 === SHIPPED ===
 - Restored shared model-profile resolution with default off semantics and workflow model emission in gad-tools init
@@ -20,24 +21,27 @@ Phase 35-03 shipped (2026-04-12): /planning, per-run eval pages, and landing/pla
 - gad install all --claude/--codex now installs from canonical skills/ and transpiles into runtime-native layouts
 - build-site-data.mjs, release support, and release-surface gating now read skills/ as the authored source of truth
 - gad-trace-hook now emits runtime metadata on each event; gad CLI logs now stamp runtime identity; TRACE scaffolds/from-log preserve runtime_identity
+- `gad snapshot` now returns scope/agent/assignment context and acts as the normal lane bootstrap handshake
+- `gad tasks claim`, `gad tasks release`, and `gad tasks active` are live, backed by `.planning/.gad-agent-lanes.json`
 
 === DECISIONS ===
 GAD-D-144: Skill candidates quarantine and review workflow
 GAD-D-146: Claude-facing model profiles use aliases and stay off by default
+GAD-D-149: `gad snapshot` is the normal agent-lane bootstrap handshake
+GAD-D-150: Agent lane depth is capped at one direct child level
 
 === NEXT ===
-1. Phase 40 (site structure): 40-01/40-02 shipped (skills tab split + shadcn Input/Button; Planning System tab split). Next: grep for remaining multi-component pages (glossary, emergent, freedom, contribute) or close phase 40 when backlog empty.
-2. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap
-3. Execute phase 36 (per-eval repos + command split)
-4. Manually review 12 candidates on the site and decide: promote, merge, or discard
-5. Decide whether to backfill runtime identity into historically preserved eval traces or leave them as pre-contract runs
-6. Phase 41 is the concrete workstream/concurrency track: scoped snapshots + task claims + query SDK over shared planning artifacts
+1. Finish 41-01: ship the first `sdk/src/query/` slice and start routing CLI logic through it instead of treating subprocess `gad-tools` calls as canonical
+2. Execute 41-04: thread agent-id/lineage/assignment context into telemetry, self-eval, and planning/site surfaces
+3. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap
+4. Execute phase 36 (per-eval repos + command split)
+5. Manually review 12 candidates on the site and decide: promote, merge, or discard
+6. Decide whether to backfill runtime identity into historically preserved eval traces or leave them as pre-contract runs
 7. Keep `.tmp/get-shit-done` current and continue capturing upstream comparison notes before adopting more upstream SDK/workstream ideas
-8. Start 41-01/41-02 next: design the query handler surface and extend `gad snapshot` with `--phaseid`, `--taskid`, and `--agentid`
 
 === SELF-EVAL (latest) ===
 3,517 events | 198 tasks (191 done) | 143 decisions
 Framework overhead: 23.6% | Loop compliance: 80%
 Skill candidates: 12</next-action>
-  <last-updated>2026-04-12</last-updated>
+  <last-updated>2026-04-13</last-updated>
 </state>

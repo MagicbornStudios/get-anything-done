@@ -243,7 +243,7 @@
   <phase id="41">
     <title>Scoped snapshots + query SDK + assignment-based workstreams</title>
     <goal>Implement GAD's concurrency/workstream model without duplicating planning trees. Deliverables: query-oriented SDK handlers for state/tasks/scoped snapshots/assignment, CLI support for `gad snapshot --phaseid/--taskid/--agentid`, task claim/release/active commands, assignment metadata in TASK-REGISTRY.xml, and initial site/trace support for active agent lanes. This is the GAD alternative to upstream `.planning/workstreams/&lt;name&gt;/`.</goal>
-    <status>planned</status>
+    <status>in-progress</status>
     <depends>35,36</depends>
   </phase>
   <phase id="42">

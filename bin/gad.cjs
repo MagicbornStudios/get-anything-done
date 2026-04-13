@@ -42,6 +42,16 @@ const { readBlockers } = require('../lib/blockers-reader.cjs');
 const { readDocsMap } = require('../lib/docs-map-reader.cjs');
 const { compile: compileDocs } = require('../lib/docs-compiler.cjs');
 const planningRefVerify = require('../lib/planning-ref-verify.cjs');
+const {
+  addTaskClaim,
+  claimTask,
+  ensureAgentLane,
+  listAgentLanes,
+  nowIso,
+  releaseTask,
+  removeTaskClaim,
+  touchAgentLane,
+} = require('../lib/agent-lanes.cjs');
 
 const pkg = require('../package.json');
 
@@ -172,6 +182,87 @@ function runtimeInstallFlag(runtimeId) {
   if (runtimeId === 'windsurf') return '--windsurf';
   if (runtimeId === 'gemini-cli') return '--gemini';
   return null;
+}
+
+function detectRuntimeSessionId() {
+  return process.env.GAD_RUNTIME_SESSION_ID
+    || process.env.GAD_SESSION_ID
+    || process.env.CLAUDE_SESSION_ID
+    || process.env.CLAUDE_CONVERSATION_ID
+    || process.env.CODEX_SESSION_ID
+    || process.env.CURSOR_SESSION_ID
+    || null;
+}
+
+function resolveSnapshotRuntime(runtimeArg, { humanFallback = false } = {}) {
+  const normalized = normalizeEvalRuntime(runtimeArg);
+  if (runtimeArg && normalized.id !== 'unknown') return normalized;
+  const detected = detectRuntimeIdentity();
+  if (detected.id !== 'unknown') return detected;
+  if (humanFallback) return { id: 'human', source: 'snapshot-fallback', model: null };
+  return detected;
+}
+
+function resolveSnapshotAgentInputs(args) {
+  const requestedAgentId = (args.agentid || process.env.GAD_AGENT_ID || '').trim();
+  const role = (args.role || process.env.GAD_AGENT_ROLE || 'default').trim() || 'default';
+  const parentAgentId = (args.parentAgentid || args['parent-agentid'] || process.env.GAD_PARENT_AGENT_ID || '').trim() || null;
+  const modelProfile = (args.modelProfile || args['model-profile'] || process.env.GAD_MODEL_PROFILE || '').trim() || null;
+  const resolvedModel = (args.resolvedModel || args['resolved-model'] || process.env.GAD_RESOLVED_MODEL || '').trim() || null;
+  return { requestedAgentId, role, parentAgentId, modelProfile, resolvedModel };
+}
+
+function simplifyAgentLane(agent, taskMap = new Map()) {
+  const tasks = Array.from(new Set([
+    ...(Array.isArray(agent?.claimedTaskIds) ? agent.claimedTaskIds : []),
+    ...Array.from(taskMap.values())
+      .filter((task) => task.agentId === agent.agentId && task.status !== 'done')
+      .map((task) => task.id),
+  ]));
+  return {
+    agentId: agent.agentId,
+    agentRole: agent.agentRole,
+    runtime: agent.runtime,
+    depth: agent.depth,
+    parentAgentId: agent.parentAgentId || null,
+    rootAgentId: agent.rootAgentId || agent.agentId,
+    modelProfile: agent.modelProfile || null,
+    resolvedModel: agent.resolvedModel || null,
+    tasks,
+    lastSeenAt: agent.lastSeenAt || null,
+    status: agent.status || 'active',
+  };
+}
+
+function buildAssignmentsView(allTasks, activeAgents, staleAgents, currentAgent, scopedTaskId) {
+  const taskMap = new Map(allTasks.map((task) => [task.id, task]));
+  const activeRows = activeAgents.map((agent) => simplifyAgentLane(agent, taskMap));
+  const staleRows = staleAgents.map((agent) => simplifyAgentLane(agent, taskMap));
+  const selfTaskIds = currentAgent
+    ? Array.from(new Set([
+        ...(Array.isArray(currentAgent.claimedTaskIds) ? currentAgent.claimedTaskIds : []),
+        ...allTasks.filter((task) => task.agentId === currentAgent.agentId && task.status !== 'done').map((task) => task.id),
+      ]))
+    : [];
+  const collisions = [];
+  if (scopedTaskId) {
+    const scopedTask = taskMap.get(scopedTaskId);
+    if (scopedTask && scopedTask.agentId && (!currentAgent || scopedTask.agentId !== currentAgent.agentId)) {
+      collisions.push({
+        taskId: scopedTask.id,
+        agentId: scopedTask.agentId,
+        agentRole: scopedTask.agentRole || null,
+        runtime: scopedTask.runtime || null,
+        status: scopedTask.status,
+      });
+    }
+  }
+  return {
+    self: selfTaskIds,
+    activeAgents: activeRows,
+    collisions,
+    staleAgents: staleRows,
+  };
 }
 
 function ensureEvalRuntimeHooks(runtimeIdentity) {
@@ -5662,6 +5753,812 @@ const snapshotCmd = defineCommand({
   },
 });
 
+const snapshotV2Cmd = defineCommand({
+  meta: { name: 'snapshot', description: 'Print all planning files inlined for a project' },
+  args: {
+    projectid: { type: 'string', description: 'Project ID (default: first root)', default: '' },
+    project: { type: 'string', description: 'Project ID (alias for --projectid)', default: '' },
+    phaseid: { type: 'string', description: 'Scope snapshot to one phase id', default: '' },
+    taskid: { type: 'string', description: 'Scope snapshot to one task id', default: '' },
+    agentid: { type: 'string', description: 'Existing agent id to reuse', default: '' },
+    role: { type: 'string', description: 'Logical agent role for auto-registration', default: '' },
+    runtime: { type: 'string', description: 'Runtime identity override (claude-code, codex, cursor, human, etc.)', default: '' },
+    'parent-agentid': { type: 'string', description: 'Parent/root agent id when bootstrapping a subagent lane', default: '' },
+    'model-profile': { type: 'string', description: 'Model profile attached to the lane', default: '' },
+    'resolved-model': { type: 'string', description: 'Resolved concrete model attached to the lane', default: '' },
+    full: { type: 'boolean', description: 'Full dump (no sprint filtering)', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let roots = config.roots;
+    const projectId = args.projectid || args.project;
+
+    if (projectId) {
+      roots = roots.filter((root) => root.id === projectId);
+      if (roots.length === 0) {
+        const ids = config.roots.map((root) => root.id);
+        console.error(`\nProject not found: ${projectId}\n\nAvailable projects:\n`);
+        for (const id of ids) console.error(`  ${id}`);
+        console.error(`\nRerun with: --projectid ${ids[0]}`);
+        process.exit(1);
+      }
+    }
+
+    if (roots.length === 0) {
+      outputError('No projects configured. Run `gad workspace sync` first.');
+      return;
+    }
+
+    const root = roots[0];
+    const planDir = path.join(baseDir, root.path, root.planningDir);
+    const sprintSize = config.sprintSize || 5;
+    const useFull = args.full;
+    const sdkAssetAliases = {
+      '@skills': 'sdk/skills',
+      '@workflows': 'sdk/workflows',
+      '@templates': 'sdk/templates',
+      '@references': 'sdk/references',
+      '@agents': 'sdk/agents',
+      '@hooks': 'sdk/hooks',
+    };
+    const phases = readPhases(root, baseDir);
+    const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
+    const currentPhase = stateXml ? (stateXml.match(/<current-phase>([\s\S]*?)<\/current-phase>/) || [])[1]?.trim() || '' : '';
+    const allTasks = readTasks(root, baseDir, {});
+    const taskMap = new Map(allTasks.map((task) => [task.id, task]));
+    const scopedTaskId = String(args.taskid || '').trim();
+    const explicitPhaseId = String(args.phaseid || '').trim();
+    const scopedTask = scopedTaskId ? taskMap.get(scopedTaskId) : null;
+
+    if (scopedTaskId && !scopedTask) {
+      outputError(`Task not found for snapshot scope: ${scopedTaskId}`);
+    }
+
+    const scopedPhaseId = explicitPhaseId || (scopedTask ? scopedTask.phase : '');
+    if (scopedPhaseId && !phases.find((phase) => phase.id === scopedPhaseId)) {
+      outputError(`Phase not found for snapshot scope: ${scopedPhaseId}`);
+    }
+    if (useFull && (scopedPhaseId || scopedTaskId)) {
+      outputError('`gad snapshot --full` cannot be combined with --phaseid or --taskid.');
+    }
+
+    const agentInputs = resolveSnapshotAgentInputs(args);
+    const detectedRuntime = detectRuntimeIdentity();
+    const shouldAutoRegister = Boolean(
+      agentInputs.requestedAgentId ||
+      agentInputs.parentAgentId ||
+      args.role ||
+      args.runtime ||
+      scopedPhaseId ||
+      scopedTaskId ||
+      process.env.GAD_AGENT_ID ||
+      process.env.GAD_AGENT_ROLE ||
+      process.env.GAD_PARENT_AGENT_ID ||
+      process.env.GAD_RUNTIME ||
+      detectedRuntime.id !== 'unknown'
+    );
+    const runtimeIdentity = resolveSnapshotRuntime(args.runtime, {
+      humanFallback: Boolean(scopedPhaseId || scopedTaskId || agentInputs.parentAgentId || args.role || args.agentid),
+    });
+    let agentBootstrap = null;
+    if (shouldAutoRegister && runtimeIdentity.id !== 'unknown') {
+      try {
+        agentBootstrap = ensureAgentLane(planDir, {
+          requestedAgentId: agentInputs.requestedAgentId,
+          role: agentInputs.role,
+          runtime: runtimeIdentity.id,
+          runtimeSessionId: detectRuntimeSessionId(),
+          parentAgentId: agentInputs.parentAgentId,
+          modelProfile: agentInputs.modelProfile,
+          resolvedModel: agentInputs.resolvedModel || runtimeIdentity.model || null,
+        });
+      } catch (error) {
+        outputError(error && error.message ? error.message : String(error));
+      }
+    }
+    let laneListing = listAgentLanes(planDir);
+    const currentAgent = agentBootstrap?.agent
+      || (agentInputs.requestedAgentId
+        ? laneListing.activeAgents.find((agent) => agent.agentId === agentInputs.requestedAgentId) || null
+        : null);
+
+    if (currentAgent) {
+      touchAgentLane(planDir, currentAgent.agentId, {
+        runtime: runtimeIdentity.id,
+        runtimeSessionId: detectRuntimeSessionId() || currentAgent.runtimeSessionId || null,
+        resolvedModel: agentInputs.resolvedModel || runtimeIdentity.model || currentAgent.resolvedModel || null,
+      });
+      laneListing = listAgentLanes(planDir);
+    }
+
+    const scope = {
+      projectId: root.id,
+      phaseId: scopedPhaseId || null,
+      taskId: scopedTaskId || null,
+      snapshotMode: scopedTask ? 'task' : (scopedPhaseId ? 'phase' : 'project'),
+      isScoped: Boolean(scopedTask || scopedPhaseId),
+    };
+    const assignments = buildAssignmentsView(
+      allTasks,
+      laneListing.activeAgents,
+      laneListing.staleAgents,
+      currentAgent,
+      scopedTaskId || null,
+    );
+    const agentView = currentAgent ? {
+      agentId: currentAgent.agentId,
+      agentRole: currentAgent.agentRole,
+      runtime: currentAgent.runtime,
+      runtimeSessionId: currentAgent.runtimeSessionId || null,
+      parentAgentId: currentAgent.parentAgentId || null,
+      rootAgentId: currentAgent.rootAgentId || currentAgent.agentId,
+      depth: currentAgent.depth,
+      modelProfile: currentAgent.modelProfile || null,
+      resolvedModel: currentAgent.resolvedModel || null,
+      autoRegistered: agentBootstrap?.autoRegistered === true,
+      humanOperator: currentAgent.humanOperator === true,
+    } : null;
+
+    function buildAgentSection() {
+      if (!agentView) return null;
+      const lines = [
+        `agent-id: ${agentView.agentId}`,
+        `agent-role: ${agentView.agentRole}`,
+        `runtime: ${agentView.runtime}`,
+        `depth: ${agentView.depth}`,
+        `root-agent-id: ${agentView.rootAgentId}`,
+      ];
+      if (agentView.parentAgentId) lines.push(`parent-agent-id: ${agentView.parentAgentId}`);
+      if (agentView.runtimeSessionId) lines.push(`runtime-session-id: ${agentView.runtimeSessionId}`);
+      if (agentView.modelProfile) lines.push(`model-profile: ${agentView.modelProfile}`);
+      if (agentView.resolvedModel) lines.push(`resolved-model: ${agentView.resolvedModel}`);
+      lines.push(`auto-registered: ${agentView.autoRegistered ? 'yes' : 'no'}`);
+      return { title: 'AGENT LANE', content: lines.join('\n') };
+    }
+
+    function buildAssignmentsSection() {
+      if (
+        assignments.self.length === 0 &&
+        assignments.activeAgents.length === 0 &&
+        assignments.collisions.length === 0 &&
+        assignments.staleAgents.length === 0
+      ) {
+        return null;
+      }
+      const lines = [];
+      if (assignments.self.length > 0) {
+        lines.push(`self: ${assignments.self.join(', ')}`);
+      }
+      if (assignments.activeAgents.length > 0) {
+        if (lines.length) lines.push('');
+        lines.push('active:');
+        for (const row of assignments.activeAgents) {
+          lines.push(`- ${row.agentId} [${row.runtime}] role=${row.agentRole} depth=${row.depth} tasks=${row.tasks.join(', ') || '(none)'}`);
+        }
+      }
+      if (assignments.collisions.length > 0) {
+        if (lines.length) lines.push('');
+        lines.push('collisions:');
+        for (const row of assignments.collisions) {
+          lines.push(`- ${row.taskId} already claimed by ${row.agentId}${row.runtime ? ` (${row.runtime})` : ''}`);
+        }
+      }
+      if (assignments.staleAgents.length > 0) {
+        if (lines.length) lines.push('');
+        lines.push('stale:');
+        for (const row of assignments.staleAgents) {
+          lines.push(`- ${row.agentId} last-seen=${row.lastSeenAt || 'unknown'} tasks=${row.tasks.join(', ') || '(none)'}`);
+        }
+      }
+      return { title: 'ACTIVE ASSIGNMENTS', content: lines.join('\n').trim() };
+    }
+
+    function buildDecisionsSection() {
+      const decisionsXml = readXmlFile(path.join(planDir, 'DECISIONS.xml'));
+      if (!decisionsXml) return null;
+      const ALWAYS_INCLUDE = ['gad-04', 'gad-17', 'gad-18'];
+      const decisionRe = /<decision\s+id="([^"]*)">([\s\S]*?)<\/decision>/g;
+      let dm;
+      let decSection = '';
+      let totalDec = 0;
+      while ((dm = decisionRe.exec(decisionsXml)) !== null) {
+        totalDec++;
+        const decId = dm[1];
+        const decInner = dm[2];
+        const titleMatch = decInner.match(/<title>([\s\S]*?)<\/title>/);
+        const title = titleMatch ? titleMatch[1].trim() : '';
+        if (ALWAYS_INCLUDE.includes(decId)) {
+          const summaryMatch = decInner.match(/<summary>([\s\S]*?)<\/summary>/);
+          const impactMatch = decInner.match(/<impact>([\s\S]*?)<\/impact>/);
+          const summary = summaryMatch ? summaryMatch[1].trim() : '';
+          const impact = impactMatch ? impactMatch[1].trim() : '';
+          decSection += `<decision id="${decId}">\n  <title>${title}</title>\n  <summary>${summary}</summary>\n  <impact>${impact}</impact>\n</decision>\n`;
+        } else {
+          decSection += `${decId}: ${title.slice(0, 80)}\n`;
+        }
+      }
+      return { title: `DECISIONS (${totalDec} total, core inlined)`, content: decSection.trim() };
+    }
+
+    function buildFileRefsSection() {
+      let fileRefs = '';
+      if (scopedTask?.files?.length) {
+        fileRefs += `Task files:\n${scopedTask.files.join('\n')}\n`;
+      }
+      if (scopedTask?.commands?.length) {
+        fileRefs += `${fileRefs ? '\n' : ''}Task commands:\n${scopedTask.commands.join('\n')}\n`;
+      }
+      try {
+        const { execSync } = require('child_process');
+        const projectPath = root.path === '.' ? '' : root.path;
+        const gitCmd = projectPath
+          ? `git log --oneline -5 -- "${projectPath}"`
+          : `git log --oneline -5`;
+        const gitLog = execSync(gitCmd, { cwd: baseDir, encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+        if (gitLog) fileRefs += `${fileRefs ? '\n' : ''}Recent commits:\n${gitLog}\n`;
+        const filesCmd = projectPath
+          ? `git log --name-only --pretty=format: -3 -- "${projectPath}"`
+          : `git log --name-only --pretty=format: -3`;
+        const changedFiles = execSync(filesCmd, { cwd: baseDir, encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+        if (changedFiles) fileRefs += `\nRecently changed files:\n${changedFiles}`;
+      } catch {}
+      return fileRefs.trim() ? { title: 'FILE REFS (git)', content: fileRefs.trim() } : null;
+    }
+
+    function buildConventionsSection() {
+      let conventions = '';
+      const projConventions = readXmlFile(path.join(planDir, 'CONVENTIONS.md'));
+      if (projConventions) conventions += projConventions.trim();
+      const projAgentsMd = readXmlFile(path.join(baseDir, root.path, 'AGENTS.md'));
+      if (projAgentsMd) {
+        const convMatch = projAgentsMd.match(/##\s*(Conventions|Style|Coding\s+conventions|Code\s+style)[^\n]*\n([\s\S]*?)(?=\n##\s|\nâ•|$)/i);
+        if (convMatch) {
+          conventions += (conventions ? '\n\n' : '') + `## ${convMatch[1].trim()}\n${convMatch[2].trim()}`;
+        }
+      }
+      if (!conventions && root.path !== '.') {
+        const rootAgentsMd = readXmlFile(path.join(baseDir, 'AGENTS.md'));
+        if (rootAgentsMd) {
+          const globalConv = rootAgentsMd.match(/##\s*(Conventions|Public site copy)[^\n]*\n([\s\S]*?)(?=\n##\s[A-Z]|\nâ•|$)/i);
+          if (globalConv) {
+            conventions += `## ${globalConv[1].trim()} (global)\n${globalConv[2].trim()}`;
+          }
+        }
+      }
+      return conventions.trim() ? { title: 'CONVENTIONS', content: conventions.trim() } : null;
+    }
+
+    function collectFullFiles() {
+      const allFiles = [];
+      const PRIORITY = ['AGENTS.md', 'STATE.md', 'STATE.xml', 'ROADMAP.md', 'ROADMAP.xml', 'REQUIREMENTS.md', 'REQUIREMENTS.xml', 'DECISIONS.xml', 'TASK-REGISTRY.xml', 'session.md', 'ERRORS-AND-ATTEMPTS.xml'];
+      function collectDir(dir, relBase) {
+        if (!fs.existsSync(dir)) return;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
+          if (entry.isDirectory()) {
+            if (entry.name === 'archive' || entry.name === 'sessions' || entry.name === 'node_modules') continue;
+            collectDir(path.join(dir, entry.name), rel);
+          } else if (entry.isFile()) {
+            allFiles.push(rel);
+          }
+        }
+      }
+      collectDir(planDir, '');
+      allFiles.sort((a, b) => {
+        const aIdx = PRIORITY.indexOf(path.basename(a));
+        const bIdx = PRIORITY.indexOf(path.basename(b));
+        if (aIdx !== -1 && bIdx === -1) return -1;
+        if (bIdx !== -1 && aIdx === -1) return 1;
+        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+        return a.localeCompare(b);
+      });
+      return allFiles;
+    }
+
+    if (useFull) {
+      const allFiles = collectFullFiles();
+      if (args.json || shouldUseJson()) {
+        const files = allFiles.map((rel) => {
+          let content = null;
+          try { content = fs.readFileSync(path.join(planDir, rel), 'utf8'); } catch {}
+          return { path: `${root.planningDir}/${rel}`, content };
+        });
+        console.log(JSON.stringify({
+          project: root.id,
+          mode: 'full',
+          planningDir: root.planningDir,
+          scope,
+          agent: agentView,
+          assignments,
+          sdkAssetAliases,
+          files,
+        }, null, 2));
+        return;
+      }
+
+      console.log(`\nSnapshot (full): ${root.id} - ${allFiles.length} files\n`);
+      console.log('SDK asset aliases:');
+      for (const [alias, relPath] of Object.entries(sdkAssetAliases)) {
+        console.log(`- ${alias}/... -> ${relPath}/...`);
+      }
+      if (agentView) {
+        console.log('\nAgent lane:');
+        console.log(`- ${agentView.agentId} [${agentView.runtime}] role=${agentView.agentRole} depth=${agentView.depth}`);
+      }
+      if (assignments.activeAgents.length > 0) {
+        console.log('\nActive assignments:');
+        for (const row of assignments.activeAgents) {
+          console.log(`- ${row.agentId} tasks=${row.tasks.join(', ') || '(none)'}`);
+        }
+      }
+      console.log('');
+      for (const rel of allFiles) {
+        console.log(`${'='.repeat(70)}`);
+        console.log(`## ${root.planningDir}/${rel}`);
+        console.log(`${'='.repeat(70)}`);
+        try { console.log(fs.readFileSync(path.join(planDir, rel), 'utf8')); } catch { console.log('(unreadable)'); }
+        console.log('');
+      }
+      console.log(`=== end snapshot (${allFiles.length} files) ===`);
+      return;
+    }
+
+    if (scope.isScoped) {
+      const sections = [];
+      sections.push({
+        title: 'SDK ASSET ALIASES',
+        content: Object.entries(sdkAssetAliases).map(([alias, relPath]) => `${alias}/... -> ${relPath}/...`).join('\n'),
+      });
+      const agentSection = buildAgentSection();
+      if (agentSection) sections.push(agentSection);
+      const assignmentsSection = buildAssignmentsSection();
+      if (assignmentsSection) sections.push(assignmentsSection);
+      if (stateXml) sections.push({ title: 'STATE.xml', content: stateXml.trim() });
+      if (scopedPhaseId) {
+        const phase = phases.find((row) => row.id === scopedPhaseId);
+        if (phase) {
+          sections.push({
+            title: `ROADMAP PHASE ${phase.id}`,
+            content: `<phase id="${phase.id}">\n  <title>${phase.title || ''}</title>\n  <goal>${phase.goal || ''}</goal>\n  <status>${phase.status}</status>\n  <depends>${phase.depends || ''}</depends>\n</phase>`,
+          });
+        }
+      }
+      if (scopedTask) {
+        const attrs = [
+          `id="${scopedTask.id}"`,
+          `status="${scopedTask.status}"`,
+          scopedTask.agentId ? `agent-id="${scopedTask.agentId}"` : '',
+          scopedTask.agentRole ? `agent-role="${scopedTask.agentRole}"` : '',
+          scopedTask.runtime ? `runtime="${scopedTask.runtime}"` : '',
+          scopedTask.modelProfile ? `model-profile="${scopedTask.modelProfile}"` : '',
+          scopedTask.resolvedModel ? `resolved-model="${scopedTask.resolvedModel}"` : '',
+          scopedTask.claimedAt ? `claimed-at="${scopedTask.claimedAt}"` : '',
+          scopedTask.skill ? `skill="${scopedTask.skill}"` : '',
+          scopedTask.type ? `type="${scopedTask.type}"` : '',
+        ].filter(Boolean).join(' ');
+        sections.push({
+          title: `TASK ${scopedTask.id}`,
+          content: `<task ${attrs}>\n  <goal>${scopedTask.goal || ''}</goal>\n  <keywords>${scopedTask.keywords || ''}</keywords>\n  <depends>${scopedTask.depends || ''}</depends>\n</task>`,
+        });
+        const peerTasks = allTasks.filter((task) => task.phase === scopedTask.phase && task.id !== scopedTask.id && task.status !== 'done');
+        if (peerTasks.length > 0) {
+          sections.push({
+            title: `PHASE ${scopedTask.phase} OPEN TASKS`,
+            content: peerTasks.map((task) =>
+              `<task id="${task.id}" status="${task.status}"${task.agentId ? ` agent-id="${task.agentId}"` : ''}><goal>${(task.goal || '').slice(0, 220)}</goal></task>`
+            ).join('\n'),
+          });
+        }
+      } else {
+        const phaseTasks = allTasks.filter((task) => task.phase === scopedPhaseId && task.status !== 'done');
+        sections.push({
+          title: `PHASE ${scopedPhaseId} OPEN TASKS`,
+          content: phaseTasks.length > 0
+            ? phaseTasks.map((task) =>
+              `<task id="${task.id}" status="${task.status}"${task.agentId ? ` agent-id="${task.agentId}"` : ''}><goal>${(task.goal || '').slice(0, 220)}</goal></task>`
+            ).join('\n')
+            : '(no open tasks in scoped phase)',
+        });
+      }
+      const scopedDecisionsSection = buildDecisionsSection();
+      if (scopedDecisionsSection) sections.push(scopedDecisionsSection);
+      const scopedFileRefsSection = buildFileRefsSection();
+      if (scopedFileRefsSection) sections.push(scopedFileRefsSection);
+      const scopedConventionsSection = buildConventionsSection();
+      if (scopedConventionsSection) sections.push(scopedConventionsSection);
+      const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
+      if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify({
+          project: root.id,
+          mode: 'scoped',
+          scope,
+          agent: agentView,
+          assignments,
+          sdkAssetAliases,
+          sections: sections.map((section) => ({ title: section.title, content: section.content })),
+        }, null, 2));
+        return;
+      }
+
+      console.log(`\nSnapshot (scoped ${scope.snapshotMode}): ${root.id}${scope.phaseId ? ` - phase ${scope.phaseId}` : ''}${scope.taskId ? ` - task ${scope.taskId}` : ''}\n`);
+      for (const section of sections) {
+        console.log(`-- ${section.title} ${'-'.repeat(Math.max(0, 60 - section.title.length))}`);
+        console.log(section.content);
+        console.log('');
+      }
+      const totalChars = sections.reduce((sum, section) => sum + section.content.length, 0);
+      console.log(`-- end snapshot (~${Math.round(totalChars / 4)} tokens) --`);
+      return;
+    }
+
+    const k = getCurrentSprintIndex(phases, sprintSize, currentPhase);
+    const sprintPhaseIds = getSprintPhaseIds(phases, sprintSize, k);
+    const sections = [];
+    sections.push({
+      title: 'SDK ASSET ALIASES',
+      content: Object.entries(sdkAssetAliases).map(([alias, relPath]) => `${alias}/... -> ${relPath}/...`).join('\n'),
+    });
+    const sprintAgentSection = buildAgentSection();
+    if (sprintAgentSection) sections.push(sprintAgentSection);
+    const sprintAssignmentsSection = buildAssignmentsSection();
+    if (sprintAssignmentsSection) sections.push(sprintAssignmentsSection);
+    if (stateXml) sections.push({ title: 'STATE.xml', content: stateXml.trim() });
+
+    let roadmapSection = '';
+    for (const phase of phases) {
+      if (sprintPhaseIds.includes(phase.id)) {
+        roadmapSection += `<phase id="${phase.id}">\n  <title>${phase.title || ''}</title>\n  <goal>${phase.goal || ''}</goal>\n  <status>${phase.status}</status>\n  <depends>${phase.depends || ''}</depends>\n</phase>\n`;
+      } else {
+        roadmapSection += `${phase.id} | ${(phase.title || '').slice(0, 60)} | ${phase.status}\n`;
+      }
+    }
+    sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapSection.trim() });
+
+    const openTasks = allTasks.filter((task) => task.status !== 'done');
+    let tasksSection = '';
+    if (openTasks.length > 0) {
+      let currentTaskPhase = '';
+      for (const task of openTasks) {
+        const taskPhase = task.id ? task.id.split('-')[0] : '';
+        if (taskPhase !== currentTaskPhase) {
+          currentTaskPhase = taskPhase;
+          tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+        }
+        const goalText = (task.goal || '').slice(0, 200);
+        const extraAttrs = [
+          task.skill ? `skill="${task.skill}"` : '',
+          task.type ? `type="${task.type}"` : '',
+          task.agentId ? `agent-id="${task.agentId}"` : '',
+          task.agentRole ? `agent-role="${task.agentRole}"` : '',
+          task.runtime ? `runtime="${task.runtime}"` : '',
+        ].filter(Boolean).join(' ');
+        const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
+        tasksSection += `    <task id="${task.id}" status="${task.status}"${attrStr}><goal>${goalText}</goal></task>\n`;
+      }
+    }
+    const doneCount = allTasks.length - openTasks.length;
+    sections.push({ title: `TASKS (${openTasks.length} open, ${doneCount} done)`, content: tasksSection.trim() || '(no open tasks)' });
+    const sprintDecisionsSection = buildDecisionsSection();
+    if (sprintDecisionsSection) sections.push(sprintDecisionsSection);
+    const sprintFileRefsSection = buildFileRefsSection();
+    if (sprintFileRefsSection) sections.push(sprintFileRefsSection);
+    const sprintConventionsSection = buildConventionsSection();
+    if (sprintConventionsSection) sections.push(sprintConventionsSection);
+    const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
+    if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify({
+        project: root.id,
+        mode: 'sprint',
+        scope,
+        agent: agentView,
+        assignments,
+        sprintIndex: k,
+        sprintPhaseIds,
+        sections: sections.map((section) => ({ title: section.title, content: section.content })),
+      }, null, 2));
+      return;
+    }
+
+    console.log(`\nSnapshot (sprint ${k}): ${root.id} - phases ${sprintPhaseIds.join(', ')}\n`);
+    for (const section of sections) {
+      console.log(`-- ${section.title} ${'-'.repeat(Math.max(0, 60 - section.title.length))}`);
+      console.log(section.content);
+      console.log('');
+    }
+    const totalChars = sections.reduce((sum, section) => sum + section.content.length, 0);
+    console.log(`-- end snapshot (~${Math.round(totalChars / 4)} tokens) --`);
+  },
+});
+
+function runTasksListView(args) {
+  const baseDir = findRepoRoot();
+  const config = gadConfig.load(baseDir);
+
+  let roots = config.roots;
+  if (args.projectid) {
+    roots = roots.filter((root) => root.id === args.projectid);
+    if (roots.length === 0) {
+      const ids = config.roots.map((root) => root.id);
+      console.error(`\nProject not found: ${args.projectid}\n\nAvailable projects:\n`);
+      for (const id of ids) console.error(`  ${id}`);
+      console.error(`\nRerun with: --projectid ${ids[0]}`);
+      process.exit(1);
+    }
+  }
+
+  const filter = {};
+  if (args.status) filter.status = args.status;
+  if (args.phase) filter.phase = args.phase;
+
+  const rows = [];
+  for (const root of roots) {
+    const tasks = readTasks(root, baseDir, filter);
+    for (const task of tasks) {
+      const limit = args.full ? Infinity : 200;
+      rows.push({
+        project: root.id,
+        id: formatId(root.id, 'T', task.id),
+        'legacy-id': task.id,
+        goal: task.goal.length > limit ? task.goal.slice(0, limit - 1) + '…' : task.goal,
+        status: task.status,
+        phase: task.phase,
+        'agent-id': task.agentId || '',
+        'agent-role': task.agentRole || '',
+        runtime: task.runtime || '',
+      });
+    }
+  }
+
+  if (rows.length === 0) {
+    console.log('No tasks found.');
+    return;
+  }
+
+  const fmt = args.json ? 'json' : 'table';
+  console.log(render(rows, { format: fmt, title: `Tasks (${rows.length})` }));
+}
+
+function resolveSingleTaskRoot(projectid) {
+  const baseDir = findRepoRoot();
+  const config = gadConfig.load(baseDir);
+  const roots = resolveRoots({ projectid }, baseDir, config.roots);
+  if (roots.length === 0) {
+    outputError('No projects configured. Run `gad workspace sync` first.');
+  }
+  return { baseDir, config, root: roots[0] };
+}
+
+const tasksClaimCmd = defineCommand({
+  meta: { name: 'claim', description: 'Claim a task for an active agent lane' },
+  args: {
+    task: { type: 'positional', description: 'Task ID (e.g. 41-02)', required: true },
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    agentid: { type: 'string', description: 'Existing agent id to reuse', default: '' },
+    role: { type: 'string', description: 'Logical agent role for auto-registration', default: '' },
+    runtime: { type: 'string', description: 'Runtime identity override', default: '' },
+    'parent-agentid': { type: 'string', description: 'Parent agent id for spawned subagents', default: '' },
+    'model-profile': { type: 'string', description: 'Model profile attached to the lane', default: '' },
+    'resolved-model': { type: 'string', description: 'Resolved model attached to the lane', default: '' },
+    'lease-minutes': { type: 'string', description: 'Optional soft lease duration in minutes', default: '0' },
+    force: { type: 'boolean', description: 'Steal a task already claimed by another lane', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const { baseDir, root } = resolveSingleTaskRoot(args.projectid);
+    const planDir = path.join(baseDir, root.path, root.planningDir);
+    const allTasks = readTasks(root, baseDir, {});
+    const task = allTasks.find((row) => row.id === args.task);
+    if (!task) {
+      outputError(`Task not found: ${args.task}`);
+    }
+    if (task.status === 'done') {
+      outputError(`Task ${args.task} is already done and cannot be claimed.`);
+    }
+    if (task.agentId && task.agentId !== (args.agentid || process.env.GAD_AGENT_ID || '') && !args.force) {
+      outputError(`Task ${args.task} is already claimed by ${task.agentId}. Re-run with --force to take it over.`);
+    }
+
+    const agentInputs = resolveSnapshotAgentInputs(args);
+    const runtimeIdentity = resolveSnapshotRuntime(args.runtime, { humanFallback: true });
+    const leaseMinutes = Math.max(0, parseInt(args['lease-minutes'], 10) || 0);
+    const leaseExpiresAt = leaseMinutes > 0
+      ? new Date(Date.now() + (leaseMinutes * 60 * 1000)).toISOString()
+      : null;
+    let agentBootstrap;
+    try {
+      agentBootstrap = ensureAgentLane(planDir, {
+        requestedAgentId: agentInputs.requestedAgentId,
+        role: agentInputs.role,
+        runtime: runtimeIdentity.id,
+        runtimeSessionId: detectRuntimeSessionId(),
+        parentAgentId: agentInputs.parentAgentId,
+        modelProfile: agentInputs.modelProfile,
+        resolvedModel: agentInputs.resolvedModel || runtimeIdentity.model || null,
+        leaseExpiresAt,
+      });
+    } catch (error) {
+      outputError(error && error.message ? error.message : String(error));
+    }
+
+    claimTask(planDir, task.id, {
+      agentId: agentBootstrap.agent.agentId,
+      agentRole: agentBootstrap.agent.agentRole,
+      runtime: agentBootstrap.agent.runtime,
+      modelProfile: agentBootstrap.agent.modelProfile,
+      resolvedModel: agentBootstrap.agent.resolvedModel,
+      claimedAt: nowIso(),
+      leaseExpiresAt,
+    });
+    addTaskClaim(planDir, agentBootstrap.agent.agentId, task.id, task.phase);
+
+    const updatedTask = readTasks(root, baseDir, {}).find((row) => row.id === task.id);
+    const payload = {
+      project: root.id,
+      claimed: true,
+      task: updatedTask,
+      agent: {
+        agentId: agentBootstrap.agent.agentId,
+        agentRole: agentBootstrap.agent.agentRole,
+        runtime: agentBootstrap.agent.runtime,
+        parentAgentId: agentBootstrap.agent.parentAgentId || null,
+        rootAgentId: agentBootstrap.agent.rootAgentId || agentBootstrap.agent.agentId,
+        depth: agentBootstrap.agent.depth,
+        modelProfile: agentBootstrap.agent.modelProfile || null,
+        resolvedModel: agentBootstrap.agent.resolvedModel || null,
+      },
+      force: args.force === true,
+    };
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify(payload, null, 2));
+      return;
+    }
+
+    console.log(`Claimed ${task.id} for ${agentBootstrap.agent.agentId} (${agentBootstrap.agent.runtime}).`);
+  },
+});
+
+const tasksReleaseCmd = defineCommand({
+  meta: { name: 'release', description: 'Release a claimed task or mark it done' },
+  args: {
+    task: { type: 'positional', description: 'Task ID (e.g. 41-02)', required: true },
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    agentid: { type: 'string', description: 'Agent id performing the release', default: '' },
+    status: { type: 'string', description: 'Status to apply when not using --done (default: planned)', default: '' },
+    done: { type: 'boolean', description: 'Mark the task done and preserve attribution', default: false },
+    force: { type: 'boolean', description: 'Release even if task is owned by another lane', default: false },
+    'release-agent': { type: 'boolean', description: 'Mark the lane released when it has no remaining claimed tasks', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const { baseDir, root } = resolveSingleTaskRoot(args.projectid);
+    const planDir = path.join(baseDir, root.path, root.planningDir);
+    const allTasks = readTasks(root, baseDir, {});
+    const task = allTasks.find((row) => row.id === args.task);
+    if (!task) {
+      outputError(`Task not found: ${args.task}`);
+    }
+
+    const actingAgentId = String(args.agentid || process.env.GAD_AGENT_ID || task.agentId || '').trim();
+    if (task.agentId && actingAgentId && task.agentId !== actingAgentId && !args.force) {
+      outputError(`Task ${args.task} is claimed by ${task.agentId}. Re-run with --force to release it anyway.`);
+    }
+
+    releaseTask(planDir, task.id, {
+      done: args.done === true,
+      status: args.status || 'planned',
+    });
+    if (actingAgentId) {
+      removeTaskClaim(planDir, actingAgentId, task.id, task.phase, args['release-agent'] === true || args.done === true);
+    }
+
+    const updatedTask = readTasks(root, baseDir, {}).find((row) => row.id === task.id);
+    const payload = {
+      project: root.id,
+      released: true,
+      task: updatedTask,
+      agentId: actingAgentId || null,
+      done: args.done === true,
+    };
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify(payload, null, 2));
+      return;
+    }
+
+    console.log(`${args.done ? 'Completed' : 'Released'} ${task.id}${actingAgentId ? ` from ${actingAgentId}` : ''}.`);
+  },
+});
+
+const tasksActiveCmd = defineCommand({
+  meta: { name: 'active', description: 'List active claimed tasks and agent lanes' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    all: { type: 'boolean', description: 'Show all configured projects', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    const projects = [];
+    const tableRows = [];
+
+    for (const root of roots) {
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      const tasks = readTasks(root, baseDir, {});
+      const activeTasks = tasks.filter((task) => task.status !== 'done' && task.agentId);
+      const lanes = listAgentLanes(planDir);
+      const projectPayload = {
+        project: root.id,
+        activeTasks,
+        activeAgents: lanes.activeAgents.map((agent) => simplifyAgentLane(agent, new Map(tasks.map((task) => [task.id, task])))),
+        staleAgents: lanes.staleAgents.map((agent) => simplifyAgentLane(agent, new Map(tasks.map((task) => [task.id, task])))),
+      };
+      projects.push(projectPayload);
+
+      for (const task of activeTasks) {
+        tableRows.push({
+          project: root.id,
+          task: task.id,
+          status: task.status,
+          'agent-id': task.agentId || '',
+          'agent-role': task.agentRole || '',
+          runtime: task.runtime || '',
+          claimed: task.claimedAt || '',
+        });
+      }
+    }
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify({
+        projects,
+        totalProjects: projects.length,
+        totalActiveTasks: projects.reduce((sum, project) => sum + project.activeTasks.length, 0),
+        totalActiveAgents: projects.reduce((sum, project) => sum + project.activeAgents.length, 0),
+      }, null, 2));
+      return;
+    }
+
+    if (tableRows.length === 0) {
+      console.log('No active task claims.');
+      return;
+    }
+
+    console.log(render(tableRows, { format: 'table', title: `Active task claims (${tableRows.length})` }));
+  },
+});
+
+const tasksListCmd = defineCommand({
+  meta: { name: 'list', description: 'Show tasks from TASK-REGISTRY.xml (falls back to STATE.md)' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    status: { type: 'string', description: 'Filter by status (e.g. in-progress, planned)', default: '' },
+    phase: { type: 'string', description: 'Filter by phase id (e.g. 03)', default: '' },
+    full: { type: 'boolean', description: 'Show full goal text (no truncation)', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    runTasksListView(args);
+  },
+});
+
+const tasksV2Cmd = defineCommand({
+  meta: { name: 'tasks', description: 'Show, claim, release, and inspect active tasks' },
+  subCommands: {
+    list: tasksListCmd,
+    claim: tasksClaimCmd,
+    release: tasksReleaseCmd,
+    active: tasksActiveCmd,
+  },
+});
+
 // ---------------------------------------------------------------------------
 // migrate-schema command
 // ---------------------------------------------------------------------------
@@ -7552,7 +8449,7 @@ const main = defineCommand({
     context: contextCmd,
     state: stateCmd,
     phases: phasesCmd,
-    tasks: tasksCmd,
+    tasks: tasksV2Cmd,
     'task-checkpoint': taskCheckpoint,
     decisions: decisionsCmd,
     requirements: requirementsCmd,
@@ -7567,7 +8464,7 @@ const main = defineCommand({
     eval: evalCmd,
     rounds: roundsCmd,
     verify: verifyCmd,
-    snapshot: snapshotCmd,
+    snapshot: snapshotV2Cmd,
     sprint: sprintCmd,
     dev: devCmd,
     sink: sinkCmd,
@@ -7591,6 +8488,19 @@ const main = defineCommand({
   if (first === undefined || first.startsWith('-')) {
     a.splice(i + 1, 0, 'list');
   }
+})();
+
+(function injectTasksListDefault() {
+  const a = process.argv;
+  const i = a.indexOf('tasks');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['list', 'claim', 'release', 'active']);
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'list');
+    return;
+  }
+  if (!known.has(first)) return;
 })();
 
 runMain(main);

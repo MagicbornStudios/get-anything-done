@@ -997,4 +997,16 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>Reduces duplication, improves testability, and makes future concurrency features like scoped snapshots and task claims easier to ship without inventing a second planning filesystem. Separates methodology skills (CLI-facing) from deterministic automation/pipelines (query-facing).</impact>
   </decision>
 
+  <decision id="gad-149">
+    <title>gad snapshot is the normal agent-lane bootstrap handshake</title>
+    <summary>Concurrent GAD agents should not need a separate mandatory registration command before they can work. `gad snapshot` is both the context loader and the identity/bootstrap handshake. When snapshot is called with runtime/role/parent/task/phase context, or when a known runtime is detected, it auto-registers or refreshes the calling lane, returns `agent`, `scope`, and `assignments` blocks, and persists live lane state in the project planning directory. Manual registration can remain a debugging/ops affordance later, but it is not the canonical workflow.</summary>
+    <impact>All runtime integrations can start from one call: snapshot. Spawned subagents receive their lane identity and scoped context from the same command. Shared lane state becomes machine-managed in `.planning/.gad-agent-lanes.json`.</impact>
+  </decision>
+
+  <decision id="gad-150">
+    <title>Agent lane depth is capped at one direct child level</title>
+    <summary>GAD adopts a hard concurrency depth limit of `1`. Root agents may spawn direct child lanes, but child lanes may not spawn additional children. This preserves the single-master-loop model, prevents recursive agent explosion, keeps trace lineage understandable, and avoids hidden token burn from swarm-like recursion. Parent/root lineage is still recorded explicitly, but the lineage graph is always root plus zero-or-more direct children.</summary>
+    <impact>`gad snapshot` and future assignment/spawn helpers must reject `parent-agentid` chains that would create depth `2` or deeper. Trace data and site reporting only need to support root/child lineage, not arbitrary trees.</impact>
+  </decision>
+
 </decisions>

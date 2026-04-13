@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const TOOLS_PATH = path.join(__dirname, '..', 'bin', 'gad-tools.cjs');
+const GAD_CLI_PATH = path.join(__dirname, '..', 'bin', 'gad.cjs');
 
 /**
  * Run gad-tools command.
@@ -31,6 +32,35 @@ function runGsdTools(args, cwd = process.cwd(), env = {}) {
       });
     } else {
       result = execSync(`node "${TOOLS_PATH}" ${args}`, {
+        cwd,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: childEnv,
+      });
+    }
+    return { success: true, output: result.trim() };
+  } catch (err) {
+    return {
+      success: false,
+      output: err.stdout?.toString().trim() || '',
+      error: err.stderr?.toString().trim() || err.message,
+    };
+  }
+}
+
+function runGadCli(args, cwd = process.cwd(), env = {}) {
+  try {
+    let result;
+    const childEnv = { ...process.env, ...env };
+    if (Array.isArray(args)) {
+      result = execFileSync(process.execPath, [GAD_CLI_PATH, ...args], {
+        cwd,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: childEnv,
+      });
+    } else {
+      result = execSync(`node "${GAD_CLI_PATH}" ${args}`, {
         cwd,
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe'],
@@ -84,4 +114,4 @@ function cleanup(tmpDir) {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 }
 
-module.exports = { runGsdTools, createTempDir, createTempProject, createTempGitProject, cleanup, TOOLS_PATH };
+module.exports = { runGsdTools, runGadCli, createTempDir, createTempProject, createTempGitProject, cleanup, TOOLS_PATH, GAD_CLI_PATH };
