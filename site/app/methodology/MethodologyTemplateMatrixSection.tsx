@@ -1,14 +1,17 @@
 import { METHODOLOGY_TEMPLATE_ROWS } from "@/app/methodology/methodology-shared";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function MethodologyTemplateMatrixSection() {
   return (
     <SiteSection>
-      <SiteSectionHeading kicker="What each condition template contains" />
-      <SiteProse size="sm" className="mb-6 mt-4">
+      <Identified as="MethodologyTemplateMatrixHeading">
+        <SiteSectionHeading kicker="What each condition template contains" />
+        <SiteProse size="sm" className="mb-6 mt-4">
         {`Transparency about what the eval agent receives. Each column is one condition. \u2713 means the file is present in the template; \u2014 means absent. This is the full input set \u2014 the agent sees nothing else.`}
-      </SiteProse>
-      <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/40">
+        </SiteProse>
+      </Identified>
+      <Identified as="MethodologyTemplateMatrixTable" className="overflow-x-auto rounded-xl border border-border/70 bg-card/40">
         <table className="w-full text-left text-xs">
           <thead className="border-b border-border/60 bg-card/60">
             <tr>
@@ -54,14 +57,14 @@ export function MethodologyTemplateMatrixSection() {
             ))}
           </tbody>
         </table>
-      </div>
-      <p className="mt-4 text-[11px] text-muted-foreground">
+      </Identified>
+      <Identified as="MethodologyTemplateMatrixFootnote" tag="p" className="mt-4 text-[11px] text-muted-foreground">
         Source: the <code className="rounded bg-background/60 px-1 py-0.5">template/</code> directory of
         each eval project under{" "}
         <code className="rounded bg-background/60 px-1 py-0.5">evals/escape-the-dungeon*/</code>. This
         table shows the greenfield setup. Brownfield conditions additionally receive the preserved
         source code from their baseline greenfield run.
-      </p>
+      </Identified>
     </SiteSection>
   );
 }

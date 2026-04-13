@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import type { PlanningState } from "@/lib/catalog.generated";
 import type { TaskRecord } from "@/lib/eval-data";
 import { STATUS_TINT } from "@/app/planning/planning-shared";
@@ -15,7 +16,7 @@ export function PlanningRoadmapTab({ phases, allTasks }: PlanningRoadmapTabProps
         const done = phaseTasks.filter((t) => t.status === "done").length;
         const pct = phaseTasks.length > 0 ? Math.round((done / phaseTasks.length) * 100) : 0;
         return (
-          <div key={phase.id} className="flex items-center gap-3 rounded-lg border border-border/40 bg-card/20 px-4 py-2.5">
+          <Identified key={phase.id} as={`PlanningRoadmapTabRow-${phase.id}`} className="flex items-center gap-3 rounded-lg border border-border/40 bg-card/20 px-4 py-2.5">
             <span className="w-8 text-xs font-semibold tabular-nums text-muted-foreground">{phase.id}</span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs text-foreground">{phase.title}</p>
@@ -31,7 +32,7 @@ export function PlanningRoadmapTab({ phases, allTasks }: PlanningRoadmapTabProps
             >
               {phase.status}
             </span>
-          </div>
+          </Identified>
         );
       })}
     </div>

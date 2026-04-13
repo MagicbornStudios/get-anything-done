@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { GadCatalogJumpSection } from "./GadCatalogJumpSection";
 import { GadCoreConceptsSection } from "./GadCoreConceptsSection";
@@ -13,10 +14,18 @@ export const metadata = {
 export default function GADOverviewPage() {
   return (
     <MarketingShell>
-      <GadHeroSection />
-      <GadCoreConceptsSection />
-      <GadSkillBootstrapSection />
-      <GadCatalogJumpSection />
+      <Identified as="GadHeroSection">
+        <GadHeroSection />
+      </Identified>
+      <Identified as="GadCoreConceptsSection">
+        <GadCoreConceptsSection />
+      </Identified>
+      <Identified as="GadSkillBootstrapSection">
+        <GadSkillBootstrapSection />
+      </Identified>
+      <Identified as="GadCatalogJumpSection">
+        <GadCatalogJumpSection />
+      </Identified>
     </MarketingShell>
   );
 }

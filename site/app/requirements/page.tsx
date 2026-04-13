@@ -1,4 +1,5 @@
 import { RequirementsHero } from "@/app/requirements/RequirementsHero";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { RequirementsProjectEmptySection } from "@/app/requirements/RequirementsProjectEmptySection";
 import { RequirementsProjectSection } from "@/app/requirements/RequirementsProjectSection";
@@ -16,17 +17,29 @@ export default function RequirementsPage() {
 
   return (
     <MarketingShell>
-      <RequirementsHero />
+      <Identified as="RequirementsHero">
+        <RequirementsHero />
+      </Identified>
 
       {[...byProject.entries()].map(([project, files]) => {
         const file = files[0];
         if (!file?.content) {
-          return <RequirementsProjectEmptySection key={project} project={project} />;
+          return (
+            <Identified key={project} as={`RequirementsProjectEmpty-${project}`}>
+              <RequirementsProjectEmptySection project={project} />
+            </Identified>
+          );
         }
-        return <RequirementsProjectSection key={project} project={project} file={file} />;
+        return (
+          <Identified key={project} as={`RequirementsProjectSection-${project}`}>
+            <RequirementsProjectSection project={project} file={file} />
+          </Identified>
+        );
       })}
 
-      <RequirementsVersionHistorySection />
+      <Identified as="RequirementsVersionHistorySection">
+        <RequirementsVersionHistorySection />
+      </Identified>
     </MarketingShell>
   );
 }

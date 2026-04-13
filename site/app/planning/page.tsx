@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { PLANNING_STATE } from "@/lib/catalog.generated";
 import { ALL_TASKS, ALL_PHASES, ALL_DECISIONS, BUGS } from "@/lib/eval-data";
@@ -18,16 +19,22 @@ export default function PlanningStatePage() {
 
   return (
     <MarketingShell>
-      <PlanningOverviewSection state={state} />
-      <PlanningGanttSection phases={state.phases} />
+      <Identified as="PlanningOverviewSection">
+        <PlanningOverviewSection state={state} />
+      </Identified>
+      <Identified as="PlanningGanttSection">
+        <PlanningGanttSection phases={state.phases} />
+      </Identified>
       <Suspense>
-        <PlanningTabbedContent
-          state={state}
-          allTasks={ALL_TASKS}
-          allPhases={ALL_PHASES}
-          allDecisions={ALL_DECISIONS}
-          gadBugs={gadBugs}
-        />
+        <Identified as="PlanningTabbedContent">
+          <PlanningTabbedContent
+            state={state}
+            allTasks={ALL_TASKS}
+            allPhases={ALL_PHASES}
+            allDecisions={ALL_DECISIONS}
+            gadBugs={gadBugs}
+          />
+        </Identified>
       </Suspense>
     </MarketingShell>
   );

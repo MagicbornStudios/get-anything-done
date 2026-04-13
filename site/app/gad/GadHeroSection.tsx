@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileText, Gauge, Terminal } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { Button } from "@/components/ui/button";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { GITHUB_REPO } from "@/lib/catalog.generated";
@@ -7,30 +8,34 @@ import { GITHUB_REPO } from "@/lib/catalog.generated";
 export function GadHeroSection() {
   return (
     <SiteSection>
-      <SiteSectionHeading
-        kicker="The framework"
-        as="h1"
-        preset="hero"
-        title={
-          <>
-            <span className="text-foreground">GAD is</span>{" "}
-            <span className="gradient-text">planning + evaluation</span>{" "}
-            <span className="text-foreground">for AI coding agents.</span>
-          </>
-        }
-      />
-      <SiteProse className="mt-6">
-        A small CLI, a strict five-step loop, and an experiment harness stapled to the side. The CLI re-hydrates context
-        in one command. Skills tell the agent <em>what</em> to do. Subagents do the expensive work off the main thread.
-        Templates scaffold new projects. Runtime-specific command wrappers are generated only when a coding agent needs
-        them. Evals measure whether any of this actually helps. Read the{" "}
-        <Link href="/#workflow" className="text-accent hover:underline">
-          loop diagram
-        </Link>{" "}
-        for how it fits together.
-      </SiteProse>
+      <Identified as="GadHeroHeading">
+        <SiteSectionHeading
+          kicker="The framework"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              <span className="text-foreground">GAD is</span>{" "}
+              <span className="gradient-text">planning + evaluation</span>{" "}
+              <span className="text-foreground">for AI coding agents.</span>
+            </>
+          }
+        />
+      </Identified>
+      <Identified as="GadHeroProse">
+        <SiteProse className="mt-6">
+          A small CLI, a strict five-step loop, and an experiment harness stapled to the side. The CLI re-hydrates context
+          in one command. Skills tell the agent <em>what</em> to do. Subagents do the expensive work off the main thread.
+          Templates scaffold new projects. Runtime-specific command wrappers are generated only when a coding agent needs
+          them. Evals measure whether any of this actually helps. Read the{" "}
+          <Link href="/#workflow" className="text-accent hover:underline">
+            loop diagram
+          </Link>{" "}
+          for how it fits together.
+        </SiteProse>
+      </Identified>
 
-      <div className="mt-10 flex flex-wrap gap-3">
+      <Identified as="GadHeroCtas" className="mt-10 flex flex-wrap gap-3">
         <Button
           size="lg"
           className="gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5 hover:bg-accent/90"
@@ -63,7 +68,7 @@ export function GadHeroSection() {
             Current planning state
           </Link>
         </Button>
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

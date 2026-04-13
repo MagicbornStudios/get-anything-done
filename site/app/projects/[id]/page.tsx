@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import {
   EVAL_PROJECTS,
@@ -48,18 +49,36 @@ export default async function ProjectPage({
   const template = EVAL_TEMPLATES.find((t) => t.project === project.id);
   const planning = PLANNING_ZIPS.find((p) => p.project === project.id);
 
+  const pl = project.id;
+
   return (
     <MarketingShell>
-      <ProjectHeroSection project={project} planning={planning} template={template} />
-      <ProjectSkillsScopeSection project={project} />
-      <ProjectRunsSection runs={runs} />
+      <Identified as={`Project-${pl}-Hero`}>
+        <ProjectHeroSection project={project} planning={planning} template={template} />
+      </Identified>
+      <Identified as={`Project-${pl}-SkillsScope`}>
+        <ProjectSkillsScopeSection project={project} />
+      </Identified>
+      <Identified as={`Project-${pl}-Runs`}>
+        <ProjectRunsSection runs={runs} />
+      </Identified>
       {project.workflow === "emergent" && runs.length > 0 && (
-        <ProjectEmergentLineageSection runs={runs} />
+        <Identified as={`Project-${pl}-EmergentLineage`}>
+          <ProjectEmergentLineageSection runs={runs} />
+        </Identified>
       )}
-      <ProjectRequirementsSection projectId={project.id} />
-      <ProjectFindingsSection projectId={project.id} />
-      <ProjectBugsSection projectId={project.id} />
-      <ProjectScoringWeightsSection project={project} />
+      <Identified as={`Project-${pl}-Requirements`}>
+        <ProjectRequirementsSection projectId={project.id} />
+      </Identified>
+      <Identified as={`Project-${pl}-Findings`}>
+        <ProjectFindingsSection projectId={project.id} />
+      </Identified>
+      <Identified as={`Project-${pl}-Bugs`}>
+        <ProjectBugsSection projectId={project.id} />
+      </Identified>
+      <Identified as={`Project-${pl}-ScoringWeights`}>
+        <ProjectScoringWeightsSection project={project} />
+      </Identified>
     </MarketingShell>
   );
 }

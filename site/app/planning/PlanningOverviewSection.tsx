@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import type { PlanningState } from "@/lib/catalog.generated";
 import selfEvalData from "@/data/self-eval.json";
@@ -12,28 +13,30 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
 
   return (
     <SiteSection>
-      <SiteSectionHeading
-        kicker="Planning state"
-        as="h1"
-        preset="hero-compact"
-        title={
-          <>
-            What&apos;s in flight <span className="gradient-text">right now.</span>
-          </>
-        }
-      />
-      <SiteProse className="mt-5">
-        This page is built from{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">.planning/STATE.xml</code>,{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TASK-REGISTRY.xml</code>,{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">DECISIONS.xml</code>, root{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">.gad-log</code> telemetry, and preserved eval{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TRACE.json</code> artifacts. This is the
-        framework&apos;s public operations console: planning state, self-eval metrics, runtime mix, and eval
-        token accounting in one place.
-      </SiteProse>
+      <Identified as="PlanningOverviewIntro">
+        <SiteSectionHeading
+          kicker="Planning state"
+          as="h1"
+          preset="hero-compact"
+          title={
+            <>
+              What&apos;s in flight <span className="gradient-text">right now.</span>
+            </>
+          }
+        />
+        <SiteProse className="mt-5">
+          This page is built from{" "}
+          <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">.planning/STATE.xml</code>,{" "}
+          <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TASK-REGISTRY.xml</code>,{" "}
+          <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">DECISIONS.xml</code>, root{" "}
+          <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">.gad-log</code> telemetry, and preserved eval{" "}
+          <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TRACE.json</code> artifacts. This is the
+          framework&apos;s public operations console: planning state, self-eval metrics, runtime mix, and eval
+          token accounting in one place.
+        </SiteProse>
+      </Identified>
 
-      <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <Identified as="PlanningOverviewStats" className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Current phase</CardDescription>
@@ -112,7 +115,7 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
           </CardHeader>
           <CardContent className="pt-0 text-xs text-muted-foreground">STATE.xml</CardContent>
         </Card>
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

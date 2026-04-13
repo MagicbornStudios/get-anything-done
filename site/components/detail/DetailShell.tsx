@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell, SiteSection } from "@/components/site";
 import type { DetailShellProps } from "./detail-shell-shared";
 import DetailShellBackLink from "./DetailShellBackLink";
@@ -25,17 +26,23 @@ export default function DetailShell({
   return (
     <MarketingShell>
       <SiteSection>
-        <DetailShellBackLink backHref={backHref} backLabel={backLabel} />
-        <DetailShellKindBadges kind={kind} badges={badges} />
-        <DetailShellTitleBlock name={name} subtitle={subtitle} description={description} />
+        <Identified as="DetailShellIntro">
+          <DetailShellBackLink backHref={backHref} backLabel={backLabel} />
+          <DetailShellKindBadges kind={kind} badges={badges} />
+          <DetailShellTitleBlock name={name} subtitle={subtitle} description={description} />
+        </Identified>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
-          <div>
+          <Identified as="DetailShellMainColumn" className="min-w-0">
             {meta && meta.length > 0 && <DetailShellMetaGrid meta={meta} />}
             <DetailShellProseArticle bodyHtml={bodyHtml} />
             {sourcePath && <DetailShellSourceBlock sourcePath={sourcePath} />}
-          </div>
-          {sidebar && <aside className="space-y-5">{sidebar}</aside>}
+          </Identified>
+          {sidebar && (
+            <Identified as="DetailShellSidebar" tag="aside" className="space-y-5">
+              {sidebar}
+            </Identified>
+          )}
         </div>
       </SiteSection>
     </MarketingShell>

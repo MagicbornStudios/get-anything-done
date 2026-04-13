@@ -6,18 +6,18 @@
       "days": 7
     },
     "totals": {
-      "events": 4308,
+      "events": 4354,
       "sessions": 12,
-      "gad_cli_calls": 333
+      "gad_cli_calls": 336
     },
     "runtime_distribution": [
       {
         "runtime": "claude-code",
-        "count": 3711
+        "count": 3754
       },
       {
         "runtime": "unknown",
-        "count": 597
+        "count": 600
       }
     ],
     "runtime_sessions": [
@@ -29,23 +29,23 @@
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 1439
+        "count": 1459
       },
       {
         "tool": "Read",
-        "count": 675
+        "count": 683
       },
       {
         "tool": "unknown",
-        "count": 637
+        "count": 645
       },
       {
         "tool": "Edit",
-        "count": 528
+        "count": 532
       },
       {
         "tool": "Write",
-        "count": 350
+        "count": 356
       },
       {
         "tool": "TaskUpdate",
@@ -107,13 +107,13 @@
       },
       {
         "day": "2026-04-13",
-        "count": 471
+        "count": 517
       }
     ],
     "framework_overhead": {
-      "planning_ops": 367,
-      "source_ops": 1358,
-      "ratio": 0.213,
+      "planning_ops": 379,
+      "source_ops": 1369,
+      "ratio": 0.217,
       "score": 0.7
     },
     "loop_compliance": {
@@ -124,16 +124,16 @@
     "gad_cli_breakdown": {
       "snapshot": 53,
       "eval": 103,
-      "other": 177
+      "other": 180
     },
-    "computed_at": "2026-04-13T10:13:07.252Z",
+    "computed_at": "2026-04-13T17:23:39.846Z",
     "tasks": {
       "done": 203,
       "planned": 22,
       "in_progress": 4,
       "total": 229
     },
-    "decisions": 147,
+    "decisions": 156,
     "phases_pressure": [
       {
         "phase": "10",
@@ -1559,29 +1559,29 @@
     },
     "project_tokens": {
       "exact_eval_tokens": 1579764,
-      "estimated_live_input_tokens": 273061,
-      "estimated_live_output_tokens": 604014,
-      "estimated_live_total_tokens": 877075,
-      "combined_total_tokens": 2456839,
+      "estimated_live_input_tokens": 279224,
+      "estimated_live_output_tokens": 606673,
+      "estimated_live_total_tokens": 885897,
+      "combined_total_tokens": 2465661,
       "trace_files": 2,
       "trace_events": 2000,
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 1369
+          "count": 1417
         },
         {
           "runtime": "unknown",
-          "count": 631
+          "count": 583
         }
       ],
       "sources": [
         {
           "path": ".planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 149679,
-          "estimated_output_tokens": 300850,
-          "estimated_total_tokens": 450529
+          "estimated_input_tokens": 155842,
+          "estimated_output_tokens": 303509,
+          "estimated_total_tokens": 459351
         },
         {
           "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
@@ -3409,18 +3409,18 @@
         "days": 7
       },
       "totals": {
-        "events": 4308,
+        "events": 4354,
         "sessions": 12,
-        "gad_cli_calls": 333
+        "gad_cli_calls": 336
       },
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 3711
+          "count": 3754
         },
         {
           "runtime": "unknown",
-          "count": 597
+          "count": 600
         }
       ],
       "runtime_sessions": [
@@ -3432,23 +3432,23 @@
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 1439
+          "count": 1459
         },
         {
           "tool": "Read",
-          "count": 675
+          "count": 683
         },
         {
           "tool": "unknown",
-          "count": 637
+          "count": 645
         },
         {
           "tool": "Edit",
-          "count": 528
+          "count": 532
         },
         {
           "tool": "Write",
-          "count": 350
+          "count": 356
         },
         {
           "tool": "TaskUpdate",
@@ -3510,13 +3510,13 @@
         },
         {
           "day": "2026-04-13",
-          "count": 471
+          "count": 517
         }
       ],
       "framework_overhead": {
-        "planning_ops": 367,
-        "source_ops": 1358,
-        "ratio": 0.213,
+        "planning_ops": 379,
+        "source_ops": 1369,
+        "ratio": 0.217,
         "score": 0.7
       },
       "loop_compliance": {
@@ -3527,16 +3527,16 @@
       "gad_cli_breakdown": {
         "snapshot": 53,
         "eval": 103,
-        "other": 177
+        "other": 180
       },
-      "computed_at": "2026-04-13T10:13:07.252Z",
+      "computed_at": "2026-04-13T17:23:39.846Z",
       "tasks": {
         "done": 203,
         "planned": 22,
         "in_progress": 4,
         "total": 229
       },
-      "decisions": 147,
+      "decisions": 156,
       "phases_pressure": [
         {
           "phase": "10",
@@ -4962,29 +4962,29 @@
       },
       "project_tokens": {
         "exact_eval_tokens": 1579764,
-        "estimated_live_input_tokens": 273061,
-        "estimated_live_output_tokens": 604014,
-        "estimated_live_total_tokens": 877075,
-        "combined_total_tokens": 2456839,
+        "estimated_live_input_tokens": 279224,
+        "estimated_live_output_tokens": 606673,
+        "estimated_live_total_tokens": 885897,
+        "combined_total_tokens": 2465661,
         "trace_files": 2,
         "trace_events": 2000,
         "runtime_distribution": [
           {
             "runtime": "claude-code",
-            "count": 1369
+            "count": 1417
           },
           {
             "runtime": "unknown",
-            "count": 631
+            "count": 583
           }
         ],
         "sources": [
           {
             "path": ".planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 149679,
-            "estimated_output_tokens": 300850,
-            "estimated_total_tokens": 450529
+            "estimated_input_tokens": 155842,
+            "estimated_output_tokens": 303509,
+            "estimated_total_tokens": 459351
           },
           {
             "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",

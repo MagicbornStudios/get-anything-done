@@ -1,5 +1,6 @@
 "use client";
 
+import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { Ref } from "@/components/refs/Ref";
 import { RichText } from "@/components/refs/RichText";
@@ -19,7 +20,10 @@ export function PlanningGanttSelectedPhasePanel({
 
   return (
     <div className="mt-6 rounded-xl border border-accent/30 bg-accent/5 p-5">
-      <div className="mb-4 flex items-center gap-3">
+      <Identified
+        as={`PlanningGanttSelectedPhaseHeader-${selectedPhase.id}`}
+        className="mb-4 flex items-center gap-3"
+      >
         <span className="text-sm font-semibold text-accent">Phase {selectedPhase.id}</span>
         <Badge
           variant={
@@ -33,12 +37,16 @@ export function PlanningGanttSelectedPhasePanel({
           {selectedPhase.status}
         </Badge>
         <span className="text-sm text-foreground">{selectedPhase.title}</span>
-      </div>
+      </Identified>
 
       {selectedTasks.length > 0 ? (
         <div className="space-y-2">
           {selectedTasks.map((t) => (
-            <div key={t.id} className="flex items-start gap-3 rounded-lg border border-border/40 bg-card/30 p-3">
+            <Identified
+              key={t.id}
+              as={`PlanningGanttSelectedPhaseTask-${selectedPhase.id}-${t.id}`}
+              className="flex items-start gap-3 rounded-lg border border-border/40 bg-card/30 p-3"
+            >
               <Ref id={t.id} />
               <div className="min-w-0 flex-1">
                 <RichText text={t.goal} className="text-xs text-foreground line-clamp-3" />
@@ -57,11 +65,13 @@ export function PlanningGanttSelectedPhasePanel({
               >
                 {t.status}
               </Badge>
-            </div>
+            </Identified>
           ))}
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">No tasks found for this phase.</p>
+        <Identified as={`PlanningGanttSelectedPhaseEmpty-${selectedPhase.id}`} tag="p" className="text-xs text-muted-foreground">
+          No tasks found for this phase.
+        </Identified>
       )}
     </div>
   );

@@ -1,13 +1,14 @@
 import { buildDataSources, groupBySurface } from "./data-shared";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import DataHeroSection from "./DataHeroSection";
 import DataTrustLevelsSection from "./DataTrustLevelsSection";
 import DataSurfaceSection from "./DataSurfaceSection";
 
 export const metadata = {
-  title: "Data provenance — GAD",
+  title: "Local DB — GAD",
   description:
-    "Every chart and number on this site, with its source field, derivation formula, and trust level. Inline + indexed transparency.",
+    "Indexed site data sources and field lineage: where each number comes from, how it is derived, and trust level. Aligns with the `gad data` /data JSON catalog.",
 };
 
 export default function DataPage() {
@@ -20,11 +21,20 @@ export default function DataPage() {
 
   return (
     <MarketingShell>
-      <DataHeroSection totals={totals} />
-      <DataTrustLevelsSection />
-      {grouped.map(([surface, surfaceSources]) => (
-        <DataSurfaceSection key={surface} surface={surface} sources={surfaceSources} />
-      ))}
+      <Identified as="DataHeroSection">
+        <DataHeroSection totals={totals} />
+      </Identified>
+      <Identified as="DataTrustLevelsSection">
+        <DataTrustLevelsSection />
+      </Identified>
+      {grouped.map(([surface, surfaceSources]) => {
+        const surfaceSlug = surface.replace(/[^a-zA-Z0-9]+/g, "-");
+        return (
+          <Identified key={surface} as={`DataSurfaceSection-${surfaceSlug}`}>
+            <DataSurfaceSection surface={surface} sources={surfaceSources} />
+          </Identified>
+        );
+      })}
     </MarketingShell>
   );
 }

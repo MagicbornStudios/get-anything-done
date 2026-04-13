@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Identified } from "@/components/devid/Identified";
 import type { SkillCandidate, SkillCandidateFilterMode } from "./planning-skill-candidates-types";
 import { PlanningSkillCandidateCard } from "./PlanningSkillCandidateCard";
 import { PlanningSkillCandidatesHeader } from "./PlanningSkillCandidatesHeader";
@@ -25,9 +26,12 @@ export function PlanningSkillCandidatesTab({ candidates }: { candidates: SkillCa
 
   return (
     <div>
-      <PlanningSkillCandidatesHeader filter={filter} onFilter={setFilter} counts={counts} />
+      <Identified as="PlanningSkillCandidatesHeader">
+        <PlanningSkillCandidatesHeader filter={filter} onFilter={setFilter} counts={counts} />
+      </Identified>
 
       {filtered.length === 0 ? (
+        <Identified as="PlanningSkillCandidatesTabEmpty">
         <p className="text-sm text-muted-foreground">
           {filter === "unreviewed"
             ? "All candidates have been reviewed. Switch to 'all' or 'reviewed' to see history."
@@ -35,15 +39,17 @@ export function PlanningSkillCandidatesTab({ candidates }: { candidates: SkillCa
               ? "No candidates have been reviewed yet."
               : "No high-pressure phases detected. Candidates are regenerated each prebuild."}
         </p>
+        </Identified>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {filtered.map((candidate) => (
-            <PlanningSkillCandidateCard
-              key={candidate.name}
-              candidate={candidate}
-              isOpen={selected === candidate.name}
-              onToggleOpen={() => setSelected(selected === candidate.name ? null : candidate.name)}
-            />
+            <Identified key={candidate.name} as={`PlanningSkillCandidateCard-${candidate.name.replace(/[^a-zA-Z0-9]+/g, "-")}`}>
+              <PlanningSkillCandidateCard
+                candidate={candidate}
+                isOpen={selected === candidate.name}
+                onToggleOpen={() => setSelected(selected === candidate.name ? null : candidate.name)}
+              />
+            </Identified>
           ))}
         </div>
       )}

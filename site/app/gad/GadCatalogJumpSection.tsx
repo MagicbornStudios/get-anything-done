@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Bot, Package, Sparkles } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { AGENTS, SKILLS, TEMPLATES } from "@/lib/catalog.generated";
 
@@ -14,13 +15,15 @@ const JUMP_ITEMS = [
 export function GadCatalogJumpSection() {
   return (
     <SiteSection tone="muted">
-      <SiteSectionHeading kicker="Jump to" title="Explore the catalog" preset="section" />
+      <Identified as="GadCatalogJumpHeading">
+        <SiteSectionHeading kicker="Jump to" title="Explore the catalog" preset="section" />
+      </Identified>
       <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {JUMP_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
+            <Identified key={item.label} as={`GadCatalogJumpTile-${item.label.replace(/\s+/g, "")}`}>
             <Link
-              key={item.label}
               href={item.href}
               className="group rounded-2xl border border-border/70 bg-card/40 p-6 transition-colors hover:border-accent/60"
             >
@@ -32,6 +35,7 @@ export function GadCatalogJumpSection() {
                 <ArrowRight size={11} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
               </p>
             </Link>
+            </Identified>
           );
         })}
       </div>

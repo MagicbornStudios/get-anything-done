@@ -2,12 +2,12 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-13T09:15:30.113Z
+Generated: 2026-04-13T17:23:39.470Z
 
 
 ---
 
-# Skills (96)
+# Skills (98)
 
 ## gad:add-todo
 id: add-todo
@@ -3081,14 +3081,14 @@ Read and follow the companion `eval-suite` skill if it is installed.
 
 ## gad-evolution-evolve
 id: gad-evolution-evolve
-description: >- Start a new evolution of the GAD framework — analyze high-pressure phases, identify skill candidates, write a complete INTENT.md context payload for each, and hand them off to gad-skill-creator for autonomous test-and-draft. Use when the user says "let's evolve", "run an evolution", "find new skills", "what skills should we add", or after closing a milestone where you want to capture lessons. An evolution is the primary mechanism by which GAD's species (its DNA / skill set) improves between milestones. Refuses to run if any pending candidates from a previous evolution still need human review — clear the queue first.
+description: >- Start a new evolution of the GAD framework — analyze high-pressure phases via selection pressure, write a raw CANDIDATE.md per phase, hand each one to gad-quick-skill for autonomous drafting, then run the validator. Use when the user says "let's evolve", "run an evolution", "find new skills", "what skills should we add", or after closing a milestone where you want to capture lessons. An evolution is the primary mechanism by which GAD's species (its DNA / skill set) improves between milestones. Refuses to run if any pending proto-skills from a previous evolution still need human review — clear the queue first via gad evolution promote / discard.
 origin: official
 
 
 # gad-evolution-evolve
 
 Drives one round of the GAD evolution loop. Every evolution produces a batch of
-**skill candidates** that must be reviewed by a human before they become real
+**proto-skills** that must be reviewed by a human before they become real
 skills.
 
 ## Mental model
@@ -3101,37 +3101,56 @@ The loop:
 
 ```
 gad:evolution:evolve
-  ├─ pressure analysis (existing compute-self-eval.mjs)
-  ├─ for each high-pressure phase that doesn't already have a skill:
-  │     ├─ build INTENT.md from phase tasks/decisions/refs
-  │     ├─ invoke gad-skill-creator on the INTENT
-  │     └─ skill-creator writes SKILL.md + evals + viewer.html
-  └─ register a single TASK-REGISTRY task: "Review evolution <id> candidates"
+  ├─ compute-self-eval finds high-pressure phases (selection pressure)
+  ├─ for each new candidate phase:
+  │     ├─ write skills/proto-skills/<slug>/CANDIDATE.md
+  │     │     = raw phase dump (no curator pre-digestion)
+  │     ├─ invoke gad-quick-skill on CANDIDATE.md
+  │     │     → writes skills/proto-skills/<slug>/SKILL.md + references/
+  │     └─ invoke gad-evolution-validator on the new proto-skill
+  │           → writes skills/proto-skills/<slug>/VALIDATION.md (advisory)
+  └─ register one TASK-REGISTRY task: "Review evolution <id> proto-skills"
 
-(human, async)
-  opens skills/candidates/<slug>/viewer.html for each candidate
-  → submits feedback → reviewer decides per-candidate
+(human review, async)
+  reads SKILL.md + VALIDATION.md → promote or discard
 
-gad evolution promote <slug>     ← moves to sdk/skills/
-gad evolution discard <slug>     ← deletes the candidate
+gad evolution promote <slug>     ← moves to sdk/skills/, joins species DNA
+gad evolution discard <slug>     ← deletes the proto-skill
 ```
 
-The next `gad:evolution:evolve` cannot run until every candidate from the
+The next `gad:evolution:evolve` cannot run until every proto-skill from the
 current evolution is either promoted or discarded.
+
+## Why no curator step
+
+Earlier sketches of this loop had me hand-write a structured INTENT.md per
+candidate — pre-digesting the phase data into proposed name, when-to-trigger
+sections, hand-picked decisions, and curated test prompts.
+
+The 2026-04-13 evolution-loop experiment showed that **curators are filters,
+not amplifiers.** When given raw phase data directly, the drafting agent
+pulled in 16 decisions vs the curated arm's 7. The curator's selectivity
+filtered out load-bearing details (trace schema fragment registration, runtime
+identity, per-eval-repo architecture). See
+`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md` for the full result.
+
+So we feed raw phase dumps directly. CANDIDATE.md is a structured layout of
+the phase tasks, decisions, file references, CLI surface, and `git log`
+highlights for files the phase touched — not curated context.
 
 ## Step 1: Refuse to start if there's a pending evolution
 
 ```sh
-PENDING=$(ls skills/candidates 2>/dev/null | wc -l)
+PENDING=$(ls skills/proto-skills 2>/dev/null | wc -l)
 if [ "$PENDING" -gt 0 ]; then
-  echo "Cannot start a new evolution — $PENDING candidates still pending review."
+  echo "Cannot start a new evolution — $PENDING proto-skills still pending review."
   echo "Run 'gad status' to see them, then promote or discard each before evolving again."
   exit 1
 fi
 ```
 
-This is the human-review gate. It exists because evolutions accumulating without
-review just rot.
+This is the human-review gate. It exists because evolutions accumulating
+without review just rot.
 
 ## Step 2: Generate an evolution id
 
@@ -3142,20 +3161,22 @@ touch "skills/.evolutions/$EVOLUTION_ID"
 ```
 
 The empty marker file lets `gad status` and the site know an evolution started
-on this date even after all its candidates are reviewed and gone.
+on this date even after all its proto-skills are reviewed and gone.
 
-## Step 3: Run pressure analysis to find candidate phases
+## Step 3: Run selection pressure analysis
 
-The existing self-eval pipeline already identifies high-pressure phases:
+The existing self-eval pipeline identifies high-pressure phases:
 
 ```sh
-node site/scripts/compute-self-eval.mjs --emit-candidates --threshold 10
+node site/scripts/compute-self-eval.mjs
 ```
 
-This writes a list of phase ids whose pressure score exceeds the threshold and
-that don't yet have a skill associated. Each is a candidate. (If you're invoked
-manually for a single skill from a user request, skip this step and go straight
-to step 4 with one phase id or `null`.)
+After it runs, read `site/data/self-eval.json` for the `high_pressure_phases`
+list. Each phase id whose pressure score exceeds the threshold (default 10
+from `site/data/self-eval-config.json`) is a candidate for this evolution.
+
+If you're invoked manually for a single skill from a user request, skip this
+step and go straight to step 4 with one phase id or `null`.
 
 For each candidate phase, gather:
 
@@ -3163,7 +3184,9 @@ For each candidate phase, gather:
 - All tasks in the phase (id, status, goal)
 - Decisions referencing the phase
 - File refs touched by the phase's tasks (from git history)
-- Errors / failed attempts (from `.gad-log/` and the phase's commits)
+- `git log --follow --oneline <file>` for each touched file (catches the
+  historical "three attempts at task X failed" thread that lives in commit
+  history, not decision text)
 
 Use the GAD CLI to pull these:
 
@@ -3173,115 +3196,244 @@ gad tasks --projectid get-anything-done | grep "^get-anything-done  $PHASE_ID-"
 gad decisions --projectid get-anything-done | grep -i "phase $PHASE_ID"
 ```
 
-## Step 4: Write INTENT.md per candidate
+## Step 4: Write CANDIDATE.md per candidate phase
 
-For each candidate phase, propose a kebab-case skill name and write
-`skills/candidates/<slug>/INTENT.md` following the format defined in
-`gad-skill-creator`. The INTENT must be complete enough that skill-creator
-needs zero clarification.
+For each candidate phase, write `skills/proto-skills/<slug>/CANDIDATE.md`. The
+slug is `phase-<N>-<short-kebab-of-title>`.
 
-Critical: the **test prompts** in INTENT.md must be drawn from real tasks in
-the source phase. Skill-creator uses them verbatim as evaluation prompts, so
-they have to be realistic things a user would actually say — not abstracted
-descriptions.
+CANDIDATE.md is a structured raw dump:
 
-Also write the evolution id into the INTENT frontmatter:
-
-```yaml
+```markdown
 ---
 status: candidate
 source_phase: 14
-source_phase_title: "Eval framework — escape the dungeon tracing"
+source_phase_title: "Eval framework — escape-the-dungeon + tracing"
 pressure_score: 18
 evolution_id: 2026-04-13-001
 created_on: 2026-04-13
 created_by: gad-evolution-evolve
-proposed_name: trace-aware-eval-runner
 ---
+
+# Candidate from phase 14
+
+## Phase header
+<raw `gad phases` line>
+
+## Tasks
+<raw `gad tasks` output for phase 14>
+
+## Decisions touching this phase
+<raw `gad decisions` output, filtered>
+
+## File references
+<file paths touched by this phase's commits, one per line>
+
+## Git history for touched files
+<git log --follow --oneline output for each file>
+
+## CLI surface available
+<paste relevant lines from `gad --help` and `gad <subcommand> --help`>
+
+## Existing related skills
+<output of `ls sdk/skills/` filtered to skills with overlapping keywords>
 ```
 
-## Step 5: Invoke gad-skill-creator on each INTENT
+**No curator section.** No proposed name. No proposed test prompts. No
+hand-picked decisions. The drafting agent (gad-quick-skill) reads this raw
+material and decides what matters.
 
-Hand each candidate off to `gad-skill-creator`:
+## Step 5: Invoke gad-quick-skill on each CANDIDATE.md
+
+Hand each candidate off to `gad-quick-skill`:
 
 ```
 For each <slug> in this evolution:
-  Invoke gad-skill-creator with: "Process the candidate at
-  skills/candidates/<slug>/. The INTENT.md is complete; do not ask questions."
+  Invoke gad-quick-skill with: "Process the candidate at
+  skills/proto-skills/<slug>/CANDIDATE.md. Write SKILL.md + references/
+  in the same directory. Do not ask questions."
 ```
 
 If you have access to spawning subagents, run multiple in parallel — one per
-candidate. Otherwise run them in series. Skill-creator's own test runs are
-already parallelized internally so we don't lose much by serializing the
-outer loop.
+candidate. Otherwise run them in series.
 
-## Step 6: Register a single review task
+## Step 6: Invoke gad-evolution-validator on each new proto-skill
 
-After all candidates are drafted, register **one** task in TASK-REGISTRY for
-the whole evolution batch. Don't create one task per candidate — that's
-bookkeeping bloat. The candidates dir IS the work list.
+After SKILL.md is written, hand the proto-skill to `gad-evolution-validator`:
 
 ```
-Task: Review evolution <evolution-id> candidates
+For each <slug>:
+  Invoke gad-evolution-validator with: "Validate skills/proto-skills/<slug>/SKILL.md
+  against the actual repo. Write VALIDATION.md flagging file refs that don't
+  exist, CLI commands that don't match `gad --help`, and convention shapes
+  that diverge from existing files."
+```
+
+VALIDATION.md is advisory. It does not block promotion. The human reviewer
+reads it alongside SKILL.md.
+
+## Step 7: Register a single review task
+
+After all proto-skills are drafted and validated, register **one** task in
+TASK-REGISTRY for the whole evolution batch. Don't create one task per
+proto-skill — that's bookkeeping bloat. The proto-skills dir IS the work list.
+
+```
+Task: Review evolution <evolution-id> proto-skills
 Status: planned
-Goal: Open skills/candidates/<slug>/viewer.html for each pending candidate,
-review the test results, then run `gad evolution promote <slug>` or
-`gad evolution discard <slug>` on each. Evolution closes automatically when
-the candidates dir is empty.
+Goal: Open skills/proto-skills/<slug>/SKILL.md for each pending proto-skill,
+read its VALIDATION.md, then run `gad evolution promote <slug>` or
+`gad evolution discard <slug>`. Evolution closes automatically when the
+proto-skills dir is empty.
 Skill: gad-evolution-evolve
 Type: framework
 ```
 
-## Step 7: Print summary
+## Step 8: Print summary
 
 ```
 Evolution 2026-04-13-001 started.
-  Drafted: 5 candidates
+  Drafted: 5 proto-skills
   Pending review: 5
 
-Open the viewers in a browser to review each:
-  skills/candidates/<slug-1>/viewer.html
-  skills/candidates/<slug-2>/viewer.html
+Open the SKILL.md for each in your editor:
+  skills/proto-skills/<slug-1>/SKILL.md
+  skills/proto-skills/<slug-2>/SKILL.md
   ...
 
 Then promote or discard each:
   gad evolution promote <slug>
   gad evolution discard <slug>
 
-Run `gad status` to see remaining candidates at any time.
+Run `gad status` to see remaining proto-skills at any time.
 ```
-
-## Why no attempt-evolution / finish-evolution skills
-
-Earlier sketches of this loop had three commands (evolve / attempt-evolution /
-finish-evolution). We collapsed to one because:
-
-1. **Testing happens inside skill-creator.** It runs the eval loop natively
-   (with-skill + baseline subagents, grading, benchmarking, viewer). We don't
-   need a separate `attempt-evolution` skill to do what skill-creator already
-   does better.
-2. **Finishing happens by file move.** Promote = `git mv` from candidates/ to
-   sdk/skills/. Discard = `rm -rf`. Both are one-line CLI commands, not skills.
-3. **The evolution closes itself.** When the candidates dir is empty, the
-   evolution is done. No separate "finish" gesture required.
 
 ## Failure modes
 
-- **Pending candidates blocking evolve:** intentional. If you really need to
-  start fresh, manually `rm -rf skills/candidates/*` and accept that work is
-  lost. There's no `--force` flag because forcing this defeats the gate.
-- **INTENT.md too sparse:** skill-creator will start asking questions. Symptom:
-  the run hangs waiting for input. Fix: make INTENT.md richer, especially the
-  test prompts and CLI surface sections.
-- **No high-pressure phases found:** valid outcome. Print "no candidates this
-  evolution" and don't create any files. The evolution marker still drops in
-  `.evolutions/` so we have a record that we looked.
+- **Pending proto-skills blocking evolve:** intentional. If you really need to
+  start fresh, manually `rm -rf skills/proto-skills/*` and accept that work
+  is lost. There's no `--force` flag because forcing this defeats the gate.
+- **No high-pressure phases found:** valid outcome. Print "no proto-skills
+  this evolution" and don't create any files. The evolution marker still
+  drops in `.evolutions/` so we have a record that we looked.
+- **gad-quick-skill produces a sparse SKILL.md:** read CANDIDATE.md, see if it
+  was sparse. The CANDIDATE.md should always include the full task list,
+  decisions, file refs, and git history. If those are missing, fix the
+  CANDIDATE.md generation in step 4.
 
 ## Reference
 
-- `gad-skill-creator` — the wrapper this skill invokes per candidate
-- `compute-self-eval.mjs` — pressure analysis source
-- Roadmap phase 42 — the design context for this whole loop
+- `gad-quick-skill` — the drafter this skill invokes per candidate
+- `gad-evolution-validator` — the advisory checker
+- `compute-self-eval.mjs` — selection pressure source
+- `evals/FINDINGS-2026-04-13-evolution-loop-experiment.md` — why the curator
+  was dropped
+- Roadmap phase 42 — the design context
+
+
+## gad-evolution-validator
+id: gad-evolution-validator
+description: >- Run the advisory validator on a proto-skill and write VALIDATION.md alongside its SKILL.md. The validator extracts file references and `gad <subcommand>` CLI commands cited in the SKILL.md, then checks each against the actual repo — flagging files that don't exist and CLI commands that don't appear in `gad --help`. The output is ADVISORY, not blocking — the human reviewer reads VALIDATION.md alongside SKILL.md before promoting or discarding the proto-skill. Use when `gad-evolution-evolve` finishes drafting a proto-skill, or any time you want to validate an existing proto-skill in `skills/proto-skills/<slug>/`.
+origin: official
+
+
+# gad-evolution-validator
+
+Wraps the `gad evolution validate` CLI command, which reads a proto-skill
+SKILL.md and writes a sibling VALIDATION.md flagging things the skill cites
+that don't actually exist in the repo today.
+
+## Mental model
+
+A proto-skill is a draft. The drafting agent (gad-quick-skill) reads raw
+candidate data and writes a SKILL.md based on what it understood. The
+validator runs after drafting and answers a single question:
+
+> Does this skill reference things that actually exist in the repo right now?
+
+It's a sanity check, not a rule check. The skill might prescribe a structure
+the repo hasn't adopted yet — that's fine for forward-looking skills, but the
+human reviewer should see the discrepancy before promoting.
+
+## When to use this
+
+- `gad-evolution-evolve` calls this immediately after `gad-quick-skill` writes
+  a new proto-skill.
+- A user asks "validate proto-skill X" or "check if this skill is consistent
+  with the repo."
+- You want to re-validate after editing a proto-skill by hand.
+
+## What the validator checks (v1)
+
+| Check | How |
+|---|---|
+| File references | Greps the SKILL.md for backticked / quoted paths containing slashes + extensions, then checks each against the repo root and `vendor/get-anything-done/`. |
+| CLI commands | Greps for `gad <subcommand>` patterns, then checks each against `gad --help`'s top-level command list. |
+
+What it does NOT check (yet):
+- JSON shape consistency (e.g. does the skill's example `gad.json` match real ones?)
+- Naming consistency with existing conventions
+- Whether the skill's recipe actually runs end-to-end
+
+These are deferred until needed.
+
+## Step 1 — Run the validator
+
+```sh
+gad evolution validate <slug>
+```
+
+Where `<slug>` is the directory name under `skills/proto-skills/`. The
+command writes `skills/proto-skills/<slug>/VALIDATION.md` and prints a
+summary line with pass counts.
+
+## Step 2 — Read the output
+
+Open `skills/proto-skills/<slug>/VALIDATION.md`. It has three sections:
+
+1. **Summary** — pass/fail counts per check
+2. **File references** — table of every cited path with ✓ or ✗
+3. **CLI commands** — table of every cited `gad <cmd>` with ✓ or ✗
+
+If everything passes, the proto-skill is internally consistent with the repo
+and is ready for human review. If items fail, investigate before recommending
+promotion.
+
+## Step 3 — Decide what to do with failures
+
+The validator is advisory, so failures don't block promotion. But they're a
+signal to investigate:
+
+- **Forward-looking reference** (e.g. the skill cites a file that doesn't
+  exist yet because the skill is documenting something still being built):
+  fine, leave it. The human reviewer should know.
+- **Wrong path / typo**: edit the SKILL.md by hand to fix the path, then
+  re-run validate.
+- **Invented CLI command**: edit the SKILL.md to drop the bogus command, or
+  if the command genuinely should exist, log a follow-up to add it.
+- **Dozens of failures**: the proto-skill is likely hallucinating. Discard
+  with `gad evolution discard <slug>` and let the next evolution try again
+  with a richer CANDIDATE.md.
+
+## Failure modes
+
+- **Validator finds nothing because the SKILL.md uses prose instead of
+  backticked references.** If a path is mentioned only in narrative form
+  (e.g. "the file at vendor/get-anything-done/lib/trace-schema.cjs"), the
+  v1 regex won't pick it up. This is fine — the validator catches
+  *backticked* references, which are the load-bearing ones the agent
+  intends as commands. Prose references aren't actionable anyway.
+
+- **CLI command extraction misses subcommands.** The validator only checks
+  the top-level command (e.g. `gad evolution`, not `gad evolution validate`).
+  For now this is acceptable — if the top-level command exists, the
+  subcommand is usually findable by drilling in.
+
+## Reference
+
+- `lib/evolution-validator.cjs` — the validator engine
+- `gad evolution validate <slug>` — the CLI entry point
+- `gad-evolution-evolve` — the orchestrator that calls this
+- `gad-quick-skill` — the drafter whose output this validates
 
 
 ## gad:execute-phase
@@ -4075,6 +4227,142 @@ Provides situational awareness before continuing work.
 Execute the progress workflow from @workflows/progress.md end-to-end.
 Preserve all routing logic (Routes A through F) and edge case handling.
 </process>
+
+
+## gad-quick-skill
+id: gad-quick-skill
+description: >- Fast path to draft a new skill from a candidate context file or raw materials. Wraps the dot-agent create-skill skill, which is a lightweight authoring guide (no eval loop, no benchmarks, no test runs) — ideal when you have clear context and just need to write a clean SKILL.md following the conventions. Use whenever you want to draft a skill quickly without running a full test-and-iterate loop. Triggers on "draft a skill", "quick skill", "write a skill from this", "convert this candidate to a skill", or whenever `gad:evolution:evolve` invokes the drafting step. For high-stakes skills that need real test runs and iteration, use `gad-skill-creator` (the heavy path) instead — but quick is the right default.
+origin: official
+
+
+# gad-quick-skill
+
+A thin wrapper around dot-agent's
+[create-skill](https://github.com/siviter-xyz/dot-agent) that lets us draft new
+GAD skills fast without spinning up a full test loop.
+
+We use the dot-agent skill **unmodified** — it's already a clean format guide
+that enforces the 200-line rule, the progressive disclosure principle, and the
+references/ split. We take ownership of how it's invoked inside the GAD loop.
+
+## When to use this skill
+
+- `gad:evolution:evolve` calls this for each high-pressure phase candidate.
+- A user explicitly says "draft a skill for X" or "quick skill" or "convert
+  this candidate to a skill."
+- You've finished a workflow and want to capture a SKILL.md immediately
+  without running through `gad-skill-creator`'s eval loop.
+- You have a clear context source — a CANDIDATE.md from compute-self-eval,
+  a raw phase dump, or a working session you want to preserve.
+
+## When NOT to use this
+
+- The skill is high-stakes and you want test runs against real subagents to
+  validate it — use `gad-skill-creator` (heavy path) instead.
+- You're improving an existing skill that already has tests — `gad-skill-creator`
+  knows how to read the existing tests and re-run them.
+- The pattern isn't actually clear yet — write a quick note instead and let
+  the next evolution surface it.
+
+## Step 1 — ensure dot-agent create-skill is installed
+
+Idempotent — only installs if missing:
+
+```sh
+if [ ! -d "$HOME/.agents/skills/create-skill" ]; then
+  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes
+fi
+```
+
+After install, `~/.agents/skills/create-skill/SKILL.md` is the canonical source
+plus four reference files in `references/`. Read SKILL.md once for the full
+authoring guide — this wrapper only handles the input plumbing.
+
+## Step 2 — locate the source context
+
+The drafting input depends on how you were invoked:
+
+- **From `gad:evolution:evolve`:** `skills/proto-skills/<slug>/CANDIDATE.md` — already
+  exists, written by `compute-self-eval`. Contains the raw phase dump (tasks,
+  decisions, file refs, CLI surface, related skills, git log highlights).
+- **From a direct user request:** decide on a kebab-case slug, create
+  `skills/proto-skills/<slug>/`, and write a CANDIDATE.md from whatever the
+  user is pointing at (a phase, a working session, a transcript, a file).
+- **From a "redraft this skill" request:** the existing skill's directory.
+
+The CANDIDATE.md is **not curated** and does not contain a proposed name,
+proposed test prompts, or hand-picked decisions. It's the raw source. The
+agent reads it and decides what matters. This is intentional — see the
+2026-04-13 evolution-loop experiment finding: curators are filters, raw input
+pulls in more decisions.
+
+## Step 3 — invoke dot-agent create-skill on the source
+
+Read `~/.agents/skills/create-skill/SKILL.md` and follow its authoring
+workflow, treating CANDIDATE.md (or the user's context) as the source. The
+key constraints from dot-agent's guide:
+
+- **SKILL.md must be under 200 lines** — hard rule.
+- Description should be appropriately "pushy" so the skill triggers reliably.
+- Split deeper content into `references/<file>.md` and reference from SKILL.md.
+- Use the imperative form in instructions.
+- Explain *why*, not just *what*.
+
+Write to `skills/proto-skills/<slug>/SKILL.md` and any references files under
+`skills/proto-skills/<slug>/references/`.
+
+Pick the kebab-case skill name yourself, drawing from the phase or context. Do
+not ask the human — the whole point of the autonomous loop is that you make
+the call.
+
+## Step 4 — Hand off to the validator
+
+After SKILL.md is written, the orchestrator (`gad:evolution:evolve`) runs the
+validator skill (`gad-evolution-validator`) on the new proto-skill. The
+validator writes `skills/proto-skills/<slug>/VALIDATION.md` with advisory
+notes:
+
+- Files cited in SKILL.md that don't exist in the repo
+- CLI commands cited that don't appear in `gad --help`
+- Convention shapes (e.g. `gad.json` examples) that don't match existing
+  files in the repo
+
+VALIDATION.md is **advisory, not blocking**. The human reviewer reads both
+SKILL.md and VALIDATION.md before promote/discard. You don't need to act on
+the validator yourself — just leave the proto-skill in place.
+
+## Step 5 — Stop
+
+Do not iterate. Do not run test prompts. Do not ask for review. The
+proto-skill stays in `skills/proto-skills/<slug>/` until a human runs
+`gad evolution promote <slug>` or `gad evolution discard <slug>` later.
+
+If the orchestrator passed you multiple candidates, loop steps 2-4 for each
+one. Otherwise stop after one.
+
+## Failure modes
+
+- **dot-agent guide says to ask the user questions.** Don't. Make the call
+  yourself and document the decision in the skill body. We're autonomous
+  here.
+- **Tempted to run test prompts.** That's `gad-skill-creator` territory. Stop
+  at SKILL.md.
+- **CANDIDATE.md is sparse.** Read it anyway and pull from the file references
+  it points at — that's where the depth lives.
+
+## Why this skill is universal (not under `gad:evolution:`)
+
+Quick-skill is useful outside the evolution loop too — anytime you want to
+write a skill fast from clear context. Keeping it general means we don't
+duplicate the wrapper for one-off skill authoring vs evolution drafting.
+
+## Reference
+
+- `~/.agents/skills/create-skill/SKILL.md` — dot-agent's canonical authoring guide
+- `~/.agents/skills/create-skill/references/*` — format, structure, examples, best practices
+- `gad-skill-creator` — the heavy path with full eval loop (Anthropic skill-creator)
+- `gad-evolution-evolve` — the orchestrator that calls this for each candidate
+- 2026-04-13 evolution-loop experiment finding (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)
 
 
 ## gad:reapply-patches
@@ -8318,7 +8606,97 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (147)
+# Decisions (156)
+
+## gad-159: Magicborn per-project nav scoping is a pending design decision (phase 42 item 9)
+
+### Summary
+
+Magicborn needs the GAD site compile path to produce a pared-down nav: /planning as the home page, System tab kept, Catalog items merged into System, and the Evaluation / Theory / Play / Emergent / Skeptic tabs all dropped. During the phase 42 overnight push this was deferred because implementing it requires design decisions that shouldn't be made autonomously: (a) where the per-project site config lives — per-project `gad-config.toml [site]` table, standalone `magicborn/.planning/site.toml`, or top-level monorepo `[docs.projects.&lt;id&gt;.site]` table; (b) whether projects start with the full GAD nav and drop entries, or start blank and add them; (c) what happens at runtime when `GAD_PROJECT_ID` is unset (the main GAD site build). Implementation shape when resolved: build-site-data.mjs reads the per-project config and emits site-config.generated.ts keyed by GAD_PROJECT_ID; Nav components read it to conditionally render tabs/groups; extractPlanningSite filters the static compile file list. Until resolved, magicborn renders with the full GAD nav.
+
+### Impact
+
+Open design item tracked for the next session. Captured in oneoff/OVERNIGHT-NOTES.md with the three schema-location options. Not blocking phase 43+44+45 — the domain rename and marketplace work doesn't depend on per-project nav scoping.
+
+## gad-158: Phase 45 rebrand is confirmed direction — full visual + copy overhaul around evolutionary vocabulary
+
+### Summary
+
+After the domain rename (phase 43) and marketplace redesign (phase 44) land, the site gets a dedicated visual + copy pass (phase 45) that re-anchors the brand around the evolutionary vocabulary (decision gad-151). This is not a parked "maybe someday" — the user explicitly confirmed "branding is changing too" on 2026-04-13 and wants the rebrand tracked as a first-class deliverable. Phase 45 touches: type ramp, color palette, hero copy, About page, README, external-facing docs, logo + favicon if needed, and a site-wide consistency audit so the same word is used for the same concept everywhere. The rebrand should land playfully — e.g. "the bare species' v4 generation hatched a spawn that crushed the v4 brood" — not academically. Logo/favicon refresh is in scope if the visual identity needs to change to match the new naming.
+
+### Impact
+
+Phase 45 depends on phases 43 + 44 and is a focused design + copy effort, not a code refactor. Findings and planning docs authored before phase 45 may need a consistency pass when the rebrand ships. FINDINGS-2026-04-13-evolution-loop-experiment already uses the correct vocabulary and is rebrand-ready.
+
+## gad-157: System nav group uses four submenus — Internals, Catalog, Reference, Engage
+
+### Summary
+
+The System dropdown got too heavy (11 items in one flat list). It is now refactored into four subcategories rendered via Radix DropdownMenuSub: **Internals** (Planning, Requirements, Local DB), **Catalog** (Skills, Agents, Commands, Downloads), **Reference** (Lineage, Standards, Findings), **Engage** (Security, Contribute, Feature Requests). nav-shared.ts NavGroup is a discriminated union: either flat `links` or nested `subGroups` (NavSubGroup[]). NavDesktop renders both shapes via DropdownMenuSub/SubTrigger/SubContent; NavMobileMenu renders nested groups as inline labeled sections (no flyout on mobile). The Findings entry was added to Reference as part of restoring the /findings route that was dropped in an earlier cleanup — framework-level findings need somewhere to live, and project-specific findings continue to appear on project detail pages via ProjectFindingsSection.
+
+### Impact
+
+Nav grows without overwhelming a single dropdown. Future nav additions default to picking a subcategory rather than flattening. nav-shared.ts type changes ripple to NavDesktop.tsx, NavMobileMenu.tsx, and any other consumer.
+
+## gad-156: New evolutions gate on zero pending proto-skills (the human review gate)
+
+### Summary
+
+gad-evolution-evolve refuses to start a new evolution if skills/proto-skills/ contains any pending proto-skills from a previous evolution. Rationale: evolutions accumulating without review just rot — if candidates stack up faster than humans review them, the whole loop becomes noise. The gate forces the user to clear the queue (`gad evolution promote &lt;slug&gt;` or `gad evolution discard &lt;slug&gt;`) before a new evolution can begin. There is no `--force` flag because forcing this defeats the gate. An evolution implicitly closes when proto-skills/ is empty again.
+
+### Impact
+
+Evolutions stay bounded. The proto-skills directory IS the work list — no separate task-per-candidate bloat. A single TASK-REGISTRY entry tracks the review obligation for the whole evolution batch. skills/.evolutions/&lt;YYYY-MM-DD-NNN&gt; marker files persist the evolution timeline even after all proto-skills are reviewed and gone.
+
+## gad-155: Validator is advisory, not blocking — failures flag, human decides
+
+### Summary
+
+The gad-evolution-validator skill and its engine (lib/evolution-validator.cjs) check proto-skill SKILL.md files for cited file references that don't exist in the repo and cited `gad &lt;subcommand&gt;` commands that don't appear in `gad --help`. Output lands in VALIDATION.md alongside the SKILL.md with a pass/fail table per check. Failures do not block promotion — they surface gaps for the human reviewer before they run `gad evolution promote`. Rationale: a forward-looking skill may cite paths or commands that don't exist yet because the skill documents something still being built. Blocking on those would false-positive too often. The human is the gate. v1 validator covers file-exists and CLI-command-recognized checks; JSON shape comparison (e.g. does the skill's example gad.json match real ones?) is deferred until needed.
+
+### Impact
+
+`gad evolution validate &lt;slug&gt;` writes VALIDATION.md. gad-evolution-evolve calls the validator after each draft. The human reviewer reads VALIDATION.md alongside SKILL.md during review. Known v2 improvement logged: dedup file refs that appear under multiple path prefixes (~10 line fix in lib/evolution-validator.cjs extractFileRefs).
+
+## gad-154: Two-tier skill creators — gad-quick-skill (default) and gad-skill-creator (high-stakes)
+
+### Summary
+
+GAD maintains two drafting wrappers with different trade-offs. **gad-quick-skill** wraps dot-agent's create-skill (https://github.com/siviter-xyz/dot-agent) unmodified — a lightweight authoring guide with the 200-line rule, progressive disclosure principle, and references/ split. No eval loop, no subagent test runs, no benchmarks. Universal use (not under the evolution: namespace) so it's available for any fast skill drafting. **gad-skill-creator** wraps Anthropic's full skill-creator (https://github.com/anthropics/skills) — the heavy path with subagent test runs, grading, benchmarks, viewer.html, and iteration. Reserved for skills that need real test validation before promotion. The evolution loop defaults to quick-skill because most high-pressure-phase candidates don't need the test harness to produce a useful draft. Users override to the heavy path when the skill is load-bearing enough that the extra cost is worth it.
+
+### Impact
+
+Two Claude Code skills in sdk/skills/: gad-quick-skill (default, invoked by gad-evolution-evolve) and gad-skill-creator (opt-in). Both take candidate context as input and write SKILL.md output; only the heavy one runs additional validation internally.
+
+## gad-153: Raw candidate input beats curated INTENT — the curator is a filter, not an amplifier
+
+### Summary
+
+Two controlled experiments on 2026-04-13 compared feeding raw phase data vs a hand-curated structured INTENT.md to skill drafting tools. Result flipped between heavy (Anthropic skill-creator) and light (dot-agent create-skill) drafters: with the light tool, the RAW arm pulled 16 decisions vs the curator arm's 7. The curator turned out to filter out load-bearing details (trace schema fragment, runtime identity, per-eval-repo architecture). A parallel test-loop experiment also showed baseline agents reading the actual repo produced more accurate gad.json shapes than agents following the skill's prescribed shape. Combined conclusion: curators are filters, not amplifiers. Skills should describe what IS, not what SHOULD BE. Drafting tools should read raw context and decide what matters, not consume pre-digested human opinions.
+
+### Impact
+
+Dropped the INTENT.md curator step from the evolution loop. compute-self-eval writes raw CANDIDATE.md. gad-evolution-evolve does not invoke any curator skill. Full experimental writeup at evals/FINDINGS-2026-04-13-evolution-loop-experiment.md with tables for both arms and the methodology caveats.
+
+## gad-152: Two-stage evolution pipeline — candidate → proto-skill → skill
+
+### Summary
+
+Skill creation flows through three distinct stages, each in its own directory. **Candidate** (skills/candidates/&lt;slug&gt;/CANDIDATE.md) is the raw phase dump produced by compute-self-eval when a phase exceeds the selection pressure threshold — no curator pre-digestion, just task list + decisions + file refs + CLI surface for the drafter to discover from. **Proto-skill** (skills/proto-skills/&lt;slug&gt;/SKILL.md + references/ + VALIDATION.md) is what the drafter produces; awaits human review. **Skill** (sdk/skills/&lt;final&gt;/) is promoted and joins the species DNA. Promotion and discard are file moves, not skills — `gad evolution promote &lt;slug&gt;` and `gad evolution discard &lt;slug&gt;` are CLI subcommands alongside `status` and `validate`. The stage is tracked by directory presence, not frontmatter: if proto-skills/&lt;slug&gt;/ exists, the candidate has been drafted and compute-self-eval does not churn it.
+
+### Impact
+
+compute-self-eval.mjs stops writing SKILL.md stubs and writes CANDIDATE.md instead. gad-evolution-evolve orchestrates the pipeline. gad-quick-skill reads candidates and writes proto-skills. gad-evolution-validator writes VALIDATION.md advisories next to proto-skill SKILL.md. skills/candidates/ and skills/proto-skills/ are both indexed on the site /planning page as sibling tabs.
+
+## gad-151: Evolutionary domain vocabulary — species, generation, brood, evolution, DNA, spawn
+
+### Summary
+
+The GAD eval domain adopts a single locked evolutionary vocabulary. A **species** is a workflow lineage inside a project (bare, gad, emergent). A **generation** is one versioned run within a species (v1, v2…). A **brood** is all generations across species at the same round. An **evolution** is the timeline of broods. **DNA** is the skill manifest baked into a species — the set of skills installed when an agent runs under that species. **Spawn** is everything a generation produces: the build, planning docs, trace, commits, and review bundle. Projects remain the top-level marketable unit; species live **inside** projects (phase 43 schema unification). Framework self-development uses the same vocabulary — building a new skill is evolving GAD's own species DNA.
+
+### Impact
+
+All user-facing copy (site nav, hero, docs, CLI help, findings, README) must use these exact terms. Phase 43 executes the rename across the codebase and site display strings. Phase 45 re-anchors visual branding around the same vocabulary. Old terms (rounds, eval projects, eval runs) survive only in internal file paths where renaming would break eval preservation artifacts.
 
 ## gad-150: Agent lane depth is capped at one direct child level
 
@@ -10589,7 +10967,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **41-03** [done]: Add assignment commands to the CLI: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. Update TASK-REGISTRY.xml schema handling to support `agent-id`, `agent-role`, `runtime`, `model-profile`, `claimed`, and optional lease metadata for live concurrent agents.
 
-- **41-04** [in-progress]: Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts.
+- **41-04** [done]: Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts.
 
 - **39-01** [done]: Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.
 
@@ -10850,15 +11228,15 @@ Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/si
 
 ## Phase 41: Scoped snapshots + query SDK + assignment-based workstreams
 
-Status: active
+Status: done
 
 Implement GAD's concurrency/workstream model without duplicating planning trees. Deliverables: query-oriented SDK handlers for state/tasks/scoped snapshots/assignment, CLI support for `gad snapshot --phaseid/--taskid/--agentid`, task claim/release/active commands, assignment metadata in TASK-REGISTRY.xml, and initial site/trace support for active agent lanes. This is the GAD alternative to upstream `.planning/workstreams/&lt;name&gt;/`.
 
-## Phase 42: Evolution loop — canonical skill-creator wrapper + evolve/attempt/finish lifecycle
+## Phase 42: Evolution loop — candidate → proto-skill → skill pipeline via gad-quick-skill + advisory validator
 
-Status: planned
+Status: done
 
-Build the evolution loop on top of Anthropic's canonical skill-creator skill instead of our own half-built drafting code. (1) New skill `gad:skill-creator` — a thin Claude Code skill that ensures the canonical `npx skills add https://github.com/anthropics/skills --skill skill-creator` is installed (idempotent), bundles a context payload (candidate file if any, source phase, tasks, requirements, related decisions, file refs, existing skill refs, GAD CLI surface from `gad --help`, tool refs), and invokes the canonical skill-creator with that payload. Skill-creator writes both SKILL.md and its tests in one session because that's what it's designed to do. The whole point: with a complete enough context bundle, the user never needs to talk to it manually. (2) Three lifecycle commands as Claude Code skills: `gad:evolution:evolve` runs pressure analysis (existing compute-self-eval.mjs) to identify candidates → for each new candidate, builds context payload → invokes `gad:skill-creator` with it → auto-registers a TASK-REGISTRY entry per candidate so it surfaces in `gad snapshot`. `gad:evolution:attempt-evolution` runs the tests the skill-creator wrote against each drafted candidate (verifier agent reads tests file, executes prompts, records pass/fail on candidate frontmatter as `attempted: true, attempt_result: pass|fail|partial`). `gad:evolution:finish-evolution` reviews attempted candidates: promotes passes to sdk/skills/, discards fails, writes a CHANGELOG.md entry under skills/, marks linked TASK-REGISTRY tasks as done, optionally bumps GAD framework version. (3) Deprecate lib/skill-draft.cjs and `gad eval skill draft-candidates` — they were a half-built version of what skill-creator does properly. The infrastructure they touched (compute-self-eval pressure analysis, candidate frontmatter, candidates dir layout) stays; only the drafting prompt + spawn-claude code dies. (4) The canonical skill-creator handles unit tests natively, so we don't need to invent SKILL.test.md format — we use whatever it writes. Tie-in: skills are sections of a species' DNA, so building good skills IS evolving the species, which makes this loop the load-bearing system for everything else.
+Ship the evolution loop as a three-stage pipeline: candidate (raw phase dump) → proto-skill (drafted SKILL.md awaiting review) → skill (promoted, part of species DNA). Stage 1: compute-self-eval.mjs writes raw skills/candidates/&lt;slug&gt;/CANDIDATE.md for every high-pressure phase. No curator pre-digestion — 2026-04-13 finding showed raw input pulls more decisions than curated. Stage 2: gad-evolution-evolve skill orchestrates: invokes gad-quick-skill (universal wrapper around dot-agent's create-skill, kept unmodified) on each candidate to write skills/proto-skills/&lt;slug&gt;/SKILL.md, then invokes gad-evolution-validator (advisory; reads lib/evolution-validator.cjs) to write VALIDATION.md flagging file refs and CLI commands the skill cites that don't exist in the repo. Stage 3: human review reads SKILL.md + VALIDATION.md, then runs `gad evolution promote &lt;slug&gt;` or `gad evolution discard &lt;slug&gt;`. Promote moves to sdk/skills/&lt;final&gt;/; discard deletes. No attempt-evolution or finish-evolution skills — the loop closes itself when skills/proto-skills/ is empty. New evolutions gate on zero pending proto-skills. CLI subcommands: gad evolution status|validate|promote|discard. A deeper high-stakes path exists via gad-skill-creator (heavy wrapper around Anthropic's full skill-creator with subagent test loop + benchmark + viewer) for skills that need real test runs, but quick is the default. Deprecates lib/skill-draft.cjs and gad eval skill draft-candidates. Tie-in: skills are sections of a species' DNA, so evolving the species means evolving the skill set — this loop is the load-bearing mechanism for every framework improvement. SHIPPED 2026-04-13 (8 of 9 items from the overnight punch list; magicborn tab scoping deferred — see decision gad-158).
 
 ## Phase 43: Domain rename + project/species schema unification
 

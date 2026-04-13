@@ -1,11 +1,14 @@
 import { Gauge } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function SkepticHowUsedSection() {
   return (
     <SiteSection>
-      <SiteSectionHeading kicker="How this page is used" />
-      <ul className="space-y-2 text-sm leading-6 text-muted-foreground">
+      <Identified as="SkepticHowUsedHeading">
+        <SiteSectionHeading kicker="How this page is used" />
+      </Identified>
+      <Identified as="SkepticHowUsedList" tag="ul" className="space-y-2 text-sm leading-6 text-muted-foreground">
         <li className="flex items-start gap-2">
           <Gauge size={12} className="mt-1.5 shrink-0 text-accent" aria-hidden />
           <span>
@@ -37,7 +40,7 @@ export default function SkepticHowUsedSection() {
             know.
           </span>
         </li>
-      </ul>
+      </Identified>
     </SiteSection>
   );
 }

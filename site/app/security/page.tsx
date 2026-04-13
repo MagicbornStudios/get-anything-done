@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { SecurityHeroSection } from "./SecurityHeroSection";
 import { SecurityOperationalStatusSection } from "./SecurityOperationalStatusSection";
@@ -15,12 +16,24 @@ export const metadata = {
 export default function SecurityPage() {
   return (
     <MarketingShell>
-      <SecurityHeroSection />
-      <SecurityOperationalStatusSection />
-      <SecurityAttackSurfacesSection />
-      <SecurityMitigationsSection />
-      <SecurityCertificationSection />
-      <SecurityFurtherReadingSection />
+      <Identified as="SecurityHeroSection">
+        <SecurityHeroSection />
+      </Identified>
+      <Identified as="SecurityOperationalStatusSection">
+        <SecurityOperationalStatusSection />
+      </Identified>
+      <Identified as="SecurityAttackSurfacesSection">
+        <SecurityAttackSurfacesSection />
+      </Identified>
+      <Identified as="SecurityMitigationsSection">
+        <SecurityMitigationsSection />
+      </Identified>
+      <Identified as="SecurityCertificationSection">
+        <SecurityCertificationSection />
+      </Identified>
+      <Identified as="SecurityFurtherReadingSection">
+        <SecurityFurtherReadingSection />
+      </Identified>
     </MarketingShell>
   );
 }

@@ -1,4 +1,5 @@
 import { Github } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -7,13 +8,16 @@ export default function Footer() {
     <footer className="border-t border-border/60 bg-card/20">
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
         <div className="grid gap-10 md:grid-cols-3">
-          <div>
+          <Identified as="FooterBlurb">
+            <div>
             <p className="text-sm font-semibold tracking-tight text-foreground">get-anything-done</p>
             <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-              Planning + evaluation framework for AI coding agents. Open source. Measured, not vibed.
+              Planning + evaluation framework for AI coding agents. Open source.               Measured, not vibed.
             </p>
-          </div>
-          <div>
+            </div>
+          </Identified>
+          <Identified as="FooterSourceLinks">
+            <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Source</p>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
@@ -40,8 +44,10 @@ export default function Footer() {
                 </Button>
               </li>
             </ul>
-          </div>
-          <div>
+            </div>
+          </Identified>
+          <Identified as="FooterJumpTo">
+            <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jump to</p>
             <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               <li>
@@ -108,12 +114,13 @@ export default function Footer() {
                 </Button>
               </li>
             </ul>
-          </div>
+            </div>
+          </Identified>
         </div>
         <Separator className="my-8" />
-        <p className="text-xs text-muted-foreground">
+        <Identified as="FooterCopyright" tag="p" className="text-xs text-muted-foreground">
           © {new Date().getFullYear()} get-anything-done · MIT licensed · Built with Next.js &amp; shadcn primitives.
-        </p>
+        </Identified>
       </div>
     </footer>
   );

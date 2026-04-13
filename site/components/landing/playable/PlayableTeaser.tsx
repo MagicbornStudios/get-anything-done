@@ -19,6 +19,7 @@ import {
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import { WORKFLOW_LABELS } from "@/lib/eval-data";
 import { cn } from "@/lib/utils";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 
 /**
@@ -82,20 +83,22 @@ export default function PlayableTeaser() {
 
   return (
     <SiteSection id="play" tone="muted" className="border-t border-border/60">
-      <SiteSectionIntro
-        kicker="Playable preview"
-        preset="hero-compact"
-        title={
-          <>
-            Try the latest builds. <span className="gradient-text">Right here.</span>
-          </>
-        }
-      >
-        A quick taste of the most recent scored builds. For the full catalog of {EVAL_RUNS.length}
-        + runs across all domains, visit the project market.
-      </SiteSectionIntro>
+      <Identified as="PlayableTeaserIntro">
+        <SiteSectionIntro
+          kicker="Playable preview"
+          preset="hero-compact"
+          title={
+            <>
+              Try the latest builds. <span className="gradient-text">Right here.</span>
+            </>
+          }
+        >
+          A quick taste of the most recent scored builds. For the full catalog of {EVAL_RUNS.length}
+          + runs across all domains, visit the project market.
+        </SiteSectionIntro>
+      </Identified>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <Identified as="PlayableTeaserRunPicker" className="mt-6 flex flex-wrap gap-2">
         {teaserRuns.map((r) => {
           const key = runKey(r);
           const active = selected && runKey(selected) === key;
@@ -145,18 +148,20 @@ export default function PlayableTeaser() {
             </Button>
           );
         })}
-      </div>
+      </Identified>
 
       {selected && iframeSrc && (
-        <PlayableEmbedBlock
-          selected={selected}
-          iframeSrc={iframeSrc}
-          onOpenRequirements={() => setModal("requirements")}
-          onOpenSkill={() => setModal("skill")}
-        />
+        <Identified as="PlayableEmbedBlock">
+          <PlayableEmbedBlock
+            selected={selected}
+            iframeSrc={iframeSrc}
+            onOpenRequirements={() => setModal("requirements")}
+            onOpenSkill={() => setModal("skill")}
+          />
+        </Identified>
       )}
 
-      <div className="mt-8 flex justify-center">
+      <Identified as="PlayableTeaserMarketCta" className="mt-8 flex justify-center">
         <Button
           size="lg"
           className="rounded-full bg-accent px-8 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5 hover:bg-accent/90"
@@ -168,15 +173,17 @@ export default function PlayableTeaser() {
             <ArrowRight size={16} aria-hidden />
           </Link>
         </Button>
-      </div>
+      </Identified>
 
-      <PlayableDocModal
-        modal={modal}
-        selected={selected}
-        onOpenChange={(open) => {
-          if (!open) setModal(null);
-        }}
-      />
+      <Identified as="PlayableDocModal">
+        <PlayableDocModal
+          modal={modal}
+          selected={selected}
+          onOpenChange={(open) => {
+            if (!open) setModal(null);
+          }}
+        />
+      </Identified>
     </SiteSection>
   );
 }

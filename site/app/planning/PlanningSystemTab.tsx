@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { PlanningSystemEvalProjectsPanel } from "./PlanningSystemEvalProjectsPanel";
 import { PlanningSystemEvalTelemetryPanel } from "./PlanningSystemEvalTelemetryPanel";
 import { PlanningSystemPressurePanel } from "./PlanningSystemPressurePanel";
@@ -23,22 +24,34 @@ export function PlanningSystemTab({ selfEval }: { selfEval: PlanningSelfEvalLate
 
   return (
     <div className="space-y-6">
-      <PlanningSystemStatCards selfEval={selfEval} />
+      <Identified as="PlanningSystemStatCards">
+        <PlanningSystemStatCards selfEval={selfEval} />
+      </Identified>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <PlanningSystemProjectTokensPanel selfEval={selfEval} topProjectTokenSource={topProjectTokenSource} />
-        <PlanningSystemRuntimeActivityPanel
-          topRuntimeCount={topRuntimeCount}
-          runtimeDistribution={runtimeDistribution}
-          runtimeSessions={runtimeSessions}
-          activeAssignments={selfEval.active_assignments}
-        />
-        <PlanningSystemEvalTelemetryPanel selfEval={selfEval} topEvalRuntimeCount={topEvalRuntimeCount} />
+        <Identified as="PlanningSystemProjectTokensPanel">
+          <PlanningSystemProjectTokensPanel selfEval={selfEval} topProjectTokenSource={topProjectTokenSource} />
+        </Identified>
+        <Identified as="PlanningSystemRuntimeActivityPanel">
+          <PlanningSystemRuntimeActivityPanel
+            topRuntimeCount={topRuntimeCount}
+            runtimeDistribution={runtimeDistribution}
+            runtimeSessions={runtimeSessions}
+            activeAssignments={selfEval.active_assignments}
+          />
+        </Identified>
+        <Identified as="PlanningSystemEvalTelemetryPanel">
+          <PlanningSystemEvalTelemetryPanel selfEval={selfEval} topEvalRuntimeCount={topEvalRuntimeCount} />
+        </Identified>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <PlanningSystemPressurePanel topPressure={topPressure} />
-        <PlanningSystemEvalProjectsPanel topProjects={topProjects} />
+        <Identified as="PlanningSystemPressurePanel">
+          <PlanningSystemPressurePanel topPressure={topPressure} />
+        </Identified>
+        <Identified as="PlanningSystemEvalProjectsPanel">
+          <PlanningSystemEvalProjectsPanel topProjects={topProjects} />
+        </Identified>
       </div>
     </div>
   );

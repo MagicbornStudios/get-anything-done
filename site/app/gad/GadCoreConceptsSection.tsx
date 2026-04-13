@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +10,15 @@ import { GAD_CORE_CONCEPTS } from "./gad-core-concepts";
 export function GadCoreConceptsSection() {
   return (
     <SiteSection tone="muted">
-      <SiteSectionHeading kicker="Core concepts" title="Three moving parts" preset="section" />
+      <Identified as="GadCoreConceptsHeading">
+        <SiteSectionHeading kicker="Core concepts" title="Three moving parts" preset="section" />
+      </Identified>
       <div className="mt-10 grid gap-5 md:grid-cols-2">
         {GAD_CORE_CONCEPTS.map((c) => {
           const Icon = c.icon;
           return (
-            <Card key={c.title} className="group">
+            <Identified key={c.title} as={`GadCoreConceptCard-${c.href.replace(/[^a-z0-9]+/gi, "-")}`}>
+            <Card className="group">
               <CardHeader>
                 <div className="mb-3 flex items-center justify-between">
                   <div className="inline-flex size-10 items-center justify-center rounded-xl border border-border/60 bg-background/40 text-accent">
@@ -36,6 +40,7 @@ export function GadCoreConceptsSection() {
                 </Button>
               </CardContent>
             </Card>
+            </Identified>
           );
         })}
       </div>

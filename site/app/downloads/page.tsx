@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import Templates from "@/components/landing/templates/Templates";
 
@@ -9,7 +10,9 @@ export const metadata = {
 export default function DownloadsPage() {
   return (
     <MarketingShell>
-      <Templates />
+      <Identified as="DownloadsTemplates">
+        <Templates />
+      </Identified>
     </MarketingShell>
   );
 }

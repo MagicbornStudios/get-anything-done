@@ -1,4 +1,5 @@
 import { CRITIQUES } from "./skeptic-shared";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import SkepticHero from "./SkepticHero";
 import SkepticCrossCuttingSection from "./SkepticCrossCuttingSection";
@@ -15,13 +16,23 @@ export const metadata = {
 export default function SkepticPage() {
   return (
     <MarketingShell>
-      <SkepticHero />
-      <SkepticCrossCuttingSection />
+      <Identified as="SkepticHero">
+        <SkepticHero />
+      </Identified>
+      <Identified as="SkepticCrossCuttingSection">
+        <SkepticCrossCuttingSection />
+      </Identified>
       {CRITIQUES.map((c) => (
-        <SkepticHypothesisCritiqueSection key={c.id} critique={c} />
+        <Identified key={c.id} as={`SkepticHypothesisCritiqueSection-${c.id}`}>
+          <SkepticHypothesisCritiqueSection critique={c} />
+        </Identified>
       ))}
-      <SkepticImprovementsSection />
-      <SkepticHowUsedSection />
+      <Identified as="SkepticImprovementsSection">
+        <SkepticImprovementsSection />
+      </Identified>
+      <Identified as="SkepticHowUsedSection">
+        <SkepticHowUsedSection />
+      </Identified>
     </MarketingShell>
   );
 }

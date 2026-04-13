@@ -6,6 +6,7 @@ import { ExperimentLogIntro } from "@/components/landing/experiment-log/Experime
 import { ExperimentLogPagination } from "@/components/landing/experiment-log/ExperimentLogPagination";
 import { ExperimentLogRoundCard } from "@/components/landing/experiment-log/ExperimentLogRoundCard";
 import { useExperimentLog } from "@/components/landing/experiment-log/use-experiment-log";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 
 export default function ExperimentLog() {
@@ -30,41 +31,53 @@ export default function ExperimentLog() {
 
   return (
     <SiteSection id="experiment-log" tone="muted" className="border-t border-border/60">
-      <ExperimentLogIntro />
+      <Identified as="ExperimentLogIntro">
+        <ExperimentLogIntro />
+      </Identified>
 
-      <ExperimentLogFilterBar
-        filteredSummaries={filteredSummaries}
-        activeRound={currentSummary?.round}
-        onSelectRoundIndex={setCurrentIndex}
-        projectFilter={projectFilter}
-        onProjectChange={setProjectFilter}
-        localHypothesisFilter={localHypothesisFilter}
-        onHypothesisChange={setLocalHypothesisFilter}
-        localSearchQuery={localSearchQuery}
-        onSearchChange={setLocalSearchQuery}
-        total={total}
-        globalRoundFilter={globalRoundFilter}
-        hasActiveFilters={hasActiveFilters}
-        onClearLocalFilters={clearLocalFilters}
-      />
+      <Identified as="ExperimentLogFilterBar">
+        <ExperimentLogFilterBar
+          filteredSummaries={filteredSummaries}
+          activeRound={currentSummary?.round}
+          onSelectRoundIndex={setCurrentIndex}
+          projectFilter={projectFilter}
+          onProjectChange={setProjectFilter}
+          localHypothesisFilter={localHypothesisFilter}
+          onHypothesisChange={setLocalHypothesisFilter}
+          localSearchQuery={localSearchQuery}
+          onSearchChange={setLocalSearchQuery}
+          total={total}
+          globalRoundFilter={globalRoundFilter}
+          hasActiveFilters={hasActiveFilters}
+          onClearLocalFilters={clearLocalFilters}
+        />
+      </Identified>
 
       {filteredSummaries.length > 0 && (
         <>
-          <ExperimentLogPagination
-            effectiveIndex={effectiveIndex}
-            filteredLength={filteredSummaries.length}
-            onPrev={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-            onNext={() =>
-              setCurrentIndex((i) => Math.min(filteredSummaries.length - 1, i + 1))
-            }
-          />
+          <Identified as="ExperimentLogPagination">
+            <ExperimentLogPagination
+              effectiveIndex={effectiveIndex}
+              filteredLength={filteredSummaries.length}
+              onPrev={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+              onNext={() =>
+                setCurrentIndex((i) => Math.min(filteredSummaries.length - 1, i + 1))
+              }
+            />
+          </Identified>
 
-          {currentSummary && <ExperimentLogRoundCard round={currentSummary} />}
+          {currentSummary && (
+            <Identified as="ExperimentLogRoundCard">
+              <ExperimentLogRoundCard round={currentSummary} />
+            </Identified>
+          )}
         </>
       )}
 
       {filteredSummaries.length === 0 && (
-        <ExperimentLogEmptyState onClearLocalFilters={clearLocalFilters} />
+        <Identified as="ExperimentLogEmptyState">
+          <ExperimentLogEmptyState onClearLocalFilters={clearLocalFilters} />
+        </Identified>
       )}
     </SiteSection>
   );

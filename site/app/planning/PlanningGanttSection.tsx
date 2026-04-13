@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { GanttChart, type GanttItem } from "@/components/charts/GanttChart";
 import type { PlanningPhase } from "@/lib/catalog.generated";
 import { ALL_TASKS } from "@/lib/eval-data";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 import { PlanningGanttSelectedPhasePanel } from "./PlanningGanttSelectedPhasePanel";
 import { PlanningGanttToolbar } from "./PlanningGanttToolbar";
@@ -61,31 +62,35 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
 
   return (
     <SiteSection>
-      <PlanningGanttToolbar
-        currentSprintNum={currentSprintNum}
-        totalSprints={totalSprints}
-        sprintSize={sprintSize}
-        onSprintSizeDelta={onSprintSizeDelta}
-        sprintOffset={sprintOffset}
-        phasesLength={phases.length}
-        onPrevSprint={prevSprint}
-        onNextSprint={nextSprint}
-      />
+      <Identified as="PlanningGanttToolbar">
+        <PlanningGanttToolbar
+          currentSprintNum={currentSprintNum}
+          totalSprints={totalSprints}
+          sprintSize={sprintSize}
+          onSprintSizeDelta={onSprintSizeDelta}
+          sprintOffset={sprintOffset}
+          phasesLength={phases.length}
+          onPrevSprint={prevSprint}
+          onNextSprint={nextSprint}
+        />
+      </Identified>
 
-      <p className="mt-2 text-sm text-muted-foreground">
+      <Identified as="PlanningGanttHint" tag="p" className="mt-2 text-sm text-muted-foreground">
         Click a phase for tasks. Hover for stats. Resize sprint window with +/- controls.
-      </p>
+      </Identified>
 
-      <div className="mt-6">
+      <Identified as="PlanningGanttChart" className="mt-6">
         <GanttChart
           items={items}
           columns={columns}
           onItemClick={(item) => setSelectedPhaseId(item.id === selectedPhaseId ? null : item.id)}
           selectedId={selectedPhaseId}
         />
-      </div>
+      </Identified>
 
-      <PlanningGanttSelectedPhasePanel selectedPhase={selectedPhase} selectedTasks={selectedTasks} />
+      <Identified as="PlanningGanttSelectedPhasePanel">
+        <PlanningGanttSelectedPhasePanel selectedPhase={selectedPhase} selectedTasks={selectedTasks} />
+      </Identified>
     </SiteSection>
   );
 }

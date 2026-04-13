@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell, SiteMetricCard, SiteSection } from "@/components/site";
 import { InsightsDataSourcesCard } from "@/app/insights/InsightsDataSourcesCard";
 import { InsightsPageIntro } from "@/app/insights/InsightsPageIntro";
@@ -16,17 +17,23 @@ export default function InsightsPage() {
   return (
     <MarketingShell>
       <SiteSection>
-        <InsightsPageIntro />
+        <Identified as="InsightsPageIntro">
+          <InsightsPageIntro />
+        </Identified>
 
-        <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {insights.map((q) => (
+        <Identified as="InsightsMetricGrid" tag="ul" className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {insights.map((q, i) => (
             <li key={q.label}>
-              <SiteMetricCard label={q.label} value={q.result} />
+              <Identified as={`InsightsMetricCard-${i}`}>
+                <SiteMetricCard label={q.label} value={q.result} />
+              </Identified>
             </li>
           ))}
-        </ul>
+        </Identified>
 
-        <InsightsDataSourcesCard sources={dataSources} />
+        <Identified as="InsightsDataSourcesCard">
+          <InsightsDataSourcesCard sources={dataSources} />
+        </Identified>
       </SiteSection>
     </MarketingShell>
   );

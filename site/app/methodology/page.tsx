@@ -1,4 +1,5 @@
 import { MethodologyAgentRuntimesSection } from "@/app/methodology/MethodologyAgentRuntimesSection";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { MethodologyCompositeSection } from "@/app/methodology/MethodologyCompositeSection";
 import { MethodologyDataPipelineSection } from "@/app/methodology/MethodologyDataPipelineSection";
@@ -23,17 +24,39 @@ export default function MethodologyPage() {
 
   return (
     <MarketingShell>
-      <MethodologyHero />
-      <MethodologyCompositeSection />
-      <MethodologyGateSection />
-      <MethodologyTraceSection />
-      <MethodologyDataPipelineSection />
-      <MethodologyAgentRuntimesSection />
-      <MethodologyWorkedExamplesSection worked={worked} />
-      <MethodologyLineageSection />
-      <MethodologyTemplateMatrixSection />
-      <MethodologyCliReviewSection />
-      <MethodologyOpenQuestionsSection />
+      <Identified as="MethodologyPage-Hero">
+        <MethodologyHero />
+      </Identified>
+      <Identified as="MethodologyPage-Composite">
+        <MethodologyCompositeSection />
+      </Identified>
+      <Identified as="MethodologyPage-Gate">
+        <MethodologyGateSection />
+      </Identified>
+      <Identified as="MethodologyPage-Trace">
+        <MethodologyTraceSection />
+      </Identified>
+      <Identified as="MethodologyPage-DataPipeline">
+        <MethodologyDataPipelineSection />
+      </Identified>
+      <Identified as="MethodologyPage-AgentRuntimes">
+        <MethodologyAgentRuntimesSection />
+      </Identified>
+      <Identified as="MethodologyPage-WorkedExamples">
+        <MethodologyWorkedExamplesSection worked={worked} />
+      </Identified>
+      <Identified as="MethodologyPage-Lineage">
+        <MethodologyLineageSection />
+      </Identified>
+      <Identified as="MethodologyPage-TemplateMatrix">
+        <MethodologyTemplateMatrixSection />
+      </Identified>
+      <Identified as="MethodologyPage-CliReview">
+        <MethodologyCliReviewSection />
+      </Identified>
+      <Identified as="MethodologyPage-OpenQuestions">
+        <MethodologyOpenQuestionsSection />
+      </Identified>
     </MarketingShell>
   );
 }

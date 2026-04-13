@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Identified } from "@/components/devid/Identified";
 import { SiteInlineMetric, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 type SkillsHeroSectionProps = {
@@ -16,17 +17,20 @@ export function SkillsHeroSection({
 }: SkillsHeroSectionProps) {
   return (
     <SiteSection>
-      <SiteSectionHeading
-        kicker="Skills"
-        as="h1"
-        preset="hero"
-        title={
-          <>
-            Every authored skill. <span className="gradient-text">With provenance + real usage.</span>
-          </>
-        }
-      />
-      <SiteProse className="mt-6">
+      <Identified as="SkillsHeroHeading">
+        <SiteSectionHeading
+          kicker="Skills"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Every authored skill. <span className="gradient-text">With provenance + real usage.</span>
+            </>
+          }
+        />
+      </Identified>
+      <Identified as="SkillsHeroProse">
+        <SiteProse className="mt-6">
         The GAD skill catalog, filterable by category, searchable, and cross-referenced against real attribution
         data from <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">.planning/TASK-REGISTRY.xml</code>. The
         Usage tab shows every skill that&apos;s been tagged on a completed task. The Agents tab aggregates by agent
@@ -47,15 +51,16 @@ export function SkillsHeroSection({
         </Link>
         .
       </SiteProse>
+      </Identified>
 
-      <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
+      <Identified as="SkillsHeroMetrics" className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
         <SiteInlineMetric label="Total skills" value={totalSkills.toString()} />
         <SiteInlineMetric label="Fundamental" value={categoryCount("fundamental").toString()} />
         <SiteInlineMetric label="Eval-authored" value={categoryCount("eval-authored").toString()} />
         <SiteInlineMetric label="Framework-inherited" value={categoryCount("framework-inherited").toString()} />
         <SiteInlineMetric label="Skills used" value={usageCount.toString()} />
         <SiteInlineMetric label="Agents tracked" value={agentsCount.toString()} />
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

@@ -5,6 +5,7 @@ import { ProjectMarketFilterBar } from "@/components/project-market/ProjectMarke
 import { ProjectMarketGrid } from "@/components/project-market/ProjectMarketGrid";
 import { ProjectMarketRuns } from "@/components/project-market/ProjectMarketRuns";
 import { useProjectMarket } from "@/components/project-market/use-project-market";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 
 export default function ProjectMarket() {
@@ -34,10 +35,13 @@ export default function ProjectMarket() {
 
   return (
     <>
-      <ProjectMarketHeader />
+      <Identified as="ProjectMarketHeader">
+        <ProjectMarketHeader />
+      </Identified>
 
       <SiteSection className="border-b-0" shellClassName="py-8">
-        <ProjectMarketFilterBar
+        <Identified as="ProjectMarketFilterBar">
+          <ProjectMarketFilterBar
           domainFilter={domainFilter}
           workflowFilter={workflowFilter}
           roundFilter={roundFilter}
@@ -56,20 +60,20 @@ export default function ProjectMarket() {
           onShowAllRoundsChange={setShowAllRounds}
           onClearAll={clearAllFilters}
         />
+        </Identified>
 
-        <div className="mt-8">
-          <ProjectMarketGrid
-            featured={featuredProjects}
-            other={otherProjects}
+        <Identified as="ProjectMarketGrid" className="mt-8">
+          <ProjectMarketGrid featured={featuredProjects} other={otherProjects} />
+        </Identified>
+
+        <Identified as="ProjectMarketRuns">
+          <ProjectMarketRuns
+            runs={filteredRuns}
+            selected={selected}
+            domainFilter={domainFilter}
+            onSelectRun={setSelectedRunKey}
           />
-        </div>
-
-        <ProjectMarketRuns
-          runs={filteredRuns}
-          selected={selected}
-          domainFilter={domainFilter}
-          onSelectRun={setSelectedRunKey}
-        />
+        </Identified>
       </SiteSection>
     </>
   );

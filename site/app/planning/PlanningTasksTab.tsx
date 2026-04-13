@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Identified } from "@/components/devid/Identified";
 import { Ref } from "@/components/refs/Ref";
 import { RichText } from "@/components/refs/RichText";
 import type { TaskRecord } from "@/lib/eval-data";
@@ -15,7 +16,7 @@ export function PlanningTasksTab({ allTasks, openTasks, doneTasks, topOpen }: Pl
 
   return (
     <>
-      <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
+      <Identified as="PlanningTasksTabStats" className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
         <span>
           <strong className="text-emerald-400">{doneTasks.length}</strong> done
         </span>
@@ -27,7 +28,7 @@ export function PlanningTasksTab({ allTasks, openTasks, doneTasks, topOpen }: Pl
         <span>
           <strong className="text-foreground">{allTasks.length}</strong> total
         </span>
-      </div>
+      </Identified>
       <div className="space-y-2">
         {topOpen.map((t) => (
           <div
@@ -35,6 +36,7 @@ export function PlanningTasksTab({ allTasks, openTasks, doneTasks, topOpen }: Pl
             id={t.id}
             className="flex scroll-mt-24 items-start gap-3 rounded-lg border border-border/50 bg-card/30 p-3"
           >
+            <Identified as={`PlanningTasksTabRow-${t.id}`} className="contents">
             <Ref id={t.id} />
             <div className="min-w-0 flex-1">
               <RichText text={t.goal} className="text-xs text-foreground line-clamp-3" />
@@ -42,6 +44,7 @@ export function PlanningTasksTab({ allTasks, openTasks, doneTasks, topOpen }: Pl
             <Badge variant={t.status === "in-progress" ? "default" : "outline"} className="shrink-0 text-[10px]">
               {t.status}
             </Badge>
+            </Identified>
           </div>
         ))}
         {openTasks.length > 40 && (

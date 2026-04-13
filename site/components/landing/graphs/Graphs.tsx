@@ -3,6 +3,7 @@ import { GraphsIntro } from "@/components/landing/graphs/GraphsIntro";
 import { GraphsProvenance } from "@/components/landing/graphs/GraphsProvenance";
 import { GraphsRunsBarChart } from "@/components/landing/graphs/GraphsRunsBarChart";
 import { barData, runsWithScores } from "@/components/landing/graphs/graphs-shared";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 
 /**
@@ -23,14 +24,22 @@ export default function Graphs() {
 
   return (
     <SiteSection id="graphs" className="border-t border-border/60">
-      <GraphsIntro />
+      <Identified as="GraphsIntro">
+        <GraphsIntro />
+      </Identified>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        <GraphsDivergenceScatter scatterData={scatterData} />
-        <GraphsRunsBarChart bars={bars} />
+        <Identified as="GraphsDivergenceScatter">
+          <GraphsDivergenceScatter scatterData={scatterData} />
+        </Identified>
+        <Identified as="GraphsRunsBarChart">
+          <GraphsRunsBarChart bars={bars} />
+        </Identified>
       </div>
 
-      <GraphsProvenance />
+      <Identified as="GraphsProvenance">
+        <GraphsProvenance />
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { PLAYABLE_INDEX } from "@/lib/eval-data";
 import { bareRuns } from "./freedom-bare-runs";
@@ -28,16 +29,26 @@ export default function FreedomHypothesisPage() {
 
   return (
     <MarketingShell>
-      <FreedomHeroSection
-        runs={runs}
-        playableCount={playable.length}
-        scoredCount={scoredCount}
-        latest={latest}
-      />
-      <FreedomScoresSection runs={runs} />
-      <FreedomBareMeansSection />
-      <FreedomSkepticSection />
-      <FreedomRelatedSection />
+      <Identified as="FreedomHeroSection">
+        <FreedomHeroSection
+          runs={runs}
+          playableCount={playable.length}
+          scoredCount={scoredCount}
+          latest={latest}
+        />
+      </Identified>
+      <Identified as="FreedomScoresSection">
+        <FreedomScoresSection runs={runs} />
+      </Identified>
+      <Identified as="FreedomBareMeansSection">
+        <FreedomBareMeansSection />
+      </Identified>
+      <Identified as="FreedomSkepticSection">
+        <FreedomSkepticSection />
+      </Identified>
+      <Identified as="FreedomRelatedSection">
+        <FreedomRelatedSection />
+      </Identified>
     </MarketingShell>
   );
 }

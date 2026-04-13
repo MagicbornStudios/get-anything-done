@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { ContentDrivenFramingSection } from "./ContentDrivenFramingSection";
 import { ContentDrivenHeroSection } from "./ContentDrivenHeroSection";
@@ -14,11 +15,21 @@ export const metadata = {
 export default function ContentDrivenPage() {
   return (
     <MarketingShell>
-      <ContentDrivenHeroSection />
-      <ContentDrivenMeasureSection />
-      <ContentDrivenFramingSection />
-      <ContentDrivenStatusSection />
-      <ContentDrivenRelatedSection />
+      <Identified as="ContentDrivenHeroSection">
+        <ContentDrivenHeroSection />
+      </Identified>
+      <Identified as="ContentDrivenMeasureSection">
+        <ContentDrivenMeasureSection />
+      </Identified>
+      <Identified as="ContentDrivenFramingSection">
+        <ContentDrivenFramingSection />
+      </Identified>
+      <Identified as="ContentDrivenStatusSection">
+        <ContentDrivenStatusSection />
+      </Identified>
+      <Identified as="ContentDrivenRelatedSection">
+        <ContentDrivenRelatedSection />
+      </Identified>
     </MarketingShell>
   );
 }

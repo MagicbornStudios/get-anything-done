@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { CheckCircle2, Plug, XCircle } from "lucide-react";
 import { AGENT_RUNTIMES } from "@/app/methodology/methodology-shared";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function MethodologyAgentRuntimesSection() {
   return (
     <SiteSection>
-      <SiteSectionHeading
-        icon={Plug}
-        kicker="Agent runtimes"
-        title="Which coding agents can produce trace v4 data"
-      />
-      <SiteProse size="md" className="mt-3">
+      <Identified as="MethodologyAgentRuntimesHeading">
+        <SiteSectionHeading
+          icon={Plug}
+          kicker="Agent runtimes"
+          title="Which coding agents can produce trace v4 data"
+        />
+        <SiteProse size="md" className="mt-3">
         Trace schema v4 (phase 25) needs to capture every tool call, skill invocation, and subagent
         spawn with inputs, outputs, and timestamps. The only reliable way to get that data is from
         inside the coding agent&apos;s runtime via hooks or callbacks. Agents without a hook runtime
@@ -21,9 +23,10 @@ export function MethodologyAgentRuntimesSection() {
           gad-53
         </Link>{" "}
         pins this.
-      </SiteProse>
+        </SiteProse>
+      </Identified>
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
+      <Identified as="MethodologyAgentRuntimesTable" className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -59,9 +62,9 @@ export function MethodologyAgentRuntimesSection() {
             ))}
           </tbody>
         </table>
-      </div>
+      </Identified>
 
-      <div className="mt-8 rounded-2xl border border-border/70 bg-card/40 p-6">
+      <Identified as="MethodologyAgentRuntimesMultiAgent" className="mt-8 rounded-2xl border border-border/70 bg-card/40 p-6">
         <p className="text-xs uppercase tracking-wider text-accent">
           Multi-agent support (decision gad-55)
         </p>
@@ -80,7 +83,7 @@ export function MethodologyAgentRuntimesSection() {
           to hook into. Phase 25 ships the Claude Code converter first; Codex and Aider converters are
           future sub-phases if and when we want to run cross-agent comparisons.
         </p>
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

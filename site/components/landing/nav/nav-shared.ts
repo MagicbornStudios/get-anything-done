@@ -34,8 +34,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Evaluation",
     links: [
       { href: "/methodology", label: "Methodology", note: "rubric, gates, rounds, open questions, CLI" },
-      { href: "/#graphs", label: "Graphs", note: "quality + pressure scatters" },
-      { href: "/data", label: "Data provenance", note: "every number's source" },
     ],
   },
   {
@@ -53,6 +51,11 @@ export const NAV_GROUPS: NavGroup[] = [
         links: [
           { href: "/planning", label: "Planning", note: "state, tasks, phases, decisions, candidates, proto-skills" },
           { href: "/requirements", label: "Requirements", note: "v5 + history" },
+          {
+            href: "/data",
+            label: "Local DB",
+            note: "generated site data index + field lineage (same catalog `gad data` targets)",
+          },
         ],
       },
       {

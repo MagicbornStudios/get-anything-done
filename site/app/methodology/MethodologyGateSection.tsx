@@ -1,11 +1,15 @@
 import { Gauge } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function MethodologyGateSection() {
   return (
     <SiteSection>
-      <SiteSectionHeading icon={Gauge} kicker="Gate logic" title="Gates override everything" />
-      <SiteProse size="md" className="mt-3">
+      <Identified as="MethodologyGateHeading">
+        <SiteSectionHeading icon={Gauge} kicker="Gate logic" title="Gates override everything" />
+      </Identified>
+      <Identified as="MethodologyGateProseGateLogic">
+        <SiteProse size="md" className="mt-3">
         Starting with requirements v2, some criteria are marked{" "}
         <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">gate=&quot;true&quot;</code>. If any
         gate fails,{" "}
@@ -13,16 +17,20 @@ export function MethodologyGateSection() {
         collapses to 0. This is how a run that &quot;ticks most boxes&quot; can still score near zero on
         the mechanical dimension — because one gate (e.g. G1 game loop softlocks) makes the rest
         meaningless.
-      </SiteProse>
-      <SiteProse size="md" className="mt-4">
+        </SiteProse>
+      </Identified>
+      <Identified as="MethodologyGateProseV1V3">
+        <SiteProse size="md" className="mt-4">
         v1 runs (pre-gates) show a{" "}
         <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">pre-gate requirements</code> badge
         on their per-run pages instead of a pass/fail because the concept didn&apos;t exist yet. v3
         introduced four explicit gates (game loop, spell crafting, UI quality); v4 added a fifth
         (pressure mechanics).
-      </SiteProse>
+        </SiteProse>
+      </Identified>
 
-      <h3 className="mt-12 text-xl font-semibold tracking-tight">Low-score caps (v3+)</h3>
+      <Identified as="MethodologyGateLowScoreCaps">
+        <h3 className="mt-12 text-xl font-semibold tracking-tight">Low-score caps (v3+)</h3>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
         Layered on top of the weighted sum to prevent a broken run from reaching respectable territory
         on time-efficiency alone.
@@ -54,7 +62,8 @@ export function MethodologyGateSection() {
             </tr>
           </tbody>
         </table>
-      </div>
+        </div>
+      </Identified>
     </SiteSection>
   );
 }

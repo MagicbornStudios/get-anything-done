@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell, SiteSection } from "@/components/site";
 
 export const metadata = {
@@ -22,7 +23,9 @@ export default function EvalGuidePage() {
   return (
     <MarketingShell>
       <SiteSection>
-        <div className="prose-content" dangerouslySetInnerHTML={{ __html: html }} />
+        <Identified as="EvalGuideProse" className="prose-content">
+          <div dangerouslySetInnerHTML={{ __html: html }} />
+        </Identified>
       </SiteSection>
     </MarketingShell>
   );

@@ -1,4 +1,5 @@
 import { LineageContextRotSection } from "@/app/lineage/LineageContextRotSection";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { LineageMeasurementSection } from "@/app/lineage/LineageMeasurementSection";
 import { LineagePageHero } from "@/app/lineage/LineagePageHero";
@@ -13,10 +14,18 @@ export const metadata = {
 export default function LineagePage() {
   return (
     <MarketingShell>
-      <LineagePageHero />
-      <LineageContextRotSection />
-      <LineagePredecessorsSection />
-      <LineageMeasurementSection />
+      <Identified as="LineagePageHero">
+        <LineagePageHero />
+      </Identified>
+      <Identified as="LineageContextRotSection">
+        <LineageContextRotSection />
+      </Identified>
+      <Identified as="LineagePredecessorsSection">
+        <LineagePredecessorsSection />
+      </Identified>
+      <Identified as="LineageMeasurementSection">
+        <LineageMeasurementSection />
+      </Identified>
     </MarketingShell>
   );
 }

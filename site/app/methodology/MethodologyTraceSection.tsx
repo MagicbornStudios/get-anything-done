@@ -2,25 +2,29 @@ import Link from "next/link";
 import { AlertTriangle, FileJson } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TRACE_FIELDS } from "@/app/methodology/methodology-shared";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function MethodologyTraceSection() {
   return (
     <SiteSection tone="muted">
-      <SiteSectionHeading
-        icon={FileJson}
-        kicker="Trace schema"
-        title="What&apos;s in TRACE.json (and what&apos;s missing)"
-      />
-      <SiteProse size="md" className="mt-3">
+      <Identified as="MethodologyTraceHeading">
+        <SiteSectionHeading
+          icon={FileJson}
+          kicker="Trace schema"
+          title="What&apos;s in TRACE.json (and what&apos;s missing)"
+        />
+        <SiteProse size="md" className="mt-3">
         Every eval run writes a{" "}
         <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">TRACE.json</code> sidecar next to
-        the run artifacts. The current schema is v3. Fields below describe what it contains today.
-      </SiteProse>
+        the run artifacts. The current schema is v3. Fields below describe what it         contains today.
+        </SiteProse>
+      </Identified>
 
       <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {TRACE_FIELDS.map((f) => (
-          <Card key={f.name}>
+          <Identified key={f.name} as={`MethodologyTraceFieldCard-${f.name}`}>
+            <Card>
             <CardHeader>
               <CardDescription className="font-mono text-[11px]">{f.name}</CardDescription>
               <CardTitle className="text-base">{f.title}</CardTitle>
@@ -29,10 +33,11 @@ export function MethodologyTraceSection() {
               <p className="text-sm leading-6 text-muted-foreground">{f.description}</p>
             </CardContent>
           </Card>
+          </Identified>
         ))}
       </div>
 
-      <div className="mt-10 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-6">
+      <Identified as="MethodologyTraceKnownGaps" className="mt-10 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-6">
         <div className="mb-3 flex items-center gap-2">
           <AlertTriangle size={16} className="text-amber-400" aria-hidden />
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
@@ -71,7 +76,7 @@ export function MethodologyTraceSection() {
             See the roadmap on /planning →
           </Link>
         </p>
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

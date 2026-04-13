@@ -7,6 +7,7 @@ import { HypothesisTracksDomainSelector } from "@/components/landing/hypothesis-
 import { HypothesisTracksIntro } from "@/components/landing/hypothesis-tracks/HypothesisTracksIntro";
 import { HypothesisTracksRelatedLinks } from "@/components/landing/hypothesis-tracks/HypothesisTracksRelatedLinks";
 import { buildTrackData } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 
 /**
@@ -46,28 +47,38 @@ export default function HypothesisTracksSection() {
 
   return (
     <SiteSection id="tracks" tone="muted" className="border-t border-border/60">
-      <HypothesisTracksIntro />
+      <Identified as="HypothesisTracksIntro">
+        <HypothesisTracksIntro />
+      </Identified>
 
-      <HypothesisTracksDomainSelector
-        selectedDomain={selectedDomain}
-        onSelectDomain={(domainId) => {
-          setSelectedDomain(domainId);
-          setActiveRound(null);
-          window.dispatchEvent(new CustomEvent("domain-filter", { detail: domainId }));
-        }}
-      />
+      <Identified as="HypothesisTracksDomainSelector">
+        <HypothesisTracksDomainSelector
+          selectedDomain={selectedDomain}
+          onSelectDomain={(domainId) => {
+            setSelectedDomain(domainId);
+            setActiveRound(null);
+            window.dispatchEvent(new CustomEvent("domain-filter", { detail: domainId }));
+          }}
+        />
+      </Identified>
 
-      <HypothesisTracksChartPanel
-        data={data}
-        onRoundClick={handleRoundClick}
-        activeRound={activeRound}
-      />
+      <Identified as="HypothesisTracksChartPanel">
+        <HypothesisTracksChartPanel
+          data={data}
+          onRoundClick={handleRoundClick}
+          activeRound={activeRound}
+        />
+      </Identified>
 
       {activeRound && (
-        <HypothesisTracksActiveRoundBar activeRound={activeRound} onClear={clearRoundFilter} />
+        <Identified as="HypothesisTracksActiveRoundBar">
+          <HypothesisTracksActiveRoundBar activeRound={activeRound} onClear={clearRoundFilter} />
+        </Identified>
       )}
 
-      <HypothesisTracksRelatedLinks />
+      <Identified as="HypothesisTracksRelatedLinks">
+        <HypothesisTracksRelatedLinks />
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,5 +1,6 @@
 import { AlertOctagon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Identified } from "@/components/devid/Identified";
 import { Ref } from "@/components/refs/Ref";
 import { SiteSection } from "@/components/site";
 import type { Critique } from "./skeptic-shared";
@@ -9,22 +10,25 @@ export default function SkepticHypothesisCritiqueSection({
 }: {
   critique: Critique;
 }) {
+  const pid = `SkepticCritique-${c.id}`;
   return (
     <SiteSection id={c.id} className="last:bg-background">
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <Ref id={c.ref} />
-        <Badge variant="outline">hypothesis</Badge>
-      </div>
-      <h2 className="max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">{c.hypothesis}</h2>
+      <Identified as={`${pid}-Title`}>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <Ref id={c.ref} />
+          <Badge variant="outline">hypothesis</Badge>
+        </div>
+        <h2 className="max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">{c.hypothesis}</h2>
+      </Identified>
 
-      <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+      <Identified as={`${pid}-Steelman`} className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
         <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
           Steelman
         </p>
         <p className="text-sm leading-6 text-foreground/90">{c.steelman}</p>
-      </div>
+      </Identified>
 
-      <div className="mt-4">
+      <Identified as={`${pid}-Problems`} className="mt-4">
         <p className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-rose-300">
           <AlertOctagon size={12} aria-hidden />
           Problems with the claim
@@ -40,9 +44,9 @@ export default function SkepticHypothesisCritiqueSection({
             </li>
           ))}
         </ul>
-      </div>
+      </Identified>
 
-      <div className="mt-4">
+      <Identified as={`${pid}-Alternatives`} className="mt-4">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
           Alternative explanations for the same data
         </p>
@@ -57,9 +61,9 @@ export default function SkepticHypothesisCritiqueSection({
             </li>
           ))}
         </ul>
-      </div>
+      </Identified>
 
-      <div className="mt-4">
+      <Identified as={`${pid}-Falsification`} className="mt-4">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-sky-300">
           What would falsify this
         </p>
@@ -74,14 +78,14 @@ export default function SkepticHypothesisCritiqueSection({
             </li>
           ))}
         </ul>
-      </div>
+      </Identified>
 
-      <div className="mt-6 rounded-xl border border-border/70 bg-card/40 p-4">
+      <Identified as={`${pid}-HonestStatus`} className="mt-6 rounded-xl border border-border/70 bg-card/40 p-4">
         <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Honest current status
         </p>
         <p className="text-sm leading-6 text-foreground/90">{c.honestStatus}</p>
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

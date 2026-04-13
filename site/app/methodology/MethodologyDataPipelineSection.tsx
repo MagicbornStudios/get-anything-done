@@ -2,27 +2,31 @@ import Link from "next/link";
 import { Database } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DATA_STAGES } from "@/app/methodology/methodology-shared";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function MethodologyDataPipelineSection() {
   return (
     <SiteSection>
-      <SiteSectionHeading
-        icon={Database}
-        kicker="Data production pipeline"
-        title="Raw → structured → derived → insight"
-      />
-      <SiteProse size="md" className="mt-3">
+      <Identified as="MethodologyDataPipelineHeading">
+        <SiteSectionHeading
+          icon={Database}
+          kicker="Data production pipeline"
+          title="Raw → structured → derived → insight"
+        />
+        <SiteProse size="md" className="mt-3">
         The eval framework&apos;s primary output is{" "}
         <strong className="text-foreground">structured data</strong>, not scores. Scores are one kind
         of derived number; the framework also produces rubrics, automated gate checks, derived metrics
         from trace events, and cross-run aggregates. The four stages below are how raw run artifacts
         become insights on this site.
-      </SiteProse>
+        </SiteProse>
+      </Identified>
 
       <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         {DATA_STAGES.map((stage) => (
-          <Card key={stage.stage}>
+          <Identified key={stage.stage} as={`MethodologyDataPipelineStage-${stage.stage}`}>
+            <Card>
             <CardHeader>
               <div className="mb-2 inline-flex size-8 items-center justify-center rounded-lg border border-border/60 bg-background/40 text-xs font-semibold text-accent">
                 {stage.stage}
@@ -36,10 +40,11 @@ export function MethodologyDataPipelineSection() {
               </p>
             </CardContent>
           </Card>
+          </Identified>
         ))}
       </div>
 
-      <div className="mt-10 rounded-2xl border border-border/70 bg-card/40 p-6">
+      <Identified as="MethodologyDataPipelineObjectiveSubjective" className="mt-10 rounded-2xl border border-border/70 bg-card/40 p-6">
         <p className="text-xs uppercase tracking-wider text-accent">Objective vs subjective today</p>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           Most of what we measure today is objective (counts, durations, coverage ratios, commit
@@ -65,7 +70,7 @@ export function MethodologyDataPipelineSection() {
           for the Anthropic skills guide + agentskills.io convention that governs how individual skills
           are authored and evaluated.
         </p>
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

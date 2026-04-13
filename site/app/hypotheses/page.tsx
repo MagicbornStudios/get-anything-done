@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { buildTrackData } from "./hypotheses-data";
 import { HypothesesTracksChartSection } from "./HypothesesTracksChartSection";
@@ -16,36 +17,42 @@ export default function HypothesesIndexPage() {
   return (
     <MarketingShell>
       <SiteSection>
-        <SiteSectionHeading
-          kicker="Hypotheses"
-          as="h1"
-          preset="hero"
-          title={
-            <>
-              Every research hypothesis, <span className="gradient-text">wired to its eval track.</span>
-            </>
-          }
-        />
-        <SiteProse className="mt-6">
-          Each card below is one hypothesis the project is tracking, the eval track that tests it, the latest evidence,
-          and a link to the dedicated page for deeper reading. Every hypothesis also has an entry on{" "}
-          <Link href="/skeptic" className="text-accent underline decoration-dotted">
-            /skeptic
-          </Link>{" "}
-          holding it to its strongest critique — read that before trusting any claim here.
-        </SiteProse>
-        <SiteProse size="sm" className="mt-4">
-          Labels: <strong className="text-foreground">preliminary observation</strong> means we have seen a pattern and
-          named it, but sample size is too small to call it a finding.{" "}
-          <strong className="text-foreground">discussing</strong> means we are still working out what the hypothesis even
-          claims. <strong className="text-foreground">operationalized</strong> means it has a concrete computable
-          definition. <strong className="text-foreground">not yet tested</strong> means no runs have produced data
-          against it.
-        </SiteProse>
+        <Identified as="HypothesesPageIntro">
+          <SiteSectionHeading
+            kicker="Hypotheses"
+            as="h1"
+            preset="hero"
+            title={
+              <>
+                Every research hypothesis, <span className="gradient-text">wired to its eval track.</span>
+              </>
+            }
+          />
+          <SiteProse className="mt-6">
+            Each card below is one hypothesis the project is tracking, the eval track that tests it, the latest evidence,
+            and a link to the dedicated page for deeper reading. Every hypothesis also has an entry on{" "}
+            <Link href="/skeptic" className="text-accent underline decoration-dotted">
+              /skeptic
+            </Link>{" "}
+            holding it to its strongest critique — read that before trusting any claim here.
+          </SiteProse>
+          <SiteProse size="sm" className="mt-4">
+            Labels: <strong className="text-foreground">preliminary observation</strong> means we have seen a pattern and
+            named it, but sample size is too small to call it a finding.{" "}
+            <strong className="text-foreground">discussing</strong> means we are still working out what the hypothesis even
+            claims. <strong className="text-foreground">operationalized</strong> means it has a concrete computable
+            definition. <strong className="text-foreground">not yet tested</strong> means no runs have produced data
+            against it.
+          </SiteProse>
+        </Identified>
       </SiteSection>
 
-      <HypothesesTracksChartSection data={chartData} />
-      <HypothesesListSection />
+      <Identified as="HypothesesTracksChartSection">
+        <HypothesesTracksChartSection data={chartData} />
+      </Identified>
+      <Identified as="HypothesesListSection">
+        <HypothesesListSection />
+      </Identified>
     </MarketingShell>
   );
 }

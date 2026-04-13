@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Terminal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Identified } from "@/components/devid/Identified";
 import { EVAL_PROJECTS, WORKFLOW_LABELS, type Workflow } from "@/lib/eval-data";
 import { SiteSection } from "@/components/site";
 
@@ -22,13 +23,15 @@ export function MethodologyCliReviewSection() {
 
   return (
     <SiteSection id="cli-review" className="border-t border-border/60">
-      <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Submit a review</h2>
-      <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-        Each project ships with a rubric. Score a run against it with the{" "}
-        <code className="rounded bg-background/60 px-1 py-0.5">gad eval review</code> CLI — the
-        weighted aggregate lands in that run&apos;s{" "}
-        <code className="rounded bg-background/60 px-1 py-0.5">TRACE.json</code> automatically.
-      </p>
+      <Identified as="MethodologyCliReviewIntro">
+        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Submit a review</h2>
+        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
+          Each project ships with a rubric. Score a run against it with the{" "}
+          <code className="rounded bg-background/60 px-1 py-0.5">gad eval review</code> CLI — the
+          weighted aggregate lands in that run&apos;s{" "}
+          <code className="rounded bg-background/60 px-1 py-0.5">TRACE.json</code> automatically.
+        </p>
+      </Identified>
 
       <div className="mt-8 space-y-6">
         {projects.map((project) => {
@@ -36,8 +39,9 @@ export function MethodologyCliReviewSection() {
           const workflow = (project.workflow ?? "gad") as Workflow;
           const exampleJson = buildExampleJson(rubric.dimensions);
           return (
-            <div
+            <Identified
               key={project.id}
+              as={`MethodologyCliReviewProject-${project.id}`}
               className="rounded-2xl border border-border/70 bg-card/40 p-5"
             >
               <div className="flex flex-wrap items-center gap-2">
@@ -68,7 +72,7 @@ export function MethodologyCliReviewSection() {
                 See every run for this project
                 <ArrowRight size={11} aria-hidden />
               </Link>
-            </div>
+            </Identified>
           );
         })}
       </div>

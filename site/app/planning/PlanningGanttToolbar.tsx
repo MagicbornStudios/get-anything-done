@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { Button } from "@/components/ui/button";
 import { SiteSectionHeading } from "@/components/site";
 
@@ -27,14 +28,16 @@ export function PlanningGanttToolbar({
 }: PlanningGanttToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <SiteSectionHeading
-        kicker="Phase timeline"
-        title={`Sprint ${currentSprintNum} of ${totalSprints}`}
-        preset="section"
-        className="min-w-0 flex-1"
-      />
+      <Identified as="PlanningGanttToolbarHeading" className="min-w-0 flex-1">
+        <SiteSectionHeading
+          kicker="Phase timeline"
+          title={`Sprint ${currentSprintNum} of ${totalSprints}`}
+          preset="section"
+          className="min-w-0 flex-1"
+        />
+      </Identified>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <Identified as="PlanningGanttToolbarControls" className="flex shrink-0 items-center gap-2">
         <div className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-card/40 px-1 py-0.5">
           <Button
             type="button"
@@ -81,7 +84,7 @@ export function PlanningGanttToolbar({
           Next
           <ChevronRight className="size-3" />
         </Button>
-      </div>
+      </Identified>
     </div>
   );
 }

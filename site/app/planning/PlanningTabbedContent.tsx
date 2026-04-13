@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PlanningState } from "@/lib/catalog.generated";
 import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
 import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/eval-data";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 import { PlanningSkillCandidatesTab, type SkillCandidate } from "@/app/planning/PlanningSkillCandidatesTab";
 import { PlanningSystemTab } from "@/app/planning/PlanningSystemTab";
@@ -51,7 +52,8 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
   return (
     <SiteSection>
       <Tabs defaultValue={defaultTab}>
-        <TabsList className="mb-6 flex-wrap">
+        <Identified as="PlanningTabsList" className="mb-6">
+          <TabsList className="flex-wrap">
           <TabsTrigger value="system">System</TabsTrigger>
           <TabsTrigger value="phases">
             Phases <span className="ml-1.5 tabular-nums text-muted-foreground">{allPhases.length}</span>
@@ -80,43 +82,62 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
             <span className="ml-1.5 tabular-nums text-muted-foreground">{protoSkills.length}</span>
           </TabsTrigger>
         </TabsList>
+        </Identified>
 
         <TabsContent value="system">
-          <PlanningSystemTab selfEval={selfEvalData.latest} />
+          <Identified as="PlanningTabSystem">
+            <PlanningSystemTab selfEval={selfEvalData.latest} />
+          </Identified>
         </TabsContent>
 
         <TabsContent value="phases">
-          <PlanningPhasesTab phases={state.phases} />
+          <Identified as="PlanningTabPhases">
+            <PlanningPhasesTab phases={state.phases} />
+          </Identified>
         </TabsContent>
 
         <TabsContent value="tasks">
-          <PlanningTasksTab allTasks={allTasks} openTasks={openTasks} doneTasks={doneTasks} topOpen={topOpen} />
+          <Identified as="PlanningTabTasks">
+            <PlanningTasksTab allTasks={allTasks} openTasks={openTasks} doneTasks={doneTasks} topOpen={topOpen} />
+          </Identified>
         </TabsContent>
 
         <TabsContent value="decisions">
-          <PlanningDecisionsTab allDecisions={allDecisions} />
+          <Identified as="PlanningTabDecisions">
+            <PlanningDecisionsTab allDecisions={allDecisions} />
+          </Identified>
         </TabsContent>
 
         <TabsContent value="roadmap">
-          <PlanningRoadmapTab phases={state.phases} allTasks={allTasks} />
+          <Identified as="PlanningTabRoadmap">
+            <PlanningRoadmapTab phases={state.phases} allTasks={allTasks} />
+          </Identified>
         </TabsContent>
 
         <TabsContent value="requirements">
-          <PlanningRequirementsTab versions={versions} />
+          <Identified as="PlanningTabRequirements">
+            <PlanningRequirementsTab versions={versions} />
+          </Identified>
         </TabsContent>
 
         {gadBugs.length > 0 && (
           <TabsContent value="bugs">
-            <PlanningBugsTab gadBugs={gadBugs} />
+            <Identified as="PlanningTabBugs">
+              <PlanningBugsTab gadBugs={gadBugs} />
+            </Identified>
           </TabsContent>
         )}
 
         <TabsContent value="skill-candidates">
-          <PlanningSkillCandidatesTab candidates={skillCandidates} />
+          <Identified as="PlanningTabSkillCandidates">
+            <PlanningSkillCandidatesTab candidates={skillCandidates} />
+          </Identified>
         </TabsContent>
 
         <TabsContent value="proto-skills">
-          <PlanningSkillCandidatesTab candidates={protoSkills} />
+          <Identified as="PlanningTabProtoSkills">
+            <PlanningSkillCandidatesTab candidates={protoSkills} />
+          </Identified>
         </TabsContent>
       </Tabs>
     </SiteSection>

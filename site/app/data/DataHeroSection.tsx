@@ -1,4 +1,5 @@
 import { Ref } from "@/components/refs/Ref";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import DataTrustCount from "./DataTrustCount";
 
@@ -11,18 +12,21 @@ export default function DataHeroSection({
 }) {
   return (
     <SiteSection>
-      <SiteSectionHeading
-        kicker="Data provenance"
-        as="h1"
-        preset="hero"
-        title={
-          <>
-            Every number, with a receipt.{" "}
-            <span className="gradient-text">Show me where this came from.</span>
-          </>
-        }
-      />
-      <SiteProse className="mt-6">
+      <Identified as="DataHeroHeading">
+        <SiteSectionHeading
+          kicker="Local DB"
+          as="h1"
+          preset="hero"
+          title={
+            <>
+              Every number, with a receipt.{" "}
+              <span className="gradient-text">Show me where this came from.</span>
+            </>
+          }
+        />
+      </Identified>
+      <Identified as="DataHeroProsePrimary">
+        <SiteProse className="mt-6">
         Research credibility lives or dies on whether you can trace a number back to its inputs. This
         page indexes every chart and stat on the site with: where the number comes from, how it&apos;s
         derived, and whether the source is{" "}
@@ -30,8 +34,10 @@ export default function DataHeroSection({
         <strong className="text-rose-300">self-reported</strong> (the agent put it in TRACE.json),{" "}
         <strong>human-rated</strong> (submitted via the rubric CLI), or{" "}
         <strong className="text-muted-foreground">authored</strong> (hand-curated content).
-      </SiteProse>
-      <SiteProse size="sm" className="mt-4">
+        </SiteProse>
+      </Identified>
+      <Identified as="DataHeroProseGaps">
+        <SiteProse size="sm" className="mt-4">
         Per <Ref id="gad-69" /> (programmatic-eval priority), every new metric must answer &quot;can
         this be collected programmatically?&quot; before &quot;how do we score it?&quot;. The push is
         to move self-report sources toward deterministic ones &mdash; the gaps are tracked in{" "}
@@ -44,9 +50,10 @@ export default function DataHeroSection({
           .planning/docs/GAPS.md
         </a>
         .
-      </SiteProse>
+        </SiteProse>
+      </Identified>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <Identified as="DataHeroTrustCounts" className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <DataTrustCount
           label="Deterministic"
           count={totals.deterministic ?? 0}
@@ -59,7 +66,7 @@ export default function DataHeroSection({
           count={totals["self-report"] ?? 0}
           tint="danger"
         />
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

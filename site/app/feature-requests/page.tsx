@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { MarketingShell, SiteSection } from "@/components/site";
 import featureRequestsData from "@/../data/feature-requests.json";
 import { FeatureRequestCard, type FeatureRequestRecord } from "./FeatureRequestCard";
@@ -13,14 +14,18 @@ export default function FeatureRequestsPage() {
 
   return (
     <MarketingShell>
-      <FeatureRequestsHeroSection />
+      <Identified as="FeatureRequestsHeroSection">
+        <FeatureRequestsHeroSection />
+      </Identified>
 
       <SiteSection tone="muted">
-        <div className="space-y-4">
+        <Identified as="FeatureRequestsList" className="space-y-4">
           {requests.map((req) => (
-            <FeatureRequestCard key={req.id} req={req} />
+            <Identified key={req.id} as={`FeatureRequestCard-${req.id}`}>
+              <FeatureRequestCard req={req} />
+            </Identified>
           ))}
-        </div>
+        </Identified>
       </SiteSection>
     </MarketingShell>
   );

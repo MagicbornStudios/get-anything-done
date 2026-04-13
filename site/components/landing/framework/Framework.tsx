@@ -1,16 +1,23 @@
 import { FrameworkIntro } from "@/components/landing/framework/FrameworkIntro";
 import { FrameworkScoreWeights } from "@/components/landing/framework/FrameworkScoreWeights";
 import { FrameworkWorkflowCards } from "@/components/landing/framework/FrameworkWorkflowCards";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 
 export default function Framework() {
   return (
     <SiteSection id="framework" className="border-t border-border/60">
-      <FrameworkIntro />
+      <Identified as="FrameworkIntro">
+        <FrameworkIntro />
+      </Identified>
 
-      <FrameworkWorkflowCards />
+      <Identified as="FrameworkWorkflowCards">
+        <FrameworkWorkflowCards />
+      </Identified>
 
-      <FrameworkScoreWeights />
+      <Identified as="FrameworkScoreWeights">
+        <FrameworkScoreWeights />
+      </Identified>
     </SiteSection>
   );
 }
