@@ -902,6 +902,14 @@
       <resolution>Deferred 2026-04-12. Workstreams are currently documented historically but `gad-tools workstream` is not implemented. This review must happen after naming cleanup so we evaluate the old design on its merits rather than through stale branding noise.</resolution>
       <keywords>workstreams,sdk,review,lineage,deferred</keywords>
     </task>
+    <task id="35-06" status="planned"><goal>Maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.</goal>
+      <resolution>Logged 2026-04-12. Upstream mirror refreshed to `c11ec0555451338c3ef666753ec2b24731d7a2c7` and review note captured in `.planning/notes/upstream-gsd-review-2026-04-12.md`. Keep the mirror current and review before implementation changes.</resolution>
+      <keywords>upstream-review,get-shit-done,tmp,security,sdk,workstreams</keywords>
+    </task>
+    <task id="35-07" status="planned"><goal>Rewrite GAD README to match the completeness and onboarding depth of upstream GSD’s README while preserving GAD’s actual runtime/install/canonical-source truth and avoiding stale command/runtime claims.</goal>
+      <resolution>Logged 2026-04-12 after reviewing upstream README.md. GAD should expand install, runtime matrix, troubleshooting, security, update guidance, and product framing to a similar level of detail, but using GAD’s GitHub-first executable + skills.sh distribution model.</resolution>
+      <keywords>readme,docs,onboarding,upstream-review</keywords>
+    </task>
   </phase>
   <phase id="39">
     <task id="39-01" type="site" status="done"><goal>Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.</goal>
