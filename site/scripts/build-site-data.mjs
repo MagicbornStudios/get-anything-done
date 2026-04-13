@@ -47,6 +47,21 @@ const __dirname = path.dirname(__filename);
 
 const SITE_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(SITE_ROOT, "..");
+
+// Phase 10: `gad site compile` can point the planning-data readers at an
+// external project root via GAD_PROJECT_ROOT. Everything ELSE (skills, agents,
+// evals, templates, SDK) still reads from REPO_ROOT — those are GAD framework
+// artifacts that don't change per project. Default: GAD's own root for
+// backwards-compat with the existing GAD landing site build.
+const PROJECT_ROOT = process.env.GAD_PROJECT_ROOT
+  ? path.resolve(process.env.GAD_PROJECT_ROOT)
+  : REPO_ROOT;
+const PROJECT_ID = process.env.GAD_PROJECT_ID
+  || (PROJECT_ROOT === REPO_ROOT ? "get-anything-done" : path.basename(PROJECT_ROOT));
+if (PROJECT_ROOT !== REPO_ROOT) {
+  console.log(`  [project-mode] reading planning data from ${PROJECT_ROOT} (id=${PROJECT_ID})`);
+}
+
 const SDK_DIR = path.join(REPO_ROOT, "sdk");
 const TEMPLATES_DIR = path.join(SDK_DIR, "templates");
 const SDK_SKILLS_DIR = path.join(SDK_DIR, "skills");
@@ -778,7 +793,8 @@ function scanCatalog() {
 
 function parseAllDecisions() {
   // Uses CLI lib/decisions-reader.cjs via consolidation (gad-126)
-  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  // PROJECT_ROOT respects GAD_PROJECT_ROOT env var (phase 10)
+  const root = { id: PROJECT_ID, path: PROJECT_ROOT, planningDir: ".planning" };
   const all = readDecisions(root, "", {});
   // Sort by numeric suffix on gad-NN so the newest appear first.
   all.sort((a, b) => {
@@ -792,7 +808,7 @@ function parseAllDecisions() {
 
 function parseAllPhases() {
   // Uses CLI lib/roadmap-reader.cjs via consolidation (gad-126)
-  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  const root = { id: PROJECT_ID, path: PROJECT_ROOT, planningDir: ".planning" };
   const phases = readPhases(root, "");
   // The CLI reader returns { id, title, goal, status, depends, description }
   // Map to the shape the site expects (add outcome from goal if available)
@@ -809,7 +825,7 @@ function parseAllPhases() {
 
 function parseAllTasks() {
   // Uses CLI lib/task-registry-reader.cjs via consolidation (gad-126)
-  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  const root = { id: PROJECT_ID, path: PROJECT_ROOT, planningDir: ".planning" };
   const tasks = readTasks(root, "", {});
   // Map to the shape the site expects
   const out = tasks.map((t) => ({
@@ -1203,8 +1219,8 @@ function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs,
 }
 
 function parsePlanningState() {
-  console.log("[2g/4] Parsing GAD planning state (STATE, TASKS, DECISIONS)");
-  const planningDir = path.join(REPO_ROOT, ".planning");
+  console.log(`[2g/4] Parsing planning state for ${PROJECT_ID} (STATE, TASKS, DECISIONS)`);
+  const planningDir = path.join(PROJECT_ROOT, ".planning");
   const state = {
     currentPhase: null,
     milestone: null,
@@ -1232,7 +1248,7 @@ function parsePlanningState() {
   }
 
   // ROADMAP.xml — high-level phase list (uses CLI lib/roadmap-reader.cjs, gad-126)
-  const root = { id: "get-anything-done", path: REPO_ROOT, planningDir: ".planning" };
+  const root = { id: PROJECT_ID, path: PROJECT_ROOT, planningDir: ".planning" };
   const phases = readPhases(root, "");
   for (const p of phases) {
     state.phases.push({
@@ -2303,6 +2319,15 @@ function main() {
  *   STATIC  (hand-curated):    site/data/*.json, data/*.json (repo-level pseudo-db)
  */
 function computeSelfEval() {
+  // Phase 10: self-eval metrics (framework overhead, loop compliance, skill
+  // candidates from pressure) are GAD-framework-specific — they read .gad-log/
+  // traces, evals/, and GAD's own skill candidates. When compiling for an
+  // external project via GAD_PROJECT_ROOT, skip self-eval entirely since the
+  // metrics don't apply and the paths wouldn't resolve to anything meaningful.
+  if (process.env.GAD_PROJECT_ROOT) {
+    console.log("  [self-eval] skipped (GAD_PROJECT_ROOT set — framework metrics only apply to GAD itself)");
+    return;
+  }
   try {
     execSync("node scripts/compute-self-eval.mjs", { cwd: SITE_ROOT, stdio: "inherit" });
   } catch (err) {

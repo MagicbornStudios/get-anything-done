@@ -1521,6 +1521,106 @@ const docsCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// site subcommands (phase 10) — compile project planning into deployable HTML
+// ---------------------------------------------------------------------------
+
+const siteCompileCmd = defineCommand({
+  meta: {
+    name: 'compile',
+    description: 'Compile a GAD project\'s planning data into a static deployable site (extracts /planning from GAD site build)',
+  },
+  args: {
+    root: {
+      type: 'string',
+      description: 'Project root (dir containing .planning/). Defaults to cwd.',
+      default: '',
+    },
+    projectid: {
+      type: 'string',
+      description: 'Project id used for display + data lookups. Defaults to root dir name.',
+      default: '',
+    },
+    out: {
+      type: 'string',
+      description: 'Output directory for compiled static site. Defaults to <root>/dist/site.',
+      default: '',
+    },
+  },
+  run({ args }) {
+    const { compileSite } = require('../lib/site-compile.cjs');
+    const projectRoot = path.resolve(args.root || process.cwd());
+    const projectId = args.projectid || path.basename(projectRoot);
+    const outDir = path.resolve(args.out || path.join(projectRoot, 'dist', 'site'));
+    try {
+      compileSite({ projectRoot, projectId, outDir });
+    } catch (err) {
+      outputError(err.message);
+    }
+  },
+});
+
+const siteServeCmd = defineCommand({
+  meta: {
+    name: 'serve',
+    description: 'Compile then locally serve a GAD project\'s planning site (no dev hot reload)',
+  },
+  args: {
+    root: {
+      type: 'string',
+      description: 'Project root (dir containing .planning/). Defaults to cwd.',
+      default: '',
+    },
+    projectid: {
+      type: 'string',
+      description: 'Project id. Defaults to root dir name.',
+      default: '',
+    },
+    out: {
+      type: 'string',
+      description: 'Output directory. Defaults to <root>/dist/site.',
+      default: '',
+    },
+    port: {
+      type: 'string',
+      description: 'HTTP port. Defaults to 3456.',
+      default: '3456',
+    },
+    host: {
+      type: 'string',
+      description: 'Bind host. Defaults to 127.0.0.1.',
+      default: '127.0.0.1',
+    },
+    skipCompile: {
+      type: 'boolean',
+      description: 'Skip compile and serve existing output dir as-is.',
+      default: false,
+    },
+  },
+  run({ args }) {
+    const { compileSite, serveStatic } = require('../lib/site-compile.cjs');
+    const projectRoot = path.resolve(args.root || process.cwd());
+    const projectId = args.projectid || path.basename(projectRoot);
+    const outDir = path.resolve(args.out || path.join(projectRoot, 'dist', 'site'));
+    const port = parseInt(args.port, 10) || 3456;
+    // citty's kebab→camel conversion isn't consistent across versions; accept both.
+    const skipCompile = args.skipCompile === true || args['skip-compile'] === true;
+    try {
+      if (!skipCompile) {
+        compileSite({ projectRoot, projectId, outDir });
+      }
+      serveStatic({ rootDir: outDir, port, host: args.host });
+    } catch (err) {
+      outputError(err.message);
+    }
+  },
+});
+
+const siteCmd = defineCommand({
+  meta: { name: 'site', description: 'Compile and serve a GAD project\'s planning site (phase 10)' },
+  subCommands: { compile: siteCompileCmd, serve: siteServeCmd },
+});
+
+// ---------------------------------------------------------------------------
 // eval subcommands
 // ---------------------------------------------------------------------------
 
@@ -7461,6 +7561,7 @@ const main = defineCommand({
     refs: refsCmd,
     pack: packCmd,
     docs: docsCmd,
+    site: siteCmd,
     'self-eval': selfEvalCmd,
     data: dataCmd,
     eval: evalCmd,
