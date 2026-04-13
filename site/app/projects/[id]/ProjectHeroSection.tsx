@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Download, ExternalLink, Package } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,18 +26,20 @@ export function ProjectHeroSection({
 }) {
   return (
     <SiteSection>
-        <Button
-          variant="ghost"
-          className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
-          asChild
-        >
-          <Link href="/#projects">
-            <ArrowLeft size={14} aria-hidden />
-            Back to projects
-          </Link>
-        </Button>
+        <Identified as="ProjectHeroBackLink">
+          <Button
+            variant="ghost"
+            className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+            asChild
+          >
+            <Link href="/#projects">
+              <ArrowLeft size={14} aria-hidden />
+              Back to projects
+            </Link>
+          </Button>
+        </Identified>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <Identified as="ProjectHeroBadges" className="flex flex-wrap items-center gap-3">
           <Badge variant="default">eval project</Badge>
           {project.domain && (
             <Badge variant="secondary">{project.domain}</Badge>
@@ -58,17 +61,21 @@ export function ProjectHeroSection({
                 : `${project.baseline.project ?? "?"}/${project.baseline.version ?? "?"}`}
             </Badge>
           )}
-        </div>
+        </Identified>
 
-        <h1 className="mt-5 text-4xl font-semibold tracking-tight md:text-5xl">
-          {PROJECT_LABELS[project.id] ?? project.name}
-        </h1>
-        <p className="mt-2 font-mono text-sm text-muted-foreground">{project.id}</p>
+        <Identified as="ProjectHeroTitleBlock">
+          <h1 className="mt-5 text-4xl font-semibold tracking-tight md:text-5xl">
+            {PROJECT_LABELS[project.id] ?? project.name}
+          </h1>
+          <p className="mt-2 font-mono text-sm text-muted-foreground">{project.id}</p>
+        </Identified>
         {project.description && (
-          <p className="mt-5 max-w-3xl text-lg leading-8 text-foreground">{project.description}</p>
+          <Identified as="ProjectHeroDescription" className="mt-5 max-w-3xl text-lg leading-8 text-foreground" tag="p">
+            {project.description}
+          </Identified>
         )}
 
-        <div className="mt-10 flex flex-wrap gap-3">
+        <Identified as="ProjectHeroActions" className="mt-10 flex flex-wrap gap-3">
           {planning && (
             <Button
               size="sm"
@@ -105,7 +112,7 @@ export function ProjectHeroSection({
               Source on GitHub
             </a>
           </Button>
-        </div>
+        </Identified>
     </SiteSection>
   );
 }

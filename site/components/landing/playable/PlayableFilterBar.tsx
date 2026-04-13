@@ -1,5 +1,6 @@
 "use client";
 
+import { Identified } from "@/components/devid/Identified";
 import { Filter, Search, X } from "lucide-react";
 import {
   PROJECT_FAMILIES,
@@ -61,7 +62,7 @@ export function PlayableFilterBar({
 }: Props) {
   return (
     <div className="mt-8 rounded-xl border border-border/60 bg-card/30 p-4">
-      <div className="flex flex-wrap items-center gap-3">
+      <Identified as="PlayableFilterBarControls" className="flex flex-wrap items-center gap-3">
         <Select
           value={roundFilter ?? ALL_ROUND}
           onValueChange={(v) => {
@@ -211,9 +212,9 @@ export function PlayableFilterBar({
             </Button>
           )}
         </div>
-      </div>
+      </Identified>
 
-      <div className="mt-3 flex items-center justify-between">
+      <Identified as="PlayableFilterBarSummary" className="mt-3 flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           Showing <span className="font-semibold text-foreground tabular-nums">{runsLength}</span>{" "}
           of <span className="font-semibold text-foreground tabular-nums">{allRunsLength}</span>{" "}
@@ -248,7 +249,7 @@ export function PlayableFilterBar({
             Clear all filters
           </Button>
         )}
-      </div>
+      </Identified>
     </div>
   );
 }
