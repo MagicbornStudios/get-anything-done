@@ -19,13 +19,23 @@
  * until toggled on.
  */
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 
 interface DevIdContextValue {
   enabled: boolean;
   toggle: () => void;
   highlightCid: string | null;
   setHighlightCid: (cid: string | null) => void;
+  /** Short-lived ring on a component (e.g. list row → locate + copy) without sticky highlight. */
+  flashCid: string | null;
+  flashComponent: (cid: string) => void;
 }
 
 const DevIdContext = createContext<DevIdContextValue>({
@@ -33,11 +43,33 @@ const DevIdContext = createContext<DevIdContextValue>({
   toggle: () => {},
   highlightCid: null,
   setHighlightCid: () => {},
+  flashCid: null,
+  flashComponent: () => {},
 });
 
 export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const [enabled, setEnabled] = useState(false);
   const [highlightCid, setHighlightCid] = useState<string | null>(null);
+  const [flashCid, setFlashCid] = useState<string | null>(null);
+  const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flashComponent = useCallback((cid: string) => {
+    if (flashTimeoutRef.current) {
+      clearTimeout(flashTimeoutRef.current);
+    }
+    setFlashCid(cid);
+    flashTimeoutRef.current = setTimeout(() => {
+      setFlashCid((cur) => (cur === cid ? null : cur));
+      flashTimeoutRef.current = null;
+    }, 700);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    },
+    [],
+  );
 
   // Hydrate from env + localStorage on mount
   useEffect(() => {
@@ -64,6 +96,11 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
         toggle();
       } else if (e.key === "Escape") {
         setHighlightCid(null);
+        setFlashCid(null);
+        if (flashTimeoutRef.current) {
+          clearTimeout(flashTimeoutRef.current);
+          flashTimeoutRef.current = null;
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -71,7 +108,16 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   }, [toggle]);
 
   return (
-    <DevIdContext.Provider value={{ enabled, toggle, highlightCid, setHighlightCid }}>
+    <DevIdContext.Provider
+      value={{
+        enabled,
+        toggle,
+        highlightCid,
+        setHighlightCid,
+        flashCid,
+        flashComponent,
+      }}
+    >
       {children}
       {enabled && <DevIdStatusBadge />}
     </DevIdContext.Provider>

@@ -40,7 +40,7 @@ export function Identified({
 }: IdentifiedProps) {
   const rid = useId();
   const cid = `${slugify(as)}-${rid.replace(/[^a-z0-9]/gi, "")}`;
-  const { enabled, highlightCid, setHighlightCid } = useDevId();
+  const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
   const registry = useSectionRegistry();
   const register = registry?.register;
   const maxDepth = registry?.maxDepth;
@@ -52,6 +52,9 @@ export function Identified({
   }, [register, maxDepth, cid, as, depth]);
 
   const isHighlighted = highlightCid === cid;
+  const isFlash = flashCid === cid;
+  const showPersistentRing = enabled && isHighlighted;
+  const showFlashRing = enabled && isFlash && !isHighlighted;
 
   const handleClick = enabled
     ? (e: React.MouseEvent) => {
@@ -70,8 +73,11 @@ export function Identified({
       onClick: handleClick,
       className: [
         className,
-        enabled && isHighlighted
+        showPersistentRing
           ? "outline outline-2 outline-offset-2 outline-accent"
+          : "",
+        showFlashRing
+          ? "outline outline-2 outline-offset-2 outline-emerald-400 transition-[outline-color] duration-200"
           : "",
       ]
         .filter(Boolean)
