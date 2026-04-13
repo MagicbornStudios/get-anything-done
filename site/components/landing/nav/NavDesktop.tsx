@@ -13,6 +13,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Identified } from "@/components/devid/Identified";
 import {
   NAV_GROUPS,
   NAV_TOP_LEVEL,
@@ -20,25 +21,29 @@ import {
   type NavLink,
 } from "@/components/landing/nav/nav-shared";
 
+function navGroupSlug(label: string) {
+  return label.replace(/[^a-zA-Z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 export function NavDesktop() {
   return (
-    <nav className="hidden items-center gap-1 text-sm text-muted-foreground md:flex">
+    <Identified
+      as="NavDesktopRoot"
+      tag="nav"
+      className="hidden items-center gap-1 text-sm text-muted-foreground md:flex"
+    >
       {NAV_GROUPS.map((group) => (
         <NavDesktopGroup key={group.label} group={group} />
       ))}
 
       {NAV_TOP_LEVEL.map((link) => (
-        <Button
-          key={`${link.href}-${link.label}`}
-          variant="outline"
-          size="sm"
-          className={link.tint}
-          asChild
-        >
-          <Link href={link.href}>{link.label}</Link>
-        </Button>
+        <Identified key={`${link.href}-${link.label}`} as={`NavDesktopHighlight-${navGroupSlug(link.label)}`}>
+          <Button variant="outline" size="sm" className={link.tint} asChild>
+            <Link href={link.href}>{link.label}</Link>
+          </Button>
+        </Identified>
       ))}
-    </nav>
+    </Identified>
   );
 }
 
@@ -68,6 +73,7 @@ function NavDesktopGroup({ group }: { group: NavGroup }) {
   );
 
   return (
+    <Identified as={`NavDesktopDropdown-${navGroupSlug(group.label)}`}>
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
@@ -105,5 +111,6 @@ function NavDesktopGroup({ group }: { group: NavGroup }) {
             ))}
       </DropdownMenuContent>
     </DropdownMenu>
+    </Identified>
   );
 }

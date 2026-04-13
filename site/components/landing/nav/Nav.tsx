@@ -18,9 +18,7 @@ export default function Nav() {
           <NavBrand />
         </Identified>
 
-        <Identified as="NavDesktop">
-          <NavDesktop />
-        </Identified>
+        <NavDesktop />
 
         <Identified as="NavActions">
           <NavActions

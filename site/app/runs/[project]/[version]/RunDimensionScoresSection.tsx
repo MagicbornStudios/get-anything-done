@@ -1,4 +1,5 @@
 import type { EvalRunRecord } from "@/lib/eval-data";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { formatNum, type RunScores } from "@/app/runs/[project]/[version]/run-detail-shared";
 import { RunScoreBar } from "@/app/runs/[project]/[version]/RunScoreBar";
@@ -12,14 +13,16 @@ export function RunDimensionScoresSection({
 }) {
   return (
     <SiteSection>
-      <SiteSectionHeading kicker="Dimension scores" title="Where the composite came from" />
-      <SiteProse size="md" className="mt-3 max-w-2xl">
-        Each dimension is scored 0.0 – 1.0 and combined using the weights in{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">evals/{run.project}/gad.json</code>
-        . Human review dominates on purpose — process metrics alone can&apos;t rescue a broken run.
-      </SiteProse>
+      <Identified as="RunDimensionScoresHeader">
+        <SiteSectionHeading kicker="Dimension scores" title="Where the composite came from" />
+        <SiteProse size="md" className="mt-3 max-w-2xl">
+          Each dimension is scored 0.0 – 1.0 and combined using the weights in{" "}
+          <code className="rounded bg-card/60 px-1.5 py-0.5 text-sm">evals/{run.project}/gad.json</code>
+          . Human review dominates on purpose — process metrics alone can&apos;t rescue a broken run.
+        </SiteProse>
+      </Identified>
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
+      <Identified as="RunDimensionScoresTable" className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
@@ -30,8 +33,10 @@ export function RunDimensionScoresSection({
             </thead>
             <tbody>
               {dimensionScores.map((row, idx) => (
-                <tr
+                <Identified
                   key={row.key}
+                  as={`RunDimensionScoreRow-${String(row.key)}`}
+                  tag="tr"
                   className={idx % 2 === 0 ? "bg-transparent" : "bg-background/30"}
                 >
                   <td className="px-5 py-3 font-medium text-foreground">{row.label}</td>
@@ -41,11 +46,11 @@ export function RunDimensionScoresSection({
                       <RunScoreBar value={row.value ?? 0} />
                     </div>
                   </td>
-                </tr>
+                </Identified>
               ))}
             </tbody>
           </table>
-        </div>
+      </Identified>
     </SiteSection>
   );
 }

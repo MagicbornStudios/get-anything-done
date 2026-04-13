@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Github } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { Button } from "@/components/ui/button";
 import {
   NAV_GROUPS,
@@ -11,6 +12,10 @@ import {
 type Props = {
   onNavigate: () => void;
 };
+
+function mobileNavSlug(label: string) {
+  return label.replace(/[^a-zA-Z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
 function MobileNavLink({ link, prefix, onNavigate }: { link: NavLink; prefix: string; onNavigate: () => void }) {
   return (
@@ -33,9 +38,9 @@ function MobileNavLink({ link, prefix, onNavigate }: { link: NavLink; prefix: st
 
 export function NavMobileMenu({ onNavigate }: Props) {
   return (
-    <div className="flex max-h-[85vh] flex-col overflow-y-auto px-6 pb-8 pt-4">
+    <Identified as="NavMobileMenuScroll" className="flex max-h-[85vh] flex-col overflow-y-auto px-6 pb-8 pt-4">
       {NAV_GROUPS.map((group) => (
-        <div key={group.label} className="mb-6 last:mb-0">
+        <Identified key={group.label} as={`NavMobileGroup-${mobileNavSlug(group.label)}`} className="mb-6 last:mb-0">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {group.label}
           </p>
@@ -71,9 +76,9 @@ export function NavMobileMenu({ onNavigate }: Props) {
               ))}
             </div>
           )}
-        </div>
+        </Identified>
       ))}
-      <div className="mb-4 space-y-2">
+      <Identified as="NavMobileHighlights" className="mb-4 space-y-2">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Highlights
         </p>
@@ -89,13 +94,15 @@ export function NavMobileMenu({ onNavigate }: Props) {
             </Link>
           </Button>
         ))}
-      </div>
-      <Button variant="outline" size="sm" className="mt-2 gap-2 rounded-full" asChild>
-        <a href={NAV_GITHUB_HREF} rel="noopener noreferrer" target="_blank" onClick={onNavigate}>
-          <Github className="size-3.5" aria-hidden />
-          GitHub
-        </a>
-      </Button>
-    </div>
+      </Identified>
+      <Identified as="NavMobileGithub">
+        <Button variant="outline" size="sm" className="mt-2 gap-2 rounded-full" asChild>
+          <a href={NAV_GITHUB_HREF} rel="noopener noreferrer" target="_blank" onClick={onNavigate}>
+            <Github className="size-3.5" aria-hidden />
+            GitHub
+          </a>
+        </Button>
+      </Identified>
+    </Identified>
   );
 }
