@@ -1,46 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>41</current-phase>
+  <current-phase>42</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 38 shipped (2026-04-12): skill candidates auto-drafted from high-pressure phases.
-Phase 35 runtime telemetry foundation shipped (2026-04-12): trace schema v5 now stamps runtime identity into raw hook events, CLI logs, and TRACE scaffolds for Claude Code vs Codex attribution.
-Canonical repo-root skills/ source shipped (2026-04-12): command-backed gad-* skills and workspace skills now compile from one tree, with runtime install/transpilation sourced from skills/.
-Phase 35-03 shipped (2026-04-12): /planning, per-run eval pages, and landing/playable panels now surface runtime attribution plus eval timing metadata. `gad eval run` also auto-ensures runtime installs for supported agents before scaffolding new runs.
-Phase 41 shipped (2026-04-13): `gad snapshot` now supports scoped `--phaseid/--taskid/--agentid` bootstraps with auto-registered agent lanes, active-assignment awareness, and hard depth enforcement. `gad tasks claim|release|active` manage live concurrent task ownership through TASK-REGISTRY.xml plus `.planning/.gad-agent-lanes.json`, the query SDK is live under `sdk/src/query/`, and preserved eval/site artifacts now carry first-class `agent_lineage`.
+  <next-action>Phase 42 SHIPPED 2026-04-13 (8 of 9 punch list items). Evolution loop is live end-to-end: candidate → proto-skill → skill pipeline with gad-quick-skill (dot-agent wrapper) drafting and gad-evolution-validator (advisory) checking each draft. Full `gad evolution status|validate|promote|discard` CLI plus the skills infrastructure. Smoke-tested against a real candidate (phase-14-eval-framework-escape-the-dungeon-tracin): drafter wrote a proto-skill, validator caught real issues, status distinguished stages, discard cleanly removed the proto-skill. Pipeline works.
 
-=== SHIPPED ===
-- Restored shared model-profile resolution with default off semantics and workflow model emission in gad-tools init
-- Claude SDK sessions now use live-safe Claude aliases (sonnet / haiku / opus) instead of stale frozen model IDs
-- Added an opt-in live integration test for real model switching plus one-shot manual verification via SessionInit events
-- compute-self-eval.mjs now auto-drafts SKILL.md candidates for every high-pressure phase
-- 12 candidates landed in skills/candidates/ (phase-10, 12, 13, 14, 14.5, 17, 18, 20, 21, 22, 30, 34)
-- Candidates have status: candidate, category: System, origin: auto-drafted in frontmatter
-- Canonical skills now live at repo-root skills/ with COMMAND.md + skill.json for command-backed gad-* skills
-- gad install all --claude/--codex now installs from canonical skills/ and transpiles into runtime-native layouts
-- build-site-data.mjs, release support, and release-surface gating now read skills/ as the authored source of truth
-- gad-trace-hook now emits runtime metadata on each event; gad CLI logs now stamp runtime identity; TRACE scaffolds/from-log preserve runtime_identity
-- `gad snapshot` now returns scope/agent/assignment context and acts as the normal lane bootstrap handshake
-- `gad tasks claim`, `gad tasks release`, and `gad tasks active` are live, backed by `.planning/.gad-agent-lanes.json`
+The evolutionary domain vocabulary is LOCKED (decision gad-151): species / generation / brood / evolution / DNA / spawn. Projects remain the top-level marketable unit; species live inside projects. All user-facing copy must use these terms going forward. Findings doc captures the full experimental writeup that drove the architecture decisions (evals/FINDINGS-2026-04-13-evolution-loop-experiment.md).
 
-=== DECISIONS ===
-GAD-D-144: Skill candidates quarantine and review workflow
-GAD-D-146: Claude-facing model profiles use aliases and stay off by default
-GAD-D-149: `gad snapshot` is the normal agent-lane bootstrap handshake
-GAD-D-150: Agent lane depth is capped at one direct child level
+Phase 43 (domain rename + project/species schema unification) is the next planned phase. Phase 44 (Unity-Asset-Store-style project marketplace) follows. Phase 45 (full site rebrand around the evolutionary vocabulary) closes the arc — explicitly confirmed by the user as a first-class deliverable, not a parked idea.
+
+=== SHIPPED (phase 42 batch, 2026-04-13) ===
+- lib/evolution-validator.cjs — advisory checker engine, writes VALIDATION.md
+- bin/gad.cjs — new `evolution` subcommand with status/validate/promote/discard
+- sdk/skills/gad-quick-skill/SKILL.md — universal wrapper around dot-agent's create-skill
+- sdk/skills/gad-evolution-evolve/SKILL.md — orchestrator for the 3-stage pipeline
+- sdk/skills/gad-evolution-validator/SKILL.md — advisory validator skill
+- site/scripts/compute-self-eval.mjs — emits raw CANDIDATE.md instead of SKILL.md stub
+- skills/candidates/ — 14 regenerated in new CANDIDATE.md format
+- skills/proto-skills/ — new directory (stage 2 of the pipeline)
+- site/app/planning/ — Proto-skills tab added next to Candidates tab
+- site/components/landing/nav/nav-shared.ts — System group uses nested subGroups
+- site/components/landing/nav/NavDesktop.tsx — DropdownMenuSub for nested rendering
+- site/components/landing/nav/NavMobileMenu.tsx — inline nested labels on mobile
+- site/app/findings/page.tsx — restored /findings route for framework-level findings
+- evals/FINDINGS-2026-04-13-evolution-loop-experiment.md — the experiment writeup
+
+=== DECISIONS (phase 42 batch) ===
+GAD-D-151: Evolutionary domain vocabulary — species/generation/brood/evolution/DNA/spawn
+GAD-D-152: Two-stage evolution pipeline — candidate → proto-skill → skill
+GAD-D-153: Raw candidate input beats curated INTENT — curator is a filter
+GAD-D-154: Two-tier skill creators — gad-quick-skill (default) and gad-skill-creator (high-stakes)
+GAD-D-155: Validator is advisory, not blocking
+GAD-D-156: Evolutions gate on zero pending proto-skills (human review gate)
+GAD-D-157: System nav uses four submenus (Internals/Catalog/Reference/Engage)
+GAD-D-158: Phase 45 rebrand is confirmed direction
+GAD-D-159: Magicborn per-project nav scoping is a pending design decision
 
 === NEXT ===
-1. Start consuming `sdk/src/query/` from wider SDK/CLI surfaces instead of duplicating lane/snapshot logic in each layer
-2. Review upstream get-shit-done commits 596ce2d and 002bcf2 against the SDK/worktree roadmap
-3. Execute phase 36 (per-eval repos + command split)
-4. Manually review 12 candidates on the site and decide: promote, merge, or discard
-5. Decide whether to backfill runtime identity + agent lineage into historically preserved eval traces or leave them as pre-contract runs
-6. Keep `.tmp/get-shit-done` current and continue capturing upstream comparison notes before adopting more upstream SDK/workstream ideas
+1. Execute phase 43 — domain rename + project/species schema unification (depends on phase 42 ✓)
+2. Execute phase 44 — Unity-Asset-Store-style project marketplace (depends on phase 43)
+3. Execute phase 45 — full site rebrand around the evolutionary vocabulary (depends on phase 44)
+4. Resolve GAD-D-159 — pick the magicborn site config schema location (3 options in oneoff/OVERNIGHT-NOTES.md)
+5. Validator v2 fix (small, ~10 lines): dedup file refs with overlapping path prefixes in lib/evolution-validator.cjs extractFileRefs
+6. Run the first REAL evolution end-to-end (let gad-quick-skill actually draft from one of the 14 pending candidates, review the proto-skill, decide promote/discard)
+7. Surface framework findings on the /findings page as they're authored
+
+=== OPEN QUESTIONS (for next session) ===
+1. Magicborn config schema location — per-project gad-config.toml [site] table, standalone magicborn/.planning/site.toml, or top-level monorepo [docs.projects.&lt;id&gt;.site]?
+2. Validator v2 fix — its own commit or rolled into next phase 42-adjacent work?
+3. The phase-14 proto-skill sketch from the smoke test was discarded — worth saving as a starting point for later, or let the next real evolution regenerate it from scratch?
 
 === SELF-EVAL (latest) ===
-3,517 events | 198 tasks (191 done) | 143 decisions
-Framework overhead: 23.6% | Loop compliance: 80%
-Skill candidates: 12</next-action>
+4,308 events | 229 tasks (203 done) | 147 decisions
+Framework overhead: 21.3% | Loop compliance: 42%
+Candidates (stage 1): 14 | Proto-skills (stage 2): 0</next-action>
+  <references>
+    <reference>sdk/skills/gad-quick-skill/SKILL.md</reference>
+    <reference>sdk/skills/gad-evolution-evolve/SKILL.md</reference>
+    <reference>sdk/skills/gad-evolution-validator/SKILL.md</reference>
+    <reference>sdk/skills/gad-skill-creator/SKILL.md</reference>
+    <reference>lib/evolution-validator.cjs</reference>
+    <reference>bin/gad.cjs (evolutionCmd block)</reference>
+    <reference>site/scripts/compute-self-eval.mjs (writeCandidates/generateCandidateMd)</reference>
+    <reference>site/components/landing/nav/nav-shared.ts</reference>
+    <reference>site/app/findings/page.tsx</reference>
+    <reference>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</reference>
+    <reference>.planning/ROADMAP.xml (phases 42-45)</reference>
+    <reference>.planning/DECISIONS.xml (gad-151 through gad-159)</reference>
+    <reference>oneoff/OVERNIGHT-NOTES.md (session handoff)</reference>
+  </references>
   <last-updated>2026-04-13</last-updated>
 </state>
