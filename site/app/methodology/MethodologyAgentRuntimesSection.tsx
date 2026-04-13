@@ -7,6 +7,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export function MethodologyAgentRuntimesSection() {
   return (
     <SiteSection>
+      <Identified as="MethodologyAgentRuntimesSection">
       <Identified as="MethodologyAgentRuntimesHeading">
         <SiteSectionHeading
           icon={Plug}
@@ -83,6 +84,7 @@ export function MethodologyAgentRuntimesSection() {
           to hook into. Phase 25 ships the Claude Code converter first; Codex and Aider converters are
           future sub-phases if and when we want to run cross-agent comparisons.
         </p>
+      </Identified>
       </Identified>
     </SiteSection>
   );

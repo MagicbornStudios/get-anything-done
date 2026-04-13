@@ -7,6 +7,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export function MethodologyLineageSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="MethodologyLineageSection">
       <Identified as="MethodologyLineageHeading">
         <SiteSectionHeading
           icon={GitBranch}
@@ -34,6 +35,7 @@ export function MethodologyLineageSection() {
         Brownfield baselines read from each project&apos;s{" "}
         <code className="rounded bg-background/60 px-1 py-0.5">gad.json baseline</code> field. Edges
         show the source-code inheritance path.
+      </Identified>
       </Identified>
     </SiteSection>
   );

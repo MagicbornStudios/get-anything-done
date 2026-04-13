@@ -5,6 +5,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export function MethodologyGateSection() {
   return (
     <SiteSection>
+      <Identified as="MethodologyGateSection">
       <Identified as="MethodologyGateHeading">
         <SiteSectionHeading icon={Gauge} kicker="Gate logic" title="Gates override everything" />
       </Identified>
@@ -63,6 +64,7 @@ export function MethodologyGateSection() {
           </tbody>
         </table>
         </div>
+      </Identified>
       </Identified>
     </SiteSection>
   );

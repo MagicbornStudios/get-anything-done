@@ -16,7 +16,7 @@ export function MethodologyOpenQuestionsSection() {
   return (
     <>
       <SiteSection id="open-questions" className="border-t border-border/60">
-        <Identified as="MethodologyOpenQuestionsIntro">
+        <Identified as="MethodologyOpenQuestionsIntroSection">
           <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Open questions</h2>
           <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
             The unresolved questions about the hypothesis, evaluation approach, and framework —
@@ -29,14 +29,10 @@ export function MethodologyOpenQuestionsSection() {
       </SiteSection>
 
       {categories.map((cat) => (
-        <Identified key={cat} as={`MethodologyOpenQuestionsCategory-${cat.replace(/[^a-zA-Z0-9]+/g, "-")}`}>
-          <QuestionsCategorySection category={cat} questions={grouped[cat]} />
-        </Identified>
+        <QuestionsCategorySection key={cat} category={cat} questions={grouped[cat]} />
       ))}
 
-      <Identified as="MethodologyOpenQuestionsResolved">
-        <QuestionsResolvedSection resolved={resolved} />
-      </Identified>
+      <QuestionsResolvedSection resolved={resolved} />
     </>
   );
 }

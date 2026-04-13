@@ -5,6 +5,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export function MethodologyTemplateMatrixSection() {
   return (
     <SiteSection>
+      <Identified as="MethodologyTemplateMatrixSection">
       <Identified as="MethodologyTemplateMatrixHeading">
         <SiteSectionHeading kicker="What each condition template contains" />
         <SiteProse size="sm" className="mb-6 mt-4">
@@ -64,6 +65,7 @@ export function MethodologyTemplateMatrixSection() {
         <code className="rounded bg-background/60 px-1 py-0.5">evals/escape-the-dungeon*/</code>. This
         table shows the greenfield setup. Brownfield conditions additionally receive the preserved
         source code from their baseline greenfield run.
+      </Identified>
       </Identified>
     </SiteSection>
   );

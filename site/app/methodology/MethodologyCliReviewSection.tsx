@@ -23,6 +23,7 @@ export function MethodologyCliReviewSection() {
 
   return (
     <SiteSection id="cli-review" className="border-t border-border/60">
+      <Identified as="MethodologyCliReviewSection">
       <Identified as="MethodologyCliReviewIntro">
         <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Submit a review</h2>
         <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
@@ -76,6 +77,7 @@ export function MethodologyCliReviewSection() {
           );
         })}
       </div>
+      </Identified>
     </SiteSection>
   );
 }

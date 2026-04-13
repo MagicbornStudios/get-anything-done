@@ -8,6 +8,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export function MethodologyDataPipelineSection() {
   return (
     <SiteSection>
+      <Identified as="MethodologyDataPipelineSection">
       <Identified as="MethodologyDataPipelineHeading">
         <SiteSectionHeading
           icon={Database}
@@ -70,6 +71,7 @@ export function MethodologyDataPipelineSection() {
           for the Anthropic skills guide + agentskills.io convention that governs how individual skills
           are authored and evaluated.
         </p>
+      </Identified>
       </Identified>
     </SiteSection>
   );

@@ -6,6 +6,7 @@ import { MethodologyCompositeWeightsCatalog } from "./MethodologyCompositeWeight
 export function MethodologyCompositeSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="MethodologyCompositeSection">
       <Identified as="MethodologyCompositeHeading">
         <SiteSectionHeading
           icon={Calculator}
@@ -52,6 +53,7 @@ export function MethodologyCompositeSection() {
       </Identified>
 
       <MethodologyCompositeWeightsCatalog />
+      </Identified>
     </SiteSection>
   );
 }

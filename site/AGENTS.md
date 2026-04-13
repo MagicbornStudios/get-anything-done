@@ -28,6 +28,8 @@ Humans cite `data-cid` / dev-panel labels to mean **“this whole area”** — 
 
 If only a heading or card is tagged, there is **no stable id for the parent band** — the user cannot point at it except by naming an inner id. **Prefer an outer `Identified` per major band** (inside `SiteSection` so it registers in the section dev panel): e.g. `MethodologyDataPipelineSection` wrapping its entire shell, not only the kicker.
 
+On **`/methodology`**, each band uses **`Identified as="Methodology…Section"`** (same name as the component where possible) as the **first child inside `SiteSection`**, wrapping that section’s full content. **Do not** wrap those sections from `page.tsx` — `Identified` outside `SiteSection` does not register in any dev-id panel. Open-question **category** rows use **`OpenQuestionsCategory-<slug>`** inside `QuestionsCategorySection`; resolved uses **`OpenQuestionsResolvedSection`** inside `QuestionsResolvedSection`.
+
 ## Real routes (no hash “redirects”)
 
 Nav and CTAs must point at **real paths** (`/skills`, `/skills?tab=agents`, `/planning?tab=tasks`, `/downloads`). Do not send people to `/#catalog` or other home-page fragments that are not wired to a section id — those read like redirects and break deep linking.

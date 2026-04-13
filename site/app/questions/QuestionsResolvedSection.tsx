@@ -1,11 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import type { OpenQuestion } from "@/lib/eval-data";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function QuestionsResolvedSection({ resolved }: { resolved: OpenQuestion[] }) {
   if (resolved.length === 0) return null;
   return (
     <SiteSection className="border-b-0 border-t border-border/60">
+      <Identified as="OpenQuestionsResolvedSection">
       <SiteSectionHeading
         kicker="Resolved"
         title="What used to be open"
@@ -26,6 +28,7 @@ export function QuestionsResolvedSection({ resolved }: { resolved: OpenQuestion[
           </div>
         ))}
       </div>
+      </Identified>
     </SiteSection>
   );
 }

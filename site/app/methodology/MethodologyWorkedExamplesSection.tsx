@@ -8,6 +8,7 @@ export function MethodologyWorkedExamplesSection({ worked }: { worked: EvalRunRe
   if (worked.length === 0) return null;
   return (
     <SiteSection>
+      <Identified as="MethodologyWorkedExamplesSection">
       <Identified as="MethodologyWorkedExamplesHeading">
         <SiteSectionHeading kicker="Worked examples" title="Two runs, end to end" />
         <SiteProse size="md" className="mt-3">
@@ -43,6 +44,7 @@ export function MethodologyWorkedExamplesSection({ worked }: { worked: EvalRunRe
           </Identified>
         ))}
       </div>
+      </Identified>
     </SiteSection>
   );
 }
