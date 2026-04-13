@@ -1,176 +1,205 @@
 ---
 name: gad-skill-creator
 description: >-
-  Create GAD-tailored skills that use the GAD CLI, planning artifacts, and eval
-  framework. Use when the user wants to create a new skill for the GAD workflow,
-  turn a repetitive CLI pattern into a skill, evaluate an existing skill, or
-  enhance a workflow by reviewing tasks for repeated commands. Also triggers on
-  "make a skill for", "create skill", "we should have a skill that", "turn this
-  into a skill", or when a task completion reveals repetitive CLI patterns.
-  Immediately scaffolds an eval project for framework skills.
+  Create a GAD skill autonomously by feeding context to Anthropic's canonical
+  skill-creator. Use when something in the GAD workflow should become a reusable
+  skill — a repeated CLI sequence, a recurring decision pattern, a candidate
+  emitted by `gad:evolution:evolve`, or a direct user request like "make a skill
+  for X". This skill is a thin wrapper: it ensures the canonical skill-creator
+  is installed, packages full project context (phase, tasks, decisions, file
+  refs, CLI surface, related skills) into an INTENT.md file, and hands it to
+  skill-creator so the user never needs to sit through a Q&A interview. Triggers
+  on "make a skill for", "create a skill", "we need a skill that", "turn this
+  into a skill", "promote this candidate to a skill", or whenever a completed
+  task reveals a reusable pattern worth capturing.
 ---
 
 # gad-skill-creator
 
-Create skills tailored to the GAD workflow. Built on top of the Anthropic
-skill-creator methodology (see `references/anthropic-skill-creator.md`) but
-specialized for GAD's CLI, planning artifacts, and evaluation framework.
+A thin wrapper around Anthropic's canonical
+[skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
+that makes it work autonomously inside the GAD loop.
 
-## What makes a GAD skill different
+The canonical skill-creator is comprehensive — subagent-based test runs, grading,
+benchmarking, HTML viewer, description optimization. We don't reinvent any of
+that. We just **bypass its user interview** by feeding it a complete `INTENT.md`
+context file derived from the GAD planning artifacts, then **preserve its
+output** for the GAD site.
 
-GAD skills prefer CLI commands over manual file operations (decision gad-99,
-use good judgment). They chain `gad` CLI commands when possible. They know about
-planning artifacts (STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml). Framework
-skills get formal evaluation and are labeled as such.
+## When to use
 
-A GAD skill is NOT just instructions with GAD references. It should:
-1. Use `gad` CLI commands where they exist
-2. Reference planning artifacts by their standard names
-3. Tag its tasks with skill/agent attribution (decision gad-104)
-4. Have an eval project scaffolded immediately (decision gad-102)
+- A user explicitly asks to create / promote / refine a skill.
+- `gad:evolution:evolve` produced a candidate and you're invoked to flesh it out.
+- You hit a repeated CLI pattern across 3+ tasks and the user agrees it's a skill.
+- A bug or workaround is non-obvious enough that future agents will hit it.
 
-## Workflow
+## When NOT to use
 
-### 1. Identify what the skill should do
+- The pattern is one-off and won't recur.
+- The thing belongs in the GAD CLI itself (it would be a command, not a skill).
+- An existing skill already covers this — use `gad:merge-skill` or update in place.
 
-Sources of skill ideas:
-- **User request**: "make a skill for X"
-- **Task review (enhance)**: Review completed tasks for repetitive CLI patterns.
-  If 3+ tasks used the same sequence of commands, that's a skill candidate.
-  (decision gad-105)
-- **Merge opportunity**: `gad:merge-skill` detected overlapping skills
-- **CLI pattern**: A `gad` CLI command sequence that agents keep repeating
+## Step 1: Ensure canonical skill-creator is installed
 
-### 2. Check existing CLI coverage
-
-Before creating a skill, check if the GAD CLI already handles it:
+Idempotent — only installs if missing:
 
 ```sh
-gad --help 2>&1 | grep -i "<keyword>"
-gad eval --help 2>&1
-gad <subcommand> --help 2>&1
+if [ ! -d "$HOME/.agents/skills/skill-creator" ]; then
+  npx --yes skills add anthropics/skills --skill skill-creator --global --yes
+fi
 ```
 
-If a CLI command exists, the skill should wrap/chain it, not reimplement.
-If multiple CLI commands need chaining, that IS the skill.
+After install, `~/.agents/skills/skill-creator/SKILL.md` is the canonical source.
+Read it once for the full surface — this wrapper only handles the input/output
+plumbing.
 
-### 3. Check existing skills
+## Step 2: Build the INTENT.md context payload
 
-```sh
-ls skills/
-```
+Skill-creator's first step ("Capture Intent") is normally a user interview.
+We replace that with an INTENT.md file the skill-creator reads instead.
 
-Read any similar skills. If overlap exists, use `gad:merge-skill` instead of
-creating a new one.
+The INTENT.md location depends on where you're invoked from:
 
-### 4. Draft the skill
+- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/INTENT.md` (already
+  exists — evolve wrote it).
+- **From a direct user request:** scratch dir like
+  `skills/candidates/<proposed-slug>/INTENT.md`.
+- **From a "promote this candidate" request:** the existing INTENT.md in the
+  candidate dir.
 
-Follow the Anthropic skill-creator's SKILL.md anatomy:
+INTENT.md format (this is everything skill-creator's interview would have asked):
 
-```
-skill-name/
-├── SKILL.md          # Required: frontmatter + instructions
-├── references/       # Docs loaded as needed
-├── scripts/          # Executable automation
-└── evals/
-    └── evals.json    # Test cases
-```
-
-GAD-specific additions to frontmatter:
-```yaml
+```markdown
 ---
-name: skill-name
-description: >-
-  Descriptive trigger text. Be pushy per Anthropic guidelines.
-framework_skill: true|false    # true = formal evaluation required
-uses_cli: [gad eval, gad state] # CLI commands this skill chains
+status: candidate
+source_phase: <phase-id or null>
+source_phase_title: <title or null>
+pressure_score: <number or null>
+evolution_id: <YYYY-MM-DD-NNN or null>
+created_on: <YYYY-MM-DD>
+created_by: gad-skill-creator | gad-evolution-evolve
+proposed_name: <kebab-skill-name>
 ---
+
+# Intent: <proposed-skill-name>
+
+## What this skill should do
+<derived from phase tasks or user request — the recurring pattern in 1-2 paragraphs>
+
+## When it should trigger
+- <user-facing trigger 1>
+- <user-facing trigger 2>
+- Specific phrases users might say: "...", "...", "..."
+
+## Expected output format
+<what a successful invocation produces — file changes, CLI output, side effects>
+
+## Test prompts skill-creator should use
+1. <realistic user prompt drawn from a real task>
+2. <another realistic prompt with different phrasing>
+3. <a should-NOT-trigger negative case from an adjacent area>
+
+## Files this skill cares about
+- <path>: <one-line reason>
+
+## Decisions backing this skill
+- <decision-id>: <one-line summary>
+
+## CLI surface available
+<paste relevant lines from `gad --help` and `gad <subcommand> --help`>
+
+## Existing related skills
+- <skill-id>: <one-line reason it's adjacent but not the same thing>
+
+## Errors / failed attempts observed
+<from logs, git history, or the source phase's task notes — what didn't work>
 ```
 
-### 5. Scaffold the eval project immediately
+When you're filling INTENT.md from a phase, draw the test prompts from real
+tasks in that phase. The whole point is that skill-creator gets enough realistic
+context to write good evals without asking.
 
-For framework skills (or any skill the user wants evaluated):
+## Step 3: Invoke canonical skill-creator on the INTENT
+
+Skill-creator expects a conversational entry point. Give it a single message
+that points it at INTENT.md and tells it to skip the interview:
+
+```
+You are the canonical skill-creator. Read skills/candidates/<slug>/INTENT.md
+for the full intent — it replaces the user interview. Then:
+
+1. Write skills/candidates/<slug>/SKILL.md following your normal anatomy.
+2. Write skills/candidates/<slug>/evals/evals.json with the test prompts from
+   INTENT.md plus assertions you draft.
+3. Run your full test loop in skills/candidates/<slug>/skill-creator-workspace/
+   — spawn with-skill and baseline subagents in parallel, grade, aggregate,
+   benchmark.
+4. Generate the eval viewer with --static
+   skills/candidates/<slug>/viewer.html so a human can review it later
+   without a running server.
+5. STOP after the viewer is generated. Do NOT iterate. Do NOT prompt the user
+   to continue. The human review is asynchronous — they will open viewer.html
+   in a browser, review, and either promote or discard the candidate via the
+   gad CLI later.
+```
+
+The `--static` flag is critical — it makes skill-creator headless-compatible,
+which is what we need for the autonomous GAD loop. The viewer becomes a self-
+contained HTML file we can serve from the site or open locally.
+
+## Step 4: Preserve outputs for the GAD site
+
+After skill-creator finishes, copy the structured output into a known location
+the GAD site's build pipeline can find:
 
 ```sh
-gad eval setup --project <skill-name>
+SKILL_OUTPUT="skills/candidates/<slug>"
+mkdir -p "$SKILL_OUTPUT/_skill-creator-output"
+cp -r "$SKILL_OUTPUT/skill-creator-workspace" "$SKILL_OUTPUT/_skill-creator-output/workspace"
+[ -f "$SKILL_OUTPUT/viewer.html" ] && cp "$SKILL_OUTPUT/viewer.html" "$SKILL_OUTPUT/_skill-creator-output/viewer.html"
+[ -f "$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json" ] && \
+  cp "$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json" "$SKILL_OUTPUT/_skill-creator-output/benchmark.json"
 ```
 
-This creates `evals/<skill-name>/gad.json` and `template/`. The eval measures
-whether the skill improves agent outcomes vs not having the skill.
+`build-site-data.mjs` reads `_skill-creator-output/` to surface candidate
+benchmarks, viewer HTML, and per-eval results on the GAD site's evolution view.
 
-### 6. Write test cases
+## Step 5: Hand off to human review
 
-Create `evals/evals.json` inside the skill directory with 2-3 realistic
-test prompts. Follow the Anthropic skill-creator format:
+Print a clear handoff message to the user with the viewer path and what to do
+next:
 
-```json
-{
-  "skill_name": "my-gad-skill",
-  "evals": [
-    {
-      "id": 1,
-      "prompt": "Realistic user task that should trigger this skill",
-      "expected_output": "What success looks like",
-      "expectations": ["Verifiable outcome 1", "Verifiable outcome 2"]
-    }
-  ]
-}
+```
+Skill candidate ready for review:
+  skills/candidates/<slug>/SKILL.md
+  skills/candidates/<slug>/viewer.html
+
+Open the viewer in a browser, click through each test case, leave feedback,
+and click Submit All Reviews. When the feedback.json drops into the candidate
+dir, run:
+
+  gad evolution promote <slug>      # to merge into sdk/skills/
+  gad evolution discard <slug>      # to delete the candidate
 ```
 
-### 7. Run and evaluate
+The candidate stays in `skills/candidates/` until promoted or discarded.
+`gad:evolution:evolve` will refuse to start a new evolution while any pending
+candidates remain — this is the human-review gate.
 
-Use the Anthropic skill-creator's evaluation methodology:
-- Read `references/anthropic-skill-creator.md` for the full eval loop
-- Spawn with-skill and without-skill runs
-- Grade, aggregate, review with user
-- Iterate until satisfied
+## Failure modes
 
-### 8. Enhance review (post-creation)
-
-After the skill is in use, periodically review tasks that used it:
-1. What repetitive commands appeared?
-2. Should we create a script for them?
-3. Should we stack CLI commands instead?
-4. Should this become a `gad` CLI command?
-
-This feeds the cycle: CLI grows → skills thin → merge overlapping → repeat.
-
-## Installing skills into eval projects
-
-To evaluate a skill by installing it into an existing eval project:
-
-```sh
-# Install a local skill into an eval template
-gad eval run --install-skills path/to/skill <project>
-
-# Install from npx skills format
-npx skills add <url> --skill <name>
-# Then point the eval at it
-```
-
-The CLI handles copying the skill into the eval template, updating AGENTS.md
-skill references, and recording the installation in TRACE.json (decision gad-107).
-
-## Framework vs non-framework skills
-
-**Framework skills** (tagged `framework_skill: true`):
-- Related to GAD CLI, planning artifacts, eval framework, or core workflow
-- Require formal controlled evaluation
-- Labeled and identifiable on the site
-- Examples: trace-analysis, self-eval, snapshot-optimize
-
-**Workflow skills** (default):
-- Project-specific or domain-specific
-- Evaluated through rounds (observational data from real usage)
-- Still show usage metrics on the site from trace logs
-- Examples: find-sprites, frontend-design
+- **Skill-creator interviewing the user anyway:** make sure the INTENT.md is
+  complete and your prompt explicitly says "skip the interview." Skill-creator
+  defers to user input when context is thin, so a sparse INTENT.md will trigger
+  questions.
+- **Viewer not generating:** check that `--static` was passed. Without it,
+  skill-creator tries to launch a browser, which fails in headless GAD runs.
+- **Workspace pollution in git:** `_skill-creator-output/workspace/` can be
+  large. Add `skills/candidates/*/skill-creator-workspace/` to .gitignore and
+  only commit `_skill-creator-output/` (which is the trimmed, site-ready copy).
 
 ## Reference
 
-Read `references/anthropic-skill-creator.md` for the full Anthropic skill-creator
-methodology — this GAD skill creator follows the same eval loop but adds:
-- CLI-first design
-- Immediate eval project scaffolding
-- Task attribution tagging
-- Enhance review workflow
-- Framework/workflow skill distinction
+- Canonical skill-creator: `~/.agents/skills/skill-creator/SKILL.md`
+- Anthropic skills repo: https://github.com/anthropics/skills
+- Related skills: `gad-evolution-evolve`, `gad-merge-skill`, `gad-find-skills`

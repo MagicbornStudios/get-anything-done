@@ -1,5 +1,10 @@
 node_modules/
 .DS_Store
+
+# Skill candidate workspace pollution — only the trimmed _skill-creator-output/
+# copy is committed; raw skill-creator-workspace/ trees can be very large.
+skills/candidates/*/skill-creator-workspace/
+
 TO-DOS.md
 CLAUDE.md
 /research.claude/
