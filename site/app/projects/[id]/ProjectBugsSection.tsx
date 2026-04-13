@@ -19,32 +19,31 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
         titleClassName="text-2xl font-semibold tracking-tight"
         title={`${bugs.length} bug${bugs.length !== 1 ? "s" : ""} reported`}
       />
-      <Identified as="ProjectBugsList" className="mt-6 space-y-3">
-          {bugs.map((b) => (
-            <Identified
-              key={b.id}
-              as={`ProjectBug-${b.id}`}
-              className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4"
+      <Identified as="ProjectBugs" className="mt-6 space-y-3">
+        {bugs.map((b) => (
+          <div
+            key={b.id}
+            className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4"
+          >
+            <Badge
+              variant={b.status === "resolved" ? "success" : b.status === "wontfix" ? "outline" : "danger"}
+              className="shrink-0"
             >
-              <Badge
-                variant={b.status === "resolved" ? "success" : b.status === "wontfix" ? "outline" : "danger"}
-                className="shrink-0"
-              >
-                {b.status}
-              </Badge>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground">{b.title}</p>
-                {b.version && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Found in {b.project}/{b.version}
-                  </p>
-                )}
-                {b.description && (
-                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{b.description}</p>
-                )}
-              </div>
-            </Identified>
-          ))}
+              {b.status}
+            </Badge>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">{b.title}</p>
+              {b.version && (
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Found in {b.project}/{b.version}
+                </p>
+              )}
+              {b.description && (
+                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{b.description}</p>
+              )}
+            </div>
+          </div>
+        ))}
       </Identified>
     </SiteSection>
   );

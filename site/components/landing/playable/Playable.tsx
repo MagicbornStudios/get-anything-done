@@ -69,16 +69,13 @@ export default function Playable() {
       />
       </Identified>
 
-      <Identified as="PlayableReviewLegend">
+      <Identified as="PlayableRunsPicker">
         <PlayableReviewLegend />
-      </Identified>
-
-      <Identified as="PlayableRunGroups">
-      <PlayableRunGroups
-        groupedRuns={groupedRuns}
-        selected={selected}
-        onSelectRun={setSelectedRunKey}
-      />
+        <PlayableRunGroups
+          groupedRuns={groupedRuns}
+          selected={selected}
+          onSelectRun={setSelectedRunKey}
+        />
       </Identified>
 
       {runs.length === 0 ? (

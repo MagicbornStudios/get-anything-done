@@ -1,6 +1,5 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ export function PlayableRunGroups({ groupedRuns, selected, onSelectRun }: Props)
       {groupedRuns.map((group) => {
         if (group.runs.length === 0) return null;
         return (
-          <Identified key={group.id} as={`PlayableRunGroup-${group.id}`} className="mt-6">
+          <div key={group.id} className="mt-6">
             <div className="mb-2 flex items-center gap-2">
               <h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
               <span className="text-[11px] text-muted-foreground">{group.description}</span>
@@ -45,7 +44,7 @@ export function PlayableRunGroups({ groupedRuns, selected, onSelectRun }: Props)
                 {group.runs.length}
               </span>
             </div>
-            <Identified as={`PlayableRunGroup-${group.id}-Chips`} className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {group.runs.map((r) => {
                 const key = runKey(r);
                 const active = selected && runKey(selected) === key;
@@ -107,8 +106,8 @@ export function PlayableRunGroups({ groupedRuns, selected, onSelectRun }: Props)
                   </HoverCard>
                 );
               })}
-            </Identified>
-          </Identified>
+            </div>
+          </div>
         );
       })}
     </>

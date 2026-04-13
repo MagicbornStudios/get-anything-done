@@ -1,7 +1,6 @@
 "use client";
 
 import { Store } from "lucide-react";
-import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectMarketHeader() {
@@ -11,8 +10,7 @@ export function ProjectMarketHeader() {
       className="border-t-0"
       shellClassName="pb-8 pt-24 md:pb-12 md:pt-32"
     >
-      <Identified as="ProjectMarketHeaderHeading">
-        <SiteSectionHeading
+      <SiteSectionHeading
         icon={Store}
         kicker="Project market"
         kickerRowClassName="gap-2"
@@ -24,15 +22,12 @@ export function ProjectMarketHeader() {
             Every eval project. <span className="gradient-text">Playable in your browser.</span>
           </>
         }
-        />
-      </Identified>
-      <Identified as="ProjectMarketHeaderProse">
-        <SiteProse className="mt-5 max-w-2xl">
+      />
+      <SiteProse className="mt-5 max-w-2xl">
         Browse the full catalog of agent evaluation projects across games, video, software, and
         tooling. Each project tests a hypothesis about how coding agents build under different
         conditions.
-        </SiteProse>
-      </Identified>
+      </SiteProse>
     </SiteSection>
   );
 }

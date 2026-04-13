@@ -1,4 +1,3 @@
-import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { RunProcessMetricsAgentLineageBlock } from "@/app/runs/[project]/[version]/RunProcessMetricsAgentLineageBlock";
@@ -16,7 +15,7 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
       <RunProcessMetricsCardGrid run={run} />
 
       {runtimesInvolved.length > 0 ? (
-        <Identified as="RunProcessMetricsRuntimes" className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+        <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
           {runtimesInvolved.map((runtime, index) => (
             <span
               key={`${String(runtime.id ?? "runtime")}-${index}`}
@@ -25,7 +24,7 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
               {runtimeLabel(runtime)}
             </span>
           ))}
-        </Identified>
+        </div>
       ) : null}
 
       {lineage ? <RunProcessMetricsAgentLineageBlock lineage={lineage} topAgents={topAgents} /> : null}

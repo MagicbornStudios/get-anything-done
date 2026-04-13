@@ -1,12 +1,10 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
 import { Button } from "@/components/ui/button";
 import { SiteSectionIntro } from "@/components/site";
 
 export function PlayableIntro() {
   return (
-    <Identified as="PlayableIntroInner">
     <SiteSectionIntro
       kicker="Playable archive"
       preset="hero-compact"
@@ -23,6 +21,5 @@ export function PlayableIntro() {
       </Button>{" "}
       to filter, or use the controls below to search and filter. Hover any build badge for details.
     </SiteSectionIntro>
-    </Identified>
   );
 }

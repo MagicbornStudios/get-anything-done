@@ -1,4 +1,3 @@
-import { Identified } from "@/components/devid/Identified";
 import { WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
 import { Badge } from "@/components/ui/badge";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
@@ -23,18 +22,15 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
 
   return (
     <div className="space-y-3">
-      <Identified as="RunInfoPanelState">
-        <Badge variant="outline" className="inline-flex w-fit items-center gap-2 border-border/70 bg-card/50 py-1 text-xs font-semibold normal-case">
-          <span className={`size-2 rounded-full ${REVIEW_STATE_DOT[state]}`} />
-          {REVIEW_STATE_LABEL[state]}
-        </Badge>
-      </Identified>
+      <Badge variant="outline" className="inline-flex w-fit items-center gap-2 border-border/70 bg-card/50 py-1 text-xs font-semibold normal-case">
+        <span className={`size-2 rounded-full ${REVIEW_STATE_DOT[state]}`} />
+        {REVIEW_STATE_LABEL[state]}
+      </Badge>
 
-      <Identified as="RunInfoPanelTitle" className="text-xs font-semibold text-foreground">
+      <div className="text-xs font-semibold text-foreground">
         {r.project} · {r.version}
-      </Identified>
+      </div>
 
-      <Identified as="RunInfoPanelStats">
       <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
         <div>
           <dt className="text-muted-foreground/70 uppercase tracking-wider">Hypothesis</dt>
@@ -104,16 +100,11 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
           </dd>
         </div>
       </dl>
-      </Identified>
 
       {r.humanReview?.notes ? (
-        <Identified
-          as="RunInfoPanelNotes"
-          className="border-t border-border/60 pt-2 text-[11px] leading-4 text-muted-foreground line-clamp-3"
-          tag="p"
-        >
+        <p className="border-t border-border/60 pt-2 text-[11px] leading-4 text-muted-foreground line-clamp-3">
           {r.humanReview.notes}
-        </Identified>
+        </p>
       ) : null}
     </div>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
 import { EvalFilterSearchField } from "@/components/eval-filters/EvalFilterSearchField";
 import { EvalReviewStatusFilterChips } from "@/components/eval-filters/EvalReviewStatusFilterChips";
 import { Filter, X } from "lucide-react";
@@ -60,7 +59,7 @@ export function PlayableFilterBar({
 }: Props) {
   return (
     <div className="mt-8 rounded-xl border border-border/60 bg-card/30 p-4">
-      <Identified as="PlayableFilterBarControls" className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Select
           value={roundFilter ?? ALL_ROUND}
           onValueChange={(v) => {
@@ -118,13 +117,11 @@ export function PlayableFilterBar({
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        <Identified as="PlayableFilterStatusChips">
-          <EvalReviewStatusFilterChips statusFilter={statusFilter} onStatusChange={onStatusChange} />
-        </Identified>
+        <EvalReviewStatusFilterChips statusFilter={statusFilter} onStatusChange={onStatusChange} />
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        <Identified as="PlayableFilterHypothesisChips" className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             type="button"
             variant="ghost"
@@ -159,20 +156,18 @@ export function PlayableFilterBar({
               </Button>
             );
           })}
-        </Identified>
+        </div>
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        <Identified as="PlayableFilterSearch">
         <EvalFilterSearchField
           value={searchQuery}
           onChange={onSearchChange}
           placeholder="Search by name, version, or workflow..."
         />
-        </Identified>
-      </Identified>
+      </div>
 
-      <Identified as="PlayableFilterBarSummary" className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           Showing <span className="font-semibold text-foreground tabular-nums">{runsLength}</span>{" "}
           of <span className="font-semibold text-foreground tabular-nums">{allRunsLength}</span>{" "}
@@ -207,7 +202,7 @@ export function PlayableFilterBar({
             Clear all filters
           </Button>
         )}
-      </Identified>
+      </div>
     </div>
   );
 }

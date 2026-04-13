@@ -9,9 +9,7 @@ import { cn } from "@/lib/utils";
 import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
-type RequirementsVersion = (typeof REQUIREMENTS_HISTORY)[number];
-
-export function ProjectRequirementsSection({ projectId }: { projectId: string }) {
+export function ProjectRequirementsSection({ projectId: _projectId }: { projectId: string }) {
   const versions = REQUIREMENTS_HISTORY;
   const [currentIdx, setCurrentIdx] = useState(versions.length - 1);
 
@@ -29,7 +27,8 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
         title={`${versions.length} version${versions.length !== 1 ? "s" : ""} — each change triggers a new round`}
       />
 
-      <Identified as="ProjectRequirementsPagination" className="mt-6 flex items-center gap-3">
+      <Identified as="ProjectRequirements" className="mt-6 space-y-6">
+        <div className="flex items-center gap-3">
           <Button
             type="button"
             variant="outline"
@@ -74,9 +73,9 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
           <span className="text-xs text-muted-foreground">
             {currentIdx + 1} of {versions.length}
           </span>
-      </Identified>
+        </div>
 
-      <Identified as="ProjectRequirementsDetail" className="mt-6 rounded-2xl border border-border/60 bg-card/40 p-6">
+        <div className="rounded-2xl border border-border/60 bg-card/40 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Badge variant="default">{current.version}</Badge>
             {current.date && (
@@ -87,7 +86,6 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
             )}
           </div>
 
-          {/* Show sections */}
           {current.sections && Object.entries(current.sections).map(([key, value]) => (
             <div key={key} className="mt-4">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
@@ -99,7 +97,6 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
             </div>
           ))}
 
-          {/* What changed from previous version */}
           {prev && (
             <div className="mt-6 border-t border-border/40 pt-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-accent mb-1">
@@ -110,6 +107,7 @@ export function ProjectRequirementsSection({ projectId }: { projectId: string })
               </p>
             </div>
           )}
+        </div>
       </Identified>
     </SiteSection>
   );

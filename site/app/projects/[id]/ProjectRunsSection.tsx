@@ -1,4 +1,3 @@
-import { Identified } from "@/components/devid/Identified";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { ProjectRunCard } from "@/app/projects/[id]/ProjectRunCard";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
@@ -12,11 +11,11 @@ export function ProjectRunsSection({ runs }: { runs: EvalRunRecord[] }) {
         preset="section"
         title={`${runs.length} recorded run${runs.length === 1 ? "" : "s"}`}
       />
-      <Identified as="ProjectRunsGrid" className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {runs.map((run) => (
-            <ProjectRunCard key={run.version} run={run} />
-          ))}
-      </Identified>
+      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {runs.map((run) => (
+          <ProjectRunCard key={run.version} run={run} />
+        ))}
+      </div>
     </SiteSection>
   );
 }

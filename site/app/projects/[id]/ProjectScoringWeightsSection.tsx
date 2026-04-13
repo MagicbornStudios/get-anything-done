@@ -8,7 +8,7 @@ export function ProjectScoringWeightsSection({ project }: { project: EvalProject
   return (
     <SiteSection tone="muted">
       <SiteSectionHeading kicker="Scoring weights" preset="section" title="How this project is scored" />
-      <Identified as="ProjectScoringWeightsProse">
+      <Identified as="ProjectScoringWeights">
         <SiteProse size="md" className="mt-3">
           Defined in{" "}
           <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">evals/{project.id}/gad.json</code>. The
@@ -18,29 +18,29 @@ export function ProjectScoringWeightsSection({ project }: { project: EvalProject
           </Link>{" "}
           for the formula and caps.
         </SiteProse>
-      </Identified>
-      <Identified as="ProjectScoringWeightsTable" className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-5 py-3 font-medium">Dimension</th>
-              <th className="px-5 py-3 font-medium tabular-nums">Weight</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(project.scoringWeights)
-              .sort((a, b) => b[1] - a[1])
-              .map(([dim, w], idx) => (
-                <tr
-                  key={dim}
-                  className={idx % 2 === 0 ? "bg-transparent" : "bg-background/30"}
-                >
-                  <td className="px-5 py-3 font-mono text-xs">{dim}</td>
-                  <td className="px-5 py-3 tabular-nums text-accent">{w.toFixed(2)}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+        <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-5 py-3 font-medium">Dimension</th>
+                <th className="px-5 py-3 font-medium tabular-nums">Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(project.scoringWeights)
+                .sort((a, b) => b[1] - a[1])
+                .map(([dim, w], idx) => (
+                  <tr
+                    key={dim}
+                    className={idx % 2 === 0 ? "bg-transparent" : "bg-background/30"}
+                  >
+                    <td className="px-5 py-3 font-mono text-xs">{dim}</td>
+                    <td className="px-5 py-3 tabular-nums text-accent">{w.toFixed(2)}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       </Identified>
     </SiteSection>
   );

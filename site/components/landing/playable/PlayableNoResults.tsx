@@ -1,6 +1,5 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -13,14 +12,11 @@ export function PlayableNoResults({ roundFilter, onClearAllFilters }: Props) {
   return (
     <Card className="mt-8 border-border/70 bg-card/30 shadow-none">
       <CardContent className="p-8 text-center">
-        <Identified as="PlayableNoResultsCopy">
-          <p className="text-lg font-semibold text-muted-foreground">No playable builds match your filters</p>
-          <p className="mt-2 text-sm text-muted-foreground/70">
-            {roundFilter && `${roundFilter} may not have scored builds yet, or all runs were rate-limited. `}
-            Try adjusting your filters or search query.
-          </p>
-        </Identified>
-        <Identified as="PlayableNoResultsClear">
+        <p className="text-lg font-semibold text-muted-foreground">No playable builds match your filters</p>
+        <p className="mt-2 text-sm text-muted-foreground/70">
+          {roundFilter && `${roundFilter} may not have scored builds yet, or all runs were rate-limited. `}
+          Try adjusting your filters or search query.
+        </p>
         <Button
           type="button"
           variant="outline"
@@ -29,7 +25,6 @@ export function PlayableNoResults({ roundFilter, onClearAllFilters }: Props) {
         >
           Clear all filters
         </Button>
-        </Identified>
       </CardContent>
     </Card>
   );

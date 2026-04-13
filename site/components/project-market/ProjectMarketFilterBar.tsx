@@ -1,6 +1,5 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
 import { EvalFilterSearchField } from "@/components/eval-filters/EvalFilterSearchField";
 import { EvalReviewStatusFilterChips } from "@/components/eval-filters/EvalReviewStatusFilterChips";
 import { X } from "lucide-react";
@@ -16,7 +15,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   DOMAIN_LABELS,
-  DOMAIN_TINT,
   type ProjectDomain,
 } from "@/components/project-market/project-market-shared";
 import {
@@ -71,8 +69,7 @@ export function ProjectMarketFilterBar({
 }: Props) {
   return (
     <div className="rounded-xl border border-border/60 bg-card/30 p-4">
-      <Identified as="ProjectMarketFilterBarControls" className="flex flex-wrap items-center gap-3">
-        <Identified as="ProjectMarketFilterDomain">
+      <div className="flex flex-wrap items-center gap-3">
         <Select
           value={domainFilter ?? ALL}
           onValueChange={(v) => onDomainChange(v === ALL ? null : (v as ProjectDomain))}
@@ -89,9 +86,7 @@ export function ProjectMarketFilterBar({
             ))}
           </SelectContent>
         </Select>
-        </Identified>
 
-        <Identified as="ProjectMarketFilterRound">
         <Select
           value={roundFilter ?? ALL}
           onValueChange={(v) => onRoundChange(v === ALL ? null : v)}
@@ -106,17 +101,14 @@ export function ProjectMarketFilterBar({
             ))}
           </SelectContent>
         </Select>
-        </Identified>
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        <Identified as="ProjectMarketFilterStatusChips">
         <EvalReviewStatusFilterChips statusFilter={statusFilter} onStatusChange={onStatusChange} />
-        </Identified>
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        <Identified as="ProjectMarketFilterWorkflowChips" className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             type="button"
             variant="ghost"
@@ -151,21 +143,19 @@ export function ProjectMarketFilterBar({
               </Button>
             );
           })}
-        </Identified>
+        </div>
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        <Identified as="ProjectMarketFilterSearch">
         <EvalFilterSearchField
           value={searchQuery}
           onChange={onSearchChange}
           placeholder="Search projects or runs..."
         />
-        </Identified>
-      </Identified>
+      </div>
 
       {/* Summary row */}
-      <Identified as="ProjectMarketFilterBarSummary" className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           Showing{" "}
           <span className="font-semibold text-foreground tabular-nums">{filteredRunCount}</span>{" "}
@@ -213,7 +203,7 @@ export function ProjectMarketFilterBar({
             </Button>
           )}
         </div>
-      </Identified>
+      </div>
     </div>
   );
 }
