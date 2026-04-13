@@ -1,8 +1,7 @@
 import { Calculator } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Identified } from "@/components/devid/Identified";
-import { EVAL_PROJECTS } from "@/lib/eval-data";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
+import { MethodologyCompositeWeightsCatalog } from "./MethodologyCompositeWeightsCatalog";
 
 export function MethodologyCompositeSection() {
   return (
@@ -52,50 +51,7 @@ export function MethodologyCompositeSection() {
         </p>
       </Identified>
 
-      <div className="mt-6 space-y-5">
-        {EVAL_PROJECTS.filter((p) => p.scoringWeights && p.workflow).map((p) => {
-          const entries = Object.entries(p.scoringWeights ?? {}).sort((a, b) => b[1] - a[1]);
-          const total = entries.reduce((acc, [, w]) => acc + w, 0);
-          return (
-            <Identified
-              key={p.id}
-              as={`MethodologyCompositeProjectWeights-${p.id}`}
-              className="overflow-hidden rounded-2xl border border-border/70 bg-card/40"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-background/30 px-5 py-3">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{p.id}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {p.evalMode} · {p.workflow}
-                  </p>
-                </div>
-                <Badge variant="outline">Σ weights = {total.toFixed(2)}</Badge>
-              </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {entries.map(([dim, w], idx) => (
-                    <tr
-                      key={dim}
-                      className={idx % 2 === 0 ? "bg-transparent" : "bg-background/20"}
-                    >
-                      <td className="px-5 py-2.5 font-mono text-[11px] text-foreground">{dim}</td>
-                      <td className="px-5 py-2.5 tabular-nums text-accent">{w.toFixed(2)}</td>
-                      <td className="px-5 py-2.5">
-                        <div className="h-1.5 max-w-xs overflow-hidden rounded-full bg-border/60">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-accent/60 via-accent to-accent/80"
-                            style={{ width: `${w * 100}%` }}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Identified>
-          );
-        })}
-      </div>
+      <MethodologyCompositeWeightsCatalog />
     </SiteSection>
   );
 }

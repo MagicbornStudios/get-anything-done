@@ -1,6 +1,7 @@
 "use client";
 
 import { EvalFilterSearchField } from "@/components/eval-filters/EvalFilterSearchField";
+import { EvalFilterSurface } from "@/components/eval-filters/EvalFilterSurface";
 import { EvalReviewStatusFilterChips } from "@/components/eval-filters/EvalReviewStatusFilterChips";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,16 @@ const ALL = "__all";
 const DOMAINS: ProjectDomain[] = ["game", "video", "software", "tooling", "planning"];
 const WORKFLOWS = ["bare", "gad", "emergent"] as const;
 
+/** When set, replaces the default “playable builds” summary line (e.g. methodology weights catalog). */
+export type ProjectMarketCountSummary = {
+  filtered: number;
+  total: number;
+  nounSingular: string;
+  nounPlural: string;
+  /** Appended after the noun phrase, e.g. “with composite weights”. */
+  qualifier?: string;
+};
+
 type Props = {
   domainFilter: ProjectDomain | null;
   workflowFilter: string | null;
@@ -46,6 +57,9 @@ type Props = {
   onSearchChange: (v: string) => void;
   onShowAllRoundsChange: (v: boolean) => void;
   onClearAll: () => void;
+  /** Override summary counts/labels; still uses round/domain badges from filters. */
+  countSummary?: ProjectMarketCountSummary;
+  searchPlaceholder?: string;
 };
 
 export function ProjectMarketFilterBar({
@@ -66,9 +80,21 @@ export function ProjectMarketFilterBar({
   onSearchChange,
   onShowAllRoundsChange,
   onClearAll,
+  countSummary,
+  searchPlaceholder = "Search projects or runs...",
 }: Props) {
+  const summaryFiltered = countSummary?.filtered ?? filteredRunCount;
+  const summaryTotal = countSummary?.total ?? totalRunCount;
+  const summaryNoun =
+    countSummary != null
+      ? summaryTotal === 1
+        ? countSummary.nounSingular
+        : countSummary.nounPlural
+      : null;
+  const summaryQualifier = countSummary?.qualifier;
+
   return (
-    <div className="rounded-xl border border-border/60 bg-card/30 p-4">
+    <EvalFilterSurface>
       <div className="flex flex-wrap items-center gap-3">
         <Select
           value={domainFilter ?? ALL}
@@ -150,7 +176,7 @@ export function ProjectMarketFilterBar({
         <EvalFilterSearchField
           value={searchQuery}
           onChange={onSearchChange}
-          placeholder="Search projects or runs..."
+          placeholder={searchPlaceholder}
         />
       </div>
 
@@ -158,9 +184,16 @@ export function ProjectMarketFilterBar({
       <div className="mt-3 flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           Showing{" "}
-          <span className="font-semibold text-foreground tabular-nums">{filteredRunCount}</span>{" "}
-          of <span className="font-semibold text-foreground tabular-nums">{totalRunCount}</span>{" "}
-          playable build{totalRunCount !== 1 ? "s" : ""}
+          <span className="font-semibold text-foreground tabular-nums">{summaryFiltered}</span>{" "}
+          of <span className="font-semibold text-foreground tabular-nums">{summaryTotal}</span>{" "}
+          {countSummary != null ? (
+            <>
+              {summaryNoun}
+              {summaryQualifier ? <> {summaryQualifier}</> : null}
+            </>
+          ) : (
+            <>playable build{totalRunCount !== 1 ? "s" : ""}</>
+          )}
           {!showAllRounds && !roundFilter && (
             <Badge
               variant="outline"
@@ -204,6 +237,6 @@ export function ProjectMarketFilterBar({
           )}
         </div>
       </div>
-    </div>
+    </EvalFilterSurface>
   );
 }
