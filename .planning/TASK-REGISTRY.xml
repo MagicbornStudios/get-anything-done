@@ -919,6 +919,20 @@
       <keywords>readme,docs,install,onboarding,security</keywords>
     </task>
   </phase>
+  <phase id="41">
+    <task id="41-01" status="planned"><goal>Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.</goal>
+      <keywords>sdk,query,architecture,cli</keywords>
+    </task>
+    <task id="41-02" status="planned"><goal>Extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. Scoped snapshots must inline only the relevant planning/docs context plus assignment metadata, while preserving the current full and sprint snapshot modes.</goal>
+      <keywords>snapshot,scoping,phase,task,agent</keywords>
+    </task>
+    <task id="41-03" status="planned"><goal>Add assignment commands to the CLI: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. Update TASK-REGISTRY.xml schema handling to support `agent-id`, `agent-role`, `runtime`, `model-profile`, `claimed`, and optional lease metadata for live concurrent agents.</goal>
+      <keywords>tasks,claim,release,assignment,agent-id</keywords>
+    </task>
+    <task id="41-04" status="planned"><goal>Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts.</goal>
+      <keywords>telemetry,site,assignments,workstreams,trace</keywords>
+    </task>
+  </phase>
   <phase id="39">
     <task id="39-01" type="site" status="done"><goal>Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.</goal>
       <resolution>Shipped 2026-04-12. Added site/components/landing/shared/Round4PressureCallout.tsx; Results and RoundResults import it; removed ResultsRound4Callout.tsx and RoundResultsDefaultCallout.tsx. pnpm exec tsc --noEmit clean.</resolution>

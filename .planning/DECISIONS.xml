@@ -985,4 +985,16 @@ Skills are methodology documents (SKILL.md) — agents read and follow them. The
     <impact>gad-tools init now emits resolved workflow model fields again. Claude SDK sessions no longer fail on a stale Haiku model ID and can be live-verified through SessionInit.model. Docs and tests move from balanced-by-default assumptions to off-by-default semantics. Future runtime-identity work in phase 35 builds on a working model-selection baseline instead of dead fields.</impact>
   </decision>
 
+  <decision id="gad-147">
+    <title>GAD workstreams are scoped execution contexts over shared planning artifacts, not duplicated planning trees</title>
+    <summary>After reviewing upstream get-shit-done workstreams, GAD adopts a different direction. The concurrency problem is real, but duplicating `STATE`, `ROADMAP`, `REQUIREMENTS`, and `phases/` under `.planning/workstreams/&lt;name&gt;/` is not the right fit for GAD's eval, tracing, and site-reporting model. GAD workstreams should instead be execution lanes over a single canonical planning tree. Shared planning artifacts remain the source of truth. Context is narrowed by scoped snapshots (`--phaseid`, `--taskid`, later optional `--agentid`) and by explicit task/phase assignment metadata.</summary>
+    <impact>Future workstream support in GAD will be built around scoped snapshots and assignment state, not namespaced planning files. Docs and workflows must not imply upstream-style `/gad:workstreams` support unless and until this model is implemented.</impact>
+  </decision>
+
+  <decision id="gad-148">
+    <title>Query-oriented SDK is the canonical planning logic core; CLI remains the canonical operator surface</title>
+    <summary>GAD keeps a CLI-first operator model for skills and humans, but the framework should stop treating subprocess calls to `gad-tools` as the hidden source of truth for planning operations. The canonical logic layer should be a query-oriented SDK surface (`sdk/src/query/...`) that exposes typed in-process handlers for state, roadmap, tasks, scoped snapshots, and task assignment. The CLI then becomes a thin wrapper over those handlers. Skills still invoke the CLI because that keeps agent behavior explicit and reproducible. Pipelines, site generation, trace/reporting, and future runtime adapters should use the query layer directly when possible.</summary>
+    <impact>Reduces duplication, improves testability, and makes future concurrency features like scoped snapshots and task claims easier to ship without inventing a second planning filesystem. Separates methodology skills (CLI-facing) from deterministic automation/pipelines (query-facing).</impact>
+  </decision>
+
 </decisions>

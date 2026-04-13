@@ -31,9 +31,9 @@ GAD-D-146: Claude-facing model profiles use aliases and stay off by default
 3. Execute phase 36 (per-eval repos + command split)
 4. Manually review 12 candidates on the site and decide: promote, merge, or discard
 5. Decide whether to backfill runtime identity into historically preserved eval traces or leave them as pre-contract runs
-6. Continue workstream review: keep GAD docs/workflows truthful (flat mode only) while comparing upstream workstream design against eval preservation, runtime tracing, and site reporting before reintroducing anything
-7. Keep `.tmp/get-shit-done` current and continue capturing upstream comparison notes before adopting workstreams, security, SDK, or README ideas
-8. Next upstream adoption review: compare GSD workstreams and query-SDK structure against GAD before implementing any workstream feature
+6. Phase 41 is the concrete workstream/concurrency track: scoped snapshots + task claims + query SDK over shared planning artifacts
+7. Keep `.tmp/get-shit-done` current and continue capturing upstream comparison notes before adopting more upstream SDK/workstream ideas
+8. Start 41-01/41-02 next: design the query handler surface and extend `gad snapshot` with `--phaseid`, `--taskid`, and `--agentid`
 
 === SELF-EVAL (latest) ===
 3,517 events | 198 tasks (191 done) | 143 decisions
