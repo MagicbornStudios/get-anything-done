@@ -29,6 +29,114 @@ const ALL = "__all";
 const DOMAINS: ProjectDomain[] = ["game", "video", "software", "tooling", "planning"];
 const WORKFLOWS = ["bare", "gad", "emergent"] as const;
 
+const SELECT_TRIGGER_CLASS =
+  "h-9 w-[min(10rem,40vw)] rounded-lg border-border/70 bg-background/60 text-xs font-medium shadow-none focus:ring-accent/40";
+
+/** Domain + round `<Select>` pair for project / run catalog filters. */
+function ProjectFilterBarDomainRoundSelects({
+  domainFilter,
+  roundFilter,
+  allRounds,
+  onDomainChange,
+  onRoundChange,
+}: {
+  domainFilter: ProjectDomain | null;
+  roundFilter: string | null;
+  allRounds: string[];
+  onDomainChange: (v: ProjectDomain | null) => void;
+  onRoundChange: (v: string | null) => void;
+}) {
+  return (
+    <>
+      <Select
+        value={domainFilter ?? ALL}
+        onValueChange={(v) => onDomainChange(v === ALL ? null : (v as ProjectDomain))}
+      >
+        <SelectTrigger className={SELECT_TRIGGER_CLASS}>
+          <SelectValue placeholder="All domains" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL} className="text-xs">
+            All domains
+          </SelectItem>
+          {DOMAINS.map((d) => (
+            <SelectItem key={d} value={d} className="text-xs">
+              {DOMAIN_LABELS[d]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={roundFilter ?? ALL}
+        onValueChange={(v) => onRoundChange(v === ALL ? null : v)}
+      >
+        <SelectTrigger className={SELECT_TRIGGER_CLASS}>
+          <SelectValue placeholder="All rounds" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL} className="text-xs">
+            All rounds
+          </SelectItem>
+          {allRounds.map((r) => (
+            <SelectItem key={r} value={r} className="text-xs">
+              {r}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+}
+
+/** Bare / GAD / emergent hypothesis chips + “All workflows”. */
+function ProjectFilterBarWorkflowChips({
+  workflowFilter,
+  onWorkflowChange,
+}: {
+  workflowFilter: string | null;
+  onWorkflowChange: (v: string | null) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => onWorkflowChange(null)}
+        className={cn(
+          "h-auto rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-none",
+          !workflowFilter
+            ? "border-accent bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground"
+            : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60",
+        )}
+      >
+        All workflows
+      </Button>
+      {WORKFLOWS.map((wf) => {
+        const isActive = workflowFilter === wf;
+        return (
+          <Button
+            key={wf}
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onWorkflowChange(isActive ? null : wf)}
+            className={cn(
+              "h-auto gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-none",
+              isActive
+                ? WORKFLOW_TINT[wf].replace(/\/15/g, "/30").replace(/\/40/g, "/60")
+                : `${WORKFLOW_TINT[wf]} hover:brightness-125`,
+            )}
+          >
+            {WORKFLOW_HYPOTHESIS[wf] ?? wf}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** When set, replaces the default “playable builds” summary line (e.g. methodology weights catalog). */
 export type ProjectFilterBarCountSummary = {
   filtered: number;
@@ -38,6 +146,98 @@ export type ProjectFilterBarCountSummary = {
   /** Appended after the noun phrase, e.g. “with composite weights”. */
   qualifier?: string;
 };
+
+/** Counts line + round-window badge + clear / show-all actions. */
+function ProjectFilterBarSummaryRow({
+  summaryFiltered,
+  summaryTotal,
+  totalRunCount,
+  countSummary,
+  showAllRounds,
+  roundFilter,
+  domainFilter,
+  hasActiveFilters,
+  onShowAllRoundsChange,
+  onClearAll,
+}: {
+  summaryFiltered: number;
+  summaryTotal: number;
+  totalRunCount: number;
+  countSummary?: ProjectFilterBarCountSummary;
+  showAllRounds: boolean;
+  roundFilter: string | null;
+  domainFilter: ProjectDomain | null;
+  hasActiveFilters: boolean;
+  onShowAllRoundsChange: (v: boolean) => void;
+  onClearAll: () => void;
+}) {
+  const summaryNoun =
+    countSummary != null
+      ? summaryTotal === 1
+        ? countSummary.nounSingular
+        : countSummary.nounPlural
+      : null;
+  const summaryQualifier = countSummary?.qualifier;
+
+  return (
+    <div className="mt-3 flex items-center justify-between">
+      <p className="text-xs text-muted-foreground">
+        Showing{" "}
+        <span className="font-semibold text-foreground tabular-nums">{summaryFiltered}</span> of{" "}
+        <span className="font-semibold text-foreground tabular-nums">{summaryTotal}</span>{" "}
+        {countSummary != null ? (
+          <>
+            {summaryNoun}
+            {summaryQualifier ? <> {summaryQualifier}</> : null}
+          </>
+        ) : (
+          <>playable build{totalRunCount !== 1 ? "s" : ""}</>
+        )}
+        {!showAllRounds && !roundFilter && (
+          <Badge
+            variant="outline"
+            className="ml-2 border-amber-500/40 bg-amber-500/10 py-0.5 px-2 text-[10px] font-semibold normal-case tracking-normal text-amber-300"
+          >
+            last 5 rounds per project
+          </Badge>
+        )}
+        {domainFilter && (
+          <Badge
+            variant="outline"
+            className="ml-2 border-sky-500/40 bg-sky-500/10 py-0.5 px-2 text-[10px] font-semibold normal-case tracking-normal text-sky-300"
+          >
+            {DOMAIN_LABELS[domainFilter]}
+          </Badge>
+        )}
+      </p>
+      <div className="flex items-center gap-3">
+        {!showAllRounds && !roundFilter && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onShowAllRoundsChange(true)}
+            className="h-auto gap-1 p-0 text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:bg-transparent hover:text-foreground"
+          >
+            Show all rounds
+          </Button>
+        )}
+        {hasActiveFilters && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClearAll}
+            className="h-auto gap-1 p-0 text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:bg-transparent hover:text-foreground"
+          >
+            <X className="size-2.5" aria-hidden />
+            Clear all filters
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 type Props = {
   domainFilter: ProjectDomain | null;
@@ -85,48 +285,17 @@ export function ProjectFilterBar({
 }: Props) {
   const summaryFiltered = countSummary?.filtered ?? filteredRunCount;
   const summaryTotal = countSummary?.total ?? totalRunCount;
-  const summaryNoun =
-    countSummary != null
-      ? summaryTotal === 1
-        ? countSummary.nounSingular
-        : countSummary.nounPlural
-      : null;
-  const summaryQualifier = countSummary?.qualifier;
 
   return (
     <EvalFilterSurface>
       <div className="flex flex-wrap items-center gap-3">
-        <Select
-          value={domainFilter ?? ALL}
-          onValueChange={(v) => onDomainChange(v === ALL ? null : (v as ProjectDomain))}
-        >
-          <SelectTrigger className="h-9 w-[min(10rem,40vw)] rounded-lg border-border/70 bg-background/60 text-xs font-medium shadow-none focus:ring-accent/40">
-            <SelectValue placeholder="All domains" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL} className="text-xs">All domains</SelectItem>
-            {DOMAINS.map((d) => (
-              <SelectItem key={d} value={d} className="text-xs">
-                {DOMAIN_LABELS[d]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={roundFilter ?? ALL}
-          onValueChange={(v) => onRoundChange(v === ALL ? null : v)}
-        >
-          <SelectTrigger className="h-9 w-[min(10rem,40vw)] rounded-lg border-border/70 bg-background/60 text-xs font-medium shadow-none focus:ring-accent/40">
-            <SelectValue placeholder="All rounds" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL} className="text-xs">All rounds</SelectItem>
-            {allRounds.map((r) => (
-              <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ProjectFilterBarDomainRoundSelects
+          domainFilter={domainFilter}
+          roundFilter={roundFilter}
+          allRounds={allRounds}
+          onDomainChange={onDomainChange}
+          onRoundChange={onRoundChange}
+        />
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
@@ -134,42 +303,10 @@ export function ProjectFilterBar({
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onWorkflowChange(null)}
-            className={cn(
-              "h-auto rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-none",
-              !workflowFilter
-                ? "border-accent bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground"
-                : "border-border/70 bg-card/40 text-muted-foreground hover:border-accent/60",
-            )}
-          >
-            All workflows
-          </Button>
-          {WORKFLOWS.map((wf) => {
-            const isActive = workflowFilter === wf;
-            return (
-              <Button
-                key={wf}
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onWorkflowChange(isActive ? null : wf)}
-                className={cn(
-                  "h-auto gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-none",
-                  isActive
-                    ? WORKFLOW_TINT[wf].replace(/\/15/g, "/30").replace(/\/40/g, "/60")
-                    : `${WORKFLOW_TINT[wf]} hover:brightness-125`,
-                )}
-              >
-                {WORKFLOW_HYPOTHESIS[wf] ?? wf}
-              </Button>
-            );
-          })}
-        </div>
+        <ProjectFilterBarWorkflowChips
+          workflowFilter={workflowFilter}
+          onWorkflowChange={onWorkflowChange}
+        />
 
         <div className="hidden h-6 w-px bg-border/60 sm:block" />
 
@@ -180,63 +317,18 @@ export function ProjectFilterBar({
         />
       </div>
 
-      {/* Summary row */}
-      <div className="mt-3 flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          Showing{" "}
-          <span className="font-semibold text-foreground tabular-nums">{summaryFiltered}</span>{" "}
-          of <span className="font-semibold text-foreground tabular-nums">{summaryTotal}</span>{" "}
-          {countSummary != null ? (
-            <>
-              {summaryNoun}
-              {summaryQualifier ? <> {summaryQualifier}</> : null}
-            </>
-          ) : (
-            <>playable build{totalRunCount !== 1 ? "s" : ""}</>
-          )}
-          {!showAllRounds && !roundFilter && (
-            <Badge
-              variant="outline"
-              className="ml-2 border-amber-500/40 bg-amber-500/10 py-0.5 px-2 text-[10px] font-semibold normal-case tracking-normal text-amber-300"
-            >
-              last 5 rounds per project
-            </Badge>
-          )}
-          {domainFilter && (
-            <Badge
-              variant="outline"
-              className="ml-2 border-sky-500/40 bg-sky-500/10 py-0.5 px-2 text-[10px] font-semibold normal-case tracking-normal text-sky-300"
-            >
-              {DOMAIN_LABELS[domainFilter]}
-            </Badge>
-          )}
-        </p>
-        <div className="flex items-center gap-3">
-          {!showAllRounds && !roundFilter && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onShowAllRoundsChange(true)}
-              className="h-auto gap-1 p-0 text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:bg-transparent hover:text-foreground"
-            >
-              Show all rounds
-            </Button>
-          )}
-          {hasActiveFilters && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onClearAll}
-              className="h-auto gap-1 p-0 text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:bg-transparent hover:text-foreground"
-            >
-              <X className="size-2.5" aria-hidden />
-              Clear all filters
-            </Button>
-          )}
-        </div>
-      </div>
+      <ProjectFilterBarSummaryRow
+        summaryFiltered={summaryFiltered}
+        summaryTotal={summaryTotal}
+        totalRunCount={totalRunCount}
+        countSummary={countSummary}
+        showAllRounds={showAllRounds}
+        roundFilter={roundFilter}
+        domainFilter={domainFilter}
+        hasActiveFilters={hasActiveFilters}
+        onShowAllRoundsChange={onShowAllRoundsChange}
+        onClearAll={onClearAll}
+      />
     </EvalFilterSurface>
   );
 }
