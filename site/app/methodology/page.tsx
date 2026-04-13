@@ -33,9 +33,7 @@ export default function MethodologyPage() {
       <Identified as="MethodologyPage-Gate">
         <MethodologyGateSection />
       </Identified>
-      <Identified as="MethodologyPage-Trace">
-        <MethodologyTraceSection />
-      </Identified>
+      <MethodologyTraceSection />
       <Identified as="MethodologyPage-DataPipeline">
         <MethodologyDataPipelineSection />
       </Identified>
