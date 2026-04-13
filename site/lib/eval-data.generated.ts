@@ -34,6 +34,35 @@ export interface EvalRunRecord {
   runtimeIdentity: Record<string, unknown> | null;
   runtimesInvolved: Array<Record<string, unknown>>;
   traceEvents: Array<Record<string, unknown>> | null;
+  agentLineage:
+    | {
+        source: "trace-events" | "runtime-only" | "missing";
+        has_lineage: boolean;
+        trace_event_count: number;
+        events_with_agent: number;
+        missing_agent_events: number;
+        total_agents: number;
+        root_agent_count: number;
+        subagent_count: number;
+        max_depth_observed: number | null;
+        runtimes: Array<{ id: string; count: number }>;
+        agents: Array<{
+          agent_id: string | null;
+          agent_role: string | null;
+          runtime: string | null;
+          parent_agent_id: string | null;
+          root_agent_id: string | null;
+          depth: number | null;
+          model_profile: string | null;
+          resolved_model: string | null;
+          event_count: number;
+          tool_use_count: number;
+          skill_invocation_count: number;
+          subagent_spawn_count: number;
+          file_mutation_count: number;
+        }>;
+      }
+    | null;
   evalType: string;
   contextMode: string | null;
   timing:
@@ -215,6 +244,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -304,6 +346,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -457,6 +512,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -524,6 +592,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -593,6 +674,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -716,6 +810,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -810,6 +917,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -952,6 +1072,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1089,6 +1222,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1225,6 +1371,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1325,6 +1484,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1441,6 +1613,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1549,6 +1734,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1657,6 +1855,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1758,6 +1969,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -1877,6 +2101,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -2011,6 +2248,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -2083,6 +2333,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -2184,6 +2447,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -2288,6 +2564,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -2408,6 +2697,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -2550,6 +2852,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -2622,6 +2937,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -2691,6 +3019,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -2758,6 +3099,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -2827,6 +3181,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": null,
     "timing": null,
@@ -2880,6 +3247,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -2969,6 +3349,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -3056,6 +3449,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -3188,6 +3594,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -3256,6 +3675,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -3386,6 +3818,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -3480,6 +3925,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "implementation",
     "contextMode": "fresh",
     "timing": {
@@ -3612,6 +4070,19 @@ export const EVAL_RUNS: EvalRunRecord[] = [
     "runtimeIdentity": null,
     "runtimesInvolved": [],
     "traceEvents": null,
+    "agentLineage": {
+      "source": "missing",
+      "has_lineage": false,
+      "trace_event_count": 0,
+      "events_with_agent": 0,
+      "missing_agent_events": 0,
+      "total_agents": 0,
+      "root_agent_count": 0,
+      "subagent_count": 0,
+      "max_depth_observed": null,
+      "runtimes": [],
+      "agents": []
+    },
     "evalType": "greenfield",
     "contextMode": "fresh",
     "timing": {
@@ -6060,6 +6531,18 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-150",
+    "title": "Agent lane depth is capped at one direct child level",
+    "summary": "GAD adopts a hard concurrency depth limit of `1`. Root agents may spawn direct child lanes, but child lanes may not spawn additional children. This preserves the single-master-loop model, prevents recursive agent explosion, keeps trace lineage understandable, and avoids hidden token burn from swarm-like recursion. Parent/root lineage is still recorded explicitly, but the lineage graph is always root plus zero-or-more direct children.",
+    "impact": "`gad snapshot` and future assignment/spawn helpers must reject `parent-agentid` chains that would create depth `2` or deeper. Trace data and site reporting only need to support root/child lineage, not arbitrary trees."
+  },
+  {
+    "id": "gad-149",
+    "title": "gad snapshot is the normal agent-lane bootstrap handshake",
+    "summary": "Concurrent GAD agents should not need a separate mandatory registration command before they can work. `gad snapshot` is both the context loader and the identity/bootstrap handshake. When snapshot is called with runtime/role/parent/task/phase context, or when a known runtime is detected, it auto-registers or refreshes the calling lane, returns `agent`, `scope`, and `assignments` blocks, and persists live lane state in the project planning directory. Manual registration can remain a debugging/ops affordance later, but it is not the canonical workflow.",
+    "impact": "All runtime integrations can start from one call: snapshot. Spawned subagents receive their lane identity and scoped context from the same command. Shared lane state becomes machine-managed in `.planning/.gad-agent-lanes.json`."
+  },
   {
     "id": "gad-148",
     "title": "Query-oriented SDK is the canonical planning logic core; CLI remains the canonical operator surface",
@@ -9938,10 +10421,10 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "41-01",
     "phaseId": "41",
-    "status": "planned",
-    "agentId": null,
-    "skill": null,
-    "type": null,
+    "status": "done",
+    "agentId": "default",
+    "skill": "framework-upgrade",
+    "type": "sdk",
     "goal": "Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.",
     "keywords": [
       "sdk",
@@ -9954,10 +10437,10 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "41-02",
     "phaseId": "41",
-    "status": "planned",
-    "agentId": null,
-    "skill": null,
-    "type": null,
+    "status": "done",
+    "agentId": "default",
+    "skill": "framework-upgrade",
+    "type": "cli",
     "goal": "Extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. Scoped snapshots must inline only the relevant planning/docs context plus assignment metadata, while preserving the current full and sprint snapshot modes.",
     "keywords": [
       "snapshot",
@@ -9971,10 +10454,10 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "41-03",
     "phaseId": "41",
-    "status": "planned",
-    "agentId": null,
-    "skill": null,
-    "type": null,
+    "status": "done",
+    "agentId": "default",
+    "skill": "framework-upgrade",
+    "type": "cli",
     "goal": "Add assignment commands to the CLI: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. Update TASK-REGISTRY.xml schema handling to support `agent-id`, `agent-role`, `runtime`, `model-profile`, `claimed`, and optional lease metadata for live concurrent agents.",
     "keywords": [
       "tasks",
@@ -9988,10 +10471,10 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "41-04",
     "phaseId": "41",
-    "status": "planned",
-    "agentId": null,
-    "skill": null,
-    "type": null,
+    "status": "in-progress",
+    "agentId": "default",
+    "skill": "framework-upgrade",
+    "type": "telemetry",
     "goal": "Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts.",
     "keywords": [
       "telemetry",
@@ -10395,8 +10878,36 @@ export const ALL_PHASES: PhaseRecord[] = [
   {
     "id": "41",
     "title": "Scoped snapshots + query SDK + assignment-based workstreams",
-    "status": "planned",
+    "status": "active",
     "goal": "Implement GAD's concurrency/workstream model without duplicating planning trees. Deliverables: query-oriented SDK handlers for state/tasks/scoped snapshots/assignment, CLI support for `gad snapshot --phaseid/--taskid/--agentid`, task claim/release/active commands, assignment metadata in TASK-REGISTRY.xml, and initial site/trace support for active agent lanes. This is the GAD alternative to upstream `.planning/workstreams/&lt;name&gt;/`.",
+    "outcome": null
+  },
+  {
+    "id": "42",
+    "title": "Evolution loop — canonical skill-creator wrapper + evolve/attempt/finish lifecycle",
+    "status": "planned",
+    "goal": "Build the evolution loop on top of Anthropic's canonical skill-creator skill instead of our own half-built drafting code. (1) New skill `gad:skill-creator` — a thin Claude Code skill that ensures the canonical `npx skills add https://github.com/anthropics/skills --skill skill-creator` is installed (idempotent), bundles a context payload (candidate file if any, source phase, tasks, requirements, related decisions, file refs, existing skill refs, GAD CLI surface from `gad --help`, tool refs), and invokes the canonical skill-creator with that payload. Skill-creator writes both SKILL.md and its tests in one session because that's what it's designed to do. The whole point: with a complete enough context bundle, the user never needs to talk to it manually. (2) Three lifecycle commands as Claude Code skills: `gad:evolution:evolve` runs pressure analysis (existing compute-self-eval.mjs) to identify candidates → for each new candidate, builds context payload → invokes `gad:skill-creator` with it → auto-registers a TASK-REGISTRY entry per candidate so it surfaces in `gad snapshot`. `gad:evolution:attempt-evolution` runs the tests the skill-creator wrote against each drafted candidate (verifier agent reads tests file, executes prompts, records pass/fail on candidate frontmatter as `attempted: true, attempt_result: pass|fail|partial`). `gad:evolution:finish-evolution` reviews attempted candidates: promotes passes to sdk/skills/, discards fails, writes a CHANGELOG.md entry under skills/, marks linked TASK-REGISTRY tasks as done, optionally bumps GAD framework version. (3) Deprecate lib/skill-draft.cjs and `gad eval skill draft-candidates` — they were a half-built version of what skill-creator does properly. The infrastructure they touched (compute-self-eval pressure analysis, candidate frontmatter, candidates dir layout) stays; only the drafting prompt + spawn-claude code dies. (4) The canonical skill-creator handles unit tests natively, so we don't need to invent SKILL.test.md format — we use whatever it writes. Tie-in: skills are sections of a species' DNA, so building good skills IS evolving the species, which makes this loop the load-bearing system for everything else.",
+    "outcome": null
+  },
+  {
+    "id": "43",
+    "title": "Domain rename + project/species schema unification",
+    "status": "planned",
+    "goal": "Two changes in one atomic pass. (1) **Schema unification**: today's separate eval projects (escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent) merge under one parent **project** (\"Escape the Dungeon\") that contains three **species** rows (gad, bare, emergent). The marketplace lists projects; project detail shows species; each species shows its generations. (2) **Domain rename**: rounds → evolutions (timeline of broods); each v1, v2… within a species → generation; all generations across species at the same round → brood; the skill manifest baked into a species → DNA; the bundle a generation produces (build + planning + trace + commits + reviews) → spawn. Touch: gad.json files (introduce `parent_project` field or merge the directory layout itself; preserve existing artifact paths to avoid breaking eval preservation), build-site-data.mjs (group by parent project, expose new types), all site components and pages (display strings, nav, hero copy), gad CLI commands and help text, AGENTS.md and the Loop docs, ROADMAP/STATE/DECISIONS prose. Single commit so we never half-rename. Display strings + types + grouping only — eval preservation paths stay stable.",
+    "outcome": null
+  },
+  {
+    "id": "44",
+    "title": "Project Market redesign — Unity Asset Store-style project marketplace",
+    "status": "planned",
+    "goal": "Rebuild /project-market as a real marketplace listing modeled on the Unity Asset Store: card grid with per-project cover image, species count badges (gad/bare/emergent), generation count, best human review (stars), DNA summary chip, and review excerpt. Add cardImage + tagline + heroImage fields to project metadata. For the existing 27 projects, generate placeholder gradient cards keyed to dominant species color until real images are dropped into public/projects/&lt;id&gt;.png. Faceted filter sidebar by species / domain / tech-stack. Card detail view stays at /projects/[id], showing the project's species rows with their generations nested. The marketplace should fit naturally next to a Unity Asset Store grid — same density, same affordances — because we already have the underlying data (assets, reviews via rubric scores).",
+    "outcome": null
+  },
+  {
+    "id": "45",
+    "title": "Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model",
+    "status": "planned",
+    "goal": "The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/brood/spawn/DNA/evolution language. Make the site read playfully (e.g. \"the bare species' v4 generation hatched a spawn that crushed the v4 brood\"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor.",
     "outcome": null
   }
 ];
@@ -10414,6 +10925,20 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-150",
+    "title": "Agent lane depth is capped at one direct child level",
+    "kind": "decision",
+    "href": "/decisions#gad-150",
+    "body": "gad-150 agent lane depth is capped at one direct child level gad adopts a hard concurrency depth limit of `1`. root agents may spawn direct child lanes, but child lanes may not spawn additional children. this preserves the single-master-loop model, prevents recursive agent explosion, keeps trace lineage understandable, and avoids hidden token burn from swarm-like recursion. parent/root lineage is still recorded explicitly, but the lineage graph is always ro"
+  },
+  {
+    "id": "gad-149",
+    "title": "gad snapshot is the normal agent-lane bootstrap handshake",
+    "kind": "decision",
+    "href": "/decisions#gad-149",
+    "body": "gad-149 gad snapshot is the normal agent-lane bootstrap handshake concurrent gad agents should not need a separate mandatory registration command before they can work. `gad snapshot` is both the context loader and the identity/bootstrap handshake. when snapshot is called with runtime/role/parent/task/phase context, or when a known runtime is detected, it auto-registers or refreshes the calling lane, returns `agent`, `scope`, and `assignments` blocks, and persist"
+  },
   {
     "id": "gad-148",
     "title": "Query-oriented SDK is the canonical planning logic core; CLI remains the canonical operator surface",
@@ -13096,6 +13621,34 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "41 scoped snapshots + query sdk + assignment-based workstreams implement gad's concurrency/workstream model without duplicating planning trees. deliverables: query-oriented sdk handlers for state/tasks/scoped snapshots/assignment, cli support for `gad snapshot --phaseid/--taskid/--agentid`, task claim/release/active commands, assignment metadata in task-registry.xml, and initial site/trace support for active agent lanes. this is the gad alternative to upstream `.planning/workstreams/&lt;name&gt;/`."
   },
   {
+    "id": "42",
+    "title": "Phase 42 — Evolution loop — canonical skill-creator wrapper + evolve/attempt/finish lifecycle",
+    "kind": "phase",
+    "href": "/planning?tab=phases#42",
+    "body": "42 evolution loop — canonical skill-creator wrapper + evolve/attempt/finish lifecycle build the evolution loop on top of anthropic's canonical skill-creator skill instead of our own half-built drafting code. (1) new skill `gad:skill-creator` — a thin claude code skill that ensures the canonical `npx skills add https://github.com/anthropics/skills --skill skill-creator` is installed (idempotent), bundles a context payload (candidate file if any, source phase, tasks, requirements, related decisions, file refs, existing skill refs, gad cli surface from `gad --help`, tool refs), and invokes the canonical skill-creator with that payload. skill-creator writes both skill.md and its tests in one session because that's what it's designed to do. the whole point: with a complete enough context bundle, the user never needs to talk to it manually. (2) three lifecycle commands as claude code skills: `gad:evolution:evolve` runs pressure analysis (existing compute-self-eval.mjs) to identify candidates → for each new candidate, builds context payload → invokes `gad:skill-creator` with it → auto-registers a task-registry entry per candidate so it surfaces in `gad snapshot`. `gad:evolution:attempt-evolution` runs the tests the skill-creator wrote against each drafted candidate (verifier agent reads tests file, executes prompts, records pass/fail on candidate frontmatter as `attempted: true, attempt_result: pass|fail|partial`). `gad:evolution:finish-evolution` reviews attempted candidates: promotes passes to sdk/skills/, discards fails, writes a changelog.md entry under skills/, marks linked task-registry tasks as done, optionally bumps gad framework version. (3) deprecate lib/skill-draft.cjs and `gad eval skill draft-candidates` — they were a half-built version of what skill-creator does properly. the infrastructure they touched (compute-self-eval pressure analysis, candidate frontmatter, candidates dir layout) stays; only the drafting prompt + spawn-claude code dies. (4) the canonical skill-creator handles unit tests natively, so we don't need to invent skill.test.md format — we use whatever it writes. tie-in: skills are sections of a species' dna, so building good skills is evolving the species, which makes this loop the load-bearing system for everything else."
+  },
+  {
+    "id": "43",
+    "title": "Phase 43 — Domain rename + project/species schema unification",
+    "kind": "phase",
+    "href": "/planning?tab=phases#43",
+    "body": "43 domain rename + project/species schema unification two changes in one atomic pass. (1) **schema unification**: today's separate eval projects (escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent) merge under one parent **project** (\"escape the dungeon\") that contains three **species** rows (gad, bare, emergent). the marketplace lists projects; project detail shows species; each species shows its generations. (2) **domain rename**: rounds → evolutions (timeline of broods); each v1, v2… within a species → generation; all generations across species at the same round → brood; the skill manifest baked into a species → dna; the bundle a generation produces (build + planning + trace + commits + reviews) → spawn. touch: gad.json files (introduce `parent_project` field or merge the directory layout itself; preserve existing artifact paths to avoid breaking eval preservation), build-site-data.mjs (group by parent project, expose new types), all site components and pages (display strings, nav, hero copy), gad cli commands and help text, agents.md and the loop docs, roadmap/state/decisions prose. single commit so we never half-rename. display strings + types + grouping only — eval preservation paths stay stable."
+  },
+  {
+    "id": "44",
+    "title": "Phase 44 — Project Market redesign — Unity Asset Store-style project marketplace",
+    "kind": "phase",
+    "href": "/planning?tab=phases#44",
+    "body": "44 project market redesign — unity asset store-style project marketplace rebuild /project-market as a real marketplace listing modeled on the unity asset store: card grid with per-project cover image, species count badges (gad/bare/emergent), generation count, best human review (stars), dna summary chip, and review excerpt. add cardimage + tagline + heroimage fields to project metadata. for the existing 27 projects, generate placeholder gradient cards keyed to dominant species color until real images are dropped into public/projects/&lt;id&gt;.png. faceted filter sidebar by species / domain / tech-stack. card detail view stays at /projects/[id], showing the project's species rows with their generations nested. the marketplace should fit naturally next to a unity asset store grid — same density, same affordances — because we already have the underlying data (assets, reviews via rubric scores)."
+  },
+  {
+    "id": "45",
+    "title": "Phase 45 — Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model",
+    "kind": "phase",
+    "href": "/planning?tab=phases#45",
+    "body": "45 full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model the big polish pass after the rename and marketplace land. refresh the visual identity, type ramp, color palette, hero copy, about page, readme, and external-facing docs around the new species/generation/brood/spawn/dna/evolution language. make the site read playfully (e.g. \"the bare species' v4 generation hatched a spawn that crushed the v4 brood\"). audit every public-facing string. includes site-wide consistency check: same word for same concept everywhere. logo + favicon refresh if needed. standalone phase because it's a focused design + copy effort, not a code refactor."
+  },
+  {
     "id": "compound-skills-hypothesis",
     "title": "Compound-Skills Hypothesis",
     "kind": "glossary",
@@ -13677,6 +14230,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "gad-eval-suite gad:eval-suite run all eval projects in parallel with bootstrap prompts"
   },
   {
+    "id": "gad-evolution-evolve",
+    "title": "gad-evolution-evolve",
+    "kind": "skill",
+    "href": "/skills/gad-evolution-evolve",
+    "body": "gad-evolution-evolve gad-evolution-evolve >- start a new evolution of the gad framework — analyze high-pressure phases, identify skill candidates, write a complete intent.md context payload for each, and hand them off to gad-skill-creator for autonomous test-and-draft. use when the user says \"let's evolve\", \"run an evolution\", \"find new skills\", \"what skills should we add\", or after closing a milestone where you want to capture lessons. an evolution is the primary mechanism by which gad's species (its dna / skill set) improves between milestones. refuses to run if any pending candidates from a previous evolution still need human review — clear the queue first."
+  },
+  {
     "id": "gad-execute-phase",
     "title": "gad:execute-phase",
     "kind": "skill",
@@ -13898,7 +14458,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "gad-skill-creator",
     "kind": "skill",
     "href": "/skills/gad-skill-creator",
-    "body": "gad-skill-creator gad-skill-creator >- create gad-tailored skills that use the gad cli, planning artifacts, and eval framework. use when the user wants to create a new skill for the gad workflow, turn a repetitive cli pattern into a skill, evaluate an existing skill, or enhance a workflow by reviewing tasks for repeated commands. also triggers on \"make a skill for\", \"create skill\", \"we should have a skill that\", \"turn this into a skill\", or when a task completion reveals repetitive cli patterns. immediately scaffolds an eval project for framework skills."
+    "body": "gad-skill-creator gad-skill-creator >- create a gad skill autonomously by feeding context to anthropic's canonical skill-creator. use when something in the gad workflow should become a reusable skill — a repeated cli sequence, a recurring decision pattern, a candidate emitted by `gad:evolution:evolve`, or a direct user request like \"make a skill for x\". this skill is a thin wrapper: it ensures the canonical skill-creator is installed, packages full project context (phase, tasks, decisions, file refs, cli surface, related skills) into an intent.md file, and hands it to skill-creator so the user never needs to sit through a q&a interview. triggers on \"make a skill for\", \"create a skill\", \"we need a skill that\", \"turn this into a skill\", \"promote this candidate to a skill\", or whenever a completed task reveals a reusable pattern worth capturing."
   },
   {
     "id": "gad-stats",

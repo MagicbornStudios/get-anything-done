@@ -42,6 +42,8 @@ const { readBlockers } = require('../lib/blockers-reader.cjs');
 const { readDocsMap } = require('../lib/docs-map-reader.cjs');
 const { compile: compileDocs } = require('../lib/docs-compiler.cjs');
 const planningRefVerify = require('../lib/planning-ref-verify.cjs');
+const { summarizeAgentLineage } = require('../lib/eval-agent-lineage.cjs');
+const { parseTraceEventsJsonl } = require('../lib/trace-schema.cjs');
 const {
   addTaskClaim,
   claimTask,
@@ -2010,6 +2012,10 @@ const evalRun = defineCommand({
       framework_version: require(path.join(gadDir, 'package.json')).version || 'unknown',
       trace_schema_version: 5,
       runtime_identity: evalRuntime,
+      agent_lineage: summarizeAgentLineage({
+        runtimeIdentity: evalRuntime,
+        runtimesInvolved: evalRuntime?.id ? [{ id: evalRuntime.id, count: 1 }] : [],
+      }),
       runtime_install: hookSetup,
       eval_type: gadJson.eval_mode || 'greenfield',
       workflow: gadJson.workflow || 'unknown',
@@ -2641,6 +2647,7 @@ const evalTraceInit = defineCommand({
     // distinguish "agent improved" from "framework changed".
     const { getFrameworkVersion: _getFv } = require('../lib/framework-version.cjs');
     const fv = _getFv();
+    const runtimeIdentity = detectRuntimeIdentity();
 
     const trace = {
       eval: args.project,
@@ -2653,7 +2660,10 @@ const evalTraceInit = defineCommand({
       framework_commit_ts: fv.commit_ts,
       framework_stamp: fv.stamp,
       trace_schema_version: 4,
-      runtime_identity: detectRuntimeIdentity(),
+      runtime_identity: runtimeIdentity,
+      agent_lineage: summarizeAgentLineage({
+        runtimeIdentity,
+      }),
       eval_type: 'implementation',
       context_mode: args.mode,
       timing: {
@@ -3189,6 +3199,14 @@ const evalTraceFromLog = defineCommand({
         model: entries.find(e => e.runtime?.model)?.runtime?.model || null,
       },
       runtimes_involved: runtimeEntries.map(([id, count]) => ({ id, count })),
+      agent_lineage: summarizeAgentLineage({
+        runtimeIdentity: {
+          id: primaryRuntime,
+          source: 'log-derived',
+          model: entries.find(e => e.runtime?.model)?.runtime?.model || null,
+        },
+        runtimesInvolved: runtimeEntries.map(([id, count]) => ({ id, count })),
+      }),
       timing: {
         started: startTime,
         ended: endTime,
@@ -3962,6 +3980,33 @@ const evalPreserve = defineCommand({
         }
       } catch (err) {
         console.warn(`  [warn] skill provenance diff failed: ${err.message}`);
+      }
+    }
+
+    if (fs.existsSync(traceJsonPath)) {
+      try {
+        const trace = JSON.parse(fs.readFileSync(traceJsonPath, 'utf8'));
+        let traceEvents = Array.isArray(trace.trace_events) ? trace.trace_events : null;
+        if (!traceEvents && typeof trace.trace_events_file === 'string' && trace.trace_events_file.trim()) {
+          const traceEventsPath = trace.trace_events_file;
+          if (fs.existsSync(traceEventsPath)) {
+            traceEvents = parseTraceEventsJsonl(fs.readFileSync(traceEventsPath, 'utf8'));
+            trace.trace_events = traceEvents;
+            trace.trace_schema_version = Math.max(Number(trace.trace_schema_version || 0), 5);
+          }
+        }
+        trace.agent_lineage = summarizeAgentLineage({
+          traceEvents,
+          runtimeIdentity: trace.runtime_identity,
+          runtimesInvolved: trace.runtimes_involved,
+        });
+        fs.writeFileSync(traceJsonPath, JSON.stringify(trace, null, 2));
+        console.log(
+          `  Agent lineage:   ${trace.agent_lineage.total_agents} lane(s) ` +
+          `(${trace.agent_lineage.root_agent_count} root, ${trace.agent_lineage.subagent_count} subagent)`
+        );
+      } catch (err) {
+        console.warn(`  [warn] agent lineage summary failed: ${err.message}`);
       }
     }
 

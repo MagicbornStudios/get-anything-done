@@ -1,42 +1,41 @@
 ---
-name: phase-30-eval-framework-v2-domains-tech-stacks-ro
+name: phase-41-scoped-snapshots-query-sdk-assignment-ba
 status: candidate
 category: System
 origin: auto-drafted
 reviewed: false
 reviewed_on: null
 reviewed_notes: null
-source_phase: "30"
-source_phase_title: "Eval framework v2 — domains, tech stacks, rounds per project"
-pressure_score: 11
-tasks_total: 5
-crosscuts: 3
+source_phase: "41"
+source_phase_title: "Scoped snapshots + query SDK + assignment-based workstreams"
+pressure_score: 12
+tasks_total: 4
+crosscuts: 4
 drafted_on: "2026-04-13"
 description: >-
-  Candidate skill auto-drafted from phase 30 "Eval framework v2 — domains, tech stacks, rounds per project" — pressure score 11 (5 tasks, 3 crosscuts). Review and promote, merge, or discard.
+  Candidate skill auto-drafted from phase 41 "Scoped snapshots + query SDK + assignment-based workstreams" — pressure score 12 (4 tasks, 4 crosscuts). Review and promote, merge, or discard.
 ---
 
-# Skill Candidate: phase-30
+# Skill Candidate: phase-41
 
-**This is an auto-drafted candidate, not a live skill.** It was generated because phase 30 exceeded the pressure threshold (score 11, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.
+**This is an auto-drafted candidate, not a live skill.** It was generated because phase 41 exceeded the pressure threshold (score 12, threshold 10). High pressure signals that patterns likely exist in this phase that could become a reusable skill.
 
 ## Source phase
 
-- **Phase:** 30
-- **Title:** Eval framework v2 — domains, tech stacks, rounds per project
-- **Pressure score:** 11
-- **Tasks:** 5 total (5 done)
-- **Crosscuts:** 3 tasks touching multiple systems
+- **Phase:** 41
+- **Title:** Scoped snapshots + query SDK + assignment-based workstreams
+- **Pressure score:** 12
+- **Tasks:** 4 total (3 done)
+- **Crosscuts:** 4 tasks touching multiple systems
 
 ## Observed task patterns
 
 Review the tasks below for repeated command sequences, recurring agent decisions, or manual operations that could be automated:
 
-- **30-01** [done] gad rounds --project shows per-project rounds derived from TRACE.json requirements_version changes across runs.
-- **30-02** [done] Build requirement gate — gad eval score checks if build requirement (from gad.json) was produced. Failed gate = eval incomplete.
-- **30-03** [done] Human time estimation in eval prompt — buildEvalPrompt() includes instruction for agent to estimate human_estimate_hours before coding.
-- **30-04** [done] Source + build size computation — gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.json.
-- **30-05** [done] Site project detail shows domain badge + tech stack from eval project metadata.
+- **41-01** [done] Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assig...
+- **41-02** [done] Extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. Scoped snapshots must inline only the relevant planning/docs c...
+- **41-03** [done] Add assignment commands to the CLI: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. Update TASK-REGISTRY.xml schema handling to suppor...
+- **41-04** [in-progress] Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, ...
 
 ## Review checklist
 

@@ -28,6 +28,7 @@ const require = createRequire(import.meta.url);
 const { readDecisions } = require("../../lib/decisions-reader.cjs");
 const { readPhases } = require("../../lib/roadmap-reader.cjs");
 const { readTasks } = require("../../lib/task-registry-reader.cjs");
+const { summarizeAgentLineage } = require("../../lib/eval-agent-lineage.cjs");
 
 // Render markdown to HTML deterministically. GitHub flavoured, no sanitizer
 // because the content is authored in this repo and static at build time.
@@ -1777,6 +1778,14 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       runtimeIdentity: d.runtime_identity ?? null,
       runtimesInvolved: Array.isArray(d.runtimes_involved) ? d.runtimes_involved : [],
       traceEvents: Array.isArray(d.trace_events) ? d.trace_events : null,
+      agentLineage:
+        d.agent_lineage && typeof d.agent_lineage === "object"
+          ? d.agent_lineage
+          : summarizeAgentLineage({
+              traceEvents: Array.isArray(d.trace_events) ? d.trace_events : null,
+              runtimeIdentity: d.runtime_identity ?? null,
+              runtimesInvolved: Array.isArray(d.runtimes_involved) ? d.runtimes_involved : [],
+            }),
       evalType: d.eval_type ?? "implementation",
       contextMode: d.context_mode ?? null,
       timing: d.timing ?? null,
@@ -1804,9 +1813,8 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
   });
 
   // ---- Derived metrics (phase 27 track 3, task 27-11) ----
-  // Compute per-run derived metrics from existing v3 fields. Phase-25-dependent
-  // metrics (tool_use_mix, skill_to_tool_ratio, subagent_utilization) stub to
-  // null until trace v4 events are available.
+  // Compute per-run derived metrics from existing v3 fields plus preserved
+  // runtime/lineage metadata when available.
   for (const r of records) {
     const composite = r.scores.composite ?? 0;
     const humanScore = r.humanReview?.score;
@@ -1838,7 +1846,10 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       // Stubbed — require trace v4 events (phase 25)
       tool_use_mix: null,
       skill_to_tool_ratio: null,
-      subagent_utilization: null,
+      subagent_utilization:
+        r.agentLineage && typeof r.agentLineage.total_agents === "number" && r.agentLineage.total_agents > 0
+          ? (r.agentLineage.subagent_count ?? 0) / r.agentLineage.total_agents
+          : null,
       // total_commits
       total_commits: ga?.total_commits ?? null,
       // batch vs atomic — 1 means all atomic, 0 means all batched
@@ -1895,6 +1906,35 @@ export interface EvalRunRecord {
   runtimeIdentity: Record<string, unknown> | null;
   runtimesInvolved: Array<Record<string, unknown>>;
   traceEvents: Array<Record<string, unknown>> | null;
+  agentLineage:
+    | {
+        source: "trace-events" | "runtime-only" | "missing";
+        has_lineage: boolean;
+        trace_event_count: number;
+        events_with_agent: number;
+        missing_agent_events: number;
+        total_agents: number;
+        root_agent_count: number;
+        subagent_count: number;
+        max_depth_observed: number | null;
+        runtimes: Array<{ id: string; count: number }>;
+        agents: Array<{
+          agent_id: string | null;
+          agent_role: string | null;
+          runtime: string | null;
+          parent_agent_id: string | null;
+          root_agent_id: string | null;
+          depth: number | null;
+          model_profile: string | null;
+          resolved_model: string | null;
+          event_count: number;
+          tool_use_count: number;
+          skill_invocation_count: number;
+          subagent_spawn_count: number;
+          file_mutation_count: number;
+        }>;
+      }
+    | null;
   evalType: string;
   contextMode: string | null;
   timing:

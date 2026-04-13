@@ -11,7 +11,7 @@ source_phase_title: "Eval findings: enforce the loop, automate tracing, auto-sca
 pressure_score: 21
 tasks_total: 7
 crosscuts: 7
-drafted_on: "2026-04-12"
+drafted_on: "2026-04-13"
 description: >-
   Candidate skill auto-drafted from phase 14.5 "Eval findings: enforce the loop, automate tracing, auto-scaffold conventions" — pressure score 21 (7 tasks, 7 crosscuts). Review and promote, merge, or discard.
 ---
@@ -52,7 +52,7 @@ Before promoting this candidate to a real skill, answer:
 
 ## Review actions
 
-- **Promote** — move to `sdk/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
+- **Promote** — move to `.agents/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
 - **Merge** — combine with an existing skill via `gad:merge-skill`.
 - **Discard** — delete the candidate file and log why in the skills changelog.
 

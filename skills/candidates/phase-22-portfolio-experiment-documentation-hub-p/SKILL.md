@@ -11,7 +11,7 @@ source_phase_title: "Portfolio experiment documentation — hub, per-project, pe
 pressure_score: 110
 tasks_total: 58
 crosscuts: 26
-drafted_on: "2026-04-12"
+drafted_on: "2026-04-13"
 description: >-
   Candidate skill auto-drafted from phase 22 "Portfolio experiment documentation — hub, per-project, per-run, findings, graphs" — pressure score 110 (58 tasks, 26 crosscuts). Review and promote, merge, or discard.
 ---
@@ -60,7 +60,7 @@ Before promoting this candidate to a real skill, answer:
 
 ## Review actions
 
-- **Promote** — move to `sdk/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
+- **Promote** — move to `.agents/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
 - **Merge** — combine with an existing skill via `gad:merge-skill`.
 - **Discard** — delete the candidate file and log why in the skills changelog.
 

@@ -11,7 +11,7 @@ source_phase_title: "Eval suite — parallel runs + iteration cycle"
 pressure_score: 18
 tasks_total: 6
 crosscuts: 6
-drafted_on: "2026-04-12"
+drafted_on: "2026-04-13"
 description: >-
   Candidate skill auto-drafted from phase 18 "Eval suite — parallel runs + iteration cycle" — pressure score 18 (6 tasks, 6 crosscuts). Review and promote, merge, or discard.
 ---
@@ -51,7 +51,7 @@ Before promoting this candidate to a real skill, answer:
 
 ## Review actions
 
-- **Promote** — move to `sdk/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
+- **Promote** — move to `.agents/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
 - **Merge** — combine with an existing skill via `gad:merge-skill`.
 - **Discard** — delete the candidate file and log why in the skills changelog.
 

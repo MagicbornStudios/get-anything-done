@@ -11,7 +11,7 @@ source_phase_title: "Eval framework evolution: v3 scoring, gates, preservation c
 pressure_score: 56
 tasks_total: 28
 crosscuts: 14
-drafted_on: "2026-04-12"
+drafted_on: "2026-04-13"
 description: >-
   Candidate skill auto-drafted from phase 21 "Eval framework evolution: v3 scoring, gates, preservation contract, greenfield/brownfield" — pressure score 56 (28 tasks, 14 crosscuts). Review and promote, merge, or discard.
 ---
@@ -60,7 +60,7 @@ Before promoting this candidate to a real skill, answer:
 
 ## Review actions
 
-- **Promote** — move to `sdk/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
+- **Promote** — move to `.agents/skills/<final-name>/SKILL.md`, remove `status: candidate`, scaffold eval project per GAD-D-102.
 - **Merge** — combine with an existing skill via `gad:merge-skill`.
 - **Discard** — delete the candidate file and log why in the skills changelog.
 

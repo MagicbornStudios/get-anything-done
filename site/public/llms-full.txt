@@ -2,12 +2,12 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-12T20:44:45.164Z
+Generated: 2026-04-13T09:15:30.113Z
 
 
 ---
 
-# Skills (95)
+# Skills (96)
 
 ## gad:add-todo
 id: add-todo
@@ -3079,6 +3079,211 @@ Read and follow the companion `eval-suite` skill if it is installed.
 </skill>
 
 
+## gad-evolution-evolve
+id: gad-evolution-evolve
+description: >- Start a new evolution of the GAD framework — analyze high-pressure phases, identify skill candidates, write a complete INTENT.md context payload for each, and hand them off to gad-skill-creator for autonomous test-and-draft. Use when the user says "let's evolve", "run an evolution", "find new skills", "what skills should we add", or after closing a milestone where you want to capture lessons. An evolution is the primary mechanism by which GAD's species (its DNA / skill set) improves between milestones. Refuses to run if any pending candidates from a previous evolution still need human review — clear the queue first.
+origin: official
+
+
+# gad-evolution-evolve
+
+Drives one round of the GAD evolution loop. Every evolution produces a batch of
+**skill candidates** that must be reviewed by a human before they become real
+skills.
+
+## Mental model
+
+> A species' identity = its DNA = its installed skill set.
+> Evolving the species means evolving the skill set.
+> An evolution is one batch of proposed skill changes.
+
+The loop:
+
+```
+gad:evolution:evolve
+  ├─ pressure analysis (existing compute-self-eval.mjs)
+  ├─ for each high-pressure phase that doesn't already have a skill:
+  │     ├─ build INTENT.md from phase tasks/decisions/refs
+  │     ├─ invoke gad-skill-creator on the INTENT
+  │     └─ skill-creator writes SKILL.md + evals + viewer.html
+  └─ register a single TASK-REGISTRY task: "Review evolution <id> candidates"
+
+(human, async)
+  opens skills/candidates/<slug>/viewer.html for each candidate
+  → submits feedback → reviewer decides per-candidate
+
+gad evolution promote <slug>     ← moves to sdk/skills/
+gad evolution discard <slug>     ← deletes the candidate
+```
+
+The next `gad:evolution:evolve` cannot run until every candidate from the
+current evolution is either promoted or discarded.
+
+## Step 1: Refuse to start if there's a pending evolution
+
+```sh
+PENDING=$(ls skills/candidates 2>/dev/null | wc -l)
+if [ "$PENDING" -gt 0 ]; then
+  echo "Cannot start a new evolution — $PENDING candidates still pending review."
+  echo "Run 'gad status' to see them, then promote or discard each before evolving again."
+  exit 1
+fi
+```
+
+This is the human-review gate. It exists because evolutions accumulating without
+review just rot.
+
+## Step 2: Generate an evolution id
+
+```sh
+EVOLUTION_ID="$(date +%Y-%m-%d)-$(printf '%03d' $(( $(ls skills/.evolutions 2>/dev/null | wc -l) + 1 )))"
+mkdir -p skills/.evolutions
+touch "skills/.evolutions/$EVOLUTION_ID"
+```
+
+The empty marker file lets `gad status` and the site know an evolution started
+on this date even after all its candidates are reviewed and gone.
+
+## Step 3: Run pressure analysis to find candidate phases
+
+The existing self-eval pipeline already identifies high-pressure phases:
+
+```sh
+node site/scripts/compute-self-eval.mjs --emit-candidates --threshold 10
+```
+
+This writes a list of phase ids whose pressure score exceeds the threshold and
+that don't yet have a skill associated. Each is a candidate. (If you're invoked
+manually for a single skill from a user request, skip this step and go straight
+to step 4 with one phase id or `null`.)
+
+For each candidate phase, gather:
+
+- Phase id, title, goal, pressure score
+- All tasks in the phase (id, status, goal)
+- Decisions referencing the phase
+- File refs touched by the phase's tasks (from git history)
+- Errors / failed attempts (from `.gad-log/` and the phase's commits)
+
+Use the GAD CLI to pull these:
+
+```sh
+gad phases --projectid get-anything-done | grep "^get-anything-done  $PHASE_ID"
+gad tasks --projectid get-anything-done | grep "^get-anything-done  $PHASE_ID-"
+gad decisions --projectid get-anything-done | grep -i "phase $PHASE_ID"
+```
+
+## Step 4: Write INTENT.md per candidate
+
+For each candidate phase, propose a kebab-case skill name and write
+`skills/candidates/<slug>/INTENT.md` following the format defined in
+`gad-skill-creator`. The INTENT must be complete enough that skill-creator
+needs zero clarification.
+
+Critical: the **test prompts** in INTENT.md must be drawn from real tasks in
+the source phase. Skill-creator uses them verbatim as evaluation prompts, so
+they have to be realistic things a user would actually say — not abstracted
+descriptions.
+
+Also write the evolution id into the INTENT frontmatter:
+
+```yaml
+---
+status: candidate
+source_phase: 14
+source_phase_title: "Eval framework — escape the dungeon tracing"
+pressure_score: 18
+evolution_id: 2026-04-13-001
+created_on: 2026-04-13
+created_by: gad-evolution-evolve
+proposed_name: trace-aware-eval-runner
+---
+```
+
+## Step 5: Invoke gad-skill-creator on each INTENT
+
+Hand each candidate off to `gad-skill-creator`:
+
+```
+For each <slug> in this evolution:
+  Invoke gad-skill-creator with: "Process the candidate at
+  skills/candidates/<slug>/. The INTENT.md is complete; do not ask questions."
+```
+
+If you have access to spawning subagents, run multiple in parallel — one per
+candidate. Otherwise run them in series. Skill-creator's own test runs are
+already parallelized internally so we don't lose much by serializing the
+outer loop.
+
+## Step 6: Register a single review task
+
+After all candidates are drafted, register **one** task in TASK-REGISTRY for
+the whole evolution batch. Don't create one task per candidate — that's
+bookkeeping bloat. The candidates dir IS the work list.
+
+```
+Task: Review evolution <evolution-id> candidates
+Status: planned
+Goal: Open skills/candidates/<slug>/viewer.html for each pending candidate,
+review the test results, then run `gad evolution promote <slug>` or
+`gad evolution discard <slug>` on each. Evolution closes automatically when
+the candidates dir is empty.
+Skill: gad-evolution-evolve
+Type: framework
+```
+
+## Step 7: Print summary
+
+```
+Evolution 2026-04-13-001 started.
+  Drafted: 5 candidates
+  Pending review: 5
+
+Open the viewers in a browser to review each:
+  skills/candidates/<slug-1>/viewer.html
+  skills/candidates/<slug-2>/viewer.html
+  ...
+
+Then promote or discard each:
+  gad evolution promote <slug>
+  gad evolution discard <slug>
+
+Run `gad status` to see remaining candidates at any time.
+```
+
+## Why no attempt-evolution / finish-evolution skills
+
+Earlier sketches of this loop had three commands (evolve / attempt-evolution /
+finish-evolution). We collapsed to one because:
+
+1. **Testing happens inside skill-creator.** It runs the eval loop natively
+   (with-skill + baseline subagents, grading, benchmarking, viewer). We don't
+   need a separate `attempt-evolution` skill to do what skill-creator already
+   does better.
+2. **Finishing happens by file move.** Promote = `git mv` from candidates/ to
+   sdk/skills/. Discard = `rm -rf`. Both are one-line CLI commands, not skills.
+3. **The evolution closes itself.** When the candidates dir is empty, the
+   evolution is done. No separate "finish" gesture required.
+
+## Failure modes
+
+- **Pending candidates blocking evolve:** intentional. If you really need to
+  start fresh, manually `rm -rf skills/candidates/*` and accept that work is
+  lost. There's no `--force` flag because forcing this defeats the gate.
+- **INTENT.md too sparse:** skill-creator will start asking questions. Symptom:
+  the run hangs waiting for input. Fix: make INTENT.md richer, especially the
+  test prompts and CLI surface sections.
+- **No high-pressure phases found:** valid outcome. Print "no candidates this
+  evolution" and don't create any files. The evolution marker still drops in
+  `.evolutions/` so we have a record that we looked.
+
+## Reference
+
+- `gad-skill-creator` — the wrapper this skill invokes per candidate
+- `compute-self-eval.mjs` — pressure analysis source
+- Roadmap phase 42 — the design context for this whole loop
+
+
 ## gad:execute-phase
 id: gad-execute-phase
 description: Execute all plans in a phase with wave-based parallelization
@@ -4015,7 +4220,7 @@ d. **If ALL differences appear to be mechanical drift → still flag as CONFLICT
 When the config directory is a git repo but the pristine install commit can't be found, use commit history to identify user changes:
 ```bash
 # Find non-update commits that touched this file
-git -C "$CONFIG_DIR" log --oneline --no-merges -- "{file_path}" | grep -v "gsd:update\|GSD update\|gad-install"
+git -C "$CONFIG_DIR" log --oneline --no-merges -- "{file_path}" | grep -vi "update\|gad-install"
 ```
 Each matching commit represents an intentional user modification. Use the commit messages and diffs to understand what was changed and why.
 
@@ -4520,174 +4725,199 @@ The workflow handles all logic including:
 
 ## gad-skill-creator
 id: gad-skill-creator
-description: >- Create GAD-tailored skills that use the GAD CLI, planning artifacts, and eval framework. Use when the user wants to create a new skill for the GAD workflow, turn a repetitive CLI pattern into a skill, evaluate an existing skill, or enhance a workflow by reviewing tasks for repeated commands. Also triggers on "make a skill for", "create skill", "we should have a skill that", "turn this into a skill", or when a task completion reveals repetitive CLI patterns. Immediately scaffolds an eval project for framework skills.
+description: >- Create a GAD skill autonomously by feeding context to Anthropic's canonical skill-creator. Use when something in the GAD workflow should become a reusable skill — a repeated CLI sequence, a recurring decision pattern, a candidate emitted by `gad:evolution:evolve`, or a direct user request like "make a skill for X". This skill is a thin wrapper: it ensures the canonical skill-creator is installed, packages full project context (phase, tasks, decisions, file refs, CLI surface, related skills) into an INTENT.md file, and hands it to skill-creator so the user never needs to sit through a Q&A interview. Triggers on "make a skill for", "create a skill", "we need a skill that", "turn this into a skill", "promote this candidate to a skill", or whenever a completed task reveals a reusable pattern worth capturing.
 origin: official
 
 
 # gad-skill-creator
 
-Create skills tailored to the GAD workflow. Built on top of the Anthropic
-skill-creator methodology (see `references/anthropic-skill-creator.md`) but
-specialized for GAD's CLI, planning artifacts, and evaluation framework.
+A thin wrapper around Anthropic's canonical
+[skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
+that makes it work autonomously inside the GAD loop.
 
-## What makes a GAD skill different
+The canonical skill-creator is comprehensive — subagent-based test runs, grading,
+benchmarking, HTML viewer, description optimization. We don't reinvent any of
+that. We just **bypass its user interview** by feeding it a complete `INTENT.md`
+context file derived from the GAD planning artifacts, then **preserve its
+output** for the GAD site.
 
-GAD skills prefer CLI commands over manual file operations (decision gad-99,
-use good judgment). They chain `gad` CLI commands when possible. They know about
-planning artifacts (STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml). Framework
-skills get formal evaluation and are labeled as such.
+## When to use
 
-A GAD skill is NOT just instructions with GAD references. It should:
-1. Use `gad` CLI commands where they exist
-2. Reference planning artifacts by their standard names
-3. Tag its tasks with skill/agent attribution (decision gad-104)
-4. Have an eval project scaffolded immediately (decision gad-102)
+- A user explicitly asks to create / promote / refine a skill.
+- `gad:evolution:evolve` produced a candidate and you're invoked to flesh it out.
+- You hit a repeated CLI pattern across 3+ tasks and the user agrees it's a skill.
+- A bug or workaround is non-obvious enough that future agents will hit it.
 
-## Workflow
+## When NOT to use
 
-### 1. Identify what the skill should do
+- The pattern is one-off and won't recur.
+- The thing belongs in the GAD CLI itself (it would be a command, not a skill).
+- An existing skill already covers this — use `gad:merge-skill` or update in place.
 
-Sources of skill ideas:
-- **User request**: "make a skill for X"
-- **Task review (enhance)**: Review completed tasks for repetitive CLI patterns.
-  If 3+ tasks used the same sequence of commands, that's a skill candidate.
-  (decision gad-105)
-- **Merge opportunity**: `gad:merge-skill` detected overlapping skills
-- **CLI pattern**: A `gad` CLI command sequence that agents keep repeating
+## Step 1: Ensure canonical skill-creator is installed
 
-### 2. Check existing CLI coverage
-
-Before creating a skill, check if the GAD CLI already handles it:
+Idempotent — only installs if missing:
 
 ```sh
-gad --help 2>&1 | grep -i "<keyword>"
-gad eval --help 2>&1
-gad <subcommand> --help 2>&1
+if [ ! -d "$HOME/.agents/skills/skill-creator" ]; then
+  npx --yes skills add anthropics/skills --skill skill-creator --global --yes
+fi
 ```
 
-If a CLI command exists, the skill should wrap/chain it, not reimplement.
-If multiple CLI commands need chaining, that IS the skill.
+After install, `~/.agents/skills/skill-creator/SKILL.md` is the canonical source.
+Read it once for the full surface — this wrapper only handles the input/output
+plumbing.
 
-### 3. Check existing skills
+## Step 2: Build the INTENT.md context payload
 
-```sh
-ls skills/
-```
+Skill-creator's first step ("Capture Intent") is normally a user interview.
+We replace that with an INTENT.md file the skill-creator reads instead.
 
-Read any similar skills. If overlap exists, use `gad:merge-skill` instead of
-creating a new one.
+The INTENT.md location depends on where you're invoked from:
 
-### 4. Draft the skill
+- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/INTENT.md` (already
+  exists — evolve wrote it).
+- **From a direct user request:** scratch dir like
+  `skills/candidates/<proposed-slug>/INTENT.md`.
+- **From a "promote this candidate" request:** the existing INTENT.md in the
+  candidate dir.
 
-Follow the Anthropic skill-creator's SKILL.md anatomy:
+INTENT.md format (this is everything skill-creator's interview would have asked):
 
-```
-skill-name/
-├── SKILL.md          # Required: frontmatter + instructions
-├── references/       # Docs loaded as needed
-├── scripts/          # Executable automation
-└── evals/
-    └── evals.json    # Test cases
-```
-
-GAD-specific additions to frontmatter:
-```yaml
+```markdown
 ---
-name: skill-name
-description: >-
-  Descriptive trigger text. Be pushy per Anthropic guidelines.
-framework_skill: true|false    # true = formal evaluation required
-uses_cli: [gad eval, gad state] # CLI commands this skill chains
+status: candidate
+source_phase: <phase-id or null>
+source_phase_title: <title or null>
+pressure_score: <number or null>
+evolution_id: <YYYY-MM-DD-NNN or null>
+created_on: <YYYY-MM-DD>
+created_by: gad-skill-creator | gad-evolution-evolve
+proposed_name: <kebab-skill-name>
 ---
+
+# Intent: <proposed-skill-name>
+
+## What this skill should do
+<derived from phase tasks or user request — the recurring pattern in 1-2 paragraphs>
+
+## When it should trigger
+- <user-facing trigger 1>
+- <user-facing trigger 2>
+- Specific phrases users might say: "...", "...", "..."
+
+## Expected output format
+<what a successful invocation produces — file changes, CLI output, side effects>
+
+## Test prompts skill-creator should use
+1. <realistic user prompt drawn from a real task>
+2. <another realistic prompt with different phrasing>
+3. <a should-NOT-trigger negative case from an adjacent area>
+
+## Files this skill cares about
+- <path>: <one-line reason>
+
+## Decisions backing this skill
+- <decision-id>: <one-line summary>
+
+## CLI surface available
+<paste relevant lines from `gad --help` and `gad <subcommand> --help`>
+
+## Existing related skills
+- <skill-id>: <one-line reason it's adjacent but not the same thing>
+
+## Errors / failed attempts observed
+<from logs, git history, or the source phase's task notes — what didn't work>
 ```
 
-### 5. Scaffold the eval project immediately
+When you're filling INTENT.md from a phase, draw the test prompts from real
+tasks in that phase. The whole point is that skill-creator gets enough realistic
+context to write good evals without asking.
 
-For framework skills (or any skill the user wants evaluated):
+## Step 3: Invoke canonical skill-creator on the INTENT
+
+Skill-creator expects a conversational entry point. Give it a single message
+that points it at INTENT.md and tells it to skip the interview:
+
+```
+You are the canonical skill-creator. Read skills/candidates/<slug>/INTENT.md
+for the full intent — it replaces the user interview. Then:
+
+1. Write skills/candidates/<slug>/SKILL.md following your normal anatomy.
+2. Write skills/candidates/<slug>/evals/evals.json with the test prompts from
+   INTENT.md plus assertions you draft.
+3. Run your full test loop in skills/candidates/<slug>/skill-creator-workspace/
+   — spawn with-skill and baseline subagents in parallel, grade, aggregate,
+   benchmark.
+4. Generate the eval viewer with --static
+   skills/candidates/<slug>/viewer.html so a human can review it later
+   without a running server.
+5. STOP after the viewer is generated. Do NOT iterate. Do NOT prompt the user
+   to continue. The human review is asynchronous — they will open viewer.html
+   in a browser, review, and either promote or discard the candidate via the
+   gad CLI later.
+```
+
+The `--static` flag is critical — it makes skill-creator headless-compatible,
+which is what we need for the autonomous GAD loop. The viewer becomes a self-
+contained HTML file we can serve from the site or open locally.
+
+## Step 4: Preserve outputs for the GAD site
+
+After skill-creator finishes, copy the structured output into a known location
+the GAD site's build pipeline can find:
 
 ```sh
-gad eval setup --project <skill-name>
+SKILL_OUTPUT="skills/candidates/<slug>"
+mkdir -p "$SKILL_OUTPUT/_skill-creator-output"
+cp -r "$SKILL_OUTPUT/skill-creator-workspace" "$SKILL_OUTPUT/_skill-creator-output/workspace"
+[ -f "$SKILL_OUTPUT/viewer.html" ] && cp "$SKILL_OUTPUT/viewer.html" "$SKILL_OUTPUT/_skill-creator-output/viewer.html"
+[ -f "$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json" ] && \
+  cp "$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json" "$SKILL_OUTPUT/_skill-creator-output/benchmark.json"
 ```
 
-This creates `evals/<skill-name>/gad.json` and `template/`. The eval measures
-whether the skill improves agent outcomes vs not having the skill.
+`build-site-data.mjs` reads `_skill-creator-output/` to surface candidate
+benchmarks, viewer HTML, and per-eval results on the GAD site's evolution view.
 
-### 6. Write test cases
+## Step 5: Hand off to human review
 
-Create `evals/evals.json` inside the skill directory with 2-3 realistic
-test prompts. Follow the Anthropic skill-creator format:
+Print a clear handoff message to the user with the viewer path and what to do
+next:
 
-```json
-{
-  "skill_name": "my-gad-skill",
-  "evals": [
-    {
-      "id": 1,
-      "prompt": "Realistic user task that should trigger this skill",
-      "expected_output": "What success looks like",
-      "expectations": ["Verifiable outcome 1", "Verifiable outcome 2"]
-    }
-  ]
-}
+```
+Skill candidate ready for review:
+  skills/candidates/<slug>/SKILL.md
+  skills/candidates/<slug>/viewer.html
+
+Open the viewer in a browser, click through each test case, leave feedback,
+and click Submit All Reviews. When the feedback.json drops into the candidate
+dir, run:
+
+  gad evolution promote <slug>      # to merge into sdk/skills/
+  gad evolution discard <slug>      # to delete the candidate
 ```
 
-### 7. Run and evaluate
+The candidate stays in `skills/candidates/` until promoted or discarded.
+`gad:evolution:evolve` will refuse to start a new evolution while any pending
+candidates remain — this is the human-review gate.
 
-Use the Anthropic skill-creator's evaluation methodology:
-- Read `references/anthropic-skill-creator.md` for the full eval loop
-- Spawn with-skill and without-skill runs
-- Grade, aggregate, review with user
-- Iterate until satisfied
+## Failure modes
 
-### 8. Enhance review (post-creation)
-
-After the skill is in use, periodically review tasks that used it:
-1. What repetitive commands appeared?
-2. Should we create a script for them?
-3. Should we stack CLI commands instead?
-4. Should this become a `gad` CLI command?
-
-This feeds the cycle: CLI grows → skills thin → merge overlapping → repeat.
-
-## Installing skills into eval projects
-
-To evaluate a skill by installing it into an existing eval project:
-
-```sh
-# Install a local skill into an eval template
-gad eval run --install-skills path/to/skill <project>
-
-# Install from npx skills format
-npx skills add <url> --skill <name>
-# Then point the eval at it
-```
-
-The CLI handles copying the skill into the eval template, updating AGENTS.md
-skill references, and recording the installation in TRACE.json (decision gad-107).
-
-## Framework vs non-framework skills
-
-**Framework skills** (tagged `framework_skill: true`):
-- Related to GAD CLI, planning artifacts, eval framework, or core workflow
-- Require formal controlled evaluation
-- Labeled and identifiable on the site
-- Examples: trace-analysis, self-eval, snapshot-optimize
-
-**Workflow skills** (default):
-- Project-specific or domain-specific
-- Evaluated through rounds (observational data from real usage)
-- Still show usage metrics on the site from trace logs
-- Examples: find-sprites, frontend-design
+- **Skill-creator interviewing the user anyway:** make sure the INTENT.md is
+  complete and your prompt explicitly says "skip the interview." Skill-creator
+  defers to user input when context is thin, so a sparse INTENT.md will trigger
+  questions.
+- **Viewer not generating:** check that `--static` was passed. Without it,
+  skill-creator tries to launch a browser, which fails in headless GAD runs.
+- **Workspace pollution in git:** `_skill-creator-output/workspace/` can be
+  large. Add `skills/candidates/*/skill-creator-workspace/` to .gitignore and
+  only commit `_skill-creator-output/` (which is the trimmed, site-ready copy).
 
 ## Reference
 
-Read `references/anthropic-skill-creator.md` for the full Anthropic skill-creator
-methodology — this GAD skill creator follows the same eval loop but adds:
-- CLI-first design
-- Immediate eval project scaffolding
-- Task attribution tagging
-- Enhance review workflow
-- Framework/workflow skill distinction
+- Canonical skill-creator: `~/.agents/skills/skill-creator/SKILL.md`
+- Anthropic skills repo: https://github.com/anthropics/skills
+- Related skills: `gad-evolution-evolve`, `gad-merge-skill`, `gad-find-skills`
 
 
 ## gad:stats
@@ -5770,7 +6000,7 @@ This skill was authored on 2026-04-09 after decision gad-73 named the fundamenta
 
 ## gad:milestone
 id: milestone
-description: Manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. Use this skill when the user says "we're starting v2", "let's kick off the next release", "we finished everything in this milestone, what's next", "archive this milestone", or wants to review whether all planned work is actually done before closing. Also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. Covers gsd:new-milestone + gsd:complete-milestone + gsd:audit-milestone.
+description: Manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. Use this skill when the user says "we're starting v2", "let's kick off the next release", "we finished everything in this milestone, what's next", "archive this milestone", or wants to review whether all planned work is actually done before closing. Also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. Covers gad:new-milestone + gad:complete-milestone + gad:audit-milestone.
 origin: official
 
 
@@ -8088,7 +8318,47 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (143)
+# Decisions (147)
+
+## gad-150: Agent lane depth is capped at one direct child level
+
+### Summary
+
+GAD adopts a hard concurrency depth limit of `1`. Root agents may spawn direct child lanes, but child lanes may not spawn additional children. This preserves the single-master-loop model, prevents recursive agent explosion, keeps trace lineage understandable, and avoids hidden token burn from swarm-like recursion. Parent/root lineage is still recorded explicitly, but the lineage graph is always root plus zero-or-more direct children.
+
+### Impact
+
+`gad snapshot` and future assignment/spawn helpers must reject `parent-agentid` chains that would create depth `2` or deeper. Trace data and site reporting only need to support root/child lineage, not arbitrary trees.
+
+## gad-149: gad snapshot is the normal agent-lane bootstrap handshake
+
+### Summary
+
+Concurrent GAD agents should not need a separate mandatory registration command before they can work. `gad snapshot` is both the context loader and the identity/bootstrap handshake. When snapshot is called with runtime/role/parent/task/phase context, or when a known runtime is detected, it auto-registers or refreshes the calling lane, returns `agent`, `scope`, and `assignments` blocks, and persists live lane state in the project planning directory. Manual registration can remain a debugging/ops affordance later, but it is not the canonical workflow.
+
+### Impact
+
+All runtime integrations can start from one call: snapshot. Spawned subagents receive their lane identity and scoped context from the same command. Shared lane state becomes machine-managed in `.planning/.gad-agent-lanes.json`.
+
+## gad-148: Query-oriented SDK is the canonical planning logic core; CLI remains the canonical operator surface
+
+### Summary
+
+GAD keeps a CLI-first operator model for skills and humans, but the framework should stop treating subprocess calls to `gad-tools` as the hidden source of truth for planning operations. The canonical logic layer should be a query-oriented SDK surface (`sdk/src/query/...`) that exposes typed in-process handlers for state, roadmap, tasks, scoped snapshots, and task assignment. The CLI then becomes a thin wrapper over those handlers. Skills still invoke the CLI because that keeps agent behavior explicit and reproducible. Pipelines, site generation, trace/reporting, and future runtime adapters should use the query layer directly when possible.
+
+### Impact
+
+Reduces duplication, improves testability, and makes future concurrency features like scoped snapshots and task claims easier to ship without inventing a second planning filesystem. Separates methodology skills (CLI-facing) from deterministic automation/pipelines (query-facing).
+
+## gad-147: GAD workstreams are scoped execution contexts over shared planning artifacts, not duplicated planning trees
+
+### Summary
+
+After reviewing upstream get-shit-done workstreams, GAD adopts a different direction. The concurrency problem is real, but duplicating `STATE`, `ROADMAP`, `REQUIREMENTS`, and `phases/` under `.planning/workstreams/&lt;name&gt;/` is not the right fit for GAD's eval, tracing, and site-reporting model. GAD workstreams should instead be execution lanes over a single canonical planning tree. Shared planning artifacts remain the source of truth. Context is narrowed by scoped snapshots (`--phaseid`, `--taskid`, later optional `--agentid`) and by explicit task/phase assignment metadata.
+
+### Impact
+
+Future workstream support in GAD will be built around scoped snapshots and assignment state, not namespaced planning files. Docs and workflows must not imply upstream-style `/gad:workstreams` support unless and until this model is implemented.
 
 ## gad-146: Claude-facing model profiles stay off by default and use runtime-safe aliases when enabled
 
@@ -9937,7 +10207,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (188)
+# Tasks (197)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -10303,6 +10573,24 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **35-04** [done]: Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-safe Claude aliases when enabled, and a live verification path that proves a real Claude sub-session changed models.
 
+- **35-05** [in-progress]: After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before restoring any workstream feature. Confirm which parts of the old SDK are worth keeping, which should stay compatibility-only, and whether workstreams should exist in GAD at all.
+
+- **35-06** [planned]: Maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.
+
+- **35-07** [planned]: Rewrite GAD README to match the completeness and onboarding depth of upstream GSD’s README while preserving GAD’s actual runtime/install/canonical-source truth and avoiding stale command/runtime claims.
+
+- **35-08** [done]: Restore the shared GAD security module and realign the prompt injection scanners/tests with the current repo structure so the framework’s security claims are backed by a live module again.
+
+- **35-09** [done]: Expand GAD README to upstream-level completeness without inheriting stale npm-first or command-first claims. Cover install, runtime split, evals, planning model, security, updating, troubleshooting, and development flow.
+
+- **41-01** [done]: Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.
+
+- **41-02** [done]: Extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. Scoped snapshots must inline only the relevant planning/docs context plus assignment metadata, while preserving the current full and sprint snapshot modes.
+
+- **41-03** [done]: Add assignment commands to the CLI: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. Update TASK-REGISTRY.xml schema handling to support `agent-id`, `agent-role`, `runtime`, `model-profile`, `claimed`, and optional lease metadata for live concurrent agents.
+
+- **41-04** [in-progress]: Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts.
+
 - **39-01** [done]: Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.
 
 - **39-02** [done]: Deduplicate ExperimentLogIntro and RoundsIntro (identical copy): one canonical component or re-export; remove the extra file.
@@ -10318,7 +10606,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Phases (40)
+# Phases (45)
 
 ## Phase 01: Foundation
 
@@ -10559,6 +10847,36 @@ Close the loop between pressure observation and skill creation (GAD-D-115 + GAD-
 Status: done
 
 Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **Order:** (1) Burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) Then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared Playable/teaser chunks. (3) Re-scan periodically after other site work. **Defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. Tie-in: gad-134 (site reusability / cut duplicate edits). Depends on phase 28 (site architecture) being done.
+
+## Phase 41: Scoped snapshots + query SDK + assignment-based workstreams
+
+Status: active
+
+Implement GAD's concurrency/workstream model without duplicating planning trees. Deliverables: query-oriented SDK handlers for state/tasks/scoped snapshots/assignment, CLI support for `gad snapshot --phaseid/--taskid/--agentid`, task claim/release/active commands, assignment metadata in TASK-REGISTRY.xml, and initial site/trace support for active agent lanes. This is the GAD alternative to upstream `.planning/workstreams/&lt;name&gt;/`.
+
+## Phase 42: Evolution loop — canonical skill-creator wrapper + evolve/attempt/finish lifecycle
+
+Status: planned
+
+Build the evolution loop on top of Anthropic's canonical skill-creator skill instead of our own half-built drafting code. (1) New skill `gad:skill-creator` — a thin Claude Code skill that ensures the canonical `npx skills add https://github.com/anthropics/skills --skill skill-creator` is installed (idempotent), bundles a context payload (candidate file if any, source phase, tasks, requirements, related decisions, file refs, existing skill refs, GAD CLI surface from `gad --help`, tool refs), and invokes the canonical skill-creator with that payload. Skill-creator writes both SKILL.md and its tests in one session because that's what it's designed to do. The whole point: with a complete enough context bundle, the user never needs to talk to it manually. (2) Three lifecycle commands as Claude Code skills: `gad:evolution:evolve` runs pressure analysis (existing compute-self-eval.mjs) to identify candidates → for each new candidate, builds context payload → invokes `gad:skill-creator` with it → auto-registers a TASK-REGISTRY entry per candidate so it surfaces in `gad snapshot`. `gad:evolution:attempt-evolution` runs the tests the skill-creator wrote against each drafted candidate (verifier agent reads tests file, executes prompts, records pass/fail on candidate frontmatter as `attempted: true, attempt_result: pass|fail|partial`). `gad:evolution:finish-evolution` reviews attempted candidates: promotes passes to sdk/skills/, discards fails, writes a CHANGELOG.md entry under skills/, marks linked TASK-REGISTRY tasks as done, optionally bumps GAD framework version. (3) Deprecate lib/skill-draft.cjs and `gad eval skill draft-candidates` — they were a half-built version of what skill-creator does properly. The infrastructure they touched (compute-self-eval pressure analysis, candidate frontmatter, candidates dir layout) stays; only the drafting prompt + spawn-claude code dies. (4) The canonical skill-creator handles unit tests natively, so we don't need to invent SKILL.test.md format — we use whatever it writes. Tie-in: skills are sections of a species' DNA, so building good skills IS evolving the species, which makes this loop the load-bearing system for everything else.
+
+## Phase 43: Domain rename + project/species schema unification
+
+Status: planned
+
+Two changes in one atomic pass. (1) **Schema unification**: today's separate eval projects (escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent) merge under one parent **project** ("Escape the Dungeon") that contains three **species** rows (gad, bare, emergent). The marketplace lists projects; project detail shows species; each species shows its generations. (2) **Domain rename**: rounds → evolutions (timeline of broods); each v1, v2… within a species → generation; all generations across species at the same round → brood; the skill manifest baked into a species → DNA; the bundle a generation produces (build + planning + trace + commits + reviews) → spawn. Touch: gad.json files (introduce `parent_project` field or merge the directory layout itself; preserve existing artifact paths to avoid breaking eval preservation), build-site-data.mjs (group by parent project, expose new types), all site components and pages (display strings, nav, hero copy), gad CLI commands and help text, AGENTS.md and the Loop docs, ROADMAP/STATE/DECISIONS prose. Single commit so we never half-rename. Display strings + types + grouping only — eval preservation paths stay stable.
+
+## Phase 44: Project Market redesign — Unity Asset Store-style project marketplace
+
+Status: planned
+
+Rebuild /project-market as a real marketplace listing modeled on the Unity Asset Store: card grid with per-project cover image, species count badges (gad/bare/emergent), generation count, best human review (stars), DNA summary chip, and review excerpt. Add cardImage + tagline + heroImage fields to project metadata. For the existing 27 projects, generate placeholder gradient cards keyed to dominant species color until real images are dropped into public/projects/&lt;id&gt;.png. Faceted filter sidebar by species / domain / tech-stack. Card detail view stays at /projects/[id], showing the project's species rows with their generations nested. The marketplace should fit naturally next to a Unity Asset Store grid — same density, same affordances — because we already have the underlying data (assets, reviews via rubric scores).
+
+## Phase 45: Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model
+
+Status: planned
+
+The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/brood/spawn/DNA/evolution language. Make the site read playfully (e.g. "the bare species' v4 generation hatched a spawn that crushed the v4 brood"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor.
 
 
 ---
