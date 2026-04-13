@@ -252,6 +252,18 @@
     <status>done</status>
     <depends>31,38</depends>
   </phase>
+  <phase id="42.1">
+    <title>Framework comparison baseline + config consolidation + hydration metrics</title>
+    <goal>Make the framework-comparison story first-class before further marketplace/editor work. Deliverables: (1) one canonical config source (`gad-config.toml`) with automated compatibility export for `.planning/config.json`; legacy `planning-config.toml` remains fallback-only. (2) clarify the three concepts that are currently conflated: `workspace` = planning roots, `worktree` = git repo copies, `workstream` = shared-tree execution lane. Review upstream GSD workstreams against GAD's scoped-snapshot model, improve project worktree support outside evals, and port or explicitly defer worktree-health checks like upstream W017. (3) retire self-eval `loop_compliance` as the headline discipline metric; replace it with `framework_compliance` based on task skill/agent/type attribution and `hydration` metrics based on snapshot count, snapshot token volume, and hydration/total-token overhead. (4) document the framework comparison matrix as bare vs GSD vs GAD vs emergent vs custom, with Escape the Dungeon as the canonical comparison target and GAD+emergent retired as a standalone matrix condition.</goal>
+    <status>planned</status>
+    <depends>35,41,42</depends>
+  </phase>
+  <phase id="42.2">
+    <title>Evolution-loop follow-ups — proto-skill formalization, create-proto-skill rename, validator v2, findings whitepaper polish</title>
+    <goal>Ship the small, coherent follow-up tasks that fell out of the phase 42 evolution-loop experiment and the phase 42.1 framework-comparison reframing. (1) Write `sdk/references/proto-skills.md` as the canonical definition of proto-skill as a permanent skill type, the candidate→proto-skill→promoted flow, the filesystem handoff contract, and the difference from `gad-skill-creator` (decision gad-167). (2) Rename `sdk/skills/gad-quick-skill/` → `sdk/skills/create-proto-skill/`, update its SKILL.md to describe the filesystem handoff input contract (CANDIDATE.md + optional CONTEXT.md + REFERENCES.md) and the batch-friendly workflow, update callers in `sdk/skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, and site copy (decision gad-168). (3) Validator v2: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are recognized as the same ref. (4) Fix the /findings/&lt;slug&gt; 404 by shipping `site/app/findings/[slug]/page.tsx` with `generateStaticParams` over FINDINGS (decision gad-169) and give the /findings index a whitepaper-framed intro. (5) Nothing here unblocks phase 43/44/45 — this phase is a cleanup/clarification pass that lets the bigger arc proceed with the vocabulary and surfaces already consistent.</goal>
+    <status>planned</status>
+    <depends>42,42.1</depends>
+  </phase>
   <phase id="43">
     <title>Domain rename + project/species schema unification</title>
     <goal>Two changes in one atomic pass. (1) **Schema unification**: today's separate eval projects (escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent) merge under one parent **project** ("Escape the Dungeon") that contains three **species** rows (gad, bare, emergent). The marketplace lists projects; project detail shows species; each species shows its generations. (2) **Domain rename**: rounds → evolutions (timeline of broods); each v1, v2… within a species → generation; all generations across species at the same round → brood; the skill manifest baked into a species → DNA; the bundle a generation produces (build + planning + trace + commits + reviews) → spawn. Touch: gad.json files (introduce `parent_project` field or merge the directory layout itself; preserve existing artifact paths to avoid breaking eval preservation), build-site-data.mjs (group by parent project, expose new types), all site components and pages (display strings, nav, hero copy), gad CLI commands and help text, AGENTS.md and the Loop docs, ROADMAP/STATE/DECISIONS prose. Single commit so we never half-rename. Display strings + types + grouping only — eval preservation paths stay stable.</goal>
@@ -264,10 +276,16 @@
     <status>planned</status>
     <depends>43</depends>
   </phase>
-  <phase id="45">
-    <title>Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model</title>
-    <goal>The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/brood/spawn/DNA/evolution language. Make the site read playfully (e.g. "the bare species' v4 generation hatched a spawn that crushed the v4 brood"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor.</goal>
+  <phase id="44.5">
+    <title>Brood Editor — local-dev project/eval playground</title>
+    <goal>After the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project/species/brood as a live workspace rather than a read-only catalog entry. Scope: (1) A /brood-editor (or /projects/[id]/edit) route, gated to NODE_ENV=development, that renders the project's eval folder as an editable tree — requirements, gad.json, per-species overrides, manifest entries. (2) A Node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) Capture surfaces for species/population/generation/brood views keyed to the currently-edited project, reusing the Unity Asset Store card data from phase 44 but flipping the affordances from browse to mutate. (4) Explicit rejection of any Vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (5) Supports the "I want to iterate without rebuilding the whole site every time" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. Planning requirement: the bridge must refuse all requests unless NODE_ENV=development AND an explicit allow-list of commands is matched, so we never accidentally expose it in production builds.</goal>
     <status>planned</status>
     <depends>44</depends>
+  </phase>
+  <phase id="45">
+    <title>Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model</title>
+    <goal>The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/brood/spawn/DNA/evolution language. Make the site read playfully (e.g. "the bare species' v4 generation hatched a spawn that crushed the v4 brood"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor. Must drop any remaining "GAD+emergent" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169.</goal>
+    <status>planned</status>
+    <depends>44,44.5</depends>
   </phase>
 </roadmap>

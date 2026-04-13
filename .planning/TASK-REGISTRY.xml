@@ -924,6 +924,32 @@
       <keywords>readme,docs,install,onboarding,security</keywords>
     </task>
   </phase>
+    <phase id="42.1">
+      <task id="42.1-01" agent-id="default" skill="framework-upgrade" status="done" type="cli"><goal>Consolidate framework configuration around `gad-config.toml` as the single canonical source. `planning-config.toml` remains legacy read-only fallback; `.planning/config.json` becomes compatibility output generated automatically from canonical config for older workflows/tools.</goal>
+        <resolution>Shipped 2026-04-13. `bin/gad-config.cjs` now treats `gad-config.toml` as the canonical source for planning + workflow settings, exposes TOML write/export helpers, and regenerates compatibility JSON automatically. `gad-tools config-set` now writes canonical TOML and re-emits `.planning/config.json`, `gad-mcp.cjs` detects both TOML and compat JSON, and SDK init now scaffolds `gad-config.toml` plus the compatibility mirror from day one.</resolution>
+        <keywords>config,gad-config,planning-config,compatibility,json</keywords>
+      </task>
+      <task id="42.1-02" agent-id="default" skill="framework-upgrade" status="done" type="framework"><goal>Clarify and harden the three concepts that are currently conflated: `gad workspace` manages planning roots, `gad worktree` manages git working copies, and GAD workstreams are shared-tree execution lanes over a single planning source of truth. Update docs/CLI/help text to reflect that split and review what first-class project worktree support should exist outside evals.</goal>
+        <resolution>Shipped 2026-04-13. CLI descriptions now explicitly say `workspace` is the planning-root registry, `worktree` is for git working copies, and docs/skill text were updated to stop implying parity with upstream-style workstreams. Added `gad worktree new` so project worktrees are first-class outside eval-only flows.</resolution>
+        <keywords>workspace,worktree,workstream,docs,cli,lineage</keywords>
+      </task>
+      <task id="42.1-03" agent-id="default" skill="framework-upgrade" status="done" type="framework"><goal>Review upstream GSD worktree/workstream behavior against GAD's current implementation, including upstream worktree health detection (W017 stale/orphan worktrees). Port the checks that fit GAD's model, explicitly defer the ones that do not, and capture the parity/pros-cons story in planning docs.</goal>
+        <resolution>Shipped 2026-04-13. Reviewed live upstream GSD in `tmp/get-shit-done/` against current GAD, captured parity/pros-cons in planning decisions, and ported the stale/orphan worktree health behavior that fits GAD's model by extending `gad worktree list/show` with `prunable`, `exists`, `isOrphaned`, and `isStale` detection.</resolution>
+        <keywords>upstream-review,worktree,workstream,health,w017,parity</keywords>
+      </task>
+      <task id="42.1-04" agent-id="default" skill="objective-eval-design" status="done" type="telemetry"><goal>Replace self-eval `loop_compliance` with two more honest framework metrics: `framework_compliance` based on TASK-REGISTRY skill/agent/type attribution coverage, and `hydration` metrics based on snapshot count, estimated snapshot tokens, total project tokens, and hydration-overhead percentage.</goal>
+        <resolution>Shipped 2026-04-13. `site/scripts/compute-self-eval.mjs` now computes `framework_compliance` from completed-task attribution coverage and `hydration` from snapshot counts plus estimated snapshot token cost. Site formulas/planning surfaces were updated to render the new metrics, `loop_compliance` was removed from the current self-eval output, and verification showed framework compliance at 2.2% with hydration overhead at 61.5% for the current GAD project.</resolution>
+        <keywords>self-eval,framework-compliance,hydration,snapshot,tokens,metrics</keywords>
+      </task>
+      <task id="42.1-05" agent-id="default" skill="objective-eval-design" status="done" type="eval"><goal>Document the first-class framework comparison matrix for official evals: bare vs GSD vs GAD vs emergent vs custom. Define when a species remains canonical vs becomes custom (skills/content installed), retire GAD+emergent as a standalone matrix condition, and keep Escape the Dungeon as the official comparison target.</goal>
+        <resolution>Shipped 2026-04-13. Added `sdk/references/framework-comparison-matrix.md` as the canonical taxonomy for official eval conditions. The reference locks the canonical target to Escape the Dungeon, defines bare / GSD / GAD / emergent / custom, and codifies that any extra injected content moves a run into `custom` rather than inventing a separate `GAD+emergent` bucket.</resolution>
+        <keywords>eval,matrix,bare,gsd,gad,emergent,custom,escape-the-dungeon</keywords>
+      </task>
+      <task id="42.1-06" agent-id="default" skill="gad-add-backlog" status="done" type="site"><goal>Capture the follow-up idea for a local-first project-market/project-editor surface that can edit eval folders, run local commands/builds, and act as an interactive brood editor or playground without requiring full page recompiles for every iteration.</goal>
+        <resolution>Captured 2026-04-13 in decisions/state as the brood-editor / local-first project-market follow-up. Decision gad-170 fixes the first implementation to local-dev-only operation instead of production Vercel command execution.</resolution>
+        <keywords>project-market,editor,playground,local-dev,brood-editor,backlog</keywords>
+      </task>
+  </phase>
   <phase id="41">
     <task id="41-01" agent-id="default" skill="framework-upgrade" status="done" type="sdk"><goal>Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.</goal>
       <resolution>Shipped 2026-04-13. Added a first in-process query SDK slice under `sdk/src/query/` with typed readers and mutators for ROADMAP.xml, TASK-REGISTRY.xml, agent lanes, scoped snapshots, and task claim/release flows. Exposed the new `GADQuery` client from the public SDK plus `GSD#createQuery()`, and covered the slice with focused Vitest tests for scoped snapshot bootstrapping, depth enforcement, and task claim/release lifecycle.</resolution>
@@ -966,6 +992,42 @@
     <task id="39-06" type="site" status="done"><goal>Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.</goal>
       <resolution>Shipped 2026-04-12. PlayableEmbedBlock.tsx shares PlayableEmbed + PlayableSelectedPanel grid; PlayableDocModal stays at section level (same wiring). Teaser vs full use different run selectors (chips vs PlayableRunGroups) by design.</resolution>
       <keywords>site,playable,medium,dedup</keywords>
+    </task>
+  </phase>
+  <phase id="42.2">
+    <task id="42.2-01" type="docs" status="done" skill="default" agent="default"><goal>Write `sdk/references/proto-skills.md` as the canonical definition of proto-skill as a permanent skill type: pipeline stages, filesystem handoff contract (CANDIDATE.md + optional CONTEXT.md + REFERENCES.md), batching, promotion with PROVENANCE.md, and relationship to gad-skill-creator. Linked from the Reference nav and cited by decisions gad-167 and gad-168.</goal>
+      <resolution>Shipped 2026-04-13. sdk/references/proto-skills.md written covering pipeline stages, input/output contracts, batching rationale, context hydration pattern (calls gad snapshot/decisions/phases itself), validator semantics, and the create-proto-skill vs gad-skill-creator split.</resolution>
+      <keywords>proto-skill,references,docs,evolution</keywords>
+    </task>
+    <task id="42.2-02" type="site" status="done" skill="default" agent="default"><goal>Fix /findings/&lt;slug&gt; 404: ship `site/app/findings/[slug]/page.tsx` using generateStaticParams over FINDINGS catalog so the links from LineageMeasurementSection, RunHeroCallouts, and rubric hero resolve to standalone whitepaper-style pages.</goal>
+      <resolution>Shipped 2026-04-13. [slug]/page.tsx renders title/summary/badges/bodyHtml with a back link to /findings. generateStaticParams emits one entry per finding in the catalog. generateMetadata returns per-finding titles.</resolution>
+      <keywords>site,findings,404,whitepapers</keywords>
+    </task>
+    <task id="42.2-03" type="skill" status="planned"><goal>Rename `sdk/skills/gad-quick-skill/` → `sdk/skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `sdk/skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched — decision gad-168.</goal>
+      <keywords>skill,rename,create-proto-skill,evolution</keywords>
+    </task>
+    <task id="42.2-04" type="framework" status="planned"><goal>Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case.</goal>
+      <keywords>validator,evolution,bugfix</keywords>
+    </task>
+    <task id="42.2-05" type="site" status="planned"><goal>Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.</goal>
+      <keywords>site,findings,whitepapers,copy</keywords>
+    </task>
+    <task id="42.2-06" type="skill" status="planned"><goal>Design the create-proto-skill batching workflow: when invoked, the skill should enumerate pending candidates, read each candidate dir (CANDIDATE.md + optional CONTEXT.md/REFERENCES.md), draft a proto-skill per candidate, and write PROVENANCE.md alongside each SKILL.md. Open design question to resolve: does the skill process all candidates in one pass (bulk, amortized context) or one-per-invocation (simpler, higher per-draft cost)?</goal>
+      <keywords>skill,design,create-proto-skill,batching</keywords>
+    </task>
+  </phase>
+  <phase id="44.5">
+    <task id="44.5-01" type="site" status="planned"><goal>Scaffold the brood editor route: /brood-editor (or /projects/[id]/edit) gated to NODE_ENV=development, renders a project's eval folder as an editable tree. Reuse the phase 44 marketplace card data but flip affordances from browse to mutate. First cut is read-only view of the tree + "this would be editable in dev mode" placeholder so we can ship the shell before the mutation bridge.</goal>
+      <keywords>brood-editor,site,local-dev,scaffold</keywords>
+    </task>
+    <task id="44.5-02" type="site" status="planned"><goal>Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development AND the command matches an allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `npx` commands scoped to the eval repo, build/verify commands). Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time.</goal>
+      <keywords>brood-editor,dev-bridge,security,local-dev</keywords>
+    </task>
+    <task id="44.5-03" type="site" status="planned"><goal>Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task — focus on the round-trip (read file → edit in browser → write file → trigger rebuild).</goal>
+      <keywords>brood-editor,filesystem,local-dev</keywords>
+    </task>
+    <task id="44.5-04" type="site" status="planned"><goal>Species/population/generation/brood capture surfaces inside the editor: small inspector panes showing the currently-edited project's species rows, each species's generations, and the brood view across all species at the same round. Reuses phase 44 components but with an "active editing" affordance indicating which row is being mutated.</goal>
+      <keywords>brood-editor,species,generations,site</keywords>
     </task>
   </phase>
 </task-registry>

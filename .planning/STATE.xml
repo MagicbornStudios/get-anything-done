@@ -1,75 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>42</current-phase>
+  <current-phase>42.1</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 42 SHIPPED 2026-04-13 (8 of 9 punch list items). Evolution loop is live end-to-end: candidate → proto-skill → skill pipeline with gad-quick-skill (dot-agent wrapper) drafting and gad-evolution-validator (advisory) checking each draft. Full `gad evolution status|validate|promote|discard` CLI plus the skills infrastructure. Smoke-tested against a real candidate (phase-14-eval-framework-escape-the-dungeon-tracin): drafter wrote a proto-skill, validator caught real issues, status distinguished stages, discard cleanly removed the proto-skill. Pipeline works.
+  <next-action>Phase 42.1 is now shipped.
 
-The evolutionary domain vocabulary is LOCKED (decision gad-151): species / generation / brood / evolution / DNA / spawn. Projects remain the top-level marketable unit; species live inside projects. All user-facing copy must use these terms going forward. Findings doc captures the full experimental writeup that drove the architecture decisions (evals/FINDINGS-2026-04-13-evolution-loop-experiment.md).
+Completed in this session:
+1. 42.1-01 - canonical config consolidation around `gad-config.toml`, with `.planning/config.json` regenerated as compatibility output
+2. 42.1-02 - clarified `workspace` vs `worktree` vs `workstream` in CLI/docs and added first-class `gad worktree new`
+3. 42.1-03 - reviewed live upstream GSD parity and ported stale/orphan worktree detection that fits GAD
+4. 42.1-04 - retired `loop_compliance` in current self-eval output and replaced it with `framework_compliance` + `hydration`
+5. 42.1-06 - captured the brood-editor / local-first project-market follow-up and fixed it to local-dev-only in its first cut
 
-Phase 43 (domain rename + project/species schema unification) is the next planned phase. Phase 44 (Unity-Asset-Store-style project marketplace) follows. Phase 45 (full site rebrand around the evolutionary vocabulary) closes the arc — explicitly confirmed by the user as a first-class deliverable, not a parked idea.
+Current measured reality after the metric shift:
+- framework compliance: 4 / 179 completed tasks fully attributed = 2.2%
+- hydration overhead: 1,521,173 estimated snapshot tokens / 2,471,819 total project tokens = 61.5%
+- interpretation: the old loop-compliance story was flattering the framework; the new metrics show that attribution discipline is still weak and hydration cost is very high
 
-=== SHIPPED (phase 42 batch, 2026-04-13) ===
-- lib/evolution-validator.cjs — advisory checker engine, writes VALIDATION.md
-- bin/gad.cjs — new `evolution` subcommand with status/validate/promote/discard
-- sdk/skills/gad-quick-skill/SKILL.md — universal wrapper around dot-agent's create-skill
-- sdk/skills/gad-evolution-evolve/SKILL.md — orchestrator for the 3-stage pipeline
-- sdk/skills/gad-evolution-validator/SKILL.md — advisory validator skill
-- site/scripts/compute-self-eval.mjs — emits raw CANDIDATE.md instead of SKILL.md stub
-- skills/candidates/ — 14 regenerated in new CANDIDATE.md format
-- skills/proto-skills/ — new directory (stage 2 of the pipeline)
-- site/app/planning/ — Proto-skills tab added next to Candidates tab
-- site/components/landing/nav/nav-shared.ts — System group uses nested subGroups
-- site/components/landing/nav/NavDesktop.tsx — DropdownMenuSub for nested rendering
-- site/components/landing/nav/NavMobileMenu.tsx — inline nested labels on mobile
-- site/app/findings/page.tsx — restored /findings route for framework-level findings
-- evals/FINDINGS-2026-04-13-evolution-loop-experiment.md — the experiment writeup
-- site (2026-04-11): committed missing modules for Vercel — EvalFilterSurface, run-detail/* + lib/run-detail-shared + lib/run-process-metrics-runtime-label, project-market band components (task 28-02). Root cause was merged imports without `git add` of new paths.
-
-=== DECISIONS (phase 42 batch) ===
-GAD-D-151: Evolutionary domain vocabulary — species/generation/brood/evolution/DNA/spawn
-GAD-D-152: Two-stage evolution pipeline — candidate → proto-skill → skill
-GAD-D-153: Raw candidate input beats curated INTENT — curator is a filter
-GAD-D-154: Two-tier skill creators — gad-quick-skill (default) and gad-skill-creator (high-stakes)
-GAD-D-155: Validator is advisory, not blocking
-GAD-D-156: Evolutions gate on zero pending proto-skills (human review gate)
-GAD-D-157: System nav uses four submenus (Internals/Catalog/Reference/Engage)
-GAD-D-158: Phase 45 rebrand is confirmed direction
-GAD-D-159: Magicborn per-project nav scoping is a pending design decision
-
-=== NEXT ===
-1. Execute phase 43 — domain rename + project/species schema unification (depends on phase 42 ✓)
-2. Execute phase 44 — Unity-Asset-Store-style project marketplace (depends on phase 43)
-3. Execute phase 45 — full site rebrand around the evolutionary vocabulary (depends on phase 44)
-4. Resolve GAD-D-159 — pick the magicborn site config schema location (3 options in oneoff/OVERNIGHT-NOTES.md)
-5. Validator v2 fix (small, ~10 lines): dedup file refs with overlapping path prefixes in lib/evolution-validator.cjs extractFileRefs
-6. Run the first REAL evolution end-to-end (let gad-quick-skill actually draft from one of the 14 pending candidates, review the proto-skill, decide promote/discard)
-7. Surface framework findings on the /findings page as they're authored
-
-=== OPEN QUESTIONS (for next session) ===
-1. Magicborn config schema location — per-project gad-config.toml [site] table, standalone magicborn/.planning/site.toml, or top-level monorepo [docs.projects.&lt;id&gt;.site]?
-2. Validator v2 fix — its own commit or rolled into next phase 42-adjacent work?
-3. The phase-14 proto-skill sketch from the smoke test was discarded — worth saving as a starting point for later, or let the next real evolution regenerate it from scratch?
-
-=== SELF-EVAL (latest) ===
-4,308 events | 229 tasks (203 done) | 147 decisions
-Framework overhead: 21.3% | Loop compliance: 42%
-Candidates (stage 1): 14 | Proto-skills (stage 2): 0</next-action>
+Immediate next queue:
+1. 42.2-03 - rename `sdk/skills/gad-quick-skill/` -> `sdk/skills/create-proto-skill/`
+2. 42.2-04 - validator v2 file-ref dedup fix
+3. 42.2-05 - whitepaper-framed /findings index copy
+4. 42.2-06 - design the create-proto-skill batching workflow
+5. phase 43 / 44 / 44.5 / 45 - species rename, marketplace, brood editor, and rebrand work</next-action>
   <references>
-    <reference>sdk/skills/gad-quick-skill/SKILL.md</reference>
-    <reference>sdk/skills/gad-evolution-evolve/SKILL.md</reference>
-    <reference>sdk/skills/gad-evolution-validator/SKILL.md</reference>
-    <reference>sdk/skills/gad-skill-creator/SKILL.md</reference>
-    <reference>lib/evolution-validator.cjs</reference>
-    <reference>bin/gad.cjs (evolutionCmd block)</reference>
-    <reference>site/scripts/compute-self-eval.mjs (writeCandidates/generateCandidateMd)</reference>
-    <reference>site/components/landing/nav/nav-shared.ts</reference>
-    <reference>site/app/findings/page.tsx</reference>
-    <reference>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</reference>
-    <reference>.planning/ROADMAP.xml (phases 42-45)</reference>
-    <reference>.planning/DECISIONS.xml (gad-151 through gad-159)</reference>
-    <reference>oneoff/OVERNIGHT-NOTES.md (session handoff)</reference>
+    <reference>.planning/ROADMAP.xml (phase 42.1, 42.2, 44.5)</reference>
+    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 44.5-01..04)</reference>
+    <reference>.planning/DECISIONS.xml (gad-160 through gad-170)</reference>
+    <reference>tmp/get-shit-done-review-2026-04-13.md</reference>
+    <reference>tmp/get-shit-done/</reference>
+    <reference>bin/gad-config.cjs</reference>
+    <reference>bin/gad-tools.cjs</reference>
+    <reference>bin/gad-mcp.cjs</reference>
+    <reference>bin/gad.cjs (workspace/worktree/self-eval commands)</reference>
+    <reference>site/scripts/compute-self-eval.mjs</reference>
+    <reference>site/app/formulas/page.tsx</reference>
+    <reference>sdk/src/init-runner.ts</reference>
+    <reference>sdk/workflows/new-project.md</reference>
+    <reference>sdk/workflows/settings.md</reference>
+    <reference>sdk/references/framework-comparison-matrix.md</reference>
   </references>
   <last-updated>2026-04-13</last-updated>
+  <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
