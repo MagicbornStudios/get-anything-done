@@ -34,6 +34,7 @@ import { GSDEventStream } from './event-stream.js';
 import { PhaseRunner } from './phase-runner.js';
 import { ContextEngine } from './context-engine.js';
 import { PromptFactory } from './phase-prompt.js';
+import { GADQuery } from './query/index.js';
 
 // ─── Legacy compatibility class (`GSD`) ─────────────────────────────────────
 
@@ -118,6 +119,13 @@ export class GSD {
       projectDir: this.projectDir,
       gsdToolsPath: this.gsdToolsPath,
     });
+  }
+
+  /**
+   * Create an in-process planning query client.
+   */
+  createQuery(): GADQuery {
+    return new GADQuery(this.projectDir);
   }
 
   /**
@@ -289,6 +297,8 @@ export { loadConfig } from './config.js';
 export type { GSDConfig } from './config.js';
 export { GSD as GADCompat };
 export { GSDTools, GSDToolsError, resolveGsdToolsPath } from './gsd-tools.js';
+export { GADQuery } from './query/index.js';
+export * from './query/index.js';
 export { runPlanSession, runPhaseStepSession } from './session-runner.js';
 export { buildExecutorPrompt, parseAgentTools } from './prompt-builder.js';
 export * from './types.js';

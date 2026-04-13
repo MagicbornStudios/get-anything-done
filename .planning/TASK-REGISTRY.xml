@@ -920,7 +920,8 @@
     </task>
   </phase>
   <phase id="41">
-    <task id="41-01" agent-id="default" status="in-progress" type="sdk"><goal>Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.</goal>
+    <task id="41-01" agent-id="default" skill="framework-upgrade" status="done" type="sdk"><goal>Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.</goal>
+      <resolution>Shipped 2026-04-13. Added a first in-process query SDK slice under `sdk/src/query/` with typed readers and mutators for ROADMAP.xml, TASK-REGISTRY.xml, agent lanes, scoped snapshots, and task claim/release flows. Exposed the new `GADQuery` client from the public SDK plus `GSD#createQuery()`, and covered the slice with focused Vitest tests for scoped snapshot bootstrapping, depth enforcement, and task claim/release lifecycle.</resolution>
       <keywords>sdk,query,architecture,cli</keywords>
     </task>
     <task id="41-02" agent-id="default" skill="framework-upgrade" type="cli" status="done"><goal>Extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. Scoped snapshots must inline only the relevant planning/docs context plus assignment metadata, while preserving the current full and sprint snapshot modes.</goal>
