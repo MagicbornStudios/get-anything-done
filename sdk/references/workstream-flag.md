@@ -1,5 +1,7 @@
 # Workstream Flag (`--ws`)
 
+> Status: historical design note only. Workstreams are not currently implemented in the shipped `gad-tools` command surface, so do not rely on this reference until the feature is formally restored and evaluated.
+
 ## Overview
 
 The `--ws <name>` flag scopes GAD operations to a specific workstream, enabling
