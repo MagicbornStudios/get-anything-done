@@ -33,7 +33,11 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
   const doneTasks = allTasks.filter((t) => t.status === "done");
   const versions = REQUIREMENTS_HISTORY ?? [];
   const topOpen = openTasks.slice(0, 40);
-  const skillCandidates = (selfEvalData.latest?.skill_candidates ?? []) as SkillCandidate[];
+  const allCandidates = (selfEvalData.latest?.skill_candidates ?? []) as SkillCandidate[];
+  // Phase 42 split: stage="candidate" = raw, awaiting drafting; stage="drafted" = proto-skill awaiting review.
+  // Items without a stage field (legacy data) default to "candidate" for backwards compat.
+  const skillCandidates = allCandidates.filter((c) => (c.stage ?? "candidate") === "candidate");
+  const protoSkills = allCandidates.filter((c) => c.stage === "drafted");
 
   useEffect(() => {
     const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
@@ -68,8 +72,12 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
             </TabsTrigger>
           )}
           <TabsTrigger value="skill-candidates">
-            Skill candidates{" "}
+            Candidates{" "}
             <span className="ml-1.5 tabular-nums text-muted-foreground">{skillCandidates.length}</span>
+          </TabsTrigger>
+          <TabsTrigger value="proto-skills">
+            Proto-skills{" "}
+            <span className="ml-1.5 tabular-nums text-muted-foreground">{protoSkills.length}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -105,6 +113,10 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
 
         <TabsContent value="skill-candidates">
           <PlanningSkillCandidatesTab candidates={skillCandidates} />
+        </TabsContent>
+
+        <TabsContent value="proto-skills">
+          <PlanningSkillCandidatesTab candidates={protoSkills} />
         </TabsContent>
       </Tabs>
     </SiteSection>

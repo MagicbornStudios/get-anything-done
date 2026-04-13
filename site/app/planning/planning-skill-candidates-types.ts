@@ -20,6 +20,10 @@ export interface SkillCandidate {
   reviewed_notes: string | null;
   body_raw?: string;
   tasks: SkillCandidateTask[];
+  // Phase 42 — two-stage pipeline fields. Optional for backwards compat.
+  stage?: "candidate" | "drafted";
+  candidate_file?: string;
+  proto_skill_dir?: string | null;
 }
 
 export type SkillCandidateFilterMode = "all" | "unreviewed" | "reviewed";

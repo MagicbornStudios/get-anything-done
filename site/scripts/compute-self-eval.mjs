@@ -716,6 +716,11 @@ function writeCandidates(phasesPressure) {
         candidate_file: `skills/candidates/${name}/CANDIDATE.md`,
         proto_skill_dir: `skills/proto-skills/${name}/`,
         stage: "drafted",
+        // Legacy fields for backwards compat with existing detail page
+        file_path: `skills/candidates/${name}/CANDIDATE.md`,
+        reviewed: false,
+        reviewed_on: null,
+        reviewed_notes: null,
         body_raw: fs.existsSync(candidateFile) ? fs.readFileSync(candidateFile, "utf8") : body,
         body_html: renderMarkdown(fs.existsSync(candidateFile) ? fs.readFileSync(candidateFile, "utf8") : body),
         tasks: phase.tasks.filter(t => t.goal).map(t => ({ id: t.id, status: t.status, goal: t.goal })),
@@ -744,6 +749,11 @@ function writeCandidates(phasesPressure) {
       candidate_file: `skills/candidates/${name}/CANDIDATE.md`,
       proto_skill_dir: null,
       stage: "candidate",
+      // Legacy fields for backwards compat with existing detail page
+      file_path: `skills/candidates/${name}/CANDIDATE.md`,
+      reviewed: false,
+      reviewed_on: null,
+      reviewed_notes: null,
       body_raw: body,
       body_html: renderMarkdown(body),
       tasks: phase.tasks.filter(t => t.goal).map(t => ({ id: t.id, status: t.status, goal: t.goal })),
