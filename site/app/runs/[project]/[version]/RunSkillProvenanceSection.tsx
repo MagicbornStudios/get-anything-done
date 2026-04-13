@@ -14,6 +14,7 @@ export function RunSkillProvenanceSection({ run }: { run: EvalRunRecord }) {
 
   return (
     <SiteSection>
+      <Identified as="RunSkillProvenance">
       <SiteSectionHeading kicker="Skill provenance" />
       <Identified as="RunSkillProvenanceIntro">
         <SiteProse size="sm" className="mb-6">
@@ -121,6 +122,7 @@ export function RunSkillProvenanceSection({ run }: { run: EvalRunRecord }) {
             </div>
           </Identified>
         )}
+      </Identified>
     </SiteSection>
   );
 }

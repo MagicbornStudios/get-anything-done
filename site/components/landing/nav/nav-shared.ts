@@ -62,8 +62,8 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Catalog",
         links: [
           { href: "/skills", label: "Skills", note: "every authored skill + provenance" },
-          { href: "/#catalog", label: "Agents", note: "subagents" },
-          { href: "/#catalog", label: "Commands", note: "gad CLI" },
+          { href: "/skills?tab=agents", label: "Agents", note: "subagent roster + usage" },
+          { href: "/gad", label: "Commands", note: "framework overview (CLI in quickstart + docs)" },
           { href: "/downloads", label: "Downloads", note: "eval templates + planning packs" },
         ],
       },

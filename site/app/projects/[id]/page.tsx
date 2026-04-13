@@ -1,20 +1,19 @@
 import { notFound } from "next/navigation";
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import {
   EVAL_PROJECTS,
   EVAL_TEMPLATES,
   PLANNING_ZIPS,
 } from "@/lib/eval-data";
-import { ProjectEmergentLineageSection } from "@/app/projects/[id]/ProjectEmergentLineageSection";
-import { ProjectHeroSection } from "@/app/projects/[id]/ProjectHeroSection";
-import { ProjectRunsSection } from "@/app/projects/[id]/ProjectRunsSection";
-import { ProjectScoringWeightsSection } from "@/app/projects/[id]/ProjectScoringWeightsSection";
-import { ProjectSkillsScopeSection } from "@/app/projects/[id]/ProjectSkillsScopeSection";
-import { ProjectBugsSection } from "@/app/projects/[id]/ProjectBugsSection";
-import { ProjectRequirementsSection } from "@/app/projects/[id]/ProjectRequirementsSection";
-import { ProjectFindingsSection } from "@/app/projects/[id]/ProjectFindingsSection";
-import { projectRuns } from "@/app/projects/[id]/project-detail-shared";
+import { ProjectBugsSection } from "./ProjectBugsSection";
+import { ProjectEmergentLineageSection } from "./ProjectEmergentLineageSection";
+import { ProjectFindingsSection } from "./ProjectFindingsSection";
+import { ProjectHeroSection } from "./ProjectHeroSection";
+import { ProjectRequirementsSection } from "./ProjectRequirementsSection";
+import { ProjectRunsSection } from "./ProjectRunsSection";
+import { ProjectScoringWeightsSection } from "./ProjectScoringWeightsSection";
+import { ProjectSkillsScopeSection } from "./ProjectSkillsScopeSection";
+import { projectRuns } from "./project-detail-shared";
 
 export const dynamicParams = false;
 
@@ -49,36 +48,18 @@ export default async function ProjectPage({
   const template = EVAL_TEMPLATES.find((t) => t.project === project.id);
   const planning = PLANNING_ZIPS.find((p) => p.project === project.id);
 
-  const pl = project.id;
-
   return (
     <MarketingShell>
-      <Identified as={`Project-${pl}-Hero`}>
-        <ProjectHeroSection project={project} planning={planning} template={template} />
-      </Identified>
-      <Identified as={`Project-${pl}-SkillsScope`}>
-        <ProjectSkillsScopeSection project={project} />
-      </Identified>
-      <Identified as={`Project-${pl}-Runs`}>
-        <ProjectRunsSection runs={runs} />
-      </Identified>
-      {project.workflow === "emergent" && runs.length > 0 && (
-        <Identified as={`Project-${pl}-EmergentLineage`}>
-          <ProjectEmergentLineageSection runs={runs} />
-        </Identified>
-      )}
-      <Identified as={`Project-${pl}-Requirements`}>
-        <ProjectRequirementsSection projectId={project.id} />
-      </Identified>
-      <Identified as={`Project-${pl}-Findings`}>
-        <ProjectFindingsSection projectId={project.id} />
-      </Identified>
-      <Identified as={`Project-${pl}-Bugs`}>
-        <ProjectBugsSection projectId={project.id} />
-      </Identified>
-      <Identified as={`Project-${pl}-ScoringWeights`}>
-        <ProjectScoringWeightsSection project={project} />
-      </Identified>
+      <ProjectHeroSection project={project} planning={planning} template={template} />
+      <ProjectSkillsScopeSection project={project} />
+      <ProjectRunsSection runs={runs} />
+      {project.workflow === "emergent" && runs.length > 0 ? (
+        <ProjectEmergentLineageSection runs={runs} />
+      ) : null}
+      <ProjectRequirementsSection projectId={project.id} />
+      <ProjectFindingsSection projectId={project.id} />
+      <ProjectBugsSection projectId={project.id} />
+      <ProjectScoringWeightsSection project={project} />
     </MarketingShell>
   );
 }

@@ -13,6 +13,7 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
 
   return (
     <SiteSection>
+      <Identified as="PlanningOverviewSection">
       <Identified as="PlanningOverviewIntro">
         <SiteSectionHeading
           kicker="Planning state"
@@ -134,6 +135,7 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
           </Card>
         </Identified>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

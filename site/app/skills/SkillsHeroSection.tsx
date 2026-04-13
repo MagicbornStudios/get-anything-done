@@ -17,6 +17,7 @@ export function SkillsHeroSection({
 }: SkillsHeroSectionProps) {
   return (
     <SiteSection>
+      <Identified as="SkillsHeroSection">
       <Identified as="SkillsHeroHeading">
         <SiteSectionHeading
           kicker="Skills"
@@ -60,6 +61,7 @@ export function SkillsHeroSection({
         <SiteInlineMetric label="Framework-inherited" value={categoryCount("framework-inherited").toString()} />
         <SiteInlineMetric label="Skills used" value={usageCount.toString()} />
         <SiteInlineMetric label="Agents tracked" value={agentsCount.toString()} />
+      </Identified>
       </Identified>
     </SiteSection>
   );

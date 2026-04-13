@@ -1,3 +1,6 @@
+"use client";
+
+import { Identified } from "@/components/devid/Identified";
 import { WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
 import { Badge } from "@/components/ui/badge";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
@@ -21,7 +24,7 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
   const ended = typeof r.timing?.ended === "string" ? r.timing.ended : null;
 
   return (
-    <div className="space-y-3">
+    <Identified as="RunInfoPanel" className="space-y-3">
       <Badge variant="outline" className="inline-flex w-fit items-center gap-2 border-border/70 bg-card/50 py-1 text-xs font-semibold normal-case">
         <span className={`size-2 rounded-full ${REVIEW_STATE_DOT[state]}`} />
         {REVIEW_STATE_LABEL[state]}
@@ -106,6 +109,6 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
           {r.humanReview.notes}
         </p>
       ) : null}
-    </div>
+    </Identified>
   );
 }

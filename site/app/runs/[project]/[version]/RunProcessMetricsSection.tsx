@@ -1,8 +1,9 @@
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
-import { RunProcessMetricsAgentLineageBlock } from "@/app/runs/[project]/[version]/RunProcessMetricsAgentLineageBlock";
-import { RunProcessMetricsCardGrid } from "@/app/runs/[project]/[version]/RunProcessMetricsCardGrid";
-import { runtimeLabel } from "@/app/runs/[project]/[version]/run-process-metrics-runtime-label";
+import { RunProcessMetricsAgentLineageBlock } from "./RunProcessMetricsAgentLineageBlock";
+import { RunProcessMetricsCardGrid } from "./RunProcessMetricsCardGrid";
+import { runtimeLabel } from "@/lib/run-process-metrics-runtime-label";
 
 export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
   const runtimesInvolved = (run.runtimesInvolved ?? []).filter(Boolean);
@@ -11,11 +12,17 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
 
   return (
     <SiteSection>
-      <SiteSectionHeading kicker="Process metrics" title="How the agent actually worked" />
+      <Identified as="RunProcessMetrics">
+      <Identified as="RunProcessMetricsHeading">
+        <SiteSectionHeading kicker="Process metrics" title="How the agent actually worked" />
+      </Identified>
       <RunProcessMetricsCardGrid run={run} />
 
       {runtimesInvolved.length > 0 ? (
-        <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+        <Identified
+          as="RunProcessMetricsRuntimeChips"
+          className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground"
+        >
           {runtimesInvolved.map((runtime, index) => (
             <span
               key={`${String(runtime.id ?? "runtime")}-${index}`}
@@ -24,10 +31,11 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
               {runtimeLabel(runtime)}
             </span>
           ))}
-        </div>
+        </Identified>
       ) : null}
 
       {lineage ? <RunProcessMetricsAgentLineageBlock lineage={lineage} topAgents={topAgents} /> : null}
+      </Identified>
     </SiteSection>
   );
 }

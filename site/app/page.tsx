@@ -1,5 +1,4 @@
 import Hero from "@/components/landing/hero/Hero";
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import HypothesisTracksSection from "@/components/landing/hypothesis-tracks/HypothesisTracksSection";
 import Lineage from "@/components/landing/lineage/Lineage";
@@ -13,36 +12,18 @@ import RunIt from "@/components/landing/run-it/RunIt";
 export default function Page() {
   return (
     <MarketingShell>
-      <Identified as="LandingHero">
-        <Hero />
-      </Identified>
+      <Hero />
       {/* PRIMARY: graph + playable archive adjacent — the research showcase */}
-      <Identified as="LandingHypothesisTracksSection">
-        <HypothesisTracksSection />
-      </Identified>
-      <Identified as="LandingPlayableTeaser">
-        <PlayableTeaser />
-      </Identified>
+      <HypothesisTracksSection />
+      <PlayableTeaser />
       {/* CONTEXT: what the project is + how it works */}
-      <Identified as="LandingExperimentLog">
-        <ExperimentLog />
-      </Identified>
-      <Identified as="LandingGraphs">
-        <Graphs />
-      </Identified>
+      <ExperimentLog />
+      <Graphs />
       {/* BACKGROUND: lineage + methodology */}
-      <Identified as="LandingLineage">
-        <Lineage />
-      </Identified>
-      <Identified as="LandingWorkflow">
-        <Workflow />
-      </Identified>
-      <Identified as="LandingFramework">
-        <Framework />
-      </Identified>
-      <Identified as="LandingRunIt">
-        <RunIt />
-      </Identified>
+      <Lineage />
+      <Workflow />
+      <Framework />
+      <RunIt />
     </MarketingShell>
   );
 }

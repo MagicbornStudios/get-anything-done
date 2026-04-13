@@ -6,6 +6,7 @@ import type { ProducedArtifacts } from "@/lib/eval-data";
 export function RunProducedArtifactsSection({ produced }: { produced: ProducedArtifacts }) {
   return (
     <SiteSection>
+      <Identified as="RunProducedArtifacts">
       <SiteSectionHeading
         kicker="What the agent built for itself"
         title="Emergent workflow artifacts"
@@ -51,6 +52,7 @@ export function RunProducedArtifactsSection({ produced }: { produced: ProducedAr
                 </ul>
               </div>
             ))}
+      </Identified>
       </Identified>
     </SiteSection>
   );

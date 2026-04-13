@@ -20,6 +20,7 @@ export function RunHeroSection({
 }: RunHeroBaseProps) {
   return (
     <SiteSection>
+      <Identified as="RunHero">
       <Identified as="RunHeroBackAndTitle">
         <RunHeroBackAndTitle
           run={run}
@@ -51,6 +52,7 @@ export function RunHeroSection({
           <RunHeroActionButtons run={run} playable={playable} />
         </Identified>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

@@ -31,6 +31,7 @@ export default function ExperimentLog() {
 
   return (
     <SiteSection id="experiment-log" tone="muted" className="border-t border-border/60">
+      <Identified as="LandingExperimentLog">
       <Identified as="ExperimentLogIntro">
         <ExperimentLogIntro />
       </Identified>
@@ -79,6 +80,7 @@ export default function ExperimentLog() {
           <ExperimentLogEmptyState onClearLocalFilters={clearLocalFilters} />
         </Identified>
       )}
+      </Identified>
     </SiteSection>
   );
 }

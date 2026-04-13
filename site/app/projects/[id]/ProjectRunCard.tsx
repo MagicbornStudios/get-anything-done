@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
 import { FileCode2, Gamepad2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ export function ProjectRunCard({ run }: { run: EvalRunRecord }) {
   const produced = PRODUCED_ARTIFACTS[`${run.project}/${run.version}`];
 
   return (
+    <Identified as="ProjectRunCard" className="contents">
     <Card className="transition-colors hover:border-accent/60">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
@@ -83,5 +85,6 @@ export function ProjectRunCard({ run }: { run: EvalRunRecord }) {
         </div>
       </CardContent>
     </Card>
+    </Identified>
   );
 }

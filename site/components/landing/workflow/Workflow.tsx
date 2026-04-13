@@ -9,6 +9,7 @@ import { SiteSection } from "@/components/site";
 export default function Workflow() {
   return (
     <SiteSection id="workflow" tone="muted" className="border-t border-border/60">
+      <Identified as="LandingWorkflow">
       <Identified as="WorkflowIntro">
         <WorkflowIntro />
       </Identified>
@@ -17,6 +18,7 @@ export default function Workflow() {
       </Identified>
       <Identified as="WorkflowSessionTerminal">
         <WorkflowSessionTerminal />
+      </Identified>
       </Identified>
     </SiteSection>
   );

@@ -13,10 +13,6 @@ type Props = {
   onNavigate: () => void;
 };
 
-function mobileNavSlug(label: string) {
-  return label.replace(/[^a-zA-Z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
 function MobileNavLink({ link, prefix, onNavigate }: { link: NavLink; prefix: string; onNavigate: () => void }) {
   return (
     <li key={`${prefix}-${link.label}`}>
@@ -40,7 +36,7 @@ export function NavMobileMenu({ onNavigate }: Props) {
   return (
     <Identified as="NavMobileMenuScroll" className="flex max-h-[85vh] flex-col overflow-y-auto px-6 pb-8 pt-4">
       {NAV_GROUPS.map((group) => (
-        <Identified key={group.label} as={`NavMobileGroup-${mobileNavSlug(group.label)}`} className="mb-6 last:mb-0">
+        <Identified key={group.label} as="NavMobileNavGroup" className="mb-6 last:mb-0">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {group.label}
           </p>

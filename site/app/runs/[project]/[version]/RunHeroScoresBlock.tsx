@@ -1,5 +1,5 @@
-import { formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
-import { RunScoreBar } from "@/app/runs/[project]/[version]/RunScoreBar";
+import { RunScoreBar } from "@/components/run-detail/RunScoreBar";
+import { formatNum } from "@/lib/run-detail-shared";
 
 type RunHeroScoresBlockProps = {
   composite: number;

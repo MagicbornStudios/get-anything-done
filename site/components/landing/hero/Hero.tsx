@@ -35,6 +35,7 @@ export default function Hero() {
         </>
       }
     >
+      <Identified as="LandingHero">
       <div className="max-w-3xl">
         <Identified as="HeroBadges">
           <HeroBadges currentRequirementsVersion={stats.currentRequirementsVersion} />
@@ -69,6 +70,7 @@ export default function Hero() {
           <HeroCalloutDisclosure />
         </Identified>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

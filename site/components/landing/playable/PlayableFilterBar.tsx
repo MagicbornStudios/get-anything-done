@@ -1,6 +1,7 @@
 "use client";
 
 import { EvalFilterSearchField } from "@/components/eval-filters/EvalFilterSearchField";
+import { EvalFilterSurface } from "@/components/eval-filters/EvalFilterSurface";
 import { EvalReviewStatusFilterChips } from "@/components/eval-filters/EvalReviewStatusFilterChips";
 import { Filter, X } from "lucide-react";
 import {
@@ -58,7 +59,7 @@ export function PlayableFilterBar({
   onClearAllFilters,
 }: Props) {
   return (
-    <div className="mt-8 rounded-xl border border-border/60 bg-card/30 p-4">
+    <EvalFilterSurface className="mt-8">
       <div className="flex flex-wrap items-center gap-3">
         <Select
           value={roundFilter ?? ALL_ROUND}
@@ -203,6 +204,6 @@ export function PlayableFilterBar({
           </Button>
         )}
       </div>
-    </div>
+    </EvalFilterSurface>
   );
 }

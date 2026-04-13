@@ -1,11 +1,15 @@
 "use client";
 
+import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Identified } from "@/components/devid/Identified";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkillsAgentsTab } from "./SkillsAgentsTab";
 import { SkillsCatalogTab } from "./SkillsCatalogTab";
 import { SkillsUsageTab } from "./SkillsUsageTab";
 import type { AgentUsageDTO, SkillSummaryDTO, SkillUsageDTO } from "./skills-page-types";
+
+const VALID_TABS = new Set(["catalog", "usage", "agents"]);
 
 export function SkillsPageTabs({
   summaries,
@@ -16,8 +20,15 @@ export function SkillsPageTabs({
   usage: SkillUsageDTO[];
   agents: AgentUsageDTO[];
 }) {
+  const searchParams = useSearchParams();
+  const defaultTab = useMemo(() => {
+    const t = searchParams.get("tab");
+    return t && VALID_TABS.has(t) ? t : "catalog";
+  }, [searchParams]);
+
   return (
-    <Tabs defaultValue="catalog" className="w-full">
+    <Identified as="SkillsPageTabsSection">
+    <Tabs key={defaultTab} defaultValue={defaultTab} className="w-full">
       <Identified as="SkillsPageTabsList">
         <TabsList className="flex w-full max-w-xl flex-wrap justify-start gap-1 bg-card/40">
           <TabsTrigger value="catalog">
@@ -50,5 +61,6 @@ export function SkillsPageTabs({
         </Identified>
       </TabsContent>
     </Tabs>
+    </Identified>
   );
 }

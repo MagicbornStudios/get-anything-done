@@ -7,6 +7,7 @@ import { SiteSection } from "@/components/site";
 export default function RunIt() {
   return (
     <SiteSection id="run" className="border-t border-border/60">
+      <Identified as="LandingRunIt">
       <Identified as="RunItIntro">
         <RunItIntro />
       </Identified>
@@ -15,6 +16,7 @@ export default function RunIt() {
       </Identified>
       <Identified as="RunItCtas">
         <RunItCtas />
+      </Identified>
       </Identified>
     </SiteSection>
   );

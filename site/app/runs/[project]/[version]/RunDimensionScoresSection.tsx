@@ -1,8 +1,8 @@
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
-import { formatNum, type RunScores } from "@/app/runs/[project]/[version]/run-detail-shared";
-import { RunScoreBar } from "@/app/runs/[project]/[version]/RunScoreBar";
+import { RunScoreBar } from "@/components/run-detail/RunScoreBar";
+import { formatNum, type RunScores } from "@/lib/run-detail-shared";
 
 export function RunDimensionScoresSection({
   run,
@@ -13,6 +13,7 @@ export function RunDimensionScoresSection({
 }) {
   return (
     <SiteSection>
+      <Identified as="RunDimensionScores">
       <Identified as="RunDimensionScoresHeader">
         <SiteSectionHeading kicker="Dimension scores" title="Where the composite came from" />
         <SiteProse size="md" className="mt-3 max-w-2xl">
@@ -35,7 +36,7 @@ export function RunDimensionScoresSection({
               {dimensionScores.map((row, idx) => (
                 <Identified
                   key={row.key}
-                  as={`RunDimensionScoreRow-${String(row.key)}`}
+                  as="RunDimensionScoreRow"
                   tag="tr"
                   className={idx % 2 === 0 ? "bg-transparent" : "bg-background/30"}
                 >
@@ -50,6 +51,7 @@ export function RunDimensionScoresSection({
               ))}
             </tbody>
           </table>
+      </Identified>
       </Identified>
     </SiteSection>
   );

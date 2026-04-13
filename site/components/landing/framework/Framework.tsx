@@ -7,6 +7,7 @@ import { SiteSection } from "@/components/site";
 export default function Framework() {
   return (
     <SiteSection id="framework" className="border-t border-border/60">
+      <Identified as="LandingFramework">
       <Identified as="FrameworkIntro">
         <FrameworkIntro />
       </Identified>
@@ -17,6 +18,7 @@ export default function Framework() {
 
       <Identified as="FrameworkScoreWeights">
         <FrameworkScoreWeights />
+      </Identified>
       </Identified>
     </SiteSection>
   );

@@ -1,11 +1,10 @@
 import { Suspense } from "react";
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { PLANNING_STATE } from "@/lib/catalog.generated";
 import { ALL_TASKS, ALL_PHASES, ALL_DECISIONS, BUGS } from "@/lib/eval-data";
-import { PlanningOverviewSection } from "@/app/planning/PlanningOverviewSection";
-import { PlanningGanttSection } from "@/app/planning/PlanningGanttSection";
-import { PlanningTabbedContent } from "@/app/planning/PlanningTabbedContent";
+import { PlanningGanttSection } from "./PlanningGanttSection";
+import { PlanningOverviewSection } from "./PlanningOverviewSection";
+import { PlanningTabbedContent } from "./PlanningTabbedContent";
 
 export const metadata = {
   title: "Planning state — GAD self-transparency",
@@ -19,22 +18,16 @@ export default function PlanningStatePage() {
 
   return (
     <MarketingShell>
-      <Identified as="PlanningOverviewSection">
-        <PlanningOverviewSection state={state} />
-      </Identified>
-      <Identified as="PlanningGanttSection">
-        <PlanningGanttSection phases={state.phases} />
-      </Identified>
+      <PlanningOverviewSection state={state} />
+      <PlanningGanttSection phases={state.phases} />
       <Suspense>
-        <Identified as="PlanningTabbedContent">
-          <PlanningTabbedContent
-            state={state}
-            allTasks={ALL_TASKS}
-            allPhases={ALL_PHASES}
-            allDecisions={ALL_DECISIONS}
-            gadBugs={gadBugs}
-          />
-        </Identified>
+        <PlanningTabbedContent
+          state={state}
+          allTasks={ALL_TASKS}
+          allPhases={ALL_PHASES}
+          allDecisions={ALL_DECISIONS}
+          gadBugs={gadBugs}
+        />
       </Suspense>
     </MarketingShell>
   );

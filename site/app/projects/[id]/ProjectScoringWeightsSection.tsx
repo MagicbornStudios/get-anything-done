@@ -1,5 +1,5 @@
-import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
+import { Identified } from "@/components/devid/Identified";
 import type { EvalProjectMeta } from "@/lib/eval-data";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
@@ -7,8 +7,9 @@ export function ProjectScoringWeightsSection({ project }: { project: EvalProject
   if (!project.scoringWeights) return null;
   return (
     <SiteSection tone="muted">
-      <SiteSectionHeading kicker="Scoring weights" preset="section" title="How this project is scored" />
       <Identified as="ProjectScoringWeights">
+      <SiteSectionHeading kicker="Scoring weights" preset="section" title="How this project is scored" />
+      <>
         <SiteProse size="md" className="mt-3">
           Defined in{" "}
           <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">evals/{project.id}/gad.json</code>. The
@@ -41,6 +42,7 @@ export function ProjectScoringWeightsSection({ project }: { project: EvalProject
             </tbody>
           </table>
         </div>
+      </>
       </Identified>
     </SiteSection>
   );

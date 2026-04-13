@@ -8,6 +8,7 @@ export function RunGateReportSection({ run }: { run: EvalRunRecord }) {
   const cov = run.requirementCoverage;
   return (
     <SiteSection>
+      <Identified as="RunGateReport">
       <SiteSectionHeading kicker="Gate report" title="Requirement coverage" />
       <Identified as="RunGateReportStatsGrid" className="mt-8 grid gap-5 md:grid-cols-4">
           <Card>
@@ -47,6 +48,7 @@ export function RunGateReportSection({ run }: { run: EvalRunRecord }) {
             <p className="mt-2 text-base leading-7 text-foreground">{cov.gate_notes}</p>
           </Identified>
         )}
+      </Identified>
     </SiteSection>
   );
 }

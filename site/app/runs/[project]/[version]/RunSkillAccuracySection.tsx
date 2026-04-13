@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
-import { formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
+import { formatNum } from "@/lib/run-detail-shared";
 
 export function RunSkillAccuracySection({
   run,
@@ -16,6 +16,7 @@ export function RunSkillAccuracySection({
 }) {
   return (
     <SiteSection>
+      <Identified as="RunSkillAccuracy">
       <SiteSectionHeading
         kicker="Skill accuracy breakdown"
         title="Did the agent invoke the right skills at the right moments?"
@@ -102,6 +103,7 @@ export function RunSkillAccuracySection({
             Skill accuracy data isn&apos;t relevant for this run (no expected trigger set).
           </Identified>
         )}
+      </Identified>
     </SiteSection>
   );
 }

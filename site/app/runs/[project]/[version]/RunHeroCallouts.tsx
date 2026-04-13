@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
+import { formatNum } from "@/lib/run-detail-shared";
 import type { RunHeroBaseProps } from "./run-hero-props";
 import { RunHeroHumanReviewNote } from "./RunHeroHumanReviewNote";
 

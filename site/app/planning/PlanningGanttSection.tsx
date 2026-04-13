@@ -62,6 +62,7 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
 
   return (
     <SiteSection>
+      <Identified as="PlanningGanttSection">
       <Identified as="PlanningGanttToolbar">
         <PlanningGanttToolbar
           currentSprintNum={currentSprintNum}
@@ -90,6 +91,7 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
 
       <Identified as="PlanningGanttSelectedPhasePanel">
         <PlanningGanttSelectedPhasePanel selectedPhase={selectedPhase} selectedTasks={selectedTasks} />
+      </Identified>
       </Identified>
     </SiteSection>
   );

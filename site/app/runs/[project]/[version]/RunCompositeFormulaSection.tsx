@@ -1,7 +1,7 @@
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
-import { formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
+import { formatNum } from "@/lib/run-detail-shared";
 
 type ContributionRow = {
   dimension: string;
@@ -23,6 +23,7 @@ export function RunCompositeFormulaSection({
 }) {
   return (
     <SiteSection>
+      <Identified as="RunCompositeFormula">
       <Identified as="RunCompositeFormulaHeader">
         <SiteSectionHeading
           kicker="Composite formula"
@@ -52,7 +53,7 @@ export function RunCompositeFormulaSection({
                 return (
                   <Identified
                     key={c.dimension}
-                    as={`RunCompositeFormulaRow-${c.dimension.replace(/[^a-zA-Z0-9]+/g, "-")}`}
+                    as="RunCompositeFormulaRow"
                     tag="tr"
                     className={idx % 2 === 0 ? "bg-transparent" : "bg-background/30"}
                   >
@@ -95,6 +96,7 @@ export function RunCompositeFormulaSection({
             older scoring pass.
           </Identified>
         )}
+      </Identified>
     </SiteSection>
   );
 }

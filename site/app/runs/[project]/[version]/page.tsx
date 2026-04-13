@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { type RubricDimension } from "@/components/charts/RubricRadar";
 import { compositionsForRun } from "@/remotion/registry";
@@ -12,17 +11,17 @@ import {
   isRateLimited,
   playableUrl,
 } from "@/lib/eval-data";
-import { RunCompositeFormulaSection } from "@/app/runs/[project]/[version]/RunCompositeFormulaSection";
-import { RunDimensionScoresSection } from "@/app/runs/[project]/[version]/RunDimensionScoresSection";
-import { RunGateReportSection } from "@/app/runs/[project]/[version]/RunGateReportSection";
-import { RunHeroSection } from "@/app/runs/[project]/[version]/RunHeroSection";
-import { RunProcessMetricsSection } from "@/app/runs/[project]/[version]/RunProcessMetricsSection";
-import { RunProducedArtifactsSection } from "@/app/runs/[project]/[version]/RunProducedArtifactsSection";
-import { RunRubricSection } from "@/app/runs/[project]/[version]/RunRubricSection";
-import { RunSkillAccuracySection } from "@/app/runs/[project]/[version]/RunSkillAccuracySection";
-import { RunSkillProvenanceSection } from "@/app/runs/[project]/[version]/RunSkillProvenanceSection";
-import { RunVideosSection } from "@/app/runs/[project]/[version]/RunVideosSection";
-import { SCORE_ORDER, type RunScores } from "@/app/runs/[project]/[version]/run-detail-shared";
+import { RunCompositeFormulaSection } from "./RunCompositeFormulaSection";
+import { RunDimensionScoresSection } from "./RunDimensionScoresSection";
+import { RunGateReportSection } from "./RunGateReportSection";
+import { RunHeroSection } from "./RunHeroSection";
+import { RunProcessMetricsSection } from "./RunProcessMetricsSection";
+import { RunProducedArtifactsSection } from "./RunProducedArtifactsSection";
+import { RunRubricSection } from "./RunRubricSection";
+import { RunSkillAccuracySection } from "./RunSkillAccuracySection";
+import { RunSkillProvenanceSection } from "./RunSkillProvenanceSection";
+import { RunVideosSection } from "./RunVideosSection";
+import { SCORE_ORDER, type RunScores } from "@/lib/run-detail-shared";
 
 export const dynamicParams = false;
 
@@ -113,71 +112,47 @@ export default async function RunPage({
       ? ((run.timing as Record<string, unknown>).interruption_note as string | undefined) ?? null
       : null;
 
-  const runLabel = `${project}-${version}`;
-
   return (
     <MarketingShell>
-      <Identified as={`Run-${runLabel}-Hero`}>
-        <RunHeroSection
+      <RunHeroSection
+        run={run}
+        playable={playable}
+        composite={composite}
+        humanScore={humanScore}
+        gateKnown={gateKnown}
+        divergent={divergent}
+        rateLimited={rateLimited}
+        apiInterrupted={apiInterrupted}
+        rateLimitNote={rateLimitNote}
+        interruptionNote={interruptionNote}
+      />
+      <RunDimensionScoresSection run={run} dimensionScores={dimensionScores} />
+      {weights && contributions.length > 0 ? (
+        <RunCompositeFormulaSection
           run={run}
-          playable={playable}
           composite={composite}
-          humanScore={humanScore}
-          gateKnown={gateKnown}
-          divergent={divergent}
-          rateLimited={rateLimited}
-          apiInterrupted={apiInterrupted}
-          rateLimitNote={rateLimitNote}
-          interruptionNote={interruptionNote}
+          contributions={contributions}
+          weightedSum={weightedSum}
         />
-      </Identified>
-      <Identified as={`Run-${runLabel}-DimensionScores`}>
-        <RunDimensionScoresSection run={run} dimensionScores={dimensionScores} />
-      </Identified>
-      {weights && contributions.length > 0 && (
-        <Identified as={`Run-${runLabel}-CompositeFormula`}>
-          <RunCompositeFormulaSection
-            run={run}
-            composite={composite}
-            contributions={contributions}
-            weightedSum={weightedSum}
-          />
-        </Identified>
-      )}
-      <Identified as={`Run-${runLabel}-SkillAccuracy`}>
-        <RunSkillAccuracySection
+      ) : null}
+      <RunSkillAccuracySection
+        run={run}
+        tracingGap={tracingGap}
+        skillAccuracyValue={skillAccuracyValue}
+      />
+      <RunSkillProvenanceSection run={run} />
+      {hasRubricScores && rubricDef ? (
+        <RunRubricSection
           run={run}
-          tracingGap={tracingGap}
-          skillAccuracyValue={skillAccuracyValue}
+          rubricDimensions={rubricDimensions}
+          rubricDef={rubricDef}
+          rubric={rubric}
         />
-      </Identified>
-      <Identified as={`Run-${runLabel}-SkillProvenance`}>
-        <RunSkillProvenanceSection run={run} />
-      </Identified>
-      {hasRubricScores && rubricDef && (
-        <Identified as={`Run-${runLabel}-Rubric`}>
-          <RunRubricSection
-            run={run}
-            rubricDimensions={rubricDimensions}
-            rubricDef={rubricDef}
-            rubric={rubric}
-          />
-        </Identified>
-      )}
-      <Identified as={`Run-${runLabel}-Videos`}>
-        <RunVideosSection videos={videos} />
-      </Identified>
-      {produced && (
-        <Identified as={`Run-${runLabel}-ProducedArtifacts`}>
-          <RunProducedArtifactsSection produced={produced} />
-        </Identified>
-      )}
-      <Identified as={`Run-${runLabel}-GateReport`}>
-        <RunGateReportSection run={run} />
-      </Identified>
-      <Identified as={`Run-${runLabel}-ProcessMetrics`}>
-        <RunProcessMetricsSection run={run} />
-      </Identified>
+      ) : null}
+      <RunVideosSection videos={videos} />
+      {produced ? <RunProducedArtifactsSection produced={produced} /> : null}
+      <RunGateReportSection run={run} />
+      <RunProcessMetricsSection run={run} />
     </MarketingShell>
   );
 }

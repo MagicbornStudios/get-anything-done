@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PlanningState } from "@/lib/catalog.generated";
@@ -8,14 +8,14 @@ import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
 import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
-import { PlanningSkillCandidatesTab, type SkillCandidate } from "@/app/planning/PlanningSkillCandidatesTab";
-import { PlanningSystemTab } from "@/app/planning/PlanningSystemTab";
-import { PlanningPhasesTab } from "@/app/planning/PlanningPhasesTab";
-import { PlanningTasksTab } from "@/app/planning/PlanningTasksTab";
-import { PlanningDecisionsTab } from "@/app/planning/PlanningDecisionsTab";
-import { PlanningRoadmapTab } from "@/app/planning/PlanningRoadmapTab";
-import { PlanningRequirementsTab } from "@/app/planning/PlanningRequirementsTab";
-import { PlanningBugsTab } from "@/app/planning/PlanningBugsTab";
+import { PlanningBugsTab } from "./PlanningBugsTab";
+import { PlanningDecisionsTab } from "./PlanningDecisionsTab";
+import { PlanningPhasesTab } from "./PlanningPhasesTab";
+import { PlanningRequirementsTab } from "./PlanningRequirementsTab";
+import { PlanningRoadmapTab } from "./PlanningRoadmapTab";
+import { PlanningSkillCandidatesTab, type SkillCandidate } from "./PlanningSkillCandidatesTab";
+import { PlanningSystemTab } from "./PlanningSystemTab";
+import { PlanningTasksTab } from "./PlanningTasksTab";
 import selfEvalData from "@/data/self-eval.json";
 
 interface Props {
@@ -26,9 +26,24 @@ interface Props {
   gadBugs: BugRecord[];
 }
 
+const BASE_PLANNING_TABS = new Set([
+  "system",
+  "phases",
+  "tasks",
+  "decisions",
+  "roadmap",
+  "requirements",
+  "skill-candidates",
+  "proto-skills",
+]);
+
 export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions, gadBugs }: Props) {
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get("tab") || "system";
+  const defaultTab = useMemo(() => {
+    const raw = searchParams.get("tab") || "system";
+    if (raw === "bugs") return gadBugs.length > 0 ? "bugs" : "system";
+    return BASE_PLANNING_TABS.has(raw) ? raw : "system";
+  }, [searchParams, gadBugs.length]);
 
   const openTasks = allTasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
   const doneTasks = allTasks.filter((t) => t.status === "done");
@@ -51,7 +66,8 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
 
   return (
     <SiteSection>
-      <Tabs defaultValue={defaultTab}>
+      <Identified as="PlanningTabbedContent">
+      <Tabs key={defaultTab} defaultValue={defaultTab}>
         <Identified as="PlanningTabsList" className="mb-6">
           <TabsList className="flex-wrap">
           <TabsTrigger value="system">System</TabsTrigger>
@@ -140,6 +156,7 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
           </Identified>
         </TabsContent>
       </Tabs>
+      </Identified>
     </SiteSection>
   );
 }

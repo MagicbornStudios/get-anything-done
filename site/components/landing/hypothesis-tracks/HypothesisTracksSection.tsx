@@ -47,6 +47,7 @@ export default function HypothesisTracksSection() {
 
   return (
     <SiteSection id="tracks" tone="muted" className="border-t border-border/60">
+      <Identified as="LandingHypothesisTracksSection">
       <Identified as="HypothesisTracksIntro">
         <HypothesisTracksIntro />
       </Identified>
@@ -78,6 +79,7 @@ export default function HypothesisTracksSection() {
 
       <Identified as="HypothesisTracksRelatedLinks">
         <HypothesisTracksRelatedLinks />
+      </Identified>
       </Identified>
     </SiteSection>
   );

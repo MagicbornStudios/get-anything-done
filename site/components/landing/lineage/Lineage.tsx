@@ -6,6 +6,7 @@ import { SiteSection } from "@/components/site";
 export default function Lineage() {
   return (
     <SiteSection id="lineage" tone="muted" className="border-t border-border/60">
+      <Identified as="LandingLineage">
       <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-start lg:gap-16">
         <Identified as="LineageCopy">
           <LineageCopy />
@@ -14,6 +15,7 @@ export default function Lineage() {
           <LineageMedia />
         </Identified>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

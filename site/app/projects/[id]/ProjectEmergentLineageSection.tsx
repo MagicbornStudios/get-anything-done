@@ -1,5 +1,5 @@
-import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { PRODUCED_ARTIFACTS, type EvalRunRecord } from "@/lib/eval-data";
 
@@ -7,12 +7,13 @@ export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] 
   if (runs.length === 0) return null;
   return (
     <SiteSection>
+      <Identified as="ProjectEmergentLineage">
       <SiteSectionHeading
         kicker="Skill inheritance lineage"
         preset="section"
         title="The compound-skills hypothesis in action"
       />
-      <Identified as="ProjectEmergentLineage">
+      <>
         <SiteProse size="md" className="mt-3">
           Decision <strong>gad-65</strong> pins the compound-skills hypothesis: as the emergent
           workflow iterates on the same project domain, the inherited skill library should grow more
@@ -116,6 +117,7 @@ export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] 
             carried over from previous run
           </span>
         </SiteProse>
+      </>
       </Identified>
     </SiteSection>
   );

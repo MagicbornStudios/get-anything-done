@@ -24,6 +24,7 @@ export default function Graphs() {
 
   return (
     <SiteSection id="graphs" className="border-t border-border/60">
+      <Identified as="LandingGraphs">
       <Identified as="GraphsIntro">
         <GraphsIntro />
       </Identified>
@@ -39,6 +40,7 @@ export default function Graphs() {
 
       <Identified as="GraphsProvenance">
         <GraphsProvenance />
+      </Identified>
       </Identified>
     </SiteSection>
   );

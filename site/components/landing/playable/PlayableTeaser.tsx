@@ -83,6 +83,7 @@ export default function PlayableTeaser() {
 
   return (
     <SiteSection id="play" tone="muted" className="border-t border-border/60">
+      <Identified as="LandingPlayableTeaser">
       <Identified as="PlayableTeaserIntro">
         <SiteSectionIntro
           kicker="Playable preview"
@@ -183,6 +184,7 @@ export default function PlayableTeaser() {
             if (!open) setModal(null);
           }}
         />
+      </Identified>
       </Identified>
     </SiteSection>
   );

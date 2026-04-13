@@ -1,6 +1,7 @@
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { PlayableEmbed } from "@/components/landing/playable/PlayableEmbed";
 import { PlayableSelectedPanel } from "@/components/landing/playable/PlayableSelectedPanel";
+import { PlayableStageGrid } from "@/components/landing/playable/PlayableStageGrid";
 
 type PlayableEmbedBlockProps = {
   selected: EvalRunRecord;
@@ -16,7 +17,7 @@ export function PlayableEmbedBlock({
   onOpenSkill,
 }: PlayableEmbedBlockProps) {
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
+    <PlayableStageGrid className="mt-8">
       <PlayableEmbed
         project={selected.project}
         version={selected.version}
@@ -27,6 +28,6 @@ export function PlayableEmbedBlock({
         onOpenRequirements={onOpenRequirements}
         onOpenSkill={onOpenSkill}
       />
-    </div>
+    </PlayableStageGrid>
   );
 }

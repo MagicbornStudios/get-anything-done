@@ -26,6 +26,7 @@ export function ProjectHeroSection({
 }) {
   return (
     <SiteSection>
+      <Identified as="ProjectHero">
         <Identified as="ProjectHeroBackLink">
           <Button
             variant="ghost"
@@ -113,6 +114,7 @@ export function ProjectHeroSection({
             </a>
           </Button>
         </Identified>
+      </Identified>
     </SiteSection>
   );
 }

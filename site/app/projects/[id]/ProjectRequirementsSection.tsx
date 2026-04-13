@@ -1,12 +1,12 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectRequirementsSection({ projectId: _projectId }: { projectId: string }) {
@@ -20,6 +20,7 @@ export function ProjectRequirementsSection({ projectId: _projectId }: { projectI
 
   return (
     <SiteSection className="border-b-0 border-t border-border/60">
+      <Identified as="ProjectRequirements">
       <SiteSectionHeading
         kicker="Requirements history"
         preset="section"
@@ -27,7 +28,7 @@ export function ProjectRequirementsSection({ projectId: _projectId }: { projectI
         title={`${versions.length} version${versions.length !== 1 ? "s" : ""} — each change triggers a new round`}
       />
 
-      <Identified as="ProjectRequirements" className="mt-6 space-y-6">
+      <div className="mt-6 space-y-6">
         <div className="flex items-center gap-3">
           <Button
             type="button"
@@ -108,6 +109,7 @@ export function ProjectRequirementsSection({ projectId: _projectId }: { projectI
             </div>
           )}
         </div>
+      </div>
       </Identified>
     </SiteSection>
   );

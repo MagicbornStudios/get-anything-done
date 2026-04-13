@@ -16,6 +16,7 @@ export function RunRubricSection({
 }) {
   return (
     <SiteSection tone="muted">
+      <Identified as="RunRubric">
       <SiteSectionHeading
         kicker="Human review rubric"
         title="Where the reviewer scored this run best and worst"
@@ -72,6 +73,7 @@ export function RunRubricSection({
               </tbody>
             </table>
           </Identified>
+      </Identified>
       </Identified>
     </SiteSection>
   );

@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Suspense } from "react";
 import { MarketingShell, SiteSection } from "@/components/site";
 import { SkillsPageTabs } from "./SkillsPageTabs";
 import { SkillsHeroSection } from "./SkillsHeroSection";
@@ -19,19 +19,17 @@ export default function SkillsIndexPage() {
 
   return (
     <MarketingShell>
-      <Identified as="SkillsHeroSection">
-        <SkillsHeroSection
-          totalSkills={summaries.length}
-          categoryCount={categoryCount}
-          usageCount={usage.length}
-          agentsCount={agents.length}
-        />
-      </Identified>
+      <SkillsHeroSection
+        totalSkills={summaries.length}
+        categoryCount={categoryCount}
+        usageCount={usage.length}
+        agentsCount={agents.length}
+      />
 
       <SiteSection tone="muted" className="border-t border-border/60">
-        <Identified as="SkillsPageTabsSection">
+        <Suspense fallback={null}>
           <SkillsPageTabs summaries={summaries} usage={usage} agents={agents} />
-        </Identified>
+        </Suspense>
       </SiteSection>
     </MarketingShell>
   );

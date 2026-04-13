@@ -1,11 +1,11 @@
-import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { EvalProjectMeta } from "@/lib/eval-data";
 import { SKILLS } from "@/lib/catalog.generated";
-import { scopedSkillsFor } from "@/app/projects/[id]/project-detail-shared";
+import { scopedSkillsFor } from "./project-detail-shared";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMeta }) {
@@ -13,12 +13,13 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
 
   return (
     <SiteSection tone="muted">
+      <Identified as="ProjectSkillsScope">
       <SiteSectionHeading
         kicker="Catalog scope"
         preset="section"
         title="What skills this project can use"
       />
-      <Identified as="ProjectSkillsScope">
+      <>
         <SiteProse size="md" className="mt-3">
           {scope.description}
         </SiteProse>
@@ -67,6 +68,7 @@ export function ProjectSkillsScopeSection({ project }: { project: EvalProjectMet
             <Link href="/gad">Browse the full GAD catalog →</Link>
           </Button>
         ) : null}
+      </>
       </Identified>
     </SiteSection>
   );

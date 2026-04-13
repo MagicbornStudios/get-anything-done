@@ -1,6 +1,6 @@
 import { ExternalLink, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { REPO } from "@/app/runs/[project]/[version]/run-detail-shared";
+import { REPO } from "@/lib/run-detail-shared";
 import type { EvalRunRecord } from "@/lib/eval-data";
 
 type RunHeroActionButtonsProps = {

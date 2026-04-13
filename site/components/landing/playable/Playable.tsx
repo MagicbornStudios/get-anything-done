@@ -9,7 +9,6 @@ import { PlayableIntro } from "@/components/landing/playable/PlayableIntro";
 import { PlayableNoResults } from "@/components/landing/playable/PlayableNoResults";
 import { PlayableReviewLegend } from "@/components/landing/playable/PlayableReviewLegend";
 import { PlayableRunGroups } from "@/components/landing/playable/PlayableRunGroups";
-import { PlayableSelectedPanel } from "@/components/landing/playable/PlayableSelectedPanel";
 import { runKey } from "@/components/landing/playable/playable-shared";
 import { usePlayableArchive } from "@/components/landing/playable/use-playable-archive";
 import { Identified } from "@/components/devid/Identified";
@@ -51,22 +50,22 @@ export default function Playable() {
       </Identified>
 
       <Identified as="PlayableFilterBar">
-      <PlayableFilterBar
-        roundFilter={roundFilter}
-        domainFilter={domainFilter}
-        statusFilter={statusFilter}
-        hypothesisFilter={hypothesisFilter}
-        searchQuery={searchQuery}
-        runsLength={runs.length}
-        allRunsLength={allRuns.length}
-        hasActiveFilters={hasActiveFilters}
-        onRoundChange={setRoundFilter}
-        onDomainChange={setDomainFilter}
-        onStatusChange={setStatusFilter}
-        onHypothesisChange={setHypothesisFilter}
-        onSearchChange={setSearchQuery}
-        onClearAllFilters={clearAllFilters}
-      />
+        <PlayableFilterBar
+          roundFilter={roundFilter}
+          domainFilter={domainFilter}
+          statusFilter={statusFilter}
+          hypothesisFilter={hypothesisFilter}
+          searchQuery={searchQuery}
+          runsLength={runs.length}
+          allRunsLength={allRuns.length}
+          hasActiveFilters={hasActiveFilters}
+          onRoundChange={setRoundFilter}
+          onDomainChange={setDomainFilter}
+          onStatusChange={setStatusFilter}
+          onHypothesisChange={setHypothesisFilter}
+          onSearchChange={setSearchQuery}
+          onClearAllFilters={clearAllFilters}
+        />
       </Identified>
 
       <Identified as="PlayableRunsPicker">
@@ -87,22 +86,22 @@ export default function Playable() {
       {selected && iframeSrc ? (
         <Identified as="PlayableEmbedBlock">
           <PlayableEmbedBlock
-          selected={selected}
-          iframeSrc={iframeSrc}
-          onOpenRequirements={() => setModal("requirements")}
-          onOpenSkill={() => setModal("skill")}
-        />
+            selected={selected}
+            iframeSrc={iframeSrc}
+            onOpenRequirements={() => setModal("requirements")}
+            onOpenSkill={() => setModal("skill")}
+          />
         </Identified>
       ) : null}
 
       <Identified as="PlayableDocModal">
-      <PlayableDocModal
-        modal={modal}
-        selected={selected}
-        onOpenChange={(open) => {
-          if (!open) setModal(null);
-        }}
-      />
+        <PlayableDocModal
+          modal={modal}
+          selected={selected}
+          onOpenChange={(open) => {
+            if (!open) setModal(null);
+          }}
+        />
       </Identified>
     </SiteSection>
   );

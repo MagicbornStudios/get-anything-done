@@ -9,6 +9,7 @@ export function RunVideosSection({ videos }: { videos: CompositionEntry[] }) {
   if (videos.length === 0) return null;
   return (
     <SiteSection tone="muted">
+      <Identified as="RunVideos">
       <SiteSectionHeading
         icon={Film}
         kicker="Watch this dissection"
@@ -33,6 +34,7 @@ export function RunVideosSection({ videos }: { videos: CompositionEntry[] }) {
         >
           Browse all video dissections →
         </Link>
+      </Identified>
       </Identified>
     </SiteSection>
   );
