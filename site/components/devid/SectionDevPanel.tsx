@@ -34,8 +34,14 @@ function sortRegistryEntries(entries: RegistryEntry[]): RegistryEntry[] {
 
 function scrollTargetIntoView(cid: string) {
   if (typeof document === "undefined") return;
-  const el = document.querySelector(`[data-cid="${CSS.escape(cid)}"]`);
-  el?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  // Match by attribute value — do not build `[data-cid="…"]` with CSS.escape (that API is for
+  // identifiers, not quoted attribute values; some cids yield invalid selectors or throw).
+  for (const el of document.querySelectorAll("[data-cid]")) {
+    if (el.getAttribute("data-cid") === cid) {
+      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      return;
+    }
+  }
 }
 
 type RowProps = {
@@ -164,9 +170,12 @@ export function SectionDevPanel() {
   };
 
   const activateRow = (cid: string) => {
-    copy(cid);
-    scrollTargetIntoView(cid);
-    flashComponent(cid);
+    // Defer past Radix HoverCard trigger handling to avoid update conflicts on row click.
+    queueMicrotask(() => {
+      copy(cid);
+      scrollTargetIntoView(cid);
+      flashComponent(cid);
+    });
   };
 
   return (
