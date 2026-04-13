@@ -12,6 +12,7 @@ import { ProjectScoringWeightsSection } from "@/app/projects/[id]/ProjectScoring
 import { ProjectSkillsScopeSection } from "@/app/projects/[id]/ProjectSkillsScopeSection";
 import { ProjectBugsSection } from "@/app/projects/[id]/ProjectBugsSection";
 import { ProjectRequirementsSection } from "@/app/projects/[id]/ProjectRequirementsSection";
+import { ProjectFindingsSection } from "@/app/projects/[id]/ProjectFindingsSection";
 import { projectRuns } from "@/app/projects/[id]/project-detail-shared";
 
 export const dynamicParams = false;
@@ -56,6 +57,7 @@ export default async function ProjectPage({
         <ProjectEmergentLineageSection runs={runs} />
       )}
       <ProjectRequirementsSection projectId={project.id} />
+      <ProjectFindingsSection projectId={project.id} />
       <ProjectBugsSection projectId={project.id} />
       <ProjectScoringWeightsSection project={project} />
     </MarketingShell>

@@ -1,3 +1,10 @@
+---
+projects: [escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent]
+date: 2026-04-09
+round: 4
+gad_version: null
+---
+
 # Round 4 — partial results under rate limit
 
 **Date:** 2026-04-09

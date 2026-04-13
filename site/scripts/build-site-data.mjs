@@ -139,6 +139,19 @@ function parseFrontmatter(src) {
     }
   }
   if (key) data[key] = buf.trim();
+  // Post-process: inline-array values like `[a, b, c]` become string arrays.
+  for (const k of Object.keys(data)) {
+    const v = data[k];
+    if (typeof v === "string" && v.startsWith("[") && v.endsWith("]")) {
+      data[k] = v
+        .slice(1, -1)
+        .split(",")
+        .map((s) => s.trim().replace(/^["']|["']$/g, ""))
+        .filter(Boolean);
+    } else if (v === "null") {
+      data[k] = null;
+    }
+  }
   return { data, body };
 }
 
@@ -1379,6 +1392,9 @@ export interface Finding {
   bodyRaw: string;
   bodyHtml: string;
   summary: string;
+  projects: string[];
+  round: string | null;
+  gadVersion: string | null;
 }
 
 export interface PlanningTask {
@@ -1443,17 +1459,20 @@ function parseFindings() {
   for (const name of fs.readdirSync(EVALS_DIR).sort()) {
     if (!name.startsWith("FINDINGS-") || !name.endsWith(".md")) continue;
     const file = path.join(EVALS_DIR, name);
-    const src = fs.readFileSync(file, "utf8");
+    const fullSrc = fs.readFileSync(file, "utf8");
+    const { data: meta, body: src } = parseFrontmatter(fullSrc);
     // Slug: strip FINDINGS- prefix and .md suffix.
     const slug = name.replace(/^FINDINGS-/, "").replace(/\.md$/, "").toLowerCase();
     // Title: first H1 heading, or derive from filename.
     const h1Match = src.match(/^#\s+(.+)$/m);
     const title = h1Match ? h1Match[1].trim() : name.replace(/\.md$/, "");
-    // Date embedded in the filename if present (FINDINGS-YYYY-MM-DD-xxx.md).
+    // Date: frontmatter wins, otherwise embedded in filename.
     const dateMatch = name.match(/FINDINGS-(\d{4}-\d{2}-\d{2})/);
-    const date = dateMatch ? dateMatch[1] : null;
-    // Summary: first non-heading paragraph.
+    const date = meta.date || (dateMatch ? dateMatch[1] : null);
     const summary = firstParagraph(src, 300);
+    const projects = Array.isArray(meta.projects) ? meta.projects : [];
+    const round = meta.round != null && meta.round !== "" ? String(meta.round) : null;
+    const gadVersion = meta.gad_version || meta.gadVersion || null;
     out.push({
       slug,
       title,
@@ -1462,6 +1481,9 @@ function parseFindings() {
       bodyRaw: src,
       bodyHtml: renderMarkdown(src),
       summary,
+      projects,
+      round,
+      gadVersion,
     });
   }
   return out;
@@ -2052,9 +2074,6 @@ export const GAD_PACK_TEMPLATE = ${JSON.stringify(
   )};
 
 export const ROUND_SUMMARIES: RoundSummary[] = ${JSON.stringify(extras.rounds ?? [], null, 2)};
-
-export const FINDINGS_ROUND_3_RAW: string | null = ${JSON.stringify(extras.findings?.round3 ?? null)};
-export const FINDINGS_GENERAL_RAW: string | null = ${JSON.stringify(extras.findings?.general ?? null)};
 
 export const EVAL_PROJECTS: EvalProjectMeta[] = ${JSON.stringify(extras.evalProjects ?? [], null, 2)};
 

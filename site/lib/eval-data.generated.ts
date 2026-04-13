@@ -3857,7 +3857,7 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
 
 export const GAD_PACK_TEMPLATE = {
   "zipPath": "/downloads/gad-pack-template.zip",
-  "bytes": 89015
+  "bytes": 87857
 };
 
 export const ROUND_SUMMARIES: RoundSummary[] = [
@@ -3882,9 +3882,6 @@ export const ROUND_SUMMARIES: RoundSummary[] = [
     "body": "**Date:** 2026-04-09\n**Requirements version:** v4 (pressure over features, authored-only, 4 gates including forge-with-ingenuity-payoff and pressure-mechanics)\n**Conditions:** GAD v10, Bare v5, Emergent v4 — run serially after round 3's parallel attempt hit the shared account rate limit (gad-62)\n**Framework versioning:** first round under trace schema v4 with hook-captured events (phase 25). Framework version stamped on every TRACE.json.\n\n**Results:**\n\n| Condition | Version | Human (rubric) | Composite | Notes |\n|-----------|---------|----------------|-----------|-------|\n| **Bare v5** | v5 | TBD | TBD | Complete playable game against v4 pressure requirements. DOM + iconify-icon + @iconify-json/game-icons. 2 floors × 8 rooms. |\n| **Emergent v4** | v4 | **0.805** (rubric aggregate) | TBD | Complete playable, \"incredible\" book-like UI, DoT/resistance/stacking mechanics, first observed full skill ratcheting cycle — authored dom-over-kaplay + pressure-forge-coupling + CHANGELOG. 6-dimension rubric including skill_inheritance_effectiveness 0.95. |\n| **GAD v10** | v4 | **0.02** (rubric aggregate) | — | **API-interrupted** (HTTP 529 overloaded_error, gad-64). Title screen rendered with a novel visual treatment (ui_polish 0.10) but planning phase crashed before scene implementation. Excluded from cross-round quality comparisons per gad-63 + gad-64. |\n| GAD v9 | v4 | 0.05 (legacy score) | — | Rate-limited during round 4 attempt #1 (parallel). Start screen only. Excluded from cross-round quality. |\n\n**Key findings — freedom hypothesis holds under v4:**\n- Under pressure-oriented v4 requirements, Bare + Emergent both shipped complete playable games; GAD was api-interrupted before implementation. Freedom hypothesis (gad-36) still holds, now with v4 as the stricter test.\n- **First observed full skill ratcheting cycle.** Emergent v4 inherited from emergent v3, authored 2 new project-tailored skills (dom-over-kaplay, pressure-forge-coupling), documented the disposition of each inherited skill in CHANGELOG.md, and deprecated kaplay-scene-pattern as unusable under DOM architecture. This is the first round where the compound-skills hypothesis (gad-65) has evidence to evaluate.\n- **Convergent design evolution.** All three conditions independently chose DOM + iconify-icon + @iconify-json/game-icons + per-floor forced-craft encounters, suggesting v4's pressure requirements are narrow enough to collapse the solution space regardless of framework.\n- **Rubric replaces single-score human review** (phase 27 track 1, gad-61). Emergent gets a 6th dimension `skill_inheritance_effectiveness` as the CSH test signal.\n\n**User playtest captured 12 v5 requirements** (`evals/_v5-requirements-addendum.md`): training-via-encounter, rune discovery loop, merchants, NPC dialogue, inventory/equipment + skill tree, spell/skill loadout slots, end-boss reachability, save checkpoints, notification lifecycle, rest rooms actually rest, 2D map navigation.\n\n**Documented in:**\n- `evals/FINDINGS-2026-04-09-round-4-complete.md`\n- `evals/FINDINGS-2026-04-09-round-4-partial.md`\n- `evals/_v5-requirements-addendum.md`\n\n**Decisions landed this round:** gad-61 (programmatic eval priority), gad-62 (serial default), gad-63 (rate-limited preserve-but-exclude), gad-64 (api-interrupted as distinct failure category), gad-65 (compound-skills hypothesis), gad-66 (authored-content injection experiment queued), gad-67 (serial as permanent default).\n\n**Led to:**\n- v5 requirements addendum (12 new/changed requirements from playtest)\n- Phase 27 rubric shipping (per-dimension scoring, RubricRadar SVG, /rubric page)\n- gad-66 content-pack extraction experiment\n- HTTP 529 investigation queued before GAD v11 retry (task 21-23b)\n- Serial-only execution as permanent default (gad-67)\n\n---"
   }
 ];
-
-export const FINDINGS_ROUND_3_RAW: string | null = "# Round 3 Findings — Freedom Hypothesis\r\n\r\n**Requirements version:** v3 (game-loop gate, spell-crafting gate, UI quality gate)\r\n**Date:** 2026-04-08\r\n**Conditions:** GAD v8, Bare v3, Emergent v2 — all hit rate limits but produced builds\r\n\r\n## Results — inverted from expectations\r\n\r\n| Condition | Framework constraint | Tokens | Commits | Human score | Notes |\r\n|-----------|---------------------|--------|---------|-------------|-------|\r\n| **Bare v3** | **None (most freedom)** | 1,877 | 1 batch | **0.70** | Best UI/UX by far, most enjoyable |\r\n| Emergent v2 | Medium (inherited skills) | 1,609 | 2 phases | 0.50 | Solid forge, more content, maintained discipline |\r\n| GAD v8 | Full framework | 1,291 | 0 | 0.20 | Broken crafting, ASCII UI, hard to read |\r\n\r\n**The result is monotonic and inverse to framework constraint.** More freedom = better output.\r\n\r\n## Running tally across all rounds\r\n\r\n| Run | Requirements | Human | Key observation |\r\n|-----|-------------|-------|----------------|\r\n| GAD v5 | v1 | 0.00 | Blank screen |\r\n| GAD v6 | v2 | 0.00 | Blank screen |\r\n| GAD v7 | v2 | 0.30 | Stuck after combat |\r\n| **GAD v8** | **v3** | **0.20** | Broken crafting |\r\n| Bare v1 | v2 | 0.10 | New Game broken |\r\n| Bare v2 | v2 | 0.50 | Playable, ASCII UI |\r\n| **Bare v3** | **v3** | **0.70** | **Best game overall** |\r\n| Emergent v1 | v2 | 0.10 | Styled text crash |\r\n| **Emergent v2** | **v3** | **0.50** | Functional forge, medium UI |\r\n\r\n**GAD has never exceeded 0.30 human review across 4 attempts.**\r\n**Bare has improved monotonically: 0.10 → 0.50 → 0.70.**\r\n**Emergent has improved: 0.10 → 0.50.**\r\n\r\n## Freedom hypothesis\r\n\r\n> For creative/game implementation tasks, agent performance correlates INVERSELY with\r\n> framework constraint. Less prescribed structure leads to better output.\r\n\r\n### Supporting evidence\r\n\r\n1. **Bare always beats GAD** on human review, across all 3 rounds with same requirements\r\n2. **GAD has more tokens, more tool uses, more commits** — but produces worse games\r\n3. **GAD v8 had 0 commits** because it was so busy following the framework it hit the rate limit\r\n   before completing a work unit worth committing\r\n4. **Bare v3 best UI/UX** despite no framework telling it how to build UI\r\n5. **Emergent sits in the middle** — some framework, some freedom, middle results\r\n\r\n### Counter-evidence / confounds\r\n\r\n1. Rate limits hit all three runs — GAD v8 may have been about to commit when cut off\r\n2. Single-run variance is high — we haven't established statistical significance\r\n3. GAD's strength is discipline/traceability, not creative output — we may be measuring the\r\n   wrong thing for game evals\r\n4. Bare v3's \"one giant commit\" means if it had broken, there'd be no checkpoint. GAD's\r\n   discipline is insurance against catastrophic failure, not a booster for success\r\n\r\n### Alternative interpretation: the framework hurts speed\r\n\r\nGAD's planning overhead (reading/writing .planning/ docs, per-task commits, state updates,\r\ndecision capture) consumes tokens that could have gone to implementation and testing. In\r\na time-limited or token-limited environment, this overhead compounds:\r\n\r\n| Metric | GAD | Bare | Ratio |\r\n|--------|-----|------|-------|\r\n| Rounds completed with playable game | 0/4 | 2/3 | Bare 5x better |\r\n| Rounds with blank screen | 2/4 | 0/3 | GAD worse |\r\n| Rounds with gate failure | 4/4 | 1/3 | GAD worse |\r\n\r\n**GAD is producing disciplined garbage.** The process is followed but the product fails.\r\n\r\n## What this means for GAD\r\n\r\n1. **GAD may not be the right framework for creative implementation tasks.** It was designed\r\n   for planning/tracking, not for game development. Game dev rewards iteration speed and\r\n   visual feedback, which GAD's planning overhead slows down.\r\n\r\n2. **The bare condition's success suggests \"AGENTS.md + requirements + freedom\" is sufficient**\r\n   for implementation. The planning doc maintenance may be dead weight.\r\n\r\n3. **GAD's value proposition needs to be re-examined.** If process compliance doesn't correlate\r\n   with output quality, what is GAD actually optimizing for?\r\n   - Traceability across sessions (context compaction recovery)\r\n   - Multi-agent coordination\r\n   - Long-horizon planning (months, not days)\r\n   - Regulatory/compliance work where process matters\r\n\r\n4. **The game eval may be the wrong benchmark for GAD.** A better benchmark would be:\r\n   - Resuming work after context compaction\r\n   - Multi-phase refactors where state matters\r\n   - Documentation that has to be kept in sync with code\r\n   - Bug triage and root-cause analysis\r\n\r\n## Open questions\r\n\r\n1. Would GAD win if we measured context-resumption rather than fresh implementation?\r\n2. Does GAD win when the agent is replaced mid-run (simulating handoff)?\r\n3. What happens if we give Bare the same token budget as GAD's planning overhead in the form of free research time?\r\n4. Is the freedom hypothesis specific to KAPLAY/games, or does it generalize to web apps, APIs, CLIs?\r\n5. Would GAD do better with a \"lite mode\" that strips planning doc maintenance but keeps verification?\r\n\r\n## Immediate actions\r\n\r\n1. Treat this as a preliminary finding — needs more runs for statistical validity\r\n2. Create a GAD-lite mode for comparison (no per-task planning doc updates, only phase-level)\r\n3. Add a context-resumption eval where GAD's advantages should appear\r\n4. Do NOT abandon GAD — this finding may be specific to greenfield game implementation\r\n\r\n## Infrastructure findings\r\n\r\n- **Rate limits revealed discipline pressure response:** Emergent v2 was the only condition\r\n  that maintained phase commits under pressure. Bare regressed to 1 batch commit. GAD never\r\n  committed anything. Emergent's inherited skill \"game-loop-verification\" (which mandated\r\n  verify-per-phase) may have enforced a checkpoint discipline that kicked in before the limit.\r\n\r\n- **Build preservation was broken:** All previous runs overwrote the same path in\r\n  apps/portfolio/public/evals/. Now fixed — all 8 builds preserved per-version.\r\n";
-export const FINDINGS_GENERAL_RAW: string | null = "# Eval Findings — 2026-04-08\n\n## Experiment: Escape the Dungeon — Three Conditions\n\n### Setup\n\nSame game requirements (12 criteria, vertical-slice priority, UI-first mandate), same source\ndocs (trimmed gameplay design ~120 lines), same stack (Vite + TypeScript + KAPLAY).\n\n| Condition | Framework | Skills | Runs |\n|-----------|-----------|--------|------|\n| GAD (escape-the-dungeon) | Full GAD: .planning/ XML, AGENTS.md loop, skill triggers | Pre-built | v5 (0.0), v6 (0.0), v7 (0.30) |\n| Bare (escape-the-dungeon-bare) | None — agent creates own workflow | From scratch | v1 (0.10), v2 (0.50) |\n| Emergent (escape-the-dungeon-emergent) | None — inherits skills from bare v1 | Inherited + evolves | v1 (0.10) |\n\n### Results: Human review scores\n\n| Run | Human | Notes |\n|-----|-------|-------|\n| GAD v5 | 0.00 | Blank screen |\n| GAD v6 | 0.00 | Blank screen (ES module + file://) |\n| GAD v7 | **0.30** | Renders, better UI layout, but game loop breaks after combat — player gets stuck |\n| Bare v1 | 0.10 | Main menu renders, New Game doesn't work |\n| Bare v2 | **0.50** | **Most playable.** Full game loop works. ASCII/plain UI, needs polish, no rune forge |\n| Emergent v1 | 0.10 | Main menu + saved game detection, but crashes entering game (styled text error) |\n\n### Key finding: Bare v2 beat GAD v7 on playability\n\nThe agent WITHOUT a framework produced the most playable game. This is a significant finding.\n\n**Why bare v2 won:**\n- Simpler architecture — fewer abstractions meant fewer places for bugs\n- Focused on making things work rather than following a process\n- 6 commits (phase-level granularity) — enough traceability without overhead\n- The feedback from v1's failure was more actionable than GAD's structural requirements\n\n**Why GAD v7 lost on playability despite better process metrics:**\n- 21 commits, 17/17 tasks tracked, full planning docs — excellent discipline\n- But the game loop broke (combat → no return to navigation)\n- More framework overhead (93K tokens vs 88K) didn't translate to better output\n- Planning docs were maintained perfectly while the actual game was broken\n- **The process was followed but the product was worse**\n\n### Token comparison\n\n| Run | Tokens | Tool uses | Commits | Human |\n|-----|--------|-----------|---------|-------|\n| Bare v1 | 67,751 | 62 | 2 | 0.10 |\n| Emergent v1 | 67,375 | 79 | 2 | 0.10 |\n| Bare v2 | 87,661 | 110 | 6 | **0.50** |\n| GAD v7 | 93,632 | 137 | 21 | 0.30 |\n\nGAD used 7% more tokens than bare v2 but scored 40% lower on human review. The token overhead\nof maintaining .planning/ docs did not pay for itself in output quality.\n\n### Emergent v1 findings\n\nThe emergent eval (inherited skills from bare v1) performed WORSE than both bare v2 and GAD v7.\nThis challenges the hypothesis that inherited skills improve outcomes.\n\n**Why emergent v1 failed:**\n- Inherited skills were code-level patterns, not workflow fixes\n- The `previous-workflow.md` told it v1's New Game was broken, but the fix didn't work\n- \"Styled text error: unclosed tags START\" — a KAPLAY API issue the skills didn't cover\n- Fewer tokens (67K) suggests it relied on inherited knowledge but that knowledge was insufficient\n\n**Lesson:** Skills need to capture failure modes and fixes, not just patterns. The bare v2 agent\nsucceeded because it was told \"v1's New Game was broken\" and had to figure out the fix itself.\nThe emergent agent was told the same thing AND given skills, but the skills didn't help with\nthe specific KAPLAY API issue that caused the crash.\n\n### What this means for GAD\n\n1. **Process metrics ≠ output quality.** GAD v7 had near-perfect discipline (0.81) and planning\n   quality (1.0) but produced a worse game than the undisciplined bare v2.\n\n2. **The framework adds overhead that doesn't always pay off.** 93K tokens for GAD vs 88K for\n   bare, with worse results. The planning doc maintenance consumed tokens that could have gone\n   to testing and fixing the game.\n\n3. **Feedback about failures is more valuable than inherited skills.** Bare v2 (told about v1's\n   failure) outperformed emergent v1 (given v1's skills + failure notes). Direct feedback\n   about what broke was more actionable than documented patterns.\n\n4. **Human review is the only metric that matters for game evals.** Auto-composite can be\n   0.95+ while the game is a blank screen. The gate criteria help but aren't sufficient —\n   a game can render and still be broken.\n\n### Requirements versioning\n\nRequirements have been updated twice this session:\n- **v1 (original):** 12 criteria focused on systems completeness\n- **v2 (current):** Gate criteria (must render, must be playable), vertical-slice priority,\n  UI-first build order. Trimmed source docs from 640 → 127 lines.\n\nNext iteration should add:\n- Explicit game-loop verification: title → new game → room → interaction → room (full cycle)\n- UI quality baseline: minimum spacing, readable text, no overlapping elements\n- Rune forge as a required criterion (currently missing from all implementations)\n\n### Open questions\n\n1. Would GAD do better if the AGENTS.md mandated explicit game-loop testing per phase?\n2. Would the emergent eval improve if skills captured KAPLAY-specific error fixes?\n3. Is the bare approach inherently better for creative/game implementation, or was this specific to KAPLAY?\n4. Would multiple bare v2 runs cluster around 0.50, or was this a lucky outlier?\n";
 
 export const EVAL_PROJECTS: EvalProjectMeta[] = [
   {
@@ -6063,6 +6060,18 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-148",
+    "title": "Query-oriented SDK is the canonical planning logic core; CLI remains the canonical operator surface",
+    "summary": "GAD keeps a CLI-first operator model for skills and humans, but the framework should stop treating subprocess calls to `gad-tools` as the hidden source of truth for planning operations. The canonical logic layer should be a query-oriented SDK surface (`sdk/src/query/...`) that exposes typed in-process handlers for state, roadmap, tasks, scoped snapshots, and task assignment. The CLI then becomes a thin wrapper over those handlers. Skills still invoke the CLI because that keeps agent behavior explicit and reproducible. Pipelines, site generation, trace/reporting, and future runtime adapters should use the query layer directly when possible.",
+    "impact": "Reduces duplication, improves testability, and makes future concurrency features like scoped snapshots and task claims easier to ship without inventing a second planning filesystem. Separates methodology skills (CLI-facing) from deterministic automation/pipelines (query-facing)."
+  },
+  {
+    "id": "gad-147",
+    "title": "GAD workstreams are scoped execution contexts over shared planning artifacts, not duplicated planning trees",
+    "summary": "After reviewing upstream get-shit-done workstreams, GAD adopts a different direction. The concurrency problem is real, but duplicating `STATE`, `ROADMAP`, `REQUIREMENTS`, and `phases/` under `.planning/workstreams/&lt;name&gt;/` is not the right fit for GAD's eval, tracing, and site-reporting model. GAD workstreams should instead be execution lanes over a single canonical planning tree. Shared planning artifacts remain the source of truth. Context is narrowed by scoped snapshots (`--phaseid`, `--taskid`, later optional `--agentid`) and by explicit task/phase assignment metadata.",
+    "impact": "Future workstream support in GAD will be built around scoped snapshots and assignment state, not namespaced planning files. Docs and workflows must not imply upstream-style `/gad:workstreams` support unless and until this model is implemented."
+  },
   {
     "id": "gad-146",
     "title": "Claude-facing model profiles stay off by default and use runtime-safe aliases when enabled",
@@ -9843,6 +9852,157 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": []
   },
   {
+    "id": "35-05",
+    "phaseId": "35",
+    "status": "in-progress",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before restoring any workstream feature. Confirm which parts of the old SDK are worth keeping, which should stay compatibility-only, and whether workstreams should exist in GAD at all.",
+    "keywords": [
+      "workstreams",
+      "sdk",
+      "review",
+      "lineage",
+      "deferred"
+    ],
+    "depends": []
+  },
+  {
+    "id": "35-06",
+    "phaseId": "35",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.",
+    "keywords": [
+      "upstream-review",
+      "get-shit-done",
+      "tmp",
+      "security",
+      "sdk",
+      "workstreams"
+    ],
+    "depends": []
+  },
+  {
+    "id": "35-07",
+    "phaseId": "35",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Rewrite GAD README to match the completeness and onboarding depth of upstream GSD’s README while preserving GAD’s actual runtime/install/canonical-source truth and avoiding stale command/runtime claims.",
+    "keywords": [
+      "readme",
+      "docs",
+      "onboarding",
+      "upstream-review"
+    ],
+    "depends": []
+  },
+  {
+    "id": "35-08",
+    "phaseId": "35",
+    "status": "done",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Restore the shared GAD security module and realign the prompt injection scanners/tests with the current repo structure so the framework’s security claims are backed by a live module again.",
+    "keywords": [
+      "security",
+      "prompt-injection",
+      "tests",
+      "scanner"
+    ],
+    "depends": []
+  },
+  {
+    "id": "35-09",
+    "phaseId": "35",
+    "status": "done",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Expand GAD README to upstream-level completeness without inheriting stale npm-first or command-first claims. Cover install, runtime split, evals, planning model, security, updating, troubleshooting, and development flow.",
+    "keywords": [
+      "readme",
+      "docs",
+      "install",
+      "onboarding",
+      "security"
+    ],
+    "depends": []
+  },
+  {
+    "id": "41-01",
+    "phaseId": "41",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.",
+    "keywords": [
+      "sdk",
+      "query",
+      "architecture",
+      "cli"
+    ],
+    "depends": []
+  },
+  {
+    "id": "41-02",
+    "phaseId": "41",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. Scoped snapshots must inline only the relevant planning/docs context plus assignment metadata, while preserving the current full and sprint snapshot modes.",
+    "keywords": [
+      "snapshot",
+      "scoping",
+      "phase",
+      "task",
+      "agent"
+    ],
+    "depends": []
+  },
+  {
+    "id": "41-03",
+    "phaseId": "41",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Add assignment commands to the CLI: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. Update TASK-REGISTRY.xml schema handling to support `agent-id`, `agent-role`, `runtime`, `model-profile`, `claimed`, and optional lease metadata for live concurrent agents.",
+    "keywords": [
+      "tasks",
+      "claim",
+      "release",
+      "assignment",
+      "agent-id"
+    ],
+    "depends": []
+  },
+  {
+    "id": "41-04",
+    "phaseId": "41",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": null,
+    "goal": "Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts.",
+    "keywords": [
+      "telemetry",
+      "site",
+      "assignments",
+      "workstreams",
+      "trace"
+    ],
+    "depends": []
+  },
+  {
     "id": "39-01",
     "phaseId": "39",
     "status": "done",
@@ -10231,6 +10391,13 @@ export const ALL_PHASES: PhaseRecord[] = [
     "status": "done",
     "goal": "Continuously reduce duplicated UI and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **Order:** (1) Burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) Then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared Playable/teaser chunks. (3) Re-scan periodically after other site work. **Defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. Tie-in: gad-134 (site reusability / cut duplicate edits). Depends on phase 28 (site architecture) being done.",
     "outcome": null
+  },
+  {
+    "id": "41",
+    "title": "Scoped snapshots + query SDK + assignment-based workstreams",
+    "status": "planned",
+    "goal": "Implement GAD's concurrency/workstream model without duplicating planning trees. Deliverables: query-oriented SDK handlers for state/tasks/scoped snapshots/assignment, CLI support for `gad snapshot --phaseid/--taskid/--agentid`, task claim/release/active commands, assignment metadata in TASK-REGISTRY.xml, and initial site/trace support for active agent lanes. This is the GAD alternative to upstream `.planning/workstreams/&lt;name&gt;/`.",
+    "outcome": null
   }
 ];
 
@@ -10247,6 +10414,20 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-148",
+    "title": "Query-oriented SDK is the canonical planning logic core; CLI remains the canonical operator surface",
+    "kind": "decision",
+    "href": "/decisions#gad-148",
+    "body": "gad-148 query-oriented sdk is the canonical planning logic core; cli remains the canonical operator surface gad keeps a cli-first operator model for skills and humans, but the framework should stop treating subprocess calls to `gad-tools` as the hidden source of truth for planning operations. the canonical logic layer should be a query-oriented sdk surface (`sdk/src/query/...`) that exposes typed in-process handlers for state, roadmap, tasks, scoped snapshots, and task assignment. the cli then becomes a"
+  },
+  {
+    "id": "gad-147",
+    "title": "GAD workstreams are scoped execution contexts over shared planning artifacts, not duplicated planning trees",
+    "kind": "decision",
+    "href": "/decisions#gad-147",
+    "body": "gad-147 gad workstreams are scoped execution contexts over shared planning artifacts, not duplicated planning trees after reviewing upstream get-shit-done workstreams, gad adopts a different direction. the concurrency problem is real, but duplicating `state`, `roadmap`, `requirements`, and `phases/` under `.planning/workstreams/&lt;name&gt;/` is not the right fit for gad's eval, tracing, and site-reporting model. gad workstreams should instead be execution lanes over a single canonical planning tree. shared pla"
+  },
   {
     "id": "gad-146",
     "title": "Claude-facing model profiles stay off by default and use runtime-safe aliases when enabled",
@@ -12523,6 +12704,69 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "35-04 restore model profile resolution for current gad workflows and claude sdk sessions with `off` as the default, runtime-safe claude aliases when enabled, and a live verification path that proves a real claude sub-session changed models. model-profiles claude sdk off-by-default live-verification"
   },
   {
+    "id": "35-05",
+    "title": "After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before r",
+    "kind": "task",
+    "href": "/planning?tab=tasks#35-05",
+    "body": "35-05 after the naming/portability cleanup lands, review inherited gsd sdk design and the deferred workstream concept before restoring any workstream feature. confirm which parts of the old sdk are worth keeping, which should stay compatibility-only, and whether workstreams should exist in gad at all. workstreams sdk review lineage deferred"
+  },
+  {
+    "id": "35-06",
+    "title": "Maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes co",
+    "kind": "task",
+    "href": "/planning?tab=tasks#35-06",
+    "body": "35-06 maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, sdk structure, and docs against gad before adopting any ideas. upstream-review get-shit-done tmp security sdk workstreams"
+  },
+  {
+    "id": "35-07",
+    "title": "Rewrite GAD README to match the completeness and onboarding depth of upstream GSD’s README while preserving GAD’s actual",
+    "kind": "task",
+    "href": "/planning?tab=tasks#35-07",
+    "body": "35-07 rewrite gad readme to match the completeness and onboarding depth of upstream gsd’s readme while preserving gad’s actual runtime/install/canonical-source truth and avoiding stale command/runtime claims. readme docs onboarding upstream-review"
+  },
+  {
+    "id": "35-08",
+    "title": "Restore the shared GAD security module and realign the prompt injection scanners/tests with the current repo structure s",
+    "kind": "task",
+    "href": "/planning?tab=tasks#35-08",
+    "body": "35-08 restore the shared gad security module and realign the prompt injection scanners/tests with the current repo structure so the framework’s security claims are backed by a live module again. security prompt-injection tests scanner"
+  },
+  {
+    "id": "35-09",
+    "title": "Expand GAD README to upstream-level completeness without inheriting stale npm-first or command-first claims. Cover insta",
+    "kind": "task",
+    "href": "/planning?tab=tasks#35-09",
+    "body": "35-09 expand gad readme to upstream-level completeness without inheriting stale npm-first or command-first claims. cover install, runtime split, evals, planning model, security, updating, troubleshooting, and development flow. readme docs install onboarding security"
+  },
+  {
+    "id": "41-01",
+    "title": "Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot co",
+    "kind": "task",
+    "href": "/planning?tab=tasks#41-01",
+    "body": "41-01 design and ship the first gad query-oriented sdk slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. the cli should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation. sdk query architecture cli"
+  },
+  {
+    "id": "41-02",
+    "title": "Extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. Scoped snapshots must inline onl",
+    "kind": "task",
+    "href": "/planning?tab=tasks#41-02",
+    "body": "41-02 extend `gad snapshot` with scoping arguments: `--phaseid`, `--taskid`, and `--agentid`. scoped snapshots must inline only the relevant planning/docs context plus assignment metadata, while preserving the current full and sprint snapshot modes. snapshot scoping phase task agent"
+  },
+  {
+    "id": "41-03",
+    "title": "Add assignment commands to the CLI: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. Update TASK-REGISTRY",
+    "kind": "task",
+    "href": "/planning?tab=tasks#41-03",
+    "body": "41-03 add assignment commands to the cli: `gad tasks claim`, `gad tasks release`, and `gad tasks active`. update task-registry.xml schema handling to support `agent-id`, `agent-role`, `runtime`, `model-profile`, `claimed`, and optional lease metadata for live concurrent agents. tasks claim release assignment agent-id"
+  },
+  {
+    "id": "41-04",
+    "title": "Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible",
+    "kind": "task",
+    "href": "/planning?tab=tasks#41-04",
+    "body": "41-04 integrate assignment/scoped-context data into runtime telemetry and site reporting. active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts. telemetry site assignments workstreams trace"
+  },
+  {
     "id": "39-01",
     "title": "Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared co",
     "kind": "task",
@@ -12843,6 +13087,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "phase",
     "href": "/planning?tab=phases#39",
     "body": "39 site dry pass — low-risk dedup first, then medium refactors continuously reduce duplicated ui and boilerplate in vendor/get-anything-done/site without changing visitor-facing behavior. **order:** (1) burn down **low-risk** wins until grep finds no more trivial duplicates — identical components, copy-pasted intro blocks, dead parallel files. (2) then **medium** refactors: shared layout shell, small compound components (e.g. section intro wrapper), shared playable/teaser chunks. (3) re-scan periodically after other site work. **defer** high-friction moves (e.g. fully data-driven landing section lists) until low+medium backlog is empty. tie-in: gad-134 (site reusability / cut duplicate edits). depends on phase 28 (site architecture) being done."
+  },
+  {
+    "id": "41",
+    "title": "Phase 41 — Scoped snapshots + query SDK + assignment-based workstreams",
+    "kind": "phase",
+    "href": "/planning?tab=phases#41",
+    "body": "41 scoped snapshots + query sdk + assignment-based workstreams implement gad's concurrency/workstream model without duplicating planning trees. deliverables: query-oriented sdk handlers for state/tasks/scoped snapshots/assignment, cli support for `gad snapshot --phaseid/--taskid/--agentid`, task claim/release/active commands, assignment metadata in task-registry.xml, and initial site/trace support for active agent lanes. this is the gad alternative to upstream `.planning/workstreams/&lt;name&gt;/`."
   },
   {
     "id": "compound-skills-hypothesis",
@@ -13731,7 +13982,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "gad:milestone",
     "kind": "skill",
     "href": "/skills/milestone",
-    "body": "milestone gad:milestone manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. use this skill when the user says \"we're starting v2\", \"let's kick off the next release\", \"we finished everything in this milestone, what's next\", \"archive this milestone\", or wants to review whether all planned work is actually done before closing. also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. covers gsd:new-milestone + gsd:complete-milestone + gsd:audit-milestone."
+    "body": "milestone gad:milestone manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. use this skill when the user says \"we're starting v2\", \"let's kick off the next release\", \"we finished everything in this milestone, what's next\", \"archive this milestone\", or wants to review whether all planned work is actually done before closing. also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. covers gad:new-milestone + gad:complete-milestone + gad:audit-milestone."
   },
   {
     "id": "new-project",

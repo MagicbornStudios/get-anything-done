@@ -1,3 +1,10 @@
+---
+projects: [escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent]
+date: 2026-04-08
+round: 3
+gad_version: null
+---
+
 # Round 3 Findings — Freedom Hypothesis
 
 **Requirements version:** v3 (game-loop gate, spell-crafting gate, UI quality gate)
