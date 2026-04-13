@@ -1,16 +1,16 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
 import { useState } from "react";
 import { PLAYABLE_INDEX } from "@/lib/eval-data";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { PlayableEmbed } from "@/components/landing/playable/PlayableEmbed";
 import { PlayableSelectedPanel } from "@/components/landing/playable/PlayableSelectedPanel";
 import { PlayableDocModal } from "@/components/landing/playable/PlayableDocModal";
-import { PlayableReviewLegend } from "@/components/landing/playable/PlayableReviewLegend";
-import { PlayableRunGroups } from "@/components/landing/playable/PlayableRunGroups";
-import { runKey, PROJECT_FAMILIES } from "@/components/landing/playable/playable-shared";
-import { domainForProject, type ProjectDomain } from "@/components/project-market/project-market-shared";
+import { PlayableStageGrid } from "@/components/landing/playable/PlayableStageGrid";
+import { runKey } from "@/components/landing/playable/playable-shared";
+import { buildProjectMarketPlayableGroups } from "@/components/project-market/build-project-market-playable-groups";
+import { ProjectMarketPlayableCatalog } from "@/components/project-market/ProjectMarketPlayableCatalog";
+import type { ProjectDomain } from "@/components/project-market/project-market-shared";
 
 type Props = {
   runs: EvalRunRecord[];
@@ -26,57 +26,19 @@ export function ProjectMarketRuns({ runs, selected, domainFilter, onSelectRun }:
     return null;
   }
 
-  // Build grouped runs using PROJECT_FAMILIES, filtered by domain
-  const families = domainFilter
-    ? PROJECT_FAMILIES.filter((f) => {
-        // Check if any of the family's projects match the domain filter
-        return f.projects.some((pid) => domainForProject(pid) === domainFilter);
-      })
-    : PROJECT_FAMILIES;
-
-  const groupedRuns = families.map((family) => {
-    const familyRuns = runs.filter((r) => family.projects.includes(r.project));
-    return { ...family, runs: familyRuns };
-  });
-
-  // Also gather runs not in any family
-  const familyProjectIds = new Set(PROJECT_FAMILIES.flatMap((f) => f.projects));
-  const ungroupedRuns = runs.filter((r) => !familyProjectIds.has(r.project));
-
-  const allGroups = [
-    ...groupedRuns,
-    ...(ungroupedRuns.length > 0
-      ? [{ id: "other", label: "Other projects", description: "Additional eval runs", runs: ungroupedRuns }]
-      : []),
-  ];
-
+  const allGroups = buildProjectMarketPlayableGroups(runs, domainFilter);
   const iframeSrc = selected ? PLAYABLE_INDEX[runKey(selected)] : null;
 
   return (
     <div className="mt-10">
-      <Identified as="ProjectMarketPlayableIntro">
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Playable builds
-        </h2>
-        <p className="mb-6 text-xs text-muted-foreground">
-          Click any build badge to play it in-browser. Hover for details.
-        </p>
-      </Identified>
+      <ProjectMarketPlayableCatalog
+        groupedRuns={allGroups}
+        selected={selected}
+        onSelectRun={onSelectRun}
+      />
 
-      <Identified as="ProjectMarketPlayableLegend">
-        <PlayableReviewLegend />
-      </Identified>
-
-      <Identified as="ProjectMarketPlayableRunGroups">
-        <PlayableRunGroups
-          groupedRuns={allGroups}
-          selected={selected}
-          onSelectRun={onSelectRun}
-        />
-      </Identified>
-
-      {selected && iframeSrc && (
-        <Identified as="ProjectMarketPlayableEmbedRow" className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
+      {selected && iframeSrc ? (
+        <PlayableStageGrid className="mt-8">
           <PlayableEmbed
             project={selected.project}
             version={selected.version}
@@ -87,10 +49,9 @@ export function ProjectMarketRuns({ runs, selected, domainFilter, onSelectRun }:
             onOpenRequirements={() => setModal("requirements")}
             onOpenSkill={() => setModal("skill")}
           />
-        </Identified>
-      )}
+        </PlayableStageGrid>
+      ) : null}
 
-      <Identified as="ProjectMarketPlayableDocModal">
       <PlayableDocModal
         modal={modal}
         selected={selected}
@@ -98,7 +59,6 @@ export function ProjectMarketRuns({ runs, selected, domainFilter, onSelectRun }:
           if (!open) setModal(null);
         }}
       />
-      </Identified>
     </div>
   );
 }

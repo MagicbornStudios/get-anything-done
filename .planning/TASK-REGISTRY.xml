@@ -796,6 +796,11 @@
       <resolution>Shipped 2026-04-10. Created site/app/project-market/page.tsx route, 7 new components under site/components/project-market/ (ProjectMarket, ProjectMarketHeader, ProjectMarketFilterBar, ProjectMarketGrid, ProjectCard, ProjectMarketRuns, use-project-market, project-market-shared). PlayableTeaser replaces full Playable on home. Nav Play dropdown, hero CTA, footer link all updated. Build passes. Commit 292c621.</resolution>
       <keywords>project-market,catalog,eval-projects,featured,per-project-rounds,nav,teaser</keywords>
     </task>
+    <task id="28-02" status="done" agent-id="" type="site">
+      <goal>Vercel / clean-clone site build: every import under site/ must exist in git. Follow-up refactors added imports for EvalFilterSurface, run-detail score + process-metric cards, run-detail-shared, and run-process-metrics-runtime-label but those files were only on local disk (untracked), so production `pnpm run build` failed with module-not-found.</goal>
+      <resolution>Shipped 2026-04-11. Committed site/components/eval-filters/EvalFilterSurface.tsx, site/components/run-detail/** (RunScoreBar + process-metric-cards), site/lib/run-detail-shared.ts, site/lib/run-process-metrics-runtime-label.ts, and project-market band split files (ProjectMarket*Band, build-project-market-playable-groups) plus Grid/Runs edits. Verified `pnpm run build` in site/ on a full prebuild + next build.</resolution>
+      <keywords>vercel,site-build,module-not-found,run-detail,eval-filters,project-market</keywords>
+    </task>
   </phase>
   <phase id="31">
     <task id="31-01" status="done" skill="execute-phase" agent="gad-executor" type="skill">

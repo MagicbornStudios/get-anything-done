@@ -25,6 +25,7 @@ Phase 43 (domain rename + project/species schema unification) is the next planne
 - site/components/landing/nav/NavMobileMenu.tsx — inline nested labels on mobile
 - site/app/findings/page.tsx — restored /findings route for framework-level findings
 - evals/FINDINGS-2026-04-13-evolution-loop-experiment.md — the experiment writeup
+- site (2026-04-11): committed missing modules for Vercel — EvalFilterSurface, run-detail/* + lib/run-detail-shared + lib/run-process-metrics-runtime-label, project-market band components (task 28-02). Root cause was merged imports without `git add` of new paths.
 
 === DECISIONS (phase 42 batch) ===
 GAD-D-151: Evolutionary domain vocabulary — species/generation/brood/evolution/DNA/spawn
