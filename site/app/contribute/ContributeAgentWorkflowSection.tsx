@@ -1,11 +1,13 @@
 import { Bot, Terminal } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export function ContributeAgentWorkflowSection() {
   return (
     <SiteSection>
+      <Identified as="ContributeAgentWorkflowSection">
       <SiteSectionHeading
         icon={Bot}
         kicker="Agent workflow — what happens behind the scenes"
@@ -71,6 +73,7 @@ export function ContributeAgentWorkflowSection() {
           </CardContent>
         </Card>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

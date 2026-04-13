@@ -1,4 +1,5 @@
 import { MessageSquare } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { CONTRIBUTE_REPO_URL } from "./contribute-constants";
 import { ContributeStep } from "./ContributeStep";
@@ -6,6 +7,7 @@ import { ContributeStep } from "./ContributeStep";
 export function ContributeHumanWorkflowSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="ContributeHumanWorkflowSection">
       <SiteSectionHeading
         icon={MessageSquare}
         kicker="Human workflow — what you do"
@@ -53,6 +55,7 @@ cd get-anything-done`}
           note="When the agent finishes, the site picks up the new data automatically on the next prebuild. Findings, scores, and decisions are all rendered as static pages — open them in your browser and skim."
         />
       </div>
+      </Identified>
     </SiteSection>
   );
 }

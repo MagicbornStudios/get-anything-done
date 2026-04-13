@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function EmergentComparisonSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="EmergentComparisonSection">
       <SiteSectionHeading kicker="How emergent differs from bare and GAD" className="mb-6" />
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -39,6 +41,7 @@ export function EmergentComparisonSection() {
           </CardContent>
         </Card>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

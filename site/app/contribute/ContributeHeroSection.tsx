@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export function ContributeHeroSection() {
   return (
     <SiteSection>
+      <Identified as="ContributeHeroSection">
       <SiteSectionHeading
         kicker="Contribute"
         as="h1"
@@ -46,6 +48,7 @@ export function ContributeHeroSection() {
           .
         </p>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

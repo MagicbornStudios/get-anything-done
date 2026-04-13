@@ -1,11 +1,13 @@
 import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export function ContentDrivenHeroSection() {
   return (
     <SiteSection>
+      <Identified as="ContentDrivenHeroSection">
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <Badge
           variant="default"
@@ -51,6 +53,7 @@ export function ContentDrivenHeroSection() {
           a distinct rubric scoring the &quot;derivative coherence&quot; quality.
         </p>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,4 +1,5 @@
 import { TrendingUp } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { EmergentScoredRunRow, emergentRunKey } from "./EmergentScoredRunRow";
@@ -10,6 +11,7 @@ type EmergentCshSignalSectionProps = {
 export function EmergentCshSignalSection({ scoredRuns }: EmergentCshSignalSectionProps) {
   return (
     <SiteSection tone="muted">
+      <Identified as="EmergentCshSignalSection">
       <SiteSectionHeading
         icon={TrendingUp}
         kicker="CSH signal — human review across rounds"
@@ -38,8 +40,9 @@ export function EmergentCshSignalSection({ scoredRuns }: EmergentCshSignalSectio
           EVAL_RUNS[n].humanReviewNormalized.aggregate_score
         </code>
         , computed at prebuild from each run&apos;s rubric submission via{" "}
-        <code className="rounded bg-background/60 px-1 py-0.5">gad eval review --rubric</code>.
+        <code className="rounded bg-background/60 px-1 py-0.5">gad eval review --rubric</code>        .
       </p>
+      </Identified>
     </SiteSection>
   );
 }

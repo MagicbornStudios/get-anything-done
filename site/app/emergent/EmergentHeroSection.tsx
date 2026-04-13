@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Identified } from "@/components/devid/Identified";
 import { SiteInlineMetric, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 type EmergentHeroSectionProps = {
@@ -18,6 +19,7 @@ export function EmergentHeroSection({
 }: EmergentHeroSectionProps) {
   return (
     <SiteSection>
+      <Identified as="EmergentHeroSection">
       <div className="mb-6 flex items-center gap-2">
         <Badge
           variant="default"
@@ -77,6 +79,7 @@ export function EmergentHeroSection({
           value={latestScore != null ? latestScore.toFixed(3) : "—"}
         />
       </div>
+      </Identified>
     </SiteSection>
   );
 }

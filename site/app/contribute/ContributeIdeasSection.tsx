@@ -1,10 +1,12 @@
 import { GitFork } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { ContributeIdeaCard } from "./ContributeIdeaCard";
 
 export function ContributeIdeasSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="ContributeIdeasSection">
       <SiteSectionHeading
         icon={GitFork}
         kicker="What you can contribute"
@@ -50,6 +52,7 @@ export function ContributeIdeasSection() {
           }
         />
       </div>
+      </Identified>
     </SiteSection>
   );
 }

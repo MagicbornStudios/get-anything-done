@@ -1,5 +1,6 @@
 import { GitBranch } from "lucide-react";
 import { SkillLineageCard } from "@/components/emergent/SkillLineageCard";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { PLAYABLE_INDEX, PRODUCED_ARTIFACTS, type EvalRunRecord } from "@/lib/eval-data";
 import { emergentRunKey } from "./EmergentScoredRunRow";
@@ -11,6 +12,7 @@ type EmergentLineageSectionProps = {
 export function EmergentLineageSection({ runs }: EmergentLineageSectionProps) {
   return (
     <SiteSection>
+      <Identified as="EmergentLineageSection">
       <SiteSectionHeading icon={GitBranch} kicker="Skill lineage per run" kickerRowClassName="mb-6 gap-3" />
       <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
         Every run&apos;s skill footprint — what it inherited from the previous run, what new skills it
@@ -41,6 +43,7 @@ export function EmergentLineageSection({ runs }: EmergentLineageSectionProps) {
           );
         })}
       </div>
+      </Identified>
     </SiteSection>
   );
 }

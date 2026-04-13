@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 const linkClass =
@@ -9,6 +10,7 @@ const linkClass =
 export function ContentDrivenRelatedSection() {
   return (
     <SiteSection>
+      <Identified as="ContentDrivenRelatedSection">
       <SiteSectionHeading kicker="Related" className="mb-4" />
       <div className="flex flex-wrap gap-3 text-sm">
         <Button variant="outline" size="sm" className={linkClass} asChild>
@@ -36,6 +38,7 @@ export function ContentDrivenRelatedSection() {
           </Link>
         </Button>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,4 +1,3 @@
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { PLAYABLE_INDEX } from "@/lib/eval-data";
 import { EmergentComparisonSection } from "./EmergentComparisonSection";
@@ -29,23 +28,15 @@ export default function EmergentPage() {
 
   return (
     <MarketingShell>
-      <Identified as="EmergentHeroSection">
-        <EmergentHeroSection
-          runsCount={runs.length}
-          playableCount={playableRuns.length}
-          scoredCount={scoredRuns.length}
-          latestScore={latestScore}
-        />
-      </Identified>
-      <Identified as="EmergentCshSignalSection">
-        <EmergentCshSignalSection scoredRuns={scoredRuns} />
-      </Identified>
-      <Identified as="EmergentLineageSection">
-        <EmergentLineageSection runs={runs} />
-      </Identified>
-      <Identified as="EmergentComparisonSection">
-        <EmergentComparisonSection />
-      </Identified>
+      <EmergentHeroSection
+        runsCount={runs.length}
+        playableCount={playableRuns.length}
+        scoredCount={scoredRuns.length}
+        latestScore={latestScore}
+      />
+      <EmergentCshSignalSection scoredRuns={scoredRuns} />
+      <EmergentLineageSection runs={runs} />
+      <EmergentComparisonSection />
     </MarketingShell>
   );
 }

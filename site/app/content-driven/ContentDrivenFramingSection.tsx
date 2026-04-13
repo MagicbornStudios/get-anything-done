@@ -1,8 +1,10 @@
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ContentDrivenFramingSection() {
   return (
     <SiteSection>
+      <Identified as="ContentDrivenFramingSection">
       <SiteSectionHeading kicker="The derivative-work framing" className="mb-6" />
       <blockquote className="max-w-3xl border-l-4 border-pink-500/60 pl-5 text-lg italic leading-8 text-foreground/90">
         &quot;This is a content-driven hypothesis, like starting out with some content first — much like making a game or
@@ -21,6 +23,7 @@ export function ContentDrivenFramingSection() {
         the plot — it&apos;s a different kind of movie with different success criteria. The rubric for this track will
         score derivative coherence, integration, and scope expansion, not originality.
       </p>
+      </Identified>
     </SiteSection>
   );
 }

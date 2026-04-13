@@ -1,10 +1,12 @@
 import { Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ContentDrivenMeasureSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="ContentDrivenMeasureSection">
       <SiteSectionHeading
         icon={Package}
         kicker="What the content-driven track would measure"
@@ -42,6 +44,7 @@ export function ContentDrivenMeasureSection() {
           </CardContent>
         </Card>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

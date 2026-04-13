@@ -1,4 +1,3 @@
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import { ContributeAgentWorkflowSection } from "./ContributeAgentWorkflowSection";
 import { ContributeHeroSection } from "./ContributeHeroSection";
@@ -15,21 +14,11 @@ export const metadata = {
 export default function ContributePage() {
   return (
     <MarketingShell>
-      <Identified as="ContributeHeroSection">
-        <ContributeHeroSection />
-      </Identified>
-      <Identified as="ContributeHumanWorkflowSection">
-        <ContributeHumanWorkflowSection />
-      </Identified>
-      <Identified as="ContributeAgentWorkflowSection">
-        <ContributeAgentWorkflowSection />
-      </Identified>
-      <Identified as="ContributeIdeasSection">
-        <ContributeIdeasSection />
-      </Identified>
-      <Identified as="ContributeLinksSection">
-        <ContributeLinksSection />
-      </Identified>
+      <ContributeHeroSection />
+      <ContributeHumanWorkflowSection />
+      <ContributeAgentWorkflowSection />
+      <ContributeIdeasSection />
+      <ContributeLinksSection />
     </MarketingShell>
   );
 }

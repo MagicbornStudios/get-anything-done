@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { CONTRIBUTE_REPO_URL } from "./contribute-constants";
 
 export function ContributeLinksSection() {
   return (
     <SiteSection>
+      <Identified as="ContributeLinksSection">
       <SiteSectionHeading kicker="Useful starting points" />
       <div className="mt-4 space-y-3 text-sm leading-6">
         <p>
@@ -42,6 +44,7 @@ export function ContributeLinksSection() {
           &mdash; if a term is confusing, it&apos;s here.
         </p>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

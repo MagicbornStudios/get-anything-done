@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { Ref } from "@/components/refs/Ref";
 
 export function ContentDrivenStatusSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="ContentDrivenStatusSection">
       <SiteSectionHeading kicker="Current status" className="mb-6" />
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -43,6 +45,7 @@ export function ContentDrivenStatusSection() {
           </CardContent>
         </Card>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

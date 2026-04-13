@@ -7,6 +7,7 @@ import { SiteSection } from "@/components/site";
 export default function Templates() {
   return (
     <SiteSection id="templates" className="border-t border-border/60">
+      <Identified as="DownloadsTemplates">
       <Identified as="TemplatesIntro">
         <TemplatesIntro />
       </Identified>
@@ -15,6 +16,7 @@ export default function Templates() {
       </Identified>
       <Identified as="TemplatesEvalSection">
         <TemplatesEvalSection />
+      </Identified>
       </Identified>
     </SiteSection>
   );
