@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `--ws <name>` flag scopes GSD operations to a specific workstream, enabling
+The `--ws <name>` flag scopes GAD operations to a specific workstream, enabling
 parallel milestone work by multiple Claude Code instances on the same codebase.
 
 ## Resolution Priority
@@ -46,13 +46,13 @@ This ensures workstream scope chains automatically through the workflow:
 ## CLI Usage
 
 ```bash
-# All gsd-tools commands accept --ws
-node gsd-tools.cjs state json --ws feature-a
-node gsd-tools.cjs find-phase 3 --ws feature-b
+# All gad-tools commands accept --ws
+gad-tools state json --ws feature-a
+gad-tools find-phase 3 --ws feature-b
 
 # Workstream CRUD
-node gsd-tools.cjs workstream create <name>
-node gsd-tools.cjs workstream list
-node gsd-tools.cjs workstream status <name>
-node gsd-tools.cjs workstream complete <name>
+gad-tools workstream create <name>
+gad-tools workstream list
+gad-tools workstream status <name>
+gad-tools workstream complete <name>
 ```

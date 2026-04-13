@@ -40,8 +40,8 @@ Model profiles control which Claude model each GAD agent uses. They are off by d
 **inherit** - Follow the current session model
 - All agents resolve to `inherit`
 - Best when you switch models interactively (for example OpenCode `/model`)
-- **Required when using non-Anthropic providers** (OpenRouter, local models, etc.) — otherwise GSD may call Anthropic models directly, incurring unexpected costs
-- Use when: you want GSD to follow your currently selected runtime model
+- **Required when using non-Anthropic providers** (OpenRouter, local models, etc.) — otherwise GAD may request Anthropic model aliases directly, incurring unexpected costs
+- Use when: you want GAD to follow your currently selected runtime model
 
 ## Using Non-Claude Runtimes (Codex, OpenCode, Gemini CLI)
 
@@ -53,10 +53,10 @@ To assign different models to different agents, add `model_overrides` with model
 {
   "resolve_model_ids": "omit",
   "model_overrides": {
-    "gsd-planner": "o3",
-    "gsd-executor": "o4-mini",
-    "gsd-debugger": "o3",
-    "gsd-codebase-mapper": "o4-mini"
+    "gad-planner": "o3",
+    "gad-executor": "o4-mini",
+    "gad-debugger": "o3",
+    "gad-codebase-mapper": "o4-mini"
   }
 }
 ```
@@ -65,12 +65,11 @@ The same tiering logic applies: stronger models for planning and debugging, chea
 
 ## Using Claude Code with Non-Anthropic Providers (OpenRouter, Local)
 
-If you're using Claude Code with OpenRouter, a local model, or any non-Anthropic provider, set the `inherit` profile to prevent GAD from calling Anthropic models for subagents:
+If you're using Claude Code with OpenRouter, a local model, or any non-Anthropic provider, set the `inherit` profile to prevent GAD from requesting Anthropic model aliases for subagents:
 
 ```bash
-# Via settings command
-/gsd:settings
-# → Select "Inherit" for model profile
+# Via CLI
+gad config set-model-profile inherit
 
 # Or manually in .planning/config.json
 {
@@ -136,4 +135,4 @@ Read-only exploration and pattern extraction. No reasoning required, just struct
 Claude Code resolves aliases like `"sonnet"`, `"haiku"`, and `"opus"` to currently available versions. This avoids stale hardcoded IDs and makes model switching observable through `session_init.model`.
 
 **Why `inherit` profile?**
-Some runtimes (including OpenCode) let users switch models at runtime (`/model`). The `inherit` profile keeps all GSD subagents aligned to that live selection.
+Some runtimes (including OpenCode) let users switch models at runtime (`/model`). The `inherit` profile keeps all GAD subagents aligned to that live selection.
