@@ -923,6 +923,10 @@
       <resolution>Shipped 2026-04-12. Rewrote `README.md` into a fuller onboarding document centered on GitHub Release executables, optional Node/GitHub source use, `skills.sh`, runtime/operational split, eval preservation, canonical `sdk/` assets, defense-in-depth security, update guidance, and troubleshooting.</resolution>
       <keywords>readme,docs,install,onboarding,security</keywords>
     </task>
+    <task id="35-10" status="planned" type="framework"><goal>Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, and hydration are canonical. Decide whether phase prompts should stay on a fixed file manifest or move to scoped/query-driven hydration, and whether execute should receive relevant decisions or plan-linked refs instead of file-name-based context only.</goal>
+      <resolution>Logged 2026-04-14 in `.planning/notes/context-engine-hydration-questions-2026-04-14.md` after fixing the immediate canonical-config drift in `sdk/src/context-engine.ts`. Open questions include config compatibility boundaries, execute-time decision hydration, and whether the SDK should source context from scoped snapshot/query output rather than static manifests.</resolution>
+      <keywords>sdk,context-engine,hydration,decisions,requirements,query-layer</keywords>
+    </task>
   </phase>
     <phase id="42.1">
       <task id="42.1-01" agent-id="default" skill="framework-upgrade" status="done" type="cli"><goal>Consolidate framework configuration around `gad-config.toml` as the single canonical source. `planning-config.toml` remains legacy read-only fallback; `.planning/config.json` becomes compatibility output generated automatically from canonical config for older workflows/tools.</goal>
@@ -1017,10 +1021,12 @@
     </task>
   </phase>
   <phase id="42.3">
-    <task id="42.3-01" type="framework" status="planned"><goal>Design the workflow planning-artifact schema: file location (`.planning/workflows/*.md` vs `sdk/workflows/*.md`), frontmatter fields (name, description, trigger, participants, related-phase-ids), body format (mermaid fenced block), and discovery rules (how the site pipeline and CLI find them). Write `.planning/workflows/README.md` documenting the schema and authoring rules. Decision gad-172.</goal>
+    <task id="42.3-01" type="framework" status="done" skill="default" agent="default"><goal>Design the workflow planning-artifact schema and write `.planning/workflows/README.md`.</goal>
+      <resolution>Shipped 2026-04-14. README defines kebab-case slug-per-file layout, YAML frontmatter (slug/name/description/trigger/participants[skills,agents,cli,artifacts]/parent-workflow?/related-phases?), exactly one mermaid fenced block per file, 8-12 node guideline, verbs-for-node-names rule, nesting via parent-workflow with mermaid subgraph rendering, workflow_conformance formula ((matching − extra − out_of_order) / expected), workflow_enter/workflow_exit trace event contract. Captures decisions gad-172 + gad-173.</resolution>
       <keywords>workflow,schema,design,planning</keywords>
     </task>
-    <task id="42.3-02" type="docs" status="planned"><goal>Author the first set of hand-written workflows as `.planning/workflows/*.md` files with mermaid diagrams: (a) gad-loop — snapshot→task→implement→update-registry→commit; (b) gad-decide — the pros/cons→recommend→commit pattern validated in this conversation; (c) gad-evolution — pressure→candidate→proto-skill→validated→promoted/discarded; (d) gad-debug — symptom→hypotheses→test→eliminate→root-cause→fix; (e) gad-discuss-plan-execute — the main loop; (f) gad-findings — experiment→writeup→publish. Each file includes frontmatter and a mermaid fenced block.</goal>
+    <task id="42.3-02" type="docs" status="in-progress" skill="default" agent="default"><goal>Author the first set of hand-written workflows: gad-loop, gad-decide, gad-evolution, gad-debug, gad-discuss-plan-execute, gad-findings.</goal>
+      <resolution>Partial 2026-04-14. Shipped gad-loop.md (main execution loop, attribution-gate commentary) and gad-decide.md (nested under gad-discuss-plan-execute, documents the pros/cons→recommend→commit pattern validated in this session). Remaining: gad-evolution, gad-debug, gad-discuss-plan-execute (parent of gad-decide), gad-findings — tracked in 42.3-07.</resolution>
       <keywords>workflow,authoring,mermaid,docs</keywords>
     </task>
     <task id="42.3-03" type="pipeline" status="planned"><goal>Extend `site/scripts/build-site-data.mjs` to discover workflow files, parse frontmatter + mermaid body, and emit a WORKFLOWS array into `catalog.generated.ts` with a typed interface (slug, name, description, trigger, participants, mermaidBody, relatedPhases).</goal>
@@ -1032,8 +1038,15 @@
     <task id="42.3-05" type="site" status="planned"><goal>Add a Workflows tab to /planning that lists all hand-authored workflows and for each shows expected (left) + actual (right) mermaid graphs side-by-side, plus a diff surface highlighting missing / extra / out-of-order nodes. Mermaid renders client-side. No enforcement — advisory signal only. Decision gad-172.</goal>
       <keywords>workflow,site,planning,mermaid,diff</keywords>
     </task>
-    <task id="42.3-06" type="docs" status="planned"><goal>Open design questions to resolve during the phase 42.3 discuss round: (1) can workflows be nested (gad-decide as a sub-workflow of gad-discuss-plan-execute)? (2) should workflows carry their own validator like the evolution pipeline does? (3) should agents self-report "I am executing workflow X" as an explicit trace signal to simplify synthesis, or does the synthesizer infer workflow identity purely from observed skill/agent sequences? Capture the answers in a new `.planning/notes/` file before the plan-phase step.</goal>
+    <task id="42.3-06" type="docs" status="done" skill="default" agent="default"><goal>Resolve the three phase-42.3 open design questions: (1) workflows nest, (2) workflows carry validators, (3) agents self-report workflow identity.</goal>
+      <resolution>Resolved 2026-04-14 in decision gad-173. (1) Yes — via `parent-workflow` frontmatter, mermaid subgraph rendering. (2) Yes — the validator IS the expected/actual graph diff, emits `workflow_conformance = (matching − extra − out_of_order) / expected`, upgrades flat `framework_compliance` (gad-162). No separate validator schema. (3) Yes — explicit `workflow_enter`/`workflow_exit` trace events are authoritative when present; sequence inference is the fallback for legacy/non-GAD-aware skills.</resolution>
       <keywords>workflow,design,open-questions</keywords>
+    </task>
+    <task id="42.3-07" type="docs" status="planned"><goal>Author the remaining four workflows started in 42.3-02: gad-evolution (pressure→candidate→proto-skill→validated→promoted/discarded), gad-debug (symptom→hypotheses→test→eliminate→root-cause→fix), gad-discuss-plan-execute (parent of gad-decide — the discuss→plan→execute loop), and gad-findings (experiment→writeup→publish). Each file follows the schema documented in .planning/workflows/README.md.</goal>
+      <keywords>workflow,authoring,mermaid,docs</keywords>
+    </task>
+    <task id="42.3-08" type="framework" status="planned"><goal>Rename the self-eval headline metric from `framework_compliance` to `workflow_conformance` in compute-self-eval.mjs, CLI output, and site data surfaces, once 42.3-04 (trace synthesis) and 42.3-05 (Workflows tab) land. Keep the old name as a deprecated alias for one version so existing dashboards don't break. Decision gad-173.</goal>
+      <keywords>workflow,metric,self-eval,rename</keywords>
     </task>
   </phase>
   <phase id="44.5">
