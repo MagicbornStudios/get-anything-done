@@ -1012,16 +1012,39 @@
     <task id="42.2-05" type="site" status="planned"><goal>Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.</goal>
       <keywords>site,findings,whitepapers,copy</keywords>
     </task>
-    <task id="42.2-06" type="skill" status="planned"><goal>Design the create-proto-skill batching workflow: when invoked, the skill should enumerate pending candidates, read each candidate dir (CANDIDATE.md + optional CONTEXT.md/REFERENCES.md), draft a proto-skill per candidate, and write PROVENANCE.md alongside each SKILL.md. Open design question to resolve: does the skill process all candidates in one pass (bulk, amortized context) or one-per-invocation (simpler, higher per-draft cost)?</goal>
-      <keywords>skill,design,create-proto-skill,batching</keywords>
+    <task id="42.2-06" type="skill" status="planned"><goal>Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `skills/proto-skills/<slug>/{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance.</goal>
+      <keywords>skill,create-proto-skill,batching,checkpoint,evolution</keywords>
+    </task>
+  </phase>
+  <phase id="42.3">
+    <task id="42.3-01" type="framework" status="planned"><goal>Design the workflow planning-artifact schema: file location (`.planning/workflows/*.md` vs `sdk/workflows/*.md`), frontmatter fields (name, description, trigger, participants, related-phase-ids), body format (mermaid fenced block), and discovery rules (how the site pipeline and CLI find them). Write `.planning/workflows/README.md` documenting the schema and authoring rules. Decision gad-172.</goal>
+      <keywords>workflow,schema,design,planning</keywords>
+    </task>
+    <task id="42.3-02" type="docs" status="planned"><goal>Author the first set of hand-written workflows as `.planning/workflows/*.md` files with mermaid diagrams: (a) gad-loop — snapshot→task→implement→update-registry→commit; (b) gad-decide — the pros/cons→recommend→commit pattern validated in this conversation; (c) gad-evolution — pressure→candidate→proto-skill→validated→promoted/discarded; (d) gad-debug — symptom→hypotheses→test→eliminate→root-cause→fix; (e) gad-discuss-plan-execute — the main loop; (f) gad-findings — experiment→writeup→publish. Each file includes frontmatter and a mermaid fenced block.</goal>
+      <keywords>workflow,authoring,mermaid,docs</keywords>
+    </task>
+    <task id="42.3-03" type="pipeline" status="planned"><goal>Extend `site/scripts/build-site-data.mjs` to discover workflow files, parse frontmatter + mermaid body, and emit a WORKFLOWS array into `catalog.generated.ts` with a typed interface (slug, name, description, trigger, participants, mermaidBody, relatedPhases).</goal>
+      <keywords>workflow,site,build-pipeline,catalog</keywords>
+    </task>
+    <task id="42.3-04" type="pipeline" status="planned"><goal>Trace-to-workflow synthesis: extend the trace-analysis pipeline (`.gad-log/` JSONL + `.trace-events.jsonl`) to emit a computed "actual workflow graph" for any completed phase or session. Output format is the same mermaid-compatible node/edge list the hand-authored workflows use, so the two can be rendered with the same component. Group tool calls, skill invocations, and agent spawns into workflow nodes using the task/skill/agent/type attribution already present on TASK-REGISTRY entries.</goal>
+      <keywords>workflow,trace,synthesis,instrumentation</keywords>
+    </task>
+    <task id="42.3-05" type="site" status="planned"><goal>Add a Workflows tab to /planning that lists all hand-authored workflows and for each shows expected (left) + actual (right) mermaid graphs side-by-side, plus a diff surface highlighting missing / extra / out-of-order nodes. Mermaid renders client-side. No enforcement — advisory signal only. Decision gad-172.</goal>
+      <keywords>workflow,site,planning,mermaid,diff</keywords>
+    </task>
+    <task id="42.3-06" type="docs" status="planned"><goal>Open design questions to resolve during the phase 42.3 discuss round: (1) can workflows be nested (gad-decide as a sub-workflow of gad-discuss-plan-execute)? (2) should workflows carry their own validator like the evolution pipeline does? (3) should agents self-report "I am executing workflow X" as an explicit trace signal to simplify synthesis, or does the synthesizer infer workflow identity purely from observed skill/agent sequences? Capture the answers in a new `.planning/notes/` file before the plan-phase step.</goal>
+      <keywords>workflow,design,open-questions</keywords>
     </task>
   </phase>
   <phase id="44.5">
     <task id="44.5-01" type="site" status="planned"><goal>Scaffold the brood editor route: /brood-editor (or /projects/[id]/edit) gated to NODE_ENV=development, renders a project's eval folder as an editable tree. Reuse the phase 44 marketplace card data but flip affordances from browse to mutate. First cut is read-only view of the tree + "this would be editable in dev mode" placeholder so we can ship the shell before the mutation bridge.</goal>
       <keywords>brood-editor,site,local-dev,scaffold</keywords>
     </task>
-    <task id="44.5-02" type="site" status="planned"><goal>Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development AND the command matches an allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `npx` commands scoped to the eval repo, build/verify commands). Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time.</goal>
+    <task id="44.5-02" type="site" status="planned"><goal>Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor's happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod.</goal>
       <keywords>brood-editor,dev-bridge,security,local-dev</keywords>
+    </task>
+    <task id="44.5-02b" type="site" status="planned"><goal>Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive "any gad/npx" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety — the allow-list is defense in depth.</goal>
+      <keywords>brood-editor,dev-bridge,security,hardening</keywords>
     </task>
     <task id="44.5-03" type="site" status="planned"><goal>Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task — focus on the round-trip (read file → edit in browser → write file → trigger rebuild).</goal>
       <keywords>brood-editor,filesystem,local-dev</keywords>

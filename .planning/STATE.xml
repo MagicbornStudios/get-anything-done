@@ -20,14 +20,22 @@ Current measured reality after the metric shift:
 
 Immediate next queue:
 1. 42.2-03 - rename `sdk/skills/gad-quick-skill/` -> `sdk/skills/create-proto-skill/`
-2. 42.2-04 - validator v2 file-ref dedup fix
+2. 42.2-04 - validator v2 file-ref dedup fix (overlapping long/short path refs)
 3. 42.2-05 - whitepaper-framed /findings index copy
-4. 42.2-06 - design the create-proto-skill batching workflow
-5. phase 43 / 44 / 44.5 / 45 - species rename, marketplace, brood editor, and rebrand work</next-action>
+4. 42.2-06 - implement create-proto-skill using bulk+checkpoint pattern (decision gad-171 — LOCKED, not "design" anymore)
+5. phase 42.3 (NEW) - workflows as a first-class concept: hand-authored mermaid graphs + computed actual graphs + diff on /planning (decision gad-172)
+6. phase 43 / 44 / 44.5 / 45 - species rename, marketplace, brood editor, and rebrand work
+
+Two new decisions locked this turn:
+- gad-171: create-proto-skill uses bulk batching with per-candidate checkpoints (PROVENANCE.md first as lock marker, SKILL.md second, skip-if-both-exist on restart). Amortizes skill-creation context across N drafts; crash-resumable.
+- gad-172: Workflows are a first-class GAD concept. Hand-author expected graphs (gad-loop, gad-decide, gad-evolution, gad-debug, gad-discuss-plan-execute, gad-findings), compute actual graphs from trace data (skills/agents/tool-calls already traced), render side-by-side on /planning with diff. Advisory signal only, not enforcement. Phase 42.3 owns the implementation.
+
+Also tightened:
+- 44.5-02 dev-server bridge is now "accept any gad/npx in NODE_ENV=development" for the first cut. New task 44.5-02b captures the hardening pass (allow-list, arg sanitization) as a deferred follow-up.</next-action>
   <references>
-    <reference>.planning/ROADMAP.xml (phase 42.1, 42.2, 44.5)</reference>
-    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 44.5-01..04)</reference>
-    <reference>.planning/DECISIONS.xml (gad-160 through gad-170)</reference>
+    <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
+    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..06, 44.5-01..04+02b)</reference>
+    <reference>.planning/DECISIONS.xml (gad-160 through gad-172)</reference>
     <reference>tmp/get-shit-done-review-2026-04-13.md</reference>
     <reference>tmp/get-shit-done/</reference>
     <reference>bin/gad-config.cjs</reference>
@@ -41,6 +49,6 @@ Immediate next queue:
     <reference>sdk/workflows/settings.md</reference>
     <reference>sdk/references/framework-comparison-matrix.md</reference>
   </references>
-  <last-updated>2026-04-13</last-updated>
+  <last-updated>2026-04-14</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
