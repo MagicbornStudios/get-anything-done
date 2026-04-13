@@ -14,8 +14,10 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
+import { Check, Copy } from "lucide-react";
 
 const DEBUG_ON = process.env.NEXT_PUBLIC_CLIENT_DEBUG === "1";
 const VERBOSE = process.env.NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE === "1";
@@ -50,6 +52,16 @@ function pushToWindowExport(line: DebugLine) {
   const w = window as Window & { __GAD_DEBUG_LINES?: DebugLine[] };
   const prev = w.__GAD_DEBUG_LINES ?? [];
   w.__GAD_DEBUG_LINES = [...prev.slice(-199), line];
+}
+
+function formatLinesForClipboard(lines: DebugLine[]): string {
+  return lines
+    .map((l) => {
+      const ts = new Date(l.t).toISOString();
+      const body = l.detail ? `${l.message}\n${l.detail}` : l.message;
+      return `${ts} [${l.kind}] ${body}`;
+    })
+    .join("\n\n---\n\n");
 }
 
 class ClientRenderErrorBoundary extends Component<
@@ -91,6 +103,19 @@ class ClientRenderErrorBoundary extends Component<
 
 function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  const copyFullLog = useCallback(() => {
+    const text = formatLinesForClipboard(lines);
+    navigator.clipboard?.writeText(text).then(
+      () => {
+        setCopiedAll(true);
+        window.setTimeout(() => setCopiedAll(false), 1600);
+      },
+      () => {},
+    );
+  }, [lines]);
+
   if (collapsed) {
     return (
       <button
@@ -110,12 +135,12 @@ function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void
       aria-label="Client debug log"
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-amber-900/50 bg-amber-950/40 px-3 py-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400">
+        <span className="min-w-0 flex-1 text-[11px] font-bold uppercase tracking-wider text-amber-400">
           Client debug · NEXT_PUBLIC_CLIENT_DEBUG=1
           {VERBOSE ? " · verbose console" : ""}
         </span>
-        <div className="flex items-center gap-2">
-          <span className="tabular-nums text-[10px] text-muted-foreground">{lines.length} lines</span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="tabular-nums text-[10px] text-zinc-500">{lines.length} lines</span>
           <button
             type="button"
             className="rounded border border-zinc-600 px-2 py-0.5 text-[10px] text-zinc-300 hover:bg-zinc-800"
@@ -129,6 +154,16 @@ function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void
             onClick={() => setCollapsed(true)}
           >
             Hide
+          </button>
+          <button
+            type="button"
+            onClick={copyFullLog}
+            disabled={lines.length === 0}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-amber-600/50 bg-zinc-900/80 text-amber-300 hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-30"
+            aria-label="Copy full log to clipboard"
+            title="Copy full log"
+          >
+            {copiedAll ? <Check className="size-4 text-emerald-400" strokeWidth={2} /> : <Copy className="size-4" strokeWidth={2} />}
           </button>
         </div>
       </div>
@@ -167,12 +202,30 @@ function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void
 
 function ClientDebugEnabled({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<DebugLine[]>([]);
+  /** Batched lines flushed on the next microtask — avoids React #185 when console.* runs during render. */
+  const pendingRef = useRef<DebugLine[]>([]);
+  const flushScheduledRef = useRef(false);
 
-  const push = useCallback((line: Omit<DebugLine, "t">) => {
-    const full: DebugLine = { ...line, t: Date.now() };
-    pushToWindowExport(full);
-    setLines((prev) => [...prev.slice(-199), full]);
+  const flushPending = useCallback(() => {
+    flushScheduledRef.current = false;
+    const batch = pendingRef.current;
+    pendingRef.current = [];
+    if (batch.length === 0) return;
+    setLines((prev) => [...prev, ...batch].slice(-200));
   }, []);
+
+  const push = useCallback(
+    (line: Omit<DebugLine, "t">) => {
+      const full: DebugLine = { ...line, t: Date.now() };
+      pushToWindowExport(full);
+      pendingRef.current.push(full);
+      if (!flushScheduledRef.current) {
+        flushScheduledRef.current = true;
+        queueMicrotask(flushPending);
+      }
+    },
+    [flushPending],
+  );
 
   useEffect(() => {
     const onWindowError = (ev: ErrorEvent) => {

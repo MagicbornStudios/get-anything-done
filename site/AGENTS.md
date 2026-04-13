@@ -8,6 +8,8 @@ Optional **`NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE=1`** also mirrors **`console.log` /
 
 When the env var is unset, the shell renders children only — no extra listeners or UI.
 
+**Implementation note:** Mirrored `console.error` / `console.warn` must **not** call `setState` synchronously — React and libraries log during render, which would trigger **minified React error #185** (maximum update depth). Lines are flushed on a **microtask** in small batches instead. Header **Copy** (icon, top-right of the dock) copies the full log as plain text.
+
 ## UI blocks and `Identified`
 
 `Identified` wraps **stable, named chunks** of the UI (`as="RunProcessMetricsCards"`, `as="ProjectHero"`, …). In dev, those names register for the dev-id panel so people can say “change `RunProcessMetricsCards`” and mean the same DOM region as the code.
