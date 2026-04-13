@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { PlanningState } from "@/lib/catalog.generated";
-import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
+import type { PlanningState, Workflow } from "@/lib/catalog.generated";
+import { REQUIREMENTS_HISTORY, WORKFLOWS } from "@/lib/catalog.generated";
 import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
@@ -16,6 +16,7 @@ import { PlanningRoadmapTab } from "./PlanningRoadmapTab";
 import { PlanningSkillCandidatesTab, type SkillCandidate } from "./PlanningSkillCandidatesTab";
 import { PlanningSystemTab } from "./PlanningSystemTab";
 import { PlanningTasksTab } from "./PlanningTasksTab";
+import { PlanningWorkflowsTab } from "./PlanningWorkflowsTab";
 import selfEvalData from "@/data/self-eval.json";
 
 interface Props {
@@ -35,7 +36,10 @@ const BASE_PLANNING_TABS = new Set([
   "requirements",
   "skill-candidates",
   "proto-skills",
+  "workflows",
 ]);
+
+const WORKFLOWS_DATA: readonly Workflow[] = WORKFLOWS;
 
 export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions, gadBugs }: Props) {
   const searchParams = useSearchParams();
@@ -97,6 +101,10 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
             Proto-skills{" "}
             <span className="ml-1.5 tabular-nums text-muted-foreground">{protoSkills.length}</span>
           </TabsTrigger>
+          <TabsTrigger value="workflows">
+            Workflows{" "}
+            <span className="ml-1.5 tabular-nums text-muted-foreground">{WORKFLOWS_DATA.length}</span>
+          </TabsTrigger>
         </TabsList>
         </Identified>
 
@@ -153,6 +161,12 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
         <TabsContent value="proto-skills">
           <Identified as="PlanningTabProtoSkills">
             <PlanningSkillCandidatesTab candidates={protoSkills} />
+          </Identified>
+        </TabsContent>
+
+        <TabsContent value="workflows">
+          <Identified as="PlanningTabWorkflows">
+            <PlanningWorkflowsTab workflows={WORKFLOWS_DATA} />
           </Identified>
         </TabsContent>
       </Tabs>
