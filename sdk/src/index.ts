@@ -1,12 +1,12 @@
 /**
  * GAD SDK — Public API for running GAD plans programmatically.
  *
- * The GSD class composes plan parsing, config loading, prompt building,
+ * The GAD SDK composes plan parsing, config loading, prompt building,
  * and session running into a single `executePlan()` call.
  *
  * @example
  * ```typescript
- * import { GSD } from '@gsd-build/sdk';
+ * import { GSD } from '@magicborn/gad-sdk';
  *
  * const gsd = new GSD({ projectDir: '/path/to/project' });
  * const result = await gsd.executePlan('.planning/phases/01-auth/01-auth-01-PLAN.md');
@@ -35,7 +35,7 @@ import { PhaseRunner } from './phase-runner.js';
 import { ContextEngine } from './context-engine.js';
 import { PromptFactory } from './phase-prompt.js';
 
-// ─── GSD class ───────────────────────────────────────────────────────────────
+// ─── Legacy compatibility class (`GSD`) ─────────────────────────────────────
 
 export class GSD {
   private readonly projectDir: string;
