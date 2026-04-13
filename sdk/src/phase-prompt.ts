@@ -162,7 +162,7 @@ export class PromptFactory {
       // Not in sdk/workflows/, fall through to installed runtime files
     }
 
-    // Fall back to GSD-1 originals
+    // Fall back to the inherited legacy originals
     const filePath = join(this.workflowsDir, filename);
     try {
       return await readFile(filePath, 'utf-8');

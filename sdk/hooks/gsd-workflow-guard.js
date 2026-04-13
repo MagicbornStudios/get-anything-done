@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GAD_VERSION}}
+// gad-hook-version: {{GAD_VERSION}}
 // GAD workflow guard - PreToolUse hook
 // Detects when Claude attempts file edits outside a GAD workflow context
-// (no active /gsd: command or Task subagent) and injects an advisory warning.
+// (no active tracked workflow entrypoint or Task subagent) and injects an advisory warning.
 //
 // This is a SOFT guard — it advises, not blocks. The edit still proceeds.
-// The warning nudges Claude to use /gsd:quick or /gsd:fast instead of
+// The warning nudges Claude to use a tracked GAD workflow entrypoint instead of
 // making direct edits that bypass state tracking.
 //
 // Enable via config: hooks.workflow_guard: true (default: false)
@@ -80,7 +80,7 @@ process.stdin.on('end', () => {
         hookEventName: "PreToolUse",
         additionalContext: `⚠️ WORKFLOW ADVISORY: You're editing ${path.basename(filePath)} directly without a GAD workflow entrypoint. ` +
           'This edit will not be tracked in STATE.md or produce a SUMMARY.md. ' +
-          'Consider using /gsd:fast for trivial fixes or /gsd:quick for larger changes ' +
+          'Consider using a tracked GAD workflow entrypoint for changes that should update project state ' +
           'to maintain project state tracking. ' +
           'If this is intentional (e.g., user explicitly asked for a direct edit), proceed normally.'
       }

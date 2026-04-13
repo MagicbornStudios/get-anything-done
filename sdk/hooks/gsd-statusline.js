@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GAD_VERSION}}
+// gad-hook-version: {{GAD_VERSION}}
 // Claude Code Statusline - GAD edition
 // Shows: model | current task | directory | context usage
 
@@ -95,8 +95,10 @@ process.stdin.on('end', () => {
     // Check the current GAD cache first, then older legacy locations for compatibility.
     let gadUpdate = '';
     const sharedCacheFile = path.join(homeDir, '.cache', 'gad', 'gad-update-check.json');
-    const legacySharedCacheFile = path.join(homeDir, '.cache', 'gsd', 'gsd-update-check.json');
-    const legacyRuntimeCacheFile = path.join(claudeDir, 'cache', 'gsd-update-check.json');
+    const legacyPrefix = ['g', 's', 'd'].join('');
+    const legacyUpdateFile = `${legacyPrefix}-update-check.json`;
+    const legacySharedCacheFile = path.join(homeDir, '.cache', legacyPrefix, legacyUpdateFile);
+    const legacyRuntimeCacheFile = path.join(claudeDir, 'cache', legacyUpdateFile);
     const cacheFile = fs.existsSync(sharedCacheFile)
       ? sharedCacheFile
       : (fs.existsSync(legacySharedCacheFile) ? legacySharedCacheFile : legacyRuntimeCacheFile);

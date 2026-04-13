@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GAD_VERSION}}
+// gad-hook-version: {{GAD_VERSION}}
 // Context Monitor - PostToolUse/AfterTool hook (Gemini uses AfterTool)
 // Reads context metrics from the statusline bridge file and injects
 // warnings when context usage is high. This makes the AGENT aware of

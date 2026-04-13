@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GAD_VERSION}}
+// gad-hook-version: {{GAD_VERSION}}
 // GAD prompt injection guard - PreToolUse hook
 // Scans file content being written to .planning/ for prompt injection patterns.
 // Defense-in-depth: catches injected instructions before they enter agent context.

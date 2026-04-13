@@ -2,7 +2,7 @@
  * Core type definitions for GAD PLAN.md structures.
  *
  * These types model the YAML frontmatter + XML task bodies
- * that make up a GSD plan file.
+ * that make up a GAD plan file.
  */
 
 // ─── Frontmatter types ───────────────────────────────────────────────────────
@@ -684,7 +684,7 @@ export interface GSDInitResearchSpawnEvent extends GSDEventBase {
 }
 
 /**
- * Discriminated union of all GSD events.
+ * Discriminated union of all GAD SDK events.
  */
 export type GSDEvent =
   | GSDSessionInitEvent

@@ -31,6 +31,7 @@ GAD-D-146: Claude-facing model profiles use aliases and stay off by default
 3. Execute phase 36 (per-eval repos + command split)
 4. Manually review 12 candidates on the site and decide: promote, merge, or discard
 5. Decide whether to backfill runtime identity into historically preserved eval traces or leave them as pre-contract runs
+6. After naming cleanup stabilizes, review the inherited GSD SDK design and deferred workstream concept before reintroducing any workstream feature
 
 === SELF-EVAL (latest) ===
 3,517 events | 198 tasks (191 done) | 143 decisions

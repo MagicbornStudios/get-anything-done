@@ -898,6 +898,10 @@
       <resolution>Shipped 2026-04-12. Added lib/model-profiles.cjs as a shared resolver, restored model emission in gad-tools init, changed SDK default model_profile to off, switched Claude-facing SDK profile resolution from stale hardcoded IDs to Claude aliases, added targeted unit coverage plus an opt-in live integration test, and manually verified two real Claude sessions via SessionInit events: balanced resolved to claude-sonnet-4-6 and budget resolved to claude-haiku-4-5-20251001.</resolution>
       <keywords>model-profiles,claude,sdk,off-by-default,live-verification</keywords>
     </task>
+    <task id="35-05" status="planned"><goal>After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before restoring any workstream feature. Confirm which parts of the old SDK are worth keeping, which should stay compatibility-only, and whether workstreams should exist in GAD at all.</goal>
+      <resolution>Deferred 2026-04-12. Workstreams are currently documented historically but `gad-tools workstream` is not implemented. This review must happen after naming cleanup so we evaluate the old design on its merits rather than through stale branding noise.</resolution>
+      <keywords>workstreams,sdk,review,lineage,deferred</keywords>
+    </task>
   </phase>
   <phase id="39">
     <task id="39-01" type="site" status="done"><goal>Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.</goal>

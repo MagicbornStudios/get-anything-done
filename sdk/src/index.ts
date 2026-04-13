@@ -6,10 +6,10 @@
  *
  * @example
  * ```typescript
- * import { GSD } from '@magicborn/gad-sdk';
+ * import { GADCompat } from '@magicborn/gad-sdk';
  *
- * const gsd = new GSD({ projectDir: '/path/to/project' });
- * const result = await gsd.executePlan('.planning/phases/01-auth/01-auth-01-PLAN.md');
+ * const gad = new GADCompat({ projectDir: '/path/to/project' });
+ * const result = await gad.executePlan('.planning/phases/01-auth/01-auth-01-PLAN.md');
  *
  * if (result.success) {
  *   console.log(`Plan completed in ${result.durationMs}ms, cost: $${result.totalCostUsd}`);
@@ -287,6 +287,7 @@ export class GSD {
 export { parsePlan, parsePlanFile } from './plan-parser.js';
 export { loadConfig } from './config.js';
 export type { GSDConfig } from './config.js';
+export { GSD as GADCompat };
 export { GSDTools, GSDToolsError, resolveGsdToolsPath } from './gsd-tools.js';
 export { runPlanSession, runPhaseStepSession } from './session-runner.js';
 export { buildExecutorPrompt, parseAgentTools } from './prompt-builder.js';

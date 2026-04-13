@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { GSD } from './index.js';
+import { GSD as GADCompat } from './index.js';
 import { CLITransport } from './cli-transport.js';
 import { WSTransport } from './ws-transport.js';
 import { InitRunner } from './init-runner.js';
@@ -221,8 +221,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
     console.log(`[init] Resolved input: ${input.length} chars`);
 
-    // Build GSD instance for tools and event stream
-    const gsd = new GSD({
+    // Build the compatibility SDK instance for tools and event stream.
+    const gad = new GADCompat({
       projectDir: args.projectDir,
       model: args.model,
       maxBudgetUsd: args.maxBudget,
@@ -230,23 +230,23 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
     // Wire CLI transport
     const cliTransport = new CLITransport();
-    gsd.addTransport(cliTransport);
+    gad.addTransport(cliTransport);
 
     // Optional WebSocket transport
     let wsTransport: WSTransport | undefined;
     if (args.wsPort !== undefined) {
       wsTransport = new WSTransport({ port: args.wsPort });
       await wsTransport.start();
-      gsd.addTransport(wsTransport);
+      gad.addTransport(wsTransport);
       console.log(`WebSocket transport listening on port ${args.wsPort}`);
     }
 
     try {
-      const tools = gsd.createTools();
+      const tools = gad.createTools();
       const runner = new InitRunner({
         projectDir: args.projectDir,
         tools,
-        eventStream: gsd.eventStream,
+        eventStream: gad.eventStream,
         config: {
           maxBudgetPerSession: args.maxBudget,
           orchestratorModel: args.model,
@@ -291,7 +291,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // ─── Auto command ─────────────────────────────────────────────────────────
   if (args.command === 'auto') {
-    const gsd = new GSD({
+    const gad = new GADCompat({
       projectDir: args.projectDir,
       model: args.model,
       maxBudgetUsd: args.maxBudget,
@@ -300,14 +300,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
     // Wire CLI transport (always active)
     const cliTransport = new CLITransport();
-    gsd.addTransport(cliTransport);
+    gad.addTransport(cliTransport);
 
     // Optional WebSocket transport
     let wsTransport: WSTransport | undefined;
     if (args.wsPort !== undefined) {
       wsTransport = new WSTransport({ port: args.wsPort });
       await wsTransport.start();
-      gsd.addTransport(wsTransport);
+      gad.addTransport(wsTransport);
       console.log(`WebSocket transport listening on port ${args.wsPort}`);
     }
 
@@ -322,11 +322,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
         console.log(`[auto] Bootstrapping project from --init (${initInput.length} chars)`);
 
-        const tools = gsd.createTools();
+        const tools = gad.createTools();
         const runner = new InitRunner({
           projectDir: args.projectDir,
           tools,
-          eventStream: gsd.eventStream,
+          eventStream: gad.eventStream,
           config: {
             maxBudgetPerSession: args.maxBudget,
             orchestratorModel: args.model,
@@ -353,7 +353,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
         }
       }
 
-      const result = await gsd.run('');
+      const result = await gad.run('');
 
       // Final summary
       const status = result.success ? 'SUCCESS' : 'FAILED';
@@ -379,8 +379,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // ─── Run command ─────────────────────────────────────────────────────────
 
-  // Build GSD instance
-  const gsd = new GSD({
+  // Build the compatibility SDK instance.
+  const gad = new GADCompat({
     projectDir: args.projectDir,
     model: args.model,
     maxBudgetUsd: args.maxBudget,
@@ -388,19 +388,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // Wire CLI transport (always active)
   const cliTransport = new CLITransport();
-  gsd.addTransport(cliTransport);
+  gad.addTransport(cliTransport);
 
   // Optional WebSocket transport
   let wsTransport: WSTransport | undefined;
   if (args.wsPort !== undefined) {
     wsTransport = new WSTransport({ port: args.wsPort });
     await wsTransport.start();
-    gsd.addTransport(wsTransport);
+    gad.addTransport(wsTransport);
     console.log(`WebSocket transport listening on port ${args.wsPort}`);
   }
 
   try {
-    const result = await gsd.run(args.prompt!);
+    const result = await gad.run(args.prompt!);
 
     // Final summary
     const status = result.success ? 'SUCCESS' : 'FAILED';

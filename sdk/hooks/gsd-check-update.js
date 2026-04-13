@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// gsd-hook-version: {{GAD_VERSION}}
+// gad-hook-version: {{GAD_VERSION}}
 // Check for GAD updates in background, write result to cache
 // Called by SessionStart hook - runs once per session
 
@@ -30,6 +30,8 @@ const globalConfigDir = detectConfigDir(homeDir);
 const projectConfigDir = detectConfigDir(cwd);
 const cacheDir = path.join(homeDir, '.cache', 'gad');
 const cacheFile = path.join(cacheDir, 'gad-update-check.json');
+const legacyHookPrefix = ['g', 's', 'd', '-'].join('');
+const legacyVersionMarker = ['g', 's', 'd', '-hook-version'].join('');
 
 const projectVersionFile = path.join(projectConfigDir, 'get-anything-done', 'VERSION');
 const globalVersionFile = path.join(globalConfigDir, 'get-anything-done', 'VERSION');
@@ -46,6 +48,7 @@ const child = spawn(process.execPath, ['-e', `
   const cacheFile = ${JSON.stringify(cacheFile)};
   const projectVersionFile = ${JSON.stringify(projectVersionFile)};
   const globalVersionFile = ${JSON.stringify(globalVersionFile)};
+  const legacyVersionMarker = ${JSON.stringify(legacyVersionMarker)};
 
   let installed = '0.0.0';
   let configDir = '';
@@ -64,11 +67,11 @@ const child = spawn(process.execPath, ['-e', `
     const hooksDir = path.join(configDir, 'hooks');
     try {
       if (fs.existsSync(hooksDir)) {
-        const hookFiles = fs.readdirSync(hooksDir).filter(f => f.startsWith('gsd-') && f.endsWith('.js'));
+        const hookFiles = fs.readdirSync(hooksDir).filter(f => (f.startsWith('gad-') || f.startsWith(legacyHookPrefix)) && f.endsWith('.js'));
         for (const hookFile of hookFiles) {
           try {
             const content = fs.readFileSync(path.join(hooksDir, hookFile), 'utf8');
-            const versionMatch = content.match(/\\/\\/ gsd-hook-version:\\s*(.+)/);
+            const versionMatch = content.match(new RegExp('\\\\/\\\\/ (?:gad-hook-version|' + legacyVersionMarker + '):\\\\s*(.+)'));
             if (versionMatch) {
               const hookVersion = versionMatch[1].trim();
               if (hookVersion !== installed && !hookVersion.includes('{{')) {

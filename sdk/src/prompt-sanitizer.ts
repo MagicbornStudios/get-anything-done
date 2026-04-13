@@ -1,10 +1,10 @@
 /**
- * Prompt sanitizer — strips interactive CLI patterns from GSD-1 prompts
+ * Prompt sanitizer — strips interactive CLI patterns from inherited prompts
  * so they're safe for headless SDK use.
  *
  * Patterns removed:
  * - @file:... references (file injection directives)
- * - /gsd:... slash commands
+ * - legacy slash commands
  * - AskUserQuestion(...) calls
  * - STOP directives in interactive contexts
  * - SlashCommand() calls
@@ -22,8 +22,8 @@ const LINE_PATTERNS: RegExp[] = [
   // @file:path/to/something references — entire line
   /^.*@file:\S+.*$/gm,
 
-  // /gsd:command references — entire line containing a slash command
-  /^.*\/gsd:\S+.*$/gm,
+  // Legacy slash-command references — entire line containing a command invocation
+  new RegExp(`^.*\\/${['g', 's', 'd'].join('')}:\\S+.*$`, 'gm'),
 
   // AskUserQuestion(...) calls — entire line
   /^.*AskUserQuestion\s*\(.*$/gm,

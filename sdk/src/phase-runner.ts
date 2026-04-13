@@ -311,7 +311,7 @@ export class PhaseRunner {
 
   /**
    * Run the plan-check step.
-   * Loads the gsd-plan-checker agent definition, runs a Verify-scoped session,
+   * Loads the legacy plan-checker agent definition, runs a Verify-scoped session,
    * and parses output for PASS/FAIL signals.
    */
   private async runPlanCheckStep(
@@ -578,7 +578,7 @@ export class PhaseRunner {
       step: PhaseStepType.Execute,
     });
 
-    // Get the plan index from gsd-tools
+    // Get the plan index from the compatibility CLI bridge.
     let planIndex: PhasePlanIndex;
     try {
       planIndex = await this.tools.phasePlanIndex(phaseNumber);
