@@ -2,10 +2,14 @@
 
 /**
  * Opt-in production / preview debugging: uncaught errors, rejections, React render
- * errors, and mirrored console output surface in a fixed dock when enabled at build time.
+ * errors, and (optionally) mirrored console output.
  *
- * Enable on Vercel: NEXT_PUBLIC_CLIENT_DEBUG=1 (redeploy). Optional verbose logs:
- * NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE=1
+ * - NEXT_PUBLIC_CLIENT_DEBUG=1 — dock + window errors + rejections + React boundary
+ * - NEXT_PUBLIC_CLIENT_DEBUG_CONSOLE=1 — also mirror console.error / console.warn
+ * - NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE=1 — with console on, also mirror console.log / console.info
+ *
+ * Log lines use an external store + useSyncExternalStore so console.* never drives
+ * React setState during render (avoids minified React error #185).
  */
 
 import {
@@ -14,28 +18,22 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { Check, Copy } from "lucide-react";
+import {
+  appendDebugLog,
+  clearDebugLog,
+  getDebugLogSnapshot,
+  getServerDebugLogSnapshot,
+  subscribeDebugLog,
+  type DebugLine,
+} from "./client-debug-log";
 
 const DEBUG_ON = process.env.NEXT_PUBLIC_CLIENT_DEBUG === "1";
+const CONSOLE_MIRROR = process.env.NEXT_PUBLIC_CLIENT_DEBUG_CONSOLE === "1";
 const VERBOSE = process.env.NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE === "1";
-
-export type DebugLineKind =
-  | "window"
-  | "rejection"
-  | "react"
-  | "console-error"
-  | "console-warn"
-  | "console-log";
-
-export type DebugLine = {
-  t: number;
-  kind: DebugLineKind;
-  message: string;
-  detail?: string;
-};
 
 function formatConsoleArg(a: unknown): string {
   if (typeof a === "string") return a;
@@ -47,14 +45,7 @@ function formatConsoleArg(a: unknown): string {
   }
 }
 
-function pushToWindowExport(line: DebugLine) {
-  if (typeof window === "undefined") return;
-  const w = window as Window & { __GAD_DEBUG_LINES?: DebugLine[] };
-  const prev = w.__GAD_DEBUG_LINES ?? [];
-  w.__GAD_DEBUG_LINES = [...prev.slice(-199), line];
-}
-
-function formatLinesForClipboard(lines: DebugLine[]): string {
+function formatLinesForClipboard(lines: readonly DebugLine[]): string {
   return lines
     .map((l) => {
       const ts = new Date(l.t).toISOString();
@@ -101,7 +92,7 @@ class ClientRenderErrorBoundary extends Component<
   }
 }
 
-function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void }) {
+function DebugDock({ lines }: { lines: readonly DebugLine[] }) {
   const [collapsed, setCollapsed] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
 
@@ -137,14 +128,15 @@ function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-amber-900/50 bg-amber-950/40 px-3 py-1.5">
         <span className="min-w-0 flex-1 text-[11px] font-bold uppercase tracking-wider text-amber-400">
           Client debug · NEXT_PUBLIC_CLIENT_DEBUG=1
-          {VERBOSE ? " · verbose console" : ""}
+          {CONSOLE_MIRROR ? " · console mirror on" : ""}
+          {VERBOSE && CONSOLE_MIRROR ? " · verbose" : ""}
         </span>
         <div className="flex shrink-0 items-center gap-2">
           <span className="tabular-nums text-[10px] text-zinc-500">{lines.length} lines</span>
           <button
             type="button"
             className="rounded border border-zinc-600 px-2 py-0.5 text-[10px] text-zinc-300 hover:bg-zinc-800"
-            onClick={onClear}
+            onClick={() => clearDebugLog()}
           >
             Clear
           </button>
@@ -169,7 +161,12 @@ function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 font-mono text-[11px] leading-snug">
         {lines.length === 0 ? (
-          <p className="text-zinc-500">No events yet. Errors, rejections, and console output appear here.</p>
+          <p className="text-zinc-500">
+            No events yet. Window errors, unhandled rejections, and React render errors appear here.
+            {CONSOLE_MIRROR
+              ? " Console output is mirrored."
+              : " Set NEXT_PUBLIC_CLIENT_DEBUG_CONSOLE=1 to mirror console.error / console.warn."}
+          </p>
         ) : (
           lines.map((l, i) => (
             <pre
@@ -201,31 +198,11 @@ function DebugDock({ lines, onClear }: { lines: DebugLine[]; onClear: () => void
 }
 
 function ClientDebugEnabled({ children }: { children: ReactNode }) {
-  const [lines, setLines] = useState<DebugLine[]>([]);
-  /** Batched lines flushed on the next microtask — avoids React #185 when console.* runs during render. */
-  const pendingRef = useRef<DebugLine[]>([]);
-  const flushScheduledRef = useRef(false);
+  const lines = useSyncExternalStore(subscribeDebugLog, getDebugLogSnapshot, getServerDebugLogSnapshot);
 
-  const flushPending = useCallback(() => {
-    flushScheduledRef.current = false;
-    const batch = pendingRef.current;
-    pendingRef.current = [];
-    if (batch.length === 0) return;
-    setLines((prev) => [...prev, ...batch].slice(-200));
+  const push = useCallback((line: Omit<DebugLine, "t">) => {
+    appendDebugLog({ ...line, t: Date.now() });
   }, []);
-
-  const push = useCallback(
-    (line: Omit<DebugLine, "t">) => {
-      const full: DebugLine = { ...line, t: Date.now() };
-      pushToWindowExport(full);
-      pendingRef.current.push(full);
-      if (!flushScheduledRef.current) {
-        flushScheduledRef.current = true;
-        queueMicrotask(flushPending);
-      }
-    },
-    [flushPending],
-  );
 
   useEffect(() => {
     const onWindowError = (ev: ErrorEvent) => {
@@ -255,6 +232,8 @@ function ClientDebugEnabled({ children }: { children: ReactNode }) {
   }, [push]);
 
   useEffect(() => {
+    if (!CONSOLE_MIRROR) return;
+
     const origError = console.error;
     const origWarn = console.warn;
     const origLog = console.log;
@@ -262,21 +241,37 @@ function ClientDebugEnabled({ children }: { children: ReactNode }) {
 
     console.error = (...args: unknown[]) => {
       origError.apply(console, args);
-      push({ kind: "console-error", message: args.map(formatConsoleArg).join(" ") });
+      appendDebugLog({
+        t: Date.now(),
+        kind: "console-error",
+        message: args.map(formatConsoleArg).join(" "),
+      });
     };
     console.warn = (...args: unknown[]) => {
       origWarn.apply(console, args);
-      push({ kind: "console-warn", message: args.map(formatConsoleArg).join(" ") });
+      appendDebugLog({
+        t: Date.now(),
+        kind: "console-warn",
+        message: args.map(formatConsoleArg).join(" "),
+      });
     };
 
     if (VERBOSE) {
       console.log = (...args: unknown[]) => {
         origLog.apply(console, args);
-        push({ kind: "console-log", message: args.map(formatConsoleArg).join(" ") });
+        appendDebugLog({
+          t: Date.now(),
+          kind: "console-log",
+          message: args.map(formatConsoleArg).join(" "),
+        });
       };
       console.info = (...args: unknown[]) => {
         origInfo.apply(console, args);
-        push({ kind: "console-log", message: `[info] ${args.map(formatConsoleArg).join(" ")}` });
+        appendDebugLog({
+          t: Date.now(),
+          kind: "console-log",
+          message: `[info] ${args.map(formatConsoleArg).join(" ")}`,
+        });
       };
     }
 
@@ -288,7 +283,7 @@ function ClientDebugEnabled({ children }: { children: ReactNode }) {
         console.info = origInfo;
       }
     };
-  }, [push]);
+  }, []);
 
   const onReactCatch = useCallback(
     (error: Error, info: ErrorInfo) => {
@@ -304,7 +299,7 @@ function ClientDebugEnabled({ children }: { children: ReactNode }) {
   return (
     <>
       <ClientRenderErrorBoundary onCatch={onReactCatch}>{children}</ClientRenderErrorBoundary>
-      <DebugDock lines={lines} onClear={() => setLines([])} />
+      <DebugDock lines={lines} />
     </>
   );
 }
@@ -313,3 +308,5 @@ export function ClientDebugShell({ children }: { children: ReactNode }) {
   if (!DEBUG_ON) return <>{children}</>;
   return <ClientDebugEnabled>{children}</ClientDebugEnabled>;
 }
+
+export type { DebugLine, DebugLineKind } from "./client-debug-log";

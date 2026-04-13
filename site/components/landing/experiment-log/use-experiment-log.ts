@@ -1,14 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ROUND_SUMMARIES } from "@/lib/eval-data";
-import { useFilterStore } from "@/lib/filter-store";
 import { filterExperimentLogSummaries } from "@/components/landing/experiment-log/experiment-log-shared";
 
 export function useExperimentLog() {
   const total = ROUND_SUMMARIES.length;
-  const globalRoundFilter = useFilterStore((s) => s.roundFilter);
-  const globalHypothesisFilter = useFilterStore((s) => s.hypothesisFilter);
+
+  const [globalRoundFilter, setGlobalRoundFilter] = useState<string | null>(null);
+  const [globalHypothesisFilter, setGlobalHypothesisFilter] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onRound = (e: Event) => {
+      setGlobalRoundFilter((e as CustomEvent<string | null>).detail);
+    };
+    const onHypothesis = (e: Event) => {
+      setGlobalHypothesisFilter((e as CustomEvent<string | null>).detail);
+    };
+    window.addEventListener("round-filter", onRound);
+    window.addEventListener("hypothesis-filter", onHypothesis);
+    return () => {
+      window.removeEventListener("round-filter", onRound);
+      window.removeEventListener("hypothesis-filter", onHypothesis);
+    };
+  }, []);
 
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
   const [localHypothesisFilter, setLocalHypothesisFilter] = useState<string | null>(null);
@@ -24,7 +39,7 @@ export function useExperimentLog() {
         effectiveHypothesis,
         localSearchQuery,
       }),
-    [globalRoundFilter, projectFilter, effectiveHypothesis, localSearchQuery]
+    [globalRoundFilter, projectFilter, effectiveHypothesis, localSearchQuery],
   );
 
   const [currentIndex, setCurrentIndex] = useState(total - 1);

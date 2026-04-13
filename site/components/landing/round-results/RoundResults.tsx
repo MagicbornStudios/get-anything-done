@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ROUND_SUMMARIES } from "@/lib/eval-data";
-import { useFilterStore } from "@/lib/filter-store";
 import { Round4PressureCallout } from "@/components/landing/shared/Round4PressureCallout";
 import { RoundResultsEmptyRound } from "@/components/landing/round-results/RoundResultsEmptyRound";
 import { RoundResultsHeader } from "@/components/landing/round-results/RoundResultsHeader";
@@ -13,7 +12,16 @@ import { useRoundResultsRuns } from "@/components/landing/round-results/use-roun
 import { SiteSection } from "@/components/site";
 
 export default function RoundResults() {
-  const globalRoundFilter = useFilterStore((s) => s.roundFilter);
+  const [globalRoundFilter, setGlobalRoundFilter] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onRound = (e: Event) => {
+      setGlobalRoundFilter((e as CustomEvent<string | null>).detail);
+    };
+    window.addEventListener("round-filter", onRound);
+    return () => window.removeEventListener("round-filter", onRound);
+  }, []);
+
   const [localRoundFilter, setLocalRoundFilter] = useState<string | null>(null);
 
   const effectiveRound = localRoundFilter ?? globalRoundFilter;

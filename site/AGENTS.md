@@ -2,13 +2,13 @@
 
 ## Client debug overlay (deployed / production review)
 
-Set **`NEXT_PUBLIC_CLIENT_DEBUG=1`** on Vercel (or `.env.local`) and **redeploy**. The app wraps the tree in `ClientDebugShell` (`components/debug/ClientDebugShell.tsx`): a fixed **bottom dock** shows `window` errors, **unhandled promise rejections**, **React render errors** (via an error boundary), and mirrored **`console.error` / `console.warn`**. Lines are also appended to **`window.__GAD_DEBUG_LINES`** for inspection in DevTools.
+Set **`NEXT_PUBLIC_CLIENT_DEBUG=1`** on Vercel (or `.env.local`) and **redeploy**. The app wraps the tree in `ClientDebugShell` (`components/debug/ClientDebugShell.tsx`): a fixed **bottom dock** shows `window` errors, **unhandled promise rejections**, and **React render errors** (via an error boundary). Lines are appended to **`window.__GAD_DEBUG_LINES`** and subscribed with **`useSyncExternalStore`** (`client-debug-log.ts`) so logging never calls **`setState` during render** (that pattern causes **minified React error #185** — maximum update depth).
 
-Optional **`NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE=1`** also mirrors **`console.log` / `console.info`** (noisy on busy pages).
+Optional **`NEXT_PUBLIC_CLIENT_DEBUG_CONSOLE=1`** mirrors **`console.error` / `console.warn`** into the dock (off by default so production stays safe). With that on, **`NEXT_PUBLIC_CLIENT_DEBUG_VERBOSE=1`** also mirrors **`console.log` / `console.info`**.
 
-When the env var is unset, the shell renders children only — no extra listeners or UI.
+When `NEXT_PUBLIC_CLIENT_DEBUG` is unset, the shell renders children only — no extra listeners or UI.
 
-**Implementation note:** Mirrored `console.error` / `console.warn` must **not** call `setState` synchronously — React and libraries log during render, which would trigger **minified React error #185** (maximum update depth). Lines are flushed on a **microtask** in small batches instead. Header **Copy** (icon, top-right of the dock) copies the full log as plain text.
+Header **Copy** (icon, top-right of the dock) copies the full log as plain text.
 
 ## UI blocks and `Identified`
 

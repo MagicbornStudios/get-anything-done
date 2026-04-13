@@ -127,7 +127,10 @@ export function PlayableFilterBar({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => onHypothesisChange(null)}
+            onClick={() => {
+            onHypothesisChange(null);
+            window.dispatchEvent(new CustomEvent("hypothesis-filter", { detail: null }));
+          }}
             className={cn(
               "h-auto rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-none",
               !hypothesisFilter
@@ -145,7 +148,11 @@ export function PlayableFilterBar({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => onHypothesisChange(isActive ? null : wf)}
+                onClick={() => {
+                  const next = isActive ? null : wf;
+                  onHypothesisChange(next);
+                  window.dispatchEvent(new CustomEvent("hypothesis-filter", { detail: next }));
+                }}
                 className={cn(
                   "h-auto gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-none",
                   isActive

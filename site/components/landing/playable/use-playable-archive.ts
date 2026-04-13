@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { EVAL_RUNS, PLAYABLE_INDEX, WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
-import { useFilterStore } from "@/lib/filter-store";
+import type { ReviewState } from "@/lib/filter-store";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import {
   parseRoundFromHash,
@@ -11,7 +11,15 @@ import {
   runKey,
 } from "@/components/landing/playable/playable-shared";
 
+/** Landing playable archive filter state (local hook — was zustand; syncs via window CustomEvents). */
 export function usePlayableArchive() {
+  const [roundFilter, setRoundFilter] = useState<string | null>(null);
+  const [domainFilter, setDomainFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | ReviewState>("all");
+  const [hypothesisFilter, setHypothesisFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRunKey, setSelectedRunKey] = useState<string | null>(null);
+
   const allRuns = useMemo<EvalRunRecord[]>(
     () =>
       EVAL_RUNS.filter((r) => PLAYABLE_INDEX[runKey(r)]).sort((a, b) => {
@@ -20,34 +28,20 @@ export function usePlayableArchive() {
         const bv = parseInt(b.version.slice(1), 10) || 0;
         return av - bv;
       }),
-    []
+    [],
   );
-
-  const roundFilter = useFilterStore((s) => s.roundFilter);
-  const domainFilter = useFilterStore((s) => s.domainFilter);
-  const statusFilter = useFilterStore((s) => s.statusFilter);
-  const hypothesisFilter = useFilterStore((s) => s.hypothesisFilter);
-  const searchQuery = useFilterStore((s) => s.searchQuery);
-  const selectedRunKey = useFilterStore((s) => s.selectedRunKey);
-  const setRoundFilter = useFilterStore((s) => s.setRoundFilter);
-  const setDomainFilter = useFilterStore((s) => s.setDomainFilter);
-  const setStatusFilter = useFilterStore((s) => s.setStatusFilter);
-  const setHypothesisFilter = useFilterStore((s) => s.setHypothesisFilter);
-  const setSearchQuery = useFilterStore((s) => s.setSearchQuery);
-  const setSelectedRunKey = useFilterStore((s) => s.setSelectedRunKey);
-  const clearAll = useFilterStore((s) => s.clearAll);
 
   useEffect(() => {
     const hashRound = parseRoundFromHash();
     if (hashRound) setRoundFilter(hashRound);
-  }, [setRoundFilter]);
+  }, []);
 
   useEffect(() => {
     function onRoundFilter(e: Event) {
-      setRoundFilter((e as CustomEvent).detail as string | null);
+      setRoundFilter((e as CustomEvent<string | null>).detail);
     }
     function onDomainFilter(e: Event) {
-      setDomainFilter((e as CustomEvent).detail as string | null);
+      setDomainFilter((e as CustomEvent<string | null>).detail);
     }
     function onHashChange() {
       const hashRound = parseRoundFromHash();
@@ -61,7 +55,7 @@ export function usePlayableArchive() {
       window.removeEventListener("domain-filter", onDomainFilter);
       window.removeEventListener("hashchange", onHashChange);
     };
-  }, [setRoundFilter, setDomainFilter]);
+  }, []);
 
   const runs = useMemo(() => {
     let filtered = allRuns;
@@ -87,7 +81,7 @@ export function usePlayableArchive() {
           r.project.toLowerCase().includes(q) ||
           r.version.toLowerCase().includes(q) ||
           (roundForRun(r) ?? "").toLowerCase().includes(q) ||
-          WORKFLOW_LABELS[r.workflow].toLowerCase().includes(q)
+          WORKFLOW_LABELS[r.workflow].toLowerCase().includes(q),
       );
     }
     return filtered;
@@ -108,7 +102,7 @@ export function usePlayableArchive() {
       return runs.find((r) => runKey(r) === selectedRunKey) ?? runs[0] ?? null;
     }
     const defaultRun = runs.find(
-      (r) => r.project === "escape-the-dungeon-bare" && r.version === "v3"
+      (r) => r.project === "escape-the-dungeon-bare" && r.version === "v3",
     );
     return defaultRun ?? runs[0] ?? null;
   }, [runs, selectedRunKey]);
@@ -121,11 +115,17 @@ export function usePlayableArchive() {
     searchQuery.trim() !== "";
 
   const clearAllFilters = useCallback(() => {
-    clearAll();
+    setRoundFilter(null);
+    setDomainFilter(null);
+    setStatusFilter("all");
+    setHypothesisFilter(null);
+    setSearchQuery("");
+    setSelectedRunKey(null);
     window.history.replaceState(null, "", window.location.pathname + "#play");
     window.dispatchEvent(new CustomEvent("round-filter", { detail: null }));
     window.dispatchEvent(new CustomEvent("domain-filter", { detail: null }));
-  }, [clearAll]);
+    window.dispatchEvent(new CustomEvent("hypothesis-filter", { detail: null }));
+  }, []);
 
   return {
     allRuns,
