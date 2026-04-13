@@ -1,9 +1,11 @@
 import { Ref } from "@/components/refs/Ref";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function StandardsHeroSection() {
   return (
     <SiteSection>
+      <Identified as="StandardsHeroSection">
       <SiteSectionHeading
         kicker="Standards"
         as="h1"
@@ -26,6 +28,7 @@ export default function StandardsHeroSection() {
         <code className="rounded bg-card/60 px-1 py-0.5 text-xs">skills/</code> convention),{" "}
         <Ref id="gad-81" /> (skill-count policy derived from both sources).
       </SiteProse>
+      </Identified>
     </SiteSection>
   );
 }

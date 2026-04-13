@@ -1,12 +1,14 @@
 import { BookOpen, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { AGENTSKILLS_URL, ANTHROPIC_GUIDE_URL } from "./standards-shared";
 
 export default function StandardsReferencesSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="StandardsReferencesSection">
       <SiteSectionHeading
         icon={BookOpen}
         kicker="The two references"
@@ -77,6 +79,7 @@ export default function StandardsReferencesSection() {
           </CardContent>
         </Card>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

@@ -8,6 +8,7 @@ import { GITHUB_REPO } from "@/lib/catalog.generated";
 export function GadHeroSection() {
   return (
     <SiteSection>
+      <Identified as="GadHeroSection">
       <Identified as="GadHeroHeading">
         <SiteSectionHeading
           kicker="The framework"
@@ -68,6 +69,7 @@ export function GadHeroSection() {
             Current planning state
           </Link>
         </Button>
+      </Identified>
       </Identified>
     </SiteSection>
   );

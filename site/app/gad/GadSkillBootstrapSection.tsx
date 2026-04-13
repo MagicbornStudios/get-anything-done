@@ -11,6 +11,7 @@ export function GadSkillBootstrapSection() {
 
   return (
     <SiteSection>
+      <Identified as="GadSkillBootstrapSection">
       <Identified as="GadSkillBootstrapHeading">
         <SiteSectionHeading
           kicker="Skill bootstrap sets"
@@ -80,6 +81,7 @@ export function GadSkillBootstrapSection() {
         </div>
         </Identified>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

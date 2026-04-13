@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Gauge } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { AGENTSKILLS_URL } from "./standards-shared";
 
 export default function StandardsEvaluationMethodologySection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="StandardsEvaluationMethodologySection">
       <SiteSectionHeading
         icon={Gauge}
         kicker="Per-skill evaluation methodology"
@@ -80,6 +82,7 @@ export default function StandardsEvaluationMethodologySection() {
         <code className="rounded bg-card/60 px-1 py-0.5 text-xs">G11</code> (skill-inheritance
         hygiene).
       </p>
+      </Identified>
     </SiteSection>
   );
 }

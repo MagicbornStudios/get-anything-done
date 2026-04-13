@@ -1,9 +1,11 @@
 import { Ref } from "@/components/refs/Ref";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function StandardsNameCollisionSection() {
   return (
     <SiteSection>
+      <Identified as="StandardsNameCollisionSection">
       <SiteSectionHeading kicker="Name collision handling" />
       <SiteProse size="sm" className="mt-4">
         Per the standard, when two skills share the same{" "}
@@ -16,6 +18,7 @@ export default function StandardsNameCollisionSection() {
         collisions. A skill-collision detection scan is queued as task 22-49 to catch overlapping
         trigger descriptions before they manifest as ambiguous routing at runtime.
       </SiteProse>
+      </Identified>
     </SiteSection>
   );
 }

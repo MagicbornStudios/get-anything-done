@@ -4,6 +4,8 @@
 
 `Identified` wraps **stable, named chunks** of the UI (`as="RunProcessMetricsCards"`, `as="ProjectHero"`, …). In dev, those names register for the dev-id panel so people can say “change `RunProcessMetricsCards`” and mean the same DOM region as the code.
 
+**Section dev panel** (`SectionDevPanel.tsx`): With dev IDs on (`Alt+I`), each `SiteSection` shows a gear. Rows list registered blocks; hover the label row for a **HoverCard** (left) with `data-cid`, `as` label, and current **app route**. The message icon opens an **agent handoff** dialog: **Update** (dictation + typed notes folded into a copy-ready prompt) and **Delete** (static removal prompt). Reuse shadcn `HoverCard` / `Dialog` / `Tabs` — do not add parallel tooltip stacks for the same metadata.
+
 **Rules of thumb:**
 
 1. **`as` is a block label**, not a database key. Use one stable string per *replaceable* region. Repeating list rows may all share one label (e.g. `RunDimensionScoreRow`) so you jump to the **component file**, not hundreds of unique ids.

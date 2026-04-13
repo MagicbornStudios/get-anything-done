@@ -1,11 +1,13 @@
 import { ClipboardCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function StandardsTestingLayersSection() {
   return (
     <SiteSection>
+      <Identified as="StandardsTestingLayersSection">
       <SiteSectionHeading
         icon={ClipboardCheck}
         kicker="Three testing layers (Anthropic guide)"
@@ -55,6 +57,7 @@ export default function StandardsTestingLayersSection() {
           </CardContent>
         </Card>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

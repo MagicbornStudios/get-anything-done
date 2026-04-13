@@ -10,6 +10,7 @@ import { GAD_CORE_CONCEPTS } from "./gad-core-concepts";
 export function GadCoreConceptsSection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="GadCoreConceptsSection">
       <Identified as="GadCoreConceptsHeading">
         <SiteSectionHeading kicker="Core concepts" title="Three moving parts" preset="section" />
       </Identified>
@@ -44,6 +45,7 @@ export function GadCoreConceptsSection() {
           );
         })}
       </div>
+      </Identified>
     </SiteSection>
   );
 }

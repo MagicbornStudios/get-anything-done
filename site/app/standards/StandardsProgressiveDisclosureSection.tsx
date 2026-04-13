@@ -1,12 +1,14 @@
 import { Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { AGENTSKILLS_URL } from "./standards-shared";
 
 export default function StandardsProgressiveDisclosureSection() {
   return (
     <SiteSection>
+      <Identified as="StandardsProgressiveDisclosureSection">
       <SiteSectionHeading
         icon={Layers}
         kicker="Progressive disclosure — three tiers"
@@ -73,6 +75,7 @@ export default function StandardsProgressiveDisclosureSection() {
           </CardContent>
         </Card>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

@@ -1,9 +1,11 @@
 import { AlertTriangle } from "lucide-react";
 import { Ref } from "@/components/refs/Ref";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export default function StandardsDiscoverySection() {
   return (
     <SiteSection tone="muted">
+      <Identified as="StandardsDiscoverySection">
       <SiteSectionHeading kicker="Discovery convention - skills/" />
       <SiteProse size="sm" className="mb-6 mt-4">
         The agentskills.io cross-client interoperability convention is the canonical location GAD is
@@ -65,6 +67,7 @@ export default function StandardsDiscoverySection() {
           >.planning/docs/SKILL-FINDABILITY-2026-04-09.md</a>. Standardizing authored skills under the repo-root <code className="rounded bg-background/60 px-1 py-0.5 text-xs">skills/</code> convention started in task 22-46 and is now the active framework contract.
         </p>
       </div>
+      </Identified>
     </SiteSection>
   );
 }

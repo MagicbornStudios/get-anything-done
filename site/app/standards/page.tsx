@@ -1,5 +1,4 @@
 import StandardsHeroSection from "./StandardsHeroSection";
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import StandardsReferencesSection from "./StandardsReferencesSection";
 import StandardsProgressiveDisclosureSection from "./StandardsProgressiveDisclosureSection";
@@ -17,27 +16,13 @@ export const metadata = {
 export default function StandardsPage() {
   return (
     <MarketingShell>
-      <Identified as="StandardsHeroSection">
-        <StandardsHeroSection />
-      </Identified>
-      <Identified as="StandardsReferencesSection">
-        <StandardsReferencesSection />
-      </Identified>
-      <Identified as="StandardsProgressiveDisclosureSection">
-        <StandardsProgressiveDisclosureSection />
-      </Identified>
-      <Identified as="StandardsDiscoverySection">
-        <StandardsDiscoverySection />
-      </Identified>
-      <Identified as="StandardsNameCollisionSection">
-        <StandardsNameCollisionSection />
-      </Identified>
-      <Identified as="StandardsEvaluationMethodologySection">
-        <StandardsEvaluationMethodologySection />
-      </Identified>
-      <Identified as="StandardsTestingLayersSection">
-        <StandardsTestingLayersSection />
-      </Identified>
+      <StandardsHeroSection />
+      <StandardsReferencesSection />
+      <StandardsProgressiveDisclosureSection />
+      <StandardsDiscoverySection />
+      <StandardsNameCollisionSection />
+      <StandardsEvaluationMethodologySection />
+      <StandardsTestingLayersSection />
     </MarketingShell>
   );
 }

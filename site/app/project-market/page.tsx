@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Identified } from "@/components/devid/Identified";
 import { MarketingShell } from "@/components/site";
 import ProjectMarket from "@/components/project-market/ProjectMarket";
 
@@ -12,9 +11,7 @@ export const metadata: Metadata = {
 export default function ProjectMarketPage() {
   return (
     <MarketingShell>
-      <Identified as="ProjectMarket">
-        <ProjectMarket />
-      </Identified>
+      <ProjectMarket />
     </MarketingShell>
   );
 }

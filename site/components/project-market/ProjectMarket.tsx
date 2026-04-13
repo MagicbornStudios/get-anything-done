@@ -40,7 +40,7 @@ export default function ProjectMarket() {
       </Identified>
 
       <SiteSection className="border-b-0" shellClassName="py-8">
-        <Identified as="ProjectMarketBody">
+        <Identified as="ProjectMarket">
           <ProjectFilterBar
             domainFilter={domainFilter}
             workflowFilter={workflowFilter}

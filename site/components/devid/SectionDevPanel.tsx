@@ -4,22 +4,19 @@
  * SectionDevPanel — section-local slide-in panel listing all <Identified>
  * components registered in the current SectionRegistry.
  *
- * Key design choices:
- *   - Absolutely positioned INSIDE the SiteSection (position: relative on
- *     parent). Never escapes the section bounding box, unlike shadcn Sheet
- *     which targets the viewport.
- *   - Slides in from the section's right edge via CSS transform transition.
- *   - Gear trigger only visible on section hover OR when devIds mode is on.
- *   - Click a row: copy cid, scroll target into view, brief flash ring (not sticky).
- *   - Eye toggles persistent outline on the target (Escape clears).
- *   - The panel shell is <Identified as="SectionDevPanel"> so it appears in the list.
+ * Rows use a HoverCard (opens to the left) for id / label / route context.
+ * Agent handoff (Update dictation + Delete static) opens from the row action icon.
  */
 
 import { useState } from "react";
-import { Settings2, Copy, Eye, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Settings2, Copy, Eye, X, MessageSquare } from "lucide-react";
 import { useDevId } from "./DevIdProvider";
-import { useSectionRegistry } from "./SectionRegistry";
+import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
 import { Identified } from "./Identified";
+import { DevIdAgentPromptDialog } from "./DevIdAgentPromptDialog";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 
 function scrollTargetIntoView(cid: string) {
   if (typeof document === "undefined") return;
@@ -28,10 +25,12 @@ function scrollTargetIntoView(cid: string) {
 }
 
 export function SectionDevPanel() {
+  const pathname = usePathname() ?? "";
   const { enabled, highlightCid, setHighlightCid, flashComponent } = useDevId();
   const registry = useSectionRegistry();
   const [open, setOpen] = useState(false);
   const [justCopied, setJustCopied] = useState<string | null>(null);
+  const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
 
   if (!enabled || !registry) return null;
 
@@ -49,6 +48,15 @@ export function SectionDevPanel() {
 
   return (
     <>
+      <DevIdAgentPromptDialog
+        open={promptEntry != null}
+        onOpenChange={(v) => {
+          if (!v) setPromptEntry(null);
+        }}
+        entry={promptEntry}
+        pathname={pathname}
+      />
+
       {/* Gear trigger — top-right of the section */}
       <button
         type="button"
@@ -75,13 +83,9 @@ export function SectionDevPanel() {
         >
           <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-border/60 bg-background/95 px-4 py-3">
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Section dev panel
-              </p>
-              <p className="text-[10px] font-mono text-muted-foreground/90">
-                as=&quot;SectionDevPanel&quot;
-              </p>
-              <p className="text-xs text-foreground">
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent">Dev IDs</p>
+              <p className="text-[10px] text-muted-foreground">Blocks in this section</p>
+              <p className="mt-1 text-[10px] font-mono text-muted-foreground/90">
                 {registry.entries.length} registered · depth ≤ {registry.maxDepth}
               </p>
             </div>
@@ -106,11 +110,10 @@ export function SectionDevPanel() {
                 return (
                   <li
                     key={entry.cid}
-                    onClick={() => activateRow(entry.cid)}
-                    className={[
-                      "group/cid flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-[11px] transition-colors",
+                    className={cn(
+                      "group/cid flex items-center gap-1 rounded-md px-1 py-1 text-[11px] transition-colors",
                       isHl ? "bg-accent/15" : "hover:bg-card/60",
-                    ].join(" ")}
+                    )}
                   >
                     <button
                       type="button"
@@ -118,32 +121,78 @@ export function SectionDevPanel() {
                         e.stopPropagation();
                         setHighlightCid(isHl ? null : entry.cid);
                       }}
-                      className="text-muted-foreground hover:text-accent"
+                      className="shrink-0 text-muted-foreground hover:text-accent"
                       aria-label="Toggle persistent highlight"
                       title="Toggle persistent highlight"
                     >
                       <Eye size={12} />
                     </button>
-                    <span className="min-w-0 flex-1 truncate">
-                      <span className="text-muted-foreground/70">{entry.label}</span>
-                      <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
-                    </span>
+
+                    <HoverCard openDelay={120} closeDelay={80}>
+                      <HoverCardTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => activateRow(entry.cid)}
+                          className={cn(
+                            "min-w-0 flex-1 cursor-pointer select-none truncate rounded px-1 py-0.5 text-left transition-colors",
+                            "hover:bg-background/40",
+                          )}
+                        >
+                          <span className="text-muted-foreground/80">{entry.label}</span>
+                          <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
+                        </button>
+                      </HoverCardTrigger>
+                      <HoverCardContent
+                        side="left"
+                        align="start"
+                        sideOffset={8}
+                        className="w-72 border-accent/25 bg-popover p-3 text-xs shadow-xl"
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          data-cid
+                        </p>
+                        <p className="break-all font-mono text-[11px] text-accent">{entry.cid}</p>
+                        <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Identified as
+                        </p>
+                        <p className="text-sm text-foreground">{entry.label}</p>
+                        <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          App route
+                        </p>
+                        <p className="break-all font-mono text-[10px] text-muted-foreground">{pathname || "—"}</p>
+                        <p className="mt-2 text-[10px] text-muted-foreground">
+                          Registry depth: <span className="tabular-nums text-foreground">{entry.depth}</span>
+                        </p>
+                      </HoverCardContent>
+                    </HoverCard>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPromptEntry(entry);
+                      }}
+                      className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
+                      aria-label="Open agent prompt handoff"
+                      title="Agent handoff (update / delete)"
+                    >
+                      <MessageSquare size={12} />
+                    </button>
+
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         copy(entry.cid);
                       }}
-                      className="text-muted-foreground opacity-0 transition-opacity group-hover/cid:opacity-100 hover:text-accent"
+                      className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
                       aria-label="Copy ID"
                       title="Copy ID"
                     >
                       <Copy size={12} />
                     </button>
                     {justCopied === entry.cid && (
-                      <span className="text-[9px] uppercase tracking-wider text-emerald-400">
-                        copied
-                      </span>
+                      <span className="shrink-0 text-[9px] uppercase tracking-wider text-emerald-400">copied</span>
                     )}
                   </li>
                 );
@@ -152,7 +201,9 @@ export function SectionDevPanel() {
           )}
 
           <div className="shrink-0 border-t border-border/60 p-3 text-[10px] leading-4 text-muted-foreground">
-            Press <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> to toggle dev IDs. Click a row to copy and jump to the component. Alt-click a component to copy and pin highlight.
+            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Hover a row for details
+            (left). Row click copies id and scrolls to the block. <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
+            -click a highlighted component copies id. Message icon: handoff prompts for your agent.
           </div>
         </Identified>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Store } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectMarketHeader() {
@@ -10,6 +11,7 @@ export function ProjectMarketHeader() {
       className="border-t-0"
       shellClassName="pb-8 pt-24 md:pb-12 md:pt-32"
     >
+      <Identified as="ProjectMarketHeader">
       <SiteSectionHeading
         icon={Store}
         kicker="Project market"
@@ -28,6 +30,7 @@ export function ProjectMarketHeader() {
         tooling. Each project tests a hypothesis about how coding agents build under different
         conditions.
       </SiteProse>
+      </Identified>
     </SiteSection>
   );
 }
