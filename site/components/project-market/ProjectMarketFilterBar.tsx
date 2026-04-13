@@ -1,5 +1,6 @@
 "use client";
 
+import { Identified } from "@/components/devid/Identified";
 import { Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,7 +75,7 @@ export function ProjectMarketFilterBar({
 }: Props) {
   return (
     <div className="rounded-xl border border-border/60 bg-card/30 p-4">
-      <div className="flex flex-wrap items-center gap-3">
+      <Identified as="ProjectMarketFilterBarControls" className="flex flex-wrap items-center gap-3">
         {/* Domain filter */}
         <Select
           value={domainFilter ?? ALL}
@@ -206,10 +207,10 @@ export function ProjectMarketFilterBar({
             </Button>
           )}
         </div>
-      </div>
+      </Identified>
 
       {/* Summary row */}
-      <div className="mt-3 flex items-center justify-between">
+      <Identified as="ProjectMarketFilterBarSummary" className="mt-3 flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           Showing{" "}
           <span className="font-semibold text-foreground tabular-nums">{filteredRunCount}</span>{" "}
@@ -257,7 +258,7 @@ export function ProjectMarketFilterBar({
             </Button>
           )}
         </div>
-      </div>
+      </Identified>
     </div>
   );
 }

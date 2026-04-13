@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PROJECT_LABELS, WORKFLOW_LABELS } from "@/lib/eval-data";
@@ -13,18 +14,20 @@ type RunHeroBackAndTitleProps = Pick<
 export function RunHeroBackAndTitle({ run, gateKnown, rateLimited, apiInterrupted }: RunHeroBackAndTitleProps) {
   return (
     <>
-      <Button
-        variant="ghost"
-        className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
-        asChild
-      >
-        <Link href="/#results">
-          <ArrowLeft size={14} aria-hidden />
-          Back to results
-        </Link>
-      </Button>
+      <Identified as="RunHeroBackLink">
+        <Button
+          variant="ghost"
+          className="mb-6 h-auto gap-2 px-0 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+          asChild
+        >
+          <Link href="/#results">
+            <ArrowLeft size={14} aria-hidden />
+            Back to results
+          </Link>
+        </Button>
+      </Identified>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <Identified as="RunHeroBadges" className="flex flex-wrap items-center gap-3">
         <Badge variant="default">{WORKFLOW_LABELS[run.workflow]}</Badge>
         <Badge variant="outline">{run.version}</Badge>
         <Badge variant="outline">requirements {run.requirementsVersion}</Badge>
@@ -48,14 +51,16 @@ export function RunHeroBackAndTitle({ run, gateKnown, rateLimited, apiInterrupte
             {"\u26A0"} API interrupted — not comparable
           </Badge>
         )}
-      </div>
+      </Identified>
 
-      <h1 className="mt-5 text-4xl font-semibold tracking-tight md:text-5xl">
-        {PROJECT_LABELS[run.project] ?? run.project}
-      </h1>
-      <p className="mt-2 font-mono text-sm text-muted-foreground">
-        {run.project}/{run.version}
-      </p>
+      <Identified as="RunHeroTitleBlock">
+        <h1 className="mt-5 text-4xl font-semibold tracking-tight md:text-5xl">
+          {PROJECT_LABELS[run.project] ?? run.project}
+        </h1>
+        <p className="mt-2 font-mono text-sm text-muted-foreground">
+          {run.project}/{run.version}
+        </p>
+      </Identified>
     </>
   );
 }

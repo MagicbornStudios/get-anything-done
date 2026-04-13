@@ -3,6 +3,7 @@
 import {
   Dialog,
 } from "@/components/ui/dialog";
+import { Identified } from "@/components/devid/Identified";
 import { GlobalSearchModal } from "@/components/search/global-search/GlobalSearchModal";
 import { GlobalSearchTrigger } from "@/components/search/global-search/GlobalSearchTrigger";
 import { useGlobalSearch } from "@/components/search/global-search/use-global-search";
@@ -14,14 +15,16 @@ export function GlobalSearch() {
     <>
       <GlobalSearchTrigger onOpen={() => setOpen(true)} />
       <Dialog open={open} onOpenChange={setOpen}>
-        <GlobalSearchModal
-          inputRef={inputRef}
-          query={query}
-          onQueryChange={setQuery}
-          results={results}
-          onClose={() => setOpen(false)}
-          onPickResult={() => setOpen(false)}
-        />
+        <Identified as="GlobalSearchDialogMount" className="contents">
+          <GlobalSearchModal
+            inputRef={inputRef}
+            query={query}
+            onQueryChange={setQuery}
+            results={results}
+            onClose={() => setOpen(false)}
+            onPickResult={() => setOpen(false)}
+          />
+        </Identified>
       </Dialog>
     </>
   );

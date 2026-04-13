@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
@@ -20,7 +21,7 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
   return (
     <SiteSection>
       <SiteSectionHeading kicker="Process metrics" title="How the agent actually worked" />
-      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <Identified as="RunProcessMetricsCards" className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Primary runtime</CardDescription>
@@ -131,10 +132,10 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
             </CardContent>
           </Card>
         )}
-      </div>
+      </Identified>
 
       {runtimesInvolved.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+        <Identified as="RunProcessMetricsRuntimes" className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
           {runtimesInvolved.map((runtime, index) => (
             <span
               key={`${String(runtime.id ?? "runtime")}-${index}`}
@@ -143,11 +144,11 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
               {runtimeLabel(runtime)}
             </span>
           ))}
-        </div>
+        </Identified>
       )}
 
       {lineage && topAgents.length > 0 && (
-        <div className="mt-6">
+        <Identified as="RunProcessMetricsAgentLineage" className="mt-6">
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Agent lineage</p>
           <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {topAgents.map((agent, index) => (
@@ -180,7 +181,7 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
               Showing {topAgents.length} of {lineage.agents.length} traced agents for this run.
             </p>
           )}
-        </div>
+        </Identified>
       )}
     </SiteSection>
   );

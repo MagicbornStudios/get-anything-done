@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { formatNum } from "@/app/runs/[project]/[version]/run-detail-shared";
@@ -22,15 +23,15 @@ export function RunSkillAccuracySection({
 
       {run.skillAccuracyBreakdown && run.skillAccuracyBreakdown.expected_triggers.length > 0 ? (
           <>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
+            <Identified as="RunSkillAccuracyIntro" className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground" tag="p">
               For each expected trigger we recorded whether the agent invoked the skill at the right
               point in the loop. Accuracy = fired / expected ={" "}
               <strong className="text-foreground">
                 {formatNum(run.skillAccuracyBreakdown.accuracy, 2)}
               </strong>
               .
-            </p>
-            <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
+            </Identified>
+            <Identified as="RunSkillAccuracyTable" className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
@@ -64,10 +65,10 @@ export function RunSkillAccuracySection({
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Identified>
           </>
         ) : tracingGap ? (
-          <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-6">
+          <Identified as="RunSkillAccuracyTracingGap" className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-6">
             <div className="mb-3 flex items-center gap-2">
               <AlertTriangle size={16} className="text-amber-400" aria-hidden />
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
@@ -95,11 +96,11 @@ export function RunSkillAccuracySection({
             >
               How tracing works →
             </Link>
-          </div>
+          </Identified>
         ) : (
-          <p className="mt-6 text-sm text-muted-foreground">
+          <Identified as="RunSkillAccuracyEmpty" className="mt-6 text-sm text-muted-foreground" tag="p">
             Skill accuracy data isn&apos;t relevant for this run (no expected trigger set).
-          </p>
+          </Identified>
         )}
     </SiteSection>
   );

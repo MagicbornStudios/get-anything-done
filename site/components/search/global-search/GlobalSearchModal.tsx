@@ -1,6 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
+import { Identified } from "@/components/devid/Identified";
 import { GlobalSearchFooter } from "@/components/search/global-search/GlobalSearchFooter";
 import { GlobalSearchInputBar } from "@/components/search/global-search/GlobalSearchInputBar";
 import { GlobalSearchScrollBody } from "@/components/search/global-search/GlobalSearchScrollBody";
@@ -32,18 +33,22 @@ export function GlobalSearchModal({
       aria-describedby={undefined}
     >
       <DialogTitle className="sr-only">Global search</DialogTitle>
-      <GlobalSearchInputBar
-        inputRef={inputRef}
-        query={query}
-        onQueryChange={onQueryChange}
-        onClose={onClose}
-      />
+      <Identified as="GlobalSearchInputBar">
+        <GlobalSearchInputBar
+          inputRef={inputRef}
+          query={query}
+          onQueryChange={onQueryChange}
+          onClose={onClose}
+        />
+      </Identified>
 
-      <div className="max-h-[60vh] overflow-y-auto">
+      <Identified as="GlobalSearchResultsScroll" className="max-h-[60vh] overflow-y-auto">
         <GlobalSearchScrollBody query={query} results={results} onPickResult={onPickResult} />
-      </div>
+      </Identified>
 
-      <GlobalSearchFooter />
+      <Identified as="GlobalSearchFooter">
+        <GlobalSearchFooter />
+      </Identified>
     </DialogContent>
   );
 }

@@ -1,4 +1,5 @@
 import { Circle } from "lucide-react";
+import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import type { ProducedArtifacts } from "@/lib/eval-data";
 
@@ -9,14 +10,16 @@ export function RunProducedArtifactsSection({ produced }: { produced: ProducedAr
         kicker="What the agent built for itself"
         title="Emergent workflow artifacts"
       />
-      <SiteProse size="md" className="mt-3">
-        Bare and emergent runs don&apos;t have a framework giving them structure — they author their
-        own methodology on the fly. These are the files the agent wrote into its own{" "}
-        <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">game/.planning/</code> during this
-        run. When a file appears here that isn&apos;t in the inherited bootstrap set, the agent
-        invented it.
-      </SiteProse>
-      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <Identified as="RunProducedArtifactsProse">
+        <SiteProse size="md" className="mt-3">
+          Bare and emergent runs don&apos;t have a framework giving them structure — they author their
+          own methodology on the fly. These are the files the agent wrote into its own{" "}
+          <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">game/.planning/</code> during this
+          run. When a file appears here that isn&apos;t in the inherited bootstrap set, the agent
+          invented it.
+        </SiteProse>
+      </Identified>
+      <Identified as="RunProducedArtifactsGrid" className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {[
             { label: "Skills written", items: produced.skillFiles },
             { label: "Subagents written", items: produced.agentFiles },
@@ -48,7 +51,7 @@ export function RunProducedArtifactsSection({ produced }: { produced: ProducedAr
                 </ul>
               </div>
             ))}
-      </div>
+      </Identified>
     </SiteSection>
   );
 }

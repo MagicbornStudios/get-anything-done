@@ -1,3 +1,4 @@
+import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { type EvalRunRecord } from "@/lib/eval-data";
@@ -14,14 +15,16 @@ export function RunSkillProvenanceSection({ run }: { run: EvalRunRecord }) {
   return (
     <SiteSection>
       <SiteSectionHeading kicker="Skill provenance" />
-      <SiteProse size="sm" className="mb-6">
-        Skills present at the start and end of this eval run. Per{" "}
-        <span className="font-semibold text-foreground">decision gad-120</span>, every skill is tagged
-        with its origin: installed from the framework, inherited from a prior run, or authored by the
-        agent during this run.
-      </SiteProse>
+      <Identified as="RunSkillProvenanceIntro">
+        <SiteProse size="sm" className="mb-6">
+          Skills present at the start and end of this eval run. Per{" "}
+          <span className="font-semibold text-foreground">decision gad-120</span>, every skill is tagged
+          with its origin: installed from the framework, inherited from a prior run, or authored by the
+          agent during this run.
+        </SiteProse>
+      </Identified>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <Identified as="RunSkillProvenanceColumns" className="grid gap-6 md:grid-cols-3">
           {hasInstalled && (
             <div className="rounded-2xl border border-sky-500/30 bg-sky-500/5 p-5">
               <div className="mb-3 flex items-center gap-2">
@@ -87,10 +90,10 @@ export function RunSkillProvenanceSection({ run }: { run: EvalRunRecord }) {
               </ul>
             </div>
           )}
-        </div>
+      </Identified>
 
         {prov.startSnapshot.length > 0 && (
-          <details className="mt-6">
+          <Identified as="RunSkillProvenanceSnapshots" tag="details" className="mt-6">
             <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
               Full snapshot: {prov.startSnapshot.length} at start, {prov.endSnapshot.length} at end
             </summary>
@@ -116,7 +119,7 @@ export function RunSkillProvenanceSection({ run }: { run: EvalRunRecord }) {
                 </ul>
               </div>
             </div>
-          </details>
+          </Identified>
         )}
     </SiteSection>
   );

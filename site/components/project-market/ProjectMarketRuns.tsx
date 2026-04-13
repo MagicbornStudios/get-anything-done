@@ -1,5 +1,6 @@
 "use client";
 
+import { Identified } from "@/components/devid/Identified";
 import { useState } from "react";
 import { PLAYABLE_INDEX } from "@/lib/eval-data";
 import type { EvalRunRecord } from "@/lib/eval-data";
@@ -53,23 +54,29 @@ export function ProjectMarketRuns({ runs, selected, domainFilter, onSelectRun }:
 
   return (
     <div className="mt-10">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-        Playable builds
-      </h2>
-      <p className="mb-6 text-xs text-muted-foreground">
-        Click any build badge to play it in-browser. Hover for details.
-      </p>
+      <Identified as="ProjectMarketPlayableIntro">
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Playable builds
+        </h2>
+        <p className="mb-6 text-xs text-muted-foreground">
+          Click any build badge to play it in-browser. Hover for details.
+        </p>
+      </Identified>
 
-      <PlayableReviewLegend />
+      <Identified as="ProjectMarketPlayableLegend">
+        <PlayableReviewLegend />
+      </Identified>
 
-      <PlayableRunGroups
-        groupedRuns={allGroups}
-        selected={selected}
-        onSelectRun={onSelectRun}
-      />
+      <Identified as="ProjectMarketPlayableRunGroups">
+        <PlayableRunGroups
+          groupedRuns={allGroups}
+          selected={selected}
+          onSelectRun={onSelectRun}
+        />
+      </Identified>
 
       {selected && iframeSrc && (
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
+        <Identified as="ProjectMarketPlayableEmbedRow" className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
           <PlayableEmbed
             project={selected.project}
             version={selected.version}
@@ -80,9 +87,10 @@ export function ProjectMarketRuns({ runs, selected, domainFilter, onSelectRun }:
             onOpenRequirements={() => setModal("requirements")}
             onOpenSkill={() => setModal("skill")}
           />
-        </div>
+        </Identified>
       )}
 
+      <Identified as="ProjectMarketPlayableDocModal">
       <PlayableDocModal
         modal={modal}
         selected={selected}
@@ -90,6 +98,7 @@ export function ProjectMarketRuns({ runs, selected, domainFilter, onSelectRun }:
           if (!open) setModal(null);
         }}
       />
+      </Identified>
     </div>
   );
 }

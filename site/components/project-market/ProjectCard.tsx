@@ -1,5 +1,6 @@
 "use client";
 
+import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
 import { Star, Gamepad2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ type Props = {
 
 export function ProjectCard({ project }: Props) {
   return (
+    <Identified as="ProjectCard" className="contents">
     <Card
       className={cn(
         "group relative overflow-hidden border-border/70 bg-card/40 shadow-none transition-colors hover:border-accent/40 hover:bg-card/60",
@@ -97,5 +99,6 @@ export function ProjectCard({ project }: Props) {
         </div>
       </CardContent>
     </Card>
+    </Identified>
   );
 }
