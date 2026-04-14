@@ -39,7 +39,7 @@ export default function FindingsPage() {
               >
                 <Identified as={`FindingsArticle-${f.slug}`} className="contents">
                   <div className="flex flex-wrap items-center gap-2">
-                    {f.round && <Badge variant="outline">Round {f.round}</Badge>}
+                    {f.round && <Badge variant="outline">Evolution {f.round}</Badge>}
                     {f.gadVersion && (
                       <Badge variant="outline" className="font-mono text-[10px]">
                         GAD v{f.gadVersion}

@@ -63,8 +63,8 @@ export function MethodologyTemplateMatrixSection() {
         Source: the <code className="rounded bg-background/60 px-1 py-0.5">template/</code> directory of
         each eval project under{" "}
         <code className="rounded bg-background/60 px-1 py-0.5">evals/escape-the-dungeon*/</code>. This
-        table shows the greenfield setup. Brownfield conditions additionally receive the preserved
-        source code from their baseline greenfield run.
+        table shows the greenfield setup. Evals additionally receive the preserved
+        source code from their baseline runs.
       </Identified>
       </Identified>
     </SiteSection>

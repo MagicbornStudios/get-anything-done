@@ -34,7 +34,7 @@ export const CROSS_CUTTING: Array<{ title: string; body: string }> = [
   },
   {
     title: "The rubric has changed mid-project",
-    body: "Round 2 → 3 raised human review weight from 0.15 to 0.30. Round 3 → 4 reformulated as per-dimension scoring with low-score caps. Composite scores from round 1 are not directly comparable to round 4 because the formula has changed. The 'monotonic improvement' we celebrate may partly reflect rubric drift.",
+    body: "Evolution 2 → 3 raised human review weight from 0.15 to 0.30. Evolution 3 → 4 reformulated as per-dimension scoring with low-score caps. Composite scores from round 1 are not directly comparable to round 4 because the formula has changed. The 'monotonic improvement' we celebrate may partly reflect rubric drift.",
   },
 ];
 
@@ -70,7 +70,7 @@ export const CRITIQUES: Critique[] = [
     hypothesis: "Compound-Skills Hypothesis",
     ref: "gad-65",
     steelman:
-      "Round 4's emergent v4 authored two new skills (dom-over-kaplay, pressure-forge-coupling), deprecated one (kaplay-scene-pattern), and documented the disposition of every inherited skill in CHANGELOG.md. Its rubric aggregate (0.885 after rescoring) was the highest of any round-4 run. First observed inherit → evaluate → evolve → document cycle.",
+      "Evolution 4's emergent v4 authored two new skills (dom-over-kaplay, pressure-forge-coupling), deprecated one (kaplay-scene-pattern), and documented the disposition of every inherited skill in CHANGELOG.md. Its rubric aggregate (0.885 after rescoring) was the highest of any round-4 run. First observed inherit → evaluate → evolve → document cycle.",
     problems: [
       "N=2-3 emergent runs is not a curve. v1, v2, v4 — three points cannot establish a trend.",
       "Each emergent run targeted a harder requirements version. We do not know whether emergent improved or whether the maintainer got better at writing prompts.",
@@ -86,7 +86,7 @@ export const CRITIQUES: Critique[] = [
     ],
     falsification: [
       "An emergent-no-inherit run that scores comparably to emergent-with-inherit at the same round",
-      "Round 5 emergent scoring lower than round 4 emergent against the harder v5 requirements",
+      "Evolution 5 emergent scoring lower than round 4 emergent against the harder v5 requirements",
       "A second human reviewer giving meaningfully different scores",
     ],
     honestStatus:
@@ -128,7 +128,7 @@ export const CRITIQUES: Critique[] = [
       "The formula does not exist. We call pressure 'measurable' while the measurement is currently a hand-typed constant in app/roadmap/roadmap-shared.ts. That is exactly self-report — the same problem gad-69 says we should fight.",
       "The five sub-dimensions overlap. 'Requirement complexity' and 'constraint density' are nearly synonymous. We have five labels because five sounds satisfying, not because there are five orthogonal axes.",
       "All five sub-dimensions are author-rated. The agent doesn't know what pressure level it's under. The reviewer doesn't either. Only the requirements author does — the same person rating the dimensions.",
-      "Pressure-tier ratings are post-hoc and predictive simultaneously. Round 5's pressure rating (0.92) is in the file before round 5 has run. We will then evaluate round 5 against that prediction, creating circular validation.",
+      "Pressure-tier ratings are post-hoc and predictive simultaneously. Evolution 5's pressure rating (0.92) is in the file before round 5 has run. We will then evaluate round 5 against that prediction, creating circular validation.",
       "There is no validation step. Even if we compute pressure programmatically, we have no way to check whether it matches agent-experienced pressure.",
     ],
     alternatives: [
@@ -137,7 +137,7 @@ export const CRITIQUES: Critique[] = [
       "Pressure is a retrofit narrative justifying why early rounds scored lower.",
     ],
     falsification: [
-      "Round 5 produces results inconsistent with the predicted pressure tier",
+      "Evolution 5 produces results inconsistent with the predicted pressure tier",
       "A second researcher rating the same requirements gives meaningfully different pressure scores",
       "A programmatic pressure score correlates poorly with the hand-rated one",
     ],

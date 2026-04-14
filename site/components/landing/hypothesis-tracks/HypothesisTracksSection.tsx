@@ -25,7 +25,7 @@ export default function HypothesisTracksSection() {
       setActiveRound(next);
 
       if (next) {
-        const roundNum = next.replace("Round ", "");
+        const roundNum = next.replace("Evolution ", "");
         window.history.replaceState(null, "", `#play?round=${roundNum}`);
         const el = document.getElementById("play");
         if (el) {

@@ -3,7 +3,7 @@ import { SiteSectionIntro } from "@/components/site";
 export function ResultsIntro() {
   return (
     <SiteSectionIntro
-      kicker="Round 3 results"
+      kicker="Evolution 3 results"
       preset="hero-compact"
       title={
         <>

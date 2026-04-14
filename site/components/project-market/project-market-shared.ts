@@ -51,8 +51,8 @@ export function applyPerProjectRoundWindow(
   const allowedRounds = new Map<string, Set<string>>();
   for (const [project, rounds] of projectRounds) {
     const sorted = [...rounds].sort((a, b) => {
-      const an = parseInt(a.replace("Round ", ""), 10) || 0;
-      const bn = parseInt(b.replace("Round ", ""), 10) || 0;
+      const an = parseInt(a.replace("Evolution ", ""), 10) || 0;
+      const bn = parseInt(b.replace("Evolution ", ""), 10) || 0;
       return bn - an; // desc
     });
     allowedRounds.set(project, new Set(sorted.slice(0, limit)));
@@ -70,31 +70,12 @@ export function applyPerProjectRoundWindow(
 
 export type ProjectDomain = "game" | "video" | "software" | "tooling" | "planning";
 
+// Phase 43: only the two surviving multi-variant projects remain. Domains
+// are now per-project (not per-species) — every species under a project
+// inherits the project's domain.
 const DOMAIN_MAP: Record<string, ProjectDomain> = {
   "escape-the-dungeon": "game",
-  "escape-the-dungeon-bare": "game",
-  "escape-the-dungeon-emergent": "game",
-  "escape-the-dungeon-gad-emergent": "game",
-  "escape-the-dungeon-planning-only": "game",
-  "etd-brownfield-bare": "game",
-  "etd-brownfield-emergent": "game",
-  "etd-brownfield-gad": "game",
-  "etd-babylonjs": "game",
-  "etd-phaser": "game",
-  "etd-pixijs": "game",
-  "etd-threejs": "game",
   "gad-explainer-video": "video",
-  "gad-explainer-video-bare": "video",
-  "gad-explainer-video-emergent": "video",
-  "skill-evaluation-app": "software",
-  "eval-skill-install-eval": "tooling",
-  "gad-skill-creator-eval": "tooling",
-  "gad-planning-loop": "tooling",
-  "reverse-engineer-eval": "tooling",
-  "cli-efficiency": "tooling",
-  "portfolio-bare": "planning",
-  "project-migration": "planning",
-  "planning-migration": "planning",
 };
 
 export function domainForProject(id: string): ProjectDomain {
@@ -141,8 +122,8 @@ export function enrichProjects(
       if (round) rounds.add(round);
     }
     const sortedRounds = [...rounds].sort((a, b) => {
-      const an = parseInt(a.replace("Round ", ""), 10) || 0;
-      const bn = parseInt(b.replace("Round ", ""), 10) || 0;
+      const an = parseInt(a.replace("Evolution ", ""), 10) || 0;
+      const bn = parseInt(b.replace("Evolution ", ""), 10) || 0;
       return bn - an;
     });
     const playableCount = projectRuns.filter(

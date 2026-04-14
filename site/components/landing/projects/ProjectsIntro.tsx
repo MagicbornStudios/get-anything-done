@@ -7,16 +7,16 @@ export function ProjectsIntro() {
       preset="hero-compact"
       title={
         <>
-          Three greenfield conditions. <span className="gradient-text">Three brownfield.</span>{" "}
-          Same spec, different constraints.
+          Two projects. <span className="gradient-text">Three species each.</span>{" "}
+          Same spec, different DNA.
         </>
       }
     >
-      Greenfield runs build the game from nothing. Brownfield runs inherit a codebase —
-      specifically the bare v3 build (the highest human-reviewed run to date) — and try to extend
-      it under v4 pressure requirements. If the freedom hypothesis survives brownfield, it&apos;s
-      real. If GAD finally wins on extension, that tells us the framework&apos;s value is in
-      maintenance, not creation.
+      Each project (escape-the-dungeon, gad-explainer-video) hosts three species — gad, bare,
+      and emergent — that share the same requirements but differ in which context framework
+      they were given. Generations within a species accumulate as the requirements evolve.
+      Comparing species across the same evolution is how we test which scaffolding (full GAD,
+      bare baseline, or emergent skill inheritance) actually delivers under pressure.
     </SiteSectionIntro>
   );
 }

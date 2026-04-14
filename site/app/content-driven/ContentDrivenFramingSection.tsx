@@ -19,7 +19,7 @@ export function ContentDrivenFramingSection() {
       </p>
       <p className="mt-4 max-w-3xl text-sm text-muted-foreground">
         This is why content-pack runs <strong className="text-foreground">must not</strong> be scored against the same
-        rubric as greenfield runs. A movie adapted from a book is not a worse movie because it didn&apos;t have to invent
+        rubric as runs. A movie adapted from a book is not a worse movie because it didn&apos;t have to invent
         the plot — it&apos;s a different kind of movie with different success criteria. The rubric for this track will
         score derivative coherence, integration, and scope expansion, not originality.
       </p>

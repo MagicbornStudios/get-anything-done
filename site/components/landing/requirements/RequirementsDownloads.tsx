@@ -11,7 +11,7 @@ export function RequirementsDownloads() {
         Download and try to build it yourself
       </h3>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-        The current v4 REQUIREMENTS.xml for each greenfield condition. Drop it into a new
+        The current v4 REQUIREMENTS.xml for each species. Drop it into a new
         project with your agent of choice and see how you do. Submit your TRACE via PR.
       </p>
 

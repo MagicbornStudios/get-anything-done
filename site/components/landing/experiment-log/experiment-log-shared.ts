@@ -2,11 +2,11 @@ import { ROUND_SUMMARIES, EVAL_RUNS, type RoundSummary } from "@/lib/eval-data";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 
 export const ROUND_TINT: Record<string, string> = {
-  "Round 1": "border-red-500/40",
-  "Round 2": "border-amber-500/40",
-  "Round 3": "border-sky-500/40",
-  "Round 4": "border-emerald-500/40",
-  "Round 5": "border-purple-500/40",
+  "Evolution 1": "border-red-500/40",
+  "Evolution 2": "border-amber-500/40",
+  "Evolution 3": "border-sky-500/40",
+  "Evolution 4": "border-emerald-500/40",
+  "Evolution 5": "border-purple-500/40",
 };
 
 /** Unique project names that appear in any round */

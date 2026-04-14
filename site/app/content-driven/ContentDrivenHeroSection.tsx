@@ -36,7 +36,7 @@ export function ContentDrivenHeroSection() {
       </SiteProse>
       <SiteProse size="sm" className="mt-4">
         This track is <strong className="text-pink-300">explicitly distinct</strong> from freedom and CSH. Content-pack
-        runs and greenfield runs do <strong>not</strong> share a rubric — they answer different questions. Comparing them
+        runs and runs do <strong>not</strong> share a rubric — they answer different questions. Comparing them
         on the same score would confound the compound-skills measurement.
       </SiteProse>
 

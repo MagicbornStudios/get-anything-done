@@ -15,7 +15,7 @@ export function ContributeIdeasSection() {
       <div className="grid gap-4 md:grid-cols-2">
         <ContributeIdeaCard
           title="Run an existing eval"
-          description="Pick any greenfield project (escape-the-dungeon, -bare, -emergent) and run it against the current requirements version. Compare your results to ours."
+          description="Pick any project (escape-the-dungeon, -bare, -emergent) and run it against the current requirements version. Compare your results to ours."
           firstStep={'"Run escape-the-dungeon-bare against requirements v5"'}
         />
         <ContributeIdeaCard
@@ -46,7 +46,7 @@ export function ContributeIdeasSection() {
         />
         <ContributeIdeaCard
           title="Build a new eval flavor"
-          description="Add a new eval project under evals/ — content-pack injection (gad-66), brownfield extension, codex-runtime comparison. Each becomes its own track on the site."
+          description="Add a new eval project under evals/ — content-pack injection (gad-66), codex-runtime comparison. Each becomes its own track on the site."
           firstStep={
             '"Set up a new eval project: escape-the-dungeon-codex. Same requirements as escape-the-dungeon, but the runner is codex-cli instead of claude-code."'
           }

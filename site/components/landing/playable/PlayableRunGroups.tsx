@@ -85,7 +85,7 @@ export function PlayableRunGroups({ groupedRuns, selected, onSelectRun }: Props)
                               ? "border-background/30 text-accent-foreground/80"
                               : roundColor(round),
                           ].join(" ")}>
-                            {round.replace("Round ", "R")}
+                            {round.replace("Evolution ", "E")}
                           </span>
                         )}
                         {r.tokenUsage?.total_tokens != null && (

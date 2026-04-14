@@ -38,7 +38,7 @@ export function FreedomSkepticSection() {
           <li className="flex items-start gap-2">
             <span className="mt-1.5 size-1 shrink-0 rounded-full bg-rose-400" />
             <span>
-              GAD&apos;s design assumes multi-session work; greenfield single-shot game implementation is
+              GAD&apos;s design assumes multi-session work; single-shot game implementation is
               not its strength case. We may be testing GAD against the wrong benchmark.
             </span>
           </li>

@@ -18,7 +18,7 @@ export function RequirementsHero() {
         }
       />
       <SiteProse className="mt-6">
-        This page renders every greenfield escape-the-dungeon project&apos;s current{" "}
+        This page renders every escape-the-dungeon project&apos;s current{" "}
         <code className="rounded bg-card/60 px-1 py-0.5 text-sm">REQUIREMENTS.xml</code>: the v4
         pressure-oriented base plus the v5 addendum with 21 playtest-driven additions. Each
         requirement has a stable anchor so other pages can link to individual rules (e.g.{" "}

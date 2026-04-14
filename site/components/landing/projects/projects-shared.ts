@@ -7,60 +7,39 @@ import {
 
 export interface ProjectCard {
   project: string;
-  mode: "greenfield" | "brownfield";
+  species: string;
   workflow: Workflow;
   description: string;
   status: "active" | "planned";
 }
 
+// Phase 43: each row is a (project, species) pair. Brownfield mode and the
+// dropped tech-stack variants are gone — only the three live species per
+// project remain.
 export const PROJECTS: ProjectCard[] = [
   {
     project: "escape-the-dungeon",
-    mode: "greenfield",
+    species: "gad",
     workflow: "gad",
     description:
       "Full GAD framework from empty repo. Every phase planned, every task committed with an id, every decision captured.",
     status: "active",
   },
   {
-    project: "escape-the-dungeon-bare",
-    mode: "greenfield",
+    project: "escape-the-dungeon",
+    species: "bare",
     workflow: "bare",
     description:
       "No framework. No CLI. The agent gets AGENTS.md + REQUIREMENTS.xml + two bootstrap skills and is told to organise itself however it wants.",
     status: "active",
   },
   {
-    project: "escape-the-dungeon-emergent",
-    mode: "greenfield",
+    project: "escape-the-dungeon",
+    species: "emergent",
     workflow: "emergent",
     description:
       "No framework, but inherits skills from previous bare/emergent runs. Evolves them in place and ships a CHANGELOG documenting what was rewritten.",
     status: "active",
-  },
-  {
-    project: "etd-brownfield-gad",
-    mode: "brownfield",
-    workflow: "gad",
-    description:
-      "Extends the bare v3 baseline with v4 pressure requirements under the full GAD framework. Tests whether structured planning pays off on codebase extension.",
-    status: "planned",
-  },
-  {
-    project: "etd-brownfield-bare",
-    mode: "brownfield",
-    workflow: "bare",
-    description:
-      "Same bare v3 baseline, same v4 extensions, no framework. The control condition for the freedom-hypothesis re-test.",
-    status: "planned",
-  },
-  {
-    project: "etd-brownfield-emergent",
-    mode: "brownfield",
-    workflow: "emergent",
-    description:
-      "Bare v3 baseline + v4 extensions with inherited skills from round 3 emergent runs. The most experienced configuration.",
-    status: "planned",
   },
 ];
 

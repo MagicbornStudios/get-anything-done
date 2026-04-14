@@ -50,7 +50,7 @@ const ROUND_COLORS = [
 
 export function roundColor(round: string | null): string {
   if (!round) return "border-border/40 bg-card/20 text-muted-foreground";
-  const num = parseInt(round.replace("Round ", ""), 10);
+  const num = parseInt(round.replace("Evolution ", ""), 10);
   if (isNaN(num)) return ROUND_COLORS[0];
   return ROUND_COLORS[(num - 1) % ROUND_COLORS.length];
 }
@@ -110,7 +110,7 @@ export const PROJECT_FAMILIES: Array<{
   },
 ];
 
-export const ROUND_OPTIONS = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"] as const;
+export const ROUND_OPTIONS = ["Evolution 1", "Evolution 2", "Evolution 3", "Evolution 4", "Evolution 5"] as const;
 
 export function fmtTokensShort(t: number | null | undefined): string {
   if (t == null) return "\u2014";
@@ -145,6 +145,6 @@ export function parseRoundFromHash(): string | null {
   if (typeof window === "undefined") return null;
   const hash = window.location.hash;
   const match = hash.match(/round=(\d+)/);
-  if (match) return `Round ${match[1]}`;
+  if (match) return `Evolution ${match[1]}`;
   return null;
 }

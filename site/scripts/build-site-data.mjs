@@ -1967,6 +1967,8 @@ export interface RequirementsVersion {
 }
 export interface CurrentRequirementsFile {
   project: string;
+  species?: string | null;
+  id?: string;
   version: string;
   path: string;
   bytes: number;
@@ -2584,6 +2586,9 @@ export type EvalScores = {
 
 export interface EvalRunRecord {
   project: string;
+  species?: string | null;
+  // Composite id project/species/version (phase 43)
+  id?: string;
   version: string;
   workflow: Workflow;
   requirementsVersion: string;
@@ -2744,12 +2749,16 @@ export interface EvalRunRecord {
 
 export interface EvalTemplateAsset {
   project: string;
+  species?: string;
+  id?: string;
   zipPath: string;
   bytes: number;
 }
 
 export interface PlanningZipAsset {
   project: string;
+  species?: string;
+  id?: string;
   zipPath: string;
   bytes: number;
   files: number;
@@ -2763,14 +2772,18 @@ export interface RoundSummary {
 
 export interface EvalProjectMeta {
   id: string;
+  // Phase 43: every species row has project + species
+  project?: string;
+  species?: string;
   name: string;
   description: string | null;
-  evalMode: string | null;
+  /** @deprecated Phase 43 dropped greenfield/brownfield mode framing. */
+  evalMode?: string | null;
   /** @deprecated Use contextFramework. Legacy field from gad.json workflow key. */
   workflow: string | null;
   /** Canonical context framework slug per decision gad-179; resolves context_framework or workflow from gad.json. */
   contextFramework: string | null;
-  baseline: string | { project?: string; version?: string; source?: string } | null;
+  baseline: string | { project?: string; species?: string; version?: string; source?: string } | null;
   constraints: Record<string, unknown> | null;
   scoringWeights: Record<string, number> | null;
   humanReviewRubric: {

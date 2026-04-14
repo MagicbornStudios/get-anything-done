@@ -42,11 +42,11 @@ export default function PlayableTeaser() {
     for (const r of etdRuns) {
       const round = roundForRun(r);
       if (round) {
-        const num = parseInt(round.replace("Round ", ""), 10) || 0;
+        const num = parseInt(round.replace("Evolution ", ""), 10) || 0;
         if (num > latestRoundNum) latestRoundNum = num;
       }
     }
-    const latestRound = latestRoundNum > 0 ? `Round ${latestRoundNum}` : null;
+    const latestRound = latestRoundNum > 0 ? `Evolution ${latestRoundNum}` : null;
 
     const etdLatest = latestRound
       ? etdRuns.filter((r) => roundForRun(r) === latestRound)
@@ -143,7 +143,7 @@ export default function PlayableTeaser() {
                       : roundColor(round),
                   )}
                 >
-                  {round.replace("Round ", "R")}
+                  {round.replace("Evolution ", "E")}
                 </span>
               )}
             </Button>

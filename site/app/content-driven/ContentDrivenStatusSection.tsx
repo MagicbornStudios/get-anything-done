@@ -35,13 +35,13 @@ export function ContentDrivenStatusSection() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Round planning</CardTitle>
+            <CardTitle className="text-base">Evolution planning</CardTitle>
           </CardHeader>
           <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
             Content-driven runs will enter the rounds framework as a new track. They do <strong>not</strong> require
-            their own requirements version — they inherit greenfield v5 requirements plus the content pack as an input.
+            their own requirements version — they inherit v5 requirements plus the content pack as an input.
             Per the rounds framework (<Ref id="gad-72" />), a new hypothesis can start a new round against any existing
-            requirements version. Round 6 is the current placeholder for the first content-driven run.
+            requirements version. Evolution 6 is the current placeholder for the first content-driven run.
           </CardContent>
         </Card>
       </div>

@@ -20,6 +20,9 @@ export type EvalScores = {
 
 export interface EvalRunRecord {
   project: string;
+  species?: string | null;
+  // Composite id project/species/version (phase 43)
+  id?: string;
   version: string;
   workflow: Workflow;
   requirementsVersion: string;
@@ -180,12 +183,16 @@ export interface EvalRunRecord {
 
 export interface EvalTemplateAsset {
   project: string;
+  species?: string;
+  id?: string;
   zipPath: string;
   bytes: number;
 }
 
 export interface PlanningZipAsset {
   project: string;
+  species?: string;
+  id?: string;
   zipPath: string;
   bytes: number;
   files: number;
@@ -199,14 +206,18 @@ export interface RoundSummary {
 
 export interface EvalProjectMeta {
   id: string;
+  // Phase 43: every species row has project + species
+  project?: string;
+  species?: string;
   name: string;
   description: string | null;
-  evalMode: string | null;
+  /** @deprecated Phase 43 dropped greenfield/brownfield mode framing. */
+  evalMode?: string | null;
   /** @deprecated Use contextFramework. Legacy field from gad.json workflow key. */
   workflow: string | null;
   /** Canonical context framework slug per decision gad-179; resolves context_framework or workflow from gad.json. */
   contextFramework: string | null;
-  baseline: string | { project?: string; version?: string; source?: string } | null;
+  baseline: string | { project?: string; species?: string; version?: string; source?: string } | null;
   constraints: Record<string, unknown> | null;
   scoringWeights: Record<string, number> | null;
   humanReviewRubric: {
@@ -5465,9 +5476,9 @@ export const ALL_DECISIONS: DecisionRecord[] = [
   },
   {
     "id": "gad-17",
-    "title": "Context exhaustion: work through auto-compact, do not stop",
-    "summary": "When context window fills, Claude Code auto-compacts. The agent works through it — stopping to start a fresh session is pointless friction. After compaction, run `gad snapshot --projectid &lt;id&gt;` or `gad context` to re-hydrate and continue. The planning docs are what make this possible — STATE.xml next-action and TASK-REGISTRY.xml tell the agent exactly where it was. No fresh sessions, no handoff files, no asking the user to restart.",
-    "impact": "Agents never stop work due to context limits. Auto-compact handles it. After compaction: read gad snapshot, continue. gad-04 (capture decisions in planning docs) is what makes auto-compact re-hydration work — the planning docs ARE the durable state."
+    "title": "Context exhaustion: work through auto-compact by default, suggest restart at clean boundaries when economically motivated",
+    "summary": "**Default behavior:** never stop work mid-task, never ask the user to restart, work through Claude Code's auto-compact event. After compaction, run `gad snapshot --projectid &lt;id&gt;` to re-hydrate and continue. The planning docs (STATE.xml next-action, TASK-REGISTRY.xml, DECISIONS.xml) are what make this possible — they are the durable state, not the conversation history.\r\n\r\n**Refinement (2026-04-13):** The original \"never suggest restart\" rule is too absolute. There are real costs to letting a session grow indefinitely, and there are clean moments where a restart is the right call. The agent should *loosely* suggest restarts when the economics favor it.\r\n\r\n**Cost shape of a long session:**\r\n1. Every turn re-sends the entire conversation history as input tokens. Turn 100 pays for turns 1-99 again. Cost per turn grows linearly with session length.\r\n2. Anthropic prompt cache has a 5-minute TTL. Idle gaps cold-start the cache and force a full re-read at full price.\r\n3. As context fills, the model attends to more irrelevant history. Quality on the *current* task degrades even though the old turns are technically still there.\r\n4. Context window is finite. Hitting the wall mid-task forces an unplanned auto-compact that is lossier than a planned restart.\r\n\r\n**When a restart suggestion is appropriate:**\r\n- A phase or large task just landed and its decisions are now captured in planning docs (rehydration story is good)\r\n- The next chunk of work is clearly scoped and self-contained (no dangling in-head state)\r\n- Topic is switching (e.g., \"we're done with phase 43, now let's look at phase 44 marketplace design\")\r\n- The agent's context is past ~60-70% and the next task is independent\r\n- Auto-compact is imminent — a planned restart now beats a forced compaction mid-task\r\n\r\n**When a restart is NOT appropriate:**\r\n- Mid-task with unwritten state in the agent's head\r\n- During an investigation where the trail of \"what we ruled out\" carries weight\r\n- When the next thing depends on subtle context from the last few turns\r\n- Any time the user is in flow and a restart would interrupt their thinking\r\n\r\n**How to suggest:** loosely, with one-line reasoning (\"phase done, context ~70%, next chunk is mechanical and rehydratable from snapshot — restart is reasonable here, or I can keep going\"). The user decides. Never push, never restart unilaterally. The default still leans toward continuing — restart is the exception, not the norm.",
+    "impact": "Agents work through auto-compact by default and never restart unilaterally. They MAY suggest a restart loosely at clean planning boundaries when context is filling and the next chunk has a good rehydration story via `gad snapshot`. The user always decides. gad-04 (decisions in planning docs) is still what makes both auto-compact and planned restarts work — without durable docs, no rehydration story exists at all."
   },
   {
     "id": "gad-16",
@@ -11144,10 +11155,10 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "gad-17",
-    "title": "Context exhaustion: work through auto-compact, do not stop",
+    "title": "Context exhaustion: work through auto-compact by default, suggest restart at clean boundaries when economically motivated",
     "kind": "decision",
     "href": "/decisions#gad-17",
-    "body": "gad-17 context exhaustion: work through auto-compact, do not stop when context window fills, claude code auto-compacts. the agent works through it — stopping to start a fresh session is pointless friction. after compaction, run `gad snapshot --projectid &lt;id&gt;` or `gad context` to re-hydrate and continue. the planning docs are what make this possible — state.xml next-action and task-registry.xml tell the agent exactly where it was. no fresh sessions, no hand"
+    "body": "gad-17 context exhaustion: work through auto-compact by default, suggest restart at clean boundaries when economically motivated **default behavior:** never stop work mid-task, never ask the user to restart, work through claude code's auto-compact event. after compaction, run `gad snapshot --projectid &lt;id&gt;` to re-hydrate and continue. the planning docs (state.xml next-action, task-registry.xml, decisions.xml) are what make this possible — they are the durable state, not the conversation history.\r\n\r\n**refinement (2026-"
   },
   {
     "id": "gad-16",

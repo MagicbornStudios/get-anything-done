@@ -49,10 +49,10 @@ export const HYPOTHESIS_TRACKS_DIAGRAM = `flowchart LR
     classDef round fill:#1e1b4b,stroke:#818cf8,color:#e0e7ff,stroke-width:2px
     classDef finding fill:#3a1e2d,stroke:#c88d4c,color:#ffe4b5,stroke-width:2px
 
-    R1[Round 1<br/>v1 reqs<br/>GAD only] --> R2[Round 2<br/>v2 reqs<br/>3 conditions]
-    R2 --> R3[Round 3<br/>v3 gates<br/>3 conditions]
-    R3 --> R4[Round 4<br/>v4 pressure<br/>3 conditions]
-    R4 --> R5[Round 5<br/>v4 continued<br/>awaiting review]
+    R1[Evolution 1<br/>v1 reqs<br/>GAD only] --> R2[Evolution 2<br/>v2 reqs<br/>3 conditions]
+    R2 --> R3[Evolution 3<br/>v3 gates<br/>3 conditions]
+    R3 --> R4[Evolution 4<br/>v4 pressure<br/>3 conditions]
+    R4 --> R5[Evolution 5<br/>v4 continued<br/>awaiting review]
 
     R1 -->|"GAD: 0.00<br/>blank screen"| F1[Finding:<br/>auto-scoring lies]
     R2 -->|"Bare 0.50 > GAD 0.30"| F2[Finding:<br/>bare beats GAD]

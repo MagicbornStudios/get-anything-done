@@ -129,8 +129,8 @@ export function MethodologyCompositeWeightsCatalog() {
       for (const r of p.rounds) set.add(r);
     }
     return [...set].sort((a, b) => {
-      const an = parseInt(a.replace("Round ", ""), 10) || 0;
-      const bn = parseInt(b.replace("Round ", ""), 10) || 0;
+      const an = parseInt(a.replace("Evolution ", ""), 10) || 0;
+      const bn = parseInt(b.replace("Evolution ", ""), 10) || 0;
       return an - bn;
     });
   }, [enrichedAll]);

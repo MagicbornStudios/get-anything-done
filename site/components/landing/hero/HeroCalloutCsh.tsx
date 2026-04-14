@@ -11,7 +11,7 @@ export function HeroCalloutCsh() {
       >
         CSH
       </abbr>
-      -testing via the Emergent workflow. Round 4&apos;s Emergent v4 scored{" "}
+      -testing via the Emergent workflow. Evolution 4&apos;s Emergent v4 scored{" "}
       <strong className="font-semibold text-amber-100">0.885</strong> after
       authoring two new skills and deprecating one — the first observed full
       skill-ratcheting cycle.{" "}

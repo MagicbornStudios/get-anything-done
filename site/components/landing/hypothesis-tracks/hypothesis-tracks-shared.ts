@@ -10,37 +10,37 @@ import { EVAL_RUNS, type EvalRunRecord } from "@/lib/eval-data";
 /** Maps eval-run version → round label. Exported for Playable to reuse. */
 export const ROUND_VERSION_MAP: Record<string, Record<string, string>> = {
   "escape-the-dungeon": {
-    v1: "Round 1",
-    v2: "Round 1",
-    v3: "Round 1",
-    v4: "Round 1",
-    v5: "Round 1",
-    v6: "Round 2",
-    v7: "Round 2",
-    v8: "Round 3",
-    v9: "Round 4",
-    v10: "Round 4",
-    v11: "Round 5",
-    v12: "Round 5",
+    v1: "Evolution 1",
+    v2: "Evolution 1",
+    v3: "Evolution 1",
+    v4: "Evolution 1",
+    v5: "Evolution 1",
+    v6: "Evolution 2",
+    v7: "Evolution 2",
+    v8: "Evolution 3",
+    v9: "Evolution 4",
+    v10: "Evolution 4",
+    v11: "Evolution 5",
+    v12: "Evolution 5",
   },
   "escape-the-dungeon-bare": {
-    v1: "Round 2",
-    v2: "Round 2",
-    v3: "Round 3",
-    v4: "Round 4",
-    v5: "Round 4",
-    v6: "Round 5",
+    v1: "Evolution 2",
+    v2: "Evolution 2",
+    v3: "Evolution 3",
+    v4: "Evolution 4",
+    v5: "Evolution 4",
+    v6: "Evolution 5",
   },
   "escape-the-dungeon-emergent": {
-    v1: "Round 2",
-    v2: "Round 3",
-    v3: "Round 4",
-    v4: "Round 4",
-    v5: "Round 5",
-    v6: "Round 5",
+    v1: "Evolution 2",
+    v2: "Evolution 3",
+    v3: "Evolution 4",
+    v4: "Evolution 4",
+    v5: "Evolution 5",
+    v6: "Evolution 5",
   },
   "gad-explainer-video": {
-    v1: "Round 5",
+    v1: "Evolution 5",
   },
 };
 
@@ -57,7 +57,7 @@ function scoreOf(r: EvalRunRecord): number | null {
 }
 
 export function buildTrackData(): HypothesisTrackPoint[] {
-  const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
+  const rounds = ["Evolution 1", "Evolution 2", "Evolution 3", "Evolution 4", "Evolution 5"];
   const points: HypothesisTrackPoint[] = rounds.map((round) => ({
     round,
     freedom: null,

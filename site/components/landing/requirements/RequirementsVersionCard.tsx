@@ -80,14 +80,6 @@ export function RequirementsVersionCard({ version: v }: Props) {
             </p>
           </div>
         )}
-        {v.sections.brownfield_vs_greenfield && (
-          <div>
-            <p className="text-xs uppercase tracking-wider text-accent">Brownfield vs greenfield</p>
-            <p className="mt-1 whitespace-pre-line text-sm leading-6 text-foreground">
-              {v.sections.brownfield_vs_greenfield}
-            </p>
-          </div>
-        )}
         {v.sections.decision_references && (
           <div>
             <p className="text-xs uppercase tracking-wider text-accent">Decision references</p>

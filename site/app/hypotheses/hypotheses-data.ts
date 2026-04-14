@@ -70,7 +70,7 @@ export const HYPOTHESES: HypothesisCard[] = [
     detailHref: "/content-driven",
     status: "not-yet-tested",
     latestEvidence:
-      "No runs yet. Resolved open question: this becomes its own eval track (escape-the-dungeon-inherited-content) distinct from greenfield emergent so CSH measurements stay clean. Comparison rules are intentionally different — content-pack and greenfield runs do NOT share a rubric.",
+      "No runs yet. Resolved open question: this becomes its own eval track (escape-the-dungeon-inherited-content) distinct from emergent so CSH measurements stay clean. Comparison rules are intentionally different — content-pack and runs do NOT share a rubric.",
     skepticLink: "/skeptic",
   },
   {
@@ -113,31 +113,31 @@ export const TRACK_TINT: Record<string, string> = {
 
 export function buildTrackData(): HypothesisTrackPoint[] {
   const roundForVersion: Record<string, string> = {
-    v1: "Round 1",
-    v2: "Round 1",
-    v3: "Round 1",
-    v4: "Round 1",
-    v5: "Round 1",
-    v6: "Round 2",
-    v7: "Round 2",
-    v8: "Round 3",
-    v9: "Round 4",
-    v10: "Round 4",
+    v1: "Evolution 1",
+    v2: "Evolution 1",
+    v3: "Evolution 1",
+    v4: "Evolution 1",
+    v5: "Evolution 1",
+    v6: "Evolution 2",
+    v7: "Evolution 2",
+    v8: "Evolution 3",
+    v9: "Evolution 4",
+    v10: "Evolution 4",
   };
   const bareRoundForVersion: Record<string, string> = {
-    v1: "Round 2",
-    v2: "Round 2",
-    v3: "Round 3",
-    v4: "Round 4",
-    v5: "Round 4",
+    v1: "Evolution 2",
+    v2: "Evolution 2",
+    v3: "Evolution 3",
+    v4: "Evolution 4",
+    v5: "Evolution 4",
   };
   const emergentRoundForVersion: Record<string, string> = {
-    v1: "Round 2",
-    v2: "Round 3",
-    v3: "Round 4",
-    v4: "Round 4",
+    v1: "Evolution 2",
+    v2: "Evolution 3",
+    v3: "Evolution 4",
+    v4: "Evolution 4",
   };
-  const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
+  const rounds = ["Evolution 1", "Evolution 2", "Evolution 3", "Evolution 4", "Evolution 5"];
   const points: HypothesisTrackPoint[] = rounds.map((round) => ({
     round,
     freedom: null,

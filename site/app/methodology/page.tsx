@@ -4,7 +4,6 @@ import { MethodologyCompositeSection } from "@/app/methodology/MethodologyCompos
 import { MethodologyDataPipelineSection } from "@/app/methodology/MethodologyDataPipelineSection";
 import { MethodologyGateSection } from "@/app/methodology/MethodologyGateSection";
 import { MethodologyHero } from "@/app/methodology/MethodologyHero";
-import { MethodologyLineageSection } from "@/app/methodology/MethodologyLineageSection";
 import { MethodologyTemplateMatrixSection } from "@/app/methodology/MethodologyTemplateMatrixSection";
 import { MethodologyWorkedExamplesSection } from "@/app/methodology/MethodologyWorkedExamplesSection";
 import { MethodologyCliReviewSection } from "@/app/methodology/MethodologyCliReviewSection";
@@ -40,9 +39,6 @@ export default function MethodologyPage() {
       </PageIdentified>
       <PageIdentified as="MethodologyPageWorkedExamplesSection">
         <MethodologyWorkedExamplesSection worked={worked} />
-      </PageIdentified>
-      <PageIdentified as="MethodologyPageLineageSection">
-        <MethodologyLineageSection />
       </PageIdentified>
       <PageIdentified as="MethodologyPageTemplateMatrixSection">
         <MethodologyTemplateMatrixSection />

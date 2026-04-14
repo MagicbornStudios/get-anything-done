@@ -69,14 +69,11 @@ function HandoffPromptPane({
   const hint =
     variant === "update" ? (
       <>
-        The first {UPDATE_LOCKED_LINE_COUNT} lines are <strong className="text-foreground/90">fixed</strong>. Type only
-        in the editor below. <strong className="text-foreground/90">Hover the bottom edge</strong> for Mic + Copy.
+        The first {UPDATE_LOCKED_LINE_COUNT} lines are <strong className="text-foreground/90">fixed</strong> (gray box
+        above). Type only in the editor below; <strong className="text-foreground/90">Copy</strong> includes both.
       </>
     ) : (
-      <>
-        Edit the prompt if you need to. <strong className="text-foreground/90">Hover the bottom edge</strong> of the
-        editor for Mic + Copy.
-      </>
+      <>Edit the full delete prompt in the editor below.</>
     );
 
   return (
@@ -184,15 +181,98 @@ function insertTranscriptAtEditor(api: HandoffEditorHandle | null, transcript: s
   api?.insertAtCaret(transcript);
 }
 
-function PromptContextStrip({
-  pageUrl,
-  cid,
-  label,
+type StripCopyKey = "pageUrl" | "cid" | "label";
+
+function CopyableContextField({
+  title,
+  value,
+  copyKey,
+  activeKey,
+  onCopy,
+  mono,
 }: {
-  pageUrl: string;
-  cid: string;
-  label: string;
+  title: string;
+  value: string;
+  copyKey: StripCopyKey;
+  activeKey: StripCopyKey | null;
+  onCopy: (key: StripCopyKey, text: string) => void;
+  mono?: boolean;
 }) {
+  const text = value || "—";
+  const empty = !value.trim();
+  const justCopied = activeKey === copyKey;
+
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">{title}</p>
+      <button
+        type="button"
+        disabled={empty}
+        title={empty ? "Nothing to copy" : `Copy ${title}`}
+        aria-label={empty ? `${title} (empty)` : `Copy ${title}`}
+        onClick={() => {
+          if (!empty) onCopy(copyKey, value);
+        }}
+        className={cn(
+          "group mt-1.5 flex w-full max-w-full items-start gap-2 rounded-md border px-2 py-1.5 text-left transition-colors",
+          "border-border/50 bg-background/40 hover:border-border hover:bg-background/70",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-muted/40",
+          empty && "cursor-not-allowed opacity-50 hover:border-border/50 hover:bg-background/40",
+        )}
+      >
+        <span
+          className={cn(
+            "min-w-0 flex-1 leading-snug text-foreground sm:text-[13px]",
+            mono ? "break-all font-mono text-xs" : "text-sm font-semibold",
+          )}
+        >
+          {text}
+        </span>
+        <span
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-md border border-border/60 bg-muted/30 text-muted-foreground",
+            "group-hover:text-foreground",
+            justCopied && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+          )}
+          aria-hidden
+        >
+          {justCopied ? <Check className="size-3.5" strokeWidth={2.5} /> : <Copy className="size-3.5" strokeWidth={2} />}
+        </span>
+        {justCopied ? (
+          <span className="sr-only">Copied to clipboard</span>
+        ) : null}
+      </button>
+    </div>
+  );
+}
+
+function PromptContextStrip({ pageUrl, cid, label }: { pageUrl: string; cid: string; label: string }) {
+  const [copiedKey, setCopiedKey] = useState<StripCopyKey | null>(null);
+  const clearTimer = useRef<number | null>(null);
+
+  const flashCopied = useCallback((key: StripCopyKey) => {
+    if (clearTimer.current != null) window.clearTimeout(clearTimer.current);
+    setCopiedKey(key);
+    clearTimer.current = window.setTimeout(() => {
+      setCopiedKey(null);
+      clearTimer.current = null;
+    }, 1600);
+  }, []);
+
+  const copyStripValue = useCallback(
+    (key: StripCopyKey, text: string) => {
+      navigator.clipboard?.writeText(text).catch(() => {});
+      flashCopied(key);
+    },
+    [flashCopied],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (clearTimer.current != null) window.clearTimeout(clearTimer.current);
+    };
+  }, []);
+
   return (
     <div
       className={cn(
@@ -200,17 +280,32 @@ function PromptContextStrip({
         "shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--foreground)_6%,transparent)]",
       )}
     >
-      <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">Where to find this block</p>
-        <p className="mt-1.5 break-all font-mono text-xs leading-snug text-foreground sm:text-[13px]">{pageUrl || "—"}</p>
-      </div>
+      <CopyableContextField
+        title="Where to find this block"
+        value={pageUrl}
+        copyKey="pageUrl"
+        activeKey={copiedKey}
+        onCopy={copyStripValue}
+        mono
+      />
       <div className="min-w-0 border-t border-border/70 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">data-cid</p>
-        <p className="mt-1.5 break-all font-mono text-xs leading-snug text-accent sm:text-[13px]">{cid}</p>
+        <CopyableContextField
+          title="data-cid"
+          value={cid}
+          copyKey="cid"
+          activeKey={copiedKey}
+          onCopy={copyStripValue}
+          mono
+        />
       </div>
       <div className="min-w-0 border-t border-border/70 pt-3 sm:col-span-1 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">Component (as)</p>
-        <p className="mt-1.5 text-sm font-semibold leading-snug text-foreground">{label}</p>
+        <CopyableContextField
+          title="Component (as)"
+          value={label}
+          copyKey="label"
+          activeKey={copiedKey}
+          onCopy={copyStripValue}
+        />
       </div>
     </div>
   );
@@ -462,11 +557,6 @@ export function DevIdAgentPromptDialog({
       >
         <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
           <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            <strong className="text-foreground">Upd</strong> — the first {UPDATE_LOCKED_LINE_COUNT} lines are fixed; type
-            your instructions in the editor below them. <strong className="text-foreground">Del</strong> — full prompt
-            editable. Mic + Copy: <strong className="text-foreground">hover the bottom</strong> of the editor.
-          </DialogDescription>
         </DialogHeader>
 
         <PromptContextStrip pageUrl={pageUrl} cid={cid} label={label} />

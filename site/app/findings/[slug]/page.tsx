@@ -31,7 +31,7 @@ export default function FindingDetailPage({ params }: { params: { slug: string }
 
         <Identified as={`FindingDetail-${finding.slug}`} className="contents">
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            {finding.round && <Badge variant="outline">Round {finding.round}</Badge>}
+            {finding.round && <Badge variant="outline">Evolution {finding.round}</Badge>}
             {finding.gadVersion && (
               <Badge variant="outline" className="font-mono text-[10px]">
                 GAD v{finding.gadVersion}

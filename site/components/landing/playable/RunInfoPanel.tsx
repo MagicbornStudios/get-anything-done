@@ -45,7 +45,7 @@ export function RunInfoPanel({ r }: { r: EvalRunRecord }) {
         </div>
         {round && (
           <div>
-            <dt className="text-muted-foreground/70 uppercase tracking-wider">Round</dt>
+            <dt className="text-muted-foreground/70 uppercase tracking-wider">Evolution</dt>
             <dd className="font-medium text-foreground">{round}</dd>
           </div>
         )}

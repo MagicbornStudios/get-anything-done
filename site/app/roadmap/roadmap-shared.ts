@@ -17,23 +17,23 @@ export function tierLabel(score: number): string {
 }
 
 export const PRESSURE_ANNOTATIONS: Record<string, { note: string; source: "computed" | "authored" }> = {
-  "Round 1": {
+  "Evolution 1": {
     source: "authored",
     note: "12 systems-focused criteria, no gates. Agents could ship invisible backend and still score 1.0 on requirement_coverage. v1 template not preserved — this is an estimated value until the v1 XML is reconstructed.",
   },
-  "Round 2": {
+  "Evolution 2": {
     source: "authored",
     note: "Added 2 gate criteria and UI-first mandate. Vertical-slice priority introduced. v2 template not preserved — estimated.",
   },
-  "Round 3": {
+  "Evolution 3": {
     source: "authored",
     note: "3 explicit gates (game-loop, spell-crafting, UI quality). Rubric weights shifted toward human review. v3 template not preserved — estimated.",
   },
-  "Round 4": {
+  "Evolution 4": {
     source: "computed",
     note: "4 gates including pressure-mechanics gate itself. Authored-only, ingenuity requirement, forge must tie to encounter design. v4 is the first round with a preserved current template — pressure is COMPUTED from REQUIREMENTS.xml structure (gad-79).",
   },
-  "Round 5": {
+  "Evolution 5": {
     source: "computed",
     note: "v5 adds 21 requirements on top of v4 base via the <addendum> block: rule-based combat, entity-trait action policies, save checkpoints, spells-as-ingredients, visual map, event-driven rendering. Pressure is COMPUTED from the v5 REQUIREMENTS.xml including the addendum (gad-79).",
   },
@@ -41,18 +41,18 @@ export const PRESSURE_ANNOTATIONS: Record<string, { note: string; source: "compu
 
 // Manual fallback values for pre-v4 rounds without a preserved current template.
 export const AUTHORED_PRESSURE: Record<string, number> = {
-  "Round 1": 0.15,
-  "Round 2": 0.35,
-  "Round 3": 0.55,
+  "Evolution 1": 0.15,
+  "Evolution 2": 0.35,
+  "Evolution 3": 0.55,
 };
 
 // Map round number → requirements version that round targeted.
 export const ROUND_TO_VERSION: Record<string, string> = {
-  "Round 1": "v1",
-  "Round 2": "v2",
-  "Round 3": "v3",
-  "Round 4": "v5", // v4 template now carries the v5 addendum — single source of truth
-  "Round 5": "v5",
+  "Evolution 1": "v1",
+  "Evolution 2": "v2",
+  "Evolution 3": "v3",
+  "Evolution 4": "v5", // v4 template now carries the v5 addendum — single source of truth
+  "Evolution 5": "v5",
 };
 
 /**
@@ -62,23 +62,23 @@ export const ROUND_TO_VERSION: Record<string, string> = {
  */
 export function buildTrackData(): HypothesisTrackPoint[] {
   const roundForVersion: Record<string, string> = {
-    v1: "Round 1", v2: "Round 1", v3: "Round 1", v4: "Round 1", v5: "Round 1",
-    v6: "Round 2", v7: "Round 2",
-    v8: "Round 3",
-    v9: "Round 4", v10: "Round 4",
+    v1: "Evolution 1", v2: "Evolution 1", v3: "Evolution 1", v4: "Evolution 1", v5: "Evolution 1",
+    v6: "Evolution 2", v7: "Evolution 2",
+    v8: "Evolution 3",
+    v9: "Evolution 4", v10: "Evolution 4",
   };
   const bareRoundForVersion: Record<string, string> = {
-    v1: "Round 2", v2: "Round 2",
-    v3: "Round 3",
-    v4: "Round 4", v5: "Round 4",
+    v1: "Evolution 2", v2: "Evolution 2",
+    v3: "Evolution 3",
+    v4: "Evolution 4", v5: "Evolution 4",
   };
   const emergentRoundForVersion: Record<string, string> = {
-    v1: "Round 2",
-    v2: "Round 3",
-    v3: "Round 4", v4: "Round 4",
+    v1: "Evolution 2",
+    v2: "Evolution 3",
+    v3: "Evolution 4", v4: "Evolution 4",
   };
 
-  const rounds = ["Round 1", "Round 2", "Round 3", "Round 4", "Round 5"];
+  const rounds = ["Evolution 1", "Evolution 2", "Evolution 3", "Evolution 4", "Evolution 5"];
   const points: HypothesisTrackPoint[] = rounds.map((round) => ({
     round,
     freedom: null,
@@ -156,26 +156,26 @@ export function pressureForRound(round: string): { value: number; tier: string; 
 
 export const FUTURE_ROUNDS = [
   {
-    round: "Round 5",
+    round: "Evolution 5",
     title: "Greenfield, three-condition, requirements v5",
     body: "**Status:** planned — blocked on HTTP 529 investigation before GAD v11 retry.\n\n**Conditions:** GAD v11, Bare v6, Emergent v5. Serial execution per gad-67.\n\n**What we expect to learn:** (a) does the compound-skills hypothesis hold when requirements expand by 21 items simultaneously? (b) can the GAD workflow finally finish a round against pressure-tier High without api interruption? (c) does Bare's monotonic improvement continue, or does the v5 complexity leap break the pattern?\n\n**Hypothesis tested:** CSH primary. Freedom hypothesis as secondary measurement.",
   },
   {
-    round: "Round 6",
+    round: "Evolution 6",
     title: "Content-pack injection experiment",
-    body: "**Status:** queued — depends on gad-66 content-pack extraction CLI.\n\n**New eval track:** escape-the-dungeon-inherited-content. Runs a new build on top of a preserved content pack (spells, runes, items, NPCs) extracted from the best round-5 runs.\n\n**Hypothesis tested:** content-driven hypothesis. Distinct from freedom and CSH — we do NOT compare content-pack runs to greenfield runs on the same rubric.",
+    body: "**Status:** queued — depends on gad-66 content-pack extraction CLI.\n\n**New eval track:** escape-the-dungeon-inherited-content. Runs a new build on top of a preserved content pack (spells, runes, items, NPCs) extracted from the best round-5 runs.\n\n**Hypothesis tested:** content-driven hypothesis. Distinct from freedom and CSH — we do NOT compare content-pack runs to runs on the same rubric.",
   },
   {
-    round: "Round 7",
+    round: "Evolution 7",
     title: "Codex vs Claude Code comparison",
     body: "**Status:** queued — depends on gad.json `runner` field extension.\n\n**Setup:** identical requirements (likely v4 for cleanest comparison, re-run as a hypothesis revisit per gad-72), identical workflows, different agent runtime. One worktree per runner, serial execution.\n\n**Hypothesis tested:** runtime-effect hypothesis. New line of data, not a new requirements version.",
   },
 ];
 
 export const ROADMAP_PRESSURE_ROUNDS = [
-  "Round 1",
-  "Round 2",
-  "Round 3",
-  "Round 4",
-  "Round 5",
+  "Evolution 1",
+  "Evolution 2",
+  "Evolution 3",
+  "Evolution 4",
+  "Evolution 5",
 ] as const;

@@ -70,7 +70,7 @@ export function PlayableFilterBar({
               window.history.replaceState(
                 null,
                 "",
-                `${window.location.pathname}#play?round=${val.replace("Round ", "")}`
+                `${window.location.pathname}#play?round=${val.replace("Evolution ", "")}`
               );
             } else {
               window.history.replaceState(null, "", `${window.location.pathname}#play`);

@@ -31,7 +31,7 @@ export function EmergentCshSignalSection({ scoredRuns }: EmergentCshSignalSectio
       {scoredRuns.length < 2 && (
         <p className="mt-4 text-xs text-muted-foreground">
           Only {scoredRuns.length} scored run so far — not enough signal to claim the hypothesis is
-          holding OR failing. Round 5 will be the first real trial against v5 requirements.
+          holding OR failing. Evolution 5 will be the first real trial against v5 requirements.
         </p>
       )}
       <p className="mt-4 text-[11px] text-muted-foreground">

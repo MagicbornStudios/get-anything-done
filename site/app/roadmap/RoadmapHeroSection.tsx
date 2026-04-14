@@ -14,7 +14,7 @@ export default function RoadmapHeroSection() {
         preset="hero"
         title={
           <>
-            Round by round, <span className="gradient-text">pressure climbs.</span>
+            Evolution by evolution, <span className="gradient-text">pressure climbs.</span>
           </>
         }
       />

@@ -20,7 +20,7 @@ export function ContentDrivenMeasureSection() {
           </CardHeader>
           <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
             Given the same token budget, does the agent produce a bigger game when the content pack already exists? More
-            rooms, more encounters, deeper mechanics — measured against a greenfield run of the same agent with the same
+            rooms, more encounters, deeper mechanics — measured against a runs of the same agent with the same
             budget.
           </CardContent>
         </Card>

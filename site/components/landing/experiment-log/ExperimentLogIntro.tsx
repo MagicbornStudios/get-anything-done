@@ -9,7 +9,7 @@ export function ExperimentLogIntro() {
       preset="hero-compact"
       title={
         <>
-          Round by round. <span className="gradient-text">What we asked.</span> What the agents
+          Evolution by evolution. <span className="gradient-text">What we asked.</span> What the agents
           actually shipped.
         </>
       }
