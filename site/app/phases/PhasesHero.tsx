@@ -6,7 +6,7 @@ import { PhasesStat } from "@/app/phases/PhasesStat";
 
 export function PhasesHero({ phases }: { phases: PhaseRecord[] }) {
   return (
-    <SiteSection>
+    <SiteSection cid="phases-hero-site-section">
       <SiteSectionHeading
         kicker="Phases"
         as="h1"
@@ -35,3 +35,4 @@ export function PhasesHero({ phases }: { phases: PhaseRecord[] }) {
     </SiteSection>
   );
 }
+

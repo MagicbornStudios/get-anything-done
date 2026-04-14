@@ -10,7 +10,7 @@ const crosscutCfg = selfEvalConfig.crosscut_detection;
 
 export function FormulasPressureSection() {
   return (
-    <SiteSection tone="muted" className="border-t border-border/60">
+    <SiteSection cid="formulas-pressure-section-site-section" tone="muted" className="border-t border-border/60">
       <SiteSectionHeading kicker="Phase pressure" title="How hard was this phase, really?" />
       <SiteProse className="mt-5 max-w-4xl">
         Pressure is a Shannon-inspired approximation of the total information burden a phase imposed on whoever worked it. It combines <strong>raw task count</strong> (entropy H — the bits needed to describe the phase&apos;s workload) with <strong>crosscut count</strong> (mutual information I(X;Y) — tasks that span multiple subsystems, carrying information about both). Weighted sum approximates the agent&apos;s mental state requirement.
@@ -117,3 +117,4 @@ export function FormulasPressureSection() {
     </SiteSection>
   );
 }
+

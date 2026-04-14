@@ -6,7 +6,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function StandardsTestingLayersSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="standards-testing-layers-section-site-section">
       <Identified as="StandardsTestingLayersSection">
       <SiteSectionHeading
         icon={ClipboardCheck}
@@ -61,3 +61,4 @@ export default function StandardsTestingLayersSection() {
     </SiteSection>
   );
 }
+

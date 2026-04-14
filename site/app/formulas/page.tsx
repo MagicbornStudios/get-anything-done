@@ -14,7 +14,7 @@ export const metadata = {
 export default function FormulasPage() {
   return (
     <MarketingShell>
-      <SiteSection>
+      <SiteSection cid="page-site-section">
         <Identified as="FormulasPageIntro">
           <SiteSectionHeading
             kicker="Formulas"
@@ -52,3 +52,4 @@ export default function FormulasPage() {
     </MarketingShell>
   );
 }
+

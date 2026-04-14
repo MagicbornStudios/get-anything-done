@@ -19,7 +19,7 @@ export function ProjectRequirementsSection({ projectId: _projectId }: { projectI
   const prev = currentIdx > 0 ? versions[currentIdx - 1] : null;
 
   return (
-    <SiteSection className="border-b-0 border-t border-border/60">
+    <SiteSection cid="project-requirements-section-site-section" className="border-b-0 border-t border-border/60">
       <Identified as="ProjectRequirements">
       <SiteSectionHeading
         kicker="Requirements history"

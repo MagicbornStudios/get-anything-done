@@ -5,7 +5,7 @@ import { FUTURE_ROUNDS, pressureForRound } from "./roadmap-shared";
 
 export default function RoadmapPlannedRoundsSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="roadmap-planned-rounds-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={ArrowRight}
         kicker="Planned rounds"
@@ -29,3 +29,4 @@ export default function RoadmapPlannedRoundsSection() {
     </SiteSection>
   );
 }
+

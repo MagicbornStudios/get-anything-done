@@ -89,7 +89,7 @@ export function buildDataSources(): DataSource[] {
       source: "TRACE.json human_review.dimensions.skill_inheritance_effectiveness",
       formula: "Human-rated 0.0–1.0 on whether the run productively inherited + evolved + authored skills",
       trust: "human",
-      page: "/emergent",
+      page: "/skeptic",
       notes: "The compound-skills hypothesis test signal. Hygiene component (file-mutation events + CHANGELOG validity) is queued as GAPS G11 — automatable.",
     },
     // Tool use mix

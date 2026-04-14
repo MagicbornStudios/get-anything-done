@@ -5,7 +5,7 @@ import type { ProducedArtifacts } from "@/lib/eval-data";
 
 export function RunProducedArtifactsSection({ produced }: { produced: ProducedArtifacts }) {
   return (
-    <SiteSection>
+    <SiteSection cid="run-produced-artifacts-section-site-section">
       <Identified as="RunProducedArtifacts">
       <SiteSectionHeading
         kicker="What the agent built for itself"

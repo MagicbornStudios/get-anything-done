@@ -7,7 +7,7 @@ const latest = selfEvalData.latest;
 
 export function FormulasLoopComplianceSection() {
   return (
-    <SiteSection tone="muted" className="border-t border-border/60">
+    <SiteSection cid="formulas-loop-compliance-section-site-section" tone="muted" className="border-t border-border/60">
       <SiteSectionHeading kicker="Framework compliance" title="How much of the work is actually tracked through the framework?" />
       <SiteProse className="mt-5 max-w-4xl">
         The old loop-compliance ratio overcounted startup ritual and undercounted actual framework use. The current
@@ -44,3 +44,4 @@ export function FormulasLoopComplianceSection() {
     </SiteSection>
   );
 }
+

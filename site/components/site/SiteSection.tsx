@@ -1,7 +1,6 @@
 "use client";
 
 import type { MouseEvent, ReactNode } from "react";
-import { useId } from "react";
 import { usePathname } from "next/navigation";
 import { BandDevPanel } from "@/components/devid/BandDevPanel";
 import { useDevId } from "@/components/devid/DevIdProvider";
@@ -51,14 +50,6 @@ function routePrefix(pathname: string) {
   return tokens.length > 0 ? tokens.join("") : "Route";
 }
 
-function toKebab(value: string) {
-  return value
-    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
 function SiteSectionSurface({
   children,
   id,
@@ -74,9 +65,7 @@ function SiteSectionSurface({
   const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
   const pathname = usePathname() ?? "/";
   const prefix = routePrefix(pathname);
-  const rid = useId();
-  const autoSectionBandCid = `${toKebab(prefix)}-site-section-${rid.replace(/[^a-z0-9]/gi, "")}`;
-  const sectionBandCid = cid ?? stableBandCid ?? autoSectionBandCid;
+  const sectionBandCid = cid ?? stableBandCid ?? id;
   const sectionBandLabel = sectionBandCid ?? `${prefix}SiteSection`;
   const searchHint = cid
     ? `cid="${cid}"`
@@ -167,3 +156,4 @@ export function SiteSection({
     </SiteSectionSurface>
   );
 }
+

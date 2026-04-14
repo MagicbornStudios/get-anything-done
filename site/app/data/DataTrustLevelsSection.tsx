@@ -6,7 +6,7 @@ import { TRUST_DESCRIPTION, TRUST_TINT } from "./data-shared";
 
 export default function DataTrustLevelsSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="data-trust-levels-section-site-section" tone="muted">
       <Identified as="DataTrustLevelsSection">
       <Identified as="DataTrustLevelsHeading" register={false}>
         <SiteSectionHeading kicker="Trust levels explained" />
@@ -31,3 +31,4 @@ export default function DataTrustLevelsSection() {
     </SiteSection>
   );
 }
+

@@ -15,7 +15,7 @@ export function SecurityOperationalStatusSection() {
   const runtimeCoveragePct = totalEvalRuns > 0 ? Math.round((knownEvalRuntimeRuns / totalEvalRuns) * 100) : 0;
 
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="security-operational-status-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={ShieldCheck}
         kicker="Operational status"
@@ -111,3 +111,4 @@ export function SecurityOperationalStatusSection() {
     </SiteSection>
   );
 }
+

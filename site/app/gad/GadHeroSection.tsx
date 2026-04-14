@@ -7,7 +7,7 @@ import { GITHUB_REPO } from "@/lib/catalog.generated";
 
 export function GadHeroSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="gad-hero-section-site-section">
       <Identified as="GadHeroSection">
       <Identified as="GadHeroHeading" register={false}>
         <SiteSectionHeading
@@ -74,3 +74,4 @@ export function GadHeroSection() {
     </SiteSection>
   );
 }
+

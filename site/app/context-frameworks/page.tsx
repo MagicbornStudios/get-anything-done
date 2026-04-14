@@ -19,7 +19,7 @@ export default function ContextFrameworksIndexPage() {
   const frameworks = [...CONTEXT_FRAMEWORKS].sort((a, b) => a.name.localeCompare(b.name));
   return (
     <MarketingShell>
-      <SiteSection>
+      <SiteSection cid="page-site-section">
         <Identified as="ContextFrameworksIntro">
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
             Context frameworks
@@ -114,3 +114,4 @@ export default function ContextFrameworksIndexPage() {
     </MarketingShell>
   );
 }
+

@@ -6,7 +6,7 @@ import { pressureForRound, ROADMAP_PRESSURE_ROUNDS } from "./roadmap-shared";
 
 export default function RoadmapPressureSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="roadmap-pressure-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={Flame}
         kicker="Pressure progression"
@@ -77,3 +77,4 @@ export default function RoadmapPressureSection() {
     </SiteSection>
   );
 }
+

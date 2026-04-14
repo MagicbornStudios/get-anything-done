@@ -2974,6 +2974,67 @@ export const ROUND_SUMMARIES: RoundSummary[] = [
 
 export const EVAL_PROJECTS: EvalProjectMeta[] = [
   {
+    "id": "app-forge/gad",
+    "project": "app-forge",
+    "species": "gad",
+    "name": "app-forge/gad",
+    "description": "Greenfield: agent builds app-forge from scratch using the full GAD framework. v1 spawn = execute phase 01 from apps/forge/.planning/plans/phase-01/PLAN.md against a fresh worktree.",
+    "workflow": "gad",
+    "contextFramework": "gad",
+    "baseline": null,
+    "constraints": {
+      "usesGadFramework": true,
+      "startsFromScratch": true,
+      "phaseScope": "01"
+    },
+    "scoringWeights": {
+      "requirementCoverage": 0.15,
+      "planningQuality": 0.15,
+      "perTaskDiscipline": 0.15,
+      "skillAccuracy": 0.1,
+      "timeEfficiency": 0.05,
+      "humanReview": 0.4
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "boots",
+          "label": "Boots clean",
+          "weight": 0.3,
+          "description": "`pnpm install` from monorepo root succeeds with apps/forge in the workspace; `pnpm dev --filter @portfolio/forge` boots Next.js without errors; `pnpm build --filter @portfolio/forge` produces a clean production build."
+        },
+        {
+          "key": "listing",
+          "label": "Generation listing works",
+          "weight": 0.3,
+          "description": "Index route at / renders a non-empty list of generations discovered under evals/<project>/species/<species>/v<N>/. Each card is clickable and navigates to the detail route."
+        },
+        {
+          "key": "detail",
+          "label": "Detail route renders metadata",
+          "weight": 0.2,
+          "description": "Detail route /g/[project]/[species]/[version] renders project, species, version, createdAt, worktreePath, and lineageParent (or 'none')."
+        },
+        {
+          "key": "discipline",
+          "label": "GAD discipline",
+          "weight": 0.1,
+          "description": "Phase 01 entries in STATE.xml + ROADMAP.xml flipped to done. TASK-REGISTRY.xml entries carry skill/agent/type attributes per GAD-D-104. SUMMARY.md exists with smoke checklist."
+        },
+        {
+          "key": "polish",
+          "label": "Polish",
+          "weight": 0.1,
+          "description": "README.md exists and documents the dev command + phase 01 scope. Code is reasonably organized with no obvious dead code or commented-out blocks."
+        }
+      ]
+    },
+    "domain": "app",
+    "techStack": "next.js",
+    "buildRequirement": "Next.js app booting in monorepo with phase 01 DoD met"
+  },
+  {
     "id": "escape-the-dungeon/bare",
     "project": "escape-the-dungeon",
     "species": "bare",
@@ -3031,7 +3092,7 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       ]
     },
     "domain": "game",
-    "techStack": null,
+    "techStack": "kaplay",
     "buildRequirement": "playable HTML game"
   },
   {
@@ -3100,7 +3161,7 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
       ]
     },
     "domain": "game",
-    "techStack": null,
+    "techStack": "kaplay",
     "buildRequirement": "playable HTML game"
   },
   {
@@ -3284,6 +3345,82 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "domain": "stories",
     "techStack": "remotion",
     "buildRequirement": "Remotion composition (src is build)"
+  },
+  {
+    "id": "grime-time/gad",
+    "project": "grime-time",
+    "species": "gad",
+    "name": "grime-time/gad",
+    "description": "Brownfield GAD species: continue development on the existing grime-time-site codebase with the full GAD framework (skills, agents, planning, evaluation).",
+    "workflow": "gad",
+    "contextFramework": "gad",
+    "baseline": "HEAD",
+    "constraints": {
+      "usesGadFramework": true,
+      "startsFromScratch": false
+    },
+    "scoringWeights": null,
+    "humanReviewRubric": null,
+    "domain": "site",
+    "techStack": "next.js",
+    "buildRequirement": null
+  },
+  {
+    "id": "magicborn/gad",
+    "project": "magicborn",
+    "species": "gad",
+    "name": "magicborn/gad",
+    "description": "Brownfield GAD species: continue manuscript/worldbuilding work using the full GAD framework with the manuscript content-skill overlay.",
+    "workflow": "gad",
+    "contextFramework": "gad",
+    "baseline": "HEAD",
+    "constraints": {
+      "usesGadFramework": true,
+      "startsFromScratch": false
+    },
+    "scoringWeights": null,
+    "humanReviewRubric": null,
+    "domain": "writing",
+    "techStack": "mdx",
+    "buildRequirement": null
+  },
+  {
+    "id": "mb-cli-framework/gad",
+    "project": "mb-cli-framework",
+    "species": "gad",
+    "name": "mb-cli-framework/gad",
+    "description": "Brownfield GAD species: continue development on the existing mb-cli-framework codebase with the full GAD framework.",
+    "workflow": "gad",
+    "contextFramework": "gad",
+    "baseline": "HEAD",
+    "constraints": {
+      "usesGadFramework": true,
+      "startsFromScratch": false
+    },
+    "scoringWeights": null,
+    "humanReviewRubric": null,
+    "domain": "cli",
+    "techStack": "node+ink",
+    "buildRequirement": null
+  },
+  {
+    "id": "repub-builder/gad",
+    "project": "repub-builder",
+    "species": "gad",
+    "name": "repub-builder/gad",
+    "description": "Brownfield GAD species: continue development on the existing repub-builder codebase with the full GAD framework.",
+    "workflow": "gad",
+    "contextFramework": "gad",
+    "baseline": "HEAD",
+    "constraints": {
+      "usesGadFramework": true,
+      "startsFromScratch": false
+    },
+    "scoringWeights": null,
+    "humanReviewRubric": null,
+    "domain": "cli",
+    "techStack": "vite+react",
+    "buildRequirement": null
   }
 ];
 
@@ -4496,6 +4633,18 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-185",
+    "title": "Canonical planning-root shape: minimum file set, optional set, legacy list, and audit binding",
+    "summary": "Every GAD planning root (`[[planning.roots]]` in `gad-config.toml`) has a canonical shape. The canonical MINIMUM file set that every `.planning/` directory MUST contain is four files: `STATE.xml`, `ROADMAP.xml`, `TASK-REGISTRY.xml`, `DECISIONS.xml`. This is the \"everyone can run `gad snapshot`/`state`/`tasks`/`decisions` against it\" bar and is present in 7/7 audited roots. The canonical OPTIONAL file set is `REQUIREMENTS.xml`, `ERRORS-AND-ATTEMPTS.xml`, `HUMAN-TODOS.xml`, `BLOCKERS.xml`, `PROJECT.xml` (reserved for future identity-file standardization — currently unused by any root), `DOCS-MAP.xml`, `AGENTS.md`, `CONVENTIONS.md`, `README.md`, plus the directories `phases/`, `plans/`, `proto-skills/`, `workflows/`, `notes/`, `specs/`, `todos/`, `debug/`, `reports/`, `sessions/`, `codebase/`, `docs/`, `archive/`, `templates/`, `context-frameworks/`, `quick/`, and transient `.eval-runs/`. The LEGACY/deprecated list that `gad projects audit` should warn on: `gad.json` (→ `species.json`, phase 43 / 42.4-14), `PROJECT.md`/`STATE.md`/`ROADMAP.md`/`DECISIONS.md`/`REQUIREMENTS.md` (→ canonical XML equivalents), `config.json` inside `.planning/` (superseded by repo-root `gad-config.toml`), `REPOPLANNER-TO-GAD-MIGRATION-GAPS.md` (one-shot migration note), and project-local `skills/` as a proto-skill staging dir (→ `.planning/proto-skills/` per decision gad-183). The definition lives at `vendor/get-anything-done/references/project-shape.md` with per-file minimum XML headers, the full audit matrix across all seven registered roots, and flags for out-of-canonical shape (grime-time has legacy `skills/`; `gad`/`global` have legacy `config.json`; magicborn/mb-cli/repub-builder are \"thin\" — missing optional `REQUIREMENTS.xml` and `ERRORS-AND-ATTEMPTS.xml` but still canonical-minimum-clean). That references doc is the contract that both `gad projects init` (task 42.4-08, not yet shipped) and `gad projects audit` (task 42.4-09, this task) agree on.",
+    "impact": "(1) `bin/gad.cjs projects audit` now computes a canonical-shape report per root — new helper `computeCanonicalShape(planDir)` plus three additive checks (`canonical_minimum`, `canonical_optional`, `canonical_legacy`) per root and a new \"Canonical planning-root shape\" summary block under the existing table, each citing `references/project-shape.md` as the source of truth. Legacy required/recommended checks are kept untouched for backwards compatibility. (2) Task 42.4-08 (`gad projects init` canonical-XML scaffold) now has a concrete contract to implement: the six per-file minimum XML headers in §5 of the references doc are what it MUST write, and the four-file minimum in §2 is what it MUST produce on every invocation regardless of format flag. (3) `PROJECT.xml` is NOT in the canonical minimum — it is present in 0/7 audited roots, so promoting it would immediately flag every project as out-of-canonical. It is left in the optional list with a \"reserved for a future phase\" note; any future decision that wants to require it must also ship the backfill. (4) The audit command is additive, not a refactor: existing JSON consumers see three new `check` entries per project but no renames or removals. (5) Follow-up cleanup candidates surfaced by the audit: grime-time legacy `skills/` directory, framework + global legacy `config.json`, and three \"thin\" roots that would benefit from capturing `REQUIREMENTS.xml` / `ERRORS-AND-ATTEMPTS.xml`. None are blocking; all are informational."
+  },
+  {
+    "id": "gad-184",
+    "title": "Project ⊇ Species inheritance contract: merge-at-read-time eval loader",
+    "summary": "Every eval project has one `evals/&lt;project&gt;/project.json` declaring defaults (`techStack`, `contextFramework`, `installedSkills`, `defaultContent`, domain/description/rubric metadata) and one `evals/&lt;project&gt;/species/&lt;species&gt;/species.json` per species. Species may override any project field and also carry species-only fields (`inherits_from`, `dna`, species-specific `description`). Readers — CLI (`gad eval list/run/preserve`), the site prebuild (`build-site-data.mjs`), and the forge editor — MUST NOT hand-merge project + species. Policy: all access goes through `lib/eval-loader.cjs` which exposes `loadProject`, `loadSpecies`, `loadAllSpeciesRaw`, `loadResolvedSpecies`, `loadAllResolvedSpecies`, `mergeProjectSpecies`, and `resolveInheritanceChain`. Merge semantics are: (1) start from project.json as base; (2) walk `inherits_from` deepest-ancestor first, applying each species on top; (3) apply target species last with last-write-wins; (4) array fields REPLACE, never concat (a future `_extends` convention could opt into merging but is out of scope); (5) species-only fields stay on the resolved shape and never back-propagate to the shared project defaults; (6) cycles throw a clear `inherits_from cycle detected: a -&gt; b -&gt; a` error; (7) unknown parent references throw. Cross-references forge-10 which captured the editor-UX rationale (separate \"edit project\" vs \"edit species\" surfaces demand a single canonical merger).",
+    "impact": "(1) `lib/eval-loader.cjs` is the canonical location for project-species composition; adding or changing merge rules is one file, one function. (2) `bin/gad.cjs eval list` and `site/scripts/build-site-data.mjs scanEvalProjects` now route through the loader, replacing hand-rolled project.json + species.json combinations. (3) Hermetic inheritance tests live at `tests/eval-loader-inheritance.test.cjs` and lock the contract (5 required cases + 2 smoke checks, all green via `node --test`). (4) The forge editor can safely present \"edit project settings\" vs \"edit species settings\" as separate surfaces: whatever the operator edits at each level round-trips through the same merge on reload. (5) Other legacy `gad.json` reads inside `bin/gad.cjs` (eval run metadata, eval verify, eval review rubric, eval report) are orthogonal rename fallout from 42.4-14 and should migrate to the loader in a follow-up surgical pass — not refactored here to keep 42.4-15 scoped. (6) Arrays replacing (not concatenating) is a load-bearing choice: callers who want to \"extend\" a project-level skill list must spell out the full species list explicitly until an `_extends` convention is designed."
+  },
   {
     "id": "gad-183",
     "title": "Proto-skills stage inside the owning project's `.planning/` and install outward into runtimes on demand",
@@ -9381,6 +9530,235 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": []
   },
   {
+    "id": "42.4-08",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "`gad projects init` defaults to canonical XML and scaffolds the full file set. Currently it writes 4 markdown template files (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md) containing literal template placeholders. The rest of the monorepo uses 6+ canonical XML files (STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml, ERRORS-AND-ATTEMPTS.xml, REQUIREMENTS.xml). Surfaced 2026-04-14 during app-forge scaffolding — the markdown output had to be hand-converted to XML, see ERRORS-AND-ATTEMPTS entry `forge-init-md-misaction-2026-04-14`. Fix: update `bin/gad.cjs projects init` (or wherever the scaffold lives) to write the canonical XML file set with valid empty headers. Optional `--format md` flag for the legacy markdown path. Also scaffold the missing files (TASK-REGISTRY, DECISIONS, ERRORS-AND-ATTEMPTS) regardless of format.",
+    "keywords": [
+      "cli",
+      "projects-init",
+      "scaffold",
+      "xml",
+      "canonical-format",
+      "gad-185"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-09",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Project shape format review and refresh. The \"canonical XML file set\" for a planning root has drifted over time (some projects have HUMAN-TODOS.xml, some have phases/, some have plans/, some have proto-skills/, some have notes/). There is no single documented shape that `gad projects init` and `gad health` agree on. Audit the actual file sets across all registered planning roots (global, get-anything-done, magicborn, app-forge, etc.), define the canonical minimum + canonical optional file set, document it in references/, and align both `projects init` and `gad health` against it. Surfaced 2026-04-14 by the user during app-forge scaffolding: \"the project shape format needs to be reviewed/updated soon.\"",
+    "keywords": [
+      "schema",
+      "project-shape",
+      "canonical-format",
+      "health",
+      "audit",
+      "references",
+      "gad-185"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-10",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Audit existing `gad sink` and `gad docs` command surface for the markdown→XML conversion gap before adding new commands. CORRECTION 2026-04-14: original framing of this task assumed no conversion path existed and proposed `gad migrate-schema --from md --to xml`. User pointed out we already have `gad docs compile`, `gad sink compile/decompile/sync/diff/status/validate` — bidirectional sink flow exists. `gad sink decompile` specifically \"ensures .planning/ dirs exist for all projects; creates stubs for missing source files\" which is close to but not identical to the MD→XML conversion needed. Audit: does any existing command convert markdown PROJECT/REQUIREMENTS/ROADMAP/STATE prose into canonical XML? If yes, document it and close this task. If no, decide whether to extend `gad sink decompile` to handle the case or add a focused subcommand. Don't add new commands until we've ruled out the existing surface.",
+    "keywords": [
+      "cli",
+      "sink",
+      "docs",
+      "convert",
+      "md-to-xml",
+      "audit",
+      "decompile"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-11",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "docs",
+    "goal": "Sink coherence investigation: map the full doc compilation pipeline so agents know which surface to edit when. Concern surfaced 2026-04-14 by user: \"I am pretty sure we have a planning sink set up. We need to investigate why at some point and make sure all our docs compile to the same place.\" The repo has `[planning] docs_sink = \"docs\"` in gad-config.toml, `[[docs.projects]]` and `[[planning.roots]]` registries, `gad docs compile`, `gad sink compile/sync/decompile/diff/status/validate`, plus `gad site compile` (phase 10). It's unclear from the outside which command is canonical for: (a) editing a planning root's ROADMAP/DECISIONS/etc, (b) updating a docs.projects entry, (c) keeping the compiled MDX in `docs/&lt;id&gt;/planning/` in sync with `.planning/` source, (d) what happens when both source and sink drift. Output: a short references/sink-pipeline.md doc explaining the full flow + a quick-reference table mapping \"I want to edit X\" → \"use command Y\" → \"verify with Z.\" Then update relevant skills (new-project, plan-phase, execute-phase) to reference it.",
+    "keywords": [
+      "sink",
+      "docs",
+      "compile",
+      "pipeline",
+      "investigation",
+      "documentation",
+      "coherence"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-12",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Multi-root eval discovery. Add `[[evals.roots]]` array to `gad-config.toml` mirroring `[[planning.roots]]`. Default root stays `vendor/get-anything-done/evals/` for backwards-compat. New roots like parent-repo `evals/` (or `apps/forge/evals/`) become first-class. `gad eval list/run/preserve/verify/open/review/report` all walk the union of roots. Eval project ids must be unique across roots — duplicate detection at load time. Surfaced 2026-04-14 during app-forge planning: forge wants to consume evals from the parent custom_portfolio repo without polluting the framework submodule with downstream user projects, AND forge's own eval project (app-forge) needs to live outside the GAD submodule because forge is not a framework component. Blocks app-forge eval bootstrap (decision forge-09 plan/build separation requires fresh-agent spawn for any forge implementation work).",
+    "keywords": [
+      "multi-root",
+      "evals",
+      "discovery",
+      "gad-config",
+      "roots"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-13",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "create-skill",
+    "type": "skill",
+    "goal": "New skill + slash command `/gad-eval-spawn` for kicking off eval runs from inside a Claude Code session. Wraps `gad eval run --project &lt;name&gt; --execute` to get the JSON spec, then uses the orchestrator's Agent/spawn capability to launch a worktree-isolated Claude (or other runtime) agent against the spec. Writes a session marker (probably under `.planning/.eval-runs/&lt;run-id&gt;.json`) so the orchestrator knows which run is in flight, can poll status, and can preserve outputs via `gad eval preserve` after completion. Authored via the `create-skill` skill so we dogfood the skill-authoring pattern. Skill name: `gad-eval-spawn`. Slash command: `/gad-eval-spawn &lt;project&gt; [--runtime claude-code] [--baseline HEAD]`. Surfaced 2026-04-14 by user: \"we need a skill use create skill and also our command workflow pattern for /gad-project-eval-run or whatever we should call it to actually kick start the flow in claude code.\" Per decision forge-09 (plan/build separation), this skill is the seam between the orchestrating session and the spawned builder session.",
+    "keywords": [
+      "skill",
+      "slash-command",
+      "eval-spawn",
+      "create-skill",
+      "orchestrator",
+      "worktree",
+      "dogfood",
+      "forge-09",
+      "forge-seam"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-14",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Audit and finish phase 43 species.json migration. Phase 43 unified the eval schema around `evals/&lt;project&gt;/project.json` + `evals/&lt;project&gt;/species/&lt;species&gt;/species.json`, but escape-the-dungeon's existing species directories still use `gad.json` instead of `species.json`. Decide canonical name (recommend: `species.json` per phase 43 spec) and either: (a) rename `gad.json` → `species.json` across all existing species in `vendor/get-anything-done/evals/`, OR (b) update phase 43 prose + the CLI loader to treat `gad.json` as the canonical name and abandon `species.json`. User direction 2026-04-14: do the rename to species.json. Update CLI loaders, build-site-data.mjs, eval-preservation tests, and any references in skills/workflows/docs. Pick one shape so app-forge's species file isn't ahead of reality and so the project ⊇ species inheritance contract (42.4-15) has a stable file shape to read from.",
+    "keywords": [
+      "schema",
+      "species-json",
+      "gad-json",
+      "rename",
+      "phase-43-cleanup",
+      "migration"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-15",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Project ⊇ Species inheritance contract in the CLI eval loader. `project.json` declares defaults: `techStack`, `contextFramework`, `installedSkills`, `defaultContent` (paths or refs to default assets/files/scaffolding). `species.json` may override any of those + adds species-only fields: `inherits_from` (parent species for cross-species lineage), `dna` (workflow + skill manifest summary), species-specific `description`. The CLI's eval loaders (used by `gad eval list/run/preserve` and by build-site-data.mjs) MUST merge project + species at load time and return the merged shape — readers should never manually combine them. Shipped: new `lib/eval-loader.cjs` exporting `loadProject`, `loadSpecies`, `loadAllSpeciesRaw`, `loadResolvedSpecies`, `loadAllResolvedSpecies`, `mergeProjectSpecies`, `resolveInheritanceChain`. Merge semantics per decision gad-184: project defaults → inherits_from chain (deepest ancestor first) → target species; last write wins; arrays REPLACE not merge; species-only fields (inherits_from, dna, description) do not back-propagate to project; cycles throw. Wired `bin/gad.cjs eval list` to the loader and swapped `site/scripts/build-site-data.mjs scanEvalProjects` to use `loadResolvedSpecies` so the site sees the merged shape. Hermetic tests in `tests/eval-loader-inheritance.test.cjs` cover (a)-(e) plus loadAllResolvedSpecies + pure-function spot check (7/7 pass via `node --test`). Other legacy `gad.json` reads in bin/gad.cjs (eval run, eval verify, eval review, eval open/report) are orthogonal rename fallout and left for a separate surgical pass.",
+    "keywords": [
+      "schema",
+      "inheritance",
+      "project-species",
+      "merge",
+      "loader",
+      "forge-10",
+      "gad-184"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-16",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "docs",
+    "goal": "Forge proving-ground spec: formalize \"forge produces a passing escape-the-dungeon generation from its existing REQUIREMENTS.md via the editor's spawn flow\" as a measurable acceptance criterion. Decision forge-11 captures the why. Output: checklist doc at `apps/forge/.planning/plans/forge-proving-ground.md` defining PG-01..PG-09 (build preserved, clean headless load, zero console.error, game root mounts, player renders, tilemap renders, input moves player, no unhandled rejections, probe runtime &lt; 30s). Historical comparison table retroactively scores all 12 ETD gad-species generations (v1..v12): 4 have preserved builds (v7, v8, v9, v10), exactly 1 (v8) has an explicit SCORE.md \"Build requirement gate PASSED\" annotation, and PG-02..PG-08 are `?` across the board because no mechanical probe has ever run against an ETD build. GAPs flagged: no Playwright harness in repo (phase 08 scope), no canonical ETD root selector / player hook, input scheme varies arrow vs WASD. DOG-02 in `apps/forge/.planning/REQUIREMENTS.xml` and phase 08 success criteria in `apps/forge/.planning/ROADMAP.xml` both updated to cite the checklist. Last of the 42.4-12..16 framework gates blocking app-forge phase 01.",
+    "keywords": [
+      "proving-ground",
+      "etd",
+      "acceptance",
+      "measurable",
+      "dog-02",
+      "forge-11",
+      "docs",
+      "forge-proving-ground-md"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-17",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Implement `gad planning hydrate` — the MD → XML inverse of `gad docs compile`. Closes the follow-up flagged by task 42.4-10's audit (references/sink-md-xml-audit.md §6). Subcommand walks configured planning roots (or `--projectid`/`--all`), reads sibling markdown for each canonical slot (STATE, ROADMAP, DECISIONS, TASK-REGISTRY, REQUIREMENTS), and writes canonical XML into the root's `.planning/` directory. Supports `--from &lt;dir&gt;` to read MD from an external source dir (default is the planning dir itself), `--dry-run` to print the generated XML without writing, and `--force` to overwrite existing XML (prior XML is archived under `.planning/archive/xml/&lt;ts&gt;/` first). Non-force runs skip slots where the XML already exists, preserving the \"XML is authoritative\" invariant from decision 42.4-10.",
+    "keywords": [
+      "cli",
+      "planning",
+      "hydrate",
+      "md-to-xml",
+      "docs-compiler",
+      "42.4-10-followup",
+      "sink-md-xml-audit"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-18",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cleanup",
+    "goal": "Delete dead project-level `gad.json` fallthrough reads in `bin/gad.cjs` (decision gad-184). Task 42.4-14 renamed `evals/&lt;project&gt;/gad.json` to species-level `evals/&lt;project&gt;/species/&lt;sp&gt;/species.json`, but five call sites in `bin/gad.cjs` (buildEvalPrompt / eval run metadata + traceScaffold / eval verify / eval review --rubric / eval readme) still read from the old project-level path. Because the file no longer exists, every read silently fell back to `{}` and every downstream field rendered as a default or dash — legacy fallback fallout flagged in task 42.4-15's note. Delete the reads; inline defaults where a field must remain; rewire `eval review --rubric` and `eval readme` through `lib/eval-loader.cjs::loadAllResolvedSpecies` so they pull `humanReviewRubric` / description / domain / tech stack / build requirement from the resolved-species shape instead.",
+    "keywords": [
+      "cleanup",
+      "eval",
+      "gad-json",
+      "species-json",
+      "dead-code",
+      "gad-184",
+      "42.4-14-followup",
+      "42.4-15-followup"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-19",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Normalize species.json keys to camelCase (decision gad-184, follow-up to task 42.4-15). The project ⊇ species inheritance loader (`lib/eval-loader.cjs`) does literal key matching via `applyLayer`, so when `project.json` declares `techStack` (camelCase) and a species declares `tech_stack` (snake_case), the species override silently fails and both keys end up on the merged shape. Per gad-184 contract, camelCase is canonical. Rename `tech_stack`, `build_requirement`, `human_review_rubric`, and `context_framework` to camelCase across every species.json under `evals/escape-the-dungeon/species/*/` and `evals/gad-explainer-video/species/*/`; confirm the eval loader needs no special-casing (it does not — literal-match is the point); update all consumers reading those snake_case keys.",
+    "keywords": [
+      "framework",
+      "eval-loader",
+      "inheritance",
+      "camelcase",
+      "snake-case",
+      "species-json",
+      "gad-184",
+      "42.4-15-followup"
+    ],
+    "depends": []
+  },
+  {
     "id": "43-01",
     "phaseId": "43",
     "status": "done",
@@ -9493,11 +9871,11 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "43-08",
     "phaseId": "43",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
-    "goal": "Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" with \"generation N\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). Add \"DNA\" and \"spawn\" terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.",
+    "goal": "Update site display strings across vendor/get-anything-done/site/. Replaced user-facing \"Round N\" → \"Evolution N\" and \"Round by round\" → \"Evolution by evolution\" across 18 site files (hypotheses-data, roadmap-shared, MethodologyCompositeWeightsCatalog, content-driven, findings, projects, freedom, requirements, methodology template matrix). Internal parsers that read \"Round \" literals updated in lockstep. Dropped greenfield/brownfield framing entirely — incidental copy stripped, ProjectsIntro rewritten around species, DOMAIN_MAP collapsed to two surviving projects, projects-shared collapsed from 6 mode-keyed entries to 3 species-keyed entries. Deleted EvalLineageGraph + MethodologyLineageSection (their only purpose was the dropped lineage framing). Added species/id fields to EvalRunRecord/EvalTemplateAsset/PlanningZipAsset/EvalProjectMeta/CurrentRequirementsFile interfaces. Build runs clean, all 8 preservation tests pass, type errors limited to 5 pre-existing issues unrelated to phase 43.",
     "keywords": [
       "site",
       "display",
@@ -9541,9 +9919,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "43-11",
     "phaseId": "43",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "docs",
     "goal": "Update ROADMAP.xml phase 44.5 title from \"Brood Editor\" to \"Species Editor\" and rewrite its goal to drop \"brood\" / \"Brood Editor\" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the \"v4 brood\" example phrasing. Closed phase prose stays verbatim per D-15.",
     "keywords": [
@@ -9551,6 +9929,55 @@ export const ALL_TASKS: TaskRecord[] = [
       "phase-44.5",
       "phase-45",
       "brood-rename"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44-01",
+    "phaseId": "44",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "/project-market ProjectCard gains a dev-only Launch eval button that actually runs `gad eval run --project &lt;id&gt; --execute` via a Node child_process spawn from the dev server and streams stdout/stderr back to the browser. POST /api/dev/launch-eval refuses unless NODE_ENV=development. First cut is the live run path; legacy planning-root migration and app-forge build-preservation are split into separate tasks.",
+    "keywords": [
+      "project-market",
+      "launcher",
+      "child-process",
+      "site",
+      "dev-bridge"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44-02",
+    "phaseId": "44",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "cleanup",
+    "goal": "Migrate legacy planning roots (grime-time-site, repub-builder, mb-cli-framework, magicborn, global) from planning-only shape into the canonical eval-project shape under `evals/&lt;project&gt;/project.json` + `evals/&lt;project&gt;/species/&lt;species&gt;/species.json` so they appear on /project-market with launch affordance. Per user alignment 2026-04-14: \"every project IS an eval project — no separate non-eval card shape.\" For each root: (1) decide canonical species (likely just one — the project itself), (2) write project.json + species.json with minimum fields (id, name, description, domain, techStack, contextFramework=gad), (3) register under [[evals.roots]] in gad-config.toml if not already, (4) verify it shows up in `gad eval list` and on /project-market. Does not require porting existing planning files — legacy .planning/ trees stay where they are; the eval shape is a thin overlay for launcher purposes.",
+    "keywords": [
+      "migration",
+      "eval-shape",
+      "planning-roots",
+      "project-market"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44-03",
+    "phaseId": "44",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "pipeline",
+    "goal": "App-forge build preservation: today `gad eval verify` flags app-forge v1 MISSING because preservation expects a statically-servable dist/ but forge is a Next.js app producing `.next/` (server components, no output:export). Decide the path: (a) add `output: \"export\"` to `apps/forge/next.config.mjs` and rewrite any server-only code so `next build` produces `out/`, then teach `gad eval preserve` to copy `out/` for Next.js eval species; (b) skip static preservation for forge entirely and instead preserve a headless Playwright trace / screenshot bundle as the \"build artifact\"; (c) run forge as a live dev server from the portfolio site when viewing its eval (no static artifact). Capture the decision, update `gad eval preserve` per the chosen path, re-run preservation for app-forge v1, and confirm `gad eval verify` goes green. Also file a runtime-identity record so the preservation audit's other MISSING column clears.",
+    "keywords": [
+      "eval-preservation",
+      "next-js",
+      "app-forge",
+      "gad-eval-verify"
     ],
     "depends": []
   },
@@ -9985,16 +10412,16 @@ export const ALL_PHASES: PhaseRecord[] = [
   },
   {
     "id": "44.5",
-    "title": "Brood Editor — local-dev project/eval playground",
+    "title": "Species Editor — local-dev project/species playground",
     "status": "planned",
-    "goal": "After the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project/species/brood as a live workspace rather than a read-only catalog entry. Scope: (1) A /brood-editor (or /projects/[id]/edit) route, gated to NODE_ENV=development, that renders the project's eval folder as an editable tree — requirements, gad.json, per-species overrides, manifest entries. (2) A Node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) Capture surfaces for species/population/generation/brood views keyed to the currently-edited project, reusing the Unity Asset Store card data from phase 44 but flipping the affordances from browse to mutate. (4) Explicit rejection of any Vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (5) Supports the \"I want to iterate without rebuilding the whole site every time\" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. Planning requirement: the bridge must refuse all requests unless NODE_ENV=development AND an explicit allow-list of commands is matched, so we never accidentally expose it in production builds.",
+    "goal": "After the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project and its species as a live workspace rather than a read-only catalog entry. **Two routes, reserved here, both gated to NODE_ENV=development**: (a) `/project-editor` (or `/projects/[id]/edit`) — the parent Project Editor surface, scoped to the whole project (requirements, project.json, species roster, shared assets); (b) `/species-editor` (or `/projects/[id]/species/[species]/edit`) — the per-species inner surface, scoped to a single species folder (species.json, per-species overrides, generation list). Scope: (1) Both routes render the relevant eval folder as an editable tree — requirements, project.json, per-species overrides, manifest entries. (2) A Node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) Capture surfaces for species/generation views keyed to the currently-edited project, reusing the Unity Asset Store card data from phase 44 but flipping the affordances from browse to mutate. (4) **Lovable/Bolt-style species-without-build visualization (D-17, D-18)**: the editor previews species + generation state without requiring a full site rebuild — content-model edits reflect immediately in the editor pane, so the operator iterates on requirements/species/generations the way Lovable and Bolt iterate on generated UI. (5) Explicit rejection of any Vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (6) Supports the \"I want to iterate without rebuilding the whole site every time\" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. Planning requirement: the bridge must refuse all requests unless NODE_ENV=development AND an explicit allow-list of commands is matched, so we never accidentally expose it in production builds.",
     "outcome": null
   },
   {
     "id": "45",
     "title": "Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model",
     "status": "planned",
-    "goal": "The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/brood/spawn/DNA/evolution language. Make the site read playfully (e.g. \"the bare species' v4 generation hatched a spawn that crushed the v4 brood\"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor. Must drop any remaining \"GAD+emergent\" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169.",
+    "goal": "The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/DNA/evolution language. Make the site read playfully (e.g. \"the bare species' generation 4 evolved a fitter descendant that crushed the earlier run\"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor. Must drop any remaining \"GAD+emergent\" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169.",
     "outcome": null
   }
 ];
@@ -10012,6 +10439,20 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-185",
+    "title": "Canonical planning-root shape: minimum file set, optional set, legacy list, and audit binding",
+    "kind": "decision",
+    "href": "/decisions#gad-185",
+    "body": "gad-185 canonical planning-root shape: minimum file set, optional set, legacy list, and audit binding every gad planning root (`[[planning.roots]]` in `gad-config.toml`) has a canonical shape. the canonical minimum file set that every `.planning/` directory must contain is four files: `state.xml`, `roadmap.xml`, `task-registry.xml`, `decisions.xml`. this is the \"everyone can run `gad snapshot`/`state`/`tasks`/`decisions` against it\" bar and is present in 7/7 audited roots. the canonical optional f"
+  },
+  {
+    "id": "gad-184",
+    "title": "Project ⊇ Species inheritance contract: merge-at-read-time eval loader",
+    "kind": "decision",
+    "href": "/decisions#gad-184",
+    "body": "gad-184 project ⊇ species inheritance contract: merge-at-read-time eval loader every eval project has one `evals/&lt;project&gt;/project.json` declaring defaults (`techstack`, `contextframework`, `installedskills`, `defaultcontent`, domain/description/rubric metadata) and one `evals/&lt;project&gt;/species/&lt;species&gt;/species.json` per species. species may override any project field and also carry species-only fields (`inherits_from`, `dna`, species-specific `description"
+  },
   {
     "id": "gad-183",
     "title": "Proto-skills stage inside the owning project's `.planning/` and install outward into runtimes on demand",
@@ -12918,6 +13359,90 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "42.4-07 move staged proto-skills into the owning project's `.planning/` tree, add a direct proto-skill install command for coding-agent runtimes, and align evolution docs/state so staged proto-skills are treated as planning artifacts until explicit install or promotion. proto-skills planning evolution install runtimes"
   },
   {
+    "id": "42.4-08",
+    "title": "`gad projects init` defaults to canonical XML and scaffolds the full file set. Currently it writes 4 markdown template f",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-08",
+    "body": "42.4-08 `gad projects init` defaults to canonical xml and scaffolds the full file set. currently it writes 4 markdown template files (project.md, requirements.md, roadmap.md, state.md) containing literal template placeholders. the rest of the monorepo uses 6+ canonical xml files (state.xml, roadmap.xml, task-registry.xml, decisions.xml, errors-and-attempts.xml, requirements.xml). surfaced 2026-04-14 during app-forge scaffolding — the markdown output had to be hand-converted to xml, see errors-and-attempts entry `forge-init-md-misaction-2026-04-14`. fix: update `bin/gad.cjs projects init` (or wherever the scaffold lives) to write the canonical xml file set with valid empty headers. optional `--format md` flag for the legacy markdown path. also scaffold the missing files (task-registry, decisions, errors-and-attempts) regardless of format. cli projects-init scaffold xml canonical-format gad-185"
+  },
+  {
+    "id": "42.4-09",
+    "title": "Project shape format review and refresh. The \"canonical XML file set\" for a planning root has drifted over time (some pr",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-09",
+    "body": "42.4-09 project shape format review and refresh. the \"canonical xml file set\" for a planning root has drifted over time (some projects have human-todos.xml, some have phases/, some have plans/, some have proto-skills/, some have notes/). there is no single documented shape that `gad projects init` and `gad health` agree on. audit the actual file sets across all registered planning roots (global, get-anything-done, magicborn, app-forge, etc.), define the canonical minimum + canonical optional file set, document it in references/, and align both `projects init` and `gad health` against it. surfaced 2026-04-14 by the user during app-forge scaffolding: \"the project shape format needs to be reviewed/updated soon.\" schema project-shape canonical-format health audit references gad-185"
+  },
+  {
+    "id": "42.4-10",
+    "title": "Audit existing `gad sink` and `gad docs` command surface for the markdown→XML conversion gap before adding new commands.",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-10",
+    "body": "42.4-10 audit existing `gad sink` and `gad docs` command surface for the markdown→xml conversion gap before adding new commands. correction 2026-04-14: original framing of this task assumed no conversion path existed and proposed `gad migrate-schema --from md --to xml`. user pointed out we already have `gad docs compile`, `gad sink compile/decompile/sync/diff/status/validate` — bidirectional sink flow exists. `gad sink decompile` specifically \"ensures .planning/ dirs exist for all projects; creates stubs for missing source files\" which is close to but not identical to the md→xml conversion needed. audit: does any existing command convert markdown project/requirements/roadmap/state prose into canonical xml? if yes, document it and close this task. if no, decide whether to extend `gad sink decompile` to handle the case or add a focused subcommand. don't add new commands until we've ruled out the existing surface. cli sink docs convert md-to-xml audit decompile"
+  },
+  {
+    "id": "42.4-11",
+    "title": "Sink coherence investigation: map the full doc compilation pipeline so agents know which surface to edit when. Concern s",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-11",
+    "body": "42.4-11 sink coherence investigation: map the full doc compilation pipeline so agents know which surface to edit when. concern surfaced 2026-04-14 by user: \"i am pretty sure we have a planning sink set up. we need to investigate why at some point and make sure all our docs compile to the same place.\" the repo has `[planning] docs_sink = \"docs\"` in gad-config.toml, `[[docs.projects]]` and `[[planning.roots]]` registries, `gad docs compile`, `gad sink compile/sync/decompile/diff/status/validate`, plus `gad site compile` (phase 10). it's unclear from the outside which command is canonical for: (a) editing a planning root's roadmap/decisions/etc, (b) updating a docs.projects entry, (c) keeping the compiled mdx in `docs/&lt;id&gt;/planning/` in sync with `.planning/` source, (d) what happens when both source and sink drift. output: a short references/sink-pipeline.md doc explaining the full flow + a quick-reference table mapping \"i want to edit x\" → \"use command y\" → \"verify with z.\" then update relevant skills (new-project, plan-phase, execute-phase) to reference it. sink docs compile pipeline investigation documentation coherence"
+  },
+  {
+    "id": "42.4-12",
+    "title": "Multi-root eval discovery. Add `[[evals.roots]]` array to `gad-config.toml` mirroring `[[planning.roots]]`. Default root",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-12",
+    "body": "42.4-12 multi-root eval discovery. add `[[evals.roots]]` array to `gad-config.toml` mirroring `[[planning.roots]]`. default root stays `vendor/get-anything-done/evals/` for backwards-compat. new roots like parent-repo `evals/` (or `apps/forge/evals/`) become first-class. `gad eval list/run/preserve/verify/open/review/report` all walk the union of roots. eval project ids must be unique across roots — duplicate detection at load time. surfaced 2026-04-14 during app-forge planning: forge wants to consume evals from the parent custom_portfolio repo without polluting the framework submodule with downstream user projects, and forge's own eval project (app-forge) needs to live outside the gad submodule because forge is not a framework component. blocks app-forge eval bootstrap (decision forge-09 plan/build separation requires fresh-agent spawn for any forge implementation work). multi-root evals discovery gad-config roots"
+  },
+  {
+    "id": "42.4-13",
+    "title": "New skill + slash command `/gad-eval-spawn` for kicking off eval runs from inside a Claude Code session. Wraps `gad eval",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-13",
+    "body": "42.4-13 new skill + slash command `/gad-eval-spawn` for kicking off eval runs from inside a claude code session. wraps `gad eval run --project &lt;name&gt; --execute` to get the json spec, then uses the orchestrator's agent/spawn capability to launch a worktree-isolated claude (or other runtime) agent against the spec. writes a session marker (probably under `.planning/.eval-runs/&lt;run-id&gt;.json`) so the orchestrator knows which run is in flight, can poll status, and can preserve outputs via `gad eval preserve` after completion. authored via the `create-skill` skill so we dogfood the skill-authoring pattern. skill name: `gad-eval-spawn`. slash command: `/gad-eval-spawn &lt;project&gt; [--runtime claude-code] [--baseline head]`. surfaced 2026-04-14 by user: \"we need a skill use create skill and also our command workflow pattern for /gad-project-eval-run or whatever we should call it to actually kick start the flow in claude code.\" per decision forge-09 (plan/build separation), this skill is the seam between the orchestrating session and the spawned builder session. skill slash-command eval-spawn create-skill orchestrator worktree dogfood forge-09 forge-seam"
+  },
+  {
+    "id": "42.4-14",
+    "title": "Audit and finish phase 43 species.json migration. Phase 43 unified the eval schema around `evals/&lt;project&gt;/project",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-14",
+    "body": "42.4-14 audit and finish phase 43 species.json migration. phase 43 unified the eval schema around `evals/&lt;project&gt;/project.json` + `evals/&lt;project&gt;/species/&lt;species&gt;/species.json`, but escape-the-dungeon's existing species directories still use `gad.json` instead of `species.json`. decide canonical name (recommend: `species.json` per phase 43 spec) and either: (a) rename `gad.json` → `species.json` across all existing species in `vendor/get-anything-done/evals/`, or (b) update phase 43 prose + the cli loader to treat `gad.json` as the canonical name and abandon `species.json`. user direction 2026-04-14: do the rename to species.json. update cli loaders, build-site-data.mjs, eval-preservation tests, and any references in skills/workflows/docs. pick one shape so app-forge's species file isn't ahead of reality and so the project ⊇ species inheritance contract (42.4-15) has a stable file shape to read from. schema species-json gad-json rename phase-43-cleanup migration"
+  },
+  {
+    "id": "42.4-15",
+    "title": "Project ⊇ Species inheritance contract in the CLI eval loader. `project.json` declares defaults: `techStack`, `contextFr",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-15",
+    "body": "42.4-15 project ⊇ species inheritance contract in the cli eval loader. `project.json` declares defaults: `techstack`, `contextframework`, `installedskills`, `defaultcontent` (paths or refs to default assets/files/scaffolding). `species.json` may override any of those + adds species-only fields: `inherits_from` (parent species for cross-species lineage), `dna` (workflow + skill manifest summary), species-specific `description`. the cli's eval loaders (used by `gad eval list/run/preserve` and by build-site-data.mjs) must merge project + species at load time and return the merged shape — readers should never manually combine them. shipped: new `lib/eval-loader.cjs` exporting `loadproject`, `loadspecies`, `loadallspeciesraw`, `loadresolvedspecies`, `loadallresolvedspecies`, `mergeprojectspecies`, `resolveinheritancechain`. merge semantics per decision gad-184: project defaults → inherits_from chain (deepest ancestor first) → target species; last write wins; arrays replace not merge; species-only fields (inherits_from, dna, description) do not back-propagate to project; cycles throw. wired `bin/gad.cjs eval list` to the loader and swapped `site/scripts/build-site-data.mjs scanevalprojects` to use `loadresolvedspecies` so the site sees the merged shape. hermetic tests in `tests/eval-loader-inheritance.test.cjs` cover (a)-(e) plus loadallresolvedspecies + pure-function spot check (7/7 pass via `node --test`). other legacy `gad.json` reads in bin/gad.cjs (eval run, eval verify, eval review, eval open/report) are orthogonal rename fallout and left for a separate surgical pass. schema inheritance project-species merge loader forge-10 gad-184"
+  },
+  {
+    "id": "42.4-16",
+    "title": "Forge proving-ground spec: formalize \"forge produces a passing escape-the-dungeon generation from its existing REQUIREME",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-16",
+    "body": "42.4-16 forge proving-ground spec: formalize \"forge produces a passing escape-the-dungeon generation from its existing requirements.md via the editor's spawn flow\" as a measurable acceptance criterion. decision forge-11 captures the why. output: checklist doc at `apps/forge/.planning/plans/forge-proving-ground.md` defining pg-01..pg-09 (build preserved, clean headless load, zero console.error, game root mounts, player renders, tilemap renders, input moves player, no unhandled rejections, probe runtime &lt; 30s). historical comparison table retroactively scores all 12 etd gad-species generations (v1..v12): 4 have preserved builds (v7, v8, v9, v10), exactly 1 (v8) has an explicit score.md \"build requirement gate passed\" annotation, and pg-02..pg-08 are `?` across the board because no mechanical probe has ever run against an etd build. gaps flagged: no playwright harness in repo (phase 08 scope), no canonical etd root selector / player hook, input scheme varies arrow vs wasd. dog-02 in `apps/forge/.planning/requirements.xml` and phase 08 success criteria in `apps/forge/.planning/roadmap.xml` both updated to cite the checklist. last of the 42.4-12..16 framework gates blocking app-forge phase 01. proving-ground etd acceptance measurable dog-02 forge-11 docs forge-proving-ground-md"
+  },
+  {
+    "id": "42.4-17",
+    "title": "Implement `gad planning hydrate` — the MD → XML inverse of `gad docs compile`. Closes the follow-up flagged by task 42.4",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-17",
+    "body": "42.4-17 implement `gad planning hydrate` — the md → xml inverse of `gad docs compile`. closes the follow-up flagged by task 42.4-10's audit (references/sink-md-xml-audit.md §6). subcommand walks configured planning roots (or `--projectid`/`--all`), reads sibling markdown for each canonical slot (state, roadmap, decisions, task-registry, requirements), and writes canonical xml into the root's `.planning/` directory. supports `--from &lt;dir&gt;` to read md from an external source dir (default is the planning dir itself), `--dry-run` to print the generated xml without writing, and `--force` to overwrite existing xml (prior xml is archived under `.planning/archive/xml/&lt;ts&gt;/` first). non-force runs skip slots where the xml already exists, preserving the \"xml is authoritative\" invariant from decision 42.4-10. cli planning hydrate md-to-xml docs-compiler 42.4-10-followup sink-md-xml-audit"
+  },
+  {
+    "id": "42.4-18",
+    "title": "Delete dead project-level `gad.json` fallthrough reads in `bin/gad.cjs` (decision gad-184). Task 42.4-14 renamed `evals/",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-18",
+    "body": "42.4-18 delete dead project-level `gad.json` fallthrough reads in `bin/gad.cjs` (decision gad-184). task 42.4-14 renamed `evals/&lt;project&gt;/gad.json` to species-level `evals/&lt;project&gt;/species/&lt;sp&gt;/species.json`, but five call sites in `bin/gad.cjs` (buildevalprompt / eval run metadata + tracescaffold / eval verify / eval review --rubric / eval readme) still read from the old project-level path. because the file no longer exists, every read silently fell back to `{}` and every downstream field rendered as a default or dash — legacy fallback fallout flagged in task 42.4-15's note. delete the reads; inline defaults where a field must remain; rewire `eval review --rubric` and `eval readme` through `lib/eval-loader.cjs::loadallresolvedspecies` so they pull `humanreviewrubric` / description / domain / tech stack / build requirement from the resolved-species shape instead. cleanup eval gad-json species-json dead-code gad-184 42.4-14-followup 42.4-15-followup"
+  },
+  {
+    "id": "42.4-19",
+    "title": "Normalize species.json keys to camelCase (decision gad-184, follow-up to task 42.4-15). The project ⊇ species inheritanc",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-19",
+    "body": "42.4-19 normalize species.json keys to camelcase (decision gad-184, follow-up to task 42.4-15). the project ⊇ species inheritance loader (`lib/eval-loader.cjs`) does literal key matching via `applylayer`, so when `project.json` declares `techstack` (camelcase) and a species declares `tech_stack` (snake_case), the species override silently fails and both keys end up on the merged shape. per gad-184 contract, camelcase is canonical. rename `tech_stack`, `build_requirement`, `human_review_rubric`, and `context_framework` to camelcase across every species.json under `evals/escape-the-dungeon/species/*/` and `evals/gad-explainer-video/species/*/`; confirm the eval loader needs no special-casing (it does not — literal-match is the point); update all consumers reading those snake_case keys. framework eval-loader inheritance camelcase snake-case species-json gad-184 42.4-15-followup"
+  },
+  {
     "id": "43-01",
     "title": "Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-pla",
     "kind": "task",
@@ -12968,10 +13493,10 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "43-08",
-    "title": "Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" wi",
+    "title": "Update site display strings across vendor/get-anything-done/site/. Replaced user-facing \"Round N\" → \"Evolution N\" and \"R",
     "kind": "task",
     "href": "/planning?tab=tasks#43-08",
-    "body": "43-08 update site display strings across vendor/get-anything-done/site/. replace user-facing \"round\" with \"evolution\", \"vn\" with \"generation n\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). add \"dna\" and \"spawn\" terminology where appropriate. touch hero, about, project market, project detail, methodology pages, planning tab, findings index. use grep to find every instance. site display vocabulary rename"
+    "body": "43-08 update site display strings across vendor/get-anything-done/site/. replaced user-facing \"round n\" → \"evolution n\" and \"round by round\" → \"evolution by evolution\" across 18 site files (hypotheses-data, roadmap-shared, methodologycompositeweightscatalog, content-driven, findings, projects, freedom, requirements, methodology template matrix). internal parsers that read \"round \" literals updated in lockstep. dropped greenfield/brownfield framing entirely — incidental copy stripped, projectsintro rewritten around species, domain_map collapsed to two surviving projects, projects-shared collapsed from 6 mode-keyed entries to 3 species-keyed entries. deleted evallineagegraph + methodologylineagesection (their only purpose was the dropped lineage framing). added species/id fields to evalrunrecord/evaltemplateasset/planningzipasset/evalprojectmeta/currentrequirementsfile interfaces. build runs clean, all 8 preservation tests pass, type errors limited to 5 pre-existing issues unrelated to phase 43. site display vocabulary rename"
   },
   {
     "id": "43-09",
@@ -12993,6 +13518,27 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#43-11",
     "body": "43-11 update roadmap.xml phase 44.5 title from \"brood editor\" to \"species editor\" and rewrite its goal to drop \"brood\" / \"brood editor\" references, reserve /project-editor route name, and embed the lovable/bolt-style species-without-build visualization scope (d-17, d-18). update phase 45 goal to drop the \"v4 brood\" example phrasing. closed phase prose stays verbatim per d-15. roadmap phase-44.5 phase-45 brood-rename"
+  },
+  {
+    "id": "44-01",
+    "title": "/project-market ProjectCard gains a dev-only Launch eval button that actually runs `gad eval run --project &lt;id&gt; --",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-01",
+    "body": "44-01 /project-market projectcard gains a dev-only launch eval button that actually runs `gad eval run --project &lt;id&gt; --execute` via a node child_process spawn from the dev server and streams stdout/stderr back to the browser. post /api/dev/launch-eval refuses unless node_env=development. first cut is the live run path; legacy planning-root migration and app-forge build-preservation are split into separate tasks. project-market launcher child-process site dev-bridge"
+  },
+  {
+    "id": "44-02",
+    "title": "Migrate legacy planning roots (grime-time-site, repub-builder, mb-cli-framework, magicborn, global) from planning-only s",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-02",
+    "body": "44-02 migrate legacy planning roots (grime-time-site, repub-builder, mb-cli-framework, magicborn, global) from planning-only shape into the canonical eval-project shape under `evals/&lt;project&gt;/project.json` + `evals/&lt;project&gt;/species/&lt;species&gt;/species.json` so they appear on /project-market with launch affordance. per user alignment 2026-04-14: \"every project is an eval project — no separate non-eval card shape.\" for each root: (1) decide canonical species (likely just one — the project itself), (2) write project.json + species.json with minimum fields (id, name, description, domain, techstack, contextframework=gad), (3) register under [[evals.roots]] in gad-config.toml if not already, (4) verify it shows up in `gad eval list` and on /project-market. does not require porting existing planning files — legacy .planning/ trees stay where they are; the eval shape is a thin overlay for launcher purposes. migration eval-shape planning-roots project-market"
+  },
+  {
+    "id": "44-03",
+    "title": "App-forge build preservation: today `gad eval verify` flags app-forge v1 MISSING because preservation expects a statical",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-03",
+    "body": "44-03 app-forge build preservation: today `gad eval verify` flags app-forge v1 missing because preservation expects a statically-servable dist/ but forge is a next.js app producing `.next/` (server components, no output:export). decide the path: (a) add `output: \"export\"` to `apps/forge/next.config.mjs` and rewrite any server-only code so `next build` produces `out/`, then teach `gad eval preserve` to copy `out/` for next.js eval species; (b) skip static preservation for forge entirely and instead preserve a headless playwright trace / screenshot bundle as the \"build artifact\"; (c) run forge as a live dev server from the portfolio site when viewing its eval (no static artifact). capture the decision, update `gad eval preserve` per the chosen path, re-run preservation for app-forge v1, and confirm `gad eval verify` goes green. also file a runtime-identity record so the preservation audit's other missing column clears. eval-preservation next-js app-forge gad-eval-verify"
   },
   {
     "id": "44.5-01",
@@ -13367,17 +13913,17 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "44.5",
-    "title": "Phase 44.5 — Brood Editor — local-dev project/eval playground",
+    "title": "Phase 44.5 — Species Editor — local-dev project/species playground",
     "kind": "phase",
     "href": "/planning?tab=phases#44.5",
-    "body": "44.5 brood editor — local-dev project/eval playground after the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project/species/brood as a live workspace rather than a read-only catalog entry. scope: (1) a /brood-editor (or /projects/[id]/edit) route, gated to node_env=development, that renders the project's eval folder as an editable tree — requirements, gad.json, per-species overrides, manifest entries. (2) a node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) capture surfaces for species/population/generation/brood views keyed to the currently-edited project, reusing the unity asset store card data from phase 44 but flipping the affordances from browse to mutate. (4) explicit rejection of any vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (5) supports the \"i want to iterate without rebuilding the whole site every time\" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. planning requirement: the bridge must refuse all requests unless node_env=development and an explicit allow-list of commands is matched, so we never accidentally expose it in production builds."
+    "body": "44.5 species editor — local-dev project/species playground after the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project and its species as a live workspace rather than a read-only catalog entry. **two routes, reserved here, both gated to node_env=development**: (a) `/project-editor` (or `/projects/[id]/edit`) — the parent project editor surface, scoped to the whole project (requirements, project.json, species roster, shared assets); (b) `/species-editor` (or `/projects/[id]/species/[species]/edit`) — the per-species inner surface, scoped to a single species folder (species.json, per-species overrides, generation list). scope: (1) both routes render the relevant eval folder as an editable tree — requirements, project.json, per-species overrides, manifest entries. (2) a node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) capture surfaces for species/generation views keyed to the currently-edited project, reusing the unity asset store card data from phase 44 but flipping the affordances from browse to mutate. (4) **lovable/bolt-style species-without-build visualization (d-17, d-18)**: the editor previews species + generation state without requiring a full site rebuild — content-model edits reflect immediately in the editor pane, so the operator iterates on requirements/species/generations the way lovable and bolt iterate on generated ui. (5) explicit rejection of any vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (6) supports the \"i want to iterate without rebuilding the whole site every time\" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. planning requirement: the bridge must refuse all requests unless node_env=development and an explicit allow-list of commands is matched, so we never accidentally expose it in production builds."
   },
   {
     "id": "45",
     "title": "Phase 45 — Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model",
     "kind": "phase",
     "href": "/planning?tab=phases#45",
-    "body": "45 full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model the big polish pass after the rename and marketplace land. refresh the visual identity, type ramp, color palette, hero copy, about page, readme, and external-facing docs around the new species/generation/brood/spawn/dna/evolution language. make the site read playfully (e.g. \"the bare species' v4 generation hatched a spawn that crushed the v4 brood\"). audit every public-facing string. includes site-wide consistency check: same word for same concept everywhere. logo + favicon refresh if needed. standalone phase because it's a focused design + copy effort, not a code refactor. must drop any remaining \"gad+emergent\" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169."
+    "body": "45 full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model the big polish pass after the rename and marketplace land. refresh the visual identity, type ramp, color palette, hero copy, about page, readme, and external-facing docs around the new species/generation/dna/evolution language. make the site read playfully (e.g. \"the bare species' generation 4 evolved a fitter descendant that crushed the earlier run\"). audit every public-facing string. includes site-wide consistency check: same word for same concept everywhere. logo + favicon refresh if needed. standalone phase because it's a focused design + copy effort, not a code refactor. must drop any remaining \"gad+emergent\" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169."
   },
   {
     "id": "compound-skills-hypothesis",
@@ -13882,6 +14428,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/gad-eval-run",
     "body": "gad-eval-run gad:eval-run run an eval project in an isolated git worktree"
+  },
+  {
+    "id": "gad-eval-spawn",
+    "title": "gad:eval-spawn",
+    "kind": "skill",
+    "href": "/skills/gad-eval-spawn",
+    "body": "gad-eval-spawn gad:eval-spawn >-"
   },
   {
     "id": "gad-eval-suite",

@@ -12,7 +12,7 @@ export function RunDimensionScoresSection({
   dimensionScores: Array<{ key: keyof RunScores; label: string; value: number | undefined }>;
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="run-dimension-scores-section-site-section">
       <Identified as="RunDimensionScores">
       <Identified as="RunDimensionScoresHeader">
         <SiteSectionHeading kicker="Dimension scores" title="Where the composite came from" />

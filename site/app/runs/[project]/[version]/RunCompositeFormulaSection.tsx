@@ -22,7 +22,7 @@ export function RunCompositeFormulaSection({
   weightedSum: number;
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="run-composite-formula-section-site-section">
       <Identified as="RunCompositeFormula">
       <Identified as="RunCompositeFormulaHeader">
         <SiteSectionHeading

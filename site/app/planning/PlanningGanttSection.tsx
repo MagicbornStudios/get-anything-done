@@ -61,7 +61,7 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
   }
 
   return (
-    <SiteSection>
+    <SiteSection cid="planning-gantt-section-site-section">
       <Identified as="PlanningGanttSection">
       <Identified as="PlanningGanttToolbar">
         <PlanningGanttToolbar
@@ -96,3 +96,4 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
     </SiteSection>
   );
 }
+

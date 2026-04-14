@@ -4,7 +4,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function StandardsHeroSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="standards-hero-section-site-section">
       <Identified as="StandardsHeroSection">
       <SiteSectionHeading
         kicker="Standards"
@@ -32,3 +32,4 @@ export default function StandardsHeroSection() {
     </SiteSection>
   );
 }
+

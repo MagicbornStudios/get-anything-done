@@ -10,7 +10,7 @@ export function GadSkillBootstrapSection() {
   const frameworkOnlySkills = officialSkills.filter((s) => (SKILL_INHERITANCE[s.id] ?? []).length === 0);
 
   return (
-    <SiteSection>
+    <SiteSection cid="gad-skill-bootstrap-section-site-section">
       <Identified as="GadSkillBootstrapSection">
       <Identified as="GadSkillBootstrapHeading" register={false}>
         <SiteSectionHeading
@@ -85,3 +85,4 @@ export function GadSkillBootstrapSection() {
     </SiteSection>
   );
 }
+

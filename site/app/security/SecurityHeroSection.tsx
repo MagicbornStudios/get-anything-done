@@ -4,7 +4,7 @@ import { Ref } from "@/components/refs/Ref";
 
 export function SecurityHeroSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="security-hero-section-site-section">
       <SiteSectionHeading
         kicker="Security"
         as="h1"
@@ -39,3 +39,4 @@ export function SecurityHeroSection() {
     </SiteSection>
   );
 }
+

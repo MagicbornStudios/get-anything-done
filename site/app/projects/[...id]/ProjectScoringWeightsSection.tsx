@@ -6,7 +6,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export function ProjectScoringWeightsSection({ project }: { project: EvalProjectMeta }) {
   if (!project.scoringWeights) return null;
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="project-scoring-weights-section-site-section" tone="muted">
       <Identified as="ProjectScoringWeights">
       <SiteSectionHeading kicker="Scoring weights" preset="section" title="How this project is scored" />
       <>

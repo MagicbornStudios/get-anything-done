@@ -13,7 +13,7 @@ export function QuestionsHero({
   categoryCount: number;
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="questions-hero-site-section">
       <SiteSectionHeading
         kicker="Open questions"
         as="h1"
@@ -73,3 +73,4 @@ export function QuestionsHero({
     </SiteSection>
   );
 }
+

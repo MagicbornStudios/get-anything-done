@@ -538,6 +538,20 @@ export const SKILLS: CatalogSkill[] = [
     "bodyRaw": "\n<execution_context>\n@workflows/gad-eval-run.md\n</execution_context>\n\n<objective>\nExecute a GAD eval project in an isolated git worktree. Each run gets its own\nworktree, a timestamped output directory, and an agent stub invocation. The\nworktree is cleaned up after the run. Results are saved in `evals/<name>/v<N>/`.\n</objective>\n\n<process>\nExecute the eval-run workflow from @workflows/gad-eval-run.md. The steps below are the current CLI/worktree implementation details.\n\nParse from `$ARGUMENTS`:\n- `--project <name>` (required)\n- `--baseline <sha>` (optional, defaults to HEAD)\n- `--agent <model>` (optional, defaults to configured default model)\n\n1. **Validate project exists:**\n   ```bash\n   ls \"evals/$PROJECT\" 2>/dev/null || echo \"NOT_FOUND\"\n   ```\n   If not found: `Eval project '<name>' not found. Run \\`gad eval list\\` to see available projects.`\n\n2. **Read project REQUIREMENTS.md:**\n   ```bash\n   cat \"evals/$PROJECT/REQUIREMENTS.md\"\n   ```\n\n3. **Compute next run number:**\n   Count existing `evals/<name>/v*/` directories. Next = max + 1.\n\n4. **Create git worktree:**\n   ```bash\n   BASELINE=\"${BASELINE:-HEAD}\"\n   WORKTREE_PATH=$(mktemp -d \"/tmp/gad-eval-XXXXXX\")\n   git worktree add \"$WORKTREE_PATH\" \"$BASELINE\"\n   ```\n\n5. **Scaffold output directory:**\n   ```bash\n   mkdir -p \"evals/$PROJECT/v$RUN_NUM\"\n   cat > \"evals/$PROJECT/v$RUN_NUM/RUN.md\" << EOF\n   # Eval Run v$RUN_NUM\n\n   project: $PROJECT\n   baseline: $BASELINE\n   started: $(date -u +%Y-%m-%dT%H:%M:%SZ)\n   agent: $AGENT_MODEL\n   status: running\n   EOF\n   ```\n\n6. **Execute agent (stub):**\n   In the worktree, run the eval agent:\n   ```bash\n   cd \"$WORKTREE_PATH\"\n   # Stub: agent invocation goes here\n   # Full implementation in gad-eval plan\n   echo \"STUB: agent run for $PROJECT\" > \"$WORKTREE_PATH/eval-output.txt\"\n   ```\n\n7. **Collect results:**\n   Copy relevant output files from worktree to `evals/<name>/v<N>/`:\n   ```bash\n   cp \"$WORKTREE_PATH/eval-output.txt\" \"evals/$PROJECT/v$RUN_NUM/\"\n   ```\n\n8. **Remove worktree:**\n   ```bash\n   git worktree remove --force \"$WORKTREE_PATH\"\n   ```\n\n9. **Update RUN.md with result:**\n   Set `status: completed` and `ended: <timestamp>`.\n\n10. **Summary:**\n    ```\n    ✓ Eval run complete\n\n    Project:  $PROJECT\n    Run:      v$RUN_NUM\n    Baseline: $BASELINE\n    Output:   evals/$PROJECT/v$RUN_NUM/\n    ```\n\n</process>\n\n<rules>\n- Always remove the worktree, even if the run fails (use trap in bash)\n- Never modify files in the main worktree during an eval run\n- If baseline SHA is invalid, abort before creating the worktree\n</rules>\n"
   },
   {
+    "id": "gad-eval-spawn",
+    "name": "gad:eval-spawn",
+    "description": ">-",
+    "origin": "official",
+    "authoredBy": null,
+    "authoredOn": null,
+    "excludedFromDefaultInstall": false,
+    "frameworkSkill": false,
+    "file": "vendor/get-anything-done/skills/gad-eval-spawn/SKILL.md",
+    "source": "framework",
+    "bodyHtml": "<objective>\nSpawn an eval run in a worktree-isolated subagent. This skill is the plan/build\nseam (decision forge-09): the orchestrating session plans and reviews, the\nspawned session builds. The orchestrator stays in charge of preservation —\nafter the builder finishes, this skill preserves outputs via `gad eval preserve`\nand marks the session complete.\n</objective>\n\n<process>\n\n<p>Parse from <code>$ARGUMENTS</code>:</p>\n<ul>\n<li><code>&lt;project&gt;</code> (required, positional) — eval project name</li>\n<li><code>--runtime &lt;id&gt;</code> (optional, default <code>claude-code</code>) — runtime driving the spawned agent</li>\n<li><code>--baseline &lt;sha&gt;</code> (optional, default <code>HEAD</code>) — git baseline the worktree branches from (brownfield parents use the preserved spawn SHA here)</li>\n</ul>\n<ol>\n<li><p><strong>Resolve the project:</strong></p>\n<pre><code class=\"language-bash\">gad eval list | grep -E &quot;^\\s*$PROJECT\\b&quot; || { echo &quot;Eval project &#39;$PROJECT&#39; not found. Run &#39;gad eval list&#39; to see available projects.&quot;; exit 1; }\n</code></pre>\n<p>(<code>gad eval list</code> is multi-root aware as of task 42.4-12; if that work has not yet landed the default root <code>vendor/get-anything-done/evals/</code> is still used.)</p>\n</li>\n<li><p><strong>Generate the exec spec:</strong></p>\n<pre><code class=\"language-bash\">gad eval run --project &quot;$PROJECT&quot; --runtime &quot;$RUNTIME&quot; --baseline &quot;$BASELINE&quot; --execute\n</code></pre>\n<p>This writes <code>evals/&lt;project&gt;/v&lt;N&gt;/EXEC.json</code> and also prints the JSON between\n<code>--- EXEC_JSON_START ---</code> / <code>--- EXEC_JSON_END ---</code> markers on stdout. Parse\nthe JSON and capture: <code>project</code>, <code>version</code>, <code>runDir</code>, <code>prompt</code>, <code>promptFile</code>,\n<code>envVars</code>, <code>postSteps</code>. The <code>runId</code> for session-marker purposes is\n<code>&lt;project&gt;-&lt;version&gt;</code> (e.g. <code>escape-the-dungeon-v7</code>).</p>\n</li>\n<li><p><strong>Check for a stale session marker:</strong></p>\n<pre><code class=\"language-bash\">MARKER=&quot;.planning/.eval-runs/${PROJECT}-${VERSION}.json&quot;\nif [ -f &quot;$MARKER&quot; ]; then\n  echo &quot;Run id $PROJECT-$VERSION already has a marker at $MARKER. Refusing to overwrite. Inspect, resolve, then delete the marker to retry.&quot;\n  exit 1\nfi\nmkdir -p .planning/.eval-runs\n</code></pre>\n</li>\n<li><p><strong>Create an isolated worktree:</strong></p>\n<pre><code class=\"language-bash\">WORKTREE_PATH=&quot;.claude/worktrees/agent-${PROJECT}-${VERSION}&quot;\ngit worktree add &quot;$WORKTREE_PATH&quot; &quot;$BASELINE&quot;\n</code></pre>\n<p>Prefer <code>.claude/worktrees/agent-*</code> (already managed by <code>gad worktree list/clean</code>)\nover <code>mktemp</code> so the orchestrator can find the worktree later even across\nsession boundaries.</p>\n</li>\n<li><p><strong>Write the session marker (status: running):</strong></p>\n<pre><code class=\"language-json\">{\n  &quot;runId&quot;: &quot;escape-the-dungeon-v7&quot;,\n  &quot;project&quot;: &quot;escape-the-dungeon&quot;,\n  &quot;version&quot;: &quot;v7&quot;,\n  &quot;species&quot;: &quot;gad&quot;,\n  &quot;generation&quot;: 7,\n  &quot;runtime&quot;: &quot;claude-code&quot;,\n  &quot;baseline&quot;: &quot;HEAD&quot;,\n  &quot;worktreePath&quot;: &quot;.claude/worktrees/agent-escape-the-dungeon-v7&quot;,\n  &quot;runDir&quot;: &quot;vendor/get-anything-done/evals/escape-the-dungeon/v7&quot;,\n  &quot;agentId&quot;: null,\n  &quot;startedAt&quot;: &quot;2026-04-14T18:00:00Z&quot;,\n  &quot;status&quot;: &quot;running&quot;\n}\n</code></pre>\n<p>Write this to <code>.planning/.eval-runs/&lt;runId&gt;.json</code>. The <code>species</code> / <code>generation</code>\nsplit follows the phase 43 vocabulary; until that rename lands, <code>version</code>\n(e.g. <code>v7</code>) is the authoritative field and <code>generation</code> is the numeric\nsuffix.</p>\n</li>\n<li><p><strong>Spawn the builder subagent via the Agent tool:</strong>\nLaunch with:</p>\n<ul>\n<li><code>subagent_type: &quot;general-purpose&quot;</code> (or a runtime-specific type once they exist)</li>\n<li><code>isolation: &quot;worktree&quot;</code></li>\n<li><code>cwd: &lt;WORKTREE_PATH&gt;</code></li>\n<li><code>description: &lt;agentDescription from EXEC.json&gt;</code></li>\n<li><code>prompt: &lt;prompt from EXEC.json&gt;</code> — already contains all GAD context,\ntrace env vars, and post-steps. Do not rewrap it.</li>\n<li><code>env: &lt;envVars from EXEC.json&gt;</code> — <code>GAD_RUNTIME</code>, <code>GAD_EVAL_TRACE_DIR</code>,\n<code>GAD_LOG_DIR</code>, <code>GAD_EVAL_PROJECT</code>, <code>GAD_EVAL_VERSION</code></li>\n</ul>\n<p>When the Agent call returns, capture the agent&#39;s final message / exit status\nand the token usage, then update the marker: set <code>agentId</code>, <code>endedAt</code>,\n<code>status: &quot;agent-complete&quot;</code>.</p>\n</li>\n<li><p><strong>Preserve outputs (mandatory, decision gad-38):</strong></p>\n<pre><code class=\"language-bash\">gad eval preserve &quot;$PROJECT&quot; &quot;$VERSION&quot; --from &quot;$WORKTREE_PATH&quot;\n</code></pre>\n<p>On success, update the marker: <code>status: &quot;preserved&quot;</code>, <code>preservedAt: &lt;ts&gt;</code>.\nOn failure, leave the marker at <code>agent-complete</code> and report the error —\ndo NOT clean up the worktree, the user may need to inspect it.</p>\n</li>\n<li><p><strong>Clean up the worktree:</strong></p>\n<pre><code class=\"language-bash\">gad worktree clean &quot;agent-${PROJECT}-${VERSION}&quot;\n</code></pre>\n<p>Update the marker one last time: <code>status: &quot;cleaned&quot;</code>, <code>cleanedAt: &lt;ts&gt;</code>.</p>\n</li>\n<li><p><strong>Report:</strong></p>\n<pre><code>✓ Spawned eval run\n  Project:    $PROJECT\n  Version:    $VERSION\n  Runtime:    $RUNTIME\n  Baseline:   $BASELINE\n  Worktree:   $WORKTREE_PATH\n  Run dir:    $RUN_DIR\n  Marker:     .planning/.eval-runs/$PROJECT-$VERSION.json\n  Status:     preserved + cleaned\n</code></pre>\n</li>\n</ol>\n</process>\n\n<failure_modes>\n- **Spawn fails before the agent starts** — remove the session marker and\n  `git worktree remove --force` the worktree. The `EXEC.json` and run dir stay\n  in place; re-invoking `/gad-eval-spawn` will re-use the same `runId`, so you\n  must either delete the existing `evals/<project>/v<N>/` or accept that the\n  rerun will bump to `v<N+1>`.\n- **Agent crashes mid-run** — mark the session `status: \"agent-failed\"`, leave\n  the worktree in place for forensics, and surface the error to the user. Do\n  NOT preserve — partial spawns pollute canonical paths.\n- **Preserve fails** — mark `status: \"preserve-failed\"`, leave worktree intact,\n  instruct the user to run `gad eval preserve` manually once they've fixed\n  whatever the copy failure was.\n- **Marker already exists** — refuse. A live run at the same `runId` means\n  either a previous session is still going or a previous session crashed\n  without cleanup. Let the user resolve manually.\n- **`--execute` flag missing** — this skill depends on `gad eval run --execute`\n  (already shipped). If the CLI doesn't recognize the flag, stop and tell the\n  user to upgrade their GAD CLI rather than falling back to manual worktree\n  plumbing.\n</failure_modes>\n\n<examples>\nUser: \"Spawn an eval run for escape-the-dungeon.\"\nAgent: invokes `/gad-eval-spawn escape-the-dungeon` → generates EXEC.json at\n`evals/escape-the-dungeon/v7/EXEC.json`, creates worktree at\n`.claude/worktrees/agent-escape-the-dungeon-v7`, writes marker at\n`.planning/.eval-runs/escape-the-dungeon-v7.json`, spawns builder subagent with\nthe prompt from EXEC.json, on completion runs\n`gad eval preserve escape-the-dungeon v7 --from .claude/worktrees/agent-escape-the-dungeon-v7`,\ncleans the worktree, updates marker to `status: \"cleaned\"`.\n\n<p>User: &quot;Kick off a brownfield run from the v6 spawn SHA.&quot;\nAgent: <code>/gad-eval-spawn escape-the-dungeon --baseline &lt;sha-of-v6-spawn&gt;</code> — same\nflow, worktree branches off the preserved v6 spawn.\n</examples></p>\n<rules>\n- Always write the session marker BEFORE spawning the agent — if the agent call\n  fails, the marker lets the orchestrator recover.\n- Never skip `gad eval preserve` (decision gad-38). Preservation failures must\n  stop cleanup.\n- Never clean the worktree on failure paths — the operator needs it for forensics.\n- Never wrap or rewrite the prompt from EXEC.json. It's already fully hydrated\n  with GAD context, trace hooks, and post-steps.\n- Do not set `GAD_RUNTIME` or trace env vars manually — use the values from\n  `EXEC.json.envVars` so the CLI stays the single source of truth.\n- `.planning/.eval-runs/` is transient runtime state. Do not commit markers.\n</rules>\n\n<related>\n- `gad:eval-run` — generates the prompt and (without `--execute`) creates the\n  worktree itself; this skill is the `--execute`-mode counterpart.\n- `gad:eval-bootstrap` — older bootstrap flow that injects context without\n  spawning.\n- decision forge-09 — plan/build separation; this skill is the documented seam.\n- decision gad-38 — eval preservation contract.\n</related>\n",
+    "bodyRaw": "\n<objective>\nSpawn an eval run in a worktree-isolated subagent. This skill is the plan/build\nseam (decision forge-09): the orchestrating session plans and reviews, the\nspawned session builds. The orchestrator stays in charge of preservation —\nafter the builder finishes, this skill preserves outputs via `gad eval preserve`\nand marks the session complete.\n</objective>\n\n<process>\n\nParse from `$ARGUMENTS`:\n- `<project>` (required, positional) — eval project name\n- `--runtime <id>` (optional, default `claude-code`) — runtime driving the spawned agent\n- `--baseline <sha>` (optional, default `HEAD`) — git baseline the worktree branches from (brownfield parents use the preserved spawn SHA here)\n\n1. **Resolve the project:**\n   ```bash\n   gad eval list | grep -E \"^\\s*$PROJECT\\b\" || { echo \"Eval project '$PROJECT' not found. Run 'gad eval list' to see available projects.\"; exit 1; }\n   ```\n   (`gad eval list` is multi-root aware as of task 42.4-12; if that work has not yet landed the default root `vendor/get-anything-done/evals/` is still used.)\n\n2. **Generate the exec spec:**\n   ```bash\n   gad eval run --project \"$PROJECT\" --runtime \"$RUNTIME\" --baseline \"$BASELINE\" --execute\n   ```\n   This writes `evals/<project>/v<N>/EXEC.json` and also prints the JSON between\n   `--- EXEC_JSON_START ---` / `--- EXEC_JSON_END ---` markers on stdout. Parse\n   the JSON and capture: `project`, `version`, `runDir`, `prompt`, `promptFile`,\n   `envVars`, `postSteps`. The `runId` for session-marker purposes is\n   `<project>-<version>` (e.g. `escape-the-dungeon-v7`).\n\n3. **Check for a stale session marker:**\n   ```bash\n   MARKER=\".planning/.eval-runs/${PROJECT}-${VERSION}.json\"\n   if [ -f \"$MARKER\" ]; then\n     echo \"Run id $PROJECT-$VERSION already has a marker at $MARKER. Refusing to overwrite. Inspect, resolve, then delete the marker to retry.\"\n     exit 1\n   fi\n   mkdir -p .planning/.eval-runs\n   ```\n\n4. **Create an isolated worktree:**\n   ```bash\n   WORKTREE_PATH=\".claude/worktrees/agent-${PROJECT}-${VERSION}\"\n   git worktree add \"$WORKTREE_PATH\" \"$BASELINE\"\n   ```\n   Prefer `.claude/worktrees/agent-*` (already managed by `gad worktree list/clean`)\n   over `mktemp` so the orchestrator can find the worktree later even across\n   session boundaries.\n\n5. **Write the session marker (status: running):**\n   ```json\n   {\n     \"runId\": \"escape-the-dungeon-v7\",\n     \"project\": \"escape-the-dungeon\",\n     \"version\": \"v7\",\n     \"species\": \"gad\",\n     \"generation\": 7,\n     \"runtime\": \"claude-code\",\n     \"baseline\": \"HEAD\",\n     \"worktreePath\": \".claude/worktrees/agent-escape-the-dungeon-v7\",\n     \"runDir\": \"vendor/get-anything-done/evals/escape-the-dungeon/v7\",\n     \"agentId\": null,\n     \"startedAt\": \"2026-04-14T18:00:00Z\",\n     \"status\": \"running\"\n   }\n   ```\n   Write this to `.planning/.eval-runs/<runId>.json`. The `species` / `generation`\n   split follows the phase 43 vocabulary; until that rename lands, `version`\n   (e.g. `v7`) is the authoritative field and `generation` is the numeric\n   suffix.\n\n6. **Spawn the builder subagent via the Agent tool:**\n   Launch with:\n   - `subagent_type: \"general-purpose\"` (or a runtime-specific type once they exist)\n   - `isolation: \"worktree\"`\n   - `cwd: <WORKTREE_PATH>`\n   - `description: <agentDescription from EXEC.json>`\n   - `prompt: <prompt from EXEC.json>` — already contains all GAD context,\n     trace env vars, and post-steps. Do not rewrap it.\n   - `env: <envVars from EXEC.json>` — `GAD_RUNTIME`, `GAD_EVAL_TRACE_DIR`,\n     `GAD_LOG_DIR`, `GAD_EVAL_PROJECT`, `GAD_EVAL_VERSION`\n\n   When the Agent call returns, capture the agent's final message / exit status\n   and the token usage, then update the marker: set `agentId`, `endedAt`,\n   `status: \"agent-complete\"`.\n\n7. **Preserve outputs (mandatory, decision gad-38):**\n   ```bash\n   gad eval preserve \"$PROJECT\" \"$VERSION\" --from \"$WORKTREE_PATH\"\n   ```\n   On success, update the marker: `status: \"preserved\"`, `preservedAt: <ts>`.\n   On failure, leave the marker at `agent-complete` and report the error —\n   do NOT clean up the worktree, the user may need to inspect it.\n\n8. **Clean up the worktree:**\n   ```bash\n   gad worktree clean \"agent-${PROJECT}-${VERSION}\"\n   ```\n   Update the marker one last time: `status: \"cleaned\"`, `cleanedAt: <ts>`.\n\n9. **Report:**\n   ```\n   ✓ Spawned eval run\n     Project:    $PROJECT\n     Version:    $VERSION\n     Runtime:    $RUNTIME\n     Baseline:   $BASELINE\n     Worktree:   $WORKTREE_PATH\n     Run dir:    $RUN_DIR\n     Marker:     .planning/.eval-runs/$PROJECT-$VERSION.json\n     Status:     preserved + cleaned\n   ```\n\n</process>\n\n<failure_modes>\n- **Spawn fails before the agent starts** — remove the session marker and\n  `git worktree remove --force` the worktree. The `EXEC.json` and run dir stay\n  in place; re-invoking `/gad-eval-spawn` will re-use the same `runId`, so you\n  must either delete the existing `evals/<project>/v<N>/` or accept that the\n  rerun will bump to `v<N+1>`.\n- **Agent crashes mid-run** — mark the session `status: \"agent-failed\"`, leave\n  the worktree in place for forensics, and surface the error to the user. Do\n  NOT preserve — partial spawns pollute canonical paths.\n- **Preserve fails** — mark `status: \"preserve-failed\"`, leave worktree intact,\n  instruct the user to run `gad eval preserve` manually once they've fixed\n  whatever the copy failure was.\n- **Marker already exists** — refuse. A live run at the same `runId` means\n  either a previous session is still going or a previous session crashed\n  without cleanup. Let the user resolve manually.\n- **`--execute` flag missing** — this skill depends on `gad eval run --execute`\n  (already shipped). If the CLI doesn't recognize the flag, stop and tell the\n  user to upgrade their GAD CLI rather than falling back to manual worktree\n  plumbing.\n</failure_modes>\n\n<examples>\nUser: \"Spawn an eval run for escape-the-dungeon.\"\nAgent: invokes `/gad-eval-spawn escape-the-dungeon` → generates EXEC.json at\n`evals/escape-the-dungeon/v7/EXEC.json`, creates worktree at\n`.claude/worktrees/agent-escape-the-dungeon-v7`, writes marker at\n`.planning/.eval-runs/escape-the-dungeon-v7.json`, spawns builder subagent with\nthe prompt from EXEC.json, on completion runs\n`gad eval preserve escape-the-dungeon v7 --from .claude/worktrees/agent-escape-the-dungeon-v7`,\ncleans the worktree, updates marker to `status: \"cleaned\"`.\n\nUser: \"Kick off a brownfield run from the v6 spawn SHA.\"\nAgent: `/gad-eval-spawn escape-the-dungeon --baseline <sha-of-v6-spawn>` — same\nflow, worktree branches off the preserved v6 spawn.\n</examples>\n\n<rules>\n- Always write the session marker BEFORE spawning the agent — if the agent call\n  fails, the marker lets the orchestrator recover.\n- Never skip `gad eval preserve` (decision gad-38). Preservation failures must\n  stop cleanup.\n- Never clean the worktree on failure paths — the operator needs it for forensics.\n- Never wrap or rewrite the prompt from EXEC.json. It's already fully hydrated\n  with GAD context, trace hooks, and post-steps.\n- Do not set `GAD_RUNTIME` or trace env vars manually — use the values from\n  `EXEC.json.envVars` so the CLI stays the single source of truth.\n- `.planning/.eval-runs/` is transient runtime state. Do not commit markers.\n</rules>\n\n<related>\n- `gad:eval-run` — generates the prompt and (without `--execute`) creates the\n  worktree itself; this skill is the `--execute`-mode counterpart.\n- `gad:eval-bootstrap` — older bootstrap flow that injects context without\n  spawning.\n- decision forge-09 — plan/build separation; this skill is the documented seam.\n- decision gad-38 — eval preservation contract.\n</related>\n"
+  },
+  {
     "id": "gad-eval-suite",
     "name": "gad:eval-suite",
     "description": "Run all eval projects in parallel with bootstrap prompts",
@@ -590,8 +604,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-execute-phase/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nExecute all plans in a phase using wave-based parallel execution.\n\n<p>Orchestrator stays lean: discover plans, analyze dependencies, group into waves, spawn subagents, collect results. Each subagent loads the full execute-plan context and handles its own plan.</p>\n<p>Optional wave filter:</p>\n<ul>\n<li><code>--wave N</code> executes only Wave <code>N</code> for pacing, quota management, or staged rollout</li>\n<li>phase verification/completion still only happens when no incomplete plans remain after the selected wave finishes</li>\n</ul>\n<p>Flag handling rule:</p>\n<ul>\n<li>The optional flags documented below are available behaviors, not implied active behaviors</li>\n<li>A flag is active only when its literal token appears in <code>$ARGUMENTS</code></li>\n<li>If a documented flag is absent from <code>$ARGUMENTS</code>, treat it as inactive</li>\n</ul>\n<p>Context budget: ~15% orchestrator, 100% fresh per subagent.\n</objective></p>\n<execution_context>\n@workflows/gad-execute-phase.md\n@references/ui-brand.md\n</execution_context>\n\n<context>\nPhase: $ARGUMENTS\n\n<p><strong>Available optional flags (documentation only — not automatically active):</strong></p>\n<ul>\n<li><code>--wave N</code> — Execute only Wave <code>N</code> in the phase. Use when you want to pace execution or stay inside usage limits.</li>\n<li><code>--gaps-only</code> — Execute only gap closure plans (plans with <code>gap_closure: true</code> in frontmatter). Use after verify-work creates fix plans.</li>\n<li><code>--interactive</code> — Execute plans sequentially inline (no subagents) with user checkpoints between tasks. Lower token usage, pair-programming style. Best for small phases, bug fixes, and verification gaps.</li>\n</ul>\n<p><strong>Active flags must be derived from <code>$ARGUMENTS</code>:</strong></p>\n<ul>\n<li><code>--wave N</code> is active only if the literal <code>--wave</code> token is present in <code>$ARGUMENTS</code></li>\n<li><code>--gaps-only</code> is active only if the literal <code>--gaps-only</code> token is present in <code>$ARGUMENTS</code></li>\n<li><code>--interactive</code> is active only if the literal <code>--interactive</code> token is present in <code>$ARGUMENTS</code></li>\n<li>If none of these tokens appear, run the standard full-phase execution flow with no flag-specific filtering</li>\n<li>Do not infer that a flag is active just because it is documented in this prompt</li>\n</ul>\n<p>Context files are resolved inside the workflow via <code>gad-tools init execute-phase</code> and per-subagent <code>&lt;files_to_read&gt;</code> blocks.\n</context></p>\n<process>\nExecute the execute-phase workflow from @workflows/gad-execute-phase.md end-to-end.\nPreserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).\n</process>\n",
-    "bodyRaw": "<objective>\nExecute all plans in a phase using wave-based parallel execution.\n\nOrchestrator stays lean: discover plans, analyze dependencies, group into waves, spawn subagents, collect results. Each subagent loads the full execute-plan context and handles its own plan.\n\nOptional wave filter:\n- `--wave N` executes only Wave `N` for pacing, quota management, or staged rollout\n- phase verification/completion still only happens when no incomplete plans remain after the selected wave finishes\n\nFlag handling rule:\n- The optional flags documented below are available behaviors, not implied active behaviors\n- A flag is active only when its literal token appears in `$ARGUMENTS`\n- If a documented flag is absent from `$ARGUMENTS`, treat it as inactive\n\nContext budget: ~15% orchestrator, 100% fresh per subagent.\n</objective>\n\n<execution_context>\n@workflows/gad-execute-phase.md\n@references/ui-brand.md\n</execution_context>\n\n<context>\nPhase: $ARGUMENTS\n\n**Available optional flags (documentation only — not automatically active):**\n- `--wave N` — Execute only Wave `N` in the phase. Use when you want to pace execution or stay inside usage limits.\n- `--gaps-only` — Execute only gap closure plans (plans with `gap_closure: true` in frontmatter). Use after verify-work creates fix plans.\n- `--interactive` — Execute plans sequentially inline (no subagents) with user checkpoints between tasks. Lower token usage, pair-programming style. Best for small phases, bug fixes, and verification gaps.\n\n**Active flags must be derived from `$ARGUMENTS`:**\n- `--wave N` is active only if the literal `--wave` token is present in `$ARGUMENTS`\n- `--gaps-only` is active only if the literal `--gaps-only` token is present in `$ARGUMENTS`\n- `--interactive` is active only if the literal `--interactive` token is present in `$ARGUMENTS`\n- If none of these tokens appear, run the standard full-phase execution flow with no flag-specific filtering\n- Do not infer that a flag is active just because it is documented in this prompt\n\nContext files are resolved inside the workflow via `gad-tools init execute-phase` and per-subagent `<files_to_read>` blocks.\n</context>\n\n<process>\nExecute the execute-phase workflow from @workflows/gad-execute-phase.md end-to-end.\nPreserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).\n</process>\n"
+    "bodyHtml": "<objective>\nExecute all plans in a phase using wave-based parallel execution.\n\n<p>Orchestrator stays lean: discover plans, analyze dependencies, group into waves, spawn subagents, collect results. Each subagent loads the full execute-plan context and handles its own plan.</p>\n<p>Optional wave filter:</p>\n<ul>\n<li><code>--wave N</code> executes only Wave <code>N</code> for pacing, quota management, or staged rollout</li>\n<li>phase verification/completion still only happens when no incomplete plans remain after the selected wave finishes</li>\n</ul>\n<p>Flag handling rule:</p>\n<ul>\n<li>The optional flags documented below are available behaviors, not implied active behaviors</li>\n<li>A flag is active only when its literal token appears in <code>$ARGUMENTS</code></li>\n<li>If a documented flag is absent from <code>$ARGUMENTS</code>, treat it as inactive</li>\n</ul>\n<p>Context budget: ~15% orchestrator, 100% fresh per subagent.\n</objective></p>\n<execution_context>\n@workflows/gad-execute-phase.md\n@references/ui-brand.md\n@references/sink-pipeline.md\n</execution_context>\n\n<planning_state_surface>\nAfter each task, update planning state by hand-editing XML under `.planning/`\n(TASK-REGISTRY.xml, STATE.xml, DECISIONS.xml). Verify with `gad tasks`,\n`gad state`, `gad decisions`. See the quick-reference table in\n`@references/sink-pipeline.md` for the full \"edit X → verify with Y\" map.\nMDX in `docs/<id>/planning/` is derived — never edit it directly.\n</planning_state_surface>\n\n<context>\nPhase: $ARGUMENTS\n\n<p><strong>Available optional flags (documentation only — not automatically active):</strong></p>\n<ul>\n<li><code>--wave N</code> — Execute only Wave <code>N</code> in the phase. Use when you want to pace execution or stay inside usage limits.</li>\n<li><code>--gaps-only</code> — Execute only gap closure plans (plans with <code>gap_closure: true</code> in frontmatter). Use after verify-work creates fix plans.</li>\n<li><code>--interactive</code> — Execute plans sequentially inline (no subagents) with user checkpoints between tasks. Lower token usage, pair-programming style. Best for small phases, bug fixes, and verification gaps.</li>\n</ul>\n<p><strong>Active flags must be derived from <code>$ARGUMENTS</code>:</strong></p>\n<ul>\n<li><code>--wave N</code> is active only if the literal <code>--wave</code> token is present in <code>$ARGUMENTS</code></li>\n<li><code>--gaps-only</code> is active only if the literal <code>--gaps-only</code> token is present in <code>$ARGUMENTS</code></li>\n<li><code>--interactive</code> is active only if the literal <code>--interactive</code> token is present in <code>$ARGUMENTS</code></li>\n<li>If none of these tokens appear, run the standard full-phase execution flow with no flag-specific filtering</li>\n<li>Do not infer that a flag is active just because it is documented in this prompt</li>\n</ul>\n<p>Context files are resolved inside the workflow via <code>gad-tools init execute-phase</code> and per-subagent <code>&lt;files_to_read&gt;</code> blocks.\n</context></p>\n<process>\nExecute the execute-phase workflow from @workflows/gad-execute-phase.md end-to-end.\nPreserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).\n</process>\n",
+    "bodyRaw": "<objective>\nExecute all plans in a phase using wave-based parallel execution.\n\nOrchestrator stays lean: discover plans, analyze dependencies, group into waves, spawn subagents, collect results. Each subagent loads the full execute-plan context and handles its own plan.\n\nOptional wave filter:\n- `--wave N` executes only Wave `N` for pacing, quota management, or staged rollout\n- phase verification/completion still only happens when no incomplete plans remain after the selected wave finishes\n\nFlag handling rule:\n- The optional flags documented below are available behaviors, not implied active behaviors\n- A flag is active only when its literal token appears in `$ARGUMENTS`\n- If a documented flag is absent from `$ARGUMENTS`, treat it as inactive\n\nContext budget: ~15% orchestrator, 100% fresh per subagent.\n</objective>\n\n<execution_context>\n@workflows/gad-execute-phase.md\n@references/ui-brand.md\n@references/sink-pipeline.md\n</execution_context>\n\n<planning_state_surface>\nAfter each task, update planning state by hand-editing XML under `.planning/`\n(TASK-REGISTRY.xml, STATE.xml, DECISIONS.xml). Verify with `gad tasks`,\n`gad state`, `gad decisions`. See the quick-reference table in\n`@references/sink-pipeline.md` for the full \"edit X → verify with Y\" map.\nMDX in `docs/<id>/planning/` is derived — never edit it directly.\n</planning_state_surface>\n\n<context>\nPhase: $ARGUMENTS\n\n**Available optional flags (documentation only — not automatically active):**\n- `--wave N` — Execute only Wave `N` in the phase. Use when you want to pace execution or stay inside usage limits.\n- `--gaps-only` — Execute only gap closure plans (plans with `gap_closure: true` in frontmatter). Use after verify-work creates fix plans.\n- `--interactive` — Execute plans sequentially inline (no subagents) with user checkpoints between tasks. Lower token usage, pair-programming style. Best for small phases, bug fixes, and verification gaps.\n\n**Active flags must be derived from `$ARGUMENTS`:**\n- `--wave N` is active only if the literal `--wave` token is present in `$ARGUMENTS`\n- `--gaps-only` is active only if the literal `--gaps-only` token is present in `$ARGUMENTS`\n- `--interactive` is active only if the literal `--interactive` token is present in `$ARGUMENTS`\n- If none of these tokens appear, run the standard full-phase execution flow with no flag-specific filtering\n- Do not infer that a flag is active just because it is documented in this prompt\n\nContext files are resolved inside the workflow via `gad-tools init execute-phase` and per-subagent `<files_to_read>` blocks.\n</context>\n\n<process>\nExecute the execute-phase workflow from @workflows/gad-execute-phase.md end-to-end.\nPreserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).\n</process>\n"
   },
   {
     "id": "gad-forensics",
@@ -786,8 +800,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-new-project/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<context>\n**Flags:**\n- `--auto` — Automatic mode. After config questions, runs research → requirements → roadmap without further interaction. Expects idea document via @ reference.\n</context>\n\n<objective>\nInitialize a new project through unified flow: questioning → research (optional) → requirements → roadmap.\n\n<p><strong>Creates:</strong></p>\n<ul>\n<li><code>.planning/PROJECT.md</code> — project context</li>\n<li><code>gad-config.toml</code> — canonical workflow preferences</li>\n<li><code>.planning/config.json</code> — generated compatibility mirror</li>\n<li><code>.planning/research/</code> — domain research (optional)</li>\n<li><code>.planning/REQUIREMENTS.md</code> — scoped requirements</li>\n<li><code>.planning/ROADMAP.md</code> — phase structure</li>\n<li><code>.planning/STATE.md</code> — project memory</li>\n</ul>\n<p><strong>After this command:</strong> Run <code>/gad:plan-phase 1</code> to start execution.\n</objective></p>\n<execution_context>\n@workflows/gad-new-project.md\n@references/questioning.md\n@references/ui-brand.md\n@templates/project.md\n@templates/requirements.md\n</execution_context>\n\n<process>\nExecute the new-project workflow from @workflows/gad-new-project.md end-to-end.\nPreserve all workflow gates (validation, approvals, commits, routing).\n</process>\n",
-    "bodyRaw": "<context>\n**Flags:**\n- `--auto` — Automatic mode. After config questions, runs research → requirements → roadmap without further interaction. Expects idea document via @ reference.\n</context>\n\n<objective>\nInitialize a new project through unified flow: questioning → research (optional) → requirements → roadmap.\n\n**Creates:**\n- `.planning/PROJECT.md` — project context\n- `gad-config.toml` — canonical workflow preferences\n- `.planning/config.json` — generated compatibility mirror\n- `.planning/research/` — domain research (optional)\n- `.planning/REQUIREMENTS.md` — scoped requirements\n- `.planning/ROADMAP.md` — phase structure\n- `.planning/STATE.md` — project memory\n\n**After this command:** Run `/gad:plan-phase 1` to start execution.\n</objective>\n\n<execution_context>\n@workflows/gad-new-project.md\n@references/questioning.md\n@references/ui-brand.md\n@templates/project.md\n@templates/requirements.md\n</execution_context>\n\n<process>\nExecute the new-project workflow from @workflows/gad-new-project.md end-to-end.\nPreserve all workflow gates (validation, approvals, commits, routing).\n</process>\n"
+    "bodyHtml": "<context>\n**Flags:**\n- `--auto` — Automatic mode. After config questions, runs research → requirements → roadmap without further interaction. Expects idea document via @ reference.\n</context>\n\n<objective>\nInitialize a new project through unified flow: questioning → research (optional) → requirements → roadmap.\n\n<p><strong>Creates:</strong></p>\n<ul>\n<li><code>.planning/PROJECT.md</code> — project context</li>\n<li><code>gad-config.toml</code> — canonical workflow preferences</li>\n<li><code>.planning/config.json</code> — generated compatibility mirror</li>\n<li><code>.planning/research/</code> — domain research (optional)</li>\n<li><code>.planning/REQUIREMENTS.md</code> — scoped requirements</li>\n<li><code>.planning/ROADMAP.md</code> — phase structure</li>\n<li><code>.planning/STATE.md</code> — project memory</li>\n</ul>\n<p><strong>After this command:</strong> Run <code>/gad:plan-phase 1</code> to start execution.\n</objective></p>\n<execution_context>\n@workflows/gad-new-project.md\n@references/questioning.md\n@references/ui-brand.md\n@references/project-shape.md\n@references/sink-pipeline.md\n@templates/project.md\n@templates/requirements.md\n</execution_context>\n\n<planning_state_surface>\nXML under `.planning/` is authoritative; MDX in `docs/<id>/planning/` is derived.\nSee `@references/project-shape.md` for the canonical file set and\n`@references/sink-pipeline.md` for the \"I want to edit X → use command Y\" map.\nLegacy markdown templates (`STATE.md`, `ROADMAP.md`, …) have no supported\nMD→XML conversion path — scaffold XML directly.\n</planning_state_surface>\n\n<process>\nExecute the new-project workflow from @workflows/gad-new-project.md end-to-end.\nPreserve all workflow gates (validation, approvals, commits, routing).\n</process>\n",
+    "bodyRaw": "<context>\n**Flags:**\n- `--auto` — Automatic mode. After config questions, runs research → requirements → roadmap without further interaction. Expects idea document via @ reference.\n</context>\n\n<objective>\nInitialize a new project through unified flow: questioning → research (optional) → requirements → roadmap.\n\n**Creates:**\n- `.planning/PROJECT.md` — project context\n- `gad-config.toml` — canonical workflow preferences\n- `.planning/config.json` — generated compatibility mirror\n- `.planning/research/` — domain research (optional)\n- `.planning/REQUIREMENTS.md` — scoped requirements\n- `.planning/ROADMAP.md` — phase structure\n- `.planning/STATE.md` — project memory\n\n**After this command:** Run `/gad:plan-phase 1` to start execution.\n</objective>\n\n<execution_context>\n@workflows/gad-new-project.md\n@references/questioning.md\n@references/ui-brand.md\n@references/project-shape.md\n@references/sink-pipeline.md\n@templates/project.md\n@templates/requirements.md\n</execution_context>\n\n<planning_state_surface>\nXML under `.planning/` is authoritative; MDX in `docs/<id>/planning/` is derived.\nSee `@references/project-shape.md` for the canonical file set and\n`@references/sink-pipeline.md` for the \"I want to edit X → use command Y\" map.\nLegacy markdown templates (`STATE.md`, `ROADMAP.md`, …) have no supported\nMD→XML conversion path — scaffold XML directly.\n</planning_state_surface>\n\n<process>\nExecute the new-project workflow from @workflows/gad-new-project.md end-to-end.\nPreserve all workflow gates (validation, approvals, commits, routing).\n</process>\n"
   },
   {
     "id": "gad-next",
@@ -856,8 +870,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-plan-phase/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nCreate executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.\n\n<p><strong>Default flow:</strong> Research (if needed) → Plan → Verify → Done</p>\n<p><strong>Orchestrator role:</strong> Parse arguments, validate phase, research domain (unless skipped), spawn gad-planner, verify with gad-plan-checker, iterate until pass or max iterations, present results.\n</objective></p>\n<execution_context>\n@workflows/gad-plan-phase.md\n@references/ui-brand.md\n</execution_context>\n\n<context>\nPhase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omitted)\n\n<p><strong>Flags:</strong></p>\n<ul>\n<li><code>--research</code> — Force re-research even if RESEARCH.md exists</li>\n<li><code>--skip-research</code> — Skip research, go straight to planning</li>\n<li><code>--gaps</code> — Gap closure mode (reads VERIFICATION.md, skips research)</li>\n<li><code>--skip-verify</code> — Skip verification loop</li>\n<li><code>--prd &lt;file&gt;</code> — Use a PRD/acceptance criteria file instead of discuss-phase. Parses requirements into CONTEXT.md automatically. Skips discuss-phase entirely.</li>\n<li><code>--reviews</code> — Replan incorporating cross-AI review feedback from REVIEWS.md (produced by <code>/gad:review</code>)</li>\n<li><code>--text</code> — Use plain-text numbered lists instead of TUI menus (required for <code>/rc</code> remote sessions)</li>\n</ul>\n<p>Normalize phase input in step 2 before any directory lookups.\n</context></p>\n<process>\nExecute the plan-phase workflow from @workflows/gad-plan-phase.md end-to-end.\nPreserve all workflow gates (validation, research, planning, verification loop, routing).\n</process>\n",
-    "bodyRaw": "<objective>\nCreate executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.\n\n**Default flow:** Research (if needed) → Plan → Verify → Done\n\n**Orchestrator role:** Parse arguments, validate phase, research domain (unless skipped), spawn gad-planner, verify with gad-plan-checker, iterate until pass or max iterations, present results.\n</objective>\n\n<execution_context>\n@workflows/gad-plan-phase.md\n@references/ui-brand.md\n</execution_context>\n\n<context>\nPhase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omitted)\n\n**Flags:**\n- `--research` — Force re-research even if RESEARCH.md exists\n- `--skip-research` — Skip research, go straight to planning\n- `--gaps` — Gap closure mode (reads VERIFICATION.md, skips research)\n- `--skip-verify` — Skip verification loop\n- `--prd <file>` — Use a PRD/acceptance criteria file instead of discuss-phase. Parses requirements into CONTEXT.md automatically. Skips discuss-phase entirely.\n- `--reviews` — Replan incorporating cross-AI review feedback from REVIEWS.md (produced by `/gad:review`)\n- `--text` — Use plain-text numbered lists instead of TUI menus (required for `/rc` remote sessions)\n\nNormalize phase input in step 2 before any directory lookups.\n</context>\n\n<process>\nExecute the plan-phase workflow from @workflows/gad-plan-phase.md end-to-end.\nPreserve all workflow gates (validation, research, planning, verification loop, routing).\n</process>\n"
+    "bodyHtml": "<objective>\nCreate executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.\n\n<p><strong>Default flow:</strong> Research (if needed) → Plan → Verify → Done</p>\n<p><strong>Orchestrator role:</strong> Parse arguments, validate phase, research domain (unless skipped), spawn gad-planner, verify with gad-plan-checker, iterate until pass or max iterations, present results.\n</objective></p>\n<execution_context>\n@workflows/gad-plan-phase.md\n@references/ui-brand.md\n@references/sink-pipeline.md\n</execution_context>\n\n<planning_state_surface>\nWhen editing ROADMAP / TASK-REGISTRY / DECISIONS as part of planning, hand-edit\nthe XML under `.planning/` — it is the source of truth. See the quick-reference\ntable in `@references/sink-pipeline.md` for the full \"edit X → verify with Y\"\nmap. Do NOT edit MDX in `docs/<id>/planning/`; that is a derived view.\n</planning_state_surface>\n\n<context>\nPhase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omitted)\n\n<p><strong>Flags:</strong></p>\n<ul>\n<li><code>--research</code> — Force re-research even if RESEARCH.md exists</li>\n<li><code>--skip-research</code> — Skip research, go straight to planning</li>\n<li><code>--gaps</code> — Gap closure mode (reads VERIFICATION.md, skips research)</li>\n<li><code>--skip-verify</code> — Skip verification loop</li>\n<li><code>--prd &lt;file&gt;</code> — Use a PRD/acceptance criteria file instead of discuss-phase. Parses requirements into CONTEXT.md automatically. Skips discuss-phase entirely.</li>\n<li><code>--reviews</code> — Replan incorporating cross-AI review feedback from REVIEWS.md (produced by <code>/gad:review</code>)</li>\n<li><code>--text</code> — Use plain-text numbered lists instead of TUI menus (required for <code>/rc</code> remote sessions)</li>\n</ul>\n<p>Normalize phase input in step 2 before any directory lookups.\n</context></p>\n<process>\nExecute the plan-phase workflow from @workflows/gad-plan-phase.md end-to-end.\nPreserve all workflow gates (validation, research, planning, verification loop, routing).\n</process>\n",
+    "bodyRaw": "<objective>\nCreate executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.\n\n**Default flow:** Research (if needed) → Plan → Verify → Done\n\n**Orchestrator role:** Parse arguments, validate phase, research domain (unless skipped), spawn gad-planner, verify with gad-plan-checker, iterate until pass or max iterations, present results.\n</objective>\n\n<execution_context>\n@workflows/gad-plan-phase.md\n@references/ui-brand.md\n@references/sink-pipeline.md\n</execution_context>\n\n<planning_state_surface>\nWhen editing ROADMAP / TASK-REGISTRY / DECISIONS as part of planning, hand-edit\nthe XML under `.planning/` — it is the source of truth. See the quick-reference\ntable in `@references/sink-pipeline.md` for the full \"edit X → verify with Y\"\nmap. Do NOT edit MDX in `docs/<id>/planning/`; that is a derived view.\n</planning_state_surface>\n\n<context>\nPhase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omitted)\n\n**Flags:**\n- `--research` — Force re-research even if RESEARCH.md exists\n- `--skip-research` — Skip research, go straight to planning\n- `--gaps` — Gap closure mode (reads VERIFICATION.md, skips research)\n- `--skip-verify` — Skip verification loop\n- `--prd <file>` — Use a PRD/acceptance criteria file instead of discuss-phase. Parses requirements into CONTEXT.md automatically. Skips discuss-phase entirely.\n- `--reviews` — Replan incorporating cross-AI review feedback from REVIEWS.md (produced by `/gad:review`)\n- `--text` — Use plain-text numbered lists instead of TUI menus (required for `/rc` remote sessions)\n\nNormalize phase input in step 2 before any directory lookups.\n</context>\n\n<process>\nExecute the plan-phase workflow from @workflows/gad-plan-phase.md end-to-end.\nPreserve all workflow gates (validation, research, planning, verification loop, routing).\n</process>\n"
   },
   {
     "id": "gad-plant-seed",
@@ -1764,6 +1778,7 @@ export const SKILL_INHERITANCE: Record<string, string[]> = {
   "gad-eval-list": [],
   "gad-eval-report": [],
   "gad-eval-run": [],
+  "gad-eval-spawn": [],
   "gad-eval-suite": [],
   "gad-evolution-evolve": [],
   "gad-evolution-validator": [],
@@ -2087,15 +2102,130 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 17
+            "count": 13
+          }
+        },
+        {
+          "id": "gad-decide-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-decide-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 6
+          }
+        },
+        {
+          "id": "gad-decide-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-decide-n4",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-decide-n5",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 120
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-decide-n6",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 120
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 13
           }
         }
       ],
-      "edges": []
+      "edges": [
+        {
+          "id": "gad-decide-e0",
+          "source": "gad-decide-n0",
+          "target": "gad-decide-n1",
+          "animated": false
+        },
+        {
+          "id": "gad-decide-e1",
+          "source": "gad-decide-n1",
+          "target": "gad-decide-n2",
+          "animated": false
+        },
+        {
+          "id": "gad-decide-e2",
+          "source": "gad-decide-n2",
+          "target": "gad-decide-n3",
+          "animated": false
+        },
+        {
+          "id": "gad-decide-e3",
+          "source": "gad-decide-n3",
+          "target": "gad-decide-n4",
+          "animated": false
+        },
+        {
+          "id": "gad-decide-e4",
+          "source": "gad-decide-n4",
+          "target": "gad-decide-n5",
+          "animated": false
+        },
+        {
+          "id": "gad-decide-e5",
+          "source": "gad-decide-n5",
+          "target": "gad-decide-n6",
+          "animated": false
+        }
+      ]
     },
     "conformance": {
-      "score": 0.25,
-      "matched": 1,
+      "score": 0.5,
+      "matched": 2,
       "extra": 0,
       "out_of_order": 0,
       "expected": 4
@@ -2153,9 +2283,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/ROADMAP.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 5
           }
         },
         {
@@ -2166,9 +2296,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/ROADMAP.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 7
           }
         },
         {
@@ -2179,9 +2309,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 5
           }
         },
         {
@@ -2192,9 +2322,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 10
           }
         },
         {
@@ -2205,9 +2335,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 2
           }
         },
         {
@@ -2218,9 +2348,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 17
           }
         },
         {
@@ -2231,9 +2361,334 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n7",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 120
+          },
+          "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n8",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n9",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 1
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n10",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/ROADMAP.xml",
+            "kind": "artifact",
+            "count": 1
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n11",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 1
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n12",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 1
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n13",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/ROADMAP.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n14",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n15",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n16",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n17",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n18",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n19",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n20",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n21",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n22",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n23",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n24",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 720
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n25",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 720
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n26",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 720
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n27",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 720
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n28",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 840
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n29",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 840
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n30",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 840
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n31",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 840
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 2
           }
         }
       ],
@@ -2273,12 +2728,162 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-discuss-plan-execute-n5",
           "target": "gad-discuss-plan-execute-n6",
           "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e6",
+          "source": "gad-discuss-plan-execute-n6",
+          "target": "gad-discuss-plan-execute-n7",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e7",
+          "source": "gad-discuss-plan-execute-n7",
+          "target": "gad-discuss-plan-execute-n8",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e8",
+          "source": "gad-discuss-plan-execute-n8",
+          "target": "gad-discuss-plan-execute-n9",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e9",
+          "source": "gad-discuss-plan-execute-n9",
+          "target": "gad-discuss-plan-execute-n10",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e10",
+          "source": "gad-discuss-plan-execute-n10",
+          "target": "gad-discuss-plan-execute-n11",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e11",
+          "source": "gad-discuss-plan-execute-n11",
+          "target": "gad-discuss-plan-execute-n12",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e12",
+          "source": "gad-discuss-plan-execute-n12",
+          "target": "gad-discuss-plan-execute-n13",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e13",
+          "source": "gad-discuss-plan-execute-n13",
+          "target": "gad-discuss-plan-execute-n14",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e14",
+          "source": "gad-discuss-plan-execute-n14",
+          "target": "gad-discuss-plan-execute-n15",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e15",
+          "source": "gad-discuss-plan-execute-n15",
+          "target": "gad-discuss-plan-execute-n16",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e16",
+          "source": "gad-discuss-plan-execute-n16",
+          "target": "gad-discuss-plan-execute-n17",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e17",
+          "source": "gad-discuss-plan-execute-n17",
+          "target": "gad-discuss-plan-execute-n18",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e18",
+          "source": "gad-discuss-plan-execute-n18",
+          "target": "gad-discuss-plan-execute-n19",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e19",
+          "source": "gad-discuss-plan-execute-n19",
+          "target": "gad-discuss-plan-execute-n20",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e20",
+          "source": "gad-discuss-plan-execute-n20",
+          "target": "gad-discuss-plan-execute-n21",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e21",
+          "source": "gad-discuss-plan-execute-n21",
+          "target": "gad-discuss-plan-execute-n22",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e22",
+          "source": "gad-discuss-plan-execute-n22",
+          "target": "gad-discuss-plan-execute-n23",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e23",
+          "source": "gad-discuss-plan-execute-n23",
+          "target": "gad-discuss-plan-execute-n24",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e24",
+          "source": "gad-discuss-plan-execute-n24",
+          "target": "gad-discuss-plan-execute-n25",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e25",
+          "source": "gad-discuss-plan-execute-n25",
+          "target": "gad-discuss-plan-execute-n26",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e26",
+          "source": "gad-discuss-plan-execute-n26",
+          "target": "gad-discuss-plan-execute-n27",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e27",
+          "source": "gad-discuss-plan-execute-n27",
+          "target": "gad-discuss-plan-execute-n28",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e28",
+          "source": "gad-discuss-plan-execute-n28",
+          "target": "gad-discuss-plan-execute-n29",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e29",
+          "source": "gad-discuss-plan-execute-n29",
+          "target": "gad-discuss-plan-execute-n30",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e30",
+          "source": "gad-discuss-plan-execute-n30",
+          "target": "gad-discuss-plan-execute-n31",
+          "animated": false
         }
       ]
     },
     "conformance": {
-      "score": 0.188,
-      "matched": 3,
+      "score": 0.25,
+      "matched": 4,
       "extra": 0,
       "out_of_order": 0,
       "expected": 16
@@ -2315,32 +2920,7 @@ export const WORKFLOWS: Workflow[] = [
     "origin": "authored",
     "mermaidBody": "flowchart LR\n  A[experiment runs] --> B[eval-report skill: capture raw results + metrics]\n  B --> C[identify what is surprising]\n  C --> D{worth a finding?}\n  D -->|no| E[log in .planning/notes/ only]\n  D -->|yes| F[write-feature-doc skill: draft FINDINGS-YYYY-MM-DD-<slug>.md]\n  F --> G[hypothesis, evidence, interpretation, architectural impact]\n  G --> H[commit finding file]\n  H --> I[build-site-data picks up into FINDINGS catalog]\n  I --> J[/findings index + /findings/[slug] render]\n  J --> K[link from related site surfaces]",
     "bodyHtml": "<p>Findings are the public whitepaper output of the GAD research loop\n(decision gad-169). Each finding documents one experiment: what the\nhypothesis was, what we ran, what the raw results showed, what was\nsurprising, and what architectural change it drove (or failed to).</p>\n<p>The &quot;surprise identification&quot; step is load-bearing. A finding that\njust summarizes a result nobody doubted is not worth publishing.\nFindings earn their place by changing someone&#39;s mental model — the\nframework&#39;s, the operator&#39;s, or a future reader&#39;s.</p>\n<p>After the writeup lands in <code>evals/FINDINGS-YYYY-MM-DD-&lt;slug&gt;.md</code>,\n<code>build-site-data.mjs</code> picks it up into the FINDINGS catalog and both\n<code>/findings</code> (index) and <code>/findings/[slug]</code> (detail) start rendering\nit. Related surfaces (rubric, run hero callouts, phase 45 hero copy)\nlink to it directly.</p>\n<pre><code class=\"language-mermaid\">flowchart LR\n  A[experiment runs] --&gt; B[eval-report skill: capture raw results + metrics]\n  B --&gt; C[identify what is surprising]\n  C --&gt; D{worth a finding?}\n  D --&gt;|no| E[log in .planning/notes/ only]\n  D --&gt;|yes| F[write-feature-doc skill: draft FINDINGS-YYYY-MM-DD-&lt;slug&gt;.md]\n  F --&gt; G[hypothesis, evidence, interpretation, architectural impact]\n  G --&gt; H[commit finding file]\n  H --&gt; I[build-site-data picks up into FINDINGS catalog]\n  I --&gt; J[/findings index + /findings/[slug] render]\n  J --&gt; K[link from related site surfaces]\n</code></pre>\n",
-    "file": ".planning/workflows/gad-findings.md",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "gad-findings-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "site/lib/catalog.generated.ts",
-            "kind": "artifact",
-            "count": 1
-          }
-        }
-      ],
-      "edges": []
-    },
-    "conformance": {
-      "score": 0.143,
-      "matched": 1,
-      "extra": 0,
-      "out_of_order": 0,
-      "expected": 7
-    }
+    "file": ".planning/workflows/gad-findings.md"
   },
   {
     "slug": "gad-loop",
@@ -2385,9 +2965,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 7
           }
         },
         {
@@ -2398,9 +2978,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 5
           }
         },
         {
@@ -2411,9 +2991,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 10
           }
         },
         {
@@ -2424,9 +3004,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 2
           }
         },
         {
@@ -2437,9 +3017,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 17
           }
         },
         {
@@ -2450,9 +3030,282 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n6",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 120
+          },
+          "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n7",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 120
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n8",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-loop-n9",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 5
+          }
+        },
+        {
+          "id": "gad-loop-n10",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n11",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n12",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n13",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-loop-n14",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-loop-n15",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 360
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n16",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n17",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n18",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n19",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-loop-n20",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-loop-n21",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n22",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-loop-n23",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 600
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-loop-n24",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 720
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-loop-n25",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 720
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n26",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 720
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 2
           }
         }
       ],
@@ -2486,21 +3339,147 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-loop-n4",
           "target": "gad-loop-n5",
           "animated": false
+        },
+        {
+          "id": "gad-loop-e5",
+          "source": "gad-loop-n5",
+          "target": "gad-loop-n6",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e6",
+          "source": "gad-loop-n6",
+          "target": "gad-loop-n7",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e7",
+          "source": "gad-loop-n7",
+          "target": "gad-loop-n8",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e8",
+          "source": "gad-loop-n8",
+          "target": "gad-loop-n9",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e9",
+          "source": "gad-loop-n9",
+          "target": "gad-loop-n10",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e10",
+          "source": "gad-loop-n10",
+          "target": "gad-loop-n11",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e11",
+          "source": "gad-loop-n11",
+          "target": "gad-loop-n12",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e12",
+          "source": "gad-loop-n12",
+          "target": "gad-loop-n13",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e13",
+          "source": "gad-loop-n13",
+          "target": "gad-loop-n14",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e14",
+          "source": "gad-loop-n14",
+          "target": "gad-loop-n15",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e15",
+          "source": "gad-loop-n15",
+          "target": "gad-loop-n16",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e16",
+          "source": "gad-loop-n16",
+          "target": "gad-loop-n17",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e17",
+          "source": "gad-loop-n17",
+          "target": "gad-loop-n18",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e18",
+          "source": "gad-loop-n18",
+          "target": "gad-loop-n19",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e19",
+          "source": "gad-loop-n19",
+          "target": "gad-loop-n20",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e20",
+          "source": "gad-loop-n20",
+          "target": "gad-loop-n21",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e21",
+          "source": "gad-loop-n21",
+          "target": "gad-loop-n22",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e22",
+          "source": "gad-loop-n22",
+          "target": "gad-loop-n23",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e23",
+          "source": "gad-loop-n23",
+          "target": "gad-loop-n24",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e24",
+          "source": "gad-loop-n24",
+          "target": "gad-loop-n25",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e25",
+          "source": "gad-loop-n25",
+          "target": "gad-loop-n26",
+          "animated": false
         }
       ]
     },
     "conformance": {
-      "score": 0.222,
-      "matched": 2,
+      "score": 0.333,
+      "matched": 3,
       "extra": 0,
       "out_of_order": 0,
       "expected": 9
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-bash-193-0",
-    "name": "Bash → Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 193× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-193-0` or discard.",
+    "slug": "emergent-bash-bash-bash-bash-143-0",
+    "name": "Bash → Bash → Bash → Bash",
+    "description": "Recurring tool-use sequence detected 143× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-143-0` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2515,12 +3494,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>193×</strong>: Bash → Bash → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>143×</strong>: Bash → Bash → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-n0",
+          "id": "emergent-bash-bash-bash-bash-143-0-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -2529,11 +3508,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 193
+            "count": 143
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-n1",
+          "id": "emergent-bash-bash-bash-bash-143-0-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -2542,11 +3521,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 193
+            "count": 143
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-n2",
+          "id": "emergent-bash-bash-bash-bash-143-0-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -2555,11 +3534,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 193
+            "count": 143
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-n3",
+          "id": "emergent-bash-bash-bash-bash-143-0-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -2568,11 +3547,109 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 193
+            "count": 143
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-bash-bash-143-0-e0",
+          "source": "emergent-bash-bash-bash-bash-143-0-n0",
+          "target": "emergent-bash-bash-bash-bash-143-0-n1"
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-143-0-e1",
+          "source": "emergent-bash-bash-bash-bash-143-0-n1",
+          "target": "emergent-bash-bash-bash-bash-143-0-n2"
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-143-0-e2",
+          "source": "emergent-bash-bash-bash-bash-143-0-n2",
+          "target": "emergent-bash-bash-bash-bash-143-0-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 143,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-bash-bash-bash-bash-114-1",
+    "name": "Bash → Bash → Bash → Bash → Bash",
+    "description": "Recurring tool-use sequence detected 114× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-114-1` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>114×</strong>: Bash → Bash → Bash → Bash → Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 114
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-n4",
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 114
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 114
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 114
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -2581,140 +3658,42 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 193
+            "count": 114
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-e0",
-          "source": "emergent-bash-bash-bash-bash-bash-193-0-n0",
-          "target": "emergent-bash-bash-bash-bash-bash-193-0-n1"
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-e0",
+          "source": "emergent-bash-bash-bash-bash-bash-114-1-n0",
+          "target": "emergent-bash-bash-bash-bash-bash-114-1-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-e1",
-          "source": "emergent-bash-bash-bash-bash-bash-193-0-n1",
-          "target": "emergent-bash-bash-bash-bash-bash-193-0-n2"
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-e1",
+          "source": "emergent-bash-bash-bash-bash-bash-114-1-n1",
+          "target": "emergent-bash-bash-bash-bash-bash-114-1-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-e2",
-          "source": "emergent-bash-bash-bash-bash-bash-193-0-n2",
-          "target": "emergent-bash-bash-bash-bash-bash-193-0-n3"
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-e2",
+          "source": "emergent-bash-bash-bash-bash-bash-114-1-n2",
+          "target": "emergent-bash-bash-bash-bash-bash-114-1-n3"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-193-0-e3",
-          "source": "emergent-bash-bash-bash-bash-bash-193-0-n3",
-          "target": "emergent-bash-bash-bash-bash-bash-193-0-n4"
+          "id": "emergent-bash-bash-bash-bash-bash-114-1-e3",
+          "source": "emergent-bash-bash-bash-bash-bash-114-1-n3",
+          "target": "emergent-bash-bash-bash-bash-bash-114-1-n4"
         }
       ]
     },
     "support": {
-      "phases": 193,
+      "phases": 114,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-225-1",
-    "name": "Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 225× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-225-1` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>225×</strong>: Bash → Bash → Bash → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-bash-bash-bash-225-1-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 225
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-225-1-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 225
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-225-1-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 225
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-225-1-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 225
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-bash-bash-bash-bash-225-1-e0",
-          "source": "emergent-bash-bash-bash-bash-225-1-n0",
-          "target": "emergent-bash-bash-bash-bash-225-1-n1"
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-225-1-e1",
-          "source": "emergent-bash-bash-bash-bash-225-1-n1",
-          "target": "emergent-bash-bash-bash-bash-225-1-n2"
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-225-1-e2",
-          "source": "emergent-bash-bash-bash-bash-225-1-n2",
-          "target": "emergent-bash-bash-bash-bash-225-1-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 225,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-bash-bash-273-2",
+    "slug": "emergent-bash-bash-bash-189-2",
     "name": "Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 273× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-273-2` or discard.",
+    "description": "Recurring tool-use sequence detected 189× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-189-2` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2729,12 +3708,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>273×</strong>: Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>189×</strong>: Bash → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-273-2-n0",
+          "id": "emergent-bash-bash-bash-189-2-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -2743,11 +3722,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 273
+            "count": 189
           }
         },
         {
-          "id": "emergent-bash-bash-bash-273-2-n1",
+          "id": "emergent-bash-bash-bash-189-2-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -2756,11 +3735,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 273
+            "count": 189
           }
         },
         {
-          "id": "emergent-bash-bash-bash-273-2-n2",
+          "id": "emergent-bash-bash-bash-189-2-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -2769,32 +3748,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 273
+            "count": 189
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-273-2-e0",
-          "source": "emergent-bash-bash-bash-273-2-n0",
-          "target": "emergent-bash-bash-bash-273-2-n1"
+          "id": "emergent-bash-bash-bash-189-2-e0",
+          "source": "emergent-bash-bash-bash-189-2-n0",
+          "target": "emergent-bash-bash-bash-189-2-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-273-2-e1",
-          "source": "emergent-bash-bash-bash-273-2-n1",
-          "target": "emergent-bash-bash-bash-273-2-n2"
+          "id": "emergent-bash-bash-bash-189-2-e1",
+          "source": "emergent-bash-bash-bash-189-2-n1",
+          "target": "emergent-bash-bash-bash-189-2-n2"
         }
       ]
     },
     "support": {
-      "phases": 273,
+      "phases": 189,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-read-36-3",
-    "name": "Bash → Bash → Read",
-    "description": "Recurring tool-use sequence detected 36× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-36-3` or discard.",
+    "slug": "emergent-edit-bash-bash-40-3",
+    "name": "Edit → Bash → Bash",
+    "description": "Recurring tool-use sequence detected 40× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-40-3` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2809,92 +3788,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>36×</strong>: Bash → Bash → Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>40×</strong>: Edit → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-read-36-3-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 36
-          }
-        },
-        {
-          "id": "emergent-bash-bash-read-36-3-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 36
-          }
-        },
-        {
-          "id": "emergent-bash-bash-read-36-3-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 36
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-bash-bash-read-36-3-e0",
-          "source": "emergent-bash-bash-read-36-3-n0",
-          "target": "emergent-bash-bash-read-36-3-n1"
-        },
-        {
-          "id": "emergent-bash-bash-read-36-3-e1",
-          "source": "emergent-bash-bash-read-36-3-n1",
-          "target": "emergent-bash-bash-read-36-3-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 36,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-bash-bash-bash-24-4",
-    "name": "Edit → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 24× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-24-4` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>24×</strong>: Edit → Bash → Bash → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-bash-bash-bash-24-4-n0",
+          "id": "emergent-edit-bash-bash-40-3-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -2903,11 +3802,349 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
+            "count": 40
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-40-3-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 40
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-40-3-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 40
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-bash-bash-40-3-e0",
+          "source": "emergent-edit-bash-bash-40-3-n0",
+          "target": "emergent-edit-bash-bash-40-3-n1"
+        },
+        {
+          "id": "emergent-edit-bash-bash-40-3-e1",
+          "source": "emergent-edit-bash-bash-40-3-n1",
+          "target": "emergent-edit-bash-bash-40-3-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 40,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-bash-29-4",
+    "name": "Edit → Bash → Bash → Bash",
+    "description": "Recurring tool-use sequence detected 29× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-29-4` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>29×</strong>: Edit → Bash → Bash → Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-bash-29-4-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 29
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-29-4-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 29
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-29-4-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 29
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-29-4-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 29
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-bash-bash-bash-29-4-e0",
+          "source": "emergent-edit-bash-bash-bash-29-4-n0",
+          "target": "emergent-edit-bash-bash-bash-29-4-n1"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-29-4-e1",
+          "source": "emergent-edit-bash-bash-bash-29-4-n1",
+          "target": "emergent-edit-bash-bash-bash-29-4-n2"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-29-4-e2",
+          "source": "emergent-edit-bash-bash-bash-29-4-n2",
+          "target": "emergent-edit-bash-bash-bash-29-4-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 29,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-bash-read-37-5",
+    "name": "Bash → Bash → Read",
+    "description": "Recurring tool-use sequence detected 37× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-37-5` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>37×</strong>: Bash → Bash → Read.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-bash-read-37-5-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 37
+          }
+        },
+        {
+          "id": "emergent-bash-bash-read-37-5-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 37
+          }
+        },
+        {
+          "id": "emergent-bash-bash-read-37-5-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 37
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-read-37-5-e0",
+          "source": "emergent-bash-bash-read-37-5-n0",
+          "target": "emergent-bash-bash-read-37-5-n1"
+        },
+        {
+          "id": "emergent-bash-bash-read-37-5-e1",
+          "source": "emergent-bash-bash-read-37-5-n1",
+          "target": "emergent-bash-bash-read-37-5-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 37,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-edit-edit-37-6",
+    "name": "Edit → Edit → Edit",
+    "description": "Recurring tool-use sequence detected 37× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-37-6` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>37×</strong>: Edit → Edit → Edit.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-edit-edit-37-6-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 37
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-37-6-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 37
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-37-6-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 37
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-edit-edit-37-6-e0",
+          "source": "emergent-edit-edit-edit-37-6-n0",
+          "target": "emergent-edit-edit-edit-37-6-n1"
+        },
+        {
+          "id": "emergent-edit-edit-edit-37-6-e1",
+          "source": "emergent-edit-edit-edit-37-6-n1",
+          "target": "emergent-edit-edit-edit-37-6-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 37,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-bash-bash-read-24-7",
+    "name": "Bash → Bash → Bash → Read",
+    "description": "Recurring tool-use sequence detected 24× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-24-7` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>24×</strong>: Bash → Bash → Bash → Read.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-bash-bash-read-24-7-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
             "count": 24
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-24-4-n1",
+          "id": "emergent-bash-bash-bash-read-24-7-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -2920,7 +4157,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-24-4-n2",
+          "id": "emergent-bash-bash-bash-read-24-7-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -2933,14 +4170,14 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-24-4-n3",
+          "id": "emergent-bash-bash-bash-read-24-7-n3",
           "type": "live",
           "position": {
             "x": 660,
             "y": 0
           },
           "data": {
-            "label": "Bash",
+            "label": "Read",
             "kind": "skill",
             "count": 24
           }
@@ -2948,19 +4185,19 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-bash-24-4-e0",
-          "source": "emergent-edit-bash-bash-bash-24-4-n0",
-          "target": "emergent-edit-bash-bash-bash-24-4-n1"
+          "id": "emergent-bash-bash-bash-read-24-7-e0",
+          "source": "emergent-bash-bash-bash-read-24-7-n0",
+          "target": "emergent-bash-bash-bash-read-24-7-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-24-4-e1",
-          "source": "emergent-edit-bash-bash-bash-24-4-n1",
-          "target": "emergent-edit-bash-bash-bash-24-4-n2"
+          "id": "emergent-bash-bash-bash-read-24-7-e1",
+          "source": "emergent-bash-bash-bash-read-24-7-n1",
+          "target": "emergent-bash-bash-bash-read-24-7-n2"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-24-4-e2",
-          "source": "emergent-edit-bash-bash-bash-24-4-n2",
-          "target": "emergent-edit-bash-bash-bash-24-4-n3"
+          "id": "emergent-bash-bash-bash-read-24-7-e2",
+          "source": "emergent-bash-bash-bash-read-24-7-n2",
+          "target": "emergent-bash-bash-bash-read-24-7-n3"
         }
       ]
     },
@@ -2970,9 +4207,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-31-5",
-    "name": "Edit → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 31× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-31-5` or discard.",
+    "slug": "emergent-edit-bash-bash-bash-bash-19-8",
+    "name": "Edit → Bash → Bash → Bash → Bash",
+    "description": "Recurring tool-use sequence detected 19× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-19-8` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2987,12 +4224,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>31×</strong>: Edit → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>19×</strong>: Edit → Bash → Bash → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-31-5-n0",
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3001,11 +4238,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 31
+            "count": 19
           }
         },
         {
-          "id": "emergent-edit-bash-bash-31-5-n1",
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3014,11 +4251,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 19
           }
         },
         {
-          "id": "emergent-edit-bash-bash-31-5-n2",
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3027,189 +4264,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-bash-bash-31-5-e0",
-          "source": "emergent-edit-bash-bash-31-5-n0",
-          "target": "emergent-edit-bash-bash-31-5-n1"
-        },
-        {
-          "id": "emergent-edit-bash-bash-31-5-e1",
-          "source": "emergent-edit-bash-bash-31-5-n1",
-          "target": "emergent-edit-bash-bash-31-5-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 31,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-bash-bash-read-23-6",
-    "name": "Bash → Bash → Bash → Read",
-    "description": "Recurring tool-use sequence detected 23× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-23-6` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>23×</strong>: Bash → Bash → Bash → Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-bash-bash-read-23-6-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 23
+            "count": 19
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-23-6-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 23
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-read-23-6-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 23
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-read-23-6-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 23
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-bash-bash-bash-read-23-6-e0",
-          "source": "emergent-bash-bash-bash-read-23-6-n0",
-          "target": "emergent-bash-bash-bash-read-23-6-n1"
-        },
-        {
-          "id": "emergent-bash-bash-bash-read-23-6-e1",
-          "source": "emergent-bash-bash-bash-read-23-6-n1",
-          "target": "emergent-bash-bash-bash-read-23-6-n2"
-        },
-        {
-          "id": "emergent-bash-bash-bash-read-23-6-e2",
-          "source": "emergent-bash-bash-bash-read-23-6-n2",
-          "target": "emergent-bash-bash-bash-read-23-6-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 23,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-bash-bash-bash-read-16-7",
-    "name": "Bash → Bash → Bash → Bash → Read",
-    "description": "Recurring tool-use sequence detected 16× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-read-16-7` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>16×</strong>: Bash → Bash → Bash → Bash → Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 16
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 16
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 16
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-n3",
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -3218,55 +4277,153 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 16
+            "count": 19
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-n4",
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-n4",
           "type": "live",
           "position": {
             "x": 0,
             "y": 120
           },
           "data": {
-            "label": "Read",
+            "label": "Bash",
             "kind": "skill",
-            "count": 16
+            "count": 19
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-e0",
-          "source": "emergent-bash-bash-bash-bash-read-16-7-n0",
-          "target": "emergent-bash-bash-bash-bash-read-16-7-n1"
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-e0",
+          "source": "emergent-edit-bash-bash-bash-bash-19-8-n0",
+          "target": "emergent-edit-bash-bash-bash-bash-19-8-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-e1",
-          "source": "emergent-bash-bash-bash-bash-read-16-7-n1",
-          "target": "emergent-bash-bash-bash-bash-read-16-7-n2"
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-e1",
+          "source": "emergent-edit-bash-bash-bash-bash-19-8-n1",
+          "target": "emergent-edit-bash-bash-bash-bash-19-8-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-e2",
-          "source": "emergent-bash-bash-bash-bash-read-16-7-n2",
-          "target": "emergent-bash-bash-bash-bash-read-16-7-n3"
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-e2",
+          "source": "emergent-edit-bash-bash-bash-bash-19-8-n2",
+          "target": "emergent-edit-bash-bash-bash-bash-19-8-n3"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-read-16-7-e3",
-          "source": "emergent-bash-bash-bash-bash-read-16-7-n3",
-          "target": "emergent-bash-bash-bash-bash-read-16-7-n4"
+          "id": "emergent-edit-bash-bash-bash-bash-19-8-e3",
+          "source": "emergent-edit-bash-bash-bash-bash-19-8-n3",
+          "target": "emergent-edit-bash-bash-bash-bash-19-8-n4"
         }
       ]
     },
     "support": {
-      "phases": 16,
+      "phases": 19,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-read-edit-25-8",
+    "slug": "emergent-edit-edit-edit-edit-19-9",
+    "name": "Edit → Edit → Edit → Edit",
+    "description": "Recurring tool-use sequence detected 19× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-edit-19-9` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>19×</strong>: Edit → Edit → Edit → Edit.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-edit-edit-edit-19-9-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-19-9-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-19-9-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-19-9-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 19
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-edit-edit-edit-19-9-e0",
+          "source": "emergent-edit-edit-edit-edit-19-9-n0",
+          "target": "emergent-edit-edit-edit-edit-19-9-n1"
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-19-9-e1",
+          "source": "emergent-edit-edit-edit-edit-19-9-n1",
+          "target": "emergent-edit-edit-edit-edit-19-9-n2"
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-19-9-e2",
+          "source": "emergent-edit-edit-edit-edit-19-9-n2",
+          "target": "emergent-edit-edit-edit-edit-19-9-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 19,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-read-edit-25-10",
     "name": "Bash → Read → Edit",
-    "description": "Recurring tool-use sequence detected 25× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-edit-25-8` or discard.",
+    "description": "Recurring tool-use sequence detected 25× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-edit-25-10` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3286,7 +4443,7 @@ export const WORKFLOWS: Workflow[] = [
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-read-edit-25-8-n0",
+          "id": "emergent-bash-read-edit-25-10-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3299,7 +4456,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-bash-read-edit-25-8-n1",
+          "id": "emergent-bash-read-edit-25-10-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3312,7 +4469,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-bash-read-edit-25-8-n2",
+          "id": "emergent-bash-read-edit-25-10-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3327,14 +4484,14 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-bash-read-edit-25-8-e0",
-          "source": "emergent-bash-read-edit-25-8-n0",
-          "target": "emergent-bash-read-edit-25-8-n1"
+          "id": "emergent-bash-read-edit-25-10-e0",
+          "source": "emergent-bash-read-edit-25-10-n0",
+          "target": "emergent-bash-read-edit-25-10-n1"
         },
         {
-          "id": "emergent-bash-read-edit-25-8-e1",
-          "source": "emergent-bash-read-edit-25-8-n1",
-          "target": "emergent-bash-read-edit-25-8-n2"
+          "id": "emergent-bash-read-edit-25-10-e1",
+          "source": "emergent-bash-read-edit-25-10-n1",
+          "target": "emergent-bash-read-edit-25-10-n2"
         }
       ]
     },
@@ -3344,9 +4501,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-bash-bash-15-9",
-    "name": "Edit → Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 15× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-15-9` or discard.",
+    "slug": "emergent-edit-read-edit-25-11",
+    "name": "Edit → Read → Edit",
+    "description": "Recurring tool-use sequence detected 25× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-read-edit-25-11` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3361,12 +4518,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>15×</strong>: Edit → Bash → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>25×</strong>: Edit → Read → Edit.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-n0",
+          "id": "emergent-edit-read-edit-25-11-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3375,265 +4532,51 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 15
+            "count": 25
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-n1",
+          "id": "emergent-edit-read-edit-25-11-n1",
           "type": "live",
           "position": {
             "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-n4",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 120
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-e0",
-          "source": "emergent-edit-bash-bash-bash-bash-15-9-n0",
-          "target": "emergent-edit-bash-bash-bash-bash-15-9-n1"
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-e1",
-          "source": "emergent-edit-bash-bash-bash-bash-15-9-n1",
-          "target": "emergent-edit-bash-bash-bash-bash-15-9-n2"
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-e2",
-          "source": "emergent-edit-bash-bash-bash-bash-15-9-n2",
-          "target": "emergent-edit-bash-bash-bash-bash-15-9-n3"
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-bash-15-9-e3",
-          "source": "emergent-edit-bash-bash-bash-bash-15-9-n3",
-          "target": "emergent-edit-bash-bash-bash-bash-15-9-n4"
-        }
-      ]
-    },
-    "support": {
-      "phases": 15,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-read-edit-read-edit-16-10",
-    "name": "Read → Edit → Read → Edit",
-    "description": "Recurring tool-use sequence detected 16× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-edit-read-edit-16-10` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>16×</strong>: Read → Edit → Read → Edit.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-read-edit-read-edit-16-10-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
             "y": 0
           },
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 16
+            "count": 25
           }
         },
         {
-          "id": "emergent-read-edit-read-edit-16-10-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 16
-          }
-        },
-        {
-          "id": "emergent-read-edit-read-edit-16-10-n2",
+          "id": "emergent-edit-read-edit-25-11-n2",
           "type": "live",
           "position": {
             "x": 440,
             "y": 0
           },
           "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 16
-          }
-        },
-        {
-          "id": "emergent-read-edit-read-edit-16-10-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 16
+            "count": 25
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-read-edit-read-edit-16-10-e0",
-          "source": "emergent-read-edit-read-edit-16-10-n0",
-          "target": "emergent-read-edit-read-edit-16-10-n1"
+          "id": "emergent-edit-read-edit-25-11-e0",
+          "source": "emergent-edit-read-edit-25-11-n0",
+          "target": "emergent-edit-read-edit-25-11-n1"
         },
         {
-          "id": "emergent-read-edit-read-edit-16-10-e1",
-          "source": "emergent-read-edit-read-edit-16-10-n1",
-          "target": "emergent-read-edit-read-edit-16-10-n2"
-        },
-        {
-          "id": "emergent-read-edit-read-edit-16-10-e2",
-          "source": "emergent-read-edit-read-edit-16-10-n2",
-          "target": "emergent-read-edit-read-edit-16-10-n3"
+          "id": "emergent-edit-read-edit-25-11-e1",
+          "source": "emergent-edit-read-edit-25-11-n1",
+          "target": "emergent-edit-read-edit-25-11-n2"
         }
       ]
     },
     "support": {
-      "phases": 16,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-edit-bash-21-11",
-    "name": "Edit → Edit → Bash",
-    "description": "Recurring tool-use sequence detected 21× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-21-11` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>21×</strong>: Edit → Edit → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-bash-21-11-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 21
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-21-11-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 21
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-21-11-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 21
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-bash-21-11-e0",
-          "source": "emergent-edit-edit-bash-21-11-n0",
-          "target": "emergent-edit-edit-bash-21-11-n1"
-        },
-        {
-          "id": "emergent-edit-edit-bash-21-11-e1",
-          "source": "emergent-edit-edit-bash-21-11-n1",
-          "target": "emergent-edit-edit-bash-21-11-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 21,
+      "phases": 25,
       "stability": 1
     }
   }
@@ -3725,7 +4668,7 @@ export const CONTEXT_FRAMEWORKS: ContextFramework[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "42.4",
   "milestone": "gad-v1.1",
-  "nextAction": "Phase 43 context gathered (discuss mode). Phase 42.4 cleanup shipped end-to-end: snapshot lane leak fixed (42.4-04), command-skill/workflow normalization shipped (42.4-05), remaining canonical-skill dedupe + validator shipped (42.4-06), and proto-skill staging/install is now normalized so staged drafts live in `.planning/proto-skills/` with direct runtime install via `gad evolution install` before promotion (42.4-07, gad-183).",
+  "nextAction": "44-01 promoted from stub to live child_process bridge 2026-04-14. `site/app/api/dev/launch-eval/route.ts` now runs `node bin/gad.cjs eval run --project <id> --execute` via `node:child_process.spawn` from the repo root and streams stdout/stderr/exit back as SSE. `ProjectCard.tsx` parses the event-stream, renders stdout (green) / stderr (red) / meta (grey) lines in a scrollable log panel under the card, tracks running/done/err states, and exposes an Abort button that signals the server via AbortController → SIGTERM to the child. NODE_ENV=development gate enforced at both route and button level; prod cannot render or hit it. Strict projectId/species validation (`/^[a-zA-Z0-9_\\-./]+$/`, &lt;128 chars) guards against argv injection. Smoke-tested end-to-end on localhost:3000 against `__smoke_test__` (expected \"project not found\" error path) and `app-forge` (real CLI run → created v3 scaffolding with TRACE.json/EXEC.json/PROMPT.md). Surfaced + fixed `bin/gad.cjs` bug: commit 17043d7 restored eval_type/workflow fields in RUN.md template after 42.4-18 left stray `gadJson` references that crashed every `gad eval run` invocation. New follow-up tasks filed: 44-02 (migrate legacy planning roots grime-time/repub-builder/mb-cli-framework/magicborn/global into canonical eval-project shape per user alignment \"every project IS an eval project\"), 44-03 (decide app-forge static-export vs alt preservation path — confirmed `.next/` is correct for a Next.js app but forge has no `output: \"export\"` so nothing statically servable lands under apps/portfolio/public/evals/app-forge/; preservation audit still MISSING). 43-11 shipped earlier same day: phase 44.5 renamed \"Brood Editor\" → \"Species Editor\" with /project-editor + /species-editor routes reserved and Lovable/Bolt visualization scope embedded; phase 45 stripped of \"v4 brood\" phrasing. Next loop pick: 44-02 (migrate legacy roots — fastest win, makes the launcher actually cover the whole workspace) or 44-03 (decide app-forge preservation strategy — unblocks `gad eval verify` green). Phase 42.4 cleanup shipped end-to-end: snapshot lane leak fixed (42.4-04), command-skill/workflow normalization shipped (42.4-05), remaining canonical-skill dedupe + validator shipped (42.4-06), and proto-skill staging/install is now normalized so staged drafts live in `.planning/proto-skills/` with direct runtime install via `gad evolution install` before promotion (42.4-07, gad-183). Species-level `gad.json` → `species.json` rename completed (42.4-14): all 6 species files renamed in escape-the-dungeon + gad-explainer-video, build-site-data.mjs species scanner updated. `gad:eval-spawn` skill + slash command shipped (42.4-13): new canonical skill `skills/gad-eval-spawn/` wraps the existing `gad eval run --execute` EXEC.json spec, spawns a worktree-isolated `general-purpose` subagent with the hydrated prompt, writes a session marker under `.planning/.eval-runs/&lt;runId&gt;.json`, and preserves outputs via `gad eval preserve` before cleanup — plan/build seam per decision forge-09. Multi-root eval discovery shipped (42.4-12): `[[evals.roots]]` in `gad-config.toml` mirrors `[[planning.roots]]`; new helpers `getEvalRoots` / `listAllEvalProjects` / `resolveEvalProject` in `bin/gad.cjs` rewire every eval subcommand to walk the union of configured roots plus the implicit submodule default, with load-time duplicate-id detection; `apps/forge/evals/` registered as the first non-default root so forge can host its own evals outside the framework submodule. Forge proving-ground spec shipped (42.4-16): `apps/forge/.planning/plans/forge-proving-ground.md` defines PG-01..PG-09 observable pass criteria (build preserved, clean headless load, zero console.error, game root mounts, player renders, tilemap renders, input moves player, no unhandled rejections, probe runtime &lt; 30s) with a 12-row historical comparison table retroactively scoring all ETD gad-species generations — 4 of 12 (v7/v8/v9/v10) have preserved builds, exactly 1 (v8) has an explicit SCORE.md \"Build requirement gate PASSED\" annotation, and PG-02..PG-08 are `?` across the board because no mechanical probe has ever run against an ETD build. DOG-02 in forge `REQUIREMENTS.xml` and phase 08 success criteria in forge `ROADMAP.xml` now cite the checklist. Project ⊇ Species inheritance contract shipped (42.4-15, decision gad-184): new `lib/eval-loader.cjs` exports `loadProject`/`loadSpecies`/`loadAllSpeciesRaw`/`loadResolvedSpecies`/`loadAllResolvedSpecies`/`mergeProjectSpecies`/`resolveInheritanceChain`; merge semantics are project defaults → `inherits_from` chain (deepest ancestor first) → target species with last-write-wins, arrays REPLACE (no concat), species-only fields (`inherits_from`, `dna`, species description) stay local and never back-propagate to project defaults, cycles throw with a clear error. Wired `bin/gad.cjs eval list` and `site/scripts/build-site-data.mjs scanEvalProjects` through the loader so CLI, site prebuild, and forge editor all see the same merged shape. Hermetic test suite at `tests/eval-loader-inheritance.test.cjs` green (7/7) covering (a) empty-species inheritance, (b) clean override, (c) species-only non-pollution, (d) chain resolution, (e) cycle detection, plus `loadAllResolvedSpecies` + `mergeProjectSpecies` purity spot checks. All five of the 42.4-12..16 framework gates blocking app-forge phase 01 are now landed; forge phase 01 can spawn. 42.4-10 sink MD→XML audit shipped: determination (C) — no existing command converts markdown planning prose into canonical XML. `sink compile` reads MD but passes through to MDX without structuring; `sink decompile` is misleadingly named and only creates empty XML shells when source is missing (never reads sink content); `migrate-schema` goes XML→MD, wrong direction. Test verified against a temp markdown-only planning root. Spec for new `gad planning hydrate` subcommand (with per-file parsers inverse to existing `*XmlToMd` functions in `lib/docs-compiler.cjs`) documented in `references/sink-md-xml-audit.md` — NOT implemented, follow-up task needed (~150 LOC). Also flagged: `sink decompile` should be renamed or doc-fixed (it does not decompile), and `sink compile` should warn when it falls back to MD pass-through since the readers can't query that content. Canonical planning-root shape pinned (42.4-09, decision gad-185): `vendor/get-anything-done/references/project-shape.md` is the normative contract defining the 4-file minimum (`STATE.xml`, `ROADMAP.xml`, `TASK-REGISTRY.xml`, `DECISIONS.xml`), the canonical optional file/dir set, the legacy/deprecated list (gad.json→species.json, *.md legacy scaffolds, `config.json`, project-local `skills/` staging), per-file minimum valid XML headers for all six scaffolds, and an audit matrix across all seven registered planning roots (7/7 canonical-minimum-clean; grime-time flagged for legacy project-local `skills/` staging dir; gad + global have legacy `.planning/config.json`; three \"thin\" roots — magicborn, mb-cli-framework, repub-builder — missing optional REQUIREMENTS/ERRORS-AND-ATTEMPTS, informational only). `bin/gad.cjs projects audit` (the \"gad health\" surface) now computes a per-root canonical-shape report with three additive checks (`canonical_minimum`, `canonical_optional`, `canonical_legacy`) and a summary block citing the references doc as source of truth. 42.4-08 shipped 2026-04-14: `gad projects init` now defaults to canonical XML and scaffolds the six-file set (4-file canonical minimum + REQUIREMENTS/ERRORS-AND-ATTEMPTS) per `references/project-shape.md` §5. Added `--format md` flag for legacy markdown path (still writes the three canonical XML ledgers so the resulting root is audit-clean), `--projectid` arg, pre-flight overwrite check with `--force` escape hatch, and a post-init next-steps hint pointing at `gad projects audit` / `gad discuss-phase` / `gad plan-phase`. Verified by temp-dir init (6 files written, all parse under fast-xml-parser, canonical_minimum 4/4), refused re-run without `--force`, clean overwrite with `--force`, and legacy `--format md` scaffold in a fresh dir. No new decision — gad-185 remains the authoritative contract. 42.4-11 shipped 2026-04-14: `references/sink-pipeline.md` lands as the coherence map over 42.4-10's per-command audit — 8 sections (purpose, XML-as-source-of-truth, three-registry table `[[planning.roots]]`/`[[docs.projects]]`/`[[evals.roots]]`, ASCII flow diagram flagging broken arrows, 19-row quick-reference \"edit X → command Y → verify with Z\" table including explicit NOT SUPPORTED rows for MD→XML and MDX round-trip, footgun list extending 42.4-10's with \"site compile and sink compile are independent axes both reading .planning/\" and \"docs_sink is singular monorepo-wide\", related-docs links, change log). Three skills (gad-new-project, gad-plan-phase, gad-execute-phase) got a short `&lt;planning_state_surface&gt;` block referencing the new doc; gad-new-project also now cites `references/project-shape.md` in its execution_context. No new decision, no CLI changes.",
   "lastUpdated": "2026-04-14",
   "phases": [
     {
@@ -3970,7 +4913,7 @@ export const PLANNING_STATE: PlanningState = {
     },
     {
       "id": "44.5",
-      "title": "Brood Editor — local-dev project/eval playground",
+      "title": "Species Editor — local-dev project/species playground",
       "status": "planned"
     },
     {
@@ -4041,11 +4984,6 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Publish /workflows/methodology (or equivalent) on the site documenting how the workflow detector actually works: trace-event schema, scope classification, participant matching for authored workflows, conformance formula (decision gad-173), v1 tool-level emerg…"
     },
     {
-      "id": "43-08",
-      "status": "planned",
-      "goal": "Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" with \"generation N\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). Add \"DNA\" and \"spawn\" terminology where appropriate. T…"
-    },
-    {
       "id": "43-09",
       "status": "planned",
       "goal": "Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a r…"
@@ -4056,9 +4994,14 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project fo…"
     },
     {
-      "id": "43-11",
+      "id": "44-02",
       "status": "planned",
-      "goal": "Update ROADMAP.xml phase 44.5 title from \"Brood Editor\" to \"Species Editor\" and rewrite its goal to drop \"brood\" / \"Brood Editor\" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17,…"
+      "goal": "Migrate legacy planning roots (grime-time-site, repub-builder, mb-cli-framework, magicborn, global) from planning-only shape into the canonical eval-project shape under `evals/&lt;project&gt;/project.json` + `evals/&lt;project&gt;/species/&lt;species&gt;/spec…"
+    },
+    {
+      "id": "44-03",
+      "status": "planned",
+      "goal": "App-forge build preservation: today `gad eval verify` flags app-forge v1 MISSING because preservation expects a statically-servable dist/ but forge is a Next.js app producing `.next/` (server components, no output:export). Decide the path: (a) add `output: \"e…"
     },
     {
       "id": "44.5-01",
@@ -4086,8 +5029,18 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Species/population/generation/brood capture surfaces inside the editor: small inspector panes showing the currently-edited project's species rows, each species's generations, and the brood view across all species at the same round. Reuses phase 44 components …"
     }
   ],
-  "doneTasksCount": 216,
+  "doneTasksCount": 231,
   "recentDecisions": [
+    {
+      "id": "gad-185",
+      "title": "Canonical planning-root shape: minimum file set, optional set, legacy list, and audit binding",
+      "summary": "Every GAD planning root (`[[planning.roots]]` in `gad-config.toml`) has a canonical shape. The canonical MINIMUM file set that every `.planning/` directory MUST contain is four files: `STATE.xml`, `ROADMAP.xml`, `TASK-REGISTRY.xml`, `DECISIONS.xml`. This is the \"everyone can run `gad snapshot`/`state`/`tasks`/`decisions` against it\" bar and is present in 7/7 audited roots. The canonical OPTIONAL f"
+    },
+    {
+      "id": "gad-184",
+      "title": "Project ⊇ Species inheritance contract: merge-at-read-time eval loader",
+      "summary": "Every eval project has one `evals/&lt;project&gt;/project.json` declaring defaults (`techStack`, `contextFramework`, `installedSkills`, `defaultContent`, domain/description/rubric metadata) and one `evals/&lt;project&gt;/species/&lt;species&gt;/species.json` per species. Species may override any project field and also carry species-only fields (`inherits_from`, `dna`, species-specific `description"
+    },
     {
       "id": "gad-183",
       "title": "Proto-skills stage inside the owning project's `.planning/` and install outward into runtimes on demand",
@@ -4137,16 +5090,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-174",
       "title": "Emergent workflow detection — DFG + frequent subgraph mining v1, proto-workflow as first-class permanent type, three-section visualization",
       "summary": "The trace synthesis pipeline (phase 42.3-04) must distinguish three things: (a) runs of authored workflows, (b) emergent workflows — recurring trace patterns nobody wrote down but that appear often enough to be real, (c) noise — one-off sequences that don't repeat. Four techniques considered: directly-follows graph + frequent subgraph mining (pure Node, deterministic), PrefixSpan / GSP sequence mi"
-    },
-    {
-      "id": "gad-173",
-      "title": "Workflow validator = expected/actual diff = next `framework_compliance` metric",
-      "summary": "Three open questions about workflows (nesting, validators, self-report) resolve together because they all hinge on what a workflow validator actually IS. Answers: (a) **Workflows nest.** A workflow can declare `parent-workflow: <slug>` in frontmatter and will be rendered as a sub-graph inside its parent on /planning. `gad-decide` nests inside `gad-discuss-plan-execute`; `gad-debug` nests inside `g"
-    },
-    {
-      "id": "gad-172",
-      "title": "Workflows are a first-class GAD concept — hand-authored expected graph, computed actual graph, diff as tuning signal",
-      "summary": "GAD already traces skills, agents, and tool calls per phase (trace v4 from phases 25 and 32). That trace data is rich enough to compute an actual \"workflow graph\" — the sequence of skill invocations, agent spawns, and decision points an agent traversed to complete a task — without any new instrumentation. We should elevate \"workflow\" to a first-class concept alongside phase, plan, skill, and agent"
     }
   ]
 };

@@ -4,7 +4,7 @@ import { SiteSection, SiteSectionHeading, SiteProse } from "@/components/site";
 
 export function FormulasDataSourcesSection() {
   return (
-    <SiteSection className="border-t border-border/60">
+    <SiteSection cid="formulas-data-sources-section-site-section" className="border-t border-border/60">
       <SiteSectionHeading kicker="Data sources" title="Where the numbers come from" />
       <SiteProse className="mt-5 max-w-4xl">
         All formulas run during the site prebuild (
@@ -58,3 +58,4 @@ export function FormulasDataSourcesSection() {
     </SiteSection>
   );
 }
+

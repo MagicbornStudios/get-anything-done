@@ -7,7 +7,7 @@ export function RunGateReportSection({ run }: { run: EvalRunRecord }) {
   if (!run.requirementCoverage) return null;
   const cov = run.requirementCoverage;
   return (
-    <SiteSection>
+    <SiteSection cid="run-gate-report-section-site-section">
       <Identified as="RunGateReport">
       <SiteSectionHeading kicker="Gate report" title="Requirement coverage" />
       <Identified as="RunGateReportStatsGrid" className="mt-8 grid gap-5 md:grid-cols-4">

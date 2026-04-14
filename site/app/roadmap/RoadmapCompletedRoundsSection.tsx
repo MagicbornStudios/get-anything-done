@@ -6,7 +6,7 @@ import { pressureForRound } from "./roadmap-shared";
 
 export default function RoadmapCompletedRoundsSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="roadmap-completed-rounds-section-site-section">
       <SiteSectionHeading
         icon={Rocket}
         kicker="Completed rounds"
@@ -30,3 +30,4 @@ export default function RoadmapCompletedRoundsSection() {
     </SiteSection>
   );
 }
+

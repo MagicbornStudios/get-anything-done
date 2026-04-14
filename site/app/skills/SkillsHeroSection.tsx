@@ -16,7 +16,7 @@ export function SkillsHeroSection({
   agentsCount,
 }: SkillsHeroSectionProps) {
   return (
-    <SiteSection>
+    <SiteSection cid="skills-hero-section-site-section">
       <Identified as="SkillsHeroSection">
       <Identified as="SkillsHeroHeading" register={false}>
         <SiteSectionHeading
@@ -66,3 +66,4 @@ export function SkillsHeroSection({
     </SiteSection>
   );
 }
+

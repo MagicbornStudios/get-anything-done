@@ -6,7 +6,7 @@ import { ContributeStep } from "./ContributeStep";
 
 export function ContributeHumanWorkflowSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="contribute-human-workflow-section-site-section" tone="muted">
       <Identified as="ContributeHumanWorkflowSection">
       <SiteSectionHeading
         icon={MessageSquare}
@@ -59,3 +59,4 @@ cd get-anything-done`}
     </SiteSection>
   );
 }
+

@@ -15,7 +15,7 @@ export function RunSkillAccuracySection({
   skillAccuracyValue: number | null;
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="run-skill-accuracy-section-site-section">
       <Identified as="RunSkillAccuracy">
       <SiteSectionHeading
         kicker="Skill accuracy breakdown"

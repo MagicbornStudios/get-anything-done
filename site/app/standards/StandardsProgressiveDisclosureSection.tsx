@@ -7,7 +7,7 @@ import { AGENTSKILLS_URL } from "./standards-shared";
 
 export default function StandardsProgressiveDisclosureSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="standards-progressive-disclosure-section-site-section">
       <Identified as="StandardsProgressiveDisclosureSection">
       <SiteSectionHeading
         icon={Layers}
@@ -79,3 +79,4 @@ export default function StandardsProgressiveDisclosureSection() {
     </SiteSection>
   );
 }
+

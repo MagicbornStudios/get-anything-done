@@ -5,7 +5,7 @@ import { REPO } from "@/app/requirements/requirements-shared";
 
 export function RequirementsHero() {
   return (
-    <SiteSection>
+    <SiteSection cid="requirements-hero-site-section">
       <SiteSectionHeading
         kicker="Requirements"
         as="h1"
@@ -62,3 +62,4 @@ export function RequirementsHero() {
     </SiteSection>
   );
 }
+

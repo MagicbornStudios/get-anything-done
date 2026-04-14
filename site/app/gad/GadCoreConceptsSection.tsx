@@ -9,7 +9,7 @@ import { GAD_CORE_CONCEPTS } from "./gad-core-concepts";
 
 export function GadCoreConceptsSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="gad-core-concepts-section-site-section" tone="muted">
       <Identified as="GadCoreConceptsSection">
       <Identified as="GadCoreConceptsHeading" register={false}>
         <SiteSectionHeading kicker="Core concepts" title="Three moving parts" preset="section" />
@@ -49,3 +49,4 @@ export function GadCoreConceptsSection() {
     </SiteSection>
   );
 }
+

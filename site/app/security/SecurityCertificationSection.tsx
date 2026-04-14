@@ -4,7 +4,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function SecurityCertificationSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="security-certification-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={FileWarning}
         kicker="Where this is headed - skill certification"
@@ -32,3 +32,4 @@ export function SecurityCertificationSection() {
     </SiteSection>
   );
 }
+

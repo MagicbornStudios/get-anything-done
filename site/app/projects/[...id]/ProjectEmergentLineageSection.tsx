@@ -6,7 +6,7 @@ import { PRODUCED_ARTIFACTS, type EvalRunRecord } from "@/lib/eval-data";
 export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] }) {
   if (runs.length === 0) return null;
   return (
-    <SiteSection>
+    <SiteSection cid="project-emergent-lineage-section-site-section">
       <Identified as="ProjectEmergentLineage">
       <SiteSectionHeading
         kicker="Skill inheritance lineage"

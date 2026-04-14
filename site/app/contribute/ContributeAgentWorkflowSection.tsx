@@ -6,7 +6,7 @@ import { Ref } from "@/components/refs/Ref";
 
 export function ContributeAgentWorkflowSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="contribute-agent-workflow-section-site-section">
       <Identified as="ContributeAgentWorkflowSection">
       <SiteSectionHeading
         icon={Bot}
@@ -77,3 +77,4 @@ export function ContributeAgentWorkflowSection() {
     </SiteSection>
   );
 }
+

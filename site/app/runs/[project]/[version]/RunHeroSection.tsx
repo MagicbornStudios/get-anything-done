@@ -19,7 +19,7 @@ export function RunHeroSection({
   interruptionNote,
 }: RunHeroBaseProps) {
   return (
-    <SiteSection>
+    <SiteSection cid="run-hero-section-site-section">
       <Identified as="RunHero">
       <Identified as="RunHeroBackAndTitle">
         <RunHeroBackAndTitle

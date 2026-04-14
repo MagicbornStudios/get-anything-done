@@ -3,7 +3,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function SecurityFurtherReadingSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="security-further-reading-section-site-section">
       <SiteSectionHeading icon={AlertTriangle} kicker="Further reading" kickerRowClassName="mb-6 gap-3" />
       <div className="space-y-3 text-sm leading-6 text-muted-foreground">
         <a
@@ -22,3 +22,4 @@ export function SecurityFurtherReadingSection() {
     </SiteSection>
   );
 }
+

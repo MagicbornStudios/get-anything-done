@@ -69,7 +69,7 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
   }, [defaultTab, allTasks.length, state.phases.length, gadBugs.length]);
 
   return (
-    <SiteSection>
+    <SiteSection cid="planning-tabbed-content-site-section">
       <Identified as="PlanningTabbedContent">
       <Tabs key={defaultTab} defaultValue={defaultTab}>
         <Identified as="PlanningTabsList" className="mb-6">
@@ -174,3 +174,4 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
     </SiteSection>
   );
 }
+

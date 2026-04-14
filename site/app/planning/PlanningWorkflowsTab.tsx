@@ -23,35 +23,36 @@ export function PlanningWorkflowsTab({ workflows }: Props) {
   const emergentTree = buildWorkflowTree(emergent);
 
   return (
-    <Identified as="PlanningWorkflowsTab">
-      <div className="space-y-10">
+    <Identified as="PlanningTabWorkflows">
+      <div className="space-y-8">
         <MethodologyCallout />
+
         <SectionHeader
-          title="Authored workflows"
+          title="Authored"
           count={authored.length}
-          blurb="Hand-authored expected graphs that describe how a GAD workflow is supposed to run. Each card shows the authored Mermaid diagram on the left and the live React Flow graph (computed from trace data) on the right. Nested workflows are indented under their parent."
+          blurb="Designed workflows. Live React Flow graph is primary; authored Mermaid is tucked under a disclosure."
           accent="authored"
         />
         {authoredTree.length === 0 ? (
-          <EmptyState message="No authored workflows in the catalog. Add files under .planning/workflows/." />
+          <EmptyState message="No authored workflows. Add files under .planning/workflows/." />
         ) : (
-          <div className="space-y-6">
-            {authoredTree.map((node) => (
-              <WorkflowTreeNode key={node.workflow.slug} node={node} depth={0} />
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {flattenTree(authoredTree).map(({ node, depth }) => (
+              <WorkflowCard key={node.workflow.slug} workflow={node.workflow} depth={depth} compact />
             ))}
           </div>
         )}
 
         <SectionHeader
-          title="Emergent workflows"
+          title="Emergent"
           count={emergent.length}
-          blurb="Proto-workflows drafted by the trace-mining detector (phase 42.3-09) when a recurring pattern crosses the support/stability thresholds. Emergent workflows are rendered as React Flow graphs only — they have no authored Mermaid because nobody designed them. Promote via `gad workflow promote <slug>` or discard."
+          blurb="Trace-mined patterns (v1 tool-level). Promote with `gad workflow promote <slug>` or discard."
           accent="emergent"
         />
         {emergent.length === 0 ? (
-          <EmptyState message="No emergent candidates yet. Once gad-framework-scoped trace events accumulate (sessions working on GAD itself, not inside eval worktrees), the detector will populate this section." />
+          <EmptyState message="No emergent candidates yet. Mine gad-framework-scoped traces to populate." />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {emergent.map((w) => (
               <WorkflowCard key={w.slug} workflow={w} compact />
             ))}
@@ -61,13 +62,24 @@ export function PlanningWorkflowsTab({ workflows }: Props) {
         <SectionHeader
           title="Noise panel"
           count={0}
-          blurb="Raw event timeline + unmatched force-directed graph of events the detector could not absorb into any candidate. Deferred to phase 42.3-13 — ships after the signal sections above prove useful."
+          blurb="Unmatched events + raw timeline. Deferred to 42.3-13 (under discussion)."
           accent="noise"
         />
-        <EmptyState message="Deferred to phase 42.3-13." />
+        <EmptyState message="Deferred — still under discussion." />
       </div>
     </Identified>
   );
+}
+
+function flattenTree(tree: WorkflowNode[], depth = 0): Array<{ node: WorkflowNode; depth: number }> {
+  const out: Array<{ node: WorkflowNode; depth: number }> = [];
+  for (const node of tree) {
+    out.push({ node, depth });
+    if (node.children.length > 0) {
+      out.push(...flattenTree(node.children, depth + 1));
+    }
+  }
+  return out;
 }
 
 function WorkflowTreeNode({ node, depth }: { node: WorkflowNode; depth: number }) {
@@ -130,48 +142,16 @@ function EmptyState({ message }: { message: string }) {
  */
 function MethodologyCallout() {
   return (
-    <aside
-      aria-labelledby="workflows-methodology-title"
-      className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-xs leading-6 text-muted-foreground"
-    >
-      <h3
-        id="workflows-methodology-title"
-        className="mb-1.5 text-sm font-semibold text-foreground"
-      >
-        How this tab is built
-      </h3>
-      <p>
-        Authored workflows come from hand-written Markdown files under{" "}
-        <code className="text-foreground/80">.planning/workflows/*.md</code> — each
-        declares expected participants (skills, agents, CLI commands, artifacts)
-        and a Mermaid diagram of the expected shape. The build pipeline
-        (<code className="text-foreground/80">site/scripts/build-site-data.mjs</code>)
-        scans them into the <code className="text-foreground/80">WORKFLOWS</code>
-        {" "}catalog.
-      </p>
-      <p className="mt-2">
-        Live graphs are computed from{" "}
-        <code className="text-foreground/80">.planning/.trace-events.jsonl</code>
-        {" "}filtered to the{" "}
-        <code className="text-foreground/80">gad-framework</code> scope (decision
-        gad-175 — eval-agent events produced inside worktrees are excluded). The
-        v1 detector matches authored participants against observed{" "}
-        <code className="text-foreground/80">tool_use</code> and{" "}
-        <code className="text-foreground/80">file_mutation</code> events and
-        emits a <code className="text-foreground/80">conformance</code> score
-        (<code className="text-foreground/80">max(0, matched − extra) / expected</code>).
-      </p>
-      <p className="mt-2">
-        Emergent candidates come from a simple DFG + n-gram detector over the
-        same trace stream. This is a <strong>v1 tool-level shortcut</strong>{" "}
-        (decision gad-178): the real target is mining{" "}
-        <em>skill invocation</em> sequences, not raw tool names, so the
-        current top patterns (<code className="text-foreground/80">bash × 3</code>,{" "}
-        <code className="text-foreground/80">read → edit → edit</code>) are
-        noise that will be replaced once the detector v2 lands (task
-        42.3-16). The full methodology page is task 42.3-17 and waits on the
-        v2 deep-dive.
-      </p>
-    </aside>
+    <details className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground">
+      <summary className="cursor-pointer text-foreground/90">How this tab is built</summary>
+      <div className="mt-2 space-y-2 leading-6">
+        <p>
+          Authored workflows come from <code className="text-foreground/80">.planning/workflows/*.md</code>. Live graphs are computed from <code className="text-foreground/80">.planning/.trace-events.jsonl</code> (gad-framework scope only — decision gad-175).
+        </p>
+        <p>
+          Emergent patterns are mined via a v1 DFG + n-gram detector (decision gad-178); the v2 target is skill-invocation sequences, not raw tool names. Full methodology doc is task 42.3-17.
+        </p>
+      </div>
+    </details>
   );
 }

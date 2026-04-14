@@ -8,7 +8,7 @@ import type { CompositionEntry } from "@/remotion/registry";
 export function RunVideosSection({ videos }: { videos: CompositionEntry[] }) {
   if (videos.length === 0) return null;
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="run-videos-section-site-section" tone="muted">
       <Identified as="RunVideos">
       <SiteSectionHeading
         icon={Film}

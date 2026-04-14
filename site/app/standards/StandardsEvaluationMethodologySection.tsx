@@ -7,7 +7,7 @@ import { AGENTSKILLS_URL } from "./standards-shared";
 
 export default function StandardsEvaluationMethodologySection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="standards-evaluation-methodology-section-site-section" tone="muted">
       <Identified as="StandardsEvaluationMethodologySection">
       <SiteSectionHeading
         icon={Gauge}
@@ -86,3 +86,4 @@ export default function StandardsEvaluationMethodologySection() {
     </SiteSection>
   );
 }
+

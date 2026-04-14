@@ -8,7 +8,7 @@ export default function RoadmapHypothesisTracksSection({
   trackData: HypothesisTrackPoint[];
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="roadmap-hypothesis-tracks-section-site-section">
       <SiteSectionHeading
         kicker="Hypothesis tracks across rounds"
         className="mb-6"
@@ -29,3 +29,4 @@ export default function RoadmapHypothesisTracksSection({
     </SiteSection>
   );
 }
+

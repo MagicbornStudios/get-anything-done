@@ -4,7 +4,7 @@ import { SecurityAttackCard } from "./SecurityAttackCard";
 
 export function SecurityAttackSurfacesSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="security-attack-surfaces-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={ShieldAlert}
         kicker="Attack surfaces"
@@ -53,3 +53,4 @@ export function SecurityAttackSurfacesSection() {
     </SiteSection>
   );
 }
+

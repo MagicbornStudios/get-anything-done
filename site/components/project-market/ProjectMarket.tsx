@@ -39,7 +39,7 @@ export default function ProjectMarket() {
         <ProjectMarketHeader />
       </Identified>
 
-      <SiteSection className="border-b-0" shellClassName="py-8">
+      <SiteSection cid="project-market-site-section" className="border-b-0" shellClassName="py-8">
         <Identified as="ProjectMarket">
           <ProjectFilterBar
             domainFilter={domainFilter}
@@ -76,3 +76,4 @@ export default function ProjectMarket() {
     </>
   );
 }
+

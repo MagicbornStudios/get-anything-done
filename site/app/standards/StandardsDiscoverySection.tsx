@@ -4,7 +4,7 @@ import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 export default function StandardsDiscoverySection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="standards-discovery-section-site-section" tone="muted">
       <Identified as="StandardsDiscoverySection">
       <SiteSectionHeading kicker="Discovery convention - skills/" />
       <SiteProse size="sm" className="mb-6 mt-4">

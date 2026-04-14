@@ -25,7 +25,7 @@ export function ProjectHeroSection({
   template: TemplateZip;
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="project-hero-section-site-section">
       <Identified as="ProjectHero">
         <Identified as="ProjectHeroBackLink">
           <Button

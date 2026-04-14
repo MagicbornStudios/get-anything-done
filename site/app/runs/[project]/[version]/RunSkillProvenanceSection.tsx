@@ -13,7 +13,7 @@ export function RunSkillProvenanceSection({ run }: { run: EvalRunRecord }) {
   if (!hasInstalled && !hasInherited && !hasAuthored) return null;
 
   return (
-    <SiteSection>
+    <SiteSection cid="run-skill-provenance-section-site-section">
       <Identified as="RunSkillProvenance">
       <SiteSectionHeading kicker="Skill provenance" />
       <Identified as="RunSkillProvenanceIntro">

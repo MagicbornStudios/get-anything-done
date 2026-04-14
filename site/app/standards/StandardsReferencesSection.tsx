@@ -7,7 +7,7 @@ import { AGENTSKILLS_URL, ANTHROPIC_GUIDE_URL } from "./standards-shared";
 
 export default function StandardsReferencesSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="standards-references-section-site-section" tone="muted">
       <Identified as="StandardsReferencesSection">
       <SiteSectionHeading
         icon={BookOpen}
@@ -83,3 +83,4 @@ export default function StandardsReferencesSection() {
     </SiteSection>
   );
 }
+

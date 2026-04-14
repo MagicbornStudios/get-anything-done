@@ -3,7 +3,7 @@ import { SiteSection, SiteSectionHeading, SiteProse, SiteTextCard } from "@/comp
 
 export function LineageContextRotSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="lineage-context-rot-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={AlertTriangle}
         kicker="The problem"
@@ -39,3 +39,4 @@ export function LineageContextRotSection() {
     </SiteSection>
   );
 }
+

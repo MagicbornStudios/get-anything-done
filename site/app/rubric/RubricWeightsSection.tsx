@@ -4,7 +4,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function RubricWeightsSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="rubric-weights-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={ClipboardList}
         kicker="How to read the weights"
@@ -45,3 +45,4 @@ export function RubricWeightsSection() {
     </SiteSection>
   );
 }
+

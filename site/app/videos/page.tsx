@@ -16,7 +16,7 @@ export const metadata = {
 export default function VideosPage() {
   return (
     <MarketingShell>
-      <SiteSection>
+      <SiteSection cid="page-site-section">
         <Identified as="VideosPageIntro">
           <SiteSectionHeading
             kicker="Videos"
@@ -39,7 +39,7 @@ export default function VideosPage() {
       </SiteSection>
 
       {COMPOSITIONS.length === 0 ? (
-        <SiteSection tone="muted">
+        <SiteSection cid="page-site-section-2" tone="muted">
           <Identified as="VideosEmptyState">
             <SiteProse size="sm">
               No compositions in the registry yet. Follow the checklist in{" "}
@@ -67,7 +67,7 @@ export default function VideosPage() {
         ))
       )}
 
-      <SiteSection tone="muted">
+      <SiteSection cid="page-site-section-3" tone="muted">
         <Identified as="VideosPageFooterLinks" className="flex flex-wrap gap-3 text-sm">
           <Button
             variant="outline"
@@ -90,3 +90,4 @@ export default function VideosPage() {
     </MarketingShell>
   );
 }
+

@@ -12,7 +12,7 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
   if (bugs.length === 0) return null;
 
   return (
-    <SiteSection className="border-b-0 border-t border-border/60">
+    <SiteSection cid="project-bugs-section-site-section" className="border-b-0 border-t border-border/60">
       <Identified as="ProjectBugs">
       <SiteSectionHeading
         kicker="Known bugs"

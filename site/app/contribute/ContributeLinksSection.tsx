@@ -7,7 +7,7 @@ import { CONTRIBUTE_REPO_URL } from "./contribute-constants";
 
 export function ContributeLinksSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="contribute-links-section-site-section">
       <Identified as="ContributeLinksSection">
       <SiteSectionHeading kicker="Useful starting points" />
       <div className="mt-4 space-y-3 text-sm leading-6">
@@ -48,3 +48,4 @@ export function ContributeLinksSection() {
     </SiteSection>
   );
 }
+

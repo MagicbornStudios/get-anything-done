@@ -15,7 +15,7 @@ export function RunRubricSection({
   rubric: EvalRunRecord["humanReviewNormalized"];
 }) {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="run-rubric-section-site-section" tone="muted">
       <Identified as="RunRubric">
       <SiteSectionHeading
         kicker="Human review rubric"

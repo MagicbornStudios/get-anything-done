@@ -4,7 +4,7 @@ import { SecurityInfoCard } from "./SecurityInfoCard";
 
 export function SecurityMitigationsSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="security-mitigations-section-site-section">
       <SiteSectionHeading
         icon={ShieldCheck}
         kicker="What GAD does today"
@@ -32,3 +32,4 @@ export function SecurityMitigationsSection() {
     </SiteSection>
   );
 }
+

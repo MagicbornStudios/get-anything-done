@@ -11,7 +11,7 @@ export default function DataHeroSection({
   totals: Record<string, number>;
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="data-hero-section-site-section">
       <Identified as="DataHeroSection">
       <Identified as="DataHeroHeading" register={false}>
         <SiteSectionHeading
@@ -72,3 +72,4 @@ export default function DataHeroSection({
     </SiteSection>
   );
 }
+

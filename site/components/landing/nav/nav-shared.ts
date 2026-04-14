@@ -26,7 +26,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Theory",
     links: [
       { href: "/gad", label: "GAD", note: "what the framework is" },
-      { href: "/hypotheses", label: "Hypotheses", note: "every claim wired to its eval track" },
       { href: "/skeptic", label: "Skeptic", note: "devils advocate against our claims" },
     ],
   },
@@ -83,11 +82,6 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 export const NAV_TOP_LEVEL: NavLink[] = [
-  {
-    href: "/emergent",
-    label: "Emergent",
-    tint: "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:border-amber-400 hover:bg-amber-500/20",
-  },
   {
     href: "/skeptic",
     label: "Skeptic",

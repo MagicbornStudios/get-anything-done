@@ -5,7 +5,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function PhasesListSection({ phases }: { phases: PhaseRecord[] }) {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="phases-list-section-site-section" tone="muted">
       <SiteSectionHeading icon={GitBranch} kicker="All phases" kickerRowClassName="mb-6 gap-3" />
       <div className="space-y-4">
         {phases.map((p) => (
@@ -15,3 +15,4 @@ export function PhasesListSection({ phases }: { phases: PhaseRecord[] }) {
     </SiteSection>
   );
 }
+

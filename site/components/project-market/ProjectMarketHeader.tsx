@@ -6,7 +6,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectMarketHeader() {
   return (
-    <SiteSection
+    <SiteSection cid="project-market-header-site-section"
       tone="muted"
       className="border-t-0"
       shellClassName="pb-8 pt-24 md:pb-12 md:pt-32"
@@ -34,3 +34,4 @@ export function ProjectMarketHeader() {
     </SiteSection>
   );
 }
+

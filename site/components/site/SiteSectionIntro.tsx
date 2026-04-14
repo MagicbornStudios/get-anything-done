@@ -41,3 +41,4 @@ export function SiteSectionIntro({
   );
   return className ? <div className={className}>{block}</div> : block;
 }
+

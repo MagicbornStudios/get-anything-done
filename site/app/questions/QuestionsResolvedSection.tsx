@@ -6,7 +6,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 export function QuestionsResolvedSection({ resolved }: { resolved: OpenQuestion[] }) {
   if (resolved.length === 0) return null;
   return (
-    <SiteSection className="border-b-0 border-t border-border/60">
+    <SiteSection cid="questions-resolved-section-site-section" className="border-b-0 border-t border-border/60">
       <Identified as="OpenQuestionsResolvedSection">
       <SiteSectionHeading
         kicker="Resolved"
@@ -32,3 +32,4 @@ export function QuestionsResolvedSection({ resolved }: { resolved: OpenQuestion[
     </SiteSection>
   );
 }
+

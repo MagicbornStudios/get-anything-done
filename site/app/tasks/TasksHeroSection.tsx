@@ -17,7 +17,7 @@ export default function TasksHeroSection({
   phaseCount: number;
 }) {
   return (
-    <SiteSection>
+    <SiteSection cid="tasks-hero-section-site-section">
       <SiteSectionHeading
         kicker="Tasks"
         as="h1"
@@ -55,3 +55,4 @@ export default function TasksHeroSection({
     </SiteSection>
   );
 }
+

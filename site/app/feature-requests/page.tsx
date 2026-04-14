@@ -18,7 +18,7 @@ export default function FeatureRequestsPage() {
         <FeatureRequestsHeroSection />
       </Identified>
 
-      <SiteSection tone="muted">
+      <SiteSection cid="page-site-section" tone="muted">
         <Identified as="FeatureRequestsList" className="space-y-4">
           {requests.map((req) => (
             <Identified key={req.id} as={`FeatureRequestCard-${req.id}`}>
@@ -30,3 +30,4 @@ export default function FeatureRequestsPage() {
     </MarketingShell>
   );
 }
+

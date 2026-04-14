@@ -5,7 +5,7 @@ import { ContributeIdeaCard } from "./ContributeIdeaCard";
 
 export function ContributeIdeasSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="contribute-ideas-section-site-section" tone="muted">
       <Identified as="ContributeIdeasSection">
       <SiteSectionHeading
         icon={GitFork}
@@ -56,3 +56,4 @@ export function ContributeIdeasSection() {
     </SiteSection>
   );
 }
+

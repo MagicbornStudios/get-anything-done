@@ -12,7 +12,7 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
   const evalRuns = selfEval?.evals?.runs ?? 0;
 
   return (
-    <SiteSection>
+    <SiteSection cid="planning-overview-section-site-section">
       <Identified as="PlanningOverviewSection">
       <Identified as="PlanningOverviewIntro">
         <SiteSectionHeading
@@ -154,3 +154,4 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
     </SiteSection>
   );
 }
+

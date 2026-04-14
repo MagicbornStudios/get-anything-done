@@ -11,7 +11,7 @@ export function RunProcessMetricsSection({ run }: { run: EvalRunRecord }) {
   const topAgents = (lineage?.agents ?? []).slice(0, 6);
 
   return (
-    <SiteSection>
+    <SiteSection cid="run-process-metrics-section-site-section">
       <Identified as="RunProcessMetrics">
       <Identified as="RunProcessMetricsHeading" register={false}>
         <SiteSectionHeading kicker="Process metrics" title="How the agent actually worked" />

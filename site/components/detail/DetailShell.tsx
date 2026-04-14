@@ -25,7 +25,7 @@ export default function DetailShell({
 }: DetailShellProps) {
   return (
     <MarketingShell>
-      <SiteSection>
+      <SiteSection cid="detail-shell-site-section">
         <Identified as="DetailShellIntro">
           <DetailShellBackLink backHref={backHref} backLabel={backLabel} />
           <DetailShellKindBadges kind={kind} badges={badges} />
@@ -48,3 +48,4 @@ export default function DetailShell({
     </MarketingShell>
   );
 }
+

@@ -56,7 +56,7 @@ export default function ContextFrameworkDetailPage({
 
   return (
     <MarketingShell>
-      <SiteSection>
+      <SiteSection cid="page-site-section">
         <Identified as="ContextFrameworkDetailBreadcrumb" tag="nav" className="text-xs text-muted-foreground">
           <Link href="/context-frameworks" className="hover:text-foreground">
             ← All context frameworks

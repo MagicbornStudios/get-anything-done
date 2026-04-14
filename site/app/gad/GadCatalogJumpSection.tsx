@@ -30,7 +30,7 @@ const JUMP_ITEMS = [
 
 export function GadCatalogJumpSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="gad-catalog-jump-section-site-section" tone="muted">
       <Identified as="GadCatalogJumpSection">
       <Identified as="GadCatalogJumpHeading" register={false}>
         <SiteSectionHeading kicker="Jump to" title="Explore the catalog" preset="section" />
@@ -60,3 +60,4 @@ export function GadCatalogJumpSection() {
     </SiteSection>
   );
 }
+

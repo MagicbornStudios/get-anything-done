@@ -102,6 +102,69 @@ export function WorkflowCard({ workflow, depth = 0, compact = false }: Props) {
     ...participants.cli.map((v) => ({ kind: "cli" as const, value: v })),
   ];
 
+  // Compact authored mode: React Flow primary (same treatment as emergent),
+  // Mermaid tucked under a disclosure so cards stay dense on the grid.
+  if (compact) {
+    return (
+      <article
+        id={`workflow-${workflow.slug}`}
+        className={`${indent} rounded-lg border border-sky-500/30 bg-sky-500/5 p-3`}
+        aria-labelledby={`workflow-${workflow.slug}-title`}
+      >
+        <header className="mb-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="outline" className="text-[10px]">authored</Badge>
+            {conformance && (
+              <Badge
+                variant="outline"
+                className="text-[10px]"
+                title={`matched=${conformance.matched}, extra=${conformance.extra}, out_of_order=${conformance.out_of_order}, expected=${conformance.expected}`}
+              >
+                {(conformance.score * 100).toFixed(0)}%
+              </Badge>
+            )}
+            {workflow.parentWorkflow && (
+              <span className="text-[10px] text-muted-foreground">under {workflow.parentWorkflow}</span>
+            )}
+          </div>
+          <h3
+            id={`workflow-${workflow.slug}-title`}
+            className="mt-1.5 text-sm font-semibold text-foreground"
+          >
+            {workflow.name}
+          </h3>
+        </header>
+        <WorkflowLiveDiagram
+          workflow={liveWorkflow}
+          compact
+          emptyMessage="No live runs yet — trace this workflow to populate."
+        />
+        {workflow.mermaidBody && (
+          <details className="mt-2 text-[10px] text-muted-foreground">
+            <summary className="cursor-pointer">Authored (mermaid)</summary>
+            <div className="mt-2">
+              <WorkflowMermaidDiagram source={workflow.mermaidBody} slug={workflow.slug} />
+            </div>
+          </details>
+        )}
+        {allParticipants.length > 0 && (
+          <details className="mt-1 text-[10px] text-muted-foreground">
+            <summary className="cursor-pointer">Participants ({allParticipants.length})</summary>
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {allParticipants.map((p, i) => (
+                <Badge key={`${p.kind}-${p.value}-${i}`} variant="outline" className="text-[9px]">
+                  <span className="mr-0.5 opacity-60">{p.kind}</span>
+                  {p.value}
+                </Badge>
+              ))}
+            </div>
+          </details>
+        )}
+      </article>
+    );
+  }
+
+  // Legacy full-size layout (kept for non-compact callers, e.g. detail pages)
   return (
     <article
       id={`workflow-${workflow.slug}`}

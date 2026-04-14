@@ -6,7 +6,7 @@ import { Ref } from "@/components/refs/Ref";
 
 export function ContributeHeroSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="contribute-hero-section-site-section">
       <Identified as="ContributeHeroSection">
       <SiteSectionHeading
         kicker="Contribute"
@@ -52,3 +52,4 @@ export function ContributeHeroSection() {
     </SiteSection>
   );
 }
+

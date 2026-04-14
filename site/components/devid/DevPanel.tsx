@@ -423,7 +423,9 @@ export function DevPanel(props: DevPanelProps) {
             >
               <div className="flex items-center justify-between gap-2 text-[10px]">
                 <div className="min-w-0">
-                  <p className="font-semibold uppercase tracking-wide text-accent">Dev Panel</p>
+                  <p className="font-semibold uppercase tracking-wide text-accent">
+                    {DEV_PANEL_LABEL}
+                  </p>
                   <p className="truncate text-muted-foreground">
                     Section scan
                     {" "}
@@ -598,7 +600,9 @@ export function DevPanel(props: DevPanelProps) {
           >
             <div className="flex items-center justify-between gap-2 text-[10px]">
               <div className="min-w-0">
-                <p className="font-semibold uppercase tracking-wide text-accent">Dev Panel</p>
+                <p className="font-semibold uppercase tracking-wide text-accent">
+                  {DEV_PANEL_LABEL}
+                </p>
                 <p className="truncate text-muted-foreground">
                   {bandLabel} - {bandEntries.length} items
                 </p>

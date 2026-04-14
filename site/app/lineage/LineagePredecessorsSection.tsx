@@ -5,7 +5,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function LineagePredecessorsSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="lineage-predecessors-section-site-section">
       <SiteSectionHeading
         icon={History}
         kicker="Predecessors"
@@ -20,3 +20,4 @@ export function LineagePredecessorsSection() {
     </SiteSection>
   );
 }
+

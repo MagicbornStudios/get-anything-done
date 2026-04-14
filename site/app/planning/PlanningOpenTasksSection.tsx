@@ -6,7 +6,7 @@ import { STATUS_TINT } from "@/app/planning/planning-shared";
 export function PlanningOpenTasksSection({ state }: { state: PlanningState }) {
   if (state.openTasks.length === 0) return null;
   return (
-    <SiteSection>
+    <SiteSection cid="planning-open-tasks-section-site-section">
       <SiteSectionHeading kicker="Open tasks" title="What the agent is working on" />
       <div className="mt-8 space-y-3">
         {state.openTasks.map((task) => (
@@ -29,3 +29,4 @@ export function PlanningOpenTasksSection({ state }: { state: PlanningState }) {
     </SiteSection>
   );
 }
+

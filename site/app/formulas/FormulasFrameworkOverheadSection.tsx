@@ -9,7 +9,7 @@ const latest = selfEvalData.latest;
 
 export function FormulasFrameworkOverheadSection() {
   return (
-    <SiteSection className="border-t border-border/60">
+    <SiteSection cid="formulas-framework-overhead-section-site-section" className="border-t border-border/60">
       <SiteSectionHeading kicker="Framework overhead" title="How much of the work is planning vs building?" />
       <SiteProse className="mt-5 max-w-4xl">
         Overhead measures the ratio of planning-file operations (reads/writes on .planning/ XML files) to total file
@@ -86,3 +86,4 @@ export function FormulasFrameworkOverheadSection() {
     </SiteSection>
   );
 }
+

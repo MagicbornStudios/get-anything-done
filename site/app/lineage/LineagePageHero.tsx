@@ -2,7 +2,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function LineagePageHero() {
   return (
-    <SiteSection>
+    <SiteSection cid="lineage-page-hero-site-section">
       <SiteSectionHeading
         kicker="Lineage"
         as="h1"
@@ -29,3 +29,4 @@ export function LineagePageHero() {
     </SiteSection>
   );
 }
+

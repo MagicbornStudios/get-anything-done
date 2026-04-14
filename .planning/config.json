@@ -52,6 +52,12 @@
         "path": ".",
         "planningDir": ".planning",
         "enabled": true
+      },
+      {
+        "id": "project-editor",
+        "path": "..\\..\\projects\\project-editor",
+        "planningDir": ".planning",
+        "enabled": true
       }
     ]
   }

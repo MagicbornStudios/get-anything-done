@@ -4,7 +4,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function StandardsNameCollisionSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="standards-name-collision-section-site-section">
       <Identified as="StandardsNameCollisionSection">
       <SiteSectionHeading kicker="Name collision handling" />
       <SiteProse size="sm" className="mt-4">
@@ -22,3 +22,4 @@ export default function StandardsNameCollisionSection() {
     </SiteSection>
   );
 }
+

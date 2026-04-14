@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export function PlanningRoadmapSection({ state }: { state: PlanningState }) {
   if (state.phases.length === 0) return null;
   return (
-    <SiteSection>
+    <SiteSection cid="planning-roadmap-section-site-section">
       <SiteSectionHeading kicker="Roadmap" title="All phases, status-coded" />
       <div className="mt-8 grid gap-3 md:grid-cols-2">
         {state.phases.map((phase) => (
@@ -39,3 +39,4 @@ export function PlanningRoadmapSection({ state }: { state: PlanningState }) {
     </SiteSection>
   );
 }
+

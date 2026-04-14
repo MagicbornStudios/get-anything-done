@@ -4,7 +4,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function LineageMeasurementSection() {
   return (
-    <SiteSection tone="muted">
+    <SiteSection cid="lineage-measurement-section-site-section" tone="muted">
       <SiteSectionHeading
         icon={GitBranch}
         kicker="What GAD adds"
@@ -61,3 +61,4 @@ export function LineageMeasurementSection() {
     </SiteSection>
   );
 }
+

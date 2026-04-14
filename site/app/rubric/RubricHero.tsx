@@ -3,7 +3,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function RubricHero() {
   return (
-    <SiteSection>
+    <SiteSection cid="rubric-hero-site-section">
       <SiteSectionHeading
         kicker="Human review rubric"
         as="h1"
@@ -38,3 +38,4 @@ export function RubricHero() {
     </SiteSection>
   );
 }
+

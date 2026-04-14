@@ -7,7 +7,7 @@ export default function RoadmapHeroSection() {
   const roundedRuns = EVAL_RUNS.length;
 
   return (
-    <SiteSection>
+    <SiteSection cid="roadmap-hero-section-site-section">
       <SiteSectionHeading
         kicker="Roadmap"
         as="h1"
@@ -58,3 +58,4 @@ export default function RoadmapHeroSection() {
     </SiteSection>
   );
 }
+

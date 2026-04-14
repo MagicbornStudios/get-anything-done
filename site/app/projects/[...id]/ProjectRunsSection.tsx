@@ -6,7 +6,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 export function ProjectRunsSection({ runs }: { runs: EvalRunRecord[] }) {
   if (runs.length === 0) return null;
   return (
-    <SiteSection>
+    <SiteSection cid="project-runs-section-site-section">
       <Identified as="ProjectRuns">
         <SiteSectionHeading
           kicker="Runs"

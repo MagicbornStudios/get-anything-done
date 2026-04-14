@@ -6,7 +6,7 @@ import { GITHUB_REPO, type PlanningState } from "@/lib/catalog.generated";
 export function PlanningDecisionsSection({ state }: { state: PlanningState }) {
   if (state.recentDecisions.length === 0) return null;
   return (
-    <SiteSection>
+    <SiteSection cid="planning-decisions-section-site-section">
       <SiteSectionHeading
         kicker="Recent decisions"
         title={`The last ${state.recentDecisions.length} architectural calls`}
@@ -44,3 +44,4 @@ export function PlanningDecisionsSection({ state }: { state: PlanningState }) {
     </SiteSection>
   );
 }
+

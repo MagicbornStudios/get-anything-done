@@ -2,7 +2,7 @@ import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function FeatureRequestsHeroSection() {
   return (
-    <SiteSection>
+    <SiteSection cid="feature-requests-hero-section-site-section">
       <SiteSectionHeading
         kicker="Feature requests"
         as="h1"
@@ -21,3 +21,4 @@ export function FeatureRequestsHeroSection() {
     </SiteSection>
   );
 }
+
