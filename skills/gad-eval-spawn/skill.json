@@ -1,0 +1,6 @@
+{
+  "id": "gad-eval-spawn",
+  "canonical": true,
+  "source": "command",
+  "commandPath": "eval-spawn.md"
+}

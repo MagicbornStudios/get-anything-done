@@ -41,6 +41,9 @@ philosophy.md
 .github/get-shit-done/*
 .github/skills/get-shit-done
 .github/copilot-instructions.md
+
+# Transient eval-spawn session markers (skill: gad:eval-spawn, task 42.4-13)
+.planning/.eval-runs/
 .bg-shell/
 
 # ── GSD baseline (auto-generated) ──
