@@ -579,128 +579,138 @@ export function DevPanel(props: DevPanelProps) {
       />
       <div
         className={[
-          "pointer-events-none sticky z-[80] w-full opacity-0 transition-opacity duration-200",
-          edge === "top" ? "top-2" : "bottom-2",
+          "pointer-events-none absolute inset-0 z-[80] opacity-0 transition-opacity duration-200",
           "group-hover/site-band:pointer-events-auto group-hover/site-band:opacity-100",
           "group-focus-within/site-band:pointer-events-auto group-focus-within/site-band:opacity-100",
         ].join(" ")}
       >
         <div
           className={[
-            "pointer-events-auto w-72 rounded-md border border-accent/40 bg-background/95 px-2 py-1 shadow-lg backdrop-blur",
-            corner === "right" ? "ml-auto mr-2" : "ml-2",
+            "pointer-events-none sticky z-[80] w-full",
+            edge === "top" ? "top-2" : "bottom-2",
           ].join(" ")}
         >
-          <div className="flex items-center justify-between gap-2 text-[10px]">
-            <div className="min-w-0">
-              <p className="font-semibold uppercase tracking-wide text-accent">Dev Panel</p>
-              <p className="truncate text-muted-foreground">
-                {bandLabel} - {bandEntries.length} items
-              </p>
+          <div
+            className={[
+              "pointer-events-auto w-72 rounded-md border border-accent/40 bg-background/95 px-2 py-1 shadow-lg backdrop-blur",
+              corner === "right" ? "ml-auto mr-2" : "ml-2",
+            ].join(" ")}
+          >
+            <div className="flex items-center justify-between gap-2 text-[10px]">
+              <div className="min-w-0">
+                <p className="font-semibold uppercase tracking-wide text-accent">Dev Panel</p>
+                <p className="truncate text-muted-foreground">
+                  {bandLabel} - {bandEntries.length} items
+                </p>
+              </div>
+              <span className="truncate font-mono text-muted-foreground" title={panelIdDisplay}>
+                {panelIdDisplay}
+              </span>
             </div>
-            <span className="truncate font-mono text-muted-foreground" title={panelIdDisplay}>
-              {panelIdDisplay}
-            </span>
-          </div>
-          <div className="mt-1 flex items-center gap-1.5 text-[10px]">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={toggleUpdatePromptWithSpeech}
-              className="h-6 gap-1 px-1.5 text-[10px]"
-            >
-              {headerCopied === "update" ? (
-                <Check size={11} />
-              ) : listening ? (
-                <MicOff size={11} />
-              ) : (
-                <Mic size={11} />
-              )}
-              Update
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={copyResolvedDeletePrompt}
-              className="h-6 gap-1 px-1.5 text-[10px]"
-            >
-              {headerCopied === "delete" ? <Check size={11} /> : <Trash2 size={11} />}
-              Delete
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => copyValue(panelIdDisplay)}
-              className="size-6"
-            >
-              <Copy size={11} />
-            </Button>
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
-            <div className="min-w-0">
-              <p className="truncate">
-                <span className="text-muted-foreground">Target - </span>
-                <span className="font-medium text-foreground">{sectionTarget?.label ?? bandLabel}</span>
-              </p>
-              <p className="truncate font-mono">
-                {sectionTarget?.searchHint ?? sectionTarget?.cid ?? panelIdDisplay}
-              </p>
-            </div>
-            <div className="ml-2 flex items-center gap-1">
+            <div className="mt-1 flex items-center gap-1.5 text-[10px]">
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className="size-5"
-                disabled={depthIndex <= 0}
-                onClick={() => setDepthIndex((v) => Math.max(0, v - 1))}
+                variant="outline"
+                size="sm"
+                onClick={toggleUpdatePromptWithSpeech}
+                className="h-6 gap-1 px-1.5 text-[10px]"
               >
-                <ChevronLeft size={10} />
+                {headerCopied === "update" ? (
+                  <Check size={11} />
+                ) : listening ? (
+                  <MicOff size={11} />
+                ) : (
+                  <Mic size={11} />
+                )}
+                Update
               </Button>
-              <span className="w-16 text-center">d{bandCurrentDepth} - {bandVisibleEntries.length}</span>
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className="size-5"
-                disabled={depthIndex >= bandDepths.length - 1}
-                onClick={() => setDepthIndex((v) => Math.min(bandDepths.length - 1, v + 1))}
+                variant="outline"
+                size="sm"
+                onClick={copyResolvedDeletePrompt}
+                className="h-6 gap-1 px-1.5 text-[10px]"
               >
-                <ChevronRight size={10} />
+                {headerCopied === "delete" ? <Check size={11} /> : <Trash2 size={11} />}
+                Delete
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => copyValue(panelIdDisplay)}
+                className="size-6"
+              >
+                <Copy size={11} />
               </Button>
             </div>
+            <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+              <div className="min-w-0">
+                <p className="truncate">
+                  <span className="text-muted-foreground">Target - </span>
+                  <span className="font-medium text-foreground">
+                    {sectionTarget?.label ?? bandLabel}
+                  </span>
+                </p>
+                <p className="truncate font-mono">
+                  {sectionTarget?.searchHint ?? sectionTarget?.cid ?? panelIdDisplay}
+                </p>
+              </div>
+              <div className="ml-2 flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-5"
+                  disabled={depthIndex <= 0}
+                  onClick={() => setDepthIndex((v) => Math.max(0, v - 1))}
+                >
+                  <ChevronLeft size={10} />
+                </Button>
+                <span className="w-16 text-center">
+                  d{bandCurrentDepth} - {bandVisibleEntries.length}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-5"
+                  disabled={depthIndex >= bandDepths.length - 1}
+                  onClick={() => setDepthIndex((v) => Math.min(bandDepths.length - 1, v + 1))}
+                >
+                  <ChevronRight size={10} />
+                </Button>
+              </div>
+            </div>
+            <div className="mt-1 max-h-24 space-y-1 overflow-auto pr-1">
+              {bandVisibleEntries.map((entry) => (
+                <DevPanelListItem
+                  key={entry.cid}
+                  entry={entry}
+                  active={activeTargetCid === entry.cid}
+                  onSelect={() => {
+                    setActiveCid(entry.cid);
+                    setHighlightCid(entry.cid);
+                    locate(entry.cid);
+                  }}
+                  onCopy={() => copyEntry(entry)}
+                  onPrompt={() => setPromptEntry(entry)}
+                />
+              ))}
+            </div>
+            {listening && interim ? (
+              <p className="mt-1 max-w-56 truncate text-[10px] text-emerald-300">
+                <span className="font-semibold">Live - </span>
+                {interim}
+              </p>
+            ) : null}
+            <DevPanelPositionControls
+              edge={compactEdge}
+              corner={compactCorner}
+              onEdgeChange={setCompactEdge}
+              onCornerChange={setCompactCorner}
+            />
           </div>
-          <div className="mt-1 max-h-24 space-y-1 overflow-auto pr-1">
-            {bandVisibleEntries.map((entry) => (
-              <DevPanelListItem
-                key={entry.cid}
-                entry={entry}
-                active={activeTargetCid === entry.cid}
-                onSelect={() => {
-                  setActiveCid(entry.cid);
-                  setHighlightCid(entry.cid);
-                  locate(entry.cid);
-                }}
-                onCopy={() => copyEntry(entry)}
-                onPrompt={() => setPromptEntry(entry)}
-              />
-            ))}
-          </div>
-          {listening && interim ? (
-            <p className="mt-1 max-w-56 truncate text-[10px] text-emerald-300">
-              <span className="font-semibold">Live - </span>
-              {interim}
-            </p>
-          ) : null}
-          <DevPanelPositionControls
-            edge={compactEdge}
-            corner={compactCorner}
-            onEdgeChange={setCompactEdge}
-            onCornerChange={setCompactCorner}
-          />
         </div>
       </div>
     </>

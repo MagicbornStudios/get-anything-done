@@ -1,12 +1,11 @@
 "use client";
 
 import type { MouseEvent, ReactNode } from "react";
-import { useEffect, useId } from "react";
+import { useId } from "react";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { SectionRegistryProvider, useSectionRegistry } from "@/components/devid/SectionRegistry";
-import { SectionDevPanel } from "@/components/devid/SectionDevPanel";
+import { BandDevPanel } from "@/components/devid/BandDevPanel";
 import { useDevId } from "@/components/devid/DevIdProvider";
+import { cn } from "@/lib/utils";
 
 export type SiteSectionProps = {
   children: ReactNode;
@@ -26,7 +25,7 @@ export type SiteSectionProps = {
   stableBandCid?: string;
   /** Opt out of the DevId panel on this section (enabled by default when DevId mode is ON). */
   devIds?: boolean;
-  /** Max <Identified> depth to register in this section. Default 3. */
+  /** Kept for compatibility; section scanning now uses the outer band panel path. */
   devIdDepth?: number;
 };
 
@@ -86,20 +85,6 @@ function SiteSectionSurface({
       : id
         ? `id="${id}"`
         : undefined;
-  const registry = useSectionRegistry();
-  /** Stable — do not depend on `registry` itself; context value is a new object whenever `entries` changes. */
-  const registerFn = registry?.register;
-
-  useEffect(() => {
-    if (!devIds || !sectionBandCid || !registerFn) return;
-    return registerFn({
-      cid: sectionBandCid,
-      label: sectionBandLabel,
-      depth: 0,
-      componentTag: "SiteSection",
-      searchHint,
-    });
-  }, [devIds, sectionBandCid, sectionBandLabel, registerFn, searchHint]);
 
   const bandCid = devIds && enabled && sectionBandCid ? sectionBandCid : undefined;
   const isHighlighted = sectionBandCid != null && highlightCid === sectionBandCid;
@@ -118,27 +103,38 @@ function SiteSectionSurface({
       : undefined;
 
   return (
-    <section
-      id={id}
-      data-cid={bandCid}
-      data-cid-label={bandCid ? sectionBandLabel : undefined}
-      data-cid-component-tag={bandCid ? "SiteSection" : undefined}
-      data-cid-search={bandCid ? searchHint : undefined}
-      onClick={handleClick}
-      className={cn(
-        "group/site-section relative border-b border-border/60",
-        tone === "muted" && "bg-card/20",
-        className,
-        showPersistentRing && "outline outline-2 outline-offset-2 outline-accent",
-        showFlashRing &&
-          "outline outline-2 outline-offset-2 outline-emerald-400/90 shadow-[0_0_0_4px_rgba(52,211,153,0.25)] transition-[outline-color,box-shadow] duration-300",
-      )}
-    >
-      {beforeShell}
-      <div className={cn("section-shell", shellClassName)}>{children}</div>
-      {afterShell}
-      {devIds && <SectionDevPanel />}
-    </section>
+    <div className="group/site-band relative">
+      <section
+        id={id}
+        data-cid={bandCid}
+        data-cid-label={bandCid ? sectionBandLabel : undefined}
+        data-cid-component-tag={bandCid ? "SiteSection" : undefined}
+        data-cid-search={bandCid ? searchHint : undefined}
+        onClick={handleClick}
+        className={cn(
+          "relative border-b border-border/60",
+          tone === "muted" && "bg-card/20",
+          className,
+          showPersistentRing && "outline outline-2 outline-offset-2 outline-accent",
+          showFlashRing &&
+            "outline outline-2 outline-offset-2 outline-emerald-400/90 shadow-[0_0_0_4px_rgba(52,211,153,0.25)] transition-[outline-color,box-shadow] duration-300",
+        )}
+      >
+        {beforeShell}
+        <div className={cn("section-shell", shellClassName)}>{children}</div>
+        {afterShell}
+      </section>
+      {devIds && enabled && sectionBandCid ? (
+        <BandDevPanel
+          cid={sectionBandCid}
+          label={sectionBandLabel}
+          edge="top"
+          corner="right"
+          componentTag="SiteSection"
+          searchHint={searchHint}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -153,9 +149,9 @@ export function SiteSection({
   afterShell,
   stableBandCid,
   devIds = true,
-  devIdDepth = 3,
+  devIdDepth: _devIdDepth = 3,
 }: SiteSectionProps) {
-  const surface = (
+  return (
     <SiteSectionSurface
       id={id}
       tone={tone}
@@ -169,11 +165,5 @@ export function SiteSection({
     >
       {children}
     </SiteSectionSurface>
-  );
-
-  return devIds ? (
-    <SectionRegistryProvider maxDepth={devIdDepth}>{surface}</SectionRegistryProvider>
-  ) : (
-    surface
   );
 }
