@@ -181,7 +181,7 @@ function ProjectFilterBarSummaryRow({
 
   return (
     <div className="mt-3 flex items-center justify-between">
-      <p className="text-xs text-muted-foreground">
+      <div className="text-xs text-muted-foreground">
         Showing{" "}
         <span className="font-semibold text-foreground tabular-nums">{summaryFiltered}</span> of{" "}
         <span className="font-semibold text-foreground tabular-nums">{summaryTotal}</span>{" "}
@@ -209,7 +209,7 @@ function ProjectFilterBarSummaryRow({
             {DOMAIN_LABELS[domainFilter]}
           </Badge>
         )}
-      </p>
+      </div>
       <div className="flex items-center gap-3">
         {!showAllRounds && !roundFilter && (
           <Button

@@ -2,12 +2,13 @@
 
 /**
  * Handoff dialog for coding agents: Update and Delete — one large editable prompt
- * per tab. Dictate inserts at the textarea caret; Dictate + Copy sit on one row
- * at the bottom of the editor and appear on hover of the prompt surface.
+ * per tab. **CodeMirror 6** markdown mode with syntax highlighting, line numbers, and
+ * wrapping; dictate/copy hover chrome on the editor surface.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Mic, MicOff, Copy, Check, FilePenLine, FileX2 } from "lucide-react";
+import { HandoffMarkdownEditor, type HandoffEditorHandle } from "./HandoffMarkdownEditor";
 import {
   Dialog,
   DialogContent,
@@ -22,45 +23,102 @@ import type { RegistryEntry } from "./SectionRegistry";
 
 const SITE_ROOT = "vendor/get-anything-done/site";
 
-function buildUpdatePrompt(pathname: string, label: string, cid: string, request: string) {
-  const req = request.trim() || "(Describe the change you want.)";
-  return `You are editing the GAD marketing site (Next.js) in the monorepo.
+/** Must match the `## …` line in `buildUpdatePrompt` (no newline). */
+const HANDOFF_MAKE_CHANGES_HEADING = "## Make these changes";
 
-Code root: ${SITE_ROOT}
-
-## Target block
-- **App URL:** \`${pathname}\`
-- **data-cid:** \`${cid}\`
-- **Identified \`as\` prop:** \`${label}\`
-
-## Request
-${req}
-
-## How to find it
-Search under \`${SITE_ROOT}/\` for \`<Identified as="${label}"\` or for \`data-cid="${cid}"\`.
-
-## Conventions
-- Section dev IDs must register **inside** \`<SiteSection>\` (under \`SectionRegistryProvider\`), not from the parent page wrapping the section component.
-- Match existing patterns in neighboring sections; keep shadcn-style primitives in \`components/ui/\`.
-
-Implement the change, run \`pnpm exec tsc --noEmit\` from \`${SITE_ROOT}\`, then commit with a clear message.`;
+function absolutePageUrl(pathname: string): string {
+  if (typeof window === "undefined") return pathname || "/";
+  const path = pathname.startsWith("/") ? pathname : `/${pathname || ""}`;
+  return `${window.location.origin}${path}`;
 }
 
-function buildDeletePrompt(pathname: string, label: string, cid: string) {
-  return `Remove the UI block for this dev ID from the GAD marketing site.
+function HandoffPromptPane({
+  draft,
+  onDraftChange,
+  editorRef,
+  editorKey,
+  variant,
+  focusEmptyLineUnderHeading,
+  hoverChrome,
+  speechFooter,
+  ariaLabel,
+}: {
+  draft: string;
+  onDraftChange: (next: string) => void;
+  editorRef: RefObject<HandoffEditorHandle | null>;
+  editorKey: string;
+  variant: "update" | "delete";
+  focusEmptyLineUnderHeading?: string;
+  hoverChrome: ReactNode;
+  speechFooter?: ReactNode;
+  ariaLabel: string;
+}) {
+  const hint =
+    variant === "update" ? (
+      <>
+        Caret opens on the empty line under <strong className="text-foreground/90">Make these changes</strong>.{" "}
+        <strong className="text-foreground/90">Hover the bottom edge</strong> for Mic + Copy.
+      </>
+    ) : (
+      <>
+        Edit the prompt if you need to. <strong className="text-foreground/90">Hover the bottom edge</strong> of the
+        editor for Mic + Copy.
+      </>
+    );
 
-Code root: ${SITE_ROOT}
+  return (
+    <div className="flex min-h-0 flex-1 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
+      <p className="mb-1.5 max-w-[min(100%,40rem)] text-[10px] leading-snug text-muted-foreground sm:mb-2">{hint}</p>
 
-## Target
-- **App URL:** \`${pathname}\`
-- **data-cid:** \`${cid}\`
-- **Identified \`as\` prop:** \`${label}\`
+      <div className="group/prompt relative flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
+        <HandoffMarkdownEditor
+          key={editorKey}
+          ref={editorRef}
+          initialDoc={draft}
+          onChange={onDraftChange}
+          ariaLabel={ariaLabel}
+          focusEmptyLineUnderHeading={focusEmptyLineUnderHeading}
+        />
+        {hoverChrome}
+      </div>
+      {speechFooter}
+    </div>
+  );
+}
 
-## What to do
-1. Search \`${SITE_ROOT}/\` for \`<Identified as="${label}"\` and remove that band (wrapper + content the product owner wants gone), or remove the owning section from the page if the whole section should go.
-2. Remove any now-unused imports or components.
-3. Run \`pnpm exec tsc --noEmit\` from \`${SITE_ROOT}\` and fix issues.
-4. Commit with a message that names the removed block (\`${label}\`).`;
+function buildUpdatePrompt(pageUrl: string, label: string, cid: string) {
+  return `GAD marketing site (Next.js).
+
+## This page
+${pageUrl}
+
+## Block
+- \`data-cid\`: \`${cid}\`
+- \`<Identified as="${label}" />\`
+
+${HANDOFF_MAKE_CHANGES_HEADING}
+
+Find in repo \`${SITE_ROOT}/\`: search \`as="${label}"\` or \`data-cid="${cid}"\`.
+
+Keep \`<Identified>\` inside \`<SiteSection>\`; match nearby sections; primitives in \`components/ui/\`.
+
+\`pnpm exec tsc --noEmit\` in that folder, then commit.`;
+}
+
+function buildDeletePrompt(pageUrl: string, label: string, cid: string) {
+  return `GAD marketing site (Next.js).
+
+## This page
+${pageUrl}
+
+## Block
+- \`data-cid\`: \`${cid}\`
+- \`<Identified as="${label}" />\`
+
+## Do this
+1. Under \`${SITE_ROOT}/\`, find that \`Identified\` band and remove it (or remove the whole section if it should all go).
+2. Drop unused imports/components.
+3. \`pnpm exec tsc --noEmit\` in that folder, commit (message should name \`${label}\`).`;
 }
 
 type SpeechRecInstance = {
@@ -89,42 +147,24 @@ function getSpeechRecognition(): SpeechCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-function insertTranscriptAtCaret(
-  textarea: HTMLTextAreaElement | null,
-  transcript: string,
-  setText: (fn: (prev: string) => string) => void,
-) {
-  if (!textarea || !transcript.trim()) return;
-  const chunk = transcript.trim() + (transcript.trim().endsWith(" ") ? "" : " ");
-  setText((prev) => {
-    const start = textarea.selectionStart ?? prev.length;
-    const end = textarea.selectionEnd ?? prev.length;
-    const before = prev.slice(0, start);
-    const after = prev.slice(end);
-    const next = before + chunk + after;
-    const caret = start + chunk.length;
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(caret, caret);
-    });
-    return next;
-  });
+function insertTranscriptAtEditor(api: HandoffEditorHandle | null, transcript: string) {
+  api?.insertAtCaret(transcript);
 }
 
 function PromptContextStrip({
-  pathname,
+  pageUrl,
   cid,
   label,
 }: {
-  pathname: string;
+  pageUrl: string;
   cid: string;
   label: string;
 }) {
   return (
     <div className="grid gap-2 border-b border-border/60 bg-muted/20 px-4 py-2.5 sm:grid-cols-3">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">App route</p>
-        <p className="mt-1 break-all font-mono text-[11px] text-foreground">{pathname || "—"}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Page URL</p>
+        <p className="mt-1 break-all font-mono text-[11px] text-foreground">{pageUrl || "—"}</p>
       </div>
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">data-cid</p>
@@ -161,7 +201,7 @@ function HoverPromptChrome({
     <div
       className={cn(
         "pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-stretch justify-end",
-        "bg-gradient-to-t from-background via-background/98 to-transparent pb-2 pt-14 pl-3 pr-3",
+        "bg-transparent pb-2 pt-6 pl-3 pr-3",
         "opacity-0 transition-opacity duration-200",
         "group-hover/prompt:pointer-events-auto group-hover/prompt:opacity-100",
       )}
@@ -181,10 +221,14 @@ function HoverPromptChrome({
               onStartDictation();
             }}
             disabled={!speechOk}
-            title={speechOk ? "Dictate at cursor — place caret in the prompt first" : "Speech recognition not available"}
+            title={
+              speechOk
+                ? "Speech inserts at the caret. Upd opens with the caret on the empty line under Make these changes."
+                : "Speech recognition not available"
+            }
             className={cn(
               "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
-              "bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-900/40",
+              "bg-gradient-to-br from-emerald-500 to-teal-700 text-white",
               "transition-transform hover:scale-105 active:scale-95",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               !speechOk && "cursor-not-allowed opacity-40",
@@ -203,7 +247,7 @@ function HoverPromptChrome({
             title="Stop dictation"
             className={cn(
               "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
-              "bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-md",
+              "bg-gradient-to-br from-red-600 to-rose-800 text-white",
               "ring-2 ring-red-400/50",
               "animate-[pulse_1.1s_ease-in-out_infinite]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2",
@@ -220,7 +264,7 @@ function HoverPromptChrome({
           variant="secondary"
           size="sm"
           disabled={copyDisabled}
-          className="h-9 gap-1.5 px-3 text-xs font-semibold shadow-sm"
+          className="h-9 gap-1.5 px-3 text-xs font-semibold"
           onClick={(e) => {
             e.preventDefault();
             onCopy();
@@ -252,20 +296,22 @@ export function DevIdAgentPromptDialog({
   const [listening, setListening] = useState(false);
   const [speechOk, setSpeechOk] = useState(true);
   const recRef = useRef<SpeechRecInstance | null>(null);
-  const updateEditorRef = useRef<HTMLTextAreaElement | null>(null);
-  const deleteEditorRef = useRef<HTMLTextAreaElement | null>(null);
+  const updateEditorRef = useRef<HandoffEditorHandle | null>(null);
+  const deleteEditorRef = useRef<HandoffEditorHandle | null>(null);
   const tabRef = useRef<"update" | "delete">(tab);
   const [copied, setCopied] = useState<"update" | "delete" | null>(null);
+  const [handoffEpoch, setHandoffEpoch] = useState(0);
 
   const label = entry?.label ?? "";
   const cid = entry?.cid ?? "";
+  const pageUrl = useMemo(() => absolutePageUrl(pathname), [pathname]);
 
   tabRef.current = tab;
 
   useEffect(() => {
     if (!open || !entry) return;
-    setUpdateDraft(buildUpdatePrompt(pathname, label, cid, "(Describe the change you want.)"));
-    setDeleteDraft(buildDeletePrompt(pathname, label, cid));
+    setUpdateDraft(buildUpdatePrompt(pageUrl, label, cid));
+    setDeleteDraft(buildDeletePrompt(pageUrl, label, cid));
     setInterim("");
     setTab("update");
     setCopied(null);
@@ -278,7 +324,8 @@ export function DevIdAgentPromptDialog({
       recRef.current = null;
     }
     setListening(false);
-  }, [open, entry, pathname, label, cid]);
+    setHandoffEpoch((e) => e + 1);
+  }, [open, entry, pageUrl, label, cid]);
 
   useEffect(() => {
     return () => {
@@ -329,8 +376,7 @@ export function DevIdAgentPromptDialog({
       if (hasFinal && piece.trim()) {
         const t = tabRef.current;
         const el = t === "update" ? updateEditorRef.current : deleteEditorRef.current;
-        const setDraft = t === "update" ? setUpdateDraft : setDeleteDraft;
-        insertTranscriptAtCaret(el, piece, setDraft);
+        insertTranscriptAtEditor(el, piece);
         setInterim("");
       } else {
         setInterim(piece);
@@ -377,12 +423,14 @@ export function DevIdAgentPromptDialog({
         <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
           <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Prompt text is <strong className="text-foreground">fully editable</strong> below. Hover the editor for{" "}
-            <strong className="text-foreground">Dictate</strong> + <strong className="text-foreground">Copy</strong>.
+            <strong className="text-foreground">Upd</strong> — copy for the agent; type on the empty line under{" "}
+            <strong className="text-foreground">Make these changes</strong>. <strong className="text-foreground">Del</strong>{" "}
+            — removal checklist. Mic + Copy:{" "}
+            <strong className="text-foreground">hover the bottom</strong> of the editor.
           </DialogDescription>
         </DialogHeader>
 
-        <PromptContextStrip pathname={pathname} cid={cid} label={label} />
+        <PromptContextStrip pageUrl={pageUrl} cid={cid} label={label} />
 
         <Tabs
           value={tab}
@@ -416,24 +464,15 @@ export function DevIdAgentPromptDialog({
           </div>
 
           <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
-              <p className="mb-1 text-[10px] text-muted-foreground sm:mb-1.5">
-                Edit like a normal document; hover the box for dictation + copy.
-              </p>
-              <div className="group/prompt relative flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
-                <textarea
-                  ref={updateEditorRef}
-                  value={updateDraft}
-                  onChange={(e) => setUpdateDraft(e.target.value)}
-                  spellCheck
-                  className={cn(
-                    "box-border min-h-[min(68dvh,32rem)] w-full min-w-0 flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(72vh,36rem)]",
-                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[13px]",
-                    "touch-manipulation placeholder:text-muted-foreground/50",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
-                  )}
-                  aria-label="Full update prompt for your agent"
-                />
+            <HandoffPromptPane
+              draft={updateDraft}
+              onDraftChange={setUpdateDraft}
+              editorRef={updateEditorRef}
+              editorKey={`${handoffEpoch}-update`}
+              variant="update"
+              focusEmptyLineUnderHeading={HANDOFF_MAKE_CHANGES_HEADING}
+              ariaLabel="Update handoff prompt for your agent"
+              hoverChrome={
                 <HoverPromptChrome
                   listening={listening}
                   interim={interim}
@@ -444,32 +483,24 @@ export function DevIdAgentPromptDialog({
                   copied={copied === "update"}
                   copyDisabled={!updateDraft.trim()}
                 />
-              </div>
-              {!speechOk && (
-                <p className="mt-2 text-xs text-amber-500">Speech recognition is not supported in this browser.</p>
-              )}
-            </div>
+              }
+              speechFooter={
+                !speechOk ? (
+                  <p className="mt-2 text-xs text-amber-500">Speech recognition is not supported in this browser.</p>
+                ) : null
+              }
+            />
           </TabsContent>
 
           <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
-              <p className="mb-1 text-[10px] text-muted-foreground sm:mb-1.5">
-                Edit like a normal document; hover the box for dictation + copy.
-              </p>
-              <div className="group/prompt relative flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
-                <textarea
-                  ref={deleteEditorRef}
-                  value={deleteDraft}
-                  onChange={(e) => setDeleteDraft(e.target.value)}
-                  spellCheck
-                  className={cn(
-                    "box-border min-h-[min(68dvh,32rem)] w-full min-w-0 flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(72vh,36rem)]",
-                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[13px]",
-                    "touch-manipulation",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
-                  )}
-                  aria-label="Full delete prompt for your agent"
-                />
+            <HandoffPromptPane
+              draft={deleteDraft}
+              onDraftChange={setDeleteDraft}
+              editorRef={deleteEditorRef}
+              editorKey={`${handoffEpoch}-delete`}
+              variant="delete"
+              ariaLabel="Delete handoff prompt for your agent"
+              hoverChrome={
                 <HoverPromptChrome
                   listening={listening}
                   interim={interim}
@@ -480,8 +511,8 @@ export function DevIdAgentPromptDialog({
                   copied={copied === "delete"}
                   copyDisabled={!deleteDraft.trim()}
                 />
-              </div>
-            </div>
+              }
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>
