@@ -29,6 +29,12 @@ const { readDecisions } = require("../../lib/decisions-reader.cjs");
 const { readPhases } = require("../../lib/roadmap-reader.cjs");
 const { readTasks } = require("../../lib/task-registry-reader.cjs");
 const { summarizeAgentLineage } = require("../../lib/eval-agent-lineage.cjs");
+// Task 42.4-15, decision gad-184: project ⊇ species inheritance contract.
+// Species metadata must be loaded through the canonical merger so the site
+// sees the same shape as the CLI and the forge editor.
+const {
+  loadResolvedSpecies: loadResolvedSpeciesMerged,
+} = require("../../lib/eval-loader.cjs");
 
 // Render markdown to HTML deterministically. GitHub flavoured, no sanitizer
 // because the content is authored in this repo and static at build time.
@@ -494,12 +500,16 @@ function findTraceFiles() {
  * project-level metadata (project.json).
  */
 function scanEvalProjects() {
-  console.log("[2h/4] Scanning eval species metadata (species/<species>/species.json)");
+  console.log("[2h/4] Scanning eval species metadata (project ⊇ species merged)");
   const rows = [];
   for (const sp of listEvalSpecies()) {
     try {
-      const data = JSON.parse(fs.readFileSync(sp.speciesJsonPath, "utf8"));
-      const rawFramework = data.context_framework || data.workflow || sp.species || null;
+      // Merge-at-read-time (task 42.4-15, decision gad-184). The resolved
+      // shape already includes project defaults (techStack, contextFramework,
+      // installedSkills, defaultContent, ...) layered underneath the species
+      // overrides. Never hand-merge project.json + species.json here.
+      const data = loadResolvedSpeciesMerged(sp.projectDir, sp.species);
+      const rawFramework = data.contextFramework || data.context_framework || data.workflow || sp.species || null;
       const contextFramework =
         rawFramework === "emergent" ? "custom" : rawFramework;
       rows.push({
@@ -518,7 +528,7 @@ function scanEvalProjects() {
         scoringWeights: data.scoring?.weights || null,
         humanReviewRubric: data.human_review_rubric || null,
         domain: data.domain || null,
-        techStack: data.tech_stack || null,
+        techStack: data.techStack || data.tech_stack || null,
         buildRequirement: data.build_requirement || null,
       });
     } catch (err) {
@@ -1479,7 +1489,6 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 ## Core thesis
 
 - [Home](${SITE_URL}/): Evaluate and evolve agents under measurable pressure
-- [Methodology](${SITE_URL}/methodology): How we score, what the rubric is, how rounds work
 - [Glossary](${SITE_URL}/glossary): Every domain term (CSH, freedom hypothesis, pressure, etc.)
 - [Skeptic](${SITE_URL}/skeptic): Devils-advocate critique of every hypothesis — read this first before trusting any number
 - [Lineage](${SITE_URL}/lineage): GSD → RepoPlanner → GAD
