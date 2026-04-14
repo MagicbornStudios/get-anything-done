@@ -29,6 +29,7 @@ const { readDecisions } = require("../../lib/decisions-reader.cjs");
 const { readPhases } = require("../../lib/roadmap-reader.cjs");
 const { readTasks } = require("../../lib/task-registry-reader.cjs");
 const { summarizeAgentLineage } = require("../../lib/eval-agent-lineage.cjs");
+const gadConfig = require("../../bin/gad-config.cjs");
 // Task 42.4-15, decision gad-184: project ⊇ species inheritance contract.
 // Species metadata must be loaded through the canonical merger so the site
 // sees the same shape as the CLI and the forge editor.
@@ -73,6 +74,82 @@ const TEMPLATES_DIR = path.join(REPO_ROOT, "templates");
 const SKILLS_DIR = path.join(REPO_ROOT, "skills");
 const AGENTS_DIR = path.join(REPO_ROOT, "agents");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
+
+// -------------------------------------------------------------------------
+// Multi-root eval discovery (task 44-02, mirrors bin/gad.cjs::getEvalRoots).
+// The submodule's own `evals/` dir is the implicit default; any additional
+// [[evals.roots]] declared in gad-config.toml (searched upward from the
+// repo root) are included. Duplicate project ids across roots throw.
+// -------------------------------------------------------------------------
+function getEvalRoots() {
+  const defaultRoot = { id: "get-anything-done", dir: EVALS_DIR };
+
+  let configuredRoots = [];
+  try {
+    // findRepoRoot for build-site-data: walk upward from the site's repo
+    // parent looking for a config that carries [[evals.roots]]. The monorepo
+    // gad-config.toml sits at custom_portfolio/gad-config.toml, two levels
+    // above vendor/get-anything-done.
+    const candidates = new Set();
+    let dir = REPO_ROOT;
+    for (let i = 0; i < 8; i += 1) {
+      candidates.add(dir);
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+    for (const base of candidates) {
+      try {
+        const cfg = gadConfig.load(base);
+        if (cfg && Array.isArray(cfg.evalsRoots) && cfg.evalsRoots.length > 0) {
+          configuredRoots = cfg.evalsRoots
+            .filter((r) => r && r.enabled !== false && r.path)
+            .map((r) => ({
+              id: r.id || path.basename(r.path),
+              dir: path.isAbsolute(r.path) ? r.path : path.resolve(base, r.path),
+            }));
+          break;
+        }
+      } catch {}
+    }
+  } catch {
+    configuredRoots = [];
+  }
+
+  const seen = new Set();
+  const ordered = [];
+  for (const r of configuredRoots) {
+    const key = path.resolve(r.dir).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    ordered.push(r);
+  }
+  const defaultKey = path.resolve(defaultRoot.dir).toLowerCase();
+  if (!seen.has(defaultKey)) ordered.push(defaultRoot);
+  return ordered;
+}
+
+function listEvalProjectDirs() {
+  const byName = new Map();
+  for (const root of getEvalRoots()) {
+    if (!exists(root.dir)) continue;
+    let entries;
+    try { entries = fs.readdirSync(root.dir, { withFileTypes: true }); } catch { continue; }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      if (e.name.startsWith(".") || e.name.startsWith("_")) continue;
+      const projectDir = path.join(root.dir, e.name);
+      if (byName.has(e.name)) {
+        const existing = byName.get(e.name);
+        throw new Error(
+          `Duplicate eval project id "${e.name}" in multiple roots:\n  ${existing.projectDir}\n  ${projectDir}`,
+        );
+      }
+      byName.set(e.name, { project: e.name, projectDir, root });
+    }
+  }
+  return Array.from(byName.values()).sort((a, b) => a.project.localeCompare(b.project));
+}
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "workflows");
 const CONTEXT_FRAMEWORKS_DIR = path.join(REPO_ROOT, ".planning", "context-frameworks");
 const DATA_DIR = path.join(REPO_ROOT, "data");
@@ -112,13 +189,7 @@ function exists(p) {
 
 function listEvalSpecies() {
   const out = [];
-  if (!exists(EVALS_DIR)) return out;
-  for (const projectName of fs.readdirSync(EVALS_DIR).sort()) {
-    if (projectName.startsWith(".") || projectName.startsWith("_")) continue;
-    const projectDir = path.join(EVALS_DIR, projectName);
-    let stat;
-    try { stat = fs.statSync(projectDir); } catch { continue; }
-    if (!stat.isDirectory()) continue;
+  for (const { project: projectName, projectDir } of listEvalProjectDirs()) {
     const speciesRoot = path.join(projectDir, "species");
     if (!exists(speciesRoot)) continue;
     for (const speciesName of fs.readdirSync(speciesRoot).sort()) {
@@ -131,7 +202,6 @@ function listEvalSpecies() {
       out.push({
         project: projectName,
         species: speciesName,
-        // composite id used downstream as a stable key for species rows
         id: `${projectName}/${speciesName}`,
         dir,
         projectDir,
@@ -172,13 +242,7 @@ function listEvalGenerations() {
 
 function listEvalProjects() {
   const out = [];
-  if (!exists(EVALS_DIR)) return out;
-  for (const projectName of fs.readdirSync(EVALS_DIR).sort()) {
-    if (projectName.startsWith(".") || projectName.startsWith("_")) continue;
-    const projectDir = path.join(EVALS_DIR, projectName);
-    let stat;
-    try { stat = fs.statSync(projectDir); } catch { continue; }
-    if (!stat.isDirectory()) continue;
+  for (const { project: projectName, projectDir } of listEvalProjectDirs()) {
     const projectJsonPath = path.join(projectDir, "project.json");
     if (!exists(projectJsonPath)) continue;
     let meta = {};
