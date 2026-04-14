@@ -6495,27 +6495,38 @@ const snapshotV2Cmd = defineCommand({
       const decisionsXml = readXmlFile(path.join(planDir, 'DECISIONS.xml'));
       if (!decisionsXml) return null;
       const ALWAYS_INCLUDE = ['gad-04', 'gad-17', 'gad-18'];
+      const RECENT_CAP = 30; // last N one-liners; older are summarized as a count
       const decisionRe = /<decision\s+id="([^"]*)">([\s\S]*?)<\/decision>/g;
+      const all = [];
       let dm;
-      let decSection = '';
-      let totalDec = 0;
       while ((dm = decisionRe.exec(decisionsXml)) !== null) {
-        totalDec++;
         const decId = dm[1];
         const decInner = dm[2];
         const titleMatch = decInner.match(/<title>([\s\S]*?)<\/title>/);
         const title = titleMatch ? titleMatch[1].trim() : '';
-        if (ALWAYS_INCLUDE.includes(decId)) {
-          const summaryMatch = decInner.match(/<summary>([\s\S]*?)<\/summary>/);
-          const impactMatch = decInner.match(/<impact>([\s\S]*?)<\/impact>/);
-          const summary = summaryMatch ? summaryMatch[1].trim() : '';
-          const impact = impactMatch ? impactMatch[1].trim() : '';
-          decSection += `<decision id="${decId}">\n  <title>${title}</title>\n  <summary>${summary}</summary>\n  <impact>${impact}</impact>\n</decision>\n`;
-        } else {
-          decSection += `${decId}: ${title.slice(0, 80)}\n`;
-        }
+        all.push({ id: decId, inner: decInner, title });
       }
-      return { title: `DECISIONS (${totalDec} total, core inlined)`, content: decSection.trim() };
+      const totalDec = all.length;
+      const coreInlined = [];
+      for (const d of all) {
+        if (!ALWAYS_INCLUDE.includes(d.id)) continue;
+        const summary = (d.inner.match(/<summary>([\s\S]*?)<\/summary>/) || [, ''])[1].trim();
+        const impact = (d.inner.match(/<impact>([\s\S]*?)<\/impact>/) || [, ''])[1].trim();
+        coreInlined.push(`<decision id="${d.id}">\n  <title>${d.title}</title>\n  <summary>${summary}</summary>\n  <impact>${impact}</impact>\n</decision>`);
+      }
+      // Recent N non-core, by appearance order (file order = chronological in our DECISIONS.xml)
+      const nonCore = all.filter((d) => !ALWAYS_INCLUDE.includes(d.id));
+      const recent = nonCore.slice(-RECENT_CAP);
+      const olderCount = nonCore.length - recent.length;
+      const recentLines = recent.map((d) => `${d.id}: ${d.title.slice(0, 80)}`);
+      const sections = [];
+      if (coreInlined.length) sections.push(coreInlined.join('\n'));
+      if (olderCount > 0) sections.push(`(+${olderCount} older decisions omitted; see .planning/DECISIONS.xml)`);
+      if (recentLines.length) sections.push(recentLines.join('\n'));
+      return {
+        title: `DECISIONS (${totalDec} total, ${ALWAYS_INCLUDE.length} core + last ${recent.length})`,
+        content: sections.join('\n').trim(),
+      };
     }
 
     function buildFileRefsSection() {
@@ -6745,12 +6756,18 @@ const snapshotV2Cmd = defineCommand({
     if (stateXml) sections.push({ title: 'STATE.xml', content: stateXml.trim() });
 
     let roadmapSection = '';
+    let outOfSprintCount = 0;
     for (const phase of phases) {
       if (sprintPhaseIds.includes(phase.id)) {
-        roadmapSection += `<phase id="${phase.id}">\n  <title>${phase.title || ''}</title>\n  <goal>${phase.goal || ''}</goal>\n  <status>${phase.status}</status>\n  <depends>${phase.depends || ''}</depends>\n</phase>\n`;
+        const goalSlice = (phase.goal || '').slice(0, 240);
+        const dependsAttr = phase.depends ? ` depends="${phase.depends}"` : '';
+        roadmapSection += `<phase id="${phase.id}" status="${phase.status}"${dependsAttr}>${phase.title || ''}: ${goalSlice}</phase>\n`;
       } else {
-        roadmapSection += `${phase.id} | ${(phase.title || '').slice(0, 60)} | ${phase.status}\n`;
+        outOfSprintCount += 1;
       }
+    }
+    if (outOfSprintCount > 0) {
+      roadmapSection += `(+${outOfSprintCount} out-of-sprint phases — see .planning/ROADMAP.xml)`;
     }
     sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapSection.trim() });
 
@@ -6764,16 +6781,14 @@ const snapshotV2Cmd = defineCommand({
           currentTaskPhase = taskPhase;
           tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
         }
-        const goalText = (task.goal || '').slice(0, 200);
+        const goalText = (task.goal || '').slice(0, 120);
         const extraAttrs = [
           task.skill ? `skill="${task.skill}"` : '',
           task.type ? `type="${task.type}"` : '',
           task.agentId ? `agent-id="${task.agentId}"` : '',
-          task.agentRole ? `agent-role="${task.agentRole}"` : '',
-          task.runtime ? `runtime="${task.runtime}"` : '',
         ].filter(Boolean).join(' ');
         const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
-        tasksSection += `    <task id="${task.id}" status="${task.status}"${attrStr}><goal>${goalText}</goal></task>\n`;
+        tasksSection += `    <task id="${task.id}" status="${task.status}"${attrStr}>${goalText}</task>\n`;
       }
     }
     const doneCount = allTasks.length - openTasks.length;
@@ -9180,7 +9195,7 @@ function buildSkillImageInventory(args = {}) {
   function pushRecord(base) {
     const imageCandidates = ['image.png', 'cover.png', 'icon.png', 'preview.png'];
     const existingImage = firstExistingImagePath(base.skillDir, imageCandidates);
-    const outputPath = base.outputPath || path.join(repoRoot, 'assets', 'skills', `${base.id}.png`);
+    const outputPath = base.outputPath || path.join(repoRoot, 'site', 'public', 'skills', `${base.id}.png`);
     const promptSeed = [
       `Create a 1:1 icon-style illustration for the GAD skill "${base.name || base.id}".`,
       base.description ? `Skill purpose: ${base.description}` : '',
@@ -9214,7 +9229,7 @@ function buildSkillImageInventory(args = {}) {
         kind: 'official',
         skillDir: entry.dir,
         skillFile: entry.skillFile,
-        outputPath: path.join(repoRoot, 'assets', 'skills', `${entry.id}.png`),
+        outputPath: path.join(repoRoot, 'site', 'public', 'skills', `${entry.id}.png`),
       });
     }
   }
@@ -9275,6 +9290,70 @@ function buildSkillImageInventory(args = {}) {
   return records;
 }
 
+function skillImagePromptDataPath(repoRoot) {
+  return path.join(repoRoot, 'data', 'skill-image-prompts.json');
+}
+
+function loadSkillImagePromptData(repoRoot) {
+  const file = skillImagePromptDataPath(repoRoot);
+  if (!fs.existsSync(file)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function writeSkillImagePromptData(repoRoot, payload) {
+  const file = skillImagePromptDataPath(repoRoot);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, `${JSON.stringify(payload, null, 2)}\n`);
+  return file;
+}
+
+function buildSkillImagePromptPayload(records) {
+  const globalStyle = [
+    'Magicborn narrative style.',
+    'Game icon / spell glyph aesthetic.',
+    'Centered composition.',
+    'High-contrast readability at small sizes.',
+    'No text, no logos, no UI chrome.',
+    'Painterly-fantasy energy with clean silhouette.',
+  ];
+  return {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    globalStyle,
+    items: records.map((r) => ({
+      id: r.id,
+      name: r.name,
+      kind: r.kind,
+      runtime: r.runtime || null,
+      targetImagePath: path.relative(path.resolve(__dirname, '..'), r.targetImagePath).replace(/\\/g, '/'),
+      prompt: r.prompt,
+    })),
+  };
+}
+
+function mergeInventoryWithPromptData(records, promptData, repoRoot) {
+  if (!promptData || !Array.isArray(promptData.items)) return records;
+  const byId = new Map(promptData.items.map((it) => [String(it.id || '').trim(), it]).filter(([id]) => id));
+  const stylePrefix = Array.isArray(promptData.globalStyle) ? promptData.globalStyle.join(' ') : '';
+  return records.map((r) => {
+    const item = byId.get(r.id);
+    if (!item) return r;
+    const prompt = String(item.prompt || '').trim();
+    const targetImagePath = item.targetImagePath
+      ? path.resolve(repoRoot, String(item.targetImagePath))
+      : r.targetImagePath;
+    return {
+      ...r,
+      prompt: prompt || `${stylePrefix} ${r.prompt}`.trim(),
+      targetImagePath,
+    };
+  });
+}
+
 function parseImageInputFile(inputFile) {
   const resolved = path.resolve(inputFile);
   const src = fs.readFileSync(resolved, 'utf8');
@@ -9323,7 +9402,6 @@ async function generateImageWithOpenAI({ apiKey, model, prompt, size }) {
       prompt,
       size,
       n: 1,
-      response_format: 'b64_json',
     }),
   });
   if (!res.ok) {
@@ -9332,8 +9410,15 @@ async function generateImageWithOpenAI({ apiKey, model, prompt, size }) {
   }
   const json = await res.json();
   const b64 = json?.data?.[0]?.b64_json;
-  if (!b64) throw new Error('OpenAI response did not include data[0].b64_json');
-  return Buffer.from(b64, 'base64');
+  if (b64) return Buffer.from(b64, 'base64');
+  const url = json?.data?.[0]?.url;
+  if (url) {
+    const imgRes = await fetch(url);
+    if (!imgRes.ok) throw new Error(`OpenAI image URL fetch failed (${imgRes.status})`);
+    const arr = await imgRes.arrayBuffer();
+    return Buffer.from(arr);
+  }
+  throw new Error('OpenAI response did not include data[0].b64_json or data[0].url');
 }
 
 const evolutionImagesStatus = defineCommand({
@@ -9342,15 +9427,25 @@ const evolutionImagesStatus = defineCommand({
     scope: { type: 'string', description: 'Comma-separated: official,proto,installed (default all three)', default: 'official,proto,installed' },
     runtime: { type: 'string', description: 'When scope includes installed: comma-separated runtimes (default all)', default: 'claude,codex,cursor,windsurf,augment,copilot,antigravity' },
     'include-global': { type: 'boolean', description: 'Also scan global runtime config dirs in home directory', default: false },
+    syncPrompts: { type: 'boolean', description: 'Write/update data/skill-image-prompts.json from current inventory', default: false },
     json: { type: 'boolean', description: 'Emit full JSON inventory', default: false },
   },
   run({ args }) {
-    const records = buildSkillImageInventory(args);
+    const repoRoot = path.resolve(__dirname, '..');
+    let records = buildSkillImageInventory(args);
+    const promptData = loadSkillImagePromptData(repoRoot);
+    records = mergeInventoryWithPromptData(records, promptData, repoRoot);
     const missing = records.filter((r) => !r.hasImage);
+    let promptFile = null;
+    if (args.syncPrompts) {
+      const payload = buildSkillImagePromptPayload(records);
+      promptFile = writeSkillImagePromptData(repoRoot, payload);
+    }
     if (args.json) {
       console.log(JSON.stringify({
         total: records.length,
         missing: missing.length,
+        promptFile: promptFile ? path.relative(process.cwd(), promptFile) : null,
         records,
       }, null, 2));
       return;
@@ -9374,6 +9469,10 @@ const evolutionImagesStatus = defineCommand({
       console.log('');
       console.log('Generate with: gad evolution images generate');
     }
+    if (promptFile) {
+      console.log('');
+      console.log(`Prompt registry updated: ${path.relative(process.cwd(), promptFile)}`);
+    }
   },
 });
 
@@ -9391,6 +9490,7 @@ const evolutionImagesGenerate = defineCommand({
     limit: { type: 'string', description: 'Max images to generate', default: '' },
     overwrite: { type: 'boolean', description: 'Overwrite files that already exist', default: false },
     'env-file': { type: 'string', description: 'Load env vars from this file before generation', default: '.env' },
+    prompts: { type: 'string', description: 'Prompt registry file (default: data/skill-image-prompts.json)', default: '' },
     dryRun: { type: 'boolean', description: 'Print planned writes without calling OpenAI', default: false },
   },
   async run({ args }) {
@@ -9411,7 +9511,15 @@ const evolutionImagesGenerate = defineCommand({
         targetImagePath: row.targetImagePath || row.imagePath || '',
       }));
     } else {
-      rows = buildSkillImageInventory(args).map((row) => ({
+      const promptFile = args.prompts
+        ? path.resolve(args.prompts)
+        : skillImagePromptDataPath(repoRoot);
+      let invRows = buildSkillImageInventory(args);
+      if (fs.existsSync(promptFile)) {
+        const promptData = loadSkillImagePromptData(repoRoot) || JSON.parse(fs.readFileSync(promptFile, 'utf8'));
+        invRows = mergeInventoryWithPromptData(invRows, promptData, repoRoot);
+      }
+      rows = invRows.map((row) => ({
         id: row.id,
         prompt: row.prompt || '',
         targetImagePath: row.targetImagePath,
