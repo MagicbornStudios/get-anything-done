@@ -33,7 +33,16 @@ Context budget: ~15% orchestrator, 100% fresh per subagent.
 <execution_context>
 @workflows/gad-execute-phase.md
 @references/ui-brand.md
+@references/sink-pipeline.md
 </execution_context>
+
+<planning_state_surface>
+After each task, update planning state by hand-editing XML under `.planning/`
+(TASK-REGISTRY.xml, STATE.xml, DECISIONS.xml). Verify with `gad tasks`,
+`gad state`, `gad decisions`. See the quick-reference table in
+`@references/sink-pipeline.md` for the full "edit X → verify with Y" map.
+MDX in `docs/<id>/planning/` is derived — never edit it directly.
+</planning_state_surface>
 
 <context>
 Phase: $ARGUMENTS

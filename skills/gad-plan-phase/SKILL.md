@@ -24,7 +24,15 @@ Create executable phase prompts (PLAN.md files) for a roadmap phase with integra
 <execution_context>
 @workflows/gad-plan-phase.md
 @references/ui-brand.md
+@references/sink-pipeline.md
 </execution_context>
+
+<planning_state_surface>
+When editing ROADMAP / TASK-REGISTRY / DECISIONS as part of planning, hand-edit
+the XML under `.planning/` — it is the source of truth. See the quick-reference
+table in `@references/sink-pipeline.md` for the full "edit X → verify with Y"
+map. Do NOT edit MDX in `docs/<id>/planning/`; that is a derived view.
+</planning_state_surface>
 
 <context>
 Phase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omitted)

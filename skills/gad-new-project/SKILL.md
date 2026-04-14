@@ -33,9 +33,19 @@ Initialize a new project through unified flow: questioning → research (optiona
 @workflows/gad-new-project.md
 @references/questioning.md
 @references/ui-brand.md
+@references/project-shape.md
+@references/sink-pipeline.md
 @templates/project.md
 @templates/requirements.md
 </execution_context>
+
+<planning_state_surface>
+XML under `.planning/` is authoritative; MDX in `docs/<id>/planning/` is derived.
+See `@references/project-shape.md` for the canonical file set and
+`@references/sink-pipeline.md` for the "I want to edit X → use command Y" map.
+Legacy markdown templates (`STATE.md`, `ROADMAP.md`, …) have no supported
+MD→XML conversion path — scaffold XML directly.
+</planning_state_surface>
 
 <process>
 Execute the new-project workflow from @workflows/gad-new-project.md end-to-end.
