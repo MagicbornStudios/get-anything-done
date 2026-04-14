@@ -1,14 +1,5 @@
-import { MethodologyAgentRuntimesSection } from "@/app/methodology/MethodologyAgentRuntimesSection";
 import { MarketingShell } from "@/components/site";
-import { MethodologyCompositeSection } from "@/app/methodology/MethodologyCompositeSection";
-import { MethodologyDataPipelineSection } from "@/app/methodology/MethodologyDataPipelineSection";
-import { MethodologyGateSection } from "@/app/methodology/MethodologyGateSection";
-import { MethodologyHero } from "@/app/methodology/MethodologyHero";
-import { MethodologyLineageSection } from "@/app/methodology/MethodologyLineageSection";
-import { MethodologyTemplateMatrixSection } from "@/app/methodology/MethodologyTemplateMatrixSection";
-import { MethodologyWorkedExamplesSection } from "@/app/methodology/MethodologyWorkedExamplesSection";
-import { MethodologyCliReviewSection } from "@/app/methodology/MethodologyCliReviewSection";
-import { MethodologyOpenQuestionsSection } from "@/app/methodology/MethodologyOpenQuestionsSection";
+import { MethodologyPageBody } from "@/app/methodology/MethodologyPageBody";
 import { pickWorkedExamples } from "@/app/methodology/methodology-shared";
 
 export const metadata = {
@@ -22,16 +13,7 @@ export default function MethodologyPage() {
 
   return (
     <MarketingShell>
-      <MethodologyHero />
-      <MethodologyCompositeSection />
-      <MethodologyGateSection />
-      <MethodologyDataPipelineSection />
-      <MethodologyAgentRuntimesSection />
-      <MethodologyWorkedExamplesSection worked={worked} />
-      <MethodologyLineageSection />
-      <MethodologyTemplateMatrixSection />
-      <MethodologyCliReviewSection />
-      <MethodologyOpenQuestionsSection />
+      <MethodologyPageBody worked={worked} />
     </MarketingShell>
   );
 }

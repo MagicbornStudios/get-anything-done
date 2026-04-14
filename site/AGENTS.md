@@ -40,7 +40,7 @@ Humans cite `data-cid` / dev-panel labels to mean **“this whole area”** — 
 
 If only a heading or card is tagged, there is **no stable id for the parent band** — the user cannot point at it except by naming an inner id. **Prefer `sectionBandCid` on `SiteSection`** (stable id + `data-cid` on `<section>`, registers at depth 0) **or** an outer `Identified` wrapping the whole shell — not only the kicker.
 
-On **`/methodology`**, bands that need a single landmark id should set **`sectionBandCid`** (and optional **`sectionBandLabel`**) on **`SiteSection`** to match the section component name (e.g. `MethodologyCompositeSection`). Inner chunks stay as **`Identified`**. **Do not** wrap those sections from `page.tsx` — `Identified` outside `SiteSection` does not register in any dev-id panel. Open-question **category** rows use **`OpenQuestionsCategory-<slug>`** inside `QuestionsCategorySection`; resolved uses **`OpenQuestionsResolvedSection`** inside `QuestionsResolvedSection`.
+On **`/methodology`**, page-level bands (`MethodologyPageIntro`, …) live in **`MethodologyPageBody.tsx`**, which wraps **`SectionRegistryProvider`** + **`SectionDevPanel`** so `Identified` from the page route actually registers (the provider is normally only inside each **`SiteSection`**). Per-section internals still use **`sectionBandCid`** / **`Identified`** inside those section components. Open-question **category** rows use **`OpenQuestionsCategory-<slug>`** inside `QuestionsCategorySection`; resolved uses **`OpenQuestionsResolvedSection`** inside `QuestionsResolvedSection`.
 
 ## Real routes (no hash “redirects”)
 
