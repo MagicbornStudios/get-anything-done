@@ -847,6 +847,66 @@ const REQUIRED_FILES_BY_FORMAT = {
 };
 const RECOMMENDED_FILES = ['DECISIONS.xml', 'DECISIONS.md', 'AGENTS.md', 'REQUIREMENTS.xml', 'REQUIREMENTS.md'];
 
+// Canonical planning-root shape — source of truth is references/project-shape.md
+// (task 42.4-09, decision gad-185). Keep this list in sync with §2 / §3 / §4 of that doc.
+const CANONICAL_MINIMUM_FILES = [
+  'STATE.xml',
+  'ROADMAP.xml',
+  'TASK-REGISTRY.xml',
+  'DECISIONS.xml',
+];
+const CANONICAL_OPTIONAL_FILES = [
+  'REQUIREMENTS.xml',
+  'ERRORS-AND-ATTEMPTS.xml',
+  'HUMAN-TODOS.xml',
+  'BLOCKERS.xml',
+  'PROJECT.xml',
+  'DOCS-MAP.xml',
+  'AGENTS.md',
+  'CONVENTIONS.md',
+  'README.md',
+];
+const CANONICAL_LEGACY_FILES = [
+  // (name, reason) — reported as warnings
+  ['gad.json',                             'renamed to species.json in phase 43 / task 42.4-14'],
+  ['PROJECT.md',                           'legacy markdown scaffold; use PROJECT.xml (reserved) or leave absent'],
+  ['STATE.md',                             'use STATE.xml (canonical XML shape)'],
+  ['ROADMAP.md',                           'use ROADMAP.xml (canonical XML shape)'],
+  ['DECISIONS.md',                         'use DECISIONS.xml (canonical XML shape)'],
+  ['REQUIREMENTS.md',                      'use REQUIREMENTS.xml (canonical XML shape)'],
+  ['config.json',                          'superseded by repo-root gad-config.toml in phase 41'],
+  ['REPOPLANNER-TO-GAD-MIGRATION-GAPS.md', 'one-shot migration note, safe to archive'],
+];
+const CANONICAL_LEGACY_DIRS = [
+  ['skills', 'project-local skill staging is deprecated — use .planning/proto-skills/ per decision gad-183'],
+];
+
+// Compute the canonical-shape report for a single planning root.
+// Returns { minimumPresent, minimumMissing, optionalPresent, legacyPresent }.
+// Referenced by the projects audit command (below). Source of truth for the
+// file lists is references/project-shape.md (decision gad-185).
+function computeCanonicalShape(planDir) {
+  if (!fs.existsSync(planDir)) {
+    return { minimumPresent: [], minimumMissing: CANONICAL_MINIMUM_FILES.slice(), optionalPresent: [], legacyPresent: [] };
+  }
+  const entries = fs.readdirSync(planDir, { withFileTypes: true });
+  const files = new Set(entries.filter(e => e.isFile()).map(e => e.name));
+  const dirs  = new Set(entries.filter(e => e.isDirectory()).map(e => e.name));
+
+  const minimumPresent = CANONICAL_MINIMUM_FILES.filter(f => files.has(f));
+  const minimumMissing = CANONICAL_MINIMUM_FILES.filter(f => !files.has(f));
+  const optionalPresent = CANONICAL_OPTIONAL_FILES.filter(f => files.has(f));
+
+  const legacyPresent = [];
+  for (const [name, reason] of CANONICAL_LEGACY_FILES) {
+    if (files.has(name)) legacyPresent.push({ name, kind: 'file', reason });
+  }
+  for (const [name, reason] of CANONICAL_LEGACY_DIRS) {
+    if (dirs.has(name)) legacyPresent.push({ name, kind: 'dir', reason });
+  }
+  return { minimumPresent, minimumMissing, optionalPresent, legacyPresent };
+}
+
 const projectsAudit = defineCommand({
   meta: { name: 'audit', description: 'Audit all projects for missing files, format violations, and sink gaps' },
   args: {
@@ -913,7 +973,34 @@ const projectsAudit = defineCommand({
         }
       }
 
-      results.push({ project: root.id, format: detectedFormat, checks });
+      // 5. Canonical planning-root shape (task 42.4-09, decision gad-185).
+      // Source of truth: references/project-shape.md. This is additive — it
+      // does not replace the legacy required/recommended checks above.
+      const shape = computeCanonicalShape(planDir);
+      const minPass = shape.minimumMissing.length === 0;
+      checks.push({
+        check: 'canonical_minimum',
+        pass: minPass,
+        detail: minPass
+          ? `${shape.minimumPresent.length}/${CANONICAL_MINIMUM_FILES.length} present`
+          : `missing: ${shape.minimumMissing.join(', ')}`,
+      });
+      checks.push({
+        check: 'canonical_optional',
+        pass: true,
+        detail: shape.optionalPresent.length === 0
+          ? 'none present'
+          : `present: ${shape.optionalPresent.join(', ')}`,
+      });
+      checks.push({
+        check: 'canonical_legacy',
+        pass: shape.legacyPresent.length === 0,
+        detail: shape.legacyPresent.length === 0
+          ? 'none detected'
+          : `legacy: ${shape.legacyPresent.map(l => `${l.name} (${l.reason})`).join('; ')}`,
+      });
+
+      results.push({ project: root.id, format: detectedFormat, checks, shape });
     }
 
     if (args.json || shouldUseJson()) {
@@ -929,6 +1016,24 @@ const projectsAudit = defineCommand({
       }
     }
     output(rows, { title: `Projects Audit (${results.length} projects)` });
+
+    // Canonical-shape summary block — cites references/project-shape.md as
+    // the contract that both projects init and projects audit agree on.
+    console.log('\n── Canonical planning-root shape ───────────────────────');
+    console.log('Source: references/project-shape.md (decision gad-185)');
+    for (const r of results) {
+      if (!r.shape) continue;
+      const m = r.shape;
+      const status = m.minimumMissing.length === 0 ? '✓ clean' : `✗ missing ${m.minimumMissing.length}`;
+      console.log(`  ${r.project.padEnd(22)} ${status}`);
+      console.log(`    minimum:  ${m.minimumPresent.length}/${CANONICAL_MINIMUM_FILES.length} present${m.minimumMissing.length ? ` — missing: ${m.minimumMissing.join(', ')}` : ''}`);
+      if (m.optionalPresent.length) {
+        console.log(`    optional: ${m.optionalPresent.join(', ')}`);
+      }
+      if (m.legacyPresent.length) {
+        console.log(`    legacy:   ${m.legacyPresent.map(l => l.name).join(', ')}`);
+      }
+    }
 
     const failed = results.flatMap(r => r.checks).filter(c => !c.pass).length;
     console.log(failed === 0
