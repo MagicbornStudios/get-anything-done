@@ -368,10 +368,10 @@ export function DevIdAgentPromptDialog({
       <DialogContent
         overlayClassName="z-[200] bg-black/85"
         className={cn(
-          "fixed z-[210] flex w-[calc(100vw-1rem)] max-w-none flex-col gap-0 overflow-hidden border bg-background p-0 shadow-xl",
-          // Mobile: large sheet so the prompt reads like an editable page; desktop: centered card
-          "left-1/2 top-3 max-h-[min(94dvh,calc(100dvh-1.5rem))] -translate-x-1/2 translate-y-0 rounded-xl",
-          "sm:top-1/2 sm:max-h-[88vh] sm:w-[min(96vw,38rem)] sm:-translate-y-1/2 sm:rounded-lg",
+          "fixed z-[210] flex w-[calc(100vw-0.5rem)] max-w-none flex-col gap-0 overflow-hidden border bg-background p-0 shadow-xl",
+          // Mobile: near-edge sheet; desktop: wide editor surface
+          "left-1/2 top-1 max-h-[min(98dvh,calc(100dvh-0.5rem))] -translate-x-1/2 translate-y-0 rounded-lg",
+          "sm:top-1/2 sm:max-h-[min(96vh,100dvh)] sm:w-[min(98vw,72rem)] sm:-translate-y-1/2 sm:rounded-xl",
         )}
       >
         <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
@@ -392,39 +392,43 @@ export function DevIdAgentPromptDialog({
           }}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="shrink-0 px-3 pt-2 sm:px-4">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-md bg-muted/80 p-1 sm:max-w-xs">
+          <div className="shrink-0 px-3 pt-1 sm:px-4">
+            <TabsList className="inline-flex h-6 w-fit gap-px rounded border border-border/40 bg-muted/30 p-px">
               <TabsTrigger
                 value="update"
-                className="flex h-8 items-center justify-center gap-1.5 rounded-sm px-2 py-1 text-[11px] font-semibold leading-none data-[state=active]:shadow-sm [&_svg]:shrink-0"
+                title="Update prompt"
+                aria-label="Update handoff prompt"
+                className="flex h-[1.375rem] items-center gap-0.5 rounded-sm px-1.5 py-0 text-[9px] font-semibold leading-none data-[state=active]:bg-background data-[state=active]:shadow-sm [&_svg]:shrink-0"
               >
-                <FilePenLine className="size-3.5" strokeWidth={2} aria-hidden />
-                <span>Update</span>
+                <FilePenLine className="size-2.5" strokeWidth={2} aria-hidden />
+                <span aria-hidden>Upd</span>
               </TabsTrigger>
               <TabsTrigger
                 value="delete"
-                className="flex h-8 items-center justify-center gap-1.5 rounded-sm px-2 py-1 text-[11px] font-semibold leading-none data-[state=active]:shadow-sm [&_svg]:shrink-0"
+                title="Delete prompt"
+                aria-label="Delete handoff prompt"
+                className="flex h-[1.375rem] items-center gap-0.5 rounded-sm px-1.5 py-0 text-[9px] font-semibold leading-none data-[state=active]:bg-background data-[state=active]:shadow-sm [&_svg]:shrink-0"
               >
-                <FileX2 className="size-3.5" strokeWidth={2} aria-hidden />
-                <span>Delete</span>
+                <FileX2 className="size-2.5" strokeWidth={2} aria-hidden />
+                <span aria-hidden>Del</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-2 sm:px-4">
-              <p className="mb-1.5 text-[10px] text-muted-foreground">
+          <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
+            <div className="flex min-h-0 flex-1 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
+              <p className="mb-1 text-[10px] text-muted-foreground sm:mb-1.5">
                 Edit like a normal document; hover the box for dictation + copy.
               </p>
-              <div className="group/prompt relative flex-1 min-h-[12rem] rounded-md border border-border/70 bg-muted/15 shadow-inner">
+              <div className="group/prompt relative flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
                 <textarea
                   ref={updateEditorRef}
                   value={updateDraft}
                   onChange={(e) => setUpdateDraft(e.target.value)}
                   spellCheck
                   className={cn(
-                    "box-border min-h-[min(52dvh,26rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(42vh,16rem)]",
-                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[12px]",
+                    "box-border min-h-[min(68dvh,32rem)] w-full min-w-0 flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(72vh,36rem)]",
+                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[13px]",
                     "touch-manipulation placeholder:text-muted-foreground/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
                   )}
@@ -447,20 +451,20 @@ export function DevIdAgentPromptDialog({
             </div>
           </TabsContent>
 
-          <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-2 sm:px-4">
-              <p className="mb-1.5 text-[10px] text-muted-foreground">
+          <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
+            <div className="flex min-h-0 flex-1 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
+              <p className="mb-1 text-[10px] text-muted-foreground sm:mb-1.5">
                 Edit like a normal document; hover the box for dictation + copy.
               </p>
-              <div className="group/prompt relative flex-1 min-h-[12rem] rounded-md border border-border/70 bg-muted/15 shadow-inner">
+              <div className="group/prompt relative flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
                 <textarea
                   ref={deleteEditorRef}
                   value={deleteDraft}
                   onChange={(e) => setDeleteDraft(e.target.value)}
                   spellCheck
                   className={cn(
-                    "box-border min-h-[min(52dvh,26rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(42vh,16rem)]",
-                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[12px]",
+                    "box-border min-h-[min(68dvh,32rem)] w-full min-w-0 flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(72vh,36rem)]",
+                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[13px]",
                     "touch-manipulation",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
                   )}
