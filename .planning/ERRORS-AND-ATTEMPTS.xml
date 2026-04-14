@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<errors-and-attempts>
+  <entry id="forge-init-md-misaction-2026-04-14" date="2026-04-14">
+    <summary>Hand-converted markdown planning files to XML instead of using a CLI command — the CLI command does not exist, but the gap should have been surfaced before doing the conversion.</summary>
+    <context>
+      During app-forge project scaffolding on 2026-04-14, ran `gad projects init --name app-forge --path apps/forge`. The CLI emitted four markdown template files (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md) containing literal placeholder content from the new-project skill template. The rest of the monorepo uses 6+ canonical XML files (STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml, ERRORS-AND-ATTEMPTS.xml, REQUIREMENTS.xml). After being asked to convert to XML, I hand-wrote the XML files instead of using a CLI command.
+    </context>
+    <failure>
+      Two compounding errors:
+      (1) Used `gad projects init` without first checking whether its output matched the repo's canonical format. The misalignment between "what init scaffolds" and "what every other planning root looks like" should have been a stop-and-flag moment before any files were written.
+      (2) When asked to convert, hand-rolled the XML instead of looking for or building a `gad migrate-schema --from md --to xml` (or equivalent) command. `gad migrate-schema --help` only shows RP→GAD-Markdown conversion. The right move was to surface the gap as a framework task in this file and the task registry, then ask the user whether to add the CLI command first or hand-convert as a one-off — not silently hand-roll.
+    </failure>
+    <rule>
+      Before doing any structural change to planning files (format conversion, schema migration, file-set normalization), look for a `gad &lt;verb&gt;` command that does it. If none exists, STOP and surface the gap as a task against `get-anything-done` and an entry in this file. Then ask the user: "no CLI command for this — should I (a) add one to GAD first, or (b) hand-convert as a one-off?" Never silently hand-roll structural changes.
+
+      Also: after running `gad projects init` for a new planning root, immediately verify the output matches the canonical file set used elsewhere in the repo. Drift between "what init scaffolds" and "what reality looks like" is a framework gap that must be filed against `get-anything-done`, not papered over.
+    </rule>
+    <reference>apps/forge/.planning/</reference>
+    <reference>vendor/get-anything-done/.planning/TASK-REGISTRY.xml (tasks 42.4-08, 42.4-09, 42.4-10)</reference>
+    <reference>C:\Users\benja\.claude\projects\C--Users-benja-Documents-custom-portfolio\memory\feedback_use_cli_for_conversions.md</reference>
+    <reference>C:\Users\benja\.claude\projects\C--Users-benja-Documents-custom-portfolio\memory\feedback_human_todos_scope.md</reference>
+  </entry>
+</errors-and-attempts>
