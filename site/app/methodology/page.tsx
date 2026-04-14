@@ -1,6 +1,5 @@
 import { MethodologyAgentRuntimesSection } from "@/app/methodology/MethodologyAgentRuntimesSection";
 import { MarketingShell } from "@/components/site";
-import { MethodologyCompositeSection } from "@/app/methodology/MethodologyCompositeSection";
 import { MethodologyDataPipelineSection } from "@/app/methodology/MethodologyDataPipelineSection";
 import { MethodologyGateSection } from "@/app/methodology/MethodologyGateSection";
 import { MethodologyHero } from "@/app/methodology/MethodologyHero";
@@ -14,7 +13,7 @@ import { PageIdentified } from "@/components/devid/PageIdentified";
 export const metadata = {
   title: "Methodology — how we score GAD evals",
   description:
-    "Composite formulas, per-project weights, low-score caps, gate logic, data pipeline, and worked examples — the numbers behind the site.",
+    "Low-score caps, gate logic, data pipeline, and worked examples — the numbers behind the site.",
 };
 
 export default function MethodologyPage() {
@@ -24,9 +23,6 @@ export default function MethodologyPage() {
     <MarketingShell>
       <PageIdentified as="MethodologyPageIntro">
         <MethodologyHero />
-      </PageIdentified>
-      <PageIdentified as="MethodologyPageCompositeSection">
-        <MethodologyCompositeSection />
       </PageIdentified>
       <PageIdentified as="MethodologyPageGateSection">
         <MethodologyGateSection />

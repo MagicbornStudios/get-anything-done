@@ -24,7 +24,7 @@ export type SiteSectionProps = {
   /**
    * When dev IDs are on, registers the `<section>` shell at depth 0 and sets `data-cid` on the
    * section element (stable id for scroll / copy / agent prompts). Prefer the section component
-   * name, e.g. `MethodologyCompositeSection`.
+   * name, e.g. `MethodologyGateSection`.
    */
   sectionBandCid?: string;
   /** Dev panel label for the section shell; defaults to `sectionBandCid`. */
