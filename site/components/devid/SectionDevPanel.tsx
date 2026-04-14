@@ -137,6 +137,13 @@ export function SectionDevPanel() {
   const [justCopied, setJustCopied] = useState<string | null>(null);
   const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
 
+  const locate = useCallback(
+    (cid: string) => {
+      locateComponentOnPage(cid, flashComponent);
+    },
+    [flashComponent],
+  );
+
   if (!enabled || !registry) return null;
 
   const sortedEntries = sortRegistryEntries(registry.entries);
@@ -146,13 +153,6 @@ export function SectionDevPanel() {
     setJustCopied(cid);
     setTimeout(() => setJustCopied(null), 900);
   };
-
-  const locate = useCallback(
-    (cid: string) => {
-      locateComponentOnPage(cid, flashComponent);
-    },
-    [flashComponent],
-  );
 
   return (
     <>
