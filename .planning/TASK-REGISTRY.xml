@@ -1016,7 +1016,7 @@
     <task id="42.2-05" type="site" status="planned"><goal>Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.</goal>
       <keywords>site,findings,whitepapers,copy</keywords>
     </task>
-    <task id="42.2-06" type="skill" status="planned"><goal>Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `skills/proto-skills/<slug>/{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance.</goal>
+    <task id="42.2-06" type="skill" status="planned"><goal>Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills/<slug>/{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance.</goal>
       <keywords>skill,create-proto-skill,batching,checkpoint,evolution</keywords>
     </task>
   </phase>
@@ -1126,6 +1126,13 @@ Explicit `workflow_enter`/`workflow_exit` events are still queued as a separate 
       </commands>
       <keywords>skills,validation,dedup,filesystem,naming</keywords>
     </task>
+    <task id="42.4-07" type="framework" status="done" skill="framework-upgrade" agent="default"><goal>Move staged proto-skills into the owning project's `.planning/` tree, add a direct proto-skill install command for coding-agent runtimes, and align evolution docs/state so staged proto-skills are treated as planning artifacts until explicit install or promotion.</goal>
+      <resolution>Shipped 2026-04-14. Moved the canonical proto-skill staging path from `skills/proto-skills/` to `.planning/proto-skills/` in the live evolution CLI and supporting docs. `gad evolution validate|promote|discard|status` now read staged proto-skills from `.planning/proto-skills/`, promotion targets canonical `skills/` instead of the stale `sdk/skills/` path, and promotion preserves the full staged bundle (including provenance) instead of dropping metadata. Added `gad evolution install &lt;slug&gt;` with local/global runtime flags (`--claude --codex --cursor --windsurf --augment --copilot --antigravity --all`) so a staged proto-skill can be installed into coding-agent skill directories for testing without promoting it. Updated proto-skill references, workflow docs, self-eval candidate generation, and planning notes to treat proto-skills as project-local planning artifacts first and framework DNA only after explicit promotion.</resolution>
+      <commands>
+        <command>node vendor/get-anything-done/bin/gad.cjs evolution status</command>
+      </commands>
+      <keywords>proto-skills,planning,evolution,install,runtimes</keywords>
+    </task>
   </phase>
   <phase id="43">
     <task id="43-01" type="cleanup" status="done" skill="default" agent="default"><goal>Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.</goal>
@@ -1180,3 +1187,4 @@ Explicit `workflow_enter`/`workflow_exit` events are still queued as a separate 
     </task>
   </phase>
 </task-registry>
+

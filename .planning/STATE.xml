@@ -4,12 +4,16 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 43 context gathered (discuss mode). Phase 42.4 cleanup shipped end-to-end: snapshot lane leak fixed (42.4-04), command-skill/workflow normalization shipped (42.4-05), remaining canonical-skill dedupe + validator shipped (42.4-06), and decisions gad-180/gad-181/gad-182 now define and enforce the canonical skill/workflow contract.</next-action>
+  <next-action>Phase 43 context gathered (discuss mode). Phase 42.4 cleanup shipped end-to-end: snapshot lane leak fixed (42.4-04), command-skill/workflow normalization shipped (42.4-05), remaining canonical-skill dedupe + validator shipped (42.4-06), and proto-skill staging/install is now normalized so staged drafts live in `.planning/proto-skills/` with direct runtime install via `gad evolution install` before promotion (42.4-07, gad-183).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
-    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..06, 44.5-01..04+02b)</reference>
-    <reference>.planning/DECISIONS.xml (gad-160 through gad-182)</reference>
+    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>
+    <reference>.planning/DECISIONS.xml (gad-160 through gad-183)</reference>
     <reference>scripts/validate-canonical-assets.mjs</reference>
+    <reference>references/proto-skills.md</reference>
+    <reference>skills/gad-evolution-evolve/SKILL.md</reference>
+    <reference>skills/gad-evolution-validator/SKILL.md</reference>
+    <reference>skills/gad-quick-skill/SKILL.md</reference>
     <reference>site/scripts/build-site-data.mjs (parseWorkflows)</reference>
     <reference>site/lib/catalog.generated.ts (WORKFLOWS export)</reference>
     <reference>.planning/workflows/README.md</reference>
@@ -26,6 +30,7 @@
     <reference>bin/gad-mcp.cjs</reference>
     <reference>bin/gad.cjs (workspace/worktree/self-eval commands)</reference>
     <reference>site/scripts/compute-self-eval.mjs</reference>
+    <reference>bin/gad.cjs (evolution install/validate/promote/status)</reference>
     <reference>site/app/formulas/page.tsx</reference>
     <reference>sdk/src/init-runner.ts</reference>
     <reference>sdk/src/context-engine.ts</reference>
@@ -37,3 +42,5 @@
   <last-updated>2026-04-14</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
+
+
