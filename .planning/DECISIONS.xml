@@ -319,12 +319,35 @@
   </decision>
 
   <decision id="gad-17">
-    <title>Context exhaustion: work through auto-compact, do not stop</title>
-    <summary>When context window fills, Claude Code auto-compacts. The agent works through it — stopping to start a fresh session is pointless friction. After compaction, run `gad snapshot --projectid &lt;id&gt;` or `gad context` to re-hydrate and continue. The planning docs are what make this possible — STATE.xml next-action and TASK-REGISTRY.xml tell the agent exactly where it was. No fresh sessions, no handoff files, no asking the user to restart.</summary>
-    <impact>Agents never stop work due to context limits. Auto-compact handles it. After compaction: read gad snapshot, continue. gad-04 (capture decisions in planning docs) is what makes auto-compact re-hydration work — the planning docs ARE the durable state.</impact>
+    <title>Context exhaustion: work through auto-compact by default, suggest restart at clean boundaries when economically motivated</title>
+    <summary>**Default behavior:** never stop work mid-task, never ask the user to restart, work through Claude Code's auto-compact event. After compaction, run `gad snapshot --projectid &lt;id&gt;` to re-hydrate and continue. The planning docs (STATE.xml next-action, TASK-REGISTRY.xml, DECISIONS.xml) are what make this possible — they are the durable state, not the conversation history.
+
+**Refinement (2026-04-13):** The original "never suggest restart" rule is too absolute. There are real costs to letting a session grow indefinitely, and there are clean moments where a restart is the right call. The agent should *loosely* suggest restarts when the economics favor it.
+
+**Cost shape of a long session:**
+1. Every turn re-sends the entire conversation history as input tokens. Turn 100 pays for turns 1-99 again. Cost per turn grows linearly with session length.
+2. Anthropic prompt cache has a 5-minute TTL. Idle gaps cold-start the cache and force a full re-read at full price.
+3. As context fills, the model attends to more irrelevant history. Quality on the *current* task degrades even though the old turns are technically still there.
+4. Context window is finite. Hitting the wall mid-task forces an unplanned auto-compact that is lossier than a planned restart.
+
+**When a restart suggestion is appropriate:**
+- A phase or large task just landed and its decisions are now captured in planning docs (rehydration story is good)
+- The next chunk of work is clearly scoped and self-contained (no dangling in-head state)
+- Topic is switching (e.g., "we're done with phase 43, now let's look at phase 44 marketplace design")
+- The agent's context is past ~60-70% and the next task is independent
+- Auto-compact is imminent — a planned restart now beats a forced compaction mid-task
+
+**When a restart is NOT appropriate:**
+- Mid-task with unwritten state in the agent's head
+- During an investigation where the trail of "what we ruled out" carries weight
+- When the next thing depends on subtle context from the last few turns
+- Any time the user is in flow and a restart would interrupt their thinking
+
+**How to suggest:** loosely, with one-line reasoning ("phase done, context ~70%, next chunk is mechanical and rehydratable from snapshot — restart is reasonable here, or I can keep going"). The user decides. Never push, never restart unilaterally. The default still leans toward continuing — restart is the exception, not the norm.</summary>
+    <impact>Agents work through auto-compact by default and never restart unilaterally. They MAY suggest a restart loosely at clean planning boundaries when context is filling and the next chunk has a good rehydration story via `gad snapshot`. The user always decides. gad-04 (decisions in planning docs) is still what makes both auto-compact and planned restarts work — without durable docs, no rehydration story exists at all.</impact>
     <references>
       <file path="vendor/get-anything-done/.planning/STATE.xml" />
-      <file path="vendor/get-anything-done/evals/cli-efficiency/" />
+      <file path="vendor/get-anything-done/.planning/TASK-REGISTRY.xml" />
     </references>
   </decision>
 
