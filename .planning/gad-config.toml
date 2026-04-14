@@ -1,0 +1,8 @@
+[planning]
+sprintSize = 5
+
+[[planning.roots]]
+id = "get-anything-done"
+path = "."
+planningDir = ".planning"
+discover = false
