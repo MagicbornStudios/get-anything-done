@@ -49,12 +49,14 @@ function SiteSectionSurface({
 }: SurfaceProps) {
   const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
   const registry = useSectionRegistry();
+  /** Stable — do not depend on `registry` itself; context value is a new object whenever `entries` changes. */
+  const registerFn = registry?.register;
 
   useEffect(() => {
-    if (!devIds || !sectionBandCid || !registry?.register) return;
+    if (!devIds || !sectionBandCid || !registerFn) return;
     const label = sectionBandLabel ?? sectionBandCid;
-    return registry.register({ cid: sectionBandCid, label, depth: 0 });
-  }, [devIds, sectionBandCid, sectionBandLabel, registry]);
+    return registerFn({ cid: sectionBandCid, label, depth: 0 });
+  }, [devIds, sectionBandCid, sectionBandLabel, registerFn]);
 
   const bandCid = devIds && enabled && sectionBandCid ? sectionBandCid : undefined;
   const isHighlighted = sectionBandCid != null && highlightCid === sectionBandCid;

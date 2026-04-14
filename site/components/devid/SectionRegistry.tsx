@@ -10,7 +10,7 @@
  * paired with component types.
  */
 
-import { createContext, useContext, useRef, useState, useCallback } from "react";
+import { createContext, useContext, useRef, useState, useCallback, useMemo } from "react";
 
 export interface RegistryEntry {
   cid: string;
@@ -52,8 +52,13 @@ export function SectionRegistryProvider({
   // Suppress lint: ref used only to allocate deterministic ids if needed later.
   void counterRef;
 
+  const value = useMemo(
+    () => ({ register, entries, maxDepth }),
+    [register, entries, maxDepth],
+  );
+
   return (
-    <SectionRegistryContext.Provider value={{ register, entries, maxDepth }}>
+    <SectionRegistryContext.Provider value={value}>
       {children}
     </SectionRegistryContext.Provider>
   );
