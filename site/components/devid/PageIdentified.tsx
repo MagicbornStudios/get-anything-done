@@ -4,10 +4,18 @@
  * Page-level dev landmark — **does not** use `SectionRegistry` or the section dev panel.
  * When dev IDs are on (`Alt+I`), hovering the band shows a small **top-left** chip
  * with the `data-cid`, **Copy**, and **Message** (opens the same agent handoff modal as
- * the section dev panel). Alt+click still copies + highlights like `<Identified>`.
+ * the section dev panel). **Click** the band (outside links/buttons) to sticky-highlight the
+ * inner page section; **Alt+click** also copies the page band `data-cid`.
  */
 
-import { createElement, useCallback, useId, useState, type MouseEvent, type ReactNode } from "react";
+import {
+  createElement,
+  useCallback,
+  useId,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { usePathname } from "next/navigation";
 import { Check, Copy, MessageSquare } from "lucide-react";
 import { useDevId } from "./DevIdProvider";
@@ -50,8 +58,9 @@ export function PageIdentified({
   const [copied, setCopied] = useState(false);
   const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
 
-  const isHighlighted = highlightCid === cid;
-  const showRing = enabled && isHighlighted;
+  /** Highlights the wrapped page section (inner shell); outer keeps the band `cid` for handoff/copy. */
+  const sectionCid = `${cid}-page-section`;
+  const sectionHighlighted = enabled && highlightCid === sectionCid;
 
   const copy = useCallback(() => {
     navigator.clipboard?.writeText(cid).catch(() => {});
@@ -62,10 +71,19 @@ export function PageIdentified({
   const handleClick =
     enabled && cid
       ? (e: MouseEvent) => {
-          if (!e.altKey) return;
+          const target = e.target as HTMLElement | null;
+          if (
+            target?.closest(
+              "a,button,[role='button'],input,textarea,select,label,[contenteditable='true']",
+            )
+          ) {
+            return;
+          }
           e.stopPropagation();
-          navigator.clipboard?.writeText(cid).catch(() => {});
-          setHighlightCid(cid);
+          if (e.altKey) {
+            navigator.clipboard?.writeText(cid).catch(() => {});
+          }
+          setHighlightCid(sectionCid);
         }
       : undefined;
 
@@ -83,8 +101,8 @@ export function PageIdentified({
       onClick: handleClick,
       className: cn(
         "group/page-identified relative",
+        enabled && "cursor-pointer",
         className,
-        showRing && "outline outline-2 outline-offset-2 outline-accent",
       ),
     },
     <>
@@ -97,7 +115,17 @@ export function PageIdentified({
         pathname={pathname}
         componentTag="PageIdentified"
       />
-      {children}
+      <div
+        data-cid={enabled ? sectionCid : undefined}
+        data-cid-label={enabled ? `${as} (section)` : undefined}
+        className={cn(
+          "min-w-0",
+          enabled && "cursor-pointer",
+          sectionHighlighted && "outline outline-2 outline-offset-2 outline-accent",
+        )}
+      >
+        {children}
+      </div>
       {enabled ? (
         <div
           className={cn(
@@ -106,6 +134,8 @@ export function PageIdentified({
             "group-focus-within/page-identified:pointer-events-auto group-focus-within/page-identified:opacity-100",
             chipPosition,
           )}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-accent/40 bg-background/95 px-2 py-1 text-[10px] shadow-lg backdrop-blur">
             <span className="min-w-0 flex-1 truncate font-mono text-accent" title={cid}>
@@ -136,7 +166,7 @@ export function PageIdentified({
             </button>
           </div>
           <span className="pointer-events-none text-[9px] text-muted-foreground/90">
-            Page band · Alt+click copies · Message: handoff
+            Page band · Click to highlight section · Alt+click copies id · Message: handoff
           </span>
         </div>
       ) : null}
