@@ -2002,6 +2002,64 @@ const docsCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// planning subcommands — MD → XML hydration (task 42.4-17, audit ref
+// references/sink-md-xml-audit.md §6). Inverse of `gad docs compile`:
+// consumes FOO.md in a source dir and writes FOO.xml into the project's
+// .planning/ dir for each canonical slot.
+// ---------------------------------------------------------------------------
+
+const planningHydrateCmd = defineCommand({
+  meta: {
+    name: 'hydrate',
+    description: 'Hydrate .planning/*.xml from sibling *.md files (inverse of docs compile)',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project root id', default: '' },
+    all:       { type: 'boolean', description: 'Walk every registered planning root', default: false },
+    from:      { type: 'string', description: 'Directory to read *.md from (defaults to the root planning dir)', default: '' },
+    'dry-run': { type: 'boolean', description: 'Print generated XML without writing', default: false },
+    force:     { type: 'boolean', description: 'Overwrite existing XML (archives prior to .planning/archive/xml/<ts>/)', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config  = gadConfig.load(baseDir);
+    const roots   = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No planning roots resolved. Pass --projectid <id> or --all.');
+    }
+    const { hydrateFromMd } = require('../lib/docs-compiler.cjs');
+    let totalWritten = 0, totalSkipped = 0, totalArchived = 0;
+    for (const root of roots) {
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      const fromDir = args.from ? path.resolve(baseDir, args.from) : planDir;
+      const res = hydrateFromMd(planDir, fromDir, { force: args.force, dryRun: args['dry-run'] });
+      totalWritten  += res.written;
+      totalSkipped  += res.skipped;
+      totalArchived += res.archived;
+      console.log(`\n${root.id}  (${path.relative(baseDir, planDir) || '.'})`);
+      for (const r of res.results) {
+        if (r.status === 'dry-run') {
+          console.log(`  --- ${r.slot} → ${path.relative(baseDir, r.destPath)} ---\n${r.xml}`);
+        } else if (r.status === 'written') {
+          console.log(`  ✓ ${r.slot} → ${path.relative(baseDir, r.destPath)}`);
+        } else if (r.status === 'skipped') {
+          console.log(`  · ${r.slot} skipped — ${r.reason}`);
+        } else if (r.status === 'missing-md') {
+          console.log(`  - ${r.slot} (no source md)`);
+        }
+      }
+    }
+    const verb = args['dry-run'] ? 'would write' : 'wrote';
+    console.log(`\n${verb} ${totalWritten} file(s), skipped ${totalSkipped}, archived ${totalArchived}`);
+  },
+});
+
+const planningCmd = defineCommand({
+  meta: { name: 'planning', description: 'Planning-directory utilities (hydrate from MD, etc.)' },
+  subCommands: { hydrate: planningHydrateCmd },
+});
+
+// ---------------------------------------------------------------------------
 // site subcommands (phase 10) — compile project planning into deployable HTML
 // ---------------------------------------------------------------------------
 
@@ -2189,14 +2247,13 @@ function buildEvalPrompt(projectDir, projectName, runNum, runtimeIdentity, runDi
   const roadmapXml = readIfExists(path.join(planDir, 'ROADMAP.xml'));
   const stateXml = readIfExists(path.join(planDir, 'STATE.xml'));
 
-  // Load gad.json for eval_mode and baseline info
-  let cfg = {};
-  try {
-    const cfgPath = path.join(projectDir, 'gad.json');
-    if (fs.existsSync(cfgPath)) cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {}
-  const isBrownfield = cfg.eval_mode === 'brownfield';
-  const baseline = cfg.baseline;
+  // Project/species metadata was previously read from a project-level
+  // `gad.json`. That file was renamed to species-level `species.json` in
+  // task 42.4-14 (decision gad-184); the old project-level reads were dead
+  // fallthroughs and have been removed in task 42.4-17. Eval_mode / baseline
+  // / workflow are species-level and should come from the resolved species
+  // (via `lib/eval-loader.cjs`) if they need to be surfaced in the prompt
+  // again in a later task.
   const runtimeId = runtimeIdentity?.id || 'unknown';
   const runDirUnix = runDir.replace(/\\/g, '/');
   const runLogDirUnix = path.join(runDir, '.gad-log').replace(/\\/g, '/');
@@ -2211,24 +2268,13 @@ function buildEvalPrompt(projectDir, projectName, runNum, runtimeIdentity, runDi
 
   const sections = [];
   sections.push(`# Eval: ${projectName} v${runNum}`);
-  sections.push(`\n**Mode:** ${cfg.eval_mode || 'unknown'} | **Workflow:** ${cfg.workflow || 'unknown'}\n`);
   sections.push(`\nYou are running a GAD eval. Follow the loop defined in AGENTS.md. Your work is being traced.\n`);
   sections.push(`\n**Runtime target:** ${runtimeId}\n`);
 
-  if (isBrownfield && baseline) {
-    sections.push(
-      `## BROWNFIELD BASELINE\n\n` +
-      `This is a brownfield eval. Before coding, copy the baseline codebase into \`game/\`:\n\n` +
-      `\`\`\`sh\n` +
-      `mkdir -p game\n` +
-      `cp -r vendor/get-anything-done/${baseline.source}/* game/ 2>/dev/null || true\n` +
-      `cp -r vendor/get-anything-done/${baseline.source}/.planning game/.planning 2>/dev/null || true\n` +
-      `cd game && npm install\n` +
-      `\`\`\`\n\n` +
-      `The baseline is **${baseline.project} ${baseline.version}** — a working roguelike you must EXTEND, not replace.\n` +
-      `Read existing files before changing them. Preserve what works. Add new features on top.\n`
-    );
-  }
+  // (Mode / Workflow / brownfield baseline block previously built from the
+  // project-level `gad.json` was removed in task 42.4-17; see decision
+  // gad-184. Restore via `loadResolvedSpecies` if the prompt needs to carry
+  // species-level metadata again.)
 
   if (agentsMd) sections.push(`## AGENTS.md (follow this exactly)\n\n${agentsMd}`);
   if (reqXml) sections.push(`## REQUIREMENTS.xml\n\n\`\`\`xml\n${reqXml}\`\`\``);
@@ -2376,11 +2422,13 @@ const evalRun = defineCommand({
 
     const now = new Date().toISOString();
 
-    // Load gad.json for metadata
-    let gadJson = {};
-    try {
-      gadJson = JSON.parse(fs.readFileSync(path.join(projectDir, 'gad.json'), 'utf8'));
-    } catch {}
+    // Project-level `gad.json` was renamed to species-level `species.json`
+    // in task 42.4-14 (decision gad-184). The old read-and-ignore here was
+    // a dead fallthrough — `gadJson` was always `{}` and every reference
+    // below fell to its default. Removed in task 42.4-17. If species-level
+    // metadata (eval_mode / workflow / domain / tech stack / build
+    // requirement) needs to be stamped into the TRACE scaffold again, wire
+    // it via `lib/eval-loader.cjs::loadResolvedSpecies`.
 
     // Build the bootstrap prompt from template files
     const prompt = buildEvalPrompt(projectDir, args.project, runNum, evalRuntime, runDir);
@@ -2402,11 +2450,11 @@ const evalRun = defineCommand({
         runtimesInvolved: evalRuntime?.id ? [{ id: evalRuntime.id, count: 1 }] : [],
       }),
       runtime_install: hookSetup,
-      eval_type: gadJson.eval_mode || 'greenfield',
-      workflow: gadJson.workflow || 'unknown',
-      domain: gadJson.domain || null,
-      tech_stack: gadJson.tech_stack || null,
-      build_requirement: gadJson.build_requirement || null,
+      eval_type: 'greenfield',
+      workflow: 'unknown',
+      domain: null,
+      tech_stack: null,
+      build_requirement: null,
       requirements_version: 'v5',
       context_mode: 'fresh',
       human_estimate_hours: null,
@@ -9464,6 +9512,7 @@ const main = defineCommand({
     refs: refsCmd,
     pack: packCmd,
     docs: docsCmd,
+    planning: planningCmd,
     site: siteCmd,
     'self-eval': selfEvalCmd,
     data: dataCmd,
