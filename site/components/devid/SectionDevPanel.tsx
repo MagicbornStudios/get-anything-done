@@ -1,20 +1,23 @@
 "use client";
 
-/**
- * SectionDevPanel — section-local slide-in panel listing registered `<Identified>`
- * bands (sorted by registry depth). No HoverCard/Tooltip on rows — Radix poppers
- * inside the transformed slide-in repeatedly hit “maximum update depth” in dev.
- */
-
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Settings2, Copy, Eye, X, MessageSquare } from "lucide-react";
+import { Check, Mic, MicOff, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
 import { Identified } from "./Identified";
-import { DevIdAgentPromptDialog } from "./DevIdAgentPromptDialog";
-import { cn } from "@/lib/utils";
+import {
+  buildDeletePrompt,
+  buildUpdateLockedPrefix,
+  DevIdAgentPromptDialog,
+  type HandoffComponentTag,
+} from "./DevIdAgentPromptDialog";
 import { DEV_PANEL_LABEL, DEV_PANEL_STABLE_CID } from "./dev-panel-constants";
+import { absolutePageUrl } from "./absolutePageUrl";
+import { SectionRegistryListRow } from "./SectionRegistryListRow";
+import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
+import { Button } from "@/components/ui/button";
 
 function sortRegistryEntries(entries: RegistryEntry[]): RegistryEntry[] {
   return [...entries]
@@ -43,99 +46,15 @@ function locateComponentOnPage(cid: string, flashComponent: (cid: string) => voi
   }, 1400);
 }
 
-type RowProps = {
-  entry: RegistryEntry;
-  highlightCid: string | null;
-  setHighlightCid: (v: string | null) => void;
-  justCopied: string | null;
-  onCopy: (cid: string) => void;
-  onLocate: (cid: string) => void;
-  onPrompt: (entry: RegistryEntry) => void;
-};
-
-function RegistryListRow({
-  entry,
-  highlightCid,
-  setHighlightCid,
-  justCopied,
-  onCopy,
-  onLocate,
-  onPrompt,
-}: RowProps) {
-  const isHl = highlightCid === entry.cid;
-  return (
-    <li
-      className={cn(
-        "group/cid flex items-center gap-1 rounded-md px-1 py-1 text-[11px] transition-colors",
-        isHl ? "bg-accent/15" : "hover:bg-card/60",
-      )}
-    >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setHighlightCid(isHl ? null : entry.cid);
-        }}
-        className="shrink-0 text-muted-foreground hover:text-accent"
-        aria-label="Toggle persistent highlight"
-        title="Toggle persistent highlight"
-      >
-        <Eye size={12} />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onLocate(entry.cid)}
-        className={cn(
-          "min-w-0 flex-1 cursor-pointer select-none truncate rounded px-1 py-0.5 text-left transition-colors",
-          "hover:bg-background/40",
-        )}
-        aria-label={`Scroll to ${entry.label} on the page`}
-        title={`${entry.label} · depth ${entry.depth} · click to scroll to component and flash highlight`}
-      >
-        <span className="text-muted-foreground/80">{entry.label}</span>
-        <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onPrompt(entry);
-        }}
-        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
-        aria-label="Open agent prompt handoff"
-        title="Agent handoff (update / delete)"
-      >
-        <MessageSquare size={12} />
-      </button>
-
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onCopy(entry.cid);
-        }}
-        className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
-        aria-label="Copy ID"
-        title="Copy ID"
-      >
-        <Copy size={12} />
-      </button>
-      {justCopied === entry.cid && (
-        <span className="shrink-0 text-[9px] uppercase tracking-wider text-emerald-400">copied</span>
-      )}
-    </li>
-  );
-}
-
 export function SectionDevPanel() {
   const pathname = usePathname() ?? "";
   const { enabled, highlightCid, setHighlightCid, flashComponent } = useDevId();
   const registry = useSectionRegistry();
-  const [open, setOpen] = useState(false);
   const [justCopied, setJustCopied] = useState<string | null>(null);
   const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
+  const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const [mountedSectionCid, setMountedSectionCid] = useState<string | null>(null);
 
   const locate = useCallback(
     (cid: string) => {
@@ -148,10 +67,62 @@ export function SectionDevPanel() {
 
   const sortedEntries = sortRegistryEntries(registry.entries);
 
+  useEffect(() => {
+    const host = panelRef.current;
+    const section = host?.closest("section[data-cid]") as HTMLElement | null;
+    setMountedSectionCid(section?.getAttribute("data-cid") ?? null);
+  }, [sortedEntries.length, pathname]);
+
+  const hasMountedSectionEntry = mountedSectionCid
+    ? sortedEntries.some((entry) => entry.cid === mountedSectionCid)
+    : false;
+
+  const displayEntries =
+    mountedSectionCid && !hasMountedSectionEntry
+      ? [{ cid: mountedSectionCid, label: "CurrentSectionBand", depth: 0 }, ...sortedEntries]
+      : sortedEntries;
+
+  const sectionTarget = displayEntries.find((entry) => entry.depth === 0) ?? displayEntries[0] ?? null;
+  const panelIdDisplay = mountedSectionCid ?? sectionTarget?.cid ?? DEV_PANEL_STABLE_CID;
+  const componentTag: HandoffComponentTag = "Identified";
+
+  const finalizeUpdatePromptCopy = (transcript: string) => {
+    if (!sectionTarget) return;
+    const prefix = buildUpdateLockedPrefix(
+      absolutePageUrl(pathname),
+      sectionTarget.label,
+      sectionTarget.cid,
+      componentTag,
+    );
+    const resolved = `${prefix}\n${transcript.trim()}`;
+    navigator.clipboard?.writeText(resolved).catch(() => {});
+    setHeaderCopied("update");
+    window.setTimeout(() => setHeaderCopied(null), 1200);
+    toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
+  };
+
+  const { listening, interim, toggle: toggleUpdatePromptWithSpeech } = useDictatedPromptCopy({
+    onFinalize: finalizeUpdatePromptCopy,
+  });
+
+  const copyResolvedDeletePrompt = () => {
+    if (!sectionTarget) return;
+    const resolved = buildDeletePrompt(
+      absolutePageUrl(pathname),
+      sectionTarget.label,
+      sectionTarget.cid,
+      componentTag,
+    );
+    navigator.clipboard?.writeText(resolved).catch(() => {});
+    setHeaderCopied("delete");
+    window.setTimeout(() => setHeaderCopied(null), 1200);
+    toast.success("Delete prompt copied");
+  };
+
   const copy = (cid: string) => {
     navigator.clipboard?.writeText(cid).catch(() => {});
     setJustCopied(cid);
-    setTimeout(() => setJustCopied(null), 900);
+    window.setTimeout(() => setJustCopied(null), 900);
   };
 
   return (
@@ -165,22 +136,15 @@ export function SectionDevPanel() {
         pathname={pathname}
       />
 
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="absolute right-3 top-3 z-30 inline-flex h-7 w-7 items-center justify-center rounded-full border border-accent/40 bg-background/80 text-accent opacity-40 backdrop-blur transition-opacity hover:opacity-100"
-        aria-label="Toggle Dev Panel"
-      >
-        <Settings2 size={14} />
-      </button>
-
       <div
+        ref={panelRef}
         className={[
-          "pointer-events-none absolute right-0 top-0 z-40 h-full w-80 max-w-[85%]",
-          "transition-transform duration-300 ease-out",
-          open ? "translate-x-0" : "translate-x-full",
+          "pointer-events-none absolute right-0 top-0 z-40 h-full w-80 max-w-[85%] opacity-0",
+          "transition-opacity duration-200 ease-out",
+          "group-hover/site-section:pointer-events-auto group-hover/site-section:opacity-100",
+          "group-focus-within/site-section:pointer-events-auto group-focus-within/site-section:opacity-100",
         ].join(" ")}
-        aria-hidden={!open}
+        aria-hidden={!enabled}
       >
         <Identified
           as={DEV_PANEL_LABEL}
@@ -195,43 +159,77 @@ export function SectionDevPanel() {
               <p className="mt-0.5 text-[10px] text-muted-foreground">Blocks in this section</p>
               <p className="mt-1 truncate text-[10px] font-mono text-muted-foreground/90">
                 <span className="text-muted-foreground">Panel id · </span>
-                <button
+                <Button
                   type="button"
-                  onClick={() => copy(DEV_PANEL_STABLE_CID)}
-                  className="text-accent underline decoration-dotted underline-offset-2 hover:text-accent/90"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copy(panelIdDisplay)}
+                  className="h-auto p-0 text-accent underline decoration-dotted underline-offset-2 hover:text-accent/90"
                   title="Copy panel data-cid"
                 >
-                  {DEV_PANEL_STABLE_CID}
-                </button>
+                  {panelIdDisplay}
+                </Button>
                 <span className="text-muted-foreground">
                   {" "}
-                  · {sortedEntries.length} listed · depth ≤ {registry.maxDepth}
+                  · {displayEntries.length} listed · depth ≤ {registry.maxDepth}
                 </span>
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="Close panel"
-            >
-              <X size={16} />
-            </button>
+
+            <div className="ml-2 flex shrink-0 items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={toggleUpdatePromptWithSpeech}
+                disabled={!sectionTarget}
+                className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
+                title={listening ? "Stop dictation and copy resolved update prompt" : "Start dictation for update prompt"}
+              >
+                {headerCopied === "update" ? (
+                  <Check size={12} />
+                ) : listening ? (
+                  <MicOff size={12} />
+                ) : (
+                  <Mic size={12} />
+                )}
+                Update
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={copyResolvedDeletePrompt}
+                disabled={!sectionTarget}
+                className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
+                title="Copy resolved delete prompt"
+              >
+                {headerCopied === "delete" ? <Check size={12} /> : <Trash2 size={12} />}
+                Delete
+              </Button>
+            </div>
           </div>
 
+          {listening && interim ? (
+            <div className="border-b border-border/60 bg-emerald-500/10 px-4 py-1.5 text-[10px] text-emerald-300">
+              <span className="font-semibold">Live · </span>
+              <span className="line-clamp-2">{interim}</span>
+            </div>
+          ) : null}
+
           <ul className="min-h-0 flex-1 overflow-y-auto overflow-x-visible p-2">
-            {sortedEntries.length === 0 ? (
+            {displayEntries.length === 0 ? (
               <li className="px-2 py-3 text-[11px] text-muted-foreground">
-                No registered blocks in this section. Add{" "}
-                <code className="rounded bg-card px-1 font-mono text-[10px]">sectionBandCid</code> on{" "}
-                <code className="rounded bg-card px-1 font-mono text-[10px]">SiteSection</code> and/or{" "}
-                <code className="rounded bg-card px-1 font-mono text-[10px]">&lt;Identified&gt;</code> bands (inner
-                chrome may use{" "}
+                No registered blocks in this section.{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">SiteSection</code> auto-registers its
+                section band id; add{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">&lt;Identified&gt;</code> bands for inner
+                landmarks (inner chrome may use{" "}
                 <code className="rounded bg-card px-1 font-mono text-[10px]">register=&#123;false&#125;</code>).
               </li>
             ) : (
-              sortedEntries.map((entry) => (
-                <RegistryListRow
+              displayEntries.map((entry) => (
+                <SectionRegistryListRow
                   key={entry.cid}
                   entry={entry}
                   highlightCid={highlightCid}
@@ -246,9 +244,9 @@ export function SectionDevPanel() {
           </ul>
 
           <div className="shrink-0 border-t border-border/60 p-3 text-[10px] leading-4 text-muted-foreground">
-            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Row label: scroll to block + flash
-            highlight. Copy icon copies id. <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
-            -click a component copies id. Message: agent handoff.
+            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Row label: scroll to block +
+            flash highlight. Copy icon copies id. <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>-click a
+            component copies id. Message: agent handoff.
           </div>
         </Identified>
       </div>

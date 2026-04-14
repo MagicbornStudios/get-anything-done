@@ -31,12 +31,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Evaluation",
-    links: [
-      { href: "/methodology", label: "Methodology", note: "rubric, gates, rounds, open questions, CLI" },
-    ],
-  },
-  {
     label: "Play",
     links: [
       { href: "/project-market", label: "Project Market", note: "browse all eval projects + playable builds" },

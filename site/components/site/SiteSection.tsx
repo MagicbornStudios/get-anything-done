@@ -1,7 +1,8 @@
 "use client";
 
 import type { MouseEvent, ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SectionRegistryProvider, useSectionRegistry } from "@/components/devid/SectionRegistry";
 import { SectionDevPanel } from "@/components/devid/SectionDevPanel";
@@ -21,19 +22,37 @@ export type SiteSectionProps = {
   devIds?: boolean;
   /** Max <Identified> depth to register in this section. Default 3. */
   devIdDepth?: number;
-  /**
-   * When dev IDs are on, registers the `<section>` shell at depth 0 and sets `data-cid` on the
-   * section element (stable id for scroll / copy / agent prompts). Prefer the section component
-   * name, e.g. `MethodologyGateSection`.
-   */
-  sectionBandCid?: string;
-  /** Dev panel label for the section shell; defaults to `sectionBandCid`. */
-  sectionBandLabel?: string;
 };
 
 type SurfaceProps = Omit<SiteSectionProps, "devIds" | "devIdDepth"> & {
   devIds: boolean;
 };
+
+function toPascalToken(token: string) {
+  return token
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+}
+
+function routePrefix(pathname: string) {
+  if (!pathname || pathname === "/") return "Home";
+  const tokens = pathname
+    .split("/")
+    .filter(Boolean)
+    .map((token) => toPascalToken(token))
+    .filter(Boolean);
+  return tokens.length > 0 ? tokens.join("") : "Route";
+}
+
+function toKebab(value: string) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 function SiteSectionSurface({
   children,
@@ -44,10 +63,13 @@ function SiteSectionSurface({
   beforeShell,
   afterShell,
   devIds,
-  sectionBandCid,
-  sectionBandLabel,
 }: SurfaceProps) {
   const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
+  const pathname = usePathname() ?? "/";
+  const prefix = routePrefix(pathname);
+  const rid = useId();
+  const sectionBandCid = `${toKebab(prefix)}-site-section-${rid.replace(/[^a-z0-9]/gi, "")}`;
+  const sectionBandLabel = `${prefix}SiteSection`;
   const registry = useSectionRegistry();
   /** Stable — do not depend on `registry` itself; context value is a new object whenever `entries` changes. */
   const registerFn = registry?.register;
@@ -81,7 +103,7 @@ function SiteSectionSurface({
       data-cid-label={bandCid ? (sectionBandLabel ?? sectionBandCid) : undefined}
       onClick={handleClick}
       className={cn(
-        "relative border-b border-border/60",
+        "group/site-section relative border-b border-border/60",
         tone === "muted" && "bg-card/20",
         className,
         showPersistentRing && "outline outline-2 outline-offset-2 outline-accent",
@@ -107,8 +129,6 @@ export function SiteSection({
   afterShell,
   devIds = true,
   devIdDepth = 3,
-  sectionBandCid,
-  sectionBandLabel,
 }: SiteSectionProps) {
   const surface = (
     <SiteSectionSurface
@@ -119,8 +139,6 @@ export function SiteSection({
       beforeShell={beforeShell}
       afterShell={afterShell}
       devIds={devIds}
-      sectionBandCid={sectionBandCid}
-      sectionBandLabel={sectionBandLabel}
     >
       {children}
     </SiteSectionSurface>

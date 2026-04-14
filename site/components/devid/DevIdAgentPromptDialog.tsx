@@ -20,6 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RegistryEntry } from "./SectionRegistry";
+import { absolutePageUrl } from "./absolutePageUrl";
+import { getSpeechRecognition, type SpeechRecInstance } from "./speechRecognition";
 
 const BLOCK_LABEL_MAX = 72;
 const BLOCK_CID_MAX = 56;
@@ -35,11 +37,6 @@ function escapeAttrInCode(s: string): string {
   return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/`/g, "\\`");
 }
 
-function absolutePageUrl(pathname: string): string {
-  if (typeof window === "undefined") return pathname || "/";
-  const path = pathname.startsWith("/") ? pathname : `/${pathname || ""}`;
-  return `${window.location.origin}${path}`;
-}
 
 function HandoffPromptPane({
   draft,
@@ -109,10 +106,10 @@ function HandoffPromptPane({
   );
 }
 
-type HandoffComponentTag = "Identified" | "PageIdentified";
+export type HandoffComponentTag = "Identified" | "PageIdentified";
 
 /** Locked update header (read-only); copy is this plus a newline plus the user editor body. */
-function buildUpdateLockedPrefix(
+export function buildUpdateLockedPrefix(
   pageUrl: string,
   label: string,
   cid: string,
@@ -137,7 +134,7 @@ function buildUpdateLockedPrefix(
   return lines.join("\n");
 }
 
-function buildDeletePrompt(pageUrl: string, label: string, cid: string, componentTag: HandoffComponentTag) {
+export function buildDeletePrompt(pageUrl: string, label: string, cid: string, componentTag: HandoffComponentTag) {
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
   const tag = componentTag === "PageIdentified" ? "PageIdentified" : "Identified";
@@ -159,31 +156,6 @@ ${cidLine}${cidFull}
 3. Typecheck the site package you touched, then commit (message should name this component).`;
 }
 
-type SpeechRecInstance = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult:
-    | ((
-        ev: {
-          resultIndex: number;
-          results: { length: number; [i: number]: { isFinal: boolean; [0]: { transcript: string } } };
-        },
-      ) => void)
-    | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-
-type SpeechCtor = new () => SpeechRecInstance;
-
-function getSpeechRecognition(): SpeechCtor | null {
-  if (typeof window === "undefined") return null;
-  const w = window as Window & { webkitSpeechRecognition?: SpeechCtor; SpeechRecognition?: SpeechCtor };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
 
 function insertTranscriptAtEditor(api: HandoffEditorHandle | null, transcript: string) {
   api?.insertAtCaret(transcript);
