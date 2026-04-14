@@ -83,6 +83,150 @@ function findRepoRoot(start) {
   return process.cwd();
 }
 
+// ---------------------------------------------------------------------------
+// Multi-root eval discovery (task 42.4-12, decision GAD-D-184)
+// ---------------------------------------------------------------------------
+//
+// Eval projects can live in more than one directory. The default root stays
+// `vendor/get-anything-done/evals/` (the submodule's own evals/) for
+// backwards compatibility. Additional roots are declared in gad-config.toml:
+//
+//   [[evals.roots]]
+//   id = "app-forge"
+//   path = "apps/forge/evals"
+//
+// Paths are resolved relative to the repo root (or taken as-is if absolute).
+// The default root is always appended last unless a configured root already
+// points at the same absolute path. Project ids must be unique across all
+// roots — `listAllEvalProjects()` throws if a duplicate is detected.
+
+/** Return ordered absolute dirs of every eval root, deduped. */
+function getEvalRoots() {
+  const gadDir = path.join(__dirname, '..');
+  const defaultRoot = {
+    id: 'get-anything-done',
+    dir: path.resolve(gadDir, 'evals'),
+  };
+
+  // Collect [[evals.roots]] from the nearest config. When running inside a
+  // submodule (e.g. vendor/get-anything-done/), findRepoRoot stops at the
+  // submodule's own .planning/config.json. Walk upward to find a parent
+  // config that declares [[evals.roots]] — that is the monorepo config the
+  // user edits (gad-config.toml at repo root).
+  let configuredRoots = [];
+  try {
+    const visited = new Set();
+    let dir = findRepoRoot();
+    let resolvedBase = null;
+    while (dir && !visited.has(dir)) {
+      visited.add(dir);
+      try {
+        const cfg = gadConfig.load(dir);
+        if (cfg && Array.isArray(cfg.evalsRoots) && cfg.evalsRoots.length > 0) {
+          configuredRoots = cfg.evalsRoots
+            .filter((r) => r && r.enabled !== false && r.path)
+            .map((r) => ({
+              id: r.id || path.basename(r.path),
+              dir: path.isAbsolute(r.path) ? r.path : path.resolve(dir, r.path),
+            }));
+          resolvedBase = dir;
+          break;
+        }
+      } catch {}
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+    // Unused; kept for debuggability via inspector.
+    void resolvedBase;
+  } catch {
+    configuredRoots = [];
+  }
+
+  // Dedup: if a configured root already resolves to the default, skip the
+  // implicit default append.
+  const seenDirs = new Set();
+  const ordered = [];
+  for (const r of configuredRoots) {
+    const key = path.resolve(r.dir).toLowerCase();
+    if (seenDirs.has(key)) continue;
+    seenDirs.add(key);
+    ordered.push(r);
+  }
+  const defaultKey = path.resolve(defaultRoot.dir).toLowerCase();
+  if (!seenDirs.has(defaultKey)) {
+    ordered.push(defaultRoot);
+  }
+  return ordered;
+}
+
+/** Back-compat helper: the primary (submodule) evals dir. */
+function defaultEvalsDir() {
+  return path.join(__dirname, '..', 'evals');
+}
+
+/**
+ * Walk every eval root and return a flat list of project descriptors:
+ *   [{ name, projectDir, root }]
+ * Throws on duplicate project ids across roots (task 42.4-12).
+ */
+function listAllEvalProjects() {
+  const roots = getEvalRoots();
+  const byName = new Map();
+  for (const root of roots) {
+    if (!fs.existsSync(root.dir)) continue;
+    let entries = [];
+    try {
+      entries = fs.readdirSync(root.dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      if (e.name.startsWith('.')) continue;
+      const projectDir = path.join(root.dir, e.name);
+      if (byName.has(e.name)) {
+        const existing = byName.get(e.name);
+        throw new Error(
+          `Duplicate eval project id "${e.name}" found in multiple roots:\n` +
+          `  ${existing.projectDir}\n` +
+          `  ${projectDir}\n` +
+          `Eval project ids must be unique across [[evals.roots]].`
+        );
+      }
+      byName.set(e.name, { name: e.name, projectDir, root });
+    }
+  }
+  return Array.from(byName.values());
+}
+
+/**
+ * Resolve an eval project name to its {projectDir, root}, searching each
+ * configured root in order. Returns null if not found in any root.
+ */
+function resolveEvalProject(name) {
+  if (!name) return null;
+  const roots = getEvalRoots();
+  for (const root of roots) {
+    const candidate = path.join(root.dir, name);
+    if (fs.existsSync(candidate)) {
+      return { name, projectDir: candidate, root };
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolve an eval project dir for commands that accept --project. Falls back
+ * to the default root if no configured match (so "gad eval init --project X"
+ * creates X in the submodule's evals/). Returns an absolute path.
+ */
+function resolveOrDefaultEvalProjectDir(name) {
+  const hit = resolveEvalProject(name);
+  if (hit) return hit.projectDir;
+  return path.join(defaultEvalsDir(), name);
+}
+
 /**
  * Resolve a project ID to its namespace prefix for the new ID format (decision gad-125).
  * Examples: get-anything-done → GAD, escape-the-dungeon → ETD, grime-time → GRIME
@@ -368,22 +512,20 @@ process.on('exit', (code) => {
 
 /** List available eval projects and suggest rerun hint. */
 function listEvalProjectsHint() {
-  const gadDir = path.join(__dirname, '..');
-  const evalsDir = path.join(gadDir, 'evals');
-  if (!fs.existsSync(evalsDir)) {
-    console.error('No eval projects found. Create evals/<name>/REQUIREMENTS.md to get started.');
+  let discovered;
+  try {
+    discovered = listAllEvalProjects();
+  } catch (err) {
+    console.error(err.message);
     process.exit(1);
   }
-  const projects = fs.readdirSync(evalsDir, { withFileTypes: true })
-    .filter(e => e.isDirectory())
-    .map(e => e.name);
-  if (projects.length === 0) {
+  if (discovered.length === 0) {
     console.error('No eval projects found. Create evals/<name>/REQUIREMENTS.md to get started.');
     process.exit(1);
   }
   console.error(`\nMissing --project. Available eval projects:\n`);
-  for (const p of projects) console.error(`  ${p}`);
-  console.error(`\nRerun: gad eval run --project ${projects[0]}`);
+  for (const p of discovered) console.error(`  ${p.name}`);
+  console.error(`\nRerun: gad eval run --project ${discovered[0].name}`);
   process.exit(1);
 }
 
@@ -1743,43 +1885,53 @@ const evalList = defineCommand({
   meta: { name: 'list', description: 'List eval projects and run history' },
   run() {
     const baseDir = findRepoRoot();
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
 
-    if (!fs.existsSync(evalsDir)) {
+    let discovered;
+    try {
+      discovered = listAllEvalProjects();
+    } catch (err) {
+      outputError(err.message);
+      return;
+    }
+
+    if (discovered.length === 0) {
       console.log('No eval projects found. Create evals/<name>/REQUIREMENTS.md to get started.');
       return;
     }
 
-    const projects = fs.readdirSync(evalsDir, { withFileTypes: true })
-      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
-      .map(e => {
-        const runs = fs.readdirSync(path.join(evalsDir, e.name), { withFileTypes: true })
+    const projects = discovered.map(({ name, projectDir }) => {
+        const runs = fs.readdirSync(projectDir, { withFileTypes: true })
           .filter(r => r.isDirectory() && r.name.startsWith('v'))
           .map(r => r.name)
           .sort();
         const latest = runs[runs.length - 1] || '—';
         let status = '—';
         if (latest !== '—') {
-          const runMd = path.join(evalsDir, e.name, latest, 'RUN.md');
+          const runMd = path.join(projectDir, latest, 'RUN.md');
           if (fs.existsSync(runMd)) {
             const m = fs.readFileSync(runMd, 'utf8').match(/status:\s*([\w-]+)/);
             if (m) status = m[1];
           }
         }
-        // Load eval mode + workflow from gad.json
+        // Load eval mode + workflow from gad.json (or species.json fallback)
         let mode = '—', workflow = '—', domain = '—', techStack = '';
-        const gadJsonPath = path.join(evalsDir, e.name, 'gad.json');
-        if (fs.existsSync(gadJsonPath)) {
-          try {
-            const cfg = JSON.parse(fs.readFileSync(gadJsonPath, 'utf8'));
-            if (cfg.eval_mode) mode = cfg.eval_mode;
-            if (cfg.workflow) workflow = cfg.workflow;
-            if (cfg.domain) domain = cfg.domain;
-            if (cfg.tech_stack) techStack = cfg.tech_stack;
-          } catch {}
+        const cfgCandidates = [
+          path.join(projectDir, 'gad.json'),
+          path.join(projectDir, 'species.json'),
+        ];
+        for (const gadJsonPath of cfgCandidates) {
+          if (fs.existsSync(gadJsonPath)) {
+            try {
+              const cfg = JSON.parse(fs.readFileSync(gadJsonPath, 'utf8'));
+              if (cfg.eval_mode) mode = cfg.eval_mode;
+              if (cfg.workflow) workflow = cfg.workflow;
+              if (cfg.domain) domain = cfg.domain;
+              if (cfg.tech_stack) techStack = cfg.tech_stack;
+            } catch {}
+            break;
+          }
         }
-        return { name: e.name, domain, mode, workflow, runs: runs.length, latest, status };
+        return { name, domain, mode, workflow, runs: runs.length, latest, status };
       });
 
     output(projects, { title: 'GAD Eval Projects' });
@@ -1935,13 +2087,12 @@ const evalRun = defineCommand({
   async run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
     const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-    const projectDir = path.join(evalsDir, args.project);
-
-    if (!fs.existsSync(projectDir)) {
+    const resolved = resolveEvalProject(args.project);
+    if (!resolved) {
       outputError(`Eval project '${args.project}' not found. Run \`gad eval list\` to see available projects.`);
       return;
     }
+    const projectDir = resolved.projectDir;
 
     // Install skills into template if requested (decision gad-107)
     if (args['install-skills']) {
@@ -2181,9 +2332,7 @@ const evalScore = defineCommand({
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
     const { generateScore } = require('../lib/score-generator.cjs');
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-    const projectDir = path.join(evalsDir, args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
 
     if (!fs.existsSync(projectDir)) {
       outputError(`Eval project '${args.project}' not found.`);
@@ -2225,9 +2374,7 @@ const evalDiff = defineCommand({
       process.exit(1);
     }
     const { diffVersions } = require('../lib/score-generator.cjs');
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-    const projectDir = path.join(evalsDir, args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
 
     if (!fs.existsSync(projectDir)) {
       outputError(`Eval project '${args.project}' not found.`);
@@ -2326,17 +2473,21 @@ const evalTraceList = defineCommand({
     project: { type: 'string', description: 'Eval project name (default: all)', default: '' },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-    if (!fs.existsSync(evalsDir)) { console.log('No eval projects found.'); return; }
+    let allProjects;
+    try {
+      allProjects = listAllEvalProjects();
+    } catch (err) {
+      outputError(err.message);
+      return;
+    }
+    if (allProjects.length === 0) { console.log('No eval projects found.'); return; }
 
-    const projects = args.project
-      ? [args.project]
-      : fs.readdirSync(evalsDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name);
+    const selected = args.project
+      ? allProjects.filter(p => p.name === args.project)
+      : allProjects;
 
     const rows = [];
-    for (const proj of projects) {
-      const projDir = path.join(evalsDir, proj);
+    for (const { name: proj, projectDir: projDir } of selected) {
       if (!fs.existsSync(projDir)) continue;
       const runs = fs.readdirSync(projDir, { withFileTypes: true })
         .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
@@ -2372,8 +2523,7 @@ const evalTraceShow = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     const runs = fs.readdirSync(projDir, { withFileTypes: true })
@@ -2441,8 +2591,7 @@ const evalTraceDiff = defineCommand({
       console.error(`\nUsage: gad eval trace diff v1 v2 --project ${args.project || '<name>'}\n`);
       process.exit(1);
     }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     const t1 = loadTrace(projDir, args.v1);
@@ -2490,8 +2639,7 @@ const evalTraceReport = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     const runs = fs.readdirSync(projDir, { withFileTypes: true })
@@ -2566,8 +2714,7 @@ const evalTraceWrite = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     const runs = fs.readdirSync(projDir, { withFileTypes: true })
@@ -2633,8 +2780,7 @@ const evalTraceInit = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     // Find or create next version directory
@@ -2733,8 +2879,7 @@ const evalTraceLogCmd = defineCommand({
   },
   run({ args }) {
     if (!args.project || !args.cmd) { outputError('Usage: gad eval trace log-cmd --project <name> --cmd "<command>" [--tokens N]'); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     const runs = fs.readdirSync(projDir, { withFileTypes: true })
       .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
       .sort((a, b) => parseInt(b.name.slice(1)) - parseInt(a.name.slice(1)));
@@ -2758,8 +2903,7 @@ const evalTraceLogSkill = defineCommand({
   },
   run({ args }) {
     if (!args.project || !args.skill) { outputError('Usage: gad eval trace log-skill --project <name> --skill "<skill>" [--phase N] [--result "..."]'); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     const runs = fs.readdirSync(projDir, { withFileTypes: true })
       .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
       .sort((a, b) => parseInt(b.name.slice(1)) - parseInt(a.name.slice(1)));
@@ -2783,8 +2927,7 @@ const evalTraceFinalize = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     const runs = fs.readdirSync(projDir, { withFileTypes: true })
       .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
       .sort((a, b) => parseInt(b.name.slice(1)) - parseInt(a.name.slice(1)));
@@ -2870,7 +3013,7 @@ const evalTraceReconstruct = defineCommand({
     if (!args.project) { listEvalProjectsHint(); return; }
     const { execSync } = require('child_process');
     const gadDir = path.join(__dirname, '..');
-    const projDir = path.join(gadDir, 'evals', args.project);
+    const projDir = resolveOrDefaultEvalProjectDir(args.project);
     const evalPath = args.path || path.join(projDir, 'game');
 
     // Find the latest run version
@@ -3117,9 +3260,7 @@ const evalTraceFromLog = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-    const projectDir = path.join(evalsDir, args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
 
     if (!fs.existsSync(projectDir)) {
       outputError(`Eval project '${args.project}' not found.`);
@@ -3267,19 +3408,23 @@ const evalStatus = defineCommand({
   run() {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
 
-    const evalProjects = fs.existsSync(evalsDir)
-      ? fs.readdirSync(evalsDir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
-      : [];
+    let discovered;
+    try {
+      discovered = listAllEvalProjects();
+    } catch (err) {
+      outputError(err.message);
+      return;
+    }
+    const evalProjects = discovered.map(d => d.name);
+    const evalProjectDirByName = new Map(discovered.map(d => [d.name, d.projectDir]));
 
     const rows = config.roots.map(root => {
       const evalMatches = evalProjects.filter(ep => ep.includes(root.id) || root.id.includes(ep));
       const evalName = evalMatches[0] || null;
       let runs = 0, latest = '—', status = '—';
       if (evalName) {
-        const projectDir = path.join(evalsDir, evalName);
+        const projectDir = evalProjectDirByName.get(evalName);
         const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
           .filter(r => r.isDirectory() && /^v\d+$/.test(r.name)).map(r => r.name).sort();
         runs = runDirs.length;
@@ -3315,8 +3460,7 @@ const evalRuns = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projectDir = path.join(gadDir, 'evals', args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projectDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
@@ -3356,8 +3500,7 @@ const evalShow = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projectDir = path.join(gadDir, 'evals', args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projectDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
@@ -3392,8 +3535,7 @@ const evalScores = defineCommand({
   },
   run({ args }) {
     if (!args.project) { listEvalProjectsHint(); return; }
-    const gadDir = path.join(__dirname, '..');
-    const projectDir = path.join(gadDir, 'evals', args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projectDir)) { outputError(`Eval project '${args.project}' not found.`); return; }
 
     const runDirs = fs.readdirSync(projectDir, { withFileTypes: true })
@@ -3444,8 +3586,10 @@ const evalSetup = defineCommand({
       console.error('\nUsage: gad eval setup --project <name> [--requirements <path>]\n');
       process.exit(1);
     }
-    const gadDir = path.join(__dirname, '..');
-    const projectDir = path.join(gadDir, 'evals', args.project);
+    // setup creates a NEW project — always place it in the default (submodule)
+    // evals/ root. If a configured additional root wants to host a new project,
+    // users can add it manually to that root's directory.
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
     const templateDir = path.join(projectDir, 'template', '.planning');
 
     if (fs.existsSync(projectDir)) {
@@ -3536,18 +3680,22 @@ const evalSuite = defineCommand({
     projects: { type: 'string', description: 'Comma-separated project names (default: all with templates)', default: '' },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
+    let discovered;
+    try {
+      discovered = listAllEvalProjects();
+    } catch (err) {
+      outputError(err.message);
+      return;
+    }
 
-    if (!fs.existsSync(evalsDir)) {
-      outputError('No evals/ directory found.');
+    if (discovered.length === 0) {
+      outputError('No eval projects found.');
     }
 
     // Find all projects with a template/ directory (runnable evals)
-    const allProjects = fs.readdirSync(evalsDir, { withFileTypes: true })
-      .filter(e => e.isDirectory())
-      .filter(e => fs.existsSync(path.join(evalsDir, e.name, 'template')))
-      .map(e => e.name);
+    const runnable = discovered.filter(d => fs.existsSync(path.join(d.projectDir, 'template')));
+    const projectDirByName = new Map(discovered.map(d => [d.name, d.projectDir]));
+    const allProjects = runnable.map(d => d.name);
 
     const selectedProjects = args.projects
       ? args.projects.split(',').map(s => s.trim()).filter(Boolean)
@@ -3557,15 +3705,15 @@ const evalSuite = defineCommand({
       outputError('No runnable eval projects found (need template/ directory).');
     }
 
-    // Create suite run directory
-    const suiteDir = path.join(evalsDir, '.suite-runs', new Date().toISOString().replace(/[:.]/g, '-'));
+    // Create suite run directory in the default evals root.
+    const suiteDir = path.join(defaultEvalsDir(), '.suite-runs', new Date().toISOString().replace(/[:.]/g, '-'));
     fs.mkdirSync(suiteDir, { recursive: true });
 
     console.log(`\nEval Suite: ${selectedProjects.length} project(s)\n`);
 
     const results = [];
     for (const project of selectedProjects) {
-      const projectDir = path.join(evalsDir, project);
+      const projectDir = projectDirByName.get(project) || path.join(defaultEvalsDir(), project);
       if (!fs.existsSync(projectDir)) {
         console.log(`  ✗ ${project} — not found, skipping`);
         continue;
@@ -3605,16 +3753,19 @@ const evalReport = defineCommand({
     projects: { type: 'string', description: 'Comma-separated project names (default: all with traces)', default: '' },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-
-    if (!fs.existsSync(evalsDir)) {
-      outputError('No evals/ directory found.');
+    let discovered;
+    try {
+      discovered = listAllEvalProjects();
+    } catch (err) {
+      outputError(err.message);
+      return;
+    }
+    if (discovered.length === 0) {
+      outputError('No eval projects found.');
     }
 
-    const allProjects = fs.readdirSync(evalsDir, { withFileTypes: true })
-      .filter(e => e.isDirectory() && !e.name.startsWith('.'))
-      .map(e => e.name);
+    const projectDirByName = new Map(discovered.map(d => [d.name, d.projectDir]));
+    const allProjects = discovered.map(d => d.name);
 
     const selectedProjects = args.projects
       ? args.projects.split(',').map(s => s.trim()).filter(Boolean)
@@ -3623,8 +3774,8 @@ const evalReport = defineCommand({
     // Load latest TRACE.json for each project
     const rows = [];
     for (const project of selectedProjects) {
-      const projectDir = path.join(evalsDir, project);
-      if (!fs.existsSync(projectDir)) continue;
+      const projectDir = projectDirByName.get(project);
+      if (!projectDir || !fs.existsSync(projectDir)) continue;
 
       const versions = fs.readdirSync(projectDir)
         .filter(n => /^v\d+$/.test(n))
@@ -3727,8 +3878,9 @@ const evalReport = defineCommand({
       for (const r of noTrace) console.log(`  ${r.project} — run eval and reconstruct trace`);
     }
 
-    // Skill coverage analysis
-    const skillsDir = path.join(evalsDir, '..', 'skills');
+    // Skill coverage analysis — skills live in the submodule next to the
+    // default evals root regardless of which roots host the projects.
+    const skillsDir = path.join(defaultEvalsDir(), '..', 'skills');
     if (fs.existsSync(skillsDir)) {
       const allSkills = fs.readdirSync(skillsDir)
         .filter(n => { try { return fs.statSync(path.join(skillsDir, n)).isDirectory(); } catch { return false; } })
@@ -3740,7 +3892,8 @@ const evalReport = defineCommand({
       // Collect all tested skills from traces
       const testedSkills = new Set();
       for (const project of allProjects) {
-        const projectDir = path.join(evalsDir, project);
+        const projectDir = projectDirByName.get(project);
+        if (!projectDir || !fs.existsSync(projectDir)) continue;
         const versions = fs.readdirSync(projectDir).filter(n => /^v\d+$/.test(n));
         for (const v of versions) {
           const traceFile = path.join(projectDir, v, 'TRACE.json');
@@ -3781,9 +3934,8 @@ const evalPreserve = defineCommand({
   },
   run({ args }) {
     const gadDir = path.join(__dirname, '..');
-    const repoRoot = path.resolve(gadDir, '..', '..');
-    const evalsDir = path.join(gadDir, 'evals');
-    const projectDir = path.join(evalsDir, args.project);
+    const repoRoot = findRepoRoot();
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
     const runDir = path.join(projectDir, args.version);
 
     if (!args.from) {
@@ -4089,20 +4241,24 @@ const evalVerify = defineCommand({
     project: { type: 'positional', description: 'Specific project to verify (default: all)', default: '' },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const repoRoot = path.resolve(gadDir, '..', '..');
-    const evalsDir = path.join(gadDir, 'evals');
+    const repoRoot = findRepoRoot();
 
-    if (!fs.existsSync(evalsDir)) {
-      outputError('No evals/ directory found.');
+    let discovered;
+    try {
+      discovered = listAllEvalProjects();
+    } catch (err) {
+      outputError(err.message);
+      return;
+    }
+    if (discovered.length === 0) {
+      outputError('No eval projects found.');
       return;
     }
 
+    const projectDirByName = new Map(discovered.map(d => [d.name, d.projectDir]));
     const projects = args.project
       ? [args.project]
-      : fs.readdirSync(evalsDir, { withFileTypes: true })
-          .filter(e => e.isDirectory() && !e.name.startsWith('.'))
-          .map(e => e.name);
+      : discovered.map(d => d.name);
 
     const issues = [];
     let totalRuns = 0;
@@ -4113,7 +4269,7 @@ const evalVerify = defineCommand({
     console.log('──────────────────────────────  ───────  ─────  ────  ─────  ────  ──────');
 
     for (const project of projects) {
-      const projectDir = path.join(evalsDir, project);
+      const projectDir = projectDirByName.get(project) || path.join(defaultEvalsDir(), project);
       if (!fs.existsSync(projectDir)) continue;
       const versions = fs.readdirSync(projectDir)
         .filter(n => /^v\d+$/.test(n))
@@ -4191,8 +4347,8 @@ const evalReview = defineCommand({
     reviewer: { type: 'string', description: 'Reviewer id (default: human)', default: 'human' },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const runDir = path.join(gadDir, 'evals', args.project, args.version);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
+    const runDir = path.join(projectDir, args.version);
     const traceFile = path.join(runDir, 'TRACE.json');
 
     if (!fs.existsSync(traceFile)) {
@@ -4218,7 +4374,7 @@ const evalReview = defineCommand({
       }
 
       // Load project's declared rubric dimensions from gad.json
-      const gadJsonPath = path.join(gadDir, 'evals', args.project, 'gad.json');
+      const gadJsonPath = path.join(projectDir, 'gad.json');
       if (!fs.existsSync(gadJsonPath)) {
         outputError(`No gad.json found for project ${args.project}`);
         return;
@@ -4342,8 +4498,7 @@ const evalOpen = defineCommand({
     version: { type: 'positional', description: 'Version (default: latest)', default: '' },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const projectDir = path.join(gadDir, 'evals', args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
 
     if (!fs.existsSync(projectDir)) {
       outputError(`Eval project not found: ${args.project}`);
@@ -4363,16 +4518,17 @@ const evalOpen = defineCommand({
     }
 
     // Look for build output in common locations (version-specific first)
+    const repoRoot = findRepoRoot();
     const candidates = [
       // Portfolio public, per-version (canonical location for preserved builds)
-      path.join(gadDir, '..', '..', 'apps', 'portfolio', 'public', 'evals', args.project, version, 'index.html'),
+      path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, version, 'index.html'),
       // Eval dir per-version
       path.join(projectDir, version, 'game', 'dist', 'index.html'),
       path.join(projectDir, version, 'dist', 'index.html'),
       path.join(projectDir, version, 'build', 'index.html'),
       path.join(projectDir, version, 'index.html'),
       // Legacy: portfolio public root (latest only)
-      path.join(gadDir, '..', '..', 'apps', 'portfolio', 'public', 'evals', args.project, 'index.html'),
+      path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, 'index.html'),
     ];
 
     let found = null;
@@ -4984,9 +5140,7 @@ const evalReadme = defineCommand({
     project: { type: 'string', description: 'Eval project name', required: true },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-    const projectDir = path.join(evalsDir, args.project);
+    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
     if (!fs.existsSync(projectDir)) {
       outputError(`Eval project '${args.project}' not found.`);
       return;
@@ -5052,9 +5206,6 @@ const evalInheritSkills = defineCommand({
     'latest-only': { type: 'boolean', description: 'Only inherit skills from the latest run (not accumulated)', default: false },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-
     // Parse --from: either "project" (latest run) or "project/vN" (specific run)
     const parts = (args.from || '').split('/');
     const srcProject = parts[0];
@@ -5065,14 +5216,15 @@ const evalInheritSkills = defineCommand({
       return;
     }
 
+    const srcProjectDir = resolveOrDefaultEvalProjectDir(srcProject);
+
     // If no version specified, find the latest run
     if (!srcVersion) {
-      const projectDir = path.join(evalsDir, srcProject);
-      if (!fs.existsSync(projectDir)) {
+      if (!fs.existsSync(srcProjectDir)) {
         outputError(`Eval project '${srcProject}' not found.`);
         return;
       }
-      const runs = fs.readdirSync(projectDir, { withFileTypes: true })
+      const runs = fs.readdirSync(srcProjectDir, { withFileTypes: true })
         .filter(r => r.isDirectory() && /^v\d+$/.test(r.name))
         .map(r => ({ name: r.name, num: parseInt(r.name.slice(1), 10) }))
         .sort((a, b) => b.num - a.num);
@@ -5084,11 +5236,12 @@ const evalInheritSkills = defineCommand({
       console.log(`  Using latest run: ${srcProject}/${srcVersion}`);
     }
 
-    const srcRunDir = path.join(evalsDir, srcProject, srcVersion, 'run');
+    const srcRunDir = path.join(srcProjectDir, srcVersion, 'run');
     if (!fs.existsSync(srcRunDir)) {
-      outputError(`Source run not found: evals/${srcProject}/${srcVersion}/run/`);
+      outputError(`Source run not found: ${srcRunDir}`);
       return;
     }
+    const targetProjectDir = resolveOrDefaultEvalProjectDir(args.to);
 
     // Look for skills in game/.planning/skills/ or .planning/skills/
     const skillsDirs = [
@@ -5117,7 +5270,7 @@ const evalInheritSkills = defineCommand({
     }
 
     // Copy to target template
-    const targetDir = path.join(evalsDir, args.to, 'template', 'skills');
+    const targetDir = path.join(targetProjectDir, 'template', 'skills');
     fs.mkdirSync(targetDir, { recursive: true });
 
     for (const skill of skills) {
@@ -5128,7 +5281,7 @@ const evalInheritSkills = defineCommand({
     }
 
     // Update AGENTS.md
-    const agentsMd = path.join(evalsDir, args.to, 'template', 'AGENTS.md');
+    const agentsMd = path.join(targetProjectDir, 'template', 'AGENTS.md');
     if (fs.existsSync(agentsMd)) {
       let content = fs.readFileSync(agentsMd, 'utf8');
       const section = `\n\n## Inherited Skills (from ${srcProject}/${srcVersion})\n\n${skills.map(s => '- `skills/' + s + '/SKILL.md`').join('\n')}\n`;
@@ -5139,7 +5292,7 @@ const evalInheritSkills = defineCommand({
     }
 
     // Record lineage metadata
-    const metaFile = path.join(evalsDir, args.to, 'template', '.inherited-skills.json');
+    const metaFile = path.join(targetProjectDir, 'template', '.inherited-skills.json');
     const meta = {
       inherited_at: new Date().toISOString(),
       source: `${srcProject}/${srcVersion}`,
@@ -7465,8 +7618,7 @@ const logShow = defineCommand({
   run({ args }) {
     let logDir;
     if (args.eval) {
-      const gadDir = path.join(__dirname, '..');
-      logDir = path.join(gadDir, 'evals', args.eval);
+      logDir = resolveOrDefaultEvalProjectDir(args.eval);
       // Find latest version with a log
       if (fs.existsSync(logDir)) {
         const versions = fs.readdirSync(logDir).filter(n => /^v\d+$/.test(n)).sort();
@@ -7915,18 +8067,14 @@ const worktreePrune = defineCommand({
     }
 
     // Check if their evals have been preserved (cross-reference with eval run/ dirs)
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
     const preservedRunDirs = new Set();
-    if (fs.existsSync(evalsDir)) {
-      for (const project of fs.readdirSync(evalsDir, { withFileTypes: true })) {
-        if (!project.isDirectory()) continue;
-        const projectDir = path.join(evalsDir, project.name);
-        for (const version of fs.readdirSync(projectDir, { withFileTypes: true }).filter(e => e.isDirectory() && /^v\d+$/.test(e.name))) {
-          const runDir = path.join(projectDir, version.name, 'run');
-          if (fs.existsSync(runDir) && fs.readdirSync(runDir).length > 0) {
-            preservedRunDirs.add(`${project.name}/${version.name}`);
-          }
+    let allEvalProjects = [];
+    try { allEvalProjects = listAllEvalProjects(); } catch {}
+    for (const { name, projectDir } of allEvalProjects) {
+      for (const version of fs.readdirSync(projectDir, { withFileTypes: true }).filter(e => e.isDirectory() && /^v\d+$/.test(e.name))) {
+        const runDir = path.join(projectDir, version.name, 'run');
+        if (fs.existsSync(runDir) && fs.readdirSync(runDir).length > 0) {
+          preservedRunDirs.add(`${name}/${version.name}`);
         }
       }
     }
@@ -8422,12 +8570,9 @@ const roundsCmd = defineCommand({
     json: { type: 'boolean', description: 'Output as JSON', default: false },
   },
   run({ args }) {
-    const gadDir = path.join(__dirname, '..');
-    const evalsDir = path.join(gadDir, 'evals');
-
     // Per-project rounds: derive from TRACE.json requirements_version changes across runs
     if (args.project) {
-      const projectDir = path.join(evalsDir, args.project);
+      const projectDir = resolveOrDefaultEvalProjectDir(args.project);
       if (!fs.existsSync(projectDir)) {
         outputError(`Eval project '${args.project}' not found.`);
         return;
@@ -8490,8 +8635,9 @@ const roundsCmd = defineCommand({
       return;
     }
 
-    // Global rounds from EXPERIMENT-LOG.md
-    const logFile = path.join(evalsDir, 'EXPERIMENT-LOG.md');
+    // Global rounds from EXPERIMENT-LOG.md — the canonical log lives in the
+    // default (submodule) evals root.
+    const logFile = path.join(defaultEvalsDir(), 'EXPERIMENT-LOG.md');
     if (!fs.existsSync(logFile)) {
       outputError('No EXPERIMENT-LOG.md found in evals/');
       return;

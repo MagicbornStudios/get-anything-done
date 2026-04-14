@@ -231,6 +231,18 @@ function fromToml(tomlPath, root) {
   }));
   const rootsMerged = mergeSectionsIntoRoots(rootsTable, planning.sections);
 
+  // [[evals.roots]] — multi-root eval discovery (task 42.4-12).
+  // Each entry: path = "..." (relative to repo root or absolute),
+  // optional id = "..." (defaults to basename). The default eval root
+  // (vendor/get-anything-done/evals/) is always appended implicitly
+  // unless explicitly configured.
+  const evals = data.evals || {};
+  const evalsRoots = (evals.roots || []).map((r) => ({
+    id: r.id || path.basename(r.path || root),
+    path: r.path || '.',
+    enabled: r.enabled !== false,
+  }));
+
   return {
     configPath: tomlPath,
     mode: data.mode || 'interactive',
@@ -242,6 +254,7 @@ function fromToml(tomlPath, root) {
     firecrawl: data.firecrawl === true,
     exa_search: data.exa_search === true,
     roots: rootsMerged,
+    evalsRoots,
     docs_sink: planning.docs_sink || null,
     // Bulk ignore list for `gad sink compile` — project ids skipped
     // regardless of `enabled` per-root flag. Persistent filter used by
@@ -334,6 +347,7 @@ function fromJson(jsonPath, root) {
     firecrawl: data.firecrawl === true || planning.firecrawl === true,
     exa_search: data.exa_search === true || planning.exa_search === true,
     roots,
+    evalsRoots: [],
     docs_sink: planning.docs_sink || null,
     docs_sink_ignore: Array.isArray(planning.docs_sink_ignore) ? planning.docs_sink_ignore : [],
     ignore: planning.ignore || ['**/node_modules/**', '**/dist/**'],
@@ -504,6 +518,14 @@ function writeToml(root, config) {
     lines.push('');
   }
 
+  for (const evalRoot of config.evalsRoots || []) {
+    lines.push('[[evals.roots]]');
+    lines.push(`id = ${serializeTomlValue(evalRoot.id)}`);
+    lines.push(`path = ${serializeTomlValue(evalRoot.path)}`);
+    lines.push(`enabled = ${serializeTomlValue(evalRoot.enabled !== false)}`);
+    lines.push('');
+  }
+
   for (const docProject of config.docsProjects || []) {
     lines.push('[[docs.projects]]');
     lines.push(`id = ${serializeTomlValue(docProject.id)}`);
@@ -537,6 +559,7 @@ function defaults(root) {
       discover: false,
       enabled: true,
     }],
+    evalsRoots: [],
     docs_sink: null,
     docs_sink_ignore: [],
     ignore: ['**/node_modules/**', '**/dist/**'],
