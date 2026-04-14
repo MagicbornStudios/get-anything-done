@@ -43,19 +43,7 @@ function speciesDir(project, species) {
   return path.join(evalsDir, project, 'species', species);
 }
 
-// Generations that predate this session's discovery of pre-phase-43 data
-// loss. Their RUN.md has a `preserved:` timestamp from an earlier session
-// but the corresponding preserved build under apps/portfolio/public/evals/
-// no longer exists on disk (root cause unknown — pre-existing gap, not
-// introduced by phase 43). Documented here so the test stops failing for
-// problems we cannot fix retroactively. Future generations remain protected.
-const KNOWN_PRE_PHASE_43_DATA_LOSS = new Set([
-  'escape-the-dungeon/bare/v4',
-  'escape-the-dungeon/emergent/v3',
-]);
-
 function requiresPreservation(project, species, version) {
-  if (KNOWN_PRE_PHASE_43_DATA_LOSS.has(`${project}/${species}/${version}`)) return false;
   const versionNum = parseInt(version.slice(1), 10);
   const cutoff = PRESERVATION_CONTRACT_CUTOFF[`${project}/${species}`] ?? 1;
   if (versionNum < cutoff) return false;

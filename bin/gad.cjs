@@ -8563,15 +8563,107 @@ const roundsCmd = defineCommand({
 
 const evolutionPaths = (repoRoot) => ({
   candidatesDir: path.join(repoRoot, 'skills', 'candidates'),
-  protoSkillsDir: path.join(repoRoot, 'skills', 'proto-skills'),
-  finalSkillsDir: path.join(repoRoot, 'sdk', 'skills'),
+  protoSkillsDir: path.join(repoRoot, '.planning', 'proto-skills'),
+  finalSkillsDir: path.join(repoRoot, 'skills'),
   evolutionsDir: path.join(repoRoot, 'skills', '.evolutions'),
 });
+
+function protoSkillRelativePath(slug = '') {
+  return path.posix.join('.planning', 'proto-skills', slug).replace(/\/$/, '');
+}
+
+function expandHomeDir(targetPath) {
+  if (typeof targetPath !== 'string') return targetPath;
+  if (targetPath === '~') return require('os').homedir();
+  if (targetPath.startsWith('~/')) return path.join(require('os').homedir(), targetPath.slice(2));
+  return targetPath;
+}
+
+function normalizeProtoSkillRuntime(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === 'claude' || normalized === 'claude-code') return 'claude';
+  if (normalized === 'codex') return 'codex';
+  if (normalized === 'cursor') return 'cursor';
+  if (normalized === 'windsurf') return 'windsurf';
+  if (normalized === 'augment') return 'augment';
+  if (normalized === 'copilot') return 'copilot';
+  if (normalized === 'antigravity') return 'antigravity';
+  return null;
+}
+
+function getProtoSkillRuntimeDirName(runtime) {
+  if (runtime === 'copilot') return '.github';
+  if (runtime === 'codex') return '.codex';
+  if (runtime === 'cursor') return '.cursor';
+  if (runtime === 'windsurf') return '.windsurf';
+  if (runtime === 'augment') return '.augment';
+  if (runtime === 'antigravity') return '.agent';
+  return '.claude';
+}
+
+function getProtoSkillGlobalDir(runtime, explicitDir = '') {
+  const os = require('os');
+  if (explicitDir) return path.resolve(expandHomeDir(explicitDir));
+  if (runtime === 'claude' && process.env.CLAUDE_CONFIG_DIR) return path.resolve(expandHomeDir(process.env.CLAUDE_CONFIG_DIR));
+  if (runtime === 'codex' && process.env.CODEX_HOME) return path.resolve(expandHomeDir(process.env.CODEX_HOME));
+  if (runtime === 'cursor' && process.env.CURSOR_CONFIG_DIR) return path.resolve(expandHomeDir(process.env.CURSOR_CONFIG_DIR));
+  if (runtime === 'windsurf' && process.env.WINDSURF_CONFIG_DIR) return path.resolve(expandHomeDir(process.env.WINDSURF_CONFIG_DIR));
+  if (runtime === 'augment' && process.env.AUGMENT_CONFIG_DIR) return path.resolve(expandHomeDir(process.env.AUGMENT_CONFIG_DIR));
+  if (runtime === 'copilot' && process.env.COPILOT_CONFIG_DIR) return path.resolve(expandHomeDir(process.env.COPILOT_CONFIG_DIR));
+  if (runtime === 'antigravity' && process.env.ANTIGRAVITY_CONFIG_DIR) return path.resolve(expandHomeDir(process.env.ANTIGRAVITY_CONFIG_DIR));
+  if (runtime === 'codex') return path.join(os.homedir(), '.codex');
+  if (runtime === 'cursor') return path.join(os.homedir(), '.cursor');
+  if (runtime === 'windsurf') return path.join(os.homedir(), '.windsurf');
+  if (runtime === 'augment') return path.join(os.homedir(), '.augment');
+  if (runtime === 'copilot') return path.join(os.homedir(), '.copilot');
+  if (runtime === 'antigravity') return path.join(os.homedir(), '.gemini', 'antigravity');
+  return path.join(os.homedir(), '.claude');
+}
+
+function resolveProtoSkillInstallRuntimes(args) {
+  const selected = [];
+  if (args.all) {
+    selected.push('claude', 'codex', 'cursor', 'windsurf', 'augment', 'copilot', 'antigravity');
+  } else {
+    if (args.claude) selected.push('claude');
+    if (args.codex) selected.push('codex');
+    if (args.cursor) selected.push('cursor');
+    if (args.windsurf) selected.push('windsurf');
+    if (args.augment) selected.push('augment');
+    if (args.copilot) selected.push('copilot');
+    if (args.antigravity) selected.push('antigravity');
+  }
+  if (selected.length > 0) return [...new Set(selected)];
+  const detected = normalizeProtoSkillRuntime(detectRuntimeIdentity().id);
+  if (detected) return [detected];
+  console.error('No supported runtime selected for proto-skill install.');
+  console.error('Pass one of: --claude --codex --cursor --windsurf --augment --copilot --antigravity --all');
+  process.exit(1);
+}
+
+function installProtoSkillToRuntime(protoDir, slug, runtime, options = {}) {
+  const isGlobal = Boolean(options.global);
+  const baseDir = isGlobal
+    ? getProtoSkillGlobalDir(runtime, options.configDir || '')
+    : (options.configDir
+      ? path.resolve(expandHomeDir(options.configDir))
+      : path.join(process.cwd(), getProtoSkillRuntimeDirName(runtime)));
+  const nativeDir = path.join(baseDir, 'skills', slug);
+  const mirrorDir = path.join(baseDir, '.agents', 'skills', slug);
+  fs.rmSync(nativeDir, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(nativeDir), { recursive: true });
+  fs.cpSync(protoDir, nativeDir, { recursive: true });
+  fs.rmSync(mirrorDir, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(mirrorDir), { recursive: true });
+  fs.cpSync(protoDir, mirrorDir, { recursive: true });
+  return { baseDir, nativeDir, mirrorDir };
+}
 
 const evolutionValidate = defineCommand({
   meta: { name: 'validate', description: 'Run advisory validator on a proto-skill (writes VALIDATION.md)' },
   args: {
-    slug: { type: 'positional', description: 'proto-skill slug (directory name under skills/proto-skills/)', required: true },
+    slug: { type: 'positional', description: 'proto-skill slug (directory name under .planning/proto-skills/)', required: true },
   },
   run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
@@ -8590,6 +8682,52 @@ const evolutionValidate = defineCommand({
     console.log(`  File refs: ${okFiles}/${result.fileRefs.length}`);
     console.log(`  CLI cmds:  ${okCmds}/${result.cliCommands.length}`);
     console.log(`  → ${outPath}`);
+  },
+});
+
+const evolutionInstall = defineCommand({
+  meta: { name: 'install', description: 'Install a staged proto-skill into one or more coding-agent runtimes without promoting it' },
+  args: {
+    slug: { type: 'positional', description: 'proto-skill slug', required: true },
+    claude: { type: 'boolean' },
+    codex: { type: 'boolean' },
+    cursor: { type: 'boolean' },
+    windsurf: { type: 'boolean' },
+    augment: { type: 'boolean' },
+    copilot: { type: 'boolean' },
+    antigravity: { type: 'boolean' },
+    all: { type: 'boolean' },
+    global: { type: 'boolean' },
+    local: { type: 'boolean' },
+    'config-dir': { type: 'string', description: 'Custom runtime config directory', default: '' },
+  },
+  run({ args }) {
+    if (args.global && args.local) {
+      console.error('Choose either --global or --local for proto-skill install, not both.');
+      process.exit(1);
+    }
+    const repoRoot = path.resolve(__dirname, '..');
+    const { protoSkillsDir } = evolutionPaths(repoRoot);
+    const protoDir = path.join(protoSkillsDir, args.slug);
+    const skillPath = path.join(protoDir, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      console.error(`No proto-skill found at ${skillPath}`);
+      process.exit(1);
+    }
+    const runtimes = resolveProtoSkillInstallRuntimes(args);
+    const installMode = args.global ? 'global' : 'local';
+    console.log(`Installing proto-skill ${args.slug} from ${protoSkillRelativePath(args.slug)}/`);
+    console.log(`  mode: ${installMode}`);
+    for (const runtime of runtimes) {
+      const result = installProtoSkillToRuntime(protoDir, args.slug, runtime, {
+        global: Boolean(args.global),
+        configDir: args['config-dir'] || '',
+      });
+      console.log(`  ${runtime}: ${result.nativeDir}`);
+      console.log(`           ${result.mirrorDir}`);
+    }
+    console.log('');
+    console.log('Proto-skill remains staged in .planning until you promote or discard it.');
   },
 });
 
@@ -8619,14 +8757,11 @@ const evolutionPromote = defineCommand({
       process.exit(1);
     }
     fs.mkdirSync(finalDir, { recursive: true });
-    fs.copyFileSync(skillPath, path.join(finalDir, 'SKILL.md'));
-    const refsDir = path.join(protoDir, 'references');
-    if (fs.existsSync(refsDir)) {
-      const finalRefsDir = path.join(finalDir, 'references');
-      fs.mkdirSync(finalRefsDir, { recursive: true });
-      for (const file of fs.readdirSync(refsDir)) {
-        fs.copyFileSync(path.join(refsDir, file), path.join(finalRefsDir, file));
-      }
+    for (const entry of fs.readdirSync(protoDir, { withFileTypes: true })) {
+      const src = path.join(protoDir, entry.name);
+      const dest = path.join(finalDir, entry.name);
+      if (entry.isDirectory()) fs.cpSync(src, dest, { recursive: true });
+      else fs.copyFileSync(src, dest);
     }
     fs.rmSync(protoDir, { recursive: true, force: true });
     const candidateDir = path.join(candidatesDir, args.slug);
@@ -8694,10 +8829,11 @@ const evolutionStatus = defineCommand({
       console.log(`Proto-skills (drafted, awaiting human review): ${protoSkills.length}`);
       for (const p of protoSkills) {
         const hasValidation = fs.existsSync(path.join(protoSkillsDir, p, 'VALIDATION.md'));
-        console.log(`  - skills/proto-skills/${p}/   ${hasValidation ? '[validated]' : '[no validation yet]'}`);
+        console.log(`  - ${protoSkillRelativePath(p)}/   ${hasValidation ? '[validated]' : '[no validation yet]'}`);
       }
       console.log('');
       console.log('Review then run:');
+      console.log('  gad evolution install <slug> [--codex|--claude|...]   # test without promotion');
       console.log('  gad evolution promote <slug>   # joins species DNA');
       console.log('  gad evolution discard <slug>   # delete');
     }
@@ -8707,6 +8843,7 @@ const evolutionStatus = defineCommand({
 const evolutionCmd = defineCommand({
   meta: { name: 'evolution', description: 'Manage GAD evolution proto-skills (validate/promote/discard/status)' },
   subCommands: {
+    install: evolutionInstall,
     validate: evolutionValidate,
     promote: evolutionPromote,
     discard: evolutionDiscard,
