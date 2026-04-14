@@ -2,9 +2,8 @@
 
 /**
  * SectionDevPanel — section-local slide-in panel listing registered `<Identified>`
- * bands (sorted by registry depth). Row details use **Tooltip** (not HoverCard):
- * HoverCard keeps content under the pointer inside a transformed slide-in panel,
- * which can oscillate open/closed and hit React “maximum update depth”.
+ * bands (sorted by registry depth). No HoverCard/Tooltip on rows — Radix poppers
+ * inside the transformed slide-in repeatedly hit “maximum update depth” in dev.
  */
 
 import { useState } from "react";
@@ -14,7 +13,6 @@ import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
 import { Identified } from "./Identified";
 import { DevIdAgentPromptDialog } from "./DevIdAgentPromptDialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { DEV_PANEL_LABEL, DEV_PANEL_STABLE_CID } from "./dev-panel-constants";
 
@@ -30,7 +28,6 @@ function sortRegistryEntries(entries: RegistryEntry[]): RegistryEntry[] {
 
 type RowProps = {
   entry: RegistryEntry;
-  pathname: string;
   highlightCid: string | null;
   setHighlightCid: (v: string | null) => void;
   justCopied: string | null;
@@ -40,7 +37,6 @@ type RowProps = {
 
 function RegistryListRow({
   entry,
-  pathname,
   highlightCid,
   setHighlightCid,
   justCopied,
@@ -68,38 +64,18 @@ function RegistryListRow({
         <Eye size={12} />
       </button>
 
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={() => onCopy(entry.cid)}
-            className={cn(
-              "min-w-0 flex-1 cursor-pointer select-none truncate rounded px-1 py-0.5 text-left transition-colors",
-              "hover:bg-background/40",
-            )}
-          >
-            <span className="text-muted-foreground/80">{entry.label}</span>
-            <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent
-          side="right"
-          align="start"
-          sideOffset={8}
-          collisionPadding={12}
-          className="z-[10000] max-w-[18rem] border-accent/25 bg-popover p-3 text-xs text-popover-foreground shadow-xl"
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">data-cid</p>
-          <p className="break-all font-mono text-[11px] text-accent">{entry.cid}</p>
-          <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Identified as</p>
-          <p className="text-sm text-foreground">{entry.label}</p>
-          <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">App route</p>
-          <p className="break-all font-mono text-[10px] text-muted-foreground">{pathname || "—"}</p>
-          <p className="mt-2 text-[10px] text-muted-foreground">
-            Registry depth: <span className="tabular-nums text-foreground">{entry.depth}</span>
-          </p>
-        </TooltipContent>
-      </Tooltip>
+      <button
+        type="button"
+        onClick={() => onCopy(entry.cid)}
+        className={cn(
+          "min-w-0 flex-1 cursor-pointer select-none truncate rounded px-1 py-0.5 text-left transition-colors",
+          "hover:bg-background/40",
+        )}
+        title={`${entry.label} · depth ${entry.depth} · click to copy ${entry.cid}`}
+      >
+        <span className="text-muted-foreground/80">{entry.label}</span>
+        <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
+      </button>
 
       <button
         type="button"
@@ -216,37 +192,34 @@ export function SectionDevPanel() {
             </button>
           </div>
 
-          <TooltipProvider delayDuration={280} skipDelayDuration={120}>
-            <ul className="min-h-0 flex-1 overflow-y-auto overflow-x-visible p-2">
-              {sortedEntries.length === 0 ? (
-                <li className="px-2 py-3 text-[11px] text-muted-foreground">
-                  No registered blocks in this section. Add{" "}
-                  <code className="rounded bg-card px-1 font-mono text-[10px]">sectionBandCid</code> on{" "}
-                  <code className="rounded bg-card px-1 font-mono text-[10px]">SiteSection</code> and/or{" "}
-                  <code className="rounded bg-card px-1 font-mono text-[10px]">&lt;Identified&gt;</code> bands (inner
-                  chrome may use{" "}
-                  <code className="rounded bg-card px-1 font-mono text-[10px]">register=&#123;false&#125;</code>).
-                </li>
-              ) : (
-                sortedEntries.map((entry) => (
-                  <RegistryListRow
-                    key={entry.cid}
-                    entry={entry}
-                    pathname={pathname}
-                    highlightCid={highlightCid}
-                    setHighlightCid={setHighlightCid}
-                    justCopied={justCopied}
-                    onCopy={copy}
-                    onPrompt={setPromptEntry}
-                  />
-                ))
-              )}
-            </ul>
-          </TooltipProvider>
+          <ul className="min-h-0 flex-1 overflow-y-auto overflow-x-visible p-2">
+            {sortedEntries.length === 0 ? (
+              <li className="px-2 py-3 text-[11px] text-muted-foreground">
+                No registered blocks in this section. Add{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">sectionBandCid</code> on{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">SiteSection</code> and/or{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">&lt;Identified&gt;</code> bands (inner
+                chrome may use{" "}
+                <code className="rounded bg-card px-1 font-mono text-[10px]">register=&#123;false&#125;</code>).
+              </li>
+            ) : (
+              sortedEntries.map((entry) => (
+                <RegistryListRow
+                  key={entry.cid}
+                  entry={entry}
+                  highlightCid={highlightCid}
+                  setHighlightCid={setHighlightCid}
+                  justCopied={justCopied}
+                  onCopy={copy}
+                  onPrompt={setPromptEntry}
+                />
+              ))
+            )}
+          </ul>
 
           <div className="shrink-0 border-t border-border/60 p-3 text-[10px] leading-4 text-muted-foreground">
-            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Hover a row label for a
-            tooltip (details). Row label click copies id. <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
+            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Row label click copies id (see
+            native tooltip on hover). <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
             -click a highlighted component copies id. Message icon: handoff prompts for your agent.
           </div>
         </Identified>
