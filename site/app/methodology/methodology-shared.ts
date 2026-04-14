@@ -10,13 +10,6 @@ export function pickWorkedExamples(): EvalRunRecord[] {
 
 export const DATA_STAGES = [
   {
-    stage: "1",
-    title: "Raw artifacts",
-    body:
-      "Every eval run produces a TRACE.json sidecar, a session.jsonl (Claude Code), a git log with per-task commits, and a dist/ build. Phase 25 adds .trace-events.jsonl for hook-captured tool/skill/subagent events. These are the primary sources — nothing is ever recomputed from anything upstream.",
-    examples: "TRACE.json · session.jsonl · git log · dist/",
-  },
-  {
     stage: "2",
     title: "Structured records",
     body:

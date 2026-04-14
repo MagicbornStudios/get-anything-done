@@ -13,18 +13,18 @@ export function MethodologyDataPipelineSection() {
         <SiteSectionHeading
           icon={Database}
           kicker="Data production pipeline"
-          title="Raw → structured → derived → insight"
+          title="Structured → derived → insight"
         />
         <SiteProse size="md" className="mt-3">
         The eval framework&apos;s primary output is{" "}
         <strong className="text-foreground">structured data</strong>, not scores. Scores are one kind
         of derived number; the framework also produces rubrics, automated gate checks, derived metrics
-        from trace events, and cross-run aggregates. The four stages below are how raw run artifacts
+        from trace events, and cross-run aggregates. The three stages below are how structured records
         become insights on this site.
         </SiteProse>
       </Identified>
 
-      <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {DATA_STAGES.map((stage) => (
           <Identified key={stage.stage} as={`MethodologyDataPipelineStage-${stage.stage}`}>
             <Card>
