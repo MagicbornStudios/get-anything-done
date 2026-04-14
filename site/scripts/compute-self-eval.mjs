@@ -717,7 +717,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to \`skills/proto-skills/${name}/SKILL.md\` — a
+The drafter writes to \`.planning/proto-skills/${name}/SKILL.md\` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 
@@ -742,7 +742,7 @@ The human reviewer runs \`gad evolution promote <slug>\` or
  */
 function writeCandidates(phasesPressure) {
   const candidatesDir = path.join(REPO_ROOT, "skills", "candidates");
-  const protoSkillsDir = path.join(REPO_ROOT, "skills", "proto-skills");
+  const protoSkillsDir = path.join(REPO_ROOT, ".planning", "proto-skills");
   if (!fs.existsSync(candidatesDir)) {
     fs.mkdirSync(candidatesDir, { recursive: true });
   }
@@ -772,7 +772,7 @@ function writeCandidates(phasesPressure) {
         tasks_done: phase.tasks_done,
         crosscuts: phase.crosscuts,
         candidate_file: `skills/candidates/${name}/CANDIDATE.md`,
-        proto_skill_dir: `skills/proto-skills/${name}/`,
+        proto_skill_dir: `.planning/proto-skills/${name}/`,
         stage: "drafted",
         // Legacy fields for backwards compat with existing detail page
         file_path: `skills/candidates/${name}/CANDIDATE.md`,

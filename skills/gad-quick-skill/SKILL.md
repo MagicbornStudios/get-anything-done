@@ -60,11 +60,11 @@ authoring guide — this wrapper only handles the input plumbing.
 
 The drafting input depends on how you were invoked:
 
-- **From `gad:evolution:evolve`:** `skills/proto-skills/<slug>/CANDIDATE.md` — already
+- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/CANDIDATE.md` — already
   exists, written by `compute-self-eval`. Contains the raw phase dump (tasks,
   decisions, file refs, CLI surface, related skills, git log highlights).
 - **From a direct user request:** decide on a kebab-case slug, create
-  `skills/proto-skills/<slug>/`, and write a CANDIDATE.md from whatever the
+  `.planning/proto-skills/<slug>/`, and write a CANDIDATE.md from whatever the
   user is pointing at (a phase, a working session, a transcript, a file).
 - **From a "redraft this skill" request:** the existing skill's directory.
 
@@ -86,8 +86,8 @@ key constraints from dot-agent's guide:
 - Use the imperative form in instructions.
 - Explain *why*, not just *what*.
 
-Write to `skills/proto-skills/<slug>/SKILL.md` and any references files under
-`skills/proto-skills/<slug>/references/`.
+Write to `.planning/proto-skills/<slug>/SKILL.md` and any references files under
+`.planning/proto-skills/<slug>/references/`.
 
 Pick the kebab-case skill name yourself, drawing from the phase or context. Do
 not ask the human — the whole point of the autonomous loop is that you make
@@ -97,7 +97,7 @@ the call.
 
 After SKILL.md is written, the orchestrator (`gad:evolution:evolve`) runs the
 validator skill (`gad-evolution-validator`) on the new proto-skill. The
-validator writes `skills/proto-skills/<slug>/VALIDATION.md` with advisory
+validator writes `.planning/proto-skills/<slug>/VALIDATION.md` with advisory
 notes:
 
 - Files cited in SKILL.md that don't exist in the repo
@@ -112,8 +112,9 @@ the validator yourself — just leave the proto-skill in place.
 ## Step 5 — Stop
 
 Do not iterate. Do not run test prompts. Do not ask for review. The
-proto-skill stays in `skills/proto-skills/<slug>/` until a human runs
-`gad evolution promote <slug>` or `gad evolution discard <slug>` later.
+proto-skill stays in `.planning/proto-skills/<slug>/` until a human runs
+`gad evolution install <slug> ...`, `gad evolution promote <slug>`, or
+`gad evolution discard <slug>` later.
 
 If the orchestrator passed you multiple candidates, loop steps 2-4 for each
 one. Otherwise stop after one.

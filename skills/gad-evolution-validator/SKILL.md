@@ -9,7 +9,7 @@ description: >-
   reads VALIDATION.md alongside SKILL.md before promoting or discarding the
   proto-skill. Use when `gad-evolution-evolve` finishes drafting a proto-skill,
   or any time you want to validate an existing proto-skill in
-  `skills/proto-skills/<slug>/`.
+  `.planning/proto-skills/<slug>/`.
 ---
 
 # gad-evolution-validator
@@ -58,13 +58,13 @@ These are deferred until needed.
 gad evolution validate <slug>
 ```
 
-Where `<slug>` is the directory name under `skills/proto-skills/`. The
-command writes `skills/proto-skills/<slug>/VALIDATION.md` and prints a
+Where `<slug>` is the directory name under `.planning/proto-skills/`. The
+command writes `.planning/proto-skills/<slug>/VALIDATION.md` and prints a
 summary line with pass counts.
 
 ## Step 2 — Read the output
 
-Open `skills/proto-skills/<slug>/VALIDATION.md`. It has three sections:
+Open `.planning/proto-skills/<slug>/VALIDATION.md`. It has three sections:
 
 1. **Summary** — pass/fail counts per check
 2. **File references** — table of every cited path with ✓ or ✗

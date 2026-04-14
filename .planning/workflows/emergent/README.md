@@ -3,7 +3,7 @@
 This directory holds **proto-workflows** — workflow candidates drafted by
 the trace-mining detector (decision gad-174) from recurring patterns in
 `.planning/.trace-events.jsonl`. They are the workflow analog of
-`skills/proto-skills/` (decision gad-167).
+`.planning/proto-skills/` (decision gad-167).
 
 ## Lifecycle
 

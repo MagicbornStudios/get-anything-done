@@ -22,8 +22,8 @@ pressure → candidate → proto-skill → proto-skill[validated] → proto-skil
 | Stage | Directory | What it is |
 |---|---|---|
 | candidate | `skills/candidates/<slug>/CANDIDATE.md` | Raw phase dump with pressure metrics and suggested intent |
-| proto-skill (draft) | `skills/proto-skills/<slug>/SKILL.md` | A drafted skill in dot-agent format, not yet validated |
-| proto-skill (validated) | `skills/proto-skills/<slug>/SKILL.md` + `VALIDATION.md` | Advisory validator has checked file refs, CLI commands, and shape |
+| proto-skill (draft) | `.planning/proto-skills/<slug>/SKILL.md` | A staged proto-skill in dot-agent format, not yet validated or installed |
+| proto-skill (validated) | `.planning/proto-skills/<slug>/SKILL.md` + `VALIDATION.md` | Advisory validator has checked file refs, CLI commands, and shape |
 | proto-skill (promoted) | `skills/<name>/SKILL.md` (with proto-skill provenance) | Skill is live and distributed — still carries its proto-skill origin in metadata |
 | discarded | (deleted, candidate may remain) | Draft rejected; candidate returns to the queue if `--keepCandidate` |
 
@@ -65,7 +65,7 @@ that let a human refine a candidate before it becomes a proto-skill draft.
 For each candidate the skill is asked to process, it writes:
 
 ```
-skills/proto-skills/<slug>/
+.planning/proto-skills/<slug>/
   SKILL.md              # dot-agent format skill draft
   PROVENANCE.md         # candidate slug, phase id, pressure metrics, timestamp
 ```
@@ -112,6 +112,7 @@ decides the flags are acceptable.
 
 ```sh
 gad evolution status                       # count candidates + proto-skills by stage
+gad evolution install <slug> --codex       # install staged proto-skill into a runtime without promoting
 gad evolution validate <slug>              # write VALIDATION.md for one proto-skill
 gad evolution promote <slug> [--name X]    # move proto-skill → skills/, keep PROVENANCE.md
 gad evolution discard <slug> [--keepCandidate]
@@ -127,10 +128,23 @@ the originating candidate stays in the queue to be re-drafted later.
 |---|---|---|
 | Input | candidate handoff on filesystem | human conversation |
 | Stakes | advisory, bulk | high, human-in-the-loop |
-| Output location | `skills/proto-skills/` | `skills/` directly |
+| Output location | `.planning/proto-skills/` | `skills/` directly |
 | Provenance | carries PROVENANCE.md forever | optional |
 | Batching | yes | no |
 
 Both end up in `skills/` eventually. The difference is the path by which they
 got there, and that path stays recorded.
+
+## Why `.planning/`
+
+Proto-skills are project-local staging artifacts, not canonical framework assets yet.
+They belong beside the project's other planning artifacts until a human takes one of two
+explicit actions:
+
+1. `gad evolution install <slug> ...`
+   Installs the staged proto-skill into one or more coding-agent runtimes for local
+   testing while leaving it in `.planning/proto-skills/`.
+2. `gad evolution promote <slug>`
+   Promotes the proto-skill into canonical `skills/` so it joins the framework's
+   shipped DNA.
 
