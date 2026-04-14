@@ -2,9 +2,9 @@
 
 /**
  * SectionDevPanel — section-local slide-in panel listing registered `<Identified>`
- * bands (sorted by registry depth). HoverCard for context; message icon opens agent
- * handoff. We intentionally do **not** call scrollIntoView or flash from row
- * activation — that path interacted badly with Radix focus / layout.
+ * bands (sorted by registry depth). Row details use **Tooltip** (not HoverCard):
+ * HoverCard keeps content under the pointer inside a transformed slide-in panel,
+ * which can oscillate open/closed and hit React “maximum update depth”.
  */
 
 import { useState } from "react";
@@ -14,7 +14,7 @@ import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
 import { Identified } from "./Identified";
 import { DevIdAgentPromptDialog } from "./DevIdAgentPromptDialog";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { DEV_PANEL_LABEL, DEV_PANEL_STABLE_CID } from "./dev-panel-constants";
 
@@ -68,8 +68,8 @@ function RegistryListRow({
         <Eye size={12} />
       </button>
 
-      <HoverCard openDelay={120} closeDelay={80}>
-        <HoverCardTrigger asChild>
+      <Tooltip>
+        <TooltipTrigger asChild>
           <button
             type="button"
             onClick={() => onCopy(entry.cid)}
@@ -81,13 +81,13 @@ function RegistryListRow({
             <span className="text-muted-foreground/80">{entry.label}</span>
             <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
           </button>
-        </HoverCardTrigger>
-        <HoverCardContent
-          side="left"
+        </TooltipTrigger>
+        <TooltipContent
+          side="right"
           align="start"
           sideOffset={8}
-          collisionPadding={16}
-          className="z-[10000] w-72 border-accent/25 bg-popover p-3 text-xs shadow-xl"
+          collisionPadding={12}
+          className="z-[10000] max-w-[18rem] border-accent/25 bg-popover p-3 text-xs text-popover-foreground shadow-xl"
         >
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">data-cid</p>
           <p className="break-all font-mono text-[11px] text-accent">{entry.cid}</p>
@@ -98,8 +98,8 @@ function RegistryListRow({
           <p className="mt-2 text-[10px] text-muted-foreground">
             Registry depth: <span className="tabular-nums text-foreground">{entry.depth}</span>
           </p>
-        </HoverCardContent>
-      </HoverCard>
+        </TooltipContent>
+      </Tooltip>
 
       <button
         type="button"
@@ -216,35 +216,37 @@ export function SectionDevPanel() {
             </button>
           </div>
 
-          <ul className="min-h-0 flex-1 overflow-y-auto overflow-x-visible p-2">
-            {sortedEntries.length === 0 ? (
-              <li className="px-2 py-3 text-[11px] text-muted-foreground">
-                No registered blocks in this section. Add{" "}
-                <code className="rounded bg-card px-1 font-mono text-[10px]">sectionBandCid</code> on{" "}
-                <code className="rounded bg-card px-1 font-mono text-[10px]">SiteSection</code> and/or{" "}
-                <code className="rounded bg-card px-1 font-mono text-[10px]">&lt;Identified&gt;</code> bands (inner
-                chrome may use{" "}
-                <code className="rounded bg-card px-1 font-mono text-[10px]">register=&#123;false&#125;</code>).
-              </li>
-            ) : (
-              sortedEntries.map((entry) => (
-                <RegistryListRow
-                  key={entry.cid}
-                  entry={entry}
-                  pathname={pathname}
-                  highlightCid={highlightCid}
-                  setHighlightCid={setHighlightCid}
-                  justCopied={justCopied}
-                  onCopy={copy}
-                  onPrompt={setPromptEntry}
-                />
-              ))
-            )}
-          </ul>
+          <TooltipProvider delayDuration={280} skipDelayDuration={120}>
+            <ul className="min-h-0 flex-1 overflow-y-auto overflow-x-visible p-2">
+              {sortedEntries.length === 0 ? (
+                <li className="px-2 py-3 text-[11px] text-muted-foreground">
+                  No registered blocks in this section. Add{" "}
+                  <code className="rounded bg-card px-1 font-mono text-[10px]">sectionBandCid</code> on{" "}
+                  <code className="rounded bg-card px-1 font-mono text-[10px]">SiteSection</code> and/or{" "}
+                  <code className="rounded bg-card px-1 font-mono text-[10px]">&lt;Identified&gt;</code> bands (inner
+                  chrome may use{" "}
+                  <code className="rounded bg-card px-1 font-mono text-[10px]">register=&#123;false&#125;</code>).
+                </li>
+              ) : (
+                sortedEntries.map((entry) => (
+                  <RegistryListRow
+                    key={entry.cid}
+                    entry={entry}
+                    pathname={pathname}
+                    highlightCid={highlightCid}
+                    setHighlightCid={setHighlightCid}
+                    justCopied={justCopied}
+                    onCopy={copy}
+                    onPrompt={setPromptEntry}
+                  />
+                ))
+              )}
+            </ul>
+          </TooltipProvider>
 
           <div className="shrink-0 border-t border-border/60 p-3 text-[10px] leading-4 text-muted-foreground">
-            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Hover a row for details
-            (left). Row label click copies id (no scroll). <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
+            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Hover a row label for a
+            tooltip (details). Row label click copies id. <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
             -click a highlighted component copies id. Message icon: handoff prompts for your agent.
           </div>
         </Identified>
