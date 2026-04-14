@@ -743,13 +743,25 @@ The human reviewer runs \`gad evolution promote <slug>\` or
 function writeCandidates(phasesPressure) {
   const candidatesDir = path.join(REPO_ROOT, "skills", "candidates");
   const protoSkillsDir = path.join(REPO_ROOT, ".planning", "proto-skills");
+  const shedDir = path.join(REPO_ROOT, "skills", ".shed");
   if (!fs.existsSync(candidatesDir)) {
     fs.mkdirSync(candidatesDir, { recursive: true });
+  }
+
+  // Shed list — slugs the operator has explicitly dismissed via
+  // `gad evolution shed <slug>`. Self-eval must NOT regenerate these.
+  // Each file at skills/.shed/<slug> is a one-line reason log.
+  const shedList = new Set();
+  if (fs.existsSync(shedDir)) {
+    for (const name of fs.readdirSync(shedDir)) {
+      if (!name.startsWith(".")) shedList.add(name);
+    }
   }
 
   const highPressure = phasesPressure.filter(p => p.high_pressure);
   const written = [];
   const skippedProto = [];
+  const skippedShed = [];
   const candidates = [];
 
   for (const phase of highPressure) {
@@ -758,6 +770,12 @@ function writeCandidates(phasesPressure) {
     const candidateDir = path.join(candidatesDir, name);
     const candidateFile = path.join(candidateDir, "CANDIDATE.md");
     const protoSkillDir = path.join(protoSkillsDir, name);
+
+    // Shed list — operator dismissed this slug. Don't regenerate.
+    if (shedList.has(name)) {
+      skippedShed.push(name);
+      continue;
+    }
 
     // If a proto-skill already exists for this slug, the drafter has run.
     // Don't regenerate the candidate — let the human review the proto-skill.
@@ -823,6 +841,9 @@ function writeCandidates(phasesPressure) {
   }
   if (skippedProto.length > 0) {
     console.log(`  [self-eval] Skipped ${skippedProto.length} candidate(s) with existing proto-skill: ${skippedProto.join(", ")}`);
+  }
+  if (skippedShed.length > 0) {
+    console.log(`  [self-eval] Skipped ${skippedShed.length} shed candidate(s): ${skippedShed.join(", ")}`);
   }
 
   return candidates;

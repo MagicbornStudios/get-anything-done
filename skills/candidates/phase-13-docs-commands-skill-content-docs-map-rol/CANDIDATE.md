@@ -22,10 +22,10 @@ selection pressure: 16  (8 tasks, 8 done, 4 crosscuts)
 ## Tasks
 
 ```
-13-01 done Extend gad docs command: add `gad docs list --projectid &lt;id&gt;` that shows all docs for a project — planning files from sink status, DOCS-MAP entries, and docs.projects entries. Add --all flag.
-13-02 done Create DOCS-MAP.xml for get-anything-done with entries for evals.mdx and any other non-planning feature docs in the sink. Reader (docs-map-reader.cjs) already exists — this creates the actual data files.
+13-01 done Extend gad docs command: add `gad docs list --projectid &lt;id&gt;` that shows all docs for a project â€” planning files from sink status, DOCS-MAP entries, and docs.projects entries. Add --all flag.
+13-02 done Create DOCS-MAP.xml for get-anything-done with entries for evals.mdx and any other non-planning feature docs in the sink. Reader (docs-map-reader.cjs) already exists â€” this creates the actual data files.
 13-03 done Create DOCS-MAP.xml for grime-time, repo-planner, and any other roots that have feature docs in their sink paths. Check each root's sink directory for non-planning MDX files.
-13-04 done Flesh out write-intent SKILL.md: add concrete examples, template output, edge cases. The skill should be usable by any agent reading it cold — currently too abstract.
+13-04 done Flesh out write-intent SKILL.md: add concrete examples, template output, edge cases. The skill should be usable by any agent reading it cold â€” currently too abstract.
 13-05 done Flesh out write-feature-doc SKILL.md: add concrete examples of good feature docs, MDX frontmatter template, sink path resolution logic. Currently steps are correct but thin.
 13-06 done Flesh out write-tech-doc SKILL.md: add concrete examples, mermaid diagram patterns, decision-referencing conventions. Currently steps are correct but thin.
 13-07 done CLI error hardening: audit all gad.cjs commands for gad-12 compliance (missing-arg UX prints choices + rerun hint). Test edge cases: missing .planning/ dirs, malformed XML, empty files.

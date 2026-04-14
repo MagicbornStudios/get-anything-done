@@ -25,7 +25,7 @@ selection pressure: 16  (8 tasks, 8 done, 4 crosscuts)
 10-01 done Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 10-02 done Migrate gad-01 through gad-15 decisions from root DECISIONS.xml into vendor/get-anything-done/.planning/DECISIONS.xml. Add gad-16 (no subagents until evaluated) and gad-17 (context handoff via planning docs).
 10-03 done Add gad pack command that bundles .planning data into a repo-planner-compatible planning pack format (JSON bundle with state, phases, tasks, decisions, requirements, docRefs).
-10-04 done Create vendor/get-anything-done/AGENTS.md using GAD's own workflow — gad CLI commands, planning loop, context re-hydration, skill references.
+10-04 done Create vendor/get-anything-done/AGENTS.md using GAD's own workflow â€” gad CLI commands, planning loop, context re-hydration, skill references.
 10-05 done Create skill stubs: skills/gad-write-intent/SKILL.md, skills/gad-write-feature-doc/SKILL.md, skills/gad-write-tech-doc/SKILL.md.
 10-06 done Update gadConfig.load() to read [[docs.projects]] from planning-config.toml and expose as config.docsProjects. Update gad sink status and gad refs to include docs.projects entries.
 10-07 done Create docs-map-reader.cjs and DOCS-MAP.xml per planning root. Extend gad refs to include docs-map entries. Update gad sink compile to handle DOCS-MAP.xml.

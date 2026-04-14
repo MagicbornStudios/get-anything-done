@@ -22,15 +22,15 @@ selection pressure: 13  (9 tasks, 9 done, 2 crosscuts)
 ## Tasks
 
 ```
-12-01 done Add decisions gad-17 (revised: auto-compact over fresh sessions), gad-18 (canonical loop: snapshot → work → update → commit), gad-19 (GSD is dead, GAD only).
+12-01 done Add decisions gad-17 (revised: auto-compact over fresh sessions), gad-18 (canonical loop: snapshot â†’ work â†’ update â†’ commit), gad-19 (GSD is dead, GAD only).
 12-02 done Delete .claude/commands/gsd/ directory entirely (30 command files).
-12-03 done Rebrand .claude/hooks/ for GAD: remove gsd-check-update.js (checks npm for get-shit-done-cc). Rename gsd-context-monitor.js → context-monitor.js, strip GSD references from warning messages. Rename gsd-statusline.js → statusline.js, strip GSD update check and branding. Update .claude/settings.json to reference new hook filenames.
+12-03 done Rebrand .claude/hooks/ for GAD: remove gsd-check-update.js (checks npm for get-shit-done-cc). Rename gsd-context-monitor.js â†’ context-monitor.js, strip GSD references from warning messages. Rename gsd-statusline.js â†’ statusline.js, strip GSD update check and branding. Update .claude/settings.json to reference new hook filenames.
 12-04 done Simplify root AGENTS.md: remove the 15-file mandatory read order. Agents use gad snapshot on session start, not manual file reads. Remove GSD section. Keep build/lint/verify gates, conventions, site copy guide. Reference vendor/get-anything-done/AGENTS.md as the canonical loop definition.
 12-05 done Simplify .planning/AGENTS.md: remove redundant loop definition, trigger phrase table, and pattern examples that duplicate root AGENTS.md and vendor GAD AGENTS.md. Keep XML schema reference and planning-config.toml pointers. Reference gad-18 for the loop.
 12-06 done Update vendor/get-anything-done/AGENTS.md: mark as canonical loop source per gad-18. Update "Current work" section to reference phase 12. Fix gad-17 reference to reflect auto-compact over fresh sessions.
-12-07 done Uninstall GSD globally: delete ~/.claude/get-shit-done/, ~/.claude/commands/gsd/ (56 files), ~/.claude/hooks/gsd-*.js (5 files). Clean ~/.claude/settings.json — remove all GSD hooks and statusline, keep permissions and preferences.
+12-07 done Uninstall GSD globally: delete ~/.claude/get-shit-done/, ~/.claude/commands/gsd/ (56 files), ~/.claude/hooks/gsd-*.js (5 files). Clean ~/.claude/settings.json â€” remove all GSD hooks and statusline, keep permissions and preferences.
 12-08 done Install all 56 GAD commands from vendor/get-anything-done/commands/gad/ as Claude Code slash commands in .claude/commands/gad/. Includes the full planning loop: plan-phase, execute-phase, discuss-phase, progress, check-todos, next, plus project lifecycle, debug, health, verify, stats, and all other commands.
-12-09 done Clean all GSD/get-shit-done references in vendor/get-anything-done/commands/gad/*.md and propagate to .claude/commands/gad/. Replace GSD→GAD, get-shit-done→get-anything-done, /gsd:→/gad: throughout. Note: 115 references to get-shit-done remain as literal directory/file paths (the actual folder is named that).
+12-09 done Clean all GSD/get-shit-done references in vendor/get-anything-done/commands/gad/*.md and propagate to .claude/commands/gad/. Replace GSDâ†’GAD, get-shit-doneâ†’get-anything-done, /gsd:â†’/gad: throughout. Note: 115 references to get-shit-done remain as literal directory/file paths (the actual folder is named that).
 ```
 
 ## What this candidate is for

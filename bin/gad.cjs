@@ -9125,6 +9125,354 @@ function installProtoSkillToRuntime(protoDir, slug, runtime, options = {}) {
   return { baseDir, nativeDir, mirrorDir };
 }
 
+function splitCsvList(raw, fallback = []) {
+  if (!raw || typeof raw !== 'string') return fallback;
+  return raw
+    .split(',')
+    .map((s) => String(s || '').trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function listSkillDirs(rootDir) {
+  if (!fs.existsSync(rootDir)) return [];
+  const out = [];
+  for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const skillDir = path.join(rootDir, entry.name);
+    const skillFile = path.join(skillDir, 'SKILL.md');
+    if (!fs.existsSync(skillFile)) continue;
+    out.push({ id: entry.name, dir: skillDir, skillFile });
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function readSkillFrontmatter(skillFile) {
+  let src = '';
+  try { src = fs.readFileSync(skillFile, 'utf8'); } catch { return { name: null, description: null }; }
+  const match = src.match(/^---\n([\s\S]*?)\n---\n?/);
+  if (!match) return { name: null, description: null };
+  let name = null;
+  let description = null;
+  for (const line of match[1].split(/\r?\n/)) {
+    const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!kv) continue;
+    if (kv[1] === 'name') name = kv[2].replace(/^["']|["']$/g, '').trim();
+    if (kv[1] === 'description') description = kv[2].replace(/^["']|["']$/g, '').trim();
+  }
+  return { name, description };
+}
+
+function firstExistingImagePath(dir, candidates = []) {
+  for (const rel of candidates) {
+    const full = path.join(dir, rel);
+    if (fs.existsSync(full)) return full;
+  }
+  return null;
+}
+
+function buildSkillImageInventory(args = {}) {
+  const repoRoot = path.resolve(__dirname, '..');
+  const scopes = new Set(splitCsvList(args.scope, ['official', 'proto', 'installed']));
+  const includeGlobal = Boolean(args['include-global']);
+  const runtimeFilter = new Set(splitCsvList(args.runtime, ['claude', 'codex', 'cursor', 'windsurf', 'augment', 'copilot', 'antigravity']));
+  const records = [];
+
+  function pushRecord(base) {
+    const imageCandidates = ['image.png', 'cover.png', 'icon.png', 'preview.png'];
+    const existingImage = firstExistingImagePath(base.skillDir, imageCandidates);
+    const outputPath = base.outputPath || path.join(repoRoot, 'assets', 'skills', `${base.id}.png`);
+    const promptSeed = [
+      `Create a 1:1 icon-style illustration for the GAD skill "${base.name || base.id}".`,
+      base.description ? `Skill purpose: ${base.description}` : '',
+      'Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic.',
+      'Must be visually distinct from generic stock icons.'
+    ].filter(Boolean).join(' ');
+    records.push({
+      id: base.id,
+      name: base.name || base.id,
+      kind: base.kind,
+      runtime: base.runtime || null,
+      sourceDir: base.skillDir,
+      skillFile: base.skillFile,
+      hasImage: Boolean(existingImage),
+      imagePath: existingImage,
+      targetImagePath: outputPath,
+      description: base.description || null,
+      prompt: promptSeed,
+    });
+  }
+
+  if (scopes.has('official')) {
+    const officialRoot = path.join(repoRoot, 'skills');
+    for (const entry of listSkillDirs(officialRoot)) {
+      if (entry.id === 'candidates' || entry.id === 'emergent' || entry.id === 'proto-skills') continue;
+      const meta = readSkillFrontmatter(entry.skillFile);
+      pushRecord({
+        id: entry.id,
+        name: meta.name || entry.id,
+        description: meta.description,
+        kind: 'official',
+        skillDir: entry.dir,
+        skillFile: entry.skillFile,
+        outputPath: path.join(repoRoot, 'assets', 'skills', `${entry.id}.png`),
+      });
+    }
+  }
+
+  if (scopes.has('proto')) {
+    const protoRoot = path.join(repoRoot, '.planning', 'proto-skills');
+    for (const entry of listSkillDirs(protoRoot)) {
+      const meta = readSkillFrontmatter(entry.skillFile);
+      pushRecord({
+        id: entry.id,
+        name: meta.name || entry.id,
+        description: meta.description,
+        kind: 'proto',
+        skillDir: entry.dir,
+        skillFile: entry.skillFile,
+        outputPath: path.join(entry.dir, 'image.png'),
+      });
+    }
+  }
+
+  if (scopes.has('installed')) {
+    const localRuntimeRoots = [
+      { runtime: 'claude', dir: path.join(process.cwd(), '.claude', 'skills') },
+      { runtime: 'codex', dir: path.join(process.cwd(), '.codex', 'skills') },
+      { runtime: 'cursor', dir: path.join(process.cwd(), '.cursor', 'skills') },
+      { runtime: 'windsurf', dir: path.join(process.cwd(), '.windsurf', 'skills') },
+      { runtime: 'augment', dir: path.join(process.cwd(), '.augment', 'skills') },
+      { runtime: 'copilot', dir: path.join(process.cwd(), '.github', 'skills') },
+      { runtime: 'antigravity', dir: path.join(process.cwd(), '.agent', 'skills') },
+      { runtime: 'agents', dir: path.join(process.cwd(), '.agents', 'skills') },
+    ];
+    const runtimeRoots = [...localRuntimeRoots];
+    if (includeGlobal) {
+      for (const runtime of ['claude', 'codex', 'cursor', 'windsurf', 'augment', 'copilot', 'antigravity']) {
+        runtimeRoots.push({ runtime, dir: path.join(getProtoSkillGlobalDir(runtime), 'skills') });
+      }
+    }
+    for (const root of runtimeRoots) {
+      if (root.runtime !== 'agents' && !runtimeFilter.has(root.runtime)) continue;
+      for (const entry of listSkillDirs(root.dir)) {
+        const meta = readSkillFrontmatter(entry.skillFile);
+        const targetDir = path.join(repoRoot, 'assets', 'skills', 'installed', root.runtime);
+        pushRecord({
+          id: `${root.runtime}:${entry.id}`,
+          name: meta.name || entry.id,
+          description: meta.description,
+          kind: 'installed',
+          runtime: root.runtime,
+          skillDir: entry.dir,
+          skillFile: entry.skillFile,
+          outputPath: path.join(targetDir, `${entry.id}.png`),
+        });
+      }
+    }
+  }
+
+  records.sort((a, b) => a.id.localeCompare(b.id));
+  return records;
+}
+
+function parseImageInputFile(inputFile) {
+  const resolved = path.resolve(inputFile);
+  const src = fs.readFileSync(resolved, 'utf8');
+  if (resolved.endsWith('.json')) {
+    const parsed = JSON.parse(src);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && Array.isArray(parsed.items)) return parsed.items;
+    throw new Error(`Expected array or { items: [] } JSON in ${resolved}`);
+  }
+  const rows = [];
+  for (const line of src.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    rows.push(JSON.parse(trimmed));
+  }
+  return rows;
+}
+
+function loadLocalEnvFile(repoRoot, relPath = '.env') {
+  const envPath = path.resolve(repoRoot, relPath);
+  if (!fs.existsSync(envPath)) return;
+  const src = fs.readFileSync(envPath, 'utf8');
+  for (const line of src.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const kv = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!kv) continue;
+    const key = kv[1];
+    let value = kv[2] || '';
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+async function generateImageWithOpenAI({ apiKey, model, prompt, size }) {
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      prompt,
+      size,
+      n: 1,
+      response_format: 'b64_json',
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`OpenAI image generation failed (${res.status}): ${body.slice(0, 400)}`);
+  }
+  const json = await res.json();
+  const b64 = json?.data?.[0]?.b64_json;
+  if (!b64) throw new Error('OpenAI response did not include data[0].b64_json');
+  return Buffer.from(b64, 'base64');
+}
+
+const evolutionImagesStatus = defineCommand({
+  meta: { name: 'status', description: 'List official/proto/installed skills and show which are missing images' },
+  args: {
+    scope: { type: 'string', description: 'Comma-separated: official,proto,installed (default all three)', default: 'official,proto,installed' },
+    runtime: { type: 'string', description: 'When scope includes installed: comma-separated runtimes (default all)', default: 'claude,codex,cursor,windsurf,augment,copilot,antigravity' },
+    'include-global': { type: 'boolean', description: 'Also scan global runtime config dirs in home directory', default: false },
+    json: { type: 'boolean', description: 'Emit full JSON inventory', default: false },
+  },
+  run({ args }) {
+    const records = buildSkillImageInventory(args);
+    const missing = records.filter((r) => !r.hasImage);
+    if (args.json) {
+      console.log(JSON.stringify({
+        total: records.length,
+        missing: missing.length,
+        records,
+      }, null, 2));
+      return;
+    }
+    console.log(`Skill image inventory: ${records.length} total, ${missing.length} missing`);
+    const byKind = ['official', 'proto', 'installed'];
+    for (const kind of byKind) {
+      const rows = records.filter((r) => r.kind === kind);
+      if (rows.length === 0) continue;
+      const missingCount = rows.filter((r) => !r.hasImage).length;
+      console.log(`  ${kind}: ${rows.length} total, ${missingCount} missing`);
+    }
+    if (missing.length > 0) {
+      console.log('');
+      console.log('Missing image targets:');
+      for (const row of missing) {
+        console.log(`  - ${row.id}`);
+        console.log(`    skill:  ${path.relative(process.cwd(), row.skillFile)}`);
+        console.log(`    target: ${path.relative(process.cwd(), row.targetImagePath)}`);
+      }
+      console.log('');
+      console.log('Generate with: gad evolution images generate');
+    }
+  },
+});
+
+const evolutionImagesGenerate = defineCommand({
+  meta: { name: 'generate', description: 'Generate skill images via OpenAI (opt-in, requires OPENAI_API_KEY)' },
+  args: {
+    input: { type: 'string', description: 'JSON/JSONL file with [{ id, prompt, targetImagePath? }]. If omitted, uses inventory rows.' },
+    scope: { type: 'string', description: 'Used when --input is omitted. Comma-separated: official,proto,installed', default: 'official,proto' },
+    runtime: { type: 'string', description: 'Used for installed scan when --input is omitted', default: 'claude,codex,cursor,windsurf,augment,copilot,antigravity' },
+    'include-global': { type: 'boolean', description: 'Used for installed scan when --input is omitted', default: false },
+    'missing-only': { type: 'boolean', description: 'When using inventory rows, generate only missing images', default: true },
+    'auto-prompt': { type: 'boolean', description: 'Fill missing prompt fields from skill metadata', default: true },
+    model: { type: 'string', description: 'OpenAI image model', default: 'gpt-image-1' },
+    size: { type: 'string', description: 'Image size', default: '1024x1024' },
+    limit: { type: 'string', description: 'Max images to generate', default: '' },
+    overwrite: { type: 'boolean', description: 'Overwrite files that already exist', default: false },
+    'env-file': { type: 'string', description: 'Load env vars from this file before generation', default: '.env' },
+    dryRun: { type: 'boolean', description: 'Print planned writes without calling OpenAI', default: false },
+  },
+  async run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    loadLocalEnvFile(repoRoot, args['env-file'] || '.env');
+    const apiKey = process.env.OPENAI_API_KEY || '';
+    if (!apiKey && !args.dryRun) {
+      console.error('OPENAI_API_KEY is required for image generation.');
+      console.error('Set it in your shell or in vendor/get-anything-done/.env (see .env.example).');
+      process.exit(1);
+    }
+
+    let rows;
+    if (args.input) {
+      rows = parseImageInputFile(args.input).map((row, idx) => ({
+        id: row.id || `row-${idx + 1}`,
+        prompt: row.prompt || '',
+        targetImagePath: row.targetImagePath || row.imagePath || '',
+      }));
+    } else {
+      rows = buildSkillImageInventory(args).map((row) => ({
+        id: row.id,
+        prompt: row.prompt || '',
+        targetImagePath: row.targetImagePath,
+        hasImage: row.hasImage,
+      }));
+      if (args['missing-only']) rows = rows.filter((r) => !r.hasImage);
+    }
+
+    if (args['auto-prompt']) {
+      for (const row of rows) {
+        if (!row.prompt) {
+          row.prompt = `Create a square icon-style image for the GAD skill "${row.id}". No text. High contrast.`;
+        }
+      }
+    }
+    rows = rows.filter((r) => r.prompt && r.targetImagePath);
+    if (args.limit) {
+      const lim = Number(args.limit);
+      if (Number.isFinite(lim) && lim > 0) rows = rows.slice(0, lim);
+    }
+    if (rows.length === 0) {
+      console.log('No image jobs to run.');
+      return;
+    }
+
+    let generated = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      const target = path.resolve(row.targetImagePath);
+      if (fs.existsSync(target) && !args.overwrite) {
+        skipped += 1;
+        console.log(`[skip] ${row.id} -> ${path.relative(process.cwd(), target)} (exists, pass --overwrite)`);
+        continue;
+      }
+      if (args.dryRun) {
+        console.log(`[dry-run] ${row.id} -> ${path.relative(process.cwd(), target)}`);
+        continue;
+      }
+      const png = await generateImageWithOpenAI({
+        apiKey,
+        model: args.model || 'gpt-image-1',
+        prompt: row.prompt,
+        size: args.size || '1024x1024',
+      });
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, png);
+      generated += 1;
+      console.log(`[ok] ${row.id} -> ${path.relative(process.cwd(), target)}`);
+    }
+    console.log(`Done. generated=${generated} skipped=${skipped} total=${rows.length}`);
+  },
+});
+
+const evolutionImagesCmd = defineCommand({
+  meta: { name: 'images', description: 'Skill image inventory + optional OpenAI generation (opt-in)' },
+  subCommands: {
+    status: evolutionImagesStatus,
+    generate: evolutionImagesGenerate,
+  },
+});
+
 const evolutionValidate = defineCommand({
   meta: { name: 'validate', description: 'Run advisory validator on a proto-skill (writes VALIDATION.md)' },
   args: {
@@ -9311,6 +9659,8 @@ const evolutionSimilarity = defineCommand({
     threshold: { type: 'string', description: 'Flag pairs with score >= threshold (default 0.6)', default: '0.6' },
     shedThreshold: { type: 'string', description: 'Flag candidates stale vs promoted skills above this score (default 0.55)', default: '0.55' },
     includePromoted: { type: 'boolean', description: 'Include promoted skills/ in the main matrix (default: only shedding-compare)', default: false },
+    against: { type: 'string', description: 'Reference corpus for shedding: "skills" (promoted skills — HIGH = redundant) or "sprint" (current sprint trajectory — LOW = obsolete)', default: 'skills' },
+    obsoleteThreshold: { type: 'string', description: 'With --against sprint, flag candidates BELOW this score as obsolete (default 0.40 TF-IDF / 0.65 embeddings)', default: '' },
     embeddings: { type: 'boolean', description: 'Use transformers.js embeddings instead of TF-IDF (requires `gad models install`)', default: false },
     model: { type: 'string', description: 'Embedding model id or tag (e.g. minilm, bge-small) — default Xenova/all-MiniLM-L6-v2', default: '' },
     json: { type: 'boolean', description: 'Emit JSON instead of markdown report', default: false },
@@ -9320,6 +9670,9 @@ const evolutionSimilarity = defineCommand({
     const sim = require('../lib/similarity.cjs');
     const threshold = parseFloat(args.threshold);
     const shedThreshold = parseFloat(args.shedThreshold);
+    const useSprint = args.against === 'sprint';
+    const obsoleteDefault = args.embeddings ? 0.65 : 0.40;
+    const obsoleteThreshold = args.obsoleteThreshold ? parseFloat(args.obsoleteThreshold) : obsoleteDefault;
 
     const candidateDocs = sim.loadCorpusFromDirs([
       { kind: 'candidate', root: path.join(repoRoot, 'skills', 'candidates') },
@@ -9328,6 +9681,12 @@ const evolutionSimilarity = defineCommand({
     const promotedDocs = sim.loadCorpusFromDirs([
       { kind: 'skill', root: path.join(repoRoot, 'skills') },
     ]).filter((d) => !d.id.includes('/candidates/') && !d.id.includes('/.evolutions/'));
+
+    // Sprint-window reference corpus: a single virtual doc composed of
+    // STATE.xml next-action, open/recent tasks, recent decisions, and
+    // planned/active roadmap phase goals. Used when --against=sprint so
+    // candidates can be checked against the live trajectory.
+    const sprintDoc = useSprint ? sim.loadSprintCorpus(repoRoot, repoRoot) : null;
 
     const mainDocs = args.includePromoted ? [...candidateDocs, ...promotedDocs] : candidateDocs;
 
@@ -9394,6 +9753,41 @@ const evolutionSimilarity = defineCommand({
       shed = sim.analyzeShedding(candidateDocs, promotedDocs, { threshold: shedThreshold });
     }
 
+    // Sprint-window obsolescence pass. For every candidate, score its
+    // similarity against the single sprint virtual doc. LOW score means the
+    // candidate is outside the live trajectory — likely obsolete, shed it.
+    let obsolete = null;
+    if (useSprint && sprintDoc && sprintDoc.text.trim()) {
+      if (args.embeddings) {
+        const emb = require('../lib/embeddings.cjs');
+        const modelId = emb.resolveModelId(args.model);
+        console.error(`[embeddings] encoding sprint corpus...`);
+        const [sprintVec] = await emb.embedCorpus([sprintDoc], modelId, repoRoot);
+        console.error(`[embeddings] scoring ${candidateDocs.length} candidates vs sprint...`);
+        const candVecs = await emb.embedCorpus(candidateDocs, modelId, repoRoot);
+        const rows = candidateDocs.map((c, i) => {
+          const score = emb.cosineSimDense(candVecs[i], sprintVec);
+          return { candidate: c.id, score, obsolete: score < obsoleteThreshold };
+        });
+        rows.sort((a, b) => a.score - b.score);
+        obsolete = { threshold: obsoleteThreshold, results: rows };
+      } else {
+        // Pure TF-IDF: build one corpus of candidates + sprint, compute doc freq,
+        // then cosine each candidate against sprint.
+        const all = [...candidateDocs, sprintDoc];
+        const tf = sim.analyzeCorpus(all, { threshold: 0 });
+        // analyzeCorpus returns a matrix — use it. Sprint is the last row.
+        const sprintIdx = all.length - 1;
+        const rows = candidateDocs.map((c, i) => ({
+          candidate: c.id,
+          score: tf.matrix[i][sprintIdx],
+          obsolete: tf.matrix[i][sprintIdx] < obsoleteThreshold,
+        }));
+        rows.sort((a, b) => a.score - b.score);
+        obsolete = { threshold: obsoleteThreshold, results: rows };
+      }
+    }
+
     if (args.json) {
       console.log(JSON.stringify({
         docCount: analysis.docCount,
@@ -9442,12 +9836,81 @@ const evolutionSimilarity = defineCommand({
     console.log('');
     const stale = shed.results.filter((r) => r.stale).length;
     const flagged = analysis.pairs.length;
-    console.log(`Summary: ${flagged} merge-candidate pair(s) above ${threshold.toFixed(2)}, ${stale} stale candidate(s) above ${shedThreshold.toFixed(2)}.`);
+    let obsoleteCount = 0;
+    if (obsolete) {
+      console.log('');
+      console.log(`## Sprint-window obsolescence (candidates vs active trajectory)`);
+      console.log('');
+      console.log(`Low score = candidate is outside the live sprint trajectory.`);
+      console.log(`Obsolete threshold: < ${obsoleteThreshold.toFixed(2)} (below this = probably shed)`);
+      console.log('');
+      const obs = obsolete.results.filter((r) => r.obsolete);
+      const live = obsolete.results.filter((r) => !r.obsolete);
+      console.log(`Likely obsolete (${obs.length}): project evolved past these — discard candidates`);
+      for (const r of obs) {
+        console.log(`  [${r.score.toFixed(3)}] ${r.candidate}`);
+        const p = pathMap.get(r.candidate);
+        if (p) {
+          const rel = path.relative(cwd, p).split(path.sep).join('/');
+          console.log(`           ${rel}`);
+        }
+      }
+      console.log('');
+      console.log(`Still in trajectory (${live.length}):`);
+      for (const r of live) {
+        console.log(`  [${r.score.toFixed(3)}] ${r.candidate}`);
+      }
+      obsoleteCount = obs.length;
+    }
+    console.log('');
+    console.log(`Summary: ${flagged} merge-candidate pair(s) above ${threshold.toFixed(2)}, ${stale} stale candidate(s) above ${shedThreshold.toFixed(2)}${obsolete ? `, ${obsoleteCount} obsolete candidate(s) below ${obsoleteThreshold.toFixed(2)} vs sprint` : ''}.`);
+    if (obsolete && obsoleteCount > 0) {
+      console.log('');
+      console.log(`Shed the obsolete ones with:`);
+      for (const r of obsolete.results.filter((r) => r.obsolete)) {
+        const slug = r.candidate.split(':').pop();
+        console.log(`  gad evolution shed ${slug}`);
+      }
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// `gad evolution shed` — dismiss a candidate so self-eval stops regenerating
+// it. Deletes the candidate dir and writes a one-line reason marker to
+// skills/.shed/<slug> that compute-self-eval.mjs respects.
+// ---------------------------------------------------------------------------
+const evolutionShed = defineCommand({
+  meta: { name: 'shed', description: 'Dismiss a candidate — delete it and prevent regeneration' },
+  args: {
+    slug: { type: 'positional', description: 'Candidate slug (directory name under skills/candidates/)', required: true },
+    reason: { type: 'string', description: 'One-line reason recorded in skills/.shed/<slug>', default: 'shed via cli' },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const candidateDir = path.join(repoRoot, 'skills', 'candidates', args.slug);
+    const shedDir = path.join(repoRoot, 'skills', '.shed');
+    if (!fs.existsSync(candidateDir)) {
+      console.error(`No candidate at ${path.relative(repoRoot, candidateDir)}`);
+      console.error('Run `gad evolution status` to see current candidates.');
+      process.exit(1);
+    }
+    if (!fs.existsSync(shedDir)) fs.mkdirSync(shedDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(shedDir, args.slug),
+      `${new Date().toISOString()}\n${args.reason}\n`,
+    );
+    fs.rmSync(candidateDir, { recursive: true, force: true });
+    console.log(`Shed: ${args.slug}`);
+    console.log(`  Deleted:  ${path.relative(repoRoot, candidateDir)}`);
+    console.log(`  Recorded: ${path.relative(repoRoot, path.join(shedDir, args.slug))}`);
+    console.log('');
+    console.log('Self-eval will skip this slug on future runs.');
   },
 });
 
 const evolutionCmd = defineCommand({
-  meta: { name: 'evolution', description: 'Manage GAD evolution proto-skills (validate/promote/discard/status/similarity)' },
+  meta: { name: 'evolution', description: 'Manage GAD evolution proto-skills (validate/promote/discard/status/similarity/images)' },
   subCommands: {
     install: evolutionInstall,
     validate: evolutionValidate,
@@ -9455,6 +9918,8 @@ const evolutionCmd = defineCommand({
     discard: evolutionDiscard,
     status: evolutionStatus,
     similarity: evolutionSimilarity,
+    shed: evolutionShed,
+    images: evolutionImagesCmd,
   },
 });
 
