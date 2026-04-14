@@ -2250,7 +2250,7 @@ function buildEvalPrompt(projectDir, projectName, runNum, runtimeIdentity, runDi
   // Project/species metadata was previously read from a project-level
   // `gad.json`. That file was renamed to species-level `species.json` in
   // task 42.4-14 (decision gad-184); the old project-level reads were dead
-  // fallthroughs and have been removed in task 42.4-17. Eval_mode / baseline
+  // fallthroughs and have been removed in task 42.4-18. Eval_mode / baseline
   // / workflow are species-level and should come from the resolved species
   // (via `lib/eval-loader.cjs`) if they need to be surfaced in the prompt
   // again in a later task.
@@ -2272,7 +2272,7 @@ function buildEvalPrompt(projectDir, projectName, runNum, runtimeIdentity, runDi
   sections.push(`\n**Runtime target:** ${runtimeId}\n`);
 
   // (Mode / Workflow / brownfield baseline block previously built from the
-  // project-level `gad.json` was removed in task 42.4-17; see decision
+  // project-level `gad.json` was removed in task 42.4-18; see decision
   // gad-184. Restore via `loadResolvedSpecies` if the prompt needs to carry
   // species-level metadata again.)
 
@@ -2425,7 +2425,7 @@ const evalRun = defineCommand({
     // Project-level `gad.json` was renamed to species-level `species.json`
     // in task 42.4-14 (decision gad-184). The old read-and-ignore here was
     // a dead fallthrough — `gadJson` was always `{}` and every reference
-    // below fell to its default. Removed in task 42.4-17. If species-level
+    // below fell to its default. Removed in task 42.4-18. If species-level
     // metadata (eval_mode / workflow / domain / tech stack / build
     // requirement) needs to be stamped into the TRACE scaffold again, wire
     // it via `lib/eval-loader.cjs::loadResolvedSpecies`.
@@ -4553,16 +4553,16 @@ const evalVerify = defineCommand({
         .filter(n => /^v\d+$/.test(n))
         .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
 
-      // Determine eval type from gad.json or latest TRACE.json
-      let evalType = 'implementation';
-      const gadJsonPath = path.join(projectDir, 'gad.json');
-      if (fs.existsSync(gadJsonPath)) {
-        try {
-          const cfg = JSON.parse(fs.readFileSync(gadJsonPath, 'utf8'));
-          if (cfg.type === 'eval' && cfg.scoring?.weights?.correctness != null) evalType = 'tooling';
-          if (cfg.constraints?.planning_only) evalType = 'planning';
-        } catch {}
-      }
+      // Eval type was previously inferred from a project-level `gad.json`.
+      // That file was renamed to species-level `species.json` in task
+      // 42.4-14 (decision gad-184); the read here was dead (file never
+      // existed post-rename) and `evalType` always stayed 'implementation'.
+      // Removed in task 42.4-18. The downstream heuristic (`skipCodeCheck`
+      // below) is still what actually branches verification behaviour, and
+      // the `evalType` variable is unused in the rest of this block so the
+      // default is preserved only as a historical placeholder.
+      const evalType = 'implementation';
+      void evalType;
       // Heuristic: tooling/mcp/cli-efficiency evals don't need run/ or build/
       const skipCodeCheck = ['tooling-watch', 'tooling-mcp', 'cli-efficiency', 'planning-migration', 'project-migration', 'portfolio-bare', 'reader-workspace', 'gad-planning-loop', 'subagent-utility'].includes(project);
 
@@ -4651,16 +4651,30 @@ const evalReview = defineCommand({
         return;
       }
 
-      // Load project's declared rubric dimensions from gad.json
-      const gadJsonPath = path.join(projectDir, 'gad.json');
-      if (!fs.existsSync(gadJsonPath)) {
-        outputError(`No gad.json found for project ${args.project}`);
+      // Load project's declared rubric dimensions. Previously read from a
+      // project-level `gad.json`; after task 42.4-14 (decision gad-184) the
+      // canonical location is the resolved species (`project.json` merged
+      // with each `species.json`). Walk the resolved species under the
+      // project and use the first one that declares a `humanReviewRubric`.
+      // The rubric is expected to be project-wide in practice.
+      let rubricDef = null;
+      try {
+        const resolved = loadAllResolvedSpecies(projectDir);
+        for (const sp of resolved) {
+          if (!sp) continue;
+          // Accept camelCase (canonical post-42.4-15) or legacy snake_case.
+          const candidate = sp.humanReviewRubric || sp.human_review_rubric;
+          if (candidate && Array.isArray(candidate.dimensions)) {
+            rubricDef = candidate;
+            break;
+          }
+        }
+      } catch (err) {
+        outputError(`Failed to resolve species for project ${args.project}: ${err.message}`);
         return;
       }
-      const gadJson = JSON.parse(fs.readFileSync(gadJsonPath, 'utf8'));
-      const rubricDef = gadJson.human_review_rubric;
       if (!rubricDef || !Array.isArray(rubricDef.dimensions)) {
-        outputError(`Project ${args.project} has no human_review_rubric in gad.json. Add one or use --score for legacy mode.`);
+        outputError(`Project ${args.project} has no humanReviewRubric in project.json or any species.json. Add one or use --score for legacy mode.`);
         return;
       }
 
@@ -5430,21 +5444,42 @@ const evalReadme = defineCommand({
       .map(r => r.name)
       .sort();
 
-    let gadJson = {};
-    try { gadJson = JSON.parse(fs.readFileSync(path.join(projectDir, 'gad.json'), 'utf8')); } catch {}
+    // Project / species metadata — previously read from a project-level
+    // `gad.json`. That file was renamed to species-level `species.json` in
+    // task 42.4-14 (decision gad-184); the read here was a dead fallthrough
+    // and every field below rendered as a dash. Reworked in task 42.4-18
+    // to read `project.json` for project-wide fields and the first resolved
+    // species for mode/workflow/tech-stack/build-requirement.
+    let projectCfg = {};
+    let firstSpecies = {};
+    try { projectCfg = loadEvalProject(projectDir); } catch {}
+    try {
+      const resolved = loadAllResolvedSpecies(projectDir);
+      if (resolved.length > 0) firstSpecies = resolved[0] || {};
+    } catch {}
+    const pick = (...vals) => {
+      for (const v of vals) if (v != null && v !== '') return v;
+      return null;
+    };
+    const description   = pick(projectCfg.description, firstSpecies.description);
+    const domain        = pick(projectCfg.domain, firstSpecies.domain);
+    const evalMode      = pick(firstSpecies.eval_mode, firstSpecies.evalMode);
+    const workflow      = pick(firstSpecies.workflow);
+    const techStackVal  = pick(projectCfg.techStack, projectCfg.tech_stack, firstSpecies.techStack, firstSpecies.tech_stack);
+    const buildReqVal   = pick(firstSpecies.buildRequirement, firstSpecies.build_requirement, projectCfg.buildRequirement, projectCfg.build_requirement);
 
     const lines = [
       `# ${args.project}`,
       '',
-      gadJson.description || '',
+      description || '',
       '',
       `| Field | Value |`,
       `|---|---|`,
-      `| Domain | ${gadJson.domain || '—'} |`,
-      `| Mode | ${gadJson.eval_mode || '—'} |`,
-      `| Workflow | ${gadJson.workflow || '—'} |`,
-      `| Tech stack | ${gadJson.tech_stack || '—'} |`,
-      `| Build requirement | ${gadJson.build_requirement || '—'} |`,
+      `| Domain | ${domain || '—'} |`,
+      `| Mode | ${evalMode || '—'} |`,
+      `| Workflow | ${workflow || '—'} |`,
+      `| Tech stack | ${techStackVal || '—'} |`,
+      `| Build requirement | ${buildReqVal || '—'} |`,
       `| Runs | ${runs.length} |`,
       '',
     ];
