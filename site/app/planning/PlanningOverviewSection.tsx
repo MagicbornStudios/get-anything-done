@@ -110,17 +110,32 @@ export function PlanningOverviewSection({ state }: { state: PlanningState }) {
             </CardContent>
           </Card>
         </Identified>
-        <Identified as="PlanningOverviewStat-loopCompliance">
+        <Identified as="PlanningOverviewStat-frameworkCompliance">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Loop compliance</CardDescription>
+              <CardDescription>Framework compliance</CardDescription>
               <CardTitle className="text-4xl tabular-nums text-foreground">
-                {selfEval ? `${(selfEval.loop_compliance.score * 100).toFixed(0)}%` : "—"}
+                {selfEval ? `${(selfEval.framework_compliance.score * 100).toFixed(0)}%` : "—"}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0 text-xs text-muted-foreground">
               {selfEval
-                ? `${selfEval.loop_compliance.snapshot_starts}/${selfEval.loop_compliance.total_sessions} sessions start with snapshot`
+                ? `${selfEval.framework_compliance.fully_attributed}/${selfEval.framework_compliance.completed_tasks} done tasks have skill + agent + type`
+                : "self-eval unavailable"}
+            </CardContent>
+          </Card>
+        </Identified>
+        <Identified as="PlanningOverviewStat-hydration">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Hydration overhead</CardDescription>
+              <CardTitle className="text-4xl tabular-nums text-foreground">
+                {selfEval ? `${(selfEval.hydration.overhead_ratio * 100).toFixed(1)}%` : "—"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 text-xs text-muted-foreground">
+              {selfEval
+                ? `${selfEval.hydration.snapshot_count} snapshots • ${selfEval.hydration.estimated_snapshot_tokens.toLocaleString()} est snapshot tokens`
                 : "self-eval unavailable"}
             </CardContent>
           </Card>

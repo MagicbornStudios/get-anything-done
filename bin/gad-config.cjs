@@ -5,8 +5,8 @@
  * gad-config.cjs — GAD configuration reader
  *
  * Reads **gad-config.toml** (canonical) or legacy **planning-config.toml**
- * from the repo root or `.planning/`. Falls back to config.json `planning.*`
- * keys if no TOML file is found (backwards compatibility).
+ * from the repo root or `.planning/`. Falls back to compatibility JSON files
+ * (`.planning/config.json`, then `config.json`) if no TOML file is found.
  *
  * Usage (from GAD workflows / commands):
  *   const config = require('./gad-config.cjs').load(projectRoot);
@@ -20,7 +20,7 @@ const fs = require('fs');
 const path = require('path');
 
 // ---------------------------------------------------------------------------
-// Minimal TOML parser — supports the subset used by planning-config.toml:
+// Minimal TOML parser — supports the subset used by gad-config.toml:
 //   - [section] and [[array-of-tables]]
 //   - key = "string", key = 123, key = true
 //   - key = ["array", "values"]
@@ -115,6 +115,14 @@ function parseTomlValue(raw) {
   return raw;
 }
 
+function serializeTomlValue(value) {
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'string') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((entry) => serializeTomlValue(entry)).join(', ')}]`;
+  return JSON.stringify(String(value ?? ''));
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -168,7 +176,8 @@ function mergeSectionsIntoRoots(roots, sections) {
  *   2. <root>/.planning/gad-config.toml
  *   3. <root>/planning-config.toml (legacy)
  *   4. <root>/.planning/planning-config.toml (legacy)
- *   5. <root>/config.json  (backwards compat — reads planning.* keys)
+ *   5. <root>/.planning/config.json (backwards compat)
+ *   6. <root>/config.json  (backwards compat — reads planning.* keys)
  *
  * @param {string} [root] - Project root directory. Defaults to cwd.
  * @returns {{
@@ -187,10 +196,15 @@ function load(root) {
   root = root || process.cwd();
 
   const tomlPath = resolveTomlPath(root);
+  const planningJsonPath = path.join(root, '.planning', 'config.json');
   const jsonPath = path.join(root, 'config.json');
 
   if (tomlPath) {
     return fromToml(tomlPath, root);
+  }
+
+  if (fs.existsSync(planningJsonPath)) {
+    return fromJson(planningJsonPath, root);
   }
 
   if (fs.existsSync(jsonPath)) {
@@ -219,6 +233,14 @@ function fromToml(tomlPath, root) {
 
   return {
     configPath: tomlPath,
+    mode: data.mode || 'interactive',
+    model_profile: data.model_profile || 'off',
+    commit_docs: data.commit_docs !== false,
+    parallelization: data.parallelization !== false,
+    search_gitignored: data.search_gitignored === true,
+    brave_search: data.brave_search === true,
+    firecrawl: data.firecrawl === true,
+    exa_search: data.exa_search === true,
     roots: rootsMerged,
     docs_sink: planning.docs_sink || null,
     // Bulk ignore list for `gad sink compile` — project ids skipped
@@ -230,6 +252,33 @@ function fromToml(tomlPath, root) {
     profiles,
     currentProfile: planning.currentProfile || 'human',
     conventionsPaths: planning.conventionsPaths || [],
+    git: {
+      branching_strategy: data.git?.branching_strategy || 'none',
+      phase_branch_template: data.git?.phase_branch_template || 'gad/phase-{phase}-{slug}',
+      milestone_branch_template: data.git?.milestone_branch_template || 'gad/{milestone}-{slug}',
+      quick_branch_template: data.git?.quick_branch_template || null,
+    },
+    workflow: {
+      research: data.workflow?.research !== false,
+      plan_check: data.workflow?.plan_check !== false,
+      verifier: data.workflow?.verifier !== false,
+      nyquist_validation: data.workflow?.nyquist_validation !== false,
+      auto_advance: data.workflow?.auto_advance === true,
+      node_repair: data.workflow?.node_repair !== false,
+      node_repair_budget: typeof data.workflow?.node_repair_budget === 'number' ? data.workflow.node_repair_budget : 2,
+      ui_phase: data.workflow?.ui_phase !== false,
+      ui_safety_gate: data.workflow?.ui_safety_gate !== false,
+      text_mode: data.workflow?.text_mode === true,
+      research_before_questions: data.workflow?.research_before_questions === true,
+      discuss_mode: data.workflow?.discuss_mode || 'discuss',
+      skip_discuss: data.workflow?.skip_discuss === true,
+      max_discuss_passes: typeof data.workflow?.max_discuss_passes === 'number' ? data.workflow.max_discuss_passes : 3,
+    },
+    hooks: {
+      context_warnings: data.hooks?.context_warnings !== false,
+      community: data.hooks?.community === true,
+    },
+    agent_skills: data.agent_skills || {},
     docsProjects: (docs.projects || []).map(p => ({
       id: p.id || '',
       sinkPath: p.sinkPath || p.id || '',
@@ -251,7 +300,7 @@ function fromJson(jsonPath, root) {
     return defaults(root);
   }
 
-  const planning = data.planning || {};
+  const planning = data.planning || data || {};
   const subRepos = planning.sub_repos || [];
 
   // Map config.json sub_repos to roots format
@@ -276,6 +325,14 @@ function fromJson(jsonPath, root) {
 
   return {
     configPath: jsonPath,
+    mode: data.mode || planning.mode || 'interactive',
+    model_profile: data.model_profile || planning.model_profile || 'off',
+    commit_docs: data.commit_docs !== false && planning.commit_docs !== false,
+    parallelization: data.parallelization !== false && planning.parallelization !== false,
+    search_gitignored: data.search_gitignored === true || planning.search_gitignored === true,
+    brave_search: data.brave_search === true || planning.brave_search === true,
+    firecrawl: data.firecrawl === true || planning.firecrawl === true,
+    exa_search: data.exa_search === true || planning.exa_search === true,
     roots,
     docs_sink: planning.docs_sink || null,
     docs_sink_ignore: Array.isArray(planning.docs_sink_ignore) ? planning.docs_sink_ignore : [],
@@ -284,15 +341,195 @@ function fromJson(jsonPath, root) {
     profiles: {},
     currentProfile: 'human',
     conventionsPaths: planning.conventionsPaths || [],
+    git: {
+      branching_strategy: data.git?.branching_strategy || 'none',
+      phase_branch_template: data.git?.phase_branch_template || 'gad/phase-{phase}-{slug}',
+      milestone_branch_template: data.git?.milestone_branch_template || 'gad/{milestone}-{slug}',
+      quick_branch_template: data.git?.quick_branch_template || null,
+    },
+    workflow: {
+      research: data.workflow?.research !== false,
+      plan_check: data.workflow?.plan_check !== false && data.workflow?.plan_checker !== false,
+      verifier: data.workflow?.verifier !== false,
+      nyquist_validation: data.workflow?.nyquist_validation !== false,
+      auto_advance: data.workflow?.auto_advance === true,
+      node_repair: data.workflow?.node_repair !== false,
+      node_repair_budget: typeof data.workflow?.node_repair_budget === 'number' ? data.workflow.node_repair_budget : 2,
+      ui_phase: data.workflow?.ui_phase !== false,
+      ui_safety_gate: data.workflow?.ui_safety_gate !== false,
+      text_mode: data.workflow?.text_mode === true,
+      research_before_questions: data.workflow?.research_before_questions === true,
+      discuss_mode: data.workflow?.discuss_mode || 'discuss',
+      skip_discuss: data.workflow?.skip_discuss === true,
+      max_discuss_passes: typeof data.workflow?.max_discuss_passes === 'number' ? data.workflow.max_discuss_passes : 3,
+    },
+    hooks: {
+      context_warnings: data.hooks?.context_warnings !== false,
+      community: data.hooks?.community === true,
+    },
+    agent_skills: data.agent_skills || {},
     docsProjects: [],
     source: 'json',
     legacyToml: false,
   };
 }
 
+function toCompatJson(config, existing = {}) {
+  const planning = existing.planning && typeof existing.planning === 'object'
+    ? { ...existing.planning }
+    : {};
+
+  planning.id = planning.id || 'root';
+  planning.planningDir = planning.planningDir || '.planning';
+  planning.docs_sink = config.docs_sink || planning.docs_sink || null;
+  planning.docs_sink_ignore = Array.isArray(config.docs_sink_ignore) ? config.docs_sink_ignore : (planning.docs_sink_ignore || []);
+  planning.ignore = Array.isArray(config.ignore) ? config.ignore : (planning.ignore || []);
+  planning.sprintSize = typeof config.sprintSize === 'number' ? config.sprintSize : (planning.sprintSize || 5);
+  planning.currentProfile = config.currentProfile || planning.currentProfile || 'human';
+  planning.conventionsPaths = Array.isArray(config.conventionsPaths) ? config.conventionsPaths : (planning.conventionsPaths || []);
+  planning.sub_repos = Array.isArray(config.roots)
+    ? config.roots.map((root) => ({
+        id: root.id,
+        path: root.path,
+        planningDir: root.planningDir || '.planning',
+        enabled: root.enabled !== false,
+      }))
+    : (planning.sub_repos || []);
+
+  const docs = existing.docs && typeof existing.docs === 'object' ? { ...existing.docs } : {};
+  if (Array.isArray(config.docsProjects) && config.docsProjects.length > 0) {
+    docs.projects = config.docsProjects.map((project) => ({
+      id: project.id,
+      sinkPath: project.sinkPath,
+      description: project.description,
+      kind: project.kind,
+      repo: project.repo || undefined,
+      'content-skill': project.contentSkill || undefined,
+    }));
+  }
+
+  const out = {
+    ...existing,
+    mode: config.mode || existing.mode || 'interactive',
+    model_profile: config.model_profile || existing.model_profile || 'off',
+    commit_docs: config.commit_docs !== false,
+    parallelization: config.parallelization !== false,
+    search_gitignored: config.search_gitignored === true,
+    brave_search: config.brave_search === true,
+    firecrawl: config.firecrawl === true,
+    exa_search: config.exa_search === true,
+    git: config.git || existing.git || {},
+    workflow: config.workflow || existing.workflow || {},
+    hooks: config.hooks || existing.hooks || {},
+    agent_skills: config.agent_skills || existing.agent_skills || {},
+    planning,
+  };
+  if (Object.keys(docs).length > 0) out.docs = docs;
+  return out;
+}
+
+function writeCompatJson(root, config, extra = {}) {
+  const planningDir = path.join(root, '.planning');
+  const compatPath = path.join(planningDir, 'config.json');
+  if (!fs.existsSync(planningDir)) {
+    fs.mkdirSync(planningDir, { recursive: true });
+  }
+
+  let existing = {};
+  try {
+    if (fs.existsSync(compatPath)) {
+      existing = JSON.parse(fs.readFileSync(compatPath, 'utf8'));
+    }
+  } catch {
+    existing = {};
+  }
+
+  const merged = { ...toCompatJson(config, existing), ...extra };
+  fs.writeFileSync(compatPath, JSON.stringify(merged, null, 2) + '\n');
+  return compatPath;
+}
+
+function writeToml(root, config) {
+  const outPath = path.join(root, GAD_TOML_PRIMARY);
+  const lines = [];
+
+  lines.push('# gad-config.toml — canonical GAD project configuration');
+  lines.push(`mode = ${serializeTomlValue(config.mode || 'interactive')}`);
+  lines.push(`model_profile = ${serializeTomlValue(config.model_profile || 'off')}`);
+  lines.push(`commit_docs = ${serializeTomlValue(config.commit_docs !== false)}`);
+  lines.push(`parallelization = ${serializeTomlValue(config.parallelization !== false)}`);
+  lines.push(`search_gitignored = ${serializeTomlValue(config.search_gitignored === true)}`);
+  lines.push(`brave_search = ${serializeTomlValue(config.brave_search === true)}`);
+  lines.push(`firecrawl = ${serializeTomlValue(config.firecrawl === true)}`);
+  lines.push(`exa_search = ${serializeTomlValue(config.exa_search === true)}`);
+  lines.push('');
+
+  lines.push('[git]');
+  lines.push(`branching_strategy = ${serializeTomlValue(config.git?.branching_strategy || 'none')}`);
+  lines.push(`phase_branch_template = ${serializeTomlValue(config.git?.phase_branch_template || 'gad/phase-{phase}-{slug}')}`);
+  lines.push(`milestone_branch_template = ${serializeTomlValue(config.git?.milestone_branch_template || 'gad/{milestone}-{slug}')}`);
+  if (config.git?.quick_branch_template != null) {
+    lines.push(`quick_branch_template = ${serializeTomlValue(config.git.quick_branch_template)}`);
+  }
+  lines.push('');
+
+  lines.push('[workflow]');
+  for (const [key, value] of Object.entries(config.workflow || {})) {
+    lines.push(`${key} = ${serializeTomlValue(value)}`);
+  }
+  lines.push('');
+
+  lines.push('[hooks]');
+  for (const [key, value] of Object.entries(config.hooks || {})) {
+    lines.push(`${key} = ${serializeTomlValue(value)}`);
+  }
+  lines.push('');
+
+  lines.push('[planning]');
+  if (config.docs_sink != null) lines.push(`docs_sink = ${serializeTomlValue(config.docs_sink)}`);
+  if (Array.isArray(config.docs_sink_ignore) && config.docs_sink_ignore.length) lines.push(`docs_sink_ignore = ${serializeTomlValue(config.docs_sink_ignore)}`);
+  lines.push(`ignore = ${serializeTomlValue(Array.isArray(config.ignore) ? config.ignore : ['**/node_modules/**', '**/dist/**'])}`);
+  lines.push(`sprintSize = ${serializeTomlValue(typeof config.sprintSize === 'number' ? config.sprintSize : 5)}`);
+  lines.push(`currentProfile = ${serializeTomlValue(config.currentProfile || 'human')}`);
+  lines.push(`conventionsPaths = ${serializeTomlValue(Array.isArray(config.conventionsPaths) ? config.conventionsPaths : [])}`);
+  lines.push('');
+
+  for (const rootEntry of config.roots || []) {
+    lines.push('[[planning.roots]]');
+    lines.push(`id = ${serializeTomlValue(rootEntry.id)}`);
+    lines.push(`path = ${serializeTomlValue(rootEntry.path)}`);
+    lines.push(`planningDir = ${serializeTomlValue(rootEntry.planningDir || '.planning')}`);
+    lines.push(`discover = ${serializeTomlValue(rootEntry.discover === true)}`);
+    lines.push(`enabled = ${serializeTomlValue(rootEntry.enabled !== false)}`);
+    lines.push('');
+  }
+
+  for (const docProject of config.docsProjects || []) {
+    lines.push('[[docs.projects]]');
+    lines.push(`id = ${serializeTomlValue(docProject.id)}`);
+    lines.push(`sinkPath = ${serializeTomlValue(docProject.sinkPath)}`);
+    lines.push(`description = ${serializeTomlValue(docProject.description || '')}`);
+    lines.push(`kind = ${serializeTomlValue(docProject.kind || 'app')}`);
+    if (docProject.contentSkill) lines.push(`content-skill = ${serializeTomlValue(docProject.contentSkill)}`);
+    if (docProject.repo) lines.push(`repo = ${serializeTomlValue(docProject.repo)}`);
+    lines.push('');
+  }
+
+  fs.writeFileSync(outPath, lines.join('\n').trimEnd() + '\n');
+  return outPath;
+}
+
 function defaults(root) {
   return {
     configPath: null,
+    mode: 'interactive',
+    model_profile: 'off',
+    commit_docs: true,
+    parallelization: true,
+    search_gitignored: false,
+    brave_search: false,
+    firecrawl: false,
+    exa_search: false,
     roots: [{
       id: path.basename(root),
       path: '.',
@@ -307,13 +544,40 @@ function defaults(root) {
     profiles: {},
     currentProfile: 'human',
     conventionsPaths: [],
+    git: {
+      branching_strategy: 'none',
+      phase_branch_template: 'gad/phase-{phase}-{slug}',
+      milestone_branch_template: 'gad/{milestone}-{slug}',
+      quick_branch_template: null,
+    },
+    workflow: {
+      research: true,
+      plan_check: true,
+      verifier: true,
+      nyquist_validation: true,
+      auto_advance: false,
+      node_repair: true,
+      node_repair_budget: 2,
+      ui_phase: true,
+      ui_safety_gate: true,
+      text_mode: false,
+      research_before_questions: false,
+      discuss_mode: 'discuss',
+      skip_discuss: false,
+      max_discuss_passes: 3,
+    },
+    hooks: {
+      context_warnings: true,
+      community: false,
+    },
+    agent_skills: {},
     docsProjects: [],
     source: 'defaults',
     legacyToml: false,
   };
 }
 
-module.exports = { load, parseToml, resolveTomlPath, GAD_TOML_PRIMARY, GAD_TOML_LEGACY };
+module.exports = { load, parseToml, resolveTomlPath, toCompatJson, writeCompatJson, writeToml, GAD_TOML_PRIMARY, GAD_TOML_LEGACY };
 
 // ---------------------------------------------------------------------------
 // CLI entry point

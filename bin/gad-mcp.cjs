@@ -125,7 +125,9 @@ function findRepoRoot() {
     if (fs.existsSync(path.join(dir, 'gad-config.toml')) ||
         fs.existsSync(path.join(dir, '.planning', 'gad-config.toml')) ||
         fs.existsSync(path.join(dir, 'planning-config.toml')) ||
-        fs.existsSync(path.join(dir, '.planning', 'planning-config.toml'))) {
+        fs.existsSync(path.join(dir, '.planning', 'planning-config.toml')) ||
+        fs.existsSync(path.join(dir, '.planning', 'config.json')) ||
+        fs.existsSync(path.join(dir, 'config.json'))) {
       return dir;
     }
     const parent = path.dirname(dir);

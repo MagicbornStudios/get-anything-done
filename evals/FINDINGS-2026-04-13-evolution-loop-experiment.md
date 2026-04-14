@@ -136,7 +136,7 @@ gad:evolution:evolve
 (human review)
   reads SKILL.md + VALIDATION.md → promote or discard
 
-gad evolution promote <slug> → moves to sdk/skills/ (joins species DNA)
+gad evolution promote <slug> → moves to skills/ (joins species DNA)
 gad evolution discard <slug> → deletes
 ```
 
@@ -176,3 +176,4 @@ All inputs, intermediate artifacts, and outputs preserved under:
 | `oneoff/v2/test-runs/outputs/without-skill/` | 3 leaf subagent runs without the skill |
 
 The v1 viewer.html files (`oneoff/raw/skill/viewer.html`, `oneoff/intent/skill/viewer.html`) render the simulated test runs with skill-creator's HTML viewer — useful for skim comparison even though the underlying numbers are simulated.
+

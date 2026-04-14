@@ -11,13 +11,12 @@
     "bin",
     "dist",
     "lib",
+    "agents",
+    "hooks/dist",
+    "references",
     "skills",
-    "sdk/agents",
-    "sdk/hooks/dist",
-    "sdk/references",
-    "sdk/skills",
-    "sdk/templates",
-    "sdk/workflows",
+    "templates",
+    "workflows",
     "scripts"
   ],
   "keywords": [
@@ -56,6 +55,7 @@
   },
   "scripts": {
     "audit:portability": "node scripts/audit-portability.mjs",
+    "check:assets": "node scripts/validate-canonical-assets.mjs",
     "build:skills": "node scripts/sync-canonical-skills.mjs",
     "build:cli": "node scripts/build-cli.mjs",
     "build:hooks": "node scripts/build-hooks.js",
@@ -68,3 +68,4 @@
     "test:coverage": "c8 --check-coverage --lines 70 --reporter text --exclude 'tests/**' --all node scripts/run-tests.cjs"
   }
 }
+

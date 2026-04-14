@@ -64,7 +64,7 @@ never show any tool-use patterns characteristic of those sub-skills is
 a signal that either (a) the declared call graph is stale, or (b) the
 run deviated from the expected pattern.
 
-**Implementation:** `sdk/skills/*/SKILL.md` frontmatter gains `invokes`
+**Implementation:** `skills/*/SKILL.md` frontmatter gains `invokes`
 (optional). `parseSkills()` in build-site-data.mjs already reads
 frontmatter — we just surface the new field in the CatalogSkill type.
 
@@ -153,7 +153,7 @@ emit:
 
 ## What ships in the detector v2 task (42.3-16)
 
-1. `sdk/skills/*/SKILL.md` frontmatter gains optional `invokes:
+1. `skills/*/SKILL.md` frontmatter gains optional `invokes:
    [<slug>, ...]`. `parseSkills()` reads it.
 2. `bin/gad.cjs` top-level `--skill <slug>` flag sets
    `GAD_ACTIVE_SKILL` and stamps log entries.

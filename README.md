@@ -129,11 +129,11 @@ If snapshot output or SDK skills reference alias paths like `@references/...`,
 `@workflows/...`, `@templates/...`, `@agents/...`, or `@hooks/...`, resolve them from the
 framework’s canonical SDK asset tree:
 
-- `@references/...` -> `sdk/references/...`
-- `@workflows/...` -> `sdk/workflows/...`
-- `@templates/...` -> `sdk/templates/...`
-- `@agents/...` -> `sdk/agents/...`
-- `@hooks/...` -> `sdk/hooks/...`
+- `@references/...` -> `references/...`
+- `@workflows/...` -> `workflows/...`
+- `@templates/...` -> `templates/...`
+- `@agents/...` -> `agents/...`
+- `@hooks/...` -> `hooks/...`
 
 ## Evals
 
@@ -165,12 +165,12 @@ At a high level:
 
 For GAD’s own framework assets, the canonical authored consumer/runtime content now lives under:
 
-- `sdk/skills`
-- `sdk/agents`
-- `sdk/workflows`
-- `sdk/templates`
-- `sdk/hooks`
-- `sdk/references`
+- `skills`
+- `agents`
+- `workflows`
+- `templates`
+- `hooks`
+- `references`
 
 Runtime-specific wrappers are generated from that source of truth.
 
@@ -189,7 +189,7 @@ The shared security module lives in [lib/security.cjs](lib/security.cjs) and cov
 - safe JSON parsing
 - field and phase validation helpers
 
-The framework also carries a prompt guard hook under `sdk/hooks/gsd-prompt-guard.js`, plus
+The framework also carries a prompt guard hook under `hooks/gad-prompt-guard.js`, plus
 scanner coverage in:
 
 - `tests/security.test.cjs`
@@ -268,3 +268,4 @@ npm run audit:portability
 ## License
 
 MIT - see [LICENSE](LICENSE)
+

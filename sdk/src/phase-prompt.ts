@@ -147,7 +147,7 @@ export class PromptFactory {
 
   /**
    * Load the workflow file for a phase type.
-   * Tries sdk/workflows/ first (headless versions), then
+   * Tries workflows/ first (headless versions), then
    * falls back to installed GAD workflow files in workflowsDir.
    * Returns the raw content, or undefined if not found.
    */
@@ -159,7 +159,7 @@ export class PromptFactory {
     try {
       return await readFile(sdkPath, 'utf-8');
     } catch {
-      // Not in sdk/workflows/, fall through to installed runtime files
+      // Not in workflows/, fall through to installed runtime files
     }
 
     // Fall back to the inherited legacy originals
@@ -173,7 +173,7 @@ export class PromptFactory {
 
   /**
    * Load the agent definition for a phase type.
-   * Tries sdk/agents/ first, then
+   * Tries agents/ first, then
    * user-level agents dir, then project-level.
    * Returns undefined if no agent is mapped or file not found.
    */
@@ -214,7 +214,7 @@ export class PromptFactory {
       context: 'Context (CONTEXT.md)',
       research: 'Research (RESEARCH.md)',
       requirements: 'Requirements (REQUIREMENTS.md)',
-      config: 'Config (config.json)',
+      config: 'Config (gad-config.toml or config.json mirror)',
       plan: 'Plan (PLAN.md)',
       summary: 'Summary (SUMMARY.md)',
     };
@@ -252,3 +252,4 @@ export class PromptFactory {
 }
 
 export { PHASE_WORKFLOW_MAP };
+

@@ -28,12 +28,12 @@ Executable release work is only required for shipped CLI surface changes:
 
 - `bin/`
 - `lib/`
-- `sdk/agents/`
-- `sdk/hooks/`
-- `sdk/references/`
-- `sdk/skills/`
-- `sdk/templates/`
-- `sdk/workflows/`
+- `agents/`
+- `hooks/`
+- `references/`
+- `skills/`
+- `templates/`
+- `workflows/`
 - release/build scripts
 - `package.json` / `package-lock.json`
 
@@ -62,13 +62,12 @@ node scripts/publish-release.mjs --tag v<version>
 
 ```text
 bin/                    Installer and CLI entrypoints
-sdk/skills/             Canonical official consumer/runtime skills
-sdk/agents/             Canonical official agent definitions
-sdk/hooks/              Canonical runtime hooks
-sdk/references/         Reference docs used by official skills/agents
-sdk/templates/          Planning and workflow templates
-sdk/workflows/          Workflow docs used by official skills and agents
-skills/                 Internal or non-official repo-local skills
+skills/                 Skill catalog (official installable, internal, emergent, candidates)
+agents/                 Canonical agent definitions
+hooks/                  Canonical runtime hooks
+references/             Reference docs used by official skills/agents
+templates/              Planning and workflow templates
+workflows/              Workflow docs used by official skills and agents
 scripts/                Build, release, and maintenance scripts
 tests/                  Test suite
 ```
@@ -81,3 +80,4 @@ Terminology:
 - `skill`: installable/public methodology unit
 - `workflow`: reusable long-form execution spec consumed by skills, agents, and prompts
 - `command`: generated runtime wrapper only, not authored source
+

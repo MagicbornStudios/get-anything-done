@@ -33,7 +33,7 @@ export interface LogEntry {
 
 // ─── Logger options ──────────────────────────────────────────────────────────
 
-export interface GSDLoggerOptions {
+export interface GADLoggerOptions {
   /** Minimum log level to output. Default: 'info'. */
   level?: LogLevel;
   /** Output stream. Default: process.stderr. */
@@ -48,14 +48,14 @@ export interface GSDLoggerOptions {
 
 // ─── Logger class ────────────────────────────────────────────────────────────
 
-export class GSDLogger {
+export class GADLogger {
   private readonly minLevel: number;
   private readonly output: Writable;
   private phase?: PhaseType;
   private plan?: string;
   private sessionId?: string;
 
-  constructor(options: GSDLoggerOptions = {}) {
+  constructor(options: GADLoggerOptions = {}) {
     this.minLevel = LOG_LEVEL_PRIORITY[options.level ?? 'info'];
     this.output = options.output ?? process.stderr;
     this.phase = options.phase;

@@ -709,7 +709,7 @@ The drafter should pull additional context from:
   lives in commit history)
 - \`gad --help\` and \`gad <subcommand> --help\` — CLI surface available
   to the skill
-- \`ls vendor/get-anything-done/sdk/skills/\` — existing skills to avoid
+- \`ls vendor/get-anything-done/skills/\` — existing skills to avoid
   duplicating
 
 The drafter does **not** ask a human for anything. Make decisions and
@@ -723,7 +723,7 @@ are two distinct stages:
 
 - **candidate** (this file) = raw selection-pressure output
 - **proto-skill** (drafter output) = drafted SKILL.md awaiting human review
-- **skill** (post-promote) = lives in \`sdk/skills/\` as part of species DNA
+- **skill** (post-promote) = lives in \`skills/\` as part of species DNA
 
 The human reviewer runs \`gad evolution promote <slug>\` or
 \`gad evolution discard <slug>\` after reviewing the proto-skill.
@@ -947,3 +947,4 @@ if (metrics) {
 } else {
   console.log("  [self-eval] no trace data found");
 }
+

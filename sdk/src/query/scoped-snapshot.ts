@@ -16,12 +16,12 @@ import { readDocsMapXml, readRoadmapPhases, readStateXml } from './roadmap.js';
 import { claimTaskRecord, readTaskById, readTaskRegistry, releaseTaskRecord } from './task-registry.js';
 
 const SDK_ASSET_ALIASES = {
-  '@skills': 'sdk/skills',
-  '@workflows': 'sdk/workflows',
-  '@templates': 'sdk/templates',
-  '@references': 'sdk/references',
-  '@agents': 'sdk/agents',
-  '@hooks': 'sdk/hooks',
+  '@skills': 'skills',
+  '@workflows': 'workflows',
+  '@templates': 'templates',
+  '@references': 'references',
+  '@agents': 'agents',
+  '@hooks': 'hooks',
 } as const;
 
 function toAgentView(agent: AgentLaneRecord, autoRegistered: boolean): SnapshotAgentView {
@@ -61,14 +61,11 @@ export async function getScopedSnapshot(projectDir: string, options: ScopedSnaps
     options.agentId ||
     options.parentAgentId ||
     options.role ||
-    options.runtime ||
     scopedPhaseId ||
     scopedTaskId ||
     process.env.GAD_AGENT_ID ||
     process.env.GAD_AGENT_ROLE ||
-    process.env.GAD_PARENT_AGENT_ID ||
-    process.env.GAD_RUNTIME ||
-    runtimeIdentity.id !== 'unknown'
+    process.env.GAD_PARENT_AGENT_ID
   );
 
   let bootstrap: Awaited<ReturnType<typeof ensureAgentLane>> | null = null;
@@ -215,3 +212,4 @@ export async function listActiveAssignments(projectDir: string): Promise<ActiveA
     })),
   };
 }
+

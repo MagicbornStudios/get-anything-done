@@ -38,11 +38,11 @@ const PROJECT_ROOT = path.join(__dirname, '..');
 // Directories to scan — these contain files that become agent context
 const SCAN_DIRS = [
   'agents',
-  'sdk/workflows',
-  'sdk/skills',
-  'sdk/templates',
+  'workflows',
+  'skills',
+  'templates',
   'lib',
-  'sdk/hooks',
+  'hooks',
 ];
 
 // File extensions to scan
@@ -51,7 +51,7 @@ const SCAN_EXTS = new Set(['.md', '.cjs', '.js', '.json']);
 // Files that legitimately reference injection patterns (e.g., security docs, this test)
 const ALLOWLIST = new Set([
   'lib/security.cjs',        // The security module itself
-  'sdk/hooks/gsd-prompt-guard.js',              // The prompt guard hook
+  'hooks/gad-prompt-guard.js',              // The prompt guard hook
   'tests/security.test.cjs',                    // Security tests
   'tests/prompt-injection-scan.test.cjs',       // This file
 ]);
@@ -139,7 +139,7 @@ describe('codebase prompt injection scan', () => {
   });
 
   test('skill files are clean', () => {
-    const commandFiles = allFiles.filter(f => f.includes('/sdk/skills/'));
+    const commandFiles = allFiles.filter(f => f.includes('/skills/'));
     const findings = [];
 
     for (const file of commandFiles) {
@@ -162,7 +162,7 @@ describe('codebase prompt injection scan', () => {
   });
 
   test('hook files are clean', () => {
-    const hookFiles = allFiles.filter(f => f.includes('/sdk/hooks/'));
+    const hookFiles = allFiles.filter(f => f.includes('/hooks/'));
     const findings = [];
 
     for (const file of hookFiles) {
@@ -326,3 +326,4 @@ Build a JWT-based authentication system with login, logout, and session manageme
     assert.ok(result.clean, `False positive on clean technical content: ${result.findings.join(', ')}`);
   });
 });
+

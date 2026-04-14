@@ -20,24 +20,24 @@ import type {
   InitStepResult,
   InitStepName,
   InitNewProjectInfo,
-  GSDInitStartEvent,
-  GSDInitStepStartEvent,
-  GSDInitStepCompleteEvent,
-  GSDInitCompleteEvent,
-  GSDInitResearchSpawnEvent,
+  GADInitStartEvent,
+  GADInitStepStartEvent,
+  GADInitStepCompleteEvent,
+  GADInitCompleteEvent,
+  GADInitResearchSpawnEvent,
   PlanResult,
 } from './types.js';
-import { GSDEventType, PhaseStepType } from './types.js';
-import type { GSDTools } from './gsd-tools.js';
-import type { GSDEventStream } from './event-stream.js';
+import { GADEventType, PhaseStepType } from './types.js';
+import type { GADTools } from './gad-tools.js';
+import type { GADEventStream } from './event-stream.js';
 import { loadConfig } from './config.js';
 import { runPhaseStepSession } from './session-runner.js';
 import { sanitizePrompt } from './prompt-sanitizer.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const GSD_TEMPLATES_DIR = join(homedir(), '.gad', 'get-anything-done', 'templates');
-const GSD_AGENTS_DIR = join(homedir(), '.agents');
+const GAD_TEMPLATES_DIR = join(homedir(), '.gad', 'get-anything-done', 'templates');
+const GAD_AGENTS_DIR = join(homedir(), '.agents');
 
 const RESEARCH_TYPES = ['STACK', 'FEATURES', 'ARCHITECTURE', 'PITFALLS'] as const;
 type ResearchType = (typeof RESEARCH_TYPES)[number];
@@ -49,17 +49,31 @@ const RESEARCH_STEP_MAP: Record<ResearchType, InitStepName> = {
   PITFALLS: 'research-pitfalls',
 };
 
-/** Default config.json written during init for auto-mode projects. */
+/** Default canonical config written during init for auto-mode projects. */
 const AUTO_MODE_CONFIG = {
   mode: 'yolo',
+  model_profile: 'off',
+  commit_docs: true,
   parallelization: true,
-  depth: 'quick',
   workflow: {
     research: true,
-    plan_checker: true,
+    plan_check: true,
     verifier: true,
+    nyquist_validation: true,
     auto_advance: true,
+    node_repair: true,
+    node_repair_budget: 2,
+    ui_phase: true,
+    ui_safety_gate: true,
+    text_mode: false,
+    research_before_questions: false,
+    discuss_mode: 'discuss',
     skip_discuss: false,
+    max_discuss_passes: 3,
+  },
+  hooks: {
+    context_warnings: true,
+    community: false,
   },
 };
 
@@ -67,8 +81,8 @@ const AUTO_MODE_CONFIG = {
 
 export interface InitRunnerDeps {
   projectDir: string;
-  tools: GSDTools;
-  eventStream: GSDEventStream;
+  tools: GADTools;
+  eventStream: GADEventStream;
   config?: Partial<InitConfig>;
   /** Override for SDK prompts directory. Defaults to package-relative sdk/prompts/. */
   sdkPromptsDir?: string;
@@ -76,8 +90,8 @@ export interface InitRunnerDeps {
 
 export class InitRunner {
   private readonly projectDir: string;
-  private readonly tools: GSDTools;
-  private readonly eventStream: GSDEventStream;
+  private readonly tools: GADTools;
+  private readonly eventStream: GADEventStream;
   private readonly config: InitConfig;
   private readonly sessionId: string;
   private readonly sdkPromptsDir: string;
@@ -110,8 +124,8 @@ export class InitRunner {
     const steps: InitStepResult[] = [];
     const artifacts: string[] = [];
 
-    this.emitEvent<GSDInitStartEvent>({
-      type: GSDEventType.InitStart,
+    this.emitEvent<GADInitStartEvent>({
+      type: GADEventType.InitStart,
       input: input.slice(0, 200),
       projectDir: this.projectDir,
     });
@@ -131,7 +145,7 @@ export class InitRunner {
       }
       const projectInfo = setupResult.value as InitNewProjectInfo;
 
-      // ── Step 2: Config — write config.json and init git ───────────────
+      // ── Step 2: Config — write gad-config.toml + compat config.json and init git ───────────────
       const configResult = await this.runStep('config', async () => {
         // Ensure git is initialized
         if (!projectInfo.has_git) {
@@ -142,17 +156,19 @@ export class InitRunner {
         const planningDir = join(this.projectDir, '.planning');
         await mkdir(planningDir, { recursive: true });
 
-        // Write config.json
-        const configPath = join(planningDir, 'config.json');
-        await writeFile(configPath, JSON.stringify(AUTO_MODE_CONFIG, null, 2) + '\n', 'utf-8');
+        const configTomlPath = join(this.projectDir, 'gad-config.toml');
+        const configCompatPath = join(planningDir, 'config.json');
+        await writeFile(configTomlPath, this.renderCanonicalConfigToml(AUTO_MODE_CONFIG), 'utf-8');
+        await writeFile(configCompatPath, JSON.stringify(AUTO_MODE_CONFIG, null, 2) + '\n', 'utf-8');
+        artifacts.push('gad-config.toml');
         artifacts.push('.planning/config.json');
 
-        // Persist auto_advance via gad-tools (validates & updates state)
+        // Persist via gad-tools so canonical TOML and compat JSON stay in sync.
         await this.tools.configSet('workflow.auto_advance', 'true');
 
         // Commit config
         if (projectInfo.commit_docs) {
-          await this.tools.commit('chore: add project config', ['.planning/config.json']);
+          await this.tools.commit('chore: add project config', ['gad-config.toml', '.planning/config.json']);
         }
       });
       steps.push(configResult.stepResult);
@@ -275,8 +291,8 @@ export class InitRunner {
   ): Promise<{ stepResult: InitStepResult; value?: T }> {
     const stepStart = Date.now();
 
-    this.emitEvent<GSDInitStepStartEvent>({
-      type: GSDEventType.InitStepStart,
+    this.emitEvent<GADInitStepStartEvent>({
+      type: GADEventType.InitStepStart,
       step,
     });
 
@@ -292,8 +308,8 @@ export class InitRunner {
         costUsd,
       };
 
-      this.emitEvent<GSDInitStepCompleteEvent>({
-        type: GSDEventType.InitStepComplete,
+      this.emitEvent<GADInitStepCompleteEvent>({
+        type: GADEventType.InitStepComplete,
         step,
         success: true,
         durationMs,
@@ -313,8 +329,8 @@ export class InitRunner {
         error: errorMsg,
       };
 
-      this.emitEvent<GSDInitStepCompleteEvent>({
-        type: GSDEventType.InitStepComplete,
+      this.emitEvent<GADInitStepCompleteEvent>({
+        type: GADEventType.InitStepComplete,
         step,
         success: false,
         durationMs,
@@ -332,8 +348,8 @@ export class InitRunner {
     input: string,
     projectInfo: InitNewProjectInfo,
   ): Promise<InitStepResult[]> {
-    this.emitEvent<GSDInitResearchSpawnEvent>({
-      type: GSDEventType.InitResearchSpawn,
+    this.emitEvent<GADInitResearchSpawnEvent>({
+      type: GADEventType.InitResearchSpawn,
       sessionCount: RESEARCH_TYPES.length,
       researchTypes: [...RESEARCH_TYPES],
     });
@@ -382,7 +398,7 @@ export class InitRunner {
    * Reads the project template and combines with user input.
    */
   private async buildProjectPrompt(input: string): Promise<string> {
-    const template = await this.readGSDFile('templates/project.md');
+    const template = await this.readGADFile('templates/project.md');
 
     return sanitizePrompt([
       'You are creating the PROJECT.md for a new software project.',
@@ -410,7 +426,7 @@ export class InitRunner {
     input: string,
   ): Promise<string> {
     const agentDef = await this.readAgentFile('gad-project-researcher.md');
-    const template = await this.readGSDFile(`templates/research-project/${researchType}.md`);
+    const template = await this.readGADFile(`templates/research-project/${researchType}.md`);
 
     // Read PROJECT.md if it exists (it should by now)
     let projectContent = '';
@@ -455,7 +471,7 @@ export class InitRunner {
    */
   private async buildSynthesisPrompt(): Promise<string> {
     const agentDef = await this.readAgentFile('gad-research-synthesizer.md');
-    const summaryTemplate = await this.readGSDFile('templates/research-project/SUMMARY.md');
+    const summaryTemplate = await this.readGADFile('templates/research-project/SUMMARY.md');
     const researchDir = join(this.projectDir, '.planning', 'research');
 
     // Read whatever research files exist
@@ -499,7 +515,7 @@ export class InitRunner {
    * Reads PROJECT.md + FEATURES.md for requirement derivation.
    */
   private async buildRequirementsPrompt(): Promise<string> {
-    const reqTemplate = await this.readGSDFile('templates/requirements.md');
+    const reqTemplate = await this.readGADFile('templates/requirements.md');
 
     let projectContent = '';
     let featuresContent = '';
@@ -548,8 +564,8 @@ export class InitRunner {
    */
   private async buildRoadmapPrompt(): Promise<string> {
     const agentDef = await this.readAgentFile('gad-roadmapper.md');
-    const roadmapTemplate = await this.readGSDFile('templates/roadmap.md');
-    const stateTemplate = await this.readGSDFile('templates/state.md');
+    const roadmapTemplate = await this.readGADFile('templates/roadmap.md');
+    const stateTemplate = await this.readGADFile('templates/state.md');
 
     const filesToRead = [
       '.planning/PROJECT.md',
@@ -593,6 +609,38 @@ export class InitRunner {
     ].join('\n'));
   }
 
+  private renderCanonicalConfigToml(config: typeof AUTO_MODE_CONFIG): string {
+    const lines = [
+      '# gad-config.toml — canonical GAD project configuration',
+      `mode = ${JSON.stringify(config.mode)}`,
+      `model_profile = ${JSON.stringify(config.model_profile)}`,
+      `commit_docs = ${config.commit_docs ? 'true' : 'false'}`,
+      `parallelization = ${config.parallelization ? 'true' : 'false'}`,
+      '',
+      '[workflow]',
+      `research = ${config.workflow.research ? 'true' : 'false'}`,
+      `plan_check = ${config.workflow.plan_check ? 'true' : 'false'}`,
+      `verifier = ${config.workflow.verifier ? 'true' : 'false'}`,
+      `nyquist_validation = ${config.workflow.nyquist_validation ? 'true' : 'false'}`,
+      `auto_advance = ${config.workflow.auto_advance ? 'true' : 'false'}`,
+      `node_repair = ${config.workflow.node_repair ? 'true' : 'false'}`,
+      `node_repair_budget = ${config.workflow.node_repair_budget}`,
+      `ui_phase = ${config.workflow.ui_phase ? 'true' : 'false'}`,
+      `ui_safety_gate = ${config.workflow.ui_safety_gate ? 'true' : 'false'}`,
+      `text_mode = ${config.workflow.text_mode ? 'true' : 'false'}`,
+      `research_before_questions = ${config.workflow.research_before_questions ? 'true' : 'false'}`,
+      `discuss_mode = ${JSON.stringify(config.workflow.discuss_mode)}`,
+      `skip_discuss = ${config.workflow.skip_discuss ? 'true' : 'false'}`,
+      `max_discuss_passes = ${config.workflow.max_discuss_passes}`,
+      '',
+      '[hooks]',
+      `context_warnings = ${config.hooks.context_warnings ? 'true' : 'false'}`,
+      `community = ${config.hooks.community ? 'true' : 'false'}`,
+      '',
+    ];
+    return lines.join('\n');
+  }
+
   // ─── Session execution ─────────────────────────────────────────────────────
 
   /**
@@ -623,7 +671,7 @@ export class InitRunner {
    * Tries sdk/prompts/{relativePath} first (headless versions), then
    * falls back to installed runtime templates when sdk/prompts does not provide an override.
    */
-  private async readGSDFile(relativePath: string): Promise<string> {
+  private async readGADFile(relativePath: string): Promise<string> {
     // Try SDK prompts dir first (headless versions)
     const sdkPath = join(this.sdkPromptsDir, relativePath);
     try {
@@ -633,7 +681,7 @@ export class InitRunner {
     }
 
     // Fall back to installed runtime templates
-    const fullPath = join(GSD_TEMPLATES_DIR, '..', relativePath);
+    const fullPath = join(GAD_TEMPLATES_DIR, '..', relativePath);
     try {
       return await readFile(fullPath, 'utf-8');
     } catch {
@@ -657,7 +705,7 @@ export class InitRunner {
     }
 
     // Fall back to installed runtime agent definitions
-    const fullPath = join(GSD_AGENTS_DIR, filename);
+    const fullPath = join(GAD_AGENTS_DIR, filename);
     try {
       return await readFile(fullPath, 'utf-8');
     } catch {
@@ -684,14 +732,14 @@ export class InitRunner {
 
   // ─── Event helpers ─────────────────────────────────────────────────────────
 
-  private emitEvent<T extends { type: GSDEventType }>(
-    partial: Omit<T, 'timestamp' | 'sessionId'> & { type: GSDEventType },
+  private emitEvent<T extends { type: GADEventType }>(
+    partial: Omit<T, 'timestamp' | 'sessionId'> & { type: GADEventType },
   ): void {
     this.eventStream.emitEvent({
       timestamp: new Date().toISOString(),
       sessionId: this.sessionId,
       ...partial,
-    } as unknown as import('./types.js').GSDEvent);
+    } as unknown as import('./types.js').GADEvent);
   }
 
   // ─── Result helpers ────────────────────────────────────────────────────────
@@ -705,8 +753,8 @@ export class InitRunner {
     const totalCostUsd = steps.reduce((sum, s) => sum + s.costUsd, 0);
     const totalDurationMs = Date.now() - startTime;
 
-    this.emitEvent<GSDInitCompleteEvent>({
-      type: GSDEventType.InitComplete,
+    this.emitEvent<GADInitCompleteEvent>({
+      type: GADEventType.InitComplete,
       success,
       totalCostUsd,
       totalDurationMs,

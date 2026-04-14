@@ -180,7 +180,7 @@ allowed-tools:
   - Agent
 ---
 
-Initialize new project at ~/.claude/get-anything-done/workflows/new-project.md
+Initialize new project at ~/.claude/get-anything-done/workflows/gad-new-project.md
 `;
 
   test('produces name and description only in frontmatter', () => {
@@ -235,7 +235,7 @@ tools: Read, Write, Edit, Bash, Glob, Grep, Task
 color: blue
 ---
 
-Execute plans from ~/.claude/get-anything-done/workflows/execute-phase.md
+Execute plans from ~/.claude/get-anything-done/workflows/gad-execute-phase.md
 `;
 
   test('preserves name and description', () => {
@@ -322,25 +322,25 @@ Body text.
   });
 
   test('creates skills directory', () => {
-    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gsd', false);
+    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gad', false);
     assert.ok(fs.existsSync(skillsDir));
   });
 
   test('creates one skill directory per command with SKILL.md', () => {
-    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gsd', false);
+    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gad', false);
     const skillDir = path.join(skillsDir, 'gad-new-project');
     assert.ok(fs.existsSync(skillDir), 'skill dir should exist');
     assert.ok(fs.existsSync(path.join(skillDir, 'SKILL.md')), 'SKILL.md should exist');
   });
 
   test('handles subdirectory commands with prefixed names', () => {
-    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gsd', false);
+    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gad', false);
     const subSkillDir = path.join(skillsDir, 'gad-subdir-sub-command');
     assert.ok(fs.existsSync(subSkillDir), 'subdirectory skill dir should exist');
   });
 
   test('SKILL.md has minimal frontmatter (name + description only)', () => {
-    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gsd', false);
+    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gad', false);
     const content = fs.readFileSync(path.join(skillsDir, 'gad-new-project', 'SKILL.md'), 'utf8');
     assert.ok(content.includes('name: gad-new-project'), content);
     assert.ok(content.includes('description: Initialize a new project'), content);
@@ -348,7 +348,7 @@ Body text.
   });
 
   test('SKILL.md body has paths converted for local install', () => {
-    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gsd', false);
+    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gad', false);
     const content = fs.readFileSync(path.join(skillsDir, 'gad-new-project', 'SKILL.md'), 'utf8');
     // gad: → gad- conversion
     assert.ok(!content.includes('gad:'), content);
@@ -360,19 +360,19 @@ Body text.
     fs.mkdirSync(staleDir, { recursive: true });
     fs.writeFileSync(path.join(staleDir, 'SKILL.md'), '---\nname: old\n---\n');
 
-    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gsd', false);
+    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gad', false);
 
     assert.ok(!fs.existsSync(staleDir), 'stale skill dir should be removed');
   });
 
-  test('does not remove non-gsd skill dirs', () => {
+  test('does not remove non-gad skill dirs', () => {
     // Create a non-GSD skill dir
     const otherDir = path.join(skillsDir, 'my-custom-skill');
     fs.mkdirSync(otherDir, { recursive: true });
 
-    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gsd', false);
+    copyCommandsAsAntigravitySkills(srcDir, skillsDir, 'gad', false);
 
-    assert.ok(fs.existsSync(otherDir), 'non-GSD skill dir should be preserved');
+    assert.ok(fs.existsSync(otherDir), 'non-GAD skill dir should be preserved');
   });
 });
 

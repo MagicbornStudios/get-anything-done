@@ -4,11 +4,12 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 43 context gathered (discuss mode)</next-action>
+  <next-action>Phase 43 context gathered (discuss mode). Phase 42.4 cleanup shipped end-to-end: snapshot lane leak fixed (42.4-04), command-skill/workflow normalization shipped (42.4-05), remaining canonical-skill dedupe + validator shipped (42.4-06), and decisions gad-180/gad-181/gad-182 now define and enforce the canonical skill/workflow contract.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
-    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..13, 44.5-01..04+02b)</reference>
-    <reference>.planning/DECISIONS.xml (gad-160 through gad-174)</reference>
+    <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..06, 44.5-01..04+02b)</reference>
+    <reference>.planning/DECISIONS.xml (gad-160 through gad-182)</reference>
+    <reference>scripts/validate-canonical-assets.mjs</reference>
     <reference>site/scripts/build-site-data.mjs (parseWorkflows)</reference>
     <reference>site/lib/catalog.generated.ts (WORKFLOWS export)</reference>
     <reference>.planning/workflows/README.md</reference>
@@ -28,7 +29,7 @@
     <reference>site/app/formulas/page.tsx</reference>
     <reference>sdk/src/init-runner.ts</reference>
     <reference>sdk/src/context-engine.ts</reference>
-    <reference>workflows/new-project.md</reference>
+    <reference>workflows/gad-new-project.md</reference>
     <reference>workflows/settings.md</reference>
     <reference>references/framework-comparison-matrix.md</reference>
     <reference>.planning/notes/context-engine-hydration-questions-2026-04-14.md</reference>

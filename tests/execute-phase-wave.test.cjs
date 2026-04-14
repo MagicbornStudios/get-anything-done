@@ -13,14 +13,13 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 
-const COMMAND_PATH = path.join(__dirname, '..', 'commands', 'execute-phase.md');
-const WORKFLOW_PATH = path.join(__dirname, '..', 'workflows', 'execute-phase.md');
-const COMMANDS_DOC_PATH = path.join(__dirname, '..', 'docs', 'COMMANDS.md');
+const COMMAND_PATH = path.join(__dirname, '..', 'skills', 'gad-execute-phase', 'COMMAND.md');
+const WORKFLOW_PATH = path.join(__dirname, '..', 'workflows', 'gad-execute-phase.md');
 const HELP_PATH = path.join(__dirname, '..', 'workflows', 'help.md');
 
 describe('execute-phase command: --wave flag', () => {
   test('command file exists', () => {
-    assert.ok(fs.existsSync(COMMAND_PATH), 'commands/execute-phase.md should exist');
+    assert.ok(fs.existsSync(COMMAND_PATH), 'skills/gad-execute-phase/COMMAND.md should exist');
   });
 
   test('argument-hint includes --wave, --gaps-only, and --interactive', () => {
@@ -46,7 +45,7 @@ describe('execute-phase command: --wave flag', () => {
 
 describe('execute-phase workflow: wave filtering', () => {
   test('workflow file exists', () => {
-    assert.ok(fs.existsSync(WORKFLOW_PATH), 'workflows/execute-phase.md should exist');
+    assert.ok(fs.existsSync(WORKFLOW_PATH), 'workflows/gad-execute-phase.md should exist');
   });
 
   test('workflow parses WAVE_FILTER from arguments', () => {
@@ -85,12 +84,12 @@ describe('execute-phase workflow: wave filtering', () => {
 });
 
 describe('execute-phase docs: user-facing wave flag', () => {
-  test('COMMANDS.md documents --wave usage', () => {
-    const content = fs.readFileSync(COMMANDS_DOC_PATH, 'utf-8');
-    assert.ok(content.includes('`--wave N`'), 'COMMANDS.md should mention --wave N');
+  test('canonical command file documents --wave usage', () => {
+    const content = fs.readFileSync(COMMAND_PATH, 'utf-8');
+    assert.ok(content.includes('`--wave N`'), 'COMMAND.md should mention --wave N');
     assert.ok(
-      content.includes('/gad:execute-phase 1 --wave 2'),
-      'COMMANDS.md should include a wave-filter example'
+      content.includes('Execute only Wave `N`'),
+      'COMMAND.md should explain wave-filter behavior'
     );
   });
 
@@ -128,8 +127,6 @@ describe('use_worktrees config: cross-workflow structural coverage', () => {
   const DIAGNOSE_PATH = path.join(__dirname, '..', 'workflows', 'diagnose-issues.md');
   const EXECUTE_PLAN_PATH = path.join(__dirname, '..', 'workflows', 'execute-plan.md');
   const PLANNING_CONFIG_PATH = path.join(__dirname, '..', 'references', 'planning-config.md');
-  const CONFIG_CJS_PATH = path.join(__dirname, '..', 'lib', 'config.cjs');
-
   test('quick workflow reads USE_WORKTREES from config', () => {
     const content = fs.readFileSync(QUICK_PATH, 'utf-8');
     assert.ok(
@@ -174,11 +171,16 @@ describe('use_worktrees config: cross-workflow structural coverage', () => {
     );
   });
 
-  test('config.cjs includes workflow.use_worktrees in VALID_CONFIG_KEYS', () => {
-    const content = fs.readFileSync(CONFIG_CJS_PATH, 'utf-8');
+  test('canonical surfaces document workflow.use_worktrees', () => {
+    const workflowContent = fs.readFileSync(WORKFLOW_PATH, 'utf-8');
+    const planningConfigContent = fs.readFileSync(PLANNING_CONFIG_PATH, 'utf-8');
     assert.ok(
-      content.includes("'workflow.use_worktrees'"),
-      'config.cjs VALID_CONFIG_KEYS should include workflow.use_worktrees'
+      workflowContent.includes('config-get workflow.use_worktrees'),
+      'gad-execute-phase workflow should read workflow.use_worktrees'
+    );
+    assert.ok(
+      planningConfigContent.includes('workflow.use_worktrees'),
+      'planning-config reference should document workflow.use_worktrees'
     );
   });
 });

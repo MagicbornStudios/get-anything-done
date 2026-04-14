@@ -7,11 +7,11 @@
 
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import type { SDKMessage, SDKResultMessage, SDKResultSuccess, SDKResultError } from '@anthropic-ai/claude-agent-sdk';
-import type { ParsedPlan, PlanResult, SessionOptions, SessionUsage, GSDCostUpdateEvent, PhaseStepType } from './types.js';
-import { GSDEventType, PhaseType } from './types.js';
-import type { GSDConfig } from './config.js';
+import type { ParsedPlan, PlanResult, SessionOptions, SessionUsage, GADCostUpdateEvent, PhaseStepType } from './types.js';
+import { GADEventType, PhaseType } from './types.js';
+import type { GADConfig } from './config.js';
 import { buildExecutorPrompt, parseAgentTools, DEFAULT_ALLOWED_TOOLS } from './prompt-builder.js';
-import type { GSDEventStream, EventStreamContext } from './event-stream.js';
+import type { GADEventStream, EventStreamContext } from './event-stream.js';
 import { getToolsForPhase } from './tool-scoping.js';
 
 // ─── Model resolution ────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ import { getToolsForPhase } from './tool-scoping.js';
  *
  * Priority: explicit model option > config model_profile > default.
  */
-function resolveModel(options?: SessionOptions, config?: GSDConfig): string | undefined {
+function resolveModel(options?: SessionOptions, config?: GADConfig): string | undefined {
   if (options?.model) return options.model;
 
   // Map model_profile names to model IDs
@@ -58,10 +58,10 @@ function resolveModel(options?: SessionOptions, config?: GSDConfig): string | un
  */
 export async function runPlanSession(
   plan: ParsedPlan,
-  config: GSDConfig,
+  config: GADConfig,
   options?: SessionOptions,
   agentDef?: string,
-  eventStream?: GSDEventStream,
+  eventStream?: GADEventStream,
   streamContext?: EventStreamContext,
 ): Promise<PlanResult> {
   // Build the executor prompt
@@ -170,7 +170,7 @@ function extractResult(msg: SDKResultMessage): PlanResult {
  */
 async function processQueryStream(
   queryStream: AsyncIterable<SDKMessage>,
-  eventStream?: GSDEventStream,
+  eventStream?: GADEventStream,
   streamContext?: EventStreamContext,
 ): Promise<PlanResult> {
   let resultMessage: SDKResultMessage | undefined;
@@ -219,14 +219,14 @@ async function processQueryStream(
   if (eventStream) {
     const cost = eventStream.getCost();
     eventStream.emitEvent({
-      type: GSDEventType.CostUpdate,
+      type: GADEventType.CostUpdate,
       timestamp: new Date().toISOString(),
       sessionId: resultMessage.session_id,
       phase: streamContext?.phase,
       planName: streamContext?.planName,
       sessionCostUsd: result.totalCostUsd,
       cumulativeCostUsd: cost.cumulative,
-    } as GSDCostUpdateEvent);
+    } as GADCostUpdateEvent);
   }
 
   return result;
@@ -268,9 +268,9 @@ function stepTypeToPhaseType(step: PhaseStepType): PhaseType {
 export async function runPhaseStepSession(
   prompt: string,
   phaseStep: PhaseStepType,
-  config: GSDConfig,
+  config: GADConfig,
   options?: SessionOptions,
-  eventStream?: GSDEventStream,
+  eventStream?: GADEventStream,
   streamContext?: EventStreamContext,
 ): Promise<PlanResult> {
   const phaseType = stepTypeToPhaseType(phaseStep);

@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Handoff dialog for coding agents: Update and Delete — one large editable prompt
- * per tab. **CodeMirror 6** markdown mode with syntax highlighting, line numbers, and
- * wrapping; dictate/copy hover chrome on the editor surface.
+ * Handoff dialog for coding agents. **Update**: first 10 lines are a fixed template
+ * (read-only `pre`); CodeMirror edits the user message only; copy joins both. **Delete**:
+ * full prompt in the editor. Dictate + copy hover the editor bottom.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
@@ -21,10 +21,22 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RegistryEntry } from "./SectionRegistry";
 
-const SITE_ROOT = "vendor/get-anything-done/site";
+/** Locked update header is always this many lines; the editor below is user-only. */
+const UPDATE_LOCKED_LINE_COUNT = 10;
 
-/** Must match the `## …` line in `buildUpdatePrompt` (no newline). */
-const HANDOFF_MAKE_CHANGES_HEADING = "## Make these changes";
+const BLOCK_LABEL_MAX = 72;
+const BLOCK_CID_MAX = 56;
+
+function truncateForPrompt(value: string, maxChars: number): string {
+  if (value.length <= maxChars) return value;
+  if (maxChars <= 1) return "…";
+  return `${value.slice(0, maxChars - 1)}…`;
+}
+
+/** Escape for use inside double-quoted HTML-like attributes in markdown inline code. */
+function escapeAttrInCode(s: string): string {
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/`/g, "\\`");
+}
 
 function absolutePageUrl(pathname: string): string {
   if (typeof window === "undefined") return pathname || "/";
@@ -38,7 +50,7 @@ function HandoffPromptPane({
   editorRef,
   editorKey,
   variant,
-  focusEmptyLineUnderHeading,
+  lockedHeader,
   hoverChrome,
   speechFooter,
   ariaLabel,
@@ -48,7 +60,8 @@ function HandoffPromptPane({
   editorRef: RefObject<HandoffEditorHandle | null>;
   editorKey: string;
   variant: "update" | "delete";
-  focusEmptyLineUnderHeading?: string;
+  /** When set, shown read-only above the editor (update tab). */
+  lockedHeader?: string;
   hoverChrome: ReactNode;
   speechFooter?: ReactNode;
   ariaLabel: string;
@@ -56,8 +69,8 @@ function HandoffPromptPane({
   const hint =
     variant === "update" ? (
       <>
-        Caret opens on the empty line under <strong className="text-foreground/90">Make these changes</strong>.{" "}
-        <strong className="text-foreground/90">Hover the bottom edge</strong> for Mic + Copy.
+        The first {UPDATE_LOCKED_LINE_COUNT} lines are <strong className="text-foreground/90">fixed</strong>. Type only
+        in the editor below. <strong className="text-foreground/90">Hover the bottom edge</strong> for Mic + Copy.
       </>
     ) : (
       <>
@@ -70,55 +83,75 @@ function HandoffPromptPane({
     <div className="flex min-h-0 flex-1 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
       <p className="mb-1.5 max-w-[min(100%,40rem)] text-[10px] leading-snug text-muted-foreground sm:mb-2">{hint}</p>
 
-      <div className="group/prompt relative flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
-        <HandoffMarkdownEditor
-          key={editorKey}
-          ref={editorRef}
-          initialDoc={draft}
-          onChange={onDraftChange}
-          ariaLabel={ariaLabel}
-          focusEmptyLineUnderHeading={focusEmptyLineUnderHeading}
-        />
-        {hoverChrome}
+      <div className="group/prompt flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
+        {lockedHeader ? (
+          <pre
+            className="max-h-[min(32vh,14rem)] shrink-0 select-text overflow-y-auto border-b border-border/60 bg-muted/40 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-foreground sm:text-[12px]"
+            aria-label="Locked handoff template (not editable)"
+          >
+            {lockedHeader}
+          </pre>
+        ) : null}
+        <div className={cn("relative flex min-h-0 flex-1 flex-col", lockedHeader && "min-h-[12rem]")}>
+          <HandoffMarkdownEditor
+            key={editorKey}
+            ref={editorRef}
+            initialDoc={draft}
+            onChange={onDraftChange}
+            ariaLabel={ariaLabel}
+            autoFocus={Boolean(lockedHeader)}
+          />
+          {hoverChrome}
+        </div>
       </div>
       {speechFooter}
     </div>
   );
 }
 
-function buildUpdatePrompt(pageUrl: string, label: string, cid: string) {
-  return `GAD marketing site (Next.js).
-
-## This page
-${pageUrl}
-
-## Block
-- \`data-cid\`: \`${cid}\`
-- \`<Identified as="${label}" />\`
-
-${HANDOFF_MAKE_CHANGES_HEADING}
-
-Find in repo \`${SITE_ROOT}/\`: search \`as="${label}"\` or \`data-cid="${cid}"\`.
-
-Keep \`<Identified>\` inside \`<SiteSection>\`; match nearby sections; primitives in \`components/ui/\`.
-
-\`pnpm exec tsc --noEmit\` in that folder, then commit.`;
+/** Exactly {@link UPDATE_LOCKED_LINE_COUNT} lines; copy is this plus a newline plus the user editor body. */
+function buildUpdateLockedPrefix(pageUrl: string, label: string, cid: string): string {
+  const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
+  const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
+  const lines = [
+    "You are to make changes to this component on the site.",
+    "",
+    "## Where to find this block",
+    `component_route_location= **${pageUrl}**`,
+    "",
+    "## Block to make changes to",
+    `- Component: \`<Identified as="${escapeAttrInCode(labelShort)}" />\``,
+    `- \`data-cid="${escapeAttrInCode(cidShort)}"\``,
+    "",
+    "## Make these changes to",
+  ];
+  if (lines.length !== UPDATE_LOCKED_LINE_COUNT) {
+    throw new Error(`buildUpdateLockedPrefix: expected ${UPDATE_LOCKED_LINE_COUNT} lines, got ${lines.length}`);
+  }
+  return lines.join("\n");
 }
 
 function buildDeletePrompt(pageUrl: string, label: string, cid: string) {
+  const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
+  const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
+  const labelLine = `- Component: \`<Identified as="${escapeAttrInCode(labelShort)}" />\``;
+  const cidLine = `- data-cid: \`${escapeAttrInCode(cidShort)}\``;
+  const labelFull = label.length > BLOCK_LABEL_MAX ? `\n- Full \`as\` string: ${JSON.stringify(label)}` : "";
+  const cidFull = cid.length > BLOCK_CID_MAX ? `\n- Full data-cid: ${JSON.stringify(cid)}` : "";
+
   return `GAD marketing site (Next.js).
 
-## This page
-${pageUrl}
+## Where to find this block
+**${pageUrl}** — open this URL in the browser; this is the page where the block appears.
 
-## Block
-- \`data-cid\`: \`${cid}\`
-- \`<Identified as="${label}" />\`
+## Block to make changes to
+${labelLine}${labelFull}
+${cidLine}${cidFull}
 
-## Do this
-1. Under \`${SITE_ROOT}/\`, find that \`Identified\` band and remove it (or remove the whole section if it should all go).
-2. Drop unused imports/components.
-3. \`pnpm exec tsc --noEmit\` in that folder, commit (message should name \`${label}\`).`;
+## What to do
+1. Remove this \`Identified\` band from the page source, or remove the owning section if the whole section should go.
+2. Drop unused imports and components.
+3. Typecheck the GAD marketing site package you touched, then commit (message should name this block).`;
 }
 
 type SpeechRecInstance = {
@@ -161,18 +194,23 @@ function PromptContextStrip({
   label: string;
 }) {
   return (
-    <div className="grid gap-2 border-b border-border/60 bg-muted/20 px-4 py-2.5 sm:grid-cols-3">
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Page URL</p>
-        <p className="mt-1 break-all font-mono text-[11px] text-foreground">{pageUrl || "—"}</p>
+    <div
+      className={cn(
+        "grid gap-3 border-b-2 border-border bg-muted/40 px-4 py-3.5 sm:grid-cols-3",
+        "shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--foreground)_6%,transparent)]",
+      )}
+    >
+      <div className="min-w-0">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">Where to find this block</p>
+        <p className="mt-1.5 break-all font-mono text-xs leading-snug text-foreground sm:text-[13px]">{pageUrl || "—"}</p>
       </div>
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">data-cid</p>
-        <p className="mt-1 break-all font-mono text-[11px] text-accent">{cid}</p>
+      <div className="min-w-0 border-t border-border/70 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">data-cid</p>
+        <p className="mt-1.5 break-all font-mono text-xs leading-snug text-accent sm:text-[13px]">{cid}</p>
       </div>
-      <div className="sm:col-span-1">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Identified as</p>
-        <p className="mt-1 text-sm font-medium text-foreground">{label}</p>
+      <div className="min-w-0 border-t border-border/70 pt-3 sm:col-span-1 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">Component (as)</p>
+        <p className="mt-1.5 text-sm font-semibold leading-snug text-foreground">{label}</p>
       </div>
     </div>
   );
@@ -223,7 +261,7 @@ function HoverPromptChrome({
             disabled={!speechOk}
             title={
               speechOk
-                ? "Speech inserts at the caret. Upd opens with the caret on the empty line under Make these changes."
+                ? "Speech inserts at the caret in the editable editor (below the fixed header on Upd)."
                 : "Speech recognition not available"
             }
             className={cn(
@@ -290,7 +328,8 @@ export function DevIdAgentPromptDialog({
   pathname: string;
 }) {
   const [tab, setTab] = useState<"update" | "delete">("update");
-  const [updateDraft, setUpdateDraft] = useState("");
+  const [updateLockedPrefix, setUpdateLockedPrefix] = useState("");
+  const [updateUserDraft, setUpdateUserDraft] = useState("");
   const [deleteDraft, setDeleteDraft] = useState("");
   const [interim, setInterim] = useState("");
   const [listening, setListening] = useState(false);
@@ -310,7 +349,8 @@ export function DevIdAgentPromptDialog({
 
   useEffect(() => {
     if (!open || !entry) return;
-    setUpdateDraft(buildUpdatePrompt(pageUrl, label, cid));
+    setUpdateLockedPrefix(buildUpdateLockedPrefix(pageUrl, label, cid));
+    setUpdateUserDraft("");
     setDeleteDraft(buildDeletePrompt(pageUrl, label, cid));
     setInterim("");
     setTab("update");
@@ -401,7 +441,7 @@ export function DevIdAgentPromptDialog({
   }, [stopRecognition]);
 
   const copyActive = () => {
-    const text = tab === "update" ? updateDraft : deleteDraft;
+    const text = tab === "update" ? `${updateLockedPrefix}\n${updateUserDraft}` : deleteDraft;
     navigator.clipboard?.writeText(text).catch(() => {});
     setCopied(tab);
     window.setTimeout(() => setCopied(null), 1400);
@@ -423,10 +463,9 @@ export function DevIdAgentPromptDialog({
         <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
           <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            <strong className="text-foreground">Upd</strong> — copy for the agent; type on the empty line under{" "}
-            <strong className="text-foreground">Make these changes</strong>. <strong className="text-foreground">Del</strong>{" "}
-            — removal checklist. Mic + Copy:{" "}
-            <strong className="text-foreground">hover the bottom</strong> of the editor.
+            <strong className="text-foreground">Upd</strong> — the first {UPDATE_LOCKED_LINE_COUNT} lines are fixed; type
+            your instructions in the editor below them. <strong className="text-foreground">Del</strong> — full prompt
+            editable. Mic + Copy: <strong className="text-foreground">hover the bottom</strong> of the editor.
           </DialogDescription>
         </DialogHeader>
 
@@ -465,13 +504,13 @@ export function DevIdAgentPromptDialog({
 
           <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
             <HandoffPromptPane
-              draft={updateDraft}
-              onDraftChange={setUpdateDraft}
+              draft={updateUserDraft}
+              onDraftChange={setUpdateUserDraft}
               editorRef={updateEditorRef}
               editorKey={`${handoffEpoch}-update`}
               variant="update"
-              focusEmptyLineUnderHeading={HANDOFF_MAKE_CHANGES_HEADING}
-              ariaLabel="Update handoff prompt for your agent"
+              lockedHeader={updateLockedPrefix}
+              ariaLabel="Your instructions for the agent (editable)"
               hoverChrome={
                 <HoverPromptChrome
                   listening={listening}
@@ -481,7 +520,7 @@ export function DevIdAgentPromptDialog({
                   onStopDictation={stopRecognition}
                   onCopy={copyActive}
                   copied={copied === "update"}
-                  copyDisabled={!updateDraft.trim()}
+                  copyDisabled={false}
                 />
               }
               speechFooter={

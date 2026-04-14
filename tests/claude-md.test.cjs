@@ -35,11 +35,11 @@ describe('generate-claude-md', () => {
 
     const claudePath = path.join(tmpDir, 'CLAUDE.md');
     const content = fs.readFileSync(claudePath, 'utf-8');
-    assert.ok(content.includes('## GSD Workflow Enforcement'));
+    assert.ok(content.includes('## GAD Workflow Enforcement'));
     assert.ok(content.includes('/gad:quick'));
     assert.ok(content.includes('/gad:debug'));
     assert.ok(content.includes('/gad:execute-phase'));
-    assert.ok(content.includes('Do not make direct repo edits outside a GSD workflow'));
+    assert.ok(content.includes('Do not make direct repo edits outside a GAD workflow'));
   });
 
   test('adds workflow enforcement section when updating an existing CLAUDE.md', () => {
@@ -57,7 +57,7 @@ describe('generate-claude-md', () => {
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     assert.ok(content.includes('## Local Notes'));
-    assert.ok(content.includes('## GSD Workflow Enforcement'));
+    assert.ok(content.includes('## GAD Workflow Enforcement'));
   });
 });
 
@@ -104,8 +104,8 @@ describe('generate-claude-md skills section', () => {
     assert.ok(output.sections_fallback.includes('skills'));
 
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
-    assert.ok(content.includes('<!-- GSD:skills-start'));
-    assert.ok(content.includes('<!-- GSD:skills-end -->'));
+    assert.ok(content.includes('<!-- GAD:skills-start'));
+    assert.ok(content.includes('<!-- GAD:skills-end -->'));
     assert.ok(content.includes('No project skills found. Add skills to any of'));
   });
 
@@ -153,7 +153,7 @@ describe('generate-claude-md skills section', () => {
     fs.mkdirSync(userSkillDir, { recursive: true });
     fs.writeFileSync(
       path.join(gsdSkillDir, 'SKILL.md'),
-      '---\nname: gad-plan-phase\ndescription: GSD internal skill.\n---\n'
+      '---\nname: gad-plan-phase\ndescription: GAD internal skill.\n---\n'
     );
     fs.writeFileSync(
       path.join(userSkillDir, 'SKILL.md'),
@@ -242,7 +242,7 @@ describe('generate-claude-md skills section', () => {
     const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     const archIdx = content.indexOf('## Architecture');
     const skillsIdx = content.indexOf('## Project Skills');
-    const workflowIdx = content.indexOf('## GSD Workflow Enforcement');
+    const workflowIdx = content.indexOf('## GAD Workflow Enforcement');
     assert.ok(archIdx < skillsIdx, 'Skills section should come after Architecture');
     assert.ok(skillsIdx < workflowIdx, 'Skills section should come before Workflow Enforcement');
   });

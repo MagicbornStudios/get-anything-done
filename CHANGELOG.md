@@ -1032,7 +1032,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - User sees status between agent spawns (not a black box)
 - Planning references deprecated with redirects to `gsd-planner` agent sections
   - `plan-format.md`, `scope-estimation.md`, `goal-backward.md`, `principles.md`
-  - `workflows/plan-phase.md`
+  - `workflows/gad-plan-phase.md`
 
 ### Fixed
 - Removed zombie `gsd-milestone-auditor` agent (was accidentally re-added after correct deletion)

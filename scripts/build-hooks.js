@@ -10,16 +10,16 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const HOOKS_DIR = path.join(__dirname, '..', 'sdk', 'hooks');
+const HOOKS_DIR = path.join(__dirname, '..', 'hooks');
 const DIST_DIR = path.join(HOOKS_DIR, 'dist');
 
 // Hooks to copy (pure Node.js, no bundling needed)
 const HOOKS_TO_COPY = [
-  'gsd-check-update.js',
-  'gsd-context-monitor.js',
-  'gsd-prompt-guard.js',
-  'gsd-statusline.js',
-  'gsd-workflow-guard.js'
+  'gad-check-update.js',
+  'gad-context-monitor.js',
+  'gad-prompt-guard.js',
+  'gad-statusline.js',
+  'gad-workflow-guard.js'
 ];
 
 /**

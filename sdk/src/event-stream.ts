@@ -2,7 +2,7 @@
  * GAD Event Stream — maps SDKMessage variants to typed GAD events.
  *
  * Extends EventEmitter to provide a typed event bus. Includes:
- * - SDKMessage → GSDEvent mapping
+ * - SDKMessage → GADEvent mapping
  * - Transport management (subscribe/unsubscribe handlers)
  * - Per-session cost tracking with cumulative totals
  */
@@ -26,24 +26,24 @@ import type {
   SDKPartialAssistantMessage,
 } from '@anthropic-ai/claude-agent-sdk';
 import {
-  GSDEventType,
-  type GSDEvent,
-  type GSDSessionInitEvent,
-  type GSDSessionCompleteEvent,
-  type GSDSessionErrorEvent,
-  type GSDAssistantTextEvent,
-  type GSDToolCallEvent,
-  type GSDToolProgressEvent,
-  type GSDToolUseSummaryEvent,
-  type GSDTaskStartedEvent,
-  type GSDTaskProgressEvent,
-  type GSDTaskNotificationEvent,
-  type GSDCostUpdateEvent,
-  type GSDAPIRetryEvent,
-  type GSDRateLimitEvent as GSDRateLimitEventType,
-  type GSDStatusChangeEvent,
-  type GSDCompactBoundaryEvent,
-  type GSDStreamEvent,
+  GADEventType,
+  type GADEvent,
+  type GADSessionInitEvent,
+  type GADSessionCompleteEvent,
+  type GADSessionErrorEvent,
+  type GADAssistantTextEvent,
+  type GADToolCallEvent,
+  type GADToolProgressEvent,
+  type GADToolUseSummaryEvent,
+  type GADTaskStartedEvent,
+  type GADTaskProgressEvent,
+  type GADTaskNotificationEvent,
+  type GADCostUpdateEvent,
+  type GADAPIRetryEvent,
+  type GADRateLimitEvent as GADRateLimitEventType,
+  type GADStatusChangeEvent,
+  type GADCompactBoundaryEvent,
+  type GADStreamEvent,
   type TransportHandler,
   type CostBucket,
   type CostTracker,
@@ -57,9 +57,9 @@ export interface EventStreamContext {
   planName?: string;
 }
 
-// ─── GSDEventStream ──────────────────────────────────────────────────────────
+// ─── GADEventStream ──────────────────────────────────────────────────────────
 
-export class GSDEventStream extends EventEmitter {
+export class GADEventStream extends EventEmitter {
   private readonly transports: Set<TransportHandler> = new Set();
   private readonly costTracker: CostTracker = {
     sessions: new Map(),
@@ -98,7 +98,7 @@ export class GSDEventStream extends EventEmitter {
   // ─── Event emission ──────────────────────────────────────────────────
 
   /** Emit a typed GAD event to all listeners and transports. */
-  emitEvent(event: GSDEvent): void {
+  emitEvent(event: GADEvent): void {
     // Emit via EventEmitter for listener-based consumers
     this.emit('event', event);
     this.emit(event.type, event);
@@ -117,10 +117,10 @@ export class GSDEventStream extends EventEmitter {
   // ─── SDKMessage mapping ──────────────────────────────────────────────
 
   /**
-   * Map an SDKMessage to a GSDEvent.
+   * Map an SDKMessage to a GADEvent.
    * Returns null for non-actionable message types (user messages, replays, etc.).
    */
-  mapSDKMessage(msg: SDKMessage, context: EventStreamContext = {}): GSDEvent | null {
+  mapSDKMessage(msg: SDKMessage, context: EventStreamContext = {}): GADEvent | null {
     const base = {
       timestamp: new Date().toISOString(),
       sessionId: 'session_id' in msg ? (msg.session_id as string) : '',
@@ -165,7 +165,7 @@ export class GSDEventStream extends EventEmitter {
    * Map an SDKMessage and emit the resulting event (if any).
    * Convenience method combining mapSDKMessage + emitEvent.
    */
-  mapAndEmit(msg: SDKMessage, context: EventStreamContext = {}): GSDEvent | null {
+  mapAndEmit(msg: SDKMessage, context: EventStreamContext = {}): GADEvent | null {
     const event = this.mapSDKMessage(msg, context);
     if (event) {
       this.emitEvent(event);
@@ -204,8 +204,8 @@ export class GSDEventStream extends EventEmitter {
 
   private mapSystemMessage(
     msg: SDKSystemMessage | SDKAPIRetryMessage | SDKStatusMessage | SDKCompactBoundaryMessage | SDKTaskStartedMessage | SDKTaskProgressMessage | SDKTaskNotificationMessage,
-    base: Omit<GSDEvent, 'type'>,
-  ): GSDEvent | null {
+    base: Omit<GADEvent, 'type'>,
+  ): GADEvent | null {
     // All system messages have a subtype
     const subtype = (msg as { subtype: string }).subtype;
 
@@ -214,78 +214,78 @@ export class GSDEventStream extends EventEmitter {
         const initMsg = msg as SDKSystemMessage;
         return {
           ...base,
-          type: GSDEventType.SessionInit,
+          type: GADEventType.SessionInit,
           model: initMsg.model,
           tools: initMsg.tools,
           cwd: initMsg.cwd,
-        } as GSDSessionInitEvent;
+        } as GADSessionInitEvent;
       }
 
       case 'api_retry': {
         const retryMsg = msg as SDKAPIRetryMessage;
         return {
           ...base,
-          type: GSDEventType.APIRetry,
+          type: GADEventType.APIRetry,
           attempt: retryMsg.attempt,
           maxRetries: retryMsg.max_retries,
           retryDelayMs: retryMsg.retry_delay_ms,
           errorStatus: retryMsg.error_status,
-        } as GSDAPIRetryEvent;
+        } as GADAPIRetryEvent;
       }
 
       case 'status': {
         const statusMsg = msg as SDKStatusMessage;
         return {
           ...base,
-          type: GSDEventType.StatusChange,
+          type: GADEventType.StatusChange,
           status: statusMsg.status,
-        } as GSDStatusChangeEvent;
+        } as GADStatusChangeEvent;
       }
 
       case 'compact_boundary': {
         const compactMsg = msg as SDKCompactBoundaryMessage;
         return {
           ...base,
-          type: GSDEventType.CompactBoundary,
+          type: GADEventType.CompactBoundary,
           trigger: compactMsg.compact_metadata.trigger,
           preTokens: compactMsg.compact_metadata.pre_tokens,
-        } as GSDCompactBoundaryEvent;
+        } as GADCompactBoundaryEvent;
       }
 
       case 'task_started': {
         const taskMsg = msg as SDKTaskStartedMessage;
         return {
           ...base,
-          type: GSDEventType.TaskStarted,
+          type: GADEventType.TaskStarted,
           taskId: taskMsg.task_id,
           description: taskMsg.description,
           taskType: taskMsg.task_type,
-        } as GSDTaskStartedEvent;
+        } as GADTaskStartedEvent;
       }
 
       case 'task_progress': {
         const progressMsg = msg as SDKTaskProgressMessage;
         return {
           ...base,
-          type: GSDEventType.TaskProgress,
+          type: GADEventType.TaskProgress,
           taskId: progressMsg.task_id,
           description: progressMsg.description,
           totalTokens: progressMsg.usage.total_tokens,
           toolUses: progressMsg.usage.tool_uses,
           durationMs: progressMsg.usage.duration_ms,
           lastToolName: progressMsg.last_tool_name,
-        } as GSDTaskProgressEvent;
+        } as GADTaskProgressEvent;
       }
 
       case 'task_notification': {
         const notifMsg = msg as SDKTaskNotificationMessage;
         return {
           ...base,
-          type: GSDEventType.TaskNotification,
+          type: GADEventType.TaskNotification,
           taskId: notifMsg.task_id,
           status: notifMsg.status,
           summary: notifMsg.summary,
-        } as GSDTaskNotificationEvent;
+        } as GADTaskNotificationEvent;
       }
 
       // Non-actionable system subtypes
@@ -305,9 +305,9 @@ export class GSDEventStream extends EventEmitter {
 
   private mapAssistantMessage(
     msg: SDKAssistantMessage,
-    base: Omit<GSDEvent, 'type'>,
-  ): GSDEvent | null {
-    const events: GSDEvent[] = [];
+    base: Omit<GADEvent, 'type'>,
+  ): GADEvent | null {
+    const events: GADEvent[] = [];
 
     // Extract text blocks — content blocks are a discriminated union with a 'type' field
     const content = msg.message.content as Array<{ type: string; [key: string]: unknown }>;
@@ -320,9 +320,9 @@ export class GSDEventStream extends EventEmitter {
       if (text.length > 0) {
         events.push({
           ...base,
-          type: GSDEventType.AssistantText,
+          type: GADEventType.AssistantText,
           text,
-        } as GSDAssistantTextEvent);
+        } as GADAssistantTextEvent);
       }
     }
 
@@ -334,11 +334,11 @@ export class GSDEventStream extends EventEmitter {
     for (const block of toolUseBlocks) {
       events.push({
         ...base,
-        type: GSDEventType.ToolCall,
+        type: GADEventType.ToolCall,
         toolName: block.name,
         toolUseId: block.id,
         input: block.input as Record<string, unknown>,
-      } as GSDToolCallEvent);
+      } as GADToolCallEvent);
     }
 
     // Return the first event — for multi-event messages, emit the rest
@@ -357,8 +357,8 @@ export class GSDEventStream extends EventEmitter {
 
   private mapResultMessage(
     msg: SDKResultSuccess | SDKResultError,
-    base: Omit<GSDEvent, 'type'>,
-  ): GSDEvent {
+    base: Omit<GADEvent, 'type'>,
+  ): GADEvent {
     // Update cost tracking
     this.updateCost(msg.session_id, msg.total_cost_usd);
 
@@ -366,74 +366,74 @@ export class GSDEventStream extends EventEmitter {
       const successMsg = msg as SDKResultSuccess;
       return {
         ...base,
-        type: GSDEventType.SessionComplete,
+        type: GADEventType.SessionComplete,
         success: true,
         totalCostUsd: successMsg.total_cost_usd,
         durationMs: successMsg.duration_ms,
         numTurns: successMsg.num_turns,
         result: successMsg.result,
-      } as GSDSessionCompleteEvent;
+      } as GADSessionCompleteEvent;
     }
 
     const errorMsg = msg as SDKResultError;
     return {
       ...base,
-      type: GSDEventType.SessionError,
+      type: GADEventType.SessionError,
       success: false,
       totalCostUsd: errorMsg.total_cost_usd,
       durationMs: errorMsg.duration_ms,
       numTurns: errorMsg.num_turns,
       errorSubtype: errorMsg.subtype,
       errors: errorMsg.errors,
-    } as GSDSessionErrorEvent;
+    } as GADSessionErrorEvent;
   }
 
   private mapToolProgressMessage(
     msg: SDKToolProgressMessage,
-    base: Omit<GSDEvent, 'type'>,
-  ): GSDToolProgressEvent {
+    base: Omit<GADEvent, 'type'>,
+  ): GADToolProgressEvent {
     return {
       ...base,
-      type: GSDEventType.ToolProgress,
+      type: GADEventType.ToolProgress,
       toolName: msg.tool_name,
       toolUseId: msg.tool_use_id,
       elapsedSeconds: msg.elapsed_time_seconds,
-    } as GSDToolProgressEvent;
+    } as GADToolProgressEvent;
   }
 
   private mapToolUseSummaryMessage(
     msg: SDKToolUseSummaryMessage,
-    base: Omit<GSDEvent, 'type'>,
-  ): GSDToolUseSummaryEvent {
+    base: Omit<GADEvent, 'type'>,
+  ): GADToolUseSummaryEvent {
     return {
       ...base,
-      type: GSDEventType.ToolUseSummary,
+      type: GADEventType.ToolUseSummary,
       summary: msg.summary,
       toolUseIds: msg.preceding_tool_use_ids,
-    } as GSDToolUseSummaryEvent;
+    } as GADToolUseSummaryEvent;
   }
 
   private mapRateLimitMessage(
     msg: SDKRateLimitEvent,
-    base: Omit<GSDEvent, 'type'>,
-  ): GSDRateLimitEventType {
+    base: Omit<GADEvent, 'type'>,
+  ): GADRateLimitEventType {
     return {
       ...base,
-      type: GSDEventType.RateLimit,
+      type: GADEventType.RateLimit,
       status: msg.rate_limit_info.status,
       resetsAt: msg.rate_limit_info.resetsAt,
       utilization: msg.rate_limit_info.utilization,
-    } as GSDRateLimitEventType;
+    } as GADRateLimitEventType;
   }
 
   private mapStreamEvent(
     msg: SDKPartialAssistantMessage,
-    base: Omit<GSDEvent, 'type'>,
-  ): GSDStreamEvent {
+    base: Omit<GADEvent, 'type'>,
+  ): GADStreamEvent {
     return {
       ...base,
-      type: GSDEventType.StreamEvent,
+      type: GADEventType.StreamEvent,
       event: msg.event,
-    } as GSDStreamEvent;
+    } as GADStreamEvent;
   }
 }

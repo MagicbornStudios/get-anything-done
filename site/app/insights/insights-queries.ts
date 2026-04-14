@@ -39,7 +39,8 @@ export function buildInsights() {
     query("Total phases", () => ALL_PHASES.length),
     query("Phases done", () => ALL_PHASES.filter((p) => p.status === "done").length),
     query("Framework overhead", () => `${(selfEval.framework_overhead.ratio * 100).toFixed(1)}%`),
-    query("Loop compliance", () => `${(selfEval.loop_compliance.score * 100).toFixed(0)}%`),
+    query("Framework compliance", () => `${(selfEval.framework_compliance.score * 100).toFixed(0)}%`),
+    query("Hydration overhead", () => `${(selfEval.hydration.overhead_ratio * 100).toFixed(1)}%`),
     query("Trace events captured", () => selfEval.totals.events.toLocaleString()),
     query("GAD CLI calls", () => selfEval.totals.gad_cli_calls),
     query("Highest pressure phase", () => {

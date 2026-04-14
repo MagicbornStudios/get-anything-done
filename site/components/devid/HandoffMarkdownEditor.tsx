@@ -17,11 +17,8 @@ type Props = {
   onChange: (doc: string) => void;
   className?: string;
   ariaLabel: string;
-  /**
-   * Exact markdown heading text (no trailing newline). After mount, caret moves to the
-   * start of the empty line directly under this heading (heading must be followed by `\n\n`).
-   */
-  focusEmptyLineUnderHeading?: string;
+  /** Focus the editor after mount (e.g. empty user-only region below a locked header). */
+  autoFocus?: boolean;
 };
 
 const handoffEditorTheme = EditorView.theme(
@@ -79,16 +76,8 @@ const handoffEditorTheme = EditorView.theme(
   { dark: true },
 );
 
-function caretOnEmptyLineAfterHeading(doc: string, heading: string): number | null {
-  const idx = doc.indexOf(heading);
-  if (idx < 0) return null;
-  const nl = idx + heading.length;
-  if (doc[nl] !== "\n" || doc[nl + 1] !== "\n") return null;
-  return nl + 1;
-}
-
 export const HandoffMarkdownEditor = forwardRef<HandoffEditorHandle, Props>(function HandoffMarkdownEditor(
-  { initialDoc, onChange, className, ariaLabel, focusEmptyLineUnderHeading },
+  { initialDoc, onChange, className, ariaLabel, autoFocus },
   ref,
 ) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -131,17 +120,10 @@ export const HandoffMarkdownEditor = forwardRef<HandoffEditorHandle, Props>(func
     const view = new EditorView({ state, parent });
     viewRef.current = view;
 
-    if (focusEmptyLineUnderHeading) {
-      const pos = caretOnEmptyLineAfterHeading(initialDoc, focusEmptyLineUnderHeading);
-      if (pos != null) {
-        requestAnimationFrame(() => {
-          view.focus();
-          view.dispatch({
-            selection: { anchor: pos, head: pos },
-            scrollIntoView: true,
-          });
-        });
-      }
+    if (autoFocus) {
+      requestAnimationFrame(() => {
+        view.focus();
+      });
     }
 
     return () => {

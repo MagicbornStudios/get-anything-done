@@ -2,8 +2,6 @@ import { Bot, Package, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AGENTS, SKILLS, TEMPLATES } from "@/lib/catalog.generated";
 
-const OFFICIAL_SKILLS = SKILLS.filter((skill) => skill.source === "sdk");
-
 export type GadCoreConcept = {
   icon: LucideIcon;
   title: string;
@@ -17,9 +15,9 @@ export const GAD_CORE_CONCEPTS: GadCoreConcept[] = [
   {
     icon: Sparkles,
     title: "Skills",
-    count: OFFICIAL_SKILLS.length,
+    count: SKILLS.length,
     description:
-      "Methodology docs the agent follows. Official consumer skills live under sdk/skills and are the installable public surface; root skills are internal methodology for evolving GAD itself.",
+      "Methodology docs the agent follows. The framework skill catalog lives under skills, with installable, emergent, and experimental entries carried as metadata inside the same tree.",
     href: "/#catalog",
     chip: "-> browse skills",
   },
@@ -37,8 +35,9 @@ export const GAD_CORE_CONCEPTS: GadCoreConcept[] = [
     title: "Templates",
     count: TEMPLATES.length,
     description:
-      "The planning-doc scaffolding and workflow templates the CLI uses to bootstrap new projects. These live under sdk/templates and ship with the framework's runtime assets.",
+      "The planning-doc scaffolding and workflow templates the CLI uses to bootstrap new projects. These live under templates and ship with the framework's runtime assets.",
     href: "/#templates",
     chip: "-> download pack",
   },
 ];
+

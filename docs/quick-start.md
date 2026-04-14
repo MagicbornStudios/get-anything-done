@@ -68,7 +68,7 @@ gad eval run --project my-eval --prompt-only
 
 If snapshot output or SDK skills reference alias paths like `@references/...`,
 `@workflows/...`, `@templates/...`, `@agents/...`, or `@hooks/...`, resolve them from the GAD
-framework root under `sdk/`. Example: `@references/checkpoints.md` → `sdk/references/checkpoints.md`.
+framework root. Example: `@references/checkpoints.md` → `references/checkpoints.md`.
 
 ## 6. Preserve and review evals
 
@@ -84,3 +84,4 @@ gad eval report
 - `gad` executable: operational CLI, installed from GitHub Releases
 - GAD skills: methodology docs, installed from GitHub with `npx skills add`
 - Coding agent runtime: Claude Code, Codex, Cursor, or another supported runtime
+

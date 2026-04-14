@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { GSD as GADCompat } from './index.js';
+import { GAD } from './index.js';
 import { CLITransport } from './cli-transport.js';
 import { WSTransport } from './ws-transport.js';
 import { InitRunner } from './init-runner.js';
@@ -222,7 +222,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     console.log(`[init] Resolved input: ${input.length} chars`);
 
     // Build the compatibility SDK instance for tools and event stream.
-    const gad = new GADCompat({
+    const gad = new GAD({
       projectDir: args.projectDir,
       model: args.model,
       maxBudgetUsd: args.maxBudget,
@@ -291,7 +291,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   // ─── Auto command ─────────────────────────────────────────────────────────
   if (args.command === 'auto') {
-    const gad = new GADCompat({
+    const gad = new GAD({
       projectDir: args.projectDir,
       model: args.model,
       maxBudgetUsd: args.maxBudget,
@@ -380,7 +380,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   // ─── Run command ─────────────────────────────────────────────────────────
 
   // Build the compatibility SDK instance.
-  const gad = new GADCompat({
+  const gad = new GAD({
     projectDir: args.projectDir,
     model: args.model,
     maxBudgetUsd: args.maxBudget,

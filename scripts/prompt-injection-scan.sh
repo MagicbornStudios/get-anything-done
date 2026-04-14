@@ -73,7 +73,7 @@ ALLOWLIST=(
   'tests/security.test.cjs'
   'tests/prompt-injection-scan.test.cjs'
   'lib/security.cjs'
-  'sdk/hooks/gsd-prompt-guard.js'
+  'hooks/gad-prompt-guard.js'
   'SECURITY.md'
 )
 
@@ -196,3 +196,4 @@ main() {
 }
 
 main "$@"
+

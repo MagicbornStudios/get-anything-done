@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { GSDTools, GSDToolsError } from './gsd-tools.js';
+import { GADTools, GADToolsError } from './gad-tools.js';
 import {
   PhaseStepType,
-  GSDEventType,
+  GADEventType,
   PhaseType,
   type PhaseOpInfo,
   type PhaseStepResult,
   type PhaseRunnerResult,
   type HumanGateCallbacks,
   type PhaseRunnerOptions,
-  type GSDPhaseStartEvent,
-  type GSDPhaseStepStartEvent,
-  type GSDPhaseStepCompleteEvent,
-  type GSDPhaseCompleteEvent,
+  type GADPhaseStartEvent,
+  type GADPhaseStepStartEvent,
+  type GADPhaseStepCompleteEvent,
+  type GADPhaseCompleteEvent,
 } from './types.js';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -37,23 +37,23 @@ describe('Phase lifecycle types', () => {
     });
   });
 
-  // ─── GSDEventType phase lifecycle values ───────────────────────────────
+  // ─── GADEventType phase lifecycle values ───────────────────────────────
 
-  describe('GSDEventType phase lifecycle events', () => {
+  describe('GADEventType phase lifecycle events', () => {
     it('includes PhaseStart', () => {
-      expect(GSDEventType.PhaseStart).toBe('phase_start');
+      expect(GADEventType.PhaseStart).toBe('phase_start');
     });
 
     it('includes PhaseStepStart', () => {
-      expect(GSDEventType.PhaseStepStart).toBe('phase_step_start');
+      expect(GADEventType.PhaseStepStart).toBe('phase_step_start');
     });
 
     it('includes PhaseStepComplete', () => {
-      expect(GSDEventType.PhaseStepComplete).toBe('phase_step_complete');
+      expect(GADEventType.PhaseStepComplete).toBe('phase_step_complete');
     });
 
     it('includes PhaseComplete', () => {
-      expect(GSDEventType.PhaseComplete).toBe('phase_complete');
+      expect(GADEventType.PhaseComplete).toBe('phase_complete');
     });
   });
 
@@ -87,7 +87,7 @@ describe('Phase lifecycle types', () => {
     });
 
     it('matches the documented init phase-op JSON shape', () => {
-      // Simulate parsing JSON from gsd-tools.cjs
+      // Simulate parsing JSON from gad-tools.cjs
       const raw = JSON.parse(JSON.stringify({
         phase_found: true,
         phase_dir: '.planning/phases/03-Auth',
@@ -197,9 +197,9 @@ describe('Phase lifecycle types', () => {
   // ─── Phase lifecycle event interfaces ──────────────────────────────────
 
   describe('Phase lifecycle event interfaces', () => {
-    it('GSDPhaseStartEvent has correct shape', () => {
-      const event: GSDPhaseStartEvent = {
-        type: GSDEventType.PhaseStart,
+    it('GADPhaseStartEvent has correct shape', () => {
+      const event: GADPhaseStartEvent = {
+        type: GADEventType.PhaseStart,
         timestamp: new Date().toISOString(),
         sessionId: 'test-session',
         phaseNumber: '3',
@@ -209,9 +209,9 @@ describe('Phase lifecycle types', () => {
       expect(event.phaseNumber).toBe('3');
     });
 
-    it('GSDPhaseStepStartEvent has correct shape', () => {
-      const event: GSDPhaseStepStartEvent = {
-        type: GSDEventType.PhaseStepStart,
+    it('GADPhaseStepStartEvent has correct shape', () => {
+      const event: GADPhaseStepStartEvent = {
+        type: GADEventType.PhaseStepStart,
         timestamp: new Date().toISOString(),
         sessionId: 'test-session',
         phaseNumber: '3',
@@ -221,9 +221,9 @@ describe('Phase lifecycle types', () => {
       expect(event.step).toBe('research');
     });
 
-    it('GSDPhaseStepCompleteEvent has correct shape', () => {
-      const event: GSDPhaseStepCompleteEvent = {
-        type: GSDEventType.PhaseStepComplete,
+    it('GADPhaseStepCompleteEvent has correct shape', () => {
+      const event: GADPhaseStepCompleteEvent = {
+        type: GADEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: 'test-session',
         phaseNumber: '3',
@@ -235,9 +235,9 @@ describe('Phase lifecycle types', () => {
       expect(event.success).toBe(true);
     });
 
-    it('GSDPhaseStepCompleteEvent can include error', () => {
-      const event: GSDPhaseStepCompleteEvent = {
-        type: GSDEventType.PhaseStepComplete,
+    it('GADPhaseStepCompleteEvent can include error', () => {
+      const event: GADPhaseStepCompleteEvent = {
+        type: GADEventType.PhaseStepComplete,
         timestamp: new Date().toISOString(),
         sessionId: 'test-session',
         phaseNumber: '3',
@@ -249,9 +249,9 @@ describe('Phase lifecycle types', () => {
       expect(event.error).toBe('Verification failed');
     });
 
-    it('GSDPhaseCompleteEvent has correct shape', () => {
-      const event: GSDPhaseCompleteEvent = {
-        type: GSDEventType.PhaseComplete,
+    it('GADPhaseCompleteEvent has correct shape', () => {
+      const event: GADPhaseCompleteEvent = {
+        type: GADEventType.PhaseComplete,
         timestamp: new Date().toISOString(),
         sessionId: 'test-session',
         phaseNumber: '3',
@@ -267,14 +267,14 @@ describe('Phase lifecycle types', () => {
   });
 });
 
-// ─── GSDTools typed methods ──────────────────────────────────────────────────
+// ─── GADTools typed methods ──────────────────────────────────────────────────
 
-describe('GSDTools typed methods', () => {
+describe('GADTools typed methods', () => {
   let tmpDir: string;
   let fixtureDir: string;
 
   beforeEach(async () => {
-    tmpDir = join(tmpdir(), `gsd-tools-phase-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = join(tmpdir(), `gad-tools-phase-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     fixtureDir = join(tmpDir, 'fixtures');
     await mkdir(fixtureDir, { recursive: true });
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
@@ -291,7 +291,7 @@ describe('GSDTools typed methods', () => {
   }
 
   describe('initPhaseOp()', () => {
-    it('returns typed PhaseOpInfo from gsd-tools output', async () => {
+    it('returns typed PhaseOpInfo from gad-tools output', async () => {
       const mockOutput: PhaseOpInfo = {
         phase_found: true,
         phase_dir: '.planning/phases/05-Skill-Scaffolding',
@@ -325,7 +325,7 @@ describe('GSDTools typed methods', () => {
         `,
       );
 
-      const tools = new GSDTools({ projectDir: tmpDir, gsdToolsPath: scriptPath });
+      const tools = new GADTools({ projectDir: tmpDir, gadToolsPath: scriptPath });
       const result = await tools.initPhaseOp('5');
 
       expect(result.phase_found).toBe(true);
@@ -346,7 +346,7 @@ describe('GSDTools typed methods', () => {
         `,
       );
 
-      const tools = new GSDTools({ projectDir: tmpDir, gsdToolsPath: scriptPath });
+      const tools = new GADTools({ projectDir: tmpDir, gadToolsPath: scriptPath });
       const result = await tools.initPhaseOp('7') as { received_args: string[] };
 
       expect(result.received_args).toContain('init');
@@ -358,7 +358,7 @@ describe('GSDTools typed methods', () => {
   });
 
   describe('configGet()', () => {
-    it('returns string value from gsd-tools config', async () => {
+    it('returns string value from gad-tools config', async () => {
       const scriptPath = await createScript(
         'config-get.cjs',
         `
@@ -371,7 +371,7 @@ describe('GSDTools typed methods', () => {
         `,
       );
 
-      const tools = new GSDTools({ projectDir: tmpDir, gsdToolsPath: scriptPath });
+      const tools = new GADTools({ projectDir: tmpDir, gadToolsPath: scriptPath });
       const result = await tools.configGet('model_profile');
 
       expect(result).toBe('balanced');
@@ -390,7 +390,7 @@ describe('GSDTools typed methods', () => {
         `,
       );
 
-      const tools = new GSDTools({ projectDir: tmpDir, gsdToolsPath: scriptPath });
+      const tools = new GADTools({ projectDir: tmpDir, gadToolsPath: scriptPath });
       const result = await tools.configGet('nonexistent_key');
 
       expect(result).toBeNull();
@@ -412,7 +412,7 @@ describe('GSDTools typed methods', () => {
         `,
       );
 
-      const tools = new GSDTools({ projectDir: tmpDir, gsdToolsPath: scriptPath });
+      const tools = new GADTools({ projectDir: tmpDir, gadToolsPath: scriptPath });
       const result = await tools.stateBeginPhase('3');
 
       expect(result).toBe('ok');

@@ -5,9 +5,9 @@ import { join } from 'node:path';
 import { execSync } from 'node:child_process';
 
 import { runPhaseStepSession } from './session-runner.js';
-import { GSDEventStream } from './event-stream.js';
-import { GSDEventType, PhaseStepType, type GSDSessionInitEvent } from './types.js';
-import type { GSDConfig } from './config.js';
+import { GADEventStream } from './event-stream.js';
+import { GADEventType, PhaseStepType, type GADSessionInitEvent } from './types.js';
+import type { GADConfig } from './config.js';
 
 const RUN_LIVE = process.env.GAD_RUN_LIVE_MODEL_PROFILE_TEST === '1';
 
@@ -24,7 +24,7 @@ function hasClaude(): boolean {
   }
 }
 
-function createConfig(profile: string): GSDConfig {
+function createConfig(profile: string): GADConfig {
   return {
     model_profile: profile,
     commit_docs: true,
@@ -69,10 +69,10 @@ describe.skipIf(!RUN_LIVE || !hasClaude())('live model profile switching', () =>
     await writeFile(join(projectDir, '.planning', 'config.json'), JSON.stringify({ model_profile: 'off' }, null, 2));
 
     async function runProfile(profile: string) {
-      const eventStream = new GSDEventStream();
-      const initEvents: GSDSessionInitEvent[] = [];
-      eventStream.on(GSDEventType.SessionInit, (event) => {
-        initEvents.push(event as GSDSessionInitEvent);
+      const eventStream = new GADEventStream();
+      const initEvents: GADSessionInitEvent[] = [];
+      eventStream.on(GADEventType.SessionInit, (event) => {
+        initEvents.push(event as GADSessionInitEvent);
       });
 
       const result = await runPhaseStepSession(

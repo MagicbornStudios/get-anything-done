@@ -11,8 +11,8 @@
  *   init execute-phase <phase>         Execute-phase context
  *   init plan-phase <phase>            Plan-phase context
  *   commit <message> --files f1 f2     Commit planning docs
- *   config-get <key>                   Read from planning-config.toml or config.json
- *   config-set <key> <value>           Write to config.json
+ *   config-get <key>                   Read from gad-config.toml / compat config.json
+ *   config-set <key> <value>           Write gad-config.toml and regenerate compatibility config.json
  *   state load                         Load project state from STATE.xml
  *   state update <field> <value>       Update STATE.xml field
  *   state record-session               Update session info in STATE.xml
@@ -32,6 +32,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { resolveWorkflowModels } = require('../lib/model-profiles.cjs');
+const gadConfig = require('./gad-config.cjs');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -149,32 +150,47 @@ function parseTasksXml(content) {
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 function loadConfig(cwd) {
-  const configPath = path.join(cwd, '.planning', 'config.json');
-  if (fs.existsSync(configPath)) {
-    return JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  }
-  return {};
+  const loaded = gadConfig.load(cwd);
+  gadConfig.writeCompatJson(cwd, loaded);
+  return loaded;
 }
 
 function saveConfig(cwd, config) {
-  const configPath = path.join(cwd, '.planning', 'config.json');
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  gadConfig.writeToml(cwd, config);
+  gadConfig.writeCompatJson(cwd, config);
 }
 
 function configGet(cwd, key) {
   const config = loadConfig(cwd);
+  const compat = gadConfig.toCompatJson(config);
   const parts = key.split('.');
   let val = config;
   for (const p of parts) {
     if (val === undefined || val === null) return undefined;
     val = val[p];
   }
+  if (val === undefined) {
+    val = compat;
+    for (const p of parts) {
+      if (val === undefined || val === null) return undefined;
+      val = val[p];
+    }
+  }
   return val;
 }
 
 function configSet(cwd, key, value) {
   const config = loadConfig(cwd);
-  const parts = key.split('.');
+  const compatStyleKeys = {
+    'planning.docs_sink': 'docs_sink',
+    'planning.docs_sink_ignore': 'docs_sink_ignore',
+    'planning.ignore': 'ignore',
+    'planning.sprintSize': 'sprintSize',
+    'planning.currentProfile': 'currentProfile',
+    'planning.conventionsPaths': 'conventionsPaths',
+  };
+  const normalizedKey = compatStyleKeys[key] || key;
+  const parts = normalizedKey.split('.');
   let obj = config;
   for (let i = 0; i < parts.length - 1; i++) {
     if (!obj[parts[i]] || typeof obj[parts[i]] !== 'object') obj[parts[i]] = {};

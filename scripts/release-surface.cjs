@@ -2,13 +2,12 @@ const RELEASE_SURFACE_PREFIXES = [
   '.github/workflows/release-',
   'bin/',
   'lib/',
+  'agents/',
+  'hooks/',
+  'references/',
   'skills/',
-  'sdk/agents/',
-  'sdk/hooks/',
-  'sdk/references/',
-  'sdk/skills/',
-  'sdk/templates/',
-  'sdk/workflows/',
+  'templates/',
+  'workflows/',
   'scripts/build-',
   'scripts/install-gad-',
   'scripts/release-',
@@ -38,3 +37,4 @@ module.exports = {
   isReleaseSurfacePath,
   normalizePath,
 };
+

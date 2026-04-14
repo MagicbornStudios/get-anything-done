@@ -7,7 +7,7 @@ participants:
   skills: [create-proto-skill, gad-evolution-evolve, gad-evolution-validator, gad-skill-creator]
   agents: [default]
   cli: [gad evolution status, gad evolution validate, gad evolution promote, gad evolution discard]
-  artifacts: [skills/candidates/<slug>/CANDIDATE.md, skills/proto-skills/<slug>/PROVENANCE.md, skills/proto-skills/<slug>/SKILL.md, skills/proto-skills/<slug>/VALIDATION.md, sdk/skills/<name>/]
+  artifacts: [skills/candidates/<slug>/CANDIDATE.md, skills/proto-skills/<slug>/PROVENANCE.md, skills/proto-skills/<slug>/SKILL.md, skills/proto-skills/<slug>/VALIDATION.md, skills/<name>/]
 parent-workflow: gad-loop
 related-phases: [42, 42.2, 42.3]
 ---
@@ -37,7 +37,7 @@ flowchart TD
   F --> G[gad-evolution-validator skill: VALIDATION.md advisory]
   G --> H[human review SKILL.md + VALIDATION.md]
   H --> I{promote?}
-  I -->|yes| J[gad evolution promote -> sdk/skills/<name>/]
+  I -->|yes| J[gad evolution promote -> skills/<name>/]
   I -->|no| K[gad evolution discard]
   J --> L[PROVENANCE.md travels with skill]
 ```

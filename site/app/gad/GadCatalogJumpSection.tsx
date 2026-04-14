@@ -4,13 +4,11 @@ import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { AGENTS, SKILLS, TEMPLATES } from "@/lib/catalog.generated";
 
-const OFFICIAL_SKILLS = SKILLS.filter((skill) => skill.source === "sdk");
-
 const JUMP_ITEMS = [
   {
     as: "GadCatalogJumpTileSkills" as const,
     label: "Skills",
-    count: OFFICIAL_SKILLS.length,
+    count: SKILLS.length,
     href: "/skills",
     icon: Sparkles,
   },

@@ -6,9 +6,9 @@
  *
  * @example
  * ```typescript
- * import { GADCompat } from '@magicborn/gad-sdk';
+ * import { GAD } from '@magicborn/gad-sdk';
  *
- * const gad = new GADCompat({ projectDir: '/path/to/project' });
+ * const gad = new GAD({ projectDir: '/path/to/project' });
  * const result = await gad.executePlan('.planning/phases/01-auth/01-auth-01-PLAN.md');
  *
  * if (result.success) {
@@ -23,39 +23,39 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 
-import type { GSDOptions, PlanResult, SessionOptions, GSDEvent, TransportHandler, PhaseRunnerOptions, PhaseRunnerResult, MilestoneRunnerOptions, MilestoneRunnerResult, RoadmapPhaseInfo } from './types.js';
-import { GSDEventType } from './types.js';
+import type { GADOptions, PlanResult, SessionOptions, GADEvent, TransportHandler, PhaseRunnerOptions, PhaseRunnerResult, MilestoneRunnerOptions, MilestoneRunnerResult, RoadmapPhaseInfo } from './types.js';
+import { GADEventType } from './types.js';
 import { parsePlan, parsePlanFile } from './plan-parser.js';
 import { loadConfig } from './config.js';
-import { GSDTools, resolveGsdToolsPath } from './gsd-tools.js';
+import { GADTools, resolveGadToolsPath } from './gad-tools.js';
 import { runPlanSession } from './session-runner.js';
 import { buildExecutorPrompt, parseAgentTools } from './prompt-builder.js';
-import { GSDEventStream } from './event-stream.js';
+import { GADEventStream } from './event-stream.js';
 import { PhaseRunner } from './phase-runner.js';
 import { ContextEngine } from './context-engine.js';
 import { PromptFactory } from './phase-prompt.js';
 import { GADQuery } from './query/index.js';
 
-// ─── Legacy compatibility class (`GSD`) ─────────────────────────────────────
+// ─── Primary SDK class (`GAD`) ─────────────────────────────────────
 
-export class GSD {
+export class GAD {
   private readonly projectDir: string;
-  private readonly gsdToolsPath: string;
+  private readonly gadToolsPath: string;
   private readonly defaultModel?: string;
   private readonly defaultMaxBudgetUsd: number;
   private readonly defaultMaxTurns: number;
   private readonly autoMode: boolean;
-  readonly eventStream: GSDEventStream;
+  readonly eventStream: GADEventStream;
 
-  constructor(options: GSDOptions) {
+  constructor(options: GADOptions) {
     this.projectDir = resolve(options.projectDir);
-    this.gsdToolsPath =
-      options.gsdToolsPath ?? resolveGsdToolsPath(this.projectDir);
+    this.gadToolsPath =
+      options.gadToolsPath ?? resolveGadToolsPath(this.projectDir);
     this.defaultModel = options.model;
     this.defaultMaxBudgetUsd = options.maxBudgetUsd ?? 5.0;
     this.defaultMaxTurns = options.maxTurns ?? 50;
     this.autoMode = options.autoMode ?? false;
-    this.eventStream = new GSDEventStream();
+    this.eventStream = new GADEventStream();
   }
 
   /**
@@ -99,7 +99,7 @@ export class GSD {
   /**
    * Subscribe a simple handler to receive all GAD events.
    */
-  onEvent(handler: (event: GSDEvent) => void): void {
+  onEvent(handler: (event: GADEvent) => void): void {
     this.eventStream.on('event', handler);
   }
 
@@ -112,12 +112,12 @@ export class GSD {
   }
 
   /**
-   * Create a GSDTools instance for GAD state-management operations.
+   * Create a GADTools instance for GAD state-management operations.
    */
-  createTools(): GSDTools {
-    return new GSDTools({
+  createTools(): GADTools {
+    return new GADTools({
       projectDir: this.projectDir,
-      gsdToolsPath: this.gsdToolsPath,
+      gadToolsPath: this.gadToolsPath,
     });
   }
 
@@ -131,7 +131,7 @@ export class GSD {
   /**
    * Run a full phase lifecycle: discuss → research → plan → execute → verify → advance.
    *
-   * Creates the necessary collaborators (GSDTools, PromptFactory, ContextEngine),
+   * Creates the necessary collaborators (GADTools, PromptFactory, ContextEngine),
    * loads project config, instantiates a PhaseRunner, and delegates to `runner.run()`.
    *
    * @param phaseNumber - The phase number to execute (e.g. "01", "02")
@@ -182,7 +182,7 @@ export class GSD {
 
     // Emit MilestoneStart
     this.eventStream.emitEvent({
-      type: GSDEventType.MilestoneStart,
+      type: GADEventType.MilestoneStart,
       timestamp: new Date().toISOString(),
       sessionId: `milestone-${Date.now()}`,
       phaseCount: incompletePhases.length,
@@ -235,7 +235,7 @@ export class GSD {
 
     // Emit MilestoneComplete
     this.eventStream.emitEvent({
-      type: GSDEventType.MilestoneComplete,
+      type: GADEventType.MilestoneComplete,
       timestamp: new Date().toISOString(),
       sessionId: `milestone-${Date.now()}`,
       success,
@@ -294,9 +294,9 @@ export class GSD {
 
 export { parsePlan, parsePlanFile } from './plan-parser.js';
 export { loadConfig } from './config.js';
-export type { GSDConfig } from './config.js';
-export { GSD as GADCompat };
-export { GSDTools, GSDToolsError, resolveGsdToolsPath } from './gsd-tools.js';
+export type { GADConfig } from './config.js';
+
+export { GADTools, GADToolsError, resolveGadToolsPath } from './gad-tools.js';
 export { GADQuery } from './query/index.js';
 export * from './query/index.js';
 export { runPlanSession, runPhaseStepSession } from './session-runner.js';
@@ -304,14 +304,14 @@ export { buildExecutorPrompt, parseAgentTools } from './prompt-builder.js';
 export * from './types.js';
 
 // S02: Event stream, context, prompt, and logging modules
-export { GSDEventStream } from './event-stream.js';
+export { GADEventStream } from './event-stream.js';
 export type { EventStreamContext } from './event-stream.js';
 export { ContextEngine, PHASE_FILE_MANIFEST } from './context-engine.js';
 export type { FileSpec } from './context-engine.js';
 export { getToolsForPhase, PHASE_AGENT_MAP, PHASE_DEFAULT_TOOLS } from './tool-scoping.js';
 export { PromptFactory, extractBlock, extractSteps, PHASE_WORKFLOW_MAP } from './phase-prompt.js';
-export { GSDLogger } from './logger.js';
-export type { LogLevel, LogEntry, GSDLoggerOptions } from './logger.js';
+export { GADLogger } from './logger.js';
+export type { LogLevel, LogEntry, GADLoggerOptions } from './logger.js';
 
 // S03: Phase lifecycle state machine
 export { PhaseRunner, PhaseRunnerError } from './phase-runner.js';

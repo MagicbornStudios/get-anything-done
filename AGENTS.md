@@ -68,17 +68,14 @@ GAD does **not** infer paths from TypeScript or imports — only explicit string
 
 ## Skills
 
-Official consumer/runtime skills live in `sdk/skills/`. Agents read `SKILL.md` and follow the
-methodology. Those skills are the canonical public install/publish surface and are what runtime
-installers transpile into Claude/Codex/Cursor-compatible layouts.
-
-Repo-root `skills/` is reserved for internal or non-official methodology used to work on GAD
-itself. Repo-local `.agents/`, `.claude/`, `.codex/`, or generated `commands/` layouts are
-install/build outputs only and are not canonical source.
+Framework skills live in `skills/`. Agents read `SKILL.md` and follow the methodology. That tree
+is the canonical source for installable skills plus framework-owned non-default entries such as
+emergent, candidate, or proto skills. Repo-local `.agents/`, `.claude/`, `.codex/`, or generated
+`commands/` layouts are install/build outputs only and are not canonical source.
 
 Terminology:
-- `skill` — the installable/public methodology unit; canonical source under `sdk/skills/`
-- `workflow` — a reusable long-form execution spec used by skills, agents, and prompts; canonical source under `sdk/workflows/`
+- `skill` — a methodology unit in the framework skill catalog; canonical source under `skills/`
+- `workflow` — a reusable long-form execution spec used by skills, agents, and prompts; canonical source under `workflows/`
 - `command` — a runtime-specific wrapper shape generated from skills only when a coding agent still needs command files
 
 ### SDK asset aliases
@@ -86,16 +83,16 @@ Terminology:
 Canonical SDK content uses repo-relative alias refs instead of runtime-local install paths.
 Resolve them from the GAD framework root:
 
-- `@skills/...` ? `sdk/skills/...`
-- `@workflows/...` ? `sdk/workflows/...`
-- `@templates/...` ? `sdk/templates/...`
-- `@references/...` ? `sdk/references/...`
-- `@agents/...` ? `sdk/agents/...`
-- `@hooks/...` ? `sdk/hooks/...`
+- `@skills/...` ? `skills/...`
+- `@workflows/...` ? `workflows/...`
+- `@templates/...` ? `templates/...`
+- `@references/...` ? `references/...`
+- `@agents/...` ? `agents/...`
+- `@hooks/...` ? `hooks/...`
 
 Example:
 
-- `@references/checkpoints.md` resolves to `vendor/get-anything-done/sdk/references/checkpoints.md` in this monorepo
+- `@references/checkpoints.md` resolves to `vendor/get-anything-done/references/checkpoints.md` in this monorepo
 - in a consumer install, the same alias resolves from that installed GAD framework root
 
 When a skill, workflow, or agent prompt mentions one of these aliases, read that file from the
@@ -117,3 +114,4 @@ SDK tree before checking any runtime-local installed layout. These aliases are c
 gad sink sync                                    # compile all projects
 gad sink status --projectid get-anything-done    # check sync state
 ```
+

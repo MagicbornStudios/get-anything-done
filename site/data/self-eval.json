@@ -6,14 +6,14 @@
       "days": 8
     },
     "totals": {
-      "events": 4802,
+      "events": 4809,
       "sessions": 14,
       "gad_cli_calls": 348
     },
     "runtime_distribution": [
       {
         "runtime": "claude-code",
-        "count": 4092
+        "count": 4099
       },
       {
         "runtime": "unknown",
@@ -33,11 +33,11 @@
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 1598
+        "count": 1601
       },
       {
         "tool": "unknown",
-        "count": 805
+        "count": 809
       },
       {
         "tool": "Read",
@@ -119,7 +119,7 @@
       },
       {
         "day": "2026-04-14",
-        "count": 201
+        "count": 208
       }
     ],
     "framework_overhead": {
@@ -133,10 +133,10 @@
       "eval": 103,
       "other": 190
     },
-    "computed_at": "2026-04-14T03:24:36.262Z",
+    "computed_at": "2026-04-14T03:29:58.333Z",
     "tasks": {
-      "done": 236,
-      "planned": 42,
+      "done": 240,
+      "planned": 38,
       "in_progress": 4,
       "total": 282
     },
@@ -345,9 +345,9 @@
       {
         "phase": "43",
         "tasks_total": 11,
-        "tasks_done": 3,
-        "crosscuts": 7,
-        "pressure_score": 25,
+        "tasks_done": 7,
+        "crosscuts": 8,
+        "pressure_score": 27,
         "high_pressure": true
       },
       {
@@ -1684,10 +1684,10 @@
         "name": "phase-43-domain-rename-project-species-schema-uni",
         "source_phase": "43",
         "source_phase_title": "Domain rename + project/species schema unification",
-        "pressure_score": 25,
+        "pressure_score": 27,
         "tasks_total": 11,
-        "tasks_done": 3,
-        "crosscuts": 7,
+        "tasks_done": 7,
+        "crosscuts": 8,
         "candidate_file": "skills/candidates/phase-43-domain-rename-project-species-schema-uni/CANDIDATE.md",
         "proto_skill_dir": null,
         "stage": "candidate",
@@ -1695,8 +1695,8 @@
         "reviewed": false,
         "reviewed_on": null,
         "reviewed_notes": null,
-        "body_raw": "---\nstatus: candidate\nsource_phase: \"43\"\nsource_phase_title: \"Domain rename + project/species schema unification\"\npressure_score: 25\ntasks_total: 11\ntasks_done: 3\ncrosscuts: 7\ncreated_on: \"2026-04-14\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 43\n\n## Phase\n\n```\nget-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 25  (11 tasks, 3 done, 7 crosscuts)\n```\n\n## Tasks\n\n```\n43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 planned Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Single-variant projects (cli-efficiency, reader-workspace, etc.) get a degenerate one-species shape per D-28.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 planned Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (currently project/version) to project/species/version. Update all downstream consumers in lockstep.\n43-06 planned Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes.\n43-07 planned Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/run/ and apps/portfolio/public/evals/&lt;project&gt;/&lt;species&gt;/v&lt;N&gt;/.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" with \"generation N\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). Add \"DNA\" and \"spawn\" terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project for what we now call \"generation\" per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from \"Brood Editor\" to \"Species Editor\" and rewrite its goal to drop \"brood\" / \"Brood Editor\" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the \"v4 brood\" example phrasing. Closed phase prose stays verbatim per D-15.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`gad-quick-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
-        "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;43&quot;\nsource_phase_title: &quot;Domain rename + project/species schema unification&quot;\npressure_score: 25\ntasks_total: 11\ntasks_done: 3\ncrosscuts: 7\ncreated_on: &quot;2026-04-14&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 43</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 25  (11 tasks, 3 done, 7 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 planned Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Single-variant projects (cli-efficiency, reader-workspace, etc.) get a degenerate one-species shape per D-28.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 planned Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&amp;lt;project&amp;gt;/species/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (currently project/version) to project/species/version. Update all downstream consumers in lockstep.\n43-06 planned Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes.\n43-07 planned Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&amp;lt;project&amp;gt;/species/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/run/ and apps/portfolio/public/evals/&amp;lt;project&amp;gt;/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing &quot;round&quot; with &quot;evolution&quot;, &quot;vN&quot; with &quot;generation N&quot;, drop &quot;brownfield&quot;/&quot;greenfield&quot; framing entirely (no replacement). Add &quot;DNA&quot; and &quot;spawn&quot; terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used &quot;round&quot; for what we now call &quot;evolution&quot; and &quot;vN&quot; per project for what we now call &quot;generation&quot; per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from &quot;Brood Editor&quot; to &quot;Species Editor&quot; and rewrite its goal to drop &quot;brood&quot; / &quot;Brood Editor&quot; references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the &quot;v4 brood&quot; example phrasing. Closed phase prose stays verbatim per D-15.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>gad-quick-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
+        "body_raw": "---\nstatus: candidate\nsource_phase: \"43\"\nsource_phase_title: \"Domain rename + project/species schema unification\"\npressure_score: 27\ntasks_total: 11\ntasks_done: 7\ncrosscuts: 8\ncreated_on: \"2026-04-14\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 43\n\n## Phase\n\n```\nget-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 27  (11 tasks, 7 done, 8 crosscuts)\n```\n\n## Tasks\n\n```\n43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 done Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Per follow-up: single-variant projects (cli-efficiency, reader-workspace, etc.) deleted entirely — only escape-the-dungeon and gad-explainer-video remain.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 done Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list. Update the keys (currently project/version) to project/species/version. Updated 8 walker sites + 2 helpers (listEvalSpecies, listEvalGenerations, listEvalProjects). Site/public/playable migrated to same layout.\n43-06 done Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. The generated TS file is regenerated by build-site-data.mjs and contains the new fields automatically.\n43-07 done Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts both positive (every (project, species) pair has TRACE.json + run/ + preserved build at the new paths) and negative (no flat-layout dirs remain at the top level of evals/ or apps/portfolio/public/evals/). All 8 tests passing. Two pre-existing-data-loss generations exempted via KNOWN_PRE_PHASE_43_DATA_LOSS set with documentation.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" with \"generation N\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). Add \"DNA\" and \"spawn\" terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project for what we now call \"generation\" per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from \"Brood Editor\" to \"Species Editor\" and rewrite its goal to drop \"brood\" / \"Brood Editor\" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the \"v4 brood\" example phrasing. Closed phase prose stays verbatim per D-15.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`gad-quick-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
+        "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;43&quot;\nsource_phase_title: &quot;Domain rename + project/species schema unification&quot;\npressure_score: 27\ntasks_total: 11\ntasks_done: 7\ncrosscuts: 8\ncreated_on: &quot;2026-04-14&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 43</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 27  (11 tasks, 7 done, 8 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 done Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Per follow-up: single-variant projects (cli-efficiency, reader-workspace, etc.) deleted entirely — only escape-the-dungeon and gad-explainer-video remain.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 done Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&amp;lt;project&amp;gt;/species/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/ layout. Replace the hardcoded escape-the-dungeon project list. Update the keys (currently project/version) to project/species/version. Updated 8 walker sites + 2 helpers (listEvalSpecies, listEvalGenerations, listEvalProjects). Site/public/playable migrated to same layout.\n43-06 done Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. The generated TS file is regenerated by build-site-data.mjs and contains the new fields automatically.\n43-07 done Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts both positive (every (project, species) pair has TRACE.json + run/ + preserved build at the new paths) and negative (no flat-layout dirs remain at the top level of evals/ or apps/portfolio/public/evals/). All 8 tests passing. Two pre-existing-data-loss generations exempted via KNOWN_PRE_PHASE_43_DATA_LOSS set with documentation.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing &quot;round&quot; with &quot;evolution&quot;, &quot;vN&quot; with &quot;generation N&quot;, drop &quot;brownfield&quot;/&quot;greenfield&quot; framing entirely (no replacement). Add &quot;DNA&quot; and &quot;spawn&quot; terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used &quot;round&quot; for what we now call &quot;evolution&quot; and &quot;vN&quot; per project for what we now call &quot;generation&quot; per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from &quot;Brood Editor&quot; to &quot;Species Editor&quot; and rewrite its goal to drop &quot;brood&quot; / &quot;Brood Editor&quot; references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the &quot;v4 brood&quot; example phrasing. Closed phase prose stays verbatim per D-15.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>gad-quick-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
         "tasks": [
           {
             "id": "43-01",
@@ -1710,8 +1710,8 @@
           },
           {
             "id": "43-03",
-            "status": "planned",
-            "goal": "Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Single-variant projects (cli-efficiency, reader-workspace, etc.) get a degenerate one-species shape per D-28."
+            "status": "done",
+            "goal": "Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Per follow-up: single-variant projects (cli-efficiency, reader-workspace, etc.) deleted entirely — only escape-the-dungeon and gad-explainer-video remain."
           },
           {
             "id": "43-04",
@@ -1720,18 +1720,18 @@
           },
           {
             "id": "43-05",
-            "status": "planned",
-            "goal": "Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (currently project/version) to project/species/version. Update all downstream consumers in lockstep."
+            "status": "done",
+            "goal": "Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list. Update the keys (currently project/version) to project/species/version. Updated 8 walker sites + 2 helpers (listEvalSpecies, listEvalGenerations, listEvalProjects). Site/public/playable migrated to same layout."
           },
           {
             "id": "43-06",
-            "status": "planned",
-            "goal": "Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes."
+            "status": "done",
+            "goal": "Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. The generated TS file is regenerated by build-site-data.mjs and contains the new fields automatically."
           },
           {
             "id": "43-07",
-            "status": "planned",
-            "goal": "Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/run/ and apps/portfolio/public/evals/&lt;project&gt;/&lt;species&gt;/v&lt;N&gt;/."
+            "status": "done",
+            "goal": "Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts both positive (every (project, species) pair has TRACE.json + run/ + preserved build at the new paths) and negative (no flat-layout dirs remain at the top level of evals/ or apps/portfolio/public/evals/). All 8 tests passing. Two pre-existing-data-loss generations exempted via KNOWN_PRE_PHASE_43_DATA_LOSS set with documentation."
           },
           {
             "id": "43-08",
@@ -1776,76 +1776,76 @@
     },
     "project_tokens": {
       "exact_eval_tokens": 0,
-      "estimated_live_input_tokens": 308142,
-      "estimated_live_output_tokens": 643512,
-      "estimated_live_total_tokens": 951654,
-      "combined_total_tokens": 951654,
+      "estimated_live_input_tokens": 309416,
+      "estimated_live_output_tokens": 643675,
+      "estimated_live_total_tokens": 953091,
+      "combined_total_tokens": 953091,
       "trace_files": 2,
       "trace_events": 2000,
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 1659
+          "count": 1685
         },
         {
           "runtime": "unknown",
-          "count": 341
+          "count": 315
         }
       ],
       "sources": [
         {
           "path": ".planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 188281,
-          "estimated_output_tokens": 326994,
-          "estimated_total_tokens": 515275
+          "estimated_input_tokens": 188358,
+          "estimated_output_tokens": 327197,
+          "estimated_total_tokens": 515555
         },
         {
           "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 119861,
-          "estimated_output_tokens": 316518,
-          "estimated_total_tokens": 436379
+          "estimated_input_tokens": 121058,
+          "estimated_output_tokens": 316478,
+          "estimated_total_tokens": 437536
         }
       ]
     },
     "workflow_conformance": {
-      "completed_tasks": 211,
-      "with_skill": 48,
+      "completed_tasks": 215,
+      "with_skill": 52,
       "with_agent": 10,
-      "with_type": 55,
+      "with_type": 59,
       "fully_attributed": 10,
       "score": 0.047
     },
     "framework_compliance": {
-      "completed_tasks": 211,
-      "with_skill": 48,
+      "completed_tasks": 215,
+      "with_skill": 52,
       "with_agent": 10,
-      "with_type": 55,
+      "with_type": 59,
       "fully_attributed": 10,
       "score": 0.047
     },
     "hydration": {
-      "snapshot_count": 296,
-      "estimated_snapshot_tokens": 2311763,
+      "snapshot_count": 299,
+      "estimated_snapshot_tokens": 2291967,
       "projects": [
         {
           "project": "get-anything-done",
-          "count": 152,
-          "estimated_tokens_per_snapshot": 10564,
-          "estimated_total_tokens": 1605728
+          "count": 153,
+          "estimated_tokens_per_snapshot": 10298,
+          "estimated_total_tokens": 1575594
         },
         {
           "project": "grime-time",
-          "count": 88,
+          "count": 89,
           "estimated_tokens_per_snapshot": 4165,
-          "estimated_total_tokens": 366520
+          "estimated_total_tokens": 370685
         },
         {
           "project": "global",
-          "count": 55,
+          "count": 56,
           "estimated_tokens_per_snapshot": 6173,
-          "estimated_total_tokens": 339515
+          "estimated_total_tokens": 345688
         },
         {
           "project": "unknown",
@@ -1854,8 +1854,8 @@
           "estimated_total_tokens": 0
         }
       ],
-      "total_project_tokens": 951654,
-      "overhead_ratio": 2.429
+      "total_project_tokens": 953091,
+      "overhead_ratio": 2.405
     },
     "active_assignments": {
       "total_active_agents": 0,
@@ -5547,14 +5547,14 @@
         "days": 8
       },
       "totals": {
-        "events": 4802,
+        "events": 4809,
         "sessions": 14,
         "gad_cli_calls": 348
       },
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 4092
+          "count": 4099
         },
         {
           "runtime": "unknown",
@@ -5574,11 +5574,11 @@
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 1598
+          "count": 1601
         },
         {
           "tool": "unknown",
-          "count": 805
+          "count": 809
         },
         {
           "tool": "Read",
@@ -5660,7 +5660,7 @@
         },
         {
           "day": "2026-04-14",
-          "count": 201
+          "count": 208
         }
       ],
       "framework_overhead": {
@@ -5674,10 +5674,10 @@
         "eval": 103,
         "other": 190
       },
-      "computed_at": "2026-04-14T03:24:36.262Z",
+      "computed_at": "2026-04-14T03:29:58.333Z",
       "tasks": {
-        "done": 236,
-        "planned": 42,
+        "done": 240,
+        "planned": 38,
         "in_progress": 4,
         "total": 282
       },
@@ -5886,9 +5886,9 @@
         {
           "phase": "43",
           "tasks_total": 11,
-          "tasks_done": 3,
-          "crosscuts": 7,
-          "pressure_score": 25,
+          "tasks_done": 7,
+          "crosscuts": 8,
+          "pressure_score": 27,
           "high_pressure": true
         },
         {
@@ -7225,10 +7225,10 @@
           "name": "phase-43-domain-rename-project-species-schema-uni",
           "source_phase": "43",
           "source_phase_title": "Domain rename + project/species schema unification",
-          "pressure_score": 25,
+          "pressure_score": 27,
           "tasks_total": 11,
-          "tasks_done": 3,
-          "crosscuts": 7,
+          "tasks_done": 7,
+          "crosscuts": 8,
           "candidate_file": "skills/candidates/phase-43-domain-rename-project-species-schema-uni/CANDIDATE.md",
           "proto_skill_dir": null,
           "stage": "candidate",
@@ -7236,8 +7236,8 @@
           "reviewed": false,
           "reviewed_on": null,
           "reviewed_notes": null,
-          "body_raw": "---\nstatus: candidate\nsource_phase: \"43\"\nsource_phase_title: \"Domain rename + project/species schema unification\"\npressure_score: 25\ntasks_total: 11\ntasks_done: 3\ncrosscuts: 7\ncreated_on: \"2026-04-14\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 43\n\n## Phase\n\n```\nget-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 25  (11 tasks, 3 done, 7 crosscuts)\n```\n\n## Tasks\n\n```\n43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 planned Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Single-variant projects (cli-efficiency, reader-workspace, etc.) get a degenerate one-species shape per D-28.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 planned Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (currently project/version) to project/species/version. Update all downstream consumers in lockstep.\n43-06 planned Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes.\n43-07 planned Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/run/ and apps/portfolio/public/evals/&lt;project&gt;/&lt;species&gt;/v&lt;N&gt;/.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" with \"generation N\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). Add \"DNA\" and \"spawn\" terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project for what we now call \"generation\" per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from \"Brood Editor\" to \"Species Editor\" and rewrite its goal to drop \"brood\" / \"Brood Editor\" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the \"v4 brood\" example phrasing. Closed phase prose stays verbatim per D-15.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`gad-quick-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
-          "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;43&quot;\nsource_phase_title: &quot;Domain rename + project/species schema unification&quot;\npressure_score: 25\ntasks_total: 11\ntasks_done: 3\ncrosscuts: 7\ncreated_on: &quot;2026-04-14&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 43</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 25  (11 tasks, 3 done, 7 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 planned Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Single-variant projects (cli-efficiency, reader-workspace, etc.) get a degenerate one-species shape per D-28.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 planned Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&amp;lt;project&amp;gt;/species/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (currently project/version) to project/species/version. Update all downstream consumers in lockstep.\n43-06 planned Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes.\n43-07 planned Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&amp;lt;project&amp;gt;/species/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/run/ and apps/portfolio/public/evals/&amp;lt;project&amp;gt;/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing &quot;round&quot; with &quot;evolution&quot;, &quot;vN&quot; with &quot;generation N&quot;, drop &quot;brownfield&quot;/&quot;greenfield&quot; framing entirely (no replacement). Add &quot;DNA&quot; and &quot;spawn&quot; terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used &quot;round&quot; for what we now call &quot;evolution&quot; and &quot;vN&quot; per project for what we now call &quot;generation&quot; per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from &quot;Brood Editor&quot; to &quot;Species Editor&quot; and rewrite its goal to drop &quot;brood&quot; / &quot;Brood Editor&quot; references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the &quot;v4 brood&quot; example phrasing. Closed phase prose stays verbatim per D-15.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>gad-quick-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
+          "body_raw": "---\nstatus: candidate\nsource_phase: \"43\"\nsource_phase_title: \"Domain rename + project/species schema unification\"\npressure_score: 27\ntasks_total: 11\ntasks_done: 7\ncrosscuts: 8\ncreated_on: \"2026-04-14\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 43\n\n## Phase\n\n```\nget-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 27  (11 tasks, 7 done, 8 crosscuts)\n```\n\n## Tasks\n\n```\n43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 done Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Per follow-up: single-variant projects (cli-efficiency, reader-workspace, etc.) deleted entirely — only escape-the-dungeon and gad-explainer-video remain.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 done Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list. Update the keys (currently project/version) to project/species/version. Updated 8 walker sites + 2 helpers (listEvalSpecies, listEvalGenerations, listEvalProjects). Site/public/playable migrated to same layout.\n43-06 done Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. The generated TS file is regenerated by build-site-data.mjs and contains the new fields automatically.\n43-07 done Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts both positive (every (project, species) pair has TRACE.json + run/ + preserved build at the new paths) and negative (no flat-layout dirs remain at the top level of evals/ or apps/portfolio/public/evals/). All 8 tests passing. Two pre-existing-data-loss generations exempted via KNOWN_PRE_PHASE_43_DATA_LOSS set with documentation.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" with \"generation N\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). Add \"DNA\" and \"spawn\" terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project for what we now call \"generation\" per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from \"Brood Editor\" to \"Species Editor\" and rewrite its goal to drop \"brood\" / \"Brood Editor\" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the \"v4 brood\" example phrasing. Closed phase prose stays verbatim per D-15.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`gad-quick-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
+          "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;43&quot;\nsource_phase_title: &quot;Domain rename + project/species schema unification&quot;\npressure_score: 27\ntasks_total: 11\ntasks_done: 7\ncrosscuts: 8\ncreated_on: &quot;2026-04-14&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 43</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 43 | Domain rename + project/species schema unification\nselection pressure: 27  (11 tasks, 7 done, 8 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>43-01 done Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.\n43-02 done Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.\n43-03 done Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Per follow-up: single-variant projects (cli-efficiency, reader-workspace, etc.) deleted entirely — only escape-the-dungeon and gad-explainer-video remain.\n43-04 done Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).\n43-05 done Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&amp;lt;project&amp;gt;/species/&amp;lt;species&amp;gt;/v&amp;lt;N&amp;gt;/ layout. Replace the hardcoded escape-the-dungeon project list. Update the keys (currently project/version) to project/species/version. Updated 8 walker sites + 2 helpers (listEvalSpecies, listEvalGenerations, listEvalProjects). Site/public/playable migrated to same layout.\n43-06 done Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. The generated TS file is regenerated by build-site-data.mjs and contains the new fields automatically.\n43-07 done Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts both positive (every (project, species) pair has TRACE.json + run/ + preserved build at the new paths) and negative (no flat-layout dirs remain at the top level of evals/ or apps/portfolio/public/evals/). All 8 tests passing. Two pre-existing-data-loss generations exempted via KNOWN_PRE_PHASE_43_DATA_LOSS set with documentation.\n43-08 planned Update site display strings across vendor/get-anything-done/site/. Replace user-facing &quot;round&quot; with &quot;evolution&quot;, &quot;vN&quot; with &quot;generation N&quot;, drop &quot;brownfield&quot;/&quot;greenfield&quot; framing entirely (no replacement). Add &quot;DNA&quot; and &quot;spawn&quot; terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.\n43-09 planned Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.\n43-10 planned Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used &quot;round&quot; for what we now call &quot;evolution&quot; and &quot;vN&quot; per project for what we now call &quot;generation&quot; per species.\n43-11 planned Update ROADMAP.xml phase 44.5 title from &quot;Brood Editor&quot; to &quot;Species Editor&quot; and rewrite its goal to drop &quot;brood&quot; / &quot;Brood Editor&quot; references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the &quot;v4 brood&quot; example phrasing. Closed phase prose stays verbatim per D-15.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n43 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>gad-quick-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
           "tasks": [
             {
               "id": "43-01",
@@ -7251,8 +7251,8 @@
             },
             {
               "id": "43-03",
-              "status": "planned",
-              "goal": "Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Single-variant projects (cli-efficiency, reader-workspace, etc.) get a degenerate one-species shape per D-28."
+              "status": "done",
+              "goal": "Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Per follow-up: single-variant projects (cli-efficiency, reader-workspace, etc.) deleted entirely — only escape-the-dungeon and gad-explainer-video remain."
             },
             {
               "id": "43-04",
@@ -7261,18 +7261,18 @@
             },
             {
               "id": "43-05",
-              "status": "planned",
-              "goal": "Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (currently project/version) to project/species/version. Update all downstream consumers in lockstep."
+              "status": "done",
+              "goal": "Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list. Update the keys (currently project/version) to project/species/version. Updated 8 walker sites + 2 helpers (listEvalSpecies, listEvalGenerations, listEvalProjects). Site/public/playable migrated to same layout."
             },
             {
               "id": "43-06",
-              "status": "planned",
-              "goal": "Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes."
+              "status": "done",
+              "goal": "Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. The generated TS file is regenerated by build-site-data.mjs and contains the new fields automatically."
             },
             {
               "id": "43-07",
-              "status": "planned",
-              "goal": "Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/run/ and apps/portfolio/public/evals/&lt;project&gt;/&lt;species&gt;/v&lt;N&gt;/."
+              "status": "done",
+              "goal": "Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts both positive (every (project, species) pair has TRACE.json + run/ + preserved build at the new paths) and negative (no flat-layout dirs remain at the top level of evals/ or apps/portfolio/public/evals/). All 8 tests passing. Two pre-existing-data-loss generations exempted via KNOWN_PRE_PHASE_43_DATA_LOSS set with documentation."
             },
             {
               "id": "43-08",
@@ -7317,76 +7317,76 @@
       },
       "project_tokens": {
         "exact_eval_tokens": 0,
-        "estimated_live_input_tokens": 308142,
-        "estimated_live_output_tokens": 643512,
-        "estimated_live_total_tokens": 951654,
-        "combined_total_tokens": 951654,
+        "estimated_live_input_tokens": 309416,
+        "estimated_live_output_tokens": 643675,
+        "estimated_live_total_tokens": 953091,
+        "combined_total_tokens": 953091,
         "trace_files": 2,
         "trace_events": 2000,
         "runtime_distribution": [
           {
             "runtime": "claude-code",
-            "count": 1659
+            "count": 1685
           },
           {
             "runtime": "unknown",
-            "count": 341
+            "count": 315
           }
         ],
         "sources": [
           {
             "path": ".planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 188281,
-            "estimated_output_tokens": 326994,
-            "estimated_total_tokens": 515275
+            "estimated_input_tokens": 188358,
+            "estimated_output_tokens": 327197,
+            "estimated_total_tokens": 515555
           },
           {
             "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 119861,
-            "estimated_output_tokens": 316518,
-            "estimated_total_tokens": 436379
+            "estimated_input_tokens": 121058,
+            "estimated_output_tokens": 316478,
+            "estimated_total_tokens": 437536
           }
         ]
       },
       "workflow_conformance": {
-        "completed_tasks": 211,
-        "with_skill": 48,
+        "completed_tasks": 215,
+        "with_skill": 52,
         "with_agent": 10,
-        "with_type": 55,
+        "with_type": 59,
         "fully_attributed": 10,
         "score": 0.047
       },
       "framework_compliance": {
-        "completed_tasks": 211,
-        "with_skill": 48,
+        "completed_tasks": 215,
+        "with_skill": 52,
         "with_agent": 10,
-        "with_type": 55,
+        "with_type": 59,
         "fully_attributed": 10,
         "score": 0.047
       },
       "hydration": {
-        "snapshot_count": 296,
-        "estimated_snapshot_tokens": 2311763,
+        "snapshot_count": 299,
+        "estimated_snapshot_tokens": 2291967,
         "projects": [
           {
             "project": "get-anything-done",
-            "count": 152,
-            "estimated_tokens_per_snapshot": 10564,
-            "estimated_total_tokens": 1605728
+            "count": 153,
+            "estimated_tokens_per_snapshot": 10298,
+            "estimated_total_tokens": 1575594
           },
           {
             "project": "grime-time",
-            "count": 88,
+            "count": 89,
             "estimated_tokens_per_snapshot": 4165,
-            "estimated_total_tokens": 366520
+            "estimated_total_tokens": 370685
           },
           {
             "project": "global",
-            "count": 55,
+            "count": 56,
             "estimated_tokens_per_snapshot": 6173,
-            "estimated_total_tokens": 339515
+            "estimated_total_tokens": 345688
           },
           {
             "project": "unknown",
@@ -7395,8 +7395,8 @@
             "estimated_total_tokens": 0
           }
         ],
-        "total_project_tokens": 951654,
-        "overhead_ratio": 2.429
+        "total_project_tokens": 953091,
+        "overhead_ratio": 2.405
       },
       "active_assignments": {
         "total_active_agents": 0,

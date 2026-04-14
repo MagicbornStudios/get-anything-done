@@ -54,8 +54,25 @@ export type PlanningSelfEvalLatest = {
   framework_overhead: {
     ratio: number;
   };
-  loop_compliance: {
+  framework_compliance: {
     score: number;
+    completed_tasks: number;
+    with_skill: number;
+    with_agent: number;
+    with_type: number;
+    fully_attributed: number;
+  };
+  hydration: {
+    snapshot_count: number;
+    estimated_snapshot_tokens: number;
+    total_project_tokens: number;
+    overhead_ratio: number;
+    projects: Array<{
+      project: string;
+      count: number;
+      estimated_tokens_per_snapshot: number;
+      estimated_total_tokens: number;
+    }>;
   };
   phases_pressure: PlanningPhasePressure[];
   evals?: {

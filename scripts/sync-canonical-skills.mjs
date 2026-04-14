@@ -6,8 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
-const SDK_ROOT = path.join(ROOT, 'sdk');
-const CANONICAL_SKILLS = path.join(SDK_ROOT, 'skills');
+const CANONICAL_SKILLS = path.join(ROOT, 'skills');
 
 function ensureDir(dirPath) {
   mkdirSync(dirPath, { recursive: true });

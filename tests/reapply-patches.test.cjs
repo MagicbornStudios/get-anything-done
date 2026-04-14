@@ -124,21 +124,21 @@ describe('saveLocalPatches — patch backup and pristine hash tracking (#1469)',
   test('detects modified files and backs them up', () => {
     simulateManifestAndPatch(tmpDir, {
       original: {
-        'get-anything-done/workflows/execute-phase.md': '# Execute Phase\nOriginal content\n',
-        'get-anything-done/workflows/plan-phase.md': '# Plan Phase\nOriginal content\n',
+        'get-anything-done/workflows/gad-execute-phase.md': '# Execute Phase\nOriginal content\n',
+        'get-anything-done/workflows/gad-plan-phase.md': '# Plan Phase\nOriginal content\n',
       },
       modified: {
-        'get-anything-done/workflows/execute-phase.md': '# Execute Phase\nOriginal content\n\n## My Custom Step\nDo something special\n',
+        'get-anything-done/workflows/gad-execute-phase.md': '# Execute Phase\nOriginal content\n\n## My Custom Step\nDo something special\n',
       },
     });
 
     const result = saveLocalPatches(tmpDir);
 
     assert.strictEqual(result.length, 1, 'should detect exactly one modified file');
-    assert.ok(result.includes('get-anything-done/workflows/execute-phase.md'));
+    assert.ok(result.includes('get-anything-done/workflows/gad-execute-phase.md'));
 
     // Verify backup exists
-    const backupPath = path.join(tmpDir, 'gad-local-patches', 'get-anything-done/workflows/execute-phase.md');
+    const backupPath = path.join(tmpDir, 'gad-local-patches', 'get-anything-done/workflows/gad-execute-phase.md');
     assert.ok(fs.existsSync(backupPath), 'backup file should exist');
 
     const backupContent = fs.readFileSync(backupPath, 'utf8');
@@ -149,10 +149,10 @@ describe('saveLocalPatches — patch backup and pristine hash tracking (#1469)',
     const originalContent = '# Execute Phase\nOriginal content\n';
     simulateManifestAndPatch(tmpDir, {
       original: {
-        'get-anything-done/workflows/execute-phase.md': originalContent,
+        'get-anything-done/workflows/gad-execute-phase.md': originalContent,
       },
       modified: {
-        'get-anything-done/workflows/execute-phase.md': originalContent + '\n## Custom\n',
+        'get-anything-done/workflows/gad-execute-phase.md': originalContent + '\n## Custom\n',
       },
     });
 
@@ -167,7 +167,7 @@ describe('saveLocalPatches — patch backup and pristine hash tracking (#1469)',
     assert.ok(meta.pristine_hashes, 'meta should have pristine_hashes field');
     const expectedHash = sha256(originalContent);
     assert.strictEqual(
-      meta.pristine_hashes['get-anything-done/workflows/execute-phase.md'],
+      meta.pristine_hashes['get-anything-done/workflows/gad-execute-phase.md'],
       expectedHash,
       'pristine hash should match SHA-256 of original file content'
     );
@@ -245,7 +245,7 @@ describe('saveLocalPatches — patch backup and pristine hash tracking (#1469)',
 
 describe('reapply-patches workflow contract (#1469)', () => {
   test('workflow file contains critical invariant about never skipping backed-up files', () => {
-    const workflowPath = path.join(__dirname, '..', 'commands', 'reapply-patches.md');
+    const workflowPath = path.join(__dirname, '..', 'skills', 'gad-reapply-patches', 'COMMAND.md');
     const content = fs.readFileSync(workflowPath, 'utf8');
 
     // The workflow must explicitly state that "no custom content" is never valid
@@ -257,7 +257,7 @@ describe('reapply-patches workflow contract (#1469)', () => {
   });
 
   test('workflow file describes three-way merge strategy', () => {
-    const workflowPath = path.join(__dirname, '..', 'commands', 'reapply-patches.md');
+    const workflowPath = path.join(__dirname, '..', 'skills', 'gad-reapply-patches', 'COMMAND.md');
     const content = fs.readFileSync(workflowPath, 'utf8');
 
     assert.ok(content.includes('three-way') || content.includes('Three-way'),
@@ -267,7 +267,7 @@ describe('reapply-patches workflow contract (#1469)', () => {
   });
 
   test('workflow file describes git-aware detection path', () => {
-    const workflowPath = path.join(__dirname, '..', 'commands', 'reapply-patches.md');
+    const workflowPath = path.join(__dirname, '..', 'skills', 'gad-reapply-patches', 'COMMAND.md');
     const content = fs.readFileSync(workflowPath, 'utf8');
 
     assert.ok(content.includes('git log') || content.includes('git -C'),

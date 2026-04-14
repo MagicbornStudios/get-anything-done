@@ -1476,7 +1476,7 @@ function generateCodexConfigBlock(agents, targetDir) {
   return lines.join('\n');
 }
 
-function stripCodexGsdAgentSections(content) {
+function stripCodexGadAgentSections(content) {
   return content.replace(/^\[agents\.gad-[^\]]+\]\n(?:(?!\[)[^\n]*\n?)*/gm, '');
 }
 
@@ -1484,7 +1484,7 @@ function stripCodexGsdAgentSections(content) {
  * Strip GAD sections from Codex config.toml content.
  * Returns cleaned content, or null if file would be empty.
  */
-function stripGsdFromCodexConfig(content) {
+function stripGadFromCodexConfig(content) {
   const eol = detectLineEnding(content);
   const markerIndex = content.indexOf(GAD_CODEX_MARKER);
   const codexHooksOwnership = getManagedCodexHooksOwnership(content);
@@ -1510,7 +1510,7 @@ function stripGsdFromCodexConfig(content) {
   cleaned = cleaned.replace(/^default_mode_request_user_input\s*=\s*true\s*(?:\r?\n)?/m, '');
 
   // Remove [agents.gad-*] sections (from header to next section or EOF)
-  cleaned = stripCodexGsdAgentSections(cleaned);
+  cleaned = stripCodexGadAgentSections(cleaned);
 
   // Remove [features] section if now empty (only header, no keys before next section)
   cleaned = cleaned.replace(/^\[features\]\s*\n(?=\[|$)/m, '');
@@ -2629,7 +2629,7 @@ function mergeCopilotInstructions(filePath, gadContent) {
  * @param {string} content - File content
  * @returns {string|null} - Cleaned content or null if empty
  */
-function stripGsdFromCopilotInstructions(content) {
+function stripGadFromCopilotInstructions(content) {
   const openIndex = content.indexOf(GAD_COPILOT_INSTRUCTIONS_MARKER);
   const closeIndex = content.indexOf(GAD_COPILOT_INSTRUCTIONS_CLOSE_MARKER);
 
@@ -2658,12 +2658,12 @@ function installCodexConfig(targetDir, agentsSrc) {
   const agents = [];
 
   // Compute the Codex GAD install path (absolute, so subagents with empty $HOME work — #820)
-  const codexGsdPath = `${path.resolve(targetDir, 'get-anything-done').replace(/\\/g, '/')}/`;
+  const codexGadPath = `${path.resolve(targetDir, 'get-anything-done').replace(/\\/g, '/')}/`;
 
   for (const file of agentEntries) {
     let content = fs.readFileSync(path.join(agentsSrc, file), 'utf8');
     // Replace full .claude/get-anything-done prefix so path resolves to codex GAD install
-    content = content.replace(/~\/\.claude\/get-anything-done\//g, codexGsdPath);
+    content = content.replace(/~\/\.claude\/get-anything-done\//g, codexGadPath);
     content = content.replace(/\$HOME\/\.claude\/get-anything-done\//g, codexGsdPath);
     const { frontmatter } = extractFrontmatterAndBody(content);
     const name = extractFrontmatterField(frontmatter, 'name') || file.replace('.md', '');
@@ -3127,7 +3127,18 @@ function readCanonicalSkillRecords(skillsRoot) {
 
 function isExcludedSkill(record) {
   const rel = record.relPath || '';
-  if (rel.startsWith('emergent/') || rel.startsWith('candidates/')) return true;
+  if (
+    rel.startsWith('emergent/')
+    || rel.startsWith('candidates/')
+    || rel.startsWith('proto-skills/')
+  ) return true;
+  const isTopLevel = !rel.includes('/');
+  if (isTopLevel && !record.id.startsWith('gad-')) {
+    const gadSiblingDir = path.join(path.dirname(record.dir), `gad-${record.id}`);
+    if (fs.existsSync(path.join(gadSiblingDir, 'SKILL.md'))) {
+      return true;
+    }
+  }
   try {
     const content = fs.readFileSync(record.skillFile, 'utf8');
     return /^excluded-from-default-install:\s*true/m.test(content);
@@ -3958,7 +3969,7 @@ function uninstall(isGlobal, runtime = 'claude') {
     const configPath = path.join(targetDir, 'config.toml');
     if (fs.existsSync(configPath)) {
       const content = fs.readFileSync(configPath, 'utf8');
-      const cleaned = stripGsdFromCodexConfig(content);
+      const cleaned = stripGadFromCodexConfig(content);
       if (cleaned === null) {
         // File is empty after stripping — delete it
         fs.unlinkSync(configPath);
@@ -3993,7 +4004,7 @@ function uninstall(isGlobal, runtime = 'claude') {
     const instructionsPath = path.join(targetDir, 'copilot-instructions.md');
     if (fs.existsSync(instructionsPath)) {
       const content = fs.readFileSync(instructionsPath, 'utf8');
-      const cleaned = stripGsdFromCopilotInstructions(content);
+      const cleaned = stripGadFromCopilotInstructions(content);
       if (cleaned === null) {
         fs.unlinkSync(instructionsPath);
         removedCount++;
@@ -5029,6 +5040,7 @@ function install(isGlobal, runtime = 'claude') {
             let content = fs.readFileSync(srcFile, 'utf8');
             content = content.replace(/'\.claude'/g, configDirReplacement);
             content = content.replace(/\{\{GAD_VERSION\}\}/g, pkg.version);
+            // Compatibility fallback for legacy upstream templates not yet renamed.
             content = content.replace(/\{\{GSD_VERSION\}\}/g, pkg.version);
             fs.writeFileSync(destFile, content);
             // Ensure hook files are executable (fixes #1162 — missing +x permission)
@@ -5896,7 +5908,7 @@ if (process.env.GAD_TEST_MODE) {
     convertClaudeAgentToCodexAgent,
     generateCodexAgentToml,
     generateCodexConfigBlock,
-    stripGsdFromCodexConfig,
+    stripGadFromCodexConfig,
     mergeCodexConfig,
     installCodexConfig,
     install,
@@ -5917,7 +5929,7 @@ if (process.env.GAD_TEST_MODE) {
     GAD_COPILOT_INSTRUCTIONS_MARKER,
     GAD_COPILOT_INSTRUCTIONS_CLOSE_MARKER,
     mergeCopilotInstructions,
-    stripGsdFromCopilotInstructions,
+    stripGadFromCopilotInstructions,
     convertClaudeToAntigravityContent,
     convertClaudeCommandToAntigravitySkill,
     convertClaudeAgentToAntigravityAgent,

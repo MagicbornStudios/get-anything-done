@@ -7,12 +7,12 @@ import type {
   SessionUsage,
   SessionOptions,
   HumanGateCallbacks,
-  GSDEvent,
+  GADEvent,
   PhasePlanIndex,
   PlanInfo,
 } from './types.js';
-import { PhaseStepType, PhaseType, GSDEventType } from './types.js';
-import type { GSDConfig } from './config.js';
+import { PhaseStepType, PhaseType, GADEventType } from './types.js';
+import type { GADConfig } from './config.js';
 import { CONFIG_DEFAULTS } from './config.js';
 
 // ─── Mock modules ────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ function makePlanIndex(planCount: number, overrides: Partial<PhasePlanIndex> = {
   };
 }
 
-function makeConfig(overrides: Partial<GSDConfig> = {}): GSDConfig {
+function makeConfig(overrides: Partial<GADConfig> = {}): GADConfig {
   return {
     ...structuredClone(CONFIG_DEFAULTS),
     ...overrides,
@@ -114,11 +114,11 @@ function makeConfig(overrides: Partial<GSDConfig> = {}): GSDConfig {
       ...CONFIG_DEFAULTS.workflow,
       ...(overrides.workflow ?? {}),
     },
-  } as GSDConfig;
+  } as GADConfig;
 }
 
 function makeDeps(overrides: Partial<PhaseRunnerDeps> = {}): PhaseRunnerDeps {
-  const events: GSDEvent[] = [];
+  const events: GADEvent[] = [];
 
   return {
     projectDir: '/tmp/project',
@@ -143,7 +143,7 @@ function makeDeps(overrides: Partial<PhaseRunnerDeps> = {}): PhaseRunnerDeps {
       resolveContextFiles: vi.fn().mockResolvedValue({}),
     } as any,
     eventStream: {
-      emitEvent: vi.fn((event: GSDEvent) => events.push(event)),
+      emitEvent: vi.fn((event: GADEvent) => events.push(event)),
       on: vi.fn(),
       emit: vi.fn(),
     } as any,
@@ -153,11 +153,11 @@ function makeDeps(overrides: Partial<PhaseRunnerDeps> = {}): PhaseRunnerDeps {
 }
 
 /** Collect events from a deps object. */
-function getEmittedEvents(deps: PhaseRunnerDeps): GSDEvent[] {
-  const events: GSDEvent[] = [];
+function getEmittedEvents(deps: PhaseRunnerDeps): GADEvent[] {
+  const events: GADEvent[] = [];
   const emitFn = deps.eventStream.emitEvent as ReturnType<typeof vi.fn>;
   for (const call of emitFn.mock.calls) {
-    events.push(call[0] as GSDEvent);
+    events.push(call[0] as GADEvent);
   }
   return events;
 }
@@ -854,14 +854,14 @@ describe('PhaseRunner', () => {
       const eventTypes = events.map(e => e.type);
 
       // First event: phase_start
-      expect(eventTypes[0]).toBe(GSDEventType.PhaseStart);
+      expect(eventTypes[0]).toBe(GADEventType.PhaseStart);
 
       // Last event: phase_complete
-      expect(eventTypes[eventTypes.length - 1]).toBe(GSDEventType.PhaseComplete);
+      expect(eventTypes[eventTypes.length - 1]).toBe(GADEventType.PhaseComplete);
 
       // Each step has start + complete pair
-      const stepStarts = events.filter(e => e.type === GSDEventType.PhaseStepStart);
-      const stepCompletes = events.filter(e => e.type === GSDEventType.PhaseStepComplete);
+      const stepStarts = events.filter(e => e.type === GADEventType.PhaseStepStart);
+      const stepCompletes = events.filter(e => e.type === GADEventType.PhaseStepComplete);
       expect(stepStarts.length).toBeGreaterThan(0);
       expect(stepStarts.length).toBe(stepCompletes.length);
     });
@@ -876,7 +876,7 @@ describe('PhaseRunner', () => {
       await runner.run('5');
 
       const events = getEmittedEvents(deps);
-      const phaseStart = events.find(e => e.type === GSDEventType.PhaseStart) as any;
+      const phaseStart = events.find(e => e.type === GADEventType.PhaseStart) as any;
       expect(phaseStart.phaseNumber).toBe('5');
       expect(phaseStart.phaseName).toBe('Auth Phase');
     });
@@ -891,7 +891,7 @@ describe('PhaseRunner', () => {
       await runner.run('1');
 
       const events = getEmittedEvents(deps);
-      const phaseComplete = events.find(e => e.type === GSDEventType.PhaseComplete) as any;
+      const phaseComplete = events.find(e => e.type === GADEventType.PhaseComplete) as any;
       expect(phaseComplete.success).toBe(true);
       expect(phaseComplete.stepsCompleted).toBe(3); // plan, execute, advance
     });
@@ -906,7 +906,7 @@ describe('PhaseRunner', () => {
 
       const events = getEmittedEvents(deps);
       const stepStarts = events
-        .filter(e => e.type === GSDEventType.PhaseStepStart)
+        .filter(e => e.type === GADEventType.PhaseStepStart)
         .map(e => (e as any).step);
 
       // With all config defaults: discuss, research, plan, execute, verify, advance
@@ -935,7 +935,7 @@ describe('PhaseRunner', () => {
     it('throws PhaseRunnerError when initPhaseOp fails', async () => {
       const deps = makeDeps();
       (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('gsd-tools crashed'),
+        new Error('gad-tools crashed'),
       );
 
       const runner = new PhaseRunner(deps);
@@ -1043,7 +1043,7 @@ describe('PhaseRunner', () => {
       const deps = makeDeps({ config });
       (deps.tools.initPhaseOp as ReturnType<typeof vi.fn>).mockResolvedValue(phaseOp);
       (deps.tools.phaseComplete as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('gsd-tools commit failed'),
+        new Error('gad-tools commit failed'),
       );
 
       const runner = new PhaseRunner(deps);
@@ -1482,8 +1482,8 @@ describe('PhaseRunner', () => {
       await runner.run('1');
 
       const events = getEmittedEvents(deps);
-      const waveStarts = events.filter(e => e.type === GSDEventType.WaveStart) as any[];
-      const waveCompletes = events.filter(e => e.type === GSDEventType.WaveComplete) as any[];
+      const waveStarts = events.filter(e => e.type === GADEventType.WaveStart) as any[];
+      const waveCompletes = events.filter(e => e.type === GADEventType.WaveComplete) as any[];
 
       // Two waves → two start + two complete events
       expect(waveStarts).toHaveLength(2);
@@ -1590,7 +1590,7 @@ describe('PhaseRunner', () => {
 
       const events = getEmittedEvents(deps);
       const waveEvents = events.filter(
-        e => e.type === GSDEventType.WaveStart || e.type === GSDEventType.WaveComplete,
+        e => e.type === GADEventType.WaveStart || e.type === GADEventType.WaveComplete,
       );
       expect(waveEvents).toHaveLength(0);
     });
@@ -1752,10 +1752,10 @@ describe('PhaseRunner', () => {
 
       const events = getEmittedEvents(deps);
       const planCheckStarts = events.filter(
-        e => e.type === GSDEventType.PhaseStepStart && (e as any).step === PhaseStepType.PlanCheck,
+        e => e.type === GADEventType.PhaseStepStart && (e as any).step === PhaseStepType.PlanCheck,
       );
       const planCheckCompletes = events.filter(
-        e => e.type === GSDEventType.PhaseStepComplete && (e as any).step === PhaseStepType.PlanCheck,
+        e => e.type === GADEventType.PhaseStepComplete && (e as any).step === PhaseStepType.PlanCheck,
       );
 
       expect(planCheckStarts.length).toBeGreaterThanOrEqual(1);

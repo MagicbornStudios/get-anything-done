@@ -8,7 +8,7 @@ describe('loadConfig', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = join(tmpdir(), `gsd-config-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = join(tmpdir(), `gad-config-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(join(tmpDir, '.planning'), { recursive: true });
   });
 
@@ -49,6 +49,27 @@ describe('loadConfig', () => {
     // Top-level defaults preserved
     expect(config.commit_docs).toBe(true);
     expect(config.parallelization).toBe(true);
+  });
+
+  it('prefers canonical gad-config.toml when present', async () => {
+    await writeFile(
+      join(tmpDir, 'gad-config.toml'),
+      [
+        'mode = "interactive"',
+        'model_profile = "quality"',
+        '',
+        '[workflow]',
+        'auto_advance = true',
+        'skip_discuss = true',
+        '',
+      ].join('\n'),
+    );
+
+    const config = await loadConfig(tmpDir);
+
+    expect(config.model_profile).toBe('quality');
+    expect(config.workflow.auto_advance).toBe(true);
+    expect(config.workflow.skip_discuss).toBe(true);
   });
 
   it('partial config merges correctly for nested objects', async () => {

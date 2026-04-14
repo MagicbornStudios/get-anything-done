@@ -1,10 +1,9 @@
 /**
- * Context engine — resolves which .planning/ state files exist per phase type.
+ * Context engine — resolves which planning context files are loaded per phase.
  *
- * Different phases need different subsets of context files. The execute phase
- * only needs STATE.md + config.json (minimal). Research needs STATE.md +
- * ROADMAP.md + CONTEXT.md. Plan needs all files. Verify needs STATE.md +
- * ROADMAP.md + REQUIREMENTS.md + PLAN/SUMMARY files.
+ * Different phases need different subsets of context. The current manifest is
+ * intentionally minimal: execute gets state plus config, research/plan get the
+ * broader planning files, and verify gets the plan/summary pair.
  */
 
 import { readFile, access } from 'node:fs/promises';
@@ -13,7 +12,7 @@ import { constants } from 'node:fs';
 
 import type { ContextFiles } from './types.js';
 import { PhaseType } from './types.js';
-import type { GSDLogger } from './logger.js';
+import type { GADLogger } from './logger.js';
 
 // ─── File manifest per phase ─────────────────────────────────────────────────
 
@@ -30,7 +29,7 @@ interface FileSpec {
 const PHASE_FILE_MANIFEST: Record<PhaseType, FileSpec[]> = {
   [PhaseType.Execute]: [
     { key: 'state', filename: 'STATE.md', required: true },
-    { key: 'config', filename: 'config.json', required: false },
+    { key: 'config', filename: 'gad-config.toml', required: false },
   ],
   [PhaseType.Research]: [
     { key: 'state', filename: 'STATE.md', required: true },
@@ -63,9 +62,9 @@ const PHASE_FILE_MANIFEST: Record<PhaseType, FileSpec[]> = {
 
 export class ContextEngine {
   private readonly planningDir: string;
-  private readonly logger?: GSDLogger;
+  private readonly logger?: GADLogger;
 
-  constructor(projectDir: string, logger?: GSDLogger) {
+  constructor(projectDir: string, logger?: GADLogger) {
     this.planningDir = join(projectDir, '.planning');
     this.logger = logger;
   }
@@ -80,8 +79,9 @@ export class ContextEngine {
     const result: ContextFiles = {};
 
     for (const spec of manifest) {
-      const filePath = join(this.planningDir, spec.filename);
-      const content = await this.readFileIfExists(filePath);
+      const content = spec.key === 'config'
+        ? await this.readConfigIfExists()
+        : await this.readFileIfExists(join(this.planningDir, spec.filename));
 
       if (content !== undefined) {
         result[spec.key] = content;
@@ -89,7 +89,7 @@ export class ContextEngine {
         this.logger?.warn(`Required context file missing for ${phaseType} phase: ${spec.filename}`, {
           phase: phaseType,
           file: spec.filename,
-          path: filePath,
+          path: join(this.planningDir, spec.filename),
         });
       }
     }
@@ -107,6 +107,16 @@ export class ContextEngine {
     } catch {
       return undefined;
     }
+  }
+
+  /**
+   * Prefer canonical config, but keep the JSON mirror readable while older
+   * prompts and tools still mention it.
+   */
+  private async readConfigIfExists(): Promise<string | undefined> {
+    const canonicalPath = join(this.planningDir, '..', 'gad-config.toml');
+    const compatPath = join(this.planningDir, 'config.json');
+    return (await this.readFileIfExists(canonicalPath)) ?? this.readFileIfExists(compatPath);
   }
 }
 

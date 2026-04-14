@@ -6,7 +6,7 @@
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
-import type { GSDEvent, TransportHandler } from './types.js';
+import type { GADEvent, TransportHandler } from './types.js';
 
 export interface WSTransportOptions {
   port: number;
@@ -43,7 +43,7 @@ export class WSTransport implements TransportHandler {
    * Broadcast a GAD SDK event as JSON to all connected clients.
    * Never throws — wraps each client.send in try/catch.
    */
-  onEvent(event: GSDEvent): void {
+  onEvent(event: GADEvent): void {
     try {
       if (!this.server) return;
 

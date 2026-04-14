@@ -6,7 +6,7 @@
  */
 
 import type { Writable } from 'node:stream';
-import { GSDEventType, type GSDEvent, type TransportHandler } from './types.js';
+import { GADEventType, type GADEvent, type TransportHandler } from './types.js';
 
 // ─── ANSI escape constants (no dependency per D021) ──────────────────────────
 
@@ -53,7 +53,7 @@ export class CLITransport implements TransportHandler {
   }
 
   /** Format and write a GAD event as a rich ANSI-colored line. Never throws. */
-  onEvent(event: GSDEvent): void {
+  onEvent(event: GADEvent): void {
     try {
       const line = this.formatEvent(event);
       this.out.write(line + '\n');
@@ -69,57 +69,57 @@ export class CLITransport implements TransportHandler {
 
   // ─── Private formatting ────────────────────────────────────────────
 
-  private formatEvent(event: GSDEvent): string {
+  private formatEvent(event: GADEvent): string {
     const time = formatTime(event.timestamp);
 
     switch (event.type) {
-      case GSDEventType.SessionInit:
+      case GADEventType.SessionInit:
         return `[${time}] [INIT] Session started — model: ${event.model}, tools: ${event.tools.length}, cwd: ${event.cwd}`;
 
-      case GSDEventType.SessionComplete:
+      case GADEventType.SessionComplete:
         return `[${time}] ${GREEN}✓ Session complete — cost: ${usd(event.totalCostUsd)}, turns: ${event.numTurns}, duration: ${(event.durationMs / 1000).toFixed(1)}s${RESET}`;
 
-      case GSDEventType.SessionError:
+      case GADEventType.SessionError:
         return `[${time}] ${RED}✗ Session failed — subtype: ${event.errorSubtype}, errors: [${event.errors.join(', ')}]${RESET}`;
 
-      case GSDEventType.ToolCall:
+      case GADEventType.ToolCall:
         return `[${time}] [TOOL] ${event.toolName}(${truncate(JSON.stringify(event.input), 80)})`;
 
-      case GSDEventType.PhaseStart:
+      case GADEventType.PhaseStart:
         return `${BOLD}${CYAN}━━━ GAD ► PHASE ${event.phaseNumber}: ${event.phaseName} ━━━${RESET}`;
 
-      case GSDEventType.PhaseComplete:
+      case GADEventType.PhaseComplete:
         return `[${time}] [PHASE] Phase ${event.phaseNumber} complete — success: ${event.success}, cost: ${usd(event.totalCostUsd)}, running: ${usd(this.runningCostUsd)}`;
 
-      case GSDEventType.PhaseStepStart:
+      case GADEventType.PhaseStepStart:
         return `${CYAN}◆ ${event.step}${RESET}`;
 
-      case GSDEventType.PhaseStepComplete:
+      case GADEventType.PhaseStepComplete:
         return event.success
           ? `${GREEN}✓ ${event.step}${RESET} ${DIM}${event.durationMs}ms${RESET}`
           : `${RED}✗ ${event.step}${RESET} ${DIM}${event.durationMs}ms${RESET}`;
 
-      case GSDEventType.WaveStart:
+      case GADEventType.WaveStart:
         return `${YELLOW}⟫ Wave ${event.waveNumber} (${event.planCount} plans)${RESET}`;
 
-      case GSDEventType.WaveComplete:
+      case GADEventType.WaveComplete:
         return `[${time}] [WAVE] Wave ${event.waveNumber} complete — ${GREEN}${event.successCount} success${RESET}, ${RED}${event.failureCount} failed${RESET}, ${event.durationMs}ms`;
 
-      case GSDEventType.CostUpdate: {
+      case GADEventType.CostUpdate: {
         this.runningCostUsd += event.sessionCostUsd;
         return `${DIM}[${time}] Cost: session ${usd(event.sessionCostUsd)}, running ${usd(this.runningCostUsd)}${RESET}`;
       }
 
-      case GSDEventType.MilestoneStart:
+      case GADEventType.MilestoneStart:
         return `${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n${BOLD}  GAD Milestone — ${event.phaseCount} phases${RESET}\n${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}`;
 
-      case GSDEventType.MilestoneComplete:
+      case GADEventType.MilestoneComplete:
         return `${BOLD}━━━ Milestone complete — success: ${event.success}, cost: ${usd(event.totalCostUsd)}, running: ${usd(this.runningCostUsd)} ━━━${RESET}`;
 
-      case GSDEventType.AssistantText:
+      case GADEventType.AssistantText:
         return `${DIM}[${time}] ${truncate(event.text, 200)}${RESET}`;
 
-      case GSDEventType.InitResearchSpawn:
+      case GADEventType.InitResearchSpawn:
         return `${CYAN}◆ Spawning ${event.sessionCount} researchers...${RESET}`;
 
       // Generic fallback for event types without specific formatting

@@ -1,7 +1,7 @@
 /**
- * Integration test — proves PhaseRunner state machine works against real gsd-tools.cjs.
+ * Integration test — proves PhaseRunner state machine works against real gad-tools.cjs.
  *
- * Creates a temp `.planning/` directory structure, instantiates real GSDTools,
+ * Creates a temp `.planning/` directory structure, instantiates real GADTools,
  * and exercises the state machine. Sessions will fail (no Claude CLI in CI) but
  * the state machine's control flow, event emission, and error capture are proven.
  */
@@ -12,22 +12,22 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { homedir } from 'node:os';
 
-import { GSDTools } from './gsd-tools.js';
+import { GADTools } from './gad-tools.js';
 import { PhaseRunner } from './phase-runner.js';
 import type { PhaseRunnerDeps } from './phase-runner.js';
 import { ContextEngine } from './context-engine.js';
 import { PromptFactory } from './phase-prompt.js';
-import { GSDEventStream } from './event-stream.js';
+import { GADEventStream } from './event-stream.js';
 import { loadConfig } from './config.js';
-import type { GSDEvent } from './types.js';
-import { GSDEventType, PhaseStepType } from './types.js';
+import type { GADEvent } from './types.js';
+import { GADEventType, PhaseStepType } from './types.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const GSD_TOOLS_PATH = join(homedir(), '.claude', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const GAD_TOOLS_PATH = join(homedir(), '.claude', 'get-anything-done', 'bin', 'gad-tools.cjs');
 
 async function createTempPlanningDir(): Promise<string> {
-  const tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-phase-int-'));
+  const tmpDir = await mkdtemp(join(tmpdir(), 'gad-sdk-phase-int-'));
 
   // Create .planning structure
   const planningDir = join(tmpDir, '.planning');
@@ -65,15 +65,15 @@ async function createTempPlanningDir(): Promise<string> {
 
 // ─── Test suite ──────────────────────────────────────────────────────────────
 
-describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
+describe('Integration: PhaseRunner against real gad-tools.cjs', () => {
   let tmpDir: string;
-  let tools: GSDTools;
+  let tools: GADTools;
 
   beforeAll(async () => {
     tmpDir = await createTempPlanningDir();
-    tools = new GSDTools({
+    tools = new GADTools({
       projectDir: tmpDir,
-      gsdToolsPath: GSD_TOOLS_PATH,
+      gadToolsPath: GAD_TOOLS_PATH,
       timeoutMs: 10_000,
     });
   });
@@ -111,13 +111,13 @@ describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
   // ── Test 2: PhaseRunner state machine control flow ──
 
   it('PhaseRunner emits lifecycle events and captures session errors gracefully', { timeout: 300_000 }, async () => {
-    const eventStream = new GSDEventStream();
+    const eventStream = new GADEventStream();
     const config = await loadConfig(tmpDir);
     const contextEngine = new ContextEngine(tmpDir);
     const promptFactory = new PromptFactory();
 
-    const events: GSDEvent[] = [];
-    eventStream.on('event', (e: GSDEvent) => events.push(e));
+    const events: GADEvent[] = [];
+    eventStream.on('event', (e: GADEvent) => events.push(e));
 
     const deps: PhaseRunnerDeps = {
       projectDir: tmpDir,
@@ -136,10 +136,10 @@ describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
     });
 
     // ── (a) Phase start event emitted ──
-    const phaseStartEvents = events.filter(e => e.type === GSDEventType.PhaseStart);
+    const phaseStartEvents = events.filter(e => e.type === GADEventType.PhaseStart);
     expect(phaseStartEvents).toHaveLength(1);
     const phaseStart = phaseStartEvents[0]!;
-    if (phaseStart.type === GSDEventType.PhaseStart) {
+    if (phaseStart.type === GADEventType.PhaseStart) {
       expect(phaseStart.phaseNumber).toBe('01');
       expect(phaseStart.phaseName).toBe('integration-test');
     }
@@ -150,7 +150,7 @@ describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
     expect(discussSteps).toHaveLength(0);
 
     // ── (c) Step start events emitted for attempted steps ──
-    const stepStartEvents = events.filter(e => e.type === GSDEventType.PhaseStepStart);
+    const stepStartEvents = events.filter(e => e.type === GADEventType.PhaseStepStart);
     expect(stepStartEvents.length).toBeGreaterThanOrEqual(1);
 
     // ── (d) Step results are properly structured ──
@@ -166,7 +166,7 @@ describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
     }
 
     // ── (e) Phase complete event emitted ──
-    const phaseCompleteEvents = events.filter(e => e.type === GSDEventType.PhaseComplete);
+    const phaseCompleteEvents = events.filter(e => e.type === GADEventType.PhaseComplete);
     expect(phaseCompleteEvents).toHaveLength(1);
 
     // ── (f) Result structure is valid ──
@@ -180,7 +180,7 @@ describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
   // ── Test 3: PhaseRunner with nonexistent phase throws ──
 
   it('PhaseRunner throws PhaseRunnerError for nonexistent phase', async () => {
-    const eventStream = new GSDEventStream();
+    const eventStream = new GADEventStream();
     const config = await loadConfig(tmpDir);
     const contextEngine = new ContextEngine(tmpDir);
     const promptFactory = new PromptFactory();
@@ -198,27 +198,27 @@ describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
     await expect(runner.run('99')).rejects.toThrow('Phase 99 not found on disk');
   });
 
-  // ── Test 4: GSD.runPhase() public API delegates correctly ──
+  // ── Test 4: GAD.runPhase() public API delegates correctly ──
 
-  it('GSD.runPhase() creates collaborators and delegates to PhaseRunner', { timeout: 300_000 }, async () => {
-    // Import GSD here to test the public API wiring
-    const { GSD } = await import('./index.js');
+  it('GAD.runPhase() creates collaborators and delegates to PhaseRunner', { timeout: 300_000 }, async () => {
+    // Import GAD here to test the public API wiring
+    const { GAD } = await import('./index.js');
 
-    const gsd = new GSD({ projectDir: tmpDir });
-    const events: GSDEvent[] = [];
-    gsd.onEvent((e) => events.push(e));
+    const gad = new GAD({ projectDir: tmpDir });
+    const events: GADEvent[] = [];
+    gad.onEvent((e) => events.push(e));
 
-    const result = await gsd.runPhase('01', {
+    const result = await gad.runPhase('01', {
       maxTurnsPerStep: 2,
       maxBudgetPerStep: 0.10,
     });
 
-    // Proves the full wiring works: GSD → PhaseRunner → GSDTools → gsd-tools.cjs
+    // Proves the full wiring works: GAD → PhaseRunner → GADTools → gad-tools.cjs
     expect(result.phaseNumber).toBe('01');
     expect(result.phaseName).toBe('integration-test');
     expect(result.steps.length).toBeGreaterThanOrEqual(1);
-    expect(events.some(e => e.type === GSDEventType.PhaseStart)).toBe(true);
-    expect(events.some(e => e.type === GSDEventType.PhaseComplete)).toBe(true);
+    expect(events.some(e => e.type === GADEventType.PhaseStart)).toBe(true);
+    expect(events.some(e => e.type === GADEventType.PhaseComplete)).toBe(true);
   });
 });
 
@@ -231,7 +231,7 @@ describe('Integration: PhaseRunner against real gsd-tools.cjs', () => {
  * - Plan 01 has a SUMMARY.md (marks it as completed)
  */
 async function createMultiWavePlanningDir(): Promise<string> {
-  const tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-wave-int-'));
+  const tmpDir = await mkdtemp(join(tmpdir(), 'gad-sdk-wave-int-'));
 
   const planningDir = join(tmpDir, '.planning');
   const phaseDir = join(planningDir, 'phases', '01-wave-test');
@@ -305,13 +305,13 @@ must_haves:
 
 describe('Integration: phasePlanIndex and wave execution', () => {
   let tmpDir: string;
-  let tools: GSDTools;
+  let tools: GADTools;
 
   beforeAll(async () => {
     tmpDir = await createMultiWavePlanningDir();
-    tools = new GSDTools({
+    tools = new GADTools({
       projectDir: tmpDir,
-      gsdToolsPath: GSD_TOOLS_PATH,
+      gadToolsPath: GAD_TOOLS_PATH,
       timeoutMs: 10_000,
     });
   });

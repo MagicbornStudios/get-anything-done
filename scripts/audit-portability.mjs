@@ -5,12 +5,12 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const TARGETS = [
-  "sdk/skills",
-  "sdk/workflows",
-  "sdk/templates",
-  "sdk/agents",
-  "sdk/references",
-  "sdk/hooks",
+  "skills",
+  "workflows",
+  "templates",
+  "agents",
+  "references",
+  "hooks",
   "sdk/src",
   "site/app/security"
 ];
@@ -99,3 +99,4 @@ const totals = findings.reduce(
 
 console.log(JSON.stringify({ totals, findings }, null, 2));
 process.exit(totals.error > 0 ? 1 : 0);
+

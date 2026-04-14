@@ -194,11 +194,11 @@ export interface PlanResult {
 /**
  * Options for creating a GAD SDK instance.
  */
-export interface GSDOptions {
+export interface GADOptions {
   /** Root directory of the project. */
   projectDir: string;
   /** Path to gad-tools.cjs. Falls back to GAD marker files, local installs, then runtime config dirs. */
-  gsdToolsPath?: string;
+  gadToolsPath?: string;
   /** Model to use for execution sessions. */
   model?: string;
   /** Maximum budget per plan execution in USD. Default: 5.0. */
@@ -226,7 +226,7 @@ export enum PhaseType {
  * Event types emitted by the GAD event stream.
  * Maps from SDKMessage variants to domain-meaningful events.
  */
-export enum GSDEventType {
+export enum GADEventType {
   SessionInit = 'session_init',
   SessionComplete = 'session_complete',
   SessionError = 'session_error',
@@ -261,8 +261,8 @@ export enum GSDEventType {
 /**
  * Base fields present on every GAD event.
  */
-export interface GSDEventBase {
-  type: GSDEventType;
+export interface GADEventBase {
+  type: GADEventType;
   timestamp: string;
   sessionId: string;
   phase?: PhaseType;
@@ -272,8 +272,8 @@ export interface GSDEventBase {
 /**
  * Session initialized — emitted on SDKSystemMessage subtype 'init'.
  */
-export interface GSDSessionInitEvent extends GSDEventBase {
-  type: GSDEventType.SessionInit;
+export interface GADSessionInitEvent extends GADEventBase {
+  type: GADEventType.SessionInit;
   model: string;
   tools: string[];
   cwd: string;
@@ -282,8 +282,8 @@ export interface GSDSessionInitEvent extends GSDEventBase {
 /**
  * Session completed successfully — emitted on SDKResultSuccess.
  */
-export interface GSDSessionCompleteEvent extends GSDEventBase {
-  type: GSDEventType.SessionComplete;
+export interface GADSessionCompleteEvent extends GADEventBase {
+  type: GADEventType.SessionComplete;
   success: true;
   totalCostUsd: number;
   durationMs: number;
@@ -294,8 +294,8 @@ export interface GSDSessionCompleteEvent extends GSDEventBase {
 /**
  * Session ended with an error — emitted on SDKResultError.
  */
-export interface GSDSessionErrorEvent extends GSDEventBase {
-  type: GSDEventType.SessionError;
+export interface GADSessionErrorEvent extends GADEventBase {
+  type: GADEventType.SessionError;
   success: false;
   totalCostUsd: number;
   durationMs: number;
@@ -307,16 +307,16 @@ export interface GSDSessionErrorEvent extends GSDEventBase {
 /**
  * Assistant produced text output.
  */
-export interface GSDAssistantTextEvent extends GSDEventBase {
-  type: GSDEventType.AssistantText;
+export interface GADAssistantTextEvent extends GADEventBase {
+  type: GADEventType.AssistantText;
   text: string;
 }
 
 /**
  * Tool invocation detected in assistant response.
  */
-export interface GSDToolCallEvent extends GSDEventBase {
-  type: GSDEventType.ToolCall;
+export interface GADToolCallEvent extends GADEventBase {
+  type: GADEventType.ToolCall;
   toolName: string;
   toolUseId: string;
   input: Record<string, unknown>;
@@ -325,8 +325,8 @@ export interface GSDToolCallEvent extends GSDEventBase {
 /**
  * Tool execution progress update.
  */
-export interface GSDToolProgressEvent extends GSDEventBase {
-  type: GSDEventType.ToolProgress;
+export interface GADToolProgressEvent extends GADEventBase {
+  type: GADEventType.ToolProgress;
   toolName: string;
   toolUseId: string;
   elapsedSeconds: number;
@@ -335,8 +335,8 @@ export interface GSDToolProgressEvent extends GSDEventBase {
 /**
  * Tool use summary after completion.
  */
-export interface GSDToolUseSummaryEvent extends GSDEventBase {
-  type: GSDEventType.ToolUseSummary;
+export interface GADToolUseSummaryEvent extends GADEventBase {
+  type: GADEventType.ToolUseSummary;
   summary: string;
   toolUseIds: string[];
 }
@@ -344,8 +344,8 @@ export interface GSDToolUseSummaryEvent extends GSDEventBase {
 /**
  * Subagent task started.
  */
-export interface GSDTaskStartedEvent extends GSDEventBase {
-  type: GSDEventType.TaskStarted;
+export interface GADTaskStartedEvent extends GADEventBase {
+  type: GADEventType.TaskStarted;
   taskId: string;
   description: string;
   taskType?: string;
@@ -354,8 +354,8 @@ export interface GSDTaskStartedEvent extends GSDEventBase {
 /**
  * Subagent task progress.
  */
-export interface GSDTaskProgressEvent extends GSDEventBase {
-  type: GSDEventType.TaskProgress;
+export interface GADTaskProgressEvent extends GADEventBase {
+  type: GADEventType.TaskProgress;
   taskId: string;
   description: string;
   totalTokens: number;
@@ -367,8 +367,8 @@ export interface GSDTaskProgressEvent extends GSDEventBase {
 /**
  * Subagent task completed/failed/stopped.
  */
-export interface GSDTaskNotificationEvent extends GSDEventBase {
-  type: GSDEventType.TaskNotification;
+export interface GADTaskNotificationEvent extends GADEventBase {
+  type: GADEventType.TaskNotification;
   taskId: string;
   status: 'completed' | 'failed' | 'stopped';
   summary: string;
@@ -377,8 +377,8 @@ export interface GSDTaskNotificationEvent extends GSDEventBase {
 /**
  * Cost updated (emitted on session_complete and periodically).
  */
-export interface GSDCostUpdateEvent extends GSDEventBase {
-  type: GSDEventType.CostUpdate;
+export interface GADCostUpdateEvent extends GADEventBase {
+  type: GADEventType.CostUpdate;
   sessionCostUsd: number;
   cumulativeCostUsd: number;
 }
@@ -386,8 +386,8 @@ export interface GSDCostUpdateEvent extends GSDEventBase {
 /**
  * API retry in progress.
  */
-export interface GSDAPIRetryEvent extends GSDEventBase {
-  type: GSDEventType.APIRetry;
+export interface GADAPIRetryEvent extends GADEventBase {
+  type: GADEventType.APIRetry;
   attempt: number;
   maxRetries: number;
   retryDelayMs: number;
@@ -397,8 +397,8 @@ export interface GSDAPIRetryEvent extends GSDEventBase {
 /**
  * Rate limit information updated.
  */
-export interface GSDRateLimitEvent extends GSDEventBase {
-  type: GSDEventType.RateLimit;
+export interface GADRateLimitEvent extends GADEventBase {
+  type: GADEventType.RateLimit;
   status: string;
   resetsAt?: number;
   utilization?: number;
@@ -407,16 +407,16 @@ export interface GSDRateLimitEvent extends GSDEventBase {
 /**
  * System status change (e.g., compacting).
  */
-export interface GSDStatusChangeEvent extends GSDEventBase {
-  type: GSDEventType.StatusChange;
+export interface GADStatusChangeEvent extends GADEventBase {
+  type: GADEventType.StatusChange;
   status: string | null;
 }
 
 /**
  * Compact boundary — context window was compacted.
  */
-export interface GSDCompactBoundaryEvent extends GSDEventBase {
-  type: GSDEventType.CompactBoundary;
+export interface GADCompactBoundaryEvent extends GADEventBase {
+  type: GADEventType.CompactBoundary;
   trigger: 'manual' | 'auto';
   preTokens: number;
 }
@@ -424,16 +424,16 @@ export interface GSDCompactBoundaryEvent extends GSDEventBase {
 /**
  * Raw stream event from SDK (partial assistant messages).
  */
-export interface GSDStreamEvent extends GSDEventBase {
-  type: GSDEventType.StreamEvent;
+export interface GADStreamEvent extends GADEventBase {
+  type: GADEventType.StreamEvent;
   event: unknown;
 }
 
 /**
  * Phase execution started.
  */
-export interface GSDPhaseStartEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStart;
+export interface GADPhaseStartEvent extends GADEventBase {
+  type: GADEventType.PhaseStart;
   phaseNumber: string;
   phaseName: string;
 }
@@ -441,8 +441,8 @@ export interface GSDPhaseStartEvent extends GSDEventBase {
 /**
  * A single phase step (discuss, research, etc.) started.
  */
-export interface GSDPhaseStepStartEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStepStart;
+export interface GADPhaseStepStartEvent extends GADEventBase {
+  type: GADEventType.PhaseStepStart;
   phaseNumber: string;
   step: PhaseStepType;
 }
@@ -450,8 +450,8 @@ export interface GSDPhaseStepStartEvent extends GSDEventBase {
 /**
  * A single phase step completed.
  */
-export interface GSDPhaseStepCompleteEvent extends GSDEventBase {
-  type: GSDEventType.PhaseStepComplete;
+export interface GADPhaseStepCompleteEvent extends GADEventBase {
+  type: GADEventType.PhaseStepComplete;
   phaseNumber: string;
   step: PhaseStepType;
   success: boolean;
@@ -462,8 +462,8 @@ export interface GSDPhaseStepCompleteEvent extends GSDEventBase {
 /**
  * Full phase execution completed.
  */
-export interface GSDPhaseCompleteEvent extends GSDEventBase {
-  type: GSDEventType.PhaseComplete;
+export interface GADPhaseCompleteEvent extends GADEventBase {
+  type: GADEventType.PhaseComplete;
   phaseNumber: string;
   phaseName: string;
   success: boolean;
@@ -501,8 +501,8 @@ export interface PhasePlanIndex {
 /**
  * Wave execution started — emitted before concurrent plans launch.
  */
-export interface GSDWaveStartEvent extends GSDEventBase {
-  type: GSDEventType.WaveStart;
+export interface GADWaveStartEvent extends GADEventBase {
+  type: GADEventType.WaveStart;
   phaseNumber: string;
   waveNumber: number;
   planCount: number;
@@ -512,8 +512,8 @@ export interface GSDWaveStartEvent extends GSDEventBase {
 /**
  * Wave execution completed — emitted after all plans in a wave settle.
  */
-export interface GSDWaveCompleteEvent extends GSDEventBase {
-  type: GSDEventType.WaveComplete;
+export interface GADWaveCompleteEvent extends GADEventBase {
+  type: GADEventType.WaveComplete;
   phaseNumber: string;
   waveNumber: number;
   successCount: number;
@@ -563,8 +563,8 @@ export interface MilestoneRunnerResult {
 /**
  * Milestone execution started.
  */
-export interface GSDMilestoneStartEvent extends GSDEventBase {
-  type: GSDEventType.MilestoneStart;
+export interface GADMilestoneStartEvent extends GADEventBase {
+  type: GADEventType.MilestoneStart;
   phaseCount: number;
   prompt: string;
 }
@@ -572,8 +572,8 @@ export interface GSDMilestoneStartEvent extends GSDEventBase {
 /**
  * Milestone execution completed.
  */
-export interface GSDMilestoneCompleteEvent extends GSDEventBase {
-  type: GSDEventType.MilestoneComplete;
+export interface GADMilestoneCompleteEvent extends GADEventBase {
+  type: GADEventType.MilestoneComplete;
   success: boolean;
   totalCostUsd: number;
   totalDurationMs: number;
@@ -637,8 +637,8 @@ export interface InitResult {
 /**
  * Init workflow started.
  */
-export interface GSDInitStartEvent extends GSDEventBase {
-  type: GSDEventType.InitStart;
+export interface GADInitStartEvent extends GADEventBase {
+  type: GADEventType.InitStart;
   input: string;
   projectDir: string;
 }
@@ -646,16 +646,16 @@ export interface GSDInitStartEvent extends GSDEventBase {
 /**
  * Init workflow step started.
  */
-export interface GSDInitStepStartEvent extends GSDEventBase {
-  type: GSDEventType.InitStepStart;
+export interface GADInitStepStartEvent extends GADEventBase {
+  type: GADEventType.InitStepStart;
   step: InitStepName;
 }
 
 /**
  * Init workflow step completed.
  */
-export interface GSDInitStepCompleteEvent extends GSDEventBase {
-  type: GSDEventType.InitStepComplete;
+export interface GADInitStepCompleteEvent extends GADEventBase {
+  type: GADEventType.InitStepComplete;
   step: InitStepName;
   success: boolean;
   durationMs: number;
@@ -666,8 +666,8 @@ export interface GSDInitStepCompleteEvent extends GSDEventBase {
 /**
  * Init workflow completed.
  */
-export interface GSDInitCompleteEvent extends GSDEventBase {
-  type: GSDEventType.InitComplete;
+export interface GADInitCompleteEvent extends GADEventBase {
+  type: GADEventType.InitComplete;
   success: boolean;
   totalCostUsd: number;
   totalDurationMs: number;
@@ -677,8 +677,8 @@ export interface GSDInitCompleteEvent extends GSDEventBase {
 /**
  * Research sessions spawned in parallel during init.
  */
-export interface GSDInitResearchSpawnEvent extends GSDEventBase {
-  type: GSDEventType.InitResearchSpawn;
+export interface GADInitResearchSpawnEvent extends GADEventBase {
+  type: GADEventType.InitResearchSpawn;
   sessionCount: number;
   researchTypes: string[];
 }
@@ -686,36 +686,36 @@ export interface GSDInitResearchSpawnEvent extends GSDEventBase {
 /**
  * Discriminated union of all GAD SDK events.
  */
-export type GSDEvent =
-  | GSDSessionInitEvent
-  | GSDSessionCompleteEvent
-  | GSDSessionErrorEvent
-  | GSDAssistantTextEvent
-  | GSDToolCallEvent
-  | GSDToolProgressEvent
-  | GSDToolUseSummaryEvent
-  | GSDTaskStartedEvent
-  | GSDTaskProgressEvent
-  | GSDTaskNotificationEvent
-  | GSDCostUpdateEvent
-  | GSDAPIRetryEvent
-  | GSDRateLimitEvent
-  | GSDStatusChangeEvent
-  | GSDCompactBoundaryEvent
-  | GSDStreamEvent
-  | GSDPhaseStartEvent
-  | GSDPhaseStepStartEvent
-  | GSDPhaseStepCompleteEvent
-  | GSDPhaseCompleteEvent
-  | GSDWaveStartEvent
-  | GSDWaveCompleteEvent
-  | GSDMilestoneStartEvent
-  | GSDMilestoneCompleteEvent
-  | GSDInitStartEvent
-  | GSDInitStepStartEvent
-  | GSDInitStepCompleteEvent
-  | GSDInitCompleteEvent
-  | GSDInitResearchSpawnEvent;
+export type GADEvent =
+  | GADSessionInitEvent
+  | GADSessionCompleteEvent
+  | GADSessionErrorEvent
+  | GADAssistantTextEvent
+  | GADToolCallEvent
+  | GADToolProgressEvent
+  | GADToolUseSummaryEvent
+  | GADTaskStartedEvent
+  | GADTaskProgressEvent
+  | GADTaskNotificationEvent
+  | GADCostUpdateEvent
+  | GADAPIRetryEvent
+  | GADRateLimitEvent
+  | GADStatusChangeEvent
+  | GADCompactBoundaryEvent
+  | GADStreamEvent
+  | GADPhaseStartEvent
+  | GADPhaseStepStartEvent
+  | GADPhaseStepCompleteEvent
+  | GADPhaseCompleteEvent
+  | GADWaveStartEvent
+  | GADWaveCompleteEvent
+  | GADMilestoneStartEvent
+  | GADMilestoneCompleteEvent
+  | GADInitStartEvent
+  | GADInitStepStartEvent
+  | GADInitStepCompleteEvent
+  | GADInitCompleteEvent
+  | GADInitResearchSpawnEvent;
 
 /**
  * Transport handler interface for consuming GAD events.
@@ -723,7 +723,7 @@ export type GSDEvent =
  */
 export interface TransportHandler {
   /** Called for each event. Must not throw. */
-  onEvent(event: GSDEvent): void;
+  onEvent(event: GADEvent): void;
   /** Called when the stream is closing. Clean up resources. */
   close(): void;
 }

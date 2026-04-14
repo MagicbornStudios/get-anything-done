@@ -1,11 +1,11 @@
 /**
- * E2E lifecycle integration test — proves GSD.runPhase() drives
+ * E2E lifecycle integration test — proves GAD.runPhase() drives
  * the full phase lifecycle: discuss → research → plan → execute → verify → advance
  * after bootstrapping a real project via InitRunner.
  *
- * This is the capstone proof that `gsd-sdk auto` works end-to-end
+ * This is the capstone proof that `gad-sdk auto` works end-to-end
  * without human intervention. InitRunner bootstraps the project,
- * then GSD.runPhase() drives Phase 1 through the complete lifecycle.
+ * then GAD.runPhase() drives Phase 1 through the complete lifecycle.
  *
  * Requires Claude Code CLI (`claude`) installed and authenticated.
  * Skips gracefully if CLI is unavailable.
@@ -19,12 +19,12 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 
-import { GSD } from './index.js';
+import { GAD } from './index.js';
 import { InitRunner } from './init-runner.js';
-import { GSDTools } from './gsd-tools.js';
-import { GSDEventStream } from './event-stream.js';
-import { GSDEventType, PhaseStepType } from './types.js';
-import type { GSDEvent, PhaseRunnerResult, RoadmapAnalysis } from './types.js';
+import { GADTools } from './gad-tools.js';
+import { GADEventStream } from './event-stream.js';
+import { GADEventType, PhaseStepType } from './types.js';
+import type { GADEvent, PhaseRunnerResult, RoadmapAnalysis } from './types.js';
 
 // ─── CLI availability check ─────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ try {
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const sdkPromptsDir = join(__dirname, '..', 'prompts');
-const GSD_TOOLS_PATH = join(homedir(), '.claude', 'get-shit-done', 'bin', 'gsd-tools.cjs');
+const GAD_TOOLS_PATH = join(homedir(), '.claude', 'get-anything-done', 'bin', 'gad-tools.cjs');
 
 // ─── Lifecycle step ordering for monotonicity check ──────────────────────────
 
@@ -54,29 +54,29 @@ const STEP_ORDER: Record<string, number> = {
 
 // ─── Test suite ──────────────────────────────────────────────────────────────
 
-describe.skipIf(!cliAvailable)('E2E Lifecycle: InitRunner → GSD.runPhase() full lifecycle', () => {
+describe.skipIf(!cliAvailable)('E2E Lifecycle: InitRunner → GAD.runPhase() full lifecycle', () => {
   let tmpDir: string;
   let initSuccess: boolean = false;
   let phase1Number: string | null = null;
-  let tools: GSDTools;
+  let tools: GADTools;
 
   // ── Bootstrap: create temp dir, git init, run InitRunner ──────────────
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'gsd-sdk-lifecycle-e2e-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'gad-sdk-lifecycle-e2e-'));
 
     // Git init (required by InitRunner and phase lifecycle)
     execSync('git init', { cwd: tmpDir, stdio: 'ignore' });
     execSync('git config user.email "test@test.com"', { cwd: tmpDir, stdio: 'ignore' });
     execSync('git config user.name "Test"', { cwd: tmpDir, stdio: 'ignore' });
 
-    tools = new GSDTools({
+    tools = new GADTools({
       projectDir: tmpDir,
-      gsdToolsPath: GSD_TOOLS_PATH,
+      gadToolsPath: GAD_TOOLS_PATH,
       timeoutMs: 30_000,
     });
 
     // Run InitRunner to bootstrap the project
-    const initEventStream = new GSDEventStream();
+    const initEventStream = new GADEventStream();
     const initRunner = new InitRunner({
       projectDir: tmpDir,
       tools,
@@ -135,7 +135,7 @@ describe.skipIf(!cliAvailable)('E2E Lifecycle: InitRunner → GSD.runPhase() ful
 
   // ── Main lifecycle test ───────────────────────────────────────────────
 
-  it('GSD.runPhase() drives Phase 1 through the full lifecycle without human intervention', async () => {
+  it('GAD.runPhase() drives Phase 1 through the full lifecycle without human intervention', async () => {
     // If init failed, skip — can't test lifecycle without a bootstrapped project
     if (!initSuccess) {
       console.warn('Skipping lifecycle test: InitRunner did not bootstrap successfully');
@@ -158,17 +158,17 @@ describe.skipIf(!cliAvailable)('E2E Lifecycle: InitRunner → GSD.runPhase() ful
     expect(phaseOp.phase_found).toBe(true);
 
     // Collect all events during the phase lifecycle
-    const events: GSDEvent[] = [];
+    const events: GADEvent[] = [];
 
-    // Construct GSD with autoMode: true
-    const gsd = new GSD({
+    // Construct GAD with autoMode: true
+    const gad = new GAD({
       projectDir: tmpDir,
       autoMode: true,
     });
-    gsd.onEvent((e: GSDEvent) => events.push(e));
+    gad.onEvent((e: GADEvent) => events.push(e));
 
     // Run the discovered first phase with tight budget to minimize cost
-    const result: PhaseRunnerResult = await gsd.runPhase(phase1Number!, {
+    const result: PhaseRunnerResult = await gad.runPhase(phase1Number!, {
       maxTurnsPerStep: 10,
       maxBudgetPerStep: 0.50,
     });
@@ -184,19 +184,19 @@ describe.skipIf(!cliAvailable)('E2E Lifecycle: InitRunner → GSD.runPhase() ful
     expect(result.steps.length).toBeGreaterThanOrEqual(1);
 
     // ── Assert: events include PhaseStart ──
-    const phaseStartEvents = events.filter(e => e.type === GSDEventType.PhaseStart);
+    const phaseStartEvents = events.filter(e => e.type === GADEventType.PhaseStart);
     expect(phaseStartEvents.length).toBe(1);
     const phaseStart = phaseStartEvents[0]!;
-    if (phaseStart.type === GSDEventType.PhaseStart) {
+    if (phaseStart.type === GADEventType.PhaseStart) {
       expect(phaseStart.phaseNumber).toBe(phase1Number);
       expect(phaseStart.phaseName).toBeTruthy();
     }
 
     // ── Assert: events include PhaseComplete ──
-    const phaseCompleteEvents = events.filter(e => e.type === GSDEventType.PhaseComplete);
+    const phaseCompleteEvents = events.filter(e => e.type === GADEventType.PhaseComplete);
     expect(phaseCompleteEvents.length).toBe(1);
     const phaseComplete = phaseCompleteEvents[0]!;
-    if (phaseComplete.type === GSDEventType.PhaseComplete) {
+    if (phaseComplete.type === GADEventType.PhaseComplete) {
       expect(phaseComplete.phaseNumber).toBe(phase1Number);
       expect(typeof phaseComplete.totalCostUsd).toBe('number');
       expect(typeof phaseComplete.totalDurationMs).toBe('number');
@@ -204,8 +204,8 @@ describe.skipIf(!cliAvailable)('E2E Lifecycle: InitRunner → GSD.runPhase() ful
 
     // ── Assert: PhaseStepStart events show step progression ──
     const stepStartEvents = events.filter(
-      (e): e is Extract<GSDEvent, { type: GSDEventType.PhaseStepStart }> =>
-        e.type === GSDEventType.PhaseStepStart,
+      (e): e is Extract<GADEvent, { type: GADEventType.PhaseStepStart }> =>
+        e.type === GADEventType.PhaseStepStart,
     );
     expect(stepStartEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -248,8 +248,8 @@ describe.skipIf(!cliAvailable)('E2E Lifecycle: InitRunner → GSD.runPhase() ful
 
     // ── Assert: PhaseStepComplete events match step results ──
     const stepCompleteEvents = events.filter(
-      (e): e is Extract<GSDEvent, { type: GSDEventType.PhaseStepComplete }> =>
-        e.type === GSDEventType.PhaseStepComplete,
+      (e): e is Extract<GADEvent, { type: GADEventType.PhaseStepComplete }> =>
+        e.type === GADEventType.PhaseStepComplete,
     );
     // At least as many complete events as step results
     expect(stepCompleteEvents.length).toBeGreaterThanOrEqual(result.steps.length);

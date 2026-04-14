@@ -274,6 +274,7 @@ export async function listAgentLanes(projectDir: string, options: { staleAfterMs
   const now = Date.now();
   const activeAgents: AgentLaneRecord[] = [];
   const staleAgents: AgentLaneRecord[] = [];
+  let mutated = false;
   for (const agent of state.agents) {
     if (agent.status === 'released') continue;
     const leaseExpiry = agent.leaseExpiresAt ? Date.parse(agent.leaseExpiresAt) : Number.NaN;
@@ -281,8 +282,18 @@ export async function listAgentLanes(projectDir: string, options: { staleAfterMs
     const stale = Number.isFinite(leaseExpiry)
       ? leaseExpiry <= now
       : Number.isFinite(lastSeen) && lastSeen > 0 && (now - lastSeen) > staleAfterMs;
+    const hasClaims = (agent.claimedTaskIds || []).length > 0 || (agent.claimedPhaseIds || []).length > 0;
+    if (stale && !hasClaims) {
+      agent.status = 'released';
+      agent.updatedAt = nowIso();
+      mutated = true;
+      continue;
+    }
     if (stale) staleAgents.push(agent);
     activeAgents.push(agent);
+  }
+  if (mutated) {
+    await writeAgentLanes(projectDir, state);
   }
   return { state, activeAgents, staleAgents, lanesPath: planningFile(projectDir) };
 }

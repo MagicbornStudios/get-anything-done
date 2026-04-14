@@ -1,7 +1,7 @@
 ---
 slug: gad
 name: GAD (get-anything-done)
-description: Content-driven framework with evolutionary skill generation. Ships the full sdk/skills, sdk/agents, .planning/workflows catalogs and the GAD loop. Decision gad-166 — GAD is content + emergent in one track; gad-179 — treated as one framework of many.
+description: Content-driven framework with evolutionary skill generation. Ships the full skills, agents, and .planning/workflows catalogs plus the GAD loop. Decision gad-166 — GAD is content + emergent in one track; gad-179 — treated as one framework of many.
 version: v1.1
 extends: null
 skills: [check-todos, task-checkpoint, debug, gad-debug, gad-discuss-phase, gad-plan-phase, gad-execute-phase, gad-verify-work, gad-list-phase-assumptions, gad-next, create-proto-skill, gad-evolution-evolve, gad-evolution-validator, gad-skill-creator, eval-report, write-feature-doc]

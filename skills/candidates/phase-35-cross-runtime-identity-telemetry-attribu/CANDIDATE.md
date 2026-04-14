@@ -2,11 +2,11 @@
 status: candidate
 source_phase: "35"
 source_phase_title: "Cross-runtime identity + telemetry attribution"
-pressure_score: 17
-tasks_total: 9
+pressure_score: 18
+tasks_total: 10
 tasks_done: 5
 crosscuts: 4
-created_on: "2026-04-13"
+created_on: "2026-04-14"
 created_by: compute-self-eval
 ---
 
@@ -16,7 +16,7 @@ created_by: compute-self-eval
 
 ```
 get-anything-done | 35 | Cross-runtime identity + telemetry attribution
-selection pressure: 17  (9 tasks, 5 done, 4 crosscuts)
+selection pressure: 18  (10 tasks, 5 done, 4 crosscuts)
 ```
 
 ## Tasks
@@ -31,6 +31,7 @@ selection pressure: 17  (9 tasks, 5 done, 4 crosscuts)
 35-07 planned Rewrite GAD README to match the completeness and onboarding depth of upstream GSD’s README while preserving GAD’s actual runtime/install/canonical-source truth and avoiding stale command/runtime claims.
 35-08 done Restore the shared GAD security module and realign the prompt injection scanners/tests with the current repo structure so the framework’s security claims are backed by a live module again.
 35-09 done Expand GAD README to upstream-level completeness without inheriting stale npm-first or command-first claims. Cover install, runtime split, evals, planning model, security, updating, troubleshooting, and development flow.
+35-10 planned Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, and hydration are canonical. Decide whether phase prompts should stay on a fixed file manifest or move to scoped/query-driven hydration, and whether execute should receive relevant decisions or plan-linked refs instead of file-name-based context only.
 ```
 
 ## What this candidate is for
@@ -56,7 +57,7 @@ The drafter should pull additional context from:
   lives in commit history)
 - `gad --help` and `gad <subcommand> --help` — CLI surface available
   to the skill
-- `ls vendor/get-anything-done/sdk/skills/` — existing skills to avoid
+- `ls vendor/get-anything-done/skills/` — existing skills to avoid
   duplicating
 
 The drafter does **not** ask a human for anything. Make decisions and
@@ -70,7 +71,7 @@ are two distinct stages:
 
 - **candidate** (this file) = raw selection-pressure output
 - **proto-skill** (drafter output) = drafted SKILL.md awaiting human review
-- **skill** (post-promote) = lives in `sdk/skills/` as part of species DNA
+- **skill** (post-promote) = lives in `skills/` as part of species DNA
 
 The human reviewer runs `gad evolution promote <slug>` or
 `gad evolution discard <slug>` after reviewing the proto-skill.

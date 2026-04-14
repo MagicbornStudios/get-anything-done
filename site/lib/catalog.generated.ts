@@ -2001,7 +2001,7 @@ export const FINDINGS: Finding[] = [
     "title": "Curator vs Raw — designing the evolution loop's drafting step",
     "date": "2026-04-13",
     "file": "vendor/get-anything-done/evals/FINDINGS-2026-04-13-evolution-loop-experiment.md",
-    "bodyRaw": "\n# Curator vs Raw — designing the evolution loop's drafting step\n\nTwo controlled experiments to answer one question: **when GAD evolves itself by drafting new skills from high-pressure phases, should a curator pre-digest the phase data into a structured intent, or should we feed the raw phase dump straight to a skill creator?**\n\nThe answer flipped between experiments. Both flips are recorded here so the architecture decision lands on evidence, not vibes.\n\n## TL;DR — the surprising flip\n\n| Experiment | Tool under test | Curator helps? | Why |\n|---|---|---|---|\n| **v1** — Anthropic skill-creator with full eval loop | heavy (drafts + runs subagent test loop + benchmarks + viewer) | **YES** — curator catches load-bearing pieces (trace schema fragment, preserve reminder) raw arm misses entirely | Heavy harness fights the agent; curated INTENT.md unblocks it |\n| **v2** — dot-agent create-skill (light authoring guide) | light (formats and structures only, no eval loop) | **NO** — raw arm pulls 16 decisions vs curator's 7. Curator is a **filter**, not an amplifier | Light harness lets the agent read the data; curator adds opinions that may filter out important content |\n| **v2 test-loop** — agents using the resulting skill | n/a | **NO**, plus skill is **wrong** about repo conventions | Baseline (no skill, reads repo) wrote a more accurate gad.json shape than with-skill (which followed the skill's prescription) |\n\n**The combined finding:** When generating skills, give the agent raw access. When the curator filters, they may filter out the truth. When the skill prescribes conventions, validate them against the actual repo or the agent will follow false rules confidently.\n\n## Experiment design\n\n| | v1 | v2 — quick-skill | v2 — test loop |\n|---|---|---|---|\n| Subjects | 2 (raw, intent) | 2 (raw, intent) | 2 (with-skill, baseline) × 3 prompts |\n| Source data | Phase 14 of GAD | Phase 14 of GAD | Stub design docs + the skill from v2 intent arm |\n| Tool | `~/.agents/skills/skill-creator` (Anthropic, 485 lines) | `~/.agents/skills/create-skill` (dot-agent, 78 lines) | Subagents loaded with skill / no skill |\n| Eval loop | Subagent test runs + grading + viewer (simulated due to nested subagent limits) | Skipped — quick-skill has no test loop | Real subagent runs from main thread |\n| Sandbox | `oneoff/raw/`, `oneoff/intent/` | `oneoff/v2/raw/`, `oneoff/v2/intent/` | `oneoff/v2/test-runs/` |\n\n## Inputs side by side\n\nBoth arms across both experiments saw the same source: phase 14 of GAD's own development (\"Eval framework — escape-the-dungeon + tracing\"). The difference is the framing.\n\n### Raw input\n\nA flat dump of `gad tasks --projectid get-anything-done | grep \" 14-\"` plus `gad decisions ... | grep -i trace`. No structure, no proposed name, no test prompts, no historical context. The agent reads it cold.\n\n```\n14-01  done  Create a gad eval project \"escape-the-dungeon\" from GAMEPLAY-DESIGN.xml...\n14-02  done  Create bin/gad-tools.cjs — the GAD equivalent of gsd-tools.cjs...\n14-03  done  Define the eval trace format for real implementations: track which gad...\n14-04  done  Define the eval scoring rubric for real implementations: CLI efficiency...\n14-05  done  Run the escape-the-dungeon eval: fresh agent session...\n14-06  done  Run the portfolio-bare eval with updated tracing...\n14-07  done  Review CONTEXT.md: what it is, how discuss-phase produces it...\n```\n\n### Curated INTENT input\n\nThe same data, plus my curator labor: a proposed name (`scaffold-traced-eval-project`), a \"What this skill should do\" paragraph, \"When it should trigger\" bullet list, \"Expected output format\" table, three test prompts I drew from real phase tasks, a hand-picked subset of decisions, and an \"Errors observed\" section with the historical \"three attempts at task 14-03 failed\" insight.\n\nThe full file is at `oneoff/v2/intent/INTENT.md` — 113 lines of structured curator pre-digestion.\n\n## v2 quick-skill — outputs side by side\n\nBoth arms produced a SKILL.md with the same target name (`scaffold-traced-eval-project`). Only the input format varied.\n\n| Metric | RAW arm | INTENT arm |\n|---|---|---|\n| **SKILL.md lines** | 167 | 158 |\n| **References files split** | 4 | 3 |\n| **Decisions cited** | **16** | **7** |\n| **Tasks cited** | 5 (14-01 → 14-05) | 2 (14-03, 14-04) |\n| **Workflow steps** | 8 | 10 |\n\n### What each arm caught vs missed\n\n| Load-bearing detail | RAW caught | INTENT caught |\n|---|---|---|\n| TRACE.json schema v4 parent/child IDs (gad-50) | ✓ | ✗ |\n| `gad-trace-hook.cjs` wiring (gad-59) | ✓ | ✗ |\n| `.trace-active-skill` marker (gad-58) | ✓ | ✗ |\n| 4 KB output cap (gad-60) | ✓ | ✗ |\n| Runtime identity in trace (gad-137) | ✓ | ✗ |\n| Per-eval-repo architecture (gad-139) | ✓ | ✗ |\n| `gad-tools.cjs` vendoring floor (task 14-02) | ✓ | ✗ |\n| Rate-limited preservation (gad-63) | ✓ | ✗ |\n| Mandatory `gad eval preserve` reminder (gad-38) | ✗ | ✓ |\n| Fragment-registration pattern explicit | partial | ✓ |\n| Historical \"3 failed attempts\" context | ✗ | ✓ |\n| Explicit \"common errors\" section | ✗ | ✓ |\n\n**RAW pulls in MORE technical breadth.** It catches 8 decisions INTENT skipped because INTENT only listed the decisions I, the curator, chose to surface. **The curator is a filter.**\n\nINTENT still wins on the irreplaceable bits: the historical context that lives in commit history, not decision text. But that's a smaller win than I expected.\n\n## v2 test loop — does the resulting skill actually help an agent?\n\nAfter v2 quick-skill produced a SKILL.md, we ran a **real test loop** with subagents spawned from the main thread (so Task tool was actually available). Three test prompts × with-skill / baseline pairs = 6 leaf subagents.\n\n| Eval | Prompt | with-skill | baseline |\n|---|---|---|---|\n| **1** | Scaffold an eval project from `space-shooter-design.md` | 4/4 ✓ | 3/4 |\n| **2** | Scaffold an eval project from `data-pipeline-requirements.md` | 4/4 ✓ | 3/4 |\n| **3** | (negative) \"run the existing escape-the-dungeon eval against bare condition\" | 4/4 ✓ | 4/4 ✓ |\n| **Total** | | **12/12 (100%)** | **10/12 (83%)** |\n\n**Headline number favors with-skill by +16.7pp. The story behind it does not.**\n\nThe entire 2-assertion gap comes from one thing: the `scaffold-traced-eval-project` skill prescribes 3 GAD-native scoring dimensions (CLI efficiency, skill trigger accuracy, planning quality). The with-skill agent followed that prescription verbatim. The baseline agent **read `vendor/get-anything-done/evals/escape-the-dungeon/gad.json` directly** and produced a richer scoring shape that **matches what the repo actually uses today**:\n\n| Field in baseline gad.json | Present in actual repo? | Present in skill's prescription? |\n|---|---|---|\n| `eval_mode` | ✓ | ✗ (uses `mode`) |\n| `scoring.weights` (6 dims) | ✓ | ✗ (uses 3 dims) |\n| `human_review_rubric.dimensions` | ✓ | ✗ |\n| `compare_to` | ✓ | ✗ |\n| `domain` / `tech_stack` / `build_requirement` | ✓ | ✗ |\n\n**The skill is prescriptively wrong about what GAD evals actually look like.** Baseline did the more *accurate* job by reading the actual repo, but failed an assertion that grades against the skill's view. Baseline produced more files (REQUIREMENTS.md + .planning/ skeleton + AGENTS.md + v1 placeholders) modeled directly on `escape-the-dungeon`'s structure.\n\nThe negative test was a wash. Both arms recognized eval-3 as an execution task and refused to scaffold. With-skill cited the skill's \"Do NOT trigger for: running an existing eval\" clause; baseline reasoned from first principles. The defensive description helped, but baseline's general reasoning didn't need it.\n\n## What we changed in the architecture\n\n**Before this experiment**, my proposal was: `evolve` curates an INTENT.md per high-pressure phase, hands it to a heavy skill-creator, runs an eval loop, then human review.\n\n**After**, the loop is much shorter and the curator is gone:\n\n```\ngad:evolution:evolve\n  ├─ compute-self-eval finds high-pressure phases (selection pressure)\n  ├─ for each phase:\n  │     ├─ write skills/proto-skills/<slug>/CANDIDATE.md\n  │     │     = raw phase dump (no curator pre-digestion)\n  │     ├─ invoke gad-quick-skill on CANDIDATE.md\n  │     │     → writes SKILL.md + references/\n  │     └─ validator runs (advisory, non-blocking)\n  │           → writes VALIDATION.md flagging file refs / CLI / shape mismatches\n  └─ register one TASK-REGISTRY review task\n\n(human review)\n  reads SKILL.md + VALIDATION.md → promote or discard\n\ngad evolution promote <slug> → moves to skills/ (joins species DNA)\ngad evolution discard <slug> → deletes\n```\n\nThree dropped components:\n\n| Dropped | Why |\n|---|---|\n| Curator step (hand-written INTENT.md) | RAW arm pulled MORE decisions than curated; curator is a filter |\n| Heavy `skill-creator` with eval loop | dot-agent quick-skill produces good skills from raw input alone |\n| `attempt-evolution` / `finish-evolution` skills | Promote/discard are one-line file moves, not skills |\n\nOne added component:\n\n| Added | Why |\n|---|---|\n| Validator (advisory) | The skill may prescribe conventions that don't match the repo. Validator flags the gap so the human reviewer sees it before promoting. |\n\n## Methodology caveats\n\n- **v1 nested subagent fidelity:** The v1 experiment subagents tried to spawn their own with-skill / baseline subagents for the eval loop, but spawned subagents don't get the Task tool. Both v1 arms reported simulating the test runs inline. The pass-rate numbers from v1 are NOT real — only the SKILL.md outputs are.\n- **v2 quick-skill subagents** had the same nested limit but didn't need Task because dot-agent has no eval loop. Their outputs are real.\n- **v2 test loop** ran from the main thread, where Task is available. The 6 test subagents are real, independent runs.\n- **Stub input files** (`oneoff/v2/test-runs/inputs/*.md`) were written by hand for the test prompts — `space-shooter-design.md` and `data-pipeline-requirements.md` are realistic but invented. This mirrors what skill-creator's normal harness would do (sandbox stubs).\n\n## Files\n\nAll inputs, intermediate artifacts, and outputs preserved under:\n\n| Path | Contents |\n|---|---|\n| `oneoff/raw/` | v1 raw arm (skill-creator + raw phase 14) |\n| `oneoff/intent/` | v1 intent arm (skill-creator + curated INTENT.md) |\n| `oneoff/v2/raw/` | v2 raw arm (dot-agent quick-skill + raw phase 14) |\n| `oneoff/v2/intent/` | v2 intent arm (dot-agent quick-skill + curated INTENT.md) |\n| `oneoff/v2/test-runs/inputs/` | stub design docs (space-shooter, data-pipeline) |\n| `oneoff/v2/test-runs/outputs/with-skill/` | 3 leaf subagent runs using the skill |\n| `oneoff/v2/test-runs/outputs/without-skill/` | 3 leaf subagent runs without the skill |\n\nThe v1 viewer.html files (`oneoff/raw/skill/viewer.html`, `oneoff/intent/skill/viewer.html`) render the simulated test runs with skill-creator's HTML viewer — useful for skim comparison even though the underlying numbers are simulated.\n\r\n",
+    "bodyRaw": "\r\n\r\n# Curator vs Raw — designing the evolution loop's drafting step\r\n\r\nTwo controlled experiments to answer one question: **when GAD evolves itself by drafting new skills from high-pressure phases, should a curator pre-digest the phase data into a structured intent, or should we feed the raw phase dump straight to a skill creator?**\r\n\r\nThe answer flipped between experiments. Both flips are recorded here so the architecture decision lands on evidence, not vibes.\r\n\r\n## TL;DR — the surprising flip\r\n\r\n| Experiment | Tool under test | Curator helps? | Why |\r\n|---|---|---|---|\r\n| **v1** — Anthropic skill-creator with full eval loop | heavy (drafts + runs subagent test loop + benchmarks + viewer) | **YES** — curator catches load-bearing pieces (trace schema fragment, preserve reminder) raw arm misses entirely | Heavy harness fights the agent; curated INTENT.md unblocks it |\r\n| **v2** — dot-agent create-skill (light authoring guide) | light (formats and structures only, no eval loop) | **NO** — raw arm pulls 16 decisions vs curator's 7. Curator is a **filter**, not an amplifier | Light harness lets the agent read the data; curator adds opinions that may filter out important content |\r\n| **v2 test-loop** — agents using the resulting skill | n/a | **NO**, plus skill is **wrong** about repo conventions | Baseline (no skill, reads repo) wrote a more accurate gad.json shape than with-skill (which followed the skill's prescription) |\r\n\r\n**The combined finding:** When generating skills, give the agent raw access. When the curator filters, they may filter out the truth. When the skill prescribes conventions, validate them against the actual repo or the agent will follow false rules confidently.\r\n\r\n## Experiment design\r\n\r\n| | v1 | v2 — quick-skill | v2 — test loop |\r\n|---|---|---|---|\r\n| Subjects | 2 (raw, intent) | 2 (raw, intent) | 2 (with-skill, baseline) × 3 prompts |\r\n| Source data | Phase 14 of GAD | Phase 14 of GAD | Stub design docs + the skill from v2 intent arm |\r\n| Tool | `~/.agents/skills/skill-creator` (Anthropic, 485 lines) | `~/.agents/skills/create-skill` (dot-agent, 78 lines) | Subagents loaded with skill / no skill |\r\n| Eval loop | Subagent test runs + grading + viewer (simulated due to nested subagent limits) | Skipped — quick-skill has no test loop | Real subagent runs from main thread |\r\n| Sandbox | `oneoff/raw/`, `oneoff/intent/` | `oneoff/v2/raw/`, `oneoff/v2/intent/` | `oneoff/v2/test-runs/` |\r\n\r\n## Inputs side by side\r\n\r\nBoth arms across both experiments saw the same source: phase 14 of GAD's own development (\"Eval framework — escape-the-dungeon + tracing\"). The difference is the framing.\r\n\r\n### Raw input\r\n\r\nA flat dump of `gad tasks --projectid get-anything-done | grep \" 14-\"` plus `gad decisions ... | grep -i trace`. No structure, no proposed name, no test prompts, no historical context. The agent reads it cold.\r\n\r\n```\r\n14-01  done  Create a gad eval project \"escape-the-dungeon\" from GAMEPLAY-DESIGN.xml...\r\n14-02  done  Create bin/gad-tools.cjs — the GAD equivalent of gsd-tools.cjs...\r\n14-03  done  Define the eval trace format for real implementations: track which gad...\r\n14-04  done  Define the eval scoring rubric for real implementations: CLI efficiency...\r\n14-05  done  Run the escape-the-dungeon eval: fresh agent session...\r\n14-06  done  Run the portfolio-bare eval with updated tracing...\r\n14-07  done  Review CONTEXT.md: what it is, how discuss-phase produces it...\r\n```\r\n\r\n### Curated INTENT input\r\n\r\nThe same data, plus my curator labor: a proposed name (`scaffold-traced-eval-project`), a \"What this skill should do\" paragraph, \"When it should trigger\" bullet list, \"Expected output format\" table, three test prompts I drew from real phase tasks, a hand-picked subset of decisions, and an \"Errors observed\" section with the historical \"three attempts at task 14-03 failed\" insight.\r\n\r\nThe full file is at `oneoff/v2/intent/INTENT.md` — 113 lines of structured curator pre-digestion.\r\n\r\n## v2 quick-skill — outputs side by side\r\n\r\nBoth arms produced a SKILL.md with the same target name (`scaffold-traced-eval-project`). Only the input format varied.\r\n\r\n| Metric | RAW arm | INTENT arm |\r\n|---|---|---|\r\n| **SKILL.md lines** | 167 | 158 |\r\n| **References files split** | 4 | 3 |\r\n| **Decisions cited** | **16** | **7** |\r\n| **Tasks cited** | 5 (14-01 → 14-05) | 2 (14-03, 14-04) |\r\n| **Workflow steps** | 8 | 10 |\r\n\r\n### What each arm caught vs missed\r\n\r\n| Load-bearing detail | RAW caught | INTENT caught |\r\n|---|---|---|\r\n| TRACE.json schema v4 parent/child IDs (gad-50) | ✓ | ✗ |\r\n| `gad-trace-hook.cjs` wiring (gad-59) | ✓ | ✗ |\r\n| `.trace-active-skill` marker (gad-58) | ✓ | ✗ |\r\n| 4 KB output cap (gad-60) | ✓ | ✗ |\r\n| Runtime identity in trace (gad-137) | ✓ | ✗ |\r\n| Per-eval-repo architecture (gad-139) | ✓ | ✗ |\r\n| `gad-tools.cjs` vendoring floor (task 14-02) | ✓ | ✗ |\r\n| Rate-limited preservation (gad-63) | ✓ | ✗ |\r\n| Mandatory `gad eval preserve` reminder (gad-38) | ✗ | ✓ |\r\n| Fragment-registration pattern explicit | partial | ✓ |\r\n| Historical \"3 failed attempts\" context | ✗ | ✓ |\r\n| Explicit \"common errors\" section | ✗ | ✓ |\r\n\r\n**RAW pulls in MORE technical breadth.** It catches 8 decisions INTENT skipped because INTENT only listed the decisions I, the curator, chose to surface. **The curator is a filter.**\r\n\r\nINTENT still wins on the irreplaceable bits: the historical context that lives in commit history, not decision text. But that's a smaller win than I expected.\r\n\r\n## v2 test loop — does the resulting skill actually help an agent?\r\n\r\nAfter v2 quick-skill produced a SKILL.md, we ran a **real test loop** with subagents spawned from the main thread (so Task tool was actually available). Three test prompts × with-skill / baseline pairs = 6 leaf subagents.\r\n\r\n| Eval | Prompt | with-skill | baseline |\r\n|---|---|---|---|\r\n| **1** | Scaffold an eval project from `space-shooter-design.md` | 4/4 ✓ | 3/4 |\r\n| **2** | Scaffold an eval project from `data-pipeline-requirements.md` | 4/4 ✓ | 3/4 |\r\n| **3** | (negative) \"run the existing escape-the-dungeon eval against bare condition\" | 4/4 ✓ | 4/4 ✓ |\r\n| **Total** | | **12/12 (100%)** | **10/12 (83%)** |\r\n\r\n**Headline number favors with-skill by +16.7pp. The story behind it does not.**\r\n\r\nThe entire 2-assertion gap comes from one thing: the `scaffold-traced-eval-project` skill prescribes 3 GAD-native scoring dimensions (CLI efficiency, skill trigger accuracy, planning quality). The with-skill agent followed that prescription verbatim. The baseline agent **read `vendor/get-anything-done/evals/escape-the-dungeon/gad.json` directly** and produced a richer scoring shape that **matches what the repo actually uses today**:\r\n\r\n| Field in baseline gad.json | Present in actual repo? | Present in skill's prescription? |\r\n|---|---|---|\r\n| `eval_mode` | ✓ | ✗ (uses `mode`) |\r\n| `scoring.weights` (6 dims) | ✓ | ✗ (uses 3 dims) |\r\n| `human_review_rubric.dimensions` | ✓ | ✗ |\r\n| `compare_to` | ✓ | ✗ |\r\n| `domain` / `tech_stack` / `build_requirement` | ✓ | ✗ |\r\n\r\n**The skill is prescriptively wrong about what GAD evals actually look like.** Baseline did the more *accurate* job by reading the actual repo, but failed an assertion that grades against the skill's view. Baseline produced more files (REQUIREMENTS.md + .planning/ skeleton + AGENTS.md + v1 placeholders) modeled directly on `escape-the-dungeon`'s structure.\r\n\r\nThe negative test was a wash. Both arms recognized eval-3 as an execution task and refused to scaffold. With-skill cited the skill's \"Do NOT trigger for: running an existing eval\" clause; baseline reasoned from first principles. The defensive description helped, but baseline's general reasoning didn't need it.\r\n\r\n## What we changed in the architecture\r\n\r\n**Before this experiment**, my proposal was: `evolve` curates an INTENT.md per high-pressure phase, hands it to a heavy skill-creator, runs an eval loop, then human review.\r\n\r\n**After**, the loop is much shorter and the curator is gone:\r\n\r\n```\r\ngad:evolution:evolve\r\n  ├─ compute-self-eval finds high-pressure phases (selection pressure)\r\n  ├─ for each phase:\r\n  │     ├─ write skills/proto-skills/<slug>/CANDIDATE.md\r\n  │     │     = raw phase dump (no curator pre-digestion)\r\n  │     ├─ invoke gad-quick-skill on CANDIDATE.md\r\n  │     │     → writes SKILL.md + references/\r\n  │     └─ validator runs (advisory, non-blocking)\r\n  │           → writes VALIDATION.md flagging file refs / CLI / shape mismatches\r\n  └─ register one TASK-REGISTRY review task\r\n\r\n(human review)\r\n  reads SKILL.md + VALIDATION.md → promote or discard\r\n\r\ngad evolution promote <slug> → moves to skills/ (joins species DNA)\r\ngad evolution discard <slug> → deletes\r\n```\r\n\r\nThree dropped components:\r\n\r\n| Dropped | Why |\r\n|---|---|\r\n| Curator step (hand-written INTENT.md) | RAW arm pulled MORE decisions than curated; curator is a filter |\r\n| Heavy `skill-creator` with eval loop | dot-agent quick-skill produces good skills from raw input alone |\r\n| `attempt-evolution` / `finish-evolution` skills | Promote/discard are one-line file moves, not skills |\r\n\r\nOne added component:\r\n\r\n| Added | Why |\r\n|---|---|\r\n| Validator (advisory) | The skill may prescribe conventions that don't match the repo. Validator flags the gap so the human reviewer sees it before promoting. |\r\n\r\n## Methodology caveats\r\n\r\n- **v1 nested subagent fidelity:** The v1 experiment subagents tried to spawn their own with-skill / baseline subagents for the eval loop, but spawned subagents don't get the Task tool. Both v1 arms reported simulating the test runs inline. The pass-rate numbers from v1 are NOT real — only the SKILL.md outputs are.\r\n- **v2 quick-skill subagents** had the same nested limit but didn't need Task because dot-agent has no eval loop. Their outputs are real.\r\n- **v2 test loop** ran from the main thread, where Task is available. The 6 test subagents are real, independent runs.\r\n- **Stub input files** (`oneoff/v2/test-runs/inputs/*.md`) were written by hand for the test prompts — `space-shooter-design.md` and `data-pipeline-requirements.md` are realistic but invented. This mirrors what skill-creator's normal harness would do (sandbox stubs).\r\n\r\n## Files\r\n\r\nAll inputs, intermediate artifacts, and outputs preserved under:\r\n\r\n| Path | Contents |\r\n|---|---|\r\n| `oneoff/raw/` | v1 raw arm (skill-creator + raw phase 14) |\r\n| `oneoff/intent/` | v1 intent arm (skill-creator + curated INTENT.md) |\r\n| `oneoff/v2/raw/` | v2 raw arm (dot-agent quick-skill + raw phase 14) |\r\n| `oneoff/v2/intent/` | v2 intent arm (dot-agent quick-skill + curated INTENT.md) |\r\n| `oneoff/v2/test-runs/inputs/` | stub design docs (space-shooter, data-pipeline) |\r\n| `oneoff/v2/test-runs/outputs/with-skill/` | 3 leaf subagent runs using the skill |\r\n| `oneoff/v2/test-runs/outputs/without-skill/` | 3 leaf subagent runs without the skill |\r\n\r\nThe v1 viewer.html files (`oneoff/raw/skill/viewer.html`, `oneoff/intent/skill/viewer.html`) render the simulated test runs with skill-creator's HTML viewer — useful for skim comparison even though the underlying numbers are simulated.\r\n\r\n",
     "bodyHtml": "<h1>Curator vs Raw — designing the evolution loop&#39;s drafting step</h1>\n<p>Two controlled experiments to answer one question: <strong>when GAD evolves itself by drafting new skills from high-pressure phases, should a curator pre-digest the phase data into a structured intent, or should we feed the raw phase dump straight to a skill creator?</strong></p>\n<p>The answer flipped between experiments. Both flips are recorded here so the architecture decision lands on evidence, not vibes.</p>\n<h2>TL;DR — the surprising flip</h2>\n<table>\n<thead>\n<tr>\n<th>Experiment</th>\n<th>Tool under test</th>\n<th>Curator helps?</th>\n<th>Why</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>v1</strong> — Anthropic skill-creator with full eval loop</td>\n<td>heavy (drafts + runs subagent test loop + benchmarks + viewer)</td>\n<td><strong>YES</strong> — curator catches load-bearing pieces (trace schema fragment, preserve reminder) raw arm misses entirely</td>\n<td>Heavy harness fights the agent; curated INTENT.md unblocks it</td>\n</tr>\n<tr>\n<td><strong>v2</strong> — dot-agent create-skill (light authoring guide)</td>\n<td>light (formats and structures only, no eval loop)</td>\n<td><strong>NO</strong> — raw arm pulls 16 decisions vs curator&#39;s 7. Curator is a <strong>filter</strong>, not an amplifier</td>\n<td>Light harness lets the agent read the data; curator adds opinions that may filter out important content</td>\n</tr>\n<tr>\n<td><strong>v2 test-loop</strong> — agents using the resulting skill</td>\n<td>n/a</td>\n<td><strong>NO</strong>, plus skill is <strong>wrong</strong> about repo conventions</td>\n<td>Baseline (no skill, reads repo) wrote a more accurate gad.json shape than with-skill (which followed the skill&#39;s prescription)</td>\n</tr>\n</tbody></table>\n<p><strong>The combined finding:</strong> When generating skills, give the agent raw access. When the curator filters, they may filter out the truth. When the skill prescribes conventions, validate them against the actual repo or the agent will follow false rules confidently.</p>\n<h2>Experiment design</h2>\n<table>\n<thead>\n<tr>\n<th></th>\n<th>v1</th>\n<th>v2 — quick-skill</th>\n<th>v2 — test loop</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Subjects</td>\n<td>2 (raw, intent)</td>\n<td>2 (raw, intent)</td>\n<td>2 (with-skill, baseline) × 3 prompts</td>\n</tr>\n<tr>\n<td>Source data</td>\n<td>Phase 14 of GAD</td>\n<td>Phase 14 of GAD</td>\n<td>Stub design docs + the skill from v2 intent arm</td>\n</tr>\n<tr>\n<td>Tool</td>\n<td><code>~/.agents/skills/skill-creator</code> (Anthropic, 485 lines)</td>\n<td><code>~/.agents/skills/create-skill</code> (dot-agent, 78 lines)</td>\n<td>Subagents loaded with skill / no skill</td>\n</tr>\n<tr>\n<td>Eval loop</td>\n<td>Subagent test runs + grading + viewer (simulated due to nested subagent limits)</td>\n<td>Skipped — quick-skill has no test loop</td>\n<td>Real subagent runs from main thread</td>\n</tr>\n<tr>\n<td>Sandbox</td>\n<td><code>oneoff/raw/</code>, <code>oneoff/intent/</code></td>\n<td><code>oneoff/v2/raw/</code>, <code>oneoff/v2/intent/</code></td>\n<td><code>oneoff/v2/test-runs/</code></td>\n</tr>\n</tbody></table>\n<h2>Inputs side by side</h2>\n<p>Both arms across both experiments saw the same source: phase 14 of GAD&#39;s own development (&quot;Eval framework — escape-the-dungeon + tracing&quot;). The difference is the framing.</p>\n<h3>Raw input</h3>\n<p>A flat dump of <code>gad tasks --projectid get-anything-done | grep &quot; 14-&quot;</code> plus <code>gad decisions ... | grep -i trace</code>. No structure, no proposed name, no test prompts, no historical context. The agent reads it cold.</p>\n<pre><code>14-01  done  Create a gad eval project &quot;escape-the-dungeon&quot; from GAMEPLAY-DESIGN.xml...\n14-02  done  Create bin/gad-tools.cjs — the GAD equivalent of gsd-tools.cjs...\n14-03  done  Define the eval trace format for real implementations: track which gad...\n14-04  done  Define the eval scoring rubric for real implementations: CLI efficiency...\n14-05  done  Run the escape-the-dungeon eval: fresh agent session...\n14-06  done  Run the portfolio-bare eval with updated tracing...\n14-07  done  Review CONTEXT.md: what it is, how discuss-phase produces it...\n</code></pre>\n<h3>Curated INTENT input</h3>\n<p>The same data, plus my curator labor: a proposed name (<code>scaffold-traced-eval-project</code>), a &quot;What this skill should do&quot; paragraph, &quot;When it should trigger&quot; bullet list, &quot;Expected output format&quot; table, three test prompts I drew from real phase tasks, a hand-picked subset of decisions, and an &quot;Errors observed&quot; section with the historical &quot;three attempts at task 14-03 failed&quot; insight.</p>\n<p>The full file is at <code>oneoff/v2/intent/INTENT.md</code> — 113 lines of structured curator pre-digestion.</p>\n<h2>v2 quick-skill — outputs side by side</h2>\n<p>Both arms produced a SKILL.md with the same target name (<code>scaffold-traced-eval-project</code>). Only the input format varied.</p>\n<table>\n<thead>\n<tr>\n<th>Metric</th>\n<th>RAW arm</th>\n<th>INTENT arm</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>SKILL.md lines</strong></td>\n<td>167</td>\n<td>158</td>\n</tr>\n<tr>\n<td><strong>References files split</strong></td>\n<td>4</td>\n<td>3</td>\n</tr>\n<tr>\n<td><strong>Decisions cited</strong></td>\n<td><strong>16</strong></td>\n<td><strong>7</strong></td>\n</tr>\n<tr>\n<td><strong>Tasks cited</strong></td>\n<td>5 (14-01 → 14-05)</td>\n<td>2 (14-03, 14-04)</td>\n</tr>\n<tr>\n<td><strong>Workflow steps</strong></td>\n<td>8</td>\n<td>10</td>\n</tr>\n</tbody></table>\n<h3>What each arm caught vs missed</h3>\n<table>\n<thead>\n<tr>\n<th>Load-bearing detail</th>\n<th>RAW caught</th>\n<th>INTENT caught</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>TRACE.json schema v4 parent/child IDs (gad-50)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td><code>gad-trace-hook.cjs</code> wiring (gad-59)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td><code>.trace-active-skill</code> marker (gad-58)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td>4 KB output cap (gad-60)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td>Runtime identity in trace (gad-137)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td>Per-eval-repo architecture (gad-139)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td><code>gad-tools.cjs</code> vendoring floor (task 14-02)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td>Rate-limited preservation (gad-63)</td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td>Mandatory <code>gad eval preserve</code> reminder (gad-38)</td>\n<td>✗</td>\n<td>✓</td>\n</tr>\n<tr>\n<td>Fragment-registration pattern explicit</td>\n<td>partial</td>\n<td>✓</td>\n</tr>\n<tr>\n<td>Historical &quot;3 failed attempts&quot; context</td>\n<td>✗</td>\n<td>✓</td>\n</tr>\n<tr>\n<td>Explicit &quot;common errors&quot; section</td>\n<td>✗</td>\n<td>✓</td>\n</tr>\n</tbody></table>\n<p><strong>RAW pulls in MORE technical breadth.</strong> It catches 8 decisions INTENT skipped because INTENT only listed the decisions I, the curator, chose to surface. <strong>The curator is a filter.</strong></p>\n<p>INTENT still wins on the irreplaceable bits: the historical context that lives in commit history, not decision text. But that&#39;s a smaller win than I expected.</p>\n<h2>v2 test loop — does the resulting skill actually help an agent?</h2>\n<p>After v2 quick-skill produced a SKILL.md, we ran a <strong>real test loop</strong> with subagents spawned from the main thread (so Task tool was actually available). Three test prompts × with-skill / baseline pairs = 6 leaf subagents.</p>\n<table>\n<thead>\n<tr>\n<th>Eval</th>\n<th>Prompt</th>\n<th>with-skill</th>\n<th>baseline</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>1</strong></td>\n<td>Scaffold an eval project from <code>space-shooter-design.md</code></td>\n<td>4/4 ✓</td>\n<td>3/4</td>\n</tr>\n<tr>\n<td><strong>2</strong></td>\n<td>Scaffold an eval project from <code>data-pipeline-requirements.md</code></td>\n<td>4/4 ✓</td>\n<td>3/4</td>\n</tr>\n<tr>\n<td><strong>3</strong></td>\n<td>(negative) &quot;run the existing escape-the-dungeon eval against bare condition&quot;</td>\n<td>4/4 ✓</td>\n<td>4/4 ✓</td>\n</tr>\n<tr>\n<td><strong>Total</strong></td>\n<td></td>\n<td><strong>12/12 (100%)</strong></td>\n<td><strong>10/12 (83%)</strong></td>\n</tr>\n</tbody></table>\n<p><strong>Headline number favors with-skill by +16.7pp. The story behind it does not.</strong></p>\n<p>The entire 2-assertion gap comes from one thing: the <code>scaffold-traced-eval-project</code> skill prescribes 3 GAD-native scoring dimensions (CLI efficiency, skill trigger accuracy, planning quality). The with-skill agent followed that prescription verbatim. The baseline agent <strong>read <code>vendor/get-anything-done/evals/escape-the-dungeon/gad.json</code> directly</strong> and produced a richer scoring shape that <strong>matches what the repo actually uses today</strong>:</p>\n<table>\n<thead>\n<tr>\n<th>Field in baseline gad.json</th>\n<th>Present in actual repo?</th>\n<th>Present in skill&#39;s prescription?</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>eval_mode</code></td>\n<td>✓</td>\n<td>✗ (uses <code>mode</code>)</td>\n</tr>\n<tr>\n<td><code>scoring.weights</code> (6 dims)</td>\n<td>✓</td>\n<td>✗ (uses 3 dims)</td>\n</tr>\n<tr>\n<td><code>human_review_rubric.dimensions</code></td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td><code>compare_to</code></td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n<tr>\n<td><code>domain</code> / <code>tech_stack</code> / <code>build_requirement</code></td>\n<td>✓</td>\n<td>✗</td>\n</tr>\n</tbody></table>\n<p><strong>The skill is prescriptively wrong about what GAD evals actually look like.</strong> Baseline did the more <em>accurate</em> job by reading the actual repo, but failed an assertion that grades against the skill&#39;s view. Baseline produced more files (REQUIREMENTS.md + .planning/ skeleton + AGENTS.md + v1 placeholders) modeled directly on <code>escape-the-dungeon</code>&#39;s structure.</p>\n<p>The negative test was a wash. Both arms recognized eval-3 as an execution task and refused to scaffold. With-skill cited the skill&#39;s &quot;Do NOT trigger for: running an existing eval&quot; clause; baseline reasoned from first principles. The defensive description helped, but baseline&#39;s general reasoning didn&#39;t need it.</p>\n<h2>What we changed in the architecture</h2>\n<p><strong>Before this experiment</strong>, my proposal was: <code>evolve</code> curates an INTENT.md per high-pressure phase, hands it to a heavy skill-creator, runs an eval loop, then human review.</p>\n<p><strong>After</strong>, the loop is much shorter and the curator is gone:</p>\n<pre><code>gad:evolution:evolve\n  ├─ compute-self-eval finds high-pressure phases (selection pressure)\n  ├─ for each phase:\n  │     ├─ write skills/proto-skills/&lt;slug&gt;/CANDIDATE.md\n  │     │     = raw phase dump (no curator pre-digestion)\n  │     ├─ invoke gad-quick-skill on CANDIDATE.md\n  │     │     → writes SKILL.md + references/\n  │     └─ validator runs (advisory, non-blocking)\n  │           → writes VALIDATION.md flagging file refs / CLI / shape mismatches\n  └─ register one TASK-REGISTRY review task\n\n(human review)\n  reads SKILL.md + VALIDATION.md → promote or discard\n\ngad evolution promote &lt;slug&gt; → moves to skills/ (joins species DNA)\ngad evolution discard &lt;slug&gt; → deletes\n</code></pre>\n<p>Three dropped components:</p>\n<table>\n<thead>\n<tr>\n<th>Dropped</th>\n<th>Why</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Curator step (hand-written INTENT.md)</td>\n<td>RAW arm pulled MORE decisions than curated; curator is a filter</td>\n</tr>\n<tr>\n<td>Heavy <code>skill-creator</code> with eval loop</td>\n<td>dot-agent quick-skill produces good skills from raw input alone</td>\n</tr>\n<tr>\n<td><code>attempt-evolution</code> / <code>finish-evolution</code> skills</td>\n<td>Promote/discard are one-line file moves, not skills</td>\n</tr>\n</tbody></table>\n<p>One added component:</p>\n<table>\n<thead>\n<tr>\n<th>Added</th>\n<th>Why</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Validator (advisory)</td>\n<td>The skill may prescribe conventions that don&#39;t match the repo. Validator flags the gap so the human reviewer sees it before promoting.</td>\n</tr>\n</tbody></table>\n<h2>Methodology caveats</h2>\n<ul>\n<li><strong>v1 nested subagent fidelity:</strong> The v1 experiment subagents tried to spawn their own with-skill / baseline subagents for the eval loop, but spawned subagents don&#39;t get the Task tool. Both v1 arms reported simulating the test runs inline. The pass-rate numbers from v1 are NOT real — only the SKILL.md outputs are.</li>\n<li><strong>v2 quick-skill subagents</strong> had the same nested limit but didn&#39;t need Task because dot-agent has no eval loop. Their outputs are real.</li>\n<li><strong>v2 test loop</strong> ran from the main thread, where Task is available. The 6 test subagents are real, independent runs.</li>\n<li><strong>Stub input files</strong> (<code>oneoff/v2/test-runs/inputs/*.md</code>) were written by hand for the test prompts — <code>space-shooter-design.md</code> and <code>data-pipeline-requirements.md</code> are realistic but invented. This mirrors what skill-creator&#39;s normal harness would do (sandbox stubs).</li>\n</ul>\n<h2>Files</h2>\n<p>All inputs, intermediate artifacts, and outputs preserved under:</p>\n<table>\n<thead>\n<tr>\n<th>Path</th>\n<th>Contents</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>oneoff/raw/</code></td>\n<td>v1 raw arm (skill-creator + raw phase 14)</td>\n</tr>\n<tr>\n<td><code>oneoff/intent/</code></td>\n<td>v1 intent arm (skill-creator + curated INTENT.md)</td>\n</tr>\n<tr>\n<td><code>oneoff/v2/raw/</code></td>\n<td>v2 raw arm (dot-agent quick-skill + raw phase 14)</td>\n</tr>\n<tr>\n<td><code>oneoff/v2/intent/</code></td>\n<td>v2 intent arm (dot-agent quick-skill + curated INTENT.md)</td>\n</tr>\n<tr>\n<td><code>oneoff/v2/test-runs/inputs/</code></td>\n<td>stub design docs (space-shooter, data-pipeline)</td>\n</tr>\n<tr>\n<td><code>oneoff/v2/test-runs/outputs/with-skill/</code></td>\n<td>3 leaf subagent runs using the skill</td>\n</tr>\n<tr>\n<td><code>oneoff/v2/test-runs/outputs/without-skill/</code></td>\n<td>3 leaf subagent runs without the skill</td>\n</tr>\n</tbody></table>\n<p>The v1 viewer.html files (<code>oneoff/raw/skill/viewer.html</code>, <code>oneoff/intent/skill/viewer.html</code>) render the simulated test runs with skill-creator&#39;s HTML viewer — useful for skim comparison even though the underlying numbers are simulated.</p>\n",
     "summary": "Two controlled experiments to answer one question: **when GAD evolves itself by drafting new skills from high-pressure phases, should a curator pre-digest the phase data into a structured intent, or should we feed the raw phase dump straight to a skill creator?**",
     "projects": [
@@ -2231,7 +2231,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 10
           }
         }
       ],
@@ -2281,46 +2281,6 @@ export const WORKFLOWS: Workflow[] = [
       "out_of_order": 0,
       "expected": 16
     }
-  },
-  {
-    "slug": "gad-evolution",
-    "name": "GAD Evolution Loop",
-    "description": "Pressure → candidate → proto-skill → validated → promoted/discarded. The mechanism by which GAD's skill set evolves from observed high-pressure phases into new distributable skills.",
-    "trigger": "`compute-self-eval` detects a phase with high pressure metrics (tool-use burst, repeated corrections, long loops, novel failure patterns), OR an operator manually runs `gad evolution` against pending candidates.",
-    "participants": {
-      "skills": [
-        "create-proto-skill",
-        "gad-evolution-evolve",
-        "gad-evolution-validator",
-        "gad-skill-creator"
-      ],
-      "agents": [
-        "default"
-      ],
-      "cli": [
-        "gad evolution status",
-        "gad evolution validate",
-        "gad evolution promote",
-        "gad evolution discard"
-      ],
-      "artifacts": [
-        "skills/candidates/<slug>/CANDIDATE.md",
-        "skills/proto-skills/<slug>/PROVENANCE.md",
-        "skills/proto-skills/<slug>/SKILL.md",
-        "skills/proto-skills/<slug>/VALIDATION.md",
-        "skills/<name>/"
-      ]
-    },
-    "parentWorkflow": "gad-loop",
-    "relatedPhases": [
-      "42",
-      "42.2",
-      "42.3"
-    ],
-    "origin": "authored",
-    "mermaidBody": "flowchart TD\n  A[compute-self-eval detects pressure] --> B[write skills/candidates/<slug>/CANDIDATE.md]\n  B --> C[gad-evolution-evolve skill orchestrates]\n  C --> D[create-proto-skill skill: bulk draft]\n  D --> E[write PROVENANCE.md lock marker]\n  E --> F[draft SKILL.md in dot-agent format]\n  F --> G[gad-evolution-validator skill: VALIDATION.md advisory]\n  G --> H[human review SKILL.md + VALIDATION.md]\n  H --> I{promote?}\n  I -->|yes| J[gad evolution promote -> skills/<name>/]\n  I -->|no| K[gad evolution discard]\n  J --> L[PROVENANCE.md travels with skill]",
-    "bodyHtml": "<p>GAD&#39;s self-improvement loop. Pressure in a phase is a signal that some\nrepeatable pattern is missing from the skill set; the evolution loop\nturns that signal into a distributable skill over three stages.</p>\n<p>Stage 1 is automatic (compute-self-eval writes raw CANDIDATE.md). Stage 2\nis agentic (the <code>create-proto-skill</code> skill drafts in bulk with per-\ncandidate checkpoints per decision gad-171, then <code>gad-evolution-validator</code>\nwrites VALIDATION.md advisorily). Stage 3 is human — review and decide\npromote-or-discard. The loop gates on zero pending proto-skills so\nhumans stay in the approval path.</p>\n<p>Proto-skill is a permanent type (decision gad-167): PROVENANCE.md\ntravels with the skill through promotion so we can triage by pressure\norigin forever.</p>\n<pre><code class=\"language-mermaid\">flowchart TD\n  A[compute-self-eval detects pressure] --&gt; B[write skills/candidates/&lt;slug&gt;/CANDIDATE.md]\n  B --&gt; C[gad-evolution-evolve skill orchestrates]\n  C --&gt; D[create-proto-skill skill: bulk draft]\n  D --&gt; E[write PROVENANCE.md lock marker]\n  E --&gt; F[draft SKILL.md in dot-agent format]\n  F --&gt; G[gad-evolution-validator skill: VALIDATION.md advisory]\n  G --&gt; H[human review SKILL.md + VALIDATION.md]\n  H --&gt; I{promote?}\n  I --&gt;|yes| J[gad evolution promote -&gt; skills/&lt;name&gt;/]\n  I --&gt;|no| K[gad evolution discard]\n  J --&gt; L[PROVENANCE.md travels with skill]\n</code></pre>\n",
-    "file": ".planning/workflows/gad-evolution.md"
   },
   {
     "slug": "gad-findings",
@@ -2490,7 +2450,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 10
           }
         }
       ],
@@ -2652,9 +2612,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-206-1",
+    "slug": "emergent-bash-bash-bash-bash-207-1",
     "name": "Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 206× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-206-1` or discard.",
+    "description": "Recurring tool-use sequence detected 207× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-207-1` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2669,12 +2629,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>206×</strong>: Bash → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>207×</strong>: Bash → Bash → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-206-1-n0",
+          "id": "emergent-bash-bash-bash-bash-207-1-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -2683,11 +2643,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 206
+            "count": 207
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-206-1-n1",
+          "id": "emergent-bash-bash-bash-bash-207-1-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -2696,11 +2656,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 206
+            "count": 207
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-206-1-n2",
+          "id": "emergent-bash-bash-bash-bash-207-1-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -2709,11 +2669,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 206
+            "count": 207
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-206-1-n3",
+          "id": "emergent-bash-bash-bash-bash-207-1-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -2722,37 +2682,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 206
+            "count": 207
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-206-1-e0",
-          "source": "emergent-bash-bash-bash-bash-206-1-n0",
-          "target": "emergent-bash-bash-bash-bash-206-1-n1"
+          "id": "emergent-bash-bash-bash-bash-207-1-e0",
+          "source": "emergent-bash-bash-bash-bash-207-1-n0",
+          "target": "emergent-bash-bash-bash-bash-207-1-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-206-1-e1",
-          "source": "emergent-bash-bash-bash-bash-206-1-n1",
-          "target": "emergent-bash-bash-bash-bash-206-1-n2"
+          "id": "emergent-bash-bash-bash-bash-207-1-e1",
+          "source": "emergent-bash-bash-bash-bash-207-1-n1",
+          "target": "emergent-bash-bash-bash-bash-207-1-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-206-1-e2",
-          "source": "emergent-bash-bash-bash-bash-206-1-n2",
-          "target": "emergent-bash-bash-bash-bash-206-1-n3"
+          "id": "emergent-bash-bash-bash-bash-207-1-e2",
+          "source": "emergent-bash-bash-bash-bash-207-1-n2",
+          "target": "emergent-bash-bash-bash-bash-207-1-n3"
         }
       ]
     },
     "support": {
-      "phases": 206,
+      "phases": 207,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-251-2",
+    "slug": "emergent-bash-bash-bash-255-2",
     "name": "Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 251× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-251-2` or discard.",
+    "description": "Recurring tool-use sequence detected 255× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-255-2` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2767,12 +2727,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>251×</strong>: Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>255×</strong>: Bash → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-251-2-n0",
+          "id": "emergent-bash-bash-bash-255-2-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -2781,11 +2741,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 251
+            "count": 255
           }
         },
         {
-          "id": "emergent-bash-bash-bash-251-2-n1",
+          "id": "emergent-bash-bash-bash-255-2-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -2794,11 +2754,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 251
+            "count": 255
           }
         },
         {
-          "id": "emergent-bash-bash-bash-251-2-n2",
+          "id": "emergent-bash-bash-bash-255-2-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -2807,32 +2767,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 251
+            "count": 255
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-251-2-e0",
-          "source": "emergent-bash-bash-bash-251-2-n0",
-          "target": "emergent-bash-bash-bash-251-2-n1"
+          "id": "emergent-bash-bash-bash-255-2-e0",
+          "source": "emergent-bash-bash-bash-255-2-n0",
+          "target": "emergent-bash-bash-bash-255-2-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-251-2-e1",
-          "source": "emergent-bash-bash-bash-251-2-n1",
-          "target": "emergent-bash-bash-bash-251-2-n2"
+          "id": "emergent-bash-bash-bash-255-2-e1",
+          "source": "emergent-bash-bash-bash-255-2-n1",
+          "target": "emergent-bash-bash-bash-255-2-n2"
         }
       ]
     },
     "support": {
-      "phases": 251,
+      "phases": 255,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-read-31-3",
+    "slug": "emergent-bash-bash-read-33-3",
     "name": "Bash → Bash → Read",
-    "description": "Recurring tool-use sequence detected 31× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-31-3` or discard.",
+    "description": "Recurring tool-use sequence detected 33× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-33-3` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2847,12 +2807,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>31×</strong>: Bash → Bash → Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>33×</strong>: Bash → Bash → Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-read-31-3-n0",
+          "id": "emergent-bash-bash-read-33-3-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -2861,11 +2821,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 33
           }
         },
         {
-          "id": "emergent-bash-bash-read-31-3-n1",
+          "id": "emergent-bash-bash-read-33-3-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -2874,11 +2834,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 33
           }
         },
         {
-          "id": "emergent-bash-bash-read-31-3-n2",
+          "id": "emergent-bash-bash-read-33-3-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -2887,32 +2847,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 31
+            "count": 33
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-read-31-3-e0",
-          "source": "emergent-bash-bash-read-31-3-n0",
-          "target": "emergent-bash-bash-read-31-3-n1"
+          "id": "emergent-bash-bash-read-33-3-e0",
+          "source": "emergent-bash-bash-read-33-3-n0",
+          "target": "emergent-bash-bash-read-33-3-n1"
         },
         {
-          "id": "emergent-bash-bash-read-31-3-e1",
-          "source": "emergent-bash-bash-read-31-3-n1",
-          "target": "emergent-bash-bash-read-31-3-n2"
+          "id": "emergent-bash-bash-read-33-3-e1",
+          "source": "emergent-bash-bash-read-33-3-n1",
+          "target": "emergent-bash-bash-read-33-3-n2"
         }
       ]
     },
     "support": {
-      "phases": 31,
+      "phases": 33,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-read-20-4",
-    "name": "Bash → Bash → Bash → Read",
-    "description": "Recurring tool-use sequence detected 20× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-20-4` or discard.",
+    "slug": "emergent-edit-bash-bash-bash-23-4",
+    "name": "Edit → Bash → Bash → Bash",
+    "description": "Recurring tool-use sequence detected 23× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-23-4` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -2927,25 +2887,25 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>20×</strong>: Bash → Bash → Bash → Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>23×</strong>: Edit → Bash → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-read-20-4-n0",
+          "id": "emergent-edit-bash-bash-bash-23-4-n0",
           "type": "live",
           "position": {
             "x": 0,
             "y": 0
           },
           "data": {
-            "label": "Bash",
+            "label": "Edit",
             "kind": "skill",
-            "count": 20
+            "count": 23
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-20-4-n1",
+          "id": "emergent-edit-bash-bash-bash-23-4-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -2954,11 +2914,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 20
+            "count": 23
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-20-4-n2",
+          "id": "emergent-edit-bash-bash-bash-23-4-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -2967,11 +2927,109 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 20
+            "count": 23
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-20-4-n3",
+          "id": "emergent-edit-bash-bash-bash-23-4-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 23
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-bash-bash-bash-23-4-e0",
+          "source": "emergent-edit-bash-bash-bash-23-4-n0",
+          "target": "emergent-edit-bash-bash-bash-23-4-n1"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-23-4-e1",
+          "source": "emergent-edit-bash-bash-bash-23-4-n1",
+          "target": "emergent-edit-bash-bash-bash-23-4-n2"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-23-4-e2",
+          "source": "emergent-edit-bash-bash-bash-23-4-n2",
+          "target": "emergent-edit-bash-bash-bash-23-4-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 23,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-bash-bash-read-22-5",
+    "name": "Bash → Bash → Bash → Read",
+    "description": "Recurring tool-use sequence detected 22× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-22-5` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>22×</strong>: Bash → Bash → Bash → Read.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-bash-bash-read-22-5-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-read-22-5-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-read-22-5-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-read-22-5-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -2980,37 +3038,117 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 20
+            "count": 22
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-read-20-4-e0",
-          "source": "emergent-bash-bash-bash-read-20-4-n0",
-          "target": "emergent-bash-bash-bash-read-20-4-n1"
+          "id": "emergent-bash-bash-bash-read-22-5-e0",
+          "source": "emergent-bash-bash-bash-read-22-5-n0",
+          "target": "emergent-bash-bash-bash-read-22-5-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-read-20-4-e1",
-          "source": "emergent-bash-bash-bash-read-20-4-n1",
-          "target": "emergent-bash-bash-bash-read-20-4-n2"
+          "id": "emergent-bash-bash-bash-read-22-5-e1",
+          "source": "emergent-bash-bash-bash-read-22-5-n1",
+          "target": "emergent-bash-bash-bash-read-22-5-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-read-20-4-e2",
-          "source": "emergent-bash-bash-bash-read-20-4-n2",
-          "target": "emergent-bash-bash-bash-read-20-4-n3"
+          "id": "emergent-bash-bash-bash-read-22-5-e2",
+          "source": "emergent-bash-bash-bash-read-22-5-n2",
+          "target": "emergent-bash-bash-bash-read-22-5-n3"
         }
       ]
     },
     "support": {
-      "phases": 20,
+      "phases": 22,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-read-edit-edit-26-5",
+    "slug": "emergent-edit-bash-bash-28-6",
+    "name": "Edit → Bash → Bash",
+    "description": "Recurring tool-use sequence detected 28× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-28-6` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>28×</strong>: Edit → Bash → Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-28-6-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 28
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-28-6-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 28
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-28-6-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 28
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-bash-bash-28-6-e0",
+          "source": "emergent-edit-bash-bash-28-6-n0",
+          "target": "emergent-edit-bash-bash-28-6-n1"
+        },
+        {
+          "id": "emergent-edit-bash-bash-28-6-e1",
+          "source": "emergent-edit-bash-bash-28-6-n1",
+          "target": "emergent-edit-bash-bash-28-6-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 28,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-read-edit-edit-26-7",
     "name": "Read → Edit → Edit",
-    "description": "Recurring tool-use sequence detected 26× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-edit-edit-26-5` or discard.",
+    "description": "Recurring tool-use sequence detected 26× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-edit-edit-26-7` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3030,7 +3168,7 @@ export const WORKFLOWS: Workflow[] = [
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-read-edit-edit-26-5-n0",
+          "id": "emergent-read-edit-edit-26-7-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3043,7 +3181,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-read-edit-edit-26-5-n1",
+          "id": "emergent-read-edit-edit-26-7-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3056,7 +3194,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-read-edit-edit-26-5-n2",
+          "id": "emergent-read-edit-edit-26-7-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3071,197 +3209,19 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-read-edit-edit-26-5-e0",
-          "source": "emergent-read-edit-edit-26-5-n0",
-          "target": "emergent-read-edit-edit-26-5-n1"
+          "id": "emergent-read-edit-edit-26-7-e0",
+          "source": "emergent-read-edit-edit-26-7-n0",
+          "target": "emergent-read-edit-edit-26-7-n1"
         },
         {
-          "id": "emergent-read-edit-edit-26-5-e1",
-          "source": "emergent-read-edit-edit-26-5-n1",
-          "target": "emergent-read-edit-edit-26-5-n2"
+          "id": "emergent-read-edit-edit-26-7-e1",
+          "source": "emergent-read-edit-edit-26-7-n1",
+          "target": "emergent-read-edit-edit-26-7-n2"
         }
       ]
     },
     "support": {
       "phases": 26,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-bash-bash-bash-19-6",
-    "name": "Edit → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 19× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-19-6` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>19×</strong>: Edit → Bash → Bash → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-bash-bash-bash-19-6-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 19
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-19-6-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 19
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-19-6-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 19
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-19-6-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 19
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-bash-bash-bash-19-6-e0",
-          "source": "emergent-edit-bash-bash-bash-19-6-n0",
-          "target": "emergent-edit-bash-bash-bash-19-6-n1"
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-19-6-e1",
-          "source": "emergent-edit-bash-bash-bash-19-6-n1",
-          "target": "emergent-edit-bash-bash-bash-19-6-n2"
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-19-6-e2",
-          "source": "emergent-edit-bash-bash-bash-19-6-n2",
-          "target": "emergent-edit-bash-bash-bash-19-6-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 19,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-bash-bash-24-7",
-    "name": "Edit → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 24× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-24-7` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>24×</strong>: Edit → Bash → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-bash-bash-24-7-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 24
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-24-7-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 24
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-24-7-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 24
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-bash-bash-24-7-e0",
-          "source": "emergent-edit-bash-bash-24-7-n0",
-          "target": "emergent-edit-bash-bash-24-7-n1"
-        },
-        {
-          "id": "emergent-edit-bash-bash-24-7-e1",
-          "source": "emergent-edit-bash-bash-24-7-n1",
-          "target": "emergent-edit-bash-bash-24-7-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 24,
       "stability": 1
     }
   },
@@ -3382,169 +3342,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-edit-bash-21-9",
-    "name": "Edit → Edit → Bash",
-    "description": "Recurring tool-use sequence detected 21× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-21-9` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>21×</strong>: Edit → Edit → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-bash-21-9-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 21
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-21-9-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 21
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-21-9-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 21
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-bash-21-9-e0",
-          "source": "emergent-edit-edit-bash-21-9-n0",
-          "target": "emergent-edit-edit-bash-21-9-n1"
-        },
-        {
-          "id": "emergent-edit-edit-bash-21-9-e1",
-          "source": "emergent-edit-edit-bash-21-9-n1",
-          "target": "emergent-edit-edit-bash-21-9-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 21,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-edit-edit-20-10",
-    "name": "Edit → Edit → Edit",
-    "description": "Recurring tool-use sequence detected 20× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-20-10` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>20×</strong>: Edit → Edit → Edit.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-edit-20-10-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 20
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-20-10-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 20
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-20-10-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 20
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-edit-20-10-e0",
-          "source": "emergent-edit-edit-edit-20-10-n0",
-          "target": "emergent-edit-edit-edit-20-10-n1"
-        },
-        {
-          "id": "emergent-edit-edit-edit-20-10-e1",
-          "source": "emergent-edit-edit-edit-20-10-n1",
-          "target": "emergent-edit-edit-edit-20-10-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 20,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-bash-bash-bash-bash-12-11",
+    "slug": "emergent-edit-bash-bash-bash-bash-14-9",
     "name": "Edit → Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 12× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-12-11` or discard.",
+    "description": "Recurring tool-use sequence detected 14× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-14-9` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3559,12 +3359,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>12×</strong>: Edit → Bash → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>14×</strong>: Edit → Bash → Bash → Bash → Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-n0",
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3573,11 +3373,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 12
+            "count": 14
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-n1",
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3586,11 +3386,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 12
+            "count": 14
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-n2",
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3599,11 +3399,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 12
+            "count": 14
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-n3",
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -3612,11 +3412,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 12
+            "count": 14
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-n4",
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -3625,35 +3425,195 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 12
+            "count": 14
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-e0",
-          "source": "emergent-edit-bash-bash-bash-bash-12-11-n0",
-          "target": "emergent-edit-bash-bash-bash-bash-12-11-n1"
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-e0",
+          "source": "emergent-edit-bash-bash-bash-bash-14-9-n0",
+          "target": "emergent-edit-bash-bash-bash-bash-14-9-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-e1",
-          "source": "emergent-edit-bash-bash-bash-bash-12-11-n1",
-          "target": "emergent-edit-bash-bash-bash-bash-12-11-n2"
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-e1",
+          "source": "emergent-edit-bash-bash-bash-bash-14-9-n1",
+          "target": "emergent-edit-bash-bash-bash-bash-14-9-n2"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-e2",
-          "source": "emergent-edit-bash-bash-bash-bash-12-11-n2",
-          "target": "emergent-edit-bash-bash-bash-bash-12-11-n3"
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-e2",
+          "source": "emergent-edit-bash-bash-bash-bash-14-9-n2",
+          "target": "emergent-edit-bash-bash-bash-bash-14-9-n3"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-12-11-e3",
-          "source": "emergent-edit-bash-bash-bash-bash-12-11-n3",
-          "target": "emergent-edit-bash-bash-bash-bash-12-11-n4"
+          "id": "emergent-edit-bash-bash-bash-bash-14-9-e3",
+          "source": "emergent-edit-bash-bash-bash-bash-14-9-n3",
+          "target": "emergent-edit-bash-bash-bash-bash-14-9-n4"
         }
       ]
     },
     "support": {
-      "phases": 12,
+      "phases": 14,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-edit-bash-22-10",
+    "name": "Edit → Edit → Bash",
+    "description": "Recurring tool-use sequence detected 22× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-22-10` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>22×</strong>: Edit → Edit → Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-edit-bash-22-10-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-edit-edit-bash-22-10-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-edit-edit-bash-22-10-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 22
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-edit-bash-22-10-e0",
+          "source": "emergent-edit-edit-bash-22-10-n0",
+          "target": "emergent-edit-edit-bash-22-10-n1"
+        },
+        {
+          "id": "emergent-edit-edit-bash-22-10-e1",
+          "source": "emergent-edit-edit-bash-22-10-n1",
+          "target": "emergent-edit-edit-bash-22-10-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 22,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-read-edit-20-11",
+    "name": "Bash → Read → Edit",
+    "description": "Recurring tool-use sequence detected 20× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-edit-20-11` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>20×</strong>: Bash → Read → Edit.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-read-edit-20-11-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 20
+          }
+        },
+        {
+          "id": "emergent-bash-read-edit-20-11-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 20
+          }
+        },
+        {
+          "id": "emergent-bash-read-edit-20-11-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 20
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-read-edit-20-11-e0",
+          "source": "emergent-bash-read-edit-20-11-n0",
+          "target": "emergent-bash-read-edit-20-11-n1"
+        },
+        {
+          "id": "emergent-bash-read-edit-20-11-e1",
+          "source": "emergent-bash-read-edit-20-11-n1",
+          "target": "emergent-bash-read-edit-20-11-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 20,
       "stability": 1
     }
   }
@@ -3721,7 +3681,7 @@ export const CONTEXT_FRAMEWORKS: ContextFramework[] = [
       "escape-the-dungeon-gad-emergent"
     ],
     "bodyHtml": "<h2>Overview</h2>\n<p>GAD is a content-driven context framework with evolutionary skill\ngeneration — decision gad-166. The framework ships a baseline content\nset (skills, agents, workflows, CLI, references) AND an evolution loop\nthat generates new skills from observed pressure patterns. These two\nthings are one track, not separate conditions.</p>\n<p>Per decision gad-179, GAD is one context framework of many in the\ncatalog — not the home team. The site is a playground for trying GAD\nand other frameworks against problems; GAD happens to be the framework\nwe build and maintain, but the Brood Editor (phase 44.5) lets you\nswap it for any registered framework on a per-project basis.</p>\n<h2>What it ships</h2>\n<h3>Workflows (decision gad-172)</h3>\n<ul>\n<li><strong>gad-loop</strong> — snapshot → task → commit; the atomic unit of progress</li>\n<li><strong>gad-discuss-plan-execute</strong> — phase-level discuss/plan/execute round</li>\n<li><strong>gad-decide</strong> — pros/cons → recommend → commit for any open question</li>\n<li><strong>gad-debug</strong> — scientific-method debugging with persisted session</li>\n<li><strong>gad-evolution</strong> — pressure → candidate → proto-skill → promoted</li>\n<li><strong>gad-findings</strong> — experiment → whitepaper → publish</li>\n</ul>\n<h3>Core skills (excerpt)</h3>\n<p><code>check-todos</code>, <code>task-checkpoint</code>, <code>gad-discuss-phase</code>, <code>gad-plan-phase</code>,\n<code>gad-execute-phase</code>, <code>gad-verify-work</code>, <code>gad-list-phase-assumptions</code>,\n<code>gad-next</code>, <code>debug</code>, <code>gad-debug</code>, <code>create-proto-skill</code> (decision\ngad-168), <code>gad-evolution-evolve</code>, <code>gad-evolution-validator</code>,\n<code>gad-skill-creator</code>, <code>eval-report</code>, <code>write-feature-doc</code>.</p>\n<p>Full catalog on <code>/skills</code>.</p>\n<h3>CLI surface</h3>\n<p><code>gad snapshot</code>, <code>gad state</code>, <code>gad tasks</code>, <code>gad phases</code>, <code>gad decisions</code>,\n<code>gad evolution status|validate|promote|discard</code>, <code>gad workflow status|validate|promote|discard</code>, <code>gad eval run|verify|report</code>,\n<code>gad verify</code>, plus workspace/worktree/sprint/sink commands.</p>\n<h2>When to use it</h2>\n<ul>\n<li>Long-horizon work where context compaction will happen mid-phase</li>\n<li>Multi-agent coordination via the agent roster</li>\n<li>Any project where process discipline and traceability matter more\nthan raw iteration speed</li>\n<li>Self-improving projects where you want the framework to grow new\nskills from observed pressure</li>\n</ul>\n<h2>Relationship to other frameworks</h2>\n<ul>\n<li><strong>bare</strong>: GAD is the opposite — rich baseline content + evolution.\nBare is the control.</li>\n<li><strong>GSD</strong>: GAD is a fork. See <code>/lineage</code>. Both inherit the\ndiscuss→plan→execute shape; GAD added XML planning, explicit task\nattribution, hydration metrics, and the evolution loop.</li>\n<li><strong>custom</strong>: any GAD project that installs extra skills beyond the\ncanonical GAD DNA is categorized as <code>custom</code> in the eval matrix\n(decision gad-164).</li>\n</ul>\n<h2>Canonical comparison target</h2>\n<p>Escape the Dungeon (<code>escape-the-dungeon</code>) is the official\nframework-comparison project per decision gad-164. Three species live\nunder that project — one bare, one gsd, one gad — with identical\nrequirements and tech stack. Every round of eval data flows into the\ncross-framework lineage on <code>/lineage</code>.</p>\n",
-    "bodyRaw": "\n## Overview\n\nGAD is a content-driven context framework with evolutionary skill\ngeneration — decision gad-166. The framework ships a baseline content\nset (skills, agents, workflows, CLI, references) AND an evolution loop\nthat generates new skills from observed pressure patterns. These two\nthings are one track, not separate conditions.\n\nPer decision gad-179, GAD is one context framework of many in the\ncatalog — not the home team. The site is a playground for trying GAD\nand other frameworks against problems; GAD happens to be the framework\nwe build and maintain, but the Brood Editor (phase 44.5) lets you\nswap it for any registered framework on a per-project basis.\n\n## What it ships\n\n### Workflows (decision gad-172)\n\n- **gad-loop** — snapshot → task → commit; the atomic unit of progress\n- **gad-discuss-plan-execute** — phase-level discuss/plan/execute round\n- **gad-decide** — pros/cons → recommend → commit for any open question\n- **gad-debug** — scientific-method debugging with persisted session\n- **gad-evolution** — pressure → candidate → proto-skill → promoted\n- **gad-findings** — experiment → whitepaper → publish\n\n### Core skills (excerpt)\n\n`check-todos`, `task-checkpoint`, `gad-discuss-phase`, `gad-plan-phase`,\n`gad-execute-phase`, `gad-verify-work`, `gad-list-phase-assumptions`,\n`gad-next`, `debug`, `gad-debug`, `create-proto-skill` (decision\ngad-168), `gad-evolution-evolve`, `gad-evolution-validator`,\n`gad-skill-creator`, `eval-report`, `write-feature-doc`.\n\nFull catalog on `/skills`.\n\n### CLI surface\n\n`gad snapshot`, `gad state`, `gad tasks`, `gad phases`, `gad decisions`,\n`gad evolution status|validate|promote|discard`, `gad workflow\nstatus|validate|promote|discard`, `gad eval run|verify|report`,\n`gad verify`, plus workspace/worktree/sprint/sink commands.\n\n## When to use it\n\n- Long-horizon work where context compaction will happen mid-phase\n- Multi-agent coordination via the agent roster\n- Any project where process discipline and traceability matter more\n  than raw iteration speed\n- Self-improving projects where you want the framework to grow new\n  skills from observed pressure\n\n## Relationship to other frameworks\n\n- **bare**: GAD is the opposite — rich baseline content + evolution.\n  Bare is the control.\n- **GSD**: GAD is a fork. See `/lineage`. Both inherit the\n  discuss→plan→execute shape; GAD added XML planning, explicit task\n  attribution, hydration metrics, and the evolution loop.\n- **custom**: any GAD project that installs extra skills beyond the\n  canonical GAD DNA is categorized as `custom` in the eval matrix\n  (decision gad-164).\n\n## Canonical comparison target\n\nEscape the Dungeon (`escape-the-dungeon`) is the official\nframework-comparison project per decision gad-164. Three species live\nunder that project — one bare, one gsd, one gad — with identical\nrequirements and tech stack. Every round of eval data flows into the\ncross-framework lineage on `/lineage`.\n",
+    "bodyRaw": "\r\n\r\n## Overview\r\n\r\nGAD is a content-driven context framework with evolutionary skill\r\ngeneration — decision gad-166. The framework ships a baseline content\r\nset (skills, agents, workflows, CLI, references) AND an evolution loop\r\nthat generates new skills from observed pressure patterns. These two\r\nthings are one track, not separate conditions.\r\n\r\nPer decision gad-179, GAD is one context framework of many in the\r\ncatalog — not the home team. The site is a playground for trying GAD\r\nand other frameworks against problems; GAD happens to be the framework\r\nwe build and maintain, but the Brood Editor (phase 44.5) lets you\r\nswap it for any registered framework on a per-project basis.\r\n\r\n## What it ships\r\n\r\n### Workflows (decision gad-172)\r\n\r\n- **gad-loop** — snapshot → task → commit; the atomic unit of progress\r\n- **gad-discuss-plan-execute** — phase-level discuss/plan/execute round\r\n- **gad-decide** — pros/cons → recommend → commit for any open question\r\n- **gad-debug** — scientific-method debugging with persisted session\r\n- **gad-evolution** — pressure → candidate → proto-skill → promoted\r\n- **gad-findings** — experiment → whitepaper → publish\r\n\r\n### Core skills (excerpt)\r\n\r\n`check-todos`, `task-checkpoint`, `gad-discuss-phase`, `gad-plan-phase`,\r\n`gad-execute-phase`, `gad-verify-work`, `gad-list-phase-assumptions`,\r\n`gad-next`, `debug`, `gad-debug`, `create-proto-skill` (decision\r\ngad-168), `gad-evolution-evolve`, `gad-evolution-validator`,\r\n`gad-skill-creator`, `eval-report`, `write-feature-doc`.\r\n\r\nFull catalog on `/skills`.\r\n\r\n### CLI surface\r\n\r\n`gad snapshot`, `gad state`, `gad tasks`, `gad phases`, `gad decisions`,\r\n`gad evolution status|validate|promote|discard`, `gad workflow\r\nstatus|validate|promote|discard`, `gad eval run|verify|report`,\r\n`gad verify`, plus workspace/worktree/sprint/sink commands.\r\n\r\n## When to use it\r\n\r\n- Long-horizon work where context compaction will happen mid-phase\r\n- Multi-agent coordination via the agent roster\r\n- Any project where process discipline and traceability matter more\r\n  than raw iteration speed\r\n- Self-improving projects where you want the framework to grow new\r\n  skills from observed pressure\r\n\r\n## Relationship to other frameworks\r\n\r\n- **bare**: GAD is the opposite — rich baseline content + evolution.\r\n  Bare is the control.\r\n- **GSD**: GAD is a fork. See `/lineage`. Both inherit the\r\n  discuss→plan→execute shape; GAD added XML planning, explicit task\r\n  attribution, hydration metrics, and the evolution loop.\r\n- **custom**: any GAD project that installs extra skills beyond the\r\n  canonical GAD DNA is categorized as `custom` in the eval matrix\r\n  (decision gad-164).\r\n\r\n## Canonical comparison target\r\n\r\nEscape the Dungeon (`escape-the-dungeon`) is the official\r\nframework-comparison project per decision gad-164. Three species live\r\nunder that project — one bare, one gsd, one gad — with identical\r\nrequirements and tech stack. Every round of eval data flows into the\r\ncross-framework lineage on `/lineage`.\r\n",
     "file": ".planning/context-frameworks/gad.md"
   },
   {
@@ -4061,26 +4021,6 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Publish /workflows/methodology (or equivalent) on the site documenting how the workflow detector actually works: trace-event schema, scope classification, participant matching for authored workflows, conformance formula (decision gad-173), v1 tool-level emerg…"
     },
     {
-      "id": "43-03",
-      "status": "planned",
-      "goal": "Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects…"
-    },
-    {
-      "id": "43-05",
-      "status": "planned",
-      "goal": "Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (cur…"
-    },
-    {
-      "id": "43-06",
-      "status": "planned",
-      "goal": "Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes."
-    },
-    {
-      "id": "43-07",
-      "status": "planned",
-      "goal": "Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&lt;project&gt;/sp…"
-    },
-    {
       "id": "43-08",
       "status": "planned",
       "goal": "Update site display strings across vendor/get-anything-done/site/. Replace user-facing \"round\" with \"evolution\", \"vN\" with \"generation N\", drop \"brownfield\"/\"greenfield\" framing entirely (no replacement). Add \"DNA\" and \"spawn\" terminology where appropriate. T…"
@@ -4126,7 +4066,7 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Species/population/generation/brood capture surfaces inside the editor: small inspector panes showing the currently-edited project's species rows, each species's generations, and the brood view across all species at the same round. Reuses phase 44 components …"
     }
   ],
-  "doneTasksCount": 211,
+  "doneTasksCount": 215,
   "recentDecisions": [
     {
       "id": "gad-182",

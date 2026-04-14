@@ -41,12 +41,20 @@ export default function SelfEval() {
             score={data.framework_overhead.score}
           />
         </Identified>
-        <Identified as="MetricCard.LoopCompliance">
+        <Identified as="MetricCard.FrameworkCompliance">
           <SelfEvalMetricCard
-            label="Loop compliance"
-            value={`${(data.loop_compliance.score * 100).toFixed(0)}%`}
-            subtext={`${data.loop_compliance.snapshot_starts} of ${data.loop_compliance.total_sessions} sessions start with snapshot`}
-            score={data.loop_compliance.score}
+            label="Framework compliance"
+            value={`${(data.framework_compliance.score * 100).toFixed(0)}%`}
+            subtext={`${data.framework_compliance.fully_attributed} of ${data.framework_compliance.completed_tasks} done tasks fully attributed`}
+            score={data.framework_compliance.score}
+          />
+        </Identified>
+        <Identified as="MetricCard.Hydration">
+          <SelfEvalMetricCard
+            label="Hydration overhead"
+            value={`${(data.hydration.overhead_ratio * 100).toFixed(1)}%`}
+            subtext={`${data.hydration.snapshot_count} snapshots • ${data.hydration.estimated_snapshot_tokens.toLocaleString()} est tokens`}
+            score={1 - Math.min(1, data.hydration.overhead_ratio)}
           />
         </Identified>
         <Identified as="MetricCard.Tasks">

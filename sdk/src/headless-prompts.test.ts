@@ -46,14 +46,14 @@ const EXPECTED_WORKFLOWS = [
 ];
 
 const EXPECTED_AGENTS = [
-  'gsd-executor.md',
-  'gsd-phase-researcher.md',
-  'gsd-planner.md',
-  'gsd-verifier.md',
-  'gsd-plan-checker.md',
-  'gsd-project-researcher.md',
-  'gsd-research-synthesizer.md',
-  'gsd-roadmapper.md',
+  'gad-executor.md',
+  'gad-phase-researcher.md',
+  'gad-planner.md',
+  'gad-verifier.md',
+  'gad-plan-checker.md',
+  'gad-project-researcher.md',
+  'gad-research-synthesizer.md',
+  'gad-roadmapper.md',
 ];
 
 const templatesDir = join(promptsDir, 'templates');

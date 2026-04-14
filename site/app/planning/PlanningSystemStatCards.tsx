@@ -58,13 +58,16 @@ export function PlanningSystemStatCards({ selfEval }: { selfEval: PlanningSelfEv
 
       <Card className="border-border/60 bg-card/40">
         <CardHeader className="pb-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Loop + overhead</p>
+          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Framework + hydration</p>
           <CardTitle className="text-3xl tabular-nums">
-            {planningFmtPercent(selfEval.loop_compliance.score)} /{" "}
+            {planningFmtPercent(selfEval.framework_compliance.score)} /{" "}
+            {planningFmtPercent(selfEval.hydration.overhead_ratio)} /{" "}
             {planningFmtPercent(selfEval.framework_overhead.ratio)}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 text-xs text-muted-foreground">loop compliance / planning overhead</CardContent>
+        <CardContent className="pt-0 text-xs text-muted-foreground">
+          docs attribution / hydration overhead / planning overhead
+        </CardContent>
       </Card>
     </div>
   );

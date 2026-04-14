@@ -6,7 +6,7 @@ pressure_score: 16
 tasks_total: 8
 tasks_done: 8
 crosscuts: 4
-created_on: "2026-04-13"
+created_on: "2026-04-14"
 created_by: compute-self-eval
 ---
 
@@ -26,7 +26,7 @@ selection pressure: 16  (8 tasks, 8 done, 4 crosscuts)
 10-02 done Migrate gad-01 through gad-15 decisions from root DECISIONS.xml into vendor/get-anything-done/.planning/DECISIONS.xml. Add gad-16 (no subagents until evaluated) and gad-17 (context handoff via planning docs).
 10-03 done Add gad pack command that bundles .planning data into a repo-planner-compatible planning pack format (JSON bundle with state, phases, tasks, decisions, requirements, docRefs).
 10-04 done Create vendor/get-anything-done/AGENTS.md using GAD's own workflow — gad CLI commands, planning loop, context re-hydration, skill references.
-10-05 done Create skill stubs: skills/write-intent/SKILL.md, skills/write-feature-doc/SKILL.md, skills/write-tech-doc/SKILL.md.
+10-05 done Create skill stubs: skills/gad-write-intent/SKILL.md, skills/gad-write-feature-doc/SKILL.md, skills/gad-write-tech-doc/SKILL.md.
 10-06 done Update gadConfig.load() to read [[docs.projects]] from planning-config.toml and expose as config.docsProjects. Update gad sink status and gad refs to include docs.projects entries.
 10-07 done Create docs-map-reader.cjs and DOCS-MAP.xml per planning root. Extend gad refs to include docs-map entries. Update gad sink compile to handle DOCS-MAP.xml.
 10-08 done Create eval documentation in sink: apps/portfolio/content/docs/get-anything-done/evals.mdx covering what GAD evals are, how they work, the DEFINITIONS.md model, cli-efficiency results, portfolio-bare concept.
@@ -55,7 +55,7 @@ The drafter should pull additional context from:
   lives in commit history)
 - `gad --help` and `gad <subcommand> --help` — CLI surface available
   to the skill
-- `ls vendor/get-anything-done/sdk/skills/` — existing skills to avoid
+- `ls vendor/get-anything-done/skills/` — existing skills to avoid
   duplicating
 
 The drafter does **not** ask a human for anything. Make decisions and
@@ -69,7 +69,7 @@ are two distinct stages:
 
 - **candidate** (this file) = raw selection-pressure output
 - **proto-skill** (drafter output) = drafted SKILL.md awaiting human review
-- **skill** (post-promote) = lives in `sdk/skills/` as part of species DNA
+- **skill** (post-promote) = lives in `skills/` as part of species DNA
 
 The human reviewer runs `gad evolution promote <slug>` or
 `gad evolution discard <slug>` after reviewing the proto-skill.

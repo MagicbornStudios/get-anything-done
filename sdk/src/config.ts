@@ -1,11 +1,16 @@
 /**
- * Config reader — loads `.planning/config.json` and merges with defaults.
- *
- * Mirrors the default structure from the current GAD CLI config builder.
+ * Config reader — prefers canonical `gad-config.toml`, falls back to the
+ * generated `.planning/config.json` compatibility mirror.
  */
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const gadConfig = require('../../bin/gad-config.cjs') as {
+  load: (root: string) => Record<string, unknown>;
+};
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,7 +43,7 @@ export interface HooksConfig {
   context_warnings: boolean;
 }
 
-export interface GSDConfig {
+export interface GADConfig {
   model_profile: string;
   commit_docs: boolean;
   parallelization: boolean;
@@ -55,7 +60,7 @@ export interface GSDConfig {
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
-export const CONFIG_DEFAULTS: GSDConfig = {
+export const CONFIG_DEFAULTS: GADConfig = {
   model_profile: 'off',
   commit_docs: true,
   parallelization: true,
@@ -94,11 +99,38 @@ export const CONFIG_DEFAULTS: GSDConfig = {
 // ─── Loader ──────────────────────────────────────────────────────────────────
 
 /**
- * Load project config from `.planning/config.json`, merging with defaults.
- * Returns full defaults when file is missing or empty.
- * Throws on malformed JSON with a helpful error message.
+ * Load project config from canonical TOML or compatibility JSON, merging with
+ * defaults. Returns full defaults when no project config exists.
  */
-export async function loadConfig(projectDir: string): Promise<GSDConfig> {
+export async function loadConfig(projectDir: string): Promise<GADConfig> {
+  try {
+    const loaded = gadConfig.load(projectDir) as Record<string, unknown>;
+    if (loaded.source && loaded.source !== 'defaults') {
+      return {
+        ...structuredClone(CONFIG_DEFAULTS),
+        ...loaded,
+        git: {
+          ...CONFIG_DEFAULTS.git,
+          ...(loaded.git as Partial<GitConfig> ?? {}),
+        },
+        workflow: {
+          ...CONFIG_DEFAULTS.workflow,
+          ...(loaded.workflow as Partial<WorkflowConfig> ?? {}),
+        },
+        hooks: {
+          ...CONFIG_DEFAULTS.hooks,
+          ...(loaded.hooks as Partial<HooksConfig> ?? {}),
+        },
+        agent_skills: {
+          ...CONFIG_DEFAULTS.agent_skills,
+          ...(loaded.agent_skills as Record<string, unknown> ?? {}),
+        },
+      };
+    }
+  } catch {
+    // Fall through to direct JSON read for clearer parse errors on the compat file.
+  }
+
   const configPath = join(projectDir, '.planning', 'config.json');
 
   let raw: string;

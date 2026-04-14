@@ -5897,14 +5897,11 @@ const snapshotV2Cmd = defineCommand({
       agentInputs.requestedAgentId ||
       agentInputs.parentAgentId ||
       args.role ||
-      args.runtime ||
       scopedPhaseId ||
       scopedTaskId ||
       process.env.GAD_AGENT_ID ||
       process.env.GAD_AGENT_ROLE ||
-      process.env.GAD_PARENT_AGENT_ID ||
-      process.env.GAD_RUNTIME ||
-      detectedRuntime.id !== 'unknown'
+      process.env.GAD_PARENT_AGENT_ID
     );
     const runtimeIdentity = resolveSnapshotRuntime(args.runtime, {
       humanFallback: Boolean(scopedPhaseId || scopedTaskId || agentInputs.parentAgentId || args.role || args.agentid),

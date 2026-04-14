@@ -1,5 +1,5 @@
 /**
- * GSD Tools Tests - Copilot Install Plumbing
+ * GAD Tools Tests - Copilot Install Plumbing
  *
  * Tests for Copilot runtime directory resolution, config paths,
  * and integration with the multi-runtime installer.
@@ -28,7 +28,7 @@ const {
   GAD_COPILOT_INSTRUCTIONS_MARKER,
   GAD_COPILOT_INSTRUCTIONS_CLOSE_MARKER,
   mergeCopilotInstructions,
-  stripGsdFromCopilotInstructions,
+  stripGadFromCopilotInstructions,
   writeManifest,
   reportLocalPatches,
 } = require('../bin/install.js');
@@ -366,14 +366,14 @@ Body content here referencing ~/.claude/foo and gad:health.`;
   test('handles skill without allowed-tools', () => {
     const input = `---
 name: gad:help
-description: Show available GSD commands
+description: Show available GAD commands
 ---
 
 Help content.`;
 
     const result = convertClaudeCommandToCopilotSkill(input, 'gad-help');
     assert.ok(result.includes('name: gad-help'), 'name set');
-    assert.ok(result.includes('description: Show available GSD commands'), 'description preserved');
+    assert.ok(result.includes('description: Show available GAD commands'), 'description preserved');
     assert.ok(!result.includes('allowed-tools:'), 'no allowed-tools line');
   });
 
@@ -481,7 +481,7 @@ describe('convertClaudeAgentToCopilotAgent', () => {
   test('maps and deduplicates tools', () => {
     const input = `---
 name: gad-executor
-description: Executes GSD plans
+description: Executes GAD plans
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: yellow
 ---
@@ -508,7 +508,7 @@ Body.`;
   test('preserves name description and color', () => {
     const input = `---
 name: gad-executor
-description: Executes GSD plans with atomic commits
+description: Executes GAD plans with atomic commits
 tools: Read, Bash
 color: yellow
 ---
@@ -517,7 +517,7 @@ Body.`;
 
     const result = convertClaudeAgentToCopilotAgent(input);
     assert.ok(result.includes('name: gad-executor'), 'name preserved');
-    assert.ok(result.includes('description: Executes GSD plans with atomic commits'), 'description preserved');
+    assert.ok(result.includes('description: Executes GAD plans with atomic commits'), 'description preserved');
     assert.ok(result.includes('color: yellow'), 'color preserved');
   });
 
@@ -811,13 +811,13 @@ describe('Copilot instructions merge/strip', () => {
       const result = fs.readFileSync(filePath, 'utf8');
       assert.ok(result.includes(GAD_COPILOT_INSTRUCTIONS_MARKER), 'has opening marker');
       assert.ok(result.includes(GAD_COPILOT_INSTRUCTIONS_CLOSE_MARKER), 'has closing marker');
-      assert.ok(result.includes('Follow project conventions'), 'has GSD content');
+      assert.ok(result.includes('Follow project conventions'), 'has GAD content');
     });
 
-    test('replaces GSD section when both markers present', () => {
+    test('replaces GAD section when both markers present', () => {
       const filePath = path.join(tmpMergeDir, 'copilot-instructions.md');
       const oldContent = '# User Setup\n\n' +
-        makeGsdBlock('- Old GSD content') +
+        makeGsdBlock('- Old GAD content') +
         '\n\n# User Notes\n';
       fs.writeFileSync(filePath, oldContent);
 
@@ -826,8 +826,8 @@ describe('Copilot instructions merge/strip', () => {
 
       assert.ok(result.includes('# User Setup'), 'user content before preserved');
       assert.ok(result.includes('# User Notes'), 'user content after preserved');
-      assert.ok(!result.includes('Old GSD content'), 'old GSD content removed');
-      assert.ok(result.includes('Follow project conventions'), 'new GSD content inserted');
+      assert.ok(!result.includes('Old GAD content'), 'old GAD content removed');
+      assert.ok(result.includes('Follow project conventions'), 'new GAD content inserted');
     });
 
     test('appends to existing file when no markers present', () => {
@@ -840,14 +840,14 @@ describe('Copilot instructions merge/strip', () => {
 
       assert.ok(result.includes('# My Custom Instructions'), 'original content preserved');
       assert.ok(result.includes('Do things my way.'), 'original text preserved');
-      assert.ok(result.includes(GAD_COPILOT_INSTRUCTIONS_MARKER), 'GSD block appended');
-      assert.ok(result.includes('Follow project conventions'), 'GSD content appended');
+      assert.ok(result.includes(GAD_COPILOT_INSTRUCTIONS_MARKER), 'GAD block appended');
+      assert.ok(result.includes('Follow project conventions'), 'GAD content appended');
       // Verify separator exists
       assert.ok(result.includes('Do things my way.\n\n' + GAD_COPILOT_INSTRUCTIONS_MARKER),
-        'double newline separator before GSD block');
+        'double newline separator before GAD block');
     });
 
-    test('handles file that is GSD-only (re-creates cleanly)', () => {
+    test('handles file that is GAD-only (re-creates cleanly)', () => {
       const filePath = path.join(tmpMergeDir, 'copilot-instructions.md');
       const gsdOnly = makeGsdBlock('- Old instructions') + '\n';
       fs.writeFileSync(filePath, gsdOnly);
@@ -874,61 +874,61 @@ describe('Copilot instructions merge/strip', () => {
 
       assert.ok(result.includes('# My Setup'), 'content before markers preserved');
       assert.ok(result.includes('# My Notes'), 'content after markers preserved');
-      assert.ok(result.includes('Follow project conventions'), 'new GSD content between markers');
-      // Verify ordering: before → GSD → after
+      assert.ok(result.includes('Follow project conventions'), 'new GAD content between markers');
+      // Verify ordering: before → GAD → after
       const setupIdx = result.indexOf('# My Setup');
       const markerIdx = result.indexOf(GAD_COPILOT_INSTRUCTIONS_MARKER);
       const notesIdx = result.indexOf('# My Notes');
-      assert.ok(setupIdx < markerIdx, 'user setup comes before GSD block');
-      assert.ok(markerIdx < notesIdx, 'GSD block comes before user notes');
+      assert.ok(setupIdx < markerIdx, 'user setup comes before GAD block');
+      assert.ok(markerIdx < notesIdx, 'GAD block comes before user notes');
     });
   });
 
-  describe('stripGsdFromCopilotInstructions', () => {
-    test('returns null when content is GSD-only', () => {
-      const content = makeGsdBlock('- GSD instructions only') + '\n';
-      const result = stripGsdFromCopilotInstructions(content);
-      assert.strictEqual(result, null, 'returns null for GSD-only content');
+  describe('stripGadFromCopilotInstructions', () => {
+    test('returns null when content is GAD-only', () => {
+      const content = makeGsdBlock('- GAD instructions only') + '\n';
+      const result = stripGadFromCopilotInstructions(content);
+      assert.strictEqual(result, null, 'returns null for GAD-only content');
     });
 
     test('returns cleaned content when user content exists before markers', () => {
       const content = '# My Setup\n\nCustom rules here.\n\n' +
-        makeGsdBlock('- GSD stuff') + '\n';
-      const result = stripGsdFromCopilotInstructions(content);
+        makeGsdBlock('- GAD stuff') + '\n';
+      const result = stripGadFromCopilotInstructions(content);
 
       assert.ok(result !== null, 'does not return null');
       assert.ok(result.includes('# My Setup'), 'user content preserved');
       assert.ok(result.includes('Custom rules here.'), 'user text preserved');
       assert.ok(!result.includes(GAD_COPILOT_INSTRUCTIONS_MARKER), 'opening marker removed');
       assert.ok(!result.includes(GAD_COPILOT_INSTRUCTIONS_CLOSE_MARKER), 'closing marker removed');
-      assert.ok(!result.includes('GSD stuff'), 'GSD content removed');
+      assert.ok(!result.includes('GAD stuff'), 'GAD content removed');
     });
 
     test('returns cleaned content when user content exists after markers', () => {
-      const content = makeGsdBlock('- GSD stuff') + '\n\n# My Notes\n\nPersonal notes.\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const content = makeGsdBlock('- GAD stuff') + '\n\n# My Notes\n\nPersonal notes.\n';
+      const result = stripGadFromCopilotInstructions(content);
 
       assert.ok(result !== null, 'does not return null');
       assert.ok(result.includes('# My Notes'), 'user content after preserved');
       assert.ok(result.includes('Personal notes.'), 'user text after preserved');
       assert.ok(!result.includes(GAD_COPILOT_INSTRUCTIONS_MARKER), 'opening marker removed');
-      assert.ok(!result.includes('GSD stuff'), 'GSD content removed');
+      assert.ok(!result.includes('GAD stuff'), 'GAD content removed');
     });
 
     test('returns cleaned content preserving both before and after', () => {
-      const content = '# Before\n\n' + makeGsdBlock('- GSD middle') + '\n\n# After\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const content = '# Before\n\n' + makeGsdBlock('- GAD middle') + '\n\n# After\n';
+      const result = stripGadFromCopilotInstructions(content);
 
       assert.ok(result !== null, 'does not return null');
       assert.ok(result.includes('# Before'), 'content before preserved');
       assert.ok(result.includes('# After'), 'content after preserved');
-      assert.ok(!result.includes('GSD middle'), 'GSD content removed');
+      assert.ok(!result.includes('GAD middle'), 'GAD content removed');
       assert.ok(!result.includes(GAD_COPILOT_INSTRUCTIONS_MARKER), 'markers removed');
     });
 
     test('returns original content when no markers found', () => {
-      const content = '# Just user content\n\nNo GSD markers here.\n';
-      const result = stripGsdFromCopilotInstructions(content);
+      const content = '# Just user content\n\nNo GAD markers here.\n';
+      const result = stripGadFromCopilotInstructions(content);
       assert.strictEqual(result, content, 'returns content unchanged');
     });
   });
@@ -970,27 +970,27 @@ describe('Copilot uninstall skill removal', () => {
     assert.deepStrictEqual(nonGsdSkills, ['custom-skill'], 'preserves non-gsd skills');
   });
 
-  test('cleans GSD section from copilot-instructions.md on uninstall', () => {
+  test('cleans GAD section from copilot-instructions.md on uninstall', () => {
     const content = '# My Setup\n\nMy custom rules.\n\n' +
       GAD_COPILOT_INSTRUCTIONS_MARKER + '\n' +
-      '- GSD managed content\n' +
+      '- GAD managed content\n' +
       GAD_COPILOT_INSTRUCTIONS_CLOSE_MARKER + '\n';
 
-    const result = stripGsdFromCopilotInstructions(content);
+    const result = stripGadFromCopilotInstructions(content);
 
     assert.ok(result !== null, 'does not return null when user content exists');
     assert.ok(result.includes('# My Setup'), 'user content preserved');
     assert.ok(result.includes('My custom rules.'), 'user text preserved');
-    assert.ok(!result.includes('GSD managed content'), 'GSD content removed');
+    assert.ok(!result.includes('GAD managed content'), 'GAD content removed');
     assert.ok(!result.includes(GAD_COPILOT_INSTRUCTIONS_MARKER), 'markers removed');
   });
 
-  test('deletes copilot-instructions.md when GSD-only on uninstall', () => {
+  test('deletes copilot-instructions.md when GAD-only on uninstall', () => {
     const content = GAD_COPILOT_INSTRUCTIONS_MARKER + '\n' +
-      '- Only GSD content\n' +
+      '- Only GAD content\n' +
       GAD_COPILOT_INSTRUCTIONS_CLOSE_MARKER + '\n';
 
-    const result = stripGsdFromCopilotInstructions(content);
+    const result = stripGadFromCopilotInstructions(content);
 
     assert.strictEqual(result, null, 'returns null signaling file deletion');
   });
@@ -1187,14 +1187,14 @@ describe('E2E: Copilot full install verification', () => {
     assert.deepStrictEqual(gsdAgents, expected);
   });
 
-  test('generates copilot-instructions.md with GSD markers', () => {
+  test('generates copilot-instructions.md with GAD markers', () => {
     const instrPath = path.join(tmpDir, '.github', 'copilot-instructions.md');
     assert.ok(fs.existsSync(instrPath), 'copilot-instructions.md should exist');
     const content = fs.readFileSync(instrPath, 'utf-8');
-    assert.ok(content.includes('<!-- GSD Configuration'),
-      'Should contain GSD Configuration open marker');
-    assert.ok(content.includes('<!-- /GSD Configuration -->'),
-      'Should contain GSD Configuration close marker');
+    assert.ok(content.includes('<!-- GAD Configuration'),
+      'Should contain GAD Configuration open marker');
+    assert.ok(content.includes('<!-- /GAD Configuration -->'),
+      'Should contain GAD Configuration close marker');
   });
 
   test('creates manifest with correct structure', () => {
@@ -1285,27 +1285,27 @@ describe('E2E: Copilot uninstall verification', () => {
       'copilot-instructions.md should not exist after uninstall');
   });
 
-  test('removes all GSD skill directories', () => {
+  test('removes all GAD skill directories', () => {
     const skillsDir = path.join(tmpDir, '.github', 'skills');
     if (fs.existsSync(skillsDir)) {
       const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
       const gsdSkills = entries.filter(e => e.isDirectory() && e.name.startsWith('gad-'));
       assert.strictEqual(gsdSkills.length, 0,
-        `Expected 0 GSD skill directories after uninstall, found: ${gsdSkills.map(e => e.name).join(', ')}`);
+        `Expected 0 GAD skill directories after uninstall, found: ${gsdSkills.map(e => e.name).join(', ')}`);
     }
   });
 
-  test('removes all GSD agent files', () => {
+  test('removes all GAD agent files', () => {
     const agentsDir = path.join(tmpDir, '.github', 'agents');
     if (fs.existsSync(agentsDir)) {
       const files = fs.readdirSync(agentsDir);
       const gsdAgents = files.filter(f => f.startsWith('gad-') && f.endsWith('.agent.md'));
       assert.strictEqual(gsdAgents.length, 0,
-        `Expected 0 GSD agent files after uninstall, found: ${gsdAgents.join(', ')}`);
+        `Expected 0 GAD agent files after uninstall, found: ${gsdAgents.join(', ')}`);
     }
   });
 
-  describe('preserves non-GSD content', () => {
+  describe('preserves non-GAD content', () => {
     let td;
 
     beforeEach(() => {
@@ -1317,8 +1317,8 @@ describe('E2E: Copilot uninstall verification', () => {
       fs.rmSync(td, { recursive: true, force: true });
     });
 
-    test('preserves non-GSD content in skills directory', () => {
-      // Add non-GSD custom skill
+    test('preserves non-GAD content in skills directory', () => {
+      // Add non-GAD custom skill
       const customSkillDir = path.join(td, '.github', 'skills', 'my-custom-skill');
       fs.mkdirSync(customSkillDir, { recursive: true });
       fs.writeFileSync(path.join(customSkillDir, 'SKILL.md'), '# My Custom Skill\n');
@@ -1326,11 +1326,11 @@ describe('E2E: Copilot uninstall verification', () => {
       runCopilotUninstall(td);
       // Verify custom content preserved
       assert.ok(fs.existsSync(path.join(customSkillDir, 'SKILL.md')),
-        'Non-GSD skill directory and SKILL.md should be preserved after uninstall');
+        'Non-GAD skill directory and SKILL.md should be preserved after uninstall');
     });
 
-    test('preserves non-GSD content in agents directory', () => {
-      // Add non-GSD custom agent
+    test('preserves non-GAD content in agents directory', () => {
+      // Add non-GAD custom agent
       const customAgentPath = path.join(td, '.github', 'agents', 'my-agent.md');
       fs.writeFileSync(customAgentPath, '# My Custom Agent\n');
       // Uninstall

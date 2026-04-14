@@ -8,11 +8,11 @@ import type { InitRunnerDeps } from './init-runner.js';
 import type {
   PlanResult,
   SessionUsage,
-  GSDEvent,
+  GADEvent,
   InitNewProjectInfo,
   InitStepResult,
 } from './types.js';
-import { GSDEventType } from './types.js';
+import { GADEventType } from './types.js';
 
 // ─── Mock modules ────────────────────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ vi.mock('./config.js', () => ({
   CONFIG_DEFAULTS: {},
 }));
 
-// Mock fs/promises for template reading (InitRunner reads GSD templates)
+// Mock fs/promises for template reading (InitRunner reads GAD templates)
 // We partially mock — only readFile needs interception for template paths
 const originalReadFile = vi.importActual('node:fs/promises').then(m => (m as typeof import('node:fs/promises')).readFile);
 
@@ -120,9 +120,9 @@ function makeTools(overrides: Record<string, unknown> = {}) {
 }
 
 function makeEventStream() {
-  const events: GSDEvent[] = [];
+  const events: GADEvent[] = [];
   return {
-    emitEvent: vi.fn((event: GSDEvent) => events.push(event)),
+    emitEvent: vi.fn((event: GADEvent) => events.push(event)),
     on: vi.fn(),
     emit: vi.fn(),
     addTransport: vi.fn(),
@@ -130,7 +130,7 @@ function makeEventStream() {
   } as any;
 }
 
-function makeDeps(overrides: Partial<InitRunnerDeps> & { tmpDir: string }): InitRunnerDeps & { events: GSDEvent[] } {
+function makeDeps(overrides: Partial<InitRunnerDeps> & { tmpDir: string }): InitRunnerDeps & { events: GADEvent[] } {
   const tools = makeTools();
   const eventStream = makeEventStream();
   return {
@@ -172,7 +172,7 @@ describe('InitRunner', () => {
       eventStream,
       config: configOverrides as any,
     });
-    return { runner, tools, eventStream, events: eventStream.events as GSDEvent[] };
+    return { runner, tools, eventStream, events: eventStream.events as GADEvent[] };
   }
 
   // ─── Core workflow tests ─────────────────────────────────────────────────
@@ -330,8 +330,8 @@ describe('InitRunner', () => {
 
     await runner.run('build a todo app');
 
-    const startEvents = events.filter(e => e.type === GSDEventType.InitStart);
-    const completeEvents = events.filter(e => e.type === GSDEventType.InitComplete);
+    const startEvents = events.filter(e => e.type === GADEventType.InitStart);
+    const completeEvents = events.filter(e => e.type === GADEventType.InitComplete);
 
     expect(startEvents.length).toBe(1);
     expect(completeEvents.length).toBe(1);
@@ -352,8 +352,8 @@ describe('InitRunner', () => {
 
     await runner.run('build a todo app');
 
-    const stepStarts = events.filter(e => e.type === GSDEventType.InitStepStart);
-    const stepCompletes = events.filter(e => e.type === GSDEventType.InitStepComplete);
+    const stepStarts = events.filter(e => e.type === GADEventType.InitStepStart);
+    const stepCompletes = events.filter(e => e.type === GADEventType.InitStepComplete);
 
     // Steps: setup, config, project, 4x research, synthesis, requirements, roadmap = 10
     expect(stepStarts.length).toBe(10);
@@ -383,7 +383,7 @@ describe('InitRunner', () => {
 
     await runner.run('build a todo app');
 
-    const spawnEvents = events.filter(e => e.type === GSDEventType.InitResearchSpawn);
+    const spawnEvents = events.filter(e => e.type === GADEventType.InitResearchSpawn);
     expect(spawnEvents.length).toBe(1);
 
     const spawn = spawnEvents[0] as any;
@@ -596,15 +596,15 @@ describe('InitRunner', () => {
 
       // Write headless agents (with known marker text)
       await writeFile(
-        join(sdkPromptsDir, 'agents', 'gsd-project-researcher.md'),
+        join(sdkPromptsDir, 'agents', 'gad-project-researcher.md'),
         '# Project Researcher Agent\nSDK_HEADLESS_MARKER_RESEARCHER\n',
       );
       await writeFile(
-        join(sdkPromptsDir, 'agents', 'gsd-research-synthesizer.md'),
+        join(sdkPromptsDir, 'agents', 'gad-research-synthesizer.md'),
         '# Research Synthesizer Agent\nSDK_HEADLESS_MARKER_SYNTHESIZER\n',
       );
       await writeFile(
-        join(sdkPromptsDir, 'agents', 'gsd-roadmapper.md'),
+        join(sdkPromptsDir, 'agents', 'gad-roadmapper.md'),
         '# Roadmapper Agent\nSDK_HEADLESS_MARKER_ROADMAPPER\n',
       );
     });
@@ -622,10 +622,10 @@ describe('InitRunner', () => {
         config: configOverrides as any,
         sdkPromptsDir,
       });
-      return { runner, tools, eventStream, events: eventStream.events as GSDEvent[] };
+      return { runner, tools, eventStream, events: eventStream.events as GADEvent[] };
     }
 
-    it('readGSDFile prefers sdk/prompts/ template over GSD-1 path', async () => {
+    it('readGADFile prefers sdk/prompts/ template over GAD-1 path', async () => {
       const { runner } = createRunnerWithSdkPrompts();
 
       await runner.run('build a todo app');
@@ -635,17 +635,17 @@ describe('InitRunner', () => {
       expect(projectPrompt).toContain('SDK_HEADLESS_MARKER_PROJECT');
     });
 
-    it('readAgentFile prefers sdk/prompts/agents/ over GSD-1 path', async () => {
+    it('readAgentFile prefers sdk/prompts/agents/ over GAD-1 path', async () => {
       const { runner } = createRunnerWithSdkPrompts();
 
       await runner.run('build a todo app');
 
-      // Research calls (indices 1-4) use gsd-project-researcher.md agent def
+      // Research calls (indices 1-4) use gad-project-researcher.md agent def
       const researchPrompt = mockRunSession.mock.calls[1]![0] as string;
       expect(researchPrompt).toContain('SDK_HEADLESS_MARKER_RESEARCHER');
     });
 
-    it('readGSDFile falls back to GSD-1 when sdk/prompts/ file does not exist', async () => {
+    it('readGADFile falls back to GAD-1 when sdk/prompts/ file does not exist', async () => {
       // Create an empty sdkPromptsDir — no templates at all
       const emptySdkDir = join(tmpDir, 'empty-sdk-prompts');
       await mkdir(join(emptySdkDir, 'templates'), { recursive: true });
@@ -663,7 +663,7 @@ describe('InitRunner', () => {
       await runner.run('build a todo app');
 
       // buildProjectPrompt reads templates/project.md — not found in empty dir,
-      // falls through to GSD-1 path. If GSD-1 also missing, gets placeholder.
+      // falls through to GAD-1 path. If GAD-1 also missing, gets placeholder.
       const projectPrompt = mockRunSession.mock.calls[0]![0] as string;
 
       // Should NOT contain our marker (since empty dir was used)
@@ -672,7 +672,7 @@ describe('InitRunner', () => {
       expect(projectPrompt).toContain('PROJECT.md');
     });
 
-    it('readAgentFile falls back to GSD-1 when sdk/prompts/agents/ file does not exist', async () => {
+    it('readAgentFile falls back to GAD-1 when sdk/prompts/agents/ file does not exist', async () => {
       // Empty sdkPromptsDir — no agent files
       const emptySdkDir = join(tmpDir, 'empty-sdk-agents');
       await mkdir(join(emptySdkDir, 'templates', 'research-project'), { recursive: true });
@@ -696,7 +696,7 @@ describe('InitRunner', () => {
 
       await runner.run('build a todo app');
 
-      // Research prompt uses agent def — not in empty agents dir, falls to GSD-1
+      // Research prompt uses agent def — not in empty agents dir, falls to GAD-1
       const researchPrompt = mockRunSession.mock.calls[1]![0] as string;
       // Should NOT contain our marker
       expect(researchPrompt).not.toContain('SDK_HEADLESS_MARKER_RESEARCHER');
@@ -724,7 +724,7 @@ describe('InitRunner', () => {
     it('buildResearchPrompt output passes through sanitizePrompt (no /gsd: patterns)', async () => {
       // Write an agent def that contains interactive patterns
       await writeFile(
-        join(sdkPromptsDir, 'agents', 'gsd-project-researcher.md'),
+        join(sdkPromptsDir, 'agents', 'gad-project-researcher.md'),
         '# Researcher Agent\nSpawn /gsd:something for analysis.\nSDK_HEADLESS_MARKER_RESEARCHER\n',
       );
 
@@ -741,7 +741,7 @@ describe('InitRunner', () => {
     it('buildRoadmapPrompt output passes through sanitizePrompt (no /gsd: patterns)', async () => {
       // Write agent and templates with interactive patterns
       await writeFile(
-        join(sdkPromptsDir, 'agents', 'gsd-roadmapper.md'),
+        join(sdkPromptsDir, 'agents', 'gad-roadmapper.md'),
         '# Roadmapper Agent\nUse /gsd:execute to run.\nSDK_HEADLESS_MARKER_ROADMAPPER\n',
       );
       await writeFile(
