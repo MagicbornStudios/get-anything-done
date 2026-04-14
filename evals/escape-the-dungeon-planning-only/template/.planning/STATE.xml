@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<state>
-  <current-phase></current-phase>
-  <current-plan></current-plan>
-  <milestone>escape-the-dungeon-eval</milestone>
-  <status>not-started</status>
-  <next-action>Read REQUIREMENTS.xml and source docs. Plan phases in ROADMAP.xml — UI-first, vertical slice priority. Create tasks in TASK-REGISTRY.xml. Then implement phase by phase following AGENTS.md.</next-action>
-  <last-updated>2026-04-08</last-updated>
-</state>
