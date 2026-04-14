@@ -1,8 +1,6 @@
 import { MarketingShell } from "@/components/site";
-import { GadCatalogJumpSection } from "./GadCatalogJumpSection";
 import { GadCoreConceptsSection } from "./GadCoreConceptsSection";
 import { GadHeroSection } from "./GadHeroSection";
-import { GadSkillBootstrapSection } from "./GadSkillBootstrapSection";
 
 export const metadata = {
   title: "GAD framework - overview + catalog",
@@ -15,8 +13,6 @@ export default function GADOverviewPage() {
     <MarketingShell>
       <GadHeroSection />
       <GadCoreConceptsSection />
-      <GadSkillBootstrapSection />
-      <GadCatalogJumpSection />
     </MarketingShell>
   );
 }
