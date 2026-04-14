@@ -24,7 +24,7 @@
       "human_review": 0.3
     }
   },
-  "human_review_rubric": {
+  "humanReviewRubric": {
     "version": "v1",
     "dimensions": [
       {
@@ -66,8 +66,8 @@
     ]
   },
   "domain": "game",
-  "build_requirement": "playable HTML game",
+  "buildRequirement": "playable HTML game",
   "species": "emergent",
   "project": "escape-the-dungeon",
-  "context_framework": "emergent"
+  "contextFramework": "emergent"
 }

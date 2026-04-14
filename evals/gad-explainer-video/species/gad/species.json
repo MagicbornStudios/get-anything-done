@@ -25,7 +25,7 @@
       "human_review": 0.15
     }
   },
-  "human_review_rubric": {
+  "humanReviewRubric": {
     "version": "v1",
     "dimensions": [
       {
@@ -67,9 +67,9 @@
     "This eval tests the same hypotheses (freedom / CSH / emergent-evolution) on a DIFFERENT task domain. It is the generalization test the /skeptic page says we need."
   ],
   "domain": "stories",
-  "build_requirement": "Remotion composition (src is build)",
-  "tech_stack": "remotion",
+  "buildRequirement": "Remotion composition (src is build)",
+  "techStack": "remotion",
   "species": "gad",
   "project": "gad-explainer-video",
-  "context_framework": "gad"
+  "contextFramework": "gad"
 }

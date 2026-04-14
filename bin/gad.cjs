@@ -2203,18 +2203,14 @@ const evalList = defineCommand({
         try {
           const projectCfg = loadEvalProject(projectDir);
           if (projectCfg.domain) domain = projectCfg.domain;
-          if (projectCfg.techStack || projectCfg.tech_stack) {
-            techStack = projectCfg.techStack || projectCfg.tech_stack;
-          }
+          if (projectCfg.techStack) techStack = projectCfg.techStack;
           const allResolved = loadAllResolvedSpecies(projectDir);
           if (allResolved.length > 0) {
             const first = allResolved[0];
             if (first.workflow) workflow = first.workflow;
             if (first.eval_mode) mode = first.eval_mode;
             if (!domain && first.domain) domain = first.domain;
-            if (!techStack && (first.techStack || first.tech_stack)) {
-              techStack = first.techStack || first.tech_stack;
-            }
+            if (!techStack && first.techStack) techStack = first.techStack;
           }
         } catch (err) {
           // sparse/malformed metadata is non-fatal for `eval list`
@@ -4662,10 +4658,8 @@ const evalReview = defineCommand({
         const resolved = loadAllResolvedSpecies(projectDir);
         for (const sp of resolved) {
           if (!sp) continue;
-          // Accept camelCase (canonical post-42.4-15) or legacy snake_case.
-          const candidate = sp.humanReviewRubric || sp.human_review_rubric;
-          if (candidate && Array.isArray(candidate.dimensions)) {
-            rubricDef = candidate;
+          if (sp.humanReviewRubric && Array.isArray(sp.humanReviewRubric.dimensions)) {
+            rubricDef = sp.humanReviewRubric;
             break;
           }
         }
@@ -5465,8 +5459,8 @@ const evalReadme = defineCommand({
     const domain        = pick(projectCfg.domain, firstSpecies.domain);
     const evalMode      = pick(firstSpecies.eval_mode, firstSpecies.evalMode);
     const workflow      = pick(firstSpecies.workflow);
-    const techStackVal  = pick(projectCfg.techStack, projectCfg.tech_stack, firstSpecies.techStack, firstSpecies.tech_stack);
-    const buildReqVal   = pick(firstSpecies.buildRequirement, firstSpecies.build_requirement, projectCfg.buildRequirement, projectCfg.build_requirement);
+    const techStackVal  = pick(projectCfg.techStack, firstSpecies.techStack);
+    const buildReqVal   = pick(firstSpecies.buildRequirement, projectCfg.buildRequirement);
 
     const lines = [
       `# ${args.project}`,

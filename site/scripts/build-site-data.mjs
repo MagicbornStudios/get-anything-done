@@ -509,7 +509,7 @@ function scanEvalProjects() {
       // installedSkills, defaultContent, ...) layered underneath the species
       // overrides. Never hand-merge project.json + species.json here.
       const data = loadResolvedSpeciesMerged(sp.projectDir, sp.species);
-      const rawFramework = data.contextFramework || data.context_framework || data.workflow || sp.species || null;
+      const rawFramework = data.contextFramework || data.workflow || sp.species || null;
       const contextFramework =
         rawFramework === "emergent" ? "custom" : rawFramework;
       rows.push({
@@ -526,10 +526,10 @@ function scanEvalProjects() {
         baseline: data.baseline || null,
         constraints: data.constraints || null,
         scoringWeights: data.scoring?.weights || null,
-        humanReviewRubric: data.human_review_rubric || null,
+        humanReviewRubric: data.humanReviewRubric || null,
         domain: data.domain || null,
-        techStack: data.techStack || data.tech_stack || null,
-        buildRequirement: data.build_requirement || null,
+        techStack: data.techStack || null,
+        buildRequirement: data.buildRequirement || null,
       });
     } catch (err) {
       console.warn(`  [warn] failed to parse ${sp.speciesJsonPath}: ${err.message}`);
@@ -553,7 +553,7 @@ function scanEvalParents() {
       slug: p.meta.slug || p.project,
       description: p.meta.description || null,
       domain: p.meta.domain || null,
-      techStack: p.meta.techStack || p.meta.tech_stack || null,
+      techStack: p.meta.techStack || null,
       tagline: p.meta.tagline || null,
       cardImage: p.meta.cardImage || null,
       heroImage: p.meta.heroImage || null,
@@ -658,7 +658,7 @@ function inferWorkflow(project, data) {
   // helpers pass species through `data.species` when scanning, so prefer
   // that when present.
   if (data.species && IMPLEMENTATION_WORKFLOWS.has(data.species)) return data.species;
-  if (data.context_framework && IMPLEMENTATION_WORKFLOWS.has(data.context_framework)) return data.context_framework;
+  if (data.contextFramework && IMPLEMENTATION_WORKFLOWS.has(data.contextFramework)) return data.contextFramework;
   if (data.workflow && IMPLEMENTATION_WORKFLOWS.has(data.workflow)) return data.workflow;
   return "gad";
 }
@@ -1499,7 +1499,6 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 - [Rubric](${SITE_URL}/rubric): Per-project scoring dimensions
 - [Questions](${SITE_URL}/questions): Open research questions
 - [Data provenance](${SITE_URL}/data): Where every number on the site comes from
-- [Emergent](${SITE_URL}/emergent): Compound-Skills Hypothesis evidence rollup
 
 ## Catalog
 

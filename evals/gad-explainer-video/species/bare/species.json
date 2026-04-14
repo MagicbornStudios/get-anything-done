@@ -25,9 +25,9 @@
     }
   },
   "domain": "stories",
-  "build_requirement": "Remotion composition",
-  "tech_stack": "remotion",
+  "buildRequirement": "Remotion composition",
+  "techStack": "remotion",
   "species": "bare",
   "project": "gad-explainer-video",
-  "context_framework": "bare"
+  "contextFramework": "bare"
 }

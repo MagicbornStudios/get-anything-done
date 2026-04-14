@@ -20,7 +20,7 @@
       "human_review": 0.3
     }
   },
-  "human_review_rubric": {
+  "humanReviewRubric": {
     "version": "v1",
     "dimensions": [
       {
@@ -56,9 +56,9 @@
     ]
   },
   "domain": "game",
-  "build_requirement": "playable HTML game",
-  "tech_stack": "kaplay",
+  "buildRequirement": "playable HTML game",
+  "techStack": "kaplay",
   "species": "gad",
   "project": "escape-the-dungeon",
-  "context_framework": "gad"
+  "contextFramework": "gad"
 }
