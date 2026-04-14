@@ -216,25 +216,126 @@ Skill: gad-evolution-evolve
 Type: framework
 ```
 
-## Step 8: Print summary
+## Step 8: Print review report (MANDATORY format)
+
+Any turn that leaves `.planning/proto-skills/` non-empty MUST close with a full
+review report in this format. Terse CLI pointers are not enough — the human
+review gate rots when the report is vague. Feedback 2026-04-14: the user
+explicitly wants per-slug walkthroughs with proposed name, file-tree shape,
+merge-candidate analysis, and a recommended action.
+
+### Top-of-report header
 
 ```
-Evolution 2026-04-13-001 started.
-  Drafted: 5 proto-skills
-  Pending review: 5
+Evolution <id> — <pending> proto-skills pending review
 
-Open the SKILL.md for each in your editor:
-  .planning/proto-skills/<slug-1>/SKILL.md
-  .planning/proto-skills/<slug-2>/SKILL.md
-  ...
+Scope of this run:
+  - <where was the evolution run: monorepo root / single project / manual staging>
+  - <what pressure ranking was used / why these phases were picked>
 
-Then install/promote/discard each:
-  gad evolution install <slug> --codex
-  gad evolution promote <slug>
-  gad evolution discard <slug>
-
-Run `gad status` to see remaining proto-skills at any time.
+Blocking: next `gad evolution evolve` cannot run until this queue is empty.
+Tracked by task: <task-id for the review>
 ```
+
+### Per-slug block (repeat for each pending proto-skill)
+
+For every slug under `.planning/proto-skills/`, emit one block in this shape:
+
+```
+─── <N>. <slug> ───────────────────────────────────
+
+Proposed skill name: <frontmatter `name` field>
+Source: phase <N> / manual-staging / <other>
+Validator:           <refs hit>/<refs total> file refs, <cli hit>/<cli total> CLI
+Lines:               <SKILL.md wc -l>
+Recommendation:      <PROMOTE | DISCARD | MERGE | EDIT-THEN-PROMOTE>
+
+One-line purpose:
+  <what the skill does, verb-led>
+
+File tree:
+  .planning/proto-skills/<slug>/
+  ├── SKILL.md                  (<lines> lines)
+  ├── VALIDATION.md             (advisory)
+  └── references/               (if any)
+      ├── <reference file 1>
+      └── <reference file 2>
+
+External references cited in SKILL.md:
+  - <path>:<line>        <- one line each, relative to repo root
+  - <path>:<line>
+  - ...
+
+Parent-skill / merge analysis:
+  Parent candidates in skills/:
+    - <existing-skill-name>     <- one-line reason this is a candidate
+    - <existing-skill-name>     <- one-line reason
+  Why <merge | keep-separate | deprecate-parent>:
+    <2-3 sentences comparing scope, overlap, surface area>
+
+Open and review:
+  code .planning/proto-skills/<slug>/SKILL.md
+  code .planning/proto-skills/<slug>/VALIDATION.md
+  <if parent exists:>
+  code skills/<parent-name>/SKILL.md
+
+Commands to act on this slug:
+  gad evolution install <slug> --claude     # try without committing
+  gad evolution promote <slug>              # join skills/
+  gad evolution discard <slug>              # delete
+```
+
+### Recommendation values
+
+- **PROMOTE** — validator clean, no parent overlap, ready to join `skills/`.
+- **DISCARD** — validator failed, scope drifted, or the pattern isn't actually
+  reusable. Name the reason in the recommendation.
+- **MERGE** — a parent skill exists and the proto-skill should be folded into
+  it. Always name the parent and explain the comparison.
+- **EDIT-THEN-PROMOTE** — the proto-skill captures the right pattern but needs
+  one more pass (rename slug, fix refs, tighten scope). Name the edit needed.
+
+### Recommended review order
+
+End the report with one paragraph on the order you suggest the user review the
+slugs in. Highest-leverage first. Call out any blocking dependencies between
+slugs (e.g. "review <A> before <B> because they might merge").
+
+### Standard skill file shape
+
+Every promoted skill follows the standard format with GAD-specific metadata:
+
+```
+---
+name: <kebab-name>
+description: >-
+  Verb-led 1–3 sentence description with trigger phrases ("when user asks X", "use when Y").
+source_phase: "<N>"              # optional, for evolved skills
+source_evolution: <id>           # optional, for evolved skills
+parent_skill: <name>             # optional, if superseding/extending another skill
+status: proto | promoted         # proto while in .planning/proto-skills/, omit when promoted
+---
+
+# <skill title>
+
+## When to use
+<triggers, concrete phrases>
+
+## Steps
+<numbered, actionable>
+
+## Failure modes
+<concrete pitfalls>
+
+## References
+<file:line pointers to real repo paths. Freeform — skills may have a references/
+directory with extracted doc/example files if the body needs more space.>
+```
+
+The `references/` subdirectory under a skill is **freeform but encouraged** —
+use it for canonical snippets, design docs, comparison tables, or anything that
+would bloat SKILL.md past ~200 lines. The validator counts `references/` files
+against file-ref totals.
 
 ## Failure modes
 
