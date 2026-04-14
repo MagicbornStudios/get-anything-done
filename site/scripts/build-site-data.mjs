@@ -51,7 +51,7 @@ const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 
 // Phase 10: `gad site compile` can point the planning-data readers at an
 // external project root via GAD_PROJECT_ROOT. Everything ELSE (skills, agents,
-// evals, templates, SDK) still reads from REPO_ROOT — those are GAD framework
+// evals, templates, framework assets) still reads from REPO_ROOT — those are GAD framework
 // artifacts that don't change per project. Default: GAD's own root for
 // backwards-compat with the existing GAD landing site build.
 const PROJECT_ROOT = process.env.GAD_PROJECT_ROOT
@@ -63,11 +63,9 @@ if (PROJECT_ROOT !== REPO_ROOT) {
   console.log(`  [project-mode] reading planning data from ${PROJECT_ROOT} (id=${PROJECT_ID})`);
 }
 
-const SDK_DIR = path.join(REPO_ROOT, "sdk");
-const TEMPLATES_DIR = path.join(SDK_DIR, "templates");
-const SDK_SKILLS_DIR = path.join(SDK_DIR, "skills");
-const INTERNAL_SKILLS_DIR = path.join(REPO_ROOT, "skills");
-const AGENTS_DIR = path.join(SDK_DIR, "agents");
+const TEMPLATES_DIR = path.join(REPO_ROOT, "templates");
+const SKILLS_DIR = path.join(REPO_ROOT, "skills");
+const AGENTS_DIR = path.join(REPO_ROOT, "agents");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "workflows");
 const DATA_DIR = path.join(REPO_ROOT, "data");
@@ -120,6 +118,14 @@ function formatBytes(n) {
  * Tiny frontmatter parser. Handles the `---\n...\n---\n<body>` shape.
  * Returns { data, body }. Only understands key: value (strings, one level).
  */
+/**
+ * Minimal frontmatter parser. Supports:
+ *  - top-level key: value
+ *  - top-level key: [a, b, c] inline arrays
+ *  - one level of nesting via indented sub-keys under a bare `key:`
+ *    (sub-values may themselves be inline arrays)
+ *  - the literal `null`
+ */
 function parseFrontmatter(src) {
   if (!src.startsWith("---")) return { data: {}, body: src };
   const end = src.indexOf("\n---", 3);
@@ -127,34 +133,63 @@ function parseFrontmatter(src) {
   const header = src.slice(3, end).trim();
   const body = src.slice(end + 4).replace(/^\n/, "");
   const data = {};
-  let key = null;
-  let buf = "";
-  for (const rawLine of header.split("\n")) {
-    const line = rawLine;
-    const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (m && !/^\s/.test(rawLine)) {
-      if (key) data[key] = buf.trim();
-      key = m[1];
-      buf = m[2];
-    } else if (key) {
-      buf += " " + line.trim();
+
+  const lines = header.split(/\r?\n/);
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^\s*$/.test(line)) {
+      i += 1;
+      continue;
     }
-  }
-  if (key) data[key] = buf.trim();
-  // Post-process: inline-array values like `[a, b, c]` become string arrays.
-  for (const k of Object.keys(data)) {
-    const v = data[k];
-    if (typeof v === "string" && v.startsWith("[") && v.endsWith("]")) {
-      data[k] = v
-        .slice(1, -1)
-        .split(",")
-        .map((s) => s.trim().replace(/^["']|["']$/g, ""))
-        .filter(Boolean);
-    } else if (v === "null") {
-      data[k] = null;
+    const top = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!top || /^\s/.test(line)) {
+      // Orphan continuation — append to the last key as string
+      i += 1;
+      continue;
     }
+    const key = top[1];
+    const inlineValue = top[2];
+
+    if (inlineValue.length > 0) {
+      data[key] = decodeFrontmatterValue(inlineValue);
+      i += 1;
+      continue;
+    }
+
+    // Bare key — consume indented block as a nested object
+    const nested = {};
+    i += 1;
+    while (i < lines.length) {
+      const sub = lines[i];
+      if (!/^\s+/.test(sub) || /^\s*$/.test(sub)) break;
+      const subMatch = sub.match(/^\s+([A-Za-z0-9_-]+):\s*(.*)$/);
+      if (!subMatch) {
+        i += 1;
+        continue;
+      }
+      nested[subMatch[1]] = decodeFrontmatterValue(subMatch[2]);
+      i += 1;
+    }
+    data[key] = nested;
   }
+
   return { data, body };
+}
+
+function decodeFrontmatterValue(raw) {
+  const v = (raw || "").trim();
+  if (v === "" || v === "~" || v === "null") return null;
+  if (v.startsWith("[") && v.endsWith("]")) {
+    return v
+      .slice(1, -1)
+      .split(",")
+      .map((s) => s.trim().replace(/^["']|["']$/g, ""))
+      .filter(Boolean);
+  }
+  if (v === "true") return true;
+  if (v === "false") return false;
+  return v.replace(/^["']|["']$/g, "");
 }
 
 function firstParagraph(text, max = 600) {
@@ -717,7 +752,7 @@ function scanCatalog() {
         path.join(baseDir, entry.name),
         entry.name,
         defaultOrigin,
-        sourceLabel === "sdk" ? "vendor/get-anything-done/sdk/skills" : "vendor/get-anything-done/skills"
+        "vendor/get-anything-done/skills"
       );
       if (skill) catalog.skills.push(skill);
     }
@@ -729,15 +764,14 @@ function scanCatalog() {
           path.join(emergentDir, entry.name),
           entry.name,
           "emergent",
-          sourceLabel === "sdk" ? "vendor/get-anything-done/sdk/skills/emergent" : "vendor/get-anything-done/skills/emergent"
+          "vendor/get-anything-done/skills/emergent"
         );
         if (skill) catalog.skills.push(skill);
       }
     }
   }
 
-  addSkillsFromDir(SDK_SKILLS_DIR, "sdk", "official");
-  addSkillsFromDir(INTERNAL_SKILLS_DIR, "repo-internal", "internal");
+  addSkillsFromDir(SKILLS_DIR, "framework", "official");
   const emergentCount = catalog.skills.filter((s) => s.origin === "emergent").length;
   console.log(`  [skills] ${catalog.skills.length} total (${emergentCount} emergent, excluded from default install)`);
 
@@ -754,7 +788,7 @@ function scanCatalog() {
         description: data.description || firstParagraph(body, 280),
         tools: data.tools || null,
         color: data.color || null,
-        file: `vendor/get-anything-done/sdk/agents/${name}`,
+        file: `vendor/get-anything-done/agents/${name}`,
         bodyHtml: renderMarkdown(body),
         bodyRaw: body,
       });
@@ -878,13 +912,38 @@ const WORKFLOW_MINE_THRESHOLDS = {
   max_emergent: 12,
 };
 
-function loadTraceEvents() {
+/**
+ * Determine an event's "scope" — which context it belongs to. v1 uses a
+ * path-based heuristic: anything inside a worktree directory or eval
+ * preservation path is classified as `eval-agent` (work an agent did inside
+ * an eval project), everything else is `gad-framework` (real work on the
+ * GAD framework itself). Decision gad-175 — v2 will move this to an
+ * explicit scope tag written by the hooks, but the filter is still
+ * applied here so legacy traces can be analyzed.
+ */
+function classifyTraceEventScope(evt) {
+  const touched =
+    evt?.type === "file_mutation"
+      ? evt.path
+      : evt?.type === "tool_use" && evt.inputs && (evt.inputs.file_path || evt.inputs.command || evt.inputs.notebook_path)
+        ? evt.inputs.file_path || evt.inputs.command || evt.inputs.notebook_path
+        : null;
+  const hay = String(touched || "").replace(/\\/g, "/").toLowerCase();
+  if (!hay) return "gad-framework";
+  if (hay.includes(".claude/worktrees/") || hay.includes("/worktrees/agent-") || hay.includes("/worktrees/")) return "eval-agent";
+  if (hay.includes("/evals/") && hay.includes("/game/")) return "eval-agent";
+  return "gad-framework";
+}
+
+function loadTraceEvents({ scope } = {}) {
   if (!exists(TRACE_EVENTS_PATH)) return [];
   const raw = fs.readFileSync(TRACE_EVENTS_PATH, "utf8").split(/\r?\n/).filter(Boolean);
   const out = [];
   for (const line of raw) {
     try {
-      out.push(JSON.parse(line));
+      const evt = JSON.parse(line);
+      if (scope && classifyTraceEventScope(evt) !== scope) continue;
+      out.push(evt);
     } catch {
       // skip malformed lines
     }
@@ -1095,15 +1154,14 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
       for (let i = 0; i < nodes.length - 1; i++) {
         edges.push({ id: `${slug}-e${i}`, source: nodes[i].id, target: nodes[i + 1].id });
       }
-      const mermaidLines = [
-        "flowchart LR",
-        ...p.labels.map((l, i) => `  n${i}[${l}]`),
-        ...p.labels.slice(0, -1).map((_, i) => `  n${i} --> n${i + 1}`),
-      ];
+      // Decision gad-177: emergent workflows have NO authored mermaid body.
+      // They have no designed shape — the React Flow live graph IS the
+      // emergent workflow. mermaidBody stays empty so WorkflowCard knows
+      // to render a single-column (React-Flow-only) layout.
       return {
         slug,
-        name: `Emergent: ${p.labels.join(" → ")}`,
-        description: `Recurring tool-use sequence detected ${p.support}× in trace data. Not hand-authored. Promote to a real workflow via \`gad workflow promote ${slug}\` or discard.`,
+        name: `${p.labels.join(" → ")}`,
+        description: `Recurring tool sequence detected ${p.support}× in trace data. Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via \`gad workflow promote ${slug}\` or discard.`,
         trigger: `Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).`,
         participants: {
           skills: [],
@@ -1114,29 +1172,30 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
         parentWorkflow: null,
         relatedPhases: ["42.3"],
         origin: "emergent",
-        mermaidBody: mermaidLines.join("\n"),
+        mermaidBody: "",
         bodyHtml: `<p>Recurring tool sequence detected <strong>${p.support}×</strong>: ${p.labels.join(" → ")}.</p>`,
         file: ".planning/workflows/emergent/ (generated)",
         liveGraph: { nodes, edges },
-        conformance: {
-          score: 0,
-          matched: 0,
-          extra: 0,
-          out_of_order: 0,
-          expected: p.labels.length,
-        },
+        conformance: undefined,
         support: { phases: p.support, stability: 1 },
       };
     });
 }
 
 function synthesizeWorkflowTraceData(workflows) {
-  const events = loadTraceEvents();
+  // Decision gad-175: only consume gad-framework-scoped events when mining
+  // GAD's own workflows. Eval-agent events stay with their own eval/generation.
+  const events = loadTraceEvents({ scope: "gad-framework" });
+  const totalRaw = loadTraceEvents().length;
   if (events.length === 0) {
-    console.log("  [workflow-trace] no trace events — skipping synthesis");
+    console.log(
+      `  [workflow-trace] no gad-framework events (${totalRaw} total; rest are eval-agent scoped) — skipping synthesis`
+    );
     return;
   }
-  console.log(`  [workflow-trace] loaded ${events.length} trace events`);
+  console.log(
+    `  [workflow-trace] loaded ${events.length} gad-framework events (of ${totalRaw} total; ${totalRaw - events.length} filtered as eval-agent)`
+  );
 
   const authored = workflows.filter((w) => w.origin === "authored");
   let matchedCount = 0;
@@ -1687,7 +1746,7 @@ function parsePlanningState() {
 function writeCatalogTs(catalog, requirementsHistory, currentRequirements, findings, planningState) {
   console.log("  [write] lib/catalog.generated.ts");
   const out = `/**
- * Auto-generated from sdk/skills/, sdk/agents/, sdk/templates/, root skills/, and
+ * Auto-generated from skills/, agents/, templates/, and
  * evals/REQUIREMENTS-VERSIONS.md. DO NOT EDIT BY HAND.
  */
 
@@ -1700,7 +1759,7 @@ export interface CatalogSkill {
   authoredOn?: string | null;
   excludedFromDefaultInstall?: boolean;
   frameworkSkill?: boolean;
-  source?: "sdk" | "repo-internal" | null;
+  source?: "framework" | null;
   file: string;
   bodyHtml: string;
   bodyRaw: string;
@@ -2840,3 +2899,4 @@ function validateSiteData() {
 }
 
 main();
+

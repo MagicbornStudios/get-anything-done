@@ -44,15 +44,15 @@ export function PlanningWorkflowsTab({ workflows }: Props) {
         <SectionHeader
           title="Emergent workflows"
           count={emergent.length}
-          blurb="Proto-workflows drafted by the trace-mining detector (phase 42.3-09) when a recurring pattern crosses the support/stability thresholds. Promote to authored via `gad workflow promote <slug>` or discard. Empty until the detector runs for the first time."
+          blurb="Proto-workflows drafted by the trace-mining detector (phase 42.3-09) when a recurring pattern crosses the support/stability thresholds. Emergent workflows are rendered as React Flow graphs only — they have no authored Mermaid because nobody designed them. Promote via `gad workflow promote <slug>` or discard."
           accent="emergent"
         />
-        {emergentTree.length === 0 ? (
-          <EmptyState message="No emergent candidates yet. Phase 42.3-09 will populate this section once the DFG + frequent subgraph mining detector ships." />
+        {emergent.length === 0 ? (
+          <EmptyState message="No emergent candidates yet. Once gad-framework-scoped trace events accumulate (sessions working on GAD itself, not inside eval worktrees), the detector will populate this section." />
         ) : (
-          <div className="space-y-6">
-            {emergentTree.map((node) => (
-              <WorkflowTreeNode key={node.workflow.slug} node={node} depth={0} />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {emergent.map((w) => (
+              <WorkflowCard key={w.slug} workflow={w} compact />
             ))}
           </div>
         )}

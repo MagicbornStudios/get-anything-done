@@ -46,6 +46,8 @@ export interface LiveWorkflow {
 interface Props {
   workflow: LiveWorkflow | null;
   emptyMessage?: string;
+  /** Render smaller (240px) with no MiniMap — used by compact emergent cards. */
+  compact?: boolean;
 }
 
 const KIND_STYLES: Record<LiveWorkflowNodeData["kind"], string> = {
@@ -81,13 +83,18 @@ function LiveWorkflowNode({ data }: NodeProps<Node<LiveWorkflowNodeData>>) {
 // so ReactFlow doesn't warn about unstable `nodeTypes` on every render.
 const NODE_TYPES = { live: LiveWorkflowNode } as const;
 
-export function WorkflowLiveDiagram({ workflow, emptyMessage }: Props) {
+export function WorkflowLiveDiagram({ workflow, emptyMessage, compact = false }: Props) {
   const nodes = useMemo(() => workflow?.nodes ?? [], [workflow]);
   const edges = useMemo(() => workflow?.edges ?? [], [workflow]);
 
+  const heightClass = compact ? "h-56" : "h-[480px]";
+  const emptyHeightClass = compact ? "h-40" : "h-64";
+
   if (!workflow || nodes.length === 0) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center rounded-md border border-dashed border-border/50 bg-muted/20 text-center text-xs text-muted-foreground">
+      <div
+        className={`flex ${emptyHeightClass} flex-col items-center justify-center rounded-md border border-dashed border-border/50 bg-muted/20 text-center text-xs text-muted-foreground`}
+      >
         <span className="font-medium text-foreground/80">No live graph yet</span>
         <span className="mt-1 max-w-md px-4 leading-5">
           {emptyMessage ??
@@ -98,7 +105,7 @@ export function WorkflowLiveDiagram({ workflow, emptyMessage }: Props) {
   }
 
   return (
-    <div className="h-[480px] overflow-hidden rounded-md border border-border/50 bg-background">
+    <div className={`${heightClass} overflow-hidden rounded-md border border-border/50 bg-background`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -110,7 +117,7 @@ export function WorkflowLiveDiagram({ workflow, emptyMessage }: Props) {
         elementsSelectable
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} className="!bg-muted/20" />
-        <MiniMap pannable zoomable className="!bg-muted/40" />
+        {!compact && <MiniMap pannable zoomable className="!bg-muted/40" />}
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>

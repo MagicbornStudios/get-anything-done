@@ -6,7 +6,7 @@ trigger: A bug report, test failure, unexpected behavior, or an in-phase task th
 participants:
   skills: [debug, gad-debug]
   agents: [default, gad-debugger]
-  cli: []
+  cli: [gad state]
   artifacts: [.planning/debug/<slug>.md]
 parent-workflow: gad-discuss-plan-execute
 related-phases: [42.3]
@@ -26,18 +26,19 @@ elimination and makes the investigation log useful to a human later.
 
 ```mermaid
 flowchart TD
-  A[symptom reported] --> B{existing debug session?}
-  B -->|yes| C[resume .planning/debug/<slug>.md]
-  B -->|no| D[gather symptoms: expected, actual, repro, timeline, prior attempts]
-  D --> E[write .planning/debug/<slug>.md]
-  C --> F[form / refine hypotheses]
-  E --> F
-  F --> G[pick one hypothesis to test]
-  G --> H[run minimal test]
-  H --> I{hypothesis confirmed?}
-  I -->|no| J[eliminate, log reason]
-  I -->|yes| K[confirm root cause]
-  J --> F
-  K --> L[fix OR hand off with full investigation log]
-  L --> M[mark session resolved]
+  A[symptom reported] --> B[debug skill activates]
+  B --> C{existing debug session?}
+  C -->|yes| D[resume .planning/debug/<slug>.md]
+  C -->|no| E[gather symptoms: expected, actual, repro, timeline, prior attempts]
+  E --> F[write .planning/debug/<slug>.md]
+  D --> G[gad-debug skill: form or refine hypotheses]
+  F --> G
+  G --> H[pick one hypothesis to test]
+  H --> I[run minimal test]
+  I --> J{hypothesis confirmed?}
+  J -->|no| K[eliminate, log reason]
+  J -->|yes| L[confirm root cause]
+  K --> G
+  L --> M[fix OR hand off with full investigation log]
+  M --> N[mark session resolved]
 ```

@@ -4,7 +4,7 @@ name: GAD Discuss → Plan → Execute
 description: The phase-level loop. Gather context and decisions in a discuss round, commit the design as a PLAN.md, then execute the plan's tasks atomically with per-task commits and attribution.
 trigger: Start of a new phase, or resumption of a phase that has moved from `planned` to `active`.
 participants:
-  skills: [gad-discuss-phase, gad-plan-phase, gad-execute-phase, gad-verify-work]
+  skills: [gad-discuss-phase, gad-plan-phase, gad-execute-phase, gad-verify-work, gad-list-phase-assumptions, task-checkpoint]
   agents: [default, gad-planner, gad-executor]
   cli: [gad snapshot, gad state, gad tasks, gad decisions, gad verify]
   artifacts: [.planning/ROADMAP.xml, .planning/plans/<phase-id>/PLAN.md, .planning/TASK-REGISTRY.xml, .planning/STATE.xml, .planning/DECISIONS.xml]
@@ -26,17 +26,19 @@ to miss a decision that would have reshaped the task list.
 ```mermaid
 flowchart TD
   A[operator names the phase] --> B[gad snapshot]
-  B --> C[discuss round: gather context + assumptions]
-  C --> D{open questions?}
-  D -->|yes| E[spawn gad-decide per question]
-  D -->|no| F[write PLAN.md + KICKOFF.md]
-  E --> F
-  F --> G[task loop: each task runs gad-loop]
-  G --> H{failure?}
-  H -->|yes| I[spawn gad-debug]
-  H -->|no| J{more tasks?}
-  I --> G
-  J -->|yes| G
-  J -->|no| K[gad verify — phase goal met?]
-  K --> L[roadmap entry -> done, phase closeout commit]
+  B --> C[gad-discuss-phase skill: gather context + assumptions]
+  C --> D[gad-list-phase-assumptions skill]
+  D --> E{open questions?}
+  E -->|yes| F[spawn gad-decide per question]
+  E -->|no| G[gad-plan-phase skill: write PLAN.md + KICKOFF.md]
+  F --> G
+  G --> H[gad-execute-phase skill: task loop]
+  H --> I[task-checkpoint skill between tasks]
+  I --> J{failure?}
+  J -->|yes| K[spawn gad-debug]
+  J -->|no| L{more tasks?}
+  K --> H
+  L -->|yes| H
+  L -->|no| M[gad-verify-work skill: phase goal met?]
+  M --> N[roadmap entry -> done, phase closeout commit]
 ```

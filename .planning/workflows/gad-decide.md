@@ -4,9 +4,9 @@ name: GAD Decide
 description: Structured decision pattern — open question from the user, agent gathers options, writes pros/cons, recommends with rationale, user accepts or redirects, commit to DECISIONS.xml.
 trigger: User asks an open question with multiple viable answers that deserves a recorded decision ("should we X or Y?", "what's the best way to Z?").
 participants:
-  skills: []
+  skills: [gad-list-phase-assumptions]
   agents: [default]
-  cli: []
+  cli: [gad decisions]
   artifacts: [.planning/DECISIONS.xml, .planning/STATE.xml]
 parent-workflow: gad-discuss-plan-execute
 related-phases: [42.3]
@@ -27,14 +27,15 @@ ability to pressure-test it.
 
 ```mermaid
 flowchart LR
-  A[user asks open question] --> B[agent gathers viable options]
-  B --> C[agent writes structured pros/cons per option]
-  C --> D[agent names recommendation + rationale]
-  D --> E{user accepts?}
-  E -->|yes| F[add entry to DECISIONS.xml]
-  E -->|redirect| B
-  E -->|defer| G[capture as open question in STATE.xml]
-  F --> H[update STATE.xml next-action if queue changed]
-  G --> H
-  H --> I[commit]
+  A[user asks open question] --> B[gather viable options]
+  B --> C[gad-list-phase-assumptions skill: surface hidden constraints]
+  C --> D[write structured pros/cons per option]
+  D --> E[name recommendation + rationale]
+  E --> F{user accepts?}
+  F -->|yes| G[DECISIONS.xml: gad-NNN entry]
+  F -->|redirect| B
+  F -->|defer| H[STATE.xml: open question logged]
+  G --> I[STATE.xml next-action updated]
+  H --> I
+  I --> J[commit]
 ```

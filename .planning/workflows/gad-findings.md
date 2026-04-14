@@ -4,7 +4,7 @@ name: GAD Findings Authoring
 description: Experiment → raw results → surprise identification → whitepaper writeup → publish. Findings are articles/whitepapers documenting what we tried, what we learned, and what changed in the architecture as a result.
 trigger: An experiment completes (eval round, framework change, research pass) AND produced a result that is surprising, counter-intuitive, or load-bearing for a decision.
 participants:
-  skills: []
+  skills: [eval-report, write-feature-doc]
   agents: [default]
   cli: [gad eval verify, gad eval report]
   artifacts: [vendor/get-anything-done/evals/FINDINGS-YYYY-MM-DD-<slug>.md, site/lib/catalog.generated.ts, site/app/findings/[slug]/page.tsx]
@@ -30,11 +30,11 @@ link to it directly.
 
 ```mermaid
 flowchart LR
-  A[experiment runs] --> B[capture raw results + metrics]
+  A[experiment runs] --> B[eval-report skill: capture raw results + metrics]
   B --> C[identify what is surprising]
   C --> D{worth a finding?}
   D -->|no| E[log in .planning/notes/ only]
-  D -->|yes| F[draft FINDINGS-YYYY-MM-DD-<slug>.md]
+  D -->|yes| F[write-feature-doc skill: draft FINDINGS-YYYY-MM-DD-<slug>.md]
   F --> G[hypothesis, evidence, interpretation, architectural impact]
   G --> H[commit finding file]
   H --> I[build-site-data picks up into FINDINGS catalog]
