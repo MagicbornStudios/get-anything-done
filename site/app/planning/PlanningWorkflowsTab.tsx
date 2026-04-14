@@ -25,6 +25,7 @@ export function PlanningWorkflowsTab({ workflows }: Props) {
   return (
     <Identified as="PlanningWorkflowsTab">
       <div className="space-y-10">
+        <MethodologyCallout />
         <SectionHeader
           title="Authored workflows"
           count={authored.length}
@@ -117,5 +118,60 @@ function EmptyState({ message }: { message: string }) {
     <div className="rounded-md border border-dashed border-border/50 bg-muted/10 px-4 py-6 text-center text-xs text-muted-foreground">
       {message}
     </div>
+  );
+}
+
+/**
+ * Inline methodology callout explaining how the Workflows tab is built —
+ * trace source scoping, detector version, and the v1-vs-v2 target. The
+ * full methodology page is task 42.3-17 (deferred until 42.3-16 deep-dive
+ * lands so the doc reflects the real v2 model). This inline version is
+ * enough to make the tab legible to readers who aren't the operator.
+ */
+function MethodologyCallout() {
+  return (
+    <aside
+      aria-labelledby="workflows-methodology-title"
+      className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-xs leading-6 text-muted-foreground"
+    >
+      <h3
+        id="workflows-methodology-title"
+        className="mb-1.5 text-sm font-semibold text-foreground"
+      >
+        How this tab is built
+      </h3>
+      <p>
+        Authored workflows come from hand-written Markdown files under{" "}
+        <code className="text-foreground/80">.planning/workflows/*.md</code> — each
+        declares expected participants (skills, agents, CLI commands, artifacts)
+        and a Mermaid diagram of the expected shape. The build pipeline
+        (<code className="text-foreground/80">site/scripts/build-site-data.mjs</code>)
+        scans them into the <code className="text-foreground/80">WORKFLOWS</code>
+        {" "}catalog.
+      </p>
+      <p className="mt-2">
+        Live graphs are computed from{" "}
+        <code className="text-foreground/80">.planning/.trace-events.jsonl</code>
+        {" "}filtered to the{" "}
+        <code className="text-foreground/80">gad-framework</code> scope (decision
+        gad-175 — eval-agent events produced inside worktrees are excluded). The
+        v1 detector matches authored participants against observed{" "}
+        <code className="text-foreground/80">tool_use</code> and{" "}
+        <code className="text-foreground/80">file_mutation</code> events and
+        emits a <code className="text-foreground/80">conformance</code> score
+        (<code className="text-foreground/80">max(0, matched − extra) / expected</code>).
+      </p>
+      <p className="mt-2">
+        Emergent candidates come from a simple DFG + n-gram detector over the
+        same trace stream. This is a <strong>v1 tool-level shortcut</strong>{" "}
+        (decision gad-178): the real target is mining{" "}
+        <em>skill invocation</em> sequences, not raw tool names, so the
+        current top patterns (<code className="text-foreground/80">bash × 3</code>,{" "}
+        <code className="text-foreground/80">read → edit → edit</code>) are
+        noise that will be replaced once the detector v2 lands (task
+        42.3-16). The full methodology page is task 42.3-17 and waits on the
+        v2 deep-dive.
+      </p>
+    </aside>
   );
 }
