@@ -129,6 +129,11 @@ function readNextSeq(projectRoot) {
 }
 
 function readActiveSkill(projectRoot) {
+  // Decision gad-178 / phase 42.3-16: prefer GAD_ACTIVE_SKILL set by the
+  // top-level `gad --skill <slug>` flag, since that's the most direct
+  // way a skill can identify itself during CLI work. Fall back to the
+  // legacy marker file for non-CLI skill transitions.
+  if (process.env.GAD_ACTIVE_SKILL) return process.env.GAD_ACTIVE_SKILL;
   try {
     const content = fs.readFileSync(getMarkerFile(projectRoot), 'utf8').trim();
     return content || null;

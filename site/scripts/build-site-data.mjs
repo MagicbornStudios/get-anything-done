@@ -424,12 +424,24 @@ function scanEvalProjects() {
     if (!exists(gadJsonPath)) continue;
     try {
       const data = JSON.parse(fs.readFileSync(gadJsonPath, "utf8"));
+      // Decision gad-179 / phase 42.4-03: `contextFramework` is the canonical
+      // per-project framework identifier going forward. We read the new
+      // `context_framework` field first; fall back to the legacy `workflow`
+      // field (which historically held the same axis: "gad", "bare",
+      // "gsd", "emergent", ...) so existing gad.json files don't need a
+      // mass migration. The value `emergent` folds into `custom` per
+      // decision gad-164 since it's no longer a first-class matrix
+      // condition (gad-166).
+      const rawFramework = data.context_framework || data.workflow || null;
+      const contextFramework =
+        rawFramework === "emergent" ? "custom" : rawFramework;
       projects.push({
         id: name,
         name,
         description: data.description || null,
         evalMode: data.eval_mode || null,
         workflow: data.workflow || null,
+        contextFramework,
         baseline: data.baseline || null,
         constraints: data.constraints || null,
         scoringWeights: data.scoring?.weights || null,
@@ -1139,18 +1151,28 @@ function computeConformance(workflow, observedNodes) {
 }
 
 /**
- * Simple DFG + frequent n-gram detector (decision gad-174 v1).
- * Builds a sequence of tool names from tool_use events, slides a window of
- * length [min_length..max_length], and counts each resulting tuple. Any tuple
- * with support ≥ min_support becomes an emergent candidate. Tuples dominated
- * by another, longer, equally-supported tuple are suppressed. Returns
- * Workflow-shaped entries so the catalog and /planning tab can render them
- * alongside authored workflows via the same components.
+ * DFG + frequent n-gram detector.
+ *
+ * v2 target (decision gad-178): mine SKILL invocation sequences via
+ * `trigger_skill` tags that CLI-aware skills stamp through
+ * `gad --skill <slug>`. Skill-level patterns are the real signal.
+ *
+ * v1 fallback: if no events carry a `trigger_skill` yet, fall back to
+ * mining raw tool names. Tool-level candidates are clearly labeled as
+ * v1 so the UI can badge them differently from real skill patterns.
  */
 function detectEmergentWorkflows(events, authoredWorkflows) {
-  const sequence = events
-    .filter((e) => e && e.type === "tool_use" && e.tool)
-    .map((e) => e.tool);
+  const taggedEvents = events.filter((e) => e && e.type === "tool_use" && e.trigger_skill);
+  const useSkillStream = taggedEvents.length >= WORKFLOW_MINE_THRESHOLDS.min_length;
+
+  const sourceLabel = useSkillStream ? "skill-level (v2)" : "tool-level (v1 fallback)";
+  console.log(
+    `  [workflow-trace] emergent source: ${sourceLabel} — ${useSkillStream ? taggedEvents.length + " tagged events" : "no trigger_skill tags yet, mining raw tool names"}`
+  );
+
+  const sequence = useSkillStream
+    ? taggedEvents.map((e) => e.trigger_skill)
+    : events.filter((e) => e && e.type === "tool_use" && e.tool).map((e) => e.tool);
 
   if (sequence.length < WORKFLOW_MINE_THRESHOLDS.min_length) return [];
 
@@ -1209,10 +1231,15 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
       // They have no designed shape — the React Flow live graph IS the
       // emergent workflow. mermaidBody stays empty so WorkflowCard knows
       // to render a single-column (React-Flow-only) layout.
+      const detectorLabel = useSkillStream ? "skill-level (v2)" : "tool-level (v1)";
+      const descriptionPrefix = useSkillStream
+        ? `Recurring skill invocation sequence detected ${p.support}× in trace data (detector v2 — skill-level).`
+        : `Recurring tool-use sequence detected ${p.support}× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via \`gad --skill\`).`;
       return {
         slug,
         name: `${p.labels.join(" → ")}`,
-        description: `Recurring tool sequence detected ${p.support}× in trace data. Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via \`gad workflow promote ${slug}\` or discard.`,
+        description: `${descriptionPrefix} Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via \`gad workflow promote ${slug}\` or discard.`,
+        detector: detectorLabel,
         trigger: `Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).`,
         participants: {
           skills: [],
@@ -1928,6 +1955,8 @@ export interface Workflow {
   conformance?: WorkflowConformance;
   /** Only present on emergent workflows — detector support metrics. */
   support?: WorkflowEmergentSupport;
+  /** Only present on emergent workflows — which detector produced the candidate. */
+  detector?: "skill-level (v2)" | "tool-level (v1)";
 }
 
 /**
@@ -2634,7 +2663,10 @@ export interface EvalProjectMeta {
   name: string;
   description: string | null;
   evalMode: string | null;
+  /** @deprecated Use contextFramework. Legacy field from gad.json workflow key. */
   workflow: string | null;
+  /** Canonical context framework slug per decision gad-179; resolves context_framework or workflow from gad.json. */
+  contextFramework: string | null;
   baseline: string | { project?: string; version?: string; source?: string } | null;
   constraints: Record<string, unknown> | null;
   scoringWeights: Record<string, number> | null;

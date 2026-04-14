@@ -65,6 +65,15 @@ export function WorkflowCard({ workflow, depth = 0, compact = false }: Props) {
                 {support.phases}× support
               </Badge>
             )}
+            {workflow.detector && (
+              <Badge
+                variant="outline"
+                className={`text-[9px] ${workflow.detector.startsWith("skill") ? "border-sky-500/40" : "border-amber-500/40 text-amber-200/80"}`}
+                title={workflow.detector.startsWith("skill") ? "Mined from trigger_skill-tagged events" : "v1 fallback — raw tool-name mining; will be replaced once skills tag via --skill"}
+              >
+                {workflow.detector}
+              </Badge>
+            )}
           </div>
           <h3
             id={`workflow-${workflow.slug}-title`}

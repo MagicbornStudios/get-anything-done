@@ -5592,12 +5592,12 @@ const snapshotCmd = defineCommand({
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
     const sdkAssetAliases = {
-      '@skills': 'sdk/skills',
-      '@workflows': 'sdk/workflows',
-      '@templates': 'sdk/templates',
-      '@references': 'sdk/references',
-      '@agents': 'sdk/agents',
-      '@hooks': 'sdk/hooks',
+      '@skills': 'skills',
+      '@workflows': 'workflows',
+      '@templates': 'templates',
+      '@references': 'references',
+      '@agents': 'agents',
+      '@hooks': 'hooks',
     };
 
     if (useFull) {
@@ -5863,12 +5863,12 @@ const snapshotV2Cmd = defineCommand({
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
     const sdkAssetAliases = {
-      '@skills': 'sdk/skills',
-      '@workflows': 'sdk/workflows',
-      '@templates': 'sdk/templates',
-      '@references': 'sdk/references',
-      '@agents': 'sdk/agents',
-      '@hooks': 'sdk/hooks',
+      '@skills': 'skills',
+      '@workflows': 'workflows',
+      '@templates': 'templates',
+      '@references': 'references',
+      '@agents': 'agents',
+      '@hooks': 'hooks',
     };
     const phases = readPhases(root, baseDir);
     const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
@@ -8597,10 +8597,10 @@ const evolutionValidate = defineCommand({
 });
 
 const evolutionPromote = defineCommand({
-  meta: { name: 'promote', description: 'Promote a proto-skill into sdk/skills/ (joins species DNA)' },
+  meta: { name: 'promote', description: 'Promote a proto-skill into skills/ (joins species DNA)' },
   args: {
     slug: { type: 'positional', description: 'proto-skill slug', required: true },
-    name: { type: 'string', description: 'final skill name in sdk/skills/ (defaults to slug)', required: false },
+    name: { type: 'string', description: 'final skill name in skills/ (defaults to slug)', required: false },
   },
   run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
@@ -9001,4 +9001,32 @@ const main = defineCommand({
   if (!known.has(first)) return;
 })();
 
+/**
+ * Top-level --skill <slug> tagger (decision gad-178 / phase 42.3-16).
+ * Any `gad <cmd> --skill <slug>` invocation sets GAD_ACTIVE_SKILL in the
+ * environment so the trace hook can stamp the emitted tool_use events
+ * with `trigger_skill`. This is how skills that work by running CLI
+ * commands (gad-next, check-todos, task-checkpoint, etc.) become
+ * visible in the trace stream without having to wrap themselves in an
+ * explicit Skill tool call. The flag is stripped from argv before
+ * citty parses so sub-commands don't see it as an unknown arg.
+ */
+(function extractActiveSkillFlag() {
+  const a = process.argv;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === '--skill' && i + 1 < a.length) {
+      process.env.GAD_ACTIVE_SKILL = a[i + 1];
+      a.splice(i, 2);
+      return;
+    }
+    const eq = a[i] && a[i].startsWith('--skill=') ? a[i].slice('--skill='.length) : null;
+    if (eq) {
+      process.env.GAD_ACTIVE_SKILL = eq;
+      a.splice(i, 1);
+      return;
+    }
+  }
+})();
+
 runMain(main);
+
