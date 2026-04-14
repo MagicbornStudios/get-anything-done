@@ -794,6 +794,10 @@ function scanCatalog() {
   catalog.inheritance = inheritanceMap;
 
   catalog.workflows = parseWorkflows();
+  // Live/emergent synthesis reads trace events and enriches workflow entries
+  // in place. Authored workflows gain `liveGraph` and `conformance`; emergent
+  // workflows are appended to the same array with `origin: "emergent"`.
+  synthesizeWorkflowTraceData(catalog.workflows);
 
   console.log(
     `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} templates=${catalog.templates.length} workflows=${catalog.workflows.length}`
@@ -852,6 +856,310 @@ function parseWorkflows() {
   }
   console.log(`  [workflows] parsed ${out.length} workflow(s) from ${path.relative(REPO_ROOT, WORKFLOWS_DIR)}`);
   return out;
+}
+
+// -------------------------------------------------------------------------
+// Workflow trace synthesis (phase 42.3-04 + 42.3-09)
+// Reads `.planning/.trace-events.jsonl`, derives:
+//   1. An "actual graph" per authored workflow by matching expected
+//      participants against real tool_use/file_mutation events.
+//   2. A `workflow_conformance` score per authored workflow.
+//   3. Emergent workflow candidates via a simple DFG + n-gram frequency
+//      mine over tool_use sequences.
+// v1 is deterministic, pure Node, no dependencies — decision gad-174.
+// -------------------------------------------------------------------------
+
+const TRACE_EVENTS_PATH = path.join(REPO_ROOT, ".planning", ".trace-events.jsonl");
+
+const WORKFLOW_MINE_THRESHOLDS = {
+  min_support: 3,
+  min_length: 3,
+  max_length: 5,
+  max_emergent: 12,
+};
+
+function loadTraceEvents() {
+  if (!exists(TRACE_EVENTS_PATH)) return [];
+  const raw = fs.readFileSync(TRACE_EVENTS_PATH, "utf8").split(/\r?\n/).filter(Boolean);
+  const out = [];
+  for (const line of raw) {
+    try {
+      out.push(JSON.parse(line));
+    } catch {
+      // skip malformed lines
+    }
+  }
+  return out;
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Build a matcher set from an authored workflow's participants.
+ * CLI entries become regex prefixes; artifacts become substring checks
+ * (with <slug> wildcards stripped); agent/skill entries match trigger_skill
+ * and agent identity when present in the trace.
+ */
+function buildParticipantMatchers(workflow) {
+  const cli = (workflow.participants.cli || []).map((c) => ({
+    kind: "cli",
+    label: c,
+    regex: new RegExp("^\\s*" + escapeRegExp(c.trim().split(/\s+/)[0]) + "\\b", "i"),
+    prefix: c.trim(),
+  }));
+  const artifacts = (workflow.participants.artifacts || []).map((a) => ({
+    kind: "artifact",
+    label: a,
+    needle: a.replace(/<[^>]+>/g, "").replace(/\\/g, "/").toLowerCase(),
+  }));
+  const skills = (workflow.participants.skills || []).map((s) => ({ kind: "skill", label: s }));
+  const agents = (workflow.participants.agents || []).map((a) => ({ kind: "agent", label: a }));
+  return { cli, artifacts, skills, agents };
+}
+
+function matchEventToParticipant(evt, matchers) {
+  if (evt.type === "tool_use" && evt.tool === "Bash") {
+    const cmd = (evt.inputs && evt.inputs.command) || "";
+    for (const m of matchers.cli) {
+      if (m.regex.test(cmd) && cmd.toLowerCase().includes(m.prefix.toLowerCase())) {
+        return { kind: "cli", label: m.label };
+      }
+    }
+  }
+
+  const touched =
+    evt.type === "file_mutation"
+      ? evt.path
+      : evt.type === "tool_use" && evt.inputs && (evt.inputs.file_path || evt.inputs.notebook_path)
+        ? evt.inputs.file_path || evt.inputs.notebook_path
+        : null;
+
+  if (touched) {
+    const haystack = String(touched).replace(/\\/g, "/").toLowerCase();
+    for (const m of matchers.artifacts) {
+      if (!m.needle) continue;
+      if (haystack.includes(m.needle)) return { kind: "artifact", label: m.label };
+    }
+  }
+
+  if (evt.trigger_skill) {
+    for (const m of matchers.skills) {
+      if (m.label.toLowerCase() === String(evt.trigger_skill).toLowerCase()) {
+        return { kind: "skill", label: m.label };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Collapse a sequence of matched nodes into a directed graph.
+ * Consecutive duplicates collapse to a single node with an incremented count;
+ * temporal adjacency becomes edges. Returns React-Flow-shaped nodes/edges.
+ */
+function sequenceToGraph(sequence, workflowSlug) {
+  if (sequence.length === 0) return { nodes: [], edges: [] };
+
+  const collapsed = [];
+  for (const step of sequence) {
+    const last = collapsed[collapsed.length - 1];
+    if (last && last.label === step.label && last.kind === step.kind) {
+      last.count = (last.count ?? 1) + 1;
+    } else {
+      collapsed.push({ ...step, count: 1 });
+    }
+  }
+
+  const nodes = collapsed.map((step, i) => ({
+    id: `${workflowSlug}-n${i}`,
+    type: "live",
+    position: { x: (i % 4) * 220, y: Math.floor(i / 4) * 120 },
+    data: { label: step.label, kind: step.kind, count: step.count },
+  }));
+
+  const edges = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    edges.push({
+      id: `${workflowSlug}-e${i}`,
+      source: nodes[i].id,
+      target: nodes[i + 1].id,
+      animated: false,
+    });
+  }
+
+  return { nodes, edges };
+}
+
+/**
+ * workflow_conformance v1 formula per decision gad-173:
+ *   (matching_nodes − extra_nodes − out_of_order_nodes) / expected_nodes
+ * For v1 we approximate by counting how many authored participants were
+ * observed at least once (matching) and how many unique observed nodes had
+ * no authored counterpart (extra). Out-of-order tracking is deferred until
+ * explicit workflow_enter/workflow_exit events land in the trace schema.
+ */
+function computeConformance(workflow, observedNodes) {
+  const expected = new Set();
+  for (const c of workflow.participants.cli || []) expected.add(`cli:${c}`);
+  for (const a of workflow.participants.artifacts || []) expected.add(`artifact:${a}`);
+  for (const s of workflow.participants.skills || []) expected.add(`skill:${s}`);
+  const expectedCount = expected.size || 1;
+
+  const observedKeys = new Set();
+  for (const n of observedNodes) observedKeys.add(`${n.data.kind}:${n.data.label}`);
+
+  let matched = 0;
+  let extra = 0;
+  for (const key of observedKeys) {
+    if (expected.has(key)) matched += 1;
+    else extra += 1;
+  }
+
+  const score = Math.max(0, matched - extra) / expectedCount;
+  return {
+    score: Math.round(score * 1000) / 1000,
+    matched,
+    extra,
+    out_of_order: 0,
+    expected: expectedCount,
+  };
+}
+
+/**
+ * Simple DFG + frequent n-gram detector (decision gad-174 v1).
+ * Builds a sequence of tool names from tool_use events, slides a window of
+ * length [min_length..max_length], and counts each resulting tuple. Any tuple
+ * with support ≥ min_support becomes an emergent candidate. Tuples dominated
+ * by another, longer, equally-supported tuple are suppressed. Returns
+ * Workflow-shaped entries so the catalog and /planning tab can render them
+ * alongside authored workflows via the same components.
+ */
+function detectEmergentWorkflows(events, authoredWorkflows) {
+  const sequence = events
+    .filter((e) => e && e.type === "tool_use" && e.tool)
+    .map((e) => e.tool);
+
+  if (sequence.length < WORKFLOW_MINE_THRESHOLDS.min_length) return [];
+
+  const counts = new Map();
+  for (let len = WORKFLOW_MINE_THRESHOLDS.min_length; len <= WORKFLOW_MINE_THRESHOLDS.max_length; len++) {
+    for (let i = 0; i <= sequence.length - len; i++) {
+      const key = sequence.slice(i, i + len).join("→");
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+  }
+
+  // Filter to support threshold, rank by (length * support) for interest.
+  const raw = [];
+  for (const [key, count] of counts.entries()) {
+    if (count < WORKFLOW_MINE_THRESHOLDS.min_support) continue;
+    const labels = key.split("→");
+    raw.push({ key, labels, support: count, score: labels.length * count });
+  }
+  raw.sort((a, b) => b.score - a.score);
+
+  // Suppress tuples that are prefixes of longer tuples with equal support.
+  const picked = [];
+  for (const cand of raw) {
+    const dominated = picked.some(
+      (p) =>
+        p.support === cand.support &&
+        p.labels.length > cand.labels.length &&
+        p.key.startsWith(cand.key)
+    );
+    if (!dominated) picked.push(cand);
+    if (picked.length >= WORKFLOW_MINE_THRESHOLDS.max_emergent) break;
+  }
+
+  // Ground-truth filter: drop candidates that are substrings of any authored
+  // workflow participant set (i.e. not genuinely emergent, just re-derived).
+  const authoredSignatures = new Set();
+  for (const w of authoredWorkflows) {
+    authoredSignatures.add((w.participants.cli || []).join("→"));
+  }
+
+  return picked
+    .filter((p) => !authoredSignatures.has(p.key))
+    .map((p, idx) => {
+      const slug = `emergent-${p.labels.map((l) => l.toLowerCase()).join("-")}-${p.support}-${idx}`;
+      const nodes = p.labels.map((label, i) => ({
+        id: `${slug}-n${i}`,
+        type: "live",
+        position: { x: (i % 4) * 220, y: Math.floor(i / 4) * 120 },
+        data: { label, kind: "skill", count: p.support },
+      }));
+      const edges = [];
+      for (let i = 0; i < nodes.length - 1; i++) {
+        edges.push({ id: `${slug}-e${i}`, source: nodes[i].id, target: nodes[i + 1].id });
+      }
+      const mermaidLines = [
+        "flowchart LR",
+        ...p.labels.map((l, i) => `  n${i}[${l}]`),
+        ...p.labels.slice(0, -1).map((_, i) => `  n${i} --> n${i + 1}`),
+      ];
+      return {
+        slug,
+        name: `Emergent: ${p.labels.join(" → ")}`,
+        description: `Recurring tool-use sequence detected ${p.support}× in trace data. Not hand-authored. Promote to a real workflow via \`gad workflow promote ${slug}\` or discard.`,
+        trigger: `Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).`,
+        participants: {
+          skills: [],
+          agents: [],
+          cli: [],
+          artifacts: [],
+        },
+        parentWorkflow: null,
+        relatedPhases: ["42.3"],
+        origin: "emergent",
+        mermaidBody: mermaidLines.join("\n"),
+        bodyHtml: `<p>Recurring tool sequence detected <strong>${p.support}×</strong>: ${p.labels.join(" → ")}.</p>`,
+        file: ".planning/workflows/emergent/ (generated)",
+        liveGraph: { nodes, edges },
+        conformance: {
+          score: 0,
+          matched: 0,
+          extra: 0,
+          out_of_order: 0,
+          expected: p.labels.length,
+        },
+        support: { phases: p.support, stability: 1 },
+      };
+    });
+}
+
+function synthesizeWorkflowTraceData(workflows) {
+  const events = loadTraceEvents();
+  if (events.length === 0) {
+    console.log("  [workflow-trace] no trace events — skipping synthesis");
+    return;
+  }
+  console.log(`  [workflow-trace] loaded ${events.length} trace events`);
+
+  const authored = workflows.filter((w) => w.origin === "authored");
+  let matchedCount = 0;
+  for (const workflow of authored) {
+    const matchers = buildParticipantMatchers(workflow);
+    const matched = [];
+    for (const evt of events) {
+      const hit = matchEventToParticipant(evt, matchers);
+      if (hit) matched.push(hit);
+    }
+    if (matched.length === 0) continue;
+    matchedCount += 1;
+    const graph = sequenceToGraph(matched, workflow.slug);
+    workflow.liveGraph = graph;
+    workflow.conformance = computeConformance(workflow, graph.nodes);
+  }
+  console.log(
+    `  [workflow-trace] synthesized live graphs for ${matchedCount}/${authored.length} authored workflow(s)`
+  );
+
+  const emergent = detectEmergentWorkflows(events, authored);
+  for (const e of emergent) workflows.push(e);
+  console.log(`  [workflow-trace] detected ${emergent.length} emergent candidate(s)`);
 }
 
 // -------------------------------------------------------------------------
@@ -1458,6 +1766,40 @@ export interface WorkflowParticipants {
   cli: string[];
   artifacts: string[];
 }
+export interface WorkflowLiveGraphNode {
+  id: string;
+  type: "live";
+  position: { x: number; y: number };
+  data: {
+    label: string;
+    kind: "skill" | "agent" | "cli" | "artifact" | "decision";
+    count?: number;
+  };
+}
+export interface WorkflowLiveGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  animated?: boolean;
+}
+export interface WorkflowLiveGraph {
+  nodes: WorkflowLiveGraphNode[];
+  edges: WorkflowLiveGraphEdge[];
+}
+export interface WorkflowConformance {
+  /** (matching − extra − out_of_order) / expected — advisory score per gad-173 */
+  score: number;
+  matched: number;
+  extra: number;
+  out_of_order: number;
+  expected: number;
+}
+export interface WorkflowEmergentSupport {
+  /** Number of distinct instances the pattern was observed in. */
+  phases: number;
+  /** Edge stability across instances (0..1). v1 always reports 1. */
+  stability: number;
+}
 export interface Workflow {
   slug: string;
   name: string;
@@ -1470,6 +1812,12 @@ export interface Workflow {
   mermaidBody: string;
   bodyHtml: string;
   file: string;
+  /** Computed actual graph for authored workflows (populated when trace data exists). */
+  liveGraph?: WorkflowLiveGraph;
+  /** Conformance score vs. authored expected graph (advisory). */
+  conformance?: WorkflowConformance;
+  /** Only present on emergent workflows — detector support metrics. */
+  support?: WorkflowEmergentSupport;
 }
 
 export interface PlanningTask {

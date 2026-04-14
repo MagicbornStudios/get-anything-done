@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>42.1</current-phase>
+  <current-phase>42.3</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
@@ -43,15 +43,15 @@ Shipped across phase 42.3 opening:
 - 42.3-06 done: open design questions resolved (decision gad-173)
 - 42.3-07 done: remaining four workflows shipped alongside 42.3-02
 
-Phase 42.3 remaining:
-- 42.3-04 — trace synthesis (actual graph from .gad-log events, authored-workflow validator)
-- 42.3-05 — /planning Workflows tab with expected/actual/diff rendering
-- 42.3-08 — metric rename framework_compliance → workflow_conformance
-- 42.3-09 — emergent workflow detector v1 (DFG + frequent subgraph mining, pure Node)
-- 42.3-10 — proto-workflow filesystem layout (.planning/workflows/emergent/)
-- 42.3-11 — `gad workflow status|validate|promote|discard` CLI
-- 42.3-12 — emergent section on /planning Workflows tab (dashed green)
-- 42.3-13 — noise panel (deferred, ships after 42.3-09..12 prove useful)
+Phase 42.3 complete except for noise panel:
+- 42.3-04 done — trace synthesis emits liveGraph + conformance per authored workflow
+- 42.3-05 done — /planning Workflows tab live with all three sections
+- 42.3-08 done — metric rename: workflow_conformance is now primary, framework_compliance deprecated alias
+- 42.3-09 done — DFG + n-gram detector v1 finds 12 emergent candidates from 1000 trace events
+- 42.3-10 done — .planning/workflows/emergent/README.md schema + lifecycle
+- 42.3-11 done — `gad workflow status|validate|promote|discard` live; promote writes full authored md with provenance block
+- 42.3-12 done — emergent section on /planning Workflows tab renders candidates via same WorkflowCard component
+- 42.3-13 REMAINING — noise panel (raw event timeline + unmatched force-directed graph), still deferred until 42.3-04/09 prove useful in practice
 
 Also tightened:
 - 44.5-02 dev-server bridge is now "accept any gad/npx in NODE_ENV=development" for the first cut. New task 44.5-02b captures the hardening pass (allow-list, arg sanitization) as a deferred follow-up.</next-action>

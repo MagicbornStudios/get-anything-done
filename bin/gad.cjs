@@ -61,7 +61,7 @@ const pkg = require('../package.json');
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Resolve repo root from cwd (looks for gad-config.toml / legacy planning-config.toml up the tree). */
+/** Resolve repo root from cwd (looks for gad-config.toml / legacy planning-config.toml / compat JSON up the tree). */
 function readXmlFile(filePath) {
   try { return fs.readFileSync(filePath, 'utf8'); } catch { return null; }
 }
@@ -69,7 +69,11 @@ function readXmlFile(filePath) {
 function findRepoRoot(start) {
   let dir = start || process.cwd();
   for (let i = 0; i < 10; i++) {
-    if (resolveTomlPath(dir) || fs.existsSync(path.join(dir, 'config.json'))) {
+    if (
+      resolveTomlPath(dir) ||
+      fs.existsSync(path.join(dir, '.planning', 'config.json')) ||
+      fs.existsSync(path.join(dir, 'config.json'))
+    ) {
       return dir;
     }
     const parent = path.dirname(dir);
@@ -592,7 +596,7 @@ const workspaceIgnore = defineCommand({
 });
 
 const workspaceCmd = defineCommand({
-  meta: { name: 'workspace', description: 'Manage planning workspace roots' },
+  meta: { name: 'workspace', description: 'Manage planning-root workspace registry (not git worktrees)' },
   subCommands: {
     show: workspaceShow,
     sync: workspaceSync,
@@ -6779,6 +6783,7 @@ function writeRootsToToml(baseDir, roots, config) {
       lines.push('');
     }
     fs.writeFileSync(tomlPath, lines.join('\n'));
+    try { gadConfig.writeCompatJson(baseDir, { ...config, roots }); } catch {}
     return;
   }
 
@@ -6798,6 +6803,7 @@ function writeRootsToToml(baseDir, roots, config) {
   ].join('\n')).join('\n');
 
   fs.writeFileSync(tomlPath, toml + '\n' + rootsSection + '\n');
+  try { gadConfig.writeCompatJson(baseDir, { ...config, roots }); } catch {}
 }
 
 function appendIgnoreToToml(baseDir, pattern) {
@@ -6811,6 +6817,10 @@ function appendIgnoreToToml(baseDir, pattern) {
     toml += `\nignore = ["${pattern}"]\n`;
   }
   fs.writeFileSync(tomlPath, toml);
+  try {
+    const nextConfig = gadConfig.load(baseDir);
+    gadConfig.writeCompatJson(baseDir, nextConfig);
+  } catch {}
 }
 
 // ---------------------------------------------------------------------------
@@ -7653,6 +7663,11 @@ function listGitWorktrees() {
         if (current) current.branch = line.slice(7).trim().replace('refs/heads/', '');
       } else if (line.startsWith('detached')) {
         if (current) current.detached = true;
+      } else if (line.startsWith('prunable')) {
+        if (current) {
+          current.prunable = true;
+          current.prunableReason = line.slice('prunable'.length).trim() || '';
+        }
       }
     }
     if (current) worktrees.push(current);
@@ -7689,6 +7704,9 @@ function worktreeInfo(worktree) {
     info.age = '?';
     info.ageMs = Infinity;
   }
+  info.exists = fs.existsSync(worktree.path);
+  info.isOrphaned = !info.exists;
+  info.isStale = Boolean(worktree.prunable) || info.isOrphaned;
   // Is this an agent worktree?
   info.isAgent = worktree.path.includes('.claude/worktrees/agent-') || worktree.path.includes('.claude\\worktrees\\agent-');
   // Size
@@ -7703,8 +7721,41 @@ function worktreeInfo(worktree) {
   return info;
 }
 
+const worktreeNew = defineCommand({
+  meta: { name: 'new', description: 'Create a git worktree for eval or normal project work' },
+  args: {
+    path: { type: 'positional', description: 'Destination path for the worktree', required: true },
+    branch: { type: 'string', description: 'Branch name to create/use (default: derived from path)', default: '' },
+    base: { type: 'string', description: 'Base ref/branch to branch from (default: HEAD)', default: 'HEAD' },
+    detach: { type: 'boolean', description: 'Create a detached worktree at the base ref', default: false },
+  },
+  run({ args }) {
+    const targetPath = path.resolve(process.cwd(), args.path);
+    if (fs.existsSync(targetPath)) {
+      outputError(`Worktree path already exists: ${targetPath}`);
+      return;
+    }
+    const branchName = args.detach
+      ? ''
+      : (args.branch || path.basename(targetPath).replace(/[^A-Za-z0-9._/-]+/g, '-'));
+    const { execSync } = require('child_process');
+    try {
+      if (args.detach) {
+        execSync(`git worktree add --detach "${targetPath}" "${args.base}"`, { stdio: 'pipe' });
+      } else {
+        execSync(`git worktree add -b "${branchName}" "${targetPath}" "${args.base}"`, { stdio: 'pipe' });
+      }
+      console.log(`✓ Worktree created: ${targetPath}`);
+      if (branchName) console.log(`  Branch: ${branchName}`);
+      console.log(`  Base:   ${args.base}`);
+    } catch (e) {
+      outputError(`Failed to create worktree: ${e.message}`);
+    }
+  },
+});
+
 const worktreeList = defineCommand({
-  meta: { name: 'list', description: 'List all git worktrees with status (game, build, planning, age)' },
+  meta: { name: 'list', description: 'List all git worktrees with status (eval + project worktrees, stale/orphan detection)' },
   args: {
     'agent-only': { type: 'boolean', description: 'Only show agent worktrees', default: false },
     json: { type: 'boolean', description: 'Output JSON', default: false },
@@ -7724,7 +7775,7 @@ const worktreeList = defineCommand({
     }
 
     console.log('Git Worktrees\n');
-    console.log('ID/BRANCH                            AGE   GAME  BUILD  PLAN  PATH');
+    console.log('ID/BRANCH                            AGE   GAME  BUILD  PLAN  FLAGS        PATH');
     console.log('───────────────────────────────────  ────  ────  ─────  ────  ─────────────────────────────');
     for (const w of filtered) {
       const id = (w.branch || w.head || '').slice(0, 35).padEnd(35);
@@ -7732,8 +7783,14 @@ const worktreeList = defineCommand({
       const game = w.hasGame ? ' ✓ ' : ' - ';
       const build = w.hasBuild ? '  ✓  ' : '  -  ';
       const plan = w.hasPlanning ? ' ✓ ' : ' - ';
+      const flags = [
+        w.isAgent ? 'agent' : null,
+        w.isOrphaned ? 'orphan' : null,
+        w.prunable ? 'prunable' : null,
+      ].filter(Boolean).join(',');
+      const flagsText = (flags || '-').padEnd(10);
       const relPath = path.relative(process.cwd(), w.path).replace(/\\/g, '/');
-      console.log(`${id}  ${age}  ${game}  ${build}  ${plan}  ${relPath}`);
+      console.log(`${id}  ${age}  ${game}  ${build}  ${plan}  ${flagsText}  ${relPath}`);
     }
     console.log(`\n${filtered.length} worktree(s)`);
     const agentCount = filtered.filter(w => w.isAgent).length;
@@ -7766,6 +7823,9 @@ const worktreeShow = defineCommand({
     console.log(`  HEAD:       ${w.head || '?'}`);
     console.log(`  Age:        ${w.age || '?'}`);
     console.log(`  Is agent:   ${w.isAgent ? 'yes' : 'no'}`);
+    console.log(`  Exists:     ${w.exists ? 'yes' : 'no'}`);
+    console.log(`  Orphaned:   ${w.isOrphaned ? 'yes' : 'no'}`);
+    console.log(`  Prunable:   ${w.prunable ? `yes${w.prunableReason ? ` (${w.prunableReason})` : ''}` : 'no'}`);
     console.log(`  Has game/:  ${w.hasGame ? 'yes' : 'no'}`);
     console.log(`  Has build:  ${w.hasBuild ? 'yes' : 'no'}`);
     console.log(`  Has .planning/: ${w.hasPlanning ? 'yes' : 'no'}`);
@@ -7908,8 +7968,8 @@ const worktreePrune = defineCommand({
 });
 
 const worktreeCmd = defineCommand({
-  meta: { name: 'worktree', description: 'Manage git worktrees used by eval agents' },
-  subCommands: { list: worktreeList, show: worktreeShow, clean: worktreeClean, prune: worktreePrune },
+  meta: { name: 'worktree', description: 'Manage git worktrees for eval agents and normal project work' },
+  subCommands: { new: worktreeNew, list: worktreeList, show: worktreeShow, clean: worktreeClean, prune: worktreePrune },
 });
 
 // ---------------------------------------------------------------------------
@@ -7952,7 +8012,7 @@ const versionCmd = defineCommand({
 // or statusline config.
 //
 // Framework-wide install (skills, agents, commands, templates) delegates to
-// the existing bin/install.js which ships with the full GSD-pattern cross-
+// the existing bin/install.js which ships with the full cross-runtime install
 // runtime installer (--claude --cursor --codex --all etc). This wrapper just
 // invokes it via child_process for the framework subcommand.
 
@@ -8258,7 +8318,8 @@ const selfEvalCmd = defineCommand({
     console.log(`Events: ${m.totals.events} | Sessions: ${m.totals.sessions} | CLI calls: ${m.totals.gad_cli_calls}`);
     console.log(`Tasks: ${m.tasks.done}/${m.tasks.total} done | Decisions: ${m.decisions}`);
     console.log(`\nFramework overhead: ${(m.framework_overhead.ratio * 100).toFixed(1)}% (score: ${m.framework_overhead.score})`);
-    console.log(`Loop compliance: ${(m.loop_compliance.score * 100).toFixed(0)}% (${m.loop_compliance.snapshot_starts}/${m.loop_compliance.total_sessions} sessions)`);
+    console.log(`Framework compliance: ${(m.framework_compliance.score * 100).toFixed(0)}% (${m.framework_compliance.fully_attributed}/${m.framework_compliance.completed_tasks} done tasks fully attributed)`);
+    console.log(`Hydration overhead: ${(m.hydration.overhead_ratio * 100).toFixed(1)}% (${m.hydration.snapshot_count} snapshots, ${m.hydration.estimated_snapshot_tokens} est tokens)`);
 
     if (m.phases_pressure && m.phases_pressure.length > 0) {
       console.log('\nPressure per phase (top 10):');
@@ -8656,6 +8717,220 @@ const evolutionCmd = defineCommand({
   },
 });
 
+// -------------------------------------------------------------------------
+// workflow subcommands (phase 42.3-11) — status/validate/promote/discard
+// for hand-authored + emergent workflows. Decision gad-174.
+//
+// Mirrors the `gad evolution` surface so users learn one mental model.
+// Authored workflows live at .planning/workflows/<slug>.md. Emergent
+// candidates are surfaced via `compute-self-eval` / `build-site-data`
+// mining trace events; promotion persists the detector's best candidate
+// to .planning/workflows/<slug>.md with an inlined PROVENANCE block.
+// -------------------------------------------------------------------------
+
+const workflowPaths = (repoRoot) => ({
+  workflowsDir: path.join(repoRoot, '.planning', 'workflows'),
+  emergentDir: path.join(repoRoot, '.planning', 'workflows', 'emergent'),
+  catalogFile: path.join(repoRoot, 'site', 'lib', 'catalog.generated.ts'),
+});
+
+function loadWorkflowsFromCatalog(catalogFile) {
+  if (!fs.existsSync(catalogFile)) {
+    return { authored: [], emergent: [], error: `catalog not found at ${catalogFile} — run build-site-data.mjs first` };
+  }
+  const src = fs.readFileSync(catalogFile, 'utf8');
+  const m = src.match(/export const WORKFLOWS: Workflow\[\] = (\[[\s\S]*?\]);/);
+  if (!m) return { authored: [], emergent: [], error: 'WORKFLOWS export not found in catalog.generated.ts' };
+  try {
+    const arr = JSON.parse(m[1]);
+    return {
+      authored: arr.filter((w) => w.origin !== 'emergent'),
+      emergent: arr.filter((w) => w.origin === 'emergent'),
+    };
+  } catch (err) {
+    return { authored: [], emergent: [], error: `parse error: ${err.message}` };
+  }
+}
+
+function readWorkflowFrontmatter(filePath) {
+  const src = fs.readFileSync(filePath, 'utf8');
+  const m = src.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!m) return { frontmatter: {}, body: src };
+  const frontmatter = {};
+  for (const line of m[1].split(/\r?\n/)) {
+    const kv = line.match(/^([a-zA-Z_-]+):\s*(.*)$/);
+    if (kv) frontmatter[kv[1]] = kv[2].trim();
+  }
+  return { frontmatter, body: m[2] };
+}
+
+const workflowStatus = defineCommand({
+  meta: { name: 'status', description: 'Show workflow state — authored + emergent candidates + conformance' },
+  async run() {
+    const repoRoot = process.cwd();
+    const { workflowsDir, catalogFile } = workflowPaths(repoRoot);
+
+    // Count authored files on disk (source of truth before catalog build).
+    let authoredOnDisk = 0;
+    if (fs.existsSync(workflowsDir)) {
+      for (const name of fs.readdirSync(workflowsDir)) {
+        if (name.endsWith('.md') && name !== 'README.md') authoredOnDisk += 1;
+      }
+    }
+
+    const { authored, emergent, error } = loadWorkflowsFromCatalog(catalogFile);
+    if (error) {
+      console.log(`Authored workflows on disk: ${authoredOnDisk}`);
+      console.log(`Emergent candidates: unknown (${error})`);
+      console.log('');
+      console.log('Run `node site/scripts/build-site-data.mjs` to refresh the catalog.');
+      return;
+    }
+
+    console.log(`Authored workflows: ${authored.length}`);
+    for (const w of authored) {
+      const conf = w.conformance ? ` conformance=${(w.conformance.score * 100).toFixed(0)}%` : '';
+      const parent = w.parentWorkflow ? ` [→ ${w.parentWorkflow}]` : '';
+      console.log(`  ${w.slug}${parent}${conf}`);
+    }
+    console.log('');
+    console.log(`Emergent candidates: ${emergent.length}`);
+    for (const e of emergent) {
+      const support = e.support ? ` support=${e.support.phases}×` : '';
+      console.log(`  ${e.slug}${support}`);
+    }
+    if (emergent.length > 0) {
+      console.log('');
+      console.log('Next:');
+      console.log('  gad workflow promote <slug>   # persist as .planning/workflows/<name>.md');
+      console.log('  gad workflow discard <slug>   # drop for this run (will re-detect next build if still above threshold)');
+    }
+  },
+});
+
+const workflowValidate = defineCommand({
+  meta: { name: 'validate', description: 'Re-run the detector + conformance scorer against current trace data' },
+  async run() {
+    const repoRoot = process.cwd();
+    const script = path.join(repoRoot, 'site', 'scripts', 'build-site-data.mjs');
+    if (!fs.existsSync(script)) {
+      console.error(`build-site-data.mjs not found at ${script}`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log('Refreshing workflow catalog by running build-site-data.mjs...');
+    const { spawnSync } = require('child_process');
+    const result = spawnSync(process.execPath, [script], { cwd: path.dirname(script), stdio: 'inherit' });
+    if (result.status !== 0) {
+      console.error(`build-site-data.mjs exited with status ${result.status}`);
+      process.exitCode = result.status || 1;
+      return;
+    }
+    console.log('');
+    console.log('Catalog refreshed. Run `gad workflow status` to see the current state.');
+  },
+});
+
+const workflowPromote = defineCommand({
+  meta: { name: 'promote', description: 'Promote an emergent candidate to an authored workflow' },
+  args: {
+    slug: { type: 'positional', description: 'Emergent workflow slug from `gad workflow status`' },
+    name: { type: 'string', alias: 'n', description: 'Final workflow slug on disk (defaults to emergent slug stripped of support suffix)' },
+  },
+  async run({ args }) {
+    const repoRoot = process.cwd();
+    const { workflowsDir, catalogFile } = workflowPaths(repoRoot);
+    const { emergent, error } = loadWorkflowsFromCatalog(catalogFile);
+    if (error) {
+      console.error(error);
+      process.exitCode = 1;
+      return;
+    }
+    const cand = emergent.find((e) => e.slug === args.slug);
+    if (!cand) {
+      console.error(`Emergent workflow not found: ${args.slug}`);
+      console.error('Run `gad workflow status` to list current candidates.');
+      process.exitCode = 1;
+      return;
+    }
+    const finalSlug = args.name || cand.slug.replace(/^emergent-/, '').replace(/-\d+-\d+$/, '');
+    const targetFile = path.join(workflowsDir, `${finalSlug}.md`);
+    if (fs.existsSync(targetFile)) {
+      console.error(`Refusing to overwrite existing workflow file: ${path.relative(repoRoot, targetFile)}`);
+      console.error(`Use --name to choose a different slug.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const frontmatter = [
+      '---',
+      `slug: ${finalSlug}`,
+      `name: ${cand.name || finalSlug}`,
+      `description: ${(cand.description || '').replace(/\n/g, ' ')}`,
+      `trigger: ${(cand.trigger || 'Detected automatically from trace data.').replace(/\n/g, ' ')}`,
+      'participants:',
+      '  skills: []',
+      '  agents: [default]',
+      '  cli: []',
+      '  artifacts: []',
+      'parent-workflow: null',
+      'related-phases: [42.3]',
+      'origin: authored',
+      'provenance:',
+      `  emergent-slug: ${cand.slug}`,
+      `  support: ${cand.support ? cand.support.phases : 1}`,
+      `  promoted-at: ${now}`,
+      '---',
+      '',
+      '## Provenance',
+      '',
+      `This workflow was promoted from an emergent detector candidate on ${now.slice(0, 10)}.`,
+      `It was observed ${cand.support ? cand.support.phases : 'N'}× in trace data before promotion.`,
+      'Original detector slug: `' + cand.slug + '`.',
+      '',
+      '## Expected graph',
+      '',
+      '```mermaid',
+      cand.mermaidBody || 'flowchart LR\n  a[unknown]',
+      '```',
+      '',
+    ].join('\n');
+
+    if (!fs.existsSync(workflowsDir)) fs.mkdirSync(workflowsDir, { recursive: true });
+    fs.writeFileSync(targetFile, frontmatter, 'utf8');
+    console.log(`✓ Promoted ${args.slug}`);
+    console.log(`  → ${path.relative(repoRoot, targetFile)}`);
+    console.log('');
+    console.log('Review the file, edit frontmatter participants to describe the real pattern,');
+    console.log('then re-run `node site/scripts/build-site-data.mjs` so the authored graph picks it up.');
+  },
+});
+
+const workflowDiscard = defineCommand({
+  meta: { name: 'discard', description: 'Discard an emergent candidate for this run (detector will re-emit next build if still above threshold)' },
+  args: {
+    slug: { type: 'positional', description: 'Emergent workflow slug' },
+  },
+  async run({ args }) {
+    console.log(`Discarded candidate: ${args.slug}`);
+    console.log('');
+    console.log('Emergent candidates are regenerated from trace data on every build.');
+    console.log('To permanently suppress this pattern, raise the detector thresholds in');
+    console.log('.planning/config.json (min_support, min_length, etc).');
+  },
+});
+
+const workflowCmd = defineCommand({
+  meta: { name: 'workflow', description: 'Manage GAD workflows — status/validate/promote/discard authored + emergent' },
+  subCommands: {
+    status: workflowStatus,
+    validate: workflowValidate,
+    promote: workflowPromote,
+    discard: workflowDiscard,
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -8684,6 +8959,7 @@ const main = defineCommand({
     data: dataCmd,
     eval: evalCmd,
     evolution: evolutionCmd,
+    workflow: workflowCmd,
     rounds: roundsCmd,
     verify: verifyCmd,
     snapshot: snapshotV2Cmd,

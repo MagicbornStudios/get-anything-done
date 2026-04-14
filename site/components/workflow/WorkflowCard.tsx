@@ -1,7 +1,7 @@
 import type { Workflow } from "@/lib/catalog.generated";
 import { Badge } from "@/components/ui/badge";
 import { WorkflowMermaidDiagram } from "./WorkflowMermaidDiagram";
-import { WorkflowLiveDiagram } from "./WorkflowLiveDiagram";
+import { WorkflowLiveDiagram, type LiveWorkflow } from "./WorkflowLiveDiagram";
 
 interface Props {
   workflow: Workflow;
@@ -25,6 +25,27 @@ export function WorkflowCard({ workflow, depth = 0 }: Props) {
     ...participants.cli.map((v) => ({ kind: "cli" as const, value: v })),
   ];
 
+  const liveWorkflow: LiveWorkflow | null = workflow.liveGraph
+    ? {
+        slug: workflow.slug,
+        nodes: workflow.liveGraph.nodes.map((n) => ({
+          id: n.id,
+          type: n.type,
+          position: n.position,
+          data: { label: n.data.label, kind: n.data.kind, count: n.data.count },
+        })),
+        edges: workflow.liveGraph.edges.map((e) => ({
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          animated: e.animated,
+        })),
+      }
+    : null;
+
+  const conformance = workflow.conformance;
+  const support = workflow.support;
+
   return (
     <article
       id={`workflow-${workflow.slug}`}
@@ -36,6 +57,20 @@ export function WorkflowCard({ workflow, depth = 0 }: Props) {
           <Badge variant={workflow.origin === "emergent" ? "secondary" : "outline"}>
             {workflow.origin}
           </Badge>
+          {conformance && (
+            <Badge
+              variant="outline"
+              className="text-[10px]"
+              title={`matched=${conformance.matched}, extra=${conformance.extra}, out_of_order=${conformance.out_of_order}, expected=${conformance.expected}`}
+            >
+              conformance {(conformance.score * 100).toFixed(0)}%
+            </Badge>
+          )}
+          {support && (
+            <Badge variant="outline" className="text-[10px]">
+              support {support.phases}×
+            </Badge>
+          )}
           {workflow.parentWorkflow && (
             <span className="text-[11px] text-muted-foreground">
               nested under <code className="text-foreground/80">{workflow.parentWorkflow}</code>
@@ -82,7 +117,14 @@ export function WorkflowCard({ workflow, depth = 0 }: Props) {
             <span>Live (actual)</span>
             <span className="text-[10px] opacity-60">react flow</span>
           </div>
-          <WorkflowLiveDiagram workflow={null} />
+          <WorkflowLiveDiagram
+            workflow={liveWorkflow}
+            emptyMessage={
+              workflow.origin === "emergent"
+                ? "Emergent detector is still mining this pattern — check back after the next build."
+                : undefined
+            }
+          />
         </section>
       </div>
     </article>

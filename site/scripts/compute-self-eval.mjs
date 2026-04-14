@@ -158,6 +158,85 @@ function estimateTokensFromText(value) {
   return Math.ceil(text.length / 4);
 }
 
+function extractSnapshotProjectId(event) {
+  const args = Array.isArray(event?.args) ? event.args : [];
+  const idx = args.indexOf('--projectid');
+  if (idx !== -1 && args[idx + 1]) return String(args[idx + 1]);
+  const cmd = typeof event?.cmd === 'string' ? event.cmd : '';
+  const match = cmd.match(/snapshot\s+--projectid\s+([A-Za-z0-9._/-]+)/);
+  return match ? match[1] : null;
+}
+
+function estimateSnapshotTokensByProject(projectId) {
+  try {
+    const { execFileSync } = require('node:child_process');
+    const output = execFileSync(
+      process.execPath,
+      [path.join(REPO_ROOT, 'bin', 'gad.cjs'), 'snapshot', '--projectid', projectId],
+      { cwd: MONOREPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    return estimateTokensFromText(output);
+  } catch {
+    return 0;
+  }
+}
+
+function computeFrameworkCompliance() {
+  const tasks = readTasks(GAD_ROOT, REPO_ROOT, {});
+  const completed = tasks.filter((task) => task.status === 'done');
+  const withSkill = completed.filter((task) => Boolean(task.skill)).length;
+  const withAgent = completed.filter((task) => Boolean(task.agentId)).length;
+  const withType = completed.filter((task) => Boolean(task.type)).length;
+  const fullyAttributed = completed.filter((task) => Boolean(task.skill) && Boolean(task.agentId) && Boolean(task.type)).length;
+  const total = completed.length;
+
+  return {
+    completed_tasks: total,
+    with_skill: withSkill,
+    with_agent: withAgent,
+    with_type: withType,
+    fully_attributed: fullyAttributed,
+    score: total > 0 ? Math.round((fullyAttributed / total) * 1000) / 1000 : 0,
+  };
+}
+
+function computeHydrationMetrics(events) {
+  const snapshotEvents = events.filter((event) =>
+    typeof event?.cmd === 'string' &&
+    event.cmd.startsWith('snapshot') &&
+    (event.exit == null || event.exit === 0)
+  );
+
+  const countsByProject = {};
+  for (const event of snapshotEvents) {
+    const projectId = extractSnapshotProjectId(event) || 'unknown';
+    incrementCounter(countsByProject, projectId);
+  }
+
+  const estimatedTokensByProject = {};
+  for (const projectId of Object.keys(countsByProject)) {
+    estimatedTokensByProject[projectId] = estimateSnapshotTokensByProject(projectId);
+  }
+
+  const totalEstimatedTokens = Object.entries(countsByProject).reduce(
+    (sum, [projectId, count]) => sum + ((estimatedTokensByProject[projectId] || 0) * count),
+    0
+  );
+
+  return {
+    snapshot_count: snapshotEvents.length,
+    estimated_snapshot_tokens: totalEstimatedTokens,
+    projects: Object.entries(countsByProject)
+      .sort((a, b) => b[1] - a[1])
+      .map(([project, count]) => ({
+        project,
+        count,
+        estimated_tokens_per_snapshot: estimatedTokensByProject[project] || 0,
+        estimated_total_tokens: (estimatedTokensByProject[project] || 0) * count,
+      })),
+  };
+}
+
 function computeProjectTokenMetrics(traceFiles) {
   if (traceFiles.length === 0) {
     return {
@@ -442,22 +521,6 @@ function computeMetrics(events) {
   const totalFileOps = planningOps + sourceOps;
   const overheadRatio = totalFileOps > 0 ? planningOps / totalFileOps : 0;
 
-  // Snapshot compliance: how many sessions start with gad snapshot?
-  const sessionFirstCmds = {};
-  for (const e of events) {
-    if (!e.session_id) continue;
-    if (!sessionFirstCmds[e.session_id] && e.gad_command?.startsWith("snapshot")) {
-      sessionFirstCmds[e.session_id] = true;
-    }
-    if (!sessionFirstCmds[e.session_id]) {
-      sessionFirstCmds[e.session_id] = false;
-    }
-  }
-  const snapshotCompliance =
-    sessions.size > 0
-      ? Object.values(sessionFirstCmds).filter(Boolean).length / sessions.size
-      : 0;
-
   // GAD CLI usage breakdown
   let snapshotCount = 0;
   let evalCount = 0;
@@ -498,11 +561,6 @@ function computeMetrics(events) {
       source_ops: sourceOps,
       ratio: Math.round(overheadRatio * 1000) / 1000,
       score: overheadRatio < 0.15 ? 1.0 : overheadRatio < 0.25 ? 0.7 : overheadRatio < 0.4 ? 0.4 : 0.1,
-    },
-    loop_compliance: {
-      snapshot_starts: Object.values(sessionFirstCmds).filter(Boolean).length,
-      total_sessions: sessions.size,
-      score: Math.round(snapshotCompliance * 100) / 100,
     },
     gad_cli_breakdown: {
       snapshot: snapshotCount,
@@ -770,10 +828,10 @@ function writeCandidates(phasesPressure) {
   return candidates;
 }
 
-/** Count tasks from TASK-REGISTRY.xml across all workspaces */
+/** Count tasks from TASK-REGISTRY.xml across the tracked planning roots */
 function countTasks() {
   const result = { done: 0, planned: 0, in_progress: 0, total: 0 };
-  // Check main project and all vendor workspaces
+  // Check the main project and the GAD framework planning root
   const roots = [
     path.join(MONOREPO_ROOT, ".planning"),
     path.join(MONOREPO_ROOT, "vendor", "get-anything-done", ".planning"),
@@ -805,6 +863,8 @@ const events = readAllEvents();
 const metrics = computeMetrics(events);
 const evalMetrics = computeEvalMetrics(readEvalTraces());
 const projectTokenMetrics = computeProjectTokenMetrics(readProjectTraceEvents());
+const frameworkCompliance = computeFrameworkCompliance();
+const hydrationMetrics = computeHydrationMetrics(events);
 
 if (metrics) {
   // Add task and decision counts + per-phase pressure
@@ -832,6 +892,20 @@ if (metrics) {
     trace_events: projectTokenMetrics.trace_events,
     runtime_distribution: projectTokenMetrics.runtime_distribution,
     sources: projectTokenMetrics.sources,
+  };
+  const hydrationTotalBase = metrics.project_tokens.combined_total_tokens || 0;
+  // Decision gad-173: `framework_compliance` upgraded to `workflow_conformance`.
+  // The v1 metric is still the presence-based attribution score from
+  // computeFrameworkCompliance; once trace-to-workflow synthesis (42.3-04)
+  // computes real conformance scores, this becomes an aggregate over those.
+  // Old name retained as a deprecated alias for one version so any existing
+  // dashboard/link keeps working until it's updated.
+  metrics.workflow_conformance = frameworkCompliance;
+  metrics.framework_compliance = frameworkCompliance; // deprecated alias
+  metrics.hydration = {
+    ...hydrationMetrics,
+    total_project_tokens: hydrationTotalBase,
+    overhead_ratio: hydrationTotalBase > 0 ? Math.round((hydrationMetrics.estimated_snapshot_tokens / hydrationTotalBase) * 1000) / 1000 : 0,
   };
   metrics.active_assignments = computeActiveAssignments();
 
@@ -868,7 +942,7 @@ if (metrics) {
   fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
   fs.writeFileSync(OUTPUT, JSON.stringify(output, null, 2));
   console.log(
-    `  [self-eval] ${metrics.totals.events} events, ${metrics.tasks.total} tasks (${metrics.tasks.done} done), ${metrics.decisions} decisions → ${OUTPUT} (overhead: ${(metrics.framework_overhead.ratio * 100).toFixed(1)}%, loop compliance: ${(metrics.loop_compliance.score * 100).toFixed(0)}%)`
+    `  [self-eval] ${metrics.totals.events} events, ${metrics.tasks.total} tasks (${metrics.tasks.done} done), ${metrics.decisions} decisions → ${OUTPUT} (overhead: ${(metrics.framework_overhead.ratio * 100).toFixed(1)}%, workflow conformance: ${(metrics.workflow_conformance.score * 100).toFixed(0)}%, hydration: ${(metrics.hydration.overhead_ratio * 100).toFixed(1)}%)`
   );
 } else {
   console.log("  [self-eval] no trace data found");
