@@ -61,7 +61,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `skills/proto-skills/phase-18-eval-suite-parallel-runs-iteration-cycle/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-18-eval-suite-parallel-runs-iteration-cycle/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 

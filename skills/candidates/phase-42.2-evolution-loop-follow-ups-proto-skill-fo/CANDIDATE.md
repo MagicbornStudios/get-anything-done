@@ -27,7 +27,7 @@ selection pressure: 12  (6 tasks, 2 done, 3 crosscuts)
 42.2-03 planned Rename `skills/gad-quick-skill/` → `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched — decision gad-168.
 42.2-04 planned Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case.
 42.2-05 planned Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.
-42.2-06 planned Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `skills/proto-skills/<slug>/{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance.
+42.2-06 planned Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills/<slug>/{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance.
 ```
 
 ## What this candidate is for
@@ -61,7 +61,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `skills/proto-skills/phase-42.2-evolution-loop-follow-ups-proto-skill-fo/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-42.2-evolution-loop-follow-ups-proto-skill-fo/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 

@@ -64,7 +64,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `skills/proto-skills/phase-12-kill-gsd-formalize-gad-loop-reduce-start/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-12-kill-gsd-formalize-gad-loop-reduce-start/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 

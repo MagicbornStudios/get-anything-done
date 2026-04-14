@@ -63,7 +63,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `skills/proto-skills/phase-10-gad-eats-its-own-dogfood-planning-packs/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-10-gad-eats-its-own-dogfood-planning-packs/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 

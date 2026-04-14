@@ -63,7 +63,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `skills/proto-skills/phase-13-docs-commands-skill-content-docs-map-rol/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-13-docs-commands-skill-content-docs-map-rol/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 

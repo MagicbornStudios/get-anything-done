@@ -66,7 +66,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `skills/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-43-domain-rename-project-species-schema-uni/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 

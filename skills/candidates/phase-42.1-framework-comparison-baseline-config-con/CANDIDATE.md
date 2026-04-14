@@ -61,7 +61,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `skills/proto-skills/phase-42.1-framework-comparison-baseline-config-con/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-42.1-framework-comparison-baseline-config-con/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 
