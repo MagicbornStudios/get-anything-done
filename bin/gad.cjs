@@ -9305,14 +9305,79 @@ const evolutionStatus = defineCommand({
   },
 });
 
+const evolutionSimilarity = defineCommand({
+  meta: { name: 'similarity', description: 'Compute semantic similarity matrix across candidates + proto-skills (offline, no API)' },
+  args: {
+    threshold: { type: 'string', description: 'Flag pairs with score >= threshold (default 0.6)', default: '0.6' },
+    shedThreshold: { type: 'string', description: 'Flag candidates stale vs promoted skills above this score (default 0.55)', default: '0.55' },
+    includePromoted: { type: 'boolean', description: 'Include promoted skills/ in the main matrix (default: only shedding-compare)', default: false },
+    json: { type: 'boolean', description: 'Emit JSON instead of markdown report', default: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const sim = require('../lib/similarity.cjs');
+    const threshold = parseFloat(args.threshold);
+    const shedThreshold = parseFloat(args.shedThreshold);
+
+    const candidateDocs = sim.loadCorpusFromDirs([
+      { kind: 'candidate', root: path.join(repoRoot, 'skills', 'candidates') },
+      { kind: 'proto',     root: path.join(repoRoot, '.planning', 'proto-skills') },
+    ]);
+    const promotedDocs = sim.loadCorpusFromDirs([
+      { kind: 'skill', root: path.join(repoRoot, 'skills') },
+    ]).filter((d) => !d.id.includes('/candidates/') && !d.id.includes('/.evolutions/'));
+
+    const mainDocs = args.includePromoted ? [...candidateDocs, ...promotedDocs] : candidateDocs;
+    const analysis = sim.analyzeCorpus(mainDocs, { threshold });
+    const shed = sim.analyzeShedding(candidateDocs, promotedDocs, { threshold: shedThreshold });
+
+    if (args.json) {
+      console.log(JSON.stringify({
+        docCount: analysis.docCount,
+        threshold: analysis.threshold,
+        pairs: analysis.pairs,
+        matrix: analysis.matrix,
+        ids: analysis.ids,
+        shedding: shed,
+      }, null, 2));
+      return;
+    }
+
+    console.log(`# Similarity analysis — ${analysis.docCount} docs, threshold ${threshold.toFixed(2)}`);
+    console.log('');
+    console.log('## Flagged pairs (score >= threshold)');
+    if (analysis.pairs.length === 0) {
+      console.log('  none');
+    } else {
+      console.log('');
+      for (const pair of analysis.pairs) {
+        console.log(sim.formatPairReport(pair));
+        console.log('');
+      }
+    }
+    console.log('## Full matrix');
+    console.log('');
+    console.log(sim.formatMatrixMarkdown(analysis));
+    console.log('');
+    console.log('## Shedding (candidates vs promoted skills)');
+    console.log('');
+    console.log(sim.formatSheddingReport(shed));
+    console.log('');
+    const stale = shed.results.filter((r) => r.stale).length;
+    const flagged = analysis.pairs.length;
+    console.log(`Summary: ${flagged} merge-candidate pair(s) above ${threshold.toFixed(2)}, ${stale} stale candidate(s) above ${shedThreshold.toFixed(2)}.`);
+  },
+});
+
 const evolutionCmd = defineCommand({
-  meta: { name: 'evolution', description: 'Manage GAD evolution proto-skills (validate/promote/discard/status)' },
+  meta: { name: 'evolution', description: 'Manage GAD evolution proto-skills (validate/promote/discard/status/similarity)' },
   subCommands: {
     install: evolutionInstall,
     validate: evolutionValidate,
     promote: evolutionPromote,
     discard: evolutionDiscard,
     status: evolutionStatus,
+    similarity: evolutionSimilarity,
   },
 });
 
