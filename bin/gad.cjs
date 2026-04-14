@@ -4248,8 +4248,10 @@ const evalPreserve = defineCommand({
     }
     fs.mkdirSync(runTargetDir, { recursive: true });
 
-    // Copy every top-level entry in game/, excluding heavy/regenerated dirs
-    const excludeTopLevel = new Set(['node_modules', '.git', 'dist']);
+    // Copy every top-level entry in game/, excluding heavy/regenerated dirs.
+    // `out` and `.next` are Next.js build artifacts (gad task 44-03) —
+    // excluded from the source copy and picked up separately as the build.
+    const excludeTopLevel = new Set(['node_modules', '.git', 'dist', 'out', 'build', '.next']);
     let copiedCount = 0;
     for (const entry of fs.readdirSync(gameSrc)) {
       if (excludeTopLevel.has(entry)) continue;
@@ -4289,10 +4291,20 @@ const evalPreserve = defineCommand({
       rootExtrasCopied++;
     }
 
-    // Preserve build to apps/portfolio/public/evals/<project>/<version>/
-    const distSrc = path.join(gameSrc, 'dist');
+    // Preserve build to apps/portfolio/public/evals/<project>/<version>/.
+    // Try each known static-servable build output in order. `out` is Next.js
+    // static export (task 44-03), `dist` is Vite/rollup/plain bundlers,
+    // `build` is CRA/old tooling. `.next/` is intentionally NOT a candidate
+    // because it requires a running Node server and cannot be served
+    // statically from public/.
+    const buildDirCandidates = ['out', 'dist', 'build'];
+    let distSrc = null;
+    for (const candidate of buildDirCandidates) {
+      const attempt = path.join(gameSrc, candidate);
+      if (fs.existsSync(attempt)) { distSrc = attempt; break; }
+    }
     let buildPreserved = false;
-    if (fs.existsSync(distSrc)) {
+    if (distSrc) {
       const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, args.version);
       if (fs.existsSync(buildTarget)) {
         fs.rmSync(buildTarget, { recursive: true, force: true });
