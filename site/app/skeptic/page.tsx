@@ -3,7 +3,6 @@ import { Identified } from "@/components/devid/Identified";
 import { PageIdentified } from "@/components/devid/PageIdentified";
 import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import SkepticHypothesisPaginatedSection from "./SkepticHypothesisPaginatedSection";
-import SkepticHowUsedSection from "./SkepticHowUsedSection";
 
 export const metadata = {
   title: "Skeptic — devils-advocate critique of every hypothesis",
@@ -42,9 +41,6 @@ export default function SkepticPage() {
       </SiteSection>
       <PageIdentified as="SkepticHypothesisPaginatedSection">
         <SkepticHypothesisPaginatedSection critiques={CRITIQUES} />
-      </PageIdentified>
-      <PageIdentified as="SkepticHowUsedSection">
-        <SkepticHowUsedSection />
       </PageIdentified>
     </MarketingShell>
   );
