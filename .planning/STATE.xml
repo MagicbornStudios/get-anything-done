@@ -4,57 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 42.1 is now shipped.
-
-Completed in this session:
-1. 42.1-01 - canonical config consolidation around `gad-config.toml`, with `.planning/config.json` regenerated as compatibility output
-2. 42.1-02 - clarified `workspace` vs `worktree` vs `workstream` in CLI/docs and added first-class `gad worktree new`
-3. 42.1-03 - reviewed live upstream GSD parity and ported stale/orphan worktree detection that fits GAD
-4. 42.1-04 - retired `loop_compliance` in current self-eval output and replaced it with `framework_compliance` + `hydration`
-5. 42.1-05 - locked the official framework comparison matrix to bare / GSD / GAD / emergent / custom with Escape the Dungeon as the canonical target
-6. 42.1-06 - captured the brood-editor / local-first project-market follow-up and fixed it to local-dev-only in its first cut
-
-Current measured reality after the metric shift:
-- framework compliance: 4 / 179 completed tasks fully attributed = 2.2%
-- hydration overhead: 1,521,173 estimated snapshot tokens / 2,471,819 total project tokens = 61.5%
-- interpretation: the old loop-compliance story was flattering the framework; the new metrics show that attribution discipline is still weak and hydration cost is very high
-
-Immediate next queue:
-1. 42.2-03 - rename `sdk/skills/gad-quick-skill/` -> `sdk/skills/create-proto-skill/`
-2. 42.2-04 - validator v2 file-ref dedup fix (overlapping long/short path refs)
-3. 42.2-05 - whitepaper-framed /findings index copy
-4. 42.2-06 - implement create-proto-skill using bulk+checkpoint pattern (decision gad-171 — LOCKED, not "design" anymore)
-5. phase 42.3 (NEW) - workflows as a first-class concept: hand-authored mermaid graphs + computed actual graphs + diff on /planning (decision gad-172)
-6. phase 43 / 44 / 44.5 / 45 - species rename, marketplace, brood editor, and rebrand work
-
-Cross-cutting follow-up logged from this closeout:
-- 35-10 - review SDK context-engine hydration policy now that canonical config and hydration metrics are both live; decide whether fixed file manifests should give way to scoped/query-driven context plus relevant decisions
-
-Decisions locked this turn:
-- gad-171: create-proto-skill uses bulk batching with per-candidate checkpoints
-- gad-172: Workflows are a first-class GAD concept (hand-authored + computed + diff on /planning)
-- gad-173: Workflow validator = expected/actual graph diff = next framework-discipline metric; answers nesting/validator/self-report questions
-- gad-174: Emergent workflow detection = DFG + frequent subgraph mining v1 (pure Node); proto-workflow is a first-class permanent type mirroring proto-skill; three-section visualization (Authored / Emergent / Noise); signal vs noise gated by four configurable thresholds (min_support=3, min_length=3, edge_stability=60%, coverage=20%); upgrade path to pm4py sidecar if v1 is insufficient
-
-Shipped across phase 42.3 opening:
-- 42.3-01 done: `.planning/workflows/README.md` schema
-- 42.3-02 done: six canonical workflows authored (gad-loop, gad-discuss-plan-execute, gad-decide, gad-debug, gad-evolution, gad-findings)
-- 42.3-03 done: build-site-data workflow extractor + WORKFLOWS in catalog.generated.ts — 6 workflows parsed cleanly, tsc clean
-- 42.3-06 done: open design questions resolved (decision gad-173)
-- 42.3-07 done: remaining four workflows shipped alongside 42.3-02
-
-Phase 42.3 complete except for noise panel:
-- 42.3-04 done — trace synthesis emits liveGraph + conformance per authored workflow
-- 42.3-05 done — /planning Workflows tab live with all three sections
-- 42.3-08 done — metric rename: workflow_conformance is now primary, framework_compliance deprecated alias
-- 42.3-09 done — DFG + n-gram detector v1 finds 12 emergent candidates from 1000 trace events
-- 42.3-10 done — .planning/workflows/emergent/README.md schema + lifecycle
-- 42.3-11 done — `gad workflow status|validate|promote|discard` live; promote writes full authored md with provenance block
-- 42.3-12 done — emergent section on /planning Workflows tab renders candidates via same WorkflowCard component
-- 42.3-13 REMAINING — noise panel (raw event timeline + unmatched force-directed graph), still deferred until 42.3-04/09 prove useful in practice
-
-Also tightened:
-- 44.5-02 dev-server bridge is now "accept any gad/npx in NODE_ENV=development" for the first cut. New task 44.5-02b captures the hardening pass (allow-list, arg sanitization) as a deferred follow-up.</next-action>
+  <next-action>Phase 43 context gathered (discuss mode)</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..13, 44.5-01..04+02b)</reference>
@@ -78,9 +28,9 @@ Also tightened:
     <reference>site/app/formulas/page.tsx</reference>
     <reference>sdk/src/init-runner.ts</reference>
     <reference>sdk/src/context-engine.ts</reference>
-    <reference>sdk/workflows/new-project.md</reference>
-    <reference>sdk/workflows/settings.md</reference>
-    <reference>sdk/references/framework-comparison-matrix.md</reference>
+    <reference>workflows/new-project.md</reference>
+    <reference>workflows/settings.md</reference>
+    <reference>references/framework-comparison-matrix.md</reference>
     <reference>.planning/notes/context-engine-hydration-questions-2026-04-14.md</reference>
   </references>
   <last-updated>2026-04-14</last-updated>
