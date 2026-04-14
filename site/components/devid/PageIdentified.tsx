@@ -3,14 +3,17 @@
 /**
  * Page-level dev landmark — **does not** use `SectionRegistry` or the section dev panel.
  * When dev IDs are on (`Alt+I`), hovering the band shows a small **top-left** chip
- * with the `data-cid` and a **Copy** control. Alt+click still copies + highlights like
- * `<Identified>`.
+ * with the `data-cid`, **Copy**, and **Message** (opens the same agent handoff modal as
+ * the section dev panel). Alt+click still copies + highlights like `<Identified>`.
  */
 
 import { createElement, useCallback, useId, useState, type MouseEvent, type ReactNode } from "react";
-import { Check, Copy } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Check, Copy, MessageSquare } from "lucide-react";
 import { useDevId } from "./DevIdProvider";
+import { DevIdAgentPromptDialog } from "./DevIdAgentPromptDialog";
 import { cn } from "@/lib/utils";
+import type { RegistryEntry } from "./SectionRegistry";
 
 function slugify(label: string) {
   return label
@@ -39,11 +42,13 @@ export function PageIdentified({
   children,
   chipCorner = "top-left",
 }: PageIdentifiedProps) {
+  const pathname = usePathname() ?? "";
   const rid = useId();
   const autoCid = `${slugify(as)}-${rid.replace(/[^a-z0-9]/gi, "")}`;
   const cid = stableCid ?? autoCid;
   const { enabled, highlightCid, setHighlightCid } = useDevId();
   const [copied, setCopied] = useState(false);
+  const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
 
   const isHighlighted = highlightCid === cid;
   const showRing = enabled && isHighlighted;
@@ -83,6 +88,15 @@ export function PageIdentified({
       ),
     },
     <>
+      <DevIdAgentPromptDialog
+        open={promptEntry != null}
+        onOpenChange={(v) => {
+          if (!v) setPromptEntry(null);
+        }}
+        entry={promptEntry}
+        pathname={pathname}
+        componentTag="PageIdentified"
+      />
       {children}
       {enabled ? (
         <div
@@ -108,8 +122,22 @@ export function PageIdentified({
             >
               {copied ? <Check className="size-3 text-emerald-400" strokeWidth={2} /> : <Copy className="size-3" strokeWidth={2} />}
             </button>
+            <button
+              type="button"
+              aria-label="Open agent prompt handoff"
+              title="Agent handoff (update / delete)"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPromptEntry({ cid, label: as, depth: 0 });
+              }}
+              className="shrink-0 rounded border border-border/60 px-1.5 py-0.5 text-muted-foreground hover:border-accent/50 hover:text-accent"
+            >
+              <MessageSquare className="size-3" strokeWidth={2} aria-hidden />
+            </button>
           </div>
-          <span className="pointer-events-none text-[9px] text-muted-foreground/90">Page band · Alt+click copies</span>
+          <span className="pointer-events-none text-[9px] text-muted-foreground/90">
+            Page band · Alt+click copies · Message: handoff
+          </span>
         </div>
       ) : null}
     </>,

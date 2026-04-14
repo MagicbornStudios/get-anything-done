@@ -109,10 +109,18 @@ function HandoffPromptPane({
   );
 }
 
+type HandoffComponentTag = "Identified" | "PageIdentified";
+
 /** Locked update header (read-only); copy is this plus a newline plus the user editor body. */
-function buildUpdateLockedPrefix(pageUrl: string, label: string, cid: string): string {
+function buildUpdateLockedPrefix(
+  pageUrl: string,
+  label: string,
+  cid: string,
+  componentTag: HandoffComponentTag,
+): string {
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
+  const tag = componentTag === "PageIdentified" ? "PageIdentified" : "Identified";
   const lines = [
     "You are to make changes to this component on the site.",
     "",
@@ -120,7 +128,7 @@ function buildUpdateLockedPrefix(pageUrl: string, label: string, cid: string): s
     `component_route_location= **${pageUrl}**`,
     "",
     "## Component to make changes to",
-    `- Component: \`<Identified as="${escapeAttrInCode(labelShort)}" />\``,
+    `- Component: \`<${tag} as="${escapeAttrInCode(labelShort)}" />\``,
     `- \`data-cid="${escapeAttrInCode(cidShort)}"\``,
     `- and its children. The identified component is the parent of the component in question.`,
     "",
@@ -129,10 +137,11 @@ function buildUpdateLockedPrefix(pageUrl: string, label: string, cid: string): s
   return lines.join("\n");
 }
 
-function buildDeletePrompt(pageUrl: string, label: string, cid: string) {
+function buildDeletePrompt(pageUrl: string, label: string, cid: string, componentTag: HandoffComponentTag) {
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
-  const labelLine = `- Component: \`<Identified as="${escapeAttrInCode(labelShort)}" />\` - you will be removing this and its children from the page/route this was found.`;
+  const tag = componentTag === "PageIdentified" ? "PageIdentified" : "Identified";
+  const labelLine = `- Component: \`<${tag} as="${escapeAttrInCode(labelShort)}" />\` - you will be removing this and its children from the page/route this was found.`;
   const cidLine = `- data-cid: \`${escapeAttrInCode(cidShort)}\``;
   const labelFull = label.length > BLOCK_LABEL_MAX ? `\n- Full \`as\` string: ${JSON.stringify(label)}` : "";
   const cidFull = cid.length > BLOCK_CID_MAX ? `\n- Full data-cid: ${JSON.stringify(cid)}` : "";
@@ -420,11 +429,14 @@ export function DevIdAgentPromptDialog({
   onOpenChange,
   entry,
   pathname,
+  /** Page-level `PageIdentified` bands vs in-section `<Identified>` (dev panel rows). */
+  componentTag = "Identified",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entry: RegistryEntry | null;
   pathname: string;
+  componentTag?: HandoffComponentTag;
 }) {
   const [tab, setTab] = useState<"update" | "delete">("update");
   const [updateLockedPrefix, setUpdateLockedPrefix] = useState("");
@@ -449,9 +461,9 @@ export function DevIdAgentPromptDialog({
 
   useEffect(() => {
     if (!open || !entry) return;
-    setUpdateLockedPrefix(buildUpdateLockedPrefix(pageUrl, label, cid));
+    setUpdateLockedPrefix(buildUpdateLockedPrefix(pageUrl, label, cid, componentTag));
     setUpdateUserDraft("");
-    setDeleteLockedText(buildDeletePrompt(pageUrl, label, cid));
+    setDeleteLockedText(buildDeletePrompt(pageUrl, label, cid, componentTag));
     setInterim("");
     setTab("update");
     setCopied(null);
@@ -465,7 +477,7 @@ export function DevIdAgentPromptDialog({
     }
     setListening(false);
     setHandoffEpoch((e) => e + 1);
-  }, [open, entry, pageUrl, label, cid]);
+  }, [open, entry, pageUrl, label, cid, componentTag]);
 
   useEffect(() => {
     return () => {
