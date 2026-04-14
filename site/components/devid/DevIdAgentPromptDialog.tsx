@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Copy, Check } from "lucide-react";
+import { Mic, MicOff, Copy, Check, FilePenLine, FileX2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -368,14 +368,17 @@ export function DevIdAgentPromptDialog({
       <DialogContent
         overlayClassName="z-[200] bg-black/85"
         className={cn(
-          "fixed z-[210] flex max-h-[88vh] w-[min(96vw,38rem)] max-w-none flex-col gap-0 overflow-hidden p-0",
-          "translate-x-[-50%] translate-y-[-50%] sm:rounded-lg",
+          "fixed z-[210] flex w-[calc(100vw-1rem)] max-w-none flex-col gap-0 overflow-hidden border bg-background p-0 shadow-xl",
+          // Mobile: large sheet so the prompt reads like an editable page; desktop: centered card
+          "left-1/2 top-3 max-h-[min(94dvh,calc(100dvh-1.5rem))] -translate-x-1/2 translate-y-0 rounded-xl",
+          "sm:top-1/2 sm:max-h-[88vh] sm:w-[min(96vw,38rem)] sm:-translate-y-1/2 sm:rounded-lg",
         )}
       >
         <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
           <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Hover the prompt for <strong className="text-foreground">Dictate</strong> + <strong className="text-foreground">Copy</strong>.
+            Prompt text is <strong className="text-foreground">fully editable</strong> below. Hover the editor for{" "}
+            <strong className="text-foreground">Dictate</strong> + <strong className="text-foreground">Copy</strong>.
           </DialogDescription>
         </DialogHeader>
 
@@ -389,26 +392,40 @@ export function DevIdAgentPromptDialog({
           }}
           className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="shrink-0 px-4 pt-2">
-            <TabsList className="grid h-8 w-full max-w-xs grid-cols-2">
-              <TabsTrigger value="update">Update</TabsTrigger>
-              <TabsTrigger value="delete">Delete</TabsTrigger>
+          <div className="shrink-0 px-3 pt-2 sm:px-4">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-md bg-muted/80 p-1 sm:max-w-xs">
+              <TabsTrigger
+                value="update"
+                className="flex h-8 items-center justify-center gap-1.5 rounded-sm px-2 py-1 text-[11px] font-semibold leading-none data-[state=active]:shadow-sm [&_svg]:shrink-0"
+              >
+                <FilePenLine className="size-3.5" strokeWidth={2} aria-hidden />
+                <span>Update</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="delete"
+                className="flex h-8 items-center justify-center gap-1.5 rounded-sm px-2 py-1 text-[11px] font-semibold leading-none data-[state=active]:shadow-sm [&_svg]:shrink-0"
+              >
+                <FileX2 className="size-3.5" strokeWidth={2} aria-hidden />
+                <span>Delete</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
-              <p className="mb-1.5 text-[10px] text-muted-foreground">Edit the full prompt; hover the box for dictation + copy.</p>
-              <div className="group/prompt relative min-h-0 flex-1 rounded-md border border-border/70 bg-muted/15 shadow-inner">
+            <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-2 sm:px-4">
+              <p className="mb-1.5 text-[10px] text-muted-foreground">
+                Edit like a normal document; hover the box for dictation + copy.
+              </p>
+              <div className="group/prompt relative flex-1 min-h-[12rem] rounded-md border border-border/70 bg-muted/15 shadow-inner">
                 <textarea
                   ref={updateEditorRef}
                   value={updateDraft}
                   onChange={(e) => setUpdateDraft(e.target.value)}
                   spellCheck
                   className={cn(
-                    "box-border min-h-[min(42vh,16rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3",
-                    "font-mono text-[12px] leading-relaxed text-foreground",
-                    "placeholder:text-muted-foreground/50",
+                    "box-border min-h-[min(52dvh,26rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(42vh,16rem)]",
+                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[12px]",
+                    "touch-manipulation placeholder:text-muted-foreground/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
                   )}
                   aria-label="Full update prompt for your agent"
@@ -431,17 +448,20 @@ export function DevIdAgentPromptDialog({
           </TabsContent>
 
           <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden">
-            <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2">
-              <p className="mb-1.5 text-[10px] text-muted-foreground">Delete instruction; hover the box for dictation + copy.</p>
-              <div className="group/prompt relative min-h-0 flex-1 rounded-md border border-border/70 bg-muted/15 shadow-inner">
+            <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-2 sm:px-4">
+              <p className="mb-1.5 text-[10px] text-muted-foreground">
+                Edit like a normal document; hover the box for dictation + copy.
+              </p>
+              <div className="group/prompt relative flex-1 min-h-[12rem] rounded-md border border-border/70 bg-muted/15 shadow-inner">
                 <textarea
                   ref={deleteEditorRef}
                   value={deleteDraft}
                   onChange={(e) => setDeleteDraft(e.target.value)}
                   spellCheck
                   className={cn(
-                    "box-border min-h-[min(42vh,16rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3",
-                    "font-mono text-[12px] leading-relaxed text-foreground",
+                    "box-border min-h-[min(52dvh,26rem)] w-full flex-1 resize-y rounded-md bg-transparent px-3 py-3 sm:min-h-[min(42vh,16rem)]",
+                    "font-mono text-[13px] leading-relaxed text-foreground sm:text-[12px]",
+                    "touch-manipulation",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
                   )}
                   aria-label="Full delete prompt for your agent"
