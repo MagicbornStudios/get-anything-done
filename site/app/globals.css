@@ -27,6 +27,11 @@
 
   /* Marketing accent gradient (soft tan → muted teal) */
   --gradient-accent: linear-gradient(135deg, #e0b378 0%, #c88d4c 52%, #6f88a3 100%);
+
+  /* Overlay-style scrollbars (see GlobalScrollbarBehavior + base rules below) */
+  --scrollbar-thumb: color-mix(in oklch, var(--muted-foreground) 42%, transparent);
+  --scrollbar-thumb-strong: color-mix(in oklch, var(--muted-foreground) 58%, transparent);
+  --scrollbar-track: transparent;
 }
 
 @theme inline {
@@ -73,6 +78,75 @@
   ::selection {
     background: color-mix(in oklch, var(--accent) 30%, transparent);
     color: var(--foreground);
+  }
+
+  /*
+   * Site-wide scrollbars: no OS default look; thumb hidden until hover, focus-within,
+   * or active scroll (data-scrollbar-active from GlobalScrollbarBehavior), then fades.
+   */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  html:hover,
+  html:focus-within,
+  html[data-scrollbar-active] {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+  html:hover[data-scrollbar-active] {
+    scrollbar-color: var(--scrollbar-thumb-strong) var(--scrollbar-track);
+  }
+
+  html body * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  html body *:hover,
+  html body *:focus-within,
+  html body *[data-scrollbar-active] {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+  html body *:hover[data-scrollbar-active] {
+    scrollbar-color: var(--scrollbar-thumb-strong) var(--scrollbar-track);
+  }
+
+  html::-webkit-scrollbar,
+  html::-webkit-scrollbar-corner,
+  html body *::-webkit-scrollbar,
+  html body *::-webkit-scrollbar-corner {
+    width: 9px;
+    height: 9px;
+  }
+  html::-webkit-scrollbar-track,
+  html body *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  html::-webkit-scrollbar-thumb,
+  html body *::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.45s ease;
+  }
+  html:hover::-webkit-scrollbar-thumb,
+  html:focus-within::-webkit-scrollbar-thumb,
+  html[data-scrollbar-active]::-webkit-scrollbar-thumb,
+  html body *:hover::-webkit-scrollbar-thumb,
+  html body *:focus-within::-webkit-scrollbar-thumb,
+  html body *[data-scrollbar-active]::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+  }
+  html:hover[data-scrollbar-active]::-webkit-scrollbar-thumb,
+  html body *:hover[data-scrollbar-active]::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb-strong);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html::-webkit-scrollbar-thumb,
+    html body *::-webkit-scrollbar-thumb {
+      transition-duration: 0.01ms;
+    }
   }
 }
 

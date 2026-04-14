@@ -61,7 +61,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     flashTimeoutRef.current = setTimeout(() => {
       setFlashCid((cur) => (cur === cid ? null : cur));
       flashTimeoutRef.current = null;
-    }, 700);
+    }, 1100);
   }, []);
 
   useEffect(

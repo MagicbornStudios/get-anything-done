@@ -31,10 +31,10 @@ const handoffEditorTheme = EditorView.theme(
       flexDirection: "column",
       backgroundColor: "transparent",
     },
-    // Minimum viewport ≈ 30 text lines (uses `lh` from this scroller’s line-height + font size).
+    // Scroll inside the flex slot; do not use a large min-height or the modal grows with document length.
     ".cm-scroller": {
       flex: "1 1 0%",
-      minHeight: "max(30lh, 20rem)",
+      minHeight: "0",
       overflow: "auto",
       fontFamily: "var(--font-mono, ui-monospace, monospace)",
       lineHeight: "1.65",

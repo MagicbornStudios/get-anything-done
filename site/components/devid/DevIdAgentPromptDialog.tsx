@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Handoff dialog for coding agents. **Update**: first 10 lines are a fixed template
- * (read-only `pre`); CodeMirror edits the user message only; copy joins both. **Delete**:
- * full prompt in the editor. Dictate + copy hover the editor bottom.
+ * Handoff dialog for coding agents. **Update**: fixed template (read-only `pre`) from
+ * `buildUpdateLockedPrefix`; CodeMirror edits the user message only; copy joins both.
+ * **Delete**: fixed template from `buildDeletePrompt` (read-only); copy only. Mic on **Upd** only.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
@@ -20,9 +20,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RegistryEntry } from "./SectionRegistry";
-
-/** Locked update header is always this many lines; the editor below is user-only. */
-const UPDATE_LOCKED_LINE_COUNT = 10;
 
 const BLOCK_LABEL_MAX = 72;
 const BLOCK_CID_MAX = 56;
@@ -49,8 +46,9 @@ function HandoffPromptPane({
   onDraftChange,
   editorRef,
   editorKey,
-  variant,
   lockedHeader,
+  /** Full read-only body (delete tab); no editor below. */
+  readOnlyBody,
   hoverChrome,
   speechFooter,
   ariaLabel,
@@ -59,28 +57,33 @@ function HandoffPromptPane({
   onDraftChange: (next: string) => void;
   editorRef: RefObject<HandoffEditorHandle | null>;
   editorKey: string;
-  variant: "update" | "delete";
   /** When set, shown read-only above the editor (update tab). */
   lockedHeader?: string;
+  readOnlyBody?: string;
   hoverChrome: ReactNode;
   speechFooter?: ReactNode;
   ariaLabel: string;
 }) {
-  const hint =
-    variant === "update" ? (
-      <>
-        The first {UPDATE_LOCKED_LINE_COUNT} lines are <strong className="text-foreground/90">fixed</strong> (gray box
-        above). Type only in the editor below; <strong className="text-foreground/90">Copy</strong> includes both.
-      </>
-    ) : (
-      <>Edit the full delete prompt in the editor below.</>
+  if (readOnlyBody) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 basis-0 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
+        <div className="group/prompt relative flex h-full min-h-[12rem] flex-1 flex-col overflow-hidden rounded-md border border-border/70 bg-muted/15 shadow-inner">
+          <pre
+            className="min-h-0 flex-1 select-text overflow-y-auto bg-muted/40 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-foreground sm:text-[12px]"
+            aria-label="Delete handoff prompt (not editable)"
+          >
+            {readOnlyBody}
+          </pre>
+          {hoverChrome}
+        </div>
+        {speechFooter}
+      </div>
     );
+  }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
-      <p className="mb-1.5 max-w-[min(100%,40rem)] text-[10px] leading-snug text-muted-foreground sm:mb-2">{hint}</p>
-
-      <div className="group/prompt flex min-h-0 flex-1 flex-col rounded-md border border-border/70 bg-muted/15 shadow-inner">
+    <div className="flex h-full min-h-0 flex-1 basis-0 flex-col px-2 pb-3 pt-1 sm:px-4 sm:pb-4 sm:pt-1.5">
+      <div className="group/prompt flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-border/70 bg-muted/15 shadow-inner">
         {lockedHeader ? (
           <pre
             className="max-h-[min(32vh,14rem)] shrink-0 select-text overflow-y-auto border-b border-border/60 bg-muted/40 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-foreground sm:text-[12px]"
@@ -89,7 +92,7 @@ function HandoffPromptPane({
             {lockedHeader}
           </pre>
         ) : null}
-        <div className={cn("relative flex min-h-0 flex-1 flex-col", lockedHeader && "min-h-[12rem]")}>
+        <div className="relative flex min-h-0 flex-1 basis-0 flex-col">
           <HandoffMarkdownEditor
             key={editorKey}
             ref={editorRef}
@@ -106,49 +109,45 @@ function HandoffPromptPane({
   );
 }
 
-/** Exactly {@link UPDATE_LOCKED_LINE_COUNT} lines; copy is this plus a newline plus the user editor body. */
+/** Locked update header (read-only); copy is this plus a newline plus the user editor body. */
 function buildUpdateLockedPrefix(pageUrl: string, label: string, cid: string): string {
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
   const lines = [
     "You are to make changes to this component on the site.",
     "",
-    "## Where to find this block",
+    "## Where to find this component",
     `component_route_location= **${pageUrl}**`,
     "",
-    "## Block to make changes to",
+    "## Component to make changes to",
     `- Component: \`<Identified as="${escapeAttrInCode(labelShort)}" />\``,
     `- \`data-cid="${escapeAttrInCode(cidShort)}"\``,
+    `- and its children. The identified component is the parent of the component in question.`,
     "",
-    "## Make these changes to",
+    "## Make the changes to the component based on the below (UPDATE)",
   ];
-  if (lines.length !== UPDATE_LOCKED_LINE_COUNT) {
-    throw new Error(`buildUpdateLockedPrefix: expected ${UPDATE_LOCKED_LINE_COUNT} lines, got ${lines.length}`);
-  }
   return lines.join("\n");
 }
 
 function buildDeletePrompt(pageUrl: string, label: string, cid: string) {
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
-  const labelLine = `- Component: \`<Identified as="${escapeAttrInCode(labelShort)}" />\``;
+  const labelLine = `- Component: \`<Identified as="${escapeAttrInCode(labelShort)}" />\` - you will be removing this and its children from the page/route this was found.`;
   const cidLine = `- data-cid: \`${escapeAttrInCode(cidShort)}\``;
   const labelFull = label.length > BLOCK_LABEL_MAX ? `\n- Full \`as\` string: ${JSON.stringify(label)}` : "";
   const cidFull = cid.length > BLOCK_CID_MAX ? `\n- Full data-cid: ${JSON.stringify(cid)}` : "";
 
-  return `GAD marketing site (Next.js).
+  return `## Where to find this component
+**${pageUrl}** — open this URL in the browser; this is the page where the component appears, find in the codebase.
 
-## Where to find this block
-**${pageUrl}** — open this URL in the browser; this is the page where the block appears.
-
-## Block to make changes to
+## Component to make changes to
 ${labelLine}${labelFull}
 ${cidLine}${cidFull}
 
-## What to do
-1. Remove this \`Identified\` band from the page source, or remove the owning section if the whole section should go.
+## What to do(DELETE)
+1. Remove the identifier and its children
 2. Drop unused imports and components.
-3. Typecheck the GAD marketing site package you touched, then commit (message should name this block).`;
+3. Typecheck the site package you touched, then commit (message should name this component).`;
 }
 
 type SpeechRecInstance = {
@@ -276,12 +275,12 @@ function PromptContextStrip({ pageUrl, cid, label }: { pageUrl: string; cid: str
   return (
     <div
       className={cn(
-        "grid gap-3 border-b-2 border-border bg-muted/40 px-4 py-3.5 sm:grid-cols-3",
+        "grid shrink-0 gap-3 border-b-2 border-border bg-muted/40 px-4 py-3.5 sm:grid-cols-3",
         "shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--foreground)_6%,transparent)]",
       )}
     >
       <CopyableContextField
-        title="Where to find this block"
+        title="Where to find this component"
         value={pageUrl}
         copyKey="pageUrl"
         activeKey={copiedKey}
@@ -315,6 +314,7 @@ function HoverPromptChrome({
   listening,
   interim,
   speechOk,
+  showDictation = true,
   onStartDictation,
   onStopDictation,
   onCopy,
@@ -324,6 +324,8 @@ function HoverPromptChrome({
   listening: boolean;
   interim: string;
   speechOk: boolean;
+  /** When false, only Copy is shown (frozen delete prompt). */
+  showDictation?: boolean;
   onStartDictation: () => void;
   onStopDictation: () => void;
   onCopy: () => void;
@@ -339,58 +341,60 @@ function HoverPromptChrome({
         "group-hover/prompt:pointer-events-auto group-hover/prompt:opacity-100",
       )}
     >
-      {listening && interim ? (
+      {showDictation && listening && interim ? (
         <p className="pointer-events-none mb-2 max-h-16 overflow-y-auto rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[11px] text-emerald-100">
           <span className="font-semibold text-emerald-300">Live · </span>
           {interim}
         </p>
       ) : null}
       <div className="pointer-events-auto flex flex-row items-center justify-end gap-3">
-        {!listening ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              onStartDictation();
-            }}
-            disabled={!speechOk}
-            title={
-              speechOk
-                ? "Speech inserts at the caret in the editable editor (below the fixed header on Upd)."
-                : "Speech recognition not available"
-            }
-            className={cn(
-              "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
-              "bg-gradient-to-br from-emerald-500 to-teal-700 text-white",
-              "transition-transform hover:scale-105 active:scale-95",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              !speechOk && "cursor-not-allowed opacity-40",
-            )}
-            aria-label="Start dictation at cursor"
-          >
-            <Mic className="size-4" strokeWidth={2} aria-hidden />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              onStopDictation();
-            }}
-            title="Stop dictation"
-            className={cn(
-              "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
-              "bg-gradient-to-br from-red-600 to-rose-800 text-white",
-              "ring-2 ring-red-400/50",
-              "animate-[pulse_1.1s_ease-in-out_infinite]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2",
-            )}
-            aria-label="Stop dictation"
-            aria-pressed="true"
-          >
-            <MicOff className="size-4" strokeWidth={2} aria-hidden />
-          </button>
-        )}
+        {showDictation ? (
+          !listening ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onStartDictation();
+              }}
+              disabled={!speechOk}
+              title={
+                speechOk
+                  ? "Speech inserts at the caret in the editable editor (below the fixed header on Upd)."
+                  : "Speech recognition not available"
+              }
+              className={cn(
+                "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
+                "bg-gradient-to-br from-emerald-500 to-teal-700 text-white",
+                "transition-transform hover:scale-105 active:scale-95",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                !speechOk && "cursor-not-allowed opacity-40",
+              )}
+              aria-label="Start dictation at cursor"
+            >
+              <Mic className="size-4" strokeWidth={2} aria-hidden />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onStopDictation();
+              }}
+              title="Stop dictation"
+              className={cn(
+                "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
+                "bg-gradient-to-br from-red-600 to-rose-800 text-white",
+                "ring-2 ring-red-400/50",
+                "animate-[pulse_1.1s_ease-in-out_infinite]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2",
+              )}
+              aria-label="Stop dictation"
+              aria-pressed="true"
+            >
+              <MicOff className="size-4" strokeWidth={2} aria-hidden />
+            </button>
+          )
+        ) : null}
 
         <Button
           type="button"
@@ -425,12 +429,13 @@ export function DevIdAgentPromptDialog({
   const [tab, setTab] = useState<"update" | "delete">("update");
   const [updateLockedPrefix, setUpdateLockedPrefix] = useState("");
   const [updateUserDraft, setUpdateUserDraft] = useState("");
-  const [deleteDraft, setDeleteDraft] = useState("");
+  const [deleteLockedText, setDeleteLockedText] = useState("");
   const [interim, setInterim] = useState("");
   const [listening, setListening] = useState(false);
   const [speechOk, setSpeechOk] = useState(true);
   const recRef = useRef<SpeechRecInstance | null>(null);
   const updateEditorRef = useRef<HandoffEditorHandle | null>(null);
+  /** Satisfies `HandoffPromptPane` when delete tab uses `readOnlyBody` only (editor not mounted). */
   const deleteEditorRef = useRef<HandoffEditorHandle | null>(null);
   const tabRef = useRef<"update" | "delete">(tab);
   const [copied, setCopied] = useState<"update" | "delete" | null>(null);
@@ -446,7 +451,7 @@ export function DevIdAgentPromptDialog({
     if (!open || !entry) return;
     setUpdateLockedPrefix(buildUpdateLockedPrefix(pageUrl, label, cid));
     setUpdateUserDraft("");
-    setDeleteDraft(buildDeletePrompt(pageUrl, label, cid));
+    setDeleteLockedText(buildDeletePrompt(pageUrl, label, cid));
     setInterim("");
     setTab("update");
     setCopied(null);
@@ -510,7 +515,7 @@ export function DevIdAgentPromptDialog({
       }
       if (hasFinal && piece.trim()) {
         const t = tabRef.current;
-        const el = t === "update" ? updateEditorRef.current : deleteEditorRef.current;
+        const el = t === "update" ? updateEditorRef.current : null;
         insertTranscriptAtEditor(el, piece);
         setInterim("");
       } else {
@@ -536,7 +541,7 @@ export function DevIdAgentPromptDialog({
   }, [stopRecognition]);
 
   const copyActive = () => {
-    const text = tab === "update" ? `${updateLockedPrefix}\n${updateUserDraft}` : deleteDraft;
+    const text = tab === "update" ? `${updateLockedPrefix}\n${updateUserDraft}` : deleteLockedText;
     navigator.clipboard?.writeText(text).catch(() => {});
     setCopied(tab);
     window.setTimeout(() => setCopied(null), 1400);
@@ -550,9 +555,10 @@ export function DevIdAgentPromptDialog({
         overlayClassName="z-[200] bg-black/85"
         className={cn(
           "fixed z-[210] flex w-[calc(100vw-0.5rem)] max-w-none flex-col gap-0 overflow-hidden border bg-background p-0 shadow-xl",
-          // Mobile: near-edge sheet; desktop: wide editor surface
-          "left-1/2 top-1 max-h-[min(98dvh,calc(100dvh-0.5rem))] -translate-x-1/2 translate-y-0 rounded-lg",
-          "sm:top-1/2 sm:max-h-[min(96vh,100dvh)] sm:w-[min(98vw,72rem)] sm:-translate-y-1/2 sm:rounded-xl",
+          // Explicit height + floor: modal size stays stable; editor scrolls inside flex-1 slot.
+          "h-[min(88dvh,calc(100dvh-1.5rem))] min-h-[28rem] max-h-[min(98dvh,calc(100dvh-0.5rem))]",
+          "left-1/2 top-1 -translate-x-1/2 translate-y-0 rounded-lg",
+          "sm:top-1/2 sm:h-[min(82vh,calc(100dvh-2rem))] sm:min-h-[32rem] sm:max-h-[min(96vh,100dvh)] sm:w-[min(98vw,72rem)] sm:-translate-y-1/2 sm:rounded-xl",
         )}
       >
         <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
@@ -567,7 +573,7 @@ export function DevIdAgentPromptDialog({
             stopRecognition();
             setTab(v as "update" | "delete");
           }}
-          className="flex min-h-0 flex-1 flex-col"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           <div className="shrink-0 px-3 pt-1 sm:px-4">
             <TabsList className="inline-flex h-6 w-fit gap-px rounded border border-border/40 bg-muted/30 p-px">
@@ -592,13 +598,15 @@ export function DevIdAgentPromptDialog({
             </TabsList>
           </div>
 
-          <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
+          <TabsContent
+            value="update"
+            className="mt-0 flex min-h-0 flex-1 basis-0 flex-col overflow-hidden data-[state=inactive]:hidden"
+          >
             <HandoffPromptPane
               draft={updateUserDraft}
               onDraftChange={setUpdateUserDraft}
               editorRef={updateEditorRef}
               editorKey={`${handoffEpoch}-update`}
-              variant="update"
               lockedHeader={updateLockedPrefix}
               ariaLabel="Your instructions for the agent (editable)"
               hoverChrome={
@@ -621,24 +629,28 @@ export function DevIdAgentPromptDialog({
             />
           </TabsContent>
 
-          <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
+          <TabsContent
+            value="delete"
+            className="mt-0 flex min-h-0 flex-1 basis-0 flex-col overflow-hidden data-[state=inactive]:hidden"
+          >
             <HandoffPromptPane
-              draft={deleteDraft}
-              onDraftChange={setDeleteDraft}
+              draft=""
+              onDraftChange={() => {}}
               editorRef={deleteEditorRef}
               editorKey={`${handoffEpoch}-delete`}
-              variant="delete"
-              ariaLabel="Delete handoff prompt for your agent"
+              readOnlyBody={deleteLockedText}
+              ariaLabel="Delete handoff prompt (read-only)"
               hoverChrome={
                 <HoverPromptChrome
                   listening={listening}
                   interim={interim}
                   speechOk={speechOk}
+                  showDictation={false}
                   onStartDictation={startRecognition}
                   onStopDictation={stopRecognition}
                   onCopy={copyActive}
                   copied={copied === "delete"}
-                  copyDisabled={!deleteDraft.trim()}
+                  copyDisabled={!deleteLockedText.trim()}
                 />
               }
             />

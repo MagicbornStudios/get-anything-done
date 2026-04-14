@@ -6,7 +6,7 @@
  * inside the transformed slide-in repeatedly hit “maximum update depth” in dev.
  */
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Settings2, Copy, Eye, X, MessageSquare } from "lucide-react";
 import { useDevId } from "./DevIdProvider";
@@ -26,12 +26,30 @@ function sortRegistryEntries(entries: RegistryEntry[]): RegistryEntry[] {
     .map(({ entry }) => entry);
 }
 
+function locateComponentOnPage(cid: string, flashComponent: (cid: string) => void) {
+  const safe =
+    typeof CSS !== "undefined" && typeof CSS.escape === "function"
+      ? CSS.escape(cid)
+      : cid.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const el = document.querySelector(`[data-cid="${safe}"]`) as HTMLElement | null;
+  if (!el) return;
+  const hadTab = el.hasAttribute("tabindex");
+  if (!hadTab) el.setAttribute("tabindex", "-1");
+  el.focus({ preventScroll: true });
+  el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  flashComponent(cid);
+  window.setTimeout(() => {
+    if (!hadTab) el.removeAttribute("tabindex");
+  }, 1400);
+}
+
 type RowProps = {
   entry: RegistryEntry;
   highlightCid: string | null;
   setHighlightCid: (v: string | null) => void;
   justCopied: string | null;
   onCopy: (cid: string) => void;
+  onLocate: (cid: string) => void;
   onPrompt: (entry: RegistryEntry) => void;
 };
 
@@ -41,6 +59,7 @@ function RegistryListRow({
   setHighlightCid,
   justCopied,
   onCopy,
+  onLocate,
   onPrompt,
 }: RowProps) {
   const isHl = highlightCid === entry.cid;
@@ -66,12 +85,13 @@ function RegistryListRow({
 
       <button
         type="button"
-        onClick={() => onCopy(entry.cid)}
+        onClick={() => onLocate(entry.cid)}
         className={cn(
           "min-w-0 flex-1 cursor-pointer select-none truncate rounded px-1 py-0.5 text-left transition-colors",
           "hover:bg-background/40",
         )}
-        title={`${entry.label} · depth ${entry.depth} · click to copy ${entry.cid}`}
+        aria-label={`Scroll to ${entry.label} on the page`}
+        title={`${entry.label} · depth ${entry.depth} · click to scroll to component and flash highlight`}
       >
         <span className="text-muted-foreground/80">{entry.label}</span>
         <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
@@ -111,7 +131,7 @@ function RegistryListRow({
 
 export function SectionDevPanel() {
   const pathname = usePathname() ?? "";
-  const { enabled, highlightCid, setHighlightCid } = useDevId();
+  const { enabled, highlightCid, setHighlightCid, flashComponent } = useDevId();
   const registry = useSectionRegistry();
   const [open, setOpen] = useState(false);
   const [justCopied, setJustCopied] = useState<string | null>(null);
@@ -126,6 +146,13 @@ export function SectionDevPanel() {
     setJustCopied(cid);
     setTimeout(() => setJustCopied(null), 900);
   };
+
+  const locate = useCallback(
+    (cid: string) => {
+      locateComponentOnPage(cid, flashComponent);
+    },
+    [flashComponent],
+  );
 
   return (
     <>
@@ -211,6 +238,7 @@ export function SectionDevPanel() {
                   setHighlightCid={setHighlightCid}
                   justCopied={justCopied}
                   onCopy={copy}
+                  onLocate={locate}
                   onPrompt={setPromptEntry}
                 />
               ))
@@ -218,9 +246,9 @@ export function SectionDevPanel() {
           </ul>
 
           <div className="shrink-0 border-t border-border/60 p-3 text-[10px] leading-4 text-muted-foreground">
-            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Row label click copies id (see
-            native tooltip on hover). <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
-            -click a highlighted component copies id. Message icon: handoff prompts for your agent.
+            <kbd className="rounded bg-card px-1 font-mono">Alt+I</kbd> toggles dev IDs. Row label: scroll to block + flash
+            highlight. Copy icon copies id. <kbd className="rounded bg-card px-1 font-mono">Alt</kbd>
+            -click a component copies id. Message: agent handoff.
           </div>
         </Identified>
       </div>

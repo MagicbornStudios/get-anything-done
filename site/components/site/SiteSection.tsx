@@ -86,7 +86,7 @@ function SiteSectionSurface({
         className,
         showPersistentRing && "outline outline-2 outline-offset-2 outline-accent",
         showFlashRing &&
-          "outline outline-2 outline-offset-2 outline-emerald-400 transition-[outline-color] duration-200",
+          "outline outline-2 outline-offset-2 outline-emerald-400/90 shadow-[0_0_0_4px_rgba(52,211,153,0.25)] transition-[outline-color,box-shadow] duration-300",
       )}
     >
       {beforeShell}

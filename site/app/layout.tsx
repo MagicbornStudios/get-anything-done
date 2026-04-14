@@ -3,6 +3,7 @@ import "./globals.css";
 import { ClientDebugShell } from "@/components/debug/ClientDebugShell";
 import { DevIdProvider } from "@/components/devid/DevIdProvider";
 import { KeyboardShortcutsProvider } from "@/components/devid/KeyboardShortcuts";
+import { GlobalScrollbarBehavior } from "@/components/layout/GlobalScrollbarBehavior";
 
 export const metadata: Metadata = {
   title: "Get Anything Done — measurable AI agent workflows",
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body>
+        <GlobalScrollbarBehavior />
         <DevIdProvider>
           <ClientDebugShell>{children}</ClientDebugShell>
           <KeyboardShortcutsProvider />
