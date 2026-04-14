@@ -47,6 +47,9 @@
   "dependencies": {
     "citty": "^0.1.6"
   },
+  "optionalDependencies": {
+    "@huggingface/transformers": "^3.0.0"
+  },
   "devDependencies": {
     "c8": "^11.0.0",
     "esbuild": "^0.24.0",

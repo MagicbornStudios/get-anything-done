@@ -9311,9 +9311,11 @@ const evolutionSimilarity = defineCommand({
     threshold: { type: 'string', description: 'Flag pairs with score >= threshold (default 0.6)', default: '0.6' },
     shedThreshold: { type: 'string', description: 'Flag candidates stale vs promoted skills above this score (default 0.55)', default: '0.55' },
     includePromoted: { type: 'boolean', description: 'Include promoted skills/ in the main matrix (default: only shedding-compare)', default: false },
+    embeddings: { type: 'boolean', description: 'Use transformers.js embeddings instead of TF-IDF (requires `gad models install`)', default: false },
+    model: { type: 'string', description: 'Embedding model id or tag (e.g. minilm, bge-small) — default Xenova/all-MiniLM-L6-v2', default: '' },
     json: { type: 'boolean', description: 'Emit JSON instead of markdown report', default: false },
   },
-  run({ args }) {
+  async run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
     const sim = require('../lib/similarity.cjs');
     const threshold = parseFloat(args.threshold);
@@ -9328,8 +9330,69 @@ const evolutionSimilarity = defineCommand({
     ]).filter((d) => !d.id.includes('/candidates/') && !d.id.includes('/.evolutions/'));
 
     const mainDocs = args.includePromoted ? [...candidateDocs, ...promotedDocs] : candidateDocs;
-    const analysis = sim.analyzeCorpus(mainDocs, { threshold });
-    const shed = sim.analyzeShedding(candidateDocs, promotedDocs, { threshold: shedThreshold });
+
+    let analysis, shed;
+    if (args.embeddings) {
+      const emb = require('../lib/embeddings.cjs');
+      const modelId = emb.resolveModelId(args.model);
+      console.error(`[embeddings] model=${modelId}`);
+      console.error(`[embeddings] encoding ${mainDocs.length} docs...`);
+      try {
+        const vectors = await emb.embedCorpus(mainDocs, modelId, repoRoot, (i, n) => {
+          if (i % 5 === 0 || i === n) console.error(`[embeddings]   ${i}/${n}`);
+        });
+        analysis = emb.analyzeEmbeddingCorpus(mainDocs, vectors, { threshold });
+        // Shedding pass: embed promoted skills and find best match per candidate.
+        console.error(`[embeddings] encoding ${promotedDocs.length} promoted skills for shedding...`);
+        const promotedVecs = await emb.embedCorpus(promotedDocs, modelId, repoRoot);
+        const candVecStart = args.includePromoted ? 0 : 0; // candidateDocs are the first N of mainDocs
+        const shedResults = [];
+        for (let i = 0; i < candidateDocs.length; i++) {
+          const cv = vectors[candVecStart + i];
+          let best = { id: null, score: 0 };
+          for (let j = 0; j < promotedDocs.length; j++) {
+            const score = emb.cosineSimDense(cv, promotedVecs[j]);
+            if (score > best.score) best = { id: promotedDocs[j].id, score };
+          }
+          shedResults.push({
+            candidate: candidateDocs[i].id,
+            bestMatch: best.id,
+            score: best.score,
+            cosine: best.score,
+            jaccard: 0,
+            stale: best.score >= shedThreshold,
+          });
+        }
+        shedResults.sort((a, b) => b.score - a.score);
+        shed = { results: shedResults, threshold: shedThreshold };
+        // Decorate pairs with unique-term diffs from the TF-IDF path so the
+        // "context being lost on merge" report still works. The TF-IDF diff
+        // is independent of the similarity score and cheap to recompute.
+        const tfidfRef = sim.analyzeCorpus(mainDocs, { threshold: 0 });
+        const pairIndex = new Map();
+        for (const p of tfidfRef.pairs) pairIndex.set(`${p.a}||${p.b}`, p);
+        analysis.pairs = analysis.pairs.map((p) => {
+          const tf = pairIndex.get(`${p.a}||${p.b}`) || pairIndex.get(`${p.b}||${p.a}`);
+          return {
+            ...p,
+            cosine: p.score,
+            jaccard: 0,
+            uniqueInA: tf?.uniqueInA || [],
+            uniqueInB: tf?.uniqueInB || [],
+            sharedFiles: tf?.sharedFiles || [],
+          };
+        });
+      } catch (err) {
+        if (err.code === 'TRANSFORMERS_MISSING') {
+          console.error(err.message);
+          process.exit(2);
+        }
+        throw err;
+      }
+    } else {
+      analysis = sim.analyzeCorpus(mainDocs, { threshold });
+      shed = sim.analyzeShedding(candidateDocs, promotedDocs, { threshold: shedThreshold });
+    }
 
     if (args.json) {
       console.log(JSON.stringify({
@@ -9343,7 +9406,21 @@ const evolutionSimilarity = defineCommand({
       return;
     }
 
+    // Build the path map from the full union so both main analysis and
+    // shedding reports can print clickable repo-relative paths.
+    const pathMap = sim.buildPathMap([...candidateDocs, ...promotedDocs]);
+    const cwd = process.cwd();
+
     console.log(`# Similarity analysis — ${analysis.docCount} docs, threshold ${threshold.toFixed(2)}`);
+    if (args.embeddings) {
+      console.log('');
+      console.log('Backend: embeddings (Xenova/all-MiniLM-L6-v2 by default).');
+      console.log('Note: embedding scores run ~0.15-0.25 higher than TF-IDF on the same');
+      console.log('corpus because the model captures topical prior ("GAD framework prose")');
+      console.log('as baseline similarity. Suggested thresholds with --embeddings:');
+      console.log('  merge-candidate:  --threshold 0.80   (vs 0.60 for TF-IDF)');
+      console.log('  stale-shed:       --shedThreshold 0.75   (vs 0.55 for TF-IDF)');
+    }
     console.log('');
     console.log('## Flagged pairs (score >= threshold)');
     if (analysis.pairs.length === 0) {
@@ -9351,7 +9428,7 @@ const evolutionSimilarity = defineCommand({
     } else {
       console.log('');
       for (const pair of analysis.pairs) {
-        console.log(sim.formatPairReport(pair));
+        console.log(sim.formatPairReport(pair, pathMap, cwd));
         console.log('');
       }
     }
@@ -9361,7 +9438,7 @@ const evolutionSimilarity = defineCommand({
     console.log('');
     console.log('## Shedding (candidates vs promoted skills)');
     console.log('');
-    console.log(sim.formatSheddingReport(shed));
+    console.log(sim.formatSheddingReport(shed, pathMap, cwd));
     console.log('');
     const stale = shed.results.filter((r) => r.stale).length;
     const flagged = analysis.pairs.length;
@@ -9595,6 +9672,138 @@ const workflowCmd = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// models subcommands — manage local embedding models per gad project.
+// Models cache under `.gad/models/` at the repo root (never committed).
+// Zero-cost when unused; lazy-requires @huggingface/transformers only when
+// an action that needs it runs.
+// ---------------------------------------------------------------------------
+
+const modelsListAvailable = defineCommand({
+  meta: { name: 'list-available', description: 'Show curated embedding models we know work with gad' },
+  run() {
+    const emb = require('../lib/embeddings.cjs');
+    console.log('Curated embedding models:');
+    console.log('');
+    for (const m of emb.CURATED_MODELS) {
+      const def = m.id === emb.DEFAULT_MODEL ? ' (default)' : '';
+      console.log(`  ${m.tag.padEnd(12)} ${m.id}${def}`);
+      console.log(`    ${m.note}`);
+      console.log(`    ~${m.sizeMB}MB on disk, ${m.dim}-dim vectors, task=${m.task}`);
+      console.log('');
+    }
+    console.log('Install: gad models install <tag-or-id>');
+    console.log('Example: gad models install minilm');
+  },
+});
+
+const modelsList = defineCommand({
+  meta: { name: 'list', description: 'Show models installed in this gad project' },
+  run() {
+    const emb = require('../lib/embeddings.cjs');
+    const repoRoot = process.cwd();
+    const installed = emb.listInstalledModels(repoRoot);
+    const dir = emb.projectModelsDir(repoRoot);
+    console.log(`Project models dir: ${dir}`);
+    console.log('');
+    if (installed.length === 0) {
+      console.log('No models installed.');
+      console.log('');
+      console.log('Install one with: gad models install <tag-or-id>');
+      console.log('See options with:  gad models list-available');
+      return;
+    }
+    console.log(`Installed models (${installed.length}):`);
+    for (const m of installed) {
+      console.log(`  ${m.id}   ${emb.formatBytes(m.sizeBytes)}`);
+      console.log(`    ${m.path}`);
+    }
+  },
+});
+
+const modelsPath = defineCommand({
+  meta: { name: 'path', description: 'Print the project models cache directory' },
+  run() {
+    const emb = require('../lib/embeddings.cjs');
+    console.log(emb.projectModelsDir(process.cwd()));
+  },
+});
+
+const modelsInstall = defineCommand({
+  meta: { name: 'install', description: 'Download and cache an embedding model from HuggingFace' },
+  args: {
+    model: { type: 'positional', description: 'Model id or tag (e.g. minilm, Xenova/all-MiniLM-L6-v2)', required: false, default: '' },
+  },
+  async run({ args }) {
+    const emb = require('../lib/embeddings.cjs');
+    const repoRoot = process.cwd();
+    const modelId = emb.resolveModelId(args.model);
+    console.log(`Resolving: ${modelId}`);
+    console.log(`Cache dir: ${emb.projectModelsDir(repoRoot)}`);
+    console.log('');
+    console.log('Downloading (first run will fetch ~90MB for MiniLM)...');
+    try {
+      // Instantiating the pipeline forces transformers.js to fetch and cache
+      // the model weights + tokenizer into env.cacheDir.
+      await emb.getEmbedder(modelId, repoRoot);
+      console.log('');
+      console.log(`Installed: ${modelId}`);
+      const installed = emb.listInstalledModels(repoRoot);
+      const match = installed.find((m) => m.id === modelId);
+      if (match) {
+        console.log(`  ${match.path}`);
+        console.log(`  ${emb.formatBytes(match.sizeBytes)}`);
+      }
+    } catch (err) {
+      if (err.code === 'TRANSFORMERS_MISSING') {
+        console.error(err.message);
+        process.exit(2);
+      }
+      console.error(`Install failed: ${err.message}`);
+      process.exit(1);
+    }
+  },
+});
+
+const modelsRemove = defineCommand({
+  meta: { name: 'remove', description: 'Delete a cached model from this gad project' },
+  args: {
+    model: { type: 'positional', description: 'Model id to remove (full org/model form)', required: true },
+  },
+  run({ args }) {
+    const emb = require('../lib/embeddings.cjs');
+    const repoRoot = process.cwd();
+    const installed = emb.listInstalledModels(repoRoot);
+    const match = installed.find((m) => m.id === args.model || m.id.endsWith(`/${args.model}`));
+    if (!match) {
+      console.error(`Not installed: ${args.model}`);
+      console.error('Run `gad models list` to see what is installed.');
+      process.exit(1);
+    }
+    fs.rmSync(match.path, { recursive: true, force: true });
+    // Also remove the org dir if empty
+    const orgDir = path.dirname(match.path);
+    try {
+      if (fs.existsSync(orgDir) && fs.readdirSync(orgDir).length === 0) {
+        fs.rmdirSync(orgDir);
+      }
+    } catch (_) { /* ignore */ }
+    console.log(`Removed: ${match.id}`);
+    console.log(`  ${match.path}`);
+  },
+});
+
+const modelsCmd = defineCommand({
+  meta: { name: 'models', description: 'Manage local embedding models for this gad project (install/remove/list)' },
+  subCommands: {
+    list: modelsList,
+    'list-available': modelsListAvailable,
+    install: modelsInstall,
+    remove: modelsRemove,
+    path: modelsPath,
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -9624,6 +9833,7 @@ const main = defineCommand({
     data: dataCmd,
     eval: evalCmd,
     evolution: evolutionCmd,
+    models: modelsCmd,
     workflow: workflowCmd,
     rounds: roundsCmd,
     verify: verifyCmd,
