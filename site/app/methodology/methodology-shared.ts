@@ -8,51 +8,6 @@ export function pickWorkedExamples(): EvalRunRecord[] {
   return [v8, barev3].filter((x): x is NonNullable<typeof x> => x != null);
 }
 
-export const AGENT_RUNTIMES = [
-  {
-    agent: "Claude Code",
-    hook: "PreToolUse / PostToolUse hooks via settings.json",
-    supported: true,
-    notes:
-      "First-class support. Hooks run before and after every tool call; session.jsonl captures the full invocation stream. Phase 25 writes a hook handler that emits trace v4 events directly.",
-  },
-  {
-    agent: "Aider",
-    hook: "Python callbacks + chat history export",
-    supported: true,
-    notes:
-      "Supported via converter. Python API exposes on_message / on_tool_call style callbacks; the existing chat history file is parseable for after-the-fact conversion. Future sub-phase.",
-  },
-  {
-    agent: "Continue.dev",
-    hook: "VS Code extension API (onToolCall, onChatUpdate)",
-    supported: true,
-    notes:
-      "Supported via converter. Extension hosts expose tool-call events; we'd ship a small extension-side emitter that writes trace v4 to disk. Future sub-phase.",
-  },
-  {
-    agent: "OpenAI Codex CLI",
-    hook: "Structured stream output (Running/Ran prefixes)",
-    supported: true,
-    notes:
-      "Supported via stream parser. Codex's terminal output format is line-delimited with recognisable prefixes (Running ..., • Ran ..., └ <output>). Lossier than hooks because reasoning text interleaves with tool calls and rate limits can truncate. Future sub-phase.",
-  },
-  {
-    agent: "Cursor",
-    hook: "Closed-source, no public hook API",
-    supported: false,
-    notes:
-      "No way to trace from inside the editor. The only access is through the chat panel which has no tool-call visibility. Not supported until Cursor exposes a hook runtime.",
-  },
-  {
-    agent: "Vanilla ChatGPT / Claude.ai web",
-    hook: "None",
-    supported: false,
-    notes:
-      "Web interfaces have no tool access and no extension points. Fundamentally the wrong shape of tool for the kind of work we're evaluating.",
-  },
-] as const;
-
 export const METHODOLOGY_TEMPLATE_ROWS: [string, string, string, string, string, string][] = [
   ["AGENTS.md", "✓", "✓", "✓", "✓", "✓"],
   ["REQUIREMENTS.xml", "✓", "✓", "✓", "✓", "✓"],
