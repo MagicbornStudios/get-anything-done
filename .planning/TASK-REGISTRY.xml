@@ -946,7 +946,7 @@
         <keywords>self-eval,framework-compliance,hydration,snapshot,tokens,metrics</keywords>
       </task>
       <task id="42.1-05" agent-id="default" skill="objective-eval-design" status="done" type="eval"><goal>Document the first-class framework comparison matrix for official evals: bare vs GSD vs GAD vs emergent vs custom. Define when a species remains canonical vs becomes custom (skills/content installed), retire GAD+emergent as a standalone matrix condition, and keep Escape the Dungeon as the official comparison target.</goal>
-        <resolution>Shipped 2026-04-13. Added `sdk/references/framework-comparison-matrix.md` as the canonical taxonomy for official eval conditions. The reference locks the canonical target to Escape the Dungeon, defines bare / GSD / GAD / emergent / custom, and codifies that any extra injected content moves a run into `custom` rather than inventing a separate `GAD+emergent` bucket.</resolution>
+        <resolution>Shipped 2026-04-13. Added `references/framework-comparison-matrix.md` as the canonical taxonomy for official eval conditions. The reference locks the canonical target to Escape the Dungeon, defines bare / GSD / GAD / emergent / custom, and codifies that any extra injected content moves a run into `custom` rather than inventing a separate `GAD+emergent` bucket.</resolution>
         <keywords>eval,matrix,bare,gsd,gad,emergent,custom,escape-the-dungeon</keywords>
       </task>
       <task id="42.1-06" agent-id="default" skill="gad-add-backlog" status="done" type="site"><goal>Capture the follow-up idea for a local-first project-market/project-editor surface that can edit eval folders, run local commands/builds, and act as an interactive brood editor or playground without requiring full page recompiles for every iteration.</goal>
@@ -999,15 +999,15 @@
     </task>
   </phase>
   <phase id="42.2">
-    <task id="42.2-01" type="docs" status="done" skill="default" agent="default"><goal>Write `sdk/references/proto-skills.md` as the canonical definition of proto-skill as a permanent skill type: pipeline stages, filesystem handoff contract (CANDIDATE.md + optional CONTEXT.md + REFERENCES.md), batching, promotion with PROVENANCE.md, and relationship to gad-skill-creator. Linked from the Reference nav and cited by decisions gad-167 and gad-168.</goal>
-      <resolution>Shipped 2026-04-13. sdk/references/proto-skills.md written covering pipeline stages, input/output contracts, batching rationale, context hydration pattern (calls gad snapshot/decisions/phases itself), validator semantics, and the create-proto-skill vs gad-skill-creator split.</resolution>
+    <task id="42.2-01" type="docs" status="done" skill="default" agent="default"><goal>Write `references/proto-skills.md` as the canonical definition of proto-skill as a permanent skill type: pipeline stages, filesystem handoff contract (CANDIDATE.md + optional CONTEXT.md + REFERENCES.md), batching, promotion with PROVENANCE.md, and relationship to gad-skill-creator. Linked from the Reference nav and cited by decisions gad-167 and gad-168.</goal>
+      <resolution>Shipped 2026-04-13. `references/proto-skills.md` written covering pipeline stages, input/output contracts, batching rationale, context hydration pattern (calls gad snapshot/decisions/phases itself), validator semantics, and the create-proto-skill vs gad-skill-creator split.</resolution>
       <keywords>proto-skill,references,docs,evolution</keywords>
     </task>
     <task id="42.2-02" type="site" status="done" skill="default" agent="default"><goal>Fix /findings/&lt;slug&gt; 404: ship `site/app/findings/[slug]/page.tsx` using generateStaticParams over FINDINGS catalog so the links from LineageMeasurementSection, RunHeroCallouts, and rubric hero resolve to standalone whitepaper-style pages.</goal>
       <resolution>Shipped 2026-04-13. [slug]/page.tsx renders title/summary/badges/bodyHtml with a back link to /findings. generateStaticParams emits one entry per finding in the catalog. generateMetadata returns per-finding titles.</resolution>
       <keywords>site,findings,404,whitepapers</keywords>
     </task>
-    <task id="42.2-03" type="skill" status="planned"><goal>Rename `sdk/skills/gad-quick-skill/` → `sdk/skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `sdk/skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched — decision gad-168.</goal>
+    <task id="42.2-03" type="skill" status="planned"><goal>Rename `skills/gad-quick-skill/` → `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched — decision gad-168.</goal>
       <keywords>skill,rename,create-proto-skill,evolution</keywords>
     </task>
     <task id="42.2-04" type="framework" status="planned"><goal>Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case.</goal>
@@ -1102,6 +1102,57 @@ Explicit `workflow_enter`/`workflow_exit` events are still queued as a separate 
     <task id="42.4-03" type="framework" status="done" skill="default" agent="default"><goal>Project metadata gains a `contextFramework` field resolved from gad.json.</goal>
       <resolution>Shipped 2026-04-14. `parseEvalProjects()` in build-site-data.mjs reads `context_framework` first, falls back to the legacy `workflow` field so existing gad.json files don't need a mass migration. Value `emergent` folds into `custom` per decision gad-164 since it's no longer a first-class matrix condition (gad-166). `EvalProjectMeta` interface gains `contextFramework: string | null` and documents the legacy `workflow` field as @deprecated. Downstream surfaces (project market cards, lineage, comparison views) can consume `contextFramework` going forward. No gad.json files touched — migration is opt-in. Coordinated with phase 43's species schema unification so the canonical name is ready when 43 lands.</resolution>
       <keywords>context-framework,schema,project-metadata</keywords>
+    </task>
+    <task id="42.4-04" type="framework" status="done" skill="default" agent="default"><goal>Patch `gad snapshot` lane bootstrap so plain project snapshots do not auto-register idle agent lanes, and prune stale unclaimed default lanes that were leaked by the old behavior. Capture the skill-catalog consolidation rule for duplicate public skill names.</goal>
+      <resolution>Shipped 2026-04-14. Plain `gad snapshot --projectid <id>` no longer auto-registers a lane just because a runtime is detected; bootstrap now requires explicit assignment intent (task scope, phase scope, parent/agent id, or explicit role context). Patched both live CLI path (`bin/gad.cjs`) and query-layer sources (`sdk/src/query/scoped-snapshot.ts`). Also updated lane listing cleanup in `lib/agent-lanes.cjs` and `sdk/src/query/agent-lanes.ts` so stale lanes with no claimed tasks or phases are marked released automatically instead of lingering forever. Verified locally: repeated project snapshots keep `agent: null` and do not mint `claude-default-0012+`. Logged follow-on decision gad-180: one canonical skill body per public skill name; duplicate same-name skill bodies are a catalog bug and must be merged, rewritten, or archived out of the canonical `skills/` tree.</resolution>
+      <commands>
+        <command>node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --json</command>
+        <command>node vendor/get-anything-done/bin/gad.cjs tasks active --projectid get-anything-done --json</command>
+      </commands>
+      <keywords>snapshot,agent-lanes,cleanup,skills,consolidation</keywords>
+    </task>
+    <task id="42.4-05" type="framework" status="done" skill="framework-upgrade" agent="default"><goal>Normalize the command-skill catalog so procedural legacy duplicates are consolidated into `gad-*` workflows/references, keep only canonical `gad-*` command skills in `skills/`, and make the naming contract explicit.</goal>
+      <resolution>Shipped 2026-04-14. Consolidated the duplicate plain-name command skills by moving their salvageable long-form methodology into prefixed workflows and leaving the `gad-*` command skills as the only canonical runtime-facing entries. Renamed authored workflow files to `workflows/gad-plan-phase.md`, `workflows/gad-new-project.md`, `workflows/gad-map-codebase.md`, and `workflows/gad-execute-phase.md`; added new prefixed workflows for `gad-debug` and `gad-eval-run`; updated canonical `gad-*` skills/commands/tests to reference the new workflow names; and removed the duplicate plain-name skill directories (`skills/plan-phase`, `skills/new-project`, `skills/map-codebase`, `skills/debug`, `skills/eval-run`, `skills/execute-phase`) from the canonical catalog. The procedural/methodology content now lives where it belongs: workflows for ordered execution and references for policy/background. Verified with targeted searches and site-data regeneration that live source paths now resolve through the prefixed `gad-*` workflow contract and the duplicate plain-name skills are gone from the shipped surface.</resolution>
+      <commands>
+        <command>node vendor/get-anything-done/site/scripts/build-site-data.mjs</command>
+        <command>node vendor/get-anything-done/site/scripts/compute-self-eval.mjs</command>
+      </commands>
+      <keywords>skills,workflows,consolidation,naming,framework-upgrade</keywords>
+    </task>
+  </phase>
+  <phase id="43">
+    <task id="43-01" type="cleanup" status="planned"><goal>Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.</goal>
+      <keywords>schema,cleanup,delete,evals</keywords>
+    </task>
+    <task id="43-02" type="cleanup" status="planned"><goal>Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.</goal>
+      <keywords>schema,merge,git-mv,evals</keywords>
+    </task>
+    <task id="43-03" type="framework" status="planned"><goal>Define the new gad.json schema (project.json + species.json split) and migrate every project to it. Drop eval_mode field everywhere (D-22). Stub cardImage/tagline/heroImage fields for phase 44 to populate (D-14). Drop compare_to references to deleted projects. Single-variant projects (cli-efficiency, reader-workspace, etc.) get a degenerate one-species shape per D-28.</goal>
+      <keywords>schema,gad-json,species,migration</keywords>
+    </task>
+    <task id="43-04" type="cleanup" status="planned"><goal>Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).</goal>
+      <keywords>preservation,gad-38,paths,git-mv</keywords>
+    </task>
+    <task id="43-05" type="pipeline" status="planned"><goal>Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list (line 583). Update the keys (currently project/version) to project/species/version. Update all downstream consumers in lockstep.</goal>
+      <keywords>build-site-data,extractor,schema</keywords>
+    </task>
+    <task id="43-06" type="framework" status="planned"><goal>Update the TypeScript types in site/lib/eval-data.generated.ts (and the source-of-truth interface) to add species, dna, cardImage, tagline, heroImage fields and remove evalMode. Update every consumer of the type so tsc passes.</goal>
+      <keywords>types,typescript,eval-data,schema</keywords>
+    </task>
+    <task id="43-07" type="framework" status="planned"><goal>Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts that for each species in each project the canonical preservation paths exist at evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/run/ and apps/portfolio/public/evals/&lt;project&gt;/&lt;species&gt;/v&lt;N&gt;/.</goal>
+      <keywords>tests,gad-38,preservation</keywords>
+    </task>
+    <task id="43-08" type="site" status="planned"><goal>Update site display strings across vendor/get-anything-done/site/. Replace user-facing "round" with "evolution", "vN" with "generation N", drop "brownfield"/"greenfield" framing entirely (no replacement). Add "DNA" and "spawn" terminology where appropriate. Touch hero, About, project market, project detail, methodology pages, planning tab, findings index. Use grep to find every instance.</goal>
+      <keywords>site,display,vocabulary,rename</keywords>
+    </task>
+    <task id="43-09" type="cli" status="planned"><goal>Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.</goal>
+      <keywords>cli,help-text,gad-eval,snapshot</keywords>
+    </task>
+    <task id="43-10" type="docs" status="planned"><goal>Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used "round" for what we now call "evolution" and "vN" per project for what we now call "generation" per species.</goal>
+      <keywords>docs,readme,agents-md,changelog</keywords>
+    </task>
+    <task id="43-11" type="docs" status="planned"><goal>Update ROADMAP.xml phase 44.5 title from "Brood Editor" to "Species Editor" and rewrite its goal to drop "brood" / "Brood Editor" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the "v4 brood" example phrasing. Closed phase prose stays verbatim per D-15.</goal>
+      <keywords>roadmap,phase-44.5,phase-45,brood-rename</keywords>
     </task>
   </phase>
   <phase id="44.5">
