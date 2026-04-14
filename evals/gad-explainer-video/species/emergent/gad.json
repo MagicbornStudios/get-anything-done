@@ -1,16 +1,11 @@
 {
   "type": "eval",
-  "name": "gad-explainer-video-emergent",
+  "name": "emergent",
   "description": "gad-explainer-video-emergent — tests the same hypotheses as gad-explainer-video but under the emergent workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
-  "eval_mode": "greenfield",
   "workflow": "emergent",
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": [
-    "gad-explainer-video",
-    "gad-explainer-video-bare"
-  ],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": false,
@@ -31,5 +26,8 @@
   },
   "domain": "stories",
   "build_requirement": "Remotion composition",
-  "tech_stack": "remotion"
+  "tech_stack": "remotion",
+  "species": "emergent",
+  "project": "gad-explainer-video",
+  "context_framework": "emergent"
 }

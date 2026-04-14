@@ -1,16 +1,11 @@
 {
   "type": "eval",
-  "name": "gad-explainer-video-bare",
+  "name": "bare",
   "description": "gad-explainer-video-bare — tests the same hypotheses as gad-explainer-video but under the bare workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
-  "eval_mode": "greenfield",
   "workflow": "bare",
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": [
-    "gad-explainer-video",
-    "gad-explainer-video-emergent"
-  ],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": false,
@@ -31,5 +26,8 @@
   },
   "domain": "stories",
   "build_requirement": "Remotion composition",
-  "tech_stack": "remotion"
+  "tech_stack": "remotion",
+  "species": "bare",
+  "project": "gad-explainer-video",
+  "context_framework": "bare"
 }

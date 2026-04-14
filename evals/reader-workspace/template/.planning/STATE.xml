@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<state>
-  <current-phase></current-phase>
-  <current-plan></current-plan>
-  <milestone>M1: Reader Workspace</milestone>
-  <status>not-started</status>
-  <next-action>Read REQUIREMENTS.xml and begin planning phase 01 (Foundation: types, utilities, build scaffold).</next-action>
-  <last-updated></last-updated>
-</state>

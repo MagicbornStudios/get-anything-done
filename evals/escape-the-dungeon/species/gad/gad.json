@@ -1,8 +1,7 @@
 {
   "type": "eval",
-  "name": "escape-the-dungeon",
+  "name": "gad",
   "description": "Greenfield: agent builds the game from scratch using the full GAD framework",
-  "eval_mode": "greenfield",
   "workflow": "gad",
   "baseline": null,
   "trace": true,
@@ -58,5 +57,8 @@
   },
   "domain": "game",
   "build_requirement": "playable HTML game",
-  "tech_stack": "kaplay"
+  "tech_stack": "kaplay",
+  "species": "gad",
+  "project": "escape-the-dungeon",
+  "context_framework": "gad"
 }

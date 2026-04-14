@@ -1,17 +1,12 @@
 {
   "type": "eval",
-  "name": "escape-the-dungeon-emergent",
+  "name": "emergent",
   "description": "Greenfield emergent: agent builds the game with skills inherited from previous bare/emergent runs. Tests whether self-created systems improve over iterations.",
-  "eval_mode": "greenfield",
   "workflow": "emergent",
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": [
-    "escape-the-dungeon",
-    "escape-the-dungeon-bare"
-  ],
-  "inherits_from": "escape-the-dungeon-bare",
+  "inherits_from": "bare",
   "constraints": {
     "uses_gad_framework": false,
     "starts_from_scratch": true,
@@ -71,5 +66,8 @@
     ]
   },
   "domain": "game",
-  "build_requirement": "playable HTML game"
+  "build_requirement": "playable HTML game",
+  "species": "emergent",
+  "project": "escape-the-dungeon",
+  "context_framework": "emergent"
 }

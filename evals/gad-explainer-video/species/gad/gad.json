@@ -1,16 +1,11 @@
 {
   "type": "eval",
-  "name": "gad-explainer-video",
+  "name": "gad",
   "description": "NEW EVAL DOMAIN (task 22-31, scaffolded 2026-04-09). The task is to produce a Remotion video that explains the GAD framework, its hypotheses, and its current state. The video requirements evolve across rounds the same way the escape-the-dungeon game requirements did — each round adds clarity, constraints, and complexity to the explainer script. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a completely different task domain: video composition instead of game implementation. If bare still outperforms GAD here, freedom hypothesis generalizes beyond game dev. If not, freedom may be specific to creative implementation.",
-  "eval_mode": "greenfield",
   "workflow": "gad",
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": [
-    "gad-explainer-video-bare",
-    "gad-explainer-video-emergent"
-  ],
   "status": "scaffolded — no runs yet",
   "constraints": {
     "uses_gad_framework": true,
@@ -73,5 +68,8 @@
   ],
   "domain": "stories",
   "build_requirement": "Remotion composition (src is build)",
-  "tech_stack": "remotion"
+  "tech_stack": "remotion",
+  "species": "gad",
+  "project": "gad-explainer-video",
+  "context_framework": "gad"
 }

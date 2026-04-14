@@ -1,9 +1,0 @@
-{
-  "installed_at": "2026-04-11T02:13:09.000Z",
-  "skills": [
-    {
-      "name": "reverse-engineer",
-      "source": "vendor/get-anything-done/.agents/skills/reverse-engineer"
-    }
-  ]
-}

@@ -95,6 +95,98 @@ function exists(p) {
   }
 }
 
+// -------------------------------------------------------------------------
+// Eval layout helpers (phase 43 schema)
+// -------------------------------------------------------------------------
+// Phase 43 unified the eval layout: every project lives in evals/<project>/
+// and contains a project.json plus species/<species>/ subdirs. Each species
+// has its own gad.json plus generation subdirs (v1, v2, ...). These helpers
+// flatten that hierarchy so walker code can iterate species rows or
+// generation rows without re-implementing the directory shape every time.
+
+function listEvalSpecies() {
+  const out = [];
+  if (!exists(EVALS_DIR)) return out;
+  for (const projectName of fs.readdirSync(EVALS_DIR).sort()) {
+    if (projectName.startsWith(".") || projectName.startsWith("_")) continue;
+    const projectDir = path.join(EVALS_DIR, projectName);
+    let stat;
+    try { stat = fs.statSync(projectDir); } catch { continue; }
+    if (!stat.isDirectory()) continue;
+    const speciesRoot = path.join(projectDir, "species");
+    if (!exists(speciesRoot)) continue;
+    for (const speciesName of fs.readdirSync(speciesRoot).sort()) {
+      const dir = path.join(speciesRoot, speciesName);
+      let s;
+      try { s = fs.statSync(dir); } catch { continue; }
+      if (!s.isDirectory()) continue;
+      const gadJsonPath = path.join(dir, "gad.json");
+      if (!exists(gadJsonPath)) continue;
+      out.push({
+        project: projectName,
+        species: speciesName,
+        // composite id used downstream as a stable key for species rows
+        id: `${projectName}/${speciesName}`,
+        dir,
+        projectDir,
+        gadJsonPath,
+        templateDir: path.join(dir, "template"),
+      });
+    }
+  }
+  return out;
+}
+
+function listEvalGenerations() {
+  const out = [];
+  for (const sp of listEvalSpecies()) {
+    let entries;
+    try { entries = fs.readdirSync(sp.dir).sort(); } catch { continue; }
+    for (const v of entries) {
+      if (!/^v\d+$/.test(v)) continue;
+      const dir = path.join(sp.dir, v);
+      let s;
+      try { s = fs.statSync(dir); } catch { continue; }
+      if (!s.isDirectory()) continue;
+      out.push({
+        project: sp.project,
+        species: sp.species,
+        version: v,
+        // composite id used as a stable key for generation rows
+        id: `${sp.project}/${sp.species}/${v}`,
+        dir,
+        runDir: path.join(dir, "run"),
+        speciesDir: sp.dir,
+        projectDir: sp.projectDir,
+      });
+    }
+  }
+  return out;
+}
+
+function listEvalProjects() {
+  const out = [];
+  if (!exists(EVALS_DIR)) return out;
+  for (const projectName of fs.readdirSync(EVALS_DIR).sort()) {
+    if (projectName.startsWith(".") || projectName.startsWith("_")) continue;
+    const projectDir = path.join(EVALS_DIR, projectName);
+    let stat;
+    try { stat = fs.statSync(projectDir); } catch { continue; }
+    if (!stat.isDirectory()) continue;
+    const projectJsonPath = path.join(projectDir, "project.json");
+    if (!exists(projectJsonPath)) continue;
+    let meta = {};
+    try { meta = JSON.parse(fs.readFileSync(projectJsonPath, "utf8")); } catch {}
+    out.push({
+      project: projectName,
+      dir: projectDir,
+      projectJsonPath,
+      meta,
+    });
+  }
+  return out;
+}
+
 function rmrf(p) {
   if (exists(p)) fs.rmSync(p, { recursive: true, force: true });
 }
@@ -274,18 +366,16 @@ function zipGadPackTemplate() {
 function zipEvalTemplates() {
   console.log("[2/4] Zipping per-eval templates");
   const results = [];
-  if (!exists(EVALS_DIR)) return results;
-  for (const name of fs.readdirSync(EVALS_DIR).sort()) {
-    const projectDir = path.join(EVALS_DIR, name);
-    if (!fs.statSync(projectDir).isDirectory()) continue;
-    if (name.startsWith(".")) continue;
-    const templateDir = path.join(projectDir, "template");
-    if (!exists(templateDir)) continue;
-    const zipPath = path.join(DOWNLOADS_DIR, `eval-${name}-template.zip`);
-    const entry = zipDirectory(templateDir, zipPath, `eval:${name}`);
+  for (const sp of listEvalSpecies()) {
+    if (!exists(sp.templateDir)) continue;
+    const slug = `${sp.project}-${sp.species}`;
+    const zipPath = path.join(DOWNLOADS_DIR, `eval-${slug}-template.zip`);
+    const entry = zipDirectory(sp.templateDir, zipPath, `eval:${slug}`);
     if (entry) {
       results.push({
-        project: name,
+        project: sp.project,
+        species: sp.species,
+        id: sp.id,
         zipPath: `/${entry.path}`,
         bytes: entry.bytes,
       });
@@ -360,18 +450,16 @@ function zipPlanningOnly(srcDir, zipPath, label) {
 function zipPlanningOnlyPerEval() {
   console.log("[2b/4] Zipping planning-only per eval");
   const results = [];
-  if (!exists(EVALS_DIR)) return results;
-  for (const name of fs.readdirSync(EVALS_DIR).sort()) {
-    const projectDir = path.join(EVALS_DIR, name);
-    if (!fs.statSync(projectDir).isDirectory()) continue;
-    if (name.startsWith(".")) continue;
-    const templateDir = path.join(projectDir, "template");
-    if (!exists(templateDir)) continue;
-    const zipPath = path.join(PLANNING_ZIPS_DIR, `eval-${name}-planning.zip`);
-    const entry = zipPlanningOnly(templateDir, zipPath, name);
+  for (const sp of listEvalSpecies()) {
+    if (!exists(sp.templateDir)) continue;
+    const slug = `${sp.project}-${sp.species}`;
+    const zipPath = path.join(PLANNING_ZIPS_DIR, `eval-${slug}-planning.zip`);
+    const entry = zipPlanningOnly(sp.templateDir, zipPath, slug);
     if (entry) {
       results.push({
-        project: name,
+        project: sp.project,
+        species: sp.species,
+        id: sp.id,
         zipPath: `/${entry.path}`,
         bytes: entry.bytes,
         files: entry.files,
@@ -387,59 +475,42 @@ function zipPlanningOnlyPerEval() {
 
 function findTraceFiles() {
   const traces = [];
-  if (!exists(EVALS_DIR)) return traces;
-  for (const project of fs.readdirSync(EVALS_DIR).sort()) {
-    const projectDir = path.join(EVALS_DIR, project);
-    if (!fs.statSync(projectDir).isDirectory()) continue;
-    if (project.startsWith(".")) continue;
-    for (const version of fs.readdirSync(projectDir).sort()) {
-      if (!/^v\d+$/.test(version)) continue;
-      const traceFile = path.join(projectDir, version, "TRACE.json");
-      if (!exists(traceFile)) continue;
-      try {
-        const data = JSON.parse(fs.readFileSync(traceFile, "utf8"));
-        traces.push({ project, version, data });
-      } catch (err) {
-        console.warn(`  [warn] failed to parse ${traceFile}: ${err.message}`);
-      }
+  for (const gen of listEvalGenerations()) {
+    const traceFile = path.join(gen.dir, "TRACE.json");
+    if (!exists(traceFile)) continue;
+    try {
+      const data = JSON.parse(fs.readFileSync(traceFile, "utf8"));
+      traces.push({ project: gen.project, species: gen.species, version: gen.version, id: gen.id, data });
+    } catch (err) {
+      console.warn(`  [warn] failed to parse ${traceFile}: ${err.message}`);
     }
   }
   return traces;
 }
 
 /**
- * Scan each eval project for gad.json + extract scoring weights.
- * Also snapshot eval_mode, workflow, baseline, constraints — used by the
- * /projects/[id] page and the methodology page.
+ * Scan each eval species for gad.json + extract scoring weights.
+ * Phase 43: emits one row per (project, species). Use scanEvalParents() for
+ * project-level metadata (project.json).
  */
 function scanEvalProjects() {
-  console.log("[2h/4] Scanning eval project metadata (gad.json)");
-  const projects = [];
-  if (!exists(EVALS_DIR)) return projects;
-  for (const name of fs.readdirSync(EVALS_DIR).sort()) {
-    const projectDir = path.join(EVALS_DIR, name);
-    if (!fs.statSync(projectDir).isDirectory()) continue;
-    if (name.startsWith(".")) continue;
-    const gadJsonPath = path.join(projectDir, "gad.json");
-    if (!exists(gadJsonPath)) continue;
+  console.log("[2h/4] Scanning eval species metadata (species/<species>/gad.json)");
+  const rows = [];
+  for (const sp of listEvalSpecies()) {
     try {
-      const data = JSON.parse(fs.readFileSync(gadJsonPath, "utf8"));
-      // Decision gad-179 / phase 42.4-03: `contextFramework` is the canonical
-      // per-project framework identifier going forward. We read the new
-      // `context_framework` field first; fall back to the legacy `workflow`
-      // field (which historically held the same axis: "gad", "bare",
-      // "gsd", "emergent", ...) so existing gad.json files don't need a
-      // mass migration. The value `emergent` folds into `custom` per
-      // decision gad-164 since it's no longer a first-class matrix
-      // condition (gad-166).
-      const rawFramework = data.context_framework || data.workflow || null;
+      const data = JSON.parse(fs.readFileSync(sp.gadJsonPath, "utf8"));
+      const rawFramework = data.context_framework || data.workflow || sp.species || null;
       const contextFramework =
         rawFramework === "emergent" ? "custom" : rawFramework;
-      projects.push({
-        id: name,
-        name,
+      rows.push({
+        // Composite key — the new canonical species id
+        id: sp.id,
+        project: sp.project,
+        species: sp.species,
+        // Legacy `name` field — kept as the species name for backwards-compat
+        // with consumers that still index by a single string.
+        name: sp.id,
         description: data.description || null,
-        evalMode: data.eval_mode || null,
         workflow: data.workflow || null,
         contextFramework,
         baseline: data.baseline || null,
@@ -451,11 +522,34 @@ function scanEvalProjects() {
         buildRequirement: data.build_requirement || null,
       });
     } catch (err) {
-      console.warn(`  [warn] failed to parse ${gadJsonPath}: ${err.message}`);
+      console.warn(`  [warn] failed to parse ${sp.gadJsonPath}: ${err.message}`);
     }
   }
-  console.log(`  [scan] ${projects.length} eval project(s)`);
-  return projects;
+  console.log(`  [scan] ${rows.length} eval species across ${new Set(rows.map(r => r.project)).size} project(s)`);
+  return rows;
+}
+
+/**
+ * Scan each parent eval project's project.json. Returns one row per project.
+ */
+function scanEvalParents() {
+  console.log("[2h.5/4] Scanning eval project metadata (project.json)");
+  const rows = [];
+  for (const p of listEvalProjects()) {
+    rows.push({
+      id: p.project,
+      project: p.project,
+      name: p.meta.name || p.project,
+      slug: p.meta.slug || p.project,
+      description: p.meta.description || null,
+      domain: p.meta.domain || null,
+      techStack: p.meta.techStack || p.meta.tech_stack || null,
+      tagline: p.meta.tagline || null,
+      cardImage: p.meta.cardImage || null,
+      heroImage: p.meta.heroImage || null,
+    });
+  }
+  return rows;
 }
 
 /**
@@ -464,18 +558,13 @@ function scanEvalProjects() {
  * Returns a map keyed by `${project}/${version}` -> { skillFiles, agentFiles, planningFiles, workflowNotes }.
  */
 function scanProducedArtifacts() {
-  console.log("[2i/4] Scanning agent-produced artifacts per run");
+  console.log("[2i/4] Scanning agent-produced artifacts per generation");
   const produced = {};
-  if (!exists(EVALS_DIR)) return produced;
-  for (const project of fs.readdirSync(EVALS_DIR).sort()) {
-    const projectDir = path.join(EVALS_DIR, project);
-    if (!fs.statSync(projectDir).isDirectory()) continue;
-    if (project.startsWith(".")) continue;
-    for (const version of fs.readdirSync(projectDir).sort()) {
-      if (!/^v\d+$/.test(version)) continue;
-      const runDir = path.join(projectDir, version, "run");
-      if (!exists(runDir)) continue;
-      const key = `${project}/${version}`;
+  for (const gen of listEvalGenerations()) {
+    const runDir = gen.runDir;
+    if (!exists(runDir)) continue;
+    const key = gen.id;
+    {
       const entry = {
         skillFiles: [],
         agentFiles: [],
@@ -548,15 +637,18 @@ function scanProducedArtifacts() {
       }
     }
   }
-  console.log(`  [scan] ${Object.keys(produced).length} run(s) with produced artifacts`);
+  console.log(`  [scan] ${Object.keys(produced).length} generation(s) with produced artifacts`);
   return produced;
 }
 
 const IMPLEMENTATION_WORKFLOWS = new Set(["gad", "bare", "emergent"]);
 
 function inferWorkflow(project, data) {
-  if (project.includes("-bare")) return "bare";
-  if (project.includes("-emergent")) return "emergent";
+  // Phase 43: species name is now the canonical context_framework. The
+  // helpers pass species through `data.species` when scanning, so prefer
+  // that when present.
+  if (data.species && IMPLEMENTATION_WORKFLOWS.has(data.species)) return data.species;
+  if (data.context_framework && IMPLEMENTATION_WORKFLOWS.has(data.context_framework)) return data.context_framework;
   if (data.workflow && IMPLEMENTATION_WORKFLOWS.has(data.workflow)) return data.workflow;
   return "gad";
 }
@@ -580,26 +672,29 @@ function copyCurrentRequirements() {
   console.log("[2c/4] Copying current game requirements");
   const out = [];
   ensureDir(REQUIREMENTS_DIR);
-  const projects = ["escape-the-dungeon", "escape-the-dungeon-bare", "escape-the-dungeon-emergent"];
-  for (const project of projects) {
-    // Try template/.planning/REQUIREMENTS.xml first, then template/REQUIREMENTS.xml.
+  // Phase 43: walk every species under escape-the-dungeon for its current
+  // REQUIREMENTS.xml. The single-source-of-truth is at species/<species>/template/.
+  for (const sp of listEvalSpecies()) {
+    if (sp.project !== "escape-the-dungeon") continue;
     const candidates = [
-      path.join(EVALS_DIR, project, "template", ".planning", "REQUIREMENTS.xml"),
-      path.join(EVALS_DIR, project, "template", "REQUIREMENTS.xml"),
+      path.join(sp.templateDir, ".planning", "REQUIREMENTS.xml"),
+      path.join(sp.templateDir, "REQUIREMENTS.xml"),
     ];
     const src = candidates.find(exists);
     if (!src) continue;
     const content = fs.readFileSync(src, "utf8");
-    // Read the version attribute from the XML itself so we stop hardcoding.
     const versionMatch = content.match(/<requirements\s+version="([^"]+)"/);
     const version = versionMatch ? versionMatch[1] : "unknown";
-    const destName = `${project}-REQUIREMENTS-${version}.xml`;
+    const slug = `${sp.project}-${sp.species}`;
+    const destName = `${slug}-REQUIREMENTS-${version}.xml`;
     const dest = path.join(REQUIREMENTS_DIR, destName);
     fs.copyFileSync(src, dest);
     const size = fs.statSync(dest).size;
-    console.log(`  [copy] ${project} ${version} → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
+    console.log(`  [copy] ${slug} ${version} → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
     out.push({
-      project,
+      project: sp.project,
+      species: sp.species,
+      id: sp.id,
       version,
       path: `/downloads/requirements/${destName}`,
       bytes: size,
@@ -834,15 +929,13 @@ function scanCatalog() {
   // template/skills/<name>.md → the eval copies that skill into its starting state.
   const inheritanceMap = {}; // skillId -> [project...]
   for (const skill of catalog.skills) inheritanceMap[skill.id] = [];
-  if (exists(EVALS_DIR)) {
-    for (const project of fs.readdirSync(EVALS_DIR).sort()) {
-      const skillsDir = path.join(EVALS_DIR, project, "template", "skills");
-      if (!exists(skillsDir)) continue;
-      for (const file of fs.readdirSync(skillsDir)) {
-        if (!file.endsWith(".md")) continue;
-        const skillId = file.replace(/\.md$/, "");
-        if (inheritanceMap[skillId]) inheritanceMap[skillId].push(project);
-      }
+  for (const sp of listEvalSpecies()) {
+    const skillsDir = path.join(sp.templateDir, "skills");
+    if (!exists(skillsDir)) continue;
+    for (const file of fs.readdirSync(skillsDir)) {
+      if (!file.endsWith(".md")) continue;
+      const skillId = file.replace(/\.md$/, "");
+      if (inheritanceMap[skillId]) inheritanceMap[skillId].push(sp.id);
     }
   }
   catalog.inheritance = inheritanceMap;
@@ -2182,19 +2275,15 @@ function normalizeHumanReviewPrebuild(humanReview) {
  * Each run gets a REQUIREMENTS_BY_RUN entry; the UI can then pop up a modal
  * showing the file content without a network fetch.
  */
-function loadRequirementsForRun(project, requirementsVersion) {
-  // Priority 1: current template version (v5 as of 2026-04-09). The current
-  // template always holds the LATEST requirements version and carries the full
-  // history of addendums inside it. Any run stamped with the template's current
-  // version reads directly from the template. Pre-current versions fall through
-  // to the snapshot path below.
+function loadRequirementsForRun(project, species, requirementsVersion) {
   const currentTemplateVersion = 'v5';
   if (requirementsVersion === currentTemplateVersion || requirementsVersion === 'v4') {
-    // v4 still resolves to the same file for now because the template includes
-    // the full v4 base + v5 addendum — a v4-tagged run can still read it.
+    const speciesDir = species
+      ? path.join(EVALS_DIR, project, 'species', species)
+      : path.join(EVALS_DIR, project);
     const candidates = [
-      path.join(EVALS_DIR, project, 'template', '.planning', 'REQUIREMENTS.xml'),
-      path.join(EVALS_DIR, project, 'template', 'REQUIREMENTS.xml'),
+      path.join(speciesDir, 'template', '.planning', 'REQUIREMENTS.xml'),
+      path.join(speciesDir, 'template', 'REQUIREMENTS.xml'),
     ];
     for (const candidate of candidates) {
       if (exists(candidate)) {
@@ -2220,6 +2309,9 @@ function loadRequirementsForRun(project, requirementsVersion) {
     };
     const snapshotSlug = snapshotMap[requirementsVersion];
     if (snapshotSlug) {
+      // Phase 43: snapshots are written keyed by old project name
+      // ("escape-the-dungeon") because they were extracted from git history
+      // before the species split. Keep that as the lookup key.
       const base = project.startsWith('escape-the-dungeon')
         ? 'escape-the-dungeon'
         : project;
@@ -2238,8 +2330,10 @@ function loadRequirementsForRun(project, requirementsVersion) {
     }
   }
 
-  // Priority 3: the current REQUIREMENTS.md meta file for the project
-  const metaPath = path.join(EVALS_DIR, project, 'REQUIREMENTS.md');
+  // Priority 3: the current REQUIREMENTS.md meta file for the species
+  const metaPath = species
+    ? path.join(EVALS_DIR, project, 'species', species, 'REQUIREMENTS.md')
+    : path.join(EVALS_DIR, project, 'REQUIREMENTS.md');
   if (exists(metaPath)) {
     return {
       filename: `REQUIREMENTS.md (eval meta)`,
@@ -2263,23 +2357,24 @@ function loadRequirementsForRun(project, requirementsVersion) {
  * surfaces the biggest one — typically the one that captures the most
  * project-specific knowledge.
  */
-function loadTopSkillForRun(project, version, producedArtifacts) {
-  const key = `${project}/${version}`;
+function loadTopSkillForRun(project, species, version, producedArtifacts) {
+  const key = species ? `${project}/${species}/${version}` : `${project}/${version}`;
   const produced = producedArtifacts[key];
   if (!produced || !produced.skillFiles || produced.skillFiles.length === 0) {
     return null;
   }
 
-  // Sort by bytes descending — biggest first
   const sorted = [...produced.skillFiles].sort((a, b) => (b.bytes ?? 0) - (a.bytes ?? 0));
   const top = sorted[0];
   if (!top) return null;
 
-  // Try to read the skill content from the preserved run's planning dir
+  const speciesRunDir = species
+    ? path.join(EVALS_DIR, project, 'species', species, version, 'run')
+    : path.join(EVALS_DIR, project, version, 'run');
   const candidates = [
-    path.join(EVALS_DIR, project, version, 'run', 'game', '.planning', 'skills', top.name),
-    path.join(EVALS_DIR, project, version, 'run', '.planning', 'skills', top.name),
-    path.join(EVALS_DIR, project, version, 'run', 'game', 'skills', top.name),
+    path.join(speciesRunDir, 'game', '.planning', 'skills', top.name),
+    path.join(speciesRunDir, '.planning', 'skills', top.name),
+    path.join(speciesRunDir, 'game', 'skills', top.name),
   ];
   for (const candidate of candidates) {
     if (exists(candidate)) {
@@ -2352,8 +2447,11 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
         : null;
     return {
       project: t.project,
+      species: t.species,
+      // Composite id: project/species/version — the new canonical row key
+      id: t.id,
       version: t.version,
-      workflow: inferWorkflow(t.project, d),
+      workflow: inferWorkflow(t.project, { ...d, species: t.species }),
       requirementsVersion: d.requirements_version ?? "unknown",
       date: d.date ?? null,
       gadVersion: d.gad_version ?? null,
@@ -2396,8 +2494,8 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
             skillsAuthored: Array.isArray(d.skills_provenance.skills_authored) ? d.skills_provenance.skills_authored : [],
           }
         : null,
-      requirementsDoc: loadRequirementsForRun(t.project, d.requirements_version ?? 'v4'),
-      topSkill: loadTopSkillForRun(t.project, t.version, extras.producedArtifacts ?? {}),
+      requirementsDoc: loadRequirementsForRun(t.project, t.species, d.requirements_version ?? 'v4'),
+      topSkill: loadTopSkillForRun(t.project, t.species, t.version, extras.producedArtifacts ?? {}),
     };
   });
 
@@ -2410,7 +2508,7 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
     const pq = r.planningQuality;
     const timing = r.timing;
     const ga = r.gitAnalysis;
-    const produced = extras.producedArtifacts?.[`${r.project}/${r.version}`];
+    const produced = extras.producedArtifacts?.[r.id];
 
     r.derived = {
       // |composite - human_review| — flags runs where process metrics lie
@@ -2451,11 +2549,16 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
 
   const playable = {};
   for (const r of records) {
-    const playablePath = path.join(PLAYABLE_DIR, r.project, r.version, "index.html");
+    // Phase 43: playable index keyed by project/species/version.
+    const speciesSegment = r.species ? r.species : null;
+    const playablePath = speciesSegment
+      ? path.join(PLAYABLE_DIR, r.project, speciesSegment, r.version, "index.html")
+      : path.join(PLAYABLE_DIR, r.project, r.version, "index.html");
     if (exists(playablePath)) {
-      // Explicit filename — Next.js on Vercel does not serve directory index
-      // files for public/ subdirectories reliably, so link to index.html.
-      playable[`${r.project}/${r.version}`] = `/playable/${r.project}/${r.version}/index.html`;
+      const urlPath = speciesSegment
+        ? `/playable/${r.project}/${speciesSegment}/${r.version}/index.html`
+        : `/playable/${r.project}/${r.version}/index.html`;
+      playable[r.id] = urlPath;
     }
   }
 
@@ -2874,14 +2977,28 @@ function auditPlayable() {
     return;
   }
   const found = [];
+  // Phase 43: walk project/species/version layout.
   for (const project of fs.readdirSync(PLAYABLE_DIR).sort()) {
     const pd = path.join(PLAYABLE_DIR, project);
     if (!fs.statSync(pd).isDirectory()) continue;
-    for (const version of fs.readdirSync(pd).sort()) {
-      const vd = path.join(pd, version);
-      if (!fs.statSync(vd).isDirectory()) continue;
-      if (exists(path.join(vd, "index.html"))) {
-        found.push(`${project}/${version}`);
+    for (const speciesName of fs.readdirSync(pd).sort()) {
+      const spd = path.join(pd, speciesName);
+      if (!fs.statSync(spd).isDirectory()) continue;
+      // If this looks like a version dir (vN), the playable layout is the
+      // legacy flat shape — surface it as project/version.
+      if (/^v\d+$/.test(speciesName)) {
+        if (exists(path.join(spd, "index.html"))) {
+          found.push(`${project}/${speciesName}`);
+        }
+        continue;
+      }
+      for (const version of fs.readdirSync(spd).sort()) {
+        const vd = path.join(spd, version);
+        if (!fs.statSync(vd).isDirectory()) continue;
+        if (!/^v\d+$/.test(version)) continue;
+        if (exists(path.join(vd, "index.html"))) {
+          found.push(`${project}/${speciesName}/${version}`);
+        }
       }
     }
   }

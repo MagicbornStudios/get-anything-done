@@ -1,0 +1,10 @@
+{
+  "name": "GAD Explainer Video",
+  "slug": "gad-explainer-video",
+  "description": "A Remotion-rendered explainer video for the GAD framework. The non-game eval domain — tests whether framework / context-framework hypotheses generalize beyond game implementation.",
+  "domain": "video",
+  "techStack": "remotion",
+  "tagline": null,
+  "cardImage": null,
+  "heroImage": null
+}

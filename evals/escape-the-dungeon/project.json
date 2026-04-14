@@ -1,0 +1,10 @@
+{
+  "name": "Escape the Dungeon",
+  "slug": "escape-the-dungeon",
+  "description": "A roguelite dungeon-crawler the agent must implement end-to-end. The canonical implementation eval — used to test framework / context-framework / DNA hypotheses across multiple species.",
+  "domain": "game",
+  "techStack": "kaplay",
+  "tagline": null,
+  "cardImage": null,
+  "heroImage": null
+}

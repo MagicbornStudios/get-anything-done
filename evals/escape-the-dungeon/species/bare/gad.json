@@ -1,16 +1,11 @@
 {
   "type": "eval",
-  "name": "escape-the-dungeon-bare",
+  "name": "bare",
   "description": "Greenfield baseline: agent builds the game WITHOUT a planning framework, creating its own workflow",
-  "eval_mode": "greenfield",
   "workflow": "bare",
   "baseline": null,
   "trace": true,
   "template": "template/",
-  "compare_to": [
-    "escape-the-dungeon",
-    "escape-the-dungeon-emergent"
-  ],
   "constraints": {
     "uses_gad_framework": false,
     "starts_from_scratch": true,
@@ -62,5 +57,8 @@
     ]
   },
   "domain": "game",
-  "build_requirement": "playable HTML game"
+  "build_requirement": "playable HTML game",
+  "species": "bare",
+  "project": "escape-the-dungeon",
+  "context_framework": "bare"
 }
