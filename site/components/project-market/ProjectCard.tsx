@@ -2,7 +2,8 @@
 
 import { Identified } from "@/components/devid/Identified";
 import Link from "next/link";
-import { Star, Gamepad2, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Star, Gamepad2, ExternalLink, Rocket, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,34 @@ type Props = {
   project: EnrichedProject;
 };
 
+const IS_DEV = process.env.NODE_ENV === "development";
+
 export function ProjectCard({ project }: Props) {
+  const [launchState, setLaunchState] = useState<
+    { kind: "idle" } | { kind: "pending" } | { kind: "ok"; command: string } | { kind: "err"; message: string }
+  >({ kind: "idle" });
+
+  async function handleLaunch(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setLaunchState({ kind: "pending" });
+    try {
+      const res = await fetch("/api/dev/launch-eval", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ projectId: project.id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setLaunchState({ kind: "err", message: data.error ?? "launch failed" });
+        return;
+      }
+      setLaunchState({ kind: "ok", command: data.command });
+    } catch (err) {
+      setLaunchState({ kind: "err", message: err instanceof Error ? err.message : "network error" });
+    }
+  }
+
   return (
     <Identified as="ProjectCard" className="contents">
     <Card
@@ -88,7 +116,7 @@ export function ProjectCard({ project }: Props) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-3 pt-1">
           <Link
             href={`/projects/${project.id}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
@@ -96,7 +124,33 @@ export function ProjectCard({ project }: Props) {
             View project
             <ExternalLink size={10} aria-hidden />
           </Link>
+          {IS_DEV && (
+            <button
+              type="button"
+              onClick={handleLaunch}
+              disabled={launchState.kind === "pending"}
+              className="inline-flex items-center gap-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
+              title="Dev-only: stubbed launch — prints resolved `gad eval run` to the dev-server log (44.5-02 replaces this with a real bridge)"
+            >
+              {launchState.kind === "pending" ? (
+                <Loader2 size={10} className="animate-spin" aria-hidden />
+              ) : (
+                <Rocket size={10} aria-hidden />
+              )}
+              Launch eval
+            </button>
+          )}
         </div>
+        {IS_DEV && launchState.kind === "ok" && (
+          <p className="truncate rounded-md bg-emerald-500/10 px-2 py-1 font-mono text-[10px] text-emerald-300">
+            {launchState.command}
+          </p>
+        )}
+        {IS_DEV && launchState.kind === "err" && (
+          <p className="truncate rounded-md bg-rose-500/10 px-2 py-1 font-mono text-[10px] text-rose-300">
+            {launchState.message}
+          </p>
+        )}
       </CardContent>
     </Card>
     </Identified>
