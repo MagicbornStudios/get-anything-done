@@ -68,6 +68,7 @@ const SKILLS_DIR = path.join(REPO_ROOT, "skills");
 const AGENTS_DIR = path.join(REPO_ROOT, "agents");
 const EVALS_DIR = path.join(REPO_ROOT, "evals");
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "workflows");
+const CONTEXT_FRAMEWORKS_DIR = path.join(REPO_ROOT, ".planning", "context-frameworks");
 const DATA_DIR = path.join(REPO_ROOT, "data");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
 const DOWNLOADS_DIR = path.join(PUBLIC_DIR, "downloads");
@@ -718,6 +719,11 @@ function scanDirFiles(dir, pattern) {
 function scanCatalog() {
   console.log("[2e/4] Scanning catalog (skills, agents, templates)");
   const catalog = { skills: [], agents: [], commands: [], templates: [] };
+  function shouldSkipCatalogSkill(baseDir, entryName) {
+    if (entryName.startsWith("gad-")) return false;
+    const gadSibling = path.join(baseDir, `gad-${entryName}`, "SKILL.md");
+    return exists(gadSibling);
+  }
 
   function addSkillsFromDir(baseDir, sourceLabel, defaultOrigin = "human-authored") {
     if (!exists(baseDir)) return;
@@ -748,6 +754,8 @@ function scanCatalog() {
       if (!entry.isDirectory()) continue;
       if (entry.name === "emergent") continue; // handled separately
       if (entry.name === "candidates") continue; // quarantined drafts (GAD-D-144), excluded from catalog
+      if (entry.name === "proto-skills") continue; // incubation stage, not part of the public/runtime catalog
+      if (shouldSkipCatalogSkill(baseDir, entry.name)) continue; // legacy alias superseded by gad-* canonical skill
       const skill = readSkill(
         path.join(baseDir, entry.name),
         entry.name,
@@ -828,6 +836,7 @@ function scanCatalog() {
   catalog.inheritance = inheritanceMap;
 
   catalog.workflows = parseWorkflows();
+  catalog.contextFrameworks = parseContextFrameworks();
   // Live/emergent synthesis reads trace events and enriches workflow entries
   // in place. Authored workflows gain `liveGraph` and `conformance`; emergent
   // workflows are appended to the same array with `origin: "emergent"`.
@@ -892,6 +901,42 @@ function parseWorkflows() {
   return out;
 }
 
+/**
+ * Context frameworks (phase 42.4, decision gad-179) are bundles that
+ * reference existing catalog items by slug. Each lives as a Markdown file
+ * under .planning/context-frameworks/*.md with YAML frontmatter listing
+ * the skills/agents/workflows it includes.
+ */
+function parseContextFrameworks() {
+  const out = [];
+  if (!exists(CONTEXT_FRAMEWORKS_DIR)) return out;
+  for (const name of fs.readdirSync(CONTEXT_FRAMEWORKS_DIR).sort()) {
+    if (!name.endsWith(".md")) continue;
+    if (name === "README.md") continue;
+    const file = path.join(CONTEXT_FRAMEWORKS_DIR, name);
+    const fullSrc = fs.readFileSync(file, "utf8");
+    const { data: meta, body: src } = parseFrontmatter(fullSrc);
+    const slug = meta.slug || name.replace(/\.md$/, "");
+    const asArray = (v) => (Array.isArray(v) ? v : v == null ? [] : [String(v)]);
+    out.push({
+      slug,
+      name: meta.name || slug,
+      description: meta.description || "",
+      version: meta.version ? String(meta.version) : "0.0.0",
+      extends: meta.extends && meta.extends !== "null" ? String(meta.extends) : null,
+      skills: asArray(meta.skills).map(String),
+      agents: asArray(meta.agents).map(String),
+      workflows: asArray(meta.workflows).map(String),
+      canonicalProjects: asArray(meta.canonicalProjects || meta["canonical-projects"]).map(String),
+      bodyHtml: renderMarkdown(src),
+      bodyRaw: src,
+      file: path.relative(REPO_ROOT, file).replace(/\\/g, "/"),
+    });
+  }
+  console.log(`  [context-frameworks] parsed ${out.length} framework(s) from ${path.relative(REPO_ROOT, CONTEXT_FRAMEWORKS_DIR)}`);
+  return out;
+}
+
 // -------------------------------------------------------------------------
 // Workflow trace synthesis (phase 42.3-04 + 42.3-09)
 // Reads `.planning/.trace-events.jsonl`, derives:
@@ -922,6 +967,12 @@ const WORKFLOW_MINE_THRESHOLDS = {
  * applied here so legacy traces can be analyzed.
  */
 function classifyTraceEventScope(evt) {
+  // Prefer the explicit scope written by gad-trace-hook.cjs at emission
+  // time (decision gad-175 v2). Fall back to the path-based heuristic
+  // for legacy events written before the hook was updated.
+  if (evt && typeof evt.scope === "string" && evt.scope.length > 0) {
+    return evt.scope;
+  }
   const touched =
     evt?.type === "file_mutation"
       ? evt.path
@@ -1879,6 +1930,30 @@ export interface Workflow {
   support?: WorkflowEmergentSupport;
 }
 
+/**
+ * ContextFramework is a bundle that references existing catalog items
+ * (skills, agents, workflows) by slug. It is NOT a copy — when the
+ * referenced items update, every project on the framework picks up the
+ * update without re-bundling. Frameworks can extend other frameworks
+ * via \`extends\` (e.g. a future "GAD-lite" inherits from "gad").
+ * Decision gad-179.
+ */
+export interface ContextFramework {
+  slug: string;
+  name: string;
+  description: string;
+  version: string;
+  /** Optional parent framework slug — this framework inherits its bundle and can override. */
+  extends: string | null;
+  skills: string[];
+  agents: string[];
+  workflows: string[];
+  canonicalProjects: string[];
+  bodyHtml: string;
+  bodyRaw: string;
+  file: string;
+}
+
 export interface PlanningTask {
   id: string;
   status: string;
@@ -1924,6 +1999,8 @@ export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = ${JSON.stringify(
 export const FINDINGS: Finding[] = ${JSON.stringify(findings || [], null, 2)};
 
 export const WORKFLOWS: Workflow[] = ${JSON.stringify(catalog.workflows || [], null, 2)};
+
+export const CONTEXT_FRAMEWORKS: ContextFramework[] = ${JSON.stringify(catalog.contextFrameworks || [], null, 2)};
 
 export const PLANNING_STATE: PlanningState = ${JSON.stringify(planningState || null, null, 2)};
 

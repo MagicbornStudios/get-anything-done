@@ -154,8 +154,54 @@ function readStdin() {
 /** Max events before log rotation truncates the oldest */
 const MAX_TRACE_EVENTS = 1000;
 
-function appendEvent(projectRoot, event) {
+/**
+ * Classify the scope an event belongs to — decision gad-175. v2 (this
+ * function) runs at emission time using the real cwd from the hook
+ * payload and the agent's ancestry, so we can make a cleaner call than
+ * the path-based fallback classifier in build-site-data.mjs (which
+ * still runs for legacy events that were written without a scope).
+ *
+ * Rules, in order:
+ *  - `GAD_EVAL_TRACE_DIR` is set -> this is an eval run routed to its own
+ *    trace file; scope = eval-agent regardless of cwd.
+ *  - cwd contains `.claude/worktrees/agent-*` or `/worktrees/agent-*` ->
+ *    working inside an agent worktree; scope = eval-agent.
+ *  - cwd contains `/evals/<project>/game/` or ends in `/game/<anything>` ->
+ *    working inside an eval's game dir; scope = eval-agent.
+ *  - `GAD_BROOD_PROJECT_ID` env set -> scope = brood-project (phase 44.5).
+ *  - otherwise scope = gad-framework.
+ *
+ * Returns a string slug, never null. The synthesizer filters by scope
+ * at ingest; a missing scope falls back to the path-based classifier.
+ */
+function classifyEventScope(payload, projectRoot) {
+  if (process.env.GAD_EVAL_TRACE_DIR) return 'eval-agent';
+  if (process.env.GAD_BROOD_PROJECT_ID) return 'brood-project';
+
+  const cwd = String((payload && payload.cwd) || process.cwd() || '').replace(/\\/g, '/').toLowerCase();
+  if (!cwd) return 'gad-framework';
+
+  if (cwd.includes('.claude/worktrees/agent-')) return 'eval-agent';
+  if (cwd.includes('/worktrees/agent-')) return 'eval-agent';
+  if (/\/evals\/[^/]+\/game(\/|$)/.test(cwd)) return 'eval-agent';
+  if (cwd.endsWith('/game') || cwd.includes('/game/')) {
+    // Only flag as eval-agent if we're inside a GAD repo's eval tree; a
+    // user's own `/game/` directory at the repo root shouldn't be misread.
+    if (cwd.includes('/evals/')) return 'eval-agent';
+  }
+
+  return 'gad-framework';
+}
+
+function appendEvent(projectRoot, event, payload) {
   const traceFile = getTraceFile(projectRoot);
+  // Decision gad-175: stamp every emitted event with an explicit scope so
+  // the synthesizer doesn't have to reverse-engineer it from paths. The
+  // path-based classifier in build-site-data.mjs is the fallback for
+  // legacy events that were written before this field existed.
+  if (event && typeof event === 'object' && !event.scope) {
+    event.scope = classifyEventScope(payload || {}, projectRoot);
+  }
   fs.appendFileSync(traceFile, JSON.stringify(event) + '\n');
 
   // Log rotation: truncate oldest events when over limit
@@ -386,7 +432,7 @@ async function main() {
     const activeSkill = readActiveSkill(projectRoot);
 
     if (skillEvent) {
-      appendEvent(projectRoot, skillEvent);
+      appendEvent(projectRoot, skillEvent, payload);
     }
 
     // Only PostToolUse produces tool_use / subagent_spawn / file_mutation
@@ -403,7 +449,7 @@ async function main() {
         triggerSkill: activeSkill,
       });
       for (const ev of events) {
-        appendEvent(projectRoot, ev);
+        appendEvent(projectRoot, ev, payload);
       }
     }
   } catch (err) {
