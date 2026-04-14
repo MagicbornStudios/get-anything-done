@@ -30,17 +30,18 @@ The loop:
 gad:evolution:evolve
   ├─ compute-self-eval finds high-pressure phases (selection pressure)
   ├─ for each new candidate phase:
-  │     ├─ write skills/proto-skills/<slug>/CANDIDATE.md
+  │     ├─ keep skills/candidates/<slug>/CANDIDATE.md as the raw source
   │     │     = raw phase dump (no curator pre-digestion)
   │     ├─ invoke gad-quick-skill on CANDIDATE.md
-  │     │     → writes skills/proto-skills/<slug>/SKILL.md + references/
+  │     │     → writes .planning/proto-skills/<slug>/SKILL.md + references/
   │     └─ invoke gad-evolution-validator on the new proto-skill
-  │           → writes skills/proto-skills/<slug>/VALIDATION.md (advisory)
+  │           → writes .planning/proto-skills/<slug>/VALIDATION.md (advisory)
   └─ register one TASK-REGISTRY task: "Review evolution <id> proto-skills"
 
 (human review, async)
   reads SKILL.md + VALIDATION.md → promote or discard
 
+gad evolution install <slug> ... ← installs staged proto-skill into coding agents
 gad evolution promote <slug>     ← moves to skills/, joins species DNA
 gad evolution discard <slug>     ← deletes the proto-skill
 ```
@@ -68,7 +69,7 @@ highlights for files the phase touched — not curated context.
 ## Step 1: Refuse to start if there's a pending evolution
 
 ```sh
-PENDING=$(ls skills/proto-skills 2>/dev/null | wc -l)
+PENDING=$(ls .planning/proto-skills 2>/dev/null | wc -l)
 if [ "$PENDING" -gt 0 ]; then
   echo "Cannot start a new evolution — $PENDING proto-skills still pending review."
   echo "Run 'gad status' to see them, then promote or discard each before evolving again."
@@ -125,7 +126,7 @@ gad decisions --projectid get-anything-done | grep -i "phase $PHASE_ID"
 
 ## Step 4: Write CANDIDATE.md per candidate phase
 
-For each candidate phase, write `skills/proto-skills/<slug>/CANDIDATE.md`. The
+For each candidate phase, keep `skills/candidates/<slug>/CANDIDATE.md` as the raw source and write the staged proto-skill to `.planning/proto-skills/<slug>/`. The
 slug is `phase-<N>-<short-kebab-of-title>`.
 
 CANDIDATE.md is a structured raw dump:
@@ -176,8 +177,8 @@ Hand each candidate off to `gad-quick-skill`:
 ```
 For each <slug> in this evolution:
   Invoke gad-quick-skill with: "Process the candidate at
-  skills/proto-skills/<slug>/CANDIDATE.md. Write SKILL.md + references/
-  in the same directory. Do not ask questions."
+  skills/candidates/<slug>/CANDIDATE.md. Write SKILL.md + references/
+  under .planning/proto-skills/<slug>/. Do not ask questions."
 ```
 
 If you have access to spawning subagents, run multiple in parallel — one per
@@ -189,7 +190,7 @@ After SKILL.md is written, hand the proto-skill to `gad-evolution-validator`:
 
 ```
 For each <slug>:
-  Invoke gad-evolution-validator with: "Validate skills/proto-skills/<slug>/SKILL.md
+  Invoke gad-evolution-validator with: "Validate .planning/proto-skills/<slug>/SKILL.md
   against the actual repo. Write VALIDATION.md flagging file refs that don't
   exist, CLI commands that don't match `gad --help`, and convention shapes
   that diverge from existing files."
@@ -207,8 +208,8 @@ proto-skill — that's bookkeeping bloat. The proto-skills dir IS the work list.
 ```
 Task: Review evolution <evolution-id> proto-skills
 Status: planned
-Goal: Open skills/proto-skills/<slug>/SKILL.md for each pending proto-skill,
-read its VALIDATION.md, then run `gad evolution promote <slug>` or
+Goal: Open .planning/proto-skills/<slug>/SKILL.md for each pending proto-skill,
+read its VALIDATION.md, optionally run `gad evolution install <slug> ...` to test it in a coding agent, then run `gad evolution promote <slug>` or
 `gad evolution discard <slug>`. Evolution closes automatically when the
 proto-skills dir is empty.
 Skill: gad-evolution-evolve
@@ -223,11 +224,12 @@ Evolution 2026-04-13-001 started.
   Pending review: 5
 
 Open the SKILL.md for each in your editor:
-  skills/proto-skills/<slug-1>/SKILL.md
-  skills/proto-skills/<slug-2>/SKILL.md
+  .planning/proto-skills/<slug-1>/SKILL.md
+  .planning/proto-skills/<slug-2>/SKILL.md
   ...
 
-Then promote or discard each:
+Then install/promote/discard each:
+  gad evolution install <slug> --codex
   gad evolution promote <slug>
   gad evolution discard <slug>
 
@@ -237,7 +239,7 @@ Run `gad status` to see remaining proto-skills at any time.
 ## Failure modes
 
 - **Pending proto-skills blocking evolve:** intentional. If you really need to
-  start fresh, manually `rm -rf skills/proto-skills/*` and accept that work
+  start fresh, manually clear `.planning/proto-skills/*` and accept that work
   is lost. There's no `--force` flag because forcing this defeats the gate.
 - **No high-pressure phases found:** valid outcome. Print "no proto-skills
   this evolution" and don't create any files. The evolution marker still
@@ -255,4 +257,5 @@ Run `gad status` to see remaining proto-skills at any time.
 - `evals/FINDINGS-2026-04-13-evolution-loop-experiment.md` — why the curator
   was dropped
 - Roadmap phase 42 — the design context
+
 
