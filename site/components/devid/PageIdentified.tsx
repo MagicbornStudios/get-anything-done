@@ -2,7 +2,7 @@
 
 /**
  * Page-level dev landmark — **does not** use `SectionRegistry` or the section dev panel.
- * When dev IDs are on (`Alt+I`), hovering the band shows a small **bottom-left** chip
+ * When dev IDs are on (`Alt+I`), hovering the band shows a small **top-left** chip
  * with the `data-cid` and a **Copy** control. Alt+click still copies + highlights like
  * `<Identified>`.
  */
@@ -27,7 +27,7 @@ export interface PageIdentifiedProps {
   stableCid?: string;
   className?: string;
   children?: ReactNode;
-  /** Where the dev chip sits over the band (default bottom-left). */
+  /** Where the dev chip sits over the band (default top-left). */
   chipCorner?: "bottom-left" | "top-left";
 }
 
@@ -37,7 +37,7 @@ export function PageIdentified({
   stableCid,
   className,
   children,
-  chipCorner = "bottom-left",
+  chipCorner = "top-left",
 }: PageIdentifiedProps) {
   const rid = useId();
   const autoCid = `${slugify(as)}-${rid.replace(/[^a-z0-9]/gi, "")}`;
