@@ -88,16 +88,19 @@ function resolveLatestGeneration(projectName: string): ProjectOperatorProps["lat
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return EVAL_PROJECTS.map((p) => ({ id: p.id }));
+  // Route is a catch-all so project ids with slashes (e.g. "app-forge/gad")
+  // map to a url path. `id` must be a string[] for catch-all routes.
+  return EVAL_PROJECTS.map((p) => ({ id: p.id.split("/") }));
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string[] }>;
 }) {
   const { id } = await params;
-  const project = EVAL_PROJECTS.find((p) => p.id === id);
+  const joined = Array.isArray(id) ? id.join("/") : String(id);
+  const project = EVAL_PROJECTS.find((p) => p.id === joined);
   if (!project) return { title: "Project not found" };
   return {
     title: `${project.name} — GAD eval project`,
@@ -108,10 +111,11 @@ export async function generateMetadata({
 export default async function ProjectPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string[] }>;
 }) {
   const { id } = await params;
-  const project = EVAL_PROJECTS.find((p) => p.id === id);
+  const joined = Array.isArray(id) ? id.join("/") : String(id);
+  const project = EVAL_PROJECTS.find((p) => p.id === joined);
   if (!project) notFound();
 
   const runs = projectRuns(project.id);

@@ -9,7 +9,7 @@ import {
   type EvalProjectMeta,
   type Workflow,
 } from "@/lib/eval-data";
-import { formatBytes, REPO } from "@/app/projects/[id]/project-detail-shared";
+import { formatBytes, REPO } from "./project-detail-shared";
 import { SiteSection } from "@/components/site";
 
 type PlanningZip = { zipPath: string; bytes: number } | undefined;
