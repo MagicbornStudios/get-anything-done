@@ -100,7 +100,7 @@ function exists(p) {
 // -------------------------------------------------------------------------
 // Phase 43 unified the eval layout: every project lives in evals/<project>/
 // and contains a project.json plus species/<species>/ subdirs. Each species
-// has its own gad.json plus generation subdirs (v1, v2, ...). These helpers
+// has its own species.json plus generation subdirs (v1, v2, ...). These helpers
 // flatten that hierarchy so walker code can iterate species rows or
 // generation rows without re-implementing the directory shape every time.
 
@@ -120,8 +120,8 @@ function listEvalSpecies() {
       let s;
       try { s = fs.statSync(dir); } catch { continue; }
       if (!s.isDirectory()) continue;
-      const gadJsonPath = path.join(dir, "gad.json");
-      if (!exists(gadJsonPath)) continue;
+      const speciesJsonPath = path.join(dir, "species.json");
+      if (!exists(speciesJsonPath)) continue;
       out.push({
         project: projectName,
         species: speciesName,
@@ -129,7 +129,7 @@ function listEvalSpecies() {
         id: `${projectName}/${speciesName}`,
         dir,
         projectDir,
-        gadJsonPath,
+        speciesJsonPath,
         templateDir: path.join(dir, "template"),
       });
     }
@@ -489,16 +489,16 @@ function findTraceFiles() {
 }
 
 /**
- * Scan each eval species for gad.json + extract scoring weights.
+ * Scan each eval species for species.json + extract scoring weights.
  * Phase 43: emits one row per (project, species). Use scanEvalParents() for
  * project-level metadata (project.json).
  */
 function scanEvalProjects() {
-  console.log("[2h/4] Scanning eval species metadata (species/<species>/gad.json)");
+  console.log("[2h/4] Scanning eval species metadata (species/<species>/species.json)");
   const rows = [];
   for (const sp of listEvalSpecies()) {
     try {
-      const data = JSON.parse(fs.readFileSync(sp.gadJsonPath, "utf8"));
+      const data = JSON.parse(fs.readFileSync(sp.speciesJsonPath, "utf8"));
       const rawFramework = data.context_framework || data.workflow || sp.species || null;
       const contextFramework =
         rawFramework === "emergent" ? "custom" : rawFramework;
@@ -522,7 +522,7 @@ function scanEvalProjects() {
         buildRequirement: data.build_requirement || null,
       });
     } catch (err) {
-      console.warn(`  [warn] failed to parse ${sp.gadJsonPath}: ${err.message}`);
+      console.warn(`  [warn] failed to parse ${sp.speciesJsonPath}: ${err.message}`);
     }
   }
   console.log(`  [scan] ${rows.length} eval species across ${new Set(rows.map(r => r.project)).size} project(s)`);
