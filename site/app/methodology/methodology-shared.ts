@@ -8,30 +8,6 @@ export function pickWorkedExamples(): EvalRunRecord[] {
   return [v8, barev3].filter((x): x is NonNullable<typeof x> => x != null);
 }
 
-export const DATA_STAGES = [
-  {
-    stage: "2",
-    title: "Structured records",
-    body:
-      "The prebuild script reads raw artifacts and emits typed records: EvalRunRecord, CatalogSkill, RequirementsVersion, PlanningState, ProducedArtifacts. Schema versioned so old runs parse cleanly alongside new ones. This is what the site consumes — no client-side parsing.",
-    examples: "lib/eval-data.generated.ts · lib/catalog.generated.ts",
-  },
-  {
-    stage: "3",
-    title: "Derived metrics",
-    body:
-      "Computed from structured records: composite scores, divergence (composite vs human review), commit rhythm, plan-adherence delta, tool-use mix (phase 25+), skill-to-tool ratio, produced artifact density. Each derived number has a formula that's traceable back to its inputs — no magic aggregates.",
-    examples: "scores.composite · divergence_score · plan_adherence_delta",
-  },
-  {
-    stage: "4",
-    title: "Insights + visualizations",
-    body:
-      "Cross-run queries answer specific research questions. Charts shape data around the question, not the data shape. Phase 27 adds /insights with curated query cards and gad eval query for custom drilling. Every chart's caption is the question it answers — the number is just evidence.",
-    examples: "freedom hypothesis scatter · rubric radar · insight cards",
-  },
-];
-
 export const AGENT_RUNTIMES = [
   {
     agent: "Claude Code",
