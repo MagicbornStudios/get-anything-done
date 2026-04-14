@@ -40,6 +40,11 @@ const { readRequirements } = require('../lib/requirements-reader.cjs');
 const { readErrors } = require('../lib/errors-reader.cjs');
 const { readBlockers } = require('../lib/blockers-reader.cjs');
 const { readDocsMap } = require('../lib/docs-map-reader.cjs');
+const {
+  loadProject: loadEvalProject,
+  loadAllResolvedSpecies,
+  loadResolvedSpecies,
+} = require('../lib/eval-loader.cjs');
 const { compile: compileDocs } = require('../lib/docs-compiler.cjs');
 const planningRefVerify = require('../lib/planning-ref-verify.cjs');
 const { summarizeAgentLineage } = require('../lib/eval-agent-lineage.cjs');
@@ -1913,23 +1918,29 @@ const evalList = defineCommand({
             if (m) status = m[1];
           }
         }
-        // Load eval mode + workflow from gad.json (or species.json fallback)
+        // Load project defaults + first species via the merge-at-read-time
+        // loader (task 42.4-15, decision gad-184). The project ⊇ species
+        // contract means every reader goes through eval-loader.cjs instead
+        // of hand-merging project.json + species.json.
         let mode = '—', workflow = '—', domain = '—', techStack = '';
-        const cfgCandidates = [
-          path.join(projectDir, 'gad.json'),
-          path.join(projectDir, 'species.json'),
-        ];
-        for (const gadJsonPath of cfgCandidates) {
-          if (fs.existsSync(gadJsonPath)) {
-            try {
-              const cfg = JSON.parse(fs.readFileSync(gadJsonPath, 'utf8'));
-              if (cfg.eval_mode) mode = cfg.eval_mode;
-              if (cfg.workflow) workflow = cfg.workflow;
-              if (cfg.domain) domain = cfg.domain;
-              if (cfg.tech_stack) techStack = cfg.tech_stack;
-            } catch {}
-            break;
+        try {
+          const projectCfg = loadEvalProject(projectDir);
+          if (projectCfg.domain) domain = projectCfg.domain;
+          if (projectCfg.techStack || projectCfg.tech_stack) {
+            techStack = projectCfg.techStack || projectCfg.tech_stack;
           }
+          const allResolved = loadAllResolvedSpecies(projectDir);
+          if (allResolved.length > 0) {
+            const first = allResolved[0];
+            if (first.workflow) workflow = first.workflow;
+            if (first.eval_mode) mode = first.eval_mode;
+            if (!domain && first.domain) domain = first.domain;
+            if (!techStack && (first.techStack || first.tech_stack)) {
+              techStack = first.techStack || first.tech_stack;
+            }
+          }
+        } catch (err) {
+          // sparse/malformed metadata is non-fatal for `eval list`
         }
         return { name, domain, mode, workflow, runs: runs.length, latest, status };
       });
