@@ -21,6 +21,34 @@ type Props = {
 
 const IS_DEV = process.env.NODE_ENV === "development";
 
+// Deterministic hash → 0..360 hue. Used to pick gradient colors per project
+// so every card has a stable visual identity even without a real card image.
+function hashHue(seed: string, salt = 0): number {
+  let h = 2166136261 ^ salt;
+  for (let i = 0; i < seed.length; i += 1) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h) % 360;
+}
+
+function gradientForProject(p: { id: string; domain: string; techStack?: string | null }): string {
+  const h1 = hashHue(p.id, 0);
+  const h2 = hashHue(p.id, 1337);
+  // Domain nudges lightness so game cards feel different from writing cards.
+  const lightByDomain: Record<string, number> = {
+    game: 40, video: 35, software: 38, tooling: 42, planning: 30,
+  };
+  const l1 = lightByDomain[p.domain] ?? 38;
+  return `linear-gradient(135deg, hsl(${h1} 70% ${l1}%) 0%, hsl(${h2} 65% ${Math.max(15, l1 - 18)}%) 100%)`;
+}
+
+function initialsForProject(name: string): string {
+  const words = name.replace(/[\/_-]/g, " ").split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return (words[0]?.slice(0, 2) ?? "??").toUpperCase();
+}
+
 type LogLine = { stream: "stdout" | "stderr" | "meta"; text: string };
 type LaunchState =
   | { kind: "idle" }
@@ -43,11 +71,15 @@ export function ProjectCard({ project }: Props) {
       const lines: LogLine[] = [];
       setLaunchState({ kind: "running", lines });
 
+      // EVAL_PROJECTS uses a composite `<project>/<species>` id; the CLI
+      // wants just the project name.
+      const projectName = project.project ?? project.id.split("/")[0];
+
       try {
         const res = await fetch("/api/dev/launch-eval", {
           method: "POST",
           headers: { "content-type": "application/json", accept: "text/event-stream" },
-          body: JSON.stringify({ projectId: project.id }),
+          body: JSON.stringify({ projectId: projectName }),
           signal: controller.signal,
         });
 
@@ -130,27 +162,71 @@ export function ProjectCard({ project }: Props) {
     <Identified as="ProjectCard" className="contents">
     <Card
       className={cn(
-        "group relative overflow-hidden border-border/70 bg-card/40 shadow-none transition-colors hover:border-accent/40 hover:bg-card/60",
+        "group relative flex flex-col overflow-hidden border-border/70 bg-card/40 shadow-none transition-all hover:border-accent/40 hover:bg-card/60 hover:shadow-lg hover:shadow-accent/5",
         project.featured && "ring-1 ring-accent/20",
       )}
     >
-      {project.featured && (
-        <div className="absolute right-3 top-3">
-          <Badge className="gap-1 border-amber-500/40 bg-amber-500/15 text-amber-300">
-            <Star size={10} className="fill-amber-400" aria-hidden />
-            Featured
-          </Badge>
+      {/* Gradient hero strip — deterministic per project id, serves as a
+          placeholder card image until real cardImage is dropped in. */}
+      <div
+        className="relative aspect-[16/9] w-full overflow-hidden"
+        style={{ background: gradientForProject(project) }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.18),transparent_60%)]" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="font-mono text-5xl font-bold tracking-tight text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+            {initialsForProject(project.name)}
+          </span>
         </div>
-      )}
-      <CardContent className="space-y-3 p-5">
-        <div className="flex flex-wrap items-center gap-2">
+        {project.featured && (
+          <div className="absolute right-2 top-2">
+            <Badge className="gap-1 border-amber-500/40 bg-amber-500/20 text-amber-200 backdrop-blur-sm">
+              <Star size={10} className="fill-amber-400" aria-hidden />
+              Featured
+            </Badge>
+          </div>
+        )}
+        {project.species && (
+          <div className="absolute left-2 top-2">
+            <Badge variant="outline" className="border-white/30 bg-black/30 text-[10px] uppercase tracking-wider text-white backdrop-blur-sm">
+              {project.species}
+            </Badge>
+          </div>
+        )}
+        {(project.runCount > 0 || project.playableCount > 0) && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+            {project.runCount > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <Gamepad2 size={10} aria-hidden />
+                {project.runCount}
+              </span>
+            )}
+            {project.playableCount > 0 && (
+              <span className="text-emerald-300">▶ {project.playableCount}</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <CardContent className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Badge
             variant="outline"
             className={cn("text-[10px] uppercase tracking-wider", DOMAIN_TINT[project.domain])}
           >
             {DOMAIN_LABELS[project.domain]}
           </Badge>
-          {project.workflow && (
+          {project.techStack && (
+            <Badge variant="outline" className="border-sky-500/40 bg-sky-500/10 text-[10px] text-sky-300">
+              {project.techStack}
+            </Badge>
+          )}
+          {project.contextFramework && project.contextFramework !== project.species && (
+            <Badge variant="outline" className="border-purple-500/40 bg-purple-500/10 text-[10px] text-purple-300">
+              {project.contextFramework}
+            </Badge>
+          )}
+          {project.workflow && project.workflow !== project.contextFramework && (
             <Badge
               variant="outline"
               className={cn(
@@ -161,39 +237,23 @@ export function ProjectCard({ project }: Props) {
               {project.workflow}
             </Badge>
           )}
-          {project.evalMode && (
-            <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-border/50 text-muted-foreground">
-              {project.evalMode}
-            </Badge>
-          )}
         </div>
 
-        <h3 className="text-sm font-semibold leading-tight text-foreground pr-20">
+        <h3 className="text-sm font-semibold leading-tight text-foreground">
           {project.name}
         </h3>
 
         {project.description && (
-          <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">
+          <p className="line-clamp-2 flex-1 text-xs leading-5 text-muted-foreground">
             {project.description}
           </p>
         )}
 
-        <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-          {project.runCount > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <Gamepad2 size={11} aria-hidden />
-              {project.runCount} run{project.runCount !== 1 ? "s" : ""}
-            </span>
-          )}
-          {project.playableCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-accent">
-              {project.playableCount} playable
-            </span>
-          )}
-          {project.latestRound && (
-            <span>{project.latestRound}</span>
-          )}
-        </div>
+        {project.latestRound && (
+          <div className="text-[11px] text-muted-foreground">
+            Latest: <span className="text-foreground">{project.latestRound}</span>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 pt-1">
           <Link
