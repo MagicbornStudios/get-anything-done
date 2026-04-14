@@ -4,7 +4,7 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export default function SkepticHowUsedSection() {
   return (
-    <SiteSection>
+    <SiteSection devIds={false}>
       <Identified as="SkepticHowUsedHeading" register={false}>
         <SiteSectionHeading kicker="How this page is used" />
       </Identified>
