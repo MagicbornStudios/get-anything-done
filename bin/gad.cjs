@@ -789,54 +789,168 @@ const lsCmd = defineCommand({
   },
 });
 
+// Canonical XML scaffold templates for `gad projects init` (task 42.4-08).
+// Source of truth: references/project-shape.md §5 (decision gad-185).
+// Each template is a function of (projectId, today) returning valid XML.
+const INIT_XML_TEMPLATES = {
+  'STATE.xml': (id, today) =>
+`<?xml version="1.0" encoding="UTF-8"?>
+<state project="${id}" schema="1">
+  <status>active</status>
+  <milestone>v1</milestone>
+  <current-phase></current-phase>
+  <last-activity>${today}</last-activity>
+  <next-action>Project initialized. Define requirements.</next-action>
+</state>
+`,
+  'ROADMAP.xml': (id) =>
+`<?xml version="1.0" encoding="UTF-8"?>
+<roadmap project="${id}" schema="1">
+  <milestone id="v1" status="active">
+    <title>Initial milestone</title>
+    <phase id="00" status="planned">
+      <title>Bootstrap</title>
+      <goal>Define scope</goal>
+    </phase>
+  </milestone>
+</roadmap>
+`,
+  'TASK-REGISTRY.xml': (id) =>
+`<?xml version="1.0" encoding="UTF-8"?>
+<task-registry project="${id}" schema="1">
+  <phase id="00">
+    <!-- <task id="00-01" type="..." status="planned"><goal>...</goal></task> -->
+  </phase>
+</task-registry>
+`,
+  'DECISIONS.xml': (id) =>
+`<?xml version="1.0" encoding="UTF-8"?>
+<decisions project="${id}" schema="1">
+  <!-- <decision id="${id}-001"><title>...</title><summary>...</summary><impact>...</impact></decision> -->
+</decisions>
+`,
+  'REQUIREMENTS.xml': (id) =>
+`<?xml version="1.0" encoding="UTF-8"?>
+<requirements project="${id}" schema="1">
+  <!-- TODO: capture initial scope -->
+  <!-- <requirement id="REQ-001" priority="must"><goal>...</goal></requirement> -->
+</requirements>
+`,
+  'ERRORS-AND-ATTEMPTS.xml': (id) =>
+`<?xml version="1.0" encoding="UTF-8"?>
+<errors-and-attempts project="${id}" schema="1">
+  <!-- <entry id="<slug>-YYYY-MM-DD" date="YYYY-MM-DD"><what>...</what><why>...</why><lesson>...</lesson></entry> -->
+</errors-and-attempts>
+`,
+};
+
+// Files scaffolded by the default (XML) init path: canonical minimum (4) plus
+// the two strongly-recommended optionals called out in the 42.4-08 task goal.
+const INIT_XML_FILES = [
+  'STATE.xml',
+  'ROADMAP.xml',
+  'TASK-REGISTRY.xml',
+  'DECISIONS.xml',
+  'REQUIREMENTS.xml',
+  'ERRORS-AND-ATTEMPTS.xml',
+];
+
 const projectsInit = defineCommand({
-  meta: { name: 'init', description: 'Initialize a new project with .planning/ scaffold' },
+  meta: { name: 'init', description: 'Initialize a new project with canonical XML .planning/ scaffold' },
   args: {
-    name: { type: 'string', description: 'Project name (default: folder name)', default: '' },
-    path: { type: 'string', description: 'Project path (default: cwd)', default: '' },
+    name:      { type: 'string',  description: 'Project display name (default: folder name)', default: '' },
+    projectid: { type: 'string',  description: 'Project id (default: slug of --name)', default: '' },
+    path:      { type: 'string',  description: 'Project path (default: cwd)', default: '' },
+    format:    { type: 'string',  description: 'Scaffold format: xml (default) or md (legacy)', default: 'xml' },
+    force:     { type: 'boolean', description: 'Overwrite existing files', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
     const config = gadConfig.load(baseDir);
     const projectPath = args.path || process.cwd();
     const projectName = args.name || path.basename(projectPath);
+    const projectId   = (args.projectid || projectName).toLowerCase().replace(/[^a-z0-9-]/g, '-');
     const planDir = path.join(projectPath, '.planning');
+    const format  = (args.format || 'xml').toLowerCase();
+
+    if (format !== 'xml' && format !== 'md') {
+      console.error(`✗ Unknown --format "${args.format}". Expected xml or md.`);
+      process.exitCode = 1;
+      return;
+    }
 
     fs.mkdirSync(planDir, { recursive: true });
 
-    // Create starter files from templates
-    const templateDir = path.join(__dirname, '..', 'templates');
-    const starters = ['state.md', 'roadmap.md', 'requirements.md', 'project.md'];
-    let created = 0;
+    // Decide which files to write based on format.
+    const targets = format === 'xml'
+      ? INIT_XML_FILES.slice()
+      : ['STATE.md', 'ROADMAP.md', 'REQUIREMENTS.md', 'PROJECT.md', 'TASK-REGISTRY.xml', 'DECISIONS.xml', 'ERRORS-AND-ATTEMPTS.xml'];
 
-    for (const tmpl of starters) {
-      const dest = path.join(planDir, tmpl.replace('state.md', 'STATE.md')
-        .replace('roadmap.md', 'ROADMAP.md')
-        .replace('requirements.md', 'REQUIREMENTS.md')
-        .replace('project.md', 'PROJECT.md'));
-      if (!fs.existsSync(dest)) {
-        const src = path.join(templateDir, tmpl);
+    // Pre-flight overwrite check.
+    const collisions = targets.filter(f => fs.existsSync(path.join(planDir, f)));
+    if (collisions.length && !args.force) {
+      console.error(`✗ Refusing to init — ${collisions.length} file(s) already exist in ${planDir}:`);
+      for (const c of collisions) console.error(`    ${c}`);
+      console.error(`  Re-run with --force to overwrite.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const written = [];
+
+    if (format === 'xml') {
+      for (const f of INIT_XML_FILES) {
+        fs.writeFileSync(path.join(planDir, f), INIT_XML_TEMPLATES[f](projectId, today));
+        written.push(f);
+      }
+    } else {
+      // Legacy markdown path — keeps the old template-copy behavior, but also
+      // scaffolds the XML ledgers the old path forgot (TASK-REGISTRY / DECISIONS
+      // / ERRORS-AND-ATTEMPTS) so the resulting root still passes canonical audit.
+      const templateDir = path.join(__dirname, '..', 'templates');
+      const mdStarters = [
+        ['state.md', 'STATE.md'],
+        ['roadmap.md', 'ROADMAP.md'],
+        ['requirements.md', 'REQUIREMENTS.md'],
+        ['project.md', 'PROJECT.md'],
+      ];
+      for (const [tmpl, destName] of mdStarters) {
+        const dest = path.join(planDir, destName);
+        const src  = path.join(templateDir, tmpl);
         if (fs.existsSync(src)) {
           fs.copyFileSync(src, dest);
-          created++;
         } else {
-          fs.writeFileSync(dest, `# ${path.basename(dest, '.md').replace(/-/g, ' ')}\n\nProject: ${projectName}\n`);
-          created++;
+          fs.writeFileSync(dest, `# ${destName.replace('.md', '')}\n\nProject: ${projectName}\n`);
         }
+        written.push(destName);
+      }
+      // Always scaffold the canonical XML ledgers that were missing pre-42.4-08.
+      for (const f of ['TASK-REGISTRY.xml', 'DECISIONS.xml', 'ERRORS-AND-ATTEMPTS.xml']) {
+        fs.writeFileSync(path.join(planDir, f), INIT_XML_TEMPLATES[f](projectId, today));
+        written.push(f);
       }
     }
 
     console.log(`✓ Initialized .planning/ in ${projectPath}`);
-    console.log(`  Created ${created} starter files`);
+    console.log(`  Format: ${format}`);
+    console.log(`  Project id: ${projectId}`);
+    console.log(`  Files written (${written.length}):`);
+    for (const f of written) console.log(`    ${f}`);
 
-    // Register in config if not already present
+    // Register in config if not already present.
     const relPath = path.relative(baseDir, projectPath) || '.';
     if (!config.roots.find(r => normalizePath(r.path) === normalizePath(relPath))) {
-      const id = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-      config.roots.push({ id, path: relPath, planningDir: '.planning', discover: false });
+      config.roots.push({ id: projectId, path: relPath, planningDir: '.planning', discover: false });
       writeRootsToToml(baseDir, config.roots, config);
-      console.log(`  Registered as [${id}] in gad-config.toml`);
+      console.log(`  Registered as [${projectId}] in gad-config.toml`);
     }
+
+    console.log('');
+    console.log('Next steps:');
+    console.log(`  gad projects audit --project ${projectId}    # verify canonical shape`);
+    console.log(`  gad discuss-phase --projectid ${projectId}   # capture phase 00 context`);
+    console.log(`  gad plan-phase --projectid ${projectId}      # plan phase 00`);
   },
 });
 
