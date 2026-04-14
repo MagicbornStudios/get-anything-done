@@ -12,7 +12,7 @@
 
 import { createContext, useContext, useRef, useState, useCallback, useMemo } from "react";
 
-export type DevIdComponentTag = "SiteSection" | "Identified" | "PageIdentified";
+export type DevIdComponentTag = "SiteSection" | "Identified";
 
 export interface RegistryEntry {
   cid: string;

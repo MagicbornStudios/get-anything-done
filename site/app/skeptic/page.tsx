@@ -1,6 +1,5 @@
 import { CRITIQUES } from "./skeptic-shared";
 import { Identified } from "@/components/devid/Identified";
-import { PageIdentified } from "@/components/devid/PageIdentified";
 import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import SkepticHypothesisPaginatedSection from "./SkepticHypothesisPaginatedSection";
 
@@ -39,9 +38,11 @@ export default function SkepticPage() {
           </SiteProse>
         </Identified>
       </SiteSection>
-      <PageIdentified as="SkepticHypothesisPaginatedSection">
-        <SkepticHypothesisPaginatedSection critiques={CRITIQUES} />
-      </PageIdentified>
+      <SiteSection cid="skeptic-hypothesis-paginated-site-section">
+        <Identified as="SkepticHypothesisPaginatedSection">
+          <SkepticHypothesisPaginatedSection critiques={CRITIQUES} />
+        </Identified>
+      </SiteSection>
     </MarketingShell>
   );
 }

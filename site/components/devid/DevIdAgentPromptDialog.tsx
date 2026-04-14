@@ -416,7 +416,7 @@ export function DevIdAgentPromptDialog({
   onOpenChange,
   entry,
   pathname,
-  /** Page-level `PageIdentified` bands vs in-section `<Identified>` (dev panel rows). */
+  /** Component kind: SiteSection band vs in-section Identified row. */
   componentTag = "Identified",
 }: {
   open: boolean;
