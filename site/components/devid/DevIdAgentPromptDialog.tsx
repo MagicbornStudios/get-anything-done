@@ -19,7 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { RegistryEntry } from "./SectionRegistry";
+import type { DevIdComponentTag, RegistryEntry } from "./SectionRegistry";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { getSpeechRecognition, type SpeechRecInstance } from "./speechRecognition";
 
@@ -106,7 +106,7 @@ function HandoffPromptPane({
   );
 }
 
-export type HandoffComponentTag = "Identified" | "PageIdentified";
+export type HandoffComponentTag = DevIdComponentTag;
 
 /** Locked update header (read-only); copy is this plus a newline plus the user editor body. */
 export function buildUpdateLockedPrefix(
@@ -114,10 +114,11 @@ export function buildUpdateLockedPrefix(
   label: string,
   cid: string,
   componentTag: HandoffComponentTag,
+  searchHint?: string,
 ): string {
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
-  const tag = componentTag === "PageIdentified" ? "PageIdentified" : "Identified";
+  const searchShort = truncateForPrompt(searchHint ?? cid, Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX));
   const lines = [
     "You are to make changes to this component on the site.",
     "",
@@ -125,7 +126,9 @@ export function buildUpdateLockedPrefix(
     `component_route_location= **${pageUrl}**`,
     "",
     "## Component to make changes to",
-    `- Component: \`<${tag} as="${escapeAttrInCode(labelShort)}" />\``,
+    `- Component kind: \`${componentTag}\``,
+    `- Component label: \`${escapeAttrInCode(labelShort)}\``,
+    `- Search literal: \`${escapeAttrInCode(searchShort)}\``,
     `- \`data-cid="${escapeAttrInCode(cidShort)}"\``,
     `- and its children. The identified component is the parent of the component in question.`,
     "",
@@ -134,20 +137,32 @@ export function buildUpdateLockedPrefix(
   return lines.join("\n");
 }
 
-export function buildDeletePrompt(pageUrl: string, label: string, cid: string, componentTag: HandoffComponentTag) {
+export function buildDeletePrompt(
+  pageUrl: string,
+  label: string,
+  cid: string,
+  componentTag: HandoffComponentTag,
+  searchHint?: string,
+) {
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
-  const tag = componentTag === "PageIdentified" ? "PageIdentified" : "Identified";
-  const labelLine = `- Component: \`<${tag} as="${escapeAttrInCode(labelShort)}" />\` - you will be removing this and its children from the page/route this was found.`;
+  const searchShort = truncateForPrompt(searchHint ?? cid, Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX));
+  const labelLine = `- Component kind: \`${componentTag}\` · label: \`${escapeAttrInCode(labelShort)}\` - you will be removing this and its children from the page/route this was found.`;
+  const searchLine = `- Search literal: \`${escapeAttrInCode(searchShort)}\``;
   const cidLine = `- data-cid: \`${escapeAttrInCode(cidShort)}\``;
   const labelFull = label.length > BLOCK_LABEL_MAX ? `\n- Full \`as\` string: ${JSON.stringify(label)}` : "";
   const cidFull = cid.length > BLOCK_CID_MAX ? `\n- Full data-cid: ${JSON.stringify(cid)}` : "";
+  const searchFull =
+    (searchHint ?? cid).length > Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX)
+      ? `\n- Full search literal: ${JSON.stringify(searchHint ?? cid)}`
+      : "";
 
   return `## Where to find this component
 **${pageUrl}** — open this URL in the browser; this is the page where the component appears, find in the codebase.
 
 ## Component to make changes to
 ${labelLine}${labelFull}
+${searchLine}${searchFull}
 ${cidLine}${cidFull}
 
 ## What to do(DELETE)
@@ -433,9 +448,14 @@ export function DevIdAgentPromptDialog({
 
   useEffect(() => {
     if (!open || !entry) return;
-    setUpdateLockedPrefix(buildUpdateLockedPrefix(pageUrl, label, cid, componentTag));
+    const resolvedComponentTag = entry.componentTag ?? componentTag;
+    setUpdateLockedPrefix(
+      buildUpdateLockedPrefix(pageUrl, label, cid, resolvedComponentTag, entry.searchHint),
+    );
     setUpdateUserDraft("");
-    setDeleteLockedText(buildDeletePrompt(pageUrl, label, cid, componentTag));
+    setDeleteLockedText(
+      buildDeletePrompt(pageUrl, label, cid, resolvedComponentTag, entry.searchHint),
+    );
     setInterim("");
     setTab("update");
     setCopied(null);

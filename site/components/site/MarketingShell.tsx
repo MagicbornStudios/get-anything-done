@@ -11,14 +11,14 @@ export function MarketingShell({ children }: { children: ReactNode }) {
         <Identified as="SiteNav" stableCid="site-nav">
           <Nav />
         </Identified>
-        <BandDevPanel cid="site-nav" label="SiteNav" edge="top" />
+        <BandDevPanel cid="site-nav" label="SiteNav" edge="bottom" corner="right" />
       </div>
       {children}
       <div className="group/site-band relative">
         <Identified as="SiteFooter" stableCid="site-footer">
           <Footer />
         </Identified>
-        <BandDevPanel cid="site-footer" label="SiteFooter" edge="bottom" />
+        <BandDevPanel cid="site-footer" label="SiteFooter" edge="top" corner="right" />
       </div>
     </main>
   );

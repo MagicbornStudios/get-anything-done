@@ -1,5 +1,6 @@
 import { CRITIQUES } from "./skeptic-shared";
 import { Identified } from "@/components/devid/Identified";
+import { PageIdentified } from "@/components/devid/PageIdentified";
 import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import SkepticHypothesisPaginatedSection from "./SkepticHypothesisPaginatedSection";
 import SkepticImprovementsSection from "./SkepticImprovementsSection";
@@ -14,7 +15,7 @@ export const metadata = {
 export default function SkepticPage() {
   return (
     <MarketingShell>
-      <SiteSection>
+      <SiteSection cid="skeptic-hypotheses-site-section">
         <Identified as="HypothesesPageIntro">
           <SiteSectionHeading
             kicker="Hypotheses"
@@ -40,13 +41,15 @@ export default function SkepticPage() {
           </SiteProse>
         </Identified>
       </SiteSection>
-      <SkepticHypothesisPaginatedSection critiques={CRITIQUES} />
-      <Identified as="SkepticImprovementsSection">
+      <PageIdentified as="SkepticHypothesisPaginatedSection">
+        <SkepticHypothesisPaginatedSection critiques={CRITIQUES} />
+      </PageIdentified>
+      <PageIdentified as="SkepticImprovementsSection">
         <SkepticImprovementsSection />
-      </Identified>
-      <Identified as="SkepticHowUsedSection">
+      </PageIdentified>
+      <PageIdentified as="SkepticHowUsedSection">
         <SkepticHowUsedSection />
-      </Identified>
+      </PageIdentified>
     </MarketingShell>
   );
 }

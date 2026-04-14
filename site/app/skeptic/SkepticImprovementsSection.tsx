@@ -6,8 +6,8 @@ import { IMPROVEMENTS } from "./skeptic-shared";
 
 export default function SkepticImprovementsSection() {
   return (
-    <SiteSection tone="muted">
-      <Identified as="SkepticImprovementsHeading" register={false}>
+    <SiteSection tone="muted" cid="skeptic-improvements-site-section">
+      <Identified as="SkepticImprovementsHeading">
         <SiteSectionHeading
         icon={Beaker}
         kicker="What would make us more credible"

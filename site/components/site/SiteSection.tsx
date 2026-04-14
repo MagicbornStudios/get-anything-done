@@ -14,10 +14,16 @@ export type SiteSectionProps = {
   tone?: "default" | "muted";
   className?: string;
   shellClassName?: string;
+  /** Preferred explicit dev-id/search token for this section band. */
+  cid?: string;
   /** Rendered inside `<section>` before the `section-shell` wrapper (e.g. hero backgrounds). */
   beforeShell?: ReactNode;
   /** Rendered inside `<section>` after the `section-shell` wrapper. */
   afterShell?: ReactNode;
+  /**
+   * Legacy alias for `cid`. When omitted, the band id falls back to the route-based auto id.
+   */
+  stableBandCid?: string;
   /** Opt out of the DevId panel on this section (enabled by default when DevId mode is ON). */
   devIds?: boolean;
   /** Max <Identified> depth to register in this section. Default 3. */
@@ -60,25 +66,40 @@ function SiteSectionSurface({
   tone = "default",
   className,
   shellClassName,
+  cid,
   beforeShell,
   afterShell,
   devIds,
+  stableBandCid,
 }: SurfaceProps) {
   const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
   const pathname = usePathname() ?? "/";
   const prefix = routePrefix(pathname);
   const rid = useId();
-  const sectionBandCid = `${toKebab(prefix)}-site-section-${rid.replace(/[^a-z0-9]/gi, "")}`;
-  const sectionBandLabel = `${prefix}SiteSection`;
+  const autoSectionBandCid = `${toKebab(prefix)}-site-section-${rid.replace(/[^a-z0-9]/gi, "")}`;
+  const sectionBandCid = cid ?? stableBandCid ?? autoSectionBandCid;
+  const sectionBandLabel = sectionBandCid ?? `${prefix}SiteSection`;
+  const searchHint = cid
+    ? `cid="${cid}"`
+    : stableBandCid
+      ? `stableBandCid="${stableBandCid}"`
+      : id
+        ? `id="${id}"`
+        : undefined;
   const registry = useSectionRegistry();
   /** Stable — do not depend on `registry` itself; context value is a new object whenever `entries` changes. */
   const registerFn = registry?.register;
 
   useEffect(() => {
     if (!devIds || !sectionBandCid || !registerFn) return;
-    const label = sectionBandLabel ?? sectionBandCid;
-    return registerFn({ cid: sectionBandCid, label, depth: 0 });
-  }, [devIds, sectionBandCid, sectionBandLabel, registerFn]);
+    return registerFn({
+      cid: sectionBandCid,
+      label: sectionBandLabel,
+      depth: 0,
+      componentTag: "SiteSection",
+      searchHint,
+    });
+  }, [devIds, sectionBandCid, sectionBandLabel, registerFn, searchHint]);
 
   const bandCid = devIds && enabled && sectionBandCid ? sectionBandCid : undefined;
   const isHighlighted = sectionBandCid != null && highlightCid === sectionBandCid;
@@ -91,7 +112,7 @@ function SiteSectionSurface({
       ? (e: MouseEvent) => {
           if (!e.altKey) return;
           e.stopPropagation();
-          navigator.clipboard?.writeText(sectionBandCid).catch(() => {});
+          navigator.clipboard?.writeText(searchHint ?? sectionBandCid).catch(() => {});
           setHighlightCid(sectionBandCid);
         }
       : undefined;
@@ -100,7 +121,9 @@ function SiteSectionSurface({
     <section
       id={id}
       data-cid={bandCid}
-      data-cid-label={bandCid ? (sectionBandLabel ?? sectionBandCid) : undefined}
+      data-cid-label={bandCid ? sectionBandLabel : undefined}
+      data-cid-component-tag={bandCid ? "SiteSection" : undefined}
+      data-cid-search={bandCid ? searchHint : undefined}
       onClick={handleClick}
       className={cn(
         "group/site-section relative border-b border-border/60",
@@ -125,8 +148,10 @@ export function SiteSection({
   tone = "default",
   className,
   shellClassName,
+  cid,
   beforeShell,
   afterShell,
+  stableBandCid,
   devIds = true,
   devIdDepth = 3,
 }: SiteSectionProps) {
@@ -136,9 +161,11 @@ export function SiteSection({
       tone={tone}
       className={className}
       shellClassName={shellClassName}
+      cid={cid}
       beforeShell={beforeShell}
       afterShell={afterShell}
       devIds={devIds}
+      stableBandCid={stableBandCid}
     >
       {children}
     </SiteSectionSurface>

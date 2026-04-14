@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <errors-and-attempts>
+  <entry id="dev-panel-split-regression-2026-04-14" date="2026-04-14">
+    <summary>Refactoring the dev panel into divergent section-vs-band surfaces regressed the operator workflow: the compact panel kept good ids, while the long section panel drifted away from the sticky compact UX and source-searchable copy tokens.</summary>
+    <context>
+      During public-site dev-id work on 2026-04-14, the shared panel logic was split into a compact band panel (used by nav/footer and later page bands) and a longer section scan panel. The compact panel was closer to the desired operator workflow, but the section panel kept a different layout and copied less useful tokens in some paths. At the same time, some section shells were still relying on auto-generated runtime ids, which made copied values hard to grep in source.
+    </context>
+    <failure>
+      Two mistakes combined:
+      (1) treated "section panel UX" and "band panel UX" as separate products instead of one operator surface with different scopes;
+      (2) let runtime-generated ids remain in the path where the operator actually copies identifiers for Codex/Cursor/Claude handoff.
+      The result was inconsistency exactly where the panel needs to be most deterministic.
+    </failure>
+    <rule>
+      The dev panel is one product. Do not maintain separate compact-vs-long semantics for the same actions. Any panel row or prompt handoff must prefer a source-searchable literal (`cid`, `stableCid`, `stableBandCid`, or `as`) over a runtime-only generated id. If a refactor improves one panel mode but not the other, stop and unify the surface before extending it further.
+    </rule>
+    <reference>vendor/get-anything-done/site/components/devid/DevPanel.tsx</reference>
+    <reference>vendor/get-anything-done/site/components/devid/Identified.tsx</reference>
+    <reference>vendor/get-anything-done/site/components/devid/PageIdentified.tsx</reference>
+    <reference>vendor/get-anything-done/site/components/site/SiteSection.tsx</reference>
+    <reference>vendor/get-anything-done/.planning/TASK-REGISTRY.xml (44-04, 44-05)</reference>
+  </entry>
   <entry id="forge-init-md-misaction-2026-04-14" date="2026-04-14">
     <summary>Hand-converted markdown planning files to XML instead of using a CLI command — the CLI command does not exist, but the gap should have been surfaced before doing the conversion.</summary>
     <context>

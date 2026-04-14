@@ -12,10 +12,14 @@
 
 import { createContext, useContext, useRef, useState, useCallback, useMemo } from "react";
 
+export type DevIdComponentTag = "SiteSection" | "Identified" | "PageIdentified";
+
 export interface RegistryEntry {
   cid: string;
   label: string;
   depth: number;
+  componentTag?: DevIdComponentTag;
+  searchHint?: string;
 }
 
 interface SectionRegistryValue {
