@@ -6711,7 +6711,7 @@ const snapshotV2Cmd = defineCommand({
           const fm = readSkillFrontmatter(s.skillFile);
           const searchText = [s.id, fm.name || '', fm.description || ''].join(' ');
           const score = jaccard(queryTokens, tokenizeForRelevance(searchText));
-          if (score > 0) entries.push({ id: s.id, name: fm.name || s.id, description: fm.description || '', score, kind: 'canonical' });
+          if (score > 0) entries.push({ id: s.id, name: fm.name || s.id, description: fm.description || '', workflow: fm.workflow || null, score, kind: 'canonical' });
         }
       } catch {}
       try {
@@ -6721,17 +6721,21 @@ const snapshotV2Cmd = defineCommand({
           const score = jaccard(queryTokens, tokenizeForRelevance(searchText));
           // Proto-skills get a small boost so they surface even against
           // many-decades-old canonical skills with overlapping descriptions.
-          if (score > 0) entries.push({ id: s.id, name: fm.name || s.id, description: fm.description || '', score: score * 1.1, kind: 'proto' });
+          if (score > 0) entries.push({ id: s.id, name: fm.name || s.id, description: fm.description || '', workflow: fm.workflow || null, score: score * 1.1, kind: 'proto' });
         }
       } catch {}
 
       if (entries.length === 0) return null;
       entries.sort((a, b) => b.score - a.score);
       const picked = entries.slice(0, limit);
+      // Per decision gad-192: surface the `workflow:` frontmatter pointer
+      // alongside the description so the agent sees where the procedural
+      // body lives without a second read.
       const lines = picked.map((e) => {
         const tag = e.kind === 'proto' ? ' (proto — `gad skill promote <slug> --project --claude` to equip)' : '';
         const descFrag = (e.description || '').replace(/\s+/g, ' ').slice(0, 160);
-        return `  ${e.id}${tag}\n    ${descFrag}`;
+        const workflowFrag = e.workflow ? ` → ${e.workflow}` : '';
+        return `  ${e.id}${workflowFrag}${tag}\n    ${descFrag}`;
       });
       // Hard-cap the body at ~2000 chars (~500 tokens) so the block never blows budget.
       let body = lines.join('\n');
@@ -9331,18 +9335,20 @@ function listSkillDirs(rootDir) {
 
 function readSkillFrontmatter(skillFile) {
   let src = '';
-  try { src = fs.readFileSync(skillFile, 'utf8'); } catch { return { name: null, description: null }; }
-  const match = src.match(/^---\n([\s\S]*?)\n---\n?/);
-  if (!match) return { name: null, description: null };
+  try { src = fs.readFileSync(skillFile, 'utf8'); } catch { return { name: null, description: null, workflow: null }; }
+  const match = src.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+  if (!match) return { name: null, description: null, workflow: null };
   let name = null;
   let description = null;
+  let workflow = null;
   for (const line of match[1].split(/\r?\n/)) {
     const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
     if (!kv) continue;
     if (kv[1] === 'name') name = kv[2].replace(/^["']|["']$/g, '').trim();
     if (kv[1] === 'description') description = kv[2].replace(/^["']|["']$/g, '').trim();
+    if (kv[1] === 'workflow') workflow = kv[2].replace(/^["']|["']$/g, '').trim() || null;
   }
-  return { name, description };
+  return { name, description, workflow };
 }
 
 function firstExistingImagePath(dir, candidates = []) {
