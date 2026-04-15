@@ -9,7 +9,7 @@ description: >-
   capture lessons. An evolution is the primary mechanism by which GAD's species
   (its DNA / skill set) improves between milestones. Refuses to run if any
   pending proto-skills from a previous evolution still need human review —
-  clear the queue first via gad evolution promote / discard.
+  clear the queue first via gad skill promote --framework / gad evolution discard.
 ---
 
 # gad-evolution-evolve
@@ -41,9 +41,13 @@ gad:evolution:evolve
 (human review, async)
   reads SKILL.md + VALIDATION.md → promote or discard
 
-gad evolution install <slug> ... ← installs staged proto-skill into coding agents
-gad evolution promote <slug>     ← moves to skills/, joins species DNA
-gad evolution discard <slug>     ← deletes the proto-skill
+gad skill promote <slug> --project --claude     ← consumer runtime install (any project)
+gad skill promote <slug> --framework             ← canonical promote (this repo only; joins species DNA)
+gad evolution discard <slug>                     ← deletes the proto-skill
+
+(Legacy: `gad evolution install` / `gad evolution promote` still work as
+back-compat shims and forward to the unified `gad skill promote` verb per
+decision gad-188 / task 44-36.)
 ```
 
 The next `gad:evolution:evolve` cannot run until every proto-skill from the
@@ -209,7 +213,7 @@ proto-skill — that's bookkeeping bloat. The proto-skills dir IS the work list.
 Task: Review evolution <evolution-id> proto-skills
 Status: planned
 Goal: Open .planning/proto-skills/<slug>/SKILL.md for each pending proto-skill,
-read its VALIDATION.md, optionally run `gad evolution install <slug> ...` to test it in a coding agent, then run `gad evolution promote <slug>` or
+read its VALIDATION.md, optionally run `gad skill promote <slug> --project [--claude|--codex|...]` to test it in a coding agent runtime, then run `gad skill promote <slug> --framework` (canonical) or
 `gad evolution discard <slug>`. Evolution closes automatically when the
 proto-skills dir is empty.
 Skill: gad-evolution-evolve
@@ -280,9 +284,9 @@ Open and review:
   code skills/<parent-name>/SKILL.md
 
 Commands to act on this slug:
-  gad evolution install <slug> --claude     # try without committing
-  gad evolution promote <slug>              # join skills/
-  gad evolution discard <slug>              # delete
+  gad skill promote <slug> --project --claude    # try in runtime without committing
+  gad skill promote <slug> --framework           # join canonical skills/ (this repo only)
+  gad evolution discard <slug>                   # delete
 ```
 
 ### Recommendation values

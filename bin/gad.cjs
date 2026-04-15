@@ -9807,6 +9807,146 @@ const evolutionPromote = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// gad skill — unified skill ops (44-36). promote has two modes:
+//   --framework : move .planning/proto-skills/<slug>/ → skills/<slug>/
+//                 (canonical, ships in the next release). Gated: only
+//                 runs inside the canonical get-anything-done clone.
+//   --project   : install the proto-skill into the current project's
+//                 coding-agent runtime dirs (.claude/skills/, .codex/
+//                 skills/, etc.) via the same runtime path used by
+//                 `gad evolution install`. Works in any consumer project.
+// ---------------------------------------------------------------------------
+
+function isCanonicalGadRepo(repoRoot) {
+  try {
+    if (fs.existsSync(path.join(repoRoot, '.gad-canonical'))) return true;
+  } catch {}
+  try {
+    const out = require('child_process')
+      .execSync('git config --get remote.origin.url', { cwd: repoRoot, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString().trim();
+    if (/MagicbornStudios\/get-anything-done(\.git)?$/i.test(out)) return true;
+    if (/get-anything-done(\.git)?$/i.test(out)) return true;
+  } catch {}
+  return false;
+}
+
+const skillPromote = defineCommand({
+  meta: { name: 'promote', description: 'Promote a proto-skill — --framework (canonical skills/) or --project (consumer runtime dir)' },
+  args: {
+    slug: { type: 'positional', description: 'proto-skill slug', required: true },
+    framework: { type: 'boolean', description: 'Promote to canonical skills/ (canonical repo only)' },
+    project: { type: 'boolean', description: 'Install into the current project\'s coding-agent runtime dirs' },
+    name: { type: 'string', description: 'final skill name for --framework (defaults to slug)', required: false },
+    claude: { type: 'boolean' },
+    codex: { type: 'boolean' },
+    cursor: { type: 'boolean' },
+    windsurf: { type: 'boolean' },
+    augment: { type: 'boolean' },
+    copilot: { type: 'boolean' },
+    antigravity: { type: 'boolean' },
+    all: { type: 'boolean' },
+    global: { type: 'boolean' },
+    local: { type: 'boolean' },
+    'config-dir': { type: 'string', description: 'Custom runtime config directory (--project only)', default: '' },
+  },
+  run({ args }) {
+    if (args.framework && args.project) {
+      console.error('Choose either --framework or --project, not both.');
+      process.exit(1);
+    }
+    if (!args.framework && !args.project) {
+      console.error('Specify a mode: --framework (canonical skills/) or --project (consumer runtime).');
+      console.error('');
+      console.error('Examples:');
+      console.error('  gad skill promote my-skill --framework                # canonical (repo gate)');
+      console.error('  gad skill promote my-skill --project --claude          # install to ./.claude/skills/');
+      console.error('  gad skill promote my-skill --project --all --global    # install to all runtimes globally');
+      process.exit(1);
+    }
+
+    const repoRoot = path.resolve(__dirname, '..');
+
+    if (args.framework) {
+      if (!isCanonicalGadRepo(repoRoot)) {
+        console.error('Refusing --framework promote: this does not look like the canonical get-anything-done repo.');
+        console.error('');
+        console.error('Detection: git remote.origin.url must match MagicbornStudios/get-anything-done,');
+        console.error('or a .gad-canonical sentinel file must exist at the repo root.');
+        console.error('');
+        console.error('For a consumer project, use: gad skill promote <slug> --project [--claude|--codex|...]');
+        process.exit(1);
+      }
+      // Delegate to evolutionPromote.run — same body.
+      return evolutionPromote.run({ args: { slug: args.slug, name: args.name } });
+    }
+
+    // --project mode: delegate to evolutionInstall.run
+    return evolutionInstall.run({
+      args: {
+        slug: args.slug,
+        claude: args.claude,
+        codex: args.codex,
+        cursor: args.cursor,
+        windsurf: args.windsurf,
+        augment: args.augment,
+        copilot: args.copilot,
+        antigravity: args.antigravity,
+        all: args.all,
+        global: args.global,
+        local: args.local,
+        'config-dir': args['config-dir'] || '',
+      },
+    });
+  },
+});
+
+const skillList = defineCommand({
+  meta: { name: 'list', description: 'List canonical skills (from skills/) and any pending proto-skills' },
+  args: {
+    proto: { type: 'boolean', description: 'List only pending proto-skills' },
+    canonical: { type: 'boolean', description: 'List only canonical skills' },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { protoSkillsDir, finalSkillsDir } = evolutionPaths(repoRoot);
+    const showCanonical = !args.proto;
+    const showProto = !args.canonical;
+    if (showCanonical) {
+      const canonical = listSkillDirs(finalSkillsDir);
+      console.log(`Canonical skills (skills/): ${canonical.length}`);
+      for (const s of canonical) {
+        const fm = readSkillFrontmatter(s.skillFile);
+        console.log(`  ${s.id}${fm.name && fm.name !== s.id ? `  (${fm.name})` : ''}`);
+      }
+      console.log('');
+    }
+    if (showProto) {
+      const proto = listSkillDirs(protoSkillsDir);
+      console.log(`Proto-skills (.planning/proto-skills/): ${proto.length}`);
+      for (const s of proto) {
+        const fm = readSkillFrontmatter(s.skillFile);
+        console.log(`  ${s.id}${fm.name && fm.name !== s.id ? `  (${fm.name})` : ''}`);
+      }
+      if (proto.length > 0) {
+        console.log('');
+        console.log('Promote with:');
+        console.log('  gad skill promote <slug> --framework            # canonical (this repo only)');
+        console.log('  gad skill promote <slug> --project --claude     # runtime install');
+      }
+    }
+  },
+});
+
+const skillCmd = defineCommand({
+  meta: { name: 'skill', description: 'Skill ops — list, promote (--framework canonical / --project consumer runtime). See decision gad-188.' },
+  subCommands: {
+    list: skillList,
+    promote: skillPromote,
+  },
+});
+
 const evolutionDiscard = defineCommand({
   meta: { name: 'discard', description: 'Discard a proto-skill (deletes the directory)' },
   args: {
@@ -10577,6 +10717,7 @@ const main = defineCommand({
     data: dataCmd,
     eval: evalCmd,
     evolution: evolutionCmd,
+    skill: skillCmd,
     models: modelsCmd,
     workflow: workflowCmd,
     rounds: roundsCmd,
