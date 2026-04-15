@@ -10319,6 +10319,176 @@ const skillShow = defineCommand({
   },
 });
 
+const skillPromoteFolder = defineCommand({
+  meta: { name: 'promote-folder', description: 'Promote any skill-shaped folder into the framework or a consumer project. Generalizes `evolution promote` — source can be a project skills/ dir, a hand-authored draft, a consumer-project proto-skill, anything matching the skill shape. Decision gad-196 (task 42.2-32).' },
+  args: {
+    source: { type: 'positional', description: 'absolute or relative path to a skill-shaped folder (must contain SKILL.md with valid frontmatter)', required: true },
+    framework: { type: 'boolean', description: 'Promote into the canonical get-anything-done skills/ + workflows/ tree' },
+    project: { type: 'string', description: 'Install into a consumer project by id (reads gad-config.toml [[planning.roots]]). Requires the project to have a skills/ dir sibling to the planning root.', default: '' },
+    name: { type: 'string', description: 'Final skill name (defaults to source dir basename)', default: '' },
+    'dry-run': { type: 'boolean', description: 'Print what would happen without writing anything', default: false },
+    force: { type: 'boolean', description: 'Overwrite an existing skills/<name>/ or workflows/<name>.md at the destination', default: false },
+  },
+  run({ args }) {
+    if (args.framework && args.project) {
+      console.error('Choose either --framework or --project <id>, not both.');
+      process.exit(1);
+    }
+    if (!args.framework && !args.project) {
+      console.error('Specify a destination: --framework OR --project <id>.');
+      console.error('');
+      console.error('Examples:');
+      console.error('  gad skill promote-folder ./skills/gad-visual-context-system --framework');
+      console.error('  gad skill promote-folder /path/to/draft --framework --name vcs --dry-run');
+      console.error('  gad skill promote-folder ./my-draft --project grime-time-site');
+      process.exit(1);
+    }
+
+    const srcDir = path.resolve(args.source);
+    if (!fs.existsSync(srcDir) || !fs.statSync(srcDir).isDirectory()) {
+      console.error(`Source path is not a directory: ${srcDir}`);
+      process.exit(1);
+    }
+    const srcSkill = path.join(srcDir, 'SKILL.md');
+    if (!fs.existsSync(srcSkill)) {
+      console.error(`Source folder is not skill-shaped: missing SKILL.md at ${srcSkill}`);
+      process.exit(1);
+    }
+
+    // Parse frontmatter for validation + name + workflow pointer.
+    const raw = fs.readFileSync(srcSkill, 'utf8');
+    const fmMatch = raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+    if (!fmMatch) {
+      console.error(`SKILL.md has no frontmatter block: ${srcSkill}`);
+      process.exit(1);
+    }
+    const fmBody = fmMatch[1];
+    const nameMatch = fmBody.match(/^name:\s*(.+?)\s*$/m);
+    const descMatch = fmBody.match(/^description:\s*(.+?)\s*$/m);
+    if (!nameMatch) {
+      console.error(`SKILL.md frontmatter missing required 'name:' key`);
+      process.exit(1);
+    }
+    if (!descMatch) {
+      console.error(`SKILL.md frontmatter missing required 'description:' key`);
+      process.exit(1);
+    }
+
+    // Compute destination.
+    const finalName = args.name || path.basename(srcDir);
+    let destRoot;
+    if (args.framework) {
+      const repoRoot = path.resolve(__dirname, '..');
+      if (!isCanonicalGadRepo(repoRoot)) {
+        console.error('Refusing --framework promote: not in the canonical get-anything-done repo.');
+        process.exit(1);
+      }
+      destRoot = repoRoot;
+    } else {
+      // --project <id>
+      const baseDir = findRepoRoot();
+      const config = gadConfig.load(baseDir);
+      const root = (config.roots || []).find((r) => r.id === args.project);
+      if (!root) {
+        console.error(`Project not found in gad-config: ${args.project}`);
+        console.error(`Available projects: ${(config.roots || []).map((r) => r.id).join(', ')}`);
+        process.exit(1);
+      }
+      destRoot = path.join(baseDir, root.path);
+    }
+
+    const destSkillDir = path.join(destRoot, 'skills', finalName);
+    const destWorkflowsDir = path.join(destRoot, 'workflows');
+
+    // Resolve source workflow ref — same logic as readCanonicalSkillRecords.
+    const workflowRefMatch = fmBody.match(/^workflow:\s*(.+?)\s*$/m);
+    let workflowRef = null;
+    let sourceWorkflowPath = null;
+    let destCanonicalWorkflowPath = null;
+    if (workflowRefMatch) {
+      workflowRef = workflowRefMatch[1].replace(/^["']|["']$/g, '').trim();
+      const isSibling = workflowRef.startsWith('./') || workflowRef.startsWith('../');
+      if (isSibling) {
+        sourceWorkflowPath = path.resolve(srcDir, workflowRef);
+      } else {
+        // Canonical ref — look for the file in the source's enclosing repo.
+        // Try source grand-parent first (typical `<repo>/skills/<name>/` layout).
+        const candidate = path.resolve(path.dirname(path.dirname(srcDir)), workflowRef);
+        if (fs.existsSync(candidate)) sourceWorkflowPath = candidate;
+      }
+      destCanonicalWorkflowPath = path.join(destWorkflowsDir, `${finalName}.md`);
+    }
+
+    // Pre-check collisions.
+    const collisions = [];
+    if (fs.existsSync(destSkillDir) && !args.force) {
+      collisions.push(`destination skill dir already exists: ${destSkillDir}`);
+    }
+    if (destCanonicalWorkflowPath && fs.existsSync(destCanonicalWorkflowPath) && !args.force) {
+      collisions.push(`destination workflow file already exists: ${destCanonicalWorkflowPath}`);
+    }
+    if (collisions.length > 0) {
+      console.error('Refusing to overwrite (pass --force to override):');
+      for (const c of collisions) console.error(`  ${c}`);
+      process.exit(1);
+    }
+
+    // Plan (print under --dry-run).
+    console.log(`Promote skill folder`);
+    console.log(`  source:      ${srcDir}`);
+    console.log(`  destination: ${destSkillDir}`);
+    if (destCanonicalWorkflowPath) {
+      console.log(`  workflow →   ${destCanonicalWorkflowPath}`);
+    }
+    console.log(`  name:        ${finalName}`);
+    console.log(`  public name: ${nameMatch[1].replace(/^["']|["']$/g, '').trim()}`);
+    console.log('');
+
+    if (args['dry-run']) {
+      console.log('--dry-run: no files written.');
+      return;
+    }
+
+    // Perform the copy + split.
+    fs.mkdirSync(destSkillDir, { recursive: true });
+    if (destCanonicalWorkflowPath) fs.mkdirSync(destWorkflowsDir, { recursive: true });
+
+    // Copy every file from source except the workflow file (if sibling).
+    const siblingToSkip = sourceWorkflowPath && workflowRef &&
+      (workflowRef.startsWith('./') || workflowRef.startsWith('../'))
+      ? path.resolve(sourceWorkflowPath)
+      : null;
+    for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+      const src = path.join(srcDir, entry.name);
+      if (siblingToSkip && path.resolve(src) === siblingToSkip) continue;
+      const dest = path.join(destSkillDir, entry.name);
+      if (entry.isDirectory()) fs.cpSync(src, dest, { recursive: true });
+      else fs.copyFileSync(src, dest);
+    }
+
+    // Copy the workflow file to canonical location + rewrite pointer.
+    if (sourceWorkflowPath && fs.existsSync(sourceWorkflowPath) && destCanonicalWorkflowPath) {
+      fs.copyFileSync(sourceWorkflowPath, destCanonicalWorkflowPath);
+      const canonicalRef = `workflows/${finalName}.md`;
+      const destSkillFile = path.join(destSkillDir, 'SKILL.md');
+      const destRaw = fs.readFileSync(destSkillFile, 'utf8');
+      const rewritten = destRaw.replace(
+        /^(workflow:\s*)(.+)$/m,
+        (_, prefix) => `${prefix}${canonicalRef}`
+      );
+      fs.writeFileSync(destSkillFile, rewritten);
+    }
+
+    console.log(`Promoted → ${path.relative(destRoot, destSkillDir)}`);
+    if (destCanonicalWorkflowPath && fs.existsSync(destCanonicalWorkflowPath)) {
+      console.log(`  Workflow: ${path.relative(destRoot, destCanonicalWorkflowPath)}`);
+    }
+    console.log('');
+    console.log('Verify:');
+    console.log(`  gad skill show ${finalName}`);
+  },
+});
+
 const skillFind = defineCommand({
   meta: { name: 'find', description: 'Search canonical + proto skills by keyword — matches name, description, id. Ranked by token overlap. Eliminates the "guess the slug" problem for cold agents.' },
   args: {
@@ -10387,12 +10557,13 @@ const skillFind = defineCommand({
 });
 
 const skillCmd = defineCommand({
-  meta: { name: 'skill', description: 'Skill ops — list, show, find, promote (--framework canonical / --project consumer runtime). See decision gad-188.' },
+  meta: { name: 'skill', description: 'Skill ops — list, show, find, promote (--framework canonical / --project consumer runtime), promote-folder (any skill-shaped folder). See decisions gad-188, gad-196.' },
   subCommands: {
     list: skillList,
     show: skillShow,
     find: skillFind,
     promote: skillPromote,
+    'promote-folder': skillPromoteFolder,
   },
 });
 

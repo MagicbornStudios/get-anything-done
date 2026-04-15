@@ -10,7 +10,15 @@ description: >-
   <new app/game>", or "normalize the ids across <existing app>".
 source_phase: "44"
 source_evolution: 2026-04-14-001
-status: proto
+status: stable
+canonicalized: 2026-04-15
+canonicalization_rationale: >-
+  Framework staple — every UI-based consumer project is expected to start with
+  this methodology. Bare minimum requirement: a dev-only searchable id panel
+  with hide affordance. Canonicalized via `gad skill promote-folder` metadata
+  flip per decision gad-196 (task 42.2-32). Parent skill
+  gad-visual-context-panel-identities remains available as the lower-level
+  component-id methodology.
 parent_skill: gad-visual-context-panel-identities
 workflow: workflows/visual-context-system.md
 ---
