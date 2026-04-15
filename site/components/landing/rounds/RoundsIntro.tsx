@@ -1,1 +1,21 @@
-export { ExperimentLogIntro as RoundsIntro } from "@/components/landing/experiment-log/ExperimentLogIntro";
+"use client";
+
+import { SiteSectionIntro } from "@/components/site";
+
+export function RoundsIntro() {
+  return (
+    <SiteSectionIntro
+      kicker="Experiment log"
+      preset="hero-compact"
+      title={
+        <>
+          Evolution by evolution. <span className="gradient-text">What we asked.</span> What the agents
+          actually shipped.
+        </>
+      }
+    >
+      The experiment log is append-only. Each entry captures the requirements version, the workflow
+      conditions that ran, the scores, and the key finding that drove the next round&apos;s changes.
+    </SiteSectionIntro>
+  );
+}
