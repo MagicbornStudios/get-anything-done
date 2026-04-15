@@ -132,6 +132,7 @@ export function DevPanel(props: DevPanelProps) {
   const [compactEdge, setCompactEdge] = useState<"top" | "bottom">(bandEdge);
   const [compactCorner, setCompactCorner] = useState<"left" | "right">(bandCorner);
   const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
+  const [chromeUpdateCopied, setChromeUpdateCopied] = useState(false);
 
   const sortedSectionEntries = useMemo(
     () => (registry ? sortRegistryEntries(registry.entries) : []),
@@ -389,6 +390,35 @@ export function DevPanel(props: DevPanelProps) {
     onFinalize: finalizeUpdatePromptCopy,
   });
 
+  const finalizeChromeSelfPrompt = useCallback(
+    (transcript: string) => {
+      const prefix = buildUpdateLockedPrefix(
+        absolutePageUrl(pathname),
+        DEV_PANEL_SELF_ENTRY.label,
+        DEV_PANEL_SELF_ENTRY.cid,
+        DEV_PANEL_SELF_ENTRY.componentTag ?? "Identified",
+        DEV_PANEL_SELF_ENTRY.searchHint,
+        undefined,
+        promptVerbosity,
+      );
+      const resolved = `${prefix}\n${transcript.trim()}`;
+      navigator.clipboard?.writeText(resolved).catch(() => {});
+      setChromeUpdateCopied(true);
+      window.setTimeout(() => setChromeUpdateCopied(false), 1200);
+      toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
+    },
+    [pathname, promptVerbosity],
+  );
+
+  const {
+    listening: listeningChrome,
+    interim: interimChrome,
+    toggle: toggleChromeSpeech,
+  } = useDictatedPromptCopy({
+    onFinalize: finalizeChromeSelfPrompt,
+    listeningMessage: "Listening for panel chrome…",
+  });
+
   const copyResolvedDeletePrompt = () => {
     if (!sectionTarget) return;
     const resolved = buildDeletePrompt(
@@ -455,15 +485,24 @@ export function DevPanel(props: DevPanelProps) {
             >
               <div className="flex items-start justify-between gap-2 text-[10px]">
                 <div className="group/paneltitle min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    <p className="font-semibold uppercase tracking-wide text-accent">{DEV_PANEL_LABEL}</p>
-                    <DevPanelHoverPromptActions
-                      selfEntry={DEV_PANEL_SELF_ENTRY}
-                      pathname={pathname}
-                      promptVerbosity={promptVerbosity}
-                      onAgentPrompt={(e) => setPromptEntry(e)}
-                      className="pointer-events-none opacity-0 transition-opacity group-hover/paneltitle:pointer-events-auto group-hover/paneltitle:opacity-100"
-                    />
+                  <div className="relative h-6 w-full min-w-0">
+                    <p className="absolute inset-0 flex items-center font-semibold uppercase tracking-wide text-accent transition-opacity group-hover/paneltitle:pointer-events-none group-hover/paneltitle:opacity-0">
+                      {DEV_PANEL_LABEL}
+                    </p>
+                    <div className="absolute inset-0 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover/paneltitle:pointer-events-auto group-hover/paneltitle:opacity-100">
+                      <DevPanelHoverPromptActions
+                        selfEntry={DEV_PANEL_SELF_ENTRY}
+                        pathname={pathname}
+                        promptVerbosity={promptVerbosity}
+                        onAgentPrompt={(e) => setPromptEntry(e)}
+                        externalDictation={{
+                          listening: listeningChrome,
+                          interim: interimChrome,
+                          toggle: toggleChromeSpeech,
+                        }}
+                        updateJustCopied={chromeUpdateCopied}
+                      />
+                    </div>
                   </div>
                   <p className="truncate text-muted-foreground">
                     Section scan {sectionEntries.length} items
@@ -581,10 +620,10 @@ export function DevPanel(props: DevPanelProps) {
                   />
                 ))}
               </div>
-              {listening && interim ? (
-                <p className="mt-1 max-w-56 truncate text-[10px] text-emerald-300">
-                  <span className="font-semibold">Live - </span>
-                  {interim}
+              {listening || listeningChrome ? (
+                <p className="mt-1 max-w-full truncate text-[10px] text-emerald-300">
+                  <span className="font-semibold">Live — </span>
+                  {(listening ? interim : interimChrome) || "\u00a0"}
                 </p>
               ) : null}
               <div className="mt-1 text-[10px] text-muted-foreground">
@@ -637,16 +676,25 @@ export function DevPanel(props: DevPanelProps) {
           >
             <div className="flex items-start justify-between gap-2 text-[10px]">
               <div className="group/paneltitle min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                  <p className="font-semibold uppercase tracking-wide text-accent">{DEV_PANEL_LABEL}</p>
-                  <DevPanelHoverPromptActions
-                    selfEntry={DEV_PANEL_SELF_ENTRY}
-                    pathname={pathname}
-                    promptVerbosity={promptVerbosity}
-                    onAgentPrompt={(e) => setPromptEntry(e)}
-                    size="band"
-                    className="pointer-events-none opacity-0 transition-opacity group-hover/paneltitle:pointer-events-auto group-hover/paneltitle:opacity-100"
-                  />
+                <div className="relative h-6 w-full min-w-0">
+                  <p className="absolute inset-0 flex items-center font-semibold uppercase tracking-wide text-accent transition-opacity group-hover/paneltitle:pointer-events-none group-hover/paneltitle:opacity-0">
+                    {DEV_PANEL_LABEL}
+                  </p>
+                  <div className="absolute inset-0 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover/paneltitle:pointer-events-auto group-hover/paneltitle:opacity-100">
+                    <DevPanelHoverPromptActions
+                      selfEntry={DEV_PANEL_SELF_ENTRY}
+                      pathname={pathname}
+                      promptVerbosity={promptVerbosity}
+                      onAgentPrompt={(e) => setPromptEntry(e)}
+                      size="band"
+                      externalDictation={{
+                        listening: listeningChrome,
+                        interim: interimChrome,
+                        toggle: toggleChromeSpeech,
+                      }}
+                      updateJustCopied={chromeUpdateCopied}
+                    />
+                  </div>
                 </div>
                 <p className="truncate text-muted-foreground">
                   {bandLabel} · {bandEntries.length} items
@@ -761,10 +809,10 @@ export function DevPanel(props: DevPanelProps) {
                 />
               ))}
             </div>
-            {listening && interim ? (
-              <p className="mt-1 max-w-56 truncate text-[10px] text-emerald-300">
-                <span className="font-semibold">Live - </span>
-                {interim}
+            {listening || listeningChrome ? (
+              <p className="mt-1 max-w-full truncate text-[10px] text-emerald-300">
+                <span className="font-semibold">Live — </span>
+                {(listening ? interim : interimChrome) || "\u00a0"}
               </p>
             ) : null}
             <DevPanelPositionControls

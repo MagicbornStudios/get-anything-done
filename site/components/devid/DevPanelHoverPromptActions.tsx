@@ -28,8 +28,15 @@ const btn = {
   modal: "size-5 h-5",
 } as const;
 
+export type ExternalDictation = {
+  listening: boolean;
+  interim: string;
+  toggle: () => void;
+};
+
 /**
  * Hover-only Mic / Copy / Delete / optional Message for dev chrome (panel title, modal VC strip).
+ * Pass `externalDictation` to lift speech + interim to the parent (e.g. shared Live footer on DevPanel).
  */
 export function DevPanelHoverPromptActions({
   selfEntry,
@@ -38,6 +45,8 @@ export function DevPanelHoverPromptActions({
   onAgentPrompt,
   size = "section",
   className,
+  externalDictation,
+  updateJustCopied = false,
 }: {
   selfEntry: RegistryEntry;
   pathname: string;
@@ -45,6 +54,10 @@ export function DevPanelHoverPromptActions({
   onAgentPrompt?: (entry: RegistryEntry) => void;
   size?: Size;
   className?: string;
+  /** When set, Mic uses this slot and interim is not rendered here (parent shows it). */
+  externalDictation?: ExternalDictation;
+  /** Parent-driven check on Mic (e.g. after external dictation finalize). */
+  updateJustCopied?: boolean;
 }) {
   const [copied, setCopied] = useState<"update" | "delete" | "cid" | null>(null);
   const is = icon[size];
@@ -70,10 +83,16 @@ export function DevPanelHoverPromptActions({
     [pathname, selfEntry, promptVerbosity],
   );
 
-  const { listening, interim, toggle: toggleSpeech } = useDictatedPromptCopy({
+  const internal = useDictatedPromptCopy({
     onFinalize: finalizeUpdate,
     listeningMessage: "Listening for chrome handoff…",
   });
+
+  const listening = externalDictation?.listening ?? internal.listening;
+  const interim = externalDictation?.interim ?? internal.interim;
+  const toggleSpeech = externalDictation?.toggle ?? internal.toggle;
+
+  const showInlineInterim = !externalDictation;
 
   const copyDelete = useCallback(() => {
     const resolved = buildDeletePrompt(
@@ -110,7 +129,7 @@ export function DevPanelHoverPromptActions({
           toggleSpeech();
         }}
       >
-        {copied === "update" ? (
+        {copied === "update" || updateJustCopied ? (
           <Check size={is} />
         ) : listening ? (
           <MicOff size={is} />
@@ -159,7 +178,7 @@ export function DevPanelHoverPromptActions({
           <MessageSquare size={is} />
         </Button>
       ) : null}
-      {listening && interim ? (
+      {showInlineInterim && listening && interim ? (
         <span className="max-w-[10rem] truncate font-mono text-[9px] text-emerald-400/95" title={interim}>
           {interim}
         </span>
