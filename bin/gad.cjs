@@ -6384,6 +6384,7 @@ const snapshotV2Cmd = defineCommand({
     'resolved-model': { type: 'string', description: 'Resolved concrete model attached to the lane', default: '' },
     full: { type: 'boolean', description: 'Full dump (no sprint filtering)', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
+    skills: { type: 'string', description: 'Number of equipped skills to surface (44-35). 0 disables. Default: 5.', default: '5' },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
@@ -6654,6 +6655,90 @@ const snapshotV2Cmd = defineCommand({
       return conventions.trim() ? { title: 'CONVENTIONS', content: conventions.trim() } : null;
     }
 
+    // ---- 44-35: encounter-style equipped skills block -------------------
+    // Tokenize query (open tasks + next-action + current phase goal) and rank
+    // skills (canonical + pending proto-skills) by Jaccard overlap. Skills
+    // the agent doesn't see via its runtime dir still appear here, so
+    // subagents + post-compact rehydration get the relevance signal.
+    function tokenizeForRelevance(text) {
+      const STOP = new Set([
+        'the','a','an','and','or','but','if','of','for','in','on','to','at','by','from','with','as','is','are','was','were','be','been','being','it','its','this','that','these','those','then','than','which','who','what','when','where','why','how','we','they','their','there','has','have','had','do','does','did','will','would','should','could','can','may','might','must','not','no','yes','so','too','very','just','also','any','all','some','one','two','three','per','into','out','up','down','over','under','before','after','again','once','new','old','use','used','using','via','about','above','below','between','because','while','during','each','other','more','most','less','few','many','much','such','own','same','only','own','get','got','make','made','run','ran','running','shipped','ship','work','working','task','tasks','phase','phases','goal','goals','goal','item','items','thing','things','stuff','plan','planning','done','closed','planned','active','current','next','open','status','good','bad','first','last','need','needs','needed','want','wants'
+      ]);
+      const raw = String(text || '').toLowerCase();
+      const tokens = raw
+        .replace(/[`*_#>~]/g, ' ')
+        .split(/[^a-z0-9]+/)
+        .filter(Boolean)
+        .filter((t) => t.length >= 3 && !STOP.has(t));
+      return new Set(tokens);
+    }
+    function jaccard(a, b) {
+      if (a.size === 0 || b.size === 0) return 0;
+      let intersect = 0;
+      for (const t of a) if (b.has(t)) intersect += 1;
+      const union = a.size + b.size - intersect;
+      return union === 0 ? 0 : intersect / union;
+    }
+    function buildEquippedSkillsSection(limit) {
+      if (!limit || limit <= 0) return null;
+      // Build query text from current sprint shape.
+      const queryParts = [];
+      if (stateXml) {
+        const nextAction = (stateXml.match(/<next-action>([\s\S]*?)<\/next-action>/) || [])[1];
+        if (nextAction) queryParts.push(nextAction);
+      }
+      const currentPhaseObj = phases.find((p) => p.id === currentPhase);
+      if (currentPhaseObj) {
+        if (currentPhaseObj.title) queryParts.push(currentPhaseObj.title);
+        if (currentPhaseObj.goal) queryParts.push(currentPhaseObj.goal);
+      }
+      // Use a small window of open tasks — first 8 — to bias toward what's
+      // actually being worked on rather than the long tail of the backlog.
+      const openTasksSample = allTasks.filter((t) => t.status !== 'done').slice(0, 8);
+      for (const t of openTasksSample) {
+        if (t.goal) queryParts.push(String(t.goal).slice(0, 240));
+      }
+      const queryText = queryParts.join(' ');
+      const queryTokens = tokenizeForRelevance(queryText);
+      if (queryTokens.size === 0) return null;
+
+      const repoRoot = path.resolve(__dirname, '..');
+      const skillsRoot = path.join(repoRoot, 'skills');
+      const protoRoot = path.join(repoRoot, '.planning', 'proto-skills');
+      const entries = [];
+      try {
+        for (const s of listSkillDirs(skillsRoot)) {
+          const fm = readSkillFrontmatter(s.skillFile);
+          const searchText = [s.id, fm.name || '', fm.description || ''].join(' ');
+          const score = jaccard(queryTokens, tokenizeForRelevance(searchText));
+          if (score > 0) entries.push({ id: s.id, name: fm.name || s.id, description: fm.description || '', score, kind: 'canonical' });
+        }
+      } catch {}
+      try {
+        for (const s of listSkillDirs(protoRoot)) {
+          const fm = readSkillFrontmatter(s.skillFile);
+          const searchText = [s.id, fm.name || '', fm.description || ''].join(' ');
+          const score = jaccard(queryTokens, tokenizeForRelevance(searchText));
+          // Proto-skills get a small boost so they surface even against
+          // many-decades-old canonical skills with overlapping descriptions.
+          if (score > 0) entries.push({ id: s.id, name: fm.name || s.id, description: fm.description || '', score: score * 1.1, kind: 'proto' });
+        }
+      } catch {}
+
+      if (entries.length === 0) return null;
+      entries.sort((a, b) => b.score - a.score);
+      const picked = entries.slice(0, limit);
+      const lines = picked.map((e) => {
+        const tag = e.kind === 'proto' ? ' (proto — `gad skill promote <slug> --project --claude` to equip)' : '';
+        const descFrag = (e.description || '').replace(/\s+/g, ' ').slice(0, 160);
+        return `  ${e.id}${tag}\n    ${descFrag}`;
+      });
+      // Hard-cap the body at ~2000 chars (~500 tokens) so the block never blows budget.
+      let body = lines.join('\n');
+      if (body.length > 2000) body = body.slice(0, 1970).trimEnd() + '\n    [truncated]';
+      return { title: `EQUIPPED SKILLS (top ${picked.length} by relevance)`, content: body };
+    }
+
     function collectFullFiles() {
       const allFiles = [];
       const PRIORITY = ['AGENTS.md', 'STATE.md', 'STATE.xml', 'ROADMAP.md', 'ROADMAP.xml', 'REQUIREMENTS.md', 'REQUIREMENTS.xml', 'DECISIONS.xml', 'TASK-REGISTRY.xml', 'session.md', 'ERRORS-AND-ATTEMPTS.xml'];
@@ -6792,6 +6877,9 @@ const snapshotV2Cmd = defineCommand({
       if (scopedFileRefsSection) sections.push(scopedFileRefsSection);
       const scopedConventionsSection = buildConventionsSection();
       if (scopedConventionsSection) sections.push(scopedConventionsSection);
+      const scopedSkillsLimit = Number.parseInt(String(args.skills || '5'), 10) || 0;
+      const scopedEquippedSkillsSection = buildEquippedSkillsSection(scopedSkillsLimit);
+      if (scopedEquippedSkillsSection) sections.push(scopedEquippedSkillsSection);
       const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
       if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
 
@@ -6876,6 +6964,9 @@ const snapshotV2Cmd = defineCommand({
     if (sprintFileRefsSection) sections.push(sprintFileRefsSection);
     const sprintConventionsSection = buildConventionsSection();
     if (sprintConventionsSection) sections.push(sprintConventionsSection);
+    const skillsLimit = Number.parseInt(String(args.skills || '5'), 10) || 0;
+    const sprintEquippedSkillsSection = buildEquippedSkillsSection(skillsLimit);
+    if (sprintEquippedSkillsSection) sections.push(sprintEquippedSkillsSection);
     const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
     if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
 

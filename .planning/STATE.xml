@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>44-36 shipped: new top-level `gad skill` subcommand (list / promote --framework|--project). Canonical gate via origin URL match + .gad-canonical sentinel. Zero-duplication dispatcher over existing evolutionPromote/evolutionInstall. gad-evolution-evolve SKILL.md updated at 4 sites. Next picks: 44-35 (encounter-skills snapshot), 44-31 (B0 release pipeline), 44.5-01 (brood editor).</next-action>
+  <next-action>44-35 + 44-36 shipped this session. `gad skill` top-level subcommand (list/promote --framework|--project). `gad snapshot` now includes EQUIPPED SKILLS block (top-5 Jaccard, --skills N, --skills 0 disables). Snapshot stays at 5882 tokens with skills on. Next picks: 44-31 B0 release pipeline (load-bearing for all Track B installer work), 44.5-01 brood editor, 35-06 upstream GSD mirror.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>
