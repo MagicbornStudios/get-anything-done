@@ -2,7 +2,7 @@
   "meta": {
     "site": "https://get-anything-done.vercel.app",
     "repo": "https://github.com/MagicbornStudios/get-anything-done",
-    "generated": "2026-04-15T00:33:02.050Z",
+    "generated": "2026-04-15T02:38:27.446Z",
     "schema": "gad-docs-v1",
     "description": "Structured machine-readable export of every agent-ingestable artifact on the GAD site. Fetch this if you are an AI agent evaluating or reviewing the GAD framework."
   },
@@ -966,6 +966,13 @@
     }
   ],
   "decisions": [
+    {
+      "id": "gad-188",
+      "title": "44-28 umbrella: installer + release pipeline + data scoping — distribution is GitHub releases, not npm, with a Windows-first lightweight installer writing only into .planning/ and agent dirs",
+      "summary": "Discuss-phase 2026-04-14 on task 44-28 produced a 12-point decision set that reframes the original thin \"gad site install\" scope into an umbrella covering 5 sub-tasks (44-30 through 44-34). Locked: (1) NO npm publishing ever — we ship from GitHub releases of github.com/MagicbornStudios/get-anything-done pulled from our site. (2) Windows-first with a real lightweight installer.exe; Go/Rust rewrites are fun-experiment later phases. (3) No backward-compat — versions lock at install time. (4) NO contamination of consumer repos — installer writes only to .planning/, .claude/, .codex/, .agent/, .cursor/, etc.; never to repo root, never to apps/, never to packages/. The .planning/ dir is the safe zone. pnpm workspace idea discarded. (5) Site lives at .planning/site/ as a self-contained Next.js server runtime (not static export — server reads .planning/*.xml live). Double-click path via a small launcher.exe that spawns bundled Node + server + browser. (6) Installer prompts {site, skills, planning, node} — four feature branches. (7) Installer accepts args for headless/scripted runs. (8) Skills branch is GATED on gad.exe + node being present; planning files can install without them. (9) get-anything-done is the release + source of truth; the custom_portfolio monorepo is just the first example consumer. (10) Consumer baseline assumption: \"has a computer, finds the repo, downloads installer, reads README, double-clicks launcher\". AI coding agent install is on the consumer. (11) Release pipeline is LOCAL — operator-triggered pre-commit/post-push builds, pushed to GitHub releases via gh CLI; no GitHub Actions yet. (12) Data-scoping surface coverage is FULL — every site page filters by current-project via a React context hook reading ?projectid=<id>, not just /planning. Implementation delta from the original plan: dropped B1 (gad.exe build — ALREADY exists as Node SEA at dist/release/gad-v1.32.0-windows-x64.exe, working, needs only release automation) and dropped B5 (runtime rewriters — ALREADY shipped in bin/install.js which is a 5993-line GSD-forked installer supporting 9 coding-agent runtimes with per-runtime path rewrites). What's actually new work: 44-30 (A1 data scoping, ships immediately), 44-31 (B0 release pipeline foundation), 44-32 (B2 installer extension: --site/--planning/--node flags + --from-release download source mode + feature-picker interactive reshape + skills gating), 44-33 (B3 self-contained site packaging with launcher.exe), 44-34 (B4 portable Node bootstrap). Dependency spine: A1 independent + parallelizable. B0 must land before B2/B3/B4 (nothing for a consumer to pull from otherwise). B3 and B4 can run in parallel after B2.",
+      "impact": "(1) Phase 44 gains a 5-task umbrella that sprawls beyond original phase-44 scope — candidate for promoting to a standalone phase 44.6 or similar in a follow-up cleanup, but leaving in phase 44 for now to avoid roadmap churn. (2) The dist/release/gad-v1.32.0-windows-x64.exe on the current machine is 3 days stale (10+ commits behind bin/gad.cjs) and has never been published anywhere — every \"consumer downloads from our release\" claim is aspirational until 44-31 lands. (3) bin/install.js is the single biggest asset we have for 44-32 — fork-and-extend, not rewrite. (4) Data scoping (44-30) can ship immediately and independently; the Track B installer work is sequenced behind release-pipeline foundation. (5) pnpm-workspace layout is killed — earlier discuss-phase hypothesis about apps/site + packages/gad-cli is abandoned in favor of the fenced .planning/site/ model. (6) \"Consumer baseline has nothing but a computer\" drives the portable-Node branch (44-34) and the bundled-Node site-launcher design (44-33). (7) No GitHub Actions in scope — skills + workflows authored via create-skill + gh CLI are the release automation. (8) This decision is the authoritative discuss-phase output for task 44-28 in lieu of a phases/44-28/KICKOFF.md file — sub-task goal bodies carry the per-task KICKOFF content.",
+      "references": []
+    },
     {
       "id": "gad-187",
       "title": "Visual Context Panel naming contract: section cid is the default identity; Identified is optional depth",
@@ -7592,9 +7599,9 @@
     {
       "id": "44-21",
       "phaseId": "44",
-      "status": "planned",
+      "status": "done",
       "agentId": null,
-      "skill": null,
+      "skill": "default",
       "type": "site",
       "goal": "Trace-based agent-behavior analytics on /planning. New tab (Identified `PlanningTabSignal` or similar) that mines `.trace-events.jsonl` for: (a) most-visited files ranked by tool_use count across Read/Edit/Write/Glob, normalized to repo-relative paths; (b) tool mix histogram (Bash/Read/Edit/Grep/WebFetch share %); (c) file-path frequency heatmap (by directory); (d) Bash command extraction (separate path refs inside `inputs.command` from the tool name); (e) URL route frequency from WebFetch. Cross-reference the observed patterns against authored workflow participants (44-20 is the authored surface) to surface conformance gaps at the file-path level instead of just the tool level. User ask: \"I want to be able to see where the coding agent goes most of the time and what tool it is using — looking for repeating patterns.\" Data source already exists; gap is the aggregation/rank/visualization layer.",
       "keywords": [
@@ -7610,9 +7617,9 @@
     {
       "id": "44-22",
       "phaseId": "44",
-      "status": "planned",
+      "status": "done",
       "agentId": null,
-      "skill": null,
+      "skill": "default",
       "type": "site",
       "goal": "Human workflows tab on /planning (Identified `PlanningTabHumanWorkflows`). Separate surface from authored agent workflows. Captures the operator's daily routine and expectations when working from the custom_portfolio monorepo root: what projects get touched, what order, what commands, what output cadence, how a \"working session on get-anything-done\" differs from \"working session on a vendored project\" differs from \"evaluating a generation in forge\". Each human workflow is a graph (React Flow, same treatment as authored agent workflows for consistency) with nodes for human actions (pick project, review state, run CLI, inspect site) and edges for expected sequence. Seed entries: \"daily routine\", \"review + promote a generation\", \"land a new phase on an existing project\", \"build a new species for an existing project\". User framing: this exists because expectation mismatches (e.g. \"I didn't expect tasks to land in global .planning\") should be visible as workflow gaps, not tribal knowledge. Eventually cross-referenced with trace data (44-21) to detect when the observed session doesn't match the expected human workflow.",
       "keywords": [
@@ -7627,9 +7634,9 @@
     {
       "id": "44-23",
       "phaseId": "44",
-      "status": "planned",
+      "status": "done",
       "agentId": null,
-      "skill": null,
+      "skill": "default",
       "type": "content",
       "goal": "Author two workflows under `.planning/workflows/` so they surface on the compact Workflows tab (44-20): `gad-evolution.md` (the self-eval → pressure analysis → candidates → proto-skills → merge → promote loop) and `gad-visual-context-identity.md` (the UI development workflow where every component gets an explicit `SiteSection cid` / `Identified as=\"...\"` literal so the Dev Panel → copy → agent-prompt handoff path works). User ask: \"the Evolution workflow and the visual context identity workflow that we have here which is where I go into I have the UI up the sign up and then I go to a page and then when I have the visual context panel up I can select identified components things that are going to be in place that are static that is a part of our UI workflow that we do when we develop components they must be a part of this system.\" Both need trigger + participants + Mermaid source + related decisions. Authors: human, dogfooded against the Visual Context Panel.",
       "keywords": [
@@ -7680,9 +7687,9 @@
     {
       "id": "44-26",
       "phaseId": "44",
-      "status": "planned",
+      "status": "done",
       "agentId": null,
-      "skill": null,
+      "skill": "create-proto-skill",
       "type": "skill",
       "goal": "New proto-skill: generic cross-config domain-change pattern for GAD projects. Replaces the discarded phase-43-eval-vocabulary draft which was too specific to the submodule and baked in paths like apps/public/evals. Single skill entrypoint with TWO workflows selected by project config: (A) monorepo-wide rename (walks all [[planning.roots]] and [[evals.roots]] in gad-config.toml, coordinates across the union), and (B) single-project rename (scoped to one .planning/ root). Both workflows must read the project config first (`gad projects audit` or equivalent) and surface a quick config-status readout before starting. The skill must also formalize \"evals\" vocabulary into something more generic — user explicitly flagged they want the eval vocabulary itself renormalized. Deliverables: proto-skill at .planning/proto-skills/gad-cross-config-domain-change/ with both workflows, references section citing gad-config.toml shape, pre-flight config audit, git-mv-through-temp pattern, planning-doc migration, and translation-note decision template.",
       "keywords": [
@@ -7720,15 +7727,108 @@
       "status": "planned",
       "agentId": null,
       "skill": null,
-      "type": "skill",
-      "goal": "Architectural: site-as-project-management-UI. User ask 2026-04-14: \"every GAD project should be able to serve the site for itself... operating from the root of the repo and being able to filter down the data for the project I am working on and that are made available to me in the site would be good... agnostic, they just get to have their own version they can customize... I expect them to hate the site and want to remake it themselves... I want it easy to get in to my hands for a good workflow.\" Findings and lineage content stay in the site (marketing); the data layer needs to (a) scope by the project the operator is currently on, (b) surface all projects registered in gad-config.toml in a unified way (planning tabs have been doing this), (c) expose site settings via the CLI now that we have terminals. Additional: package the get-anything-done site so `gad site install` in any repo with the CLI pulls the source tree and everything needed — site stays light but talks to the local environment through web + terminals/CLIs. Split into subtasks after discussion: (1) data scoping by current project, (2) site settings via CLI, (3) gad site install command, (4) agnostic-shell vs get-anything-done-specific content split (light-touch, customization-friendly).",
+      "type": "meta",
+      "goal": "UMBRELLA (see decision gad-188): site-as-project-management-UI + Windows installer + release pipeline. Discuss-phase 2026-04-14 reframed this from a thin \"gad site install\" task into a 5-sub-task spine. User's atomic decisions: no npm publishing ever (distribution is GitHub releases of get-anything-done, pulled from our site); Windows-first with a real lightweight installer; no contamination of consumer repo (installer writes only to .planning/, .claude/, .codex/, .agent/, etc. — .planning is the safe zone); site lives at .planning/site/ as a self-contained Next.js server runtime with a launcher.exe for double-click read-only operation; installer prompts {site, skills, planning, node} with args to bypass prompts; skills branch gated on node+gad.exe present; no backward-compat; consumer baseline is \"has a computer, finds the repo, downloads the installer, reads README, double-clicks launcher\"; AI coding agent install is on the consumer. Split into: 44-30 (A1 data scoping — ships standalone), 44-31 (B0 release pipeline foundation), 44-32 (B2 installer extension — new flags + release-zip source), 44-33 (B3 site packaging for .planning/site/), 44-34 (B4 portable node bootstrap). Dropped from original plan: B1 (gad.exe build — already exists as Node SEA, see dist/release/), and B5 (runtime rewriters — already shipped in bin/install.js for 9 coding agents). This task stays open as the tracking umbrella until all 5 sub-tasks close.",
       "keywords": [
+        "umbrella",
         "site-install",
-        "project-management-ui",
-        "cli-settings",
-        "agnostic-shell",
-        "filtering",
-        "data-scoping"
+        "installer",
+        "release-pipeline",
+        "data-scoping",
+        "windows"
+      ],
+      "depends": []
+    },
+    {
+      "id": "44-30",
+      "phaseId": "44",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "44-28.A1 — Full-surface data scoping by current-project signal. Ships independent of the installer track. Add a global `currentProject` React context (populated from `?projectid=` query param, falling back to the first `[[planning.roots]]` id in gad-config.toml, falling back to \"get-anything-done\"). Thread the hook `useCurrentProject()` through every user-facing route and filter records by project where records already carry a project field (FINDINGS.projects string[], BUGS.project, EVAL_RUNS.project, EVAL_PROJECTS.project, REQUIREMENTS_HISTORY.project, PLANNING_ZIPS.project). Add a project picker dropdown in NavActions that reads the list of registered projects (new helper `site/lib/project-config.ts` that loads gad-config.toml at build time into a typed constant), writes the selection to the URL, and persists nothing (URL is the source of truth). Routes that MUST filter: /planning (already filters BUGS hardcoded to \"gad\" — replace with context), /findings (+ /findings/[slug]), /project-market. Routes that stay framework-global for now: /skills, /formulas, /glossary, /, /about, /methodology, /workflows, /lineage. Planning/tasks/phases/decisions data stays single-project at build time per the build script's GAD_PROJECT_ROOT env var — broaden in a follow-up (Option B in the scoping research: read all projects' planning into ALL_TASKS_BY_PROJECT etc.). Verify: tsc clean, `/` renders for a consumer's repo where their planning root is NOT get-anything-done, /findings filters to the picked project, /project-market collapses to the picked project's species rows.",
+      "keywords": [
+        "data-scoping",
+        "project-context",
+        "nav-picker",
+        "findings-filter",
+        "bugs-filter",
+        "query-param"
+      ],
+      "depends": []
+    },
+    {
+      "id": "44-31",
+      "phaseId": "44",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "framework",
+      "goal": "44-28.B0 — Release pipeline foundation. Today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale Node SEA build on one machine; `dist/` is gitignored; zero git tags exist; zero GitHub releases have been published on github.com/MagicbornStudios/get-anything-done. Nothing a consumer can download. Deliverables: (1) Verify + document the existing Node SEA build script that produces dist/release/*.exe. (2) Author a new `build-and-release-locally` skill via create-skill that runs the full sequence idempotently: clean build, version bump (package.json + CHANGELOG.md), rebuild exe, `git tag v`, `gh release create v dist/release/* --notes-from-tag`, verify with `gh release view`. (3) First release cut: v1.33.0 or similar, with current artifacts attached. (4) Consumer-facing README section documenting the \"download installer.exe from latest release → run in target repo\" path. Gates: no GitHub Actions (operator-triggered only), no npm publishing ever, local-only build pre-commit/post-push. Must precede any B2/B3/B4 work — those sub-tasks depend on there being a consumable release.",
+      "keywords": [
+        "release-pipeline",
+        "github-releases",
+        "node-sea",
+        "build-and-release-locally",
+        "create-skill",
+        "gh-release"
+      ],
+      "depends": []
+    },
+    {
+      "id": "44-32",
+      "phaseId": "44",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "framework",
+      "goal": "44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) with: (a) new `--site` flag that installs a self-contained site tree into `&lt;target&gt;/.planning/site/`; (b) new `--planning` flag that scaffolds `&lt;target&gt;/.planning/` with STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml from a template; (c) new `--node` flag that opts into the portable-node bootstrap branch (44-34); (d) new `--from-release &lt;url|tag&gt;` source mode that downloads the release zip from github.com/MagicbornStudios/get-anything-done releases and extracts into a scratch dir for the installer to source files from — today install.js assumes it's running from inside the GAD repo source tree, which is wrong for a consumer that only has the installer.exe; (e) reshape interactive mode from \"pick one runtime\" to \"pick features {site, skills, planning, node}\" → then runtime picker for the skills branch; (f) gate the skills branch on `gad.exe` + node being detectable on PATH or in `.planning/.node/` — refuse install with a clear error if missing; (g) enforce the local-only install scope (no home-dir writes). Rebuild installer.exe via Node SEA, attach to the next release. Depends on 44-31 (B0) landing first so there's a release to pull from.",
+      "keywords": [
+        "installer",
+        "install-js",
+        "site-flag",
+        "planning-flag",
+        "node-flag",
+        "from-release",
+        "skills-gating",
+        "interactive-mode"
+      ],
+      "depends": []
+    },
+    {
+      "id": "44-33",
+      "phaseId": "44",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "site",
+      "goal": "44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js server build output that can run with `node server.js` in place (not `next start` which needs the full next CLI). (b) Bundled Node runtime extracted beside the site (so the launcher doesn't depend on the host having Node installed). (c) `launcher.exe` — tiny Windows exe (bun --compile or Go) that spawns `./.node/node.exe ./site/server.js`, waits for the server to bind a local port, opens the default browser at `http://localhost:&lt;port&gt;`, stays running until the browser window closes or Ctrl+C. (d) The site must read `.planning/*.xml` from its parent dir at request time — already works in dev via build-site-data.mjs but must keep working after packaging. (e) Build target + release artifact: `site-&lt;version&gt;.zip` containing site/ + .node/ + launcher.exe + README.txt. (f) Wire into 44-32's `--site` branch: installer downloads the zip from the release and extracts it to `&lt;target&gt;/.planning/site/`. Depends on 44-31 (release pipeline) + 44-32 (installer --site flag). Decision point during planning: does the packaged site rebuild its lib/catalog.generated.ts against the consumer's planning data on first launch, or does it ship with prebuilt GAD framework data baked in and only read live project data? Recommend: first-launch rebuild against consumer's gad-config.toml.",
+      "keywords": [
+        "site-packaging",
+        "launcher-exe",
+        "bundled-node",
+        "next-server",
+        "double-click",
+        "release-zip",
+        "planning-site"
+      ],
+      "depends": []
+    },
+    {
+      "id": "44-34",
+      "phaseId": "44",
+      "status": "planned",
+      "agentId": null,
+      "skill": null,
+      "type": "framework",
+      "goal": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned Node zip (current LTS or whatever the site build targets) from our release assets — NOT from nodejs.org — so we own the distribution channel end-to-end; (b) extracts to `&lt;target&gt;/.planning/.node/`; (c) writes a small `.planning/.cmd/gad.cmd` (or equivalent shim) that points at `.planning/.node/node.exe` + the gad.exe location; (d) adds an instruction block in the installer's success message explaining how to activate the portable Node for this shell session. Do NOT touch the consumer's system PATH — this is a fenced install that works by being invoked through the shim. Depends on 44-31 (release pipeline must host the node zip) + 44-32 (installer --node flag wiring). Leave GitHub Actions out.",
+      "keywords": [
+        "portable-node",
+        "node-bootstrap",
+        "installer",
+        "fenced-install",
+        "shim",
+        "cmd"
       ],
       "depends": []
     },
@@ -8296,6 +8396,13 @@
     }
   ],
   "searchIndex": [
+    {
+      "id": "gad-188",
+      "title": "44-28 umbrella: installer + release pipeline + data scoping — distribution is GitHub releases, not npm, with a Windows-first lightweight installer writing only into .planning/ and agent dirs",
+      "kind": "decision",
+      "href": "/decisions#gad-188",
+      "body": "gad-188 44-28 umbrella: installer + release pipeline + data scoping — distribution is github releases, not npm, with a windows-first lightweight installer writing only into .planning/ and agent dirs discuss-phase 2026-04-14 on task 44-28 produced a 12-point decision set that reframes the original thin \"gad site install\" scope into an umbrella covering 5 sub-tasks (44-30 through 44-34). locked: (1) no npm publishing ever — we ship from github releases of github.com/magicbornstudios/get-anything-done pulled from our site. (2) windows-first with a real lightweight installer.exe; go/rust rewrites"
+    },
     {
       "id": "gad-187",
       "title": "Visual Context Panel naming contract: section cid is the default identity; Identified is optional depth",
@@ -11525,10 +11632,45 @@
     },
     {
       "id": "44-28",
-      "title": "Architectural: site-as-project-management-UI. User ask 2026-04-14: \"every GAD project should be able to serve the site f",
+      "title": "UMBRELLA (see decision gad-188): site-as-project-management-UI + Windows installer + release pipeline. Discuss-phase 202",
       "kind": "task",
       "href": "/planning?tab=tasks#44-28",
-      "body": "44-28 architectural: site-as-project-management-ui. user ask 2026-04-14: \"every gad project should be able to serve the site for itself... operating from the root of the repo and being able to filter down the data for the project i am working on and that are made available to me in the site would be good... agnostic, they just get to have their own version they can customize... i expect them to hate the site and want to remake it themselves... i want it easy to get in to my hands for a good workflow.\" findings and lineage content stay in the site (marketing); the data layer needs to (a) scope by the project the operator is currently on, (b) surface all projects registered in gad-config.toml in a unified way (planning tabs have been doing this), (c) expose site settings via the cli now that we have terminals. additional: package the get-anything-done site so `gad site install` in any repo with the cli pulls the source tree and everything needed — site stays light but talks to the local environment through web + terminals/clis. split into subtasks after discussion: (1) data scoping by current project, (2) site settings via cli, (3) gad site install command, (4) agnostic-shell vs get-anything-done-specific content split (light-touch, customization-friendly). site-install project-management-ui cli-settings agnostic-shell filtering data-scoping"
+      "body": "44-28 umbrella (see decision gad-188): site-as-project-management-ui + windows installer + release pipeline. discuss-phase 2026-04-14 reframed this from a thin \"gad site install\" task into a 5-sub-task spine. user's atomic decisions: no npm publishing ever (distribution is github releases of get-anything-done, pulled from our site); windows-first with a real lightweight installer; no contamination of consumer repo (installer writes only to .planning/, .claude/, .codex/, .agent/, etc. — .planning is the safe zone); site lives at .planning/site/ as a self-contained next.js server runtime with a launcher.exe for double-click read-only operation; installer prompts {site, skills, planning, node} with args to bypass prompts; skills branch gated on node+gad.exe present; no backward-compat; consumer baseline is \"has a computer, finds the repo, downloads the installer, reads readme, double-clicks launcher\"; ai coding agent install is on the consumer. split into: 44-30 (a1 data scoping — ships standalone), 44-31 (b0 release pipeline foundation), 44-32 (b2 installer extension — new flags + release-zip source), 44-33 (b3 site packaging for .planning/site/), 44-34 (b4 portable node bootstrap). dropped from original plan: b1 (gad.exe build — already exists as node sea, see dist/release/), and b5 (runtime rewriters — already shipped in bin/install.js for 9 coding agents). this task stays open as the tracking umbrella until all 5 sub-tasks close. umbrella site-install installer release-pipeline data-scoping windows"
+    },
+    {
+      "id": "44-30",
+      "title": "44-28.A1 — Full-surface data scoping by current-project signal. Ships independent of the installer track. Add a global `",
+      "kind": "task",
+      "href": "/planning?tab=tasks#44-30",
+      "body": "44-30 44-28.a1 — full-surface data scoping by current-project signal. ships independent of the installer track. add a global `currentproject` react context (populated from `?projectid=` query param, falling back to the first `[[planning.roots]]` id in gad-config.toml, falling back to \"get-anything-done\"). thread the hook `usecurrentproject()` through every user-facing route and filter records by project where records already carry a project field (findings.projects string[], bugs.project, eval_runs.project, eval_projects.project, requirements_history.project, planning_zips.project). add a project picker dropdown in navactions that reads the list of registered projects (new helper `site/lib/project-config.ts` that loads gad-config.toml at build time into a typed constant), writes the selection to the url, and persists nothing (url is the source of truth). routes that must filter: /planning (already filters bugs hardcoded to \"gad\" — replace with context), /findings (+ /findings/[slug]), /project-market. routes that stay framework-global for now: /skills, /formulas, /glossary, /, /about, /methodology, /workflows, /lineage. planning/tasks/phases/decisions data stays single-project at build time per the build script's gad_project_root env var — broaden in a follow-up (option b in the scoping research: read all projects' planning into all_tasks_by_project etc.). verify: tsc clean, `/` renders for a consumer's repo where their planning root is not get-anything-done, /findings filters to the picked project, /project-market collapses to the picked project's species rows. data-scoping project-context nav-picker findings-filter bugs-filter query-param"
+    },
+    {
+      "id": "44-31",
+      "title": "44-28.B0 — Release pipeline foundation. Today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale Node SEA build",
+      "kind": "task",
+      "href": "/planning?tab=tasks#44-31",
+      "body": "44-31 44-28.b0 — release pipeline foundation. today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale node sea build on one machine; `dist/` is gitignored; zero git tags exist; zero github releases have been published on github.com/magicbornstudios/get-anything-done. nothing a consumer can download. deliverables: (1) verify + document the existing node sea build script that produces dist/release/*.exe. (2) author a new `build-and-release-locally` skill via create-skill that runs the full sequence idempotently: clean build, version bump (package.json + changelog.md), rebuild exe, `git tag v`, `gh release create v dist/release/* --notes-from-tag`, verify with `gh release view`. (3) first release cut: v1.33.0 or similar, with current artifacts attached. (4) consumer-facing readme section documenting the \"download installer.exe from latest release → run in target repo\" path. gates: no github actions (operator-triggered only), no npm publishing ever, local-only build pre-commit/post-push. must precede any b2/b3/b4 work — those sub-tasks depend on there being a consumable release. release-pipeline github-releases node-sea build-and-release-locally create-skill gh-release"
+    },
+    {
+      "id": "44-32",
+      "title": "44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) ",
+      "kind": "task",
+      "href": "/planning?tab=tasks#44-32",
+      "body": "44-32 44-28.b2 — extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) with: (a) new `--site` flag that installs a self-contained site tree into `&lt;target&gt;/.planning/site/`; (b) new `--planning` flag that scaffolds `&lt;target&gt;/.planning/` with state.xml, roadmap.xml, task-registry.xml, decisions.xml from a template; (c) new `--node` flag that opts into the portable-node bootstrap branch (44-34); (d) new `--from-release &lt;url|tag&gt;` source mode that downloads the release zip from github.com/magicbornstudios/get-anything-done releases and extracts into a scratch dir for the installer to source files from — today install.js assumes it's running from inside the gad repo source tree, which is wrong for a consumer that only has the installer.exe; (e) reshape interactive mode from \"pick one runtime\" to \"pick features {site, skills, planning, node}\" → then runtime picker for the skills branch; (f) gate the skills branch on `gad.exe` + node being detectable on path or in `.planning/.node/` — refuse install with a clear error if missing; (g) enforce the local-only install scope (no home-dir writes). rebuild installer.exe via node sea, attach to the next release. depends on 44-31 (b0) landing first so there's a release to pull from. installer install-js site-flag planning-flag node-flag from-release skills-gating interactive-mode"
+    },
+    {
+      "id": "44-33",
+      "title": "44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js ",
+      "kind": "task",
+      "href": "/planning?tab=tasks#44-33",
+      "body": "44-33 44-28.b3 — site packaging for .planning/site/ double-click launch path. produce a self-contained site tree: (a) next.js server build output that can run with `node server.js` in place (not `next start` which needs the full next cli). (b) bundled node runtime extracted beside the site (so the launcher doesn't depend on the host having node installed). (c) `launcher.exe` — tiny windows exe (bun --compile or go) that spawns `./.node/node.exe ./site/server.js`, waits for the server to bind a local port, opens the default browser at `http://localhost:&lt;port&gt;`, stays running until the browser window closes or ctrl+c. (d) the site must read `.planning/*.xml` from its parent dir at request time — already works in dev via build-site-data.mjs but must keep working after packaging. (e) build target + release artifact: `site-&lt;version&gt;.zip` containing site/ + .node/ + launcher.exe + readme.txt. (f) wire into 44-32's `--site` branch: installer downloads the zip from the release and extracts it to `&lt;target&gt;/.planning/site/`. depends on 44-31 (release pipeline) + 44-32 (installer --site flag). decision point during planning: does the packaged site rebuild its lib/catalog.generated.ts against the consumer's planning data on first launch, or does it ship with prebuilt gad framework data baked in and only read live project data? recommend: first-launch rebuild against consumer's gad-config.toml. site-packaging launcher-exe bundled-node next-server double-click release-zip planning-site"
+    },
+    {
+      "id": "44-34",
+      "title": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the inter",
+      "kind": "task",
+      "href": "/planning?tab=tasks#44-34",
+      "body": "44-34 44-28.b4 — portable node bootstrap branch for the installer. when the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned node zip (current lts or whatever the site build targets) from our release assets — not from nodejs.org — so we own the distribution channel end-to-end; (b) extracts to `&lt;target&gt;/.planning/.node/`; (c) writes a small `.planning/.cmd/gad.cmd` (or equivalent shim) that points at `.planning/.node/node.exe` + the gad.exe location; (d) adds an instruction block in the installer's success message explaining how to activate the portable node for this shell session. do not touch the consumer's system path — this is a fenced install that works by being invoked through the shim. depends on 44-31 (release pipeline must host the node zip) + 44-32 (installer --node flag wiring). leave github actions out. portable-node node-bootstrap installer fenced-install shim cmd"
     },
     {
       "id": "44-29",

@@ -8,6 +8,7 @@ export interface SkillSummaryDTO {
   isFrameworkSkill: boolean;
   authoredByEvals: string[];
   category: string;
+  origin: "official" | "proto";
 }
 
 export interface SkillUsageDTO {
@@ -25,16 +26,12 @@ export interface AgentUsageDTO {
 }
 
 export const CATEGORY_LABEL: Record<string, string> = {
-  fundamental: "Fundamental",
-  "eval-authored": "Eval-authored",
-  "framework-inherited": "Framework — inherited",
-  "framework-only": "Framework — not inherited",
+  official: "Official",
+  proto: "Proto",
 };
 
 export const SKILL_CATEGORIES = [
   "all",
-  "fundamental",
-  "eval-authored",
-  "framework-inherited",
-  "framework-only",
+  "official",
+  "proto",
 ] as const;

@@ -19,23 +19,19 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { DevIdComponentTag, RegistryEntry } from "./SectionRegistry";
+import { Identified } from "./Identified";
+import type { RegistryEntry } from "./SectionRegistry";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { getSpeechRecognition, type SpeechRecInstance } from "./speechRecognition";
-
-const BLOCK_LABEL_MAX = 72;
-const BLOCK_CID_MAX = 56;
-
-function truncateForPrompt(value: string, maxChars: number): string {
-  if (value.length <= maxChars) return value;
-  if (maxChars <= 1) return "…";
-  return `${value.slice(0, maxChars - 1)}…`;
-}
-
-/** Escape for use inside double-quoted HTML-like attributes in markdown inline code. */
-function escapeAttrInCode(s: string): string {
-  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/`/g, "\\`");
-}
+import { DevIdModalContextFooter } from "./DevIdModalContextFooter";
+import {
+  buildDeletePrompt,
+  buildUpdateLockedPrefix,
+  DEFAULT_DELETE_TEMPLATE,
+  DEFAULT_UPDATE_TEMPLATE,
+  type HandoffComponentTag,
+  type PromptVerbosity,
+} from "./DevIdPromptTemplates";
 
 
 function HandoffPromptPane({
@@ -106,71 +102,6 @@ function HandoffPromptPane({
   );
 }
 
-export type HandoffComponentTag = DevIdComponentTag;
-
-/** Locked update header (read-only); copy is this plus a newline plus the user editor body. */
-export function buildUpdateLockedPrefix(
-  pageUrl: string,
-  label: string,
-  cid: string,
-  componentTag: HandoffComponentTag,
-  searchHint?: string,
-): string {
-  const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
-  const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
-  const searchShort = truncateForPrompt(searchHint ?? cid, Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX));
-  const lines = [
-    "You are to make changes to this component on the site.",
-    "",
-    "## Where to find this component",
-    `component_route_location= **${pageUrl}**`,
-    "",
-    "## Component to make changes to",
-    `- Dev-ID wrapper: \`${componentTag}\` — React primitive (\`Identified\` or \`SiteSection\`); the meaningful block name is **Component label** (\`as\`) below.`,
-    `- Component label (\`as\`): \`${escapeAttrInCode(labelShort)}\``,
-    `- Search literal: \`${escapeAttrInCode(searchShort)}\``,
-    `- \`data-cid="${escapeAttrInCode(cidShort)}"\``,
-    `- and its children. The landmark element is the parent of the content in question.`,
-    "",
-    "## Make the changes to the component based on the below (UPDATE)",
-  ];
-  return lines.join("\n");
-}
-
-export function buildDeletePrompt(
-  pageUrl: string,
-  label: string,
-  cid: string,
-  componentTag: HandoffComponentTag,
-  searchHint?: string,
-) {
-  const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
-  const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
-  const searchShort = truncateForPrompt(searchHint ?? cid, Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX));
-  const labelLine = `- Remove the \`${componentTag}\` dev-id wrapper whose label (\`as\`) is \`${escapeAttrInCode(labelShort)}\` — that wrapper and its children leave this page/route.`;
-  const searchLine = `- Search literal: \`${escapeAttrInCode(searchShort)}\``;
-  const cidLine = `- data-cid: \`${escapeAttrInCode(cidShort)}\``;
-  const labelFull = label.length > BLOCK_LABEL_MAX ? `\n- Full \`as\` string: ${JSON.stringify(label)}` : "";
-  const cidFull = cid.length > BLOCK_CID_MAX ? `\n- Full data-cid: ${JSON.stringify(cid)}` : "";
-  const searchFull =
-    (searchHint ?? cid).length > Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX)
-      ? `\n- Full search literal: ${JSON.stringify(searchHint ?? cid)}`
-      : "";
-
-  return `## Where to find this component
-**${pageUrl}** — open this URL in the browser; this is the page where the component appears, find in the codebase.
-
-## Component to make changes to
-${labelLine}${labelFull}
-${searchLine}${searchFull}
-${cidLine}${cidFull}
-
-## What to do(DELETE)
-1. Remove the \`<Identified>\` or \`<SiteSection>\` block (per wrapper type above), including nested content, that matches \`data-cid\` / label.
-2. Drop unused imports and components.
-3. Typecheck the site package you touched, then commit (message should reference the label or \`data-cid\`).`;
-}
-
 
 function insertTranscriptAtEditor(api: HandoffEditorHandle | null, transcript: string) {
   api?.insertAtCaret(transcript);
@@ -179,60 +110,44 @@ function insertTranscriptAtEditor(api: HandoffEditorHandle | null, transcript: s
 type StripCopyKey = "pageUrl" | "cid" | "label";
 
 function CopyableContextField({
-  title,
   value,
   copyKey,
   activeKey,
   onCopy,
-  mono,
 }: {
-  title: string;
   value: string;
   copyKey: StripCopyKey;
   activeKey: StripCopyKey | null;
   onCopy: (key: StripCopyKey, text: string) => void;
-  mono?: boolean;
 }) {
   const text = value || "—";
   const empty = !value.trim();
   const justCopied = activeKey === copyKey;
 
   return (
-    <div className="min-w-0">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-foreground/90">{title}</p>
+    <div className="min-w-0 flex-1">
       <button
         type="button"
         disabled={empty}
-        title={empty ? "Nothing to copy" : `Copy ${title}`}
-        aria-label={empty ? `${title} (empty)` : `Copy ${title}`}
+        title={empty ? "Nothing to copy" : "Copy to clipboard"}
+        aria-label={empty ? "Empty value" : "Copy to clipboard"}
         onClick={() => {
           if (!empty) onCopy(copyKey, value);
         }}
         className={cn(
-          "group mt-1.5 flex w-full max-w-full items-start gap-2 rounded-md border px-2 py-1.5 text-left transition-colors",
-          "border-border/50 bg-background/40 hover:border-border hover:bg-background/70",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-muted/40",
-          empty && "cursor-not-allowed opacity-50 hover:border-border/50 hover:bg-background/40",
+          "group flex w-full min-w-0 items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-left",
+          "border-border/60 bg-muted/35 text-foreground transition-colors hover:bg-muted/55",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1",
+          justCopied && "border-emerald-500/40 bg-emerald-500/10",
+          empty && "cursor-not-allowed opacity-50",
         )}
       >
         <span
-          className={cn(
-            "min-w-0 flex-1 leading-snug text-foreground sm:text-[13px]",
-            mono ? "break-all font-mono text-xs" : "text-sm font-semibold",
-          )}
+          className="min-w-0 truncate font-mono text-[11px] leading-snug"
         >
           {text}
         </span>
-        <span
-          className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-md border border-border/60 bg-muted/30 text-muted-foreground",
-            "group-hover:text-foreground",
-            justCopied && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-          )}
-          aria-hidden
-        >
-          {justCopied ? <Check className="size-3.5" strokeWidth={2.5} /> : <Copy className="size-3.5" strokeWidth={2} />}
-        </span>
+        {justCopied ? <Check className="size-3 shrink-0 text-emerald-400" aria-hidden /> : null}
         {justCopied ? (
           <span className="sr-only">Copied to clipboard</span>
         ) : null}
@@ -271,37 +186,27 @@ function PromptContextStrip({ pageUrl, cid, label }: { pageUrl: string; cid: str
   return (
     <div
       className={cn(
-        "grid shrink-0 gap-3 border-b-2 border-border bg-muted/40 px-4 py-3.5 sm:grid-cols-3",
-        "shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--foreground)_6%,transparent)]",
+        "grid shrink-0 grid-cols-3 gap-2 overflow-hidden border-b border-border/50 bg-muted/20 px-3 py-2",
       )}
     >
       <CopyableContextField
-        title="Where to find this component"
         value={pageUrl}
         copyKey="pageUrl"
         activeKey={copiedKey}
         onCopy={copyStripValue}
-        mono
       />
-      <div className="min-w-0 border-t border-border/70 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
-        <CopyableContextField
-          title="data-cid"
-          value={cid}
-          copyKey="cid"
-          activeKey={copiedKey}
-          onCopy={copyStripValue}
-          mono
-        />
-      </div>
-      <div className="min-w-0 border-t border-border/70 pt-3 sm:col-span-1 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0">
-        <CopyableContextField
-          title="Component (as)"
-          value={label}
-          copyKey="label"
-          activeKey={copiedKey}
-          onCopy={copyStripValue}
-        />
-      </div>
+      <CopyableContextField
+        value={cid}
+        copyKey="cid"
+        activeKey={copiedKey}
+        onCopy={copyStripValue}
+      />
+      <CopyableContextField
+        value={label}
+        copyKey="label"
+        activeKey={copiedKey}
+        onCopy={copyStripValue}
+      />
     </div>
   );
 }
@@ -439,23 +344,50 @@ export function DevIdAgentPromptDialog({
   const tabRef = useRef<"update" | "delete">(tab);
   const [copied, setCopied] = useState<"update" | "delete" | null>(null);
   const [handoffEpoch, setHandoffEpoch] = useState(0);
+  const [updateTemplate, setUpdateTemplate] = useState(DEFAULT_UPDATE_TEMPLATE);
+  const [deleteTemplate, setDeleteTemplate] = useState(DEFAULT_DELETE_TEMPLATE);
+  const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
+  const [activeEntry, setActiveEntry] = useState<RegistryEntry | null>(entry);
+  const modalScanRef = useRef<HTMLDivElement | null>(null);
 
-  const label = entry?.label ?? "";
-  const cid = entry?.cid ?? "";
+  const label = activeEntry?.label ?? "";
+  const cid = activeEntry?.cid ?? "";
   const pageUrl = useMemo(() => absolutePageUrl(pathname), [pathname]);
 
   tabRef.current = tab;
 
   useEffect(() => {
-    if (!open || !entry) return;
-    const resolvedComponentTag = entry.componentTag ?? componentTag;
-    setUpdateLockedPrefix(
-      buildUpdateLockedPrefix(pageUrl, label, cid, resolvedComponentTag, entry.searchHint),
-    );
+    let alive = true;
+    async function loadTemplates() {
+      try {
+        const [u, d] = await Promise.all([
+          fetch("/devid-prompts/update.md").then((r) => (r.ok ? r.text() : DEFAULT_UPDATE_TEMPLATE)),
+          fetch("/devid-prompts/delete.md").then((r) => (r.ok ? r.text() : DEFAULT_DELETE_TEMPLATE)),
+        ]);
+        if (!alive) return;
+        setUpdateTemplate(u || DEFAULT_UPDATE_TEMPLATE);
+        setDeleteTemplate(d || DEFAULT_DELETE_TEMPLATE);
+      } catch {
+        if (!alive) return;
+        setUpdateTemplate(DEFAULT_UPDATE_TEMPLATE);
+        setDeleteTemplate(DEFAULT_DELETE_TEMPLATE);
+      }
+    }
+    loadTemplates();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem("devid.prompt.verbosity");
+    if (raw === "compact" || raw === "full") setPromptVerbosity(raw);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveEntry(entry);
     setUpdateUserDraft("");
-    setDeleteLockedText(
-      buildDeletePrompt(pageUrl, label, cid, resolvedComponentTag, entry.searchHint),
-    );
     setInterim("");
     setTab("update");
     setCopied(null);
@@ -469,7 +401,36 @@ export function DevIdAgentPromptDialog({
     }
     setListening(false);
     setHandoffEpoch((e) => e + 1);
-  }, [open, entry, pageUrl, label, cid, componentTag]);
+  }, [open, entry]);
+
+  useEffect(() => {
+    if (!open || !activeEntry) return;
+    const resolvedComponentTag = activeEntry.componentTag ?? componentTag;
+    const updateTemplateForMode = promptVerbosity === "full" ? updateTemplate : undefined;
+    const deleteTemplateForMode = promptVerbosity === "full" ? deleteTemplate : undefined;
+    setUpdateLockedPrefix(
+      buildUpdateLockedPrefix(
+        pageUrl,
+        label,
+        cid,
+        resolvedComponentTag,
+        activeEntry.searchHint,
+        updateTemplateForMode,
+        promptVerbosity,
+      ),
+    );
+    setDeleteLockedText(
+      buildDeletePrompt(
+        pageUrl,
+        label,
+        cid,
+        resolvedComponentTag,
+        activeEntry.searchHint,
+        deleteTemplateForMode,
+        promptVerbosity,
+      ),
+    );
+  }, [open, activeEntry, pageUrl, label, cid, componentTag, updateTemplate, deleteTemplate, promptVerbosity]);
 
   useEffect(() => {
     return () => {
@@ -551,7 +512,7 @@ export function DevIdAgentPromptDialog({
     window.setTimeout(() => setCopied(null), 1400);
   };
 
-  if (!entry) return null;
+  if (!activeEntry) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -565,22 +526,27 @@ export function DevIdAgentPromptDialog({
           "sm:top-1/2 sm:h-[min(82vh,calc(100dvh-2rem))] sm:min-h-[32rem] sm:max-h-[min(96vh,100dvh)] sm:w-[min(98vw,72rem)] sm:-translate-y-1/2 sm:rounded-xl",
         )}
       >
-        <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
-          <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
-        </DialogHeader>
+        <div ref={modalScanRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Identified as="DevIdAgentPromptHeader" cid="devid-agent-prompt-header" register={false} depth={1}>
+            <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
+              <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
+            </DialogHeader>
+          </Identified>
 
-        <PromptContextStrip pageUrl={pageUrl} cid={cid} label={label} />
+          <Identified as="DevIdAgentPromptContextStrip" cid="devid-agent-prompt-context-strip" register={false} depth={1}>
+            <PromptContextStrip pageUrl={pageUrl} cid={cid} label={label} />
+          </Identified>
 
-        <Tabs
-          value={tab}
-          onValueChange={(v) => {
-            stopRecognition();
-            setTab(v as "update" | "delete");
-          }}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
-        >
-          <div className="shrink-0 px-3 pt-1 sm:px-4">
-            <TabsList className="inline-flex h-6 w-fit gap-px rounded border border-border/40 bg-muted/30 p-px">
+          <Tabs
+            value={tab}
+            onValueChange={(v) => {
+              stopRecognition();
+              setTab(v as "update" | "delete");
+            }}
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          >
+            <div className="shrink-0 px-3 pt-1 sm:px-4">
+              <TabsList className="inline-flex h-6 w-fit gap-px rounded border border-border/40 bg-muted/30 p-px">
               <TabsTrigger
                 value="update"
                 title="Update prompt"
@@ -602,65 +568,80 @@ export function DevIdAgentPromptDialog({
             </TabsList>
           </div>
 
-          <TabsContent
-            value="update"
-            className="mt-0 flex min-h-0 flex-1 basis-0 flex-col overflow-hidden data-[state=inactive]:hidden"
-          >
-            <HandoffPromptPane
-              draft={updateUserDraft}
-              onDraftChange={setUpdateUserDraft}
-              editorRef={updateEditorRef}
-              editorKey={`${handoffEpoch}-update`}
-              lockedHeader={updateLockedPrefix}
-              ariaLabel="Your instructions for the agent (editable)"
-              hoverChrome={
-                <HoverPromptChrome
-                  listening={listening}
-                  interim={interim}
-                  speechOk={speechOk}
-                  onStartDictation={startRecognition}
-                  onStopDictation={stopRecognition}
-                  onCopy={copyActive}
-                  copied={copied === "update"}
-                  copyDisabled={false}
+            <Identified as="DevIdAgentPromptTabsBody" cid="devid-agent-prompt-tabs-body" register={false} depth={1} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <TabsContent
+                value="update"
+                className="mt-0 flex min-h-0 flex-1 basis-0 flex-col overflow-hidden data-[state=inactive]:hidden"
+              >
+                <HandoffPromptPane
+                  draft={updateUserDraft}
+                  onDraftChange={setUpdateUserDraft}
+                  editorRef={updateEditorRef}
+                  editorKey={`${handoffEpoch}-update`}
+                  lockedHeader={updateLockedPrefix}
+                  ariaLabel="Your instructions for the agent (editable)"
+                  hoverChrome={
+                    <HoverPromptChrome
+                      listening={listening}
+                      interim={interim}
+                      speechOk={speechOk}
+                      onStartDictation={startRecognition}
+                      onStopDictation={stopRecognition}
+                      onCopy={copyActive}
+                      copied={copied === "update"}
+                      copyDisabled={false}
+                    />
+                  }
+                  speechFooter={
+                    !speechOk ? (
+                      <p className="mt-2 text-xs text-amber-500">Speech recognition is not supported in this browser.</p>
+                    ) : null
+                  }
                 />
-              }
-              speechFooter={
-                !speechOk ? (
-                  <p className="mt-2 text-xs text-amber-500">Speech recognition is not supported in this browser.</p>
-                ) : null
-              }
-            />
-          </TabsContent>
+              </TabsContent>
 
-          <TabsContent
-            value="delete"
-            className="mt-0 flex min-h-0 flex-1 basis-0 flex-col overflow-hidden data-[state=inactive]:hidden"
-          >
-            <HandoffPromptPane
-              draft=""
-              onDraftChange={() => {}}
-              editorRef={deleteEditorRef}
-              editorKey={`${handoffEpoch}-delete`}
-              readOnlyBody={deleteLockedText}
-              ariaLabel="Delete handoff prompt (read-only)"
-              hoverChrome={
-                <HoverPromptChrome
-                  listening={listening}
-                  interim={interim}
-                  speechOk={speechOk}
-                  showDictation={false}
-                  onStartDictation={startRecognition}
-                  onStopDictation={stopRecognition}
-                  onCopy={copyActive}
-                  copied={copied === "delete"}
-                  copyDisabled={!deleteLockedText.trim()}
+              <TabsContent
+                value="delete"
+                className="mt-0 flex min-h-0 flex-1 basis-0 flex-col overflow-hidden data-[state=inactive]:hidden"
+              >
+                <HandoffPromptPane
+                  draft=""
+                  onDraftChange={() => {}}
+                  editorRef={deleteEditorRef}
+                  editorKey={`${handoffEpoch}-delete`}
+                  readOnlyBody={deleteLockedText}
+                  ariaLabel="Delete handoff prompt (read-only)"
+                  hoverChrome={
+                    <HoverPromptChrome
+                      listening={listening}
+                      interim={interim}
+                      speechOk={speechOk}
+                      showDictation={false}
+                      onStartDictation={startRecognition}
+                      onStopDictation={stopRecognition}
+                      onCopy={copyActive}
+                      copied={copied === "delete"}
+                      copyDisabled={!deleteLockedText.trim()}
+                    />
+                  }
                 />
-              }
-            />
-          </TabsContent>
-        </Tabs>
+              </TabsContent>
+            </Identified>
+          </Tabs>
+          <DevIdModalContextFooter
+            open={open}
+            scanRootRef={modalScanRef}
+            promptVerbosity={promptVerbosity}
+            onPromptVerbosityChange={setPromptVerbosity}
+            onActiveEntryChange={(next) => {
+              if (next) setActiveEntry(next);
+            }}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+
+

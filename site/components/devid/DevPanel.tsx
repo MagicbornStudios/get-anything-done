@@ -16,10 +16,9 @@ import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
 import { Identified } from "./Identified";
 import {
-  buildDeletePrompt,
-  buildUpdateLockedPrefix,
   DevIdAgentPromptDialog,
 } from "./DevIdAgentPromptDialog";
+import { buildDeletePrompt, buildUpdateLockedPrefix, type PromptVerbosity } from "./DevIdPromptTemplates";
 import { DEV_PANEL_LABEL, DEV_PANEL_STABLE_CID } from "./dev-panel-constants";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
@@ -125,11 +124,21 @@ export function DevPanel(props: DevPanelProps) {
   const [sectionCorner, setSectionCorner] = useState<"left" | "right">("right");
   const [compactEdge, setCompactEdge] = useState<"top" | "bottom">(bandEdge);
   const [compactCorner, setCompactCorner] = useState<"left" | "right">(bandCorner);
+  const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
 
   const sortedSectionEntries = useMemo(
     () => (registry ? sortRegistryEntries(registry.entries) : []),
     [registry],
   );
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem("devid.prompt.verbosity");
+    if (raw === "compact" || raw === "full") setPromptVerbosity(raw);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("devid.prompt.verbosity", promptVerbosity);
+  }, [promptVerbosity]);
 
   useEffect(() => {
     if (mode !== "section" || !registry) return;
@@ -333,6 +342,8 @@ export function DevPanel(props: DevPanelProps) {
       sectionTarget.cid,
       sectionTarget.componentTag ?? "Identified",
       sectionTarget.searchHint,
+      undefined,
+      promptVerbosity,
     );
     const resolved = `${prefix}\n${transcript.trim()}`;
     navigator.clipboard?.writeText(resolved).catch(() => {});
@@ -353,6 +364,8 @@ export function DevPanel(props: DevPanelProps) {
       sectionTarget.cid,
       sectionTarget.componentTag ?? "Identified",
       sectionTarget.searchHint,
+      undefined,
+      promptVerbosity,
     );
     navigator.clipboard?.writeText(resolved).catch(() => {});
     setHeaderCopied("delete");
@@ -472,6 +485,16 @@ export function DevPanel(props: DevPanelProps) {
                   className="size-6"
                 >
                   <Copy size={11} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  title="Toggle prompt verbosity"
+                  onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
+                  className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
+                >
+                  {promptVerbosity === "compact" ? "Short" : "Full"}
                 </Button>
               </div>
               <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
@@ -632,6 +655,16 @@ export function DevPanel(props: DevPanelProps) {
                 className="size-6"
               >
                 <Copy size={11} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                title="Toggle prompt verbosity"
+                onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
+                className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
+              >
+                {promptVerbosity === "compact" ? "Short" : "Full"}
               </Button>
             </div>
             <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">

@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState, type RefObject } from "react";
 import { usePathname } from "next/navigation";
-import { Check, ChevronLeft, ChevronRight, Copy, MessageSquare, Mic, MicOff, Trash2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, Mic, MicOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevId } from "./DevIdProvider";
-import { buildDeletePrompt, buildUpdateLockedPrefix, DevIdAgentPromptDialog } from "./DevIdAgentPromptDialog";
+import { buildDeletePrompt, buildUpdateLockedPrefix, type PromptVerbosity } from "./DevIdPromptTemplates";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { collectScopedEntries, escapeCidSelector, sortRegistryEntries } from "./devid-dom-scan";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
@@ -35,17 +35,34 @@ export function DevIdModalContextFooter({
   open,
   scanRootRef,
   className,
+  onActiveEntryChange,
+  promptVerbosity,
+  onPromptVerbosityChange,
 }: {
   open: boolean;
   scanRootRef: RefObject<HTMLElement | null>;
   className?: string;
+  onActiveEntryChange?: (entry: RegistryEntry | null) => void;
+  promptVerbosity?: PromptVerbosity;
+  onPromptVerbosityChange?: (verbosity: PromptVerbosity) => void;
 }) {
   const pathname = usePathname() ?? "";
   const { enabled, highlightCid, setHighlightCid, flashComponent } = useDevId();
   const [entries, setEntries] = useState<RegistryEntry[]>([]);
   const [idx, setIdx] = useState(0);
-  const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
   const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | "cid" | null>(null);
+  const [localPromptVerbosity, setLocalPromptVerbosity] = useState<PromptVerbosity>("full");
+  const effectivePromptVerbosity = promptVerbosity ?? localPromptVerbosity;
+
+  useEffect(() => {
+    if (promptVerbosity) return;
+    const raw = window.localStorage.getItem("devid.prompt.verbosity");
+    if (raw === "compact" || raw === "full") setLocalPromptVerbosity(raw);
+  }, [promptVerbosity]);
+
+  useEffect(() => {
+    window.localStorage.setItem("devid.prompt.verbosity", effectivePromptVerbosity);
+  }, [effectivePromptVerbosity]);
 
   const recompute = useCallback(() => {
     const root = scanRootRef.current;
@@ -92,6 +109,10 @@ export function DevIdModalContextFooter({
 
   const current = entries[idx] ?? null;
 
+  useEffect(() => {
+    onActiveEntryChange?.(current);
+  }, [current, onActiveEntryChange]);
+
   const finalizeUpdate = useCallback(
     (transcript: string) => {
       if (!current) return;
@@ -101,6 +122,8 @@ export function DevIdModalContextFooter({
         current.cid,
         current.componentTag ?? "Identified",
         current.searchHint,
+        undefined,
+        effectivePromptVerbosity,
       );
       const resolved = `${prefix}\n${transcript.trim()}`;
       navigator.clipboard?.writeText(resolved).catch(() => {});
@@ -108,7 +131,7 @@ export function DevIdModalContextFooter({
       window.setTimeout(() => setHeaderCopied(null), 1200);
       toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
     },
-    [current, pathname],
+    [current, pathname, effectivePromptVerbosity],
   );
 
   const { listening, interim, toggle: toggleSpeech } = useDictatedPromptCopy({
@@ -123,12 +146,14 @@ export function DevIdModalContextFooter({
       current.cid,
       current.componentTag ?? "Identified",
       current.searchHint,
+      undefined,
+      effectivePromptVerbosity,
     );
     navigator.clipboard?.writeText(resolved).catch(() => {});
     setHeaderCopied("delete");
     window.setTimeout(() => setHeaderCopied(null), 1200);
     toast.success("Delete prompt copied");
-  }, [current, pathname]);
+  }, [current, pathname, effectivePromptVerbosity]);
 
   const go = (nextIdx: number) => {
     if (!entries.length) return;
@@ -171,14 +196,7 @@ export function DevIdModalContextFooter({
   }
 
   return (
-    <>
-      <DevIdAgentPromptDialog
-        open={promptEntry != null}
-        onOpenChange={(v) => !v && setPromptEntry(null)}
-        entry={promptEntry}
-        pathname={pathname}
-      />
-      <div
+    <div
         title="Alt+click a landmark to sync with the band panel · use arrows to change the active landmark"
         className={cn(
           "shrink-0 border-t border-border/60 bg-muted/25 px-2 py-1",
@@ -261,18 +279,20 @@ export function DevIdModalContextFooter({
             <Button type="button" variant="secondary" size="icon" className="size-6" onClick={copyCid}>
               {headerCopied === "cid" ? <Check size={10} /> : <Copy size={10} />}
             </Button>
-            {current ? (
-              <Button
-                type="button"
-                variant="secondary"
-                size="icon"
-                className="size-6"
-                aria-label="Agent prompt"
-                onClick={() => setPromptEntry(current)}
-              >
-                <MessageSquare size={10} />
-              </Button>
-            ) : null}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 px-1 text-[9px] font-semibold uppercase tracking-wide"
+              title="Toggle prompt verbosity"
+              onClick={() => {
+                const next = effectivePromptVerbosity === "full" ? "compact" : "full";
+                if (onPromptVerbosityChange) onPromptVerbosityChange(next);
+                else setLocalPromptVerbosity(next);
+              }}
+            >
+              {effectivePromptVerbosity === "compact" ? "Short" : "Full"}
+            </Button>
           </div>
         </div>
         {listening && interim ? (
@@ -282,6 +302,5 @@ export function DevIdModalContextFooter({
           </p>
         ) : null}
       </div>
-    </>
   );
 }

@@ -56,9 +56,8 @@ export function SkillsHeroSection({
 
       <Identified as="SkillsHeroMetrics" className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
         <SiteInlineMetric label="Total skills" value={totalSkills.toString()} />
-        <SiteInlineMetric label="Fundamental" value={categoryCount("fundamental").toString()} />
-        <SiteInlineMetric label="Eval-authored" value={categoryCount("eval-authored").toString()} />
-        <SiteInlineMetric label="Framework-inherited" value={categoryCount("framework-inherited").toString()} />
+        <SiteInlineMetric label="Official" value={categoryCount("official").toString()} />
+        <SiteInlineMetric label="Proto-skills" value={categoryCount("proto").toString()} />
         <SiteInlineMetric label="Skills used" value={usageCount.toString()} />
         <SiteInlineMetric label="Agents tracked" value={agentsCount.toString()} />
       </Identified>

@@ -34,26 +34,23 @@ import {
 import { ReadonlyCodeMirror } from "./ReadonlyCodeMirror";
 import { DevIdModalContextFooter } from "@/components/devid/DevIdModalContextFooter";
 
-/** 0–100 for telemetry; null = catalog preview (no fill). */
+/** 0–100 for telemetry; default to 0 when no trigger signal exists yet. */
 function derivedUsagePercent(row: ProjectSkillScopeRow): number | null {
   if (row.usagePercent !== null) return row.usagePercent;
   if (row.triggered === true) return 100;
   if (row.triggered === false) return 0;
-  return null;
+  return 0;
 }
 
 function usagePercentLabel(row: ProjectSkillScopeRow): { text: string; title: string } {
   const d = derivedUsagePercent(row);
-  if (d !== null) {
-    return {
-      text: `${d}%`,
-      title:
-        row.usagePercent !== null
-          ? "Expected trigger outcome (latest run + playable build)"
-          : "Expected trigger from trace (add playable build to match bar to telemetry)",
-    };
-  }
-  return { text: "—%", title: "Catalog preview — sprite + usage ship with eval telemetry" };
+  return {
+    text: `${d}%`,
+    title:
+      row.usagePercent !== null
+        ? "Expected trigger outcome (latest run + playable build)"
+        : "Expected trigger from trace (add playable build to match bar to telemetry)",
+  };
 }
 
 /**
@@ -263,7 +260,9 @@ export function ProjectSkillsScopeExplorer({
                       <SkillUsageHud row={row} />
                       <div className="min-w-0 flex-1">
                         <span className="block truncate text-[11px] font-medium leading-tight">{row.label}</span>
-                        <span className="block truncate font-mono text-[10px] text-muted-foreground">{row.skillId}</span>
+                        {row.skillId && row.skillId !== row.label ? (
+                          <span className="block truncate font-mono text-[10px] text-muted-foreground">{row.skillId}</span>
+                        ) : null}
                       </div>
                       {row.triggered === true ? (
                         <span className="flex shrink-0 items-center gap-0.5 text-[9px] font-semibold uppercase text-emerald-400/90">
@@ -338,14 +337,17 @@ export function ProjectSkillsScopeExplorer({
                     </DialogTrigger>
                     <DialogContent
                       devIdBandCid={PROJECT_SKILLS_SCOPE_SECTION_BAND_CID}
-                      className="flex max-h-[min(92vh,900px)] w-[min(96vw,56rem)] flex-col gap-0 p-0 sm:max-w-[56rem]"
+                      className="flex max-h-[min(90vh,860px)] w-[min(96vw,56rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[56rem]"
                     >
-                      <div ref={skillFilesModalScanRef} className="flex min-h-0 flex-1 flex-col">
+                      <div
+                        ref={skillFilesModalScanRef}
+                        className="flex min-h-0 max-h-[inherit] flex-1 flex-col overflow-hidden"
+                      >
                         <Identified
                           as="Skill package & files"
                           cid="project-skills-scope-source-files-modal"
                           depth={1}
-                          className="flex min-h-0 flex-1 flex-col"
+                          className="flex min-h-0 max-h-full flex-1 flex-col overflow-hidden"
                         >
                           <Identified
                             as="Skill package modal header"
@@ -353,22 +355,22 @@ export function ProjectSkillsScopeExplorer({
                             depth={2}
                             className="shrink-0"
                           >
-                            <DialogHeader className="px-5 pb-2 pt-1">
+                            <DialogHeader className="px-5 pb-3 pt-1">
                               <DialogTitle className="text-base">Skill package & files</DialogTitle>
                               <DialogDescription className="text-xs leading-relaxed">
                                 {SKILL_PACKAGE_REFERENCE_BLURB}
                               </DialogDescription>
                             </DialogHeader>
                           </Identified>
-                          <div className="flex min-h-0 min-h-[min(52vh,560px)] flex-1 flex-col gap-4 overflow-hidden px-5 pb-5 md:flex-row md:gap-5">
+                          <div className="mt-4 flex min-h-0 w-full max-w-full flex-1 flex-col gap-4 overflow-hidden px-5 pb-6 sm:mt-5 md:h-[min(56vh,580px)] md:max-h-[min(62vh,640px)] md:min-h-[280px] md:flex-row md:gap-6 md:pb-5">
                             <Identified
                               as="Modal — package file tree"
                               cid="project-skills-scope-modal-file-tree"
                               depth={2}
-                              className="flex min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-background/95 via-card/60 to-muted/25 shadow-md ring-1 ring-border/15 md:w-[min(44%,24rem)]"
+                              className="flex min-h-0 max-h-[min(36vh,300px)] w-full min-w-0 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/40 bg-card/90 shadow-sm md:h-full md:max-h-none md:w-[min(40%,24rem)] md:shrink-0"
                               tag="section"
                             >
-                              <div className="shrink-0 space-y-1 border-b border-border/30 bg-black/[0.12] px-3 py-2.5">
+                              <div className="shrink-0 space-y-1 border-b border-border/40 bg-muted/35 px-3 py-2.5">
                                 <h4 className="text-xs font-semibold tracking-tight text-foreground">Package files</h4>
                                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] leading-snug text-muted-foreground">
                                   <span className="min-w-0">This skill’s folder shape and bundled paths.</span>
@@ -395,21 +397,21 @@ export function ProjectSkillsScopeExplorer({
                               as="Modal — file preview"
                               cid="project-skills-scope-modal-file-preview"
                               depth={2}
-                              className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-background/95 via-card/50 to-muted/20 shadow-md ring-1 ring-border/15"
+                              className="flex min-h-[min(52vh,440px)] min-w-0 max-h-[min(66vh,640px)] flex-1 flex-col overflow-hidden rounded-2xl border border-border/40 bg-card/90 shadow-sm md:min-h-[28rem] md:max-h-full"
                               tag="section"
                             >
-                              <div className="shrink-0 border-b border-border/30 bg-black/[0.12] px-3 py-2.5">
+                              <div className="shrink-0 border-b border-border/40 bg-muted/35 px-3 py-2.5">
                                 <h4 className="text-xs font-semibold tracking-tight text-foreground">Preview</h4>
                                 <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
                                   Bundled selection shows catalog source; other paths show a short note.
                                 </p>
                               </div>
-                              <div className="min-h-0 flex-1 overflow-hidden p-2">
+                              <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-2.5 sm:p-3">
                                 <ReadonlyCodeMirror
                                   key={`${selected.skillId}-${effectiveModalFilePath}`}
-                                  className="border-border/40 bg-zinc-950/35"
-                                  minVisibleLines={20}
-                                  maxVisibleLines={48}
+                                  className="h-full min-h-[28rem] max-h-full overflow-hidden border-border/50 bg-background"
+                                  minVisibleLines={25}
+                                  maxVisibleLines={36}
                                   value={skillFileModalPreview(
                                     effectiveModalFilePath,
                                     selected.skillId,

@@ -80,6 +80,11 @@ export function Identified({
       }
     : undefined;
 
+  /**
+   * Highlights use **inset** rings so they are not clipped by `overflow-hidden` ancestors
+   * (outlines sit outside the box and are easy to cut off at modal/section edges).
+   * `scroll-mt-*` gives Locate / scroll-into-view a little air at the top.
+   */
   return createElement(
     tag,
     {
@@ -90,11 +95,10 @@ export function Identified({
       onClick: handleClick,
       className: [
         className,
-        showPersistentRing
-          ? "outline outline-2 outline-offset-2 outline-accent"
-          : "",
+        enabled ? "scroll-mt-3 scroll-mb-1 sm:scroll-mt-4" : "",
+        showPersistentRing ? "ring-2 ring-inset ring-accent" : "",
         showFlashRing
-          ? "outline outline-2 outline-offset-2 outline-emerald-400/90 shadow-[0_0_0_4px_rgba(52,211,153,0.25)] transition-[outline-color,box-shadow] duration-300"
+          ? "ring-2 ring-inset ring-emerald-400/90 shadow-[inset_0_0_12px_rgba(52,211,153,0.2)] transition-[box-shadow,ring-color] duration-300"
           : "",
       ]
         .filter(Boolean)

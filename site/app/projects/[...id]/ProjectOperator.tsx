@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Rocket, Loader2, X, AlertTriangle, FolderOpen, FileCheck2, PauseCircle } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
+import { SiteSection } from "@/components/site";
 import { cn } from "@/lib/utils";
 
 type LogLine = { stream: "stdout" | "stderr" | "meta"; text: string };
@@ -38,6 +39,12 @@ export function ProjectOperator(props: ProjectOperatorProps) {
   const [state, setState] = useState<LaunchState>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
   const logRef = useRef<HTMLDivElement | null>(null);
+  const [terminalCommand, setTerminalCommand] = useState("");
+  const [terminalLines, setTerminalLines] = useState<LogLine[]>([]);
+  const [terminalRunning, setTerminalRunning] = useState(false);
+  const terminalAbortRef = useRef<AbortController | null>(null);
+  const terminalLogRef = useRef<HTMLDivElement | null>(null);
+  const terminalSurfaceRef = useRef<HTMLDivElement | null>(null);
 
   // Autoscroll terminal on new lines.
   useEffect(() => {
@@ -46,6 +53,16 @@ export function ProjectOperator(props: ProjectOperatorProps) {
       if (el) el.scrollTop = el.scrollHeight;
     }
   }, [state]);
+
+  useEffect(() => {
+    const el = terminalLogRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [terminalLines, terminalRunning]);
+
+  useEffect(() => {
+    if (!terminalSurfaceRef.current) return;
+    terminalSurfaceRef.current.focus();
+  }, []);
 
   const handleRun = useCallback(async () => {
     const controller = new AbortController();
@@ -127,16 +144,99 @@ export function ProjectOperator(props: ProjectOperatorProps) {
     setState({ kind: "idle" });
   }, []);
 
+  const runTerminalCommand = useCallback(async () => {
+    const command = terminalCommand.trim();
+    if (!command || terminalRunning) return;
+
+    const controller = new AbortController();
+    terminalAbortRef.current = controller;
+    setTerminalRunning(true);
+    setTerminalLines((prev) => [...prev, { stream: "meta", text: `$ ${command}` }]);
+
+    try {
+      const res = await fetch("/api/dev/terminal", {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "text/event-stream" },
+        body: JSON.stringify({ command }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        const errText = await res.text().catch(() => `HTTP ${res.status}`);
+        setTerminalLines((prev) => [...prev, { stream: "stderr", text: errText || `HTTP ${res.status}` }]);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let currentEvent = "message";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+
+        let idx: number;
+        while ((idx = buf.indexOf("\n\n")) !== -1) {
+          const block = buf.slice(0, idx);
+          buf = buf.slice(idx + 2);
+          currentEvent = "message";
+          let dataStr = "";
+          for (const rawLine of block.split("\n")) {
+            if (rawLine.startsWith("event:")) currentEvent = rawLine.slice(6).trim();
+            else if (rawLine.startsWith("data:")) dataStr += rawLine.slice(5).trim();
+          }
+          if (!dataStr) continue;
+          let data: unknown;
+          try { data = JSON.parse(dataStr); } catch { continue; }
+
+          if (currentEvent === "stdout" || currentEvent === "stderr") {
+            const line = (data as { line?: string }).line ?? "";
+            const streamType: LogLine["stream"] = currentEvent;
+            setTerminalLines((prev) => [...prev, { stream: streamType, text: line }]);
+          } else if (currentEvent === "exit") {
+            const code = (data as { code?: number | null }).code ?? null;
+            setTerminalLines((prev) => [...prev, { stream: "meta", text: `— exited (${code ?? "null"})` }]);
+          } else if (currentEvent === "error") {
+            const message = (data as { message?: string }).message ?? "error";
+            setTerminalLines((prev) => [...prev, { stream: "stderr", text: message }]);
+          }
+        }
+      }
+    } catch (err) {
+      if ((err as { name?: string })?.name !== "AbortError") {
+        setTerminalLines((prev) => [
+          ...prev,
+          { stream: "stderr", text: err instanceof Error ? err.message : "network error" },
+        ]);
+      } else {
+        setTerminalLines((prev) => [...prev, { stream: "meta", text: "— aborted" }]);
+      }
+    } finally {
+      terminalAbortRef.current = null;
+      setTerminalRunning(false);
+    }
+  }, [terminalCommand, terminalRunning]);
+
+  const abortTerminalCommand = useCallback(() => {
+    terminalAbortRef.current?.abort();
+  }, []);
+
+  const clearTerminal = useCallback(() => {
+    setTerminalLines([]);
+  }, []);
+
   const isRunning = state.kind === "running";
   const showLogs = state.kind === "running" || state.kind === "done" || state.kind === "err";
   const lines = showLogs ? state.lines : [];
 
   return (
-    <Identified as="ProjectOperator">
-      <section className="mx-auto max-w-6xl px-4 py-6">
+    <SiteSection cid="project-operator-dev-controls-site-section">
+      <Identified as="ProjectOperator" cid="project-operator-dev-controls" className="mx-auto max-w-6xl py-2">
         <div className="rounded-xl border border-amber-500/30 bg-gradient-to-b from-amber-500/5 to-transparent p-5">
           {/* Header: dev-mode callout */}
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <Identified as="ProjectOperatorHeader" cid="project-operator-dev-controls-header" className="mb-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <AlertTriangle size={14} className="text-amber-400" aria-hidden />
               <h2 className="text-sm font-semibold uppercase tracking-wider text-amber-200">
@@ -146,11 +246,11 @@ export function ProjectOperator(props: ProjectOperatorProps) {
             <span className="font-mono text-[11px] text-muted-foreground">
               NODE_ENV=development
             </span>
-          </div>
+          </Identified>
 
           {/* Status strip: preserved build + latest generation */}
-          <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border border-border/60 bg-card/40 p-3">
+          <Identified as="ProjectOperatorStatusStrip" cid="project-operator-dev-controls-status-strip" className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Identified as="ProjectOperatorPreservedBuildCard" cid="project-operator-preserved-build-card" className="rounded-lg border border-border/60 bg-card/40 p-3">
               <div className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
                 <FileCheck2 size={11} aria-hidden />
                 Preserved build
@@ -171,9 +271,9 @@ export function ProjectOperator(props: ProjectOperatorProps) {
                   after a successful build.
                 </div>
               )}
-            </div>
+            </Identified>
 
-            <div className="rounded-lg border border-border/60 bg-card/40 p-3">
+            <Identified as="ProjectOperatorLatestGenerationCard" cid="project-operator-latest-generation-card" className="rounded-lg border border-border/60 bg-card/40 p-3">
               <div className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
                 <FolderOpen size={11} aria-hidden />
                 Latest generation
@@ -189,11 +289,11 @@ export function ProjectOperator(props: ProjectOperatorProps) {
               ) : (
                 <div className="text-xs text-muted-foreground">No generations yet.</div>
               )}
-            </div>
-          </div>
+            </Identified>
+          </Identified>
 
           {/* Action row */}
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Identified as="ProjectOperatorActions" cid="project-operator-dev-controls-actions" className="mb-3 flex flex-wrap items-center gap-2">
             {state.kind === "idle" && (
               <button
                 type="button"
@@ -276,42 +376,150 @@ export function ProjectOperator(props: ProjectOperatorProps) {
                 </button>
               </>
             )}
-          </div>
+          </Identified>
 
           {/* Terminal panel */}
-          <div
-            ref={logRef}
-            className="h-80 overflow-auto rounded-lg border border-border/60 bg-black/60 p-3 font-mono text-[11px] leading-relaxed"
+          <Identified
+            as="ProjectOperatorTerminal"
+            cid="project-operator-dev-controls-terminal"
+            className="rounded-lg border border-border/60 bg-black/60"
           >
-            {!showLogs && (
-              <div className="text-muted-foreground">
-                Terminal idle. Output from <code>gad eval run</code> will stream here.
-              </div>
-            )}
-            {lines.map((line, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "whitespace-pre-wrap",
-                  line.stream === "stderr" && "text-rose-300",
-                  line.stream === "stdout" && "text-emerald-100",
-                  line.stream === "meta" && "text-amber-300",
-                )}
+            <div
+              ref={logRef}
+              className="h-80 overflow-auto p-3 font-mono text-[11px] leading-relaxed"
+            >
+              {!showLogs && (
+                <div className="text-muted-foreground">
+                  Terminal idle. Output from <code>gad eval run</code> will stream here.
+                </div>
+              )}
+              {lines.map((line, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "whitespace-pre-wrap",
+                    line.stream === "stderr" && "text-rose-300",
+                    line.stream === "stdout" && "text-emerald-100",
+                    line.stream === "meta" && "text-amber-300",
+                  )}
+                >
+                  {line.text || "\u00a0"}
+                </div>
+              ))}
+              {state.kind === "done" && (
+                <div className="pt-2 text-muted-foreground">
+                  — process exited with code {state.code ?? "null"}
+                </div>
+              )}
+              {state.kind === "err" && (
+                <div className="pt-2 text-rose-400">— {state.message}</div>
+              )}
+            </div>
+          </Identified>
+
+          <Identified
+            as="ProjectOperatorInteractiveTerminal"
+            cid="project-operator-interactive-terminal"
+            className="mt-4 rounded-lg border border-border/60 bg-card/40 p-3"
+          >
+            <Identified
+              as="ProjectOperatorInteractiveTerminalControls"
+              cid="project-operator-interactive-terminal-controls"
+              className="mb-2 flex flex-wrap items-center gap-2"
+            >
+              <span className="text-[10px] text-muted-foreground">
+                Click terminal, type command, press Enter.
+              </span>
+              <button
+                type="button"
+                onClick={() => void runTerminalCommand()}
+                disabled={terminalRunning || !terminalCommand.trim()}
+                className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {line.text || "\u00a0"}
+                {terminalRunning ? <Loader2 size={12} className="animate-spin" aria-hidden /> : <Rocket size={12} aria-hidden />}
+                Run
+              </button>
+              <button
+                type="button"
+                onClick={abortTerminalCommand}
+                disabled={!terminalRunning}
+                className="inline-flex items-center gap-1.5 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <PauseCircle size={12} aria-hidden />
+                Abort
+              </button>
+              <button
+                type="button"
+                onClick={clearTerminal}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-transparent px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-card/40"
+              >
+                Clear
+              </button>
+            </Identified>
+
+            <Identified
+              as="ProjectOperatorInteractiveTerminalOutput"
+              cid="project-operator-interactive-terminal-output"
+              className="rounded-md border border-border/60 bg-black/60"
+            >
+              <div
+                ref={(node) => {
+                  terminalSurfaceRef.current = node;
+                  terminalLogRef.current = node;
+                }}
+                tabIndex={0}
+                onClick={() => terminalSurfaceRef.current?.focus()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void runTerminalCommand();
+                    return;
+                  }
+                  if (e.key === "Backspace") {
+                    e.preventDefault();
+                    setTerminalCommand((prev) => prev.slice(0, -1));
+                    return;
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    setTerminalCommand("");
+                    return;
+                  }
+                  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    e.preventDefault();
+                    setTerminalCommand((prev) => prev + e.key);
+                  }
+                }}
+                className="h-72 overflow-auto p-3 font-mono text-[11px] leading-relaxed outline-none ring-0 focus-visible:ring-2 focus-visible:ring-accent/50"
+              >
+                {terminalLines.length === 0 ? (
+                  <div className="text-muted-foreground">Interactive terminal idle. Run a command to begin.</div>
+                ) : null}
+                {terminalLines.map((line, i) => (
+                  <div
+                    key={`term-${i}`}
+                    className={cn(
+                      "whitespace-pre-wrap",
+                      line.stream === "stderr" && "text-rose-300",
+                      line.stream === "stdout" && "text-emerald-100",
+                      line.stream === "meta" && "text-amber-300",
+                    )}
+                  >
+                    {line.text || "\u00a0"}
+                  </div>
+                ))}
+                <div className="mt-1 flex items-center gap-1 text-emerald-200">
+                  <span>{terminalRunning ? "…" : ">"}</span>
+                  <span className={cn("min-w-0 break-all", terminalRunning && "opacity-60")}>
+                    {terminalCommand}
+                    <span className="inline-block h-3 w-[1px] animate-pulse bg-emerald-200 align-middle" aria-hidden />
+                  </span>
+                </div>
               </div>
-            ))}
-            {state.kind === "done" && (
-              <div className="pt-2 text-muted-foreground">
-                — process exited with code {state.code ?? "null"}
-              </div>
-            )}
-            {state.kind === "err" && (
-              <div className="pt-2 text-rose-400">— {state.message}</div>
-            )}
-          </div>
+            </Identified>
+          </Identified>
         </div>
-      </section>
-    </Identified>
+      </Identified>
+    </SiteSection>
   );
 }
