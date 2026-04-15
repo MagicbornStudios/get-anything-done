@@ -20,6 +20,7 @@ import {
 } from "./DevIdAgentPromptDialog";
 import { buildDeletePrompt, buildUpdateLockedPrefix, type PromptVerbosity } from "./DevIdPromptTemplates";
 import {
+  DEV_PANEL_BRAND_MARK,
   DEV_PANEL_LABEL,
   DEV_PANEL_SELF_ENTRY,
   DEV_PANEL_STABLE_CID,
@@ -468,20 +469,12 @@ export function DevPanel(props: DevPanelProps) {
                     Section scan {sectionEntries.length} items
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <span className="max-w-[9rem] truncate font-mono text-muted-foreground" title={panelIdDisplay}>
-                    {panelIdDisplay}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyValue(panelIdDisplay)}
-                    className="size-6"
-                  >
-                    <Copy size={11} />
-                  </Button>
-                </div>
+                <p
+                  className="shrink-0 max-w-[5.5rem] text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85"
+                  title="Framework"
+                >
+                  {DEV_PANEL_BRAND_MARK}
+                </p>
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-[10px]">
                 <Button
@@ -659,20 +652,12 @@ export function DevPanel(props: DevPanelProps) {
                   {bandLabel} · {bandEntries.length} items
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <span className="max-w-[9rem] truncate font-mono text-muted-foreground" title={panelIdDisplay}>
-                  {panelIdDisplay}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => copyValue(panelIdDisplay)}
-                  className="size-6"
-                >
-                  <Copy size={11} />
-                </Button>
-              </div>
+              <p
+                className="shrink-0 max-w-[5.5rem] text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85"
+                title="Framework"
+              >
+                {DEV_PANEL_BRAND_MARK}
+              </p>
             </div>
             <div className="mt-1 flex items-center gap-1.5 text-[10px]">
               <Button
@@ -705,7 +690,8 @@ export function DevPanel(props: DevPanelProps) {
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => copyValue(panelIdDisplay)}
+                onClick={() => sectionTarget && copyEntry(sectionTarget)}
+                disabled={!sectionTarget}
                 className="size-6"
               >
                 <Copy size={11} />
