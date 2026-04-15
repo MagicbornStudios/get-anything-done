@@ -221,7 +221,130 @@ The following are removed wholesale during migration:
 - `skills/gad-merge-skill/` — folded into `skills/merge-skill/`; its COMMAND.md body becomes `workflows/merge-skill.md`.
 - All `skills/**/skill.json` files (~60 sidecars).
 
-## 10. Consumer-project parity
+## 10. Standard flow: creating a new command/workflow skill
+
+This is the canonical procedure for creating a new GAD command skill (the
+`skills/gad-<name>/SKILL.md` + `workflows/<name>.md` pattern). Apply it every
+time — deviations must be justified in a decision entry.
+
+**Step 1 — decide the identity.**
+
+- Pick a kebab-case `<name>` (e.g. `review-backlog`, `new-project`).
+- The skill directory is `skills/gad-<name>/`.
+- The public `name:` frontmatter value is `gad:<name>` (colon form —
+  matches slash-command invocation).
+- The workflow file is `workflows/<name>.md` (no `gad-` prefix). Exception:
+  a few legacy canonical workflows like `gad-debug.md`, `gad-eval-run.md`,
+  `gad-execute-phase.md`, `gad-map-codebase.md`, `gad-new-project.md`,
+  `gad-plan-phase.md` retain their `gad-` prefix. For new skills, default
+  to unprefixed.
+
+**Step 2 — author `workflows/<name>.md`.**
+
+The body goes here, not in SKILL.md. Include:
+
+- `## Objective` — one paragraph on what the skill achieves.
+- `## Inputs` — what the caller must supply (flags, context files).
+- `## Process` — ordered steps, each using concrete tools (gad CLI
+  commands, Read/Edit/Write, Bash). Number the steps.
+- `## Outputs` — files written, state mutated, exit signals.
+- `## References` — links to related skills, decisions, planning docs.
+
+Keep workflows focused on one task. If a procedure branches heavily,
+split into multiple workflows and have a parent workflow orchestrate.
+
+**Step 3 — author `skills/gad-<name>/SKILL.md`.**
+
+Thin entry point. Shape:
+
+```markdown
+---
+name: gad:<name>
+description: >-
+  One-paragraph when-to-fire prose. Include trigger phrases the user is
+  likely to say ("let's X", "run Y", "make Z"). Describe the outcome, not
+  the process — the process lives in the workflow file.
+workflow: workflows/<name>.md
+argument-hint: "[<args>]"
+allowed-tools: [Read, Write, Edit, Bash, Glob, Grep, Agent]
+---
+
+# gad:<name>
+
+**Workflow:** [workflows/<name>.md](../../workflows/<name>.md)
+
+Fire when:
+- <trigger phrase 1>
+- <trigger phrase 2>
+- <trigger phrase 3>
+
+Run the workflow and follow its steps. All procedural detail lives in the
+workflow file per the canonical skill shape.
+```
+
+SKILL.md stays short. If it grows past ~30 lines, something belongs in
+the workflow file instead.
+
+**Step 4 — verify discovery.**
+
+Run these checks in order:
+
+```sh
+node scripts/validate-canonical-assets.mjs          # frontmatter + pointer resolution
+node --test tests/canonical-skill-records.test.cjs  # parser coverage
+node bin/gad.cjs snapshot --projectid get-anything-done --skills 10
+```
+
+The new skill should appear in `EQUIPPED SKILLS` when sprint context mentions
+its domain. If it does not appear, either the description lacks query-
+overlap tokens or the relevance threshold filters it out.
+
+**Step 5 — register attribution on the first task that uses it.**
+
+When you ship a task that uses the new skill, set `skill="gad-<name>"` on
+the task in TASK-REGISTRY.xml per decision gad-104. This feeds the
+self-eval pipeline and makes the skill visible in the snapshot section.
+
+**Step 6 — run an eval if the skill is non-trivial.**
+
+For skills that could regress silently, scaffold an eval project:
+
+```sh
+gad eval setup --project gad-<name>-eval
+```
+
+Follow `gad-skill-creator` for the eval scaffolding if the skill needs
+rigorous testing. Otherwise `create-proto-skill` is the lightweight path.
+
+## 11. Skill lifecycle — candidate → proto-skill → canonical
+
+The four lifecycle stages and the CLI verbs that move between them:
+
+```
+raw intent
+   │
+   │  `gad evolution evolve` writes .planning/candidates/<slug>/CANDIDATE.md
+   ↓
+candidate (.planning/candidates/<slug>/CANDIDATE.md)
+   │
+   │  `create-proto-skill` reads CANDIDATE.md, writes the bundle
+   ↓
+proto-skill (.planning/proto-skills/<slug>/ — self-contained bundle)
+   │  SKILL.md (status: proto, workflow: ./workflow.md)
+   │  workflow.md (sibling)
+   │  PROVENANCE.md
+   │
+   │  `gad evolution install --claude [...]`  (optional, test in runtime)
+   │  `gad evolution validate`                 (advisory VALIDATION.md)
+   │  `gad evolution promote <slug>`
+   ↓
+canonical (skills/gad-<name>/SKILL.md + workflows/<name>.md)
+```
+
+Each arrow is a CLI verb — no step is manual file shuffling. If a step
+lacks a CLI verb, that is a gap to close before the lifecycle is uniform.
+
+## 12. Consumer-project parity
 
 Consumer projects going through evolution follow the same shape. When a
 consumer project promotes a proto-skill, it writes to **its own**
