@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <task-registry>
   <phase id="10">
     <task id="10-01" agent-id="" status="done">
@@ -1520,6 +1520,10 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     <task id="44-26" type="docs" status="done" skill="create-skill" agent="default"><goal>Document the real speech-driven visual editing workflow as a reusable methodology: loose UPDATE/DELETE prompts, landmark-first targeting (`cid` as source of truth), cleanup boundaries, and the Mermaid-leak incident as a concrete failure mode for cross-route renderer side effects.</goal>
       <resolution>Shipped 2026-04-14. Updated `references/visual-context-panel-methodology.md` with fast-input/speech guidance, cleanup-boundary policy, and automation-at-scale constraints; updated `skills/gad-visual-context-panel-identities/SKILL.md` with cleanup guardrails and noisy-input verification; logged the Mermaid leak in `ERRORS-AND-ATTEMPTS.xml` with root cause + mitigation references.</resolution>
       <keywords>human-workflow,speech-input,landmarks,cleanup-policy,mermaid,error-log</keywords>
+    </task>
+    <task id="44-37" type="meta" status="done" skill="default" agent="default"><goal>Retrospective: Visual Context landing band — intro landmarks vs inner showcase scope (2026-04-15). Capture where confusion lived (agent prioritized showcase/meteor demos; user wanted intro kicker/title/body as separate Identified targets for DevPanel), resolution (split `LandingVisualContextIntroKicker`, `IntroTitle`, `IntroBody` under outer `LandingVisualContextShowcase`), and mitigations for future UI work (name scope explicitly; atomic Identified per DevPanel target; verify with grep before closing).</goal>
+      <resolution>Artifact: `.planning/notes/retr-visual-context-landmarks-intro-2026-04-15.md`. Code: `site/components/landing/home/LandingVisualContextAndPromptBand.tsx` — intro uses three `Identified` children plus existing `LandingVisualContextPanelShowcase`, `LandingVisualContextPatternList`, `LandingPageGenerationPromptExample`.</resolution>
+      <keywords>retrospective,visual-context,identified,landmarks,intro,dev-panel,44-15,44-16</keywords>
     </task>
   </phase>
   <phase id="44.5">

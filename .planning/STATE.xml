@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <state>
   <current-phase>44.5</current-phase>
   <current-plan></current-plan>
@@ -39,6 +39,7 @@
     <reference>workflows/settings.md</reference>
     <reference>references/framework-comparison-matrix.md</reference>
     <reference>.planning/notes/context-engine-hydration-questions-2026-04-14.md</reference>
+    <reference>.planning/notes/retr-visual-context-landmarks-intro-2026-04-15.md (task 44-37)</reference>
   </references>
   <last-updated>2026-04-15</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
