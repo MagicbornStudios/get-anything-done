@@ -1,75 +1,251 @@
-import { Ref } from "@/components/refs/Ref";
+"use client";
+
+import { useMemo, useState } from "react";
+import { Database, Play, RefreshCw } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
-import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
-import DataTrustCount from "./DataTrustCount";
+import { SiteSection } from "@/components/site";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { DataSource } from "./data-shared";
+import DataQueryEditor from "./DataQueryEditor";
+import { DEFAULT_QUERY, executeDbQuery, type QueryField } from "./query";
 
-const REPO = "https://github.com/MagicbornStudios/get-anything-done";
+type DbCollection = {
+  key: string;
+  label: string;
+  description: string;
+  rows: DataSource[];
+};
 
-export default function DataHeroSection({
-  totals,
-}: {
-  totals: Record<string, number>;
-}) {
+function toCollectionKey(surface: string): string {
+  return surface.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+function rowField(record: DataSource, field: QueryField): string {
+  if (field === "id") return record.id;
+  if (field === "surface") return record.surface;
+  if (field === "number") return record.number;
+  if (field === "source") return record.source;
+  if (field === "formula") return record.formula ?? "";
+  if (field === "trust") return record.trust;
+  if (field === "page") return record.page;
+  if (field === "notes") return record.notes ?? "";
+  if (field === "sourceLength") return String(record.source.length);
+  if (field === "formulaLength") return String(record.formula?.length ?? 0);
+  return String(record.notes?.length ?? 0);
+}
+
+function buildCollections(sources: DataSource[]): DbCollection[] {
+  const grouped = new Map<string, DataSource[]>();
+  for (const source of sources) {
+    const key = toCollectionKey(source.surface);
+    const current = grouped.get(key) ?? [];
+    current.push(source);
+    grouped.set(key, current);
+  }
+
+  const bySurface = [...grouped.entries()].map(([key, rows]) => ({
+    key,
+    label: rows[0]?.surface ?? key,
+    description: "Surface-derived collection",
+    rows,
+  }));
+
+  return [
+    {
+      key: "active",
+      label: "active",
+      description: "All local records in the current data catalog",
+      rows: sources,
+    },
+    ...bySurface.sort((a, b) => a.label.localeCompare(b.label)),
+  ];
+}
+
+export default function DataHeroSection({ sources }: { sources: DataSource[] }) {
+  const collections = useMemo(() => buildCollections(sources), [sources]);
+  const collectionsByKey = useMemo(
+    () =>
+      collections.reduce<Record<string, DataSource[]>>((acc, collection) => {
+        acc[collection.key.toLowerCase()] = collection.rows;
+        return acc;
+      }, {}),
+    [collections],
+  );
+  const [activeCollectionKey, setActiveCollectionKey] = useState("active");
+  const [queryDraft, setQueryDraft] = useState(DEFAULT_QUERY);
+  const [queryText, setQueryText] = useState(DEFAULT_QUERY);
+
+  const activeCollection = collections.find((collection) => collection.key === activeCollectionKey) ?? collections[0];
+  const { rows, errors, plan, appliedCollection } = useMemo(
+    () => executeDbQuery(activeCollection?.rows ?? [], queryText, collectionsByKey),
+    [activeCollection, queryText, collectionsByKey],
+  );
+  const runQuery = () => {
+    setQueryText(queryDraft);
+    const parsedFrom = queryDraft
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.toUpperCase().startsWith("FROM "));
+    const nextCollection = parsedFrom?.slice(5).trim().toLowerCase();
+    if (nextCollection && collectionsByKey[nextCollection]) {
+      setActiveCollectionKey(nextCollection);
+    }
+  };
+
+  const tableColumns = plan.select;
+
   return (
-    <SiteSection cid="data-hero-section-site-section">
-      <Identified as="DataHeroSection">
-      <Identified as="DataHeroHeading" register={false}>
-        <SiteSectionHeading
-          kicker="Local DB"
-          as="h1"
-          preset="hero"
-          title={
-            <>
-              Every number, with a receipt.{" "}
-              <span className="gradient-text">Show me where this came from.</span>
-            </>
-          }
-        />
-      </Identified>
-      <Identified as="DataHeroProsePrimary">
-        <SiteProse className="mt-6">
-        Research credibility lives or dies on whether you can trace a number back to its inputs. This
-        page indexes every chart and stat on the site with: where the number comes from, how it&apos;s
-        derived, and whether the source is{" "}
-        <strong className="text-emerald-300">deterministic</strong> (computed at prebuild),{" "}
-        <strong className="text-rose-300">self-reported</strong> (the agent put it in TRACE.json),{" "}
-        <strong>human-rated</strong> (submitted via the rubric CLI), or{" "}
-        <strong className="text-muted-foreground">authored</strong> (hand-curated content).
-        </SiteProse>
-      </Identified>
-      <Identified as="DataHeroProseGaps">
-        <SiteProse size="sm" className="mt-4">
-        Per <Ref id="gad-69" /> (programmatic-eval priority), every new metric must answer &quot;can
-        this be collected programmatically?&quot; before &quot;how do we score it?&quot;. The push is
-        to move self-report sources toward deterministic ones &mdash; the gaps are tracked in{" "}
-        <a
-          href={`${REPO}/blob/main/.planning/docs/GAPS.md`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-accent underline decoration-dotted"
-        >
-          .planning/docs/GAPS.md
-        </a>
-        .
-        </SiteProse>
-      </Identified>
+    <SiteSection
+      cid="data-hero-section-site-section"
+      sectionShell={false}
+      shellClassName="w-full max-w-none px-0 py-2 md:py-3"
+    >
+      <Identified as="DataHeroSection" className="w-full">
+        <Identified as="DataHeroHeading" register={false}>
+          <div className="mb-2 flex w-full items-center justify-between gap-3 border-b border-border/60 pb-2">
+            <h1 className="text-base font-semibold tracking-tight md:text-lg">DB Viewer</h1>
+            <Badge variant="outline" className="font-mono text-[11px]">
+              local json
+            </Badge>
+          </div>
+        </Identified>
 
-      <Identified as="DataHeroTrustCounts" className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <DataTrustCount
-          label="Deterministic"
-          count={totals.deterministic ?? 0}
-          tint="success"
-        />
-        <DataTrustCount label="Human-rated" count={totals.human ?? 0} tint="default" />
-        <DataTrustCount label="Authored" count={totals.authored ?? 0} tint="outline" />
-        <DataTrustCount
-          label="Self-report"
-          count={totals["self-report"] ?? 0}
-          tint="danger"
-        />
-      </Identified>
+        <Identified
+          as="DataDbViewerApp"
+          className="grid w-full items-start gap-2 lg:grid-cols-[360px_minmax(0,1fr)]"
+        >
+          <Identified as="DataDbCollectionsPanel">
+            <Card className="h-full">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Database size={14} />
+                  Collections
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1.5">
+                {collections.map((collection) => {
+                  const active = collection.key === activeCollectionKey;
+                  return (
+                    <button
+                      key={collection.key}
+                      type="button"
+                      onClick={() => setActiveCollectionKey(collection.key)}
+                      className={`w-full rounded-md border px-2.5 py-2 text-left transition ${
+                        active
+                          ? "border-accent bg-accent/10"
+                          : "border-border/70 bg-background/30 hover:border-accent/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs">{collection.label}</span>
+                        <Badge variant={active ? "default" : "outline"}>{collection.rows.length}</Badge>
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{collection.description}</p>
+                    </button>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </Identified>
+
+          <div className="space-y-2">
+            <Identified as="DataDbQueryPanel">
+              <Card>
+                <CardHeader className="pb-1.5">
+                  <CardTitle className="text-sm">Query</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2.5">
+                  <DataQueryEditor
+                    className="min-h-[52vh]"
+                    value={queryDraft}
+                    onChange={setQueryDraft}
+                    onRun={runQuery}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button size="sm" onClick={runQuery}>
+                      <Play size={13} className="mr-1" />
+                      Run
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setQueryDraft(DEFAULT_QUERY);
+                        setQueryText(DEFAULT_QUERY);
+                        setActiveCollectionKey("active");
+                      }}
+                    >
+                      <RefreshCw size={13} className="mr-1" />
+                      Reset
+                    </Button>
+                    <Badge variant="outline">FROM {appliedCollection}</Badge>
+                    <Badge variant="outline">LIMIT {plan.limit}</Badge>
+                    <Badge variant="outline">
+                      SORT {plan.sortField} {plan.sortDirection}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    DSL: <code>FROM</code>, <code>WHERE</code> (AND), <code>SORT</code>, <code>LIMIT</code>,{" "}
+                    <code>SELECT</code>. Example condition: <code>trust:deterministic</code> or{" "}
+                    <code>sourceLength&gt;40</code>.
+                  </p>
+                </CardContent>
+              </Card>
+            </Identified>
+
+            <Identified as="DataDbResultsPanel">
+              <Card>
+                <CardHeader className="pb-1.5">
+                  <CardTitle className="text-sm">Results</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2.5">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <Badge variant="secondary">
+                      {rows.length} row{rows.length === 1 ? "" : "s"}
+                    </Badge>
+                    {errors.length > 0 ? <Badge variant="danger">{errors.length} parse issue(s)</Badge> : null}
+                  </div>
+                  {errors.length > 0 ? (
+                    <div className="rounded-lg border border-rose-400/40 bg-rose-500/10 p-3 text-xs text-rose-200">
+                      {errors.map((error) => (
+                        <p key={error}>{error}</p>
+                      ))}
+                    </div>
+                  ) : null}
+                  <Identified as="DataDbRecordTable" className="overflow-x-auto">
+                    <table className="w-full min-w-[760px] border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-border/80 text-left">
+                          {tableColumns.map((column) => (
+                            <th key={column} className="px-2 py-2 font-mono uppercase text-muted-foreground">
+                              {column}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row) => (
+                          <tr key={row.id} className="border-b border-border/40 align-top">
+                            {tableColumns.map((column) => (
+                              <td key={`${row.id}-${column}`} className="px-2 py-2">
+                                <code className="whitespace-pre-wrap break-words text-foreground/90">
+                                  {rowField(row, column)}
+                                </code>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Identified>
+                </CardContent>
+              </Card>
+            </Identified>
+          </div>
+        </Identified>
       </Identified>
     </SiteSection>
   );
 }
-

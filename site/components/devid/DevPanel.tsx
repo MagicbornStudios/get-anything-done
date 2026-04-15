@@ -119,6 +119,7 @@ export function DevPanel(props: DevPanelProps) {
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const highlightPrevRef = useRef<string | null>(null);
+  const highlightDepthSyncRef = useRef<string | null>(null);
 
   const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
   const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | "cid" | null>(null);
@@ -299,9 +300,11 @@ export function DevPanel(props: DevPanelProps) {
     }
   }, [mode, sectionEntries, activeCid, mountedSectionEntry]);
 
-  /** Alt+click on any Identified sets `highlightCid`; keep the compact panel list in sync. */
+  /** Alt+click on any Identified sets `highlightCid`; sync depth only when highlight target changes. */
   useEffect(() => {
     if (!highlightCid) return;
+    if (highlightDepthSyncRef.current === highlightCid) return;
+    highlightDepthSyncRef.current = highlightCid;
     if (mode === "band") {
       const entry = bandEntries.find((e) => e.cid === highlightCid);
       if (!entry) return;
@@ -324,6 +327,7 @@ export function DevPanel(props: DevPanelProps) {
     const prev = highlightPrevRef.current;
     highlightPrevRef.current = highlightCid;
     if (!(highlightCid === null && prev != null)) return;
+    highlightDepthSyncRef.current = null;
     if (mode === "band") {
       setActiveCid(bandCid);
       setDepthIndex(0);

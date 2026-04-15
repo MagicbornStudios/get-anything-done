@@ -71,19 +71,46 @@ export function Identified({
   const showPersistentRing = enabled && isHighlighted;
   const showFlashRing = enabled && isFlash && !isHighlighted;
 
+  function cycleTargetFromEvent(
+    event: React.MouseEvent,
+    currentHighlight: string | null,
+  ): { cid: string; searchHint: string } {
+    const path = typeof event.nativeEvent.composedPath === "function"
+      ? event.nativeEvent.composedPath()
+      : [];
+    const seen = new Set<string>();
+    const candidates: Array<{ cid: string; searchHint: string }> = [];
+    for (const node of path) {
+      if (!(node instanceof HTMLElement)) continue;
+      const nodeCid = node.getAttribute("data-cid");
+      if (!nodeCid || seen.has(nodeCid)) continue;
+      seen.add(nodeCid);
+      candidates.push({
+        cid: nodeCid,
+        searchHint: node.getAttribute("data-cid-search") ?? nodeCid,
+      });
+    }
+
+    if (candidates.length === 0) {
+      return { cid: resolvedCid, searchHint: searchHint ?? resolvedCid };
+    }
+
+    if (!currentHighlight) return candidates[0];
+    const currentIndex = candidates.findIndex((candidate) => candidate.cid === currentHighlight);
+    if (currentIndex < 0) return candidates[0];
+    return candidates[(currentIndex + 1) % candidates.length];
+  }
+
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if (!enabled) return;
       if (!e.altKey) return;
       e.stopPropagation();
-      if (highlightCid === resolvedCid) {
-        setHighlightCid(null);
-        return;
-      }
-      navigator.clipboard?.writeText(searchHint ?? resolvedCid).catch(() => {});
-      setHighlightCid(resolvedCid);
+      const next = cycleTargetFromEvent(e, highlightCid);
+      navigator.clipboard?.writeText(next.searchHint).catch(() => {});
+      setHighlightCid(next.cid);
     },
-    [enabled, highlightCid, resolvedCid, searchHint, setHighlightCid],
+    [enabled, highlightCid, setHighlightCid],
   );
 
   /**

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -86,16 +86,17 @@ export default function PlayableTeaser() {
       <Identified as="LandingPlayableTeaser">
       <Identified as="PlayableTeaserIntro">
         <SiteSectionIntro
-          kicker="Playable preview"
+          kicker="Playable archive"
           preset="hero-compact"
           title={
             <>
-              Try the latest builds. <span className="gradient-text">Right here.</span>
+              Live embeds from the archive. <span className="gradient-text">Pick a build.</span>
             </>
           }
         >
-          A quick taste of the most recent scored builds. For the full catalog of {EVAL_RUNS.length}
-          + runs across all domains, visit the project market.
+          This is the on-page slice of the eval archive — pick a scored build, load the iframe, and
+          jump into requirements or skill text without leaving the landing route. The project market
+          still lists all {EVAL_RUNS.length}+ runs when you need the full catalog.
         </SiteSectionIntro>
       </Identified>
 

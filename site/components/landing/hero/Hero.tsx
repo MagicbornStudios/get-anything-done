@@ -6,7 +6,6 @@ import { HeroHeadline } from "@/components/landing/hero/HeroHeadline";
 import { HeroLead } from "@/components/landing/hero/HeroLead";
 import { HeroStatsGrid } from "@/components/landing/hero/HeroStatsGrid";
 import { getHeroStats } from "@/components/landing/hero/hero-stats";
-import { SiteSection } from "@/components/site";
 import { Identified } from "@/components/devid/Identified";
 
 /**
@@ -24,20 +23,9 @@ export default function Hero() {
   const stats = getHeroStats();
 
   return (
-    <SiteSection
-      id="top"
-      cid="top-site-section"
-      className="relative overflow-hidden border-b-0"
-      shellClassName="relative"
-      beforeShell={
-        <>
-          <div className="absolute inset-0 grid-bg opacity-50" aria-hidden />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-        </>
-      }
-    >
-      <Identified as="LandingHero">
-      <div className="max-w-3xl">
+    <Identified as="LandingHero">
+      <div className="section-shell relative pb-10 md:pb-14">
+        <div className="max-w-3xl">
         <Identified as="HeroBadges">
           <HeroBadges currentRequirementsVersion={stats.currentRequirementsVersion} />
         </Identified>
@@ -70,8 +58,8 @@ export default function Hero() {
         <Identified as="HeroCalloutDisclosure">
           <HeroCalloutDisclosure />
         </Identified>
+        </div>
       </div>
-      </Identified>
-    </SiteSection>
+    </Identified>
   );
 }

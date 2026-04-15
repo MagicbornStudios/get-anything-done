@@ -20,6 +20,12 @@ export type SiteSectionProps = {
   /** Rendered inside `<section>` after the `section-shell` wrapper. */
   afterShell?: ReactNode;
   /**
+   * When false, omit the shared `section-shell` class so `shellClassName` fully controls layout.
+   * Use for full-bleed page wrappers: `section-shell` is a single bundled utility and
+   * tailwind-merge cannot strip its max-width when you only add `max-w-none` alongside it.
+   */
+  sectionShell?: boolean;
+  /**
    * Legacy alias for `cid`. When omitted, the band id falls back to the route-based auto id.
    */
   stableBandCid?: string;
@@ -60,6 +66,7 @@ function SiteSectionSurface({
   cid,
   beforeShell,
   afterShell,
+  sectionShell = true,
   devIds,
   stableBandCid,
 }: SurfaceProps) {
@@ -111,7 +118,7 @@ function SiteSectionSurface({
         )}
       >
         {beforeShell}
-        <div className={cn("section-shell", shellClassName)}>
+        <div className={cn(sectionShell && "section-shell", shellClassName)}>
           <DevIdBandProvider bandCid={sectionBandCid}>{children}</DevIdBandProvider>
         </div>
         {afterShell}
@@ -139,6 +146,7 @@ export function SiteSection({
   cid,
   beforeShell,
   afterShell,
+  sectionShell = true,
   stableBandCid,
   devIds = true,
   devIdDepth: _devIdDepth = 3,
@@ -152,6 +160,7 @@ export function SiteSection({
       cid={cid}
       beforeShell={beforeShell}
       afterShell={afterShell}
+      sectionShell={sectionShell}
       devIds={devIds}
       stableBandCid={stableBandCid}
     >

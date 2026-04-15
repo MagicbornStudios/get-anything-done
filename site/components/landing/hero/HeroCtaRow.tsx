@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Gauge, Github, ClipboardCheck } from "lucide-react";
+import { ArrowRight, Gauge, Github, ClipboardCheck, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function HeroCtaRow() {
@@ -14,6 +14,18 @@ export function HeroCtaRow() {
           <Gauge size={18} aria-hidden />
           Project market
           <ArrowRight size={16} aria-hidden />
+        </Link>
+      </Button>
+
+      <Button
+        variant="outline"
+        size="lg"
+        className="rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold"
+        asChild
+      >
+        <Link href="/downloads">
+          <Download size={16} aria-hidden />
+          Installer &amp; packs
         </Link>
       </Button>
 

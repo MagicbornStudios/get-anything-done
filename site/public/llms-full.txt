@@ -2,12 +2,226 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-15T02:38:27.442Z
+Generated: 2026-04-15T05:54:40.668Z
 
 
 ---
 
-# Skills (87)
+# Skills (89)
+
+## build-and-release-locally
+id: build-and-release-locally
+description: Cut a new GAD release — version bump, CHANGELOG entry, Node SEA rebuild, git tag, and `gh release create` with artifacts attached. Operator-triggered only, no CI, no npm publish. Trigger this skill whenever the user asks to "cut a release", "ship v<N>", "publish a new release", "bump the version", or any variation that means "the canonical GAD repo should have a new downloadable installer artifact on GitHub Releases." Canonical-repo-only: refuses to run outside the MagicbornStudios/get-anything-done clone. See decision gad-188 (44-28 umbrella — distribution is GitHub Releases + executable download, no GitHub Actions).
+origin: official
+
+
+# build-and-release-locally
+
+This is the procedure for cutting a GAD release from the operator's workstation. There is no CI. There is no `npm publish`. The only distribution channel is GitHub Releases on `github.com/MagicbornStudios/get-anything-done`, and the only way to populate it is to run this skill end-to-end on a machine that has Node, `gh`, and `git` installed, with push access to the canonical repo.
+
+## When to trigger this skill
+
+- User asks to "cut a release", "ship v<N>", "publish a new release", "bump the version to <N>".
+- Task 44-31 or any downstream Track B installer task (44-32/33/34) is blocked waiting for a release to exist.
+- CHANGELOG `[Unreleased]` section has accumulated enough material to warrant a new version, and the user confirms they want to publish.
+- A downstream consumer (eval runner, someone installing GAD into their repo) needs a fresh `installer.exe` and the last published release is materially stale.
+
+## When NOT to trigger this skill
+
+- In-progress work on a feature branch — releases come from `main` after the work is merged.
+- When `dist/release/gad-v*.exe` is already current and only docs or planning changed — a release is not required for every commit.
+- When running inside a consumer project (the canonical-repo gate will refuse).
+- When the user asks to publish to npm — GAD does not ship to npm. Explain and refuse.
+
+## Hard gates before you start
+
+1. **Canonical repo check.** Run `git config --get remote.origin.url` and confirm it matches `MagicbornStudios/get-anything-done(.git)?`. If not, refuse: the operator is in a consumer project and this skill cannot run.
+2. **Branch check.** Confirm `git branch --show-current` is `main` and `git status --porcelain` is empty. Releases come from a clean `main`. If there are uncommitted changes, list them and stop — the operator decides whether to commit/stash/discard before you proceed.
+3. **Tool availability.** Confirm `node --version`, `gh --version`, and `git --version` all return. If `gh` is missing or unauthenticated (`gh auth status`), stop and print the install/auth instructions.
+4. **Fetch.** Run `git fetch --tags` so local tag state matches the remote. If a tag with the target version already exists, refuse — version bumps must be monotonic.
+5. **Dependencies.** Run `npm install` (or confirm `node_modules/` + `node_modules/.bin/postject` exists). The SEA build depends on `postject` being installed locally.
+
+## Procedure
+
+### Step 1 — Decide the new version
+
+Read `package.json` `version` field and propose the next version following semver:
+
+| Change type | Bump |
+|---|---|
+| Breaking CLI surface, removed commands, schema renames | MAJOR |
+| New commands, new subcommands, new decisions, new skills | MINOR |
+| Bug fixes only, no new surface | PATCH |
+
+Confirm the chosen version with the operator before editing files. The operator can override.
+
+### Step 2 — Bump version in package files
+
+Edit both:
+
+- `package.json` — update `version` field
+- `package-lock.json` — update BOTH top-level `version` AND the `packages[""].version` field
+
+Use the `Edit` tool, not a manual `npm version` call — npm version creates a commit + tag unprompted, which collides with this skill's control flow.
+
+### Step 3 — Write the CHANGELOG entry
+
+Edit `CHANGELOG.md`. Keep the structure:
+
+```
+## [Unreleased]
+
+## [<new-version>] - <YYYY-MM-DD>
+
+<one-paragraph summary of the release>
+
+### Added
+- …
+
+### Changed
+- …
+
+### Fixed
+- …
+
+### Contract notes (optional)
+- …
+```
+
+Source material: `git log --oneline <previous-tag>..HEAD` if there is a previous tag, or `git log --since=<previous-release-date> --oneline` if not. Group commits by subsystem (CLI, site, framework, release pipeline, eval framework). Cite decision IDs (`gad-NNN` / `GAD-D-NNN`) and task IDs (`NN-NN` / `GAD-T-NN-NN`) where relevant — the changelog is a primary durable record of WHY changes happened.
+
+Keep it concise but thorough. A release with 300+ commits warrants a long changelog section; a patch release warrants 5 lines.
+
+### Step 4 — Rebuild the release artifact
+
+```sh
+npm run build:release
+```
+
+This runs `scripts/build-release.mjs` which:
+
+1. Calls `scripts/build-hooks.js` (compile hook shims).
+2. Calls `scripts/build-cli.mjs` (bundle CLI entrypoints).
+3. Calls `scripts/build-release-support.mjs` (build the support tree of skills, commands, templates, references bundled into the SEA blob).
+4. Generates `sea-config-<platform>-<arch>.json` via `--experimental-sea-config` and emits `sea-prep-<platform>-<arch>.blob`.
+5. Copies `process.execPath` (the running Node binary) to `dist/release/gad-v<version>-<platform>-<arch>.exe`.
+6. Injects the SEA blob into the executable via `postject` using the SEA sentinel fuse constant (see `SEA_SENTINEL` in `scripts/build-release.mjs` — do NOT quote the literal value in any file that lands in the release-support tree; the sentinel string must only appear once in the final binary, so any skill/doc/template that embeds a copy will break the build via postject's "Multiple occurrences of sentinel" sanity check).
+7. On Windows, also copies `scripts/install-gad-windows.ps1` and writes a fresh `dist/release/INSTALL.txt` with the correct artifact name and invocation instructions.
+
+Cross-platform note: `build-release.mjs` refuses to cross-build. Windows artifacts must be built on Windows, macOS on macOS, Linux on Linux. If the operator needs multi-platform artifacts, they must run the skill on each target OS and upload to the same tag.
+
+**Verify the build** before committing:
+
+```sh
+ls -la dist/release/
+./dist/release/gad-v<version>-windows-x64.exe --version    # on Windows
+./dist/release/gad-v<version>-<platform>-<arch> --version  # on macOS/Linux
+```
+
+The version output must match the version you just bumped to. If it reports the old version, the SEA blob did not rebuild — investigate `scripts/build-release-support.mjs` and the esbuild cache.
+
+### Step 5 — Commit the release
+
+```sh
+git add package.json package-lock.json CHANGELOG.md
+git commit -m "release: v<version>"
+```
+
+Do NOT commit `dist/` — it is gitignored. The artifact lives only in GitHub Releases.
+
+### Step 6 — Tag
+
+```sh
+git tag -a v<version> -m "GAD v<version>"
+```
+
+Annotated tag, not lightweight — the tag message is what `gh release create --generate-notes` picks up if no `--notes-file` is given.
+
+### Step 7 — Push commit + tag
+
+```sh
+git push origin main
+git push origin v<version>
+```
+
+If the operator is working in a monorepo where `vendor/get-anything-done/` is a git submodule (this is the current reality in `custom_portfolio`), the push is from INSIDE the submodule, not from the outer repo. The outer repo's submodule pointer will need a separate commit in a follow-up step — but that is the consumer's job, not this skill's.
+
+**This is the visible, shared-state step.** Before pushing the tag, explicitly confirm with the operator. The tag push triggers the release in step 8 and is not trivially reversible (deleting a tag that downstream consumers have already fetched is bad form). If the operator approved "cut a release" but did not explicitly approve "push the tag now," pause and ask.
+
+### Step 8 — Create the GitHub release
+
+```sh
+npm run publish:release
+```
+
+This runs `scripts/publish-release.mjs` which:
+
+1. Reads the current `package.json` version and derives `v<version>` as the tag.
+2. Checks `gh release view v<version>` — if the release already exists, skips the create step.
+3. Otherwise runs `gh release create v<version> --title "GAD v<version>" --generate-notes`.
+4. Uploads every artifact in `dist/release/` matching `gad-v*` or `install-gad-windows.ps1` or `INSTALL.txt` via `gh release upload --clobber`.
+
+`--clobber` means re-running the skill after fixing a bad artifact is safe: the upload replaces the existing asset at the same name.
+
+**Alternative**: to attach a richer body than `--generate-notes`, pass `--notes-file` pointing at a temporary file containing the CHANGELOG section you wrote in step 3:
+
+```sh
+node scripts/publish-release.mjs --notes-file /tmp/release-notes-v<version>.md
+```
+
+### Step 9 — Verify
+
+```sh
+gh release view v<version>
+gh release view v<version> --json assets --jq '.assets[].name'
+```
+
+Confirm the tag exists, the title is correct, and every expected artifact is attached. Open the URL in a browser if the operator wants a visual check:
+
+```sh
+gh release view v<version> --web
+```
+
+### Step 10 — Update planning docs
+
+Edit `.planning/STATE.xml` `<next-action>` to reflect that the release is cut. If the release closes a task, update `.planning/TASK-REGISTRY.xml` — set `status="done"`, `skill="build-and-release-locally"`, `agent="default"`, `type="framework"`. Capture any new decisions in `.planning/DECISIONS.xml` (e.g. version cadence policy, what went into the release notes).
+
+Commit the planning-doc updates separately from the release commit — the release commit should be minimal (version files + CHANGELOG only).
+
+## Common failure modes
+
+| Failure | Cause | Fix |
+|---|---|---|
+| `postject: command not found` | `node_modules/.bin/postject` missing | `npm install` from vendor root |
+| `Cross-platform SEA builds must run on the target platform/arch` | Operator passed `--platform` / `--arch` that doesn't match the host | Re-run on the target OS, or drop the flags |
+| `gh: command not found` | `gh` CLI not installed | Install from `https://cli.github.com` |
+| `gh auth status: not logged in` | `gh` not authenticated | Run `gh auth login`, pick HTTPS or SSH, follow the prompts |
+| Release exists, upload fails with 422 | Previous run uploaded bad artifacts | `gh release upload <tag> ... --clobber` (already the default in `publish-release.mjs`) |
+| Exe reports old version after rebuild | Stale SEA blob, esbuild cache, or support-tree pre-cache | `rm -rf dist/ && npm run build:release` |
+| postject: `Multiple occurences of sentinel ... found in the binary` | **Something in the release-support tree embeds a copy of the SEA sentinel string literal.** The SEA sentinel is meant to appear exactly once — in the placeholder region of the copied `node.exe`. When postject injects the blob as a PE resource on Windows, the blob contents end up in a resource section of the final binary; if the blob contains the sentinel string (e.g., a skill doc or script quotes it verbatim), postject's post-inject sanity re-scan finds two copies and aborts. This is NOT a Node version bug — initially misdiagnosed as such. Confirmed 2026-04-14 via `node -e "buf.indexOf(...)"` direct scan of `sea-prep-win32-x64.blob` showing 2 hits, both in the same `skills/build-and-release-locally/SKILL.md` file (included twice: once from `skills/` and once from `dist/release-support/get-anything-done/skills/`). | Find the offending file: `node -e "const fs=require('fs');const b=fs.readFileSync('dist/release/sea-prep-win32-x64.blob');const n=Buffer.from('NODE_SEA_FUSE_'+'<hex>');let i=0;while((i=b.indexOf(n,i))!==-1){console.log(i,b.slice(Math.max(0,i-80),i+60).toString().replace(/[^\x20-\x7e]/g,'.'));i++}"` — the context will identify which source file embeds the literal. Then either remove the literal or break it with string concatenation so it doesn't appear as a contiguous byte sequence on disk. **Rule**: never quote the sentinel in any file that gets bundled into the release-support tree (`skills/`, `commands/`, `templates/`, `references/`, `agents/`, `hooks/`, `workflows/`, SDK assets). The sentinel may only be referenced symbolically, e.g., "the `SEA_SENTINEL` constant in `scripts/build-release.mjs`". |
+| `esbuild: No loader is configured for ".node" files` (onnxruntime-node) | Optional embedding backend (`@huggingface/transformers`) transitively pulls native `.node` binaries that esbuild can't bundle. Fixed 2026-04-14 in `scripts/build-cli.mjs` by adding `@huggingface/transformers`, `onnxruntime-node`, `onnxruntime-common`, `onnxruntime-web`, `sharp` to the esbuild `external` list. | If this regresses, re-apply the fix. Optional deps that ship native bindings must always be externals in the SEA bundle — the packaged exe runs without embeddings and falls back to Jaccard ranking in `gad snapshot`. |
+| Tag push rejected | Someone else tagged first, or local is behind | `git pull --rebase origin main && git fetch --tags` and re-verify version |
+| Build-release succeeds but exe won't launch on Windows | Windows Defender or SmartScreen blocked an unsigned binary | Expected for unsigned releases; instruct consumers to right-click → Properties → Unblock. Code-signing is a separate decision not covered here. |
+
+## Contract with 44-28 umbrella
+
+This skill is the B0 foundation of the Track B installer pipeline (decision gad-188). Downstream tasks that depend on a consumable release:
+
+- **44-32 / B2** — `bin/install.js` `--from-release <url|tag>` flag needs a real release to pull from.
+- **44-33 / B3** — Site packaging produces a `site-<version>.zip` artifact uploaded alongside the installer.
+- **44-34 / B4** — Portable Node bootstrap ships a `node-v<N>-<platform>.zip` artifact uploaded alongside the installer.
+
+Every one of those downstream tasks **adds a new artifact** to the release. The shape of `publish-release.mjs`'s `getArtifacts()` filter (`/^gad-v.+/` + explicit install files) may need to widen when B2/B3/B4 land — revise this skill at that point.
+
+## Guardrails — things this skill MUST NOT do
+
+1. **Never run `npm publish`.** GAD is not on npm. If the operator asks, explain and refuse.
+2. **Never trigger CI / GitHub Actions.** There is no CI. This skill is the only release path.
+3. **Never force-push to `main`.** If the release commit fails a hook, fix the underlying problem and create a new commit — do not `git push --force`.
+4. **Never delete a published tag.** If a release is bad, cut a new version that fixes it. Deleting published tags breaks downstream consumers.
+5. **Never run outside the canonical repo.** The gate in step 1 is load-bearing. Consumer projects should use `gad skill promote --project` to equip skills, not this skill.
+6. **Never push the tag without explicit operator confirmation in the conversation where the skill is running.** The `git push origin v<version>` step is the point of no return.
+
 
 ## eval-skill-install
 id: eval-skill-install
@@ -1056,6 +1270,398 @@ project scaffolded immediately.
 </process>
 
 
+## gad-cross-config-domain-change
+id: gad-cross-config-domain-change
+description: >-
+origin: official
+
+
+# gad-cross-config-domain-change
+
+A **procedure for renaming a domain concept across a GAD monorepo without leaving
+dangling references or breaking compiled sinks.** The value is not the `git mv` —
+it is the *coordinated pass across every declared planning root and eval root* so
+that the rename lands atomically from the operator's point of view.
+
+The skill has **one entrypoint** and **two workflows**, chosen by the scope of
+the rename.
+
+## Core invariant (both workflows)
+
+A domain-change is safe if and only if, after the operation:
+
+1. Every occurrence of the old name in every planning root and eval root declared
+   in `gad-config.toml` is either (a) rewritten to the new name, or (b) intentionally
+   preserved as a shim/alias and **cited in a DECISIONS.xml translation-note entry**.
+2. `grep` for the old name across the monorepo returns zero hits outside the
+   translation-note shim and the decision log itself.
+3. Compiled sinks (planning docs sink, site data, catalog generators) rebuild
+   clean — no broken imports, no orphaned slugs, no case-insensitive FS collisions.
+4. The operator can run `node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>`
+   on every affected planning root and get a valid state readout.
+
+The invariant is **scope-independent.** Workflow A and Workflow B differ only in
+how many roots participate; the safety contract is identical.
+
+## Which workflow to run
+
+Determine scope by reading the top-level configuration first. Assume the
+operator's working directory is the monorepo root and `gad-config.toml` lives at
+the root.
+
+```sh
+# From the monorepo root:
+node vendor/get-anything-done/bin/gad.cjs projects audit 2>&1 | head -60
+node vendor/get-anything-done/bin/gad.cjs workspace show 2>&1 | head -40
+
+# Show every planning + eval root declared in gad-config.toml:
+grep -nE '^\[\[planning\.roots\]\]|^\[\[evals\.roots\]\]|^id =|^path =' gad-config.toml
+```
+
+Then classify:
+
+- **Term appears in 2+ planning roots OR 1+ eval roots OR the config file itself**
+  → **Workflow A: Monorepo-wide rename**.
+- **Term is confined to a single `.planning/` root and its compiled sink**
+  → **Workflow B: Single-project rename**.
+- **Term only appears in source code (no planning-doc or config references)**
+  → this skill is the wrong tool; use a normal refactor skill.
+
+When in doubt, start in Workflow A — the pre-flight audit will downgrade to
+Workflow B cleanly if the monorepo footprint turns out to be empty.
+
+---
+
+## Pre-flight config audit (both workflows)
+
+Before any file is moved or edited, produce a **config-status readout** and
+show it to the operator for confirmation. The readout has four sections:
+
+1. **Config source of truth** — confirm that `gad-config.toml` at the monorepo
+   root exists and parses. Per decision gad-160, this is the only canonical
+   config; no per-project config overrides.
+2. **Planning roots in scope** — list every `[[planning.roots]]` entry whose
+   `path` contains the old term in any of: the path itself, a file inside the
+   `planningDir`, or the compiled sink target.
+3. **Eval roots in scope** — same for `[[evals.roots]]`. Remember the default
+   `vendor/get-anything-done/evals/` root is implicit and must be checked even
+   if it is not declared in `gad-config.toml`.
+4. **Grep census** — a raw count of hits for the old term in each root, broken
+   down by file type (planning XML, markdown, source, config, JSON).
+
+```sh
+# Census template — replace OLD with the term being renamed:
+OLD="evals"
+for path in $(grep -E '^path =' gad-config.toml | sed 's/path = //;s/"//g'); do
+  echo "-- $path --"
+  grep -rn "$OLD" "$path" 2>/dev/null | wc -l
+done
+grep -rn "$OLD" gad-config.toml | wc -l
+```
+
+The readout is the **decision point**. Operator confirms or aborts. No moves
+happen before this.
+
+---
+
+## Workflow A: Monorepo-wide rename
+
+Use this when the term crosses project boundaries — the canonical example is
+renaming `evals` → `species` (see worked example below), or collapsing
+`workspace` / `worktree` / `workstream` into their distinct meanings per
+decision gad-161.
+
+### Steps
+
+1. **Run the pre-flight audit** above. Capture the readout in a temp file —
+   this becomes the attachment for the translation-note decision.
+
+2. **Lock the tree.** Announce the rename to the operator and ask them to pause
+   any concurrent work in affected roots. A cross-root rename is not safe to
+   interleave with other edits.
+
+3. **Rewrite `gad-config.toml` first.** The config is the contract every other
+   step references. Update `[[planning.roots]]` paths, `[[evals.roots]]` paths,
+   `sinkPath` fields, and any `id` fields that embed the old term. Do **not**
+   move any files yet — only the config text changes.
+
+4. **Walk the union of roots in dependency order.** For each root from step 3:
+   - Rename the top-level directory (see Git-mv-through-temp pattern below).
+   - Run the planning-doc migration pass (see Planning-doc migration below).
+   - Rebuild the compiled sink and confirm it is clean.
+
+5. **Rewrite cross-root references.** Any planning doc in one root that
+   references another root's path needs to be updated. Typical offenders:
+   `STATE.xml <references>` entries, `ROADMAP.xml` phase descriptions that cite
+   file paths, `workflows/*.md` examples.
+
+6. **Config re-audit.** Re-run the pre-flight census. Expected result: zero
+   hits for the old term outside the translation-note shim.
+
+7. **Write the translation-note decision** (template below) in **every**
+   affected planning root's `DECISIONS.xml`. Same decision ID namespace, same
+   text, one entry per root. Cross-reference them by date.
+
+8. **Rebuild sinks.** Run the planning-doc compiler and any site-data build
+   that consumes the renamed roots. Expect at least one broken import on first
+   pass; fix it, rebuild, confirm green.
+
+### Deliverables
+
+- Updated `gad-config.toml` at the monorepo root.
+- Renamed directories and their contents across all affected planning and eval roots.
+- One translation-note decision per affected planning root.
+- A green snapshot for every affected `projectid`.
+- A clean census report attached to (or cited by) the decisions.
+
+### Failure modes
+
+- **Partial rename** — config updated but a planning root missed. The next
+  snapshot will fail loudly; recover by re-running the audit and finishing the
+  skipped root.
+- **Case-insensitive FS collision** (Windows, macOS default) — renaming `Evals`
+  → `evals` on an existing `evals` path silently clobbers or no-ops. Always use
+  the git-mv-through-temp pattern below for case-only changes.
+- **Dangling references in compiled sinks.** The sink is a build artifact, but
+  old generated files can linger until the next compile. Delete the sink
+  directory and rebuild from scratch after a cross-root rename.
+- **Broken site data.** Site catalog generators (e.g. `site/scripts/build-site-data.mjs`)
+  read slugs out of the renamed roots. If the site is in scope, re-run its
+  build and fix the generator references before declaring done.
+- **Decision-log drift.** Writing the translation-note in only one root and
+  forgetting the rest — future operators reading from a different root will
+  have no idea the rename happened. One root, one decision, every time.
+
+---
+
+## Workflow B: Single-project rename
+
+Use this when the term is confined to one `.planning/` root and its sink —
+e.g. renaming a phase's internal vocabulary inside `vendor/get-anything-done/.planning/`
+without touching any other root. The common case is a project-local term that
+was never exported to `gad-config.toml` or to cross-project planning docs.
+
+### Steps
+
+1. **Run the pre-flight audit**, scoped to the one root. Confirm the
+   cross-root census comes back zero — if it does not, abort and switch to
+   Workflow A.
+
+2. **Rename inside the root.** Apply the planning-doc migration pass below.
+   No top-level directory rename unless the root's own path is changing.
+
+3. **Rebuild the compiled sink** for this root only. Confirm clean.
+
+4. **Write the translation-note decision** in this root's `DECISIONS.xml`. A
+   single-root rename still deserves a translation note — future self-audits
+   will ask "when did this change?"
+
+5. **Snapshot verify.** `gad snapshot --projectid <id>` must parse and show
+   the renamed term in `STATE.xml`, `ROADMAP.xml`, and `TASK-REGISTRY.xml`.
+
+### Deliverables
+
+- Renamed entries inside one `.planning/` root.
+- One translation-note decision in that root's `DECISIONS.xml`.
+- A green snapshot for the affected `projectid`.
+
+### Failure modes
+
+- **Unexpected cross-root leakage.** The term turns out to appear in
+  `gad-config.toml` or a sibling planning root after all. Abort Workflow B and
+  restart in Workflow A.
+- **Snapshot parser still seeing the old term.** Usually a CRLF-line, XML
+  attribute, or stray trailing whitespace. Re-grep case-insensitively and in
+  multiline mode.
+
+---
+
+## Git-mv-through-temp pattern
+
+`git mv` on a case-only rename (`Evals` → `evals`) is a no-op on
+case-insensitive filesystems (Windows, default macOS). Use a temp-name
+round-trip:
+
+```sh
+OLD="Evals"
+NEW="evals"
+TMP="${NEW}__tmp_rename__"
+
+git mv "$OLD" "$TMP"
+git commit -m "chore: rename $OLD -> $TMP (step 1/2, case-only workaround)"
+git mv "$TMP" "$NEW"
+git commit -m "chore: rename $TMP -> $NEW (step 2/2)"
+```
+
+This is also the safe pattern for **collision-avoidance** when the target name
+already exists as a sibling (e.g. merging two directories into a new canonical
+one). Move each source to a unique temp name first, then merge into the
+canonical target in a second commit.
+
+Always split into two commits — a single squashed commit will not survive
+round-tripping through a case-insensitive worktree on a collaborator's
+machine.
+
+## Planning-doc migration
+
+Inside any affected planning root, rewrite these files in this order:
+
+1. `STATE.xml` — `current-phase`, `next-action`, `<references>` entries.
+2. `ROADMAP.xml` — phase descriptions, phase IDs if they embed the term.
+3. `TASK-REGISTRY.xml` — task descriptions, task types, skill attributions.
+4. `DECISIONS.xml` — old decision text stays verbatim (history is immutable);
+   the translation-note is a **new** entry, not an edit of old ones.
+5. `workflows/*.md`, `notes/*.md`, `phases/*/`, `plans/*/` — grep sweep.
+6. `config.json` if present — project-local metadata.
+
+Use the operator's normal editor for each file and verify each change with
+`grep` before moving to the next. Do **not** run a bulk sed across the whole
+`.planning/` tree — the 2026-04-14 visual-context rollout regression (character
+substitution in page files) is the cautionary tale. One file at a time, reads
+before and after, Edit tool with explicit old/new strings rather than regex.
+
+## Translation-note decision template
+
+Append this to every affected `DECISIONS.xml`:
+
+```xml
+<decision id="GAD-D-NNN" slug="translation-note-<OLDTERM>-to-<NEWTERM>" date="YYYY-MM-DD">
+  <title><OLDTERM> was renamed to <NEWTERM> across <scope></title>
+  <context>
+    On YYYY-MM-DD, the term "<OLDTERM>" was renamed to "<NEWTERM>" across
+    <scope: monorepo | this planning root>. The rename was executed by the
+    gad-cross-config-domain-change skill under task <task-id>. Pre-flight
+    census showed <N> hits across <M> roots; post-rename census returned zero.
+  </context>
+  <decision>
+    All future work uses "<NEWTERM>". The old term "<OLDTERM>" is preserved only
+    in (a) historical decision entries, and (b) the alias shim at
+    <full/repo-relative/path/to/shim> for N months, after which it is removed.
+  </decision>
+  <consequences>
+    Anyone reading a decision or archived artifact that still says "<OLDTERM>"
+    should mentally substitute "<NEWTERM>". The snapshot, roadmap, and task
+    registry no longer mention the old term. Cross-reference with sibling
+    translation-note decisions in <list other affected roots> for the full
+    monorepo picture.
+  </consequences>
+  <status>accepted</status>
+</decision>
+```
+
+One decision per affected planning root. Cross-reference them by date in the
+`<consequences>` block so a future reader landing on any one of them can
+reconstruct the full rename.
+
+---
+
+## Example: renaming `evals` → `species`
+
+This is the motivating case flagged in the phase-44 evolution notes: the term
+"evals" conflates the *run artifact* (a specific attempt by an agent), the
+*project definition* (the thing being attempted), and the *directory on disk*.
+Per decision gad-184, the project/species inheritance contract wants "project"
+and "species" as the primary terms, and "evals" as a legacy umbrella.
+
+A full rename would touch:
+
+- `gad-config.toml` — `[[evals.roots]]` entries and their `path` fields.
+- `vendor/get-anything-done/evals/` — the default eval root directory and every
+  project subdirectory.
+- `vendor/get-anything-done/bin/gad.cjs` — the `eval` subcommand surface, which
+  would become `species` with `eval` aliased via a deprecation shim.
+- `vendor/get-anything-done/site/` — site catalog generators, route paths,
+  component names that embed "eval".
+- `vendor/get-anything-done/.planning/TASK-REGISTRY.xml` — every task tagged
+  `type="eval"`.
+- `vendor/get-anything-done/.planning/DECISIONS.xml` — decisions that use
+  "eval" in their text stay verbatim (history is immutable); a new
+  translation-note decision points at them.
+- `vendor/get-anything-done/skills/eval-*/SKILL.md` — skill names and
+  descriptions.
+
+Walkthrough under Workflow A:
+
+1. **Pre-flight audit.** Expect the census to return a large hit count —
+   probably several hundred — spread across the framework planning root, the
+   eval-root directory, the site, and the CLI. This is the moment to confirm
+   with the operator that the rename is actually desired before any moves.
+
+2. **Decide the shim shape.** Because the CLI surface `gad eval ...` is in
+   user muscle memory, the translation note should promise an alias period
+   (say, 3 releases) where `gad eval` forwards to `gad species` with a
+   deprecation warning. The shim itself lives at
+   `vendor/get-anything-done/bin/gad.cjs` as a small forwarding branch.
+
+3. **Rewrite `gad-config.toml`.** Rename `[[evals.roots]]` →
+   `[[species.roots]]`, update any `id` fields, save.
+
+4. **Git-mv the directories** with the temp-name round-trip pattern.
+   `vendor/get-anything-done/evals/` → `vendor/get-anything-done/species/`.
+
+5. **Walk the planning root.** Apply the planning-doc migration pass to
+   `vendor/get-anything-done/.planning/`. The big targets are
+   `TASK-REGISTRY.xml` (`type="eval"` → `type="species"`) and any
+   `ROADMAP.xml` phase description that mentions evals.
+
+6. **Walk the site.** `vendor/get-anything-done/site/scripts/build-site-data.mjs`
+   reads from the old path and emits a `WORKFLOWS`/`EVALS` export. Fix the
+   reader, fix the export name, rebuild.
+
+7. **Walk the CLI.** Rename the subcommand module, add the forwarding alias,
+   update `gad help` text. This is the step most likely to produce a broken
+   build — the CLI has cross-file imports.
+
+8. **Re-audit.** Census should go to zero outside the shim and the decision
+   log. Snapshot every affected `projectid` — at minimum `get-anything-done`
+   and `global`.
+
+9. **Translation-note decisions.** One entry in the framework's
+   `DECISIONS.xml`, one in `global`'s if global references any renamed path,
+   cross-referenced.
+
+The same shape applies to any other vocabulary normalization (`workspace` vs
+`worktree` vs `workstream` per gad-161, or any future term). The skill's job
+is to make the coordinated walk mechanical, not to decide *whether* the rename
+is worth doing — that is a decision for the operator.
+
+---
+
+## References
+
+- `gad-config.toml` (monorepo root) — the single canonical config per decision
+  gad-160. This file's `[[planning.roots]]` and `[[evals.roots]]` tables define
+  the full scope the skill walks.
+- `vendor/get-anything-done/bin/gad.cjs` — `projects audit`, `workspace show`,
+  `snapshot`, and `eval list` subcommands used by the pre-flight audit and the
+  post-rename verification.
+- `vendor/get-anything-done/.planning/DECISIONS.xml` — decisions gad-160
+  (single canonical config), gad-161 (`workspace` / `worktree` / `workstream`
+  disambiguation), and gad-184 (project ⊇ species inheritance contract) are the
+  motivating context for this skill.
+- `vendor/get-anything-done/.planning/STATE.xml` — the file format the
+  planning-doc migration pass walks in step 1 of the migration.
+- `vendor/get-anything-done/.planning/TASK-REGISTRY.xml` — the `type=` attribute
+  convention that any vocabulary rename has to follow.
+- `vendor/get-anything-done/skills/gad-visual-context-system/SKILL.md` — the
+  canonical two-workflow proto-skill this file's structure is modeled on.
+- `vendor/get-anything-done/site/scripts/build-site-data.mjs` — the site's
+  compiled-sink generator; any monorepo-wide rename that touches the site has
+  to re-run this and fix broken slug references.
+- `vendor/get-anything-done/references/proto-skills.md` — the proto-skill
+  lifecycle (proto → promote) this file will travel through.
+
+## Relationship to parent skill
+
+This proto-skill has **no parent**. It supersedes and replaces the earlier
+`phase-43-eval-vocabulary` draft, which was discarded because it baked in
+submodule-specific paths like `apps/public/evals` and was scoped narrowly to a
+one-time rename rather than the general cross-config-domain-change pattern.
+On promotion, this skill should graduate to
+`vendor/get-anything-done/skills/gad-cross-config-domain-change/SKILL.md` as a
+first-class skill with no deprecated ancestor to archive.
+
+
 ## gad:debug
 id: gad-debug
 description: Systematic debugging with persistent state across context resets
@@ -1900,9 +2506,13 @@ gad:evolution:evolve
 (human review, async)
   reads SKILL.md + VALIDATION.md → promote or discard
 
-gad evolution install <slug> ... ← installs staged proto-skill into coding agents
-gad evolution promote <slug>     ← moves to skills/, joins species DNA
-gad evolution discard <slug>     ← deletes the proto-skill
+gad skill promote <slug> --project --claude     ← consumer runtime install (any project)
+gad skill promote <slug> --framework             ← canonical promote (this repo only; joins species DNA)
+gad evolution discard <slug>                     ← deletes the proto-skill
+
+(Legacy: `gad evolution install` / `gad evolution promote` still work as
+back-compat shims and forward to the unified `gad skill promote` verb per
+decision gad-188 / task 44-36.)
 ```
 
 The next `gad:evolution:evolve` cannot run until every proto-skill from the
@@ -2068,7 +2678,7 @@ proto-skill — that's bookkeeping bloat. The proto-skills dir IS the work list.
 Task: Review evolution <evolution-id> proto-skills
 Status: planned
 Goal: Open .planning/proto-skills/<slug>/SKILL.md for each pending proto-skill,
-read its VALIDATION.md, optionally run `gad evolution install <slug> ...` to test it in a coding agent, then run `gad evolution promote <slug>` or
+read its VALIDATION.md, optionally run `gad skill promote <slug> --project [--claude|--codex|...]` to test it in a coding agent runtime, then run `gad skill promote <slug> --framework` (canonical) or
 `gad evolution discard <slug>`. Evolution closes automatically when the
 proto-skills dir is empty.
 Skill: gad-evolution-evolve
@@ -2139,9 +2749,9 @@ Open and review:
   code skills/<parent-name>/SKILL.md
 
 Commands to act on this slug:
-  gad evolution install <slug> --claude     # try without committing
-  gad evolution promote <slug>              # join skills/
-  gad evolution discard <slug>              # delete
+  gad skill promote <slug> --project --claude    # try in runtime without committing
+  gad skill promote <slug> --framework           # join canonical skills/ (this repo only)
+  gad evolution discard <slug>                   # delete
 ```
 
 ### Recommendation values
@@ -9040,7 +9650,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (294)
+# Tasks (296)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -9410,7 +10020,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **35-05** [in-progress]: After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before restoring any workstream feature. Confirm which parts of the old SDK are worth keeping, which should stay compatibility-only, and whether workstreams should exist in GAD at all.
 
-- **35-06** [planned]: Maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.
+- **35-06** [done]: Maintain an always-current upstream `get-shit-done` mirror in `tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.
 
 - **35-07** [planned]: Rewrite GAD README to match the completeness and onboarding depth of upstream GSDâ€™s README while preserving GADâ€™s actual runtime/install/canonical-source truth and avoiding stale command/runtime claims.
 
@@ -9588,7 +10198,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44-23** [done]: Author two workflows under `.planning/workflows/` so they surface on the compact Workflows tab (44-20): `gad-evolution.md` (the self-eval → pressure analysis → candidates → proto-skills → merge → promote loop) and `gad-visual-context-identity.md` (the UI development workflow where every component gets an explicit `SiteSection cid` / `Identified as="..."` literal so the Dev Panel → copy → agent-pro
 
-- **44-24** [in_progress]: Skill evolution pass for the monorepo's daily-driver agent (root-of-monorepo work, not get-anything-done-only). Steps: (1) run `gad self-eval` or equivalent pressure-analysis to surface high-pressure phases + skill gaps, (2) invoke `create-skill` or `gad-create-skill` on the candidates, (3) drop outputs as proto-skills under `.planning/proto-skills/`, (4) verify coding agents can SEE proto-skills 
+- **44-24** [done]: Skill evolution pass for the monorepo's daily-driver agent (root-of-monorepo work, not get-anything-done-only). Steps: (1) run `gad self-eval` or equivalent pressure-analysis to surface high-pressure phases + skill gaps, (2) invoke `create-skill` or `gad-create-skill` on the candidates, (3) drop outputs as proto-skills under `.planning/proto-skills/`, (4) verify coding agents can SEE proto-skills 
 
 - **44-25** [done]: Review evolution 2026-04-14-001 proto-skills (human review gate).
 
@@ -9598,15 +10208,19 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44-28** [planned]: UMBRELLA (see decision gad-188): site-as-project-management-UI + Windows installer + release pipeline. Discuss-phase 2026-04-14 reframed this from a thin "gad site install" task into a 5-sub-task spine. User's atomic decisions: no npm publishing ever (distribution is GitHub releases of get-anything-done, pulled from our site); Windows-first with a real lightweight installer; no contamination of co
 
-- **44-30** [planned]: 44-28.A1 — Full-surface data scoping by current-project signal. Ships independent of the installer track. Add a global `currentProject` React context (populated from `?projectid=` query param, falling back to the first `[[planning.roots]]` id in gad-config.toml, falling back to "get-anything-done"). Thread the hook `useCurrentProject()` through every user-facing route and filter records by project
+- **44-30** [done]: 44-28.A1 — Full-surface data scoping by current-project signal. Ships independent of the installer track. Add a global `currentProject` React context (populated from `?projectid=` query param, falling back to the first `[[planning.roots]]` id in gad-config.toml, falling back to "get-anything-done"). Thread the hook `useCurrentProject()` through every user-facing route and filter records by project
 
-- **44-31** [planned]: 44-28.B0 — Release pipeline foundation. Today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale Node SEA build on one machine; `dist/` is gitignored; zero git tags exist; zero GitHub releases have been published on github.com/MagicbornStudios/get-anything-done. Nothing a consumer can download. Deliverables: (1) Verify + document the existing Node SEA build script that produces dist/relea
+- **44-31** [done]: 44-28.B0 — Release pipeline foundation. Today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale Node SEA build on one machine; `dist/` is gitignored; zero git tags exist; zero GitHub releases have been published on github.com/MagicbornStudios/get-anything-done. Nothing a consumer can download. Deliverables: (1) Verify + document the existing Node SEA build script that produces dist/relea
 
 - **44-32** [planned]: 44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) with: (a) new `--site` flag that installs a self-contained site tree into `&lt;target&gt;/.planning/site/`; (b) new `--planning` flag that scaffolds `&lt;target&gt;/.planning/` with STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml from a template; (c) new `--node` flag th
 
 - **44-33** [planned]: 44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js server build output that can run with `node server.js` in place (not `next start` which needs the full next CLI). (b) Bundled Node runtime extracted beside the site (so the launcher doesn't depend on the host having Node installed). (c) `launcher.exe` — tiny Windows exe (bun --co
 
 - **44-34** [planned]: 44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned Node zip (current LTS or whatever the site build targets) from our release assets — NOT from nodejs.org — so we own the distribution channel end-to-end; (b) extracts to `&lt;target&gt;/.planning/.node/`; (c) writes a small `.pl
+
+- **44-36** [done]: Unified skill promote command — collapse `gad evolution promote` (canonical) and `gad evolution install` (runtime) into one verb with two modes. User ask 2026-04-14: "let's move canonical skill shipping under the command skill --promote --[framework|project] so it would be a pseudo command for a project since that will just be an install to their agent runtime they would provide. for us it would b
+
+- **44-35** [done]: Encounter-style skill surfacing in `gad snapshot`: inline the most-relevant equipped skills for the current sprint into snapshot output so subagents (and the main session post-compact) see "which skills apply to this encounter" rather than having to re-discover them by trigger words. Today snapshot has no skill block at all — agents discover skills via their runtime dir (`.claude/skills/`) at sess
 
 - **44-29** [done]: Deprecate and remove PageIdentified component.
 

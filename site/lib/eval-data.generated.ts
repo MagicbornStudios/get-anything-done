@@ -8702,11 +8702,11 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "35-06",
     "phaseId": "35",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
-    "type": null,
-    "goal": "Maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.",
+    "skill": "default",
+    "type": "docs",
+    "goal": "Maintain an always-current upstream `get-shit-done` mirror in `tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.",
     "keywords": [
       "upstream-review",
       "get-shit-done",
@@ -10206,7 +10206,7 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44-24",
     "phaseId": "44",
-    "status": "in_progress",
+    "status": "done",
     "agentId": null,
     "skill": "gad-evolution-evolve",
     "type": "skill",
@@ -10297,9 +10297,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44-30",
     "phaseId": "44",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "44-28.A1 — Full-surface data scoping by current-project signal. Ships independent of the installer track. Add a global `currentProject` React context (populated from `?projectid=` query param, falling back to the first `[[planning.roots]]` id in gad-config.toml, falling back to \"get-anything-done\"). Thread the hook `useCurrentProject()` through every user-facing route and filter records by project where records already carry a project field (FINDINGS.projects string[], BUGS.project, EVAL_RUNS.project, EVAL_PROJECTS.project, REQUIREMENTS_HISTORY.project, PLANNING_ZIPS.project). Add a project picker dropdown in NavActions that reads the list of registered projects (new helper `site/lib/project-config.ts` that loads gad-config.toml at build time into a typed constant), writes the selection to the URL, and persists nothing (URL is the source of truth). Routes that MUST filter: /planning (already filters BUGS hardcoded to \"gad\" — replace with context), /findings (+ /findings/[slug]), /project-market. Routes that stay framework-global for now: /skills, /formulas, /glossary, /, /about, /methodology, /workflows, /lineage. Planning/tasks/phases/decisions data stays single-project at build time per the build script's GAD_PROJECT_ROOT env var — broaden in a follow-up (Option B in the scoping research: read all projects' planning into ALL_TASKS_BY_PROJECT etc.). Verify: tsc clean, `/` renders for a consumer's repo where their planning root is NOT get-anything-done, /findings filters to the picked project, /project-market collapses to the picked project's species rows.",
     "keywords": [
@@ -10315,9 +10315,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44-31",
     "phaseId": "44",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "build-and-release-locally",
     "type": "framework",
     "goal": "44-28.B0 — Release pipeline foundation. Today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale Node SEA build on one machine; `dist/` is gitignored; zero git tags exist; zero GitHub releases have been published on github.com/MagicbornStudios/get-anything-done. Nothing a consumer can download. Deliverables: (1) Verify + document the existing Node SEA build script that produces dist/release/*.exe. (2) Author a new `build-and-release-locally` skill via create-skill that runs the full sequence idempotently: clean build, version bump (package.json + CHANGELOG.md), rebuild exe, `git tag v`, `gh release create v dist/release/* --notes-from-tag`, verify with `gh release view`. (3) First release cut: v1.33.0 or similar, with current artifacts attached. (4) Consumer-facing README section documenting the \"download installer.exe from latest release → run in target repo\" path. Gates: no GitHub Actions (operator-triggered only), no npm publishing ever, local-only build pre-commit/post-push. Must precede any B2/B3/B4 work — those sub-tasks depend on there being a consumable release.",
     "keywords": [
@@ -10326,7 +10326,10 @@ export const ALL_TASKS: TaskRecord[] = [
       "node-sea",
       "build-and-release-locally",
       "create-skill",
-      "gh-release"
+      "gh-release",
+      "postject",
+      "node24",
+      "onnxruntime"
     ],
     "depends": []
   },
@@ -10384,6 +10387,45 @@ export const ALL_TASKS: TaskRecord[] = [
       "fenced-install",
       "shim",
       "cmd"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44-36",
+    "phaseId": "44",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Unified skill promote command — collapse `gad evolution promote` (canonical) and `gad evolution install` (runtime) into one verb with two modes. User ask 2026-04-14: \"let's move canonical skill shipping under the command skill --promote --[framework|project] so it would be a pseudo command for a project since that will just be an install to their agent runtime they would provide. for us it would be to the actual folder location in the get-anything-done and that command only works in the canonical cloned repo.\" Two modes: (a) `--framework `: move proto-skill from `.planning/proto-skills//` to canonical `skills//`. GATED: refuses unless running in the canonical `get-anything-done` cloned repo — detect via `git config --get remote.origin.url` matching `MagicbornStudios/get-anything-done` OR via a sentinel file like `.gad-canonical` at repo root. Same behavior as today's `gad evolution promote`. (b) `--project  [--claude|--codex|--copilot|...]`: delegate to `bin/install.js`'s runtime path to install the proto-skill into the target agent's dir (.claude/skills/, .codex/skills/, etc.) with per-runtime path rewrites. Works in any consumer project. From the project's perspective their skill is now \"promoted\" (equipped), but nothing pushes upstream to canonical GAD. Shape preference (to confirm via discuss-phase): recommended entry point is a NEW top-level `gad skill` subcommand (`gad skill promote  --framework` / `gad skill promote  --project --claude`) with room to grow: `gad skill list`, `gad skill install`, `gad skill deprecate`. Current `gad evolution promote` becomes a thin shim that forwards to `gad skill promote --framework` for back-compat for one or two releases then removed. Update create-skill SKILL.md's \"promoting\" section to reference the new unified command. Update gad-evolution-evolve SKILL.md's step 6 (promote stable ones) to reference the new command. Keep `gad evolution install` working as-is for the moment — it can be a sibling of the new shape rather than deprecated now.",
+    "keywords": [
+      "skill-promote",
+      "gad-skill",
+      "framework-mode",
+      "project-mode",
+      "canonical-gate",
+      "install-js",
+      "unified-verb"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44-35",
+    "phaseId": "44",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Encounter-style skill surfacing in `gad snapshot`: inline the most-relevant equipped skills for the current sprint into snapshot output so subagents (and the main session post-compact) see \"which skills apply to this encounter\" rather than having to re-discover them by trigger words. Today snapshot has no skill block at all — agents discover skills via their runtime dir (`.claude/skills/`) at session start, which misses proto-skills + doesn't weight by relevance. User framing: \"the snapshot provides the encounter / the obstacle and we use the skills we have equipped. like almost like a game and these are encounters.\" Mechanism: at snapshot time, (a) build a query string from the current sprint's open task goals + STATE.xml next-action + current-phase goal, (b) compute top-N skill relevance via cosine similarity against pre-computed skill embeddings (gad models backend already shipped, commit 9412d67) with a Jaccard token-overlap fallback when the embeddings model isn't installed, (c) include both canonical skills under `skills/` AND pending proto-skills under `.planning/proto-skills/` in the ranking — proto-skills get a \"(proto, run `gad evolution install` to equip)\" annotation so the operator can promote-on-demand, (d) emit a new `-- EQUIPPED SKILLS -- ` block in snapshot output listing top-N (configurable, default 5) entries with name + description + `:runtime-install-hint`, (e) respect the existing snapshot token budget — cap at ~500 tokens for the skills block. Edge cases: no model installed → Jaccard; no open tasks → fall back to current-phase goal; empty result → skip block. Optional flag `gad snapshot --skills=0` to disable when not wanted. This is the same \"equipped skills for the encounter\" shape we would give a subagent via a prompt, but hoisted into snapshot so it's cheap and automatic. Sibling follow-up (not in this task): a similar pass for workflows / decisions / references.",
+    "keywords": [
+      "snapshot",
+      "skills",
+      "embeddings",
+      "jaccard",
+      "proto-skills",
+      "relevance",
+      "encounter",
+      "subagent-hydration"
     ],
     "depends": []
   },
@@ -13533,10 +13575,10 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "35-06",
-    "title": "Maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes co",
+    "title": "Maintain an always-current upstream `get-shit-done` mirror in `tmp/get-shit-done` and preserve periodic review notes com",
     "kind": "task",
     "href": "/planning?tab=tasks#35-06",
-    "body": "35-06 maintain an always-current upstream `get-shit-done` mirror in `.tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, sdk structure, and docs against gad before adopting any ideas. upstream-review get-shit-done tmp security sdk workstreams"
+    "body": "35-06 maintain an always-current upstream `get-shit-done` mirror in `tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, sdk structure, and docs against gad before adopting any ideas. upstream-review get-shit-done tmp security sdk workstreams"
   },
   {
     "id": "35-07",
@@ -14201,7 +14243,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "44-28.B0 — Release pipeline foundation. Today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale Node SEA build",
     "kind": "task",
     "href": "/planning?tab=tasks#44-31",
-    "body": "44-31 44-28.b0 — release pipeline foundation. today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale node sea build on one machine; `dist/` is gitignored; zero git tags exist; zero github releases have been published on github.com/magicbornstudios/get-anything-done. nothing a consumer can download. deliverables: (1) verify + document the existing node sea build script that produces dist/release/*.exe. (2) author a new `build-and-release-locally` skill via create-skill that runs the full sequence idempotently: clean build, version bump (package.json + changelog.md), rebuild exe, `git tag v`, `gh release create v dist/release/* --notes-from-tag`, verify with `gh release view`. (3) first release cut: v1.33.0 or similar, with current artifacts attached. (4) consumer-facing readme section documenting the \"download installer.exe from latest release → run in target repo\" path. gates: no github actions (operator-triggered only), no npm publishing ever, local-only build pre-commit/post-push. must precede any b2/b3/b4 work — those sub-tasks depend on there being a consumable release. release-pipeline github-releases node-sea build-and-release-locally create-skill gh-release"
+    "body": "44-31 44-28.b0 — release pipeline foundation. today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale node sea build on one machine; `dist/` is gitignored; zero git tags exist; zero github releases have been published on github.com/magicbornstudios/get-anything-done. nothing a consumer can download. deliverables: (1) verify + document the existing node sea build script that produces dist/release/*.exe. (2) author a new `build-and-release-locally` skill via create-skill that runs the full sequence idempotently: clean build, version bump (package.json + changelog.md), rebuild exe, `git tag v`, `gh release create v dist/release/* --notes-from-tag`, verify with `gh release view`. (3) first release cut: v1.33.0 or similar, with current artifacts attached. (4) consumer-facing readme section documenting the \"download installer.exe from latest release → run in target repo\" path. gates: no github actions (operator-triggered only), no npm publishing ever, local-only build pre-commit/post-push. must precede any b2/b3/b4 work — those sub-tasks depend on there being a consumable release. release-pipeline github-releases node-sea build-and-release-locally create-skill gh-release postject node24 onnxruntime"
   },
   {
     "id": "44-32",
@@ -14223,6 +14265,20 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#44-34",
     "body": "44-34 44-28.b4 — portable node bootstrap branch for the installer. when the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned node zip (current lts or whatever the site build targets) from our release assets — not from nodejs.org — so we own the distribution channel end-to-end; (b) extracts to `&lt;target&gt;/.planning/.node/`; (c) writes a small `.planning/.cmd/gad.cmd` (or equivalent shim) that points at `.planning/.node/node.exe` + the gad.exe location; (d) adds an instruction block in the installer's success message explaining how to activate the portable node for this shell session. do not touch the consumer's system path — this is a fenced install that works by being invoked through the shim. depends on 44-31 (release pipeline must host the node zip) + 44-32 (installer --node flag wiring). leave github actions out. portable-node node-bootstrap installer fenced-install shim cmd"
+  },
+  {
+    "id": "44-36",
+    "title": "Unified skill promote command — collapse `gad evolution promote` (canonical) and `gad evolution install` (runtime) into ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-36",
+    "body": "44-36 unified skill promote command — collapse `gad evolution promote` (canonical) and `gad evolution install` (runtime) into one verb with two modes. user ask 2026-04-14: \"let's move canonical skill shipping under the command skill --promote --[framework|project] so it would be a pseudo command for a project since that will just be an install to their agent runtime they would provide. for us it would be to the actual folder location in the get-anything-done and that command only works in the canonical cloned repo.\" two modes: (a) `--framework `: move proto-skill from `.planning/proto-skills//` to canonical `skills//`. gated: refuses unless running in the canonical `get-anything-done` cloned repo — detect via `git config --get remote.origin.url` matching `magicbornstudios/get-anything-done` or via a sentinel file like `.gad-canonical` at repo root. same behavior as today's `gad evolution promote`. (b) `--project  [--claude|--codex|--copilot|...]`: delegate to `bin/install.js`'s runtime path to install the proto-skill into the target agent's dir (.claude/skills/, .codex/skills/, etc.) with per-runtime path rewrites. works in any consumer project. from the project's perspective their skill is now \"promoted\" (equipped), but nothing pushes upstream to canonical gad. shape preference (to confirm via discuss-phase): recommended entry point is a new top-level `gad skill` subcommand (`gad skill promote  --framework` / `gad skill promote  --project --claude`) with room to grow: `gad skill list`, `gad skill install`, `gad skill deprecate`. current `gad evolution promote` becomes a thin shim that forwards to `gad skill promote --framework` for back-compat for one or two releases then removed. update create-skill skill.md's \"promoting\" section to reference the new unified command. update gad-evolution-evolve skill.md's step 6 (promote stable ones) to reference the new command. keep `gad evolution install` working as-is for the moment — it can be a sibling of the new shape rather than deprecated now. skill-promote gad-skill framework-mode project-mode canonical-gate install-js unified-verb"
+  },
+  {
+    "id": "44-35",
+    "title": "Encounter-style skill surfacing in `gad snapshot`: inline the most-relevant equipped skills for the current sprint into ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-35",
+    "body": "44-35 encounter-style skill surfacing in `gad snapshot`: inline the most-relevant equipped skills for the current sprint into snapshot output so subagents (and the main session post-compact) see \"which skills apply to this encounter\" rather than having to re-discover them by trigger words. today snapshot has no skill block at all — agents discover skills via their runtime dir (`.claude/skills/`) at session start, which misses proto-skills + doesn't weight by relevance. user framing: \"the snapshot provides the encounter / the obstacle and we use the skills we have equipped. like almost like a game and these are encounters.\" mechanism: at snapshot time, (a) build a query string from the current sprint's open task goals + state.xml next-action + current-phase goal, (b) compute top-n skill relevance via cosine similarity against pre-computed skill embeddings (gad models backend already shipped, commit 9412d67) with a jaccard token-overlap fallback when the embeddings model isn't installed, (c) include both canonical skills under `skills/` and pending proto-skills under `.planning/proto-skills/` in the ranking — proto-skills get a \"(proto, run `gad evolution install` to equip)\" annotation so the operator can promote-on-demand, (d) emit a new `-- equipped skills -- ` block in snapshot output listing top-n (configurable, default 5) entries with name + description + `:runtime-install-hint`, (e) respect the existing snapshot token budget — cap at ~500 tokens for the skills block. edge cases: no model installed → jaccard; no open tasks → fall back to current-phase goal; empty result → skip block. optional flag `gad snapshot --skills=0` to disable when not wanted. this is the same \"equipped skills for the encounter\" shape we would give a subagent via a prompt, but hoisted into snapshot so it's cheap and automatic. sibling follow-up (not in this task): a similar pass for workflows / decisions / references. snapshot skills embeddings jaccard proto-skills relevance encounter subagent-hydration"
   },
   {
     "id": "44-29",
@@ -14981,6 +15037,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "glitchy redraws on button clicks across all round-4 builds ui visibly glitches/flickers on button clicks as if full per-tick redraws are running. observed consistently across gad v9, gad v10, bare v5, and emergent v4."
   },
   {
+    "id": "build-and-release-locally",
+    "title": "build-and-release-locally",
+    "kind": "skill",
+    "href": "/skills/build-and-release-locally",
+    "body": "build-and-release-locally build-and-release-locally cut a new gad release — version bump, changelog entry, node sea rebuild, git tag, and `gh release create` with artifacts attached. operator-triggered only, no ci, no npm publish. trigger this skill whenever the user asks to \"cut a release\", \"ship v<n>\", \"publish a new release\", \"bump the version\", or any variation that means \"the canonical gad repo should have a new downloadable installer artifact on github releases.\" canonical-repo-only: refuses to run outside the magicbornstudios/get-anything-done clone. see decision gad-188 (44-28 umbrella — distribution is github releases + executable download, no github actions)."
+  },
+  {
     "id": "eval-skill-install",
     "title": "eval-skill-install",
     "kind": "skill",
@@ -15091,6 +15154,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/gad-create-skill",
     "body": "gad-create-skill gad:create-skill >-"
+  },
+  {
+    "id": "gad-cross-config-domain-change",
+    "title": "gad-cross-config-domain-change",
+    "kind": "skill",
+    "href": "/skills/gad-cross-config-domain-change",
+    "body": "gad-cross-config-domain-change gad-cross-config-domain-change >-"
   },
   {
     "id": "gad-debug",
