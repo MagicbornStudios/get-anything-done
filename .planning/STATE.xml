@@ -4,11 +4,12 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>44.5-01a VCS reference research shipped 2026-04-15 as .planning/research/44.5-01a-visual-context-system-references.md. 20 devid components (~2558 LOC) + 2 constants files + 2 skills + 4 decisions enumerated. Operator-flagged anchor tokens confirmed: cid="visual-context-modal-footer" (DevIdModalContextFooter.tsx) + stableCid="visual-context-panel" (DevPanel.tsx via dev-panel-constants.ts). Clipboard-is-universal-CRUD-transport semantics locked into memory. 6 new-infra items surfaced for phase 44.5: editor-chrome constants files, deterministic cid helpers for inventory slots/bestiary cards/diff rows, iframe postMessage bridge (stretch), VCS coverage regression test. Next: plan-phase on 44.5-01 (Project Editor shell at /projects/[id]/edit with mandatory VCS coverage on every pane) — research doc is the KICKOFF.md references input. Ship 44.5-01b (draft/published schema) + 44.5-01c (editor CTA) alongside as the minimum route-and-nav slice before primitives (05/07/08/09/10) land.</next-action>
+  <next-action>Evolution turn checkpoint 1 shipped 2026-04-15: uniform skill shape locked. Decisions gad-190 (SKILL.md is the single command entry point; `workflow:` frontmatter key replaces `skill.json`), gad-191 (proto-skills are self-contained bundles at `.planning/proto-skills/&lt;slug&gt;/` with sibling `workflow.md`), gad-192 (`gad snapshot` surfaces sprint-relevant skills via TASK-REGISTRY `skill=` attribution) written. Canonical contract shipped as `references/skill-shape.md` (10 sections: layout, frontmatter spec, body shapes, workflows/ shape, proto-skill bundles, runtime install, validator rules, migration checklist, deleted artifacts, consumer-project parity). Phase 42.2 gained nine new tasks: 42.2-07 (done — references/skill-shape.md), 42.2-08 (install.js workflow: migration), 42.2-09 (validator update), 42.2-10 (migrate four keeper authoring skills: create-skill, create-proto-skill, gad-skill-creator, merge-skill; delete gad-create-skill, gad-merge-skill, gad-quick-skill), 42.2-11 (bulk-delete ~60 skill.json sidecars), 42.2-12 (verify `gad evolution install/promote` handles proto-skill bundles), 42.2-13 (promote phase-44.5 candidate as first pipeline proof), 42.2-14 (snapshot skills section), 42.2-15 (migrate legacy skills/candidates/ → .planning/candidates/). STOPPING for operator review before touching install.js (next checkpoint = 42.2-08). Interleave with phase 44.5 Project Editor work as operator directs — 42.2 evolution tasks are independent and can ship between 44.5 slices.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>
-    <reference>.planning/DECISIONS.xml (gad-160 through gad-183)</reference>
+    <reference>.planning/DECISIONS.xml (gad-160 through gad-192)</reference>
+    <reference>references/skill-shape.md</reference>
     <reference>scripts/validate-canonical-assets.mjs</reference>
     <reference>references/proto-skills.md</reference>
     <reference>skills/gad-evolution-evolve/SKILL.md</reference>
@@ -39,7 +40,7 @@
     <reference>references/framework-comparison-matrix.md</reference>
     <reference>.planning/notes/context-engine-hydration-questions-2026-04-14.md</reference>
   </references>
-  <last-updated>2026-04-14</last-updated>
+  <last-updated>2026-04-15</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
 
