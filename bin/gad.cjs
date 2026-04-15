@@ -10343,30 +10343,14 @@ const skillShow = defineCommand({
 });
 
 const skillPromoteFolder = defineCommand({
-  meta: { name: 'promote-folder', description: 'Promote any skill-shaped folder into the framework or a consumer project. Generalizes `evolution promote` — source can be a project skills/ dir, a hand-authored draft, a consumer-project proto-skill, anything matching the skill shape. Decision gad-196 (task 42.2-32).' },
+  meta: { name: 'promote-folder', description: 'Promote any skill-shaped folder into the canonical get-anything-done framework `skills/` + `workflows/` tree. Generalizes `evolution promote` — source can be `.planning/proto-skills/<slug>/` (the evolve-loop pathway), a hand-authored draft, or a consumer project proto-skill being elevated to framework canonical. Consumer projects do NOT use this — their proto-skills auto-register in the project tree. Decision gad-196 (task 42.2-32/34).' },
   args: {
     source: { type: 'positional', description: 'absolute or relative path to a skill-shaped folder (must contain SKILL.md with valid frontmatter)', required: true },
-    framework: { type: 'boolean', description: 'Promote into the canonical get-anything-done skills/ + workflows/ tree' },
-    project: { type: 'string', description: 'Install into a consumer project by id (reads gad-config.toml [[planning.roots]]). Requires the project to have a skills/ dir sibling to the planning root.', default: '' },
     name: { type: 'string', description: 'Final skill name (defaults to source dir basename)', default: '' },
     'dry-run': { type: 'boolean', description: 'Print what would happen without writing anything', default: false },
     force: { type: 'boolean', description: 'Overwrite an existing skills/<name>/ or workflows/<name>.md at the destination', default: false },
   },
   run({ args }) {
-    if (args.framework && args.project) {
-      console.error('Choose either --framework or --project <id>, not both.');
-      process.exit(1);
-    }
-    if (!args.framework && !args.project) {
-      console.error('Specify a destination: --framework OR --project <id>.');
-      console.error('');
-      console.error('Examples:');
-      console.error('  gad skill promote-folder ./skills/gad-visual-context-system --framework');
-      console.error('  gad skill promote-folder /path/to/draft --framework --name vcs --dry-run');
-      console.error('  gad skill promote-folder ./my-draft --project grime-time-site');
-      process.exit(1);
-    }
-
     const srcDir = path.resolve(args.source);
     if (!fs.existsSync(srcDir) || !fs.statSync(srcDir).isDirectory()) {
       console.error(`Source path is not a directory: ${srcDir}`);
@@ -10397,28 +10381,24 @@ const skillPromoteFolder = defineCommand({
       process.exit(1);
     }
 
-    // Compute destination.
+    // Compute destination. Always the canonical get-anything-done framework
+    // tree. Consumer projects do NOT promote — their proto-skills auto-
+    // register in the project's own tree, there is no cross-project
+    // "install" operation via this command.
     const finalName = args.name || path.basename(srcDir);
-    let destRoot;
-    if (args.framework) {
-      const repoRoot = path.resolve(__dirname, '..');
-      if (!isCanonicalGadRepo(repoRoot)) {
-        console.error('Refusing --framework promote: not in the canonical get-anything-done repo.');
-        process.exit(1);
-      }
-      destRoot = repoRoot;
-    } else {
-      // --project <id>
-      const baseDir = findRepoRoot();
-      const config = gadConfig.load(baseDir);
-      const root = (config.roots || []).find((r) => r.id === args.project);
-      if (!root) {
-        console.error(`Project not found in gad-config: ${args.project}`);
-        console.error(`Available projects: ${(config.roots || []).map((r) => r.id).join(', ')}`);
-        process.exit(1);
-      }
-      destRoot = path.join(baseDir, root.path);
+    const repoRoot = path.resolve(__dirname, '..');
+    if (!isCanonicalGadRepo(repoRoot)) {
+      console.error('Refusing promote-folder: not in the canonical get-anything-done repo.');
+      console.error('');
+      console.error('Detection: git remote.origin.url must match MagicbornStudios/get-anything-done,');
+      console.error('or a .gad-canonical sentinel file must exist at the repo root.');
+      console.error('');
+      console.error('Consumer projects do not promote — proto-skills in a consumer project');
+      console.error('live in that project\'s own tree and are automatically available.');
+      console.error('There is no cross-project install operation for this command.');
+      process.exit(1);
     }
+    const destRoot = repoRoot;
 
     const destSkillDir = path.join(destRoot, 'skills', finalName);
     const destWorkflowsDir = path.join(destRoot, 'workflows');
@@ -10580,7 +10560,7 @@ const skillFind = defineCommand({
 });
 
 const skillCmd = defineCommand({
-  meta: { name: 'skill', description: 'Skill ops — list, show, find, promote (--framework canonical / --project consumer runtime), promote-folder (any skill-shaped folder). See decisions gad-188, gad-196.' },
+  meta: { name: 'skill', description: 'Skill ops — list, show, find, promote (--framework canonical / --project consumer runtime install), promote-folder (any skill-shaped folder → framework canonical, framework-only). See decisions gad-188, gad-196.' },
   subCommands: {
     list: skillList,
     show: skillShow,

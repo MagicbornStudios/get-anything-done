@@ -1,8 +1,14 @@
 <workflow slug="proto-skill-battery" name="Proto-skill discoverability + supersession battery">
 
 <objective>
-Per-proto-skill fitness test. For every staged proto-skill or
-promoted-from-proto skill in the current project, measure three things:
+Per-proto-skill fitness test. Runs PER PROJECT — each project tests its own
+proto-skills against each other. Proto-skills auto-register in the project
+that owns them; there is no cross-project install or promotion step, so the
+battery is always scoped to the project you're in.
+
+For every proto-skill in the current project (staged at
+`.planning/proto-skills/<slug>/` plus any skill carrying `status: proto` or
+`origin: promoted-from-proto` frontmatter), measure three things:
 
 1. **Findability** — can a cold agent discover this skill from a paraphrased
    version of its own trigger? Mirrors `gad:discovery-test` arm 1.
@@ -10,14 +16,21 @@ promoted-from-proto skill in the current project, measure three things:
    the agent to rate it executable without further research?
 3. **Supersession / shed score** — does any OTHER proto-skill in the same
    project cover the same trigger better, making this one an eviction
-   candidate? Proto-vs-proto comparison, NOT proto-vs-canonical (canonical is
-   framework-specific; projects have their own ecosystems that grow and
-   obsolete each other).
+   candidate? Proto-vs-proto comparison within the same project. NOT
+   proto-vs-canonical (canonical is the framework-scope skill set; consumer
+   projects have their own ecosystems that grow and obsolete each other on
+   their own timeline, independent of framework canonical evolution).
 
 Output: `site/data/proto-skill-findings.json` machine-readable per-proto scores
 + `.planning/notes/proto-skill-battery-{date}.md` human writeup. Operator
 reviews shed candidates and runs `gad evolution shed <slug>` manually — the
 battery never mutates canonical state, it only produces evidence.
+
+**Framework note:** get-anything-done itself is a consumer project AND the
+framework. When this battery runs in the get-anything-done repo, it tests
+the proto-skills used inside get-anything-done's own workflow (e.g. the
+VCS proto-skills before they were canonicalized). It does NOT test framework
+canonical skills — those are evaluated by `gad:discovery-test`.
 </objective>
 
 <inputs>
