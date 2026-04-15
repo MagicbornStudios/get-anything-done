@@ -21,7 +21,9 @@ export function AgentHandoffCycleCopy() {
         <code className="rounded bg-card/60 px-1 py-0.5 font-mono text-xs">
           agent-handoff-cycle-site-section
         </code>
-        ) is the live target: the verbatim handoff that built it sits in the showcase block above.
+        ) is the live target: the verbatim handoff that built it sits in the showcase block above. The
+        ring graphic places the terminal screenshot inside the coding-agent node — follow the arrows
+        clockwise for one full lap.
       </SiteSectionIntro>
       <SiteProse size="md" className="mt-4 max-w-2xl">
         You paste that brief into{" "}

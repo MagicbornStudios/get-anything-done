@@ -12,7 +12,7 @@ Target:
 - search: cid="agent-handoff-cycle-site-section"
 - data-cid: agent-handoff-cycle-site-section
 - inner landmarks: Identified as="LandingAgentHandoffCycle" | "AgentHandoffCycleCopy" | "AgentHandoffCycleMedia" | "AgentHandoffCycleDiagram"
-- scope: \`AgentHandoffCycle.tsx\` subtree + related files under \`components/landing/agent-handoff-cycle/\` + \`landing-page-generation-prompt.example.ts\`
+- scope: \`AgentHandoffCycle.tsx\` + \`AgentHandoffCycleDiagram.tsx\` (SVG cycle + embedded terminal image) + \`agent-handoff-cycle-constants.ts\` + \`AgentHandoffCycleMedia.tsx\` + \`landing-page-generation-prompt.example.ts\`
 
 Cycle to showcase (rinse · repeat):
 1. Browse site with dev IDs — see greppable \`cid\` / \`data-cid\`.
@@ -50,4 +50,4 @@ https://storage.ghost.io/c/57/9b/579b6dca-f48a-4307-844f-f0533595d058/content/im
 
 Tasking (update):
 
-Drive the home-page band as a **visible cycle**: diagram + copy + media column. Rename the former \`lineage/*\` components to \`agent-handoff-cycle/*\`, set \`cid="agent-handoff-cycle-site-section"\`, and record naming debt in planning (decision gad-196). Align this verbatim block with the new target and the six-step loop above.`;
+Ship a **presentable cyclical flow** for this band: SVG elliptical arrows connecting six steps; the Claude Code screenshot lives **inside** the coding-agent node (not a duplicate hero column). Mobile: vertical stack with the same image in-step. Right column = short upstream context + YouTube link only.`;
