@@ -9262,6 +9262,33 @@ function firstExistingImagePath(dir, candidates = []) {
   return null;
 }
 
+function sanitizeSkillPromptText(input, maxLen = 420) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  let text = raw
+    .replace(/\r?\n+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^\s*[>|-]+\s*$/g, '')
+    .replace(/\b(?:kill|weapon|blood|gore|violence|violent)\b/gi, '')
+    .trim();
+  if (!text || text === '>-') return '';
+  if (text.length > maxLen) text = `${text.slice(0, maxLen - 1).trimEnd()}.`;
+  return text;
+}
+
+function buildSafeSkillImagePrompt({ id, name, description }) {
+  const label = sanitizeSkillPromptText(name || id, 120) || sanitizeSkillPromptText(id, 120) || 'skill';
+  const purpose = sanitizeSkillPromptText(description, 320);
+  const parts = [
+    `Create a square icon-style illustration for the software skill "${label}".`,
+    purpose ? `Purpose: ${purpose}` : '',
+    'Use abstract symbols and tooling motifs only.',
+    'No people, no faces, no text, no logos, no brand marks.',
+    'Non-violent, safe-for-work, high contrast, clean silhouette, minimal background.',
+  ];
+  return parts.filter(Boolean).join(' ');
+}
+
 function buildSkillImageInventory(args = {}) {
   const repoRoot = path.resolve(__dirname, '..');
   const scopes = new Set(splitCsvList(args.scope, ['official', 'proto', 'installed']));
@@ -9273,12 +9300,12 @@ function buildSkillImageInventory(args = {}) {
     const imageCandidates = ['image.png', 'cover.png', 'icon.png', 'preview.png'];
     const existingImage = firstExistingImagePath(base.skillDir, imageCandidates);
     const outputPath = base.outputPath || path.join(repoRoot, 'site', 'public', 'skills', `${base.id}.png`);
-    const promptSeed = [
-      `Create a 1:1 icon-style illustration for the GAD skill "${base.name || base.id}".`,
-      base.description ? `Skill purpose: ${base.description}` : '',
-      'Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic.',
-      'Must be visually distinct from generic stock icons.'
-    ].filter(Boolean).join(' ');
+    const hasOutputImage = fs.existsSync(outputPath);
+    const promptSeed = buildSafeSkillImagePrompt({
+      id: base.id,
+      name: base.name || base.id,
+      description: base.description,
+    });
     records.push({
       id: base.id,
       name: base.name || base.id,
@@ -9286,8 +9313,8 @@ function buildSkillImageInventory(args = {}) {
       runtime: base.runtime || null,
       sourceDir: base.skillDir,
       skillFile: base.skillFile,
-      hasImage: Boolean(existingImage),
-      imagePath: existingImage,
+      hasImage: Boolean(existingImage || hasOutputImage),
+      imagePath: existingImage || (hasOutputImage ? outputPath : null),
       targetImagePath: outputPath,
       description: base.description || null,
       prompt: promptSeed,
@@ -9348,7 +9375,7 @@ function buildSkillImageInventory(args = {}) {
       if (root.runtime !== 'agents' && !runtimeFilter.has(root.runtime)) continue;
       for (const entry of listSkillDirs(root.dir)) {
         const meta = readSkillFrontmatter(entry.skillFile);
-        const targetDir = path.join(repoRoot, 'assets', 'skills', 'installed', root.runtime);
+        const targetDir = path.join(repoRoot, 'site', 'public', 'skills', 'installed', root.runtime);
         pushRecord({
           id: `${root.runtime}:${entry.id}`,
           name: meta.name || entry.id,
@@ -9419,13 +9446,13 @@ function mergeInventoryWithPromptData(records, promptData, repoRoot) {
   return records.map((r) => {
     const item = byId.get(r.id);
     if (!item) return r;
-    const prompt = String(item.prompt || '').trim();
+    const prompt = sanitizeSkillPromptText(item.prompt, 800);
     const targetImagePath = item.targetImagePath
       ? path.resolve(repoRoot, String(item.targetImagePath))
       : r.targetImagePath;
     return {
       ...r,
-      prompt: prompt || `${stylePrefix} ${r.prompt}`.trim(),
+      prompt: prompt || sanitizeSkillPromptText(`${stylePrefix} ${r.prompt}`, 800),
       targetImagePath,
     };
   });
@@ -9608,7 +9635,9 @@ const evolutionImagesGenerate = defineCommand({
     if (args['auto-prompt']) {
       for (const row of rows) {
         if (!row.prompt) {
-          row.prompt = `Create a square icon-style image for the GAD skill "${row.id}". No text. High contrast.`;
+          row.prompt = buildSafeSkillImagePrompt({ id: row.id, name: row.id, description: '' });
+        } else {
+          row.prompt = sanitizeSkillPromptText(row.prompt, 800);
         }
       }
     }

@@ -1,0 +1,718 @@
+{
+    "version":  1,
+    "updatedAt":  "2026-04-14T19:32:58.1547971-05:00",
+    "globalStyle":  [
+                        "Magicborn narrative style.",
+                        "Game icon / spell glyph aesthetic.",
+                        "Centered composition.",
+                        "High-contrast readability at small sizes.",
+                        "No text, no logos, no UI chrome.",
+                        "Painterly-fantasy energy with clean silhouette."
+                    ],
+    "items":  [
+                  {
+                      "id":  "create-skill",
+                      "name":  "create-skill",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/create-skill.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"create-skill\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "eval-skill-install",
+                      "name":  "eval-skill-install",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/eval-skill-install.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"eval-skill-install\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "find-skills",
+                      "name":  "find-skills",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/find-skills.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"find-skills\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "find-sprites",
+                      "name":  "find-sprites",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/find-sprites.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"find-sprites\". Skill purpose: Source visual assets (sprites, icons, tilesets, portraits) for a game or UI-heavy build in a way that yields a coherent, intentional look instead of a debug-console aesthetic. Use this skill when you need art for rooms, entities, UI controls, HP bars, spell icons, status effects, or any other visual element; when the build is failing its UI-quality gate because it looks unintentional; or when you\u0027re about to fall back to raw ASCII/text UI. The goal is \"looks like someone designed it\" — not photorealism, not 1:1 with AAA games, but internally consistent and readable. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "framework-upgrade",
+                      "name":  "framework-upgrade",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/framework-upgrade.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"framework-upgrade\". Skill purpose: Ship a change to the GAD framework itself (new skill, new subagent, reworked command, altered loop) in a way that preserves the ability to interpret eval results across versions. Trigger this skill whenever a framework change could affect how an agent behaves during an eval run — e.g. adding a mandatory skill, changing a command\u0027s spawned subagent, rewording AGENTS.md, changing the plan-phase flow, anything that would make \"the same agent prompt\" produce different output. The goal is to make framework drift visible so we don\u0027t mistake a framework improvement for an agent improvement (or vice versa) when scores move. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-add-backlog",
+                      "name":  "gad:add-backlog",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-add-backlog.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:add-backlog\". Skill purpose: Add an idea to the backlog parking lot (999.x numbering) Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-add-phase",
+                      "name":  "gad:add-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-add-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:add-phase\". Skill purpose: Add phase to end of current milestone in roadmap Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-add-tests",
+                      "name":  "gad:add-tests",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-add-tests.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:add-tests\". Skill purpose: Generate tests for a completed phase based on UAT criteria and implementation Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-add-todo",
+                      "name":  "gad:add-todo",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-add-todo.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:add-todo\". Skill purpose: Capture idea or task as todo from current conversation context Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-audit-milestone",
+                      "name":  "gad:audit-milestone",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-audit-milestone.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:audit-milestone\". Skill purpose: Audit milestone completion against original intent before archiving Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-audit-uat",
+                      "name":  "gad:audit-uat",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-audit-uat.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:audit-uat\". Skill purpose: Cross-phase audit of all outstanding UAT and verification items Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-auto-conventions",
+                      "name":  "gad:auto-conventions",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-auto-conventions.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:auto-conventions\". Skill purpose: Auto-scaffold CONVENTIONS.md from codebase patterns after first implementation phase Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-autonomous",
+                      "name":  "gad:autonomous",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-autonomous.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:autonomous\". Skill purpose: Run all remaining phases autonomously — discuss→plan→execute per phase Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-check-todos",
+                      "name":  "gad:check-todos",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-check-todos.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:check-todos\". Skill purpose: List pending todos and select one to work on Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-cleanup",
+                      "name":  "gad:cleanup",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-cleanup.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:cleanup\". Skill purpose: Archive accumulated phase directories from completed milestones Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-complete-milestone",
+                      "name":  "gad:complete-milestone",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-complete-milestone.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:complete-milestone\". Skill purpose: Archive completed milestone and prepare for next version Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-create-skill",
+                      "name":  "gad:create-skill",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-create-skill.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:create-skill\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-debug",
+                      "name":  "gad:debug",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-debug.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:debug\". Skill purpose: Systematic debugging with persistent state across context resets Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-discuss-phase",
+                      "name":  "gad:discuss-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-discuss-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:discuss-phase\". Skill purpose: Gather phase context through adaptive questioning before planning. Use --auto to skip interactive questions (Claude picks recommended defaults). Use --chain for interactive discuss followed by automatic plan+execute. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-do",
+                      "name":  "gad:do",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-do.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:do\". Skill purpose: Route freeform text to the right GAD command automatically Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-docs-compile",
+                      "name":  "gad:docs-compile",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-docs-compile.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:docs-compile\". Skill purpose: Compile planning docs from all roots into docs_sink as MDX files Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-docs-update",
+                      "name":  "gad:docs-update",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-docs-update.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:docs-update\". Skill purpose: Generate or update project documentation verified against the codebase Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-eval-bootstrap",
+                      "name":  "gad:eval-bootstrap",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-eval-bootstrap.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:eval-bootstrap\". Skill purpose: Bootstrap an eval agent with full GAD context injected into its prompt Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-eval-list",
+                      "name":  "gad:eval-list",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-eval-list.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:eval-list\". Skill purpose: List available eval projects and their run history Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-eval-report",
+                      "name":  "gad:eval-report",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-eval-report.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:eval-report\". Skill purpose: Show cross-project eval comparison and findings Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-eval-run",
+                      "name":  "gad:eval-run",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-eval-run.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:eval-run\". Skill purpose: Run an eval project in an isolated git worktree Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-eval-spawn",
+                      "name":  "gad:eval-spawn",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-eval-spawn.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:eval-spawn\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-eval-suite",
+                      "name":  "gad:eval-suite",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-eval-suite.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:eval-suite\". Skill purpose: Run all eval projects in parallel with bootstrap prompts Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-evolution-evolve",
+                      "name":  "gad-evolution-evolve",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-evolution-evolve.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-evolution-evolve\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-evolution-images",
+                      "name":  "gad-evolution-images",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-evolution-images.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-evolution-images\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-evolution-validator",
+                      "name":  "gad-evolution-validator",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-evolution-validator.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-evolution-validator\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-execute-phase",
+                      "name":  "gad:execute-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-execute-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:execute-phase\". Skill purpose: Execute all plans in a phase with wave-based parallelization Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-forensics",
+                      "name":  "gad:forensics",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-forensics.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:forensics\". Skill purpose: Post-mortem investigation for failed GAD workflows — analyzes git history, artifacts, and state to diagnose what went wrong Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-health",
+                      "name":  "gad:health",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-health.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:health\". Skill purpose: Diagnose planning directory health and optionally repair issues Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-help",
+                      "name":  "gad:help",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-help.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:help\". Skill purpose: Show available GAD commands and usage guide Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-insert-phase",
+                      "name":  "gad:insert-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-insert-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:insert-phase\". Skill purpose: Insert urgent work as decimal phase (e.g., 72.1) between existing phases Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-list-phase-assumptions",
+                      "name":  "gad:list-phase-assumptions",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-list-phase-assumptions.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:list-phase-assumptions\". Skill purpose: Surface Claude\u0027s assumptions about a phase approach before planning Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-manager",
+                      "name":  "gad:manager",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-manager.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:manager\". Skill purpose: Interactive command center for managing multiple phases from one terminal Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-manuscript",
+                      "name":  "gad:manuscript",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-manuscript.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:manuscript\". Skill purpose: Fiction writing adaptation of the GAD loop for novels and story outlines Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-map-codebase",
+                      "name":  "gad:map-codebase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-map-codebase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:map-codebase\". Skill purpose: Analyze codebase with parallel mapper agents to produce .planning/codebase/ documents Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-merge-skill",
+                      "name":  "gad:merge-skill",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-merge-skill.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:merge-skill\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-migrate-schema",
+                      "name":  "gad:migrate-schema",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-migrate-schema.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:migrate-schema\". Skill purpose: Convert RP XML planning files (STATE.xml, ROADMAP.xml) to GAD Markdown format Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-milestone",
+                      "name":  "gad:milestone",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-milestone.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:milestone\". Skill purpose: Manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. Use this skill when the user says \"we\u0027re starting v2\", \"let\u0027s kick off the next release\", \"we finished everything in this milestone, what\u0027s next\", \"archive this milestone\", or wants to review whether all planned work is actually done before closing. Also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. Covers gad:new-milestone + gad:complete-milestone + gad:audit-milestone. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-milestone-summary",
+                      "name":  "gad:milestone-summary",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-milestone-summary.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:milestone-summary\". Skill purpose: Generate a comprehensive project summary from milestone artifacts for team onboarding and review Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-new-milestone",
+                      "name":  "gad:new-milestone",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-new-milestone.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:new-milestone\". Skill purpose: Start a new milestone cycle — update PROJECT.md and route to requirements Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-new-project",
+                      "name":  "gad:new-project",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-new-project.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:new-project\". Skill purpose: Initialize a new project with deep context gathering and PROJECT.md Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-next",
+                      "name":  "gad:next",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-next.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:next\". Skill purpose: Automatically advance to the next logical step in the GAD workflow Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-note",
+                      "name":  "gad:note",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-note.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:note\". Skill purpose: Zero-friction idea capture. Append, list, or promote notes to todos. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-pause-work",
+                      "name":  "gad:pause-work",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-pause-work.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:pause-work\". Skill purpose: Create context handoff when pausing work mid-phase Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-plan-milestone-gaps",
+                      "name":  "gad:plan-milestone-gaps",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-plan-milestone-gaps.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:plan-milestone-gaps\". Skill purpose: Create phases to close all gaps identified by milestone audit Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-plan-phase",
+                      "name":  "gad:plan-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-plan-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:plan-phase\". Skill purpose: Create detailed phase plan (PLAN.md) with verification loop Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-plant-seed",
+                      "name":  "gad:plant-seed",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-plant-seed.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:plant-seed\". Skill purpose: Capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-progress",
+                      "name":  "gad:progress",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-progress.png",
+                      "prompt":  "Design a clean fantasy game skill icon for the software skill \"gad-progress\". Theme: navigation compass, waypoint rune, progress meter arc. Safe, non-violent, non-harmful imagery. No characters, no text, no blood, no weapons. Magicborn style, centered, high contrast, polished icon rendering."
+                  },
+                  {
+                      "id":  "gad-quick-skill",
+                      "name":  "gad-quick-skill",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-quick-skill.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-quick-skill\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-reapply-patches",
+                      "name":  "gad:reapply-patches",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-reapply-patches.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:reapply-patches\". Skill purpose: Reapply local modifications after a GAD update Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-remove-phase",
+                      "name":  "gad:remove-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-remove-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:remove-phase\". Skill purpose: Remove a future phase from roadmap and renumber subsequent phases Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-research-phase",
+                      "name":  "gad:research-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-research-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:research-phase\". Skill purpose: Research how to implement a phase (standalone - usually use /gad:plan-phase instead) Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-resume-work",
+                      "name":  "gad:resume-work",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-resume-work.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:resume-work\". Skill purpose: Resume work from previous session with full context restoration Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-reverse-engineer",
+                      "name":  "gad:reverse-engineer",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-reverse-engineer.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:reverse-engineer\". Skill purpose: Analyze any codebase (local or GitHub URL) and produce requirements for clean-room reimplementation Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-review",
+                      "name":  "gad:review",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-review.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:review\". Skill purpose: Request cross-AI peer review of phase plans from external AI CLIs Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-review-backlog",
+                      "name":  "gad:review-backlog",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-review-backlog.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:review-backlog\". Skill purpose: Review and promote backlog items to active milestone Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-session",
+                      "name":  "gad:session",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-session.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:session\". Skill purpose: Save and restore full planning context across sessions — creates a handoff file when pausing and restores from it when resuming. Use this skill when the user is about to stop work mid-phase, wants to hand off to a new context window, is starting a new session and needs to orient fully, or when gad:check-todos alone isn\u0027t enough because there\u0027s in-progress work, unresolved decisions, or active blockers that aren\u0027t captured in the living planning docs. Essential for the autonomous execution loop — call it at pause and resume to maintain continuity. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-session-report",
+                      "name":  "gad:session-report",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-session-report.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:session-report\". Skill purpose: Generate a session report with token usage estimates, work summary, and outcomes Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-set-profile",
+                      "name":  "gad:set-profile",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-set-profile.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:set-profile\". Skill purpose: Switch model profile for GAD agents (quality/balanced/budget/inherit) Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-settings",
+                      "name":  "gad:settings",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-settings.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:settings\". Skill purpose: Configure GAD workflow toggles and model profile Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-skill-creator",
+                      "name":  "gad-skill-creator",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-skill-creator.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-skill-creator\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-snapshot-optimize",
+                      "name":  "gad:snapshot-optimize",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-snapshot-optimize.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:snapshot-optimize\". Skill purpose: Verify and optimize gad snapshot output to fit within the sprint context window. Use after modifying snapshot logic, adding new planning file types, or when snapshot token count exceeds the target budget. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-stats",
+                      "name":  "gad:stats",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-stats.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:stats\". Skill purpose: Display project statistics — phases, plans, requirements, git metrics, and timeline Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-task-checkpoint",
+                      "name":  "gad:task-checkpoint",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-task-checkpoint.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:task-checkpoint\". Skill purpose: Verify planning doc updates before proceeding to the next task. Called between tasks during execute-phase to enforce per-task tracking. Checks TASK-REGISTRY.xml and STATE.xml are current. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-thread",
+                      "name":  "gad:thread",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-thread.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:thread\". Skill purpose: Manage persistent context threads for cross-session work Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-update",
+                      "name":  "gad:update",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-update.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:update\". Skill purpose: Update GAD to latest version with changelog display Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-validate-phase",
+                      "name":  "gad:validate-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-validate-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:validate-phase\". Skill purpose: Retroactively audit and fill Nyquist validation gaps for a completed phase Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-verify-phase",
+                      "name":  "gad:verify-phase",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-verify-phase.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:verify-phase\". Skill purpose: Verify a completed phase achieved its goals. Runs build checks, validates deliverables exist, checks planning doc state, produces VERIFICATION.md. Works automated (eval agents) or interactive (human review). Use after completing a phase, before marking it done in ROADMAP.xml. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-verify-work",
+                      "name":  "gad:verify-work",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-verify-work.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:verify-work\". Skill purpose: Validate built features through conversational UAT Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-visual-context-panel-identities",
+                      "name":  "gad-visual-context-panel-identities",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-visual-context-panel-identities.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-visual-context-panel-identities\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-visual-context-system",
+                      "name":  "gad-visual-context-system",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-visual-context-system.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-visual-context-system\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-workspace-add",
+                      "name":  "gad:workspace-add",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-workspace-add.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:workspace-add\". Skill purpose: Add a path as a planning root in gad-config.toml Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-workspace-show",
+                      "name":  "gad:workspace-show",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-workspace-show.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:workspace-show\". Skill purpose: Show all registered planning roots and their current status Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-workspace-sync",
+                      "name":  "gad:workspace-sync",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-workspace-sync.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:workspace-sync\". Skill purpose: Crawl monorepo for .planning/ directories and sync gad-config.toml roots Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-write-feature-doc",
+                      "name":  "gad:write-feature-doc",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-write-feature-doc.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:write-feature-doc\". Skill purpose: Produce a feature documentation MDX file into the docs sink. Use when a project feature needs clear human-readable documentation that persists across sessions. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-write-intent",
+                      "name":  "gad:write-intent",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-write-intent.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:write-intent\". Skill purpose: Capture user intent for a project into planning docs. Use when starting a new project, clarifying what a project is for, or when requirements are missing or vague. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "gad-write-tech-doc",
+                      "name":  "gad:write-tech-doc",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/gad-write-tech-doc.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad:write-tech-doc\". Skill purpose: Produce a technical breakdown doc — architecture, data flow, component design. Use when a system needs to be explained structurally for agent or developer onboarding. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "merge-skill",
+                      "name":  "merge-skill",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/merge-skill.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"merge-skill\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "objective-eval-design",
+                      "name":  "objective-eval-design",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/objective-eval-design.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"objective-eval-design\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "phase-42.4-context-frameworks",
+                      "name":  "gad-author-context-framework",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/phase-42.4-context-frameworks.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"gad-author-context-framework\". Skill purpose: \u003e- Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "portfolio-sync",
+                      "name":  "portfolio-sync",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/portfolio-sync.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"portfolio-sync\". Skill purpose: Keep the public-facing GAD site and generated publishing artifacts in sync with the framework as it evolves. Trigger this skill whenever an eval run finishes, a new finding is written, a skill or agent changes, requirements or decisions move, or planning/docs outputs need regeneration. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "self-eval",
+                      "name":  "self-eval",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/self-eval.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"self-eval\". Skill purpose: Score a round of GAD development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  },
+                  {
+                      "id":  "trace-analysis",
+                      "name":  "trace-analysis",
+                      "kind":  "official",
+                      "runtime":  null,
+                      "targetImagePath":  "site/public/skills/trace-analysis.png",
+                      "prompt":  "Create a 1:1 icon-style illustration for the GAD skill \"trace-analysis\". Skill purpose: Analyze GAD trace data (.gad-log JSONL + .trace-events.jsonl + preserved eval traces) to produce usage reports such as tool mix, skill invocations, commit rhythm, token coverage, runtime mix, and per-project breakdowns. Style: clean, high-contrast, no text, symbolic, engineering/tooling aesthetic. Must be visually distinct from generic stock icons."
+                  }
+              ]
+}

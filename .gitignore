@@ -70,3 +70,7 @@ vendor/
 *.log
 .cache/
 tmp/
+
+# gad models cache — per-project embedding model downloads (never committed)
+.gad/models/
+.gad/
