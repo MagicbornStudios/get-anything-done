@@ -8629,6 +8629,36 @@ const worktreeCmd = defineCommand({
 
 const { getFrameworkVersion } = require('../lib/framework-version.cjs');
 
+const discoveryTestCmd = defineCommand({
+  meta: { name: 'discovery-test', description: 'Print the subagent discovery test battery instructions. Operator runs the actual battery by invoking the gad:discovery-test skill in an agent session.' },
+  args: {
+    date: { type: 'string', description: 'ISO date for findings filename (default: today)', default: '' },
+    agents: { type: 'string', description: 'Number of cold agents (default: 5)', default: '5' },
+  },
+  run({ args }) {
+    const today = args.date || new Date().toISOString().slice(0, 10);
+    const n = parseInt(args.agents, 10) || 5;
+    console.log('Subagent discovery test battery');
+    console.log('');
+    console.log(`  findings → .planning/notes/subagent-discovery-findings-${today}.md`);
+    console.log(`  site data → site/data/discovery-findings.json`);
+    console.log(`  agents    → ${n} parallel cold subagents`);
+    console.log('');
+    console.log('Battery runs as a skill (gad:discovery-test), not as a direct CLI invocation —');
+    console.log('it requires spawning subagents via the Agent tool, which only works from inside');
+    console.log('a coding-agent session. To run it:');
+    console.log('');
+    console.log('  1. Read the workflow:  gad skill show gad-discovery-test --body');
+    console.log('  2. In your session, invoke the skill by saying "run the discovery test battery"');
+    console.log('     or by reading workflows/discovery-test.md and following the steps.');
+    console.log('');
+    console.log('The battery takes ~90 seconds wall-clock and ~250k total tokens (5 agents × ~50k).');
+    console.log('Rerun after any change to the skill catalog, CLI discovery surface, or skill-shape docs.');
+    console.log('');
+    console.log('Target mean confidence: 8.5 / 10. Below that is a regression.');
+  },
+});
+
 const startupCmd = defineCommand({
   meta: { name: 'startup', description: 'Print the GAD session-start contract. One-shot answer to "how do I begin working on this project?" (task 42.2-22, fixes chicken-and-egg identified by subagent battery findings 2026-04-15).' },
   args: {
@@ -11064,6 +11094,7 @@ const main = defineCommand({
     verify: verifyCmd,
     snapshot: snapshotV2Cmd,
     startup: startupCmd,
+    'discovery-test': discoveryTestCmd,
     sprint: sprintCmd,
     dev: devCmd,
     sink: sinkCmd,
