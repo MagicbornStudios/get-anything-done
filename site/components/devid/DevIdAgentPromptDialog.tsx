@@ -126,11 +126,11 @@ export function buildUpdateLockedPrefix(
     `component_route_location= **${pageUrl}**`,
     "",
     "## Component to make changes to",
-    `- Component kind: \`${componentTag}\``,
-    `- Component label: \`${escapeAttrInCode(labelShort)}\``,
+    `- Dev-ID wrapper: \`${componentTag}\` — React primitive (\`Identified\` or \`SiteSection\`); the meaningful block name is **Component label** (\`as\`) below.`,
+    `- Component label (\`as\`): \`${escapeAttrInCode(labelShort)}\``,
     `- Search literal: \`${escapeAttrInCode(searchShort)}\``,
     `- \`data-cid="${escapeAttrInCode(cidShort)}"\``,
-    `- and its children. The identified component is the parent of the component in question.`,
+    `- and its children. The landmark element is the parent of the content in question.`,
     "",
     "## Make the changes to the component based on the below (UPDATE)",
   ];
@@ -147,7 +147,7 @@ export function buildDeletePrompt(
   const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
   const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
   const searchShort = truncateForPrompt(searchHint ?? cid, Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX));
-  const labelLine = `- Component kind: \`${componentTag}\` · label: \`${escapeAttrInCode(labelShort)}\` - you will be removing this and its children from the page/route this was found.`;
+  const labelLine = `- Remove the \`${componentTag}\` dev-id wrapper whose label (\`as\`) is \`${escapeAttrInCode(labelShort)}\` — that wrapper and its children leave this page/route.`;
   const searchLine = `- Search literal: \`${escapeAttrInCode(searchShort)}\``;
   const cidLine = `- data-cid: \`${escapeAttrInCode(cidShort)}\``;
   const labelFull = label.length > BLOCK_LABEL_MAX ? `\n- Full \`as\` string: ${JSON.stringify(label)}` : "";
@@ -166,9 +166,9 @@ ${searchLine}${searchFull}
 ${cidLine}${cidFull}
 
 ## What to do(DELETE)
-1. Remove the identifier and its children
+1. Remove the \`<Identified>\` or \`<SiteSection>\` block (per wrapper type above), including nested content, that matches \`data-cid\` / label.
 2. Drop unused imports and components.
-3. Typecheck the site package you touched, then commit (message should name this component).`;
+3. Typecheck the site package you touched, then commit (message should reference the label or \`data-cid\`).`;
 }
 
 

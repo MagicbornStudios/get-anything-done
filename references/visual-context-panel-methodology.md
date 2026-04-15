@@ -14,6 +14,16 @@ a coding agent.
 3. Only one panel surface is maintained to avoid split semantics.
 4. Runtime-generated ids are never the primary handoff token.
 
+## Portal modals (Radix Dialog)
+
+Dialogs render outside the `<section>` DOM but still participate in the **same** band scan:
+
+1. `SiteSection` provides `DevIdBandProvider` with this section’s band `cid`.
+2. `DialogContent` sets `data-devid-band="<same cid>"` (from context or explicit `devIdBandCid` prop).
+3. The band `DevPanel` merges open nodes `[data-devid-band=…][data-state=open]` (Radix dialog content; do not rely on `role="dialog"` matching the same element) into the section’s landmark list so inner `<Identified>` targets appear while the modal is open.
+
+Use `devIdBandCid={null}` on `DialogContent` when a dialog must not attach to any section scan.
+
 ## Component identity model
 
 1. Page landmark:
@@ -61,6 +71,22 @@ Use this structure when copying context for an Update/Delete prompt:
 5. Rendered `data-cid`
 6. Requested change
 
+## Fast input mode (speech + loose UPDATE)
+
+This workflow supports noisy, speech-to-text prompts as long as landmarks are present.
+The operator does not need perfect component hierarchy language if the prompt includes:
+
+1. Route URL
+2. Landmark token (`cid` preferred)
+3. Intent verb (`UPDATE`, `DELETE`, etc.)
+
+Example resilient input:
+
+- "On `/gad`, remove `gad-skill-bootstrap-section-site-section`"
+- "Footer area has Mermaid syntax error text pushing layout"
+
+Agent requirement: resolve by landmark first, then verify nearest parent route component.
+
 ## Planning usage contract
 
 When this methodology is applied in implementation work:
@@ -72,6 +98,26 @@ When this methodology is applied in implementation work:
 4. Keep examples current in:
    - `skills/gad-visual-context-panel-identities/SKILL.md`
    - this references document
+
+## Cleanup boundary policy
+
+Landmark-driven edits should default to targeted cleanup:
+
+1. Always remove unused imports caused by the edit.
+2. Remove now-unreferenced component files only when they are clearly dead.
+3. Do not broad-refactor unrelated sections during a landmark operation.
+4. Typecheck the touched package and report pre-existing failures separately.
+
+This keeps "delete/update by landmark" fast and predictable while still preventing obvious drift.
+
+## Automation + scale note
+
+Manual landmark authoring (`cid` literals) is labor intensive, but it provides high-precision
+control for human-in-the-loop development. Future automation should preserve this contract:
+
+1. Auto-generated scaffolds may propose ids, but final ids must remain source-searchable literals.
+2. Any abstraction that hides landmarks must still expose stable copy tokens to operators.
+3. Reusability patterns are acceptable only if they do not remove route + landmark traceability.
 
 ## Related assets
 

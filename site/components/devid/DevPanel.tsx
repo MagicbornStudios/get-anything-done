@@ -26,6 +26,13 @@ import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
 import { Button } from "@/components/ui/button";
+import {
+  collectScopedEntries,
+  escapeCidSelector,
+  queryByCid,
+  readEntryFromElement,
+  sortRegistryEntries,
+} from "./devid-dom-scan";
 
 type DevPanelProps =
   | { mode: "section" }
@@ -38,26 +45,6 @@ type DevPanelProps =
       componentTag?: RegistryEntry["componentTag"];
       searchHint?: string;
     };
-
-function sortRegistryEntries(entries: RegistryEntry[]): RegistryEntry[] {
-  return [...entries]
-    .map((entry, index) => ({ entry, index }))
-    .sort((a, b) => {
-      if (a.entry.depth !== b.entry.depth) return a.entry.depth - b.entry.depth;
-      return a.index - b.index;
-    })
-    .map(({ entry }) => entry);
-}
-
-function escapeCidSelector(cid: string) {
-  return typeof CSS !== "undefined" && typeof CSS.escape === "function"
-    ? CSS.escape(cid)
-    : cid.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-}
-
-function queryByCid(cid: string) {
-  return document.querySelector(`[data-cid="${escapeCidSelector(cid)}"]`) as HTMLElement | null;
-}
 
 function locateComponentOnPage(cid: string, flashComponent: (cid: string) => void) {
   const el = queryByCid(cid);
@@ -72,71 +59,45 @@ function locateComponentOnPage(cid: string, flashComponent: (cid: string) => voi
   }, 1400);
 }
 
-function readEntryFromElement(
-  node: HTMLElement,
-  depth: number,
-  fallback?: Partial<RegistryEntry>,
-): RegistryEntry | null {
-  const cid = node.getAttribute("data-cid") ?? fallback?.cid ?? "";
-  if (!cid) return null;
-  return {
-    cid,
-    label: node.getAttribute("data-cid-label") ?? fallback?.label ?? cid,
-    depth,
-    componentTag:
-      (node.getAttribute("data-cid-component-tag") as RegistryEntry["componentTag"] | null) ??
-      fallback?.componentTag,
-    searchHint: node.getAttribute("data-cid-search") ?? fallback?.searchHint,
-  };
-}
-
-function collectScopedEntries(
-  scope: HTMLElement | null,
-  options?: {
-    includeScope?: boolean;
-    fallbackRoot?: Partial<RegistryEntry>;
-  },
+/** Open Radix dialogs portaled to `body` are outside the section DOM; merge by `data-devid-band`. */
+function collectBandEntriesWithPortals(
+  bandCid: string,
+  bandLabel: string,
+  bandComponentTag: RegistryEntry["componentTag"] | undefined,
+  bandSearchHint: string | undefined,
 ): RegistryEntry[] {
-  if (!scope) {
-    return options?.fallbackRoot?.cid
-      ? [
-          {
-            cid: options.fallbackRoot.cid,
-            label: options.fallbackRoot.label ?? options.fallbackRoot.cid,
-            depth: 0,
-            componentTag: options.fallbackRoot.componentTag,
-            searchHint: options.fallbackRoot.searchHint,
-          },
-        ]
-      : [];
+  const scope = queryByCid(bandCid);
+  const fromSection = collectScopedEntries(scope, {
+    includeScope: true,
+    fallbackRoot: {
+      cid: bandCid,
+      label: bandLabel,
+      depth: 0,
+      componentTag: bandComponentTag,
+      searchHint: bandSearchHint,
+    },
+  });
+  if (typeof document === "undefined") return fromSection;
+
+  /** Radix Content may not expose `role="dialog"` on the same node as our attrs in all versions — match by band + open state only. */
+  let dialogRoots: HTMLElement[];
+  try {
+    dialogRoots = Array.from(
+      document.querySelectorAll<HTMLElement>(`[data-devid-band="${escapeCidSelector(bandCid)}"]`),
+    ).filter((el) => el.getAttribute("data-state") === "open");
+  } catch {
+    return fromSection;
   }
-  const nodes = [
-    ...(options?.includeScope ? [scope] : []),
-    ...Array.from(scope.querySelectorAll<HTMLElement>("[data-cid]")),
-  ];
-  const withDepth = nodes
-    .map((node) => {
-      let depth = 0;
-      let current: HTMLElement | null = node === scope ? null : node.parentElement;
-      while (current) {
-        if (scope.contains(current) && current.hasAttribute("data-cid")) depth += 1;
-        if (current === scope) break;
-        current = current.parentElement;
-      }
-      return readEntryFromElement(
-        node,
-        depth,
-        node === scope ? options?.fallbackRoot : undefined,
-      );
-    })
-    .filter((entry): entry is RegistryEntry => entry != null);
-  const minDepth = withDepth.length > 0 ? Math.min(...withDepth.map((e) => e.depth)) : 0;
-  const dedup = new Map<string, RegistryEntry>();
-  for (const entry of withDepth) {
-    if (!entry.cid || dedup.has(entry.cid)) continue;
-    dedup.set(entry.cid, { ...entry, depth: Math.max(0, entry.depth - minDepth) });
+
+  const fromDialogs: RegistryEntry[] = [];
+  for (const root of dialogRoots) {
+    fromDialogs.push(...collectScopedEntries(root, { includeScope: false }));
   }
-  return Array.from(dedup.values());
+
+  const merged = new Map<string, RegistryEntry>();
+  for (const e of fromDialogs) merged.set(e.cid, e);
+  for (const e of fromSection) merged.set(e.cid, e);
+  return sortRegistryEntries(Array.from(merged.values()));
 }
 
 export function DevPanel(props: DevPanelProps) {
@@ -149,7 +110,7 @@ export function DevPanel(props: DevPanelProps) {
   const bandComponentTag = isBand ? props.componentTag : undefined;
   const bandSearchHint = isBand ? props.searchHint : undefined;
   const pathname = usePathname() ?? "";
-  const { enabled, setHighlightCid, flashComponent } = useDevId();
+  const { enabled, setHighlightCid, flashComponent, highlightCid } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -179,19 +140,24 @@ export function DevPanel(props: DevPanelProps) {
 
   useEffect(() => {
     if (mode !== "band") return;
-    const scope = queryByCid(bandCid);
-    setBandEntries(
-      collectScopedEntries(scope, {
-        includeScope: true,
-        fallbackRoot: {
-          cid: bandCid,
-          label: bandLabel,
-          depth: 0,
-          componentTag: bandComponentTag,
-          searchHint: bandSearchHint,
-        },
-      }),
-    );
+    const run = () => {
+      setBandEntries(
+        collectBandEntriesWithPortals(bandCid, bandLabel, bandComponentTag, bandSearchHint),
+      );
+    };
+    run();
+    const raf = requestAnimationFrame(run);
+    const obs = new MutationObserver(run);
+    obs.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-state", "data-devid-band", "data-cid"],
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      obs.disconnect();
+    };
   }, [mode, pathname, bandCid, bandLabel, bandComponentTag, bandSearchHint]);
 
   useEffect(() => {
@@ -316,6 +282,26 @@ export function DevPanel(props: DevPanelProps) {
     }
   }, [mode, sectionEntries, activeCid, mountedSectionEntry]);
 
+  /** Alt+click on any Identified sets `highlightCid`; keep the compact panel list in sync. */
+  useEffect(() => {
+    if (!highlightCid) return;
+    if (mode === "band") {
+      const entry = bandEntries.find((e) => e.cid === highlightCid);
+      if (!entry) return;
+      setActiveCid(highlightCid);
+      const di = bandDepths.indexOf(entry.depth);
+      if (di >= 0) setDepthIndex(di);
+      return;
+    }
+    if (mode === "section") {
+      const entry = sectionEntries.find((e) => e.cid === highlightCid);
+      if (!entry) return;
+      setActiveCid(highlightCid);
+      const di = sectionDepths.indexOf(entry.depth);
+      if (di >= 0) setSectionDepthIndex(di);
+    }
+  }, [highlightCid, mode, bandEntries, sectionEntries, bandDepths, sectionDepths]);
+
   const sectionTarget =
     mode === "section"
       ? sectionEntries.find((entry) => entry.cid === activeCid) ?? null
@@ -400,8 +386,8 @@ export function DevPanel(props: DevPanelProps) {
           ref={panelRef}
           className={[
             "pointer-events-none absolute inset-0 z-[80] opacity-0 transition-opacity duration-200 ease-out",
-            "group-hover/site-section:pointer-events-auto group-hover/site-section:opacity-100",
-            "group-focus-within/site-section:pointer-events-auto group-focus-within/site-section:opacity-100",
+            "group-hover/site-section:opacity-100",
+            "group-focus-within/site-section:opacity-100",
           ].join(" ")}
           aria-hidden={!enabled}
         >
@@ -582,8 +568,8 @@ export function DevPanel(props: DevPanelProps) {
       <div
         className={[
           "pointer-events-none absolute inset-0 z-[80] opacity-0 transition-opacity duration-200",
-          "group-hover/site-band:pointer-events-auto group-hover/site-band:opacity-100",
-          "group-focus-within/site-band:pointer-events-auto group-focus-within/site-band:opacity-100",
+          "group-hover/site-band:opacity-100",
+          "group-focus-within/site-band:opacity-100",
         ].join(" ")}
       >
         <div
