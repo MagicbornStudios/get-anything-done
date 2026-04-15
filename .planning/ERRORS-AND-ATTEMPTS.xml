@@ -40,4 +40,19 @@
     <reference>C:\Users\benja\.claude\projects\C--Users-benja-Documents-custom-portfolio\memory\feedback_use_cli_for_conversions.md</reference>
     <reference>C:\Users\benja\.claude\projects\C--Users-benja-Documents-custom-portfolio\memory\feedback_human_todos_scope.md</reference>
   </entry>
+  <entry id="mermaid-leak-footer-push-2026-04-14" date="2026-04-14">
+    <summary>Mermaid syntax errors were rendered as leaked body text below page content, visually pushing footer context and confusing landmark-driven editing on /gad.</summary>
+    <context>
+      During speech-driven UPDATE testing against `/gad`, the operator reported text like "Mermaid JS syntax error ... mermaid version 11.14.0" appearing below the page and interfering with footer-area reasoning. The target landmark was `site-footer`, but root cause was not Footer itself.
+    </context>
+    <failure>
+      Mermaid render failures in workflow diagram components could leave temporary error nodes in `document.body`, outside component hosts. Those leaked nodes persisted across navigation and looked like footer/layout regressions on unrelated routes.
+    </failure>
+    <rule>
+      For visual-landmark debugging, resolve by landmark first but always validate cross-route side effects from shared client renderers. Mermaid/graph renderers must clean up temporary DOM artifacts after each render attempt, and leaked error nodes must be removed unless inside explicit diagram hosts.
+    </rule>
+    <reference>vendor/get-anything-done/site/components/landing/workflow/WorkflowMermaidDiagram.tsx</reference>
+    <reference>vendor/get-anything-done/site/components/workflow/WorkflowMermaidDiagram.tsx</reference>
+    <reference>vendor/get-anything-done/references/visual-context-panel-methodology.md</reference>
+  </entry>
 </errors-and-attempts>
