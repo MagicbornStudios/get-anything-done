@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { HumanWorkflow, PlanningState, Workflow } from "@/lib/catalog.generated";
-import { HUMAN_WORKFLOWS, REQUIREMENTS_HISTORY, WORKFLOWS } from "@/lib/catalog.generated";
+import type { HumanWorkflow, PlanningState, Signal, Workflow } from "@/lib/catalog.generated";
+import { HUMAN_WORKFLOWS, REQUIREMENTS_HISTORY, SIGNAL, WORKFLOWS } from "@/lib/catalog.generated";
 import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
@@ -17,6 +17,7 @@ import { PlanningSkillCandidatesTab, type SkillCandidate } from "./PlanningSkill
 import { PlanningSystemTab } from "./PlanningSystemTab";
 import { PlanningTasksTab } from "./PlanningTasksTab";
 import { PlanningTabHumanWorkflows } from "./PlanningTabHumanWorkflows";
+import { PlanningTabSignal } from "./PlanningTabSignal";
 import { PlanningWorkflowsTab } from "./PlanningWorkflowsTab";
 import selfEvalData from "@/data/self-eval.json";
 
@@ -27,6 +28,7 @@ interface Props {
   allDecisions: DecisionRecord[];
   gadBugs: BugRecord[];
   humanWorkflows?: readonly HumanWorkflow[];
+  signal?: Signal;
 }
 
 const BASE_PLANNING_TABS = new Set([
@@ -40,10 +42,12 @@ const BASE_PLANNING_TABS = new Set([
   "proto-skills",
   "workflows",
   "human-workflows",
+  "signal",
 ]);
 
 const WORKFLOWS_DATA: readonly Workflow[] = WORKFLOWS;
 const HUMAN_WORKFLOWS_DATA: readonly HumanWorkflow[] = HUMAN_WORKFLOWS;
+const SIGNAL_DATA: Signal = SIGNAL;
 
 export function PlanningTabbedContent({
   state,
@@ -52,6 +56,7 @@ export function PlanningTabbedContent({
   allDecisions,
   gadBugs,
   humanWorkflows = HUMAN_WORKFLOWS_DATA,
+  signal = SIGNAL_DATA,
 }: Props) {
   const searchParams = useSearchParams();
   const defaultTab = useMemo(() => {
@@ -120,6 +125,10 @@ export function PlanningTabbedContent({
             Human Workflows{" "}
             <span className="ml-1.5 tabular-nums text-muted-foreground">{humanWorkflows.length}</span>
           </TabsTrigger>
+          <TabsTrigger value="signal">
+            Signal{" "}
+            <span className="ml-1.5 tabular-nums text-muted-foreground">{signal.totalEvents}</span>
+          </TabsTrigger>
         </TabsList>
         </Identified>
 
@@ -187,6 +196,10 @@ export function PlanningTabbedContent({
 
         <TabsContent value="human-workflows">
           <PlanningTabHumanWorkflows workflows={humanWorkflows} />
+        </TabsContent>
+
+        <TabsContent value="signal">
+          <PlanningTabSignal signal={signal} />
         </TabsContent>
       </Tabs>
       </Identified>

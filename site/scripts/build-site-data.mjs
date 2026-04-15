@@ -1036,7 +1036,12 @@ function scanCatalog() {
   // Live/emergent synthesis reads trace events and enriches workflow entries
   // in place. Authored workflows gain `liveGraph` and `conformance`; emergent
   // workflows are appended to the same array with `origin: "emergent"`.
-  synthesizeWorkflowTraceData(catalog.workflows);
+  // Load the gad-framework-scoped trace events ONCE here so multiple
+  // downstream synthesizers (workflow trace + signal analytics, task 44-21)
+  // share the same array.
+  const traceEvents = loadTraceEvents({ scope: "gad-framework" });
+  synthesizeWorkflowTraceData(catalog.workflows, traceEvents);
+  catalog.signal = synthesizeSignalAnalytics(traceEvents);
 
   console.log(
     `  [scan] skills=${catalog.skills.length} agents=${catalog.agents.length} templates=${catalog.templates.length} workflows=${catalog.workflows.length}`
@@ -1487,10 +1492,10 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
     });
 }
 
-function synthesizeWorkflowTraceData(workflows) {
+function synthesizeWorkflowTraceData(workflows, preloadedEvents) {
   // Decision gad-175: only consume gad-framework-scoped events when mining
   // GAD's own workflows. Eval-agent events stay with their own eval/generation.
-  const events = loadTraceEvents({ scope: "gad-framework" });
+  const events = preloadedEvents != null ? preloadedEvents : loadTraceEvents({ scope: "gad-framework" });
   const totalRaw = loadTraceEvents().length;
   if (events.length === 0) {
     console.log(
@@ -1524,6 +1529,116 @@ function synthesizeWorkflowTraceData(workflows) {
   const emergent = detectEmergentWorkflows(events, authored);
   for (const e of emergent) workflows.push(e);
   console.log(`  [workflow-trace] detected ${emergent.length} emergent candidate(s)`);
+}
+
+// -------------------------------------------------------------------------
+// Signal analytics (task 44-21) — pure reducers over the gad-framework
+// scoped trace event stream. v1 surfaces:
+//   1. Top files by tool_use count (Read/Edit/Write/Glob/etc.)
+//   2. Top skills by trigger_skill invocation
+//   3. Tool mix (count + percentage)
+//   4. Agent split (default/main vs subagent + role breakdown)
+//
+// Deferred to v2 (NOT implemented):
+//   - Bash command path extraction (split inputs.command into tokens, find
+//     repo-relative file refs, fold into topFiles).
+//   - WebFetch URL frequency.
+//   - Tool/skill n-gram sequences (reuse the synthesizeWorkflowTraceData
+//     pattern — frequent-subgraph mining).
+//   - Per-session trends (group by runtime.session_id).
+// -------------------------------------------------------------------------
+
+const SIGNAL_PROJECT_ROOT_PREFIX = "C:/Users/benja/Documents/custom_portfolio/";
+
+function normalizeSignalFilePath(raw) {
+  if (raw == null) return null;
+  let p = String(raw).replace(/\\/g, "/");
+  if (!p) return null;
+  // Strip the absolute monorepo root if present (case-insensitive on Win).
+  const lowerPrefix = SIGNAL_PROJECT_ROOT_PREFIX.toLowerCase();
+  if (p.toLowerCase().startsWith(lowerPrefix)) {
+    p = p.slice(SIGNAL_PROJECT_ROOT_PREFIX.length);
+  }
+  // If still absolute (different drive, /tmp, etc.), drop it — we only
+  // want repo-relative paths in the leaderboard.
+  if (/^[a-zA-Z]:\//.test(p) || p.startsWith("/")) return null;
+  return p;
+}
+
+function synthesizeSignalAnalytics(events) {
+  const safeEvents = Array.isArray(events) ? events : [];
+  const toolUse = safeEvents.filter((e) => e && e.type === "tool_use" && e.tool);
+
+  // 1. Top files
+  const fileCounts = new Map();
+  for (const evt of toolUse) {
+    const inputs = evt.inputs || {};
+    const raw = inputs.file_path || inputs.notebook_path || null;
+    const norm = normalizeSignalFilePath(raw);
+    if (!norm) continue;
+    fileCounts.set(norm, (fileCounts.get(norm) ?? 0) + 1);
+  }
+  const topFiles = [...fileCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([p, count]) => ({ path: p, count }));
+
+  // 2. Top skills
+  const skillCounts = new Map();
+  for (const evt of toolUse) {
+    const skill = evt.trigger_skill;
+    if (!skill) continue;
+    skillCounts.set(skill, (skillCounts.get(skill) ?? 0) + 1);
+  }
+  const topSkills = [...skillCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([skill, count]) => ({ skill, count }));
+
+  // 3. Tool mix
+  const toolCounts = new Map();
+  for (const evt of toolUse) {
+    toolCounts.set(evt.tool, (toolCounts.get(evt.tool) ?? 0) + 1);
+  }
+  const totalTool = toolUse.length || 1;
+  const toolMix = {};
+  for (const [tool, count] of toolCounts.entries()) {
+    toolMix[tool] = {
+      count,
+      pct: Math.round((count / totalTool) * 1000) / 10,
+    };
+  }
+
+  // 4. Agent split — default = main session (agent_id null), sub = subagent.
+  let defaultCount = 0;
+  let subCount = 0;
+  const byRole = {};
+  for (const evt of toolUse) {
+    const agent = evt.agent || {};
+    if (agent.agent_id == null) {
+      defaultCount += 1;
+    } else {
+      subCount += 1;
+      const role = agent.agent_role || "(unspecified)";
+      byRole[role] = (byRole[role] ?? 0) + 1;
+    }
+  }
+
+  console.log(
+    `  [signal] ${toolUse.length} tool_use events → ${topFiles.length} top files, ${topSkills.length} top skills, ${Object.keys(toolMix).length} tools, default=${defaultCount} sub=${subCount}`
+  );
+
+  return {
+    totalEvents: toolUse.length,
+    topFiles,
+    topSkills,
+    toolMix,
+    agentSplit: {
+      default: defaultCount,
+      sub: subCount,
+      byRole,
+    },
+  };
 }
 
 // -------------------------------------------------------------------------
@@ -2210,6 +2325,29 @@ export interface HumanWorkflow {
 }
 
 /**
+ * Signal — trace-based agent-behavior analytics (task 44-21). Pure
+ * reducers over the gad-framework-scoped slice of \`.planning/.trace-events.jsonl\`.
+ * v1 ships top files, top skills, tool mix, and agent split. Bash command
+ * path extraction, WebFetch URL frequency, and tool n-gram sequences are
+ * deferred to v2.
+ */
+export interface SignalToolMixEntry {
+  count: number;
+  pct: number;
+}
+export interface Signal {
+  totalEvents: number;
+  topFiles: { path: string; count: number }[];
+  topSkills: { skill: string; count: number }[];
+  toolMix: Record<string, SignalToolMixEntry>;
+  agentSplit: {
+    default: number;
+    sub: number;
+    byRole: Record<string, number>;
+  };
+}
+
+/**
  * ContextFramework is a bundle that references existing catalog items
  * (skills, agents, workflows) by slug. It is NOT a copy — when the
  * referenced items update, every project on the framework picks up the
@@ -2280,6 +2418,8 @@ export const FINDINGS: Finding[] = ${JSON.stringify(findings || [], null, 2)};
 export const WORKFLOWS: Workflow[] = ${JSON.stringify(catalog.workflows || [], null, 2)};
 
 export const HUMAN_WORKFLOWS: HumanWorkflow[] = ${JSON.stringify(catalog.humanWorkflows || [], null, 2)};
+
+export const SIGNAL: Signal = ${JSON.stringify(catalog.signal || { totalEvents: 0, topFiles: [], topSkills: [], toolMix: {}, agentSplit: { default: 0, sub: 0, byRole: {} } }, null, 2)};
 
 export const CONTEXT_FRAMEWORKS: ContextFramework[] = ${JSON.stringify(catalog.contextFrameworks || [], null, 2)};
 

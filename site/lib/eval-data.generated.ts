@@ -10166,9 +10166,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44-22",
     "phaseId": "44",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Human workflows tab on /planning (Identified `PlanningTabHumanWorkflows`). Separate surface from authored agent workflows. Captures the operator's daily routine and expectations when working from the custom_portfolio monorepo root: what projects get touched, what order, what commands, what output cadence, how a \"working session on get-anything-done\" differs from \"working session on a vendored project\" differs from \"evaluating a generation in forge\". Each human workflow is a graph (React Flow, same treatment as authored agent workflows for consistency) with nodes for human actions (pick project, review state, run CLI, inspect site) and edges for expected sequence. Seed entries: \"daily routine\", \"review + promote a generation\", \"land a new phase on an existing project\", \"build a new species for an existing project\". User framing: this exists because expectation mismatches (e.g. \"I didn't expect tasks to land in global .planning\") should be visible as workflow gaps, not tribal knowledge. Eventually cross-referenced with trace data (44-21) to detect when the observed session doesn't match the expected human workflow.",
     "keywords": [
