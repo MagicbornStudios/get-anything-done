@@ -1,55 +1,86 @@
 ---
 name: create-proto-skill
 description: >-
-  Fast path to draft a proto-skill from a candidate context file or raw
-  materials. Lightweight authoring guide — no eval loop, no benchmarks, no
-  test runs — ideal when you have clear context and just need to write a
-  clean proto-skill bundle following the uniform shape in
-  references/skill-shape.md. Triggers on "draft a skill", "create proto
-  skill", "write a skill from this", "convert this candidate to a skill",
-  or whenever `gad:evolution:evolve` invokes the drafting step. Output
-  lands at `.planning/proto-skills/<slug>/` per decisions gad-183 and
-  gad-191 as a self-contained bundle (SKILL.md + sibling workflow.md +
-  PROVENANCE.md). For high-stakes skills that need real test runs and
-  iteration, use `gad-skill-creator` (the heavy path) instead — but
-  proto-skill drafting is the right default for candidates coming out of
-  the evolution loop.
+  Bulk drafter for proto-skills inside the GAD evolution loop. Enumerates
+  every raw candidate under `.planning/candidates/`, filters to ones that
+  don't yet have a finished proto-skill bundle at `.planning/proto-skills/
+  <slug>/`, and drafts each pending candidate in turn. Per-candidate
+  checkpoint protocol: write PROVENANCE.md FIRST as a lock marker, then
+  workflow.md, then SKILL.md — so a crash or context compaction mid-batch
+  leaves half-written bundles identifiable and resumable on the next run.
+  Triggers on "draft a skill", "draft proto-skills", "convert candidates
+  to proto-skills", or whenever `gad:evolution:evolve` invokes the
+  drafting step. Output bundles follow decision gad-191: SKILL.md with
+  `status: proto` + `workflow: ./workflow.md`, sibling workflow.md,
+  PROVENANCE.md, optional CANDIDATE.md copy. For high-stakes skills that
+  need real test runs, use `gad-skill-creator` (heavy path) instead.
 status: stable
 ---
 
 # create-proto-skill
 
-The lightweight drafter inside the GAD evolution loop. Reads a candidate
-context file, writes a proto-skill bundle to `.planning/proto-skills/<slug>/`,
-and hands off to `gad evolution validate` for advisory scoring and
-`gad evolution install` for runtime test use. Renamed from `gad-quick-skill`
-per decision gad-168; output contract updated to the proto-skill bundle
-shape per decision gad-191.
+The lightweight drafter inside the GAD evolution loop. Walks every raw
+candidate under `.planning/candidates/`, drafts each one into a proto-skill
+bundle under `.planning/proto-skills/<slug>/`, and hands off to
+`gad evolution validate` and `gad evolution install` for advisory scoring
+and runtime test use.
 
-We use the dot-agent skill **unmodified** — it's already a clean format guide
-that enforces the 200-line rule, the progressive disclosure principle, and the
-references/ split. We take ownership of how it's invoked inside the GAD loop.
+Renamed from `gad-quick-skill` per decision gad-168. Output shape locked by
+decision gad-191. Bulk-batch + per-candidate-checkpoint protocol locked by
+decision gad-171 — the whole point is that a 20-candidate batch survives a
+crash or auto-compact halfway through.
 
 ## When to use this skill
 
-- `gad:evolution:evolve` calls this for each high-pressure phase candidate.
-- A user explicitly says "draft a skill for X" or "quick skill" or "convert
-  this candidate to a skill."
+- `gad:evolution:evolve` calls this during the drafting step for every
+  candidate that `compute-self-eval` surfaced above the pressure threshold.
+- A user says "draft a proto-skill for X", "convert this candidate", or
+  "draft all pending candidates".
 - You've finished a workflow and want to capture a SKILL.md immediately
-  without running through `gad-skill-creator`'s eval loop.
-- You have a clear context source — a CANDIDATE.md from compute-self-eval,
-  a raw phase dump, or a working session you want to preserve.
+  without running `gad-skill-creator`'s full eval loop.
+- You have clear context sources — CANDIDATE.md files from self-eval, raw
+  phase dumps, or working session notes you want to preserve.
 
 ## When NOT to use this
 
-- The skill is high-stakes and you want test runs against real subagents to
-  validate it — use `gad-skill-creator` (heavy path) instead.
-- You're improving an existing skill that already has tests — `gad-skill-creator`
-  knows how to read the existing tests and re-run them.
-- The pattern isn't actually clear yet — write a quick note instead and let
-  the next evolution surface it.
+- The skill is high-stakes and you want real subagent test runs to validate
+  it — use `gad-skill-creator` (heavy path).
+- You're improving an existing skill that already has tests — use
+  `gad-skill-creator`, it re-runs the tests.
+- The pattern isn't actually clear yet — write a quick note (`gad note`)
+  and let the next evolution surface it.
 
-## Step 1 — ensure dot-agent create-skill is installed
+## Step 1 — enumerate pending candidates
+
+Run `gad evolution status` first to see the current state. The command
+renders three counts for the proto-skill backlog:
+
+- **pending** — candidates under `.planning/candidates/<slug>/` with no
+  matching `.planning/proto-skills/<slug>/` directory at all.
+- **in-progress** — proto-skill dirs with PROVENANCE.md but no SKILL.md
+  yet (a previous run crashed or was compacted mid-draft, lock marker left
+  behind).
+- **complete** — proto-skill dirs with both PROVENANCE.md and SKILL.md.
+
+Your batch is `pending ∪ in-progress`. Skip `complete`.
+
+Enumerate explicitly:
+
+```sh
+gad evolution status
+# Or, to get the raw list:
+ls .planning/candidates/
+ls .planning/proto-skills/
+```
+
+For each candidate slug, decide its state:
+
+- PROVENANCE.md missing → **pending** (fresh draft)
+- PROVENANCE.md present, SKILL.md missing → **in-progress** (resume; keep
+  the existing PROVENANCE.md, do not rewrite)
+- Both present → **complete** (skip)
+
+## Step 2 — ensure dot-agent create-skill is installed
 
 Idempotent — only installs if missing:
 
@@ -59,93 +90,159 @@ if [ ! -d "$HOME/.agents/skills/create-skill" ]; then
 fi
 ```
 
-After install, `~/.agents/skills/create-skill/SKILL.md` is the canonical source
-plus four reference files in `references/`. Read SKILL.md once for the full
-authoring guide — this wrapper only handles the input plumbing.
+After install, `~/.agents/skills/create-skill/SKILL.md` is the canonical
+authoring guide plus four reference files in `references/`. Read SKILL.md
+once for the format rules — this wrapper only handles input plumbing and
+the checkpoint protocol.
 
-## Step 2 — locate the source context
+## Step 3 — per-candidate checkpoint protocol
 
-The drafting input depends on how you were invoked:
+Loop over the pending+in-progress list. For each slug, **in this order**:
 
-- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/CANDIDATE.md` — already
-  exists, written by `compute-self-eval`. Contains the raw phase dump (tasks,
-  decisions, file refs, CLI surface, related skills, git log highlights).
-- **From a direct user request:** decide on a kebab-case slug, create
-  `.planning/proto-skills/<slug>/`, and write a CANDIDATE.md from whatever the
-  user is pointing at (a phase, a working session, a transcript, a file).
-- **From a "redraft this skill" request:** the existing skill's directory.
+### 3a. Write PROVENANCE.md FIRST (lock marker)
 
-The CANDIDATE.md is **not curated** and does not contain a proposed name,
-proposed test prompts, or hand-picked decisions. It's the raw source. The
-agent reads it and decides what matters. This is intentional — see the
-2026-04-13 evolution-loop experiment finding: curators are filters, raw input
+Create `.planning/proto-skills/<slug>/` and write PROVENANCE.md before
+anything else. This is the lock marker that tells the next run "this slug
+is in-progress, don't re-draft it from scratch":
+
+```markdown
+---
+candidate_slug: <slug>
+source_phase: <phase id from CANDIDATE.md frontmatter>
+pressure_score: <from CANDIDATE.md>
+created_on: <YYYY-MM-DD>
+created_by: create-proto-skill
+status: in-progress
+---
+
+# Provenance for <slug>
+
+Drafted from `.planning/candidates/<slug>/CANDIDATE.md` during evolution
+turn <N>. Raw source: self-eval pressure dump (tasks, decisions, file refs,
+CLI surface, related skills).
+```
+
+If PROVENANCE.md already exists (resume case), **do not overwrite it**.
+Read its `status:` field — if `in-progress`, you're resuming a crashed run.
+
+### 3b. Read the candidate
+
+Read `.planning/candidates/<slug>/CANDIDATE.md`. It contains the raw phase
+dump and is **not curated** — no proposed name, no hand-picked decisions,
+no suggested test prompts. Decide what matters. This is intentional per the
+2026-04-13 evolution-loop experiment finding: curators filter, raw input
 pulls in more decisions.
 
-## Step 3 — invoke dot-agent create-skill on the source
+For direct user requests where no candidate exists, write a minimal
+CANDIDATE.md into `.planning/candidates/<slug>/` from whatever the user is
+pointing at, then continue.
 
-Read `~/.agents/skills/create-skill/SKILL.md` and follow its authoring
-workflow, treating CANDIDATE.md (or the user's context) as the source. The
-key constraints from dot-agent's guide:
+### 3c. Write workflow.md
 
-- **SKILL.md must be under 200 lines** — hard rule.
-- Description should be appropriately "pushy" so the skill triggers reliably.
-- Split deeper content into `references/<file>.md` and reference from SKILL.md.
-- Use the imperative form in instructions.
-- Explain *why*, not just *what*.
+Write the procedural body to `.planning/proto-skills/<slug>/workflow.md`.
+This is the "what the agent actually does" file — step-by-step instructions,
+guardrails, failure modes. Follow dot-agent's authoring rules: imperative
+form, explain *why* not just *what*, split deeper content into
+`references/<file>.md` and reference from here.
 
-Write to `.planning/proto-skills/<slug>/SKILL.md` and any references files under
-`.planning/proto-skills/<slug>/references/`.
+Pick the kebab-case skill name yourself, drawing from the phase or context.
+Do not ask the human. The autonomous loop exists because you make the call.
 
-Pick the kebab-case skill name yourself, drawing from the phase or context. Do
-not ask the human — the whole point of the autonomous loop is that you make
-the call.
+### 3d. Write SKILL.md (thin entry point)
 
-## Step 4 — Hand off to the validator
+Write `.planning/proto-skills/<slug>/SKILL.md` as the thin trigger doc with
+`workflow: ./workflow.md` per decision gad-191:
 
-After SKILL.md is written, the orchestrator (`gad:evolution:evolve`) runs the
-validator skill (`gad-evolution-validator`) on the new proto-skill. The
-validator writes `.planning/proto-skills/<slug>/VALIDATION.md` with advisory
-notes:
+```markdown
+---
+name: <skill-name>
+description: >-
+  <2-4 sentence trigger-friendly description. Start strong. Include the
+  "when to use" framing so it fires reliably.>
+status: proto
+workflow: ./workflow.md
+---
 
-- Files cited in SKILL.md that don't exist in the repo
+# <skill-name>
+
+<One-paragraph summary. Point the reader at workflow.md for the procedure.>
+
+**Workflow:** [./workflow.md](./workflow.md)
+
+## Provenance
+
+Drafted by `create-proto-skill` from `.planning/candidates/<slug>/
+CANDIDATE.md` on <date>. See PROVENANCE.md for source metadata.
+```
+
+Hard rule: **SKILL.md under 200 lines.** If the body is long, move it to
+workflow.md and keep SKILL.md as the trigger-only entry point.
+
+### 3e. Flip PROVENANCE.md status to `complete`
+
+After both workflow.md and SKILL.md land, update PROVENANCE.md `status:`
+from `in-progress` to `complete`. This closes the lock marker.
+
+### 3f. Commit checkpoint (if in a long batch)
+
+For batches over ~5 candidates, commit after each completed proto-skill so
+partial progress survives independent of the working tree. Commit message
+shape: `evolution: draft proto-skill <slug> from candidate`.
+
+## Step 4 — hand off to the validator
+
+After the batch finishes, the orchestrator (`gad:evolution:evolve`) runs
+`gad-evolution-validator` across the new proto-skills. The validator writes
+`.planning/proto-skills/<slug>/VALIDATION.md` with advisory notes:
+
+- Files cited in SKILL.md/workflow.md that don't exist in the repo
 - CLI commands cited that don't appear in `gad --help`
-- Convention shapes (e.g. `gad.json` examples) that don't match existing
-  files in the repo
+- Convention shapes that don't match existing files
 
-VALIDATION.md is **advisory, not blocking**. The human reviewer reads both
-SKILL.md and VALIDATION.md before promote/discard. You don't need to act on
-the validator yourself — just leave the proto-skill in place.
+VALIDATION.md is **advisory, not blocking**. The human reviewer reads
+SKILL.md + workflow.md + VALIDATION.md before promote/discard. You don't
+need to act on validator output — just leave the proto-skills in place.
 
-## Step 5 — Stop
+## Step 5 — stop
 
-Do not iterate. Do not run test prompts. Do not ask for review. The
-proto-skill stays in `.planning/proto-skills/<slug>/` until a human runs
-`gad evolution install <slug> ...`, `gad evolution promote <slug>`, or
+Do not iterate. Do not run test prompts. Do not ask for review. Proto-skills
+stay in `.planning/proto-skills/<slug>/` until a human runs
+`gad evolution install <slug>`, `gad evolution promote <slug>`, or
 `gad evolution discard <slug>` later.
 
-If the orchestrator passed you multiple candidates, loop steps 2-4 for each
-one. Otherwise stop after one.
+## Resume protocol (crash / auto-compact recovery)
+
+If you're invoked after a previous batch crashed mid-draft:
+
+1. Run `gad evolution status` — the `in-progress` count is your work queue.
+2. For each in-progress slug, read the existing PROVENANCE.md to confirm
+   it's a lock marker, not a false positive.
+3. Resume at step 3b (re-read the candidate, then 3c → 3d → 3e).
+4. Never regenerate PROVENANCE.md on resume — the original timestamp and
+   metadata are part of the audit trail.
 
 ## Failure modes
 
 - **dot-agent guide says to ask the user questions.** Don't. Make the call
-  yourself and document the decision in the skill body. We're autonomous
-  here.
-- **Tempted to run test prompts.** That's `gad-skill-creator` territory. Stop
-  at SKILL.md.
-- **CANDIDATE.md is sparse.** Read it anyway and pull from the file references
-  it points at — that's where the depth lives.
-
-## Why this skill is universal (not under `gad:evolution:`)
-
-Quick-skill is useful outside the evolution loop too — anytime you want to
-write a skill fast from clear context. Keeping it general means we don't
-duplicate the wrapper for one-off skill authoring vs evolution drafting.
+  yourself, document the decision in workflow.md. Autonomous loop.
+- **Tempted to run test prompts.** That's `gad-skill-creator` territory.
+  Stop at SKILL.md + workflow.md.
+- **CANDIDATE.md is sparse.** Read it anyway and pull from the file
+  references it points at — that's where the depth lives.
+- **Forgot to write PROVENANCE.md first.** Re-run from step 3a for that
+  slug. The checkpoint protocol is not decorative; without a lock marker,
+  crash-resume can't distinguish "never started" from "half-done".
+- **Existing `.planning/proto-skills/<slug>/` from a prior run.** Inspect
+  before overwriting: `complete` means skip, `in-progress` means resume.
 
 ## Reference
 
-- `~/.agents/skills/create-skill/SKILL.md` — dot-agent's canonical authoring guide
-- `~/.agents/skills/create-skill/references/*` — format, structure, examples, best practices
-- `gad-skill-creator` — the heavy path with full eval loop (Anthropic skill-creator)
-- `gad-evolution-evolve` — the orchestrator that calls this for each candidate
-- 2026-04-13 evolution-loop experiment finding (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)
+- `~/.agents/skills/create-skill/SKILL.md` — dot-agent authoring guide
+- `references/skill-shape.md` — uniform shape contract
+- `references/proto-skills.md` — proto-skill bundle contract
+- `gad-skill-creator` — heavy path with full eval loop
+- `gad-evolution-evolve` — orchestrator that calls this in a batch
+- Decision gad-171 — bulk batching + per-candidate checkpoints
+- Decision gad-191 — proto-skill bundle shape at `.planning/proto-skills/`
+- 2026-04-13 evolution-loop experiment finding
+  (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)

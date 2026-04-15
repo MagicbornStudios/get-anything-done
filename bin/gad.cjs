@@ -10596,6 +10596,8 @@ const evolutionDiscard = defineCommand({
   },
 });
 
+const { classifyProtoSkillDraftingState } = require('../lib/proto-skill-state.cjs');
+
 const evolutionStatus = defineCommand({
   meta: { name: 'status', description: 'Show evolution state — pending proto-skills + candidates' },
   run() {
@@ -10611,6 +10613,8 @@ const evolutionStatus = defineCommand({
       ? fs.readdirSync(evolutionsDir).filter((e) => !e.startsWith('.'))
       : [];
 
+    const drafting = classifyProtoSkillDraftingState(candidatesDir, protoSkillsDir);
+
     if (candidates.length === 0 && protoSkills.length === 0) {
       console.log('No active evolution.');
       console.log(`  ${evolutions.length} historical evolutions recorded in skills/.evolutions/`);
@@ -10618,6 +10622,22 @@ const evolutionStatus = defineCommand({
     }
     console.log(`Active evolution: ${evolutions[evolutions.length - 1] || '(no marker found)'}`);
     console.log('');
+
+    // Drafting queue — the counts create-proto-skill's checkpoint protocol relies on.
+    console.log('Drafting queue (create-proto-skill):');
+    console.log(`  pending:     ${drafting.pending.length}   (candidate without proto-skill dir)`);
+    console.log(`  in-progress: ${drafting.inProgress.length}   (PROVENANCE.md present, SKILL.md missing — resume target)`);
+    console.log(`  complete:    ${drafting.complete.length}   (proto-skill bundle drafted)`);
+    console.log('');
+
+    if (drafting.inProgress.length > 0) {
+      console.log('Resume in-progress proto-skills (previous run crashed mid-draft):');
+      for (const slug of drafting.inProgress) {
+        console.log(`  - ${protoSkillRelativePath(slug)}/   [PROVENANCE.md only]`);
+      }
+      console.log('');
+    }
+
     if (candidates.length > 0) {
       console.log(`Candidates (raw, awaiting drafting): ${candidates.length}`);
       for (const c of candidates) console.log(`  - .planning/candidates/${c}/`);
