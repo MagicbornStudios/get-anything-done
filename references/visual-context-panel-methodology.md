@@ -24,6 +24,16 @@ Dialogs render outside the `<section>` DOM but still participate in the **same**
 
 Use `devIdBandCid={null}` on `DialogContent` when a dialog must not attach to any section scan.
 
+### Workflow gap record (2026-04-15)
+
+Gap observed: dev-only `Component ID search` modal shipped without the Visual Context modal footer and without fixed modal dimensions, causing workflow inconsistency vs other dev modals.
+
+Resolution applied:
+
+1. Modal now uses fixed width/height in dev search.
+2. Modal now mounts `DevIdModalContextFooter` with a local scan root.
+3. Footer parity is now required for new dev-context modals.
+
 ## Component identity model
 
 1. Page landmark:

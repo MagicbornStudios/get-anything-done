@@ -59,6 +59,11 @@ try {
       'node:querystring', 'node:dgram', 'node:dns', 'node:tty',
       'node:cluster', 'node:fs/promises', 'node:timers/promises',
       'fs/promises',
+      '@huggingface/transformers',
+      'onnxruntime-node',
+      'onnxruntime-common',
+      'onnxruntime-web',
+      'sharp',
     ],
     // Define __dirname and __filename to work correctly in bundled output
     define: {},

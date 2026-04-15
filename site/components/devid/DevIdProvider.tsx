@@ -1,24 +1,5 @@
 "use client";
 
-/**
- * DevIdProvider — enables component ID overlay mode across the site.
- *
- * Usage:
- *   <DevIdProvider>
- *     <App />
- *   </DevIdProvider>
- *
- * Activation:
- *   - Env flag: NEXT_PUBLIC_DEV_IDS=1 (enabled-by-default in dev builds)
- *   - Keyboard: Alt+I toggles globally at runtime
- *   - Escape: closes any open section panels
- *
- * Prod builds with NEXT_PUBLIC_DEV_IDS unset: the provider is still mounted
- * but `enabled` stays false; the keyboard listener is still active so you can
- * flip it on in a deployed env via devtools if you need to. Zero visual impact
- * until toggled on.
- */
-
 import {
   createContext,
   useContext,
@@ -27,13 +8,14 @@ import {
   useCallback,
   useRef,
 } from "react";
+import { usePathname } from "next/navigation";
+import { DevIdSearchDialog } from "./DevIdSearchDialog";
 
 interface DevIdContextValue {
   enabled: boolean;
   toggle: () => void;
   highlightCid: string | null;
   setHighlightCid: (cid: string | null) => void;
-  /** Short-lived ring on a component (e.g. list row → locate + copy) without sticky highlight. */
   flashCid: string | null;
   flashComponent: (cid: string) => void;
 }
@@ -48,15 +30,15 @@ const DevIdContext = createContext<DevIdContextValue>({
 });
 
 export function DevIdProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() ?? "/";
   const [enabled, setEnabled] = useState(false);
   const [highlightCid, setHighlightCid] = useState<string | null>(null);
   const [flashCid, setFlashCid] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flashComponent = useCallback((cid: string) => {
-    if (flashTimeoutRef.current) {
-      clearTimeout(flashTimeoutRef.current);
-    }
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
     setFlashCid(cid);
     flashTimeoutRef.current = setTimeout(() => {
       setFlashCid((cur) => (cur === cid ? null : cur));
@@ -71,30 +53,50 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  // Hydrate from env + localStorage on mount
   useEffect(() => {
     const envOn = process.env.NEXT_PUBLIC_DEV_IDS === "1";
     const stored = typeof window !== "undefined" ? localStorage.getItem("devIds") : null;
-    if (stored === "1" || (stored == null && envOn)) {
-      setEnabled(true);
-    }
+    if (stored === "1" || (stored == null && envOn)) setEnabled(true);
   }, []);
+
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem("devid.pending.highlight");
+      if (!pending) return;
+      sessionStorage.removeItem("devid.pending.highlight");
+      setEnabled(true);
+      setHighlightCid(pending);
+      flashComponent(pending);
+    } catch {
+      // ignore storage issues
+    }
+  }, [pathname, flashComponent]);
 
   const toggle = useCallback(() => {
     setEnabled((prev) => {
       const next = !prev;
-      try { localStorage.setItem("devIds", next ? "1" : "0"); } catch {}
+      try {
+        localStorage.setItem("devIds", next ? "1" : "0");
+      } catch {
+        // ignore storage issues
+      }
       return next;
     });
   }, []);
 
-  // Keyboard: Alt+I toggles, Escape clears highlight
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.altKey && (e.key === "i" || e.key === "I")) {
         e.preventDefault();
         toggle();
-      } else if (e.key === "Escape") {
+        return;
+      }
+      if (e.altKey && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+        return;
+      }
+      if (e.key === "Escape") {
         setHighlightCid(null);
         setFlashCid(null);
         if (flashTimeoutRef.current) {
@@ -119,18 +121,27 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-      {enabled && <DevIdStatusBadge />}
+      {enabled ? (
+        <>
+          <DevIdStatusBadge onOpenSearch={() => setSearchOpen(true)} />
+          <DevIdSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+        </>
+      ) : null}
     </DevIdContext.Provider>
   );
 }
 
-function DevIdStatusBadge() {
+function DevIdStatusBadge({ onOpenSearch }: { onOpenSearch: () => void }) {
   return (
-    <div
-      className="fixed bottom-4 left-4 z-[9999] rounded-full border border-accent/60 bg-background/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-accent shadow-lg backdrop-blur"
-      aria-hidden
-    >
-      DevIds ON · Alt+I to toggle
+    <div className="fixed bottom-4 left-4 z-[9999] flex items-center gap-2 rounded-full border border-accent/60 bg-background/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-accent shadow-lg backdrop-blur">
+      <span aria-hidden>DevIds ON · Alt+I toggle</span>
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        className="rounded border border-border/60 bg-card/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-foreground hover:bg-card"
+      >
+        Search (Alt+K)
+      </button>
     </div>
   );
 }
@@ -138,3 +149,4 @@ function DevIdStatusBadge() {
 export function useDevId() {
   return useContext(DevIdContext);
 }
+

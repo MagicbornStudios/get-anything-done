@@ -28,6 +28,19 @@ framework, or just a different prompt. GAD is the layer that makes those runs op
 
 Primary install path: GitHub Release executable.
 
+Latest release: **https://github.com/MagicbornStudios/get-anything-done/releases/latest**
+
+Quick path — download the installer for your platform, drop it into your target repo, and run it from that repo's root:
+
+```powershell
+# Windows — from the target repo root
+curl.exe -L -o gad.exe https://github.com/MagicbornStudios/get-anything-done/releases/latest/download/gad-v1.33.0-windows-x64.exe
+.\gad.exe install self
+.\gad.exe snapshot
+```
+
+The installer is a single self-contained executable. It has no runtime dependency on Node or npm — GAD's packaged runtime extracts its support tree (skills, commands, templates) on first run. Install is scoped to the current repo; nothing is written to your home directory or system PATH.
+
 Download the current release asset for your platform from GitHub Releases:
 
 - `gad-v<version>-windows-x64.exe`
@@ -39,19 +52,19 @@ Download the current release asset for your platform from GitHub Releases:
 Portable use:
 
 ```powershell
-.\gad-v1.32.0-windows-x64.exe --help
+.\gad-v1.33.0-windows-x64.exe --help
 ```
 
 Global install:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install-gad-windows.ps1 -Artifact .\gad-v1.32.0-windows-x64.exe
+powershell -ExecutionPolicy Bypass -File .\install-gad-windows.ps1 -Artifact .\gad-v1.33.0-windows-x64.exe
 ```
 
 Or install from the packaged executable itself:
 
 ```powershell
-.\gad-v1.32.0-windows-x64.exe install self
+.\gad-v1.33.0-windows-x64.exe install self
 ```
 
 ### Linux and macOS

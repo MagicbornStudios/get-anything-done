@@ -6,6 +6,70 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.33.0] - 2026-04-14
+
+First GitHub release cut of GAD with downloadable Windows installer artifacts attached. Sprint 9 delta — 376 commits since 1.32.0 — covering the evolution/skill pipeline, site planning surfaces, eval preservation, the full `gad skill` subcommand, encounter-style snapshot hydration, and the release pipeline itself.
+
+### Added
+
+**CLI**
+- `gad skill promote <slug> --framework|--project` — unified skill promote verb (task 44-36). `--framework` gated to canonical `MagicbornStudios/get-anything-done` repo; `--project` delegates to `bin/install.js` runtime rewriters. `gad skill list [--proto|--canonical]` sibling.
+- `gad snapshot` EQUIPPED SKILLS block (task 44-35) — top-N Jaccard-ranked skills for the current sprint, proto-skills annotated with equip command. `--skills N` configurable, `--skills 0` disables. Budget ~274 tokens.
+- `gad models` subcommand + `lib/embeddings.cjs` backend — pluggable embeddings for future similarity work.
+- `gad evolution similarity|shed|install|validate|promote|status` — full proto-skill lifecycle with sprint-window obsolescence, bulk shed, and per-candidate checkpointing.
+- `gad planning hydrate` — Markdown → XML planning file migration (task 42.4-17).
+- `gad eval preserve` picks up Next.js `out/` + Vite/CRA build dirs (44-03); eval preservation is now a mandatory contract (decision gad-38).
+- `gad worktree list|show|clean|prune` — manage `.claude/worktrees/agent-*` dirs from eval runs.
+- `gad workspace add|show|sync` — multi-root planning directory management.
+- `gad self-eval` — cross-project self-evaluation pipeline feeding site data.
+- Decision IDs normalized to `GAD-D-NNN`; task IDs to `GAD-T-NN-NN`.
+
+**Site**
+- `/project-market` Unity-Asset-Store-style marketplace with species badges, generation count, human review scores, DNA chips (phase 44).
+- Live child-process bridge + SSE streaming for Launch Eval button (44-01), gated to dev.
+- Multi-root eval discovery in `build-site-data.mjs` (44-02).
+- `/projects/[...id]` catch-all route for composite species IDs.
+- Visual Context Panel — `SiteSection cid="..."` explicit-identity pattern with dev-id band scan, portal modal participation, compact overlay panels. Decisions gad-186/187.
+- PlanningTabSignal — trace-based agent-behavior analytics from preserved eval traces (44-21).
+- Human workflows tab + cross-config domain-change proto-skill (44-22, 44-26).
+- Full-surface data scoping by current project with site-wide project switcher (44-30).
+- `PageIdentified` component removed; replaced by `SiteSection cid` pattern.
+
+**Framework**
+- `DECISIONS.xml` grew from gad-159 to gad-188 — 29 new decisions covering config unification, workstream/worktree/workspace disambiguation, hydration metric, framework comparison matrix, context framework as first-class catalog axis, workflow detection via DFG + frequent subgraph mining, skills → workflows determinism, and the 44-28 installer+release+data-scoping umbrella.
+- Proto-skill permanent type (gad-167); proto-skills stage in owning project's `.planning/` and install outward via `gad skill promote --project` (gad-183).
+- Canonical framework assets integrity gate — unique public skill names, no wrapper duplication, `scripts/validate-canonical-assets.mjs` in CI (gad-180/182).
+- Workflows first-class (gad-172) — hand-authored expected graph + computed actual graph, diff as `framework_compliance` v2.
+- `lib/security.cjs` restored (35-08) with path validation, prompt-injection scanning, shell argument validation, safe JSON parsing.
+
+**Release pipeline**
+- `scripts/build-release.mjs` — Node SEA build producing `dist/release/gad-v<version>-<platform>-<arch>.exe` via `--experimental-sea-config` + postject injection. Bundled support tree of skills, commands, templates, references.
+- `scripts/publish-release.mjs` — idempotent `gh release create` + `gh release upload --clobber`.
+- `scripts/install-gad-windows.ps1` — Windows installer distributed with the release.
+- `skills/build-and-release-locally/SKILL.md` (task 44-31) — end-to-end release procedure documented for the operator: version bump → CHANGELOG → rebuild → commit → tag → publish. No CI, operator-triggered only (decision gad-188).
+
+**Eval framework**
+- Eval projects categorized by mode (greenfield/brownfield) and workflow (gad/bare/emergent) per decisions gad-39/40.
+- Canonical preservation paths `evals/<project>/v<N>/run/` + `apps/portfolio/public/evals/<project>/v<N>/` (gad-38).
+- `gad eval report` cross-project comparison; `skills/eval-bootstrap` for bootstrap agents.
+
+### Changed
+
+- Military-SITREP communication style formalized as GAD default (`references/communication-style.md`).
+- `STATE.xml next-action` hard-capped at 600 chars.
+- Snapshot compaction — trimmed STATE, capped DECISIONS, compacted ROADMAP/TASKS to fit the sprint window.
+- Inline execution preferred for small phases; subagent spawn reserved for parallel waves.
+
+### Fixed
+
+- `gad eval preserve` restores `eval_type`/`workflow` fields in `RUN.md` after 42.4-18.
+
+### Contract notes
+
+- **Eval preservation is mandatory.** Every implementation eval run MUST call `gad eval preserve <project> v<N> --from <worktree-path>` before the worktree is removed. `tests/eval-preservation.test.cjs` fails the build if skipped.
+- **Attribution is mandatory.** Every completed task must have `skill`, `agent`, `type` attributes. Feeds the self-eval pipeline and site data.
+- **No GitHub Actions.** Release is operator-triggered local build only. No `npm publish`. Distribution is GitHub Releases + executable download (decision gad-188).
+
 ## [1.32.0] - 2026-04-03
 
 ### Added — GAD Foundation (global-planning-01)
