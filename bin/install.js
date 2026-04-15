@@ -3085,6 +3085,34 @@ function listCodexSkillNames(skillsDir, prefix = 'gad-') {
     .sort();
 }
 
+function parseSkillFrontmatterWorkflow(skillFile) {
+  // Extracts the `workflow:` key from SKILL.md YAML frontmatter if present.
+  // Returns a forward-slash path relative to repo root (or relative to the
+  // SKILL.md dir for proto-skill sibling refs like `./workflow.md`), or null.
+  // Minimal parser — handles unquoted scalar + single/double-quoted values on
+  // the key line. Does not interpret multiline or list values. Per decision
+  // gad-190: `workflow:` frontmatter key replaces `skill.json.commandPath`.
+  try {
+    const raw = fs.readFileSync(skillFile, 'utf8');
+    const fmMatch = raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+    if (!fmMatch) return null;
+    const fm = fmMatch[1];
+    const keyMatch = fm.match(/^workflow:\s*(.+?)\s*$/m);
+    if (!keyMatch) return null;
+    let value = keyMatch[1].trim();
+    if (!value) return null;
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    return value.replace(/\\/g, '/');
+  } catch {
+    return null;
+  }
+}
+
 function readCanonicalSkillRecords(skillsRoot) {
   if (!fs.existsSync(skillsRoot)) return [];
   const records = [];
@@ -3099,8 +3127,19 @@ function readCanonicalSkillRecords(skillsRoot) {
       const commandFile = path.join(nextDir, 'COMMAND.md');
       const metaFile = path.join(nextDir, 'skill.json');
       if (fs.existsSync(skillFile)) {
-        let commandPath = null;
-        if (fs.existsSync(metaFile)) {
+        // Uniform-shape path (decision gad-190): prefer `workflow:` frontmatter
+        // key on SKILL.md. Legacy path: fall back to skill.json.commandPath
+        // during the phase 42.2 migration. The skill.json branch is removed
+        // after task 42.2-11 lands (bulk sidecar delete).
+        // commandPath stays semantically a BARE FILENAME (e.g. `add-backlog.md`)
+        // used as the install-target filename. When sourced from a full
+        // workflow path like `workflows/gad-add-backlog.md`, the basename is
+        // extracted to preserve downstream install semantics.
+        const workflowRef = parseSkillFrontmatterWorkflow(skillFile);
+        let commandPath = workflowRef
+          ? workflowRef.split('/').filter(Boolean).pop() || null
+          : null;
+        if (!commandPath && fs.existsSync(metaFile)) {
           try {
             const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
             if (typeof meta.commandPath === 'string' && meta.commandPath) {
@@ -3246,7 +3285,14 @@ function installCanonicalSkillsMirror(skillsRoot, targetDir, pathPrefix, runtime
 }
 
 function installCanonicalCommands(skillsRoot, destDir, pathPrefix, runtime, flatten = false, prefix = 'gad') {
-  const records = readCanonicalSkillRecords(skillsRoot).filter((record) => !isExcludedSkill(record) && record.commandFile);
+  // Post gad-190 migration: a skill is a slash-command install target when
+  // either a legacy COMMAND.md exists OR SKILL.md frontmatter declares a
+  // `workflow:` pointer (which populates commandPath during record scan).
+  // readCommandBackedSkillContent falls back from commandFile to skillFile,
+  // so SKILL.md-only records still produce sensible install payloads.
+  const records = readCanonicalSkillRecords(skillsRoot).filter(
+    (record) => !isExcludedSkill(record) && (record.commandFile || record.commandPath)
+  );
   if (records.length === 0) return 0;
   if (!flatten) {
     fs.mkdirSync(destDir, { recursive: true });
@@ -5950,6 +5996,8 @@ if (process.env.GAD_TEST_MODE) {
     installSdk,
     promptSdk,
     configureOpencodePermissions,
+    parseSkillFrontmatterWorkflow,
+    readCanonicalSkillRecords,
   };
 } else {
 
