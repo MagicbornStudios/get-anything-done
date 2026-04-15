@@ -75,6 +75,17 @@ STRICT TOOL RESTRICTIONS:
 - Read: ONLY on paths that a prior gad CLI call printed to stdout. Every Read must trace to a CLI-surfaced path.
 - NO Glob, Grep, or arbitrary file reads.
 - NO reading CLAUDE.md, AGENTS.md, or any file you weren't pointed to.
+- **READ-ONLY CLI SURFACE**: you may invoke `gad` subcommands that PRINT information
+  (list, show, find, status, snapshot, startup, tasks, decisions, phases, state, help).
+  You may NOT invoke write-side CLI verbs that mutate canonical state:
+  `gad evolution validate/install/promote/discard/shed`, `gad skill promote`,
+  `gad eval setup/run/preserve/review`, `gad task add`, `gad commit`, or any command
+  that creates/deletes/modifies files outside `.planning/debug/` scratch space. You
+  are REPORTING on discoverability, not executing the pipeline. If a task description
+  asks you to "run an evolution" or "promote a skill", you SIMULATE the steps —
+  describe what commands you would run, cite the outputs you would inspect — but
+  DO NOT actually run them. Added 2026-04-15 after Agent E in rerun 2 executed the
+  full candidate-to-canonical pipeline including promote, which required operator cleanup.
 
 TASK: {task_description}
 
