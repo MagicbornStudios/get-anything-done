@@ -83,6 +83,18 @@ Print the pending list and exit non-zero if any exist.
       proto-skills". The next `gad evolution evolve` cannot run until
       that task is closed.
     </step>
+
+    <step id="9" name="run-proto-skill-battery" skill="gad-proto-skill-battery">
+      Automatic trailing hook (task 42.2-33). Run the proto-skill
+      discoverability + supersession battery for the current project's
+      proto-skills. Produces fleet metrics + shed candidates in
+      .planning/notes/proto-skill-battery-&lt;date&gt;.md and
+      site/data/proto-skill-findings.json. Never mutates canonical state;
+      the operator reviews shed candidates and decides whether to
+      discard manually. This is the natural feedback loop: every
+      evolution cycle produces fresh proto-skills and measures whether
+      they're still earning their place against the existing fleet.
+    </step>
   </else>
 </else>
 
