@@ -47,4 +47,4 @@ export function catalogSkillFilePaths(skillId: string, sourcePath: string): stri
 }
 
 export const SKILL_PACKAGE_REFERENCE_BLURB =
-  "Left: typical GAD folder shape — click a file. Right: catalog text for bundled paths; reference-only paths show a short notice.";
+  "Select a file in the tree to inspect it. Bundled paths show catalog content; others show a short notice.";

@@ -360,21 +360,28 @@ export function ProjectSkillsScopeExplorer({
                               </DialogDescription>
                             </DialogHeader>
                           </Identified>
-                          <div className="flex min-h-0 min-h-[min(52vh,560px)] flex-1 flex-col gap-3 overflow-hidden px-5 pb-5 md:flex-row md:gap-4">
+                          <div className="flex min-h-0 min-h-[min(52vh,560px)] flex-1 flex-col gap-4 overflow-hidden px-5 pb-5 md:flex-row md:gap-5">
                             <Identified
                               as="Modal — package file tree"
                               cid="project-skills-scope-modal-file-tree"
                               depth={2}
-                              className="flex min-h-0 w-full min-w-0 shrink-0 flex-col gap-2 rounded-lg border border-border/50 bg-muted/10 p-3 md:w-[min(42%,22rem)]"
+                              className="flex min-h-0 w-full min-w-0 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-background/95 via-card/60 to-muted/25 shadow-md ring-1 ring-border/15 md:w-[min(44%,24rem)]"
                               tag="section"
                             >
-                              <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                Package files
-                              </h4>
-                              <p className="text-[11px] text-muted-foreground">
-                                GAD-style tree — click a file; bundled paths match the catalog preview on the right.
-                              </p>
-                              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                              <div className="shrink-0 space-y-1 border-b border-border/30 bg-black/[0.12] px-3 py-2.5">
+                                <h4 className="text-xs font-semibold tracking-tight text-foreground">Package files</h4>
+                                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] leading-snug text-muted-foreground">
+                                  <span className="min-w-0">This skill’s folder shape and bundled paths.</span>
+                                  <Link
+                                    href="/skills"
+                                    className="inline-flex shrink-0 items-center gap-1 font-medium text-accent/95 underline-offset-4 hover:underline"
+                                  >
+                                    Agent skills reference
+                                    <ExternalLink className="size-3 opacity-80" aria-hidden />
+                                  </Link>
+                                </div>
+                              </div>
+                              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-3 pt-2">
                                 <SkillPackageFileTreeInteractive
                                   skillId={selected.skillId}
                                   sourcePath={selected.sourcePath}
@@ -388,19 +395,21 @@ export function ProjectSkillsScopeExplorer({
                               as="Modal — file preview"
                               cid="project-skills-scope-modal-file-preview"
                               depth={2}
-                              className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-lg border border-border/50 bg-muted/10 p-3"
+                              className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/30 bg-gradient-to-br from-background/95 via-card/50 to-muted/20 shadow-md ring-1 ring-border/15"
                               tag="section"
                             >
-                              <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                Preview
-                              </h4>
-                              <p className="text-[11px] text-muted-foreground">
-                                Same idea as the skill body panel — pick a file in the tree to read it here (bundled
-                                files show catalog text).
-                              </p>
-                              <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-border/40 bg-background/40">
+                              <div className="shrink-0 border-b border-border/30 bg-black/[0.12] px-3 py-2.5">
+                                <h4 className="text-xs font-semibold tracking-tight text-foreground">Preview</h4>
+                                <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
+                                  Bundled selection shows catalog source; other paths show a short note.
+                                </p>
+                              </div>
+                              <div className="min-h-0 flex-1 overflow-hidden p-2">
                                 <ReadonlyCodeMirror
                                   key={`${selected.skillId}-${effectiveModalFilePath}`}
+                                  className="border-border/40 bg-zinc-950/35"
+                                  minVisibleLines={20}
+                                  maxVisibleLines={48}
                                   value={skillFileModalPreview(
                                     effectiveModalFilePath,
                                     selected.skillId,

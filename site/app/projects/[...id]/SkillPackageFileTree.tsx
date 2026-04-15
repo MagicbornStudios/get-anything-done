@@ -73,9 +73,11 @@ function FileTreeRows({
           title={node.note}
           onClick={() => onSelectFile(fullPath)}
           className={cn(
-            "flex w-full items-start gap-1.5 rounded px-1 py-0.5 text-left font-mono transition-colors",
+            "flex w-full items-start gap-1.5 rounded-md border border-transparent px-1 py-0.5 text-left font-mono transition-colors",
             compact ? "text-[10px] leading-snug" : "text-[11px] leading-snug",
-            active ? "bg-accent/15 ring-1 ring-accent/40" : "hover:bg-muted/50",
+            active
+              ? "border-accent/35 bg-accent/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+              : "hover:border-border/30 hover:bg-white/[0.04]",
           )}
           style={{ paddingLeft: pad }}
         >
@@ -104,13 +106,13 @@ function FileTreeRows({
     <div className="space-y-0.5">
       <div
         className={cn(
-          "flex items-start gap-1.5 rounded px-1 py-0.5 font-mono text-muted-foreground",
+          "flex items-start gap-1.5 rounded-md px-1 py-0.5 font-mono text-muted-foreground/95",
           compact ? "text-[10px] leading-snug" : "text-[11px] leading-snug",
         )}
         style={{ paddingLeft: pad }}
         title={node.note}
       >
-        <Folder className="mt-0.5 size-3 shrink-0 text-amber-500/85" aria-hidden />
+        <Folder className="mt-0.5 size-3 shrink-0 text-amber-400/75" aria-hidden />
         <span className="min-w-0 break-all">{node.name}</span>
       </div>
       {node.children?.map((ch) => (
@@ -210,7 +212,12 @@ export function SkillPackageFileTreeInteractive({
   const actual = new Set(catalogSkillFilePaths(skillId, sourcePath).map(normalizePath));
   const tree = canonicalSkillPackageTree(skillId);
   return (
-    <div className={cn("rounded-md border border-border/50 bg-background/30 p-2", className)}>
+    <div
+      className={cn(
+        "rounded-lg border border-white/[0.06] bg-zinc-950/45 p-2 ring-1 ring-inset ring-white/[0.03]",
+        className,
+      )}
+    >
       <FileTreeRows
         node={tree}
         basePath=""

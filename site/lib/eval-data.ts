@@ -65,7 +65,16 @@ export function runKey(r: { project: string; version: string }) {
   return `${r.project}/${r.version}`;
 }
 
-export function playableUrl(r: { project: string; version: string }): string | null {
+/** Resolves `/playable/...` URL; phase-43 species rows use `project/species/version` keys in PLAYABLE_INDEX. */
+export function playableUrl(r: {
+  project: string;
+  version: string;
+  species?: string | null;
+  id?: string;
+}): string | null {
+  if (r.id && PLAYABLE_INDEX[r.id]) return PLAYABLE_INDEX[r.id]!;
+  const speciesKey = r.species ? `${r.project}/${r.species}/${r.version}` : null;
+  if (speciesKey && PLAYABLE_INDEX[speciesKey]) return PLAYABLE_INDEX[speciesKey]!;
   return PLAYABLE_INDEX[runKey(r)] ?? null;
 }
 

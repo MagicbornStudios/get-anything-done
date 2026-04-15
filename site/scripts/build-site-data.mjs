@@ -50,6 +50,18 @@ function renderMarkdown(src) {
   }
 }
 
+/** Agent frontmatter `tools` may be a string, YAML list, or (buggy) `{}` — catalog types expect `string | null`. */
+function normalizeAgentToolsField(value) {
+  if (value == null) return null;
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map((x) => String(x)).join(", ");
+  if (typeof value === "object") {
+    if (Object.keys(value).length === 0) return null;
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -914,10 +926,13 @@ function scanCatalog() {
       const src = fs.readFileSync(file, "utf8");
       const { data, body } = parseFrontmatter(src);
       const declaredOrigin = data.origin || origin;
+      const iconPath = path.join(SITE_ROOT, "public", "skills", `${id}.png`);
+      const imagePath = exists(iconPath) ? `/skills/${id}.png` : null;
       return {
         id,
         name: data.name || id,
         description: data.description || firstParagraph(body, 280),
+        imagePath,
         origin: declaredOrigin,
         authoredBy: data["authored-by"] || null,
         authoredOn: data["authored-on"] || null,
@@ -975,7 +990,7 @@ function scanCatalog() {
         id,
         name: data.name || id,
         description: data.description || firstParagraph(body, 280),
-        tools: data.tools || null,
+        tools: normalizeAgentToolsField(data.tools),
         color: data.color || null,
         file: `vendor/get-anything-done/agents/${name}`,
         bodyHtml: renderMarkdown(body),
@@ -1997,6 +2012,7 @@ export interface CatalogSkill {
   id: string;
   name: string;
   description: string;
+  imagePath?: string | null;
   origin?: "human-authored" | "emergent" | "inherited" | "official" | "internal" | null;
   authoredBy?: string | null;
   authoredOn?: string | null;

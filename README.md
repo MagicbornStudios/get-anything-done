@@ -125,6 +125,26 @@ gad eval verify
 gad eval report
 ```
 
+## Optional OpenAI Image Generation (Disabled by Default)
+
+Skill image generation is opt-in and only runs when you explicitly call:
+
+```bash
+gad evolution images generate
+```
+
+It requires an OpenAI API key. Copy `.env.example` to `.env` and set:
+
+```bash
+OPENAI_API_KEY=your_key_here
+```
+
+Inventory/report-only mode does not call OpenAI:
+
+```bash
+gad evolution images status
+```
+
 If snapshot output or SDK skills reference alias paths like `@references/...`,
 `@workflows/...`, `@templates/...`, `@agents/...`, or `@hooks/...`, resolve them from the
 framework’s canonical SDK asset tree:
