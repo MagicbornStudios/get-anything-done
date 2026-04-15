@@ -1,5 +1,12 @@
 # Snapshot rehydration cost — experiment design
 
+> **SUPERSEDED 2026-04-15 by decision gad-195.** The operator confirmed H2
+> without needing the experiment run — repeated rehydration IS wasteful and
+> the session-scoped static/active split is the correct architecture. This
+> doc remains as history for the design reasoning and the dependent-variable
+> catalog, but the experiment itself is cancelled. See `gad snapshot --mode=active`
+> (task 42.2-29) for the shipped implementation of the insight.
+
 **Date:** 2026-04-15
 **Phase:** 42.2 evolution turn
 **Prompted by:** operator — "i am concerned about the rehydration of the snapshots. not

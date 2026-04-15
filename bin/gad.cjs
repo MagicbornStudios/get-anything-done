@@ -6385,6 +6385,7 @@ const snapshotV2Cmd = defineCommand({
     full: { type: 'boolean', description: 'Full dump (no sprint filtering)', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
     skills: { type: 'string', description: 'Number of equipped skills to surface (44-35). 0 disables. Default: 5.', default: '5' },
+    mode: { type: 'string', description: 'full (default) | active — "active" emits ONLY STATE.xml next-action + current phase + open sprint tasks (skips static catalog, references, decisions). Decision gad-195: static info loaded once at session start, active info re-pullable cheap without context waste.', default: 'full' },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
@@ -6962,17 +6963,27 @@ const snapshotV2Cmd = defineCommand({
     }
     const doneCount = allTasks.length - openTasks.length;
     sections.push({ title: `TASKS (${openTasks.length} open, ${doneCount} done)`, content: tasksSection.trim() || '(no open tasks)' });
-    const sprintDecisionsSection = buildDecisionsSection();
-    if (sprintDecisionsSection) sections.push(sprintDecisionsSection);
-    const sprintFileRefsSection = buildFileRefsSection();
-    if (sprintFileRefsSection) sections.push(sprintFileRefsSection);
-    const sprintConventionsSection = buildConventionsSection();
-    if (sprintConventionsSection) sections.push(sprintConventionsSection);
-    const skillsLimit = Number.parseInt(String(args.skills || '5'), 10) || 0;
-    const sprintEquippedSkillsSection = buildEquippedSkillsSection(skillsLimit);
-    if (sprintEquippedSkillsSection) sections.push(sprintEquippedSkillsSection);
-    const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
-    if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
+
+    // Decision gad-195: --mode=active emits ONLY the changing state —
+    // STATE.xml (next-action), ROADMAP (sprint phases), TASKS (open sprint).
+    // Static sections (decisions, file refs, conventions, equipped skills,
+    // docs-map) are loaded once at session start via --mode=full (default)
+    // and NOT re-emitted mid-session. This is the session-scoped snapshot
+    // contract that prevents redundant context re-loading.
+    const isActiveMode = String(args.mode || 'full').toLowerCase() === 'active';
+    if (!isActiveMode) {
+      const sprintDecisionsSection = buildDecisionsSection();
+      if (sprintDecisionsSection) sections.push(sprintDecisionsSection);
+      const sprintFileRefsSection = buildFileRefsSection();
+      if (sprintFileRefsSection) sections.push(sprintFileRefsSection);
+      const sprintConventionsSection = buildConventionsSection();
+      if (sprintConventionsSection) sections.push(sprintConventionsSection);
+      const skillsLimit = Number.parseInt(String(args.skills || '5'), 10) || 0;
+      const sprintEquippedSkillsSection = buildEquippedSkillsSection(skillsLimit);
+      if (sprintEquippedSkillsSection) sections.push(sprintEquippedSkillsSection);
+      const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
+      if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
+    }
 
     if (args.json || shouldUseJson()) {
       console.log(JSON.stringify({
