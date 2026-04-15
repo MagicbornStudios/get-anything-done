@@ -4,6 +4,7 @@ description: Show cross-project eval comparison and findings
 allowed-tools:
   - Read
   - Bash
+workflow: workflows/eval-report.md
 ---
 
 <objective>

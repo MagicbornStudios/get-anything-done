@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - Bash
   - Glob
+workflow: workflows/docs-compile.md
 ---
 
 <objective>

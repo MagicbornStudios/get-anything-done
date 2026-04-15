@@ -8,6 +8,7 @@ allowed-tools:
   - Bash
   - Grep
   - Glob
+workflow: workflows/manuscript.md
 ---
 
 <objective>

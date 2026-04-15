@@ -3116,6 +3116,10 @@ function parseSkillFrontmatterWorkflow(skillFile) {
 function readCanonicalSkillRecords(skillsRoot) {
   if (!fs.existsSync(skillsRoot)) return [];
   const records = [];
+  // skillsRoot is typically <repo>/skills/. Resolve workflow: frontmatter refs
+  // relative to the repo root (i.e. skillsRoot/..) for canonical refs, or
+  // relative to the SKILL.md dir for sibling refs (`./workflow.md`).
+  const repoRoot = path.resolve(skillsRoot, '..');
 
   function recurse(currentDir, relPath = '') {
     const entries = fs.readdirSync(currentDir, { withFileTypes: true });
@@ -3135,10 +3139,21 @@ function readCanonicalSkillRecords(skillsRoot) {
         // used as the install-target filename. When sourced from a full
         // workflow path like `workflows/gad-add-backlog.md`, the basename is
         // extracted to preserve downstream install semantics.
+        // workflowFile is the RESOLVED absolute path to the workflow body,
+        // used by readCommandBackedSkillContent to source install payload
+        // when no COMMAND.md is present.
         const workflowRef = parseSkillFrontmatterWorkflow(skillFile);
         let commandPath = workflowRef
           ? workflowRef.split('/').filter(Boolean).pop() || null
           : null;
+        let workflowFile = null;
+        if (workflowRef) {
+          const isSibling = workflowRef.startsWith('./') || workflowRef.startsWith('../');
+          const resolved = isSibling
+            ? path.resolve(nextDir, workflowRef)
+            : path.resolve(repoRoot, workflowRef);
+          if (fs.existsSync(resolved)) workflowFile = resolved;
+        }
         if (!commandPath && fs.existsSync(metaFile)) {
           try {
             const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
@@ -3154,6 +3169,8 @@ function readCanonicalSkillRecords(skillsRoot) {
           skillFile,
           commandFile: fs.existsSync(commandFile) ? commandFile : null,
           commandPath,
+          workflowRef,
+          workflowFile,
         });
       }
       recurse(nextDir, nextRel);
@@ -3197,7 +3214,15 @@ function removeInstalledSkillDirs(skillsDir, skillRecords) {
 }
 
 function readCommandBackedSkillContent(record) {
-  return fs.readFileSync(record.commandFile || record.skillFile, 'utf8');
+  // Decision gad-190 body-source precedence:
+  //   1. COMMAND.md (legacy — still honored during transition)
+  //   2. workflowFile (resolved `workflow:` frontmatter pointer)
+  //   3. SKILL.md fallback
+  // COMMAND.md precedence preserves existing install behavior. Once all
+  // skills migrate off COMMAND.md, the workflowFile branch becomes primary.
+  if (record.commandFile) return fs.readFileSync(record.commandFile, 'utf8');
+  if (record.workflowFile) return fs.readFileSync(record.workflowFile, 'utf8');
+  return fs.readFileSync(record.skillFile, 'utf8');
 }
 
 function applyRuntimePathTransforms(content, pathPrefix, runtime) {

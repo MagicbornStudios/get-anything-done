@@ -9,6 +9,7 @@ allowed-tools:
   - Grep
   - Glob
   - Agent
+workflow: workflows/reverse-engineer.md
 ---
 
 <objective>

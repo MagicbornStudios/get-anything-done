@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - AskUserQuestion
   - SlashCommand
+workflow: workflows/resume-work.md
 ---
 
 <objective>

@@ -7,6 +7,7 @@ allowed-tools:
   - Bash
   - Grep
   - Glob
+workflow: workflows/auto-conventions.md
 ---
 
 <objective>

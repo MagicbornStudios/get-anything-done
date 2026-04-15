@@ -15,6 +15,7 @@ allowed-tools:
   - Write
   - Bash
   - Agent
+workflow: workflows/eval-spawn.md
 ---
 
 <objective>

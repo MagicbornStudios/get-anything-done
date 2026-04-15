@@ -4,6 +4,7 @@ description: List available eval projects and their run history
 allowed-tools:
   - Read
   - Bash
+workflow: workflows/eval-list.md
 ---
 
 <objective>

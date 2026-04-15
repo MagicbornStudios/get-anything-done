@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - Bash
   - Glob
+workflow: workflows/migrate-schema.md
 ---
 
 <objective>

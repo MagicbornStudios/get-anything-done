@@ -5,6 +5,7 @@ argument-hint: <profile (quality|balanced|budget|inherit)>
 model: haiku
 allowed-tools:
   - Bash
+workflow: workflows/set-profile.md
 ---
 
 Show the following output to the user verbatim, with no extra commentary:

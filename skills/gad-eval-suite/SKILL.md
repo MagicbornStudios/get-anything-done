@@ -6,6 +6,7 @@ allowed-tools:
   - Write
   - Bash
   - Agent
+workflow: workflows/eval-suite.md
 ---
 
 <objective>

@@ -4,6 +4,7 @@ description: Show all registered planning roots and their current status
 allowed-tools:
   - Read
   - Bash
+workflow: workflows/workspace-show.md
 ---
 
 <objective>

@@ -2,6 +2,7 @@
 name: gad:reapply-patches
 description: Reapply local modifications after a GAD update
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
+workflow: workflows/reapply-patches.md
 ---
 
 <purpose>

@@ -5,6 +5,7 @@ allowed-tools:
   - Read
   - Write
   - Bash
+workflow: workflows/review-backlog.md
 ---
 
 <objective>

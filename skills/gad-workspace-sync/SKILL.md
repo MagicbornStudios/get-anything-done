@@ -6,6 +6,7 @@ allowed-tools:
   - Write
   - Bash
   - Glob
+workflow: workflows/workspace-sync.md
 ---
 
 <objective>

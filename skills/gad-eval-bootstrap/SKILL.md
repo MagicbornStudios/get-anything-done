@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - Bash
   - Agent
+workflow: workflows/eval-bootstrap.md
 ---
 
 <objective>
