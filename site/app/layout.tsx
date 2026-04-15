@@ -4,6 +4,7 @@ import { ClientDebugShell } from "@/components/debug/ClientDebugShell";
 import { DevIdProvider } from "@/components/devid/DevIdProvider";
 import { KeyboardShortcutsProvider } from "@/components/devid/KeyboardShortcuts";
 import { GlobalScrollbarBehavior } from "@/components/layout/GlobalScrollbarBehavior";
+import { ProjectProvider } from "@/components/ProjectContext";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <GlobalScrollbarBehavior />
         <DevIdProvider>
-          <ClientDebugShell>{children}</ClientDebugShell>
+          <ProjectProvider>
+            <ClientDebugShell>{children}</ClientDebugShell>
+          </ProjectProvider>
           <KeyboardShortcutsProvider />
           <Toaster />
         </DevIdProvider>

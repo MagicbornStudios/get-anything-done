@@ -1,6 +1,10 @@
 import { Identified } from "@/components/devid/Identified";
 import { MarketingShell, SiteSection } from "@/components/site";
 import { FINDINGS } from "@/lib/catalog.generated";
+import {
+  DEFAULT_PROJECT_ID,
+  REGISTERED_PROJECTS,
+} from "@/lib/project-config";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata = {
@@ -9,8 +13,24 @@ export const metadata = {
     "Experiment writeups and framework-level lessons from the GAD evolution loop. Each finding documents what we tried, what we learned, and what changed in the architecture as a result.",
 };
 
-export default function FindingsPage() {
-  const sorted = [...FINDINGS].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+// Task 44-30: show findings whose `projects` array includes the current
+// project, PLUS framework-level findings (empty `projects`) which are
+// global. Absent/invalid projectid falls back to DEFAULT_PROJECT_ID.
+export default function FindingsPage({
+  searchParams,
+}: {
+  searchParams?: { projectid?: string };
+}) {
+  const paramId = searchParams?.projectid;
+  const currentProject =
+    paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
+      ? paramId
+      : DEFAULT_PROJECT_ID;
+  const scoped = FINDINGS.filter((f) => {
+    if (!f.projects || f.projects.length === 0) return true;
+    return f.projects.includes(currentProject);
+  });
+  const sorted = [...scoped].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 
   return (
     <MarketingShell>

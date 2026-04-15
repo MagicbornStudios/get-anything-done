@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { Identified } from "@/components/devid/Identified";
 import { MarketingShell, SiteSection } from "@/components/site";
 import { FINDINGS } from "@/lib/catalog.generated";
+import {
+  DEFAULT_PROJECT_ID,
+  REGISTERED_PROJECTS,
+} from "@/lib/project-config";
 import { Badge } from "@/components/ui/badge";
 
 export function generateStaticParams() {
@@ -18,9 +22,27 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   };
 }
 
-export default function FindingDetailPage({ params }: { params: { slug: string } }) {
+export default function FindingDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams?: { projectid?: string };
+}) {
   const finding = FINDINGS.find((f) => f.slug === params.slug);
   if (!finding) notFound();
+
+  // Task 44-30: soft scoping — do NOT 404 on project mismatch; just surface
+  // a banner so the user knows the finding is tagged for a different
+  // project. Framework-level findings (empty projects) show everywhere.
+  const paramId = searchParams?.projectid;
+  const currentProject =
+    paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
+      ? paramId
+      : DEFAULT_PROJECT_ID;
+  const tagged = finding.projects ?? [];
+  const outOfScope =
+    tagged.length > 0 && !tagged.includes(currentProject);
 
   return (
     <MarketingShell>
@@ -28,6 +50,18 @@ export default function FindingDetailPage({ params }: { params: { slug: string }
         <Identified as="FindingDetailBreadcrumb" tag="nav" className="text-xs text-muted-foreground">
           <Link href="/findings" className="hover:text-foreground">← All findings</Link>
         </Identified>
+
+        {outOfScope && (
+          <Identified
+            as="FindingDetailScopeBanner"
+            className="mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-200"
+          >
+            This finding is tagged for project{" "}
+            <span className="font-mono">{tagged.join(", ")}</span>. You are
+            viewing the site as project{" "}
+            <span className="font-mono">{currentProject}</span>.
+          </Identified>
+        )}
 
         <Identified as={`FindingDetail-${finding.slug}`} className="contents">
           <div className="mt-4 flex flex-wrap items-center gap-2">

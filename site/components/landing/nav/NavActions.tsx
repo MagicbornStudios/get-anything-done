@@ -3,6 +3,7 @@ import { Identified } from "@/components/devid/Identified";
 import { GlobalSearch } from "@/components/search/global-search/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { NAV_GITHUB_HREF } from "@/components/landing/nav/nav-shared";
+import { NavProjectPicker } from "@/components/landing/nav/NavProjectPicker";
 
 type Props = {
   mobileOpen: boolean;
@@ -12,6 +13,7 @@ type Props = {
 export function NavActions({ mobileOpen, onToggleMobile }: Props) {
   return (
     <div className="flex shrink-0 items-center gap-2">
+      <NavProjectPicker />
       <Identified as="NavGlobalSearch" className="hidden md:block">
         <GlobalSearch />
       </Identified>

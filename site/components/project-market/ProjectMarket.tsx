@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { ProjectMarketHeader } from "@/components/project-market/ProjectMarketHeader";
 import { ProjectFilterBar } from "@/components/project-market/ProjectFilterBar";
 import { ProjectMarketGrid } from "@/components/project-market/ProjectMarketGrid";
@@ -8,11 +9,17 @@ import { useProjectMarket } from "@/components/project-market/use-project-market
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
 
-export default function ProjectMarket() {
+interface ProjectMarketProps {
+  /** Task 44-30: when non-null, collapse the marketplace to only this
+   * project's species rows / runs. Null = full marketplace. */
+  scopeProject?: string | null;
+}
+
+export default function ProjectMarket({ scopeProject = null }: ProjectMarketProps = {}) {
   const {
-    featuredProjects,
-    otherProjects,
-    filteredRuns,
+    featuredProjects: allFeatured,
+    otherProjects: allOther,
+    filteredRuns: allFilteredRuns,
     allPlayableRuns,
     selected,
     hasActiveFilters,
@@ -32,6 +39,22 @@ export default function ProjectMarket() {
     setSelectedRunKey,
     clearAllFilters,
   } = useProjectMarket();
+
+  // Task 44-30: collapse to a single project when scopeProject is set.
+  // EVAL_PROJECTS rows carry an optional `project` field (composite id is
+  // project/species). When scoped, only keep rows matching that project.
+  const featuredProjects = useMemo(
+    () => (scopeProject ? allFeatured.filter((p) => p.project === scopeProject) : allFeatured),
+    [allFeatured, scopeProject],
+  );
+  const otherProjects = useMemo(
+    () => (scopeProject ? allOther.filter((p) => p.project === scopeProject) : allOther),
+    [allOther, scopeProject],
+  );
+  const filteredRuns = useMemo(
+    () => (scopeProject ? allFilteredRuns.filter((r) => r.project === scopeProject) : allFilteredRuns),
+    [allFilteredRuns, scopeProject],
+  );
 
   return (
     <>
