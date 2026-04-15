@@ -10065,18 +10065,31 @@ const skillList = defineCommand({
   args: {
     proto: { type: 'boolean', description: 'List only pending proto-skills' },
     canonical: { type: 'boolean', description: 'List only canonical skills' },
+    paths: { type: 'boolean', description: 'Print absolute SKILL.md path and resolved workflow path for each skill (decision gad-194, task 42.2-20)' },
   },
   run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
     const { protoSkillsDir, finalSkillsDir } = evolutionPaths(repoRoot);
     const showCanonical = !args.proto;
     const showProto = !args.canonical;
+    const showPaths = Boolean(args.paths);
     if (showCanonical) {
       const canonical = listSkillDirs(finalSkillsDir);
       console.log(`Canonical skills (skills/): ${canonical.length}`);
       for (const s of canonical) {
         const fm = readSkillFrontmatter(s.skillFile);
         console.log(`  ${s.id}${fm.name && fm.name !== s.id ? `  (${fm.name})` : ''}`);
+        if (showPaths) {
+          console.log(`      SKILL.md: ${s.skillFile}`);
+          if (fm.workflow) {
+            const isSibling = fm.workflow.startsWith('./') || fm.workflow.startsWith('../');
+            const resolved = isSibling
+              ? path.resolve(s.dir, fm.workflow)
+              : path.resolve(repoRoot, fm.workflow);
+            const exists = fs.existsSync(resolved);
+            console.log(`      workflow: ${resolved}${exists ? '' : ' (MISSING)'}`);
+          }
+        }
       }
       console.log('');
     }
@@ -10086,6 +10099,17 @@ const skillList = defineCommand({
       for (const s of proto) {
         const fm = readSkillFrontmatter(s.skillFile);
         console.log(`  ${s.id}${fm.name && fm.name !== s.id ? `  (${fm.name})` : ''}`);
+        if (showPaths) {
+          console.log(`      SKILL.md: ${s.skillFile}`);
+          if (fm.workflow) {
+            const isSibling = fm.workflow.startsWith('./') || fm.workflow.startsWith('../');
+            const resolved = isSibling
+              ? path.resolve(s.dir, fm.workflow)
+              : path.resolve(repoRoot, fm.workflow);
+            const exists = fs.existsSync(resolved);
+            console.log(`      workflow: ${resolved}${exists ? '' : ' (MISSING)'}`);
+          }
+        }
       }
       if (proto.length > 0) {
         console.log('');
@@ -10097,10 +10121,79 @@ const skillList = defineCommand({
   },
 });
 
+const skillShow = defineCommand({
+  meta: { name: 'show', description: 'Show a canonical or proto-skill: resolved paths, frontmatter, and (optionally) SKILL.md + workflow body. Decision gad-194, task 42.2-20.' },
+  args: {
+    id: { type: 'positional', description: 'skill id (e.g. gad-plan-phase) or slug', required: true },
+    body: { type: 'boolean', description: 'Also print SKILL.md and workflow file body', default: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { protoSkillsDir, finalSkillsDir } = evolutionPaths(repoRoot);
+
+    // Search canonical first, then proto. Accept exact match or public-name match.
+    const roots = [
+      { label: 'canonical', dir: finalSkillsDir },
+      { label: 'proto', dir: protoSkillsDir },
+    ];
+    let hit = null;
+    for (const root of roots) {
+      const entries = listSkillDirs(root.dir);
+      for (const s of entries) {
+        const fm = readSkillFrontmatter(s.skillFile);
+        if (s.id === args.id || fm.name === args.id || fm.name === `gad:${args.id.replace(/^gad-/, '')}`) {
+          hit = { ...s, fm, origin: root.label };
+          break;
+        }
+      }
+      if (hit) break;
+    }
+
+    if (!hit) {
+      console.error(`Skill not found: ${args.id}`);
+      console.error(`  Try:  gad skill list --paths   # full inventory with paths`);
+      process.exit(1);
+    }
+
+    console.log(`Skill: ${hit.id}  [${hit.origin}]`);
+    console.log(`  public name: ${hit.fm.name || '(none)'}`);
+    console.log(`  description: ${(hit.fm.description || '').replace(/\s+/g, ' ').trim()}`);
+    console.log(`  SKILL.md:    ${hit.skillFile}`);
+    if (hit.fm.workflow) {
+      const isSibling = hit.fm.workflow.startsWith('./') || hit.fm.workflow.startsWith('../');
+      const resolved = isSibling
+        ? path.resolve(hit.dir, hit.fm.workflow)
+        : path.resolve(repoRoot, hit.fm.workflow);
+      const exists = fs.existsSync(resolved);
+      console.log(`  workflow:    ${resolved}${exists ? '' : ' (MISSING)'}`);
+    } else {
+      console.log(`  workflow:    (none — inline body in SKILL.md)`);
+    }
+
+    if (args.body) {
+      console.log('');
+      console.log('-- SKILL.md ---------------------------------------------------');
+      console.log(fs.readFileSync(hit.skillFile, 'utf8'));
+      if (hit.fm.workflow) {
+        const isSibling = hit.fm.workflow.startsWith('./') || hit.fm.workflow.startsWith('../');
+        const resolved = isSibling
+          ? path.resolve(hit.dir, hit.fm.workflow)
+          : path.resolve(repoRoot, hit.fm.workflow);
+        if (fs.existsSync(resolved)) {
+          console.log('');
+          console.log(`-- workflow (${path.relative(repoRoot, resolved)}) --------`);
+          console.log(fs.readFileSync(resolved, 'utf8'));
+        }
+      }
+    }
+  },
+});
+
 const skillCmd = defineCommand({
-  meta: { name: 'skill', description: 'Skill ops — list, promote (--framework canonical / --project consumer runtime). See decision gad-188.' },
+  meta: { name: 'skill', description: 'Skill ops — list, show, promote (--framework canonical / --project consumer runtime). See decision gad-188.' },
   subCommands: {
     list: skillList,
+    show: skillShow,
     promote: skillPromote,
   },
 });

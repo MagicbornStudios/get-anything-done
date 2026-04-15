@@ -8,7 +8,7 @@ authored directly by a human using `gad-skill-creator`. The label stays with the
 for its entire life. It is not removed after validation or promotion.
 
 This is a deliberate departure from the earlier framing that treated proto-skills as a
-short-lived intermediate between `skills/candidates/` and `skills/`. That framing
+short-lived intermediate between `.planning/candidates/` and `skills/`. That framing
 collapsed once we realized that provenance *is* a useful ongoing signal: a proto-skill's
 lineage (which candidate, which phase, which pressure event) is how we evaluate whether
 the evolution loop is producing skills worth keeping.
@@ -21,7 +21,7 @@ pressure → candidate → proto-skill → proto-skill[validated] → proto-skil
 
 | Stage | Directory | What it is |
 |---|---|---|
-| candidate | `skills/candidates/<slug>/CANDIDATE.md` | Raw phase dump with pressure metrics and suggested intent |
+| candidate | `.planning/candidates/<slug>/CANDIDATE.md` | Raw phase dump with pressure metrics and suggested intent |
 | proto-skill (draft) | `.planning/proto-skills/<slug>/SKILL.md` | A staged proto-skill in dot-agent format, not yet validated or installed |
 | proto-skill (validated) | `.planning/proto-skills/<slug>/SKILL.md` + `VALIDATION.md` | Advisory validator has checked file refs, CLI commands, and shape |
 | proto-skill (promoted) | `skills/<name>/SKILL.md` (with proto-skill provenance) | Skill is live and distributed — still carries its proto-skill origin in metadata |
@@ -51,7 +51,7 @@ non-GAD use cases.
 argument, so the skill can be batched across many candidates without context pressure:
 
 ```
-skills/candidates/<slug>/
+.planning/candidates/<slug>/
   CANDIDATE.md          # pressure dump + suggested intent (written by compute-self-eval)
   CONTEXT.md            # optional — additional context the candidate curator adds
   REFERENCES.md         # optional — file refs + CLI commands the skill should cite

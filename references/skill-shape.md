@@ -38,6 +38,28 @@ Rules:
    is reserved for **meta-loops** (`gad-loop`, `gad-decide`, `gad-evolution`,
    etc.) and is outside this pattern. The two dirs are different concepts.
 
+### 1a. `workflows/` vs `.planning/workflows/` — not duplicates
+
+Agents repeatedly confuse these two directories because some file names
+overlap (e.g. both `workflows/gad-debug.md` and `.planning/workflows/gad-debug.md`
+may exist). They are **different artifacts with different purposes**:
+
+| Directory | Purpose | Authored how | Discovered via |
+|---|---|---|---|
+| `workflows/<name>.md` | **Skill-workflow spec** — the procedural body a SKILL.md points at via `workflow:` frontmatter. One file per command skill. Contains the ordered steps the agent executes when the skill fires. | By the skill author during skill creation (per §10) | `gad skill show <id>` → `workflow:` line, or `gad skill list --paths` |
+| `.planning/workflows/<name>.md` | **Meta-loop workflow** — how the GAD framework itself operates. One file per top-level loop (`gad-loop`, `gad-decide`, `gad-debug`, `gad-evolution`, `gad-findings`, `gad-discuss-plan-execute`). Contains the conceptual flow diagram + participating skills, not execution steps for a single skill. | By the framework authors when defining how phases operate | Snapshot STATE.xml `<reference>` list, or `gad workflow status` |
+
+**Rule of thumb:** if you are executing a skill, you want `workflows/<name>.md`.
+If you are answering "how does the framework operate around this skill", you
+want `.planning/workflows/<name>.md`. They are NOT copies of each other; if
+they look identical it is a documentation bug and should be reported as a
+consolidation candidate.
+
+The `gad workflow status` command lists `.planning/workflows/` contents
+(meta-loops and emergent detected workflows). The `gad skill list --paths`
+command lists `skills/` + resolved `workflow:` pointers into `workflows/`.
+Use the right CLI verb for the right tree.
+
 ## 2. SKILL.md frontmatter
 
 Minimum required keys:
