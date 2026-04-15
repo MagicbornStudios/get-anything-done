@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { ROUND_SUMMARIES } from "@/lib/eval-data";
@@ -32,7 +32,7 @@ export default function RoundResults() {
     : null;
 
   return (
-    <SiteSection id="results" tone="muted" className="border-t border-border/60">
+    <SiteSection id="results" cid="results-site-section" tone="muted" className="border-t border-border/60">
       <RoundResultsHeader
         effectiveRound={effectiveRound}
         localRoundFilter={localRoundFilter}
@@ -62,3 +62,4 @@ export default function RoundResults() {
     </SiteSection>
   );
 }
+

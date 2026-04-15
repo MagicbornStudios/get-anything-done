@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { WorkflowDiagramTabs } from "@/components/landing/workflow/WorkflowDiagramTabs";
 import { WorkflowIntro } from "@/components/landing/workflow/WorkflowIntro";
@@ -8,7 +8,7 @@ import { SiteSection } from "@/components/site";
 
 export default function Workflow() {
   return (
-    <SiteSection id="workflow" tone="muted" className="border-t border-border/60">
+    <SiteSection id="workflow" cid="workflow-site-section" tone="muted" className="border-t border-border/60">
       <Identified as="LandingWorkflow">
       <Identified as="WorkflowIntro">
         <WorkflowIntro />
@@ -23,3 +23,4 @@ export default function Workflow() {
     </SiteSection>
   );
 }
+

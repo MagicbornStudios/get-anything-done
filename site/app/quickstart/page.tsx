@@ -22,7 +22,7 @@ export default function QuickStartPage() {
 
   return (
     <MarketingShell>
-      <SiteSection cid="page-site-section">
+      <SiteSection cid="quickstart-page-site-section">
         <Identified as="QuickstartProse" className="prose-content">
           <div dangerouslySetInnerHTML={{ __html: html }} />
         </Identified>

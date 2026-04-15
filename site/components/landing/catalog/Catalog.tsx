@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { CatalogEmptyState } from "@/components/landing/catalog/CatalogEmptyState";
 import { CatalogGrid } from "@/components/landing/catalog/CatalogGrid";
@@ -11,7 +11,7 @@ export default function Catalog() {
   const { tab, setTab, query, setQuery, items } = useCatalogSection();
 
   return (
-    <SiteSection id="catalog" className="border-t border-border/60">
+    <SiteSection id="catalog" cid="catalog-site-section" className="border-t border-border/60">
       <CatalogIntro />
 
       <CatalogToolbar tab={tab} query={query} onTabChange={setTab} onQueryChange={setQuery} />
@@ -22,3 +22,4 @@ export default function Catalog() {
     </SiteSection>
   );
 }
+

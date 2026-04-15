@@ -15,6 +15,7 @@ export default function DataSurfaceSection({
   return (
     <SiteSection
       id={`surface-${surface.toLowerCase().replace(/\s+/g, "-")}`}
+      cid={`surface-${surface.toLowerCase().replace(/\s+/g, "-")}-site-section`}
       className="last:bg-background"
     >
       <Identified as={`DataSurfaceHeader-${surface.replace(/[^a-zA-Z0-9]+/g, "-")}`} className="mb-6 flex flex-wrap items-center gap-3">

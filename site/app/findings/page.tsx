@@ -14,7 +14,7 @@ export default function FindingsPage() {
 
   return (
     <MarketingShell>
-      <SiteSection cid="page-site-section">
+      <SiteSection cid="findings-page-site-section">
         <Identified as="FindingsPageIntro">
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Findings</h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">

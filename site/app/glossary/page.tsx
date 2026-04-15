@@ -13,7 +13,7 @@ export default function GlossaryPage() {
 
   return (
     <MarketingShell>
-      <SiteSection cid="page-site-section">
+      <SiteSection cid="glossary-page-site-section">
         <SiteSectionHeading
           kicker="Glossary"
           as="h1"

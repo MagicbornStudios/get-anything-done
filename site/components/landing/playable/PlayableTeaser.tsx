@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -82,7 +82,7 @@ export default function PlayableTeaser() {
   const iframeSrc = selected ? PLAYABLE_INDEX[runKey(selected)] : null;
 
   return (
-    <SiteSection id="play" tone="muted" className="border-t border-border/60">
+    <SiteSection id="play" cid="play-site-section" tone="muted" className="border-t border-border/60">
       <Identified as="LandingPlayableTeaser">
       <Identified as="PlayableTeaserIntro">
         <SiteSectionIntro
@@ -189,4 +189,5 @@ export default function PlayableTeaser() {
     </SiteSection>
   );
 }
+
 

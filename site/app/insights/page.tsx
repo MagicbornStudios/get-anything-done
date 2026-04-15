@@ -16,7 +16,7 @@ export default function InsightsPage() {
 
   return (
     <MarketingShell>
-      <SiteSection cid="page-site-section">
+      <SiteSection cid="insights-page-site-section">
         <Identified as="InsightsPageIntro">
           <InsightsPageIntro />
         </Identified>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { HypothesisTracksActiveRoundBar } from "@/components/landing/hypothesis-tracks/HypothesisTracksActiveRoundBar";
@@ -46,7 +46,7 @@ export default function HypothesisTracksSection() {
   }, []);
 
   return (
-    <SiteSection id="tracks" tone="muted" className="border-t border-border/60">
+    <SiteSection id="tracks" cid="tracks-site-section" tone="muted" className="border-t border-border/60">
       <Identified as="LandingHypothesisTracksSection">
       <Identified as="HypothesisTracksIntro">
         <HypothesisTracksIntro />
@@ -84,3 +84,4 @@ export default function HypothesisTracksSection() {
     </SiteSection>
   );
 }
+

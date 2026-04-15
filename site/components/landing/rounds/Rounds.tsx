@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { RoundsArticle } from "@/components/landing/rounds/RoundsArticle";
@@ -16,7 +16,7 @@ export default function Rounds() {
   const r = ROUND_SUMMARIES[currentIndex];
 
   return (
-    <SiteSection id="rounds" tone="muted" className="border-t border-border/60">
+    <SiteSection id="rounds" cid="rounds-site-section" tone="muted" className="border-t border-border/60">
       <RoundsIntro />
 
       <RoundsPagination
@@ -31,3 +31,4 @@ export default function Rounds() {
     </SiteSection>
   );
 }
+

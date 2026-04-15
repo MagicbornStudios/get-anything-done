@@ -26,6 +26,7 @@ export default function Hero() {
   return (
     <SiteSection
       id="top"
+      cid="top-site-section"
       className="relative overflow-hidden border-b-0"
       shellClassName="relative"
       beforeShell={

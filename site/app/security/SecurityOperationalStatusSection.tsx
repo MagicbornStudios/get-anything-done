@@ -4,10 +4,13 @@ import selfEvalData from "@/data/self-eval.json";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { SecurityStatusCard } from "./SecurityStatusCard";
 
+type RuntimeDistEntry = { runtime: string; count: number };
+
 export function SecurityOperationalStatusSection() {
   const latest = selfEvalData.latest;
   const evals = latest.evals;
-  const knownEvalRuntimeRuns = (evals.runtime_distribution ?? []).reduce(
+  const runtimeDist = (evals.runtime_distribution ?? []) as RuntimeDistEntry[];
+  const knownEvalRuntimeRuns = runtimeDist.reduce(
     (sum, entry) => (entry.runtime === "unknown" ? sum : sum + entry.count),
     0,
   );

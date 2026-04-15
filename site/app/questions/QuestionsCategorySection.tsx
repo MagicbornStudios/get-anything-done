@@ -17,6 +17,7 @@ export function QuestionsCategorySection({
   return (
     <SiteSection
       id={category}
+      cid={`${category}-site-section`}
       tone="muted"
       className="last:border-b-0 last:bg-background"
     >

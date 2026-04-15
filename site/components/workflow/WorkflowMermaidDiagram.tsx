@@ -7,6 +7,24 @@ interface Props {
   slug: string;
 }
 
+function cleanupMermaidArtifacts(renderId: string) {
+  if (typeof document === "undefined") return;
+
+  const direct = document.getElementById(renderId);
+  if (direct && !direct.closest("[data-mermaid-host='true']")) direct.remove();
+
+  const prefixed = document.getElementById(`d${renderId}`);
+  if (prefixed && !prefixed.closest("[data-mermaid-host='true']")) prefixed.remove();
+
+  const leakedErrors = Array.from(document.querySelectorAll("body *")).filter((el) => {
+    const text = el.textContent?.toLowerCase() ?? "";
+    return text.includes("syntax error in text") && text.includes("mermaid");
+  });
+  leakedErrors.forEach((el) => {
+    if (!el.closest("[data-mermaid-host='true']")) el.remove();
+  });
+}
+
 /**
  * Client-side Mermaid renderer for authored workflow diagrams.
  *
@@ -28,6 +46,7 @@ export function WorkflowMermaidDiagram({ source, slug }: Props) {
 
   useEffect(() => {
     let cancelled = false;
+    let renderId = "";
     (async () => {
       try {
         const mermaid = (await import("mermaid")).default;
@@ -41,10 +60,13 @@ export function WorkflowMermaidDiagram({ source, slug }: Props) {
             fontSize: "13px",
           },
         });
-        const { svg: rendered } = await mermaid.render(`mm-${slug}-${diagramId}`, source);
+        renderId = `mm-${slug}-${diagramId}`;
+        const { svg: rendered } = await mermaid.render(renderId, source);
         if (!cancelled) setSvg(rendered);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        if (renderId) cleanupMermaidArtifacts(renderId);
       }
     })();
     return () => {
@@ -74,6 +96,7 @@ export function WorkflowMermaidDiagram({ source, slug }: Props) {
 
   return (
     <div
+      data-mermaid-host="true"
       className="mermaid-diagram overflow-x-auto rounded-md border border-border/50 bg-muted/20 p-4 [&_svg]:h-auto [&_svg]:max-w-full"
       aria-label={`Workflow diagram for ${slug}`}
       // eslint-disable-next-line react/no-danger

@@ -1,4 +1,4 @@
-import { AlertOctagon } from "lucide-react";
+﻿import { AlertOctagon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Identified } from "@/components/devid/Identified";
 import { Ref } from "@/components/refs/Ref";
@@ -12,7 +12,7 @@ export default function SkepticHypothesisCritiqueSection({
 }) {
   const pid = `SkepticCritique-${c.id}`;
   return (
-    <SiteSection id={c.id} className="last:bg-background">
+    <SiteSection id={c.id} cid={`${c.id}-site-section`} className="last:bg-background">
       <Identified as={`${pid}-Title`}>
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <Ref id={c.ref} />
@@ -89,3 +89,4 @@ export default function SkepticHypothesisCritiqueSection({
     </SiteSection>
   );
 }
+

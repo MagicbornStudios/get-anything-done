@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,14 +7,14 @@ import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
 
 export function RequirementsVersionHistorySection() {
   return (
-    <SiteSection id="history">
+    <SiteSection id="history" cid="history-site-section">
       <SiteSectionHeading icon={FileText} kicker="Version history" kickerRowClassName="mb-6 gap-3" />
       <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
           Every requirements version has its own entry. Each version defines a round (decision{" "}
           <Link href="/decisions#gad-72" className="text-accent underline decoration-dotted">
             gad-72
           </Link>
-          ) — new requirements version = new round.
+          ) â€” new requirements version = new round.
         </p>
         <div className="space-y-4">
           {REQUIREMENTS_HISTORY.slice()
@@ -40,4 +40,5 @@ export function RequirementsVersionHistorySection() {
     </SiteSection>
   );
 }
+
 

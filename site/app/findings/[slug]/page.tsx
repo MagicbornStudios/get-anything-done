@@ -24,7 +24,7 @@ export default function FindingDetailPage({ params }: { params: { slug: string }
 
   return (
     <MarketingShell>
-      <SiteSection cid="page-site-section">
+      <SiteSection cid="findings-detail-page-site-section">
         <Identified as="FindingDetailBreadcrumb" tag="nav" className="text-xs text-muted-foreground">
           <Link href="/findings" className="hover:text-foreground">← All findings</Link>
         </Identified>

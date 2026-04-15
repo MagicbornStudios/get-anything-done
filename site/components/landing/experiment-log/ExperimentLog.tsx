@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ExperimentLogEmptyState } from "@/components/landing/experiment-log/ExperimentLogEmptyState";
 import { ExperimentLogFilterBar } from "@/components/landing/experiment-log/ExperimentLogFilterBar";
@@ -30,7 +30,7 @@ export default function ExperimentLog() {
   if (total === 0) return null;
 
   return (
-    <SiteSection id="experiment-log" tone="muted" className="border-t border-border/60">
+    <SiteSection id="experiment-log" cid="experiment-log-site-section" tone="muted" className="border-t border-border/60">
       <Identified as="LandingExperimentLog">
       <Identified as="ExperimentLogIntro">
         <ExperimentLogIntro />
@@ -84,3 +84,4 @@ export default function ExperimentLog() {
     </SiteSection>
   );
 }
+

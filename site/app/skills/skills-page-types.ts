@@ -2,6 +2,7 @@ export interface SkillSummaryDTO {
   id: string;
   name: string;
   description: string;
+  imagePath: string | null;
   inheritedBy: string[];
   isFundamental: boolean;
   isFrameworkSkill: boolean;

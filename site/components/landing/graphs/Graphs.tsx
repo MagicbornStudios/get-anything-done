@@ -1,4 +1,4 @@
-import { GraphsDivergenceScatter } from "@/components/landing/graphs/GraphsDivergenceScatter";
+﻿import { GraphsDivergenceScatter } from "@/components/landing/graphs/GraphsDivergenceScatter";
 import { GraphsIntro } from "@/components/landing/graphs/GraphsIntro";
 import { GraphsProvenance } from "@/components/landing/graphs/GraphsProvenance";
 import { GraphsRunsBarChart } from "@/components/landing/graphs/GraphsRunsBarChart";
@@ -9,10 +9,10 @@ import { SiteSection } from "@/components/site";
 /**
  * Interactive graphs section on the landing page.
  * Two charts:
- * 1. Divergence scatter (composite vs human review) — shows ALL hypotheses,
+ * 1. Divergence scatter (composite vs human review) â€” shows ALL hypotheses,
  *    color-coded by workflow. Points above the diagonal = human rates higher
  *    than automated composite. Points below = composite inflated.
- * 2. Per-run bar chart — all scored runs ordered by score, colored by workflow.
+ * 2. Per-run bar chart â€” all scored runs ordered by score, colored by workflow.
  *
  * Both recharts-based for interactivity (hover tooltips, click-through).
  */
@@ -23,7 +23,7 @@ export default function Graphs() {
   if (scatterData.length === 0 && bars.length === 0) return null;
 
   return (
-    <SiteSection id="graphs" className="border-t border-border/60">
+    <SiteSection id="graphs" cid="graphs-site-section" className="border-t border-border/60">
       <Identified as="LandingGraphs">
       <Identified as="GraphsIntro">
         <GraphsIntro />
@@ -45,3 +45,4 @@ export default function Graphs() {
     </SiteSection>
   );
 }
+

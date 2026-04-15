@@ -39,6 +39,7 @@ export function buildSummaries(): SkillSummaryDTO[] {
       id: s.id,
       name: s.name,
       description: s.description,
+      imagePath: s.imagePath ?? null,
       inheritedBy,
       isFundamental,
       isFrameworkSkill,

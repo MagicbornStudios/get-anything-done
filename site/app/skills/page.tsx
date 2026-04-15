@@ -26,7 +26,7 @@ export default function SkillsIndexPage() {
         agentsCount={agents.length}
       />
 
-      <SiteSection cid="page-site-section" tone="muted" className="border-t border-border/60">
+      <SiteSection cid="skills-page-site-section" tone="muted" className="border-t border-border/60">
         <Suspense fallback={null}>
           <SkillsPageTabs summaries={summaries} usage={usage} agents={agents} />
         </Suspense>

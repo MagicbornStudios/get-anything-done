@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Play } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
@@ -8,15 +8,15 @@ import VideoEmbed from "@/components/video/VideoEmbed";
 import { COMPOSITIONS } from "@/remotion/registry";
 
 export const metadata = {
-  title: "Videos — GAD",
+  title: "Videos â€” GAD",
   description:
-    "Remotion compositions from the site registry — embeddable explainers up to 30s, built as TypeScript + React.",
+    "Remotion compositions from the site registry â€” embeddable explainers up to 30s, built as TypeScript + React.",
 };
 
 export default function VideosPage() {
   return (
     <MarketingShell>
-      <SiteSection cid="page-site-section">
+      <SiteSection cid="videos-page-intro-site-section">
         <Identified as="VideosPageIntro">
           <SiteSectionHeading
             kicker="Videos"
@@ -31,7 +31,7 @@ export default function VideosPage() {
           />
           <SiteProse className="mt-6">
             Each embed below is a row in{" "}
-            <code className="rounded bg-card/60 px-1 py-0.5 text-sm">remotion/registry.ts</code> — same
+            <code className="rounded bg-card/60 px-1 py-0.5 text-sm">remotion/registry.ts</code> â€” same
             metadata the per-run pages use when a composition is tied to a preserved eval. Add a
             composition there and it appears here automatically.
           </SiteProse>
@@ -39,7 +39,7 @@ export default function VideosPage() {
       </SiteSection>
 
       {COMPOSITIONS.length === 0 ? (
-        <SiteSection cid="page-site-section-2" tone="muted">
+        <SiteSection cid="videos-page-categories-site-section" tone="muted">
           <Identified as="VideosEmptyState">
             <SiteProse size="sm">
               No compositions in the registry yet. Follow the checklist in{" "}
@@ -49,7 +49,12 @@ export default function VideosPage() {
         </SiteSection>
       ) : (
         COMPOSITIONS.map((c, i) => (
-          <SiteSection key={c.slug} id={c.slug} tone={i % 2 === 0 ? "muted" : "default"}>
+          <SiteSection
+            key={c.slug}
+            id={c.slug}
+            cid={`${c.slug}-site-section`}
+            tone={i % 2 === 0 ? "muted" : "default"}
+          >
             <Identified as={`VideosComposition-${c.slug}`} className="contents">
               <div className="mb-6 flex flex-wrap items-center gap-3">
                 <Badge variant="default" className="inline-flex items-center gap-1.5">
@@ -57,7 +62,7 @@ export default function VideosPage() {
                   {c.slug}
                 </Badge>
                 <Badge variant="outline">
-                  {Math.round(c.durationInFrames / c.fps)}s · {c.width}×{c.height} · {c.fps}fps
+                  {Math.round(c.durationInFrames / c.fps)}s Â· {c.width}Ã—{c.height} Â· {c.fps}fps
                 </Badge>
                 <Badge variant="outline">{c.status}</Badge>
               </div>
@@ -67,7 +72,7 @@ export default function VideosPage() {
         ))
       )}
 
-      <SiteSection cid="page-site-section-3" tone="muted">
+      <SiteSection cid="videos-page-notes-site-section" tone="muted">
         <Identified as="VideosPageFooterLinks" className="flex flex-wrap gap-3 text-sm">
           <Button
             variant="outline"
@@ -90,4 +95,5 @@ export default function VideosPage() {
     </MarketingShell>
   );
 }
+
 

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Github, Download, Gauge, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ export function RequirementsProjectSection({
   const addendum = parseAddendum(xml);
 
   return (
-    <SiteSection id={project} tone="muted">
+    <SiteSection id={project} cid={`${project}-site-section`} tone="muted">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <Badge variant="default" className="inline-flex items-center gap-1.5">
             <Flame size={10} aria-hidden />
@@ -67,7 +67,7 @@ export function RequirementsProjectSection({
           <Card className="mt-8">
             <CardHeader>
               <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
-                v4 base — goal
+                v4 base â€” goal
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0 text-sm leading-6 text-foreground/90">{v4Base.goal}</CardContent>
@@ -102,7 +102,7 @@ export function RequirementsProjectSection({
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 text-xs leading-5 text-muted-foreground">
-                    {g.summary}…
+                    {g.summary}â€¦
                   </CardContent>
                 </Card>
               ))}
@@ -114,7 +114,7 @@ export function RequirementsProjectSection({
           <div className="mt-10">
             <SiteSectionHeading
               icon={Gauge}
-              kicker={`v5 addendum — ${addendum.length} playtest-driven additions`}
+              kicker={`v5 addendum â€” ${addendum.length} playtest-driven additions`}
               kickerRowClassName="mb-4 gap-3"
             />
             <div className="space-y-3">
@@ -154,4 +154,5 @@ export function RequirementsProjectSection({
     </SiteSection>
   );
 }
+
 

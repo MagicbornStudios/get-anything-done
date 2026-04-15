@@ -15,6 +15,7 @@ export default function TasksPhaseSection({
   return (
     <SiteSection
       id={`phase-${phaseId}`}
+      cid={`phase-${phaseId}-site-section`}
       tone="muted"
       className="last:border-b-0 last:bg-background"
     >

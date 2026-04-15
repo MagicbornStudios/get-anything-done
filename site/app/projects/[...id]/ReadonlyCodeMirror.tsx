@@ -55,11 +55,24 @@ function createDarkChrome(minVisibleLines: number | undefined, maxVisibleLines: 
 export function ReadonlyCodeMirror({
   value,
   className,
+  /** Minimum viewport height in lines (e.g. 20 in modals). */
+  minVisibleLines,
+  /** Maximum scroll viewport in lines before inner scroll. Defaults to 24. */
+  maxVisibleLines = READONLY_CM_VISIBLE_LINES,
 }: {
   value: string;
   className?: string;
+  minVisibleLines?: number;
+  maxVisibleLines?: number;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const chrome = useMemo(
+    () => createDarkChrome(minVisibleLines, maxVisibleLines),
+    [minVisibleLines, maxVisibleLines],
+  );
+  const maxPx = useMemo(() => readonlyCmHeightForLines(maxVisibleLines), [maxVisibleLines]);
+  const minPx =
+    minVisibleLines != null ? readonlyCmHeightForLines(minVisibleLines) : undefined;
 
   useEffect(() => {
     if (!host.current) return;
@@ -70,14 +83,14 @@ export function ReadonlyCodeMirror({
         markdown(),
         EditorView.editable.of(false),
         EditorState.readOnly.of(true),
-        darkChrome,
+        chrome,
       ],
     });
     const view = new EditorView({ state, parent: host.current });
     return () => {
       view.destroy();
     };
-  }, [value]);
+  }, [value, chrome]);
 
   return (
     <div
@@ -86,7 +99,10 @@ export function ReadonlyCodeMirror({
         "w-full overflow-hidden rounded-lg border border-border/60",
         className,
       )}
-      style={{ maxHeight: READONLY_CM_MAX_HEIGHT_PX }}
+      style={{
+        maxHeight: maxPx,
+        ...(minPx != null ? { minHeight: minPx } : {}),
+      }}
     />
   );
 }

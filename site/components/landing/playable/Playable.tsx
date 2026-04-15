@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { PLAYABLE_INDEX } from "@/lib/eval-data";
@@ -44,7 +44,7 @@ export default function Playable() {
   const iframeSrc = selected ? PLAYABLE_INDEX[runKey(selected)] : null;
 
   return (
-    <SiteSection id="play" tone="muted" className="border-t border-border/60">
+    <SiteSection id="play" cid="play-site-section" tone="muted" className="border-t border-border/60">
       <Identified as="PlayableIntro">
         <PlayableIntro />
       </Identified>
@@ -106,3 +106,4 @@ export default function Playable() {
     </SiteSection>
   );
 }
+

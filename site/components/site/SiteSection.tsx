@@ -3,6 +3,7 @@
 import type { MouseEvent, ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { BandDevPanel } from "@/components/devid/BandDevPanel";
+import { DevIdBandProvider } from "@/components/devid/DevIdBandContext";
 import { useDevId } from "@/components/devid/DevIdProvider";
 import { cn } from "@/lib/utils";
 
@@ -110,7 +111,9 @@ function SiteSectionSurface({
         )}
       >
         {beforeShell}
-        <div className={cn("section-shell", shellClassName)}>{children}</div>
+        <div className={cn("section-shell", shellClassName)}>
+          <DevIdBandProvider bandCid={sectionBandCid}>{children}</DevIdBandProvider>
+        </div>
         {afterShell}
       </section>
       {devIds && enabled && sectionBandCid ? (

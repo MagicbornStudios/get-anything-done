@@ -1,9 +1,9 @@
-import { PROJECT_LABELS } from "@/app/requirements/requirements-shared";
+﻿import { PROJECT_LABELS } from "@/app/requirements/requirements-shared";
 import { SiteSection } from "@/components/site";
 
 export function RequirementsProjectEmptySection({ project }: { project: string }) {
   return (
-    <SiteSection id={project} tone="muted">
+    <SiteSection id={project} cid={`${project}-site-section`} tone="muted">
       <h2 className="text-2xl font-semibold tracking-tight">
         {PROJECT_LABELS[project] ?? project}
       </h2>
@@ -11,3 +11,4 @@ export function RequirementsProjectEmptySection({ project }: { project: string }
     </SiteSection>
   );
 }
+

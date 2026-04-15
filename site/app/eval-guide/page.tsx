@@ -22,7 +22,7 @@ export default function EvalGuidePage() {
 
   return (
     <MarketingShell>
-      <SiteSection cid="page-site-section">
+      <SiteSection cid="eval-guide-page-site-section">
         <Identified as="EvalGuideProse" className="prose-content">
           <div dangerouslySetInnerHTML={{ __html: html }} />
         </Identified>

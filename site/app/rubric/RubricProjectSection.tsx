@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { ArrowRight, Terminal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { EvalProjectMeta, Workflow } from "@/lib/eval-data";
@@ -17,7 +17,7 @@ export function RubricProjectSection({ project }: { project: EvalProjectMeta }) 
   const exampleJson = buildRubricExampleJson(rubric.dimensions);
 
   return (
-    <SiteSection id={project.id}>
+    <SiteSection id={project.id} cid={`${project.id}-site-section`}>
         <div className="flex flex-wrap items-center gap-3">
           <span
             className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider ${WORKFLOW_TINT[workflow]}`}
@@ -26,7 +26,7 @@ export function RubricProjectSection({ project }: { project: EvalProjectMeta }) 
           </span>
           <Badge variant="outline">rubric {rubric.version}</Badge>
           <Badge variant="outline">
-            {rubric.dimensions.length} dimensions · Σ {totalWeight.toFixed(2)}
+            {rubric.dimensions.length} dimensions Â· Î£ {totalWeight.toFixed(2)}
           </Badge>
         </div>
 
@@ -71,3 +71,4 @@ export function RubricProjectSection({ project }: { project: EvalProjectMeta }) 
     </SiteSection>
   );
 }
+

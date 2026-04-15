@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Badge } from "@/components/ui/badge";
 import selfEvalData from "@/data/self-eval.json";
@@ -16,7 +16,7 @@ export default function SelfEval() {
   const maxToolCount = topTools.length > 0 ? topTools[0].count : 1;
 
   return (
-    <SiteSection id="self-eval" tone="muted" className="border-t border-border/60">
+    <SiteSection id="self-eval" cid="self-eval-site-section" tone="muted" className="border-t border-border/60">
       <SiteSectionHeading
         kicker="Framework usage"
         preset="hero-compact"
@@ -27,7 +27,7 @@ export default function SelfEval() {
         }
       />
       <SiteProse className="mt-5">
-        We use GAD to build GAD. These metrics come from our actual trace logs —
+        We use GAD to build GAD. These metrics come from our actual trace logs â€”
         {data.totals.events.toLocaleString()} tool calls across {data.totals.sessions} sessions over{" "}
         {data.period.days} days. Not a controlled experiment, just real work.
       </SiteProse>
@@ -53,7 +53,7 @@ export default function SelfEval() {
           <SelfEvalMetricCard
             label="Hydration overhead"
             value={`${(data.hydration.overhead_ratio * 100).toFixed(1)}%`}
-            subtext={`${data.hydration.snapshot_count} snapshots • ${data.hydration.estimated_snapshot_tokens.toLocaleString()} est tokens`}
+            subtext={`${data.hydration.snapshot_count} snapshots â€¢ ${data.hydration.estimated_snapshot_tokens.toLocaleString()} est tokens`}
             score={1 - Math.min(1, data.hydration.overhead_ratio)}
           />
         </Identified>
@@ -61,7 +61,7 @@ export default function SelfEval() {
           <SelfEvalMetricCard
             label="Tasks"
             value={`${data.tasks.done} / ${data.tasks.total}`}
-            subtext={`${data.tasks.planned} planned · ${data.tasks.in_progress} in progress`}
+            subtext={`${data.tasks.planned} planned Â· ${data.tasks.in_progress} in progress`}
           />
         </Identified>
         <Identified as="MetricCard.Decisions">
@@ -128,7 +128,7 @@ export default function SelfEval() {
                 </h3>
                 <div className="mt-2 flex items-center gap-2">
                   <Badge variant="outline">{data.period.start}</Badge>
-                  <span className="text-xs text-muted-foreground">→</span>
+                  <span className="text-xs text-muted-foreground">â†’</span>
                   <Badge variant="outline">{data.period.end}</Badge>
                   <Badge variant="default">{data.period.days} days</Badge>
                 </div>
@@ -145,4 +145,5 @@ export default function SelfEval() {
     </SiteSection>
   );
 }
+
 
