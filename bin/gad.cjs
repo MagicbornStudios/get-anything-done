@@ -9206,7 +9206,7 @@ const roundsCmd = defineCommand({
 
 // ---------------------------------------------------------------------------
 // evolution subcommands (phase 42) — validate/promote/discard/status
-// proto-skills produced by gad-evolution-evolve and gad-quick-skill.
+// proto-skills produced by gad-evolution-evolve and create-proto-skill.
 // ---------------------------------------------------------------------------
 
 const evolutionPaths = (repoRoot) => ({

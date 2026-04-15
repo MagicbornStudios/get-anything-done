@@ -3,7 +3,7 @@ name: gad-evolution-evolve
 description: >-
   Start a new evolution of the GAD framework — analyze high-pressure phases via
   selection pressure, write a raw CANDIDATE.md per phase, hand each one to
-  gad-quick-skill for autonomous drafting, then run the validator. Use when
+  create-proto-skill for autonomous drafting, then run the validator. Use when
   the user says "let's evolve", "run an evolution", "find new skills",
   "what skills should we add", or after closing a milestone where you want to
   capture lessons. An evolution is the primary mechanism by which GAD's species
@@ -32,7 +32,7 @@ gad:evolution:evolve
   ├─ for each new candidate phase:
   │     ├─ keep skills/candidates/<slug>/CANDIDATE.md as the raw source
   │     │     = raw phase dump (no curator pre-digestion)
-  │     ├─ invoke gad-quick-skill on CANDIDATE.md
+  │     ├─ invoke create-proto-skill on CANDIDATE.md
   │     │     → writes .planning/proto-skills/<slug>/SKILL.md + references/
   │     └─ invoke gad-evolution-validator on the new proto-skill
   │           → writes .planning/proto-skills/<slug>/VALIDATION.md (advisory)
@@ -171,16 +171,16 @@ created_by: gad-evolution-evolve
 ```
 
 **No curator section.** No proposed name. No proposed test prompts. No
-hand-picked decisions. The drafting agent (gad-quick-skill) reads this raw
+hand-picked decisions. The drafting agent (create-proto-skill) reads this raw
 material and decides what matters.
 
-## Step 5: Invoke gad-quick-skill on each CANDIDATE.md
+## Step 5: Invoke create-proto-skill on each CANDIDATE.md
 
-Hand each candidate off to `gad-quick-skill`:
+Hand each candidate off to `create-proto-skill`:
 
 ```
 For each <slug> in this evolution:
-  Invoke gad-quick-skill with: "Process the candidate at
+  Invoke create-proto-skill with: "Process the candidate at
   skills/candidates/<slug>/CANDIDATE.md. Write SKILL.md + references/
   under .planning/proto-skills/<slug>/. Do not ask questions."
 ```
@@ -349,14 +349,14 @@ against file-ref totals.
 - **No high-pressure phases found:** valid outcome. Print "no proto-skills
   this evolution" and don't create any files. The evolution marker still
   drops in `.evolutions/` so we have a record that we looked.
-- **gad-quick-skill produces a sparse SKILL.md:** read CANDIDATE.md, see if it
+- **create-proto-skill produces a sparse SKILL.md:** read CANDIDATE.md, see if it
   was sparse. The CANDIDATE.md should always include the full task list,
   decisions, file refs, and git history. If those are missing, fix the
   CANDIDATE.md generation in step 4.
 
 ## Reference
 
-- `gad-quick-skill` — the drafter this skill invokes per candidate
+- `create-proto-skill` — the drafter this skill invokes per candidate
 - `gad-evolution-validator` — the advisory checker
 - `compute-self-eval.mjs` — selection pressure source
 - `evals/FINDINGS-2026-04-13-evolution-loop-experiment.md` — why the curator

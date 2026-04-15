@@ -41,7 +41,7 @@ pressure → candidate → proto-skill → proto-skill[validated] → proto-skil
 ## The `create-proto-skill` workflow
 
 The skill that drafts proto-skills is **`create-proto-skill`** (canonical name going
-forward, replacing `gad-quick-skill`). `create-proto-skill` is a GAD-aware wrapper
+forward, replacing `create-proto-skill`). `create-proto-skill` is a GAD-aware wrapper
 around the neutral upstream skill creator; the neutral baseline stays available for
 non-GAD use cases.
 

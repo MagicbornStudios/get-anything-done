@@ -202,5 +202,5 @@ candidates remain — this is the human-review gate.
 
 - Canonical skill-creator: `~/.agents/skills/skill-creator/SKILL.md`
 - Anthropic skills repo: https://github.com/anthropics/skills
-- Related skills: `gad-evolution-evolve`, `gad-merge-skill`, `gad-find-skills`
+- Related skills: `gad-evolution-evolve`, `merge-skill`, `create-proto-skill`, `create-skill`, `gad-find-skills`
 

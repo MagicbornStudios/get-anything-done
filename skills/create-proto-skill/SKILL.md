@@ -1,23 +1,30 @@
 ---
-name: gad-quick-skill
+name: create-proto-skill
 description: >-
-  Fast path to draft a new skill from a candidate context file or raw materials.
-  Wraps the dot-agent create-skill skill, which is a lightweight authoring guide
-  (no eval loop, no benchmarks, no test runs) — ideal when you have clear
-  context and just need to write a clean SKILL.md following the conventions.
-  Use whenever you want to draft a skill quickly without running a full
-  test-and-iterate loop. Triggers on "draft a skill", "quick skill", "write a
-  skill from this", "convert this candidate to a skill", or whenever
-  `gad:evolution:evolve` invokes the drafting step. For high-stakes skills
-  that need real test runs and iteration, use `gad-skill-creator` (the heavy
-  path) instead — but quick is the right default.
+  Fast path to draft a proto-skill from a candidate context file or raw
+  materials. Lightweight authoring guide — no eval loop, no benchmarks, no
+  test runs — ideal when you have clear context and just need to write a
+  clean proto-skill bundle following the uniform shape in
+  references/skill-shape.md. Triggers on "draft a skill", "create proto
+  skill", "write a skill from this", "convert this candidate to a skill",
+  or whenever `gad:evolution:evolve` invokes the drafting step. Output
+  lands at `.planning/proto-skills/<slug>/` per decisions gad-183 and
+  gad-191 as a self-contained bundle (SKILL.md + sibling workflow.md +
+  PROVENANCE.md). For high-stakes skills that need real test runs and
+  iteration, use `gad-skill-creator` (the heavy path) instead — but
+  proto-skill drafting is the right default for candidates coming out of
+  the evolution loop.
+status: stable
 ---
 
-# gad-quick-skill
+# create-proto-skill
 
-A thin wrapper around dot-agent's
-[create-skill](https://github.com/siviter-xyz/dot-agent) that lets us draft new
-GAD skills fast without spinning up a full test loop.
+The lightweight drafter inside the GAD evolution loop. Reads a candidate
+context file, writes a proto-skill bundle to `.planning/proto-skills/<slug>/`,
+and hands off to `gad evolution validate` for advisory scoring and
+`gad evolution install` for runtime test use. Renamed from `gad-quick-skill`
+per decision gad-168; output contract updated to the proto-skill bundle
+shape per decision gad-191.
 
 We use the dot-agent skill **unmodified** — it's already a clean format guide
 that enforces the 200-line rule, the progressive disclosure principle, and the

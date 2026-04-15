@@ -20,7 +20,7 @@ that don't actually exist in the repo today.
 
 ## Mental model
 
-A proto-skill is a draft. The drafting agent (gad-quick-skill) reads raw
+A proto-skill is a draft. The drafting agent (create-proto-skill) reads raw
 candidate data and writes a SKILL.md based on what it understood. The
 validator runs after drafting and answers a single question:
 
@@ -32,7 +32,7 @@ human reviewer should see the discrepancy before promoting.
 
 ## When to use this
 
-- `gad-evolution-evolve` calls this immediately after `gad-quick-skill` writes
+- `gad-evolution-evolve` calls this immediately after `create-proto-skill` writes
   a new proto-skill.
 - A user asks "validate proto-skill X" or "check if this skill is consistent
   with the repo."
@@ -109,4 +109,4 @@ signal to investigate:
 - `lib/evolution-validator.cjs` — the validator engine
 - `gad evolution validate <slug>` — the CLI entry point
 - `gad-evolution-evolve` — the orchestrator that calls this
-- `gad-quick-skill` — the drafter whose output this validates
+- `create-proto-skill` — the drafter whose output this validates
