@@ -15,8 +15,9 @@ The canonical loop defined in CLAUDE.md and AGENTS.md: hydrate context
 with `gad snapshot`, pick one `planned` task from TASK-REGISTRY.xml,
 implement it, update the task's `status="done"` along with the mandatory
 `skill` / `agent` / `type` attribution (decision gad-104), update
-STATE.xml's next-action, record any new decisions in DECISIONS.xml using
-the `gad-NNN` format, and commit.
+STATE.xml's next-action via `gad state set-next-action --projectid <id> "<text>"`
+(hard cap 600 chars — pointer not journal), record any new decisions in
+DECISIONS.xml using the `gad-NNN` format, and commit.
 
 The attribution step is load-bearing. Without it the self-eval pipeline
 has no data to compute `workflow_conformance` against (decision gad-173).

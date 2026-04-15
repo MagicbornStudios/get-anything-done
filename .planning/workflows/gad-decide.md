@@ -18,7 +18,8 @@ gathers candidate approaches, lays out pros and cons for each, names a
 recommendation with reasoning, and waits for the user to accept, redirect,
 or defer. Accepted recommendations become `<decision>` entries in
 DECISIONS.xml with an id, title, summary, and impact. STATE.xml's
-`next-action` is updated if the decision changes the queue.
+`next-action` is updated via `gad state set-next-action` (hard cap 600 chars)
+if the decision changes the queue.
 
 Do NOT skip the pros/cons step. The value of the workflow is the
 structured comparison, not the recommendation itself. A recommendation

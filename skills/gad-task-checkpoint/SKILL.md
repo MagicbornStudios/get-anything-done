@@ -35,7 +35,7 @@ Pass: next-action references upcoming work
 Fail: next-action still describes the task that was just completed, or is stale
 ```
 
-If fail: **Stop. Update STATE.xml next-action to describe what comes next.**
+If fail: **Stop. Run `gad state set-next-action --projectid <id> "<text>"` to update next-action.** Hard-capped at 600 chars — write a pointer (next pick + open ids + blockers), not a journal. Activity goes in TASK-REGISTRY `<resolution>`.
 
 ### 3. Code compiles (if applicable)
 

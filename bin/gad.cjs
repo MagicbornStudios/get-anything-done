@@ -1170,8 +1170,14 @@ const projectsCmd = defineCommand({
 // state command
 // ---------------------------------------------------------------------------
 
-const stateCmd = defineCommand({
-  meta: { name: 'state', description: 'Show current state for all projects' },
+// Hard cap on STATE.xml <next-action> writes (per gad-D-NN — anti-bloat
+// guard). next-action is a pointer to the next pick, NOT a running journal.
+// Activity logging belongs in TASK-REGISTRY <resolution> blocks and
+// DECISIONS.xml entries. Cap at 600 chars to enforce discipline.
+const NEXT_ACTION_MAX_CHARS = 600;
+
+const stateShowCmd = defineCommand({
+  meta: { name: 'show', description: 'Show current state for all projects' },
   args: {
     projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
     all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
@@ -1227,6 +1233,77 @@ const stateCmd = defineCommand({
         }
       }
     }
+  },
+});
+
+const stateSetNextActionCmd = defineCommand({
+  meta: { name: 'set-next-action', description: `Replace STATE.xml <next-action> with new text. Hard-capped at ${NEXT_ACTION_MAX_CHARS} chars — overflow fails loud.` },
+  args: {
+    text: { type: 'positional', description: 'Replacement next-action text (use quotes)', required: true },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    force: { type: 'boolean', description: 'Bypass the hard cap (DO NOT USE — for migration only)', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+      return;
+    }
+    if (roots.length > 1) {
+      outputError('set-next-action requires a single project. Pass --projectid <id>.');
+      return;
+    }
+    const root = roots[0];
+    const text = String(args.text || '').trim();
+    if (!text) {
+      outputError('next-action text is empty.');
+      return;
+    }
+
+    if (text.length > NEXT_ACTION_MAX_CHARS && !args.force) {
+      console.error('');
+      console.error(`✗ next-action too long: ${text.length} chars (cap ${NEXT_ACTION_MAX_CHARS})`);
+      console.error('');
+      console.error('next-action is a pointer to the next pick, NOT a running journal.');
+      console.error('Activity logging belongs elsewhere:');
+      console.error('  - per-task progress  → .planning/TASK-REGISTRY.xml <task><resolution>');
+      console.error('  - architectural choices → .planning/DECISIONS.xml');
+      console.error('  - session handoffs → .planning/sessions/');
+      console.error('');
+      console.error('Recommended shape (≤600 chars):');
+      console.error('  "Phase X in progress. Next pick: <task-id>. Open queue: <ids>. Blockers: <if any>."');
+      console.error('');
+      console.error('If you really need to bypass the cap (migration only): pass --force.');
+      process.exit(2);
+    }
+
+    const statePath = path.join(baseDir, root.path, root.planningDir, 'STATE.xml');
+    if (!fs.existsSync(statePath)) {
+      outputError(`STATE.xml not found at ${path.relative(baseDir, statePath)}`);
+      return;
+    }
+    const original = fs.readFileSync(statePath, 'utf8');
+    const replaced = original.replace(
+      /<next-action>[\s\S]*?<\/next-action>/,
+      `<next-action>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</next-action>`,
+    );
+    if (replaced === original) {
+      outputError('No <next-action> element found in STATE.xml — add one manually first.');
+      return;
+    }
+    fs.writeFileSync(statePath, replaced);
+    console.log(`Updated: ${path.relative(baseDir, statePath)}`);
+    console.log(`Length:  ${text.length}/${NEXT_ACTION_MAX_CHARS} chars`);
+  },
+});
+
+const stateCmd = defineCommand({
+  meta: { name: 'state', description: 'Show or update STATE.xml (show / set-next-action)' },
+  subCommands: {
+    show: stateShowCmd,
+    'set-next-action': stateSetNextActionCmd,
   },
 });
 
@@ -9547,6 +9624,7 @@ const evolutionImagesGenerate = defineCommand({
 
     let generated = 0;
     let skipped = 0;
+    let failed = 0;
     for (const row of rows) {
       const target = path.resolve(row.targetImagePath);
       if (fs.existsSync(target) && !args.overwrite) {
@@ -9558,18 +9636,25 @@ const evolutionImagesGenerate = defineCommand({
         console.log(`[dry-run] ${row.id} -> ${path.relative(process.cwd(), target)}`);
         continue;
       }
-      const png = await generateImageWithOpenAI({
-        apiKey,
-        model: args.model || 'gpt-image-1',
-        prompt: row.prompt,
-        size: args.size || '1024x1024',
-      });
-      fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.writeFileSync(target, png);
-      generated += 1;
-      console.log(`[ok] ${row.id} -> ${path.relative(process.cwd(), target)}`);
+      try {
+        const png = await generateImageWithOpenAI({
+          apiKey,
+          model: args.model || 'gpt-image-1',
+          prompt: row.prompt,
+          size: args.size || '1024x1024',
+        });
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, png);
+        generated += 1;
+        console.log(`[ok] ${row.id} -> ${path.relative(process.cwd(), target)}`);
+      } catch (err) {
+        failed += 1;
+        const msg = err && err.message ? String(err.message) : String(err || 'unknown error');
+        console.error(`[fail] ${row.id}: ${msg}`);
+      }
     }
-    console.log(`Done. generated=${generated} skipped=${skipped} total=${rows.length}`);
+    console.log(`Done. generated=${generated} skipped=${skipped} failed=${failed} total=${rows.length}`);
+    if (failed > 0) process.exitCode = 2;
   },
 });
 
@@ -10490,6 +10575,18 @@ const main = defineCommand({
   const first = a[i + 1];
   if (first === undefined || first.startsWith('-')) {
     a.splice(i + 1, 0, 'list');
+  }
+})();
+
+(function injectStateShowDefault() {
+  const a = process.argv;
+  const i = a.indexOf('state');
+  if (i === -1) return;
+  const first = a[i + 1];
+  // Recognize known subcommands so `gad state set-next-action ...` still works
+  if (first === 'show' || first === 'set-next-action') return;
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'show');
   }
 })();
 

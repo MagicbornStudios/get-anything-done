@@ -80,6 +80,7 @@ break that bridge because they are not reliably greppable or stable across edits
 - Auto-generated section ids make copied tokens unsearchable in source.
 - Route-level generic ids repeated in one file (`page-site-section` everywhere) create ambiguity.
 - Missing `Identified as` landmarks at logical component boundaries reduces edit precision.
+- Mermaid render failures can leak raw error text into the page chrome if renderer artifacts are not cleaned.
 
 ## Verification checklist
 
@@ -87,13 +88,22 @@ break that bridge because they are not reliably greppable or stable across edits
 - Copy from panel row/header and `rg` it in repo: token resolves to intended component.
 - Update/Delete prompt payload includes route + component kind + search literal + `data-cid`.
 - Added sections include explicit static `cid` and meaningful `as` labels.
+- Speech/noisy prompt still resolves when route + `cid` are present.
+
+## Cleanup guardrail
+
+For landmark-driven edits:
+
+1. Required cleanup: unused imports and dead local component references.
+2. Optional cleanup: deleting unreferenced files created by the exact edit.
+3. Avoid wide unrelated refactors in the same pass.
 
 ## Planning hook
 
 When this skill is used on a task, record it in planning artifacts:
 
 - `TASK-REGISTRY.xml`: set `skill="gad-visual-context-panel-identities"` on the completed task.
-- `STATE.xml`: include one line in `next-action` summarizing what ids were normalized.
+- `STATE.xml`: one line in `next-action` summarizing what ids were normalized — use `gad state set-next-action` (hard cap 600 chars).
 - `DECISIONS.xml` (only if policy changed): record the id contract change with examples.
 
 ## Related

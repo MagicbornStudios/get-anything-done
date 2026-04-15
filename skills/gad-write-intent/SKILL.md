@@ -73,7 +73,7 @@ Any constraint that came up during intent capture goes to DECISIONS.xml:
 
 ## Step 5 — Update STATE.xml
 
-Set `next-action` to reflect what the intent implies should happen next. Example: "Intent captured. Next: plan phase 01 based on requirements."
+Set `next-action` via `gad state set-next-action --projectid <id> "<text>"` (hard cap 600 chars — fails loud over). Example: "Intent captured. Next: plan phase 01 based on requirements."
 
 ## Step 6 — Sync
 

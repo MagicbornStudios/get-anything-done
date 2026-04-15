@@ -151,7 +151,7 @@ is the GAD site itself (`vendor/get-anything-done/site/`).
 
 7. **Update planning artifacts** on the project you're working on:
    - `TASK-REGISTRY.xml`: mark the task `status="done" skill="gad-visual-context-system"`.
-   - `STATE.xml` `next-action`: one line listing the normalized routes.
+   - `STATE.xml` `next-action`: one line listing the normalized routes — use `gad state set-next-action` (hard cap 600 chars).
    - `DECISIONS.xml`: only if the policy itself changed. This workflow enforces, it doesn't drift.
 
 ### Failure modes
