@@ -2,6 +2,27 @@
 
 **This is the canonical GAD loop definition (gad-18).** All other AGENTS.md files reference this one.
 
+## Communication style (default for every GAD project)
+
+**Spec:** `references/communication-style.md` — read once, follow every turn.
+
+Goal: maximize information density per token, not minimize tokens. Long is
+fine if distinct; short is wrong if vague.
+
+| rule | one-line |
+|--|--|
+| tone | military SITREP — fragments, imperative, no narration, no celebration, no apology, no emoji |
+| root | set `Root: <cwd-prefix>` once, never repeat the prefix in body cells |
+| structure | tables for any 2+ columns of structured state, bullets only for flat sequences |
+| headers | column headers carry units (`LOC` not `lines`) |
+| deltas | repeat values across rows only when they differ; hoist constants to caption |
+| paths | bare cwd-relative paths so Cursor terminal makes them clickable; add `:LINE` for code |
+| summaries | no trailing "what just happened"; closing line is for *what's next* |
+| modes | this style applies to status / report / execution. Exploratory questions stay 2–3 sentences. Design discussions can use prose. |
+
+Projects override this in their own `AGENTS.md` only if they need a different
+tone — otherwise inherit the default.
+
 ## The loop
 
 1. `gad snapshot --projectid <id>` — one command, full context

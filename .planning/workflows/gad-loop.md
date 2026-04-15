@@ -24,6 +24,11 @@ has no data to compute `workflow_conformance` against (decision gad-173).
 Skipping attribution is the single biggest source of trace gaps in the
 measured reality (gad-162 baseline: 4 / 179 = 2.2% fully attributed).
 
+**Operator-facing output during this loop follows the GAD communication
+style** — see `references/communication-style.md`. SITREP tone, root set
+once, tables for structured state, deltas only, no trailing summaries.
+This is the default for every GAD project.
+
 ```mermaid
 flowchart TD
   A[gad snapshot --projectid X] --> B[check-todos skill]
