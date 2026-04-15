@@ -10183,9 +10183,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44-23",
     "phaseId": "44",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "content",
     "goal": "Author two workflows under `.planning/workflows/` so they surface on the compact Workflows tab (44-20): `gad-evolution.md` (the self-eval → pressure analysis → candidates → proto-skills → merge → promote loop) and `gad-visual-context-identity.md` (the UI development workflow where every component gets an explicit `SiteSection cid` / `Identified as=\"...\"` literal so the Dev Panel → copy → agent-prompt handoff path works). User ask: \"the Evolution workflow and the visual context identity workflow that we have here which is where I go into I have the UI up the sign up and then I go to a page and then when I have the visual context panel up I can select identified components things that are going to be in place that are static that is a part of our UI workflow that we do when we develop components they must be a part of this system.\" Both need trigger + participants + Mermaid source + related decisions. Authors: human, dogfooded against the Visual Context Panel.",
     "keywords": [
