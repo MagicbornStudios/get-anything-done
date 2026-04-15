@@ -8629,6 +8629,73 @@ const worktreeCmd = defineCommand({
 
 const { getFrameworkVersion } = require('../lib/framework-version.cjs');
 
+const startupCmd = defineCommand({
+  meta: { name: 'startup', description: 'Print the GAD session-start contract. One-shot answer to "how do I begin working on this project?" (task 42.2-22, fixes chicken-and-egg identified by subagent battery findings 2026-04-15).' },
+  args: {
+    projectid: { type: 'string', description: 'Project id to snapshot against (default: first root)', default: '' },
+  },
+  run({ args }) {
+    const lines = [
+      'GAD session startup — one command gets you full context.',
+      '',
+      '  gad snapshot --projectid <id>      # full context dump, ~6-7k tokens',
+      '',
+      'What snapshot gives you:',
+      '  - STATE.xml (current phase, next-action, references)',
+      '  - ROADMAP in-sprint phases',
+      '  - Open + recently-done tasks in sprint window',
+      '  - Recent decisions (last 30)',
+      '  - EQUIPPED SKILLS (top 5 by relevance, with workflow pointers)',
+      '  - DOCS-MAP + file references',
+      '',
+      'After reading snapshot output:',
+      '  1. Act on the <next-action> line in STATE.xml — this is what to do next.',
+      '  2. Browse EQUIPPED SKILLS for skills relevant to the current sprint.',
+      '     Use `gad skill show <id>` to inspect any skill end-to-end.',
+      '  3. Use `gad skill list --paths` for the full skill inventory with paths.',
+      '',
+      'Cross-session continuity:',
+      '  - Decisions live in .planning/DECISIONS.xml — query with `gad decisions`.',
+      '  - Task attribution is on TASK-REGISTRY.xml entries (skill= attribute).',
+      '  - Re-run snapshot after auto-compact to re-hydrate.',
+      '',
+      'Rehydration cost note (decision gad-195, 2026-04-15):',
+      '  Snapshot is ~6-7k tokens. Running it every turn wastes cache. Run it',
+      '  once at session start and at clean phase boundaries. Between those',
+      '  points, trust the planning doc edits you made — they are durable.',
+      '',
+      'Common project ids on this repo:',
+    ];
+    // Best-effort enumeration via gad-config.
+    try {
+      const baseDir = findRepoRoot();
+      const config = gadConfig.load(baseDir);
+      for (const root of config.roots || []) {
+        lines.push(`  - ${root.id}`);
+      }
+    } catch {
+      lines.push('  (run `gad workspace list` to see available project ids)');
+    }
+    lines.push('');
+    lines.push('Single most important command: `gad snapshot --projectid <id>`.');
+    lines.push('Everything else is optional until you have that context.');
+    console.log(lines.join('\n'));
+
+    if (args.projectid) {
+      console.log('');
+      console.log(`Running snapshot now for projectid=${args.projectid}...`);
+      console.log('');
+      // Delegate to snapshot by re-invoking the process — simplest path.
+      const result = require('child_process').spawnSync(
+        process.execPath,
+        [__filename, 'snapshot', '--projectid', args.projectid],
+        { stdio: 'inherit' }
+      );
+      process.exit(result.status || 0);
+    }
+  },
+});
+
 const versionCmd = defineCommand({
   meta: { name: 'version', description: 'Print GAD framework version + git commit/branch for trace stamping' },
   args: {
@@ -10118,6 +10185,28 @@ const skillList = defineCommand({
         console.log('  gad skill promote <slug> --project --claude     # runtime install');
       }
     }
+    // Authoring skill disambiguation footer (task 42.2-23, findings
+    // 2026-04-15). Agents surfaced confusion about which of the four
+    // authoring skills to fire for "create a skill" — this footer answers.
+    console.log('');
+    console.log('Authoring skills — which to fire when:');
+    console.log('  create-skill         neutral generic authoring, no eval loop');
+    console.log('  create-proto-skill   fast drafter inside evolution loop (candidate → proto)');
+    console.log('  gad-skill-creator    GAD-tailored heavy path, eval scaffold');
+    console.log('  merge-skill          fuse overlapping / duplicate skills');
+    console.log('');
+    console.log('Skill lifecycle (decision gad-183 / references/skill-shape.md §11):');
+    console.log('  candidate → proto-skill → [install/validate] → promoted');
+    console.log('  gad evolution evolve       # find high-pressure phases → write CANDIDATE.md');
+    console.log('  create-proto-skill         # draft from candidate → .planning/proto-skills/<slug>/');
+    console.log('  gad evolution install      # test in runtime without promoting');
+    console.log('  gad evolution validate     # advisory checker → VALIDATION.md');
+    console.log('  gad evolution promote      # → skills/<name>/ + workflows/<name>.md');
+    console.log('');
+    console.log('Discovery helpers:');
+    console.log('  gad skill show <id>        # name, description, resolved workflow path');
+    console.log('  gad skill show <id> --body # full SKILL.md + workflow contents');
+    console.log('  gad skill list --paths     # inventory with absolute paths + MISSING flags');
   },
 });
 
@@ -10974,6 +11063,7 @@ const main = defineCommand({
     rounds: roundsCmd,
     verify: verifyCmd,
     snapshot: snapshotV2Cmd,
+    startup: startupCmd,
     sprint: sprintCmd,
     dev: devCmd,
     sink: sinkCmd,
