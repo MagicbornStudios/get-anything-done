@@ -5910,6 +5910,132 @@ function promptRuntime(callback) {
 /**
  * Prompt for install location
  */
+/**
+ * Default folder path for the "new GAD project folder" onboard option.
+ * Prefers ~/Desktop/my-gad-project (visible to the user), falls back to
+ * ~/my-gad-project if Desktop doesn't exist (non-standard home layouts).
+ */
+function defaultNewProjectPath() {
+  const home = os.homedir();
+  const desktop = path.join(home, 'Desktop');
+  const base = fs.existsSync(desktop) ? desktop : home;
+  return path.join(base, 'my-gad-project');
+}
+
+/**
+ * Prepare a target folder for the onboard flow. Creates it if missing,
+ * warns if it's non-empty. Returns { ok, reason } — caller decides whether
+ * to abort on non-empty.
+ */
+function prepareOnboardFolder(targetPath) {
+  const abs = path.resolve(expandTilde(targetPath));
+  if (!fs.existsSync(abs)) {
+    fs.mkdirSync(abs, { recursive: true });
+    return { abs, created: true, nonEmpty: false };
+  }
+  const entries = fs.readdirSync(abs).filter((e) => !e.startsWith('.DS_Store'));
+  return { abs, created: false, nonEmpty: entries.length > 0 };
+}
+
+/**
+ * Run the onboard flow: install runtime skills into targetFolder as a
+ * local install, then invoke `gad projects init --path <folder>` to
+ * scaffold .planning/. Never touches global state; never bundles
+ * external coding-agent CLIs.
+ */
+function runOnboardFlow(runtimes, targetFolder, isInteractive) {
+  console.log(`\n  ${cyan}Onboard mode:${reset} ${targetFolder}\n`);
+
+  // Step 1: chdir into the folder so the existing local-install path
+  // writes skills into <folder>/.claude/ (or equivalent per runtime).
+  try {
+    process.chdir(targetFolder);
+  } catch (err) {
+    console.error(`  ${yellow}Could not enter ${targetFolder}: ${err.message}${reset}`);
+    process.exit(1);
+  }
+
+  // Step 2: install runtime skills as a local install into the folder.
+  installAllRuntimes(runtimes, false, isInteractive);
+
+  // Step 3: spawn `gad projects init --path <folder>` to scaffold .planning/
+  // Use the same Node binary that ran us. Point at the packaged gad.cjs
+  // when bundled, or the source tree during development.
+  try {
+    const { execFileSync } = require('child_process');
+    const gadCliPath = path.join(__dirname, 'gad.cjs');
+    if (!fs.existsSync(gadCliPath)) {
+      console.warn(`  ${yellow}⚠ Could not locate gad.cjs next to install.js — skipping .planning/ scaffold${reset}`);
+      console.warn(`    Run manually from inside the folder: ${cyan}gad projects init${reset}`);
+    } else {
+      const projectName = path.basename(targetFolder);
+      const projectId = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      console.log(`\n  ${cyan}Scaffolding .planning/ as project id "${projectId}"${reset}`);
+      try {
+        execFileSync(process.execPath, [
+          gadCliPath, 'projects', 'init',
+          '--path', targetFolder,
+          '--name', projectName,
+          '--projectid', projectId,
+        ], { stdio: 'inherit' });
+      } catch (initErr) {
+        // projects init refuses to overwrite existing .planning/ files
+        // without --force. That's expected on re-runs. Surface the
+        // message but don't abort — skills install still worked.
+        console.warn(`  ${yellow}⚠ gad projects init exited non-zero (re-run in the folder with --force if needed)${reset}`);
+      }
+    }
+  } catch (err) {
+    console.warn(`  ${yellow}⚠ .planning/ scaffold step failed: ${err.message}${reset}`);
+  }
+
+  // Step 4: tailored SITREP.
+  console.log(`\n  ${green}✓ GAD project ready at${reset} ${targetFolder}`);
+  console.log(`  ${dim}Next:${reset}`);
+  console.log(`    cd "${targetFolder}"`);
+  for (const r of runtimes) {
+    console.log(`    ${dim}# ${r}${reset}`);
+  }
+  console.log(`    gad snapshot --projectid ${path.basename(targetFolder).toLowerCase().replace(/[^a-z0-9-]/g, '-')}`);
+  console.log('');
+}
+
+function promptNewProjectFolder(runtimes) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const defaultPath = defaultNewProjectPath();
+
+  console.log(`\n  ${yellow}Where should your new GAD project live?${reset}`);
+  console.log(`  ${dim}Press enter to accept the default, or paste an absolute path.${reset}`);
+  console.log(`  ${dim}A new folder will be created if it doesn't exist.${reset}\n`);
+
+  rl.question(`  Path ${dim}[${defaultPath}]${reset}: `, (answer) => {
+    const chosen = answer.trim() || defaultPath;
+    const prep = prepareOnboardFolder(chosen);
+
+    if (prep.nonEmpty) {
+      console.log(`\n  ${yellow}⚠ ${prep.abs} already contains files.${reset}`);
+      console.log(`  ${dim}GAD will still install runtime skills into a .claude/ (or equivalent)${reset}`);
+      console.log(`  ${dim}subfolder, and will refuse to overwrite an existing .planning/ directory${reset}`);
+      console.log(`  ${dim}unless you re-run with --force.${reset}\n`);
+      rl.question(`  Continue anyway? ${dim}[y/N]${reset}: `, (confirm) => {
+        rl.close();
+        if (!/^y(es)?$/i.test(confirm.trim())) {
+          console.log(`\n  ${yellow}Onboard cancelled${reset}\n`);
+          process.exit(0);
+        }
+        runOnboardFlow(runtimes, prep.abs, true);
+      });
+      return;
+    }
+
+    rl.close();
+    if (prep.created) {
+      console.log(`  ${green}✓ Created ${prep.abs}${reset}`);
+    }
+    runOnboardFlow(runtimes, prep.abs, true);
+  });
+}
+
 function promptLocation(runtimes) {
   if (!process.stdin.isTTY) {
     console.log(`  ${yellow}Non-interactive terminal detected, defaulting to global install${reset}\n`);
@@ -5938,15 +6064,21 @@ function promptLocation(runtimes) {
   }).join(', ');
 
   const localExamples = runtimes.map(r => `./${getDirName(r)}`).join(', ');
+  const onboardDefault = defaultNewProjectPath().replace(os.homedir(), '~');
 
   console.log(`  ${yellow}Where would you like to install?${reset}\n\n  ${cyan}1${reset}) Global ${dim}(${pathExamples})${reset} - available in all projects
   ${cyan}2${reset}) Local  ${dim}(${localExamples})${reset} - this project only
+  ${cyan}3${reset}) New GAD project folder ${dim}(${onboardDefault})${reset} - self-contained project + runtime
 `);
 
   rl.question(`  Choice ${dim}[1]${reset}: `, (answer) => {
     answered = true;
     rl.close();
     const choice = answer.trim() || '1';
+    if (choice === '3') {
+      promptNewProjectFolder(runtimes);
+      return;
+    }
     const isGlobal = choice !== '2';
     installAllRuntimes(runtimes, isGlobal, true);
   });
@@ -6081,6 +6213,19 @@ if (hasGlobal && hasLocal) {
 } else if (explicitConfigDir && hasLocal) {
   console.error(`  ${yellow}Cannot use --config-dir with --local${reset}`);
   process.exit(1);
+} else if (explicitNewProjectPath && (hasGlobal || hasLocal || explicitConfigDir)) {
+  console.error(`  ${yellow}Cannot use --new-project with --global, --local, or --config-dir${reset}`);
+  process.exit(1);
+} else if (explicitNewProjectPath) {
+  // Scriptable onboard path. Runtime defaults to claude if none specified.
+  const runtimes = selectedRuntimes.length > 0 ? selectedRuntimes : ['claude'];
+  const prep = prepareOnboardFolder(explicitNewProjectPath);
+  if (prep.created) {
+    console.log(`  ${green}✓ Created ${prep.abs}${reset}`);
+  } else if (prep.nonEmpty) {
+    console.log(`  ${yellow}⚠ ${prep.abs} is non-empty — proceeding (scripted mode, no confirm)${reset}`);
+  }
+  runOnboardFlow(runtimes, prep.abs, false);
 } else if (hasUninstall) {
   if (!hasGlobal && !hasLocal) {
     console.error(`  ${yellow}--uninstall requires --global or --local${reset}`);

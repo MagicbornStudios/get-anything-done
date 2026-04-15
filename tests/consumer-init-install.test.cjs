@@ -265,3 +265,87 @@ describe('Flow C — gad install all --<runtime> --config-dir <tmp>', () => {
     });
   }
 });
+
+// ─── Flow D: onboard flow — bin/install.js --new-project <path> ─────────────
+//
+// Task 42.2-38: the double-clickable onboard flow. Verifies the
+// scriptable `--new-project <path>` path that operators hit through the
+// interactive "3) New GAD project folder" choice. End state must be a
+// single self-contained folder with both `.claude/skills/` (runtime)
+// and `.planning/<canonical XML files>` (project state) — proving the
+// one-folder-for-everything contract.
+
+describe('Flow D — bin/install.js --claude --new-project <tmp>', () => {
+  let projectDir;
+  const { execFileSync } = require('child_process');
+  const INSTALL_JS = path.join(REPO_ROOT, 'bin', 'install.js');
+
+  before(() => {
+    // Use a subdir so the onboard dir is brand-new (not pre-created by mkdtemp).
+    const parent = createTempDir('gad-onboard-flow-d-');
+    projectDir = path.join(parent, 'my-gad-project');
+  });
+
+  after(() => {
+    if (projectDir && fs.existsSync(path.dirname(projectDir))) {
+      cleanup(path.dirname(projectDir));
+    }
+  });
+
+  test('creates self-contained folder with .claude/skills + .planning/ scaffold', () => {
+    let result;
+    try {
+      const out = execFileSync(
+        process.execPath,
+        [INSTALL_JS, '--claude', '--new-project', projectDir],
+        { cwd: REPO_ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+      );
+      result = { success: true, output: out };
+    } catch (err) {
+      result = {
+        success: false,
+        output: err.stdout?.toString() || '',
+        error: err.stderr?.toString() || err.message,
+      };
+    }
+
+    assert.ok(result.success, `onboard flow failed: ${(result.error || '').slice(0, 400)}`);
+
+    // 1. Project folder must exist.
+    assert.ok(fs.existsSync(projectDir), 'project folder created');
+
+    // 2. Runtime install must land .claude/skills/<many>/SKILL.md inside the project.
+    const claudeSkillsDir = path.join(projectDir, '.claude', 'skills');
+    assert.ok(fs.existsSync(claudeSkillsDir), '.claude/skills/ exists inside project folder');
+    const skillDirs = fs
+      .readdirSync(claudeSkillsDir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name);
+    assert.ok(skillDirs.length > 50, `expected >50 skills installed, got ${skillDirs.length}`);
+
+    // 3. At least one skill must have valid SKILL.md frontmatter.
+    const firstSkill = skillDirs.find((n) => n.startsWith('gad-')) || skillDirs[0];
+    const skillFile = path.join(claudeSkillsDir, firstSkill, 'SKILL.md');
+    assert.ok(fs.existsSync(skillFile), `${firstSkill}/SKILL.md exists`);
+    const skillBody = fs.readFileSync(skillFile, 'utf8');
+    assert.match(skillBody, /^---\s*\r?\n/, `${firstSkill} has frontmatter`);
+
+    // 4. .planning/ scaffold must exist with the four canonical XML ledgers.
+    const planningDir = path.join(projectDir, '.planning');
+    assert.ok(fs.existsSync(planningDir), '.planning/ scaffold exists');
+    for (const f of ['STATE.xml', 'ROADMAP.xml', 'TASK-REGISTRY.xml', 'DECISIONS.xml']) {
+      const fp = path.join(planningDir, f);
+      assert.ok(fs.existsSync(fp), `.planning/${f} exists`);
+      assert.match(fs.readFileSync(fp, 'utf8'), /^<\?xml version="1\.0"/, `${f} is valid XML`);
+    }
+
+    // 5. Non-interference: everything landed inside projectDir, nothing
+    // symlinked out. We can't safely assert on ~/.claude/ from here,
+    // but confirming zero escapes from the sandbox is a strong proxy.
+    const escapes = skillDirs.filter((name) => {
+      const real = fs.realpathSync(path.join(claudeSkillsDir, name));
+      return !real.startsWith(fs.realpathSync(projectDir));
+    });
+    assert.deepStrictEqual(escapes, [], 'no installed skill escapes the project folder');
+  });
+});
