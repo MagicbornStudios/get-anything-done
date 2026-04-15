@@ -5,7 +5,7 @@ import { EditorState } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, keymap } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { cn } from "@/lib/utils";
-import { QUERY_FIELDS, QUERY_KEYWORDS, QUERY_OPERATORS, QUERY_TRUST_VALUES } from "./query";
+import { QUERY_FIELDS, QUERY_TRUST_VALUES } from "./query";
 
 const QUERY_KEYWORDS_PATTERN = /\b(FROM|WHERE|AND|SORT|LIMIT|SELECT|ASC|DESC)\b/gi;
 const QUERY_OPERATORS_PATTERN = /(>=|<=|!=|=|:|>|<)/g;
@@ -16,6 +16,27 @@ type QueryHint = {
   insert: string;
   detail: string;
 };
+
+type QueryHintState = {
+  hints: QueryHint[];
+  activeToken: string;
+};
+
+const MONGO_KEYS = ["collection", "filter", "project", "sort", "limit"] as const;
+const MONGO_OPERATORS = [
+  "$eq",
+  "$ne",
+  "$gt",
+  "$gte",
+  "$lt",
+  "$lte",
+  "$in",
+  "$nin",
+  "$regex",
+  "$exists",
+  "$and",
+  "$or",
+] as const;
 
 function buildDecorations(view: EditorView) {
   const decorations = [];
@@ -108,72 +129,75 @@ type Props = {
   collections?: string[];
 };
 
-function deriveQueryHints(docText: string, cursorPos: number, collections: string[]): QueryHint[] {
+function deriveQueryHints(docText: string, cursorPos: number, collections: string[]): QueryHintState {
   const uniqueCollections = [...new Set(["active", ...collections.map((name) => name.toLowerCase())])];
-  const lineStartsAt = docText.lastIndexOf("\n", Math.max(0, cursorPos - 1)) + 1;
-  const lineText = docText.slice(lineStartsAt, cursorPos);
-  const tokenMatch = lineText.match(/[A-Za-z_][\w-]*$/);
-  const token = tokenMatch?.[0]?.toLowerCase() ?? "";
-  const upperPrefix = lineText.toUpperCase();
+  const beforeCursor = docText.slice(0, cursorPos);
+  const lineStartsAt = beforeCursor.lastIndexOf("\n", Math.max(0, beforeCursor.length - 1)) + 1;
+  const lineText = beforeCursor.slice(lineStartsAt);
+  const tokenMatch = lineText.match(/[$A-Za-z_][\w$-]*$/);
+  const token = tokenMatch?.[0] ?? "";
+  const tokenLower = token.toLowerCase();
   const filterHints = (hints: QueryHint[]) =>
-    token ? hints.filter((hint) => hint.label.toLowerCase().startsWith(token)) : hints;
+    tokenLower ? hints.filter((hint) => hint.label.toLowerCase().startsWith(tokenLower)) : hints;
 
-  if (upperPrefix.startsWith("FROM ")) {
-    return filterHints(uniqueCollections.map((name) => ({ label: name, insert: name, detail: "collection" }))).slice(
-      0,
-      8,
-    );
+  const nearCollectionValue = /"collection"\s*:\s*"[^"]*$/.test(beforeCursor);
+  const nearTrustValue = /"trust"\s*:\s*"[^"]*$/.test(beforeCursor);
+  const nearOperatorValue = /"\$[\w-]*$/.test(beforeCursor) || /\$[\w-]*$/.test(lineText);
+  const nearRootOrObjectKey = /[{,]\s*"?[A-Za-z_][\w-]*$/.test(lineText);
+  const inFilterLikeContext = /"(filter|sort|project)"\s*:\s*\{[^}]*$/.test(beforeCursor);
+  const inJsonLikeContext = /[\[{]/.test(beforeCursor);
+
+  if (!inJsonLikeContext) {
+    return { activeToken: "", hints: [] };
   }
 
-  if (upperPrefix.startsWith("SORT ")) {
-    const sortParts = lineText.trim().split(/\s+/);
-    if (sortParts.length <= 2) {
-      return filterHints(
-        QUERY_FIELDS.map((field) => ({
-          label: field,
-          insert: field,
-          detail: "field",
-        })),
-      ).slice(0, 10);
-    }
-    return filterHints([
-      { label: "asc", insert: "asc", detail: "ascending" },
-      { label: "desc", insert: "desc", detail: "descending" },
-    ]);
+  if (nearCollectionValue) {
+    return {
+      activeToken: token,
+      hints: filterHints(uniqueCollections.map((name) => ({ label: name, insert: name, detail: "collection" }))).slice(
+        0,
+        8,
+      ),
+    };
   }
 
-  if (upperPrefix.startsWith("SELECT ")) {
-    return filterHints(
-      QUERY_FIELDS.map((field) => ({
-        label: field,
-        insert: field,
-        detail: "field",
-      })),
-    ).slice(0, 10);
-  }
-
-  if (upperPrefix.startsWith("WHERE ") || upperPrefix.includes(" AND ")) {
-    const trustNeedsValue = /(?:^|\s)trust(?:>=|<=|!=|=|:|>|<)$/.test(lineText);
-    if (trustNeedsValue) {
-      return filterHints(
+  if (nearTrustValue) {
+    return {
+      activeToken: token,
+      hints: filterHints(
         QUERY_TRUST_VALUES.map((value) => ({
           label: value,
           insert: value,
           detail: "trust value",
         })),
-      );
-    }
-    return filterHints([
-      ...QUERY_FIELDS.map((field) => ({ label: field, insert: field, detail: "field" })),
-      ...QUERY_OPERATORS.map((operator) => ({ label: operator, insert: operator, detail: "operator" })),
-      { label: "AND", insert: "AND", detail: "combine clauses" },
-    ]).slice(0, 12);
+      ).slice(0, 6),
+    };
   }
 
-  return filterHints(QUERY_KEYWORDS.map((keyword) => ({ label: keyword, insert: keyword, detail: "keyword" }))).slice(
-    0,
-    8,
-  );
+  if (nearOperatorValue) {
+    return {
+      activeToken: token,
+      hints: filterHints(
+        MONGO_OPERATORS.map((op) => ({
+          label: op,
+          insert: op,
+          detail: "operator",
+        })),
+      ).slice(0, 8),
+    };
+  }
+
+  if (nearRootOrObjectKey || inFilterLikeContext) {
+    return {
+      activeToken: token,
+      hints: filterHints([
+        ...MONGO_KEYS.map((key) => ({ label: key, insert: key, detail: "query key" })),
+        ...QUERY_FIELDS.map((field) => ({ label: field, insert: field, detail: "field" })),
+      ]).slice(0, 10),
+    };
+  }
+
+  return { activeToken: "", hints: [] };
 }
 
 export default function DataQueryEditor({ value, onChange, onRun, className, collections = [] }: Props) {
@@ -184,6 +208,10 @@ export default function DataQueryEditor({ value, onChange, onRun, className, col
   const collectionsRef = useRef(collections);
   const [hints, setHints] = useState<QueryHint[]>([]);
   const hintsRef = useRef<QueryHint[]>([]);
+  const [activeToken, setActiveToken] = useState("");
+  const activeTokenRef = useRef("");
+  const [selectedHintIndex, setSelectedHintIndex] = useState(0);
+  const selectedHintIndexRef = useRef(0);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -194,12 +222,26 @@ export default function DataQueryEditor({ value, onChange, onRun, className, col
   }, [onRun]);
 
   useEffect(() => {
+    activeTokenRef.current = activeToken;
+  }, [activeToken]);
+
+  useEffect(() => {
+    selectedHintIndexRef.current = selectedHintIndex;
+  }, [selectedHintIndex]);
+
+  useEffect(() => {
     collectionsRef.current = collections;
     const view = viewRef.current;
     if (!view) return;
-    const nextHints = deriveQueryHints(view.state.doc.toString(), view.state.selection.main.head, collections);
+    const { hints: nextHints, activeToken: nextToken } = deriveQueryHints(
+      view.state.doc.toString(),
+      view.state.selection.main.head,
+      collections,
+    );
     hintsRef.current = nextHints;
     setHints(nextHints);
+    setActiveToken(nextToken);
+    setSelectedHintIndex(0);
   }, [collections]);
 
   const applyHint = (hint: QueryHint) => {
@@ -208,7 +250,7 @@ export default function DataQueryEditor({ value, onChange, onRun, className, col
     const { from, to } = view.state.selection.main;
     const line = view.state.doc.lineAt(from);
     const prefix = line.text.slice(0, from - line.from);
-    const tokenMatch = prefix.match(/[A-Za-z_][\w-]*$/);
+    const tokenMatch = prefix.match(/[$A-Za-z_][\w$-]*$/);
     const replaceFrom = tokenMatch ? from - tokenMatch[0].length : from;
     view.dispatch({
       changes: { from: replaceFrom, to, insert: hint.insert },
@@ -239,9 +281,25 @@ export default function DataQueryEditor({ value, onChange, onRun, className, col
           {
             key: "Tab",
             run: () => {
-              const first = hintsRef.current[0];
-              if (!first) return false;
-              applyHint(first);
+              const selected = hintsRef.current[Math.max(0, selectedHintIndexRef.current)] ?? hintsRef.current[0];
+              if (!selected || !activeTokenRef.current) return false;
+              applyHint(selected);
+              return true;
+            },
+          },
+          {
+            key: "ArrowDown",
+            run: () => {
+              if (hintsRef.current.length === 0) return false;
+              setSelectedHintIndex((prev) => (prev + 1) % hintsRef.current.length);
+              return true;
+            },
+          },
+          {
+            key: "ArrowUp",
+            run: () => {
+              if (hintsRef.current.length === 0) return false;
+              setSelectedHintIndex((prev) => (prev - 1 + hintsRef.current.length) % hintsRef.current.length);
               return true;
             },
           },
@@ -250,9 +308,15 @@ export default function DataQueryEditor({ value, onChange, onRun, className, col
           const docText = update.state.doc.toString();
           if (update.docChanged) onChangeRef.current(docText);
           if (update.docChanged || update.selectionSet) {
-            const nextHints = deriveQueryHints(docText, update.state.selection.main.head, collectionsRef.current);
+            const { hints: nextHints, activeToken: nextToken } = deriveQueryHints(
+              docText,
+              update.state.selection.main.head,
+              collectionsRef.current,
+            );
             hintsRef.current = nextHints;
             setHints(nextHints);
+            setActiveToken(nextToken);
+            setSelectedHintIndex(0);
           }
         }),
       ],
@@ -260,9 +324,11 @@ export default function DataQueryEditor({ value, onChange, onRun, className, col
 
     const view = new EditorView({ state, parent: host });
     viewRef.current = view;
-    const initialHints = deriveQueryHints(value, view.state.selection.main.head, collectionsRef.current);
-    hintsRef.current = initialHints;
-    setHints(initialHints);
+    const initialHintState = deriveQueryHints(value, view.state.selection.main.head, collectionsRef.current);
+    hintsRef.current = initialHintState.hints;
+    setHints(initialHintState.hints);
+    setActiveToken(initialHintState.activeToken);
+    setSelectedHintIndex(0);
 
     return () => {
       view.destroy();
@@ -282,33 +348,50 @@ export default function DataQueryEditor({ value, onChange, onRun, className, col
 
   return (
     <div className="space-y-2">
-      <div
-        ref={hostRef}
-        className={cn(
-          "min-h-[180px] overflow-hidden rounded-xl border border-border/70 bg-background/40 [&_.cm-editor]:outline-none",
-          className,
-        )}
-        role="region"
-        aria-label="Data query editor"
-      />
-      <div className="rounded-lg border border-border/60 bg-muted/20 p-2">
-        <p className="text-[11px] text-muted-foreground">Suggestions (Tab inserts first)</p>
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {hints.length === 0 ? (
-            <span className="text-[11px] text-muted-foreground">No suggestions for this cursor position.</span>
-          ) : (
-            hints.map((hint) => (
-              <button
-                key={`${hint.label}-${hint.detail}`}
-                type="button"
-                onClick={() => applyHint(hint)}
-                className="rounded-md border border-border/70 bg-background/70 px-2 py-1 text-[11px] hover:border-accent/60"
-              >
-                {hint.label}
-              </button>
-            ))
+      <div className={cn("relative", className)}>
+        <div
+          ref={hostRef}
+          className={cn(
+            "min-h-[180px] overflow-hidden rounded-xl border border-border/70 bg-background/40 [&_.cm-editor]:outline-none",
+            className,
           )}
-        </div>
+          role="region"
+          aria-label="Data query editor"
+        />
+        {hints.length > 0 && activeToken ? (
+          <div className="pointer-events-none absolute right-3 top-2 rounded border border-border/60 bg-background/70 px-2 py-0.5 text-[10px] text-muted-foreground">
+            {activeToken}
+            <span className="text-muted-foreground/40">{hints[selectedHintIndex]?.label.slice(activeToken.length)}</span>
+          </div>
+        ) : null}
+        {hints.length > 0 && activeToken ? (
+          <div className="absolute bottom-2 left-2 right-2 z-20">
+            <div className="rounded-lg border border-border/70 bg-background/95 p-1.5 shadow-lg">
+              <p className="px-1 text-[10px] text-muted-foreground">Suggestions (Tab accepts, Up/Down changes)</p>
+              <div className="mt-1 max-h-32 overflow-auto">
+                {hints.map((hint, index) => (
+                  <button
+                    key={`${hint.label}-${hint.detail}`}
+                    type="button"
+                    onClick={() => {
+                      setSelectedHintIndex(index);
+                      applyHint(hint);
+                    }}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded px-2 py-1 text-left text-[11px]",
+                      index === selectedHintIndex
+                        ? "border border-accent/50 bg-accent/15"
+                        : "border border-transparent hover:border-accent/40 hover:bg-muted/40",
+                    )}
+                  >
+                    <span>{hint.label}</span>
+                    <span className="text-[10px] uppercase text-muted-foreground">{hint.detail}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

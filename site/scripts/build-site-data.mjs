@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * Prebuild data generator for the GAD landing site.
  *
@@ -30,7 +30,7 @@ const { readPhases } = require("../../lib/roadmap-reader.cjs");
 const { readTasks } = require("../../lib/task-registry-reader.cjs");
 const { summarizeAgentLineage } = require("../../lib/eval-agent-lineage.cjs");
 const gadConfig = require("../../bin/gad-config.cjs");
-// Task 42.4-15, decision gad-184: project ⊇ species inheritance contract.
+// Task 42.4-15, decision gad-184: project âŠ‡ species inheritance contract.
 // Species metadata must be loaded through the canonical merger so the site
 // sees the same shape as the CLI and the forge editor.
 const {
@@ -50,7 +50,7 @@ function renderMarkdown(src) {
   }
 }
 
-/** Agent frontmatter `tools` may be a string, YAML list, or (buggy) `{}` — catalog types expect `string | null`. */
+/** Agent frontmatter `tools` may be a string, YAML list, or (buggy) `{}` â€” catalog types expect `string | null`. */
 function normalizeAgentToolsField(value) {
   if (value == null) return null;
   if (typeof value === "string") return value;
@@ -70,7 +70,7 @@ const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 
 // Phase 10: `gad site compile` can point the planning-data readers at an
 // external project root via GAD_PROJECT_ROOT. Everything ELSE (skills, agents,
-// evals, templates, framework assets) still reads from REPO_ROOT — those are GAD framework
+// evals, templates, framework assets) still reads from REPO_ROOT â€” those are GAD framework
 // artifacts that don't change per project. Default: GAD's own root for
 // backwards-compat with the existing GAD landing site build.
 const PROJECT_ROOT = process.env.GAD_PROJECT_ROOT
@@ -166,6 +166,8 @@ const WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "workflows");
 const HUMAN_WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "human-workflows");
 const CONTEXT_FRAMEWORKS_DIR = path.join(REPO_ROOT, ".planning", "context-frameworks");
 const DATA_DIR = path.join(REPO_ROOT, "data");
+const SITE_DATA_DIR = path.join(SITE_ROOT, "data");
+const DB_JSON_FILE = path.join(SITE_DATA_DIR, "db.json");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
 const DOWNLOADS_DIR = path.join(PUBLIC_DIR, "downloads");
 const REQUIREMENTS_DIR = path.join(DOWNLOADS_DIR, "requirements");
@@ -174,6 +176,7 @@ const PLAYABLE_DIR = path.join(PUBLIC_DIR, "playable");
 const GENERATED_FILE = path.join(SITE_ROOT, "lib", "eval-data.generated.ts");
 const CATALOG_FILE = path.join(SITE_ROOT, "lib", "catalog.generated.ts");
 const PROJECT_CONFIG_FILE = path.join(SITE_ROOT, "lib", "project-config.generated.ts");
+const DEVID_PROMPTS_FILE = path.join(SITE_ROOT, "lib", "devid-prompts.generated.ts");
 
 // -------------------------------------------------------------------------
 // Helpers
@@ -321,7 +324,7 @@ function parseFrontmatter(src) {
     }
     const top = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
     if (!top || /^\s/.test(line)) {
-      // Orphan continuation — append to the last key as string
+      // Orphan continuation â€” append to the last key as string
       i += 1;
       continue;
     }
@@ -334,7 +337,7 @@ function parseFrontmatter(src) {
       continue;
     }
 
-    // Bare key — consume indented block as a nested object
+    // Bare key â€” consume indented block as a nested object
     const nested = {};
     i += 1;
     while (i < lines.length) {
@@ -385,7 +388,7 @@ function firstParagraph(text, max = 600) {
     i++;
   }
   const result = chunks.join(" ").replace(/\s+/g, " ").trim();
-  return result.length > max ? result.slice(0, max - 1) + "…" : result;
+  return result.length > max ? result.slice(0, max - 1) + "â€¦" : result;
 }
 
 function gitShow(ref, repoRelPath) {
@@ -398,7 +401,7 @@ function gitShow(ref, repoRelPath) {
   }
 }
 
-// Skip these patterns when zipping — keeps downloads lean.
+// Skip these patterns when zipping â€” keeps downloads lean.
 const ZIP_SKIP = new Set(["node_modules", ".git", "dist", ".next"]);
 
 function shouldSkipForZip(name) {
@@ -429,7 +432,7 @@ function zipDirectory(srcDir, zipPath, label) {
   ensureDir(path.dirname(zipPath));
   zip.writeZip(zipPath);
   const size = fs.statSync(zipPath).size;
-  console.log(`  [zip] ${label} → ${path.relative(SITE_ROOT, zipPath)} (${formatBytes(size)})`);
+  console.log(`  [zip] ${label} â†’ ${path.relative(SITE_ROOT, zipPath)} (${formatBytes(size)})`);
   return { path: path.relative(PUBLIC_DIR, zipPath).split(path.sep).join("/"), bytes: size };
 }
 
@@ -469,7 +472,7 @@ function zipEvalTemplates() {
 }
 
 // -------------------------------------------------------------------------
-// 2b. Planning-only zips (no source code) — bundles just the planning
+// 2b. Planning-only zips (no source code) â€” bundles just the planning
 // artifacts a human would read to understand the eval: .planning/, skills/,
 // AGENTS.md, REQUIREMENTS.xml or REQUIREMENTS.md, source-*.xml design docs.
 // -------------------------------------------------------------------------
@@ -527,7 +530,7 @@ function zipPlanningOnly(srcDir, zipPath, label) {
   ensureDir(path.dirname(zipPath));
   zip.writeZip(zipPath);
   const size = fs.statSync(zipPath).size;
-  console.log(`  [zip] planning:${label} → ${path.relative(SITE_ROOT, zipPath)} (${formatBytes(size)}, ${fileCount} files)`);
+  console.log(`  [zip] planning:${label} â†’ ${path.relative(SITE_ROOT, zipPath)} (${formatBytes(size)}, ${fileCount} files)`);
   return { path: path.relative(PUBLIC_DIR, zipPath).split(path.sep).join("/"), bytes: size, files: fileCount };
 }
 
@@ -578,7 +581,7 @@ function findTraceFiles() {
  * project-level metadata (project.json).
  */
 function scanEvalProjects() {
-  console.log("[2h/4] Scanning eval species metadata (project ⊇ species merged)");
+  console.log("[2h/4] Scanning eval species metadata (project âŠ‡ species merged)");
   const rows = [];
   for (const sp of listEvalSpecies()) {
     try {
@@ -591,11 +594,11 @@ function scanEvalProjects() {
       const contextFramework =
         rawFramework === "emergent" ? "custom" : rawFramework;
       rows.push({
-        // Composite key — the new canonical species id
+        // Composite key â€” the new canonical species id
         id: sp.id,
         project: sp.project,
         species: sp.species,
-        // Legacy `name` field — kept as the species name for backwards-compat
+        // Legacy `name` field â€” kept as the species name for backwards-compat
         // with consumers that still index by a single string.
         name: sp.id,
         description: data.description || null,
@@ -641,7 +644,7 @@ function scanEvalParents() {
 }
 
 /**
- * Scan each eval run's run/ directory for what the agent produced for itself —
+ * Scan each eval run's run/ directory for what the agent produced for itself â€”
  * workflow notes, written skills, created AGENTS.md, planning artifacts.
  * Returns a map keyed by `${project}/${version}` -> { skillFiles, agentFiles, planningFiles, workflowNotes }.
  */
@@ -742,7 +745,7 @@ function inferWorkflow(project, data) {
 }
 
 function isImplementationRun(project, data) {
-  // cli-efficiency is a tooling eval with workflow="A"/"B" letters — not
+  // cli-efficiency is a tooling eval with workflow="A"/"B" letters â€” not
   // comparable to implementation eval results.
   if (project.startsWith("cli-efficiency")) return false;
   // Accept implementation + greenfield + brownfield eval types.
@@ -753,7 +756,7 @@ function isImplementationRun(project, data) {
 }
 
 // -------------------------------------------------------------------------
-// Requirements versions — the current v4 and a narrative for v1-v3
+// Requirements versions â€” the current v4 and a narrative for v1-v3
 // -------------------------------------------------------------------------
 
 function copyCurrentRequirements() {
@@ -778,7 +781,7 @@ function copyCurrentRequirements() {
     const dest = path.join(REQUIREMENTS_DIR, destName);
     fs.copyFileSync(src, dest);
     const size = fs.statSync(dest).size;
-    console.log(`  [copy] ${slug} ${version} → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
+    console.log(`  [copy] ${slug} ${version} â†’ ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
     out.push({
       project: sp.project,
       species: sp.species,
@@ -796,11 +799,11 @@ function copyCurrentRequirements() {
   if (exists(historyFile)) {
     const dest = path.join(REQUIREMENTS_DIR, "REQUIREMENTS-VERSIONS.md");
     fs.copyFileSync(historyFile, dest);
-    console.log(`  [copy] requirements history narrative → ${path.relative(SITE_ROOT, dest)}`);
+    console.log(`  [copy] requirements history narrative â†’ ${path.relative(SITE_ROOT, dest)}`);
   }
 
   // Extract historical REQUIREMENTS.md snapshots from git. These are the eval
-  // DESCRIPTION docs (what the eval measures), not the game spec itself — the
+  // DESCRIPTION docs (what the eval measures), not the game spec itself â€” the
   // game spec XML was only committed starting with v4. Still valuable for
   // lineage, labelled truthfully as "eval description snapshots".
   const historicalSnapshots = [
@@ -831,14 +834,14 @@ function copyCurrentRequirements() {
     // Prepend a short provenance header so the file is self-describing.
     const annotated =
       `<!-- Extracted from git commit ${snap.commit} on ${snap.date} (${snap.label}). -->\n` +
-      `<!-- This is the eval DESCRIPTION doc — what the eval measures — not the\n` +
+      `<!-- This is the eval DESCRIPTION doc â€” what the eval measures â€” not the\n` +
       `     game spec. The game spec XML lives in template/.planning/REQUIREMENTS.xml\n` +
       `     and was only committed to git starting with v4 (the earlier .planning/\n` +
       `     directories were gitignored). -->\n\n` +
       content;
     fs.writeFileSync(dest, annotated, "utf8");
     const size = fs.statSync(dest).size;
-    console.log(`  [git] snapshot ${snap.commit} (${snap.date}) → ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
+    console.log(`  [git] snapshot ${snap.commit} (${snap.date}) â†’ ${path.relative(SITE_ROOT, dest)} (${formatBytes(size)})`);
     extracted.push({
       commit: snap.commit,
       date: snap.date,
@@ -871,7 +874,7 @@ function parseRequirementsHistory() {
   for (const chunk of chunks) {
     const lines = chunk.split("\n");
     const header = lines[0] ?? "";
-    const versionMatch = header.match(/^(v\d+)\s*—\s*(\d{4}-\d{2}-\d{2})/);
+    const versionMatch = header.match(/^(v\d+)\s*â€”\s*(\d{4}-\d{2}-\d{2})/);
     if (!versionMatch) continue;
     const body = lines.slice(1).join("\n").trim();
     // Extract labeled sections by bold prefix.
@@ -1017,7 +1020,7 @@ function scanCatalog() {
   }
 
   // Scan which eval templates inherit which framework skills.
-  // template/skills/<name>.md → the eval copies that skill into its starting state.
+  // template/skills/<name>.md â†’ the eval copies that skill into its starting state.
   const inheritanceMap = {}; // skillId -> [project...]
   for (const skill of catalog.skills) inheritanceMap[skill.id] = [];
   for (const sp of listEvalSpecies()) {
@@ -1053,7 +1056,7 @@ function scanCatalog() {
 }
 
 // -------------------------------------------------------------------------
-// Workflows — parse hand-authored .planning/workflows/*.md files into
+// Workflows â€” parse hand-authored .planning/workflows/*.md files into
 // a typed WORKFLOWS catalog. Each file has YAML frontmatter + exactly one
 // mermaid fenced block per .planning/workflows/README.md schema.
 // -------------------------------------------------------------------------
@@ -1073,7 +1076,7 @@ function parseWorkflows() {
     const mermaidMatch = src.match(/```mermaid\n([\s\S]*?)```/);
     const mermaidBody = mermaidMatch ? mermaidMatch[1].trim() : "";
     if (!mermaidBody) {
-      console.warn(`  [workflows] ${name} has no mermaid block — skipping`);
+      console.warn(`  [workflows] ${name} has no mermaid block â€” skipping`);
       continue;
     }
 
@@ -1104,7 +1107,7 @@ function parseWorkflows() {
 }
 
 // -------------------------------------------------------------------------
-// Human workflows — hand-authored operator routines. Distinct from
+// Human workflows â€” hand-authored operator routines. Distinct from
 // .planning/workflows/ (agent workflows): no trace matching, no
 // conformance score, Mermaid is optional, frontmatter shape is different.
 // Decision / task 44-22.
@@ -1190,7 +1193,7 @@ function parseContextFrameworks() {
 //   2. A `workflow_conformance` score per authored workflow.
 //   3. Emergent workflow candidates via a simple DFG + n-gram frequency
 //      mine over tool_use sequences.
-// v1 is deterministic, pure Node, no dependencies — decision gad-174.
+// v1 is deterministic, pure Node, no dependencies â€” decision gad-174.
 // -------------------------------------------------------------------------
 
 const TRACE_EVENTS_PATH = path.join(REPO_ROOT, ".planning", ".trace-events.jsonl");
@@ -1203,11 +1206,11 @@ const WORKFLOW_MINE_THRESHOLDS = {
 };
 
 /**
- * Determine an event's "scope" — which context it belongs to. v1 uses a
+ * Determine an event's "scope" â€” which context it belongs to. v1 uses a
  * path-based heuristic: anything inside a worktree directory or eval
  * preservation path is classified as `eval-agent` (work an agent did inside
  * an eval project), everything else is `gad-framework` (real work on the
- * GAD framework itself). Decision gad-175 — v2 will move this to an
+ * GAD framework itself). Decision gad-175 â€” v2 will move this to an
  * explicit scope tag written by the hooks, but the filter is still
  * applied here so legacy traces can be analyzed.
  */
@@ -1350,7 +1353,7 @@ function sequenceToGraph(sequence, workflowSlug) {
 
 /**
  * workflow_conformance v1 formula per decision gad-173:
- *   (matching_nodes − extra_nodes − out_of_order_nodes) / expected_nodes
+ *   (matching_nodes âˆ’ extra_nodes âˆ’ out_of_order_nodes) / expected_nodes
  * For v1 we approximate by counting how many authored participants were
  * observed at least once (matching) and how many unique observed nodes had
  * no authored counterpart (extra). Out-of-order tracking is deferred until
@@ -1400,7 +1403,7 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
 
   const sourceLabel = useSkillStream ? "skill-level (v2)" : "tool-level (v1 fallback)";
   console.log(
-    `  [workflow-trace] emergent source: ${sourceLabel} — ${useSkillStream ? taggedEvents.length + " tagged events" : "no trigger_skill tags yet, mining raw tool names"}`
+    `  [workflow-trace] emergent source: ${sourceLabel} â€” ${useSkillStream ? taggedEvents.length + " tagged events" : "no trigger_skill tags yet, mining raw tool names"}`
   );
 
   const sequence = useSkillStream
@@ -1412,7 +1415,7 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
   const counts = new Map();
   for (let len = WORKFLOW_MINE_THRESHOLDS.min_length; len <= WORKFLOW_MINE_THRESHOLDS.max_length; len++) {
     for (let i = 0; i <= sequence.length - len; i++) {
-      const key = sequence.slice(i, i + len).join("→");
+      const key = sequence.slice(i, i + len).join("â†’");
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
   }
@@ -1421,7 +1424,7 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
   const raw = [];
   for (const [key, count] of counts.entries()) {
     if (count < WORKFLOW_MINE_THRESHOLDS.min_support) continue;
-    const labels = key.split("→");
+    const labels = key.split("â†’");
     raw.push({ key, labels, support: count, score: labels.length * count });
   }
   raw.sort((a, b) => b.score - a.score);
@@ -1443,7 +1446,7 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
   // workflow participant set (i.e. not genuinely emergent, just re-derived).
   const authoredSignatures = new Set();
   for (const w of authoredWorkflows) {
-    authoredSignatures.add((w.participants.cli || []).join("→"));
+    authoredSignatures.add((w.participants.cli || []).join("â†’"));
   }
 
   return picked
@@ -1461,17 +1464,17 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
         edges.push({ id: `${slug}-e${i}`, source: nodes[i].id, target: nodes[i + 1].id });
       }
       // Decision gad-177: emergent workflows have NO authored mermaid body.
-      // They have no designed shape — the React Flow live graph IS the
+      // They have no designed shape â€” the React Flow live graph IS the
       // emergent workflow. mermaidBody stays empty so WorkflowCard knows
       // to render a single-column (React-Flow-only) layout.
       const detectorLabel = useSkillStream ? "skill-level (v2)" : "tool-level (v1)";
       const descriptionPrefix = useSkillStream
-        ? `Recurring skill invocation sequence detected ${p.support}× in trace data (detector v2 — skill-level).`
-        : `Recurring tool-use sequence detected ${p.support}× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via \`gad --skill\`).`;
+        ? `Recurring skill invocation sequence detected ${p.support}Ã— in trace data (detector v2 â€” skill-level).`
+        : `Recurring tool-use sequence detected ${p.support}Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via \`gad --skill\`).`;
       return {
         slug,
-        name: `${p.labels.join(" → ")}`,
-        description: `${descriptionPrefix} Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via \`gad workflow promote ${slug}\` or discard.`,
+        name: `${p.labels.join(" â†’ ")}`,
+        description: `${descriptionPrefix} Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via \`gad workflow promote ${slug}\` or discard.`,
         detector: detectorLabel,
         trigger: `Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).`,
         participants: {
@@ -1484,7 +1487,7 @@ function detectEmergentWorkflows(events, authoredWorkflows) {
         relatedPhases: ["42.3"],
         origin: "emergent",
         mermaidBody: "",
-        bodyHtml: `<p>Recurring tool sequence detected <strong>${p.support}×</strong>: ${p.labels.join(" → ")}.</p>`,
+        bodyHtml: `<p>Recurring tool sequence detected <strong>${p.support}Ã—</strong>: ${p.labels.join(" â†’ ")}.</p>`,
         file: ".planning/workflows/emergent/ (generated)",
         liveGraph: { nodes, edges },
         conformance: undefined,
@@ -1500,7 +1503,7 @@ function synthesizeWorkflowTraceData(workflows, preloadedEvents) {
   const totalRaw = loadTraceEvents().length;
   if (events.length === 0) {
     console.log(
-      `  [workflow-trace] no gad-framework events (${totalRaw} total; rest are eval-agent scoped) — skipping synthesis`
+      `  [workflow-trace] no gad-framework events (${totalRaw} total; rest are eval-agent scoped) â€” skipping synthesis`
     );
     return;
   }
@@ -1533,7 +1536,7 @@ function synthesizeWorkflowTraceData(workflows, preloadedEvents) {
 }
 
 // -------------------------------------------------------------------------
-// Signal analytics (task 44-21) — pure reducers over the gad-framework
+// Signal analytics (task 44-21) â€” pure reducers over the gad-framework
 // scoped trace event stream. v1 surfaces:
 //   1. Top files by tool_use count (Read/Edit/Write/Glob/etc.)
 //   2. Top skills by trigger_skill invocation
@@ -1545,7 +1548,7 @@ function synthesizeWorkflowTraceData(workflows, preloadedEvents) {
 //     repo-relative file refs, fold into topFiles).
 //   - WebFetch URL frequency.
 //   - Tool/skill n-gram sequences (reuse the synthesizeWorkflowTraceData
-//     pattern — frequent-subgraph mining).
+//     pattern â€” frequent-subgraph mining).
 //   - Per-session trends (group by runtime.session_id).
 // -------------------------------------------------------------------------
 
@@ -1560,7 +1563,7 @@ function normalizeSignalFilePath(raw) {
   if (p.toLowerCase().startsWith(lowerPrefix)) {
     p = p.slice(SIGNAL_PROJECT_ROOT_PREFIX.length);
   }
-  // If still absolute (different drive, /tmp, etc.), drop it — we only
+  // If still absolute (different drive, /tmp, etc.), drop it â€” we only
   // want repo-relative paths in the leaderboard.
   if (/^[a-zA-Z]:\//.test(p) || p.startsWith("/")) return null;
   return p;
@@ -1610,7 +1613,7 @@ function synthesizeSignalAnalytics(events) {
     };
   }
 
-  // 4. Agent split — default = main session (agent_id null), sub = subagent.
+  // 4. Agent split â€” default = main session (agent_id null), sub = subagent.
   let defaultCount = 0;
   let subCount = 0;
   const byRole = {};
@@ -1626,7 +1629,7 @@ function synthesizeSignalAnalytics(events) {
   }
 
   console.log(
-    `  [signal] ${toolUse.length} tool_use events → ${topFiles.length} top files, ${topSkills.length} top skills, ${Object.keys(toolMix).length} tools, default=${defaultCount} sub=${subCount}`
+    `  [signal] ${toolUse.length} tool_use events â†’ ${topFiles.length} top files, ${topSkills.length} top skills, ${Object.keys(toolMix).length} tools, default=${defaultCount} sub=${subCount}`
   );
 
   return {
@@ -1643,7 +1646,7 @@ function synthesizeSignalAnalytics(events) {
 }
 
 // -------------------------------------------------------------------------
-// Planning state — parse STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml
+// Planning state â€” parse STATE.xml, TASK-REGISTRY.xml, DECISIONS.xml
 // for the /planning meta-transparency page.
 // -------------------------------------------------------------------------
 
@@ -1704,13 +1707,13 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
   // Writes three artifacts so external agents evaluating GAD can ingest the
   // full system without crawling the HTML:
   //
-  //   public/llms.txt            — concise index following the emerging
+  //   public/llms.txt            â€” concise index following the emerging
   //                                llms.txt convention (https://llmstxt.org/)
   //                                listing the key pages with one-line notes.
-  //   public/llms-full.txt       — full-text markdown dump of every skill,
+  //   public/llms-full.txt       â€” full-text markdown dump of every skill,
   //                                decision, question, bug, glossary term,
   //                                task, phase, and current requirements XML.
-  //   public/api/docs.json       — structured JSON of everything above plus
+  //   public/api/docs.json       â€” structured JSON of everything above plus
   //                                the search index, so other agents can
   //                                parse it as structured data.
   console.log("[2j/4] Writing agent-crawlable docs (llms.txt, llms-full.txt, api/docs.json)");
@@ -1722,7 +1725,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
   const SITE_URL = "https://get-anything-done.vercel.app";
 
   // ---------- llms.txt (concise index) ----------
-  const llmsTxt = `# Get Anything Done — llms.txt
+  const llmsTxt = `# Get Anything Done â€” llms.txt
 
 > A research framework for evaluating and evolving AI coding agents under measurable pressure. Everything in this site is backed by files in the repo at https://github.com/MagicbornStudios/get-anything-done. This file follows the llmstxt.org convention.
 
@@ -1730,8 +1733,8 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 
 - [Home](${SITE_URL}/): Evaluate and evolve agents under measurable pressure
 - [Glossary](${SITE_URL}/glossary): Every domain term (CSH, freedom hypothesis, pressure, etc.)
-- [Skeptic](${SITE_URL}/skeptic): Devils-advocate critique of every hypothesis — read this first before trusting any number
-- [Lineage](${SITE_URL}/lineage): GSD → RepoPlanner → GAD
+- [Skeptic](${SITE_URL}/skeptic): Devils-advocate critique of every hypothesis â€” read this first before trusting any number
+- [Lineage](${SITE_URL}/lineage): GSD â†’ RepoPlanner â†’ GAD
 
 ## Evaluation
 
@@ -1748,7 +1751,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 
 ## System
 
-- [Contribute](${SITE_URL}/contribute): Human-first workflow (clone → install → open in Claude → talk)
+- [Contribute](${SITE_URL}/contribute): Human-first workflow (clone â†’ install â†’ open in Claude â†’ talk)
 - [Security](${SITE_URL}/security): Skill attack surfaces, mitigations, future certification model
 - [Planning](${SITE_URL}/planning): State + tabs for tasks (${allTasks.length}), phases (${allPhases.length}), decisions (${allDecisions.length}), roadmap, requirements, bugs (${(pseudoDb.bugs?.bugs ?? []).length})
 
@@ -1770,7 +1773,7 @@ git clone https://github.com/MagicbornStudios/get-anything-done
   // ---------- llms-full.txt (full content dump) ----------
   const sections = [];
 
-  sections.push(`# Get Anything Done — full text export
+  sections.push(`# Get Anything Done â€” full text export
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
@@ -1812,7 +1815,7 @@ Generated: ${new Date().toISOString()}
   sections.push(`\n\n---\n\n# Observed bugs (${bugs.length})\n`);
   for (const b of bugs) {
     sections.push(`\n## ${b.id}\n\n`);
-    sections.push(`**${b.title}** — ${b.project}/${b.version} — ${b.severity} — ${b.status}\n\n`);
+    sections.push(`**${b.title}** â€” ${b.project}/${b.version} â€” ${b.severity} â€” ${b.status}\n\n`);
     sections.push(`${b.description}\n\n**Expected:** ${b.expected}\n\n**Reproduction:** ${b.reproduction}\n`);
   }
 
@@ -1825,7 +1828,7 @@ Generated: ${new Date().toISOString()}
     sections.push(`${g.short}\n\n${g.full}\n`);
   }
 
-  // Tasks (summary only — 140 full goals would blow up the file)
+  // Tasks (summary only â€” 140 full goals would blow up the file)
   sections.push(`\n\n---\n\n# Tasks (${allTasks.length})\n`);
   for (const t of allTasks) {
     sections.push(`\n- **${t.id}** [${t.status}]: ${t.goal.slice(0, 400)}\n`);
@@ -1900,7 +1903,7 @@ Generated: ${new Date().toISOString()}
 function computeTaskPressure(xml) {
   // Decision gad-79: task_pressure is computed programmatically from
   // REQUIREMENTS.xml structure. Shannon-entropy intuition without computing
-  // entropy directly — "pressure ≈ number of decisions/questions required
+  // entropy directly â€” "pressure â‰ˆ number of decisions/questions required
   // to satisfy the system."
   //
   // Inputs:
@@ -1913,8 +1916,8 @@ function computeTaskPressure(xml) {
   //   raw   = R + 2*G + C
   //   score = log2(raw + 1) / log2(MAX_EXPECTED + 1), clamped [0, 1]
   //
-  // MAX_EXPECTED is chosen at 64 so round-5 (R≈21 addendum + G=4 + ≥6 cross-cuts
-  // ≈ 21 + 8 + 6 = 35 raw) normalizes to log2(36)/log2(65) ≈ 0.86. Values above
+  // MAX_EXPECTED is chosen at 64 so round-5 (Râ‰ˆ21 addendum + G=4 + â‰¥6 cross-cuts
+  // â‰ˆ 21 + 8 + 6 = 35 raw) normalizes to log2(36)/log2(65) â‰ˆ 0.86. Values above
   // MAX_EXPECTED clamp to 1.0.
   if (!xml) return { R: 0, G: 0, C: 0, W: 0, raw: 0, score: 0 };
 
@@ -1925,7 +1928,7 @@ function computeTaskPressure(xml) {
   const G = gateMatches.length;
 
   const amendsMatches = xml.match(/\samends="[^"]+"/g) || [];
-  // Each amends attribute may name multiple targets (e.g. amends="G1 G4") — count tokens.
+  // Each amends attribute may name multiple targets (e.g. amends="G1 G4") â€” count tokens.
   let C = 0;
   for (const m of amendsMatches) {
     const val = m.match(/amends="([^"]+)"/)?.[1] ?? "";
@@ -1973,7 +1976,7 @@ function computeTaskPressurePerVersion(currentRequirements) {
 
 function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs, skills, agents, commands }) {
   // Flat list of searchable entries. Each entry is { id, title, kind, href, body }.
-  // Body is the searchable haystack — fuzzy match against this.
+  // Body is the searchable haystack â€” fuzzy match against this.
   const entries = [];
 
   for (const d of decisions) {
@@ -1999,7 +2002,7 @@ function buildSearchIndex({ decisions, tasks, phases, glossary, questions, bugs,
   for (const p of phases) {
     entries.push({
       id: p.id,
-      title: `Phase ${p.id} — ${p.title}`,
+      title: `Phase ${p.id} â€” ${p.title}`,
       kind: "phase",
       href: `/planning?tab=phases#${p.id}`,
       body: `${p.id} ${p.title} ${p.goal ?? ""}`,
@@ -2101,7 +2104,7 @@ function parsePlanningState() {
     if (state.nextAction) state.nextAction = state.nextAction.trim();
   }
 
-  // ROADMAP.xml — high-level phase list (uses CLI lib/roadmap-reader.cjs, gad-126)
+  // ROADMAP.xml â€” high-level phase list (uses CLI lib/roadmap-reader.cjs, gad-126)
   const root = { id: PROJECT_ID, path: PROJECT_ROOT, planningDir: ".planning" };
   const phases = readPhases(root, "");
   for (const p of phases) {
@@ -2112,7 +2115,7 @@ function parsePlanningState() {
     });
   }
 
-  // TASK-REGISTRY.xml — tasks (open vs done)
+  // TASK-REGISTRY.xml â€” tasks (open vs done)
   const taskPath = path.join(planningDir, "TASK-REGISTRY.xml");
   if (exists(taskPath)) {
     const src = fs.readFileSync(taskPath, "utf8");
@@ -2129,12 +2132,12 @@ function parsePlanningState() {
       if (status === "done") {
         state.doneTasksCount++;
       } else if (status !== "cancelled") {
-        state.openTasks.push({ id, status, goal: goal.length > 260 ? goal.slice(0, 259) + "…" : goal });
+        state.openTasks.push({ id, status, goal: goal.length > 260 ? goal.slice(0, 259) + "â€¦" : goal });
       }
     }
   }
 
-  // DECISIONS.xml — latest N decisions with title
+  // DECISIONS.xml â€” latest N decisions with title
   const decisionsPath = path.join(planningDir, "DECISIONS.xml");
   if (exists(decisionsPath)) {
     const src = fs.readFileSync(decisionsPath, "utf8");
@@ -2157,7 +2160,7 @@ function parsePlanningState() {
   }
 
   console.log(
-    `  [state] phase=${state.currentPhase} · open=${state.openTasks.length} · done=${state.doneTasksCount} · decisions=${state.recentDecisions.length}`
+    `  [state] phase=${state.currentPhase} Â· open=${state.openTasks.length} Â· done=${state.doneTasksCount} Â· decisions=${state.recentDecisions.length}`
   );
   return state;
 }
@@ -2268,7 +2271,7 @@ export interface WorkflowLiveGraph {
   edges: WorkflowLiveGraphEdge[];
 }
 export interface WorkflowConformance {
-  /** (matching − extra − out_of_order) / expected — advisory score per gad-173 */
+  /** (matching âˆ’ extra âˆ’ out_of_order) / expected â€” advisory score per gad-173 */
   score: number;
   matched: number;
   extra: number;
@@ -2297,17 +2300,17 @@ export interface Workflow {
   liveGraph?: WorkflowLiveGraph;
   /** Conformance score vs. authored expected graph (advisory). */
   conformance?: WorkflowConformance;
-  /** Only present on emergent workflows — detector support metrics. */
+  /** Only present on emergent workflows â€” detector support metrics. */
   support?: WorkflowEmergentSupport;
-  /** Only present on emergent workflows — which detector produced the candidate. */
+  /** Only present on emergent workflows â€” which detector produced the candidate. */
   detector?: "skill-level (v2)" | "tool-level (v1)";
 }
 
 /**
- * HumanWorkflow — hand-authored operator routines (task 44-22). Distinct
+ * HumanWorkflow â€” hand-authored operator routines (task 44-22). Distinct
  * from Workflow: no trace matching, no conformance score, Mermaid is
  * optional, frontmatter shape is different. Lives under
- * .planning/human-workflows/*.md and surfaces on /planning → Human
+ * .planning/human-workflows/*.md and surfaces on /planning â†’ Human
  * Workflows tab.
  */
 export interface HumanWorkflow {
@@ -2318,7 +2321,7 @@ export interface HumanWorkflow {
   triggers: string[];
   projectsTouched: string[];
   relatedPhases: string[];
-  /** Optional — may be empty string if no mermaid block is present. */
+  /** Optional â€” may be empty string if no mermaid block is present. */
   mermaidBody: string;
   bodyHtml: string;
   bodyRaw: string;
@@ -2326,7 +2329,7 @@ export interface HumanWorkflow {
 }
 
 /**
- * Signal — trace-based agent-behavior analytics (task 44-21). Pure
+ * Signal â€” trace-based agent-behavior analytics (task 44-21). Pure
  * reducers over the gad-framework-scoped slice of \`.planning/.trace-events.jsonl\`.
  * v1 ships top files, top skills, tool mix, and agent split. Bash command
  * path extraction, WebFetch URL frequency, and tool n-gram sequences are
@@ -2350,7 +2353,7 @@ export interface Signal {
 
 /**
  * ContextFramework is a bundle that references existing catalog items
- * (skills, agents, workflows) by slug. It is NOT a copy — when the
+ * (skills, agents, workflows) by slug. It is NOT a copy â€” when the
  * referenced items update, every project on the framework picks up the
  * update without re-bundling. Frameworks can extend other frameworks
  * via \`extends\` (e.g. a future "GAD-lite" inherits from "gad").
@@ -2361,7 +2364,7 @@ export interface ContextFramework {
   name: string;
   description: string;
   version: string;
-  /** Optional parent framework slug — this framework inherits its bundle and can override. */
+  /** Optional parent framework slug â€” this framework inherits its bundle and can override. */
   extends: string | null;
   skills: string[];
   agents: string[];
@@ -2433,7 +2436,7 @@ export const GITHUB_REPO = "https://github.com/MagicbornStudios/get-anything-don
 }
 
 // -------------------------------------------------------------------------
-// Findings + experiment log — parse into round summaries
+// Findings + experiment log â€” parse into round summaries
 // -------------------------------------------------------------------------
 
 function parseFindings() {
@@ -2483,7 +2486,7 @@ function parseRoundSummaries() {
     const chunks = text.split(/\n## /);
     for (const chunk of chunks) {
       const header = (chunk.split("\n")[0] ?? "").trim();
-      // Match "Round 1", "Round 1 — …", "Round 1 - …", or "Round 1:"
+      // Match "Round 1", "Round 1 â€” â€¦", "Round 1 - â€¦", or "Round 1:"
       const m = header.match(/^(Round\s*\d+)\s*[\u2014\u2013:\-]?\s*(.*)$/i);
       if (!m) continue;
       const round = m[1];
@@ -2543,7 +2546,7 @@ function normalizeHumanReviewPrebuild(humanReview) {
       is_empty: Object.values(dims).every((d) => !d || d.score == null),
     };
   }
-  // Legacy single-score — synthesize `overall`
+  // Legacy single-score â€” synthesize `overall`
   const score = typeof humanReview.score === "number" ? humanReview.score : null;
   return {
     rubric_version: "legacy-v0",
@@ -2602,7 +2605,7 @@ function loadRequirementsForRun(project, species, requirementsVersion) {
   const snapshotDir = path.join(PUBLIC_DIR, 'downloads', 'requirements');
   if (exists(snapshotDir)) {
     // Snapshot naming: <project>-EVAL-REQUIREMENTS-<date>-<label>.md
-    // For v1/v2 we use date-based matching: v1 ≈ 2026-04-06, v2 ≈ 2026-04-07
+    // For v1/v2 we use date-based matching: v1 â‰ˆ 2026-04-06, v2 â‰ˆ 2026-04-07
     const snapshotMap = {
       v1: '2026-04-06-pre-gates',
       v2: '2026-04-07-hosted-demo-added',
@@ -2647,14 +2650,14 @@ function loadRequirementsForRun(project, species, requirementsVersion) {
 }
 
 /**
- * Pick the "top skill used" for a run — the single most load-bearing skill
+ * Pick the "top skill used" for a run â€” the single most load-bearing skill
  * we can surface. Heuristic: largest skill file by bytes in the run's
  * game/.planning/skills/ directory. Returns { filename, content } or null.
  *
  * For runs where the agent only inherited bootstrap skills, this will
  * surface whichever of those two is largest (usually find-sprites since
  * it's the longer doc). For emergent runs that authored new skills, this
- * surfaces the biggest one — typically the one that captures the most
+ * surfaces the biggest one â€” typically the one that captures the most
  * project-specific knowledge.
  */
 function loadTopSkillForRun(project, species, version, producedArtifacts) {
@@ -2687,7 +2690,7 @@ function loadTopSkillForRun(project, species, version, producedArtifacts) {
     }
   }
 
-  // Couldn't find the file on disk — return metadata only
+  // Couldn't find the file on disk â€” return metadata only
   return {
     filename: top.name,
     content: null,
@@ -2724,6 +2727,106 @@ function loadJsonDataPseudoDb() {
   return result;
 }
 
+function readJsonFilesInDir(dirPath, exclude = []) {
+  const out = {};
+  if (!exists(dirPath)) return out;
+  const excludeSet = new Set(exclude.map((x) => x.toLowerCase()));
+  const entries = fs.readdirSync(dirPath).filter((name) => name.endsWith(".json"));
+  for (const name of entries) {
+    if (excludeSet.has(name.toLowerCase())) continue;
+    const p = path.join(dirPath, name);
+    try {
+      out[name] = JSON.parse(fs.readFileSync(p, "utf8"));
+    } catch (err) {
+      console.warn(`  [db] failed to parse ${path.relative(SITE_ROOT, p)}: ${err.message}`);
+    }
+  }
+  return out;
+}
+
+function writeDbJson({ pseudoDb, allDecisions, allTasks, allPhases }) {
+  const repoDataFiles = readJsonFilesInDir(DATA_DIR);
+  const siteDataFiles = readJsonFilesInDir(SITE_DATA_DIR, ["db.json"]);
+
+  const records = [
+    {
+      id: "decisions-count",
+      surface: "/decisions",
+      number: `Total decisions (${allDecisions.length})`,
+      source: "ALL_DECISIONS",
+      formula: "parseAllDecisions() over .planning/DECISIONS.xml",
+      trust: "deterministic",
+      page: "/decisions",
+    },
+    {
+      id: "tasks-count",
+      surface: "/planning (tasks tab)",
+      number: `Total tasks (${allTasks.length})`,
+      source: "ALL_TASKS",
+      formula: "parseAllTasks() over .planning/TASK-REGISTRY.xml",
+      trust: "deterministic",
+      page: "/planning?tab=tasks",
+    },
+    {
+      id: "phases-count",
+      surface: "/planning (phases tab)",
+      number: `Total phases (${allPhases.length})`,
+      source: "ALL_PHASES",
+      formula: "parseAllPhases() over .planning/ROADMAP.xml",
+      trust: "deterministic",
+      page: "/planning?tab=phases",
+    },
+    {
+      id: "glossary-count",
+      surface: "/glossary",
+      number: `Glossary terms (${pseudoDb?.glossary?.terms?.length ?? 0})`,
+      source: "data/glossary.json",
+      formula: "terms.length",
+      trust: "authored",
+      page: "/glossary",
+    },
+    {
+      id: "questions-count",
+      surface: "/questions",
+      number: `Open questions (${pseudoDb?.openQuestions?.questions?.length ?? 0})`,
+      source: "data/open-questions.json",
+      formula: "questions.length",
+      trust: "authored",
+      page: "/questions",
+    },
+    {
+      id: "bugs-count",
+      surface: "/planning (bugs tab)",
+      number: `Tracked bugs (${pseudoDb?.bugs?.bugs?.length ?? 0})`,
+      source: "data/bugs.json",
+      formula: "bugs.length",
+      trust: "authored",
+      page: "/planning?tab=bugs",
+    },
+  ];
+
+  const payload = {
+    _schema: {
+      id: "gad-db-viewer-v1",
+      generated_by: "scripts/build-site-data.mjs",
+      generated_on: new Date().toISOString(),
+      source_path: "site/data/db.json",
+    },
+    collections: {
+      active: records,
+    },
+    records,
+    raw: {
+      repo_data_files: repoDataFiles,
+      site_data_files: siteDataFiles,
+    },
+  };
+
+  ensureDir(SITE_DATA_DIR);
+  fs.writeFileSync(DB_JSON_FILE, JSON.stringify(payload, null, 2), "utf8");
+  console.log(`  [write] ${path.relative(SITE_ROOT, DB_JSON_FILE)} (db viewer payload)`);
+}
+
 function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
   console.log("[3/4] Writing lib/eval-data.generated.ts");
   const records = traces
@@ -2748,14 +2851,14 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
     return {
       project: t.project,
       species: t.species,
-      // Composite id: project/species/version — the new canonical row key
+      // Composite id: project/species/version â€” the new canonical row key
       id: t.id,
       version: t.version,
       workflow: inferWorkflow(t.project, { ...d, species: t.species }),
       requirementsVersion: d.requirements_version ?? "unknown",
       date: d.date ?? null,
       gadVersion: d.gad_version ?? null,
-      // Phase 25 trace schema v4 fields — framework version stamps
+      // Phase 25 trace schema v4 fields â€” framework version stamps
       traceSchemaVersion: typeof d.trace_schema_version === "number" ? d.trace_schema_version : 3,
       frameworkVersion: d.framework_version ?? null,
       frameworkCommit: d.framework_commit ?? null,
@@ -2811,7 +2914,7 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
     const produced = extras.producedArtifacts?.[r.id];
 
     r.derived = {
-      // |composite - human_review| — flags runs where process metrics lie
+      // |composite - human_review| â€” flags runs where process metrics lie
       divergence_score:
         typeof humanScore === "number"
           ? Math.abs(composite - humanScore)
@@ -2830,7 +2933,7 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
               (produced.planningFiles?.length ?? 0)
             ) / timing.duration_minutes
           : null,
-      // Stubbed — require trace v4 events (phase 25)
+      // Stubbed â€” require trace v4 events (phase 25)
       tool_use_mix: null,
       skill_to_tool_ratio: null,
       subagent_utilization:
@@ -2839,7 +2942,7 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
           : null,
       // total_commits
       total_commits: ga?.total_commits ?? null,
-      // batch vs atomic — 1 means all atomic, 0 means all batched
+      // batch vs atomic â€” 1 means all atomic, 0 means all batched
       commit_discipline:
         ga && typeof ga.total_commits === "number" && ga.total_commits > 0
           ? (ga.task_id_commits ?? 0) / ga.total_commits
@@ -2864,7 +2967,7 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
 
   const out = `/**
  * Auto-generated from evals/<project>/<version>/TRACE.json files.
- * DO NOT EDIT BY HAND — run \`npm run prebuild\` to regenerate.
+ * DO NOT EDIT BY HAND â€” run \`npm run prebuild\` to regenerate.
  */
 
 export type Workflow = "gad" | "bare" | "emergent";
@@ -3284,7 +3387,7 @@ export const WORKFLOW_DESCRIPTIONS: Record<Workflow, string> = {
 function auditPlayable() {
   console.log("[4/4] Auditing public/playable");
   if (!exists(PLAYABLE_DIR)) {
-    console.log("  (no playable directory yet — run scripts/build-games.mjs to populate)");
+    console.log("  (no playable directory yet â€” run scripts/build-games.mjs to populate)");
     return;
   }
   const found = [];
@@ -3296,7 +3399,7 @@ function auditPlayable() {
       const spd = path.join(pd, speciesName);
       if (!fs.statSync(spd).isDirectory()) continue;
       // If this looks like a version dir (vN), the playable layout is the
-      // legacy flat shape — surface it as project/version.
+      // legacy flat shape â€” surface it as project/version.
       if (/^v\d+$/.test(speciesName)) {
         if (exists(path.join(spd, "index.html"))) {
           found.push(`${project}/${speciesName}`);
@@ -3321,8 +3424,8 @@ function auditPlayable() {
 // -------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------
-// Task 44-30: Emit lib/project-config.generated.ts — build-time snapshot of
-// all registered GAD projects (planning.roots ∪ evals.roots) from the nearest
+// Task 44-30: Emit lib/project-config.generated.ts â€” build-time snapshot of
+// all registered GAD projects (planning.roots âˆª evals.roots) from the nearest
 // gad-config.toml walking upward from REPO_ROOT. Consumed by the site project
 // picker and server-side route scoping. Static; no runtime toml parsing.
 // -------------------------------------------------------------------------
@@ -3414,9 +3517,51 @@ export const DEFAULT_PROJECT_ID: string = ${JSON.stringify(defaultId)};
   console.log(`  [write] ${path.relative(SITE_ROOT, PROJECT_CONFIG_FILE)} (${registered.length} projects, default=${defaultId})`);
 }
 
+function readTextFileOrFallback(filePath, fallback) {
+  if (!exists(filePath)) return fallback;
+  try {
+    return fs.readFileSync(filePath, "utf8");
+  } catch {
+    return fallback;
+  }
+}
+
+function writeDevIdPromptTemplatesTs() {
+  const promptsDir = path.join(PUBLIC_DIR, "devid-prompts");
+  const updateTemplate = readTextFileOrFallback(
+    path.join(promptsDir, "update.md"),
+    "Objective: update target component.\nRoute: **{{PAGE_URL}}**\nTarget: {{COMPONENT_TAG}} | {{LABEL}}\nsearch: {{SEARCH_LITERAL}}\ndata-cid: {{CID}}\n",
+  );
+  const deleteTemplate = readTextFileOrFallback(
+    path.join(promptsDir, "delete.md"),
+    "Objective: remove target component.\nRoute: **{{PAGE_URL}}**\nTarget: {{COMPONENT_TAG}} | {{LABEL}}\nsearch: {{SEARCH_LITERAL}}\ndata-cid: {{CID}}\n",
+  );
+  const updateCompactTemplate = readTextFileOrFallback(
+    path.join(promptsDir, "update-compact.md"),
+    "Update target.\nRoute: {{PAGE_URL}}\nTarget: {{COMPONENT_TAG}} | {{LABEL}}\nsearch: {{SEARCH_LITERAL}}\ndata-cid: {{CID}}\n",
+  );
+  const deleteCompactTemplate = readTextFileOrFallback(
+    path.join(promptsDir, "delete-compact.md"),
+    "Delete target.\nRoute: {{PAGE_URL}}\nTarget: {{COMPONENT_TAG}} | {{LABEL}}\nsearch: {{SEARCH_LITERAL}}\ndata-cid: {{CID}}\nCleanup: remove dead imports/components; typecheck touched package.\n",
+  );
+
+  const body = `// AUTO-GENERATED by scripts/build-site-data.mjs — do not edit.
+// Source of truth: site/public/devid-prompts/*.md
+
+export const DEVID_UPDATE_TEMPLATE = ${JSON.stringify(updateTemplate)};
+export const DEVID_DELETE_TEMPLATE = ${JSON.stringify(deleteTemplate)};
+export const DEVID_UPDATE_COMPACT_TEMPLATE = ${JSON.stringify(updateCompactTemplate)};
+export const DEVID_DELETE_COMPACT_TEMPLATE = ${JSON.stringify(deleteCompactTemplate)};
+`;
+  ensureDir(path.dirname(DEVID_PROMPTS_FILE));
+  fs.writeFileSync(DEVID_PROMPTS_FILE, body, "utf8");
+  console.log(`  [write] ${path.relative(SITE_ROOT, DEVID_PROMPTS_FILE)} (devid prompts)`);
+}
+
 function main() {
   console.log("=== build-site-data ===");
   writeProjectConfigTs();
+  writeDevIdPromptTemplatesTs();
   rmrf(DOWNLOADS_DIR);
   ensureDir(DOWNLOADS_DIR);
   ensureDir(PLANNING_ZIPS_DIR);
@@ -3438,6 +3583,7 @@ function main() {
   const allDecisions = parseAllDecisions();
   const allTasks = parseAllTasks();
   const allPhases = parseAllPhases();
+  writeDbJson({ pseudoDb, allDecisions, allTasks, allPhases });
   const taskPressureByVersion = computeTaskPressurePerVersion(currentRequirements);
   const searchIndex = buildSearchIndex({
     decisions: allDecisions,
@@ -3485,7 +3631,7 @@ function main() {
  * Validate site/data/*.json files exist and parse correctly.
  * These are static, hand-curated data files for the landing page
  * (hypotheses, rounds metadata, eval conditions, media refs).
- * Unlike eval-data.generated.ts, these are NOT auto-generated —
+ * Unlike eval-data.generated.ts, these are NOT auto-generated â€”
  * they're imported directly by components as JSON modules.
  *
  * Boundary:
@@ -3494,12 +3640,12 @@ function main() {
  */
 function computeSelfEval() {
   // Phase 10: self-eval metrics (framework overhead, framework compliance, hydration, skill
-  // candidates from pressure) are GAD-framework-specific — they read .gad-log/
+  // candidates from pressure) are GAD-framework-specific â€” they read .gad-log/
   // traces, evals/, and GAD's own skill candidates. When compiling for an
   // external project via GAD_PROJECT_ROOT, skip self-eval entirely since the
   // metrics don't apply and the paths wouldn't resolve to anything meaningful.
   if (process.env.GAD_PROJECT_ROOT) {
-    console.log("  [self-eval] skipped (GAD_PROJECT_ROOT set — framework metrics only apply to GAD itself)");
+    console.log("  [self-eval] skipped (GAD_PROJECT_ROOT set â€” framework metrics only apply to GAD itself)");
     return;
   }
   try {
@@ -3512,7 +3658,7 @@ function computeSelfEval() {
 function validateSiteData() {
   const siteDataDir = path.join(SITE_ROOT, "data");
   if (!fs.existsSync(siteDataDir)) {
-    console.log("  [site-data] no site/data/ directory — skipping validation");
+    console.log("  [site-data] no site/data/ directory â€” skipping validation");
     return;
   }
   const files = fs.readdirSync(siteDataDir).filter((f) => f.endsWith(".json"));
@@ -3523,7 +3669,7 @@ function validateSiteData() {
       JSON.parse(fs.readFileSync(path.join(siteDataDir, f), "utf8"));
       valid++;
     } catch (err) {
-      console.warn(`  [site-data] INVALID JSON: ${f} — ${err.message}`);
+      console.warn(`  [site-data] INVALID JSON: ${f} â€” ${err.message}`);
       invalid++;
     }
   }
@@ -3531,4 +3677,5 @@ function validateSiteData() {
 }
 
 main();
+
 

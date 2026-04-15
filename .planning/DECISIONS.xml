@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <decisions>
 
   <decision id="gad-92">
@@ -1299,6 +1299,15 @@ Skills are methodology documents (SKILL.md) â€” agents read and follow them
 
 4. **Never auto-rehydrate after auto-compact.** The previous CLAUDE.md instruction "Run `gad snapshot --projectid <id>` immediately to re-hydrate" is obsolete for mid-session re-entries. The agent should trust its working memory post-compact and only fetch delta info on-demand. A full rehydration is appropriate only when the agent genuinely lost state (e.g. fresh session), not as a reflexive per-compact ritual.</summary>
     <impact>(1) `bin/gad.cjs snapshot` gains `--mode={full|active}` flag. Active mode emits STATE.xml + ROADMAP (sprint) + TASKS only, dropping decisions/file-refs/conventions/equipped-skills/docs-map. Measured: ~3900 tokens active vs ~7500 full (≈50% reduction). (2) Task 42.2-26 (rehydration experiment) cancelled. The design doc at `.planning/notes/rehydration-cost-experiment-2026-04-15.md` stays as history with a "superseded by operator confirmation / decision gad-195" note at the top. (3) `gad startup` (42.2-22) remains the recommended session-start entry point — it prints the contract + can delegate to `gad snapshot` once. (4) CLAUDE.md auto-compact rehydration instruction needs a refinement: replace "re-run gad snapshot immediately" with "re-run `gad snapshot --mode=active` only if you need fresh next-action state; otherwise continue from working memory". (5) Decision gad-192 (snapshot EQUIPPED SKILLS section) is unaffected — EQUIPPED SKILLS is a static-mode-only section, which is correct since the skill catalog is inherently static. (6) Future work: a session-state file at `.gad-log/snapshot-session-&lt;id&gt;.json` could track which sections each session has already been shown, auto-suppressing them on subsequent calls. Not shipped in the first cut — active mode is the MVP. (7) The subagent discovery test battery is unaffected — cold subagents are a "fresh session" scenario by definition and should always run full snapshot.</impact>
+  </decision>
+  <decision id="gad-196">
+    <title>Home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming</title>
+    <summary>The home-page section `components/landing/lineage/` used `SiteSection` `cid="lineage-site-section"` while the **product meaning** had shifted to a visual-context handoff loop (site → panel → speech → clipboard → coding agent → ship → repeat). "Lineage" remained accurate only for the **GSD upstream reference** (link + YouTube segment), not for the primary UX story. That mismatch persisted across refactors because: (1) **incremental edits** prioritized the prompt payload and media swap over filesystem renames; (2) **no TASK-REGISTRY task** explicitly gated "rename module when semantics change"; (3) **greppable `cid` churn** was deferred to avoid one-shot breakages in the showcase prompt and dev-panel bookmarks.
+
+**GAD loop application:** treat stale public identifiers as **technical debt** the same as an unfinished task — capture in DECISIONS (this entry), rename files + `cid` in one atomic change, update the verbatim showcase string, and **commit** so snapshot and site stay aligned.
+
+**Resolution:** folder `lineage/` → `agent-handoff-cycle/`; components `Lineage*` → `AgentHandoffCycle*`; `cid` → `agent-handoff-cycle-site-section`; `id` → `agent-handoff-cycle`; `media.json` key `lineage_talk` → `gsd_upstream_planning_talk` (content unchanged). Intellectual lineage to GSD stays in copy and links — it is no longer the **module** name.</summary>
+    <impact>(1) All imports and `Identified as="…"` strings update to the new names. (2) `LANDING_PAGE_GENERATION_PROMPT` and `LandingVisualContextAndPromptBand` reference the new `cid`. (3) `/lineage` route (if reintroduced) remains the **canonical URL** for the long-form GSD→GAD attribution page — distinct from this home band. (4) Future: when a section's **name** and **story** diverge, either rename in the same PR as the copy change or add an explicit TASK-REGISTRY row so the rename does not slip.</impact>
   </decision>
 </decisions>
 

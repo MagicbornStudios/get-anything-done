@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * /planning -> Human Workflows tab (task 44-22). Hand-authored operator
+ * /planning -> Workflows tab → Human workflows band (task 44-22). Hand-authored operator
  * routines that are a deliberately separate surface from the authored
  * agent workflows on the Workflows tab:
  *  - no trace matching, no conformance score

@@ -1,4 +1,4 @@
-import type { DataSource } from "./data-shared";
+﻿import type { DataSource } from "./data-shared";
 
 export type QueryField =
   | "id"
@@ -32,9 +32,41 @@ export type DbQueryPlan = {
 
 export type DbQueryCollections = Record<string, DataSource[]>;
 
+type MqlScalar = string | number | boolean | null;
+type MqlFieldFilter =
+  | MqlScalar
+  | {
+      $eq?: MqlScalar;
+      $ne?: MqlScalar;
+      $gt?: number;
+      $gte?: number;
+      $lt?: number;
+      $lte?: number;
+      $in?: MqlScalar[];
+      $nin?: MqlScalar[];
+      $regex?: string;
+      $options?: string;
+    };
+
+type MqlFilter = {
+  $and?: MqlFilter[];
+  $or?: MqlFilter[];
+  [field: string]: MqlFieldFilter | MqlFilter[] | undefined;
+};
+
+export type DbMqlQuery = {
+  collection?: string;
+  filter?: MqlFilter;
+  projection?: QueryField[] | Record<string, 0 | 1 | boolean>;
+  sort?: Partial<Record<QueryField, 1 | -1>>;
+  limit?: number;
+};
+
 export type DbQueryParseResult = {
   plan: DbQueryPlan;
   errors: string[];
+  mode: "dsl" | "mql";
+  mql?: DbMqlQuery;
 };
 
 export const QUERY_FIELDS: QueryField[] = [
@@ -53,43 +85,15 @@ export const QUERY_FIELDS: QueryField[] = [
 
 export const QUERY_KEYWORDS = ["FROM", "WHERE", "AND", "SORT", "LIMIT", "SELECT", "asc", "desc"] as const;
 export const QUERY_OPERATORS = [":", "=", "!=", ">", "<", ">=", "<="] as const;
-export const QUERY_TRUST_VALUES = ["deterministic", "heuristic", "review"] as const;
+export const QUERY_TRUST_VALUES = ["deterministic", "self-report", "human", "authored"] as const;
 
-export const DEFAULT_QUERY = `FROM active
-WHERE trust:deterministic
-SORT number asc
-LIMIT 25
-SELECT id,number,trust,surface,page`;
-
-export const QUERY_HELP_EXAMPLES: { label: string; description: string; query: string }[] = [
-  {
-    label: "Trust Filter",
-    description: "Start from active records and filter by trust level.",
-    query: `FROM active
-WHERE trust:deterministic
-SORT number asc
-LIMIT 25
-SELECT id,number,trust,surface,page`,
-  },
-  {
-    label: "Long Sources",
-    description: "Find records where source text is longer than 40 chars.",
-    query: `FROM active
-WHERE sourceLength>40
-SORT sourceLength desc
-LIMIT 20
-SELECT id,sourceLength,trust,surface,page`,
-  },
-  {
-    label: "Surface Search",
-    description: "Search source text for a word and keep the latest by number.",
-    query: `FROM active
-WHERE source:mercy
-SORT number desc
-LIMIT 15
-SELECT id,number,source,trust,page`,
-  },
-];
+export const DEFAULT_QUERY = `{
+  "collection": "active",
+  "filter": { "trust": "deterministic" },
+  "sort": { "number": 1 },
+  "limit": 25,
+  "projection": ["id", "number", "trust", "surface", "page"]
+}`;
 
 const NUMERIC_FIELDS = new Set<QueryField>(["sourceLength", "formulaLength", "notesLength"]);
 
@@ -128,7 +132,33 @@ function parseWhereClause(fragment: string): QueryClause | null {
   return { field, operator: operator as QueryOperator, value: stripQuotes(rawValue) };
 }
 
-export function parseDbQuery(queryText: string): DbQueryParseResult {
+function mqlProjectionToFields(projection: DbMqlQuery["projection"]): QueryField[] {
+  if (Array.isArray(projection)) {
+    return projection.filter((f): f is QueryField => QUERY_FIELDS.includes(f));
+  }
+  if (!projection || typeof projection !== "object") return [];
+  return Object.entries(projection)
+    .filter(([, v]) => Boolean(v))
+    .map(([k]) => parseField(k))
+    .filter((f): f is QueryField => Boolean(f));
+}
+
+function mqlToPlan(mql: DbMqlQuery): DbQueryPlan {
+  const sortEntry = Object.entries(mql.sort ?? {}).find(([k]) => parseField(k));
+  const sortField = sortEntry ? (parseField(sortEntry[0]) ?? "number") : "number";
+  const sortDirection = sortEntry && Number(sortEntry[1]) < 0 ? "desc" : "asc";
+  const select = mqlProjectionToFields(mql.projection);
+  return {
+    from: (mql.collection ?? "active").trim() || "active",
+    where: [],
+    sortField,
+    sortDirection,
+    limit: Number.isFinite(mql.limit) && (mql.limit ?? 0) > 0 ? Math.floor(mql.limit as number) : 50,
+    select: select.length > 0 ? select : ["id", "number", "trust", "surface", "page"],
+  };
+}
+
+function parseDslQuery(queryText: string): DbQueryParseResult {
   const plan: DbQueryPlan = {
     from: "active",
     where: [],
@@ -199,7 +229,22 @@ export function parseDbQuery(queryText: string): DbQueryParseResult {
     errors.push(`Unknown statement: ${line}`);
   }
 
-  return { plan, errors };
+  return { plan, errors, mode: "dsl" };
+}
+
+export function parseDbQuery(queryText: string): DbQueryParseResult {
+  const trimmed = queryText.trim();
+  if (trimmed.startsWith("{")) {
+    try {
+      const mql = JSON.parse(trimmed) as DbMqlQuery;
+      return { plan: mqlToPlan(mql), errors: [], mode: "mql", mql };
+    } catch (err) {
+      const fallback = parseDslQuery(queryText);
+      fallback.errors.unshift(`Invalid JSON query: ${(err as Error).message}`);
+      return fallback;
+    }
+  }
+  return parseDslQuery(queryText);
 }
 
 function matchesClause(source: DataSource, clause: QueryClause): boolean {
@@ -213,9 +258,7 @@ function matchesClause(source: DataSource, clause: QueryClause): boolean {
   if (clause.operator === "!=") {
     return String(current).toLowerCase() !== clause.value.toLowerCase();
   }
-  if (!NUMERIC_FIELDS.has(clause.field)) {
-    return false;
-  }
+  if (!NUMERIC_FIELDS.has(clause.field)) return false;
   const left = Number(current);
   const right = Number(clause.value);
   if (!Number.isFinite(left) || !Number.isFinite(right)) return false;
@@ -225,17 +268,55 @@ function matchesClause(source: DataSource, clause: QueryClause): boolean {
   return left <= right;
 }
 
+function matchesMqlField(value: unknown, filter: MqlFieldFilter): boolean {
+  if (filter && typeof filter === "object" && !Array.isArray(filter)) {
+    const f = filter as Exclude<MqlFieldFilter, MqlScalar>;
+    if (f.$eq !== undefined && value !== f.$eq) return false;
+    if (f.$ne !== undefined && value === f.$ne) return false;
+    if (f.$gt !== undefined && !(Number(value) > f.$gt)) return false;
+    if (f.$gte !== undefined && !(Number(value) >= f.$gte)) return false;
+    if (f.$lt !== undefined && !(Number(value) < f.$lt)) return false;
+    if (f.$lte !== undefined && !(Number(value) <= f.$lte)) return false;
+    if (f.$in && !f.$in.includes(value as MqlScalar)) return false;
+    if (f.$nin && f.$nin.includes(value as MqlScalar)) return false;
+    if (f.$regex) {
+      const flags = f.$options ?? "";
+      const re = new RegExp(f.$regex, flags);
+      if (!re.test(String(value ?? ""))) return false;
+    }
+    return true;
+  }
+  return value === filter;
+}
+
+function matchesMqlFilter(row: DataSource, filter?: MqlFilter): boolean {
+  if (!filter || typeof filter !== "object") return true;
+  if (Array.isArray(filter.$and) && !filter.$and.every((f) => matchesMqlFilter(row, f))) return false;
+  if (Array.isArray(filter.$or) && !filter.$or.some((f) => matchesMqlFilter(row, f))) return false;
+
+  for (const [key, rawFilter] of Object.entries(filter)) {
+    if (key === "$and" || key === "$or") continue;
+    if (rawFilter === undefined) continue;
+    const field = parseField(key);
+    if (!field) return false;
+    const value = fieldValue(row, field);
+    if (!matchesMqlField(value, rawFilter as MqlFieldFilter)) return false;
+  }
+  return true;
+}
+
 export function executeDbQuery(
   records: DataSource[],
   queryText: string,
   collections?: DbQueryCollections,
 ): { rows: DataSource[]; plan: DbQueryPlan; errors: string[]; appliedCollection: string } {
-  const { plan, errors } = parseDbQuery(queryText);
+  const { plan, errors, mode, mql } = parseDbQuery(queryText);
   const fallbackCollection = "active";
   const requestedCollection = plan.from.trim().toLowerCase() || fallbackCollection;
   const resolvedRecords = collections?.[requestedCollection];
   let sourceRecords = records;
   let appliedCollection = requestedCollection;
+
   if (collections) {
     if (resolvedRecords) {
       sourceRecords = resolvedRecords;
@@ -245,13 +326,18 @@ export function executeDbQuery(
     }
   }
 
-  const filtered = sourceRecords.filter((record) => plan.where.every((clause) => matchesClause(record, clause)));
+  const filtered =
+    mode === "mql"
+      ? sourceRecords.filter((record) => matchesMqlFilter(record, mql?.filter))
+      : sourceRecords.filter((record) => plan.where.every((clause) => matchesClause(record, clause)));
+
   filtered.sort((left, right) => {
     const a = fieldValue(left, plan.sortField);
     const b = fieldValue(right, plan.sortField);
     const compare = String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
     return plan.sortDirection === "asc" ? compare : -compare;
   });
+
   return {
     rows: filtered.slice(0, plan.limit),
     plan,

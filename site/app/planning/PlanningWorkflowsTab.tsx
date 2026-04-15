@@ -1,5 +1,7 @@
-import type { Signal, Workflow } from "@/lib/catalog.generated";
+import type { HumanWorkflow, Signal, Workflow } from "@/lib/catalog.generated";
 import { Identified } from "@/components/devid/Identified";
+import { PlanningDiscoveryTab } from "./PlanningDiscoveryTab";
+import { PlanningTabHumanWorkflows } from "./PlanningTabHumanWorkflows";
 import { PlanningTabSignal } from "./PlanningTabSignal";
 import { WorkflowCard } from "@/components/workflow/WorkflowCard";
 import {
@@ -11,6 +13,7 @@ import {
 interface Props {
   workflows: readonly Workflow[];
   signal: Signal;
+  humanWorkflows: readonly HumanWorkflow[];
 }
 
 /**
@@ -19,8 +22,10 @@ interface Props {
  *  2. Emergent — proto-workflows drafted from trace synthesis (empty until 42.3-09)
  *  3. Noise panel — deferred to 42.3-13
  *  4. Signal — trace reducer band (`cid="planning-signal-site-section"`, same subtree as former Signal tab)
+ *  5. Human workflows — operator routines (`cid="planning-human-workflows-site-section"`)
+ *  6. Discovery — subagent discovery battery (`cid="planning-discovery-tab-site-section"`)
  */
-export function PlanningWorkflowsTab({ workflows, signal }: Props) {
+export function PlanningWorkflowsTab({ workflows, signal, humanWorkflows }: Props) {
   const { authored, emergent } = partitionWorkflows(workflows);
   const authoredTree = buildWorkflowTree(authored);
   const emergentTree = buildWorkflowTree(emergent);
@@ -71,6 +76,10 @@ export function PlanningWorkflowsTab({ workflows, signal }: Props) {
         <EmptyState message="Deferred — still under discussion." />
 
         <PlanningTabSignal signal={signal} />
+
+        <PlanningTabHumanWorkflows workflows={humanWorkflows} />
+
+        <PlanningDiscoveryTab />
       </div>
     </Identified>
   );

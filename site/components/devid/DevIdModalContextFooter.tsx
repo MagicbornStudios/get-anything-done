@@ -53,23 +53,19 @@ export function DevIdModalContextFooter({
   onChromeAgentPrompt?: (entry: RegistryEntry) => void;
 }) {
   const pathname = usePathname() ?? "";
-  const { enabled, highlightCid, setHighlightCid, flashComponent } = useDevId();
+  const {
+    enabled,
+    highlightCid,
+    setHighlightCid,
+    flashComponent,
+    promptVerbosity: sharedPromptVerbosity,
+    setPromptVerbosity: setSharedPromptVerbosity,
+  } = useDevId();
   const [entries, setEntries] = useState<RegistryEntry[]>([]);
   const [idx, setIdx] = useState(0);
   const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | "cid" | null>(null);
   const [chromeFooterUpdateCopied, setChromeFooterUpdateCopied] = useState(false);
-  const [localPromptVerbosity, setLocalPromptVerbosity] = useState<PromptVerbosity>("full");
-  const effectivePromptVerbosity = promptVerbosity ?? localPromptVerbosity;
-
-  useEffect(() => {
-    if (promptVerbosity) return;
-    const raw = window.localStorage.getItem("devid.prompt.verbosity");
-    if (raw === "compact" || raw === "full") setLocalPromptVerbosity(raw);
-  }, [promptVerbosity]);
-
-  useEffect(() => {
-    window.localStorage.setItem("devid.prompt.verbosity", effectivePromptVerbosity);
-  }, [effectivePromptVerbosity]);
+  const effectivePromptVerbosity = promptVerbosity ?? sharedPromptVerbosity;
 
   const recompute = useCallback(() => {
     const root = scanRootRef.current;
@@ -370,7 +366,7 @@ export function DevIdModalContextFooter({
               onClick={() => {
                 const next = effectivePromptVerbosity === "full" ? "compact" : "full";
                 if (onPromptVerbosityChange) onPromptVerbosityChange(next);
-                else setLocalPromptVerbosity(next);
+                else setSharedPromptVerbosity(next);
               }}
             >
               {effectivePromptVerbosity === "compact" ? "Short" : "Full"}

@@ -24,13 +24,11 @@ import type { RegistryEntry } from "./SectionRegistry";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { getSpeechRecognition, type SpeechRecInstance } from "./speechRecognition";
 import { DevIdModalContextFooter } from "./DevIdModalContextFooter";
+import { useDevId } from "./DevIdProvider";
 import {
   buildDeletePrompt,
   buildUpdateLockedPrefix,
-  DEFAULT_DELETE_TEMPLATE,
-  DEFAULT_UPDATE_TEMPLATE,
   type HandoffComponentTag,
-  type PromptVerbosity,
 } from "./DevIdPromptTemplates";
 
 
@@ -344,45 +342,15 @@ export function DevIdAgentPromptDialog({
   const tabRef = useRef<"update" | "delete">(tab);
   const [copied, setCopied] = useState<"update" | "delete" | null>(null);
   const [handoffEpoch, setHandoffEpoch] = useState(0);
-  const [updateTemplate, setUpdateTemplate] = useState(DEFAULT_UPDATE_TEMPLATE);
-  const [deleteTemplate, setDeleteTemplate] = useState(DEFAULT_DELETE_TEMPLATE);
-  const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
   const [activeEntry, setActiveEntry] = useState<RegistryEntry | null>(entry);
   const modalScanRef = useRef<HTMLDivElement | null>(null);
+  const { promptVerbosity, setPromptVerbosity } = useDevId();
 
   const label = activeEntry?.label ?? "";
   const cid = activeEntry?.cid ?? "";
   const pageUrl = useMemo(() => absolutePageUrl(pathname), [pathname]);
 
   tabRef.current = tab;
-
-  useEffect(() => {
-    let alive = true;
-    async function loadTemplates() {
-      try {
-        const [u, d] = await Promise.all([
-          fetch("/devid-prompts/update.md").then((r) => (r.ok ? r.text() : DEFAULT_UPDATE_TEMPLATE)),
-          fetch("/devid-prompts/delete.md").then((r) => (r.ok ? r.text() : DEFAULT_DELETE_TEMPLATE)),
-        ]);
-        if (!alive) return;
-        setUpdateTemplate(u || DEFAULT_UPDATE_TEMPLATE);
-        setDeleteTemplate(d || DEFAULT_DELETE_TEMPLATE);
-      } catch {
-        if (!alive) return;
-        setUpdateTemplate(DEFAULT_UPDATE_TEMPLATE);
-        setDeleteTemplate(DEFAULT_DELETE_TEMPLATE);
-      }
-    }
-    loadTemplates();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const raw = window.localStorage.getItem("devid.prompt.verbosity");
-    if (raw === "compact" || raw === "full") setPromptVerbosity(raw);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -406,8 +374,6 @@ export function DevIdAgentPromptDialog({
   useEffect(() => {
     if (!open || !activeEntry) return;
     const resolvedComponentTag = activeEntry.componentTag ?? componentTag;
-    const updateTemplateForMode = promptVerbosity === "full" ? updateTemplate : undefined;
-    const deleteTemplateForMode = promptVerbosity === "full" ? deleteTemplate : undefined;
     setUpdateLockedPrefix(
       buildUpdateLockedPrefix(
         pageUrl,
@@ -415,7 +381,7 @@ export function DevIdAgentPromptDialog({
         cid,
         resolvedComponentTag,
         activeEntry.searchHint,
-        updateTemplateForMode,
+        undefined,
         promptVerbosity,
       ),
     );
@@ -426,11 +392,11 @@ export function DevIdAgentPromptDialog({
         cid,
         resolvedComponentTag,
         activeEntry.searchHint,
-        deleteTemplateForMode,
+        undefined,
         promptVerbosity,
       ),
     );
-  }, [open, activeEntry, pageUrl, label, cid, componentTag, updateTemplate, deleteTemplate, promptVerbosity]);
+  }, [open, activeEntry, pageUrl, label, cid, componentTag, promptVerbosity]);
 
   useEffect(() => {
     return () => {

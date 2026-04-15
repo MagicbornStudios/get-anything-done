@@ -40,14 +40,8 @@ const PlanningSystemTab = dynamic(() =>
 const PlanningTasksTab = dynamic(() =>
   import("./PlanningTasksTab").then((m) => m.PlanningTasksTab),
 );
-const PlanningTabHumanWorkflows = dynamic(() =>
-  import("./PlanningTabHumanWorkflows").then((m) => m.PlanningTabHumanWorkflows),
-);
 const PlanningWorkflowsTab = dynamic(() =>
   import("./PlanningWorkflowsTab").then((m) => m.PlanningWorkflowsTab),
-);
-const PlanningDiscoveryTab = dynamic(() =>
-  import("./PlanningDiscoveryTab").then((m) => m.PlanningDiscoveryTab),
 );
 
 interface Props {
@@ -70,7 +64,6 @@ const BASE_PLANNING_TABS = new Set([
   "skill-candidates",
   "proto-skills",
   "workflows",
-  "human-workflows",
 ]);
 
 const WORKFLOWS_DATA: readonly Workflow[] = WORKFLOWS;
@@ -104,6 +97,7 @@ export function PlanningTabbedContent({
     const raw = searchParams.get("tab") || "system";
     if (raw === "bugs") return gadBugs.length > 0 ? "bugs" : "system";
     if (raw === "signal") return "workflows";
+    if (raw === "human-workflows" || raw === "discovery") return "workflows";
     return BASE_PLANNING_TABS.has(raw) ? raw : "system";
   }, [searchParams, gadBugs.length]);
 
@@ -188,18 +182,12 @@ export function PlanningTabbedContent({
             Workflows{" "}
             <span className="ml-1.5 tabular-nums text-muted-foreground">{WORKFLOWS_DATA.length}</span>
           </TabsTrigger>
-          <TabsTrigger value="human-workflows">
-            Human Workflows{" "}
-            <span className="ml-1.5 tabular-nums text-muted-foreground">{humanWorkflows.length}</span>
-          </TabsTrigger>
-          <TabsTrigger value="discovery">Discovery</TabsTrigger>
         </TabsList>
         </Identified>
 
         <TabsContent value="system">
           <Identified as="PlanningTabSystem">
             <div className="space-y-6">
-              <PlanningGanttSection />
               {selfEvalLatest ? (
                 <PlanningSystemTab selfEval={selfEvalLatest} />
               ) : (
@@ -263,17 +251,11 @@ export function PlanningTabbedContent({
 
         <TabsContent value="workflows">
           <Identified as="PlanningTabWorkflows">
-            <PlanningWorkflowsTab workflows={WORKFLOWS_DATA} signal={signal} />
-          </Identified>
-        </TabsContent>
-
-        <TabsContent value="human-workflows">
-          <PlanningTabHumanWorkflows workflows={humanWorkflows} />
-        </TabsContent>
-
-        <TabsContent value="discovery">
-          <Identified as="PlanningTabDiscovery">
-            <PlanningDiscoveryTab />
+            <PlanningWorkflowsTab
+              workflows={WORKFLOWS_DATA}
+              signal={signal}
+              humanWorkflows={humanWorkflows}
+            />
           </Identified>
         </TabsContent>
       </Tabs>

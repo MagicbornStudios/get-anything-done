@@ -7,9 +7,12 @@ import {
   useState,
   useCallback,
   useRef,
+  type Dispatch,
+  type SetStateAction,
 } from "react";
 import { usePathname } from "next/navigation";
 import { DevIdSearchDialog } from "./DevIdSearchDialog";
+import type { PromptVerbosity } from "./DevIdPromptTemplates";
 
 interface DevIdContextValue {
   enabled: boolean;
@@ -18,6 +21,8 @@ interface DevIdContextValue {
   setHighlightCid: (cid: string | null) => void;
   flashCid: string | null;
   flashComponent: (cid: string) => void;
+  promptVerbosity: PromptVerbosity;
+  setPromptVerbosity: Dispatch<SetStateAction<PromptVerbosity>>;
 }
 
 const DevIdContext = createContext<DevIdContextValue>({
@@ -27,6 +32,8 @@ const DevIdContext = createContext<DevIdContextValue>({
   setHighlightCid: () => {},
   flashCid: null,
   flashComponent: () => {},
+  promptVerbosity: "full",
+  setPromptVerbosity: () => {},
 });
 
 export function DevIdProvider({ children }: { children: React.ReactNode }) {
@@ -35,6 +42,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const [highlightCid, setHighlightCid] = useState<string | null>(null);
   const [flashCid, setFlashCid] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flashComponent = useCallback((cid: string) => {
@@ -57,7 +65,17 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     const envOn = process.env.NEXT_PUBLIC_DEV_IDS === "1";
     const stored = typeof window !== "undefined" ? localStorage.getItem("devIds") : null;
     if (stored === "1" || (stored == null && envOn)) setEnabled(true);
+    const verbosity = typeof window !== "undefined" ? localStorage.getItem("devid.prompt.verbosity") : null;
+    if (verbosity === "compact" || verbosity === "full") setPromptVerbosity(verbosity);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("devid.prompt.verbosity", promptVerbosity);
+    } catch {
+      // ignore storage issues
+    }
+  }, [promptVerbosity]);
 
   useEffect(() => {
     try {
@@ -118,6 +136,8 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
         setHighlightCid,
         flashCid,
         flashComponent,
+        promptVerbosity,
+        setPromptVerbosity,
       }}
     >
       {children}
@@ -149,4 +169,3 @@ function DevIdStatusBadge({ onOpenSearch }: { onOpenSearch: () => void }) {
 export function useDevId() {
   return useContext(DevIdContext);
 }
-

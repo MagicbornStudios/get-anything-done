@@ -6,8 +6,8 @@ import { SiteSection, SiteSectionHeading } from "@/components/site";
 import discoveryFindings from "@/data/discovery-findings.json";
 
 /**
- * PlanningDiscoveryTab — phase 42.2-28 site integration of the subagent
- * discovery test battery.
+ * PlanningDiscoveryTab — phase 42.2-28; lives under /planning Workflows tab (subagent
+ * discovery test battery).
  *
  * Three stacked panels:
  *   1. Terminal capture — live `gad startup` / `gad snapshot` / `gad skill list`

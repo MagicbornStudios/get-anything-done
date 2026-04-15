@@ -1,5 +1,5 @@
 <!-- Extracted from git commit 02b0e84 on 2026-04-07 (hosted-demo-added). -->
-<!-- This is the eval DESCRIPTION doc — what the eval measures — not the
+<!-- This is the eval DESCRIPTION doc â€” what the eval measures â€” not the
      game spec. The game spec XML lives in template/.planning/REQUIREMENTS.xml
      and was only committed to git starting with v4 (the earlier .planning/
      directories were gitignored). -->

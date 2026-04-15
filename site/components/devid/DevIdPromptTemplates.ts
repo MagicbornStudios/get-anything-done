@@ -1,6 +1,12 @@
 "use client";
 
 import type { DevIdComponentTag } from "./SectionRegistry";
+import {
+  DEVID_DELETE_COMPACT_TEMPLATE,
+  DEVID_DELETE_TEMPLATE,
+  DEVID_UPDATE_COMPACT_TEMPLATE,
+  DEVID_UPDATE_TEMPLATE,
+} from "@/lib/devid-prompts.generated";
 
 const BLOCK_LABEL_MAX = 72;
 const BLOCK_CID_MAX = 56;
@@ -20,67 +26,10 @@ export type HandoffComponentTag = DevIdComponentTag;
 export type PromptVerbosity = "full" | "compact";
 export const VISUAL_CONTEXT_SKILL_REF = "vendor/get-anything-done/skills/gad-visual-context-system/SKILL.md";
 
-export const DEFAULT_UPDATE_TEMPLATE = `Objective: update target component.
-Route: **{{PAGE_URL}}**
-Skill ref (mandatory): {{VISUAL_CONTEXT_SKILL_REF}}
-
-Target:
-- wrapper: {{COMPONENT_TAG}}
-- as: {{LABEL}}
-- search: {{SEARCH_LITERAL}}
-- data-cid: {{CID}}
-- scope: target node + children
-
-Execution model:
-- Default: subagent.
-- Subagent scope: target component plus tightly related nearby components in the same UI context.
-- If work expands beyond local UI context, keep orchestration in main session and delegate isolated slices only.
-
-Report:
-- workflow: subagent | local-session
-- rationale: one line
-- preserve route/as/search/data-cid
-
-Tasking (update):
-`;
-
-export const DEFAULT_DELETE_TEMPLATE = `Objective: remove target component.
-Route: **{{PAGE_URL}}**
-Skill ref (mandatory): {{VISUAL_CONTEXT_SKILL_REF}}
-
-Target:
-- wrapper: {{COMPONENT_TAG}}
-- as: {{LABEL}}
-- search: {{SEARCH_LITERAL}}
-- data-cid: {{CID}}
-- scope: target node + children
-
-Execution model:
-- Default: subagent.
-- Subagent scope: target component plus tightly related nearby components in the same UI context.
-
-Report:
-- workflow: subagent
-- rationale: one line
-- preserve route/as/search/data-cid
-
-Tasking (delete):
-1. Remove dead imports/components.
-2. Typecheck touched package.`;
-
-export const COMPACT_UPDATE_TEMPLATE = `Update target.
-Route: {{PAGE_URL}}
-Target: {{COMPONENT_TAG}} | {{LABEL}}
-search: {{SEARCH_LITERAL}}
-data-cid: {{CID}}
-`;
-
-export const COMPACT_DELETE_TEMPLATE = `Delete target.
-Route: {{PAGE_URL}}
-Target: {{COMPONENT_TAG}} | {{LABEL}}
-search: {{SEARCH_LITERAL}}
-data-cid: {{CID}}
-Cleanup: remove dead imports/components; typecheck touched package.`;
+export const DEFAULT_UPDATE_TEMPLATE = DEVID_UPDATE_TEMPLATE;
+export const DEFAULT_DELETE_TEMPLATE = DEVID_DELETE_TEMPLATE;
+export const COMPACT_UPDATE_TEMPLATE = DEVID_UPDATE_COMPACT_TEMPLATE;
+export const COMPACT_DELETE_TEMPLATE = DEVID_DELETE_COMPACT_TEMPLATE;
 
 function renderPromptTemplate(template: string, vars: Record<string, string>): string {
   let out = template;

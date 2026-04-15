@@ -102,7 +102,7 @@ export interface WorkflowLiveGraph {
   edges: WorkflowLiveGraphEdge[];
 }
 export interface WorkflowConformance {
-  /** (matching − extra − out_of_order) / expected — advisory score per gad-173 */
+  /** (matching âˆ’ extra âˆ’ out_of_order) / expected â€” advisory score per gad-173 */
   score: number;
   matched: number;
   extra: number;
@@ -131,17 +131,17 @@ export interface Workflow {
   liveGraph?: WorkflowLiveGraph;
   /** Conformance score vs. authored expected graph (advisory). */
   conformance?: WorkflowConformance;
-  /** Only present on emergent workflows — detector support metrics. */
+  /** Only present on emergent workflows â€” detector support metrics. */
   support?: WorkflowEmergentSupport;
-  /** Only present on emergent workflows — which detector produced the candidate. */
+  /** Only present on emergent workflows â€” which detector produced the candidate. */
   detector?: "skill-level (v2)" | "tool-level (v1)";
 }
 
 /**
- * HumanWorkflow — hand-authored operator routines (task 44-22). Distinct
+ * HumanWorkflow â€” hand-authored operator routines (task 44-22). Distinct
  * from Workflow: no trace matching, no conformance score, Mermaid is
  * optional, frontmatter shape is different. Lives under
- * .planning/human-workflows/*.md and surfaces on /planning → Human
+ * .planning/human-workflows/*.md and surfaces on /planning â†’ Human
  * Workflows tab.
  */
 export interface HumanWorkflow {
@@ -152,7 +152,7 @@ export interface HumanWorkflow {
   triggers: string[];
   projectsTouched: string[];
   relatedPhases: string[];
-  /** Optional — may be empty string if no mermaid block is present. */
+  /** Optional â€” may be empty string if no mermaid block is present. */
   mermaidBody: string;
   bodyHtml: string;
   bodyRaw: string;
@@ -160,7 +160,7 @@ export interface HumanWorkflow {
 }
 
 /**
- * Signal — trace-based agent-behavior analytics (task 44-21). Pure
+ * Signal â€” trace-based agent-behavior analytics (task 44-21). Pure
  * reducers over the gad-framework-scoped slice of `.planning/.trace-events.jsonl`.
  * v1 ships top files, top skills, tool mix, and agent split. Bash command
  * path extraction, WebFetch URL frequency, and tool n-gram sequences are
@@ -184,7 +184,7 @@ export interface Signal {
 
 /**
  * ContextFramework is a bundle that references existing catalog items
- * (skills, agents, workflows) by slug. It is NOT a copy — when the
+ * (skills, agents, workflows) by slug. It is NOT a copy â€” when the
  * referenced items update, every project on the framework picks up the
  * update without re-bundling. Frameworks can extend other frameworks
  * via `extends` (e.g. a future "GAD-lite" inherits from "gad").
@@ -195,7 +195,7 @@ export interface ContextFramework {
   name: string;
   description: string;
   version: string;
-  /** Optional parent framework slug — this framework inherits its bundle and can override. */
+  /** Optional parent framework slug â€” this framework inherits its bundle and can override. */
   extends: string | null;
   skills: string[];
   agents: string[];
@@ -260,8 +260,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/create-proto-skill/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>create-proto-skill</h1>\n<p>The lightweight drafter inside the GAD evolution loop. Reads a candidate\ncontext file, writes a proto-skill bundle to <code>.planning/proto-skills/&lt;slug&gt;/</code>,\nand hands off to <code>gad evolution validate</code> for advisory scoring and\n<code>gad evolution install</code> for runtime test use. Renamed from <code>gad-quick-skill</code>\nper decision gad-168; output contract updated to the proto-skill bundle\nshape per decision gad-191.</p>\n<p>We use the dot-agent skill <strong>unmodified</strong> — it&#39;s already a clean format guide\nthat enforces the 200-line rule, the progressive disclosure principle, and the\nreferences/ split. We take ownership of how it&#39;s invoked inside the GAD loop.</p>\n<h2>When to use this skill</h2>\n<ul>\n<li><code>gad:evolution:evolve</code> calls this for each high-pressure phase candidate.</li>\n<li>A user explicitly says &quot;draft a skill for X&quot; or &quot;quick skill&quot; or &quot;convert\nthis candidate to a skill.&quot;</li>\n<li>You&#39;ve finished a workflow and want to capture a SKILL.md immediately\nwithout running through <code>gad-skill-creator</code>&#39;s eval loop.</li>\n<li>You have a clear context source — a CANDIDATE.md from compute-self-eval,\na raw phase dump, or a working session you want to preserve.</li>\n</ul>\n<h2>When NOT to use this</h2>\n<ul>\n<li>The skill is high-stakes and you want test runs against real subagents to\nvalidate it — use <code>gad-skill-creator</code> (heavy path) instead.</li>\n<li>You&#39;re improving an existing skill that already has tests — <code>gad-skill-creator</code>\nknows how to read the existing tests and re-run them.</li>\n<li>The pattern isn&#39;t actually clear yet — write a quick note instead and let\nthe next evolution surface it.</li>\n</ul>\n<h2>Step 1 — ensure dot-agent create-skill is installed</h2>\n<p>Idempotent — only installs if missing:</p>\n<pre><code class=\"language-sh\">if [ ! -d &quot;$HOME/.agents/skills/create-skill&quot; ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n</code></pre>\n<p>After install, <code>~/.agents/skills/create-skill/SKILL.md</code> is the canonical source\nplus four reference files in <code>references/</code>. Read SKILL.md once for the full\nauthoring guide — this wrapper only handles the input plumbing.</p>\n<h2>Step 2 — locate the source context</h2>\n<p>The drafting input depends on how you were invoked:</p>\n<ul>\n<li><strong>From <code>gad:evolution:evolve</code>:</strong> <code>skills/candidates/&lt;slug&gt;/CANDIDATE.md</code> — already\nexists, written by <code>compute-self-eval</code>. Contains the raw phase dump (tasks,\ndecisions, file refs, CLI surface, related skills, git log highlights).</li>\n<li><strong>From a direct user request:</strong> decide on a kebab-case slug, create\n<code>.planning/proto-skills/&lt;slug&gt;/</code>, and write a CANDIDATE.md from whatever the\nuser is pointing at (a phase, a working session, a transcript, a file).</li>\n<li><strong>From a &quot;redraft this skill&quot; request:</strong> the existing skill&#39;s directory.</li>\n</ul>\n<p>The CANDIDATE.md is <strong>not curated</strong> and does not contain a proposed name,\nproposed test prompts, or hand-picked decisions. It&#39;s the raw source. The\nagent reads it and decides what matters. This is intentional — see the\n2026-04-13 evolution-loop experiment finding: curators are filters, raw input\npulls in more decisions.</p>\n<h2>Step 3 — invoke dot-agent create-skill on the source</h2>\n<p>Read <code>~/.agents/skills/create-skill/SKILL.md</code> and follow its authoring\nworkflow, treating CANDIDATE.md (or the user&#39;s context) as the source. The\nkey constraints from dot-agent&#39;s guide:</p>\n<ul>\n<li><strong>SKILL.md must be under 200 lines</strong> — hard rule.</li>\n<li>Description should be appropriately &quot;pushy&quot; so the skill triggers reliably.</li>\n<li>Split deeper content into <code>references/&lt;file&gt;.md</code> and reference from SKILL.md.</li>\n<li>Use the imperative form in instructions.</li>\n<li>Explain <em>why</em>, not just <em>what</em>.</li>\n</ul>\n<p>Write to <code>.planning/proto-skills/&lt;slug&gt;/SKILL.md</code> and any references files under\n<code>.planning/proto-skills/&lt;slug&gt;/references/</code>.</p>\n<p>Pick the kebab-case skill name yourself, drawing from the phase or context. Do\nnot ask the human — the whole point of the autonomous loop is that you make\nthe call.</p>\n<h2>Step 4 — Hand off to the validator</h2>\n<p>After SKILL.md is written, the orchestrator (<code>gad:evolution:evolve</code>) runs the\nvalidator skill (<code>gad-evolution-validator</code>) on the new proto-skill. The\nvalidator writes <code>.planning/proto-skills/&lt;slug&gt;/VALIDATION.md</code> with advisory\nnotes:</p>\n<ul>\n<li>Files cited in SKILL.md that don&#39;t exist in the repo</li>\n<li>CLI commands cited that don&#39;t appear in <code>gad --help</code></li>\n<li>Convention shapes (e.g. <code>gad.json</code> examples) that don&#39;t match existing\nfiles in the repo</li>\n</ul>\n<p>VALIDATION.md is <strong>advisory, not blocking</strong>. The human reviewer reads both\nSKILL.md and VALIDATION.md before promote/discard. You don&#39;t need to act on\nthe validator yourself — just leave the proto-skill in place.</p>\n<h2>Step 5 — Stop</h2>\n<p>Do not iterate. Do not run test prompts. Do not ask for review. The\nproto-skill stays in <code>.planning/proto-skills/&lt;slug&gt;/</code> until a human runs\n<code>gad evolution install &lt;slug&gt; ...</code>, <code>gad evolution promote &lt;slug&gt;</code>, or\n<code>gad evolution discard &lt;slug&gt;</code> later.</p>\n<p>If the orchestrator passed you multiple candidates, loop steps 2-4 for each\none. Otherwise stop after one.</p>\n<h2>Failure modes</h2>\n<ul>\n<li><strong>dot-agent guide says to ask the user questions.</strong> Don&#39;t. Make the call\nyourself and document the decision in the skill body. We&#39;re autonomous\nhere.</li>\n<li><strong>Tempted to run test prompts.</strong> That&#39;s <code>gad-skill-creator</code> territory. Stop\nat SKILL.md.</li>\n<li><strong>CANDIDATE.md is sparse.</strong> Read it anyway and pull from the file references\nit points at — that&#39;s where the depth lives.</li>\n</ul>\n<h2>Why this skill is universal (not under <code>gad:evolution:</code>)</h2>\n<p>Quick-skill is useful outside the evolution loop too — anytime you want to\nwrite a skill fast from clear context. Keeping it general means we don&#39;t\nduplicate the wrapper for one-off skill authoring vs evolution drafting.</p>\n<h2>Reference</h2>\n<ul>\n<li><code>~/.agents/skills/create-skill/SKILL.md</code> — dot-agent&#39;s canonical authoring guide</li>\n<li><code>~/.agents/skills/create-skill/references/*</code> — format, structure, examples, best practices</li>\n<li><code>gad-skill-creator</code> — the heavy path with full eval loop (Anthropic skill-creator)</li>\n<li><code>gad-evolution-evolve</code> — the orchestrator that calls this for each candidate</li>\n<li>2026-04-13 evolution-loop experiment finding (<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>)</li>\n</ul>\n",
-    "bodyRaw": "\n# create-proto-skill\n\nThe lightweight drafter inside the GAD evolution loop. Reads a candidate\ncontext file, writes a proto-skill bundle to `.planning/proto-skills/<slug>/`,\nand hands off to `gad evolution validate` for advisory scoring and\n`gad evolution install` for runtime test use. Renamed from `gad-quick-skill`\nper decision gad-168; output contract updated to the proto-skill bundle\nshape per decision gad-191.\n\nWe use the dot-agent skill **unmodified** — it's already a clean format guide\nthat enforces the 200-line rule, the progressive disclosure principle, and the\nreferences/ split. We take ownership of how it's invoked inside the GAD loop.\n\n## When to use this skill\n\n- `gad:evolution:evolve` calls this for each high-pressure phase candidate.\n- A user explicitly says \"draft a skill for X\" or \"quick skill\" or \"convert\n  this candidate to a skill.\"\n- You've finished a workflow and want to capture a SKILL.md immediately\n  without running through `gad-skill-creator`'s eval loop.\n- You have a clear context source — a CANDIDATE.md from compute-self-eval,\n  a raw phase dump, or a working session you want to preserve.\n\n## When NOT to use this\n\n- The skill is high-stakes and you want test runs against real subagents to\n  validate it — use `gad-skill-creator` (heavy path) instead.\n- You're improving an existing skill that already has tests — `gad-skill-creator`\n  knows how to read the existing tests and re-run them.\n- The pattern isn't actually clear yet — write a quick note instead and let\n  the next evolution surface it.\n\n## Step 1 — ensure dot-agent create-skill is installed\n\nIdempotent — only installs if missing:\n\n```sh\nif [ ! -d \"$HOME/.agents/skills/create-skill\" ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n```\n\nAfter install, `~/.agents/skills/create-skill/SKILL.md` is the canonical source\nplus four reference files in `references/`. Read SKILL.md once for the full\nauthoring guide — this wrapper only handles the input plumbing.\n\n## Step 2 — locate the source context\n\nThe drafting input depends on how you were invoked:\n\n- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/CANDIDATE.md` — already\n  exists, written by `compute-self-eval`. Contains the raw phase dump (tasks,\n  decisions, file refs, CLI surface, related skills, git log highlights).\n- **From a direct user request:** decide on a kebab-case slug, create\n  `.planning/proto-skills/<slug>/`, and write a CANDIDATE.md from whatever the\n  user is pointing at (a phase, a working session, a transcript, a file).\n- **From a \"redraft this skill\" request:** the existing skill's directory.\n\nThe CANDIDATE.md is **not curated** and does not contain a proposed name,\nproposed test prompts, or hand-picked decisions. It's the raw source. The\nagent reads it and decides what matters. This is intentional — see the\n2026-04-13 evolution-loop experiment finding: curators are filters, raw input\npulls in more decisions.\n\n## Step 3 — invoke dot-agent create-skill on the source\n\nRead `~/.agents/skills/create-skill/SKILL.md` and follow its authoring\nworkflow, treating CANDIDATE.md (or the user's context) as the source. The\nkey constraints from dot-agent's guide:\n\n- **SKILL.md must be under 200 lines** — hard rule.\n- Description should be appropriately \"pushy\" so the skill triggers reliably.\n- Split deeper content into `references/<file>.md` and reference from SKILL.md.\n- Use the imperative form in instructions.\n- Explain *why*, not just *what*.\n\nWrite to `.planning/proto-skills/<slug>/SKILL.md` and any references files under\n`.planning/proto-skills/<slug>/references/`.\n\nPick the kebab-case skill name yourself, drawing from the phase or context. Do\nnot ask the human — the whole point of the autonomous loop is that you make\nthe call.\n\n## Step 4 — Hand off to the validator\n\nAfter SKILL.md is written, the orchestrator (`gad:evolution:evolve`) runs the\nvalidator skill (`gad-evolution-validator`) on the new proto-skill. The\nvalidator writes `.planning/proto-skills/<slug>/VALIDATION.md` with advisory\nnotes:\n\n- Files cited in SKILL.md that don't exist in the repo\n- CLI commands cited that don't appear in `gad --help`\n- Convention shapes (e.g. `gad.json` examples) that don't match existing\n  files in the repo\n\nVALIDATION.md is **advisory, not blocking**. The human reviewer reads both\nSKILL.md and VALIDATION.md before promote/discard. You don't need to act on\nthe validator yourself — just leave the proto-skill in place.\n\n## Step 5 — Stop\n\nDo not iterate. Do not run test prompts. Do not ask for review. The\nproto-skill stays in `.planning/proto-skills/<slug>/` until a human runs\n`gad evolution install <slug> ...`, `gad evolution promote <slug>`, or\n`gad evolution discard <slug>` later.\n\nIf the orchestrator passed you multiple candidates, loop steps 2-4 for each\none. Otherwise stop after one.\n\n## Failure modes\n\n- **dot-agent guide says to ask the user questions.** Don't. Make the call\n  yourself and document the decision in the skill body. We're autonomous\n  here.\n- **Tempted to run test prompts.** That's `gad-skill-creator` territory. Stop\n  at SKILL.md.\n- **CANDIDATE.md is sparse.** Read it anyway and pull from the file references\n  it points at — that's where the depth lives.\n\n## Why this skill is universal (not under `gad:evolution:`)\n\nQuick-skill is useful outside the evolution loop too — anytime you want to\nwrite a skill fast from clear context. Keeping it general means we don't\nduplicate the wrapper for one-off skill authoring vs evolution drafting.\n\n## Reference\n\n- `~/.agents/skills/create-skill/SKILL.md` — dot-agent's canonical authoring guide\n- `~/.agents/skills/create-skill/references/*` — format, structure, examples, best practices\n- `gad-skill-creator` — the heavy path with full eval loop (Anthropic skill-creator)\n- `gad-evolution-evolve` — the orchestrator that calls this for each candidate\n- 2026-04-13 evolution-loop experiment finding (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)\n"
+    "bodyHtml": "<h1>create-proto-skill</h1>\n<p>The lightweight drafter inside the GAD evolution loop. Walks every raw\ncandidate under <code>.planning/candidates/</code>, drafts each one into a proto-skill\nbundle under <code>.planning/proto-skills/&lt;slug&gt;/</code>, and hands off to\n<code>gad evolution validate</code> and <code>gad evolution install</code> for advisory scoring\nand runtime test use.</p>\n<p>Renamed from <code>gad-quick-skill</code> per decision gad-168. Output shape locked by\ndecision gad-191. Bulk-batch + per-candidate-checkpoint protocol locked by\ndecision gad-171 — the whole point is that a 20-candidate batch survives a\ncrash or auto-compact halfway through.</p>\n<h2>When to use this skill</h2>\n<ul>\n<li><code>gad:evolution:evolve</code> calls this during the drafting step for every\ncandidate that <code>compute-self-eval</code> surfaced above the pressure threshold.</li>\n<li>A user says &quot;draft a proto-skill for X&quot;, &quot;convert this candidate&quot;, or\n&quot;draft all pending candidates&quot;.</li>\n<li>You&#39;ve finished a workflow and want to capture a SKILL.md immediately\nwithout running <code>gad-skill-creator</code>&#39;s full eval loop.</li>\n<li>You have clear context sources — CANDIDATE.md files from self-eval, raw\nphase dumps, or working session notes you want to preserve.</li>\n</ul>\n<h2>When NOT to use this</h2>\n<ul>\n<li>The skill is high-stakes and you want real subagent test runs to validate\nit — use <code>gad-skill-creator</code> (heavy path).</li>\n<li>You&#39;re improving an existing skill that already has tests — use\n<code>gad-skill-creator</code>, it re-runs the tests.</li>\n<li>The pattern isn&#39;t actually clear yet — write a quick note (<code>gad note</code>)\nand let the next evolution surface it.</li>\n</ul>\n<h2>Step 1 — enumerate pending candidates</h2>\n<p>Run <code>gad evolution status</code> first to see the current state. The command\nrenders three counts for the proto-skill backlog:</p>\n<ul>\n<li><strong>pending</strong> — candidates under <code>.planning/candidates/&lt;slug&gt;/</code> with no\nmatching <code>.planning/proto-skills/&lt;slug&gt;/</code> directory at all.</li>\n<li><strong>in-progress</strong> — proto-skill dirs with PROVENANCE.md but no SKILL.md\nyet (a previous run crashed or was compacted mid-draft, lock marker left\nbehind).</li>\n<li><strong>complete</strong> — proto-skill dirs with both PROVENANCE.md and SKILL.md.</li>\n</ul>\n<p>Your batch is <code>pending ∪ in-progress</code>. Skip <code>complete</code>.</p>\n<p>Enumerate explicitly:</p>\n<pre><code class=\"language-sh\">gad evolution status\n# Or, to get the raw list:\nls .planning/candidates/\nls .planning/proto-skills/\n</code></pre>\n<p>For each candidate slug, decide its state:</p>\n<ul>\n<li>PROVENANCE.md missing → <strong>pending</strong> (fresh draft)</li>\n<li>PROVENANCE.md present, SKILL.md missing → <strong>in-progress</strong> (resume; keep\nthe existing PROVENANCE.md, do not rewrite)</li>\n<li>Both present → <strong>complete</strong> (skip)</li>\n</ul>\n<h2>Step 2 — ensure dot-agent create-skill is installed</h2>\n<p>Idempotent — only installs if missing:</p>\n<pre><code class=\"language-sh\">if [ ! -d &quot;$HOME/.agents/skills/create-skill&quot; ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n</code></pre>\n<p>After install, <code>~/.agents/skills/create-skill/SKILL.md</code> is the canonical\nauthoring guide plus four reference files in <code>references/</code>. Read SKILL.md\nonce for the format rules — this wrapper only handles input plumbing and\nthe checkpoint protocol.</p>\n<h2>Step 3 — per-candidate checkpoint protocol</h2>\n<p>Loop over the pending+in-progress list. For each slug, <strong>in this order</strong>:</p>\n<h3>3a. Write PROVENANCE.md FIRST (lock marker)</h3>\n<p>Create <code>.planning/proto-skills/&lt;slug&gt;/</code> and write PROVENANCE.md before\nanything else. This is the lock marker that tells the next run &quot;this slug\nis in-progress, don&#39;t re-draft it from scratch&quot;:</p>\n<pre><code class=\"language-markdown\">---\ncandidate_slug: &lt;slug&gt;\nsource_phase: &lt;phase id from CANDIDATE.md frontmatter&gt;\npressure_score: &lt;from CANDIDATE.md&gt;\ncreated_on: &lt;YYYY-MM-DD&gt;\ncreated_by: create-proto-skill\nstatus: in-progress\n---\n\n# Provenance for &lt;slug&gt;\n\nDrafted from `.planning/candidates/&lt;slug&gt;/CANDIDATE.md` during evolution\nturn &lt;N&gt;. Raw source: self-eval pressure dump (tasks, decisions, file refs,\nCLI surface, related skills).\n</code></pre>\n<p>If PROVENANCE.md already exists (resume case), <strong>do not overwrite it</strong>.\nRead its <code>status:</code> field — if <code>in-progress</code>, you&#39;re resuming a crashed run.</p>\n<h3>3b. Read the candidate</h3>\n<p>Read <code>.planning/candidates/&lt;slug&gt;/CANDIDATE.md</code>. It contains the raw phase\ndump and is <strong>not curated</strong> — no proposed name, no hand-picked decisions,\nno suggested test prompts. Decide what matters. This is intentional per the\n2026-04-13 evolution-loop experiment finding: curators filter, raw input\npulls in more decisions.</p>\n<p>For direct user requests where no candidate exists, write a minimal\nCANDIDATE.md into <code>.planning/candidates/&lt;slug&gt;/</code> from whatever the user is\npointing at, then continue.</p>\n<h3>3c. Write workflow.md</h3>\n<p>Write the procedural body to <code>.planning/proto-skills/&lt;slug&gt;/workflow.md</code>.\nThis is the &quot;what the agent actually does&quot; file — step-by-step instructions,\nguardrails, failure modes. Follow dot-agent&#39;s authoring rules: imperative\nform, explain <em>why</em> not just <em>what</em>, split deeper content into\n<code>references/&lt;file&gt;.md</code> and reference from here.</p>\n<p>Pick the kebab-case skill name yourself, drawing from the phase or context.\nDo not ask the human. The autonomous loop exists because you make the call.</p>\n<h3>3d. Write SKILL.md (thin entry point)</h3>\n<p>Write <code>.planning/proto-skills/&lt;slug&gt;/SKILL.md</code> as the thin trigger doc with\n<code>workflow: ./workflow.md</code> per decision gad-191:</p>\n<pre><code class=\"language-markdown\">---\nname: &lt;skill-name&gt;\ndescription: &gt;-\n  &lt;2-4 sentence trigger-friendly description. Start strong. Include the\n  &quot;when to use&quot; framing so it fires reliably.&gt;\nstatus: proto\nworkflow: ./workflow.md\n---\n\n# &lt;skill-name&gt;\n\n&lt;One-paragraph summary. Point the reader at workflow.md for the procedure.&gt;\n\n**Workflow:** [./workflow.md](./workflow.md)\n\n## Provenance\n\nDrafted by `create-proto-skill` from `.planning/candidates/&lt;slug&gt;/\nCANDIDATE.md` on &lt;date&gt;. See PROVENANCE.md for source metadata.\n</code></pre>\n<p>Hard rule: <strong>SKILL.md under 200 lines.</strong> If the body is long, move it to\nworkflow.md and keep SKILL.md as the trigger-only entry point.</p>\n<h3>3e. Flip PROVENANCE.md status to <code>complete</code></h3>\n<p>After both workflow.md and SKILL.md land, update PROVENANCE.md <code>status:</code>\nfrom <code>in-progress</code> to <code>complete</code>. This closes the lock marker.</p>\n<h3>3f. Commit checkpoint (if in a long batch)</h3>\n<p>For batches over ~5 candidates, commit after each completed proto-skill so\npartial progress survives independent of the working tree. Commit message\nshape: <code>evolution: draft proto-skill &lt;slug&gt; from candidate</code>.</p>\n<h2>Step 4 — hand off to the validator</h2>\n<p>After the batch finishes, the orchestrator (<code>gad:evolution:evolve</code>) runs\n<code>gad-evolution-validator</code> across the new proto-skills. The validator writes\n<code>.planning/proto-skills/&lt;slug&gt;/VALIDATION.md</code> with advisory notes:</p>\n<ul>\n<li>Files cited in SKILL.md/workflow.md that don&#39;t exist in the repo</li>\n<li>CLI commands cited that don&#39;t appear in <code>gad --help</code></li>\n<li>Convention shapes that don&#39;t match existing files</li>\n</ul>\n<p>VALIDATION.md is <strong>advisory, not blocking</strong>. The human reviewer reads\nSKILL.md + workflow.md + VALIDATION.md before promote/discard. You don&#39;t\nneed to act on validator output — just leave the proto-skills in place.</p>\n<h2>Step 5 — stop</h2>\n<p>Do not iterate. Do not run test prompts. Do not ask for review. Proto-skills\nstay in <code>.planning/proto-skills/&lt;slug&gt;/</code> until a human runs\n<code>gad evolution install &lt;slug&gt;</code>, <code>gad evolution promote &lt;slug&gt;</code>, or\n<code>gad evolution discard &lt;slug&gt;</code> later.</p>\n<h2>Resume protocol (crash / auto-compact recovery)</h2>\n<p>If you&#39;re invoked after a previous batch crashed mid-draft:</p>\n<ol>\n<li>Run <code>gad evolution status</code> — the <code>in-progress</code> count is your work queue.</li>\n<li>For each in-progress slug, read the existing PROVENANCE.md to confirm\nit&#39;s a lock marker, not a false positive.</li>\n<li>Resume at step 3b (re-read the candidate, then 3c → 3d → 3e).</li>\n<li>Never regenerate PROVENANCE.md on resume — the original timestamp and\nmetadata are part of the audit trail.</li>\n</ol>\n<h2>Failure modes</h2>\n<ul>\n<li><strong>dot-agent guide says to ask the user questions.</strong> Don&#39;t. Make the call\nyourself, document the decision in workflow.md. Autonomous loop.</li>\n<li><strong>Tempted to run test prompts.</strong> That&#39;s <code>gad-skill-creator</code> territory.\nStop at SKILL.md + workflow.md.</li>\n<li><strong>CANDIDATE.md is sparse.</strong> Read it anyway and pull from the file\nreferences it points at — that&#39;s where the depth lives.</li>\n<li><strong>Forgot to write PROVENANCE.md first.</strong> Re-run from step 3a for that\nslug. The checkpoint protocol is not decorative; without a lock marker,\ncrash-resume can&#39;t distinguish &quot;never started&quot; from &quot;half-done&quot;.</li>\n<li><strong>Existing <code>.planning/proto-skills/&lt;slug&gt;/</code> from a prior run.</strong> Inspect\nbefore overwriting: <code>complete</code> means skip, <code>in-progress</code> means resume.</li>\n</ul>\n<h2>Reference</h2>\n<ul>\n<li><code>~/.agents/skills/create-skill/SKILL.md</code> — dot-agent authoring guide</li>\n<li><code>references/skill-shape.md</code> — uniform shape contract</li>\n<li><code>references/proto-skills.md</code> — proto-skill bundle contract</li>\n<li><code>gad-skill-creator</code> — heavy path with full eval loop</li>\n<li><code>gad-evolution-evolve</code> — orchestrator that calls this in a batch</li>\n<li>Decision gad-171 — bulk batching + per-candidate checkpoints</li>\n<li>Decision gad-191 — proto-skill bundle shape at <code>.planning/proto-skills/</code></li>\n<li>2026-04-13 evolution-loop experiment finding\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>)</li>\n</ul>\n",
+    "bodyRaw": "\n# create-proto-skill\n\nThe lightweight drafter inside the GAD evolution loop. Walks every raw\ncandidate under `.planning/candidates/`, drafts each one into a proto-skill\nbundle under `.planning/proto-skills/<slug>/`, and hands off to\n`gad evolution validate` and `gad evolution install` for advisory scoring\nand runtime test use.\n\nRenamed from `gad-quick-skill` per decision gad-168. Output shape locked by\ndecision gad-191. Bulk-batch + per-candidate-checkpoint protocol locked by\ndecision gad-171 — the whole point is that a 20-candidate batch survives a\ncrash or auto-compact halfway through.\n\n## When to use this skill\n\n- `gad:evolution:evolve` calls this during the drafting step for every\n  candidate that `compute-self-eval` surfaced above the pressure threshold.\n- A user says \"draft a proto-skill for X\", \"convert this candidate\", or\n  \"draft all pending candidates\".\n- You've finished a workflow and want to capture a SKILL.md immediately\n  without running `gad-skill-creator`'s full eval loop.\n- You have clear context sources — CANDIDATE.md files from self-eval, raw\n  phase dumps, or working session notes you want to preserve.\n\n## When NOT to use this\n\n- The skill is high-stakes and you want real subagent test runs to validate\n  it — use `gad-skill-creator` (heavy path).\n- You're improving an existing skill that already has tests — use\n  `gad-skill-creator`, it re-runs the tests.\n- The pattern isn't actually clear yet — write a quick note (`gad note`)\n  and let the next evolution surface it.\n\n## Step 1 — enumerate pending candidates\n\nRun `gad evolution status` first to see the current state. The command\nrenders three counts for the proto-skill backlog:\n\n- **pending** — candidates under `.planning/candidates/<slug>/` with no\n  matching `.planning/proto-skills/<slug>/` directory at all.\n- **in-progress** — proto-skill dirs with PROVENANCE.md but no SKILL.md\n  yet (a previous run crashed or was compacted mid-draft, lock marker left\n  behind).\n- **complete** — proto-skill dirs with both PROVENANCE.md and SKILL.md.\n\nYour batch is `pending ∪ in-progress`. Skip `complete`.\n\nEnumerate explicitly:\n\n```sh\ngad evolution status\n# Or, to get the raw list:\nls .planning/candidates/\nls .planning/proto-skills/\n```\n\nFor each candidate slug, decide its state:\n\n- PROVENANCE.md missing → **pending** (fresh draft)\n- PROVENANCE.md present, SKILL.md missing → **in-progress** (resume; keep\n  the existing PROVENANCE.md, do not rewrite)\n- Both present → **complete** (skip)\n\n## Step 2 — ensure dot-agent create-skill is installed\n\nIdempotent — only installs if missing:\n\n```sh\nif [ ! -d \"$HOME/.agents/skills/create-skill\" ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n```\n\nAfter install, `~/.agents/skills/create-skill/SKILL.md` is the canonical\nauthoring guide plus four reference files in `references/`. Read SKILL.md\nonce for the format rules — this wrapper only handles input plumbing and\nthe checkpoint protocol.\n\n## Step 3 — per-candidate checkpoint protocol\n\nLoop over the pending+in-progress list. For each slug, **in this order**:\n\n### 3a. Write PROVENANCE.md FIRST (lock marker)\n\nCreate `.planning/proto-skills/<slug>/` and write PROVENANCE.md before\nanything else. This is the lock marker that tells the next run \"this slug\nis in-progress, don't re-draft it from scratch\":\n\n```markdown\n---\ncandidate_slug: <slug>\nsource_phase: <phase id from CANDIDATE.md frontmatter>\npressure_score: <from CANDIDATE.md>\ncreated_on: <YYYY-MM-DD>\ncreated_by: create-proto-skill\nstatus: in-progress\n---\n\n# Provenance for <slug>\n\nDrafted from `.planning/candidates/<slug>/CANDIDATE.md` during evolution\nturn <N>. Raw source: self-eval pressure dump (tasks, decisions, file refs,\nCLI surface, related skills).\n```\n\nIf PROVENANCE.md already exists (resume case), **do not overwrite it**.\nRead its `status:` field — if `in-progress`, you're resuming a crashed run.\n\n### 3b. Read the candidate\n\nRead `.planning/candidates/<slug>/CANDIDATE.md`. It contains the raw phase\ndump and is **not curated** — no proposed name, no hand-picked decisions,\nno suggested test prompts. Decide what matters. This is intentional per the\n2026-04-13 evolution-loop experiment finding: curators filter, raw input\npulls in more decisions.\n\nFor direct user requests where no candidate exists, write a minimal\nCANDIDATE.md into `.planning/candidates/<slug>/` from whatever the user is\npointing at, then continue.\n\n### 3c. Write workflow.md\n\nWrite the procedural body to `.planning/proto-skills/<slug>/workflow.md`.\nThis is the \"what the agent actually does\" file — step-by-step instructions,\nguardrails, failure modes. Follow dot-agent's authoring rules: imperative\nform, explain *why* not just *what*, split deeper content into\n`references/<file>.md` and reference from here.\n\nPick the kebab-case skill name yourself, drawing from the phase or context.\nDo not ask the human. The autonomous loop exists because you make the call.\n\n### 3d. Write SKILL.md (thin entry point)\n\nWrite `.planning/proto-skills/<slug>/SKILL.md` as the thin trigger doc with\n`workflow: ./workflow.md` per decision gad-191:\n\n```markdown\n---\nname: <skill-name>\ndescription: >-\n  <2-4 sentence trigger-friendly description. Start strong. Include the\n  \"when to use\" framing so it fires reliably.>\nstatus: proto\nworkflow: ./workflow.md\n---\n\n# <skill-name>\n\n<One-paragraph summary. Point the reader at workflow.md for the procedure.>\n\n**Workflow:** [./workflow.md](./workflow.md)\n\n## Provenance\n\nDrafted by `create-proto-skill` from `.planning/candidates/<slug>/\nCANDIDATE.md` on <date>. See PROVENANCE.md for source metadata.\n```\n\nHard rule: **SKILL.md under 200 lines.** If the body is long, move it to\nworkflow.md and keep SKILL.md as the trigger-only entry point.\n\n### 3e. Flip PROVENANCE.md status to `complete`\n\nAfter both workflow.md and SKILL.md land, update PROVENANCE.md `status:`\nfrom `in-progress` to `complete`. This closes the lock marker.\n\n### 3f. Commit checkpoint (if in a long batch)\n\nFor batches over ~5 candidates, commit after each completed proto-skill so\npartial progress survives independent of the working tree. Commit message\nshape: `evolution: draft proto-skill <slug> from candidate`.\n\n## Step 4 — hand off to the validator\n\nAfter the batch finishes, the orchestrator (`gad:evolution:evolve`) runs\n`gad-evolution-validator` across the new proto-skills. The validator writes\n`.planning/proto-skills/<slug>/VALIDATION.md` with advisory notes:\n\n- Files cited in SKILL.md/workflow.md that don't exist in the repo\n- CLI commands cited that don't appear in `gad --help`\n- Convention shapes that don't match existing files\n\nVALIDATION.md is **advisory, not blocking**. The human reviewer reads\nSKILL.md + workflow.md + VALIDATION.md before promote/discard. You don't\nneed to act on validator output — just leave the proto-skills in place.\n\n## Step 5 — stop\n\nDo not iterate. Do not run test prompts. Do not ask for review. Proto-skills\nstay in `.planning/proto-skills/<slug>/` until a human runs\n`gad evolution install <slug>`, `gad evolution promote <slug>`, or\n`gad evolution discard <slug>` later.\n\n## Resume protocol (crash / auto-compact recovery)\n\nIf you're invoked after a previous batch crashed mid-draft:\n\n1. Run `gad evolution status` — the `in-progress` count is your work queue.\n2. For each in-progress slug, read the existing PROVENANCE.md to confirm\n   it's a lock marker, not a false positive.\n3. Resume at step 3b (re-read the candidate, then 3c → 3d → 3e).\n4. Never regenerate PROVENANCE.md on resume — the original timestamp and\n   metadata are part of the audit trail.\n\n## Failure modes\n\n- **dot-agent guide says to ask the user questions.** Don't. Make the call\n  yourself, document the decision in workflow.md. Autonomous loop.\n- **Tempted to run test prompts.** That's `gad-skill-creator` territory.\n  Stop at SKILL.md + workflow.md.\n- **CANDIDATE.md is sparse.** Read it anyway and pull from the file\n  references it points at — that's where the depth lives.\n- **Forgot to write PROVENANCE.md first.** Re-run from step 3a for that\n  slug. The checkpoint protocol is not decorative; without a lock marker,\n  crash-resume can't distinguish \"never started\" from \"half-done\".\n- **Existing `.planning/proto-skills/<slug>/` from a prior run.** Inspect\n  before overwriting: `complete` means skip, `in-progress` means resume.\n\n## Reference\n\n- `~/.agents/skills/create-skill/SKILL.md` — dot-agent authoring guide\n- `references/skill-shape.md` — uniform shape contract\n- `references/proto-skills.md` — proto-skill bundle contract\n- `gad-skill-creator` — heavy path with full eval loop\n- `gad-evolution-evolve` — orchestrator that calls this in a batch\n- Decision gad-171 — bulk batching + per-candidate checkpoints\n- Decision gad-191 — proto-skill bundle shape at `.planning/proto-skills/`\n- 2026-04-13 evolution-loop experiment finding\n  (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)\n"
   },
   {
     "id": "create-skill",
@@ -350,8 +350,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-add-backlog/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nAdd a backlog item to the roadmap using 999.x numbering. Backlog items are\nunsequenced ideas that aren't ready for active planning — they live outside\nthe normal phase sequence and accumulate context over time.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Read ROADMAP.md</strong> to find existing backlog entries:</p>\n<pre><code class=\"language-bash\">cat .planning/ROADMAP.md\n</code></pre>\n</li>\n<li><p><strong>Find next backlog number:</strong></p>\n<pre><code class=\"language-bash\">NEXT=$(gad-tools phase next-decimal 999 --raw)\n</code></pre>\n<p>If no 999.x phases exist, start at 999.1.</p>\n</li>\n<li><p><strong>Create the phase directory:</strong></p>\n<pre><code class=\"language-bash\">SLUG=$(gad-tools generate-slug &quot;$ARGUMENTS&quot; --raw)\nmkdir -p &quot;.planning/phases/${NEXT}-${SLUG}&quot;\ntouch &quot;.planning/phases/${NEXT}-${SLUG}/.gitkeep&quot;\n</code></pre>\n</li>\n<li><p><strong>Add to ROADMAP.md</strong> under a <code>## Backlog</code> section. If the section doesn&#39;t exist, create it at the end:</p>\n<pre><code class=\"language-markdown\">## Backlog\n\n### Phase {NEXT}: {description} (BACKLOG)\n\n**Goal:** [Captured for future planning]\n**Requirements:** TBD\n**Plans:** 0 plans\n\nPlans:\n- [ ] TBD (promote with /gad:review-backlog when ready)\n</code></pre>\n</li>\n<li><p><strong>Commit:</strong></p>\n<pre><code class=\"language-bash\">gad-tools commit &quot;docs: add backlog item ${NEXT} — ${ARGUMENTS}&quot; --files .planning/ROADMAP.md &quot;.planning/phases/${NEXT}-${SLUG}/.gitkeep&quot;\n</code></pre>\n</li>\n<li><p><strong>Report:</strong></p>\n<pre><code>## 📋 Backlog Item Added\n\nPhase {NEXT}: {description}\nDirectory: .planning/phases/{NEXT}-{slug}/\n\nThis item lives in the backlog parking lot.\nUse /gad:discuss-phase {NEXT} to explore it further.\nUse /gad:review-backlog to promote items to active milestone.\n</code></pre>\n</li>\n</ol>\n</process>\n\n<notes>\n- 999.x numbering keeps backlog items out of the active phase sequence\n- Phase directories are created immediately, so /gad:discuss-phase and /gad:plan-phase work on them\n- No `Depends on:` field — backlog items are unsequenced by definition\n- Sparse numbering is fine (999.1, 999.3) — always uses next-decimal\n</notes>\n",
-    "bodyRaw": "\n<objective>\nAdd a backlog item to the roadmap using 999.x numbering. Backlog items are\nunsequenced ideas that aren't ready for active planning — they live outside\nthe normal phase sequence and accumulate context over time.\n</objective>\n\n<process>\n\n1. **Read ROADMAP.md** to find existing backlog entries:\n   ```bash\n   cat .planning/ROADMAP.md\n   ```\n\n2. **Find next backlog number:**\n   ```bash\n   NEXT=$(gad-tools phase next-decimal 999 --raw)\n   ```\n   If no 999.x phases exist, start at 999.1.\n\n3. **Create the phase directory:**\n   ```bash\n   SLUG=$(gad-tools generate-slug \"$ARGUMENTS\" --raw)\n   mkdir -p \".planning/phases/${NEXT}-${SLUG}\"\n   touch \".planning/phases/${NEXT}-${SLUG}/.gitkeep\"\n   ```\n\n4. **Add to ROADMAP.md** under a `## Backlog` section. If the section doesn't exist, create it at the end:\n\n   ```markdown\n   ## Backlog\n\n   ### Phase {NEXT}: {description} (BACKLOG)\n\n   **Goal:** [Captured for future planning]\n   **Requirements:** TBD\n   **Plans:** 0 plans\n\n   Plans:\n   - [ ] TBD (promote with /gad:review-backlog when ready)\n   ```\n\n5. **Commit:**\n   ```bash\n   gad-tools commit \"docs: add backlog item ${NEXT} — ${ARGUMENTS}\" --files .planning/ROADMAP.md \".planning/phases/${NEXT}-${SLUG}/.gitkeep\"\n   ```\n\n6. **Report:**\n   ```\n   ## 📋 Backlog Item Added\n\n   Phase {NEXT}: {description}\n   Directory: .planning/phases/{NEXT}-{slug}/\n\n   This item lives in the backlog parking lot.\n   Use /gad:discuss-phase {NEXT} to explore it further.\n   Use /gad:review-backlog to promote items to active milestone.\n   ```\n\n</process>\n\n<notes>\n- 999.x numbering keeps backlog items out of the active phase sequence\n- Phase directories are created immediately, so /gad:discuss-phase and /gad:plan-phase work on them\n- No `Depends on:` field — backlog items are unsequenced by definition\n- Sparse numbering is fine (999.1, 999.3) — always uses next-decimal\n</notes>\n"
+    "bodyHtml": "<h1>gad:add-backlog</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/add-backlog.md\">workflows/add-backlog.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:add-backlog\n\n**Workflow:** [workflows/add-backlog.md](../../workflows/add-backlog.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-add-phase",
@@ -440,8 +440,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-auto-conventions/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nAnalyze the codebase after the first implementation phase and generate a CONVENTIONS.md capturing the patterns established — file structure, naming, import/export patterns, store patterns, component patterns, and type conventions.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Check if CONVENTIONS.md already exists:</strong></p>\n<pre><code class=\"language-bash\">test -f .planning/CONVENTIONS.md &amp;&amp; echo &quot;EXISTS&quot; || echo &quot;MISSING&quot;\n</code></pre>\n<p>If EXISTS, update it with new patterns. If MISSING, create it.</p>\n</li>\n<li><p><strong>Scan the codebase</strong> for established patterns:</p>\n<ul>\n<li>File naming (kebab-case, PascalCase, etc.)</li>\n<li>Directory structure</li>\n<li>Import/export patterns</li>\n<li>State management patterns (zustand, redux, etc.)</li>\n<li>Component patterns (functional, class, etc.)</li>\n<li>Type conventions (interfaces vs types, naming)</li>\n<li>Test patterns</li>\n</ul>\n</li>\n<li><p><strong>Write .planning/CONVENTIONS.md</strong> with the discovered patterns.</p>\n</li>\n<li><p><strong>Commit:</strong></p>\n<pre><code class=\"language-bash\">git add .planning/CONVENTIONS.md\ngit commit -m &quot;docs: auto-scaffold CONVENTIONS.md from codebase patterns&quot;\n</code></pre>\n</li>\n</ol>\n</process>\n\n<skill>\nRead and follow the companion `auto-conventions` skill if it is installed.\n</skill>\n",
-    "bodyRaw": "\n<objective>\nAnalyze the codebase after the first implementation phase and generate a CONVENTIONS.md capturing the patterns established — file structure, naming, import/export patterns, store patterns, component patterns, and type conventions.\n</objective>\n\n<process>\n\n1. **Check if CONVENTIONS.md already exists:**\n   ```bash\n   test -f .planning/CONVENTIONS.md && echo \"EXISTS\" || echo \"MISSING\"\n   ```\n   If EXISTS, update it with new patterns. If MISSING, create it.\n\n2. **Scan the codebase** for established patterns:\n   - File naming (kebab-case, PascalCase, etc.)\n   - Directory structure\n   - Import/export patterns\n   - State management patterns (zustand, redux, etc.)\n   - Component patterns (functional, class, etc.)\n   - Type conventions (interfaces vs types, naming)\n   - Test patterns\n\n3. **Write .planning/CONVENTIONS.md** with the discovered patterns.\n\n4. **Commit:**\n   ```bash\n   git add .planning/CONVENTIONS.md\n   git commit -m \"docs: auto-scaffold CONVENTIONS.md from codebase patterns\"\n   ```\n\n</process>\n\n<skill>\nRead and follow the companion `auto-conventions` skill if it is installed.\n</skill>\n"
+    "bodyHtml": "<h1>gad:auto-conventions</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/auto-conventions.md\">workflows/auto-conventions.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:auto-conventions\n\n**Workflow:** [workflows/auto-conventions.md](../../workflows/auto-conventions.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-autonomous",
@@ -515,8 +515,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-cross-config-domain-change/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad-cross-config-domain-change</h1>\n<p>A <strong>procedure for renaming a domain concept across a GAD monorepo without leaving\ndangling references or breaking compiled sinks.</strong> The value is not the <code>git mv</code> —\nit is the <em>coordinated pass across every declared planning root and eval root</em> so\nthat the rename lands atomically from the operator&#39;s point of view.</p>\n<p>The skill has <strong>one entrypoint</strong> and <strong>two workflows</strong>, chosen by the scope of\nthe rename.</p>\n<h2>Core invariant (both workflows)</h2>\n<p>A domain-change is safe if and only if, after the operation:</p>\n<ol>\n<li>Every occurrence of the old name in every planning root and eval root declared\nin <code>gad-config.toml</code> is either (a) rewritten to the new name, or (b) intentionally\npreserved as a shim/alias and <strong>cited in a DECISIONS.xml translation-note entry</strong>.</li>\n<li><code>grep</code> for the old name across the monorepo returns zero hits outside the\ntranslation-note shim and the decision log itself.</li>\n<li>Compiled sinks (planning docs sink, site data, catalog generators) rebuild\nclean — no broken imports, no orphaned slugs, no case-insensitive FS collisions.</li>\n<li>The operator can run <code>node vendor/get-anything-done/bin/gad.cjs snapshot --projectid &lt;id&gt;</code>\non every affected planning root and get a valid state readout.</li>\n</ol>\n<p>The invariant is <strong>scope-independent.</strong> Workflow A and Workflow B differ only in\nhow many roots participate; the safety contract is identical.</p>\n<h2>Which workflow to run</h2>\n<p>Determine scope by reading the top-level configuration first. Assume the\noperator&#39;s working directory is the monorepo root and <code>gad-config.toml</code> lives at\nthe root.</p>\n<pre><code class=\"language-sh\"># From the monorepo root:\nnode vendor/get-anything-done/bin/gad.cjs projects audit 2&gt;&amp;1 | head -60\nnode vendor/get-anything-done/bin/gad.cjs workspace show 2&gt;&amp;1 | head -40\n\n# Show every planning + eval root declared in gad-config.toml:\ngrep -nE &#39;^\\[\\[planning\\.roots\\]\\]|^\\[\\[evals\\.roots\\]\\]|^id =|^path =&#39; gad-config.toml\n</code></pre>\n<p>Then classify:</p>\n<ul>\n<li><strong>Term appears in 2+ planning roots OR 1+ eval roots OR the config file itself</strong>\n→ <strong>Workflow A: Monorepo-wide rename</strong>.</li>\n<li><strong>Term is confined to a single <code>.planning/</code> root and its compiled sink</strong>\n→ <strong>Workflow B: Single-project rename</strong>.</li>\n<li><strong>Term only appears in source code (no planning-doc or config references)</strong>\n→ this skill is the wrong tool; use a normal refactor skill.</li>\n</ul>\n<p>When in doubt, start in Workflow A — the pre-flight audit will downgrade to\nWorkflow B cleanly if the monorepo footprint turns out to be empty.</p>\n<hr>\n<h2>Pre-flight config audit (both workflows)</h2>\n<p>Before any file is moved or edited, produce a <strong>config-status readout</strong> and\nshow it to the operator for confirmation. The readout has four sections:</p>\n<ol>\n<li><strong>Config source of truth</strong> — confirm that <code>gad-config.toml</code> at the monorepo\nroot exists and parses. Per decision gad-160, this is the only canonical\nconfig; no per-project config overrides.</li>\n<li><strong>Planning roots in scope</strong> — list every <code>[[planning.roots]]</code> entry whose\n<code>path</code> contains the old term in any of: the path itself, a file inside the\n<code>planningDir</code>, or the compiled sink target.</li>\n<li><strong>Eval roots in scope</strong> — same for <code>[[evals.roots]]</code>. Remember the default\n<code>vendor/get-anything-done/evals/</code> root is implicit and must be checked even\nif it is not declared in <code>gad-config.toml</code>.</li>\n<li><strong>Grep census</strong> — a raw count of hits for the old term in each root, broken\ndown by file type (planning XML, markdown, source, config, JSON).</li>\n</ol>\n<pre><code class=\"language-sh\"># Census template — replace OLD with the term being renamed:\nOLD=&quot;evals&quot;\nfor path in $(grep -E &#39;^path =&#39; gad-config.toml | sed &#39;s/path = //;s/&quot;//g&#39;); do\n  echo &quot;-- $path --&quot;\n  grep -rn &quot;$OLD&quot; &quot;$path&quot; 2&gt;/dev/null | wc -l\ndone\ngrep -rn &quot;$OLD&quot; gad-config.toml | wc -l\n</code></pre>\n<p>The readout is the <strong>decision point</strong>. Operator confirms or aborts. No moves\nhappen before this.</p>\n<hr>\n<h2>Workflow A: Monorepo-wide rename</h2>\n<p>Use this when the term crosses project boundaries — the canonical example is\nrenaming <code>evals</code> → <code>species</code> (see worked example below), or collapsing\n<code>workspace</code> / <code>worktree</code> / <code>workstream</code> into their distinct meanings per\ndecision gad-161.</p>\n<h3>Steps</h3>\n<ol>\n<li><p><strong>Run the pre-flight audit</strong> above. Capture the readout in a temp file —\nthis becomes the attachment for the translation-note decision.</p>\n</li>\n<li><p><strong>Lock the tree.</strong> Announce the rename to the operator and ask them to pause\nany concurrent work in affected roots. A cross-root rename is not safe to\ninterleave with other edits.</p>\n</li>\n<li><p><strong>Rewrite <code>gad-config.toml</code> first.</strong> The config is the contract every other\nstep references. Update <code>[[planning.roots]]</code> paths, <code>[[evals.roots]]</code> paths,\n<code>sinkPath</code> fields, and any <code>id</code> fields that embed the old term. Do <strong>not</strong>\nmove any files yet — only the config text changes.</p>\n</li>\n<li><p><strong>Walk the union of roots in dependency order.</strong> For each root from step 3:</p>\n<ul>\n<li>Rename the top-level directory (see Git-mv-through-temp pattern below).</li>\n<li>Run the planning-doc migration pass (see Planning-doc migration below).</li>\n<li>Rebuild the compiled sink and confirm it is clean.</li>\n</ul>\n</li>\n<li><p><strong>Rewrite cross-root references.</strong> Any planning doc in one root that\nreferences another root&#39;s path needs to be updated. Typical offenders:\n<code>STATE.xml &lt;references&gt;</code> entries, <code>ROADMAP.xml</code> phase descriptions that cite\nfile paths, <code>workflows/*.md</code> examples.</p>\n</li>\n<li><p><strong>Config re-audit.</strong> Re-run the pre-flight census. Expected result: zero\nhits for the old term outside the translation-note shim.</p>\n</li>\n<li><p><strong>Write the translation-note decision</strong> (template below) in <strong>every</strong>\naffected planning root&#39;s <code>DECISIONS.xml</code>. Same decision ID namespace, same\ntext, one entry per root. Cross-reference them by date.</p>\n</li>\n<li><p><strong>Rebuild sinks.</strong> Run the planning-doc compiler and any site-data build\nthat consumes the renamed roots. Expect at least one broken import on first\npass; fix it, rebuild, confirm green.</p>\n</li>\n</ol>\n<h3>Deliverables</h3>\n<ul>\n<li>Updated <code>gad-config.toml</code> at the monorepo root.</li>\n<li>Renamed directories and their contents across all affected planning and eval roots.</li>\n<li>One translation-note decision per affected planning root.</li>\n<li>A green snapshot for every affected <code>projectid</code>.</li>\n<li>A clean census report attached to (or cited by) the decisions.</li>\n</ul>\n<h3>Failure modes</h3>\n<ul>\n<li><strong>Partial rename</strong> — config updated but a planning root missed. The next\nsnapshot will fail loudly; recover by re-running the audit and finishing the\nskipped root.</li>\n<li><strong>Case-insensitive FS collision</strong> (Windows, macOS default) — renaming <code>Evals</code>\n→ <code>evals</code> on an existing <code>evals</code> path silently clobbers or no-ops. Always use\nthe git-mv-through-temp pattern below for case-only changes.</li>\n<li><strong>Dangling references in compiled sinks.</strong> The sink is a build artifact, but\nold generated files can linger until the next compile. Delete the sink\ndirectory and rebuild from scratch after a cross-root rename.</li>\n<li><strong>Broken site data.</strong> Site catalog generators (e.g. <code>site/scripts/build-site-data.mjs</code>)\nread slugs out of the renamed roots. If the site is in scope, re-run its\nbuild and fix the generator references before declaring done.</li>\n<li><strong>Decision-log drift.</strong> Writing the translation-note in only one root and\nforgetting the rest — future operators reading from a different root will\nhave no idea the rename happened. One root, one decision, every time.</li>\n</ul>\n<hr>\n<h2>Workflow B: Single-project rename</h2>\n<p>Use this when the term is confined to one <code>.planning/</code> root and its sink —\ne.g. renaming a phase&#39;s internal vocabulary inside <code>vendor/get-anything-done/.planning/</code>\nwithout touching any other root. The common case is a project-local term that\nwas never exported to <code>gad-config.toml</code> or to cross-project planning docs.</p>\n<h3>Steps</h3>\n<ol>\n<li><p><strong>Run the pre-flight audit</strong>, scoped to the one root. Confirm the\ncross-root census comes back zero — if it does not, abort and switch to\nWorkflow A.</p>\n</li>\n<li><p><strong>Rename inside the root.</strong> Apply the planning-doc migration pass below.\nNo top-level directory rename unless the root&#39;s own path is changing.</p>\n</li>\n<li><p><strong>Rebuild the compiled sink</strong> for this root only. Confirm clean.</p>\n</li>\n<li><p><strong>Write the translation-note decision</strong> in this root&#39;s <code>DECISIONS.xml</code>. A\nsingle-root rename still deserves a translation note — future self-audits\nwill ask &quot;when did this change?&quot;</p>\n</li>\n<li><p><strong>Snapshot verify.</strong> <code>gad snapshot --projectid &lt;id&gt;</code> must parse and show\nthe renamed term in <code>STATE.xml</code>, <code>ROADMAP.xml</code>, and <code>TASK-REGISTRY.xml</code>.</p>\n</li>\n</ol>\n<h3>Deliverables</h3>\n<ul>\n<li>Renamed entries inside one <code>.planning/</code> root.</li>\n<li>One translation-note decision in that root&#39;s <code>DECISIONS.xml</code>.</li>\n<li>A green snapshot for the affected <code>projectid</code>.</li>\n</ul>\n<h3>Failure modes</h3>\n<ul>\n<li><strong>Unexpected cross-root leakage.</strong> The term turns out to appear in\n<code>gad-config.toml</code> or a sibling planning root after all. Abort Workflow B and\nrestart in Workflow A.</li>\n<li><strong>Snapshot parser still seeing the old term.</strong> Usually a CRLF-line, XML\nattribute, or stray trailing whitespace. Re-grep case-insensitively and in\nmultiline mode.</li>\n</ul>\n<hr>\n<h2>Git-mv-through-temp pattern</h2>\n<p><code>git mv</code> on a case-only rename (<code>Evals</code> → <code>evals</code>) is a no-op on\ncase-insensitive filesystems (Windows, default macOS). Use a temp-name\nround-trip:</p>\n<pre><code class=\"language-sh\">OLD=&quot;Evals&quot;\nNEW=&quot;evals&quot;\nTMP=&quot;${NEW}__tmp_rename__&quot;\n\ngit mv &quot;$OLD&quot; &quot;$TMP&quot;\ngit commit -m &quot;chore: rename $OLD -&gt; $TMP (step 1/2, case-only workaround)&quot;\ngit mv &quot;$TMP&quot; &quot;$NEW&quot;\ngit commit -m &quot;chore: rename $TMP -&gt; $NEW (step 2/2)&quot;\n</code></pre>\n<p>This is also the safe pattern for <strong>collision-avoidance</strong> when the target name\nalready exists as a sibling (e.g. merging two directories into a new canonical\none). Move each source to a unique temp name first, then merge into the\ncanonical target in a second commit.</p>\n<p>Always split into two commits — a single squashed commit will not survive\nround-tripping through a case-insensitive worktree on a collaborator&#39;s\nmachine.</p>\n<h2>Planning-doc migration</h2>\n<p>Inside any affected planning root, rewrite these files in this order:</p>\n<ol>\n<li><code>STATE.xml</code> — <code>current-phase</code>, <code>next-action</code>, <code>&lt;references&gt;</code> entries.</li>\n<li><code>ROADMAP.xml</code> — phase descriptions, phase IDs if they embed the term.</li>\n<li><code>TASK-REGISTRY.xml</code> — task descriptions, task types, skill attributions.</li>\n<li><code>DECISIONS.xml</code> — old decision text stays verbatim (history is immutable);\nthe translation-note is a <strong>new</strong> entry, not an edit of old ones.</li>\n<li><code>workflows/*.md</code>, <code>notes/*.md</code>, <code>phases/*/</code>, <code>plans/*/</code> — grep sweep.</li>\n<li><code>config.json</code> if present — project-local metadata.</li>\n</ol>\n<p>Use the operator&#39;s normal editor for each file and verify each change with\n<code>grep</code> before moving to the next. Do <strong>not</strong> run a bulk sed across the whole\n<code>.planning/</code> tree — the 2026-04-14 visual-context rollout regression (character\nsubstitution in page files) is the cautionary tale. One file at a time, reads\nbefore and after, Edit tool with explicit old/new strings rather than regex.</p>\n<h2>Translation-note decision template</h2>\n<p>Append this to every affected <code>DECISIONS.xml</code>:</p>\n<pre><code class=\"language-xml\">&lt;decision id=&quot;GAD-D-NNN&quot; slug=&quot;translation-note-&lt;OLDTERM&gt;-to-&lt;NEWTERM&gt;&quot; date=&quot;YYYY-MM-DD&quot;&gt;\n  &lt;title&gt;&lt;OLDTERM&gt; was renamed to &lt;NEWTERM&gt; across &lt;scope&gt;&lt;/title&gt;\n  &lt;context&gt;\n    On YYYY-MM-DD, the term &quot;&lt;OLDTERM&gt;&quot; was renamed to &quot;&lt;NEWTERM&gt;&quot; across\n    &lt;scope: monorepo | this planning root&gt;. The rename was executed by the\n    gad-cross-config-domain-change skill under task &lt;task-id&gt;. Pre-flight\n    census showed &lt;N&gt; hits across &lt;M&gt; roots; post-rename census returned zero.\n  &lt;/context&gt;\n  &lt;decision&gt;\n    All future work uses &quot;&lt;NEWTERM&gt;&quot;. The old term &quot;&lt;OLDTERM&gt;&quot; is preserved only\n    in (a) historical decision entries, and (b) the alias shim at\n    &lt;full/repo-relative/path/to/shim&gt; for N months, after which it is removed.\n  &lt;/decision&gt;\n  &lt;consequences&gt;\n    Anyone reading a decision or archived artifact that still says &quot;&lt;OLDTERM&gt;&quot;\n    should mentally substitute &quot;&lt;NEWTERM&gt;&quot;. The snapshot, roadmap, and task\n    registry no longer mention the old term. Cross-reference with sibling\n    translation-note decisions in &lt;list other affected roots&gt; for the full\n    monorepo picture.\n  &lt;/consequences&gt;\n  &lt;status&gt;accepted&lt;/status&gt;\n&lt;/decision&gt;\n</code></pre>\n<p>One decision per affected planning root. Cross-reference them by date in the\n<code>&lt;consequences&gt;</code> block so a future reader landing on any one of them can\nreconstruct the full rename.</p>\n<hr>\n<h2>Example: renaming <code>evals</code> → <code>species</code></h2>\n<p>This is the motivating case flagged in the phase-44 evolution notes: the term\n&quot;evals&quot; conflates the <em>run artifact</em> (a specific attempt by an agent), the\n<em>project definition</em> (the thing being attempted), and the <em>directory on disk</em>.\nPer decision gad-184, the project/species inheritance contract wants &quot;project&quot;\nand &quot;species&quot; as the primary terms, and &quot;evals&quot; as a legacy umbrella.</p>\n<p>A full rename would touch:</p>\n<ul>\n<li><code>gad-config.toml</code> — <code>[[evals.roots]]</code> entries and their <code>path</code> fields.</li>\n<li><code>vendor/get-anything-done/evals/</code> — the default eval root directory and every\nproject subdirectory.</li>\n<li><code>vendor/get-anything-done/bin/gad.cjs</code> — the <code>eval</code> subcommand surface, which\nwould become <code>species</code> with <code>eval</code> aliased via a deprecation shim.</li>\n<li><code>vendor/get-anything-done/site/</code> — site catalog generators, route paths,\ncomponent names that embed &quot;eval&quot;.</li>\n<li><code>vendor/get-anything-done/.planning/TASK-REGISTRY.xml</code> — every task tagged\n<code>type=&quot;eval&quot;</code>.</li>\n<li><code>vendor/get-anything-done/.planning/DECISIONS.xml</code> — decisions that use\n&quot;eval&quot; in their text stay verbatim (history is immutable); a new\ntranslation-note decision points at them.</li>\n<li><code>vendor/get-anything-done/skills/eval-*/SKILL.md</code> — skill names and\ndescriptions.</li>\n</ul>\n<p>Walkthrough under Workflow A:</p>\n<ol>\n<li><p><strong>Pre-flight audit.</strong> Expect the census to return a large hit count —\nprobably several hundred — spread across the framework planning root, the\neval-root directory, the site, and the CLI. This is the moment to confirm\nwith the operator that the rename is actually desired before any moves.</p>\n</li>\n<li><p><strong>Decide the shim shape.</strong> Because the CLI surface <code>gad eval ...</code> is in\nuser muscle memory, the translation note should promise an alias period\n(say, 3 releases) where <code>gad eval</code> forwards to <code>gad species</code> with a\ndeprecation warning. The shim itself lives at\n<code>vendor/get-anything-done/bin/gad.cjs</code> as a small forwarding branch.</p>\n</li>\n<li><p><strong>Rewrite <code>gad-config.toml</code>.</strong> Rename <code>[[evals.roots]]</code> →\n<code>[[species.roots]]</code>, update any <code>id</code> fields, save.</p>\n</li>\n<li><p><strong>Git-mv the directories</strong> with the temp-name round-trip pattern.\n<code>vendor/get-anything-done/evals/</code> → <code>vendor/get-anything-done/species/</code>.</p>\n</li>\n<li><p><strong>Walk the planning root.</strong> Apply the planning-doc migration pass to\n<code>vendor/get-anything-done/.planning/</code>. The big targets are\n<code>TASK-REGISTRY.xml</code> (<code>type=&quot;eval&quot;</code> → <code>type=&quot;species&quot;</code>) and any\n<code>ROADMAP.xml</code> phase description that mentions evals.</p>\n</li>\n<li><p><strong>Walk the site.</strong> <code>vendor/get-anything-done/site/scripts/build-site-data.mjs</code>\nreads from the old path and emits a <code>WORKFLOWS</code>/<code>EVALS</code> export. Fix the\nreader, fix the export name, rebuild.</p>\n</li>\n<li><p><strong>Walk the CLI.</strong> Rename the subcommand module, add the forwarding alias,\nupdate <code>gad help</code> text. This is the step most likely to produce a broken\nbuild — the CLI has cross-file imports.</p>\n</li>\n<li><p><strong>Re-audit.</strong> Census should go to zero outside the shim and the decision\nlog. Snapshot every affected <code>projectid</code> — at minimum <code>get-anything-done</code>\nand <code>global</code>.</p>\n</li>\n<li><p><strong>Translation-note decisions.</strong> One entry in the framework&#39;s\n<code>DECISIONS.xml</code>, one in <code>global</code>&#39;s if global references any renamed path,\ncross-referenced.</p>\n</li>\n</ol>\n<p>The same shape applies to any other vocabulary normalization (<code>workspace</code> vs\n<code>worktree</code> vs <code>workstream</code> per gad-161, or any future term). The skill&#39;s job\nis to make the coordinated walk mechanical, not to decide <em>whether</em> the rename\nis worth doing — that is a decision for the operator.</p>\n<hr>\n<h2>References</h2>\n<ul>\n<li><code>gad-config.toml</code> (monorepo root) — the single canonical config per decision\ngad-160. This file&#39;s <code>[[planning.roots]]</code> and <code>[[evals.roots]]</code> tables define\nthe full scope the skill walks.</li>\n<li><code>vendor/get-anything-done/bin/gad.cjs</code> — <code>projects audit</code>, <code>workspace show</code>,\n<code>snapshot</code>, and <code>eval list</code> subcommands used by the pre-flight audit and the\npost-rename verification.</li>\n<li><code>vendor/get-anything-done/.planning/DECISIONS.xml</code> — decisions gad-160\n(single canonical config), gad-161 (<code>workspace</code> / <code>worktree</code> / <code>workstream</code>\ndisambiguation), and gad-184 (project ⊇ species inheritance contract) are the\nmotivating context for this skill.</li>\n<li><code>vendor/get-anything-done/.planning/STATE.xml</code> — the file format the\nplanning-doc migration pass walks in step 1 of the migration.</li>\n<li><code>vendor/get-anything-done/.planning/TASK-REGISTRY.xml</code> — the <code>type=</code> attribute\nconvention that any vocabulary rename has to follow.</li>\n<li><code>vendor/get-anything-done/skills/gad-visual-context-system/SKILL.md</code> — the\ncanonical two-workflow proto-skill this file&#39;s structure is modeled on.</li>\n<li><code>vendor/get-anything-done/site/scripts/build-site-data.mjs</code> — the site&#39;s\ncompiled-sink generator; any monorepo-wide rename that touches the site has\nto re-run this and fix broken slug references.</li>\n<li><code>vendor/get-anything-done/references/proto-skills.md</code> — the proto-skill\nlifecycle (proto → promote) this file will travel through.</li>\n</ul>\n<h2>Relationship to parent skill</h2>\n<p>This proto-skill has <strong>no parent</strong>. It supersedes and replaces the earlier\n<code>phase-43-eval-vocabulary</code> draft, which was discarded because it baked in\nsubmodule-specific paths like <code>apps/public/evals</code> and was scoped narrowly to a\none-time rename rather than the general cross-config-domain-change pattern.\nOn promotion, this skill should graduate to\n<code>vendor/get-anything-done/skills/gad-cross-config-domain-change/SKILL.md</code> as a\nfirst-class skill with no deprecated ancestor to archive.</p>\n",
-    "bodyRaw": "\n# gad-cross-config-domain-change\n\nA **procedure for renaming a domain concept across a GAD monorepo without leaving\ndangling references or breaking compiled sinks.** The value is not the `git mv` —\nit is the *coordinated pass across every declared planning root and eval root* so\nthat the rename lands atomically from the operator's point of view.\n\nThe skill has **one entrypoint** and **two workflows**, chosen by the scope of\nthe rename.\n\n## Core invariant (both workflows)\n\nA domain-change is safe if and only if, after the operation:\n\n1. Every occurrence of the old name in every planning root and eval root declared\n   in `gad-config.toml` is either (a) rewritten to the new name, or (b) intentionally\n   preserved as a shim/alias and **cited in a DECISIONS.xml translation-note entry**.\n2. `grep` for the old name across the monorepo returns zero hits outside the\n   translation-note shim and the decision log itself.\n3. Compiled sinks (planning docs sink, site data, catalog generators) rebuild\n   clean — no broken imports, no orphaned slugs, no case-insensitive FS collisions.\n4. The operator can run `node vendor/get-anything-done/bin/gad.cjs snapshot --projectid <id>`\n   on every affected planning root and get a valid state readout.\n\nThe invariant is **scope-independent.** Workflow A and Workflow B differ only in\nhow many roots participate; the safety contract is identical.\n\n## Which workflow to run\n\nDetermine scope by reading the top-level configuration first. Assume the\noperator's working directory is the monorepo root and `gad-config.toml` lives at\nthe root.\n\n```sh\n# From the monorepo root:\nnode vendor/get-anything-done/bin/gad.cjs projects audit 2>&1 | head -60\nnode vendor/get-anything-done/bin/gad.cjs workspace show 2>&1 | head -40\n\n# Show every planning + eval root declared in gad-config.toml:\ngrep -nE '^\\[\\[planning\\.roots\\]\\]|^\\[\\[evals\\.roots\\]\\]|^id =|^path =' gad-config.toml\n```\n\nThen classify:\n\n- **Term appears in 2+ planning roots OR 1+ eval roots OR the config file itself**\n  → **Workflow A: Monorepo-wide rename**.\n- **Term is confined to a single `.planning/` root and its compiled sink**\n  → **Workflow B: Single-project rename**.\n- **Term only appears in source code (no planning-doc or config references)**\n  → this skill is the wrong tool; use a normal refactor skill.\n\nWhen in doubt, start in Workflow A — the pre-flight audit will downgrade to\nWorkflow B cleanly if the monorepo footprint turns out to be empty.\n\n---\n\n## Pre-flight config audit (both workflows)\n\nBefore any file is moved or edited, produce a **config-status readout** and\nshow it to the operator for confirmation. The readout has four sections:\n\n1. **Config source of truth** — confirm that `gad-config.toml` at the monorepo\n   root exists and parses. Per decision gad-160, this is the only canonical\n   config; no per-project config overrides.\n2. **Planning roots in scope** — list every `[[planning.roots]]` entry whose\n   `path` contains the old term in any of: the path itself, a file inside the\n   `planningDir`, or the compiled sink target.\n3. **Eval roots in scope** — same for `[[evals.roots]]`. Remember the default\n   `vendor/get-anything-done/evals/` root is implicit and must be checked even\n   if it is not declared in `gad-config.toml`.\n4. **Grep census** — a raw count of hits for the old term in each root, broken\n   down by file type (planning XML, markdown, source, config, JSON).\n\n```sh\n# Census template — replace OLD with the term being renamed:\nOLD=\"evals\"\nfor path in $(grep -E '^path =' gad-config.toml | sed 's/path = //;s/\"//g'); do\n  echo \"-- $path --\"\n  grep -rn \"$OLD\" \"$path\" 2>/dev/null | wc -l\ndone\ngrep -rn \"$OLD\" gad-config.toml | wc -l\n```\n\nThe readout is the **decision point**. Operator confirms or aborts. No moves\nhappen before this.\n\n---\n\n## Workflow A: Monorepo-wide rename\n\nUse this when the term crosses project boundaries — the canonical example is\nrenaming `evals` → `species` (see worked example below), or collapsing\n`workspace` / `worktree` / `workstream` into their distinct meanings per\ndecision gad-161.\n\n### Steps\n\n1. **Run the pre-flight audit** above. Capture the readout in a temp file —\n   this becomes the attachment for the translation-note decision.\n\n2. **Lock the tree.** Announce the rename to the operator and ask them to pause\n   any concurrent work in affected roots. A cross-root rename is not safe to\n   interleave with other edits.\n\n3. **Rewrite `gad-config.toml` first.** The config is the contract every other\n   step references. Update `[[planning.roots]]` paths, `[[evals.roots]]` paths,\n   `sinkPath` fields, and any `id` fields that embed the old term. Do **not**\n   move any files yet — only the config text changes.\n\n4. **Walk the union of roots in dependency order.** For each root from step 3:\n   - Rename the top-level directory (see Git-mv-through-temp pattern below).\n   - Run the planning-doc migration pass (see Planning-doc migration below).\n   - Rebuild the compiled sink and confirm it is clean.\n\n5. **Rewrite cross-root references.** Any planning doc in one root that\n   references another root's path needs to be updated. Typical offenders:\n   `STATE.xml <references>` entries, `ROADMAP.xml` phase descriptions that cite\n   file paths, `workflows/*.md` examples.\n\n6. **Config re-audit.** Re-run the pre-flight census. Expected result: zero\n   hits for the old term outside the translation-note shim.\n\n7. **Write the translation-note decision** (template below) in **every**\n   affected planning root's `DECISIONS.xml`. Same decision ID namespace, same\n   text, one entry per root. Cross-reference them by date.\n\n8. **Rebuild sinks.** Run the planning-doc compiler and any site-data build\n   that consumes the renamed roots. Expect at least one broken import on first\n   pass; fix it, rebuild, confirm green.\n\n### Deliverables\n\n- Updated `gad-config.toml` at the monorepo root.\n- Renamed directories and their contents across all affected planning and eval roots.\n- One translation-note decision per affected planning root.\n- A green snapshot for every affected `projectid`.\n- A clean census report attached to (or cited by) the decisions.\n\n### Failure modes\n\n- **Partial rename** — config updated but a planning root missed. The next\n  snapshot will fail loudly; recover by re-running the audit and finishing the\n  skipped root.\n- **Case-insensitive FS collision** (Windows, macOS default) — renaming `Evals`\n  → `evals` on an existing `evals` path silently clobbers or no-ops. Always use\n  the git-mv-through-temp pattern below for case-only changes.\n- **Dangling references in compiled sinks.** The sink is a build artifact, but\n  old generated files can linger until the next compile. Delete the sink\n  directory and rebuild from scratch after a cross-root rename.\n- **Broken site data.** Site catalog generators (e.g. `site/scripts/build-site-data.mjs`)\n  read slugs out of the renamed roots. If the site is in scope, re-run its\n  build and fix the generator references before declaring done.\n- **Decision-log drift.** Writing the translation-note in only one root and\n  forgetting the rest — future operators reading from a different root will\n  have no idea the rename happened. One root, one decision, every time.\n\n---\n\n## Workflow B: Single-project rename\n\nUse this when the term is confined to one `.planning/` root and its sink —\ne.g. renaming a phase's internal vocabulary inside `vendor/get-anything-done/.planning/`\nwithout touching any other root. The common case is a project-local term that\nwas never exported to `gad-config.toml` or to cross-project planning docs.\n\n### Steps\n\n1. **Run the pre-flight audit**, scoped to the one root. Confirm the\n   cross-root census comes back zero — if it does not, abort and switch to\n   Workflow A.\n\n2. **Rename inside the root.** Apply the planning-doc migration pass below.\n   No top-level directory rename unless the root's own path is changing.\n\n3. **Rebuild the compiled sink** for this root only. Confirm clean.\n\n4. **Write the translation-note decision** in this root's `DECISIONS.xml`. A\n   single-root rename still deserves a translation note — future self-audits\n   will ask \"when did this change?\"\n\n5. **Snapshot verify.** `gad snapshot --projectid <id>` must parse and show\n   the renamed term in `STATE.xml`, `ROADMAP.xml`, and `TASK-REGISTRY.xml`.\n\n### Deliverables\n\n- Renamed entries inside one `.planning/` root.\n- One translation-note decision in that root's `DECISIONS.xml`.\n- A green snapshot for the affected `projectid`.\n\n### Failure modes\n\n- **Unexpected cross-root leakage.** The term turns out to appear in\n  `gad-config.toml` or a sibling planning root after all. Abort Workflow B and\n  restart in Workflow A.\n- **Snapshot parser still seeing the old term.** Usually a CRLF-line, XML\n  attribute, or stray trailing whitespace. Re-grep case-insensitively and in\n  multiline mode.\n\n---\n\n## Git-mv-through-temp pattern\n\n`git mv` on a case-only rename (`Evals` → `evals`) is a no-op on\ncase-insensitive filesystems (Windows, default macOS). Use a temp-name\nround-trip:\n\n```sh\nOLD=\"Evals\"\nNEW=\"evals\"\nTMP=\"${NEW}__tmp_rename__\"\n\ngit mv \"$OLD\" \"$TMP\"\ngit commit -m \"chore: rename $OLD -> $TMP (step 1/2, case-only workaround)\"\ngit mv \"$TMP\" \"$NEW\"\ngit commit -m \"chore: rename $TMP -> $NEW (step 2/2)\"\n```\n\nThis is also the safe pattern for **collision-avoidance** when the target name\nalready exists as a sibling (e.g. merging two directories into a new canonical\none). Move each source to a unique temp name first, then merge into the\ncanonical target in a second commit.\n\nAlways split into two commits — a single squashed commit will not survive\nround-tripping through a case-insensitive worktree on a collaborator's\nmachine.\n\n## Planning-doc migration\n\nInside any affected planning root, rewrite these files in this order:\n\n1. `STATE.xml` — `current-phase`, `next-action`, `<references>` entries.\n2. `ROADMAP.xml` — phase descriptions, phase IDs if they embed the term.\n3. `TASK-REGISTRY.xml` — task descriptions, task types, skill attributions.\n4. `DECISIONS.xml` — old decision text stays verbatim (history is immutable);\n   the translation-note is a **new** entry, not an edit of old ones.\n5. `workflows/*.md`, `notes/*.md`, `phases/*/`, `plans/*/` — grep sweep.\n6. `config.json` if present — project-local metadata.\n\nUse the operator's normal editor for each file and verify each change with\n`grep` before moving to the next. Do **not** run a bulk sed across the whole\n`.planning/` tree — the 2026-04-14 visual-context rollout regression (character\nsubstitution in page files) is the cautionary tale. One file at a time, reads\nbefore and after, Edit tool with explicit old/new strings rather than regex.\n\n## Translation-note decision template\n\nAppend this to every affected `DECISIONS.xml`:\n\n```xml\n<decision id=\"GAD-D-NNN\" slug=\"translation-note-<OLDTERM>-to-<NEWTERM>\" date=\"YYYY-MM-DD\">\n  <title><OLDTERM> was renamed to <NEWTERM> across <scope></title>\n  <context>\n    On YYYY-MM-DD, the term \"<OLDTERM>\" was renamed to \"<NEWTERM>\" across\n    <scope: monorepo | this planning root>. The rename was executed by the\n    gad-cross-config-domain-change skill under task <task-id>. Pre-flight\n    census showed <N> hits across <M> roots; post-rename census returned zero.\n  </context>\n  <decision>\n    All future work uses \"<NEWTERM>\". The old term \"<OLDTERM>\" is preserved only\n    in (a) historical decision entries, and (b) the alias shim at\n    <full/repo-relative/path/to/shim> for N months, after which it is removed.\n  </decision>\n  <consequences>\n    Anyone reading a decision or archived artifact that still says \"<OLDTERM>\"\n    should mentally substitute \"<NEWTERM>\". The snapshot, roadmap, and task\n    registry no longer mention the old term. Cross-reference with sibling\n    translation-note decisions in <list other affected roots> for the full\n    monorepo picture.\n  </consequences>\n  <status>accepted</status>\n</decision>\n```\n\nOne decision per affected planning root. Cross-reference them by date in the\n`<consequences>` block so a future reader landing on any one of them can\nreconstruct the full rename.\n\n---\n\n## Example: renaming `evals` → `species`\n\nThis is the motivating case flagged in the phase-44 evolution notes: the term\n\"evals\" conflates the *run artifact* (a specific attempt by an agent), the\n*project definition* (the thing being attempted), and the *directory on disk*.\nPer decision gad-184, the project/species inheritance contract wants \"project\"\nand \"species\" as the primary terms, and \"evals\" as a legacy umbrella.\n\nA full rename would touch:\n\n- `gad-config.toml` — `[[evals.roots]]` entries and their `path` fields.\n- `vendor/get-anything-done/evals/` — the default eval root directory and every\n  project subdirectory.\n- `vendor/get-anything-done/bin/gad.cjs` — the `eval` subcommand surface, which\n  would become `species` with `eval` aliased via a deprecation shim.\n- `vendor/get-anything-done/site/` — site catalog generators, route paths,\n  component names that embed \"eval\".\n- `vendor/get-anything-done/.planning/TASK-REGISTRY.xml` — every task tagged\n  `type=\"eval\"`.\n- `vendor/get-anything-done/.planning/DECISIONS.xml` — decisions that use\n  \"eval\" in their text stay verbatim (history is immutable); a new\n  translation-note decision points at them.\n- `vendor/get-anything-done/skills/eval-*/SKILL.md` — skill names and\n  descriptions.\n\nWalkthrough under Workflow A:\n\n1. **Pre-flight audit.** Expect the census to return a large hit count —\n   probably several hundred — spread across the framework planning root, the\n   eval-root directory, the site, and the CLI. This is the moment to confirm\n   with the operator that the rename is actually desired before any moves.\n\n2. **Decide the shim shape.** Because the CLI surface `gad eval ...` is in\n   user muscle memory, the translation note should promise an alias period\n   (say, 3 releases) where `gad eval` forwards to `gad species` with a\n   deprecation warning. The shim itself lives at\n   `vendor/get-anything-done/bin/gad.cjs` as a small forwarding branch.\n\n3. **Rewrite `gad-config.toml`.** Rename `[[evals.roots]]` →\n   `[[species.roots]]`, update any `id` fields, save.\n\n4. **Git-mv the directories** with the temp-name round-trip pattern.\n   `vendor/get-anything-done/evals/` → `vendor/get-anything-done/species/`.\n\n5. **Walk the planning root.** Apply the planning-doc migration pass to\n   `vendor/get-anything-done/.planning/`. The big targets are\n   `TASK-REGISTRY.xml` (`type=\"eval\"` → `type=\"species\"`) and any\n   `ROADMAP.xml` phase description that mentions evals.\n\n6. **Walk the site.** `vendor/get-anything-done/site/scripts/build-site-data.mjs`\n   reads from the old path and emits a `WORKFLOWS`/`EVALS` export. Fix the\n   reader, fix the export name, rebuild.\n\n7. **Walk the CLI.** Rename the subcommand module, add the forwarding alias,\n   update `gad help` text. This is the step most likely to produce a broken\n   build — the CLI has cross-file imports.\n\n8. **Re-audit.** Census should go to zero outside the shim and the decision\n   log. Snapshot every affected `projectid` — at minimum `get-anything-done`\n   and `global`.\n\n9. **Translation-note decisions.** One entry in the framework's\n   `DECISIONS.xml`, one in `global`'s if global references any renamed path,\n   cross-referenced.\n\nThe same shape applies to any other vocabulary normalization (`workspace` vs\n`worktree` vs `workstream` per gad-161, or any future term). The skill's job\nis to make the coordinated walk mechanical, not to decide *whether* the rename\nis worth doing — that is a decision for the operator.\n\n---\n\n## References\n\n- `gad-config.toml` (monorepo root) — the single canonical config per decision\n  gad-160. This file's `[[planning.roots]]` and `[[evals.roots]]` tables define\n  the full scope the skill walks.\n- `vendor/get-anything-done/bin/gad.cjs` — `projects audit`, `workspace show`,\n  `snapshot`, and `eval list` subcommands used by the pre-flight audit and the\n  post-rename verification.\n- `vendor/get-anything-done/.planning/DECISIONS.xml` — decisions gad-160\n  (single canonical config), gad-161 (`workspace` / `worktree` / `workstream`\n  disambiguation), and gad-184 (project ⊇ species inheritance contract) are the\n  motivating context for this skill.\n- `vendor/get-anything-done/.planning/STATE.xml` — the file format the\n  planning-doc migration pass walks in step 1 of the migration.\n- `vendor/get-anything-done/.planning/TASK-REGISTRY.xml` — the `type=` attribute\n  convention that any vocabulary rename has to follow.\n- `vendor/get-anything-done/skills/gad-visual-context-system/SKILL.md` — the\n  canonical two-workflow proto-skill this file's structure is modeled on.\n- `vendor/get-anything-done/site/scripts/build-site-data.mjs` — the site's\n  compiled-sink generator; any monorepo-wide rename that touches the site has\n  to re-run this and fix broken slug references.\n- `vendor/get-anything-done/references/proto-skills.md` — the proto-skill\n  lifecycle (proto → promote) this file will travel through.\n\n## Relationship to parent skill\n\nThis proto-skill has **no parent**. It supersedes and replaces the earlier\n`phase-43-eval-vocabulary` draft, which was discarded because it baked in\nsubmodule-specific paths like `apps/public/evals` and was scoped narrowly to a\none-time rename rather than the general cross-config-domain-change pattern.\nOn promotion, this skill should graduate to\n`vendor/get-anything-done/skills/gad-cross-config-domain-change/SKILL.md` as a\nfirst-class skill with no deprecated ancestor to archive.\n"
+    "bodyHtml": "<h1>gad-cross-config-domain-change</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/cross-config-domain-change.md\">workflows/cross-config-domain-change.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad-cross-config-domain-change\n\n**Workflow:** [workflows/cross-config-domain-change.md](../../workflows/cross-config-domain-change.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-debug",
@@ -532,6 +532,21 @@ export const SKILLS: CatalogSkill[] = [
     "source": "framework",
     "bodyHtml": "<execution_context>\n@workflows/gad-debug.md\n</execution_context>\n\n<objective>\nDebug issues using scientific method with subagent isolation.\n\n<p><strong>Orchestrator role:</strong> Gather symptoms, spawn gad-debugger agent, handle checkpoints, spawn continuations.</p>\n<p><strong>Why subagent:</strong> Investigation burns context fast (reading files, forming hypotheses, testing). Fresh 200k context per investigation. Main context stays lean for user interaction.</p>\n<p><strong>Flags:</strong></p>\n<ul>\n<li><code>--diagnose</code> — Diagnose only. Find root cause without applying a fix. Returns a structured Root Cause Report. Use when you want to validate the diagnosis before committing to a fix.</objective></li>\n</ul>\n<available_agent_types>\nValid GAD subagent types (use exact names — do not fall back to 'general-purpose'):\n- gad-debugger — Diagnoses and fixes issues\n</available_agent_types>\n\n<context>\nUser's issue: $ARGUMENTS\n\n<p>Parse flags from $ARGUMENTS:</p>\n<ul>\n<li>If <code>--diagnose</code> is present, set <code>diagnose_only=true</code> and remove the flag from the issue description.</li>\n<li>Otherwise, <code>diagnose_only=false</code>.</li>\n</ul>\n<p>Check for active sessions:</p>\n<pre><code class=\"language-bash\">ls .planning/debug/*.md 2&gt;/dev/null | grep -v resolved | head -5\n</code></pre>\n</context>\n\n<process>\nExecute the debug workflow from @workflows/gad-debug.md, using the agent-orchestration steps below as the runtime-specific implementation.\n\n<h2>0. Initialize Context</h2>\n<pre><code class=\"language-bash\">INIT=$(gad-tools state load)\nif [[ &quot;$INIT&quot; == @file:* ]]; then INIT=$(cat &quot;${INIT#@file:}&quot;); fi\n</code></pre>\n<p>Extract <code>commit_docs</code> from init JSON. Resolve debugger model:</p>\n<pre><code class=\"language-bash\">debugger_model=$(gad-tools resolve-model gad-debugger --raw)\n</code></pre>\n<h2>1. Check Active Sessions</h2>\n<p>If active sessions exist AND no $ARGUMENTS:</p>\n<ul>\n<li>List sessions with status, hypothesis, next action</li>\n<li>User picks number to resume OR describes new issue</li>\n</ul>\n<p>If $ARGUMENTS provided OR user describes new issue:</p>\n<ul>\n<li>Continue to symptom gathering</li>\n</ul>\n<h2>2. Gather Symptoms (if new issue)</h2>\n<p>Use AskUserQuestion for each:</p>\n<ol>\n<li><strong>Expected behavior</strong> - What should happen?</li>\n<li><strong>Actual behavior</strong> - What happens instead?</li>\n<li><strong>Error messages</strong> - Any errors? (paste or describe)</li>\n<li><strong>Timeline</strong> - When did this start? Ever worked?</li>\n<li><strong>Reproduction</strong> - How do you trigger it?</li>\n</ol>\n<p>After all gathered, confirm ready to investigate.</p>\n<h2>3. Spawn gad-debugger Agent</h2>\n<p>Fill prompt and spawn:</p>\n<pre><code class=\"language-markdown\">&lt;objective&gt;\nInvestigate issue: {slug}\n\n**Summary:** {trigger}\n&lt;/objective&gt;\n\n&lt;symptoms&gt;\nexpected: {expected}\nactual: {actual}\nerrors: {errors}\nreproduction: {reproduction}\ntimeline: {timeline}\n&lt;/symptoms&gt;\n\n&lt;mode&gt;\nsymptoms_prefilled: true\ngoal: {if diagnose_only: &quot;find_root_cause_only&quot;, else: &quot;find_and_fix&quot;}\n&lt;/mode&gt;\n\n&lt;debug_file&gt;\nCreate: .planning/debug/{slug}.md\n&lt;/debug_file&gt;\n</code></pre>\n<pre><code>Task(\n  prompt=filled_prompt,\n  subagent_type=&quot;gad-debugger&quot;,\n  model=&quot;{debugger_model}&quot;,\n  description=&quot;Debug {slug}&quot;\n)\n</code></pre>\n<h2>4. Handle Agent Return</h2>\n<p><strong>If <code>## ROOT CAUSE FOUND</code> (diagnose-only mode):</strong></p>\n<ul>\n<li>Display root cause, confidence level, files involved, and suggested fix strategies</li>\n<li>Offer options:<ul>\n<li>&quot;Fix now&quot; — spawn a continuation agent with <code>goal: find_and_fix</code> to apply the fix (see step 5)</li>\n<li>&quot;Plan fix&quot; — suggest <code>/gad:plan-phase --gaps</code></li>\n<li>&quot;Manual fix&quot; — done</li>\n</ul>\n</li>\n</ul>\n<p><strong>If <code>## DEBUG COMPLETE</code> (find_and_fix mode):</strong></p>\n<ul>\n<li>Display root cause and fix summary</li>\n<li>Offer options:<ul>\n<li>&quot;Plan fix&quot; — suggest <code>/gad:plan-phase --gaps</code> if further work needed</li>\n<li>&quot;Done&quot; — mark resolved</li>\n</ul>\n</li>\n</ul>\n<p><strong>If <code>## CHECKPOINT REACHED</code>:</strong></p>\n<ul>\n<li>Present checkpoint details to user</li>\n<li>Get user response</li>\n<li>If checkpoint type is <code>human-verify</code>:<ul>\n<li>If user confirms fixed: continue so agent can finalize/resolve/archive</li>\n<li>If user reports issues: continue so agent returns to investigation/fixing</li>\n</ul>\n</li>\n<li>Spawn continuation agent (see step 5)</li>\n</ul>\n<p><strong>If <code>## INVESTIGATION INCONCLUSIVE</code>:</strong></p>\n<ul>\n<li>Show what was checked and eliminated</li>\n<li>Offer options:<ul>\n<li>&quot;Continue investigating&quot; - spawn new agent with additional context</li>\n<li>&quot;Manual investigation&quot; - done</li>\n<li>&quot;Add more context&quot; - gather more symptoms, spawn again</li>\n</ul>\n</li>\n</ul>\n<h2>5. Spawn Continuation Agent (After Checkpoint or &quot;Fix now&quot;)</h2>\n<p>When user responds to checkpoint OR selects &quot;Fix now&quot; from diagnose-only results, spawn fresh agent:</p>\n<pre><code class=\"language-markdown\">&lt;objective&gt;\nContinue debugging {slug}. Evidence is in the debug file.\n&lt;/objective&gt;\n\n&lt;prior_state&gt;\n&lt;files_to_read&gt;\n- .planning/debug/{slug}.md (Debug session state)\n&lt;/files_to_read&gt;\n&lt;/prior_state&gt;\n\n&lt;checkpoint_response&gt;\n**Type:** {checkpoint_type}\n**Response:** {user_response}\n&lt;/checkpoint_response&gt;\n\n&lt;mode&gt;\ngoal: find_and_fix\n&lt;/mode&gt;\n</code></pre>\n<pre><code>Task(\n  prompt=continuation_prompt,\n  subagent_type=&quot;gad-debugger&quot;,\n  model=&quot;{debugger_model}&quot;,\n  description=&quot;Continue debug {slug}&quot;\n)\n</code></pre>\n</process>\n\n<success_criteria>\n- [ ] Active sessions checked\n- [ ] Symptoms gathered (if new)\n- [ ] gad-debugger spawned with context\n- [ ] Checkpoints handled correctly\n- [ ] Root cause confirmed before fixing\n</success_criteria>\n",
     "bodyRaw": "\n<execution_context>\n@workflows/gad-debug.md\n</execution_context>\n\n<objective>\nDebug issues using scientific method with subagent isolation.\n\n**Orchestrator role:** Gather symptoms, spawn gad-debugger agent, handle checkpoints, spawn continuations.\n\n**Why subagent:** Investigation burns context fast (reading files, forming hypotheses, testing). Fresh 200k context per investigation. Main context stays lean for user interaction.\n\n**Flags:**\n- `--diagnose` — Diagnose only. Find root cause without applying a fix. Returns a structured Root Cause Report. Use when you want to validate the diagnosis before committing to a fix.\n</objective>\n\n<available_agent_types>\nValid GAD subagent types (use exact names — do not fall back to 'general-purpose'):\n- gad-debugger — Diagnoses and fixes issues\n</available_agent_types>\n\n<context>\nUser's issue: $ARGUMENTS\n\nParse flags from $ARGUMENTS:\n- If `--diagnose` is present, set `diagnose_only=true` and remove the flag from the issue description.\n- Otherwise, `diagnose_only=false`.\n\nCheck for active sessions:\n```bash\nls .planning/debug/*.md 2>/dev/null | grep -v resolved | head -5\n```\n</context>\n\n<process>\nExecute the debug workflow from @workflows/gad-debug.md, using the agent-orchestration steps below as the runtime-specific implementation.\n\n## 0. Initialize Context\n\n```bash\nINIT=$(gad-tools state load)\nif [[ \"$INIT\" == @file:* ]]; then INIT=$(cat \"${INIT#@file:}\"); fi\n```\n\nExtract `commit_docs` from init JSON. Resolve debugger model:\n```bash\ndebugger_model=$(gad-tools resolve-model gad-debugger --raw)\n```\n\n## 1. Check Active Sessions\n\nIf active sessions exist AND no $ARGUMENTS:\n- List sessions with status, hypothesis, next action\n- User picks number to resume OR describes new issue\n\nIf $ARGUMENTS provided OR user describes new issue:\n- Continue to symptom gathering\n\n## 2. Gather Symptoms (if new issue)\n\nUse AskUserQuestion for each:\n\n1. **Expected behavior** - What should happen?\n2. **Actual behavior** - What happens instead?\n3. **Error messages** - Any errors? (paste or describe)\n4. **Timeline** - When did this start? Ever worked?\n5. **Reproduction** - How do you trigger it?\n\nAfter all gathered, confirm ready to investigate.\n\n## 3. Spawn gad-debugger Agent\n\nFill prompt and spawn:\n\n```markdown\n<objective>\nInvestigate issue: {slug}\n\n**Summary:** {trigger}\n</objective>\n\n<symptoms>\nexpected: {expected}\nactual: {actual}\nerrors: {errors}\nreproduction: {reproduction}\ntimeline: {timeline}\n</symptoms>\n\n<mode>\nsymptoms_prefilled: true\ngoal: {if diagnose_only: \"find_root_cause_only\", else: \"find_and_fix\"}\n</mode>\n\n<debug_file>\nCreate: .planning/debug/{slug}.md\n</debug_file>\n```\n\n```\nTask(\n  prompt=filled_prompt,\n  subagent_type=\"gad-debugger\",\n  model=\"{debugger_model}\",\n  description=\"Debug {slug}\"\n)\n```\n\n## 4. Handle Agent Return\n\n**If `## ROOT CAUSE FOUND` (diagnose-only mode):**\n- Display root cause, confidence level, files involved, and suggested fix strategies\n- Offer options:\n  - \"Fix now\" — spawn a continuation agent with `goal: find_and_fix` to apply the fix (see step 5)\n  - \"Plan fix\" — suggest `/gad:plan-phase --gaps`\n  - \"Manual fix\" — done\n\n**If `## DEBUG COMPLETE` (find_and_fix mode):**\n- Display root cause and fix summary\n- Offer options:\n  - \"Plan fix\" — suggest `/gad:plan-phase --gaps` if further work needed\n  - \"Done\" — mark resolved\n\n**If `## CHECKPOINT REACHED`:**\n- Present checkpoint details to user\n- Get user response\n- If checkpoint type is `human-verify`:\n  - If user confirms fixed: continue so agent can finalize/resolve/archive\n  - If user reports issues: continue so agent returns to investigation/fixing\n- Spawn continuation agent (see step 5)\n\n**If `## INVESTIGATION INCONCLUSIVE`:**\n- Show what was checked and eliminated\n- Offer options:\n  - \"Continue investigating\" - spawn new agent with additional context\n  - \"Manual investigation\" - done\n  - \"Add more context\" - gather more symptoms, spawn again\n\n## 5. Spawn Continuation Agent (After Checkpoint or \"Fix now\")\n\nWhen user responds to checkpoint OR selects \"Fix now\" from diagnose-only results, spawn fresh agent:\n\n```markdown\n<objective>\nContinue debugging {slug}. Evidence is in the debug file.\n</objective>\n\n<prior_state>\n<files_to_read>\n- .planning/debug/{slug}.md (Debug session state)\n</files_to_read>\n</prior_state>\n\n<checkpoint_response>\n**Type:** {checkpoint_type}\n**Response:** {user_response}\n</checkpoint_response>\n\n<mode>\ngoal: find_and_fix\n</mode>\n```\n\n```\nTask(\n  prompt=continuation_prompt,\n  subagent_type=\"gad-debugger\",\n  model=\"{debugger_model}\",\n  description=\"Continue debug {slug}\"\n)\n```\n\n</process>\n\n<success_criteria>\n- [ ] Active sessions checked\n- [ ] Symptoms gathered (if new)\n- [ ] gad-debugger spawned with context\n- [ ] Checkpoints handled correctly\n- [ ] Root cause confirmed before fixing\n</success_criteria>\n"
+  },
+  {
+    "id": "gad-discovery-test",
+    "name": "gad:discovery-test",
+    "description": ">-",
+    "imagePath": null,
+    "origin": "official",
+    "authoredBy": null,
+    "authoredOn": null,
+    "excludedFromDefaultInstall": false,
+    "frameworkSkill": false,
+    "file": "vendor/get-anything-done/skills/gad-discovery-test/SKILL.md",
+    "source": "framework",
+    "bodyHtml": "<h1>gad:discovery-test</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/discovery-test.md\">workflows/discovery-test.md</a></p>\n<p>Fire when:</p>\n<ul>\n<li>the skill catalog changes (add, rename, delete, promote, demote)</li>\n<li>CLI discovery surface changes (<code>gad skill list</code>, <code>gad skill show</code>, <code>gad snapshot</code>)</li>\n<li><code>references/skill-shape.md</code> or <code>references/proto-skills.md</code> changes</li>\n<li>operator asks to &quot;test findability&quot; or &quot;rerun the discovery battery&quot;</li>\n<li>as a periodic regression check to keep mean confidence ≥ 8.5</li>\n</ul>\n<p>Run the workflow. All procedural detail, agent prompts, JSON output schema,\nand site data integration live in the workflow file per the canonical skill\nshape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n# gad:discovery-test\n\n**Workflow:** [workflows/discovery-test.md](../../workflows/discovery-test.md)\n\nFire when:\n- the skill catalog changes (add, rename, delete, promote, demote)\n- CLI discovery surface changes (`gad skill list`, `gad skill show`, `gad snapshot`)\n- `references/skill-shape.md` or `references/proto-skills.md` changes\n- operator asks to \"test findability\" or \"rerun the discovery battery\"\n- as a periodic regression check to keep mean confidence ≥ 8.5\n\nRun the workflow. All procedural detail, agent prompts, JSON output schema,\nand site data integration live in the workflow file per the canonical skill\nshape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-discuss-phase",
@@ -575,8 +590,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-docs-compile/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nRead `STATE.md` and `ROADMAP.md` from every registered `[[planning.roots]]` entry\nand write MDX equivalents to the configured `docs_sink`. The sink is NEVER the\nsource — source files in `.planning/` are never modified.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Load config:</strong></p>\n<pre><code class=\"language-bash\">gad-tools config-get planning 2&gt;/dev/null\n</code></pre>\n<p>Also parse <code>--sink &lt;path&gt;</code> from <code>$ARGUMENTS</code> to override <code>docs_sink</code>.</p>\n</li>\n<li><p><strong>Validate sink:</strong></p>\n<ul>\n<li>If <code>docs_sink</code> is not configured and <code>--sink</code> not provided, show error:<pre><code>No docs_sink configured. Set docs_sink in planning-config.toml or pass --sink &lt;path&gt;.\n</code></pre>\n</li>\n</ul>\n</li>\n<li><p><strong>For each root:</strong>\na. Read <code>&lt;root.path&gt;/&lt;root.planningDir&gt;/STATE.md</code>\nb. Read <code>&lt;root.path&gt;/&lt;root.planningDir&gt;/ROADMAP.md</code>\nc. Write to <code>&lt;sink&gt;/&lt;root.id&gt;/STATE.mdx</code> and <code>&lt;sink&gt;/&lt;root.id&gt;/ROADMAP.mdx</code></p>\n<p><strong>MDX transformation:</strong></p>\n<ul>\n<li>Add frontmatter header:<pre><code class=\"language-mdx\">---\ntitle: &lt;root.id&gt; — Planning State\ndescription: Auto-compiled from &lt;root.path&gt;/&lt;root.planningDir&gt;/STATE.md\ngenerated: &lt;ISO date&gt;\nsource: &lt;root.path&gt;/&lt;root.planningDir&gt;/STATE.md\n---\n</code></pre>\n</li>\n<li>Preserve all Markdown content verbatim below the frontmatter</li>\n<li>Replace relative links <code>./phases/</code> → <code>&lt;sink&gt;/&lt;root.id&gt;/phases/</code></li>\n</ul>\n</li>\n<li><p><strong>Copy phase subdirs</strong> (if they exist):\nFor each <code>&lt;root.planningDir&gt;/phases/</code> directory, compile each phase&#39;s\n<code>PLAN.md</code>, <code>SUMMARY.md</code>, <code>KICKOFF.md</code> → <code>.mdx</code> equivalents in\n<code>&lt;sink&gt;/&lt;root.id&gt;/phases/&lt;phase&gt;/</code>.</p>\n</li>\n<li><p><strong>Summary:</strong></p>\n<pre><code>✓ Compiled 3 roots → apps/portfolio/content/docs/planning/\n  global    → STATE.mdx, ROADMAP.mdx, 8 phase files\n  grime-time → STATE.mdx, ROADMAP.mdx, 4 phase files\n  gad       → STATE.mdx, ROADMAP.mdx (no phases yet)\n</code></pre>\n</li>\n</ol>\n</process>\n\n<rules>\n- Never modify source `.planning/` files\n- Overwrite existing sink files (sink is always rebuilt from source)\n- Create sink directories as needed with `mkdir -p`\n- Skip roots where STATE.md or ROADMAP.md don't exist; log a warning\n</rules>\n",
-    "bodyRaw": "\n<objective>\nRead `STATE.md` and `ROADMAP.md` from every registered `[[planning.roots]]` entry\nand write MDX equivalents to the configured `docs_sink`. The sink is NEVER the\nsource — source files in `.planning/` are never modified.\n</objective>\n\n<process>\n\n1. **Load config:**\n   ```bash\n   gad-tools config-get planning 2>/dev/null\n   ```\n   Also parse `--sink <path>` from `$ARGUMENTS` to override `docs_sink`.\n\n2. **Validate sink:**\n   - If `docs_sink` is not configured and `--sink` not provided, show error:\n     ```\n     No docs_sink configured. Set docs_sink in planning-config.toml or pass --sink <path>.\n     ```\n\n3. **For each root:**\n   a. Read `<root.path>/<root.planningDir>/STATE.md`\n   b. Read `<root.path>/<root.planningDir>/ROADMAP.md`\n   c. Write to `<sink>/<root.id>/STATE.mdx` and `<sink>/<root.id>/ROADMAP.mdx`\n\n   **MDX transformation:**\n   - Add frontmatter header:\n     ```mdx\n     ---\n     title: <root.id> — Planning State\n     description: Auto-compiled from <root.path>/<root.planningDir>/STATE.md\n     generated: <ISO date>\n     source: <root.path>/<root.planningDir>/STATE.md\n     ---\n     ```\n   - Preserve all Markdown content verbatim below the frontmatter\n   - Replace relative links `./phases/` → `<sink>/<root.id>/phases/`\n\n4. **Copy phase subdirs** (if they exist):\n   For each `<root.planningDir>/phases/` directory, compile each phase's\n   `PLAN.md`, `SUMMARY.md`, `KICKOFF.md` → `.mdx` equivalents in\n   `<sink>/<root.id>/phases/<phase>/`.\n\n5. **Summary:**\n   ```\n   ✓ Compiled 3 roots → apps/portfolio/content/docs/planning/\n     global    → STATE.mdx, ROADMAP.mdx, 8 phase files\n     grime-time → STATE.mdx, ROADMAP.mdx, 4 phase files\n     gad       → STATE.mdx, ROADMAP.mdx (no phases yet)\n   ```\n\n</process>\n\n<rules>\n- Never modify source `.planning/` files\n- Overwrite existing sink files (sink is always rebuilt from source)\n- Create sink directories as needed with `mkdir -p`\n- Skip roots where STATE.md or ROADMAP.md don't exist; log a warning\n</rules>\n"
+    "bodyHtml": "<h1>gad:docs-compile</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/docs-compile.md\">workflows/docs-compile.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:docs-compile\n\n**Workflow:** [workflows/docs-compile.md](../../workflows/docs-compile.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-docs-update",
@@ -605,8 +620,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-eval-bootstrap/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nGenerate a bootstrap prompt for a single eval project and launch an agent in an isolated worktree. The agent starts with all GAD context inline — it does not need to discover the loop.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Generate the bootstrap prompt:</strong></p>\n<pre><code class=\"language-bash\">gad eval run --project $PROJECT --prompt-only\n</code></pre>\n</li>\n<li><p><strong>Read the generated PROMPT.md</strong> from the eval run directory.</p>\n</li>\n<li><p><strong>Launch an agent</strong> with <code>isolation: &quot;worktree&quot;</code> using the prompt content.</p>\n</li>\n<li><p><strong>After completion</strong>, reconstruct the trace:</p>\n<pre><code class=\"language-bash\">gad eval trace reconstruct --project $PROJECT\n</code></pre>\n</li>\n</ol>\n</process>\n\n<skill>\nRead and follow the companion `eval-bootstrap` skill if it is installed.\n</skill>\n",
-    "bodyRaw": "\n<objective>\nGenerate a bootstrap prompt for a single eval project and launch an agent in an isolated worktree. The agent starts with all GAD context inline — it does not need to discover the loop.\n</objective>\n\n<process>\n\n1. **Generate the bootstrap prompt:**\n   ```bash\n   gad eval run --project $PROJECT --prompt-only\n   ```\n\n2. **Read the generated PROMPT.md** from the eval run directory.\n\n3. **Launch an agent** with `isolation: \"worktree\"` using the prompt content.\n\n4. **After completion**, reconstruct the trace:\n   ```bash\n   gad eval trace reconstruct --project $PROJECT\n   ```\n\n</process>\n\n<skill>\nRead and follow the companion `eval-bootstrap` skill if it is installed.\n</skill>\n"
+    "bodyHtml": "<h1>gad:eval-bootstrap</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/eval-bootstrap.md\">workflows/eval-bootstrap.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:eval-bootstrap\n\n**Workflow:** [workflows/eval-bootstrap.md](../../workflows/eval-bootstrap.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-eval-list",
@@ -620,8 +635,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-eval-list/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nDisplay all eval projects in `evals/` with their run count, latest run status,\nand last baseline SHA.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Find eval projects:</strong></p>\n<pre><code class=\"language-bash\">ls -d evals/*/ 2&gt;/dev/null || echo &quot;NO_PROJECTS&quot;\n</code></pre>\n<p>If none: <code>No eval projects found. Create one at evals/&lt;name&gt;/REQUIREMENTS.md.</code></p>\n</li>\n<li><p><strong>For each project</strong>, read its run history:</p>\n<pre><code class=\"language-bash\">ls -d &quot;evals/$PROJECT&quot;/v*/ 2&gt;/dev/null | sort -V\n</code></pre>\n<p>Read the latest <code>RUN.md</code> for status and baseline.</p>\n</li>\n<li><p><strong>Display table:</strong></p>\n<pre><code>GAD Eval Projects\n\nNAME              RUNS   LATEST   STATUS     BASELINE\n─────────────────────────────────────────────────────────\nportfolio-bare    2      v2       completed  abc1234\nmy-feature        0      —        —          —\n</code></pre>\n</li>\n<li><p><strong>Show totals:</strong></p>\n<pre><code>2 projects, 2 total runs\n</code></pre>\n</li>\n</ol>\n</process>\n",
-    "bodyRaw": "\n<objective>\nDisplay all eval projects in `evals/` with their run count, latest run status,\nand last baseline SHA.\n</objective>\n\n<process>\n\n1. **Find eval projects:**\n   ```bash\n   ls -d evals/*/ 2>/dev/null || echo \"NO_PROJECTS\"\n   ```\n   If none: `No eval projects found. Create one at evals/<name>/REQUIREMENTS.md.`\n\n2. **For each project**, read its run history:\n   ```bash\n   ls -d \"evals/$PROJECT\"/v*/ 2>/dev/null | sort -V\n   ```\n   Read the latest `RUN.md` for status and baseline.\n\n3. **Display table:**\n   ```\n   GAD Eval Projects\n\n   NAME              RUNS   LATEST   STATUS     BASELINE\n   ─────────────────────────────────────────────────────────\n   portfolio-bare    2      v2       completed  abc1234\n   my-feature        0      —        —          —\n   ```\n\n4. **Show totals:**\n   ```\n   2 projects, 2 total runs\n   ```\n\n</process>\n"
+    "bodyHtml": "<h1>gad:eval-list</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/eval-list.md\">workflows/eval-list.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:eval-list\n\n**Workflow:** [workflows/eval-list.md](../../workflows/eval-list.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-eval-report",
@@ -635,8 +650,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-eval-report/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nGenerate a comparison report across all eval projects showing scores, discipline, and findings from the latest runs.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Run cross-project report:</strong></p>\n<pre><code class=\"language-bash\">gad eval report\n</code></pre>\n</li>\n<li><p><strong>For deeper analysis on a specific project:</strong></p>\n<pre><code class=\"language-bash\">gad eval scores --project &lt;name&gt;\ngad eval diff v1 v2 --project &lt;name&gt;\n</code></pre>\n</li>\n<li><p><strong>Interpret findings</strong> and recommend next actions.</p>\n</li>\n</ol>\n</process>\n\n<skill>\nRead and follow the companion `eval-report` skill if it is installed.\n</skill>\n",
-    "bodyRaw": "\n<objective>\nGenerate a comparison report across all eval projects showing scores, discipline, and findings from the latest runs.\n</objective>\n\n<process>\n\n1. **Run cross-project report:**\n   ```bash\n   gad eval report\n   ```\n\n2. **For deeper analysis on a specific project:**\n   ```bash\n   gad eval scores --project <name>\n   gad eval diff v1 v2 --project <name>\n   ```\n\n3. **Interpret findings** and recommend next actions.\n\n</process>\n\n<skill>\nRead and follow the companion `eval-report` skill if it is installed.\n</skill>\n"
+    "bodyHtml": "<h1>gad:eval-report</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/eval-report.md\">workflows/eval-report.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:eval-report\n\n**Workflow:** [workflows/eval-report.md](../../workflows/eval-report.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-eval-run",
@@ -680,8 +695,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-eval-suite/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nGenerate bootstrap prompts for all runnable eval projects, then launch them as parallel agents in isolated worktrees. After completion, reconstruct traces and produce a cross-project comparison report.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Generate prompts:</strong></p>\n<pre><code class=\"language-bash\">gad eval suite\n</code></pre>\n</li>\n<li><p><strong>Read each generated prompt</strong> from the suite-runs directory.</p>\n</li>\n<li><p><strong>Launch agents in parallel</strong> — one per eval project, each with <code>isolation: &quot;worktree&quot;</code> and <code>run_in_background: true</code>. Send ALL agent launches in a single message.</p>\n</li>\n<li><p><strong>Wait for completion</strong> — you will be notified as each agent finishes.</p>\n</li>\n<li><p><strong>Write TRACE.json</strong> for each completed eval from the agent&#39;s reported results.</p>\n</li>\n<li><p><strong>Run cross-project report:</strong></p>\n<pre><code class=\"language-bash\">gad eval report\n</code></pre>\n</li>\n<li><p><strong>Report findings</strong> — what improved, what regressed, what skills were triggered or missing.</p>\n</li>\n</ol>\n</process>\n\n<skill>\nRead and follow the companion `eval-suite` skill if it is installed.\n</skill>\n",
-    "bodyRaw": "\n<objective>\nGenerate bootstrap prompts for all runnable eval projects, then launch them as parallel agents in isolated worktrees. After completion, reconstruct traces and produce a cross-project comparison report.\n</objective>\n\n<process>\n\n1. **Generate prompts:**\n   ```bash\n   gad eval suite\n   ```\n\n2. **Read each generated prompt** from the suite-runs directory.\n\n3. **Launch agents in parallel** — one per eval project, each with `isolation: \"worktree\"` and `run_in_background: true`. Send ALL agent launches in a single message.\n\n4. **Wait for completion** — you will be notified as each agent finishes.\n\n5. **Write TRACE.json** for each completed eval from the agent's reported results.\n\n6. **Run cross-project report:**\n   ```bash\n   gad eval report\n   ```\n\n7. **Report findings** — what improved, what regressed, what skills were triggered or missing.\n\n</process>\n\n<skill>\nRead and follow the companion `eval-suite` skill if it is installed.\n</skill>\n"
+    "bodyHtml": "<h1>gad:eval-suite</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/eval-suite.md\">workflows/eval-suite.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:eval-suite\n\n**Workflow:** [workflows/eval-suite.md](../../workflows/eval-suite.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-evolution-evolve",
@@ -695,8 +710,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-evolution-evolve/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad-evolution-evolve</h1>\n<p>Drives one round of the GAD evolution loop. Every evolution produces a batch of\n<strong>proto-skills</strong> that must be reviewed by a human before they become real\nskills.</p>\n<h2>Mental model</h2>\n<blockquote>\n<p>A species&#39; identity = its DNA = its installed skill set.\nEvolving the species means evolving the skill set.\nAn evolution is one batch of proposed skill changes.</p>\n</blockquote>\n<p>The loop:</p>\n<pre><code>gad:evolution:evolve\n  ├─ compute-self-eval finds high-pressure phases (selection pressure)\n  ├─ for each new candidate phase:\n  │     ├─ keep skills/candidates/&lt;slug&gt;/CANDIDATE.md as the raw source\n  │     │     = raw phase dump (no curator pre-digestion)\n  │     ├─ invoke create-proto-skill on CANDIDATE.md\n  │     │     → writes .planning/proto-skills/&lt;slug&gt;/SKILL.md + references/\n  │     └─ invoke gad-evolution-validator on the new proto-skill\n  │           → writes .planning/proto-skills/&lt;slug&gt;/VALIDATION.md (advisory)\n  └─ register one TASK-REGISTRY task: &quot;Review evolution &lt;id&gt; proto-skills&quot;\n\n(human review, async)\n  reads SKILL.md + VALIDATION.md → promote or discard\n\ngad skill promote &lt;slug&gt; --project --claude     ← consumer runtime install (any project)\ngad skill promote &lt;slug&gt; --framework             ← canonical promote (this repo only; joins species DNA)\ngad evolution discard &lt;slug&gt;                     ← deletes the proto-skill\n\n(Legacy: `gad evolution install` / `gad evolution promote` still work as\nback-compat shims and forward to the unified `gad skill promote` verb per\ndecision gad-188 / task 44-36.)\n</code></pre>\n<p>The next <code>gad:evolution:evolve</code> cannot run until every proto-skill from the\ncurrent evolution is either promoted or discarded.</p>\n<h2>Why no curator step</h2>\n<p>Earlier sketches of this loop had me hand-write a structured INTENT.md per\ncandidate — pre-digesting the phase data into proposed name, when-to-trigger\nsections, hand-picked decisions, and curated test prompts.</p>\n<p>The 2026-04-13 evolution-loop experiment showed that <strong>curators are filters,\nnot amplifiers.</strong> When given raw phase data directly, the drafting agent\npulled in 16 decisions vs the curated arm&#39;s 7. The curator&#39;s selectivity\nfiltered out load-bearing details (trace schema fragment registration, runtime\nidentity, per-eval-repo architecture). See\n<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code> for the full result.</p>\n<p>So we feed raw phase dumps directly. CANDIDATE.md is a structured layout of\nthe phase tasks, decisions, file references, CLI surface, and <code>git log</code>\nhighlights for files the phase touched — not curated context.</p>\n<h2>Step 1: Refuse to start if there&#39;s a pending evolution</h2>\n<pre><code class=\"language-sh\">PENDING=$(ls .planning/proto-skills 2&gt;/dev/null | wc -l)\nif [ &quot;$PENDING&quot; -gt 0 ]; then\n  echo &quot;Cannot start a new evolution — $PENDING proto-skills still pending review.&quot;\n  echo &quot;Run &#39;gad status&#39; to see them, then promote or discard each before evolving again.&quot;\n  exit 1\nfi\n</code></pre>\n<p>This is the human-review gate. It exists because evolutions accumulating\nwithout review just rot.</p>\n<h2>Step 2: Generate an evolution id</h2>\n<pre><code class=\"language-sh\">EVOLUTION_ID=&quot;$(date +%Y-%m-%d)-$(printf &#39;%03d&#39; $(( $(ls skills/.evolutions 2&gt;/dev/null | wc -l) + 1 )))&quot;\nmkdir -p skills/.evolutions\ntouch &quot;skills/.evolutions/$EVOLUTION_ID&quot;\n</code></pre>\n<p>The empty marker file lets <code>gad status</code> and the site know an evolution started\non this date even after all its proto-skills are reviewed and gone.</p>\n<h2>Step 3: Run selection pressure analysis</h2>\n<p>The existing self-eval pipeline identifies high-pressure phases:</p>\n<pre><code class=\"language-sh\">node site/scripts/compute-self-eval.mjs\n</code></pre>\n<p>After it runs, read <code>site/data/self-eval.json</code> for the <code>high_pressure_phases</code>\nlist. Each phase id whose pressure score exceeds the threshold (default 10\nfrom <code>site/data/self-eval-config.json</code>) is a candidate for this evolution.</p>\n<p>If you&#39;re invoked manually for a single skill from a user request, skip this\nstep and go straight to step 4 with one phase id or <code>null</code>.</p>\n<p>For each candidate phase, gather:</p>\n<ul>\n<li>Phase id, title, goal, pressure score</li>\n<li>All tasks in the phase (id, status, goal)</li>\n<li>Decisions referencing the phase</li>\n<li>File refs touched by the phase&#39;s tasks (from git history)</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> for each touched file (catches the\nhistorical &quot;three attempts at task X failed&quot; thread that lives in commit\nhistory, not decision text)</li>\n</ul>\n<p>Use the GAD CLI to pull these:</p>\n<pre><code class=\"language-sh\">gad phases --projectid get-anything-done | grep &quot;^get-anything-done  $PHASE_ID&quot;\ngad tasks --projectid get-anything-done | grep &quot;^get-anything-done  $PHASE_ID-&quot;\ngad decisions --projectid get-anything-done | grep -i &quot;phase $PHASE_ID&quot;\n</code></pre>\n<h2>Step 4: Write CANDIDATE.md per candidate phase</h2>\n<p>For each candidate phase, keep <code>skills/candidates/&lt;slug&gt;/CANDIDATE.md</code> as the raw source and write the staged proto-skill to <code>.planning/proto-skills/&lt;slug&gt;/</code>. The\nslug is <code>phase-&lt;N&gt;-&lt;short-kebab-of-title&gt;</code>.</p>\n<p>CANDIDATE.md is a structured raw dump:</p>\n<pre><code class=\"language-markdown\">---\nstatus: candidate\nsource_phase: 14\nsource_phase_title: &quot;Eval framework — escape-the-dungeon + tracing&quot;\npressure_score: 18\nevolution_id: 2026-04-13-001\ncreated_on: 2026-04-13\ncreated_by: gad-evolution-evolve\n---\n\n# Candidate from phase 14\n\n## Phase header\n&lt;raw `gad phases` line&gt;\n\n## Tasks\n&lt;raw `gad tasks` output for phase 14&gt;\n\n## Decisions touching this phase\n&lt;raw `gad decisions` output, filtered&gt;\n\n## File references\n&lt;file paths touched by this phase&#39;s commits, one per line&gt;\n\n## Git history for touched files\n&lt;git log --follow --oneline output for each file&gt;\n\n## CLI surface available\n&lt;paste relevant lines from `gad --help` and `gad &lt;subcommand&gt; --help`&gt;\n\n## Existing related skills\n&lt;output of `ls skills/` filtered to skills with overlapping keywords&gt;\n</code></pre>\n<p><strong>No curator section.</strong> No proposed name. No proposed test prompts. No\nhand-picked decisions. The drafting agent (create-proto-skill) reads this raw\nmaterial and decides what matters.</p>\n<h2>Step 5: Invoke create-proto-skill on each CANDIDATE.md</h2>\n<p>Hand each candidate off to <code>create-proto-skill</code>:</p>\n<pre><code>For each &lt;slug&gt; in this evolution:\n  Invoke create-proto-skill with: &quot;Process the candidate at\n  skills/candidates/&lt;slug&gt;/CANDIDATE.md. Write SKILL.md + references/\n  under .planning/proto-skills/&lt;slug&gt;/. Do not ask questions.&quot;\n</code></pre>\n<p>If you have access to spawning subagents, run multiple in parallel — one per\ncandidate. Otherwise run them in series.</p>\n<h2>Step 6: Invoke gad-evolution-validator on each new proto-skill</h2>\n<p>After SKILL.md is written, hand the proto-skill to <code>gad-evolution-validator</code>:</p>\n<pre><code>For each &lt;slug&gt;:\n  Invoke gad-evolution-validator with: &quot;Validate .planning/proto-skills/&lt;slug&gt;/SKILL.md\n  against the actual repo. Write VALIDATION.md flagging file refs that don&#39;t\n  exist, CLI commands that don&#39;t match `gad --help`, and convention shapes\n  that diverge from existing files.&quot;\n</code></pre>\n<p>VALIDATION.md is advisory. It does not block promotion. The human reviewer\nreads it alongside SKILL.md.</p>\n<h2>Step 7: Register a single review task</h2>\n<p>After all proto-skills are drafted and validated, register <strong>one</strong> task in\nTASK-REGISTRY for the whole evolution batch. Don&#39;t create one task per\nproto-skill — that&#39;s bookkeeping bloat. The proto-skills dir IS the work list.</p>\n<pre><code>Task: Review evolution &lt;evolution-id&gt; proto-skills\nStatus: planned\nGoal: Open .planning/proto-skills/&lt;slug&gt;/SKILL.md for each pending proto-skill,\nread its VALIDATION.md, optionally run `gad skill promote &lt;slug&gt; --project [--claude|--codex|...]` to test it in a coding agent runtime, then run `gad skill promote &lt;slug&gt; --framework` (canonical) or\n`gad evolution discard &lt;slug&gt;`. Evolution closes automatically when the\nproto-skills dir is empty.\nSkill: gad-evolution-evolve\nType: framework\n</code></pre>\n<h2>Step 8: Print review report (MANDATORY format)</h2>\n<p>Any turn that leaves <code>.planning/proto-skills/</code> non-empty MUST close with a full\nreview report in this format. Terse CLI pointers are not enough — the human\nreview gate rots when the report is vague. Feedback 2026-04-14: the user\nexplicitly wants per-slug walkthroughs with proposed name, file-tree shape,\nmerge-candidate analysis, and a recommended action.</p>\n<h3>Top-of-report header</h3>\n<pre><code>Evolution &lt;id&gt; — &lt;pending&gt; proto-skills pending review\n\nScope of this run:\n  - &lt;where was the evolution run: monorepo root / single project / manual staging&gt;\n  - &lt;what pressure ranking was used / why these phases were picked&gt;\n\nBlocking: next `gad evolution evolve` cannot run until this queue is empty.\nTracked by task: &lt;task-id for the review&gt;\n</code></pre>\n<h3>Per-slug block (repeat for each pending proto-skill)</h3>\n<p>For every slug under <code>.planning/proto-skills/</code>, emit one block in this shape:</p>\n<pre><code>─── &lt;N&gt;. &lt;slug&gt; ───────────────────────────────────\n\nProposed skill name: &lt;frontmatter `name` field&gt;\nSource: phase &lt;N&gt; / manual-staging / &lt;other&gt;\nValidator:           &lt;refs hit&gt;/&lt;refs total&gt; file refs, &lt;cli hit&gt;/&lt;cli total&gt; CLI\nLines:               &lt;SKILL.md wc -l&gt;\nRecommendation:      &lt;PROMOTE | DISCARD | MERGE | EDIT-THEN-PROMOTE&gt;\n\nOne-line purpose:\n  &lt;what the skill does, verb-led&gt;\n\nFile tree:\n  .planning/proto-skills/&lt;slug&gt;/\n  ├── SKILL.md                  (&lt;lines&gt; lines)\n  ├── VALIDATION.md             (advisory)\n  └── references/               (if any)\n      ├── &lt;reference file 1&gt;\n      └── &lt;reference file 2&gt;\n\nExternal references cited in SKILL.md:\n  - &lt;path&gt;:&lt;line&gt;        &lt;- one line each, relative to repo root\n  - &lt;path&gt;:&lt;line&gt;\n  - ...\n\nParent-skill / merge analysis:\n  Parent candidates in skills/:\n    - &lt;existing-skill-name&gt;     &lt;- one-line reason this is a candidate\n    - &lt;existing-skill-name&gt;     &lt;- one-line reason\n  Why &lt;merge | keep-separate | deprecate-parent&gt;:\n    &lt;2-3 sentences comparing scope, overlap, surface area&gt;\n\nOpen and review:\n  code .planning/proto-skills/&lt;slug&gt;/SKILL.md\n  code .planning/proto-skills/&lt;slug&gt;/VALIDATION.md\n  &lt;if parent exists:&gt;\n  code skills/&lt;parent-name&gt;/SKILL.md\n\nCommands to act on this slug:\n  gad skill promote &lt;slug&gt; --project --claude    # try in runtime without committing\n  gad skill promote &lt;slug&gt; --framework           # join canonical skills/ (this repo only)\n  gad evolution discard &lt;slug&gt;                   # delete\n</code></pre>\n<h3>Recommendation values</h3>\n<ul>\n<li><strong>PROMOTE</strong> — validator clean, no parent overlap, ready to join <code>skills/</code>.</li>\n<li><strong>DISCARD</strong> — validator failed, scope drifted, or the pattern isn&#39;t actually\nreusable. Name the reason in the recommendation.</li>\n<li><strong>MERGE</strong> — a parent skill exists and the proto-skill should be folded into\nit. Always name the parent and explain the comparison.</li>\n<li><strong>EDIT-THEN-PROMOTE</strong> — the proto-skill captures the right pattern but needs\none more pass (rename slug, fix refs, tighten scope). Name the edit needed.</li>\n</ul>\n<h3>Recommended review order</h3>\n<p>End the report with one paragraph on the order you suggest the user review the\nslugs in. Highest-leverage first. Call out any blocking dependencies between\nslugs (e.g. &quot;review <A> before <B> because they might merge&quot;).</p>\n<h3>Standard skill file shape</h3>\n<p>Every promoted skill follows the standard format with GAD-specific metadata:</p>\n<pre><code>---\nname: &lt;kebab-name&gt;\ndescription: &gt;-\n  Verb-led 1–3 sentence description with trigger phrases (&quot;when user asks X&quot;, &quot;use when Y&quot;).\nsource_phase: &quot;&lt;N&gt;&quot;              # optional, for evolved skills\nsource_evolution: &lt;id&gt;           # optional, for evolved skills\nparent_skill: &lt;name&gt;             # optional, if superseding/extending another skill\nstatus: proto | promoted         # proto while in .planning/proto-skills/, omit when promoted\n---\n\n# &lt;skill title&gt;\n\n## When to use\n&lt;triggers, concrete phrases&gt;\n\n## Steps\n&lt;numbered, actionable&gt;\n\n## Failure modes\n&lt;concrete pitfalls&gt;\n\n## References\n&lt;file:line pointers to real repo paths. Freeform — skills may have a references/\ndirectory with extracted doc/example files if the body needs more space.&gt;\n</code></pre>\n<p>The <code>references/</code> subdirectory under a skill is <strong>freeform but encouraged</strong> —\nuse it for canonical snippets, design docs, comparison tables, or anything that\nwould bloat SKILL.md past ~200 lines. The validator counts <code>references/</code> files\nagainst file-ref totals.</p>\n<h2>Failure modes</h2>\n<ul>\n<li><strong>Pending proto-skills blocking evolve:</strong> intentional. If you really need to\nstart fresh, manually clear <code>.planning/proto-skills/*</code> and accept that work\nis lost. There&#39;s no <code>--force</code> flag because forcing this defeats the gate.</li>\n<li><strong>No high-pressure phases found:</strong> valid outcome. Print &quot;no proto-skills\nthis evolution&quot; and don&#39;t create any files. The evolution marker still\ndrops in <code>.evolutions/</code> so we have a record that we looked.</li>\n<li><strong>create-proto-skill produces a sparse SKILL.md:</strong> read CANDIDATE.md, see if it\nwas sparse. The CANDIDATE.md should always include the full task list,\ndecisions, file refs, and git history. If those are missing, fix the\nCANDIDATE.md generation in step 4.</li>\n</ul>\n<h2>Reference</h2>\n<ul>\n<li><code>create-proto-skill</code> — the drafter this skill invokes per candidate</li>\n<li><code>gad-evolution-validator</code> — the advisory checker</li>\n<li><code>compute-self-eval.mjs</code> — selection pressure source</li>\n<li><code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code> — why the curator\nwas dropped</li>\n<li>Roadmap phase 42 — the design context</li>\n</ul>\n",
-    "bodyRaw": "\n# gad-evolution-evolve\n\nDrives one round of the GAD evolution loop. Every evolution produces a batch of\n**proto-skills** that must be reviewed by a human before they become real\nskills.\n\n## Mental model\n\n> A species' identity = its DNA = its installed skill set.\n> Evolving the species means evolving the skill set.\n> An evolution is one batch of proposed skill changes.\n\nThe loop:\n\n```\ngad:evolution:evolve\n  ├─ compute-self-eval finds high-pressure phases (selection pressure)\n  ├─ for each new candidate phase:\n  │     ├─ keep skills/candidates/<slug>/CANDIDATE.md as the raw source\n  │     │     = raw phase dump (no curator pre-digestion)\n  │     ├─ invoke create-proto-skill on CANDIDATE.md\n  │     │     → writes .planning/proto-skills/<slug>/SKILL.md + references/\n  │     └─ invoke gad-evolution-validator on the new proto-skill\n  │           → writes .planning/proto-skills/<slug>/VALIDATION.md (advisory)\n  └─ register one TASK-REGISTRY task: \"Review evolution <id> proto-skills\"\n\n(human review, async)\n  reads SKILL.md + VALIDATION.md → promote or discard\n\ngad skill promote <slug> --project --claude     ← consumer runtime install (any project)\ngad skill promote <slug> --framework             ← canonical promote (this repo only; joins species DNA)\ngad evolution discard <slug>                     ← deletes the proto-skill\n\n(Legacy: `gad evolution install` / `gad evolution promote` still work as\nback-compat shims and forward to the unified `gad skill promote` verb per\ndecision gad-188 / task 44-36.)\n```\n\nThe next `gad:evolution:evolve` cannot run until every proto-skill from the\ncurrent evolution is either promoted or discarded.\n\n## Why no curator step\n\nEarlier sketches of this loop had me hand-write a structured INTENT.md per\ncandidate — pre-digesting the phase data into proposed name, when-to-trigger\nsections, hand-picked decisions, and curated test prompts.\n\nThe 2026-04-13 evolution-loop experiment showed that **curators are filters,\nnot amplifiers.** When given raw phase data directly, the drafting agent\npulled in 16 decisions vs the curated arm's 7. The curator's selectivity\nfiltered out load-bearing details (trace schema fragment registration, runtime\nidentity, per-eval-repo architecture). See\n`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md` for the full result.\n\nSo we feed raw phase dumps directly. CANDIDATE.md is a structured layout of\nthe phase tasks, decisions, file references, CLI surface, and `git log`\nhighlights for files the phase touched — not curated context.\n\n## Step 1: Refuse to start if there's a pending evolution\n\n```sh\nPENDING=$(ls .planning/proto-skills 2>/dev/null | wc -l)\nif [ \"$PENDING\" -gt 0 ]; then\n  echo \"Cannot start a new evolution — $PENDING proto-skills still pending review.\"\n  echo \"Run 'gad status' to see them, then promote or discard each before evolving again.\"\n  exit 1\nfi\n```\n\nThis is the human-review gate. It exists because evolutions accumulating\nwithout review just rot.\n\n## Step 2: Generate an evolution id\n\n```sh\nEVOLUTION_ID=\"$(date +%Y-%m-%d)-$(printf '%03d' $(( $(ls skills/.evolutions 2>/dev/null | wc -l) + 1 )))\"\nmkdir -p skills/.evolutions\ntouch \"skills/.evolutions/$EVOLUTION_ID\"\n```\n\nThe empty marker file lets `gad status` and the site know an evolution started\non this date even after all its proto-skills are reviewed and gone.\n\n## Step 3: Run selection pressure analysis\n\nThe existing self-eval pipeline identifies high-pressure phases:\n\n```sh\nnode site/scripts/compute-self-eval.mjs\n```\n\nAfter it runs, read `site/data/self-eval.json` for the `high_pressure_phases`\nlist. Each phase id whose pressure score exceeds the threshold (default 10\nfrom `site/data/self-eval-config.json`) is a candidate for this evolution.\n\nIf you're invoked manually for a single skill from a user request, skip this\nstep and go straight to step 4 with one phase id or `null`.\n\nFor each candidate phase, gather:\n\n- Phase id, title, goal, pressure score\n- All tasks in the phase (id, status, goal)\n- Decisions referencing the phase\n- File refs touched by the phase's tasks (from git history)\n- `git log --follow --oneline <file>` for each touched file (catches the\n  historical \"three attempts at task X failed\" thread that lives in commit\n  history, not decision text)\n\nUse the GAD CLI to pull these:\n\n```sh\ngad phases --projectid get-anything-done | grep \"^get-anything-done  $PHASE_ID\"\ngad tasks --projectid get-anything-done | grep \"^get-anything-done  $PHASE_ID-\"\ngad decisions --projectid get-anything-done | grep -i \"phase $PHASE_ID\"\n```\n\n## Step 4: Write CANDIDATE.md per candidate phase\n\nFor each candidate phase, keep `skills/candidates/<slug>/CANDIDATE.md` as the raw source and write the staged proto-skill to `.planning/proto-skills/<slug>/`. The\nslug is `phase-<N>-<short-kebab-of-title>`.\n\nCANDIDATE.md is a structured raw dump:\n\n```markdown\n---\nstatus: candidate\nsource_phase: 14\nsource_phase_title: \"Eval framework — escape-the-dungeon + tracing\"\npressure_score: 18\nevolution_id: 2026-04-13-001\ncreated_on: 2026-04-13\ncreated_by: gad-evolution-evolve\n---\n\n# Candidate from phase 14\n\n## Phase header\n<raw `gad phases` line>\n\n## Tasks\n<raw `gad tasks` output for phase 14>\n\n## Decisions touching this phase\n<raw `gad decisions` output, filtered>\n\n## File references\n<file paths touched by this phase's commits, one per line>\n\n## Git history for touched files\n<git log --follow --oneline output for each file>\n\n## CLI surface available\n<paste relevant lines from `gad --help` and `gad <subcommand> --help`>\n\n## Existing related skills\n<output of `ls skills/` filtered to skills with overlapping keywords>\n```\n\n**No curator section.** No proposed name. No proposed test prompts. No\nhand-picked decisions. The drafting agent (create-proto-skill) reads this raw\nmaterial and decides what matters.\n\n## Step 5: Invoke create-proto-skill on each CANDIDATE.md\n\nHand each candidate off to `create-proto-skill`:\n\n```\nFor each <slug> in this evolution:\n  Invoke create-proto-skill with: \"Process the candidate at\n  skills/candidates/<slug>/CANDIDATE.md. Write SKILL.md + references/\n  under .planning/proto-skills/<slug>/. Do not ask questions.\"\n```\n\nIf you have access to spawning subagents, run multiple in parallel — one per\ncandidate. Otherwise run them in series.\n\n## Step 6: Invoke gad-evolution-validator on each new proto-skill\n\nAfter SKILL.md is written, hand the proto-skill to `gad-evolution-validator`:\n\n```\nFor each <slug>:\n  Invoke gad-evolution-validator with: \"Validate .planning/proto-skills/<slug>/SKILL.md\n  against the actual repo. Write VALIDATION.md flagging file refs that don't\n  exist, CLI commands that don't match `gad --help`, and convention shapes\n  that diverge from existing files.\"\n```\n\nVALIDATION.md is advisory. It does not block promotion. The human reviewer\nreads it alongside SKILL.md.\n\n## Step 7: Register a single review task\n\nAfter all proto-skills are drafted and validated, register **one** task in\nTASK-REGISTRY for the whole evolution batch. Don't create one task per\nproto-skill — that's bookkeeping bloat. The proto-skills dir IS the work list.\n\n```\nTask: Review evolution <evolution-id> proto-skills\nStatus: planned\nGoal: Open .planning/proto-skills/<slug>/SKILL.md for each pending proto-skill,\nread its VALIDATION.md, optionally run `gad skill promote <slug> --project [--claude|--codex|...]` to test it in a coding agent runtime, then run `gad skill promote <slug> --framework` (canonical) or\n`gad evolution discard <slug>`. Evolution closes automatically when the\nproto-skills dir is empty.\nSkill: gad-evolution-evolve\nType: framework\n```\n\n## Step 8: Print review report (MANDATORY format)\n\nAny turn that leaves `.planning/proto-skills/` non-empty MUST close with a full\nreview report in this format. Terse CLI pointers are not enough — the human\nreview gate rots when the report is vague. Feedback 2026-04-14: the user\nexplicitly wants per-slug walkthroughs with proposed name, file-tree shape,\nmerge-candidate analysis, and a recommended action.\n\n### Top-of-report header\n\n```\nEvolution <id> — <pending> proto-skills pending review\n\nScope of this run:\n  - <where was the evolution run: monorepo root / single project / manual staging>\n  - <what pressure ranking was used / why these phases were picked>\n\nBlocking: next `gad evolution evolve` cannot run until this queue is empty.\nTracked by task: <task-id for the review>\n```\n\n### Per-slug block (repeat for each pending proto-skill)\n\nFor every slug under `.planning/proto-skills/`, emit one block in this shape:\n\n```\n─── <N>. <slug> ───────────────────────────────────\n\nProposed skill name: <frontmatter `name` field>\nSource: phase <N> / manual-staging / <other>\nValidator:           <refs hit>/<refs total> file refs, <cli hit>/<cli total> CLI\nLines:               <SKILL.md wc -l>\nRecommendation:      <PROMOTE | DISCARD | MERGE | EDIT-THEN-PROMOTE>\n\nOne-line purpose:\n  <what the skill does, verb-led>\n\nFile tree:\n  .planning/proto-skills/<slug>/\n  ├── SKILL.md                  (<lines> lines)\n  ├── VALIDATION.md             (advisory)\n  └── references/               (if any)\n      ├── <reference file 1>\n      └── <reference file 2>\n\nExternal references cited in SKILL.md:\n  - <path>:<line>        <- one line each, relative to repo root\n  - <path>:<line>\n  - ...\n\nParent-skill / merge analysis:\n  Parent candidates in skills/:\n    - <existing-skill-name>     <- one-line reason this is a candidate\n    - <existing-skill-name>     <- one-line reason\n  Why <merge | keep-separate | deprecate-parent>:\n    <2-3 sentences comparing scope, overlap, surface area>\n\nOpen and review:\n  code .planning/proto-skills/<slug>/SKILL.md\n  code .planning/proto-skills/<slug>/VALIDATION.md\n  <if parent exists:>\n  code skills/<parent-name>/SKILL.md\n\nCommands to act on this slug:\n  gad skill promote <slug> --project --claude    # try in runtime without committing\n  gad skill promote <slug> --framework           # join canonical skills/ (this repo only)\n  gad evolution discard <slug>                   # delete\n```\n\n### Recommendation values\n\n- **PROMOTE** — validator clean, no parent overlap, ready to join `skills/`.\n- **DISCARD** — validator failed, scope drifted, or the pattern isn't actually\n  reusable. Name the reason in the recommendation.\n- **MERGE** — a parent skill exists and the proto-skill should be folded into\n  it. Always name the parent and explain the comparison.\n- **EDIT-THEN-PROMOTE** — the proto-skill captures the right pattern but needs\n  one more pass (rename slug, fix refs, tighten scope). Name the edit needed.\n\n### Recommended review order\n\nEnd the report with one paragraph on the order you suggest the user review the\nslugs in. Highest-leverage first. Call out any blocking dependencies between\nslugs (e.g. \"review <A> before <B> because they might merge\").\n\n### Standard skill file shape\n\nEvery promoted skill follows the standard format with GAD-specific metadata:\n\n```\n---\nname: <kebab-name>\ndescription: >-\n  Verb-led 1–3 sentence description with trigger phrases (\"when user asks X\", \"use when Y\").\nsource_phase: \"<N>\"              # optional, for evolved skills\nsource_evolution: <id>           # optional, for evolved skills\nparent_skill: <name>             # optional, if superseding/extending another skill\nstatus: proto | promoted         # proto while in .planning/proto-skills/, omit when promoted\n---\n\n# <skill title>\n\n## When to use\n<triggers, concrete phrases>\n\n## Steps\n<numbered, actionable>\n\n## Failure modes\n<concrete pitfalls>\n\n## References\n<file:line pointers to real repo paths. Freeform — skills may have a references/\ndirectory with extracted doc/example files if the body needs more space.>\n```\n\nThe `references/` subdirectory under a skill is **freeform but encouraged** —\nuse it for canonical snippets, design docs, comparison tables, or anything that\nwould bloat SKILL.md past ~200 lines. The validator counts `references/` files\nagainst file-ref totals.\n\n## Failure modes\n\n- **Pending proto-skills blocking evolve:** intentional. If you really need to\n  start fresh, manually clear `.planning/proto-skills/*` and accept that work\n  is lost. There's no `--force` flag because forcing this defeats the gate.\n- **No high-pressure phases found:** valid outcome. Print \"no proto-skills\n  this evolution\" and don't create any files. The evolution marker still\n  drops in `.evolutions/` so we have a record that we looked.\n- **create-proto-skill produces a sparse SKILL.md:** read CANDIDATE.md, see if it\n  was sparse. The CANDIDATE.md should always include the full task list,\n  decisions, file refs, and git history. If those are missing, fix the\n  CANDIDATE.md generation in step 4.\n\n## Reference\n\n- `create-proto-skill` — the drafter this skill invokes per candidate\n- `gad-evolution-validator` — the advisory checker\n- `compute-self-eval.mjs` — selection pressure source\n- `evals/FINDINGS-2026-04-13-evolution-loop-experiment.md` — why the curator\n  was dropped\n- Roadmap phase 42 — the design context\n\n\n"
+    "bodyHtml": "<h1>gad-evolution-evolve</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/evolution-evolve.md\">workflows/evolution-evolve.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad-evolution-evolve\n\n**Workflow:** [workflows/evolution-evolve.md](../../workflows/evolution-evolve.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-evolution-images",
@@ -710,8 +725,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-evolution-images/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad-evolution-images</h1>\n<p>Use this skill for the skill-image evolution loop:</p>\n<ol>\n<li>Inventory coverage:<ul>\n<li><code>gad evolution images status</code></li>\n<li>Optional JSON output for tooling: <code>gad evolution images status --json</code></li>\n</ul>\n</li>\n<li>Build or edit a structured prompt list (JSON or JSONL):<ul>\n<li>Each item: <code>id</code>, <code>prompt</code>, <code>targetImagePath</code> (or <code>imagePath</code>)</li>\n</ul>\n</li>\n<li>Generate images only when explicitly requested:<ul>\n<li><code>gad evolution images generate --input &lt;file.json&gt;</code></li>\n<li>or inventory-driven: <code>gad evolution images generate --scope official,proto</code></li>\n</ul>\n</li>\n</ol>\n<h2>Safety and defaults</h2>\n<ul>\n<li>Do not generate images unless explicitly asked.</li>\n<li>If generating, require <code>OPENAI_API_KEY</code>.</li>\n<li>If key is missing, instruct user to set <code>.env</code> from <code>.env.example</code>.</li>\n<li>Prefer <code>--missing-only</code> inventory runs first, then targeted regeneration with\n<code>--overwrite</code> only when needed.</li>\n</ul>\n<h2>References</h2>\n<ul>\n<li><code>bin/gad.cjs</code> (<code>evolution images status|generate</code>)</li>\n<li><code>.env.example</code></li>\n</ul>\n",
-    "bodyRaw": "\n# gad-evolution-images\n\nUse this skill for the skill-image evolution loop:\n\n1. Inventory coverage:\n   - `gad evolution images status`\n   - Optional JSON output for tooling: `gad evolution images status --json`\n2. Build or edit a structured prompt list (JSON or JSONL):\n   - Each item: `id`, `prompt`, `targetImagePath` (or `imagePath`)\n3. Generate images only when explicitly requested:\n   - `gad evolution images generate --input <file.json>`\n   - or inventory-driven: `gad evolution images generate --scope official,proto`\n\n## Safety and defaults\n\n- Do not generate images unless explicitly asked.\n- If generating, require `OPENAI_API_KEY`.\n- If key is missing, instruct user to set `.env` from `.env.example`.\n- Prefer `--missing-only` inventory runs first, then targeted regeneration with\n  `--overwrite` only when needed.\n\n## References\n\n- `bin/gad.cjs` (`evolution images status|generate`)\n- `.env.example`\n"
+    "bodyHtml": "<h1>gad-evolution-images</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/evolution-images.md\">workflows/evolution-images.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad-evolution-images\n\n**Workflow:** [workflows/evolution-images.md](../../workflows/evolution-images.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-evolution-validator",
@@ -725,8 +740,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-evolution-validator/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad-evolution-validator</h1>\n<p>Wraps the <code>gad evolution validate</code> CLI command, which reads a proto-skill\nSKILL.md and writes a sibling VALIDATION.md flagging things the skill cites\nthat don&#39;t actually exist in the repo today.</p>\n<h2>Mental model</h2>\n<p>A proto-skill is a draft. The drafting agent (create-proto-skill) reads raw\ncandidate data and writes a SKILL.md based on what it understood. The\nvalidator runs after drafting and answers a single question:</p>\n<blockquote>\n<p>Does this skill reference things that actually exist in the repo right now?</p>\n</blockquote>\n<p>It&#39;s a sanity check, not a rule check. The skill might prescribe a structure\nthe repo hasn&#39;t adopted yet — that&#39;s fine for forward-looking skills, but the\nhuman reviewer should see the discrepancy before promoting.</p>\n<h2>When to use this</h2>\n<ul>\n<li><code>gad-evolution-evolve</code> calls this immediately after <code>create-proto-skill</code> writes\na new proto-skill.</li>\n<li>A user asks &quot;validate proto-skill X&quot; or &quot;check if this skill is consistent\nwith the repo.&quot;</li>\n<li>You want to re-validate after editing a proto-skill by hand.</li>\n</ul>\n<h2>What the validator checks (v1)</h2>\n<table>\n<thead>\n<tr>\n<th>Check</th>\n<th>How</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>File references</td>\n<td>Greps the SKILL.md for backticked / quoted paths containing slashes + extensions, then checks each against the repo root and <code>vendor/get-anything-done/</code>.</td>\n</tr>\n<tr>\n<td>CLI commands</td>\n<td>Greps for <code>gad &lt;subcommand&gt;</code> patterns, then checks each against <code>gad --help</code>&#39;s top-level command list.</td>\n</tr>\n</tbody></table>\n<p>What it does NOT check (yet):</p>\n<ul>\n<li>JSON shape consistency (e.g. does the skill&#39;s example <code>gad.json</code> match real ones?)</li>\n<li>Naming consistency with existing conventions</li>\n<li>Whether the skill&#39;s recipe actually runs end-to-end</li>\n</ul>\n<p>These are deferred until needed.</p>\n<h2>Step 1 — Run the validator</h2>\n<pre><code class=\"language-sh\">gad evolution validate &lt;slug&gt;\n</code></pre>\n<p>Where <code>&lt;slug&gt;</code> is the directory name under <code>.planning/proto-skills/</code>. The\ncommand writes <code>.planning/proto-skills/&lt;slug&gt;/VALIDATION.md</code> and prints a\nsummary line with pass counts.</p>\n<h2>Step 2 — Read the output</h2>\n<p>Open <code>.planning/proto-skills/&lt;slug&gt;/VALIDATION.md</code>. It has three sections:</p>\n<ol>\n<li><strong>Summary</strong> — pass/fail counts per check</li>\n<li><strong>File references</strong> — table of every cited path with ✓ or ✗</li>\n<li><strong>CLI commands</strong> — table of every cited <code>gad &lt;cmd&gt;</code> with ✓ or ✗</li>\n</ol>\n<p>If everything passes, the proto-skill is internally consistent with the repo\nand is ready for human review. If items fail, investigate before recommending\npromotion.</p>\n<h2>Step 3 — Decide what to do with failures</h2>\n<p>The validator is advisory, so failures don&#39;t block promotion. But they&#39;re a\nsignal to investigate:</p>\n<ul>\n<li><strong>Forward-looking reference</strong> (e.g. the skill cites a file that doesn&#39;t\nexist yet because the skill is documenting something still being built):\nfine, leave it. The human reviewer should know.</li>\n<li><strong>Wrong path / typo</strong>: edit the SKILL.md by hand to fix the path, then\nre-run validate.</li>\n<li><strong>Invented CLI command</strong>: edit the SKILL.md to drop the bogus command, or\nif the command genuinely should exist, log a follow-up to add it.</li>\n<li><strong>Dozens of failures</strong>: the proto-skill is likely hallucinating. Discard\nwith <code>gad evolution discard &lt;slug&gt;</code> and let the next evolution try again\nwith a richer CANDIDATE.md.</li>\n</ul>\n<h2>Failure modes</h2>\n<ul>\n<li><p><strong>Validator finds nothing because the SKILL.md uses prose instead of\nbackticked references.</strong> If a path is mentioned only in narrative form\n(e.g. &quot;the file at vendor/get-anything-done/lib/trace-schema.cjs&quot;), the\nv1 regex won&#39;t pick it up. This is fine — the validator catches\n<em>backticked</em> references, which are the load-bearing ones the agent\nintends as commands. Prose references aren&#39;t actionable anyway.</p>\n</li>\n<li><p><strong>CLI command extraction misses subcommands.</strong> The validator only checks\nthe top-level command (e.g. <code>gad evolution</code>, not <code>gad evolution validate</code>).\nFor now this is acceptable — if the top-level command exists, the\nsubcommand is usually findable by drilling in.</p>\n</li>\n</ul>\n<h2>Reference</h2>\n<ul>\n<li><code>lib/evolution-validator.cjs</code> — the validator engine</li>\n<li><code>gad evolution validate &lt;slug&gt;</code> — the CLI entry point</li>\n<li><code>gad-evolution-evolve</code> — the orchestrator that calls this</li>\n<li><code>create-proto-skill</code> — the drafter whose output this validates</li>\n</ul>\n",
-    "bodyRaw": "\n# gad-evolution-validator\n\nWraps the `gad evolution validate` CLI command, which reads a proto-skill\nSKILL.md and writes a sibling VALIDATION.md flagging things the skill cites\nthat don't actually exist in the repo today.\n\n## Mental model\n\nA proto-skill is a draft. The drafting agent (create-proto-skill) reads raw\ncandidate data and writes a SKILL.md based on what it understood. The\nvalidator runs after drafting and answers a single question:\n\n> Does this skill reference things that actually exist in the repo right now?\n\nIt's a sanity check, not a rule check. The skill might prescribe a structure\nthe repo hasn't adopted yet — that's fine for forward-looking skills, but the\nhuman reviewer should see the discrepancy before promoting.\n\n## When to use this\n\n- `gad-evolution-evolve` calls this immediately after `create-proto-skill` writes\n  a new proto-skill.\n- A user asks \"validate proto-skill X\" or \"check if this skill is consistent\n  with the repo.\"\n- You want to re-validate after editing a proto-skill by hand.\n\n## What the validator checks (v1)\n\n| Check | How |\n|---|---|\n| File references | Greps the SKILL.md for backticked / quoted paths containing slashes + extensions, then checks each against the repo root and `vendor/get-anything-done/`. |\n| CLI commands | Greps for `gad <subcommand>` patterns, then checks each against `gad --help`'s top-level command list. |\n\nWhat it does NOT check (yet):\n- JSON shape consistency (e.g. does the skill's example `gad.json` match real ones?)\n- Naming consistency with existing conventions\n- Whether the skill's recipe actually runs end-to-end\n\nThese are deferred until needed.\n\n## Step 1 — Run the validator\n\n```sh\ngad evolution validate <slug>\n```\n\nWhere `<slug>` is the directory name under `.planning/proto-skills/`. The\ncommand writes `.planning/proto-skills/<slug>/VALIDATION.md` and prints a\nsummary line with pass counts.\n\n## Step 2 — Read the output\n\nOpen `.planning/proto-skills/<slug>/VALIDATION.md`. It has three sections:\n\n1. **Summary** — pass/fail counts per check\n2. **File references** — table of every cited path with ✓ or ✗\n3. **CLI commands** — table of every cited `gad <cmd>` with ✓ or ✗\n\nIf everything passes, the proto-skill is internally consistent with the repo\nand is ready for human review. If items fail, investigate before recommending\npromotion.\n\n## Step 3 — Decide what to do with failures\n\nThe validator is advisory, so failures don't block promotion. But they're a\nsignal to investigate:\n\n- **Forward-looking reference** (e.g. the skill cites a file that doesn't\n  exist yet because the skill is documenting something still being built):\n  fine, leave it. The human reviewer should know.\n- **Wrong path / typo**: edit the SKILL.md by hand to fix the path, then\n  re-run validate.\n- **Invented CLI command**: edit the SKILL.md to drop the bogus command, or\n  if the command genuinely should exist, log a follow-up to add it.\n- **Dozens of failures**: the proto-skill is likely hallucinating. Discard\n  with `gad evolution discard <slug>` and let the next evolution try again\n  with a richer CANDIDATE.md.\n\n## Failure modes\n\n- **Validator finds nothing because the SKILL.md uses prose instead of\n  backticked references.** If a path is mentioned only in narrative form\n  (e.g. \"the file at vendor/get-anything-done/lib/trace-schema.cjs\"), the\n  v1 regex won't pick it up. This is fine — the validator catches\n  *backticked* references, which are the load-bearing ones the agent\n  intends as commands. Prose references aren't actionable anyway.\n\n- **CLI command extraction misses subcommands.** The validator only checks\n  the top-level command (e.g. `gad evolution`, not `gad evolution validate`).\n  For now this is acceptable — if the top-level command exists, the\n  subcommand is usually findable by drilling in.\n\n## Reference\n\n- `lib/evolution-validator.cjs` — the validator engine\n- `gad evolution validate <slug>` — the CLI entry point\n- `gad-evolution-evolve` — the orchestrator that calls this\n- `create-proto-skill` — the drafter whose output this validates\n"
+    "bodyHtml": "<h1>gad-evolution-validator</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/evolution-validator.md\">workflows/evolution-validator.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad-evolution-validator\n\n**Workflow:** [workflows/evolution-validator.md](../../workflows/evolution-validator.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-execute-phase",
@@ -845,8 +860,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-manuscript/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nApply the GAD planning loop to fiction and creative writing projects. Manages beat sheets, chapter drafts, canon locks, forward questions, and narrative state using the standard 5-doc planning structure with fiction-specific vocabulary.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Check project type</strong> — look for fiction indicators:</p>\n<ul>\n<li>Beat sheets, chapter IDs in task registry</li>\n<li>MT-* or ML-* decision IDs (manuscript/canon locks)</li>\n<li>books/<slug>/ directory structure</li>\n<li>AGENTS.md with &quot;fiction&quot; or &quot;manuscript&quot; language</li>\n</ul>\n</li>\n<li><p><strong>Follow the manuscript loop</strong> as defined in the skill.</p>\n</li>\n</ol>\n</process>\n\n<skill>\nRead and follow the companion `manuscript` skill if it is installed.\n</skill>\n",
-    "bodyRaw": "\n<objective>\nApply the GAD planning loop to fiction and creative writing projects. Manages beat sheets, chapter drafts, canon locks, forward questions, and narrative state using the standard 5-doc planning structure with fiction-specific vocabulary.\n</objective>\n\n<process>\n\n1. **Check project type** — look for fiction indicators:\n   - Beat sheets, chapter IDs in task registry\n   - MT-* or ML-* decision IDs (manuscript/canon locks)\n   - books/<slug>/ directory structure\n   - AGENTS.md with \"fiction\" or \"manuscript\" language\n\n2. **Follow the manuscript loop** as defined in the skill.\n\n</process>\n\n<skill>\nRead and follow the companion `manuscript` skill if it is installed.\n</skill>\n"
+    "bodyHtml": "<h1>gad:manuscript</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/manuscript.md\">workflows/manuscript.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:manuscript\n\n**Workflow:** [workflows/manuscript.md](../../workflows/manuscript.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-map-codebase",
@@ -875,8 +890,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-migrate-schema/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nDetect and convert repo-planner XML planning files (`STATE.xml`, `ROADMAP.xml`,\n`TASK-REGISTRY.xml`, `REQUIREMENTS.xml`) to GAD Markdown equivalents. Original XML\nfiles are archived to `<planningDir>/archive/xml/` — never deleted.\n</objective>\n\n<process>\n\n<p>Parse <code>--path &lt;dir&gt;</code> from <code>$ARGUMENTS</code> (default: <code>.planning/</code>).</p>\n<ol>\n<li><p><strong>Detect XML files:</strong></p>\n<pre><code class=\"language-bash\">ls &quot;$PLANNING_DIR&quot;/*.xml 2&gt;/dev/null\n</code></pre>\n<p>If none found, report: <code>No XML files found in &lt;path&gt; — nothing to migrate.</code></p>\n</li>\n<li><p><strong>Show migration plan:</strong></p>\n<pre><code>Migration plan for .planning/\n\nSTATE.xml        → STATE.md\nROADMAP.xml      → ROADMAP.md\nTASK-REGISTRY.xml → (merged into STATE.md performance metrics)\nREQUIREMENTS.xml  → REQUIREMENTS.md\n\nArchive: .planning/archive/xml/\n</code></pre>\n<p>Confirm before proceeding.</p>\n</li>\n<li><p><strong>Migrate STATE.xml → STATE.md:</strong>\nRead the XML, extract key fields:</p>\n<ul>\n<li><code>&lt;current-phase&gt;</code> → <code>## Current Position</code></li>\n<li><code>&lt;milestone&gt;</code> → milestone header</li>\n<li><code>&lt;completed-phases&gt;</code> → completed phase list</li>\n<li><code>&lt;active-issues&gt;</code> → open issues section</li>\n<li><code>&lt;performance-metrics&gt;</code> → metrics table</li>\n</ul>\n<p>Write <code>STATE.md</code> following the GAD state template format.</p>\n</li>\n<li><p><strong>Migrate ROADMAP.xml → ROADMAP.md:</strong>\nRead <code>&lt;phase id&gt;</code>, <code>&lt;title&gt;</code>, <code>&lt;status&gt;</code>, <code>&lt;description&gt;</code> elements.\nWrite <code>ROADMAP.md</code> as a Markdown checklist:</p>\n<pre><code class=\"language-markdown\"># Roadmap\n\n## Milestone N: &lt;name&gt;\n\n- [x] **Phase 1: &lt;title&gt;** — &lt;description&gt;\n- [ ] **Phase 2: &lt;title&gt;** — &lt;description&gt;\n</code></pre>\n</li>\n<li><p><strong>Migrate TASK-REGISTRY.xml → STATE.md metrics section:</strong>\nMerge task rows into the <code>## Performance Metrics</code> section of STATE.md.</p>\n</li>\n<li><p><strong>Migrate REQUIREMENTS.xml → REQUIREMENTS.md:</strong>\nConvert requirement nodes to Markdown sections.</p>\n</li>\n<li><p><strong>Archive originals:</strong></p>\n<pre><code class=\"language-bash\">mkdir -p &quot;$PLANNING_DIR/archive/xml&quot;\nmv &quot;$PLANNING_DIR&quot;/*.xml &quot;$PLANNING_DIR/archive/xml/&quot;\n</code></pre>\n</li>\n<li><p><strong>Summary:</strong></p>\n<pre><code>✓ Migration complete — .planning/\n\nCreated:  STATE.md, ROADMAP.md, REQUIREMENTS.md\nArchived: STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, REQUIREMENTS.xml\n          → .planning/archive/xml/\n\nReview the migrated files before committing.\n</code></pre>\n</li>\n</ol>\n</process>\n\n<rules>\n- Never delete XML files — always archive\n- If a target .md file already exists, create <name>-migrated.md instead and warn\n- Log every field that couldn't be mapped so nothing is silently lost\n- Validate that ROADMAP.md has the same number of phases as ROADMAP.xml\n</rules>\n",
-    "bodyRaw": "\n<objective>\nDetect and convert repo-planner XML planning files (`STATE.xml`, `ROADMAP.xml`,\n`TASK-REGISTRY.xml`, `REQUIREMENTS.xml`) to GAD Markdown equivalents. Original XML\nfiles are archived to `<planningDir>/archive/xml/` — never deleted.\n</objective>\n\n<process>\n\nParse `--path <dir>` from `$ARGUMENTS` (default: `.planning/`).\n\n1. **Detect XML files:**\n   ```bash\n   ls \"$PLANNING_DIR\"/*.xml 2>/dev/null\n   ```\n   If none found, report: `No XML files found in <path> — nothing to migrate.`\n\n2. **Show migration plan:**\n   ```\n   Migration plan for .planning/\n\n   STATE.xml        → STATE.md\n   ROADMAP.xml      → ROADMAP.md\n   TASK-REGISTRY.xml → (merged into STATE.md performance metrics)\n   REQUIREMENTS.xml  → REQUIREMENTS.md\n\n   Archive: .planning/archive/xml/\n   ```\n   Confirm before proceeding.\n\n3. **Migrate STATE.xml → STATE.md:**\n   Read the XML, extract key fields:\n   - `<current-phase>` → `## Current Position`\n   - `<milestone>` → milestone header\n   - `<completed-phases>` → completed phase list\n   - `<active-issues>` → open issues section\n   - `<performance-metrics>` → metrics table\n\n   Write `STATE.md` following the GAD state template format.\n\n4. **Migrate ROADMAP.xml → ROADMAP.md:**\n   Read `<phase id>`, `<title>`, `<status>`, `<description>` elements.\n   Write `ROADMAP.md` as a Markdown checklist:\n   ```markdown\n   # Roadmap\n\n   ## Milestone N: <name>\n\n   - [x] **Phase 1: <title>** — <description>\n   - [ ] **Phase 2: <title>** — <description>\n   ```\n\n5. **Migrate TASK-REGISTRY.xml → STATE.md metrics section:**\n   Merge task rows into the `## Performance Metrics` section of STATE.md.\n\n6. **Migrate REQUIREMENTS.xml → REQUIREMENTS.md:**\n   Convert requirement nodes to Markdown sections.\n\n7. **Archive originals:**\n   ```bash\n   mkdir -p \"$PLANNING_DIR/archive/xml\"\n   mv \"$PLANNING_DIR\"/*.xml \"$PLANNING_DIR/archive/xml/\"\n   ```\n\n8. **Summary:**\n   ```\n   ✓ Migration complete — .planning/\n\n   Created:  STATE.md, ROADMAP.md, REQUIREMENTS.md\n   Archived: STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, REQUIREMENTS.xml\n             → .planning/archive/xml/\n\n   Review the migrated files before committing.\n   ```\n\n</process>\n\n<rules>\n- Never delete XML files — always archive\n- If a target .md file already exists, create <name>-migrated.md instead and warn\n- Log every field that couldn't be mapped so nothing is silently lost\n- Validate that ROADMAP.md has the same number of phases as ROADMAP.xml\n</rules>\n"
+    "bodyHtml": "<h1>gad:migrate-schema</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/migrate-schema.md\">workflows/migrate-schema.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:migrate-schema\n\n**Workflow:** [workflows/migrate-schema.md](../../workflows/migrate-schema.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-milestone",
@@ -890,8 +905,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-milestone/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>Milestone Lifecycle</h1>\n<p>Manages milestone boundaries — the transitions between &quot;shipping v1&quot; and &quot;starting v2&quot;. A milestone is a named set of phases that ship together. Closing one cleanly and starting the next is what keeps planning from accumulating drift.</p>\n<h2>Detecting mode</h2>\n<p>Three modes based on context:</p>\n<ul>\n<li><strong><code>audit</code></strong> — all or most phases are done; user wants to verify before closing</li>\n<li><strong><code>close</code></strong> — audit passed; archive the milestone and tag the release  </li>\n<li><strong><code>new</code></strong> — starting fresh work after a closed milestone (or for a new product direction)</li>\n</ul>\n<p>Read STATE.md and ROADMAP.md first to determine which mode applies.</p>\n<hr>\n<h2>Mode: Audit (pre-close integrity check)</h2>\n<p>Before archiving a milestone, verify it actually delivered what it promised.</p>\n<h3>Step 1: Check phase completion</h3>\n<p>Read ROADMAP.md. For each phase:</p>\n<table>\n<thead>\n<tr>\n<th>Phase</th>\n<th>Status</th>\n<th>DoD verified?</th>\n<th>SUMMARY.md exists?</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>app-auth-01</code></td>\n<td>done</td>\n<td>✓</td>\n<td>✓</td>\n</tr>\n<tr>\n<td><code>app-data-01</code></td>\n<td>done</td>\n<td>✓</td>\n<td>✓</td>\n</tr>\n<tr>\n<td><code>app-ui-02</code></td>\n<td>done</td>\n<td>✗ missing</td>\n<td>✗ missing</td>\n</tr>\n</tbody></table>\n<p>Flag any phase that is <code>done</code> without a verified DoD or SUMMARY.md — these are soft closes.</p>\n<h3>Step 2: Check requirements coverage</h3>\n<p>Read REQUIREMENTS.md. For each v1 requirement:</p>\n<ul>\n<li>Is it marked as delivered? (checkbox or status)</li>\n<li>Is there a phase in ROADMAP.md that covers it?</li>\n<li>Does a SUMMARY.md or VERIFICATION result confirm it shipped?</li>\n</ul>\n<pre><code>Requirements audit:\n  AUTH-01 ✓ — delivered in app-auth-01\n  AUTH-02 ✓ — delivered in app-auth-01\n  DATA-03 ✗ — no phase covers this requirement\n  UI-04 ⚠ — phase done but no verification\n</code></pre>\n<h3>Step 3: Check for tech debt and open questions</h3>\n<p>Scan ERRORS-AND-ATTEMPTS.md and DECISIONS.md for anything flagged as &quot;revisit later&quot; or unresolved. List them — the user decides whether they block the milestone close or carry forward.</p>\n<h3>Step 4: Audit result</h3>\n<p><strong>If all requirements covered, all phases verified:</strong></p>\n<pre><code>Milestone audit: PASSED\n\nAll N phases complete, all requirements covered.\nReady to close. Run gad:milestone close when ready.\n</code></pre>\n<p><strong>If gaps found:</strong></p>\n<pre><code>Milestone audit: GAPS FOUND\n\nMissing coverage:\n  - DATA-03: no phase covers this requirement\n  - app-ui-02: phase done but DoD not verified\n\nOptions:\n  1. Close gaps first — add tasks to cover these before closing\n  2. Defer to next milestone — explicitly mark these as v2\n  3. Close anyway — acknowledge the gaps and move on\n</code></pre>\n<hr>\n<h2>Mode: Close (archive and tag)</h2>\n<p>After audit passes (or gaps are explicitly deferred):</p>\n<h3>Step 1: Update REQUIREMENTS.md</h3>\n<p>Move any explicitly deferred requirements to a &quot;v2&quot; section:</p>\n<pre><code class=\"language-markdown\">## Deferred to v2\n\n| Id | Requirement | Reason |\n|----|-------------|--------|\n| `DATA-03` | &lt;requirement&gt; | deprioritized post-audit |\n</code></pre>\n<h3>Step 2: Archive phase directories</h3>\n<p>Move completed phase dirs to an archive:</p>\n<pre><code class=\"language-bash\">mkdir -p .planning/milestones/v1-phases/\nmv .planning/phases/* .planning/milestones/v1-phases/\n</code></pre>\n<h3>Step 3: Snapshot the milestone in ROADMAP.md</h3>\n<p>Collapse the milestone phases into a single summary line:</p>\n<pre><code class=\"language-markdown\">## v1.0 (archived — &lt;date&gt;)\n\n&lt;N&gt; phases shipped. Requirements: AUTH-01 through DATA-03.\nSee `.planning/milestones/v1-phases/` for phase history.\n</code></pre>\n<h3>Step 4: Tag the release</h3>\n<pre><code class=\"language-bash\">git tag -a v1.0 -m &quot;v1.0 — &lt;milestone summary&gt;&quot;\ngit push --tags\n</code></pre>\n<h3>Step 5: Reset STATE.md for the next cycle</h3>\n<pre><code class=\"language-markdown\"># State\n\n## Registry\n\n| Field | Value |\n|-------|-------|\n| `status` | `planning` |\n| `updated` | &lt;date&gt; |\n\n## Current cycle\n\n| Field | Value |\n|-------|-------|\n| `phase` | — |\n| `focus` | v1.0 closed. Planning v2 — run gad:milestone new to start. |\n\n## Next queue\n\n| Priority | Action | Type |\n|----------|--------|------|\n| `1` | run gad:milestone new to kick off v2 | `planning` |\n</code></pre>\n<pre><code>Milestone v1.0 closed.\n\nTagged: v1.0\nArchived: .planning/milestones/v1-phases/\nState: reset for v2 planning\n\nNext: gad:milestone new OR rp-new-project --milestone to start the next cycle.\n</code></pre>\n<hr>\n<h2>Mode: New (start next milestone)</h2>\n<p>Starting a new milestone for an existing project — new goals, continuing phase numbering.</p>\n<h3>Step 1: Review what shipped</h3>\n<p>Read the archived milestone summary and REQUIREMENTS.md v2 section. Understand what carries forward.</p>\n<h3>Step 2: Gather new goals</h3>\n<p>Ask (conversationally):</p>\n<ol>\n<li><strong>What&#39;s the focus of this milestone?</strong> (one sentence)</li>\n<li><strong>What did v1 ship that we&#39;re building on?</strong></li>\n<li><strong>What new capabilities are we targeting?</strong></li>\n<li><strong>What&#39;s explicitly out of scope for this milestone?</strong></li>\n<li><strong>Any constraints?</strong> (timeline, tech debt to address, dependencies)</li>\n</ol>\n<h3>Step 3: Update PROJECT.md</h3>\n<p>Add a new milestone section:</p>\n<pre><code class=\"language-markdown\">## Milestone: v2.0\n\n**Focus:** &lt;one sentence&gt;\n**Building on:** v1 ships [list key v1 capabilities]\n**New targets:** [list new goals]\n**Out of scope:** [list explicit exclusions]\n**Constraints:** [any constraints]\n\n---\n*Started: &lt;date&gt;*\n</code></pre>\n<h3>Step 4: Write new requirements</h3>\n<p>Append to REQUIREMENTS.md (don&#39;t delete v2 deferred items — promote or re-scope them):</p>\n<pre><code class=\"language-markdown\">## v2 Requirements\n\n### Active\n\n| Id | Requirement | Status |\n|----|-------------|--------|\n| `V2-AUTH-01` | &lt;requirement&gt; | `planned` |\n\n### Carried forward from v1\n\n| Id | Requirement | Original | Status |\n|----|-------------|----------|--------|\n| `DATA-03` | &lt;requirement&gt; | v1 deferred | `active` |\n</code></pre>\n<h3>Step 5: Create new roadmap phases</h3>\n<p>Using the same approach as <code>rp-plan-phase</code> — derive phases from new requirements, map every requirement to exactly one phase. Phase IDs continue from where v1 left off (don&#39;t restart numbering).</p>\n<p>Update ROADMAP.md with the new phases.</p>\n<h3>Step 6: Update STATE.md</h3>\n<pre><code class=\"language-markdown\">## Current cycle\n\n| Field | Value |\n|-------|-------|\n| `phase` | v2.0 kickoff — phases defined, planning next |\n| `focus` | run rp-plan-phase for the first v2 phase |\n</code></pre>\n<pre><code>Milestone v2.0 started.\n\nRequirements: N new + M carried forward\nPhases: N defined in ROADMAP.md\n\nNext: rp-plan-phase for phase &lt;first-v2-phase-id&gt;\n</code></pre>\n",
-    "bodyRaw": "\n# Milestone Lifecycle\n\nManages milestone boundaries — the transitions between \"shipping v1\" and \"starting v2\". A milestone is a named set of phases that ship together. Closing one cleanly and starting the next is what keeps planning from accumulating drift.\n\n## Detecting mode\n\nThree modes based on context:\n\n- **`audit`** — all or most phases are done; user wants to verify before closing\n- **`close`** — audit passed; archive the milestone and tag the release  \n- **`new`** — starting fresh work after a closed milestone (or for a new product direction)\n\nRead STATE.md and ROADMAP.md first to determine which mode applies.\n\n---\n\n## Mode: Audit (pre-close integrity check)\n\nBefore archiving a milestone, verify it actually delivered what it promised.\n\n### Step 1: Check phase completion\n\nRead ROADMAP.md. For each phase:\n\n| Phase | Status | DoD verified? | SUMMARY.md exists? |\n|-------|--------|--------------|-------------------|\n| `app-auth-01` | done | ✓ | ✓ |\n| `app-data-01` | done | ✓ | ✓ |\n| `app-ui-02` | done | ✗ missing | ✗ missing |\n\nFlag any phase that is `done` without a verified DoD or SUMMARY.md — these are soft closes.\n\n### Step 2: Check requirements coverage\n\nRead REQUIREMENTS.md. For each v1 requirement:\n- Is it marked as delivered? (checkbox or status)\n- Is there a phase in ROADMAP.md that covers it?\n- Does a SUMMARY.md or VERIFICATION result confirm it shipped?\n\n```\nRequirements audit:\n  AUTH-01 ✓ — delivered in app-auth-01\n  AUTH-02 ✓ — delivered in app-auth-01\n  DATA-03 ✗ — no phase covers this requirement\n  UI-04 ⚠ — phase done but no verification\n```\n\n### Step 3: Check for tech debt and open questions\n\nScan ERRORS-AND-ATTEMPTS.md and DECISIONS.md for anything flagged as \"revisit later\" or unresolved. List them — the user decides whether they block the milestone close or carry forward.\n\n### Step 4: Audit result\n\n**If all requirements covered, all phases verified:**\n```\nMilestone audit: PASSED\n\nAll N phases complete, all requirements covered.\nReady to close. Run gad:milestone close when ready.\n```\n\n**If gaps found:**\n```\nMilestone audit: GAPS FOUND\n\nMissing coverage:\n  - DATA-03: no phase covers this requirement\n  - app-ui-02: phase done but DoD not verified\n\nOptions:\n  1. Close gaps first — add tasks to cover these before closing\n  2. Defer to next milestone — explicitly mark these as v2\n  3. Close anyway — acknowledge the gaps and move on\n```\n\n---\n\n## Mode: Close (archive and tag)\n\nAfter audit passes (or gaps are explicitly deferred):\n\n### Step 1: Update REQUIREMENTS.md\n\nMove any explicitly deferred requirements to a \"v2\" section:\n\n```markdown\n## Deferred to v2\n\n| Id | Requirement | Reason |\n|----|-------------|--------|\n| `DATA-03` | <requirement> | deprioritized post-audit |\n```\n\n### Step 2: Archive phase directories\n\nMove completed phase dirs to an archive:\n\n```bash\nmkdir -p .planning/milestones/v1-phases/\nmv .planning/phases/* .planning/milestones/v1-phases/\n```\n\n### Step 3: Snapshot the milestone in ROADMAP.md\n\nCollapse the milestone phases into a single summary line:\n\n```markdown\n## v1.0 (archived — <date>)\n\n<N> phases shipped. Requirements: AUTH-01 through DATA-03.\nSee `.planning/milestones/v1-phases/` for phase history.\n```\n\n### Step 4: Tag the release\n\n```bash\ngit tag -a v1.0 -m \"v1.0 — <milestone summary>\"\ngit push --tags\n```\n\n### Step 5: Reset STATE.md for the next cycle\n\n```markdown\n# State\n\n## Registry\n\n| Field | Value |\n|-------|-------|\n| `status` | `planning` |\n| `updated` | <date> |\n\n## Current cycle\n\n| Field | Value |\n|-------|-------|\n| `phase` | — |\n| `focus` | v1.0 closed. Planning v2 — run gad:milestone new to start. |\n\n## Next queue\n\n| Priority | Action | Type |\n|----------|--------|------|\n| `1` | run gad:milestone new to kick off v2 | `planning` |\n```\n\n```\nMilestone v1.0 closed.\n\nTagged: v1.0\nArchived: .planning/milestones/v1-phases/\nState: reset for v2 planning\n\nNext: gad:milestone new OR rp-new-project --milestone to start the next cycle.\n```\n\n---\n\n## Mode: New (start next milestone)\n\nStarting a new milestone for an existing project — new goals, continuing phase numbering.\n\n### Step 1: Review what shipped\n\nRead the archived milestone summary and REQUIREMENTS.md v2 section. Understand what carries forward.\n\n### Step 2: Gather new goals\n\nAsk (conversationally):\n\n1. **What's the focus of this milestone?** (one sentence)\n2. **What did v1 ship that we're building on?**\n3. **What new capabilities are we targeting?**\n4. **What's explicitly out of scope for this milestone?**\n5. **Any constraints?** (timeline, tech debt to address, dependencies)\n\n### Step 3: Update PROJECT.md\n\nAdd a new milestone section:\n\n```markdown\n## Milestone: v2.0\n\n**Focus:** <one sentence>\n**Building on:** v1 ships [list key v1 capabilities]\n**New targets:** [list new goals]\n**Out of scope:** [list explicit exclusions]\n**Constraints:** [any constraints]\n\n---\n*Started: <date>*\n```\n\n### Step 4: Write new requirements\n\nAppend to REQUIREMENTS.md (don't delete v2 deferred items — promote or re-scope them):\n\n```markdown\n## v2 Requirements\n\n### Active\n\n| Id | Requirement | Status |\n|----|-------------|--------|\n| `V2-AUTH-01` | <requirement> | `planned` |\n\n### Carried forward from v1\n\n| Id | Requirement | Original | Status |\n|----|-------------|----------|--------|\n| `DATA-03` | <requirement> | v1 deferred | `active` |\n```\n\n### Step 5: Create new roadmap phases\n\nUsing the same approach as `rp-plan-phase` — derive phases from new requirements, map every requirement to exactly one phase. Phase IDs continue from where v1 left off (don't restart numbering).\n\nUpdate ROADMAP.md with the new phases.\n\n### Step 6: Update STATE.md\n\n```markdown\n## Current cycle\n\n| Field | Value |\n|-------|-------|\n| `phase` | v2.0 kickoff — phases defined, planning next |\n| `focus` | run rp-plan-phase for the first v2 phase |\n```\n\n```\nMilestone v2.0 started.\n\nRequirements: N new + M carried forward\nPhases: N defined in ROADMAP.md\n\nNext: rp-plan-phase for phase <first-v2-phase-id>\n```\n"
+    "bodyHtml": "<h1>gad:milestone</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/milestone.md\">workflows/milestone.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:milestone\n\n**Workflow:** [workflows/milestone.md](../../workflows/milestone.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-milestone-summary",
@@ -1044,6 +1059,21 @@ export const SKILLS: CatalogSkill[] = [
     "bodyRaw": "<objective>\nCheck project progress, summarize recent work and what's ahead, then intelligently route to the next action - either executing an existing plan or creating the next one.\n\nProvides situational awareness before continuing work.\n</objective>\n\n<execution_context>\n@workflows/progress.md\n</execution_context>\n\n<process>\nExecute the progress workflow from @workflows/progress.md end-to-end.\nPreserve all routing logic (Routes A through F) and edge case handling.\n</process>\n"
   },
   {
+    "id": "gad-proto-skill-battery",
+    "name": "gad:proto-skill-battery",
+    "description": ">-",
+    "imagePath": null,
+    "origin": "official",
+    "authoredBy": null,
+    "authoredOn": null,
+    "excludedFromDefaultInstall": false,
+    "frameworkSkill": false,
+    "file": "vendor/get-anything-done/skills/gad-proto-skill-battery/SKILL.md",
+    "source": "framework",
+    "bodyHtml": "<h1>gad:proto-skill-battery</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/proto-skill-battery.md\">workflows/proto-skill-battery.md</a></p>\n<p>Fire when:</p>\n<ul>\n<li><code>gad evolution evolve</code> completes and has newly-drafted or newly-promoted proto-skills</li>\n<li>operator says &quot;run the proto-skill battery&quot;, &quot;shed audit&quot;, &quot;test proto-skills&quot;</li>\n<li>periodic regression check (same cadence as evolution cycles — not on every commit)</li>\n</ul>\n<p>Run the workflow. All procedural detail, agent prompts, scoring rubric, and\nshed thresholds live in the workflow file per the canonical skill shape\n(references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n# gad:proto-skill-battery\n\n**Workflow:** [workflows/proto-skill-battery.md](../../workflows/proto-skill-battery.md)\n\nFire when:\n- `gad evolution evolve` completes and has newly-drafted or newly-promoted proto-skills\n- operator says \"run the proto-skill battery\", \"shed audit\", \"test proto-skills\"\n- periodic regression check (same cadence as evolution cycles — not on every commit)\n\nRun the workflow. All procedural detail, agent prompts, scoring rubric, and\nshed thresholds live in the workflow file per the canonical skill shape\n(references/skill-shape.md, decision gad-190).\n"
+  },
+  {
     "id": "gad-reapply-patches",
     "name": "gad:reapply-patches",
     "description": "Reapply local modifications after a GAD update",
@@ -1055,8 +1085,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-reapply-patches/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<purpose>\nAfter a GAD update wipes and reinstalls files, this command merges user's previously saved local modifications back into the new version. Uses three-way comparison (pristine baseline, user-modified backup, newly installed version) to reliably distinguish user customizations from version drift.\n\n<p><strong>Critical invariant:</strong> Every file in <code>gad-local-patches/</code> was backed up because the installer&#39;s hash comparison detected it was modified. The workflow must NEVER conclude &quot;no custom content&quot; for any backed-up file — that is a logical contradiction. When in doubt, classify as CONFLICT requiring user review, not SKIP.\n</purpose></p>\n<process>\n\n<h2>Step 1: Detect backed-up patches</h2>\n<p>Check for local patches directory:</p>\n<pre><code class=\"language-bash\"># Global install — detect runtime config directory\nif [ -d &quot;$HOME/.config/opencode/gad-local-patches&quot; ]; then\n  PATCHES_DIR=&quot;$HOME/.config/opencode/gad-local-patches&quot;\nelif [ -d &quot;$HOME/.opencode/gad-local-patches&quot; ]; then\n  PATCHES_DIR=&quot;$HOME/.opencode/gad-local-patches&quot;\nelif [ -d &quot;$HOME/.gemini/gad-local-patches&quot; ]; then\n  PATCHES_DIR=&quot;$HOME/.gemini/gad-local-patches&quot;\nelse\n  PATCHES_DIR=&quot;${GAD_PATCHES_DIR:-$HOME/.config/gad-local-patches}&quot;\nfi\n# Local install fallback — check all runtime directories\nif [ ! -d &quot;$PATCHES_DIR&quot; ]; then\n  for dir in .config/opencode .opencode .gemini .claude; do\n    if [ -d &quot;./$dir/gad-local-patches&quot; ]; then\n      PATCHES_DIR=&quot;./$dir/gad-local-patches&quot;\n      break\n    fi\n  done\nfi\n</code></pre>\n<p>Read <code>backup-meta.json</code> from the patches directory.</p>\n<p><strong>If no patches found:</strong></p>\n<pre><code>No local patches found. Nothing to reapply.\n\nLocal patches are automatically saved when you run /gad:update\nafter modifying any GAD workflow, command, or agent files.\n</code></pre>\n<p>Exit.</p>\n<h2>Step 2: Determine baseline for three-way comparison</h2>\n<p>The quality of the merge depends on having a <strong>pristine baseline</strong> — the original unmodified version of each file from the pre-update GAD release. This enables three-way comparison:</p>\n<ul>\n<li><strong>Pristine baseline</strong> (original GAD file before any user edits)</li>\n<li><strong>User&#39;s version</strong> (backed up in <code>gad-local-patches/</code>)</li>\n<li><strong>New version</strong> (freshly installed after update)</li>\n</ul>\n<p>Check for baseline sources in priority order:</p>\n<h3>Option A: Git history (most reliable)</h3>\n<p>If the config directory is a git repository:</p>\n<pre><code class=\"language-bash\">CONFIG_DIR=$(dirname &quot;$PATCHES_DIR&quot;)\nif git -C &quot;$CONFIG_DIR&quot; rev-parse --git-dir &gt;/dev/null 2&gt;&amp;1; then\n  HAS_GIT=true\nfi\n</code></pre>\n<p>When <code>HAS_GIT=true</code>, use <code>git log</code> to find the commit where GAD was originally installed (before user edits). For each file, the pristine baseline can be extracted with:</p>\n<pre><code class=\"language-bash\">git -C &quot;$CONFIG_DIR&quot; log --diff-filter=A --format=&quot;%H&quot; -- &quot;{file_path}&quot;\n</code></pre>\n<p>This gives the commit that first added the file (the install commit). Extract the pristine version:</p>\n<pre><code class=\"language-bash\">git -C &quot;$CONFIG_DIR&quot; show {install_commit}:{file_path}\n</code></pre>\n<h3>Option B: Pristine snapshot directory</h3>\n<p>Check if a <code>gad-pristine/</code> directory exists alongside <code>gad-local-patches/</code>:</p>\n<pre><code class=\"language-bash\">PRISTINE_DIR=&quot;$CONFIG_DIR/gad-pristine&quot;\n</code></pre>\n<p>If it exists, the installer saved pristine copies at install time. Use these as the baseline.</p>\n<h3>Option C: No baseline available (two-way fallback)</h3>\n<p>If neither git history nor pristine snapshots are available, fall back to two-way comparison — but with <strong>strengthened heuristics</strong> (see Step 3).</p>\n<h2>Step 3: Show patch summary</h2>\n<pre><code>## Local Patches to Reapply\n\n**Backed up from:** v{from_version}\n**Current version:** {read VERSION file}\n**Files modified:** {count}\n**Merge strategy:** {three-way (git) | three-way (pristine) | two-way (enhanced)}\n\n| # | File | Status |\n|---|------|--------|\n| 1 | {file_path} | Pending |\n| 2 | {file_path} | Pending |\n</code></pre>\n<h2>Step 4: Merge each file</h2>\n<p>For each file in <code>backup-meta.json</code>:</p>\n<ol>\n<li><strong>Read the backed-up version</strong> (user&#39;s modified copy from <code>gad-local-patches/</code>)</li>\n<li><strong>Read the newly installed version</strong> (current file after update)</li>\n<li><strong>If available, read the pristine baseline</strong> (from git history or <code>gad-pristine/</code>)</li>\n</ol>\n<h3>Three-way merge (when baseline is available)</h3>\n<p>Compare the three versions to isolate changes:</p>\n<ul>\n<li><strong>User changes</strong> = diff(pristine → user&#39;s version) — these are the customizations to preserve</li>\n<li><strong>Upstream changes</strong> = diff(pristine → new version) — these are version updates to accept</li>\n</ul>\n<p><strong>Merge rules:</strong></p>\n<ul>\n<li>Sections changed only by user → apply user&#39;s version</li>\n<li>Sections changed only by upstream → accept upstream version</li>\n<li>Sections changed by both → flag as CONFLICT, show both, ask user</li>\n<li>Sections unchanged by either → use new version (identical to all three)</li>\n</ul>\n<h3>Two-way merge (fallback when no baseline)</h3>\n<p>When no pristine baseline is available, use these <strong>strengthened heuristics</strong>:</p>\n<p><strong>CRITICAL RULE: Every file in this backup directory was explicitly detected as modified by the installer&#39;s SHA-256 hash comparison. &quot;No custom content&quot; is never a valid conclusion.</strong></p>\n<p>For each file:\na. Read both versions completely\nb. Identify ALL differences, then classify each as:</p>\n<ul>\n<li><strong>Mechanical drift</strong> — path substitutions between runtime config directories, variable additions (<code>${GAD_WS}</code>, <code>${AGENT_SKILLS_*}</code>), error handling additions (<code>|| true</code>)</li>\n<li><strong>User customization</strong> — added steps/sections, removed sections, reordered content, changed behavior, added frontmatter fields, modified instructions</li>\n</ul>\n<p>c. <strong>If ANY differences remain after filtering out mechanical drift → those are user customizations. Merge them.</strong>\nd. <strong>If ALL differences appear to be mechanical drift → still flag as CONFLICT.</strong> The installer&#39;s hash check already proved this file was modified. Ask the user: &quot;This file appears to only have path/variable differences. Were there intentional customizations?&quot; Do NOT silently skip.</p>\n<h3>Git-enhanced two-way merge</h3>\n<p>When the config directory is a git repo but the pristine install commit can&#39;t be found, use commit history to identify user changes:</p>\n<pre><code class=\"language-bash\"># Find non-update commits that touched this file\ngit -C &quot;$CONFIG_DIR&quot; log --oneline --no-merges -- &quot;{file_path}&quot; | grep -vi &quot;update\\|gad-install&quot;\n</code></pre>\n<p>Each matching commit represents an intentional user modification. Use the commit messages and diffs to understand what was changed and why.</p>\n<ol start=\"4\">\n<li><strong>Write merged result</strong> to the installed location</li>\n<li><strong>Report status per file:</strong><ul>\n<li><code>Merged</code> — user modifications applied cleanly (show summary of what was preserved)</li>\n<li><code>Conflict</code> — user reviewed and chose resolution</li>\n<li><code>Incorporated</code> — user&#39;s modification was already adopted upstream (only valid when pristine baseline confirms this)</li>\n</ul>\n</li>\n</ol>\n<p><strong>Never report <code>Skipped — no custom content</code>.</strong> If a file is in the backup, it has custom content.</p>\n<h2>Step 5: Update manifest</h2>\n<p>After reapplying, regenerate the file manifest so future updates correctly detect these as user modifications:</p>\n<pre><code class=\"language-bash\"># The manifest will be regenerated on next /gad:update\n# For now, just note which files were modified\n</code></pre>\n<h2>Step 6: Cleanup option</h2>\n<p>Ask user:</p>\n<ul>\n<li>&quot;Keep patch backups for reference?&quot; → preserve <code>gad-local-patches/</code></li>\n<li>&quot;Clean up patch backups?&quot; → remove <code>gad-local-patches/</code> directory</li>\n</ul>\n<h2>Step 7: Report</h2>\n<pre><code>## Patches Reapplied\n\n| # | File | Result | User Changes Preserved |\n|---|------|--------|----------------------|\n| 1 | {file_path} | Merged | Added step X, modified section Y |\n| 2 | {file_path} | Incorporated | Already in upstream v{version} |\n| 3 | {file_path} | Conflict resolved | User chose: keep custom section |\n\n{count} file(s) updated. Your local modifications are active again.\n</code></pre>\n</process>\n\n<success_criteria>\n- [ ] All backed-up patches processed — zero files left unhandled\n- [ ] No file classified as \"no custom content\" or \"SKIP\" — every backed-up file is definitionally modified\n- [ ] Three-way merge used when pristine baseline available (git history or gad-pristine/)\n- [ ] User modifications identified and merged into new version\n- [ ] Conflicts surfaced to user with both versions shown\n- [ ] Status reported for each file with summary of what was preserved\n</success_criteria>\n",
-    "bodyRaw": "\n<purpose>\nAfter a GAD update wipes and reinstalls files, this command merges user's previously saved local modifications back into the new version. Uses three-way comparison (pristine baseline, user-modified backup, newly installed version) to reliably distinguish user customizations from version drift.\n\n**Critical invariant:** Every file in `gad-local-patches/` was backed up because the installer's hash comparison detected it was modified. The workflow must NEVER conclude \"no custom content\" for any backed-up file — that is a logical contradiction. When in doubt, classify as CONFLICT requiring user review, not SKIP.\n</purpose>\n\n<process>\n\n## Step 1: Detect backed-up patches\n\nCheck for local patches directory:\n\n```bash\n# Global install — detect runtime config directory\nif [ -d \"$HOME/.config/opencode/gad-local-patches\" ]; then\n  PATCHES_DIR=\"$HOME/.config/opencode/gad-local-patches\"\nelif [ -d \"$HOME/.opencode/gad-local-patches\" ]; then\n  PATCHES_DIR=\"$HOME/.opencode/gad-local-patches\"\nelif [ -d \"$HOME/.gemini/gad-local-patches\" ]; then\n  PATCHES_DIR=\"$HOME/.gemini/gad-local-patches\"\nelse\n  PATCHES_DIR=\"${GAD_PATCHES_DIR:-$HOME/.config/gad-local-patches}\"\nfi\n# Local install fallback — check all runtime directories\nif [ ! -d \"$PATCHES_DIR\" ]; then\n  for dir in .config/opencode .opencode .gemini .claude; do\n    if [ -d \"./$dir/gad-local-patches\" ]; then\n      PATCHES_DIR=\"./$dir/gad-local-patches\"\n      break\n    fi\n  done\nfi\n```\n\nRead `backup-meta.json` from the patches directory.\n\n**If no patches found:**\n```\nNo local patches found. Nothing to reapply.\n\nLocal patches are automatically saved when you run /gad:update\nafter modifying any GAD workflow, command, or agent files.\n```\nExit.\n\n## Step 2: Determine baseline for three-way comparison\n\nThe quality of the merge depends on having a **pristine baseline** — the original unmodified version of each file from the pre-update GAD release. This enables three-way comparison:\n- **Pristine baseline** (original GAD file before any user edits)\n- **User's version** (backed up in `gad-local-patches/`)\n- **New version** (freshly installed after update)\n\nCheck for baseline sources in priority order:\n\n### Option A: Git history (most reliable)\nIf the config directory is a git repository:\n```bash\nCONFIG_DIR=$(dirname \"$PATCHES_DIR\")\nif git -C \"$CONFIG_DIR\" rev-parse --git-dir >/dev/null 2>&1; then\n  HAS_GIT=true\nfi\n```\nWhen `HAS_GIT=true`, use `git log` to find the commit where GAD was originally installed (before user edits). For each file, the pristine baseline can be extracted with:\n```bash\ngit -C \"$CONFIG_DIR\" log --diff-filter=A --format=\"%H\" -- \"{file_path}\"\n```\nThis gives the commit that first added the file (the install commit). Extract the pristine version:\n```bash\ngit -C \"$CONFIG_DIR\" show {install_commit}:{file_path}\n```\n\n### Option B: Pristine snapshot directory\nCheck if a `gad-pristine/` directory exists alongside `gad-local-patches/`:\n```bash\nPRISTINE_DIR=\"$CONFIG_DIR/gad-pristine\"\n```\nIf it exists, the installer saved pristine copies at install time. Use these as the baseline.\n\n### Option C: No baseline available (two-way fallback)\nIf neither git history nor pristine snapshots are available, fall back to two-way comparison — but with **strengthened heuristics** (see Step 3).\n\n## Step 3: Show patch summary\n\n```\n## Local Patches to Reapply\n\n**Backed up from:** v{from_version}\n**Current version:** {read VERSION file}\n**Files modified:** {count}\n**Merge strategy:** {three-way (git) | three-way (pristine) | two-way (enhanced)}\n\n| # | File | Status |\n|---|------|--------|\n| 1 | {file_path} | Pending |\n| 2 | {file_path} | Pending |\n```\n\n## Step 4: Merge each file\n\nFor each file in `backup-meta.json`:\n\n1. **Read the backed-up version** (user's modified copy from `gad-local-patches/`)\n2. **Read the newly installed version** (current file after update)\n3. **If available, read the pristine baseline** (from git history or `gad-pristine/`)\n\n### Three-way merge (when baseline is available)\n\nCompare the three versions to isolate changes:\n- **User changes** = diff(pristine → user's version) — these are the customizations to preserve\n- **Upstream changes** = diff(pristine → new version) — these are version updates to accept\n\n**Merge rules:**\n- Sections changed only by user → apply user's version\n- Sections changed only by upstream → accept upstream version\n- Sections changed by both → flag as CONFLICT, show both, ask user\n- Sections unchanged by either → use new version (identical to all three)\n\n### Two-way merge (fallback when no baseline)\n\nWhen no pristine baseline is available, use these **strengthened heuristics**:\n\n**CRITICAL RULE: Every file in this backup directory was explicitly detected as modified by the installer's SHA-256 hash comparison. \"No custom content\" is never a valid conclusion.**\n\nFor each file:\na. Read both versions completely\nb. Identify ALL differences, then classify each as:\n   - **Mechanical drift** — path substitutions between runtime config directories, variable additions (`${GAD_WS}`, `${AGENT_SKILLS_*}`), error handling additions (`|| true`)\n   - **User customization** — added steps/sections, removed sections, reordered content, changed behavior, added frontmatter fields, modified instructions\n\nc. **If ANY differences remain after filtering out mechanical drift → those are user customizations. Merge them.**\nd. **If ALL differences appear to be mechanical drift → still flag as CONFLICT.** The installer's hash check already proved this file was modified. Ask the user: \"This file appears to only have path/variable differences. Were there intentional customizations?\" Do NOT silently skip.\n\n### Git-enhanced two-way merge\n\nWhen the config directory is a git repo but the pristine install commit can't be found, use commit history to identify user changes:\n```bash\n# Find non-update commits that touched this file\ngit -C \"$CONFIG_DIR\" log --oneline --no-merges -- \"{file_path}\" | grep -vi \"update\\|gad-install\"\n```\nEach matching commit represents an intentional user modification. Use the commit messages and diffs to understand what was changed and why.\n\n4. **Write merged result** to the installed location\n5. **Report status per file:**\n   - `Merged` — user modifications applied cleanly (show summary of what was preserved)\n   - `Conflict` — user reviewed and chose resolution\n   - `Incorporated` — user's modification was already adopted upstream (only valid when pristine baseline confirms this)\n\n**Never report `Skipped — no custom content`.** If a file is in the backup, it has custom content.\n\n## Step 5: Update manifest\n\nAfter reapplying, regenerate the file manifest so future updates correctly detect these as user modifications:\n\n```bash\n# The manifest will be regenerated on next /gad:update\n# For now, just note which files were modified\n```\n\n## Step 6: Cleanup option\n\nAsk user:\n- \"Keep patch backups for reference?\" → preserve `gad-local-patches/`\n- \"Clean up patch backups?\" → remove `gad-local-patches/` directory\n\n## Step 7: Report\n\n```\n## Patches Reapplied\n\n| # | File | Result | User Changes Preserved |\n|---|------|--------|----------------------|\n| 1 | {file_path} | Merged | Added step X, modified section Y |\n| 2 | {file_path} | Incorporated | Already in upstream v{version} |\n| 3 | {file_path} | Conflict resolved | User chose: keep custom section |\n\n{count} file(s) updated. Your local modifications are active again.\n```\n\n</process>\n\n<success_criteria>\n- [ ] All backed-up patches processed — zero files left unhandled\n- [ ] No file classified as \"no custom content\" or \"SKIP\" — every backed-up file is definitionally modified\n- [ ] Three-way merge used when pristine baseline available (git history or gad-pristine/)\n- [ ] User modifications identified and merged into new version\n- [ ] Conflicts surfaced to user with both versions shown\n- [ ] Status reported for each file with summary of what was preserved\n</success_criteria>\n"
+    "bodyHtml": "<h1>gad:reapply-patches</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/reapply-patches.md\">workflows/reapply-patches.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:reapply-patches\n\n**Workflow:** [workflows/reapply-patches.md](../../workflows/reapply-patches.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-remove-phase",
@@ -1100,8 +1130,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-resume-work/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nRestore complete project context and resume work seamlessly from previous session.\n\n<p>Routes to the resume-project workflow which handles:</p>\n<ul>\n<li>STATE.md loading (or reconstruction if missing)</li>\n<li>Checkpoint detection (.continue-here files)</li>\n<li>Incomplete work detection (PLAN without SUMMARY)</li>\n<li>Status presentation</li>\n<li>Context-aware next action routing</objective></li>\n</ul>\n<execution_context>\n@workflows/resume-project.md\n</execution_context>\n\n<process>\n**Follow the resume-project workflow** from `@workflows/resume-project.md`.\n\n<p>The workflow handles all resumption logic including:</p>\n<ol>\n<li>Project existence verification</li>\n<li>STATE.md loading or reconstruction</li>\n<li>Checkpoint and incomplete work detection</li>\n<li>Visual status presentation</li>\n<li>Context-aware option offering (checks CONTEXT.md before suggesting plan vs discuss)</li>\n<li>Routing to appropriate next command</li>\n<li>Session continuity updates</process></li>\n</ol>\n",
-    "bodyRaw": "\n<objective>\nRestore complete project context and resume work seamlessly from previous session.\n\nRoutes to the resume-project workflow which handles:\n\n- STATE.md loading (or reconstruction if missing)\n- Checkpoint detection (.continue-here files)\n- Incomplete work detection (PLAN without SUMMARY)\n- Status presentation\n- Context-aware next action routing\n  </objective>\n\n<execution_context>\n@workflows/resume-project.md\n</execution_context>\n\n<process>\n**Follow the resume-project workflow** from `@workflows/resume-project.md`.\n\nThe workflow handles all resumption logic including:\n\n1. Project existence verification\n2. STATE.md loading or reconstruction\n3. Checkpoint and incomplete work detection\n4. Visual status presentation\n5. Context-aware option offering (checks CONTEXT.md before suggesting plan vs discuss)\n6. Routing to appropriate next command\n7. Session continuity updates\n   </process>\n"
+    "bodyHtml": "<h1>gad:resume-work</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/resume-work.md\">workflows/resume-work.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:resume-work\n\n**Workflow:** [workflows/resume-work.md](../../workflows/resume-work.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-reverse-engineer",
@@ -1115,8 +1145,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-reverse-engineer/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nAnalyze a codebase and produce GAD planning docs (REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml) for clean-room reimplementation. Supports local paths and GitHub URLs.\n</objective>\n\n<process>\n\n<p>Parse from <code>$ARGUMENTS</code>:</p>\n<ul>\n<li><code>--path &lt;local-path&gt;</code> — analyze a local directory</li>\n<li><code>--repo &lt;github-url&gt;</code> — clone from GitHub and analyze</li>\n<li><code>--branch &lt;branch&gt;</code> — branch to clone (default: default branch)</li>\n</ul>\n<ol>\n<li><p><strong>Acquire the target:</strong></p>\n<ul>\n<li>If <code>--repo</code>: clone to temp with <code>git clone --depth 1 &lt;url&gt; /tmp/gad-re-&lt;name&gt;</code></li>\n<li>If <code>--path</code>: use the local path directly</li>\n<li>If the URL includes <code>/tree/&lt;branch&gt;/&lt;path&gt;</code>, extract the subdirectory</li>\n</ul>\n</li>\n<li><p><strong>Run the deep analysis</strong> — follow the 5-pass methodology in the skill.</p>\n</li>\n<li><p><strong>Produce all outputs</strong> — REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, CONTEXT.md</p>\n</li>\n<li><p><strong>Clean up</strong> — if cloned to temp, remove the temp directory</p>\n</li>\n</ol>\n</process>\n\n<skill>\nRead and follow the companion `reverse-engineer` skill if it is installed.\n</skill>\n",
-    "bodyRaw": "\n<objective>\nAnalyze a codebase and produce GAD planning docs (REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml) for clean-room reimplementation. Supports local paths and GitHub URLs.\n</objective>\n\n<process>\n\nParse from `$ARGUMENTS`:\n- `--path <local-path>` — analyze a local directory\n- `--repo <github-url>` — clone from GitHub and analyze\n- `--branch <branch>` — branch to clone (default: default branch)\n\n1. **Acquire the target:**\n   - If `--repo`: clone to temp with `git clone --depth 1 <url> /tmp/gad-re-<name>`\n   - If `--path`: use the local path directly\n   - If the URL includes `/tree/<branch>/<path>`, extract the subdirectory\n\n2. **Run the deep analysis** — follow the 5-pass methodology in the skill.\n\n3. **Produce all outputs** — REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, CONTEXT.md\n\n4. **Clean up** — if cloned to temp, remove the temp directory\n\n</process>\n\n<skill>\nRead and follow the companion `reverse-engineer` skill if it is installed.\n</skill>\n"
+    "bodyHtml": "<h1>gad:reverse-engineer</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/reverse-engineer.md\">workflows/reverse-engineer.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:reverse-engineer\n\n**Workflow:** [workflows/reverse-engineer.md](../../workflows/reverse-engineer.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-review",
@@ -1145,8 +1175,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-review-backlog/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nReview all 999.x backlog items and optionally promote them into the active\nmilestone sequence or remove stale entries.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>List backlog items:</strong></p>\n<pre><code class=\"language-bash\">ls -d .planning/phases/999* 2&gt;/dev/null || echo &quot;No backlog items found&quot;\n</code></pre>\n</li>\n<li><p><strong>Read ROADMAP.md</strong> and extract all 999.x phase entries:</p>\n<pre><code class=\"language-bash\">cat .planning/ROADMAP.md\n</code></pre>\n<p>Show each backlog item with its description, any accumulated context (CONTEXT.md, RESEARCH.md), and creation date.</p>\n</li>\n<li><p><strong>Present the list to the user</strong> via AskUserQuestion:</p>\n<ul>\n<li>For each backlog item, show: phase number, description, accumulated artifacts</li>\n<li>Options per item: <strong>Promote</strong> (move to active), <strong>Keep</strong> (leave in backlog), <strong>Remove</strong> (delete)</li>\n</ul>\n</li>\n<li><p><strong>For items to PROMOTE:</strong></p>\n<ul>\n<li>Find the next sequential phase number in the active milestone</li>\n<li>Rename the directory from <code>999.x-slug</code> to <code>{new_num}-slug</code>:<pre><code class=\"language-bash\">NEW_NUM=$(gad-tools phase add &quot;${DESCRIPTION}&quot; --raw)\n</code></pre>\n</li>\n<li>Move accumulated artifacts to the new phase directory</li>\n<li>Update ROADMAP.md: move the entry from <code>## Backlog</code> section to the active phase list</li>\n<li>Remove <code>(BACKLOG)</code> marker</li>\n<li>Add appropriate <code>**Depends on:**</code> field</li>\n</ul>\n</li>\n<li><p><strong>For items to REMOVE:</strong></p>\n<ul>\n<li>Delete the phase directory</li>\n<li>Remove the entry from ROADMAP.md <code>## Backlog</code> section</li>\n</ul>\n</li>\n<li><p><strong>Commit changes:</strong></p>\n<pre><code class=\"language-bash\">gad-tools commit &quot;docs: review backlog — promoted N, removed M&quot; --files .planning/ROADMAP.md\n</code></pre>\n</li>\n<li><p><strong>Report summary:</strong></p>\n<pre><code>## 📋 Backlog Review Complete\n\nPromoted: {list of promoted items with new phase numbers}\nKept: {list of items remaining in backlog}\nRemoved: {list of deleted items}\n</code></pre>\n</li>\n</ol>\n</process>\n",
-    "bodyRaw": "\n<objective>\nReview all 999.x backlog items and optionally promote them into the active\nmilestone sequence or remove stale entries.\n</objective>\n\n<process>\n\n1. **List backlog items:**\n   ```bash\n   ls -d .planning/phases/999* 2>/dev/null || echo \"No backlog items found\"\n   ```\n\n2. **Read ROADMAP.md** and extract all 999.x phase entries:\n   ```bash\n   cat .planning/ROADMAP.md\n   ```\n   Show each backlog item with its description, any accumulated context (CONTEXT.md, RESEARCH.md), and creation date.\n\n3. **Present the list to the user** via AskUserQuestion:\n   - For each backlog item, show: phase number, description, accumulated artifacts\n   - Options per item: **Promote** (move to active), **Keep** (leave in backlog), **Remove** (delete)\n\n4. **For items to PROMOTE:**\n   - Find the next sequential phase number in the active milestone\n   - Rename the directory from `999.x-slug` to `{new_num}-slug`:\n     ```bash\n     NEW_NUM=$(gad-tools phase add \"${DESCRIPTION}\" --raw)\n     ```\n   - Move accumulated artifacts to the new phase directory\n   - Update ROADMAP.md: move the entry from `## Backlog` section to the active phase list\n   - Remove `(BACKLOG)` marker\n   - Add appropriate `**Depends on:**` field\n\n5. **For items to REMOVE:**\n   - Delete the phase directory\n   - Remove the entry from ROADMAP.md `## Backlog` section\n\n6. **Commit changes:**\n   ```bash\n   gad-tools commit \"docs: review backlog — promoted N, removed M\" --files .planning/ROADMAP.md\n   ```\n\n7. **Report summary:**\n   ```\n   ## 📋 Backlog Review Complete\n\n   Promoted: {list of promoted items with new phase numbers}\n   Kept: {list of items remaining in backlog}\n   Removed: {list of deleted items}\n   ```\n\n</process>\n"
+    "bodyHtml": "<h1>gad:review-backlog</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/review-backlog.md\">workflows/review-backlog.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:review-backlog\n\n**Workflow:** [workflows/review-backlog.md](../../workflows/review-backlog.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-session",
@@ -1160,8 +1190,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-session/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>Session Continuity</h1>\n<p>Saves and restores full working context for the autonomous execution loop. The planning docs (state, task-registry, etc.) capture completed work — this skill captures the <em>in-flight</em> state: what&#39;s partially done, decisions made mid-task, blockers encountered, and where to resume.</p>\n<h2>Detecting mode</h2>\n<p><strong>Pause mode:</strong> user is about to stop work, end session, or hand off.</p>\n<p><strong>Resume mode:</strong> user is starting a new session or context was reset. Check for a handoff file:</p>\n<pre><code class=\"language-bash\">ls .planning/session.md 2&gt;/dev/null &amp;&amp; echo &quot;HANDOFF EXISTS&quot; || echo &quot;NO HANDOFF&quot;\n</code></pre>\n<p>If handoff exists → resume mode. If not → check <code>gad:check-todos</code> for orientation (likely a clean start).</p>\n<hr>\n<h2>Pause: creating the handoff</h2>\n<p>Write <code>.planning/session.md</code> with the complete in-flight context:</p>\n<pre><code class=\"language-markdown\"># Session Handoff\n\n**Saved:** &lt;date and time&gt;\n**Phase:** `&lt;current-phase-id&gt;` — &lt;phase goal&gt;\n\n## Position\n\n| Field | Value |\n|-------|-------|\n| Current task | `&lt;task-id&gt;` — &lt;task goal&gt; |\n| Task status | in-progress / blocked / just-completed |\n| Last action | &lt;what was the last thing done — be specific&gt; |\n| Next action | &lt;exactly what to do when resuming — be prescriptive&gt; |\n\n## In-progress work\n\n&lt;Describe any work that was started but not committed. What files were changed? What&#39;s the incomplete state?&gt;\n\nUncommitted changes:\n- `&lt;file&gt;` — &lt;what was changed and why it&#39;s not committed yet&gt;\n\n## Decisions made this session\n\nThese decisions were made mid-execution but not yet recorded in decisions.md:\n\n| Decision | What was decided | Why |\n|----------|-----------------|-----|\n| &lt;topic&gt; | &lt;choice made&gt; | &lt;reason&gt; |\n\nRecord these in decisions.md on resume.\n\n## Open questions\n\nQuestions encountered mid-execution that need an answer before continuing:\n\n| Question | Blocking? | Context |\n|----------|-----------|---------|\n| &lt;question&gt; | yes/no | &lt;why it matters&gt; |\n\n## Blockers\n\n| Blocker | Severity | What&#39;s needed to unblock |\n|---------|----------|--------------------------|\n| &lt;blocker description&gt; | blocking/non-blocking | &lt;what resolves it&gt; |\n\n## Context that won&#39;t survive the reset\n\nThings that were in working memory but aren&#39;t in any file:\n\n- &lt;anything that would be lost — reasoning, tradeoffs considered, why a specific approach was chosen&gt;\n\n## Verify state before resuming\n\nRun these commands on resume to confirm the environment is correct:\n\n```bash\npnpm test                    # confirm test suite still passes\ngit status                   # check for uncommitted changes\ngit log --oneline -5         # orient to recent commits\n</code></pre>\n<pre><code>\n---\n\n## Resume: restoring context\n\n### Step 1: Read the handoff\n\n```bash\ncat .planning/session.md\n</code></pre>\n<p>Read it completely before doing anything else.</p>\n<h3>Step 2: Orient to current file state</h3>\n<p>Run the verify commands from the handoff:</p>\n<pre><code class=\"language-bash\">pnpm test 2&gt;/dev/null || echo &quot;No test command found&quot;\ngit status --short\ngit log --oneline -5\n</code></pre>\n<p>Check if any uncommitted changes from the handoff are still present. If not, they were lost — note this.</p>\n<h3>Step 3: Reconcile</h3>\n<p>Compare the handoff&#39;s &quot;Position&quot; to the current state of:</p>\n<ul>\n<li>TASK-REGISTRY.md — is the current task still the same status?</li>\n<li>STATE.md — does focus match the handoff?</li>\n</ul>\n<p>If they diverge, trust the handoff&#39;s description of in-progress work (it&#39;s more recent than the last commit to planning docs).</p>\n<h3>Step 4: Record deferred decisions</h3>\n<p>If the handoff contains decisions made mid-session that weren&#39;t yet written to decisions.md, record them now before resuming execution:</p>\n<pre><code class=\"language-bash\"># Open decisions.md and add each decision from the handoff\n</code></pre>\n<h3>Step 5: Resume</h3>\n<p>Present the restored context clearly:</p>\n<pre><code>Resuming from session handoff.\n\nPhase: `&lt;phase-id&gt;` — &lt;goal&gt;\nLast action: &lt;what was done&gt;\nNext action: &lt;exactly what to do&gt;\n\nBlockers: &lt;any blocking issues&gt;\nOpen questions: &lt;any unanswered questions&gt;\n\nReady to continue.\n</code></pre>\n<p>Then proceed directly to the next action without asking &quot;where were we?&quot; — the handoff answers that.</p>\n<h3>Step 6: Clean up the handoff</h3>\n<p>Once the session is fully active and the next task is underway, archive the handoff:</p>\n<pre><code class=\"language-bash\">mv .planning/session.md .planning/session-archive-&lt;date&gt;.md\n</code></pre>\n<p>Or delete it — it served its purpose. Don&#39;t let old handoffs accumulate (they become misleading).</p>\n<hr>\n<h2>Integration with the execution loop</h2>\n<p>The session handoff is designed to survive context resets in the autonomous ralph loop:</p>\n<pre><code>gad:execute-phase (task N) → context limit approaching\n  → gad:session pause (write session.md)\n  → fresh context window\n  → gad:session resume (read session.md)\n  → gad:execute-phase (continue from task N)\n</code></pre>\n<p>The handoff file is the bridge. Without it, the loop would have to re-read all planning docs and infer the in-flight state, which is slower and lossy. With it, the loop picks up exactly where it left off.</p>\n<h2>When gad:check-todos is enough instead</h2>\n<p>If the session ended cleanly (all tasks completed, state updated, no in-progress work), <code>gad:check-todos</code> is sufficient for re-entry — no handoff needed. Use <code>gad:session</code> only when there&#39;s in-flight state that the living docs don&#39;t capture.</p>\n",
-    "bodyRaw": "\n# Session Continuity\n\nSaves and restores full working context for the autonomous execution loop. The planning docs (state, task-registry, etc.) capture completed work — this skill captures the *in-flight* state: what's partially done, decisions made mid-task, blockers encountered, and where to resume.\n\n## Detecting mode\n\n**Pause mode:** user is about to stop work, end session, or hand off.\n\n**Resume mode:** user is starting a new session or context was reset. Check for a handoff file:\n\n```bash\nls .planning/session.md 2>/dev/null && echo \"HANDOFF EXISTS\" || echo \"NO HANDOFF\"\n```\n\nIf handoff exists → resume mode. If not → check `gad:check-todos` for orientation (likely a clean start).\n\n---\n\n## Pause: creating the handoff\n\nWrite `.planning/session.md` with the complete in-flight context:\n\n```markdown\n# Session Handoff\n\n**Saved:** <date and time>\n**Phase:** `<current-phase-id>` — <phase goal>\n\n## Position\n\n| Field | Value |\n|-------|-------|\n| Current task | `<task-id>` — <task goal> |\n| Task status | in-progress / blocked / just-completed |\n| Last action | <what was the last thing done — be specific> |\n| Next action | <exactly what to do when resuming — be prescriptive> |\n\n## In-progress work\n\n<Describe any work that was started but not committed. What files were changed? What's the incomplete state?>\n\nUncommitted changes:\n- `<file>` — <what was changed and why it's not committed yet>\n\n## Decisions made this session\n\nThese decisions were made mid-execution but not yet recorded in decisions.md:\n\n| Decision | What was decided | Why |\n|----------|-----------------|-----|\n| <topic> | <choice made> | <reason> |\n\nRecord these in decisions.md on resume.\n\n## Open questions\n\nQuestions encountered mid-execution that need an answer before continuing:\n\n| Question | Blocking? | Context |\n|----------|-----------|---------|\n| <question> | yes/no | <why it matters> |\n\n## Blockers\n\n| Blocker | Severity | What's needed to unblock |\n|---------|----------|--------------------------|\n| <blocker description> | blocking/non-blocking | <what resolves it> |\n\n## Context that won't survive the reset\n\nThings that were in working memory but aren't in any file:\n\n- <anything that would be lost — reasoning, tradeoffs considered, why a specific approach was chosen>\n\n## Verify state before resuming\n\nRun these commands on resume to confirm the environment is correct:\n\n```bash\npnpm test                    # confirm test suite still passes\ngit status                   # check for uncommitted changes\ngit log --oneline -5         # orient to recent commits\n```\n```\n\n---\n\n## Resume: restoring context\n\n### Step 1: Read the handoff\n\n```bash\ncat .planning/session.md\n```\n\nRead it completely before doing anything else.\n\n### Step 2: Orient to current file state\n\nRun the verify commands from the handoff:\n```bash\npnpm test 2>/dev/null || echo \"No test command found\"\ngit status --short\ngit log --oneline -5\n```\n\nCheck if any uncommitted changes from the handoff are still present. If not, they were lost — note this.\n\n### Step 3: Reconcile\n\nCompare the handoff's \"Position\" to the current state of:\n- TASK-REGISTRY.md — is the current task still the same status?\n- STATE.md — does focus match the handoff?\n\nIf they diverge, trust the handoff's description of in-progress work (it's more recent than the last commit to planning docs).\n\n### Step 4: Record deferred decisions\n\nIf the handoff contains decisions made mid-session that weren't yet written to decisions.md, record them now before resuming execution:\n\n```bash\n# Open decisions.md and add each decision from the handoff\n```\n\n### Step 5: Resume\n\nPresent the restored context clearly:\n\n```\nResuming from session handoff.\n\nPhase: `<phase-id>` — <goal>\nLast action: <what was done>\nNext action: <exactly what to do>\n\nBlockers: <any blocking issues>\nOpen questions: <any unanswered questions>\n\nReady to continue.\n```\n\nThen proceed directly to the next action without asking \"where were we?\" — the handoff answers that.\n\n### Step 6: Clean up the handoff\n\nOnce the session is fully active and the next task is underway, archive the handoff:\n\n```bash\nmv .planning/session.md .planning/session-archive-<date>.md\n```\n\nOr delete it — it served its purpose. Don't let old handoffs accumulate (they become misleading).\n\n---\n\n## Integration with the execution loop\n\nThe session handoff is designed to survive context resets in the autonomous ralph loop:\n\n```\ngad:execute-phase (task N) → context limit approaching\n  → gad:session pause (write session.md)\n  → fresh context window\n  → gad:session resume (read session.md)\n  → gad:execute-phase (continue from task N)\n```\n\nThe handoff file is the bridge. Without it, the loop would have to re-read all planning docs and infer the in-flight state, which is slower and lossy. With it, the loop picks up exactly where it left off.\n\n## When gad:check-todos is enough instead\n\nIf the session ended cleanly (all tasks completed, state updated, no in-progress work), `gad:check-todos` is sufficient for re-entry — no handoff needed. Use `gad:session` only when there's in-flight state that the living docs don't capture.\n"
+    "bodyHtml": "<h1>gad:session</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/session.md\">workflows/session.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:session\n\n**Workflow:** [workflows/session.md](../../workflows/session.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-session-report",
@@ -1190,8 +1220,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-set-profile/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<p>Show the following output to the user verbatim, with no extra commentary:</p>\n<p>!<code>gad-tools config-set-model-profile $ARGUMENTS --raw</code></p>\n",
-    "bodyRaw": "\nShow the following output to the user verbatim, with no extra commentary:\n\n!`gad-tools config-set-model-profile $ARGUMENTS --raw`\n"
+    "bodyHtml": "<h1>gad:set-profile</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/set-profile.md\">workflows/set-profile.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:set-profile\n\n**Workflow:** [workflows/set-profile.md](../../workflows/set-profile.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-settings",
@@ -1220,8 +1250,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-skill-creator/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad-skill-creator</h1>\n<p>A thin wrapper around Anthropic&#39;s canonical\n<a href=\"https://github.com/anthropics/skills/tree/main/skills/skill-creator\">skill-creator</a>\nthat makes it work autonomously inside the GAD loop.</p>\n<p>The canonical skill-creator is comprehensive — subagent-based test runs, grading,\nbenchmarking, HTML viewer, description optimization. We don&#39;t reinvent any of\nthat. We just <strong>bypass its user interview</strong> by feeding it a complete <code>INTENT.md</code>\ncontext file derived from the GAD planning artifacts, then <strong>preserve its\noutput</strong> for the GAD site.</p>\n<h2>When to use</h2>\n<ul>\n<li>A user explicitly asks to create / promote / refine a skill.</li>\n<li><code>gad:evolution:evolve</code> produced a candidate and you&#39;re invoked to flesh it out.</li>\n<li>You hit a repeated CLI pattern across 3+ tasks and the user agrees it&#39;s a skill.</li>\n<li>A bug or workaround is non-obvious enough that future agents will hit it.</li>\n</ul>\n<h2>When NOT to use</h2>\n<ul>\n<li>The pattern is one-off and won&#39;t recur.</li>\n<li>The thing belongs in the GAD CLI itself (it would be a command, not a skill).</li>\n<li>An existing skill already covers this — use <code>gad:merge-skill</code> or update in place.</li>\n</ul>\n<h2>Step 1: Ensure canonical skill-creator is installed</h2>\n<p>Idempotent — only installs if missing:</p>\n<pre><code class=\"language-sh\">if [ ! -d &quot;$HOME/.agents/skills/skill-creator&quot; ]; then\n  npx --yes skills add anthropics/skills --skill skill-creator --global --yes\nfi\n</code></pre>\n<p>After install, <code>~/.agents/skills/skill-creator/SKILL.md</code> is the canonical source.\nRead it once for the full surface — this wrapper only handles the input/output\nplumbing.</p>\n<h2>Step 2: Build the INTENT.md context payload</h2>\n<p>Skill-creator&#39;s first step (&quot;Capture Intent&quot;) is normally a user interview.\nWe replace that with an INTENT.md file the skill-creator reads instead.</p>\n<p>The INTENT.md location depends on where you&#39;re invoked from:</p>\n<ul>\n<li><strong>From <code>gad:evolution:evolve</code>:</strong> <code>skills/candidates/&lt;slug&gt;/INTENT.md</code> (already\nexists — evolve wrote it).</li>\n<li><strong>From a direct user request:</strong> scratch dir like\n<code>skills/candidates/&lt;proposed-slug&gt;/INTENT.md</code>.</li>\n<li><strong>From a &quot;promote this candidate&quot; request:</strong> the existing INTENT.md in the\ncandidate dir.</li>\n</ul>\n<p>INTENT.md format (this is everything skill-creator&#39;s interview would have asked):</p>\n<pre><code class=\"language-markdown\">---\nstatus: candidate\nsource_phase: &lt;phase-id or null&gt;\nsource_phase_title: &lt;title or null&gt;\npressure_score: &lt;number or null&gt;\nevolution_id: &lt;YYYY-MM-DD-NNN or null&gt;\ncreated_on: &lt;YYYY-MM-DD&gt;\ncreated_by: gad-skill-creator | gad-evolution-evolve\nproposed_name: &lt;kebab-skill-name&gt;\n---\n\n# Intent: &lt;proposed-skill-name&gt;\n\n## What this skill should do\n&lt;derived from phase tasks or user request — the recurring pattern in 1-2 paragraphs&gt;\n\n## When it should trigger\n- &lt;user-facing trigger 1&gt;\n- &lt;user-facing trigger 2&gt;\n- Specific phrases users might say: &quot;...&quot;, &quot;...&quot;, &quot;...&quot;\n\n## Expected output format\n&lt;what a successful invocation produces — file changes, CLI output, side effects&gt;\n\n## Test prompts skill-creator should use\n1. &lt;realistic user prompt drawn from a real task&gt;\n2. &lt;another realistic prompt with different phrasing&gt;\n3. &lt;a should-NOT-trigger negative case from an adjacent area&gt;\n\n## Files this skill cares about\n- &lt;path&gt;: &lt;one-line reason&gt;\n\n## Decisions backing this skill\n- &lt;decision-id&gt;: &lt;one-line summary&gt;\n\n## CLI surface available\n&lt;paste relevant lines from `gad --help` and `gad &lt;subcommand&gt; --help`&gt;\n\n## Existing related skills\n- &lt;skill-id&gt;: &lt;one-line reason it&#39;s adjacent but not the same thing&gt;\n\n## Errors / failed attempts observed\n&lt;from logs, git history, or the source phase&#39;s task notes — what didn&#39;t work&gt;\n</code></pre>\n<p>When you&#39;re filling INTENT.md from a phase, draw the test prompts from real\ntasks in that phase. The whole point is that skill-creator gets enough realistic\ncontext to write good evals without asking.</p>\n<h2>Step 3: Invoke canonical skill-creator on the INTENT</h2>\n<p>Skill-creator expects a conversational entry point. Give it a single message\nthat points it at INTENT.md and tells it to skip the interview:</p>\n<pre><code>You are the canonical skill-creator. Read skills/candidates/&lt;slug&gt;/INTENT.md\nfor the full intent — it replaces the user interview. Then:\n\n1. Write skills/candidates/&lt;slug&gt;/SKILL.md following your normal anatomy.\n2. Write skills/candidates/&lt;slug&gt;/evals/evals.json with the test prompts from\n   INTENT.md plus assertions you draft.\n3. Run your full test loop in skills/candidates/&lt;slug&gt;/skill-creator-workspace/\n   — spawn with-skill and baseline subagents in parallel, grade, aggregate,\n   benchmark.\n4. Generate the eval viewer with --static\n   skills/candidates/&lt;slug&gt;/viewer.html so a human can review it later\n   without a running server.\n5. STOP after the viewer is generated. Do NOT iterate. Do NOT prompt the user\n   to continue. The human review is asynchronous — they will open viewer.html\n   in a browser, review, and either promote or discard the candidate via the\n   gad CLI later.\n</code></pre>\n<p>The <code>--static</code> flag is critical — it makes skill-creator headless-compatible,\nwhich is what we need for the autonomous GAD loop. The viewer becomes a self-\ncontained HTML file we can serve from the site or open locally.</p>\n<h2>Step 4: Preserve outputs for the GAD site</h2>\n<p>After skill-creator finishes, copy the structured output into a known location\nthe GAD site&#39;s build pipeline can find:</p>\n<pre><code class=\"language-sh\">SKILL_OUTPUT=&quot;skills/candidates/&lt;slug&gt;&quot;\nmkdir -p &quot;$SKILL_OUTPUT/_skill-creator-output&quot;\ncp -r &quot;$SKILL_OUTPUT/skill-creator-workspace&quot; &quot;$SKILL_OUTPUT/_skill-creator-output/workspace&quot;\n[ -f &quot;$SKILL_OUTPUT/viewer.html&quot; ] &amp;&amp; cp &quot;$SKILL_OUTPUT/viewer.html&quot; &quot;$SKILL_OUTPUT/_skill-creator-output/viewer.html&quot;\n[ -f &quot;$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json&quot; ] &amp;&amp; \\\n  cp &quot;$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json&quot; &quot;$SKILL_OUTPUT/_skill-creator-output/benchmark.json&quot;\n</code></pre>\n<p><code>build-site-data.mjs</code> reads <code>_skill-creator-output/</code> to surface candidate\nbenchmarks, viewer HTML, and per-eval results on the GAD site&#39;s evolution view.</p>\n<h2>Step 5: Hand off to human review</h2>\n<p>Print a clear handoff message to the user with the viewer path and what to do\nnext:</p>\n<pre><code>Skill candidate ready for review:\n  skills/candidates/&lt;slug&gt;/SKILL.md\n  skills/candidates/&lt;slug&gt;/viewer.html\n\nOpen the viewer in a browser, click through each test case, leave feedback,\nand click Submit All Reviews. When the feedback.json drops into the candidate\ndir, run:\n\n  gad evolution promote &lt;slug&gt;      # to merge into skills/\n  gad evolution discard &lt;slug&gt;      # to delete the candidate\n</code></pre>\n<p>The candidate stays in <code>skills/candidates/</code> until promoted or discarded.\n<code>gad:evolution:evolve</code> will refuse to start a new evolution while any pending\ncandidates remain — this is the human-review gate.</p>\n<h2>Failure modes</h2>\n<ul>\n<li><strong>Skill-creator interviewing the user anyway:</strong> make sure the INTENT.md is\ncomplete and your prompt explicitly says &quot;skip the interview.&quot; Skill-creator\ndefers to user input when context is thin, so a sparse INTENT.md will trigger\nquestions.</li>\n<li><strong>Viewer not generating:</strong> check that <code>--static</code> was passed. Without it,\nskill-creator tries to launch a browser, which fails in headless GAD runs.</li>\n<li><strong>Workspace pollution in git:</strong> <code>_skill-creator-output/workspace/</code> can be\nlarge. Add <code>skills/candidates/*/skill-creator-workspace/</code> to .gitignore and\nonly commit <code>_skill-creator-output/</code> (which is the trimmed, site-ready copy).</li>\n</ul>\n<h2>Reference</h2>\n<ul>\n<li>Canonical skill-creator: <code>~/.agents/skills/skill-creator/SKILL.md</code></li>\n<li>Anthropic skills repo: <a href=\"https://github.com/anthropics/skills\">https://github.com/anthropics/skills</a></li>\n<li>Related skills: <code>gad-evolution-evolve</code>, <code>merge-skill</code>, <code>create-proto-skill</code>, <code>create-skill</code>, <code>gad-find-skills</code></li>\n</ul>\n",
-    "bodyRaw": "\n# gad-skill-creator\n\nA thin wrapper around Anthropic's canonical\n[skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator)\nthat makes it work autonomously inside the GAD loop.\n\nThe canonical skill-creator is comprehensive — subagent-based test runs, grading,\nbenchmarking, HTML viewer, description optimization. We don't reinvent any of\nthat. We just **bypass its user interview** by feeding it a complete `INTENT.md`\ncontext file derived from the GAD planning artifacts, then **preserve its\noutput** for the GAD site.\n\n## When to use\n\n- A user explicitly asks to create / promote / refine a skill.\n- `gad:evolution:evolve` produced a candidate and you're invoked to flesh it out.\n- You hit a repeated CLI pattern across 3+ tasks and the user agrees it's a skill.\n- A bug or workaround is non-obvious enough that future agents will hit it.\n\n## When NOT to use\n\n- The pattern is one-off and won't recur.\n- The thing belongs in the GAD CLI itself (it would be a command, not a skill).\n- An existing skill already covers this — use `gad:merge-skill` or update in place.\n\n## Step 1: Ensure canonical skill-creator is installed\n\nIdempotent — only installs if missing:\n\n```sh\nif [ ! -d \"$HOME/.agents/skills/skill-creator\" ]; then\n  npx --yes skills add anthropics/skills --skill skill-creator --global --yes\nfi\n```\n\nAfter install, `~/.agents/skills/skill-creator/SKILL.md` is the canonical source.\nRead it once for the full surface — this wrapper only handles the input/output\nplumbing.\n\n## Step 2: Build the INTENT.md context payload\n\nSkill-creator's first step (\"Capture Intent\") is normally a user interview.\nWe replace that with an INTENT.md file the skill-creator reads instead.\n\nThe INTENT.md location depends on where you're invoked from:\n\n- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/INTENT.md` (already\n  exists — evolve wrote it).\n- **From a direct user request:** scratch dir like\n  `skills/candidates/<proposed-slug>/INTENT.md`.\n- **From a \"promote this candidate\" request:** the existing INTENT.md in the\n  candidate dir.\n\nINTENT.md format (this is everything skill-creator's interview would have asked):\n\n```markdown\n---\nstatus: candidate\nsource_phase: <phase-id or null>\nsource_phase_title: <title or null>\npressure_score: <number or null>\nevolution_id: <YYYY-MM-DD-NNN or null>\ncreated_on: <YYYY-MM-DD>\ncreated_by: gad-skill-creator | gad-evolution-evolve\nproposed_name: <kebab-skill-name>\n---\n\n# Intent: <proposed-skill-name>\n\n## What this skill should do\n<derived from phase tasks or user request — the recurring pattern in 1-2 paragraphs>\n\n## When it should trigger\n- <user-facing trigger 1>\n- <user-facing trigger 2>\n- Specific phrases users might say: \"...\", \"...\", \"...\"\n\n## Expected output format\n<what a successful invocation produces — file changes, CLI output, side effects>\n\n## Test prompts skill-creator should use\n1. <realistic user prompt drawn from a real task>\n2. <another realistic prompt with different phrasing>\n3. <a should-NOT-trigger negative case from an adjacent area>\n\n## Files this skill cares about\n- <path>: <one-line reason>\n\n## Decisions backing this skill\n- <decision-id>: <one-line summary>\n\n## CLI surface available\n<paste relevant lines from `gad --help` and `gad <subcommand> --help`>\n\n## Existing related skills\n- <skill-id>: <one-line reason it's adjacent but not the same thing>\n\n## Errors / failed attempts observed\n<from logs, git history, or the source phase's task notes — what didn't work>\n```\n\nWhen you're filling INTENT.md from a phase, draw the test prompts from real\ntasks in that phase. The whole point is that skill-creator gets enough realistic\ncontext to write good evals without asking.\n\n## Step 3: Invoke canonical skill-creator on the INTENT\n\nSkill-creator expects a conversational entry point. Give it a single message\nthat points it at INTENT.md and tells it to skip the interview:\n\n```\nYou are the canonical skill-creator. Read skills/candidates/<slug>/INTENT.md\nfor the full intent — it replaces the user interview. Then:\n\n1. Write skills/candidates/<slug>/SKILL.md following your normal anatomy.\n2. Write skills/candidates/<slug>/evals/evals.json with the test prompts from\n   INTENT.md plus assertions you draft.\n3. Run your full test loop in skills/candidates/<slug>/skill-creator-workspace/\n   — spawn with-skill and baseline subagents in parallel, grade, aggregate,\n   benchmark.\n4. Generate the eval viewer with --static\n   skills/candidates/<slug>/viewer.html so a human can review it later\n   without a running server.\n5. STOP after the viewer is generated. Do NOT iterate. Do NOT prompt the user\n   to continue. The human review is asynchronous — they will open viewer.html\n   in a browser, review, and either promote or discard the candidate via the\n   gad CLI later.\n```\n\nThe `--static` flag is critical — it makes skill-creator headless-compatible,\nwhich is what we need for the autonomous GAD loop. The viewer becomes a self-\ncontained HTML file we can serve from the site or open locally.\n\n## Step 4: Preserve outputs for the GAD site\n\nAfter skill-creator finishes, copy the structured output into a known location\nthe GAD site's build pipeline can find:\n\n```sh\nSKILL_OUTPUT=\"skills/candidates/<slug>\"\nmkdir -p \"$SKILL_OUTPUT/_skill-creator-output\"\ncp -r \"$SKILL_OUTPUT/skill-creator-workspace\" \"$SKILL_OUTPUT/_skill-creator-output/workspace\"\n[ -f \"$SKILL_OUTPUT/viewer.html\" ] && cp \"$SKILL_OUTPUT/viewer.html\" \"$SKILL_OUTPUT/_skill-creator-output/viewer.html\"\n[ -f \"$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json\" ] && \\\n  cp \"$SKILL_OUTPUT/skill-creator-workspace/iteration-1/benchmark.json\" \"$SKILL_OUTPUT/_skill-creator-output/benchmark.json\"\n```\n\n`build-site-data.mjs` reads `_skill-creator-output/` to surface candidate\nbenchmarks, viewer HTML, and per-eval results on the GAD site's evolution view.\n\n## Step 5: Hand off to human review\n\nPrint a clear handoff message to the user with the viewer path and what to do\nnext:\n\n```\nSkill candidate ready for review:\n  skills/candidates/<slug>/SKILL.md\n  skills/candidates/<slug>/viewer.html\n\nOpen the viewer in a browser, click through each test case, leave feedback,\nand click Submit All Reviews. When the feedback.json drops into the candidate\ndir, run:\n\n  gad evolution promote <slug>      # to merge into skills/\n  gad evolution discard <slug>      # to delete the candidate\n```\n\nThe candidate stays in `skills/candidates/` until promoted or discarded.\n`gad:evolution:evolve` will refuse to start a new evolution while any pending\ncandidates remain — this is the human-review gate.\n\n## Failure modes\n\n- **Skill-creator interviewing the user anyway:** make sure the INTENT.md is\n  complete and your prompt explicitly says \"skip the interview.\" Skill-creator\n  defers to user input when context is thin, so a sparse INTENT.md will trigger\n  questions.\n- **Viewer not generating:** check that `--static` was passed. Without it,\n  skill-creator tries to launch a browser, which fails in headless GAD runs.\n- **Workspace pollution in git:** `_skill-creator-output/workspace/` can be\n  large. Add `skills/candidates/*/skill-creator-workspace/` to .gitignore and\n  only commit `_skill-creator-output/` (which is the trimmed, site-ready copy).\n\n## Reference\n\n- Canonical skill-creator: `~/.agents/skills/skill-creator/SKILL.md`\n- Anthropic skills repo: https://github.com/anthropics/skills\n- Related skills: `gad-evolution-evolve`, `merge-skill`, `create-proto-skill`, `create-skill`, `gad-find-skills`\n\n"
+    "bodyHtml": "<h1>gad-skill-creator</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/skill-creator.md\">workflows/skill-creator.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad-skill-creator\n\n**Workflow:** [workflows/skill-creator.md](../../workflows/skill-creator.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-snapshot-optimize",
@@ -1235,8 +1265,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-snapshot-optimize/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad:snapshot-optimize</h1>\n<p>Ensures <code>gad snapshot</code> output stays within the sprint context window budget. This skill defines what a well-optimized snapshot contains, how to measure it, and the verification gates.</p>\n<h2>When to use</h2>\n<ul>\n<li>After modifying snapshot logic in <code>bin/gad.cjs</code></li>\n<li>After adding new planning file types (e.g. DOCS-MAP.xml, CONTEXT.md)</li>\n<li>When snapshot token count exceeds the 3,000 token target</li>\n<li>During phase 16 execution</li>\n<li>Before any cli-efficiency eval run</li>\n</ul>\n<h2>Token budget</h2>\n<table>\n<thead>\n<tr>\n<th>Component</th>\n<th>Target tokens</th>\n<th>Max tokens</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>STATE.xml (full)</td>\n<td>200</td>\n<td>400</td>\n</tr>\n<tr>\n<td>ROADMAP.xml (sprint-scoped)</td>\n<td>400</td>\n<td>800</td>\n</tr>\n<tr>\n<td>DECISIONS.xml (active-phase refs only)</td>\n<td>500</td>\n<td>1,000</td>\n</tr>\n<tr>\n<td>TASK-REGISTRY.xml (open tasks only)</td>\n<td>400</td>\n<td>800</td>\n</tr>\n<tr>\n<td>File refs + git log</td>\n<td>300</td>\n<td>500</td>\n</tr>\n<tr>\n<td>DOCS-MAP.xml</td>\n<td>100</td>\n<td>200</td>\n</tr>\n<tr>\n<td><strong>Total snapshot</strong></td>\n<td><strong>~1,900</strong></td>\n<td><strong>3,000</strong></td>\n</tr>\n</tbody></table>\n<p>Reference: <code>docs/context-budget.md</code> — full baseline analysis with current 26,885 token overhead.</p>\n<h2>What a correct sprint-scoped snapshot contains</h2>\n<h3>1. STATE.xml — full (no filtering needed, already compact)</h3>\n<p>Current phase, milestone, status, next-action, last-updated.</p>\n<h3>2. ROADMAP.xml — sprint-scoped</h3>\n<ul>\n<li><strong>Done phases outside sprint:</strong> one line per phase: <code>id | title | done</code></li>\n<li><strong>Phases in current sprint (active + planned):</strong> full goal text, status, depends</li>\n<li><strong>Sprint size:</strong> configurable (default 5), read from planning-config.toml</li>\n</ul>\n<p>Example collapsed done phase:</p>\n<pre><code>01 | Foundation | done\n02 | Session management | done\n</code></pre>\n<p>Example active phase (full):</p>\n<pre><code class=\"language-xml\">&lt;phase id=&quot;14&quot;&gt;\n  &lt;title&gt;Eval framework: escape-the-dungeon + tracing&lt;/title&gt;\n  &lt;goal&gt;Set up escape-the-dungeon eval project...&lt;/goal&gt;\n  &lt;status&gt;active&lt;/status&gt;\n  &lt;depends&gt;13&lt;/depends&gt;\n&lt;/phase&gt;\n</code></pre>\n<h3>3. TASK-REGISTRY.xml — open tasks only</h3>\n<ul>\n<li><strong>Completed tasks:</strong> omitted entirely (agent doesn&#39;t need them to know what to do next)</li>\n<li><strong>Planned/in-progress/blocked tasks:</strong> full goal, status, keywords, commands</li>\n<li><strong>Phase grouping preserved:</strong> tasks grouped under their phase id</li>\n</ul>\n<h3>4. DECISIONS.xml — active-phase referenced only</h3>\n<ul>\n<li>Include only decisions referenced by active phase tasks (via keywords or explicit refs)</li>\n<li>Include decisions marked as &quot;always relevant&quot; (gad-04, gad-17, gad-18)</li>\n<li>Omit decisions from completed phases that don&#39;t affect current work</li>\n</ul>\n<h3>5. File refs (NEW)</h3>\n<ul>\n<li>Code/doc files touched by in-progress and recently completed tasks</li>\n<li>Source: <code>&lt;files&gt;</code> block in TASK-REGISTRY.xml (when present) + <code>git log --name-only</code> scoped to project path</li>\n<li>Recent git log: last 5 commits for the project path</li>\n</ul>\n<h3>6. DOCS-MAP.xml — full (already compact)</h3>\n<h2>Verification steps</h2>\n<p>After any snapshot change, run these checks:</p>\n<pre><code class=\"language-sh\"># 1. Measure token count\ngad snapshot --projectid get-anything-done | wc -c\n# Divide by 4 for token estimate. Must be under 12,000 chars (3,000 tokens).\n\n# 2. Verify sprint scoping works\ngad snapshot --projectid get-anything-done --sprint\n# Should show only current sprint phases, not all 17.\n\n# 3. Verify done phases are collapsed\ngad snapshot --projectid get-anything-done | grep -c &quot;&lt;goal&gt;&quot;\n# Should be much less than total phase count — only active/planned phases have goals.\n\n# 4. Verify no completed tasks appear\ngad snapshot --projectid get-anything-done | grep &#39;status=&quot;done&quot;&#39; | wc -l\n# Should be 0 in task-registry section.\n\n# 5. Verify file refs present\ngad snapshot --projectid get-anything-done | grep &quot;File refs&quot;\n# Should show a section with recent file paths.\n\n# 6. Run parser tests\nnode tests/parser-coverage.test.cjs\n# All 46+ tests must pass.\n\n# 7. Compare with full dump\nFULL=$(gad snapshot --projectid get-anything-done --full | wc -c)\nSPRINT=$(gad snapshot --projectid get-anything-done --sprint | wc -c)\necho &quot;Full: $FULL chars, Sprint: $SPRINT chars, Reduction: $(( (FULL - SPRINT) * 100 / FULL ))%&quot;\n# Reduction should be &gt;60%.\n</code></pre>\n<h2>Snapshot flags after optimization</h2>\n<table>\n<thead>\n<tr>\n<th>Flag</th>\n<th>Behavior</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>--projectid &lt;id&gt;</code></td>\n<td>Scope to one project (required)</td>\n</tr>\n<tr>\n<td><code>--sprint</code></td>\n<td>Sprint-scoped output (default after optimization)</td>\n</tr>\n<tr>\n<td><code>--full</code></td>\n<td>Full dump like current behavior (for debugging/evals)</td>\n</tr>\n<tr>\n<td><code>--json</code></td>\n<td>JSON output</td>\n</tr>\n</tbody></table>\n<h2>What to check in RepoPlanner for parity</h2>\n<p>Read <code>../repo-planner/scripts/loop-cli.mjs</code> if that legacy reference is still present in your workspace:</p>\n<ul>\n<li><code>getSprintPhaseIds()</code> — how sprint boundaries are calculated</li>\n<li><code>context sprint</code> command — what paths and summary it returns</li>\n<li>Sprint config: <code>sprintSize</code> in config, default 5</li>\n</ul>\n<p>GAD sprint model should match RP&#39;s concept but use XML planning files instead of MD.</p>\n<h2>Definition of done</h2>\n<ol>\n<li><code>gad snapshot --projectid get-anything-done</code> fits under 3,000 tokens</li>\n<li>Sprint scoping works: only current sprint phases inlined</li>\n<li>Done phases collapsed to one-liners</li>\n<li>Only open tasks shown</li>\n<li>File refs included from git log and task registry</li>\n<li><code>--full</code> flag preserves current behavior for comparison</li>\n<li>cli-efficiency eval v7 scores &gt;= v6 composite (0.976)</li>\n<li><code>docs/context-budget.md</code> updated with new numbers</li>\n</ol>\n",
-    "bodyRaw": "\n# gad:snapshot-optimize\n\nEnsures `gad snapshot` output stays within the sprint context window budget. This skill defines what a well-optimized snapshot contains, how to measure it, and the verification gates.\n\n## When to use\n\n- After modifying snapshot logic in `bin/gad.cjs`\n- After adding new planning file types (e.g. DOCS-MAP.xml, CONTEXT.md)\n- When snapshot token count exceeds the 3,000 token target\n- During phase 16 execution\n- Before any cli-efficiency eval run\n\n## Token budget\n\n| Component | Target tokens | Max tokens |\n|-----------|--------------|------------|\n| STATE.xml (full) | 200 | 400 |\n| ROADMAP.xml (sprint-scoped) | 400 | 800 |\n| DECISIONS.xml (active-phase refs only) | 500 | 1,000 |\n| TASK-REGISTRY.xml (open tasks only) | 400 | 800 |\n| File refs + git log | 300 | 500 |\n| DOCS-MAP.xml | 100 | 200 |\n| **Total snapshot** | **~1,900** | **3,000** |\n\nReference: `docs/context-budget.md` — full baseline analysis with current 26,885 token overhead.\n\n## What a correct sprint-scoped snapshot contains\n\n### 1. STATE.xml — full (no filtering needed, already compact)\nCurrent phase, milestone, status, next-action, last-updated.\n\n### 2. ROADMAP.xml — sprint-scoped\n- **Done phases outside sprint:** one line per phase: `id | title | done`\n- **Phases in current sprint (active + planned):** full goal text, status, depends\n- **Sprint size:** configurable (default 5), read from planning-config.toml\n\nExample collapsed done phase:\n```\n01 | Foundation | done\n02 | Session management | done\n```\n\nExample active phase (full):\n```xml\n<phase id=\"14\">\n  <title>Eval framework: escape-the-dungeon + tracing</title>\n  <goal>Set up escape-the-dungeon eval project...</goal>\n  <status>active</status>\n  <depends>13</depends>\n</phase>\n```\n\n### 3. TASK-REGISTRY.xml — open tasks only\n- **Completed tasks:** omitted entirely (agent doesn't need them to know what to do next)\n- **Planned/in-progress/blocked tasks:** full goal, status, keywords, commands\n- **Phase grouping preserved:** tasks grouped under their phase id\n\n### 4. DECISIONS.xml — active-phase referenced only\n- Include only decisions referenced by active phase tasks (via keywords or explicit refs)\n- Include decisions marked as \"always relevant\" (gad-04, gad-17, gad-18)\n- Omit decisions from completed phases that don't affect current work\n\n### 5. File refs (NEW)\n- Code/doc files touched by in-progress and recently completed tasks\n- Source: `<files>` block in TASK-REGISTRY.xml (when present) + `git log --name-only` scoped to project path\n- Recent git log: last 5 commits for the project path\n\n### 6. DOCS-MAP.xml — full (already compact)\n\n## Verification steps\n\nAfter any snapshot change, run these checks:\n\n```sh\n# 1. Measure token count\ngad snapshot --projectid get-anything-done | wc -c\n# Divide by 4 for token estimate. Must be under 12,000 chars (3,000 tokens).\n\n# 2. Verify sprint scoping works\ngad snapshot --projectid get-anything-done --sprint\n# Should show only current sprint phases, not all 17.\n\n# 3. Verify done phases are collapsed\ngad snapshot --projectid get-anything-done | grep -c \"<goal>\"\n# Should be much less than total phase count — only active/planned phases have goals.\n\n# 4. Verify no completed tasks appear\ngad snapshot --projectid get-anything-done | grep 'status=\"done\"' | wc -l\n# Should be 0 in task-registry section.\n\n# 5. Verify file refs present\ngad snapshot --projectid get-anything-done | grep \"File refs\"\n# Should show a section with recent file paths.\n\n# 6. Run parser tests\nnode tests/parser-coverage.test.cjs\n# All 46+ tests must pass.\n\n# 7. Compare with full dump\nFULL=$(gad snapshot --projectid get-anything-done --full | wc -c)\nSPRINT=$(gad snapshot --projectid get-anything-done --sprint | wc -c)\necho \"Full: $FULL chars, Sprint: $SPRINT chars, Reduction: $(( (FULL - SPRINT) * 100 / FULL ))%\"\n# Reduction should be >60%.\n```\n\n## Snapshot flags after optimization\n\n| Flag | Behavior |\n|------|----------|\n| `--projectid <id>` | Scope to one project (required) |\n| `--sprint` | Sprint-scoped output (default after optimization) |\n| `--full` | Full dump like current behavior (for debugging/evals) |\n| `--json` | JSON output |\n\n## What to check in RepoPlanner for parity\n\nRead `../repo-planner/scripts/loop-cli.mjs` if that legacy reference is still present in your workspace:\n- `getSprintPhaseIds()` — how sprint boundaries are calculated\n- `context sprint` command — what paths and summary it returns\n- Sprint config: `sprintSize` in config, default 5\n\nGAD sprint model should match RP's concept but use XML planning files instead of MD.\n\n## Definition of done\n\n1. `gad snapshot --projectid get-anything-done` fits under 3,000 tokens\n2. Sprint scoping works: only current sprint phases inlined\n3. Done phases collapsed to one-liners\n4. Only open tasks shown\n5. File refs included from git log and task registry\n6. `--full` flag preserves current behavior for comparison\n7. cli-efficiency eval v7 scores >= v6 composite (0.976)\n8. `docs/context-budget.md` updated with new numbers\n"
+    "bodyHtml": "<h1>gad:snapshot-optimize</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/snapshot-optimize.md\">workflows/snapshot-optimize.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:snapshot-optimize\n\n**Workflow:** [workflows/snapshot-optimize.md](../../workflows/snapshot-optimize.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-stats",
@@ -1265,8 +1295,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-task-checkpoint/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad:task-checkpoint</h1>\n<p>Verifies that the agent updated planning docs for the completed task before moving to the next one. This is the enforcement mechanism for per-task discipline (gad-21).</p>\n<h2>When to use</h2>\n<ul>\n<li>Between tasks during phase execution</li>\n<li>After completing any task, before starting the next</li>\n<li>Called automatically by execute-phase workflow</li>\n</ul>\n<h2>What it checks</h2>\n<p>Read <code>.planning/TASK-REGISTRY.xml</code> and <code>.planning/STATE.xml</code>, then verify:</p>\n<h3>1. Previous task is marked done</h3>\n<pre><code>Check: TASK-REGISTRY.xml contains a task with the completed task&#39;s id AND status=&quot;done&quot;\nPass: task exists with status=&quot;done&quot;\nFail: task still shows status=&quot;in-progress&quot; or status=&quot;planned&quot;\n</code></pre>\n<p>If fail: <strong>Stop. Update TASK-REGISTRY.xml to mark the task done before continuing.</strong></p>\n<h3>2. STATE.xml next-action is current</h3>\n<pre><code>Check: STATE.xml &lt;next-action&gt; mentions the NEXT task or phase, not the completed one\nPass: next-action references upcoming work\nFail: next-action still describes the task that was just completed, or is stale\n</code></pre>\n<p>If fail: <strong>Stop. Run <code>gad state set-next-action --projectid &lt;id&gt; &quot;&lt;text&gt;&quot;</code> to update next-action.</strong> Hard-capped at 600 chars — write a pointer (next pick + open ids + blockers), not a journal. Activity goes in TASK-REGISTRY <code>&lt;resolution&gt;</code>.</p>\n<h3>3. Code compiles (if applicable)</h3>\n<pre><code>Check: Run the project&#39;s build/typecheck command if one exists\nPass: zero errors\nFail: compilation errors\n</code></pre>\n<p>If fail: <strong>Stop. Fix compilation errors before moving to the next task.</strong></p>\n<h3>4. Changes are committed</h3>\n<pre><code>Check: git status shows no uncommitted changes to planning docs or source files\nPass: working tree clean (or only untracked files)\nFail: modified files not committed\n</code></pre>\n<p>If fail: <strong>Stop. Commit with the task id in the message.</strong></p>\n<h2>Output</h2>\n<p>After all checks pass:</p>\n<pre><code>✓ Checkpoint passed for task [task-id]\n  - TASK-REGISTRY: task marked done\n  - STATE.xml: next-action updated\n  - Build: clean\n  - Git: committed\n\nProceeding to next task: [next-task-id] — [next-task-goal]\n</code></pre>\n<h2>How execute-phase uses this</h2>\n<p>The execute-phase workflow inserts this checkpoint between every task:</p>\n<pre><code>for each task in phase:\n  1. Mark task in-progress\n  2. Implement task\n  3. Mark task done + update STATE\n  4. Commit\n  5. &gt;&gt;&gt; RUN CHECKPOINT &lt;&lt;&lt;\n  6. If checkpoint fails → fix before continuing\n  7. Proceed to next task\n</code></pre>\n<h2>Why this matters</h2>\n<p>Eval v2 showed 34 tasks completed with 0 per-task commits and 0 state updates. The agent batched everything at the end. This checkpoint prevents that by making step 5 a hard gate.</p>\n",
-    "bodyRaw": "\n# gad:task-checkpoint\n\nVerifies that the agent updated planning docs for the completed task before moving to the next one. This is the enforcement mechanism for per-task discipline (gad-21).\n\n## When to use\n\n- Between tasks during phase execution\n- After completing any task, before starting the next\n- Called automatically by execute-phase workflow\n\n## What it checks\n\nRead `.planning/TASK-REGISTRY.xml` and `.planning/STATE.xml`, then verify:\n\n### 1. Previous task is marked done\n\n```\nCheck: TASK-REGISTRY.xml contains a task with the completed task's id AND status=\"done\"\nPass: task exists with status=\"done\"\nFail: task still shows status=\"in-progress\" or status=\"planned\"\n```\n\nIf fail: **Stop. Update TASK-REGISTRY.xml to mark the task done before continuing.**\n\n### 2. STATE.xml next-action is current\n\n```\nCheck: STATE.xml <next-action> mentions the NEXT task or phase, not the completed one\nPass: next-action references upcoming work\nFail: next-action still describes the task that was just completed, or is stale\n```\n\nIf fail: **Stop. Run `gad state set-next-action --projectid <id> \"<text>\"` to update next-action.** Hard-capped at 600 chars — write a pointer (next pick + open ids + blockers), not a journal. Activity goes in TASK-REGISTRY `<resolution>`.\n\n### 3. Code compiles (if applicable)\n\n```\nCheck: Run the project's build/typecheck command if one exists\nPass: zero errors\nFail: compilation errors\n```\n\nIf fail: **Stop. Fix compilation errors before moving to the next task.**\n\n### 4. Changes are committed\n\n```\nCheck: git status shows no uncommitted changes to planning docs or source files\nPass: working tree clean (or only untracked files)\nFail: modified files not committed\n```\n\nIf fail: **Stop. Commit with the task id in the message.**\n\n## Output\n\nAfter all checks pass:\n\n```\n✓ Checkpoint passed for task [task-id]\n  - TASK-REGISTRY: task marked done\n  - STATE.xml: next-action updated\n  - Build: clean\n  - Git: committed\n\nProceeding to next task: [next-task-id] — [next-task-goal]\n```\n\n## How execute-phase uses this\n\nThe execute-phase workflow inserts this checkpoint between every task:\n\n```\nfor each task in phase:\n  1. Mark task in-progress\n  2. Implement task\n  3. Mark task done + update STATE\n  4. Commit\n  5. >>> RUN CHECKPOINT <<<\n  6. If checkpoint fails → fix before continuing\n  7. Proceed to next task\n```\n\n## Why this matters\n\nEval v2 showed 34 tasks completed with 0 per-task commits and 0 state updates. The agent batched everything at the end. This checkpoint prevents that by making step 5 a hard gate.\n"
+    "bodyHtml": "<h1>gad:task-checkpoint</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/task-checkpoint.md\">workflows/task-checkpoint.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:task-checkpoint\n\n**Workflow:** [workflows/task-checkpoint.md](../../workflows/task-checkpoint.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-thread",
@@ -1280,8 +1310,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-thread/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nCreate, list, or resume persistent context threads. Threads are lightweight\ncross-session knowledge stores for work that spans multiple sessions but\ndoesn't belong to any specific phase.\n</objective>\n\n<process>\n\n<p><strong>Parse $ARGUMENTS to determine mode:</strong></p>\n<mode_list>\n**If no arguments or $ARGUMENTS is empty:**\n\n<p>List all threads:</p>\n<pre><code class=\"language-bash\">ls .planning/threads/*.md 2&gt;/dev/null\n</code></pre>\n<p>For each thread, read the first few lines to show title and status:</p>\n<pre><code>## Active Threads\n\n| Thread | Status | Last Updated |\n|--------|--------|-------------|\n| fix-deploy-key-auth | OPEN | 2026-03-15 |\n| pasta-tcp-timeout | RESOLVED | 2026-03-12 |\n| perf-investigation | IN PROGRESS | 2026-03-17 |\n</code></pre>\n<p>If no threads exist, show:</p>\n<pre><code>No threads found. Create one with: /gad:thread &lt;description&gt;\n</code></pre>\n</mode_list>\n\n<mode_resume>\n**If $ARGUMENTS matches an existing thread name (file exists):**\n\n<p>Resume the thread — load its context into the current session:</p>\n<pre><code class=\"language-bash\">cat &quot;.planning/threads/${THREAD_NAME}.md&quot;\n</code></pre>\n<p>Display the thread content and ask what the user wants to work on next.\nUpdate the thread&#39;s status to <code>IN PROGRESS</code> if it was <code>OPEN</code>.\n</mode_resume></p>\n<mode_create>\n**If $ARGUMENTS is a new description (no matching thread file):**\n\n<p>Create a new thread:</p>\n<ol>\n<li><p>Generate slug from description:</p>\n<pre><code class=\"language-bash\">SLUG=$(gad-tools generate-slug &quot;$ARGUMENTS&quot; --raw)\n</code></pre>\n</li>\n<li><p>Create the threads directory if needed:</p>\n<pre><code class=\"language-bash\">mkdir -p .planning/threads\n</code></pre>\n</li>\n<li><p>Write the thread file:</p>\n<pre><code class=\"language-bash\">cat &gt; &quot;.planning/threads/${SLUG}.md&quot; &lt;&lt; &#39;EOF&#39;\n# Thread: {description}\n\n## Status: OPEN\n\n## Goal\n\n{description}\n\n## Context\n\n*Created from conversation on {today&#39;s date}.*\n\n## References\n\n- *(add links, file paths, or issue numbers)*\n\n## Next Steps\n\n- *(what the next session should do first)*\nEOF\n</code></pre>\n</li>\n<li><p>If there&#39;s relevant context in the current conversation (code snippets,\nerror messages, investigation results), extract and add it to the Context\nsection.</p>\n</li>\n<li><p>Commit:</p>\n<pre><code class=\"language-bash\">gad-tools commit &quot;docs: create thread — ${ARGUMENTS}&quot; --files &quot;.planning/threads/${SLUG}.md&quot;\n</code></pre>\n</li>\n<li><p>Report:</p>\n<pre><code>## 🧵 Thread Created\n\nThread: {slug}\nFile: .planning/threads/{slug}.md\n\nResume anytime with: /gad:thread {slug}\n</code></pre>\n</li>\n</ol>\n</mode_create>\n\n</process>\n\n<notes>\n- Threads are NOT phase-scoped — they exist independently of the roadmap\n- Lighter weight than /gad:pause-work — no phase state, no plan context\n- The value is in Context and Next Steps — a cold-start session can pick up immediately\n- Threads can be promoted to phases or backlog items when they mature:\n  /gad:add-phase or /gad:add-backlog with context from the thread\n- Thread files live in .planning/threads/ — no collision with phases or other GAD structures\n</notes>\n",
-    "bodyRaw": "\n<objective>\nCreate, list, or resume persistent context threads. Threads are lightweight\ncross-session knowledge stores for work that spans multiple sessions but\ndoesn't belong to any specific phase.\n</objective>\n\n<process>\n\n**Parse $ARGUMENTS to determine mode:**\n\n<mode_list>\n**If no arguments or $ARGUMENTS is empty:**\n\nList all threads:\n```bash\nls .planning/threads/*.md 2>/dev/null\n```\n\nFor each thread, read the first few lines to show title and status:\n```\n## Active Threads\n\n| Thread | Status | Last Updated |\n|--------|--------|-------------|\n| fix-deploy-key-auth | OPEN | 2026-03-15 |\n| pasta-tcp-timeout | RESOLVED | 2026-03-12 |\n| perf-investigation | IN PROGRESS | 2026-03-17 |\n```\n\nIf no threads exist, show:\n```\nNo threads found. Create one with: /gad:thread <description>\n```\n</mode_list>\n\n<mode_resume>\n**If $ARGUMENTS matches an existing thread name (file exists):**\n\nResume the thread — load its context into the current session:\n```bash\ncat \".planning/threads/${THREAD_NAME}.md\"\n```\n\nDisplay the thread content and ask what the user wants to work on next.\nUpdate the thread's status to `IN PROGRESS` if it was `OPEN`.\n</mode_resume>\n\n<mode_create>\n**If $ARGUMENTS is a new description (no matching thread file):**\n\nCreate a new thread:\n\n1. Generate slug from description:\n   ```bash\n   SLUG=$(gad-tools generate-slug \"$ARGUMENTS\" --raw)\n   ```\n\n2. Create the threads directory if needed:\n   ```bash\n   mkdir -p .planning/threads\n   ```\n\n3. Write the thread file:\n   ```bash\n   cat > \".planning/threads/${SLUG}.md\" << 'EOF'\n   # Thread: {description}\n\n   ## Status: OPEN\n\n   ## Goal\n\n   {description}\n\n   ## Context\n\n   *Created from conversation on {today's date}.*\n\n   ## References\n\n   - *(add links, file paths, or issue numbers)*\n\n   ## Next Steps\n\n   - *(what the next session should do first)*\n   EOF\n   ```\n\n4. If there's relevant context in the current conversation (code snippets,\n   error messages, investigation results), extract and add it to the Context\n   section.\n\n5. Commit:\n   ```bash\n   gad-tools commit \"docs: create thread — ${ARGUMENTS}\" --files \".planning/threads/${SLUG}.md\"\n   ```\n\n6. Report:\n   ```\n   ## 🧵 Thread Created\n\n   Thread: {slug}\n   File: .planning/threads/{slug}.md\n\n   Resume anytime with: /gad:thread {slug}\n   ```\n</mode_create>\n\n</process>\n\n<notes>\n- Threads are NOT phase-scoped — they exist independently of the roadmap\n- Lighter weight than /gad:pause-work — no phase state, no plan context\n- The value is in Context and Next Steps — a cold-start session can pick up immediately\n- Threads can be promoted to phases or backlog items when they mature:\n  /gad:add-phase or /gad:add-backlog with context from the thread\n- Thread files live in .planning/threads/ — no collision with phases or other GAD structures\n</notes>\n"
+    "bodyHtml": "<h1>gad:thread</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/thread.md\">workflows/thread.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:thread\n\n**Workflow:** [workflows/thread.md](../../workflows/thread.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-update",
@@ -1355,8 +1385,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-visual-context-panel-identities/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad-visual-context-panel-identities</h1>\n<p>This skill defines the visual context identity system for the site. The goal is simple: when a user\npoints at a region in the UI, the copied token must map directly to a searchable literal in source.</p>\n<h2>When to use</h2>\n<ul>\n<li>A user says they cannot find the component they are looking at from the dev/visual panel.</li>\n<li>The panel is copying runtime-generated ids (or unstable values) instead of source literals.</li>\n<li>A section/page shows duplicate panels or inconsistent panel behavior.</li>\n<li>You are adding new sections/pages and need them to be discoverable by name for agent handoff.</li>\n</ul>\n<h2>The pattern</h2>\n<ol>\n<li>Use one panel surface only: <code>DevPanel</code> in band mode via <code>BandDevPanel</code>.</li>\n<li>Treat <code>PageIdentified as=&quot;...&quot;</code> as the preferred page-level, human-readable component identity.</li>\n<li>Give each <code>SiteSection</code> a static <code>cid=&quot;...&quot;</code> literal (or <code>id=&quot;...&quot;</code> when that id is already stable and intentional).</li>\n<li>Keep inner landmarks on <code>Identified as=&quot;...&quot;</code> so list rows map to component-level names.</li>\n<li>Ensure prompt handoff includes:<ul>\n<li>component kind</li>\n<li>component label</li>\n<li>source-search literal (<code>cid=&quot;...&quot;</code>, <code>stableCid=&quot;...&quot;</code>, <code>as=&quot;...&quot;</code>)</li>\n<li>rendered <code>data-cid</code></li>\n</ul>\n</li>\n</ol>\n<h2>Naming contract</h2>\n<ul>\n<li>Page-level region: <code>PageIdentified as=&quot;SkepticHowUsedSection&quot;</code></li>\n<li>Section shell: <code>SiteSection cid=&quot;skeptic-how-used-site-section&quot;</code></li>\n<li>Inner block: <code>Identified as=&quot;SkepticHowUsedHeading&quot;</code></li>\n</ul>\n<p>Use explicit literals. Avoid <code>useId</code>-suffixed identities for anything users must reference in prompts.</p>\n<h2>Canonical snippets</h2>\n<p>Use these as stable templates when creating or rebuilding sections.</p>\n<pre><code class=\"language-tsx\">&lt;PageIdentified as=&quot;ProjectPage&quot;&gt;\n  &lt;SiteSection cid=&quot;project-hero-section-site-section&quot;&gt;\n    &lt;SiteSectionHeading title={project.name} /&gt;\n  &lt;/SiteSection&gt;\n&lt;/PageIdentified&gt;\n</code></pre>\n<pre><code class=\"language-tsx\">&lt;SiteSection cid=&quot;project-skills-scope-section-site-section&quot; tone=&quot;muted&quot;&gt;\n  &lt;SiteSectionHeading title=&quot;Skill Scope&quot; /&gt;\n  {/* Optional: only when you need deeper row-level targeting */}\n  &lt;Identified as=&quot;ProjectSkillInheritanceList&quot;&gt;\n    &lt;ProjectSkillInheritance project={project} /&gt;\n  &lt;/Identified&gt;\n&lt;/SiteSection&gt;\n</code></pre>\n<pre><code class=\"language-tsx\">&lt;SiteSection cid=&quot;skeptic-hypotheses-site-section&quot;&gt;\n  &lt;Identified as=&quot;HypothesesPageIntro&quot;&gt;\n    &lt;SkepticPageIntro /&gt;\n  &lt;/Identified&gt;\n&lt;/SiteSection&gt;\n</code></pre>\n<h2>Why</h2>\n<p>The panel is a human-in-the-loop visual CMS context system. Its value is not just highlighting DOM:\nit translates what humans see into exact source handles coding agents can act on. Runtime-generated ids\nbreak that bridge because they are not reliably greppable or stable across edits.</p>\n<h2>Failure modes</h2>\n<ul>\n<li>Duplicate panel surfaces (inside vs outside) create conflicting targets and prompt confusion.</li>\n<li>Auto-generated section ids make copied tokens unsearchable in source.</li>\n<li>Route-level generic ids repeated in one file (<code>page-site-section</code> everywhere) create ambiguity.</li>\n<li>Missing <code>Identified as</code> landmarks at logical component boundaries reduces edit precision.</li>\n<li>Mermaid render failures can leak raw error text into the page chrome if renderer artifacts are not cleaned.</li>\n</ul>\n<h2>Verification checklist</h2>\n<ul>\n<li>Hover one section/page band: only one Visual Context Panel appears.</li>\n<li>Copy from panel row/header and <code>rg</code> it in repo: token resolves to intended component.</li>\n<li>Update/Delete prompt payload includes route + component kind + search literal + <code>data-cid</code>.</li>\n<li>Added sections include explicit static <code>cid</code> and meaningful <code>as</code> labels.</li>\n<li>Speech/noisy prompt still resolves when route + <code>cid</code> are present.</li>\n</ul>\n<h2>Cleanup guardrail</h2>\n<p>For landmark-driven edits:</p>\n<ol>\n<li>Required cleanup: unused imports and dead local component references.</li>\n<li>Optional cleanup: deleting unreferenced files created by the exact edit.</li>\n<li>Avoid wide unrelated refactors in the same pass.</li>\n</ol>\n<h2>Planning hook</h2>\n<p>When this skill is used on a task, record it in planning artifacts:</p>\n<ul>\n<li><code>TASK-REGISTRY.xml</code>: set <code>skill=&quot;gad-visual-context-panel-identities&quot;</code> on the completed task.</li>\n<li><code>STATE.xml</code>: one line in <code>next-action</code> summarizing what ids were normalized — use <code>gad state set-next-action</code> (hard cap 600 chars).</li>\n<li><code>DECISIONS.xml</code> (only if policy changed): record the id contract change with examples.</li>\n</ul>\n<h2>Related</h2>\n<ul>\n<li><code>site/components/devid/DevPanel.tsx</code></li>\n<li><code>site/components/devid/Identified.tsx</code></li>\n<li><code>site/components/devid/PageIdentified.tsx</code></li>\n<li><code>site/components/site/SiteSection.tsx</code></li>\n<li><code>site/components/devid/DevIdAgentPromptDialog.tsx</code></li>\n</ul>\n",
-    "bodyRaw": "\n# gad-visual-context-panel-identities\n\nThis skill defines the visual context identity system for the site. The goal is simple: when a user\npoints at a region in the UI, the copied token must map directly to a searchable literal in source.\n\n## When to use\n\n- A user says they cannot find the component they are looking at from the dev/visual panel.\n- The panel is copying runtime-generated ids (or unstable values) instead of source literals.\n- A section/page shows duplicate panels or inconsistent panel behavior.\n- You are adding new sections/pages and need them to be discoverable by name for agent handoff.\n\n## The pattern\n\n1. Use one panel surface only: `DevPanel` in band mode via `BandDevPanel`.\n2. Treat `PageIdentified as=\"...\"` as the preferred page-level, human-readable component identity.\n3. Give each `SiteSection` a static `cid=\"...\"` literal (or `id=\"...\"` when that id is already stable and intentional).\n4. Keep inner landmarks on `Identified as=\"...\"` so list rows map to component-level names.\n5. Ensure prompt handoff includes:\n   - component kind\n   - component label\n   - source-search literal (`cid=\"...\"`, `stableCid=\"...\"`, `as=\"...\"`)\n   - rendered `data-cid`\n\n## Naming contract\n\n- Page-level region: `PageIdentified as=\"SkepticHowUsedSection\"`\n- Section shell: `SiteSection cid=\"skeptic-how-used-site-section\"`\n- Inner block: `Identified as=\"SkepticHowUsedHeading\"`\n\nUse explicit literals. Avoid `useId`-suffixed identities for anything users must reference in prompts.\n\n## Canonical snippets\n\nUse these as stable templates when creating or rebuilding sections.\n\n```tsx\n<PageIdentified as=\"ProjectPage\">\n  <SiteSection cid=\"project-hero-section-site-section\">\n    <SiteSectionHeading title={project.name} />\n  </SiteSection>\n</PageIdentified>\n```\n\n```tsx\n<SiteSection cid=\"project-skills-scope-section-site-section\" tone=\"muted\">\n  <SiteSectionHeading title=\"Skill Scope\" />\n  {/* Optional: only when you need deeper row-level targeting */}\n  <Identified as=\"ProjectSkillInheritanceList\">\n    <ProjectSkillInheritance project={project} />\n  </Identified>\n</SiteSection>\n```\n\n```tsx\n<SiteSection cid=\"skeptic-hypotheses-site-section\">\n  <Identified as=\"HypothesesPageIntro\">\n    <SkepticPageIntro />\n  </Identified>\n</SiteSection>\n```\n\n## Why\n\nThe panel is a human-in-the-loop visual CMS context system. Its value is not just highlighting DOM:\nit translates what humans see into exact source handles coding agents can act on. Runtime-generated ids\nbreak that bridge because they are not reliably greppable or stable across edits.\n\n## Failure modes\n\n- Duplicate panel surfaces (inside vs outside) create conflicting targets and prompt confusion.\n- Auto-generated section ids make copied tokens unsearchable in source.\n- Route-level generic ids repeated in one file (`page-site-section` everywhere) create ambiguity.\n- Missing `Identified as` landmarks at logical component boundaries reduces edit precision.\n- Mermaid render failures can leak raw error text into the page chrome if renderer artifacts are not cleaned.\n\n## Verification checklist\n\n- Hover one section/page band: only one Visual Context Panel appears.\n- Copy from panel row/header and `rg` it in repo: token resolves to intended component.\n- Update/Delete prompt payload includes route + component kind + search literal + `data-cid`.\n- Added sections include explicit static `cid` and meaningful `as` labels.\n- Speech/noisy prompt still resolves when route + `cid` are present.\n\n## Cleanup guardrail\n\nFor landmark-driven edits:\n\n1. Required cleanup: unused imports and dead local component references.\n2. Optional cleanup: deleting unreferenced files created by the exact edit.\n3. Avoid wide unrelated refactors in the same pass.\n\n## Planning hook\n\nWhen this skill is used on a task, record it in planning artifacts:\n\n- `TASK-REGISTRY.xml`: set `skill=\"gad-visual-context-panel-identities\"` on the completed task.\n- `STATE.xml`: one line in `next-action` summarizing what ids were normalized — use `gad state set-next-action` (hard cap 600 chars).\n- `DECISIONS.xml` (only if policy changed): record the id contract change with examples.\n\n## Related\n\n- `site/components/devid/DevPanel.tsx`\n- `site/components/devid/Identified.tsx`\n- `site/components/devid/PageIdentified.tsx`\n- `site/components/site/SiteSection.tsx`\n- `site/components/devid/DevIdAgentPromptDialog.tsx`\n"
+    "bodyHtml": "<h1>gad-visual-context-panel-identities</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/visual-context-panel-identities.md\">workflows/visual-context-panel-identities.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad-visual-context-panel-identities\n\n**Workflow:** [workflows/visual-context-panel-identities.md](../../workflows/visual-context-panel-identities.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-visual-context-system",
@@ -1370,8 +1400,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-visual-context-system/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad-visual-context-system</h1>\n<p>A <strong>UX pattern for visual-context-building during software development with\ncoding agents.</strong> The value is not the DOM highlighting — it&#39;s the bridge\nbetween <em>what a human sees in the UI</em> and <em>what a coding agent can unambiguously\nact on from source</em>.</p>\n<p>The skill has <strong>one entrypoint</strong> and <strong>two workflows</strong>, chosen by the shape of\nthe project it&#39;s running in.</p>\n<h2>Core invariant (both workflows)</h2>\n<p>Every user-facing region has a <strong>source-searchable identity literal</strong> — a token\nthat appears verbatim in a source file and can be found with plain <code>grep</code>. No\nruntime-generated ids. No template-literal concatenation that only exists after\nrender. No <code>useId()</code> for anything the user is meant to reference.</p>\n<p>The three landmark kinds:</p>\n<ul>\n<li><strong>Section shell</strong> — <code>SiteSection cid=&quot;&lt;route&gt;-&lt;section&gt;-site-section&quot;</code> (stable literal).</li>\n<li><strong>Inner landmark</strong> — <code>Identified as=&quot;&lt;ComponentName&gt;&quot;</code> for targets more specific than the section shell (heading, row, action).</li>\n<li><strong>Page wrapper (optional)</strong> — only when a page has multiple sections that share a\nsingle dev-panel band. See <strong>PageIdentified caveat</strong> below.</li>\n</ul>\n<p>The hand-off payload a coding agent receives must carry:\ncomponent kind + component label + source-search literal + rendered <code>data-cid</code></p>\n<ul>\n<li>route. This is what makes the copy-paste loop work.</li>\n</ul>\n<h2>Which workflow to run</h2>\n<p>Determine which workflow you need by reading the project configuration first:</p>\n<pre><code class=\"language-sh\"># From the repo root of the project the user is working on:\nnode vendor/get-anything-done/bin/gad.cjs projects audit 2&gt;&amp;1 | head -40\nls &lt;project&gt;/src/components 2&gt;/dev/null   # or equivalent component root\ngrep -rn &quot;SiteSection\\|Identified as=\\|data-cid&quot; &lt;project&gt;/src 2&gt;&amp;1 | head -20\n</code></pre>\n<ul>\n<li><strong>No hits</strong> and no dev panel component → <strong>Workflow A: Design &amp; Build</strong>.</li>\n<li><strong>Existing system + some sections missing <code>cid</code> literals</strong> → <strong>Workflow B: Maintain &amp; Rollout</strong>.</li>\n<li><strong>Existing system + every section clean</strong> → nothing to do; check if the skill\nneeds to evolve (new landmark kinds, new copy-paste affordances).</li>\n</ul>\n<p>Both workflows share the core invariant above. They differ in what they produce.</p>\n<hr>\n<h2>Workflow A: Design &amp; Build (greenfield / new project)</h2>\n<p>Use this when spinning up the visual-context system in a project that has no\ndev panel, no identity literals, and no copy-paste handoff path.</p>\n<p>This is the common case for <strong>game projects</strong> and any app the user hasn&#39;t\ntouched yet. At the start of Workflow A you do <strong>not</strong> yet know the specific\ncomponents/sections — the skill&#39;s job is to give the user a working system they\ncan extend as the UI takes shape.</p>\n<h3>Steps</h3>\n<ol>\n<li><p><strong>Design the three landmark components</strong> for the target app&#39;s component\nframework. Use the existing GAD-site implementations as canonical reference\n(see <strong>References</strong> below). In React/JSX the shapes are:</p>\n<ul>\n<li><code>SiteSection</code> — wraps a section, accepts <code>cid: string</code>, writes <code>data-cid</code>, <code>data-cid-component-tag=&quot;SiteSection&quot;</code> to the DOM root.</li>\n<li><code>Identified</code> — generic wrapper, accepts <code>as: string</code>, same data attrs with <code>&quot;Identified&quot;</code> tag.</li>\n<li><code>DevPanel</code> — a floating/band overlay that queries the DOM for those attrs, shows the token on hover, supports click-to-copy and open-in-agent-prompt.</li>\n</ul>\n<p>Non-React targets (Unity, Godot, game engines): the invariant still holds —\nthe literal needs to be written somewhere <code>grep</code> finds it. For Unity UGUI\nthat could be an attribute on the prefab; for a canvas-based renderer it\ncould be a string constant on the component class.</p>\n</li>\n<li><p><strong>Ship the minimal <code>DevPanel</code> surface</strong> — one panel, gated to <code>NODE_ENV=development</code> (or engine-dev-build equivalent). Start with: hover highlight, click-to-copy, copy-with-agent-prompt affordance. No nesting, no section-vs-band duality — that was the 2026-04-14 regression, avoid it.</p>\n</li>\n<li><p><strong>Write the agent-prompt handoff payload</strong> as a single shared component. It must emit: route + component kind + component label + source-search literal + <code>data-cid</code>. See <code>DevIdAgentPromptDialog.tsx</code> for the canonical shape.</p>\n</li>\n<li><p><strong>Seed one landmark per major section</strong> so the user has something to grep against on day one. Don&#39;t try to achieve full coverage in Workflow A — the user will drive that as the UI grows.</p>\n</li>\n<li><p><strong>Leave Workflow B plumbed in</strong> — add a one-line script (or CI check) that can be run later to grep for <code>SiteSection</code> without <code>cid=</code> and fail-with-report. This is the handoff to Workflow B.</p>\n</li>\n</ol>\n<h3>Deliverables</h3>\n<ul>\n<li><code>components/devid/{DevPanel,Identified,SiteSection,DevIdAgentPromptDialog}.tsx</code> (or the app&#39;s equivalent paths)</li>\n<li>Dev-only mount of <code>DevPanel</code> in the root layout</li>\n<li>One seeded landmark in at least the home route</li>\n<li>The Workflow B audit script stub</li>\n</ul>\n<h3>Failure modes</h3>\n<ul>\n<li><strong>Shipping the panel before the invariant is enforced.</strong> Users copy tokens,\n<code>grep</code> finds nothing, trust collapses. Seed at least one literal before the\npanel is visible.</li>\n<li><strong>Using runtime-generated ids for landmarks</strong> because it&#39;s &quot;temporary&quot;. It&#39;s\nnever temporary. Always start with literal strings.</li>\n<li><strong>Splitting the panel into section-mode vs band-mode up front.</strong> Single\nsurface wins. Complexity can be added later if there&#39;s real demand; the\nduality regression is expensive to undo.</li>\n</ul>\n<hr>\n<h2>Workflow B: Maintain &amp; Rollout (existing project)</h2>\n<p>Use this when the system already exists in the project and the user reports\none of: &quot;I copied a token from the dev panel and can&#39;t find it in source&quot;, a\nnew route landed without the explicit-cid pattern, or a batch PR introduced\nmultiple <code>SiteSection</code> components without <code>cid</code> literals. The canonical example\nis the GAD site itself (<code>vendor/get-anything-done/site/</code>).</p>\n<h3>Steps</h3>\n<ol>\n<li><p><strong>Scan for runtime-id leaks</strong> from the repo root:</p>\n<pre><code class=\"language-sh\">grep -rn &quot;SiteSection&quot; &lt;site-root&gt;/app &lt;site-root&gt;/components --include=&quot;*.tsx&quot; | grep -v &#39;cid=&#39;\n</code></pre>\n<p>Each hit is a candidate. Filter out loop renderers — they inherit from a\nparent section.</p>\n</li>\n<li><p><strong>Classify each hit:</strong></p>\n<ul>\n<li>Page shell with multiple sections → normally a <code>SiteSection cid=&quot;&lt;route&gt;-page-site-section&quot;</code> is enough. <code>PageIdentified</code> is <strong>deprecated</strong> — prefer a top-level <code>SiteSection</code> with a route-qualified literal.</li>\n<li>Content section → <code>cid=&quot;&lt;route&gt;-&lt;section&gt;-site-section&quot;</code>.</li>\n<li>Repeating row inside a list → <strong>skip</strong>, rows inherit from the parent section.</li>\n</ul>\n</li>\n<li><p><strong>Name convention</strong> — always include the route slug. <code>page-site-section</code>\nalone is banned because it collides across routes. Use\n<code>&lt;route&gt;-&lt;section&gt;-site-section</code> or <code>&lt;route&gt;-page-site-section</code>.</p>\n</li>\n<li><p><strong>Add inner <code>Identified as=&quot;...&quot;</code> landmarks</strong> only where a user would plausibly\ntarget the sub-region (heading, intro, action row). Don&#39;t carpet the tree.</p>\n</li>\n<li><p><strong>Verify by grep</strong> — one token, one hit. Zero hits = typo. Multiple hits = ambiguity.</p>\n</li>\n<li><p><strong>Manual pass in the dev panel</strong> — hover each affected section, click the\ntoken, paste-search in the editor. Catches regressions <code>grep</code> misses (tokens\nwrapped in template literals).</p>\n</li>\n<li><p><strong>Update planning artifacts</strong> on the project you&#39;re working on:</p>\n<ul>\n<li><code>TASK-REGISTRY.xml</code>: mark the task <code>status=&quot;done&quot; skill=&quot;gad-visual-context-system&quot;</code>.</li>\n<li><code>STATE.xml</code> <code>next-action</code>: one line listing the normalized routes — use <code>gad state set-next-action</code> (hard cap 600 chars).</li>\n<li><code>DECISIONS.xml</code>: only if the policy itself changed. This workflow enforces, it doesn&#39;t drift.</li>\n</ul>\n</li>\n</ol>\n<h3>Failure modes</h3>\n<ul>\n<li><strong>Normalizing list rows.</strong> Rows inherit; adding per-row literals makes grep noisy and defeats the pattern.</li>\n<li><strong>Copy-paste literal collisions</strong> — two sections with the same <code>cid</code> on different routes. Always include the route slug.</li>\n<li><strong>Removing stable <code>id=</code> anchors</strong> in favor of new <code>cid=</code>. If the existing <code>id=</code> is already stable, allow both: <code>id=&quot;workflow&quot; cid=&quot;workflow-site-section&quot;</code>.</li>\n<li><strong>Auto-replace gone wrong.</strong> The 2026-04-14 rollout had a bad sed pass that character-substituted <code>c → i</code> across page files (<code>SiteSeition</code>, <code>iomponents</code>). If you&#39;re doing a batch rename, run it <strong>one file at a time</strong> with reads before and after, or use the Edit tool with an explicit old/new match rather than a regex.</li>\n<li><strong>Normalizing inside dynamic/generated MDX or data-rendered content.</strong> Don&#39;t. Those regions are data, not source.</li>\n</ul>\n<hr>\n<h2>PageIdentified caveat (both workflows)</h2>\n<p><code>PageIdentified</code> was an earlier page-level wrapper component. As of 2026-04-14\nit has exactly <strong>one remaining call site</strong> (<code>app/skeptic/page.tsx</code>) in the GAD\nsite and is scheduled for removal. For any new Workflow A project, <strong>do not\nimplement a <code>PageIdentified</code> component</strong> — a top-level <code>SiteSection cid=&quot;&lt;route&gt;-page-site-section&quot;</code>\ncovers the same ground with less surface area. For Workflow B on a project\nthat still has <code>PageIdentified</code>, replacing call sites is a quick migration;\nsee the file list in <strong>References</strong>.</p>\n<h2>Related patterns</h2>\n<ul>\n<li><strong>Multi-project monorepos</strong> — when the skill runs from the monorepo root and\nthe operator has multiple projects with their own <code>gad-config.toml</code> scope,\nWorkflow B needs to know which project&#39;s <code>site/app/</code> to scan. Read\n<code>planning-config.toml</code> / <code>gad-config.toml</code> first and scope by the project the\nuser is currently on.</li>\n<li><strong>CI guard</strong> — a repo-level script that fails CI when a <code>SiteSection</code> lacks\n<code>cid=</code> or uses a banned generic literal (<code>page-site-section</code>). Mentioned as a\nfollow-up in the 44-16 rollout notes.</li>\n</ul>\n<h2>References (GAD site — canonical Workflow B target)</h2>\n<ul>\n<li><code>vendor/get-anything-done/site/components/site/SiteSection.tsx</code> — section shell</li>\n<li><code>vendor/get-anything-done/site/components/devid/Identified.tsx</code> — inner landmark</li>\n<li><code>vendor/get-anything-done/site/components/devid/DevPanel.tsx</code> — panel surface</li>\n<li><code>vendor/get-anything-done/site/components/devid/DevIdAgentPromptDialog.tsx</code> — handoff dialog</li>\n<li><code>vendor/get-anything-done/site/components/devid/SectionRegistry.tsx</code> — registry of component kinds</li>\n<li><code>vendor/get-anything-done/skills/gad-visual-context-panel-identities/SKILL.md</code> — the existing policy-only skill this proto-skill extends/supersedes</li>\n<li><code>vendor/get-anything-done/references/visual-context-panel-methodology.md</code> — durable methodology doc (phase 44-17)</li>\n</ul>\n<h2>Relationship to parent skill</h2>\n<p>The existing <code>gad-visual-context-panel-identities</code> skill in <code>skills/</code> is <strong>the\npolicy-only contract</strong> for the GAD site. This proto-skill <strong>supersedes</strong> it by\nadding Workflow A (design/build in a new project) on top of the same invariant.\nOn promotion, consider either:</p>\n<ul>\n<li><strong>Promote and deprecate parent</strong> — this skill fully contains the parent&#39;s\ncontent. Parent moves to <code>skills/.archive/</code> or is deleted.</li>\n<li><strong>Promote as sibling</strong> — parent remains the canonical GAD-site policy, this\nskill becomes the meta/multi-project version. Higher surface area, clearer\nseparation.</li>\n</ul>\n<p>Recommendation: <strong>promote and deprecate parent</strong>. The policy lives in this\nskill&#39;s Workflow B section; the parent file adds no information the new skill\ndoesn&#39;t.</p>\n",
-    "bodyRaw": "\n# gad-visual-context-system\n\nA **UX pattern for visual-context-building during software development with\ncoding agents.** The value is not the DOM highlighting — it's the bridge\nbetween *what a human sees in the UI* and *what a coding agent can unambiguously\nact on from source*.\n\nThe skill has **one entrypoint** and **two workflows**, chosen by the shape of\nthe project it's running in.\n\n## Core invariant (both workflows)\n\nEvery user-facing region has a **source-searchable identity literal** — a token\nthat appears verbatim in a source file and can be found with plain `grep`. No\nruntime-generated ids. No template-literal concatenation that only exists after\nrender. No `useId()` for anything the user is meant to reference.\n\nThe three landmark kinds:\n\n- **Section shell** — `SiteSection cid=\"<route>-<section>-site-section\"` (stable literal).\n- **Inner landmark** — `Identified as=\"<ComponentName>\"` for targets more specific than the section shell (heading, row, action).\n- **Page wrapper (optional)** — only when a page has multiple sections that share a\n  single dev-panel band. See **PageIdentified caveat** below.\n\nThe hand-off payload a coding agent receives must carry:\ncomponent kind + component label + source-search literal + rendered `data-cid`\n+ route. This is what makes the copy-paste loop work.\n\n## Which workflow to run\n\nDetermine which workflow you need by reading the project configuration first:\n\n```sh\n# From the repo root of the project the user is working on:\nnode vendor/get-anything-done/bin/gad.cjs projects audit 2>&1 | head -40\nls <project>/src/components 2>/dev/null   # or equivalent component root\ngrep -rn \"SiteSection\\|Identified as=\\|data-cid\" <project>/src 2>&1 | head -20\n```\n\n- **No hits** and no dev panel component → **Workflow A: Design & Build**.\n- **Existing system + some sections missing `cid` literals** → **Workflow B: Maintain & Rollout**.\n- **Existing system + every section clean** → nothing to do; check if the skill\n  needs to evolve (new landmark kinds, new copy-paste affordances).\n\nBoth workflows share the core invariant above. They differ in what they produce.\n\n---\n\n## Workflow A: Design & Build (greenfield / new project)\n\nUse this when spinning up the visual-context system in a project that has no\ndev panel, no identity literals, and no copy-paste handoff path.\n\nThis is the common case for **game projects** and any app the user hasn't\ntouched yet. At the start of Workflow A you do **not** yet know the specific\ncomponents/sections — the skill's job is to give the user a working system they\ncan extend as the UI takes shape.\n\n### Steps\n\n1. **Design the three landmark components** for the target app's component\n   framework. Use the existing GAD-site implementations as canonical reference\n   (see **References** below). In React/JSX the shapes are:\n   - `SiteSection` — wraps a section, accepts `cid: string`, writes `data-cid`, `data-cid-component-tag=\"SiteSection\"` to the DOM root.\n   - `Identified` — generic wrapper, accepts `as: string`, same data attrs with `\"Identified\"` tag.\n   - `DevPanel` — a floating/band overlay that queries the DOM for those attrs, shows the token on hover, supports click-to-copy and open-in-agent-prompt.\n\n   Non-React targets (Unity, Godot, game engines): the invariant still holds —\n   the literal needs to be written somewhere `grep` finds it. For Unity UGUI\n   that could be an attribute on the prefab; for a canvas-based renderer it\n   could be a string constant on the component class.\n\n2. **Ship the minimal `DevPanel` surface** — one panel, gated to `NODE_ENV=development` (or engine-dev-build equivalent). Start with: hover highlight, click-to-copy, copy-with-agent-prompt affordance. No nesting, no section-vs-band duality — that was the 2026-04-14 regression, avoid it.\n\n3. **Write the agent-prompt handoff payload** as a single shared component. It must emit: route + component kind + component label + source-search literal + `data-cid`. See `DevIdAgentPromptDialog.tsx` for the canonical shape.\n\n4. **Seed one landmark per major section** so the user has something to grep against on day one. Don't try to achieve full coverage in Workflow A — the user will drive that as the UI grows.\n\n5. **Leave Workflow B plumbed in** — add a one-line script (or CI check) that can be run later to grep for `SiteSection` without `cid=` and fail-with-report. This is the handoff to Workflow B.\n\n### Deliverables\n\n- `components/devid/{DevPanel,Identified,SiteSection,DevIdAgentPromptDialog}.tsx` (or the app's equivalent paths)\n- Dev-only mount of `DevPanel` in the root layout\n- One seeded landmark in at least the home route\n- The Workflow B audit script stub\n\n### Failure modes\n\n- **Shipping the panel before the invariant is enforced.** Users copy tokens,\n  `grep` finds nothing, trust collapses. Seed at least one literal before the\n  panel is visible.\n- **Using runtime-generated ids for landmarks** because it's \"temporary\". It's\n  never temporary. Always start with literal strings.\n- **Splitting the panel into section-mode vs band-mode up front.** Single\n  surface wins. Complexity can be added later if there's real demand; the\n  duality regression is expensive to undo.\n\n---\n\n## Workflow B: Maintain & Rollout (existing project)\n\nUse this when the system already exists in the project and the user reports\none of: \"I copied a token from the dev panel and can't find it in source\", a\nnew route landed without the explicit-cid pattern, or a batch PR introduced\nmultiple `SiteSection` components without `cid` literals. The canonical example\nis the GAD site itself (`vendor/get-anything-done/site/`).\n\n### Steps\n\n1. **Scan for runtime-id leaks** from the repo root:\n   ```sh\n   grep -rn \"SiteSection\" <site-root>/app <site-root>/components --include=\"*.tsx\" | grep -v 'cid='\n   ```\n   Each hit is a candidate. Filter out loop renderers — they inherit from a\n   parent section.\n\n2. **Classify each hit:**\n   - Page shell with multiple sections → normally a `SiteSection cid=\"<route>-page-site-section\"` is enough. `PageIdentified` is **deprecated** — prefer a top-level `SiteSection` with a route-qualified literal.\n   - Content section → `cid=\"<route>-<section>-site-section\"`.\n   - Repeating row inside a list → **skip**, rows inherit from the parent section.\n\n3. **Name convention** — always include the route slug. `page-site-section`\n   alone is banned because it collides across routes. Use\n   `<route>-<section>-site-section` or `<route>-page-site-section`.\n\n4. **Add inner `Identified as=\"...\"` landmarks** only where a user would plausibly\n   target the sub-region (heading, intro, action row). Don't carpet the tree.\n\n5. **Verify by grep** — one token, one hit. Zero hits = typo. Multiple hits = ambiguity.\n\n6. **Manual pass in the dev panel** — hover each affected section, click the\n   token, paste-search in the editor. Catches regressions `grep` misses (tokens\n   wrapped in template literals).\n\n7. **Update planning artifacts** on the project you're working on:\n   - `TASK-REGISTRY.xml`: mark the task `status=\"done\" skill=\"gad-visual-context-system\"`.\n   - `STATE.xml` `next-action`: one line listing the normalized routes — use `gad state set-next-action` (hard cap 600 chars).\n   - `DECISIONS.xml`: only if the policy itself changed. This workflow enforces, it doesn't drift.\n\n### Failure modes\n\n- **Normalizing list rows.** Rows inherit; adding per-row literals makes grep noisy and defeats the pattern.\n- **Copy-paste literal collisions** — two sections with the same `cid` on different routes. Always include the route slug.\n- **Removing stable `id=` anchors** in favor of new `cid=`. If the existing `id=` is already stable, allow both: `id=\"workflow\" cid=\"workflow-site-section\"`.\n- **Auto-replace gone wrong.** The 2026-04-14 rollout had a bad sed pass that character-substituted `c → i` across page files (`SiteSeition`, `iomponents`). If you're doing a batch rename, run it **one file at a time** with reads before and after, or use the Edit tool with an explicit old/new match rather than a regex.\n- **Normalizing inside dynamic/generated MDX or data-rendered content.** Don't. Those regions are data, not source.\n\n---\n\n## PageIdentified caveat (both workflows)\n\n`PageIdentified` was an earlier page-level wrapper component. As of 2026-04-14\nit has exactly **one remaining call site** (`app/skeptic/page.tsx`) in the GAD\nsite and is scheduled for removal. For any new Workflow A project, **do not\nimplement a `PageIdentified` component** — a top-level `SiteSection cid=\"<route>-page-site-section\"`\ncovers the same ground with less surface area. For Workflow B on a project\nthat still has `PageIdentified`, replacing call sites is a quick migration;\nsee the file list in **References**.\n\n## Related patterns\n\n- **Multi-project monorepos** — when the skill runs from the monorepo root and\n  the operator has multiple projects with their own `gad-config.toml` scope,\n  Workflow B needs to know which project's `site/app/` to scan. Read\n  `planning-config.toml` / `gad-config.toml` first and scope by the project the\n  user is currently on.\n- **CI guard** — a repo-level script that fails CI when a `SiteSection` lacks\n  `cid=` or uses a banned generic literal (`page-site-section`). Mentioned as a\n  follow-up in the 44-16 rollout notes.\n\n## References (GAD site — canonical Workflow B target)\n\n- `vendor/get-anything-done/site/components/site/SiteSection.tsx` — section shell\n- `vendor/get-anything-done/site/components/devid/Identified.tsx` — inner landmark\n- `vendor/get-anything-done/site/components/devid/DevPanel.tsx` — panel surface\n- `vendor/get-anything-done/site/components/devid/DevIdAgentPromptDialog.tsx` — handoff dialog\n- `vendor/get-anything-done/site/components/devid/SectionRegistry.tsx` — registry of component kinds\n- `vendor/get-anything-done/skills/gad-visual-context-panel-identities/SKILL.md` — the existing policy-only skill this proto-skill extends/supersedes\n- `vendor/get-anything-done/references/visual-context-panel-methodology.md` — durable methodology doc (phase 44-17)\n\n## Relationship to parent skill\n\nThe existing `gad-visual-context-panel-identities` skill in `skills/` is **the\npolicy-only contract** for the GAD site. This proto-skill **supersedes** it by\nadding Workflow A (design/build in a new project) on top of the same invariant.\nOn promotion, consider either:\n\n- **Promote and deprecate parent** — this skill fully contains the parent's\n  content. Parent moves to `skills/.archive/` or is deleted.\n- **Promote as sibling** — parent remains the canonical GAD-site policy, this\n  skill becomes the meta/multi-project version. Higher surface area, clearer\n  separation.\n\nRecommendation: **promote and deprecate parent**. The policy lives in this\nskill's Workflow B section; the parent file adds no information the new skill\ndoesn't.\n"
+    "bodyHtml": "<h1>gad-visual-context-system</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/visual-context-system.md\">workflows/visual-context-system.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad-visual-context-system\n\n**Workflow:** [workflows/visual-context-system.md](../../workflows/visual-context-system.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-workspace-add",
@@ -1385,8 +1415,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-workspace-add/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nAdd a new `[[planning.roots]]` entry to `gad-config.toml` for the given path.\nCreates `<path>/.planning/` if it doesn't exist.\n</objective>\n\n<process>\n\n<p>Parse <code>$ARGUMENTS</code>:</p>\n<ul>\n<li>First positional arg = path to add</li>\n<li><code>--id &lt;name&gt;</code> = optional explicit id (defaults to dirname of path)</li>\n</ul>\n<ol>\n<li><p><strong>Validate path exists:</strong></p>\n<pre><code class=\"language-bash\">ls &quot;$PATH_ARG&quot; 2&gt;/dev/null || echo &quot;PATH_NOT_FOUND&quot;\n</code></pre>\n<p>If the path doesn&#39;t exist, offer to create it.</p>\n</li>\n<li><p><strong>Check for duplicate:</strong>\nRead <code>gad-config.toml</code> and verify the path isn&#39;t already registered.\nIf already present, show the existing entry and exit.</p>\n</li>\n<li><p><strong>Ensure <code>.planning/</code> exists:</strong></p>\n<pre><code class=\"language-bash\">mkdir -p &quot;$PATH_ARG/.planning&quot;\n</code></pre>\n</li>\n<li><p><strong>Append <code>[[planning.roots]]</code> entry</strong> to <code>gad-config.toml</code>:</p>\n<pre><code class=\"language-toml\">[[planning.roots]]\nid = &quot;&lt;id&gt;&quot;\npath = &quot;&lt;path&gt;&quot;\nplanningDir = &quot;.planning&quot;\ndiscover = false\n</code></pre>\n</li>\n<li><p><strong>Confirm:</strong></p>\n<pre><code>✓ Added [&lt;id&gt;] → &lt;path&gt;/.planning/\n</code></pre>\n</li>\n</ol>\n</process>\n",
-    "bodyRaw": "\n<objective>\nAdd a new `[[planning.roots]]` entry to `gad-config.toml` for the given path.\nCreates `<path>/.planning/` if it doesn't exist.\n</objective>\n\n<process>\n\nParse `$ARGUMENTS`:\n- First positional arg = path to add\n- `--id <name>` = optional explicit id (defaults to dirname of path)\n\n1. **Validate path exists:**\n   ```bash\n   ls \"$PATH_ARG\" 2>/dev/null || echo \"PATH_NOT_FOUND\"\n   ```\n   If the path doesn't exist, offer to create it.\n\n2. **Check for duplicate:**\n   Read `gad-config.toml` and verify the path isn't already registered.\n   If already present, show the existing entry and exit.\n\n3. **Ensure `.planning/` exists:**\n   ```bash\n   mkdir -p \"$PATH_ARG/.planning\"\n   ```\n\n4. **Append `[[planning.roots]]` entry** to `gad-config.toml`:\n   ```toml\n   [[planning.roots]]\n   id = \"<id>\"\n   path = \"<path>\"\n   planningDir = \".planning\"\n   discover = false\n   ```\n\n5. **Confirm:**\n   ```\n   ✓ Added [<id>] → <path>/.planning/\n   ```\n\n</process>\n"
+    "bodyHtml": "<h1>gad:workspace-add</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/workspace-add.md\">workflows/workspace-add.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:workspace-add\n\n**Workflow:** [workflows/workspace-add.md](../../workflows/workspace-add.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-workspace-show",
@@ -1400,8 +1430,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-workspace-show/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nDisplay all `[[planning.roots]]` entries from `gad-config.toml` with their\ncurrent state (phase, milestone progress, last modified). This is the planning-root registry, not git worktrees.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Load config:</strong></p>\n<pre><code class=\"language-bash\">gad-tools config-get planning 2&gt;/dev/null\n</code></pre>\n</li>\n<li><p><strong>For each root</strong>, read its STATE.md and ROADMAP.md:</p>\n<pre><code class=\"language-bash\">cat &quot;&lt;root.path&gt;/&lt;root.planningDir&gt;/STATE.md&quot; 2&gt;/dev/null | head -30\n</code></pre>\n</li>\n<li><p><strong>Display table:</strong></p>\n<pre><code>GAD Workspaces — 3 roots registered\n\nID            PATH                      PHASE      MILESTONE\n──────────────────────────────────────────────────────────────\nglobal        .                         3 / 8      M2\ngrime-time    vendor/grime-time-site    1 / 4      M1\nget-anything-done  vendor/get-anything-done  —    —\n</code></pre>\n</li>\n<li><p>Show <code>docs_sink</code> if configured:</p>\n<pre><code>Docs sink: apps/portfolio/content/docs/planning\n</code></pre>\n</li>\n</ol>\n</process>\n",
-    "bodyRaw": "\n<objective>\nDisplay all `[[planning.roots]]` entries from `gad-config.toml` with their\ncurrent state (phase, milestone progress, last modified). This is the planning-root registry, not git worktrees.\n</objective>\n\n<process>\n\n1. **Load config:**\n   ```bash\n   gad-tools config-get planning 2>/dev/null\n   ```\n\n2. **For each root**, read its STATE.md and ROADMAP.md:\n   ```bash\n   cat \"<root.path>/<root.planningDir>/STATE.md\" 2>/dev/null | head -30\n   ```\n\n3. **Display table:**\n   ```\n   GAD Workspaces — 3 roots registered\n\n   ID            PATH                      PHASE      MILESTONE\n   ──────────────────────────────────────────────────────────────\n   global        .                         3 / 8      M2\n   grime-time    vendor/grime-time-site    1 / 4      M1\n   get-anything-done  vendor/get-anything-done  —    —\n   ```\n\n4. Show `docs_sink` if configured:\n   ```\n   Docs sink: apps/portfolio/content/docs/planning\n   ```\n\n</process>\n"
+    "bodyHtml": "<h1>gad:workspace-show</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/workspace-show.md\">workflows/workspace-show.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:workspace-show\n\n**Workflow:** [workflows/workspace-show.md](../../workflows/workspace-show.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-workspace-sync",
@@ -1415,8 +1445,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-workspace-sync/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nDiscover all `.planning/` directories in the repository and sync `[[planning.roots]]` entries\nin `gad-config.toml`. Entries already present are preserved. New entries are added.\nRemoved directories prompt before deletion.\n</objective>\n\n<process>\n\n<ol>\n<li><p><strong>Load current config:</strong></p>\n<pre><code class=\"language-bash\">gad-tools config-get planning.roots 2&gt;/dev/null || echo &quot;[]&quot;\n</code></pre>\n<p>Also read <code>gad-config.toml</code> directly to get existing roots.</p>\n</li>\n<li><p><strong>Crawl for .planning/ directories:</strong>\nFind all <code>.planning/</code> directories from the repo root, excluding paths in <code>planning.ignore</code>:</p>\n<pre><code class=\"language-bash\">find . -name &quot;.planning&quot; -type d \\\n  | grep -v node_modules | grep -v dist | grep -v .git \\\n  | sort\n</code></pre>\n</li>\n<li><p><strong>Compute diff:</strong></p>\n<ul>\n<li>For each discovered path not in <code>[[planning.roots]]</code>: show as <strong>NEW</strong></li>\n<li>For each <code>[[planning.roots]]</code> path whose <code>.planning/</code> no longer exists: show as <strong>REMOVED</strong></li>\n<li>For each <code>[[planning.roots]]</code> path still present: show as <strong>OK</strong></li>\n</ul>\n</li>\n<li><p><strong>Display summary:</strong></p>\n<pre><code>Workspace sync — found N .planning/ directories\n\n✓ OK     [global]   ./.planning\n+ NEW    [?]        vendor/grime-time-site/.planning\n! REMOVED [old-sub]  vendor/deprecated/.planning  (dir missing)\n</code></pre>\n<p>Auto-generate an <code>id</code> for new entries from the parent directory name.</p>\n</li>\n<li><p><strong>Ask to apply</strong> (if any changes):</p>\n<pre><code>Apply changes to gad-config.toml? (y/n)\n</code></pre>\n</li>\n<li><p><strong>Write updated <code>[[planning.roots]]</code></strong> to <code>gad-config.toml</code>\n(or legacy <code>.planning/planning-config.toml</code> if migrating older repos).</p>\n<ul>\n<li>Add new entries with <code>discover = false</code></li>\n<li>Remove confirmed-removed entries</li>\n<li>Preserve all other config unchanged</li>\n</ul>\n</li>\n<li><p><strong>Confirm:</strong></p>\n<pre><code>✓ gad-config.toml updated — N roots registered\n</code></pre>\n</li>\n</ol>\n</process>\n\n<rules>\n- Never delete existing roots without explicit user confirmation\n- Preserve entry order: existing roots first, new roots appended\n- Auto-generated id = dirname of the entry's parent path (e.g., `vendor/my-proj` → `my-proj`)\n- If gad-config.toml doesn't exist, create it from the bundled\n  `templates/planning-config.toml` template and rename the result to `gad-config.toml`\n</rules>\n",
-    "bodyRaw": "\n<objective>\nDiscover all `.planning/` directories in the repository and sync `[[planning.roots]]` entries\nin `gad-config.toml`. Entries already present are preserved. New entries are added.\nRemoved directories prompt before deletion.\n</objective>\n\n<process>\n\n1. **Load current config:**\n   ```bash\n   gad-tools config-get planning.roots 2>/dev/null || echo \"[]\"\n   ```\n   Also read `gad-config.toml` directly to get existing roots.\n\n2. **Crawl for .planning/ directories:**\n   Find all `.planning/` directories from the repo root, excluding paths in `planning.ignore`:\n   ```bash\n   find . -name \".planning\" -type d \\\n     | grep -v node_modules | grep -v dist | grep -v .git \\\n     | sort\n   ```\n\n3. **Compute diff:**\n   - For each discovered path not in `[[planning.roots]]`: show as **NEW**\n   - For each `[[planning.roots]]` path whose `.planning/` no longer exists: show as **REMOVED**\n   - For each `[[planning.roots]]` path still present: show as **OK**\n\n4. **Display summary:**\n   ```\n   Workspace sync — found N .planning/ directories\n\n   ✓ OK     [global]   ./.planning\n   + NEW    [?]        vendor/grime-time-site/.planning\n   ! REMOVED [old-sub]  vendor/deprecated/.planning  (dir missing)\n   ```\n   Auto-generate an `id` for new entries from the parent directory name.\n\n5. **Ask to apply** (if any changes):\n   ```\n   Apply changes to gad-config.toml? (y/n)\n   ```\n\n6. **Write updated `[[planning.roots]]`** to `gad-config.toml`\n   (or legacy `.planning/planning-config.toml` if migrating older repos).\n   - Add new entries with `discover = false`\n   - Remove confirmed-removed entries\n   - Preserve all other config unchanged\n\n7. **Confirm:**\n   ```\n   ✓ gad-config.toml updated — N roots registered\n   ```\n\n</process>\n\n<rules>\n- Never delete existing roots without explicit user confirmation\n- Preserve entry order: existing roots first, new roots appended\n- Auto-generated id = dirname of the entry's parent path (e.g., `vendor/my-proj` → `my-proj`)\n- If gad-config.toml doesn't exist, create it from the bundled\n  `templates/planning-config.toml` template and rename the result to `gad-config.toml`\n</rules>\n"
+    "bodyHtml": "<h1>gad:workspace-sync</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/workspace-sync.md\">workflows/workspace-sync.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:workspace-sync\n\n**Workflow:** [workflows/workspace-sync.md](../../workflows/workspace-sync.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-write-feature-doc",
@@ -1430,8 +1460,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-write-feature-doc/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad:write-feature-doc</h1>\n<p>Writes a feature doc into the docs sink and registers it in the project&#39;s DOCS-MAP.xml.</p>\n<h2>When to use</h2>\n<ul>\n<li>A feature exists but has no documentation</li>\n<li>User asks for a doc on a specific feature or capability</li>\n<li>After shipping a feature, to create the reference page</li>\n<li>A docs.project needs feature coverage</li>\n</ul>\n<h2>Step 1 — Identify project and feature</h2>\n<pre><code class=\"language-sh\">gad ls                              # find project id\ngad docs list --projectid &lt;id&gt;      # see what docs already exist\ngad refs --projectid &lt;id&gt;           # see file references\n</code></pre>\n<p>Don&#39;t duplicate — if a doc already covers this feature, update it instead.</p>\n<h2>Step 2 — Read context</h2>\n<pre><code class=\"language-sh\">gad decisions --projectid &lt;id&gt;      # relevant architectural decisions\ngad state --projectid &lt;id&gt;          # current project state\n</code></pre>\n<p>Understand why the feature exists and what decisions shaped it. Reference decision IDs in the doc.</p>\n<h2>Step 3 — Write the doc</h2>\n<p><strong>Path:</strong> <code>apps/portfolio/content/docs/{project-id}/{feature-name}.mdx</code></p>\n<p><strong>Frontmatter:</strong></p>\n<pre><code class=\"language-yaml\">---\ntitle: Feature Name\ndescription: One-line description for metadata/search\n---\n</code></pre>\n<p><strong>Do NOT add <code>generated: true</code></strong> — feature docs are human-quality, human-editable. They persist across <code>gad sink compile</code> runs.</p>\n<p><strong>Structure:</strong></p>\n<ol>\n<li><strong>Overview</strong> — what this feature does in 2-3 sentences</li>\n<li><strong>Why it exists</strong> — the problem it solves, reference decision IDs (e.g. &quot;See gad-09&quot;)</li>\n<li><strong>How it works</strong> — mechanics, data flow, key interfaces</li>\n<li><strong>Usage</strong> — how to use it (commands, API, UI)</li>\n<li><strong>Examples</strong> — concrete examples with code blocks or screenshots</li>\n</ol>\n<p>Keep it scannable. Use tables for reference data, code blocks for commands, mermaid for diagrams only when they clarify.</p>\n<h2>Step 4 — Register in DOCS-MAP.xml</h2>\n<p>Add to the project&#39;s <code>.planning/DOCS-MAP.xml</code>:</p>\n<pre><code class=\"language-xml\">&lt;doc kind=&quot;feature&quot; sink=&quot;{project-id}/{feature-name}.mdx&quot; skill=&quot;gad:write-feature-doc&quot;&gt;\n  &lt;description&gt;What this doc covers — one line&lt;/description&gt;\n&lt;/doc&gt;\n</code></pre>\n<p>If DOCS-MAP.xml doesn&#39;t exist yet, create it:</p>\n<pre><code class=\"language-xml\">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;\n&lt;docs-map&gt;\n  &lt;doc kind=&quot;feature&quot; sink=&quot;...&quot; skill=&quot;gad:write-feature-doc&quot;&gt;\n    &lt;description&gt;...&lt;/description&gt;\n  &lt;/doc&gt;\n&lt;/docs-map&gt;\n</code></pre>\n<h2>Step 5 — Sync and verify</h2>\n<pre><code class=\"language-sh\">gad sink sync                                    # compile planning docs\ngad docs list --projectid &lt;id&gt;                   # verify doc appears\n</code></pre>\n<h2>What makes a good feature doc</h2>\n<table>\n<thead>\n<tr>\n<th>Quality</th>\n<th>Check</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Standalone</td>\n<td>A new agent can understand the feature without reading chat history</td>\n</tr>\n<tr>\n<td>Decision-linked</td>\n<td>References decision IDs for the &quot;why&quot; — not just the &quot;what&quot;</td>\n</tr>\n<tr>\n<td>Current</td>\n<td>Matches the actual implementation, not a stale plan</td>\n</tr>\n<tr>\n<td>Scannable</td>\n<td>Someone skimming gets the gist in 30 seconds</td>\n</tr>\n<tr>\n<td>Not a tutorial</td>\n<td>Explains what exists, not how to build it from scratch</td>\n</tr>\n</tbody></table>\n<h2>What to avoid</h2>\n<ul>\n<li>Implementation diary (&quot;we tried X, then Y, then settled on Z&quot;) — that&#39;s ERRORS-AND-ATTEMPTS.xml</li>\n<li>Commit log prose (&quot;added support for...&quot;, &quot;now surfaced...&quot;) — describe the feature, not the history</li>\n<li>Duplicating planning docs — don&#39;t restate the roadmap or task registry</li>\n</ul>\n",
-    "bodyRaw": "\n# gad:write-feature-doc\n\nWrites a feature doc into the docs sink and registers it in the project's DOCS-MAP.xml.\n\n## When to use\n\n- A feature exists but has no documentation\n- User asks for a doc on a specific feature or capability\n- After shipping a feature, to create the reference page\n- A docs.project needs feature coverage\n\n## Step 1 — Identify project and feature\n\n```sh\ngad ls                              # find project id\ngad docs list --projectid <id>      # see what docs already exist\ngad refs --projectid <id>           # see file references\n```\n\nDon't duplicate — if a doc already covers this feature, update it instead.\n\n## Step 2 — Read context\n\n```sh\ngad decisions --projectid <id>      # relevant architectural decisions\ngad state --projectid <id>          # current project state\n```\n\nUnderstand why the feature exists and what decisions shaped it. Reference decision IDs in the doc.\n\n## Step 3 — Write the doc\n\n**Path:** `apps/portfolio/content/docs/{project-id}/{feature-name}.mdx`\n\n**Frontmatter:**\n```yaml\n---\ntitle: Feature Name\ndescription: One-line description for metadata/search\n---\n```\n\n**Do NOT add `generated: true`** — feature docs are human-quality, human-editable. They persist across `gad sink compile` runs.\n\n**Structure:**\n1. **Overview** — what this feature does in 2-3 sentences\n2. **Why it exists** — the problem it solves, reference decision IDs (e.g. \"See gad-09\")\n3. **How it works** — mechanics, data flow, key interfaces\n4. **Usage** — how to use it (commands, API, UI)\n5. **Examples** — concrete examples with code blocks or screenshots\n\nKeep it scannable. Use tables for reference data, code blocks for commands, mermaid for diagrams only when they clarify.\n\n## Step 4 — Register in DOCS-MAP.xml\n\nAdd to the project's `.planning/DOCS-MAP.xml`:\n\n```xml\n<doc kind=\"feature\" sink=\"{project-id}/{feature-name}.mdx\" skill=\"gad:write-feature-doc\">\n  <description>What this doc covers — one line</description>\n</doc>\n```\n\nIf DOCS-MAP.xml doesn't exist yet, create it:\n\n```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<docs-map>\n  <doc kind=\"feature\" sink=\"...\" skill=\"gad:write-feature-doc\">\n    <description>...</description>\n  </doc>\n</docs-map>\n```\n\n## Step 5 — Sync and verify\n\n```sh\ngad sink sync                                    # compile planning docs\ngad docs list --projectid <id>                   # verify doc appears\n```\n\n## What makes a good feature doc\n\n| Quality | Check |\n|---------|-------|\n| Standalone | A new agent can understand the feature without reading chat history |\n| Decision-linked | References decision IDs for the \"why\" — not just the \"what\" |\n| Current | Matches the actual implementation, not a stale plan |\n| Scannable | Someone skimming gets the gist in 30 seconds |\n| Not a tutorial | Explains what exists, not how to build it from scratch |\n\n## What to avoid\n\n- Implementation diary (\"we tried X, then Y, then settled on Z\") — that's ERRORS-AND-ATTEMPTS.xml\n- Commit log prose (\"added support for...\", \"now surfaced...\") — describe the feature, not the history\n- Duplicating planning docs — don't restate the roadmap or task registry\n"
+    "bodyHtml": "<h1>gad:write-feature-doc</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/write-feature-doc.md\">workflows/write-feature-doc.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:write-feature-doc\n\n**Workflow:** [workflows/write-feature-doc.md](../../workflows/write-feature-doc.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-write-intent",
@@ -1445,8 +1475,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-write-intent/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad:write-intent</h1>\n<p>Captures the user&#39;s intent for a project and writes it into the planning files so future sessions start with clear purpose.</p>\n<h2>When to use</h2>\n<ul>\n<li>Starting a new project with unclear requirements</li>\n<li>User describes what they want but it hasn&#39;t been written down</li>\n<li>A docs.project needs its purpose documented</li>\n<li>Requirements exist but don&#39;t reflect what the user actually wants</li>\n</ul>\n<h2>Step 1 — Identify the project</h2>\n<pre><code class=\"language-sh\">gad ls                           # list all projects\ngad state --projectid &lt;id&gt;       # current state if project exists\n</code></pre>\n<p>If the project doesn&#39;t exist yet, use <code>gad projects init</code> to scaffold it first.</p>\n<h2>Step 2 — Derive intent</h2>\n<p>Ask or infer these from conversation context:</p>\n<table>\n<thead>\n<tr>\n<th>Question</th>\n<th>Where it goes</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>What is this project for?</td>\n<td>REQUIREMENTS.xml — top-level <code>&lt;goal&gt;</code></td>\n</tr>\n<tr>\n<td>Who uses it?</td>\n<td>REQUIREMENTS.xml — <code>&lt;audience&gt;</code></td>\n</tr>\n<tr>\n<td>What does success look like?</td>\n<td>REQUIREMENTS.xml — <code>&lt;success-criteria&gt;</code></td>\n</tr>\n<tr>\n<td>What are the hard constraints?</td>\n<td>DECISIONS.xml — constraint decisions</td>\n</tr>\n<tr>\n<td>What is explicitly out of scope?</td>\n<td>REQUIREMENTS.xml — <code>&lt;non-goals&gt;</code></td>\n</tr>\n</tbody></table>\n<p>Don&#39;t ask all 5 if the answers are obvious from context. Derive what you can, ask about what you can&#39;t.</p>\n<h2>Step 3 — Write to REQUIREMENTS.xml</h2>\n<pre><code class=\"language-xml\">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;\n&lt;requirements&gt;\n  &lt;goal&gt;One-sentence project purpose&lt;/goal&gt;\n  &lt;audience&gt;Who uses this and why&lt;/audience&gt;\n  &lt;success-criteria&gt;\n    &lt;criterion&gt;Measurable outcome 1&lt;/criterion&gt;\n    &lt;criterion&gt;Measurable outcome 2&lt;/criterion&gt;\n  &lt;/success-criteria&gt;\n  &lt;non-goals&gt;\n    &lt;item&gt;Thing explicitly not in scope&lt;/item&gt;\n  &lt;/non-goals&gt;\n  &lt;docs&gt;\n    &lt;doc path=&quot;path/to/requirements.mdx&quot; role=&quot;narrative&quot; /&gt;\n  &lt;/docs&gt;\n&lt;/requirements&gt;\n</code></pre>\n<p>If REQUIREMENTS.xml already exists, update it — don&#39;t replace unless the user says to start fresh.</p>\n<h2>Step 4 — Write key decisions</h2>\n<p>Any constraint that came up during intent capture goes to DECISIONS.xml:</p>\n<pre><code class=\"language-xml\">&lt;decision id=&quot;proj-01&quot;&gt;\n  &lt;title&gt;Short decision title&lt;/title&gt;\n  &lt;summary&gt;What was decided and why&lt;/summary&gt;\n  &lt;impact&gt;How this constrains future work&lt;/impact&gt;\n&lt;/decision&gt;\n</code></pre>\n<h2>Step 5 — Update STATE.xml</h2>\n<p>Set <code>next-action</code> via <code>gad state set-next-action --projectid &lt;id&gt; &quot;&lt;text&gt;&quot;</code> (hard cap 600 chars — fails loud over). Example: &quot;Intent captured. Next: plan phase 01 based on requirements.&quot;</p>\n<h2>Step 6 — Sync</h2>\n<pre><code class=\"language-sh\">gad sink sync\n</code></pre>\n<h2>Example output</h2>\n<p>For a project called &quot;listen&quot; with intent &quot;music portfolio with BandLab integration&quot;:</p>\n<p><strong>REQUIREMENTS.xml</strong> gets: goal = &quot;Curated music portfolio surface&quot;, audience = &quot;Portfolio visitors, artist collaborators&quot;, success = &quot;BandLab tracks playable inline, preset descriptions editorial quality&quot;, non-goals = &quot;DAW features, upload functionality&quot;.</p>\n<p><strong>DECISIONS.xml</strong> gets: &quot;listen-01: BandLab is the only music source — no upload, no SoundCloud&quot;.</p>\n<p><strong>STATE.xml</strong> gets: next-action = &quot;Intent captured. Plan phase 01: catalog data model and BandLab API integration.&quot;</p>\n",
-    "bodyRaw": "\n# gad:write-intent\n\nCaptures the user's intent for a project and writes it into the planning files so future sessions start with clear purpose.\n\n## When to use\n\n- Starting a new project with unclear requirements\n- User describes what they want but it hasn't been written down\n- A docs.project needs its purpose documented\n- Requirements exist but don't reflect what the user actually wants\n\n## Step 1 — Identify the project\n\n```sh\ngad ls                           # list all projects\ngad state --projectid <id>       # current state if project exists\n```\n\nIf the project doesn't exist yet, use `gad projects init` to scaffold it first.\n\n## Step 2 — Derive intent\n\nAsk or infer these from conversation context:\n\n| Question | Where it goes |\n|----------|--------------|\n| What is this project for? | REQUIREMENTS.xml — top-level `<goal>` |\n| Who uses it? | REQUIREMENTS.xml — `<audience>` |\n| What does success look like? | REQUIREMENTS.xml — `<success-criteria>` |\n| What are the hard constraints? | DECISIONS.xml — constraint decisions |\n| What is explicitly out of scope? | REQUIREMENTS.xml — `<non-goals>` |\n\nDon't ask all 5 if the answers are obvious from context. Derive what you can, ask about what you can't.\n\n## Step 3 — Write to REQUIREMENTS.xml\n\n```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<requirements>\n  <goal>One-sentence project purpose</goal>\n  <audience>Who uses this and why</audience>\n  <success-criteria>\n    <criterion>Measurable outcome 1</criterion>\n    <criterion>Measurable outcome 2</criterion>\n  </success-criteria>\n  <non-goals>\n    <item>Thing explicitly not in scope</item>\n  </non-goals>\n  <docs>\n    <doc path=\"path/to/requirements.mdx\" role=\"narrative\" />\n  </docs>\n</requirements>\n```\n\nIf REQUIREMENTS.xml already exists, update it — don't replace unless the user says to start fresh.\n\n## Step 4 — Write key decisions\n\nAny constraint that came up during intent capture goes to DECISIONS.xml:\n\n```xml\n<decision id=\"proj-01\">\n  <title>Short decision title</title>\n  <summary>What was decided and why</summary>\n  <impact>How this constrains future work</impact>\n</decision>\n```\n\n## Step 5 — Update STATE.xml\n\nSet `next-action` via `gad state set-next-action --projectid <id> \"<text>\"` (hard cap 600 chars — fails loud over). Example: \"Intent captured. Next: plan phase 01 based on requirements.\"\n\n## Step 6 — Sync\n\n```sh\ngad sink sync\n```\n\n## Example output\n\nFor a project called \"listen\" with intent \"music portfolio with BandLab integration\":\n\n**REQUIREMENTS.xml** gets: goal = \"Curated music portfolio surface\", audience = \"Portfolio visitors, artist collaborators\", success = \"BandLab tracks playable inline, preset descriptions editorial quality\", non-goals = \"DAW features, upload functionality\".\n\n**DECISIONS.xml** gets: \"listen-01: BandLab is the only music source — no upload, no SoundCloud\".\n\n**STATE.xml** gets: next-action = \"Intent captured. Plan phase 01: catalog data model and BandLab API integration.\"\n"
+    "bodyHtml": "<h1>gad:write-intent</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/write-intent.md\">workflows/write-intent.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:write-intent\n\n**Workflow:** [workflows/write-intent.md](../../workflows/write-intent.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "gad-write-tech-doc",
@@ -1460,8 +1490,8 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-write-tech-doc/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad:write-tech-doc</h1>\n<p>Writes a technical documentation MDX file into the sink covering architecture, data flow, or system design.</p>\n<h2>When to use</h2>\n<ul>\n<li>A system exists but its design hasn&#39;t been written down</li>\n<li>Onboarding a new agent or developer to a subsystem</li>\n<li>After a significant architectural decision — capture the &quot;how&quot; (decisions capture the &quot;why&quot;)</li>\n<li>Before a major refactor — document current state first</li>\n</ul>\n<h2>Step 1 — Identify what to document</h2>\n<pre><code class=\"language-sh\">gad decisions --projectid &lt;id&gt;   # find relevant decisions\ngad docs list --projectid &lt;id&gt;   # see existing docs — don&#39;t duplicate\n</code></pre>\n<p>Scope the doc to one system or subsystem. &quot;GAD CLI architecture&quot; is good. &quot;Everything about GAD&quot; is too broad — split into multiple docs.</p>\n<h2>Step 2 — Read the code</h2>\n<p>Actually read the implementation. Tech docs that describe what someone imagined the code does (instead of what it actually does) are worse than no docs. Key things to capture:</p>\n<ul>\n<li>Entry points (main files, CLI commands, API routes)</li>\n<li>Data flow (what calls what, what format data takes at each stage)</li>\n<li>Key abstractions (the 3-5 concepts someone needs to understand)</li>\n<li>External dependencies (what it talks to, what it assumes exists)</li>\n</ul>\n<h2>Step 3 — Write the doc</h2>\n<p><strong>Path:</strong> <code>apps/portfolio/content/docs/{project-id}/{system-name}.mdx</code> or <code>{project-id}/architecture.mdx</code></p>\n<p><strong>Frontmatter:</strong></p>\n<pre><code class=\"language-yaml\">---\ntitle: System Name — Technical Design\ndescription: One-line description\n---\n</code></pre>\n<p><strong>Structure:</strong></p>\n<ol>\n<li><strong>Overview</strong> — what this system does, 2-3 sentences</li>\n<li><strong>Architecture</strong> — high-level component diagram (mermaid if it helps)</li>\n<li><strong>Data flow</strong> — what happens when X triggers Y, step by step</li>\n<li><strong>Key interfaces</strong> — the functions/types/protocols that matter</li>\n<li><strong>Constraints</strong> — what it can&#39;t do, what it assumes, reference decision IDs</li>\n<li><strong>File map</strong> — which files own which responsibilities</li>\n</ol>\n<h3>Mermaid diagrams</h3>\n<p>Use sparingly — only when the visual clarifies something text can&#39;t:</p>\n<pre><code class=\"language-mermaid\">graph LR\n  A[gad.cjs] --&gt; B[state-reader.cjs]\n  A --&gt; C[roadmap-reader.cjs]\n  A --&gt; D[docs-compiler.cjs]\n  D --&gt; E[MDX sink]\n</code></pre>\n<p>Keep diagrams in the doc, not separate files. If a diagram needs more than 15 nodes, the system is complex enough to split into multiple docs.</p>\n<h2>Step 4 — Register in DOCS-MAP.xml</h2>\n<pre><code class=\"language-xml\">&lt;doc kind=&quot;technical&quot; sink=&quot;{project-id}/{system-name}.mdx&quot; skill=&quot;gad:write-tech-doc&quot;&gt;\n  &lt;description&gt;What system this documents — one line&lt;/description&gt;\n&lt;/doc&gt;\n</code></pre>\n<h2>Step 5 — Sync and verify</h2>\n<pre><code class=\"language-sh\">gad sink sync\ngad docs list --projectid &lt;id&gt;\n</code></pre>\n<h2>What makes a good tech doc</h2>\n<table>\n<thead>\n<tr>\n<th>Quality</th>\n<th>Check</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Code-verified</td>\n<td>Every claim matches the actual implementation</td>\n</tr>\n<tr>\n<td>Decision-linked</td>\n<td>References decision IDs for constraints and choices</td>\n</tr>\n<tr>\n<td>Entry-point clear</td>\n<td>A reader knows which file to open first</td>\n</tr>\n<tr>\n<td>Not a tutorial</td>\n<td>Explains the system, not how to rebuild it step by step</td>\n</tr>\n<tr>\n<td>Bounded</td>\n<td>Covers one system, not the entire project</td>\n</tr>\n</tbody></table>\n<h2>What to avoid</h2>\n<ul>\n<li>Describing planned architecture that doesn&#39;t exist yet — document what IS, not what will be</li>\n<li>Listing every function — focus on the 5-10 that matter for understanding</li>\n<li>Copy-pasting code — reference file:line, don&#39;t inline 50 lines of source</li>\n<li>Stale diagrams — if the code changed, update the diagram or delete it</li>\n</ul>\n",
-    "bodyRaw": "\n# gad:write-tech-doc\n\nWrites a technical documentation MDX file into the sink covering architecture, data flow, or system design.\n\n## When to use\n\n- A system exists but its design hasn't been written down\n- Onboarding a new agent or developer to a subsystem\n- After a significant architectural decision — capture the \"how\" (decisions capture the \"why\")\n- Before a major refactor — document current state first\n\n## Step 1 — Identify what to document\n\n```sh\ngad decisions --projectid <id>   # find relevant decisions\ngad docs list --projectid <id>   # see existing docs — don't duplicate\n```\n\nScope the doc to one system or subsystem. \"GAD CLI architecture\" is good. \"Everything about GAD\" is too broad — split into multiple docs.\n\n## Step 2 — Read the code\n\nActually read the implementation. Tech docs that describe what someone imagined the code does (instead of what it actually does) are worse than no docs. Key things to capture:\n\n- Entry points (main files, CLI commands, API routes)\n- Data flow (what calls what, what format data takes at each stage)\n- Key abstractions (the 3-5 concepts someone needs to understand)\n- External dependencies (what it talks to, what it assumes exists)\n\n## Step 3 — Write the doc\n\n**Path:** `apps/portfolio/content/docs/{project-id}/{system-name}.mdx` or `{project-id}/architecture.mdx`\n\n**Frontmatter:**\n```yaml\n---\ntitle: System Name — Technical Design\ndescription: One-line description\n---\n```\n\n**Structure:**\n1. **Overview** — what this system does, 2-3 sentences\n2. **Architecture** — high-level component diagram (mermaid if it helps)\n3. **Data flow** — what happens when X triggers Y, step by step\n4. **Key interfaces** — the functions/types/protocols that matter\n5. **Constraints** — what it can't do, what it assumes, reference decision IDs\n6. **File map** — which files own which responsibilities\n\n### Mermaid diagrams\n\nUse sparingly — only when the visual clarifies something text can't:\n\n```mermaid\ngraph LR\n  A[gad.cjs] --> B[state-reader.cjs]\n  A --> C[roadmap-reader.cjs]\n  A --> D[docs-compiler.cjs]\n  D --> E[MDX sink]\n```\n\nKeep diagrams in the doc, not separate files. If a diagram needs more than 15 nodes, the system is complex enough to split into multiple docs.\n\n## Step 4 — Register in DOCS-MAP.xml\n\n```xml\n<doc kind=\"technical\" sink=\"{project-id}/{system-name}.mdx\" skill=\"gad:write-tech-doc\">\n  <description>What system this documents — one line</description>\n</doc>\n```\n\n## Step 5 — Sync and verify\n\n```sh\ngad sink sync\ngad docs list --projectid <id>\n```\n\n## What makes a good tech doc\n\n| Quality | Check |\n|---------|-------|\n| Code-verified | Every claim matches the actual implementation |\n| Decision-linked | References decision IDs for constraints and choices |\n| Entry-point clear | A reader knows which file to open first |\n| Not a tutorial | Explains the system, not how to rebuild it step by step |\n| Bounded | Covers one system, not the entire project |\n\n## What to avoid\n\n- Describing planned architecture that doesn't exist yet — document what IS, not what will be\n- Listing every function — focus on the 5-10 that matter for understanding\n- Copy-pasting code — reference file:line, don't inline 50 lines of source\n- Stale diagrams — if the code changed, update the diagram or delete it\n"
+    "bodyHtml": "<h1>gad:write-tech-doc</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/write-tech-doc.md\">workflows/write-tech-doc.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n",
+    "bodyRaw": "\n\n# gad:write-tech-doc\n\n**Workflow:** [workflows/write-tech-doc.md](../../workflows/write-tech-doc.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n"
   },
   {
     "id": "merge-skill",
@@ -1996,6 +2026,7 @@ export const SKILL_INHERITANCE: Record<string, string[]> = {
   "gad-complete-milestone": [],
   "gad-cross-config-domain-change": [],
   "gad-debug": [],
+  "gad-discovery-test": [],
   "gad-discuss-phase": [],
   "gad-do": [],
   "gad-docs-compile": [],
@@ -2030,6 +2061,7 @@ export const SKILL_INHERITANCE: Record<string, string[]> = {
   "gad-plan-phase": [],
   "gad-plant-seed": [],
   "gad-progress": [],
+  "gad-proto-skill-battery": [],
   "gad-reapply-patches": [],
   "gad-remove-phase": [],
   "gad-research-phase": [],
@@ -2069,65 +2101,7 @@ export const SKILL_INHERITANCE: Record<string, string[]> = {
   "session-discipline": []
 };
 
-export const REQUIREMENTS_HISTORY: RequirementsVersion[] = [
-  {
-    "version": "v1",
-    "date": "2026-04-06",
-    "rawBody": "**Scope:** Systems-focused. 12 success criteria describing what the agent should build.\r\nNo gates. No UI quality mandate. No priority on vertical slice.\r\n\r\n**Problems that emerged:**\r\n- Agents built invisible backend systems with no UI\r\n- requirement_coverage scored 1.0 while the game showed a blank screen\r\n- No way to distinguish \"code exists\" from \"game works\"\r\n\r\n---",
-    "sections": {
-      "scope": "Systems-focused. 12 success criteria describing what the agent should build.\r\nNo gates. No UI quality mandate. No priority on vertical slice.",
-      "problems_that_emerged": "- Agents built invisible backend systems with no UI\r\n- requirement_coverage scored 1.0 while the game showed a blank screen\r\n- No way to distinguish \"code exists\" from \"game works\"\r\n\r\n---"
-    }
-  },
-  {
-    "version": "v2",
-    "date": "2026-04-08",
-    "rawBody": "**Changes from v1:**\r\n- Added 2 gate criteria (production build renders, playable vertical slice)\r\n- Added `<vertical-slice>` section describing the UI-first build order\r\n- Marked gates with `gate=\"true\"` attribute\r\n- Trimmed source gameplay design doc from 640 → 127 lines\r\n\r\n**Scoring impact:**\r\n- Gate criteria override: if any `gate=\"true\"` fails, requirement_coverage = 0\r\n\r\n**Problems that emerged:**\r\n- Gates helped but bare and GAD still produced broken game loops\r\n- UI quality gate was vague — agents produced \"raw ASCII\" output and claimed it passed\r\n- Rune forge (spell crafting) was listed as a criterion but always skipped\r\n\r\n---",
-    "sections": {
-      "changes_from_v1": "- Added 2 gate criteria (production build renders, playable vertical slice)\r\n- Added `<vertical-slice>` section describing the UI-first build order\r\n- Marked gates with `gate=\"true\"` attribute\r\n- Trimmed source gameplay design doc from 640 → 127 lines",
-      "scoring_impact": "- Gate criteria override: if any `gate=\"true\"` fails, requirement_coverage = 0",
-      "problems_that_emerged": "- Gates helped but bare and GAD still produced broken game loops\r\n- UI quality gate was vague — agents produced \"raw ASCII\" output and claimed it passed\r\n- Rune forge (spell crafting) was listed as a criterion but always skipped\r\n\r\n---"
-    }
-  },
-  {
-    "version": "v3",
-    "date": "2026-04-08",
-    "rawBody": "**Changes from v2:**\r\n- Restructured into explicit `<gate-criteria>` section with 3 numbered gates\r\n- **G1 Game loop**: complete cycle title → new game → room → navigate → combat → return → continue\r\n- **G2 Spell crafting**: rune forge with combine → create → use. Loot doesn't count.\r\n- **G3 UI quality**: icons, styled buttons, HP bars, room-type differentiation, entity sprites/portraits\r\n- Added asset sourcing guidance (npm packages > web search > generated > geometric fallback)\r\n- Added `<vertical-slice>` build order (UI first, systems after)\r\n- Explicit \"don't get stuck gold-plating\" guardrail for assets\r\n\r\n**Scoring impact:**\r\n- Composite formula v3: weights (0.15, 0.15, 0.15, 0.10, 0.05, 0.30)\r\n- human_review weight 0.30 (up from 0.15)\r\n- Low-score caps: < 0.20 → 0.40, < 0.10 → 0.25\r\n\r\n**Problems that emerged:**\r\n- Rune forge was built but not integrated with progression (no affinity, no evolution, no training)\r\n- No floor progression — players stuck on first floor forever\r\n- No grinding / respawning encounters\r\n- Skills (physical actions) vs spells (mana) not differentiated\r\n- Narrative stats shown as labels that confused players — needed to be called \"Traits\"\r\n- Agents ignored asset sourcing and used raw text-only UI\r\n\r\n---",
-    "sections": {
-      "changes_from_v2": "- Restructured into explicit `<gate-criteria>` section with 3 numbered gates\r\n- **G1 Game loop**: complete cycle title → new game → room → navigate → combat → return → continue\r\n- **G2 Spell crafting**: rune forge with combine → create → use. Loot doesn't count.\r\n- **G3 UI quality**: icons, styled buttons, HP bars, room-type differentiation, entity sprites/portraits\r\n- Added asset sourcing guidance (npm packages > web search > generated > geometric fallback)\r\n- Added `<vertical-slice>` build order (UI first, systems after)\r\n- Explicit \"don't get stuck gold-plating\" guardrail for assets",
-      "scoring_impact": "- Composite formula v3: weights (0.15, 0.15, 0.15, 0.10, 0.05, 0.30)\r\n- human_review weight 0.30 (up from 0.15)\r\n- Low-score caps: < 0.20 → 0.40, < 0.10 → 0.25",
-      "problems_that_emerged": "- Rune forge was built but not integrated with progression (no affinity, no evolution, no training)\r\n- No floor progression — players stuck on first floor forever\r\n- No grinding / respawning encounters\r\n- Skills (physical actions) vs spells (mana) not differentiated\r\n- Narrative stats shown as labels that confused players — needed to be called \"Traits\"\r\n- Agents ignored asset sourcing and used raw text-only UI\r\n\r\n---"
-    }
-  },
-  {
-    "version": "v4",
-    "date": "2026-04-08",
-    "rawBody": "**Core shift from v3:** Pressure-oriented design. Previous versions were feature\r\nchecklists. v4 reframes around \"every system must create friction that rewards\r\ncreative player choice.\" Central principle: **baseline starter abilities must NOT\r\nbe sufficient to comfortably complete a full floor**.\r\n\r\n**Changes from v3:**\r\n- Authored-only (explicitly no procedural generation)\r\n- Floors → Rooms → Boss gate hierarchy; 5-8 rooms per floor\r\n- Room types: Combat, Elite, Forge, Rest, Event (mechanically distinct)\r\n- Each floor must introduce a mechanical constraint that can't be brute-forced with default spells\r\n- Respawning encounters on cleared floors allowed (grinding)\r\n- G2 forge gate expanded: not just \"crafting exists\" but **at least one encounter per floor must significantly favor crafted/adapted spells**\r\n- G4 pressure mechanics gate added: must include at least 2 of (resource pressure, enemy counterplay, encounter design pressure, build pressure)\r\n- New ingenuity_score dimension measures whether player had to adapt\r\n- Skills system: scored (not gate) — combat must support at least one non-spell action category but full skill system is bonus\r\n- Asset sourcing: attempt-first workflow (find-sprites skill), coherent fallback allowed only when sourcing genuinely fails\r\n- Terminology split: UI shows \"Traits\", code uses `narrativeStats`\r\n\r\n**Deferred to v5:**\r\n- Rune affinity decay when unused\r\n- Deep evolution trees (multi-stage mutations)\r\n- Full authored spell customization (naming still allowed in v4)\r\n\r\n**Scoring impact:**\r\n- Gates: game-loop, forge-with-ingenuity-payoff, ui-quality, pressure-mechanics (4 gates now)\r\n- Composite weights unchanged from v3 (human_review 0.30, low-score caps)\r\n- New ingenuity_score as a scored dimension (not yet in composite — evaluated in round 4 results)\r\n\r\n**Brownfield vs greenfield:**\r\n- Greenfield v4 applies to escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent\r\n- Brownfield v4 extensions live in `_brownfield-extensions-v4.md` (similar direction, applied to bare v3 baseline)\r\n\r\n**Decision references:** gad-41 (pressure reframe), gad-42 (skills scored), gad-43 (sprite sourcing), gad-44 (Traits terminology), gad-48 (GAD diagnosis deferred)\r\n\r\n---",
-    "sections": {
-      "core_shift_from_v3": "Pressure-oriented design. Previous versions were feature\r\nchecklists. v4 reframes around \"every system must create friction that rewards\r\ncreative player choice.\" Central principle: **baseline starter abilities must NOT\r\nbe sufficient to comfortably complete a full floor**.",
-      "changes_from_v3": "- Authored-only (explicitly no procedural generation)\r\n- Floors → Rooms → Boss gate hierarchy; 5-8 rooms per floor\r\n- Room types: Combat, Elite, Forge, Rest, Event (mechanically distinct)\r\n- Each floor must introduce a mechanical constraint that can't be brute-forced with default spells\r\n- Respawning encounters on cleared floors allowed (grinding)\r\n- G2 forge gate expanded: not just \"crafting exists\" but **at least one encounter per floor must significantly favor crafted/adapted spells**\r\n- G4 pressure mechanics gate added: must include at least 2 of (resource pressure, enemy counterplay, encounter design pressure, build pressure)\r\n- New ingenuity_score dimension measures whether player had to adapt\r\n- Skills system: scored (not gate) — combat must support at least one non-spell action category but full skill system is bonus\r\n- Asset sourcing: attempt-first workflow (find-sprites skill), coherent fallback allowed only when sourcing genuinely fails\r\n- Terminology split: UI shows \"Traits\", code uses `narrativeStats`",
-      "deferred_to_v5": "- Rune affinity decay when unused\r\n- Deep evolution trees (multi-stage mutations)\r\n- Full authored spell customization (naming still allowed in v4)",
-      "scoring_impact": "- Gates: game-loop, forge-with-ingenuity-payoff, ui-quality, pressure-mechanics (4 gates now)\r\n- Composite weights unchanged from v3 (human_review 0.30, low-score caps)\r\n- New ingenuity_score as a scored dimension (not yet in composite — evaluated in round 4 results)",
-      "brownfield_vs_greenfield": "- Greenfield v4 applies to escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent\r\n- Brownfield v4 extensions live in `_brownfield-extensions-v4.md` (similar direction, applied to bare v3 baseline)",
-      "decision_references": "gad-41 (pressure reframe), gad-42 (skills scored), gad-43 (sprite sourcing), gad-44 (Traits terminology), gad-48 (GAD diagnosis deferred)\r\n\r\n---"
-    }
-  },
-  {
-    "version": "v5",
-    "date": "2026-04-09",
-    "rawBody": "**Core shift from v4:** Playtest-driven expansion. v4 was a designer rewrite; v5 comes entirely from user play of Bare v5 (0.805 rubric), Emergent v4 (rescored to 0.885 after user beat floor 1), GAD v9 (rate-limited), and GAD v10 (api-interrupted). Everything in v4 still applies — v5 adds 21 new/amended requirements (R-v5.01..21) on top as a structured `<addendum>` section inside the same template XML.\r\n\r\n**Changes from v4:**\r\n- **R-v5.01** Training via encounter, not menu — affinity rises from casting, not selecting. Training Dummy encounter room type.\r\n- **R-v5.02** Rune discovery as a gameplay loop — starter subset only, rest found in world, one rune per floor gated behind non-combat.\r\n- **R-v5.03** Merchants with buy/sell/trade — at least one per floor, gold as tracked resource.\r\n- **R-v5.04** NPC dialogue with branching outcomes — 3+ NPCs, 2+ branches each, choices change game state.\r\n- **R-v5.05** Inventory/bag with grid + equippable items — weapon/off-hand/body/trinket slots affecting stats.\r\n- **R-v5.06** Visible character sheet + skill tree — physical/combat skills separate from spells, distinct resource.\r\n- **R-v5.07** Spell and skill loadout slots — forced specialization as a build-pressure mechanic.\r\n- **R-v5.08** Progression sources sufficient to reach end boss (amends G1) — guaranteed mana-max / spell-power upgrade per floor.\r\n- **R-v5.09** Save checkpoints + continue-after-death (amends G1) — Continue must never hard-brick.\r\n- **R-v5.10** Notification lifecycle (amends G3) — auto-dismiss, clear on new game, no persistence across sessions.\r\n- **R-v5.11** Rest rooms must offer rest — forge rooms combining Forge+Train+Rest must expose Rest as an action.\r\n- **R-v5.12** Navigation and map usability (amends G3) — minimum 2D graph layout, one-click navigation.\r\n- **R-v5.13** Combat model must be explicitly chosen — **Model A (rule-based simulation, Unicorn-Overlord-style)** preferred over direct-control.\r\n- **R-v5.14** Action policies driven by entity traits — applies to enemies AND NPCs; dialogue changes with trait shifts.\r\n- **R-v5.15** Real-time game-time model — 1hr real = 1 day game, remove tick system, UI time-shading is soft.\r\n- **R-v5.16** Affinity reward loop — visible payoff for boosting a rune, not just a hidden stat.\r\n- **R-v5.17** Central visual navigation map with player token (stronger form of R-v5.12).\r\n- **R-v5.18** Visual player vs enemy identity — Pokemon / Unicorn Overlord style (UO preferred).\r\n- **R-v5.19** Spells as craftable ingredients — spells + runes both combine, procedural-but-semantic naming. Explicitly mirrors the emergent-evolution hypothesis (gad-68) as an in-game narrative analogue.\r\n- **R-v5.20** Rune uniqueness within a single spell — bug fix for Bare v5's double-affinity exploit.\r\n- **R-v5.21** Event-driven rendering — kill the per-tick redraw glitches observed across ALL round-4 builds.\r\n\r\n**Scoring impact:**\r\n- v4 gates remain (G1, G2, G3, G4). v5 amendments tighten G1 (death/continue, end-boss reachable), G2 (training is encounter-driven), G3 (notification lifecycle, map usability).\r\n- New scored dimensions: `inventory_and_equipment_present`, `npc_dialogue_present` — not gates, but meaningful score hits if missing.\r\n- Rubric weights unchanged from v4.\r\n\r\n**Deferred to v6:**\r\n- Deep evolution trees (multi-stage mutations).\r\n- Rune affinity decay when unused.\r\n- Multi-character party play — out of scope for escape-the-dungeon family.\r\n\r\n**Brownfield vs greenfield:**\r\n- Greenfield v5 applies to escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent (same three templates all updated together).\r\n- Brownfield v5 extensions are not yet authored — round 5 starts greenfield-first.\r\n\r\n**Round 5 unblock:** This version is the trigger for round 5. Round 5 runs serially (gad-67) against this requirements set. HTTP 529 investigation + GAD v11 retry queued, see task registry.\r\n\r\n**Source:** `evals/_v5-requirements-addendum.md` holds the prose version with full user rationale quotes. The XML addendum in each template is the machine-readable form.\r\n\r\n**Decision references:** gad-65 (CSH), gad-68 (emergent-evolution), gad-71 (data/ pseudo-database for bug tracking), gad-72 (rounds framework — this is now round 5), gad-73 (fundamental skills triumvirate — the R-v5.19 spells-as-ingredients mechanic is the in-game analogue).",
-    "sections": {
-      "core_shift_from_v4": "Playtest-driven expansion. v4 was a designer rewrite; v5 comes entirely from user play of Bare v5 (0.805 rubric), Emergent v4 (rescored to 0.885 after user beat floor 1), GAD v9 (rate-limited), and GAD v10 (api-interrupted). Everything in v4 still applies — v5 adds 21 new/amended requirements (R-v5.01..21) on top as a structured `<addendum>` section inside the same template XML.",
-      "changes_from_v4": "- **R-v5.01** Training via encounter, not menu — affinity rises from casting, not selecting. Training Dummy encounter room type.\r\n- **R-v5.02** Rune discovery as a gameplay loop — starter subset only, rest found in world, one rune per floor gated behind non-combat.\r\n- **R-v5.03** Merchants with buy/sell/trade — at least one per floor, gold as tracked resource.\r\n- **R-v5.04** NPC dialogue with branching outcomes — 3+ NPCs, 2+ branches each, choices change game state.\r\n- **R-v5.05** Inventory/bag with grid + equippable items — weapon/off-hand/body/trinket slots affecting stats.\r\n- **R-v5.06** Visible character sheet + skill tree — physical/combat skills separate from spells, distinct resource.\r\n- **R-v5.07** Spell and skill loadout slots — forced specialization as a build-pressure mechanic.\r\n- **R-v5.08** Progression sources sufficient to reach end boss (amends G1) — guaranteed mana-max / spell-power upgrade per floor.\r\n- **R-v5.09** Save checkpoints + continue-after-death (amends G1) — Continue must never hard-brick.\r\n- **R-v5.10** Notification lifecycle (amends G3) — auto-dismiss, clear on new game, no persistence across sessions.\r\n- **R-v5.11** Rest rooms must offer rest — forge rooms combining Forge+Train+Rest must expose Rest as an action.\r\n- **R-v5.12** Navigation and map usability (amends G3) — minimum 2D graph layout, one-click navigation.\r\n- **R-v5.13** Combat model must be explicitly chosen — **Model A (rule-based simulation, Unicorn-Overlord-style)** preferred over direct-control.\r\n- **R-v5.14** Action policies driven by entity traits — applies to enemies AND NPCs; dialogue changes with trait shifts.\r\n- **R-v5.15** Real-time game-time model — 1hr real = 1 day game, remove tick system, UI time-shading is soft.\r\n- **R-v5.16** Affinity reward loop — visible payoff for boosting a rune, not just a hidden stat.\r\n- **R-v5.17** Central visual navigation map with player token (stronger form of R-v5.12).\r\n- **R-v5.18** Visual player vs enemy identity — Pokemon / Unicorn Overlord style (UO preferred).\r\n- **R-v5.19** Spells as craftable ingredients — spells + runes both combine, procedural-but-semantic naming. Explicitly mirrors the emergent-evolution hypothesis (gad-68) as an in-game narrative analogue.\r\n- **R-v5.20** Rune uniqueness within a single spell — bug fix for Bare v5's double-affinity exploit.\r\n- **R-v5.21** Event-driven rendering — kill the per-tick redraw glitches observed across ALL round-4 builds.",
-      "scoring_impact": "- v4 gates remain (G1, G2, G3, G4). v5 amendments tighten G1 (death/continue, end-boss reachable), G2 (training is encounter-driven), G3 (notification lifecycle, map usability).\r\n- New scored dimensions: `inventory_and_equipment_present`, `npc_dialogue_present` — not gates, but meaningful score hits if missing.\r\n- Rubric weights unchanged from v4.",
-      "deferred_to_v6": "- Deep evolution trees (multi-stage mutations).\r\n- Rune affinity decay when unused.\r\n- Multi-character party play — out of scope for escape-the-dungeon family.",
-      "brownfield_vs_greenfield": "- Greenfield v5 applies to escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent (same three templates all updated together).\r\n- Brownfield v5 extensions are not yet authored — round 5 starts greenfield-first.",
-      "round_5_unblock": "This version is the trigger for round 5. Round 5 runs serially (gad-67) against this requirements set. HTTP 529 investigation + GAD v11 retry queued, see task registry.",
-      "source": "`evals/_v5-requirements-addendum.md` holds the prose version with full user rationale quotes. The XML addendum in each template is the machine-readable form.",
-      "decision_references": "gad-65 (CSH), gad-68 (emergent-evolution), gad-71 (data/ pseudo-database for bug tracking), gad-72 (rounds framework — this is now round 5), gad-73 (fundamental skills triumvirate — the R-v5.19 spells-as-ingredients mechanic is the in-game analogue)."
-    }
-  }
-];
+export const REQUIREMENTS_HISTORY: RequirementsVersion[] = [];
 export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = [
   {
     "project": "escape-the-dungeon",
@@ -2163,7 +2137,7 @@ export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = [
     "project": "escape-the-dungeon",
     "version": "snapshot-2026-04-06",
     "path": "/downloads/requirements/escape-the-dungeon-EVAL-REQUIREMENTS-2026-04-06-pre-gates.md",
-    "bytes": 2012,
+    "bytes": 2022,
     "label": "pre-gates",
     "commit": "b5052fe",
     "isSnapshot": true
@@ -2172,7 +2146,7 @@ export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = [
     "project": "escape-the-dungeon",
     "version": "snapshot-2026-04-07",
     "path": "/downloads/requirements/escape-the-dungeon-EVAL-REQUIREMENTS-2026-04-07-hosted-demo-added.md",
-    "bytes": 3215,
+    "bytes": 3225,
     "label": "hosted-demo-added",
     "commit": "02b0e84",
     "isSnapshot": true
@@ -2219,7 +2193,7 @@ export const FINDINGS: Finding[] = [
     "file": "vendor/get-anything-done/evals/FINDINGS-2026-04-09-round-4-complete.md",
     "bodyRaw": "\n# Round 4 — complete v4 results (serial execution)\n\n**Date:** 2026-04-09\n**Requirements version:** v4 (pressure-oriented, 4 gates, authored dungeon, ingenuity-required)\n**Framework version:** v1.32.0 + commit 459dc36 (trace hooks live, framework-stamped TRACE.json)\n**Execution model:** serial (per decision gad-62, after round 4 attempt #1's rate-limit failure)\n\n## Summary\n\nRound 4 ran three greenfield conditions sequentially against v4 pressure-oriented\nrequirements. Two completed cleanly. One (GAD) was interrupted twice by Anthropic API\noverload errors (HTTP 529), landing with the fullest planning suite captured to date\nbut the lowest shippable-gameplay coverage. Despite the interruption, **the GAD v10\nresult is the strongest freedom-hypothesis signal in the entire dataset**: it used\nMORE tool calls (55) than either completed run (45) and shipped LESS playable game.\nThe framework's planning + data-authoring overhead consumed the budget before scene\nimplementation could begin.\n\n## The numbers\n\n| Condition | Tool uses | Wall clock | Tokens | TS lines | Dist | Playable | Skills authored | Gates self-traced |\n|---|---:|---:|---:|---:|---|---|---|---|\n| **Bare v5** | 45 | 12.5 min | 96030 | ~700 | ✓ 65 KB | ✓ 2 full floors | 0 new | all 4 pass (agent report) |\n| **Emergent v4** | 45 | 11.5 min | 95509 | ~650 | ✓ 55 KB | ✓ 2 full floors | **2 new** + CHANGELOG | all 4 pass (agent report) |\n| **GAD v10** | 55 | 9 min | 1216 | 875 | ✓ scaffold only | ✗ title screen only | 0 new | 0 of 4 (API interrupted) |\n\nToken count for GAD v10 is 1216 because the API 529 happened before the final message\nsummary — the actual token consumption was likely similar to the other two (~80-100k)\nbut wasn't recorded in the completion notification. Tool uses and wall clock are\nreliable.\n\n## What each condition actually shipped\n\n### Bare v5 — 2 floors × 8 rooms, 10 rune combinations, playable\n\n- **Stack decision**: DOM + TypeScript + Vite + iconify-icon + @iconify-json/game-icons. Explicitly rejected KAPLAY in worklog.md with rationale (\"better for action games; this is a menu-driven roguelike\").\n- **Content authored**: 5 runes (F/I/P/B/S), 10 authored craftable combinations, 2 floors × 8 rooms, 8 enemies including 2 elites and 2 bosses, 2 event rooms with 3-choice consequences.\n- **Forced-craft encounters**:\n  - Floor 1: Stone Warden (physical 0.25 damage taken — requires elemental spells) + Fungal Sovereign (fire immune, ice weak — requires ice-crafted spells)\n  - Floor 2: Mirror Djinn (40% reflect — DoT-only counter) + Pyre Lich (fire immune + 30% reflect, requires DoTs crafted from poison runes)\n- **Mana economy engineered**: agent did the literal math — bumped starter mana 12→18 and boss HP 50→42 after calculating that a Frostfire (3 casts × 17 dmg = 51) at rest-capped (85%) mana could just barely clear the 42-HP boss. That's engineering for the G2 ingenuity-payoff clause, not guessing.\n- **UI**: dark-fantasy palette, HP/MP gradient bars, per-room-type backgrounds, iconify game-icons throughout, Map/Spellbook/Traits/Bag overlays, styled buttons. No raw ASCII anywhere.\n- **Save/load**: localStorage-backed. Can resume a run.\n- **Bootstrap skills only**: create-skill.md + find-sprites.md copied from template, no new skills authored.\n- **Worklog**: flat `worklog.md` tracking 10-step plan. No phase boundaries or formal task IDs.\n\n### Emergent v4 — 2 floors × 8 rooms, 7 rune combinations, playable, **2 new skills**\n\n- **Stack decision**: DOM + TypeScript + Vite + iconify-icon + @iconify-json/game-icons. **Arrived at the same DOM conclusion independently** — the inherited `kaplay-scene-pattern.md` skill was actively marked deprecated in this run's CHANGELOG with rationale.\n- **Content authored**: 6 runes, 7 crafted combinations, 2 floors × 8 rooms (start, combat, forge, event, rest, combat, elite, boss), authored JSON data files under public/data/.\n- **Forced-craft encounters**:\n  - Floor 1: stone_golem and warden_f1 resist direct damage 65% — DoT spells (Ember Hemorrhage, Rotbloom) bypass the resistance.\n  - Floor 2: thornwretch and warden_f2 reflect 50% of direct damage — DoT-only spells (Rotbloom, Hexroot) are the intended counter.\n- **UI**: Cinzel serif font, gold/arcane/blood palette, HP/mana bars with fill + text overlay, damaged-shake animation, bonfire flicker, room-type theming via `data-theme` + `--room-accent`, mini-map sidebar with discovered/cleared state. Fog-of-war reveal.\n- **Skills evolved** (the real signal):\n  - `dom-over-kaplay.md` (NEW) — captures the methodology decision for the next emergent run. Documents why DOM + iconify beats KAPLAY for menu-driven roguelikes, notes the runtime caveat that Iconify fetches SVG from CDN on first paint.\n  - `pressure-forge-coupling.md` (NEW) — captures the v4 ingenuity clause recipe: per-floor enemy resistance/reflect + crafted-spell counter. This is the design pattern both Bare v5 and Emergent v4 independently discovered, now codified as a reusable skill.\n  - `kaplay-scene-pattern.md` — marked **deprecated for UI-heavy domains**, kept in place for lineage.\n  - `CHANGELOG.md` — documents disposition of each inherited skill + guidance for emergent v5.\n- **The inheritance ratcheting mechanism works**: next emergent run (v5) will start with 9 inherited skills including the 2 fresh ones. The knowledge compounds across rounds.\n\n### GAD v10 — **full planning suite, data layer, zero scenes**\n\n- **Stack decision**: DOM (explicitly documented in DECISIONS.xml — took the signal from bare/emergent) + Vite + TypeScript + iconify-icon. Same stack as the others.\n- **Planning suite authored** (fullest captured to date):\n  - `ROADMAP.xml` — 7 phases: scaffold, core-state-and-content, title-and-hud, room-navigation, combat, forge-and-runes, pressure-encounters\n  - `TASK-REGISTRY.xml` — ~20 tasks with IDs (01-01 through 07-xx) and status fields\n  - `STATE.xml` — current-phase 02, current-plan \"core-state-and-content\", next-action \"Phase 02: data layer. Start with task 02-01 (src/types.ts)\"\n  - `DECISIONS.xml` — scaffolded\n  - `VERIFICATION.md` — phase 01 verified as PASS\n- **Content authored (phase 02, 875 lines TS)**:\n  - `types.ts` — 137 lines of entity/combat/narrative stat shapes\n  - `state.ts` — 72 lines of game state module\n  - `content/runes.ts` — 221 lines of rune data + crafting combinations\n  - `content/floors.ts` — 224 lines of authored 2-floor × 8-room graph\n  - `content/enemies.ts` — 160 lines of enemy definitions\n  - `content/events.ts` — 43 lines of event rooms\n  - `main.ts` — 7 lines (stub: imports router and mounts)\n  - `scenes/router.ts` — 11 lines (stub: renders a static title screen \"ESCAPE THE DUNGEON v10 — scaffold booted\")\n  - `styles.css` — basic title styling\n- **What's missing**: scenes/title (real), scenes/room, scenes/combat, scenes/forge, scenes/event, scenes/rest, HUD, save/load, any interactivity beyond the scaffold title\n- **Gates self-traced**: 0 of 4. None were implemented. The scaffold title doesn't count as G3.\n- **API interrupted twice**: attempt #1 crashed at tool_uses 18 / 2.3 min (pruned fresh); attempt #2 crashed at tool_uses 55 / 9 min (preserved as v10).\n\n## The three-way comparison under v4\n\n### Design convergence\n\n**All three conditions independently arrived at the same macro design**:\n- DOM over KAPLAY\n- iconify-icon + @iconify-json/game-icons for UI\n- 2 floors × 8 rooms with authored encounters\n- Runes + combinations → crafted spells\n- Per-floor resistance/reflect encounters requiring specific crafted counters\n\nThis is a strong signal that the v4 REQUIREMENTS.xml is narrow enough to funnel\ncompetent agents toward the same solution. The spec does what it was designed\nto do: it constrains the solution space.\n\n### Implementation velocity\n\n| Condition | Tool uses | Scenes implemented | Playable loop |\n|---|---:|---:|---|\n| Bare v5 | 45 | 6+ (title, room, combat, forge, event, rest) | ✓ |\n| Emergent v4 | 45 | 6+ (title, room, combat, forge, event, rest + victory) | ✓ |\n| GAD v10 | 55 | 1 stub (router with title screen) | ✗ |\n\n**GAD used 22% more tool calls and shipped 0% of the playable scenes.** The difference\nwent entirely to planning + data authoring. Had GAD not been API-interrupted, it might\nhave caught up — but the same 45-tool-use budget that Bare and Emergent used to ship\na game was insufficient for GAD to reach scene implementation at all.\n\n### The freedom hypothesis, round 4 verdict\n\n**The freedom hypothesis holds under v4 pressure requirements — possibly more strongly\nthan under v3**.\n\nRound 3 (v3 requirements): Bare v3 human review 0.70, GAD v8 human review 0.20. Framework\nvs direct implementation, bare wins on creative output.\n\nRound 4 (v4 requirements): Bare v5 and Emergent v4 both ship complete playable games\nwith all 4 gates self-traced passing. GAD v10 ships zero scenes after 55 tool uses.\n\nThe v4 gates were DESIGNED to require ingenuity (the forced-craft encounter pattern),\nwhich should have favored a framework-driven deliberate approach. Instead, the direct-\nimplementation conditions shipped the ingenuity and GAD didn't ship anything playable.\n\n**Caveat**: API 529 interrupted GAD. A completed GAD run might reach all 7 phases.\nBut the tool-use accounting is damning regardless — at minute 9 of a 12-minute wall\nclock budget, Bare and Emergent were finishing polish while GAD was still writing data\nfiles. The overhead is real.\n\n### Workflow emergence — the quiet winner\n\nThe most interesting finding isn't the GAD-vs-bare comparison, it's **Emergent working\nas designed for the first time**:\n\n- Inherited 7 skills from previous runs\n- Applied them (DOM over KAPLAY inherited from previous emergent runs' failures)\n- Evolved them (deprecated `kaplay-scene-pattern.md` in place)\n- Authored 2 new skills that codify round 4 learnings:\n  - `dom-over-kaplay.md` — the stack decision with rationale\n  - `pressure-forge-coupling.md` — the v4 encounter design pattern\n- Wrote CHANGELOG.md for the next emergent run to inherit\n\nThis is the **knowledge ratcheting mechanism** working end-to-end in a single session.\nEvery previous emergent run either inherited without evolving or authored without\nreflecting. v4 is the first run where the full inheritance → apply → evolve → document\ncycle completed. The next emergent run (v5) will start with 9 inherited skills and\nvisible lineage of what each one taught.\n\n## API reliability as an experimental variable\n\nBoth GAD attempts hit HTTP 529 overloaded_error. This is Anthropic-side server load,\nnot anything the framework can fix. It is now an **experimental variable** we have to\nacknowledge:\n\n- Bare and Emergent ran 12-13 minutes uninterrupted\n- GAD's first attempt died at 2.3 min, second at 9 min\n- The pattern isn't random — GAD's longer setup phase (snapshot + planning + XML writes)\n  may spend more time in server-dependent states, giving 529s more opportunities to land\n\n**Decision candidate (gad-64)**: eval runs that hit API errors (not rate limits) should\nbe categorizable separately from rate-limited runs. Current `timing.rate_limited`\ncaptures account-cap failures; add `timing.api_interrupted` + `timing.interruption_reason`\nfor server-side failures. Both should filter out of cross-round comparisons by default.\n\n## What to do next\n\n1. **Accept v10 as the GAD round 4 data point.** Retrying a third time is unlikely to\n   succeed given the 529 pattern, and the partial data is already informative.\n2. **Human review Bare v5 and Emergent v4**. Both shipped complete games. Score them\n   under the rubric (playability, ui_polish, mechanics_implementation,\n   ingenuity_requirement_met, stability). Rubric phase 27 track 1 exists in planning\n   but hasn't been executed — this is the natural trigger.\n3. **Don't human-review GAD v10**. The agent's own self-assessment is correct: the\n   game doesn't exist beyond a scaffold title screen. Leave `humanReview.score` null\n   and let the api_interrupted flag exclude it from aggregates.\n4. **Ship round 4 completion on the site**. Copy all three dists to\n   `site/public/playable/`, regen prebuild, and let the Graphs scatter render the\n   two completed runs (v5, v4) against the historical dataset. v10 shows on its\n   per-run page with the api_interrupted badge but doesn't pollute the aggregates.\n5. **Queue phase 27 track 1 (rubric)** for the next session so Bare v5 and Emergent v4\n   can be reviewed under the new structured rubric instead of a single-score blob.\n6. **Document the v10 story on the site**. A paragraph on `/findings/2026-04-09-round-4-complete` explaining why GAD's tool-use count is higher and implementation depth\n   is lower. Include the 875-lines-of-TS breakdown. This is the concrete, numerical\n   freedom-hypothesis evidence the earlier rounds hinted at.\n\n## Cross-round comparison\n\nFreedom hypothesis across rounds (human-reviewed runs only, rate/api failures excluded):\n\n| Round | Req version | GAD best | Bare best | Emergent best | Hypothesis |\n|---|---|---|---|---|---|\n| Round 1 | v1 | etd v5 = 0.00 (blank screen) | — | — | not testable |\n| Round 2 | v2 | etd v7 = 0.30 | bare v2 = 0.50 | emergent v1 = 0.10 | Bare slight edge |\n| Round 3 | v3 | etd v8 = 0.20 | bare v3 = 0.70 | emergent v2 = 0.50 | **Bare wins decisively** |\n| Round 4 | v4 | **v10 = N/A** (api interrupted at phase 02) | **v5 = pending review** | **v4 = pending review** | **Bare + Emergent ship, GAD doesn't** |\n\nThe round 4 GAD cell is \"N/A\" because API failure, not because GAD performed poorly\non a scored dimension. But the tool-use accounting is clear: 55 tool uses → no\nplayable game is a worse ratio than 45 tool uses → playable game. Even if a completed\nGAD run would have outscored the others on polish or architecture, it would have\nneeded significantly more budget to get there.\n\n## Decisions logged\n\n- **gad-64** (to write): api_interrupted flag in TRACE.json timing separate from\n  rate_limited. Both filter from cross-round aggregates. The reason matters for\n  interpreting the data — \"Anthropic was overloaded\" is different from \"the agent\n  hit its account quota.\"\n",
     "bodyHtml": "<h1>Round 4 — complete v4 results (serial execution)</h1>\n<p><strong>Date:</strong> 2026-04-09\n<strong>Requirements version:</strong> v4 (pressure-oriented, 4 gates, authored dungeon, ingenuity-required)\n<strong>Framework version:</strong> v1.32.0 + commit 459dc36 (trace hooks live, framework-stamped TRACE.json)\n<strong>Execution model:</strong> serial (per decision gad-62, after round 4 attempt #1&#39;s rate-limit failure)</p>\n<h2>Summary</h2>\n<p>Round 4 ran three greenfield conditions sequentially against v4 pressure-oriented\nrequirements. Two completed cleanly. One (GAD) was interrupted twice by Anthropic API\noverload errors (HTTP 529), landing with the fullest planning suite captured to date\nbut the lowest shippable-gameplay coverage. Despite the interruption, <strong>the GAD v10\nresult is the strongest freedom-hypothesis signal in the entire dataset</strong>: it used\nMORE tool calls (55) than either completed run (45) and shipped LESS playable game.\nThe framework&#39;s planning + data-authoring overhead consumed the budget before scene\nimplementation could begin.</p>\n<h2>The numbers</h2>\n<table>\n<thead>\n<tr>\n<th>Condition</th>\n<th align=\"right\">Tool uses</th>\n<th align=\"right\">Wall clock</th>\n<th align=\"right\">Tokens</th>\n<th align=\"right\">TS lines</th>\n<th>Dist</th>\n<th>Playable</th>\n<th>Skills authored</th>\n<th>Gates self-traced</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><strong>Bare v5</strong></td>\n<td align=\"right\">45</td>\n<td align=\"right\">12.5 min</td>\n<td align=\"right\">96030</td>\n<td align=\"right\">~700</td>\n<td>✓ 65 KB</td>\n<td>✓ 2 full floors</td>\n<td>0 new</td>\n<td>all 4 pass (agent report)</td>\n</tr>\n<tr>\n<td><strong>Emergent v4</strong></td>\n<td align=\"right\">45</td>\n<td align=\"right\">11.5 min</td>\n<td align=\"right\">95509</td>\n<td align=\"right\">~650</td>\n<td>✓ 55 KB</td>\n<td>✓ 2 full floors</td>\n<td><strong>2 new</strong> + CHANGELOG</td>\n<td>all 4 pass (agent report)</td>\n</tr>\n<tr>\n<td><strong>GAD v10</strong></td>\n<td align=\"right\">55</td>\n<td align=\"right\">9 min</td>\n<td align=\"right\">1216</td>\n<td align=\"right\">875</td>\n<td>✓ scaffold only</td>\n<td>✗ title screen only</td>\n<td>0 new</td>\n<td>0 of 4 (API interrupted)</td>\n</tr>\n</tbody></table>\n<p>Token count for GAD v10 is 1216 because the API 529 happened before the final message\nsummary — the actual token consumption was likely similar to the other two (~80-100k)\nbut wasn&#39;t recorded in the completion notification. Tool uses and wall clock are\nreliable.</p>\n<h2>What each condition actually shipped</h2>\n<h3>Bare v5 — 2 floors × 8 rooms, 10 rune combinations, playable</h3>\n<ul>\n<li><strong>Stack decision</strong>: DOM + TypeScript + Vite + iconify-icon + @iconify-json/game-icons. Explicitly rejected KAPLAY in worklog.md with rationale (&quot;better for action games; this is a menu-driven roguelike&quot;).</li>\n<li><strong>Content authored</strong>: 5 runes (F/I/P/B/S), 10 authored craftable combinations, 2 floors × 8 rooms, 8 enemies including 2 elites and 2 bosses, 2 event rooms with 3-choice consequences.</li>\n<li><strong>Forced-craft encounters</strong>:<ul>\n<li>Floor 1: Stone Warden (physical 0.25 damage taken — requires elemental spells) + Fungal Sovereign (fire immune, ice weak — requires ice-crafted spells)</li>\n<li>Floor 2: Mirror Djinn (40% reflect — DoT-only counter) + Pyre Lich (fire immune + 30% reflect, requires DoTs crafted from poison runes)</li>\n</ul>\n</li>\n<li><strong>Mana economy engineered</strong>: agent did the literal math — bumped starter mana 12→18 and boss HP 50→42 after calculating that a Frostfire (3 casts × 17 dmg = 51) at rest-capped (85%) mana could just barely clear the 42-HP boss. That&#39;s engineering for the G2 ingenuity-payoff clause, not guessing.</li>\n<li><strong>UI</strong>: dark-fantasy palette, HP/MP gradient bars, per-room-type backgrounds, iconify game-icons throughout, Map/Spellbook/Traits/Bag overlays, styled buttons. No raw ASCII anywhere.</li>\n<li><strong>Save/load</strong>: localStorage-backed. Can resume a run.</li>\n<li><strong>Bootstrap skills only</strong>: create-skill.md + find-sprites.md copied from template, no new skills authored.</li>\n<li><strong>Worklog</strong>: flat <code>worklog.md</code> tracking 10-step plan. No phase boundaries or formal task IDs.</li>\n</ul>\n<h3>Emergent v4 — 2 floors × 8 rooms, 7 rune combinations, playable, <strong>2 new skills</strong></h3>\n<ul>\n<li><strong>Stack decision</strong>: DOM + TypeScript + Vite + iconify-icon + @iconify-json/game-icons. <strong>Arrived at the same DOM conclusion independently</strong> — the inherited <code>kaplay-scene-pattern.md</code> skill was actively marked deprecated in this run&#39;s CHANGELOG with rationale.</li>\n<li><strong>Content authored</strong>: 6 runes, 7 crafted combinations, 2 floors × 8 rooms (start, combat, forge, event, rest, combat, elite, boss), authored JSON data files under public/data/.</li>\n<li><strong>Forced-craft encounters</strong>:<ul>\n<li>Floor 1: stone_golem and warden_f1 resist direct damage 65% — DoT spells (Ember Hemorrhage, Rotbloom) bypass the resistance.</li>\n<li>Floor 2: thornwretch and warden_f2 reflect 50% of direct damage — DoT-only spells (Rotbloom, Hexroot) are the intended counter.</li>\n</ul>\n</li>\n<li><strong>UI</strong>: Cinzel serif font, gold/arcane/blood palette, HP/mana bars with fill + text overlay, damaged-shake animation, bonfire flicker, room-type theming via <code>data-theme</code> + <code>--room-accent</code>, mini-map sidebar with discovered/cleared state. Fog-of-war reveal.</li>\n<li><strong>Skills evolved</strong> (the real signal):<ul>\n<li><code>dom-over-kaplay.md</code> (NEW) — captures the methodology decision for the next emergent run. Documents why DOM + iconify beats KAPLAY for menu-driven roguelikes, notes the runtime caveat that Iconify fetches SVG from CDN on first paint.</li>\n<li><code>pressure-forge-coupling.md</code> (NEW) — captures the v4 ingenuity clause recipe: per-floor enemy resistance/reflect + crafted-spell counter. This is the design pattern both Bare v5 and Emergent v4 independently discovered, now codified as a reusable skill.</li>\n<li><code>kaplay-scene-pattern.md</code> — marked <strong>deprecated for UI-heavy domains</strong>, kept in place for lineage.</li>\n<li><code>CHANGELOG.md</code> — documents disposition of each inherited skill + guidance for emergent v5.</li>\n</ul>\n</li>\n<li><strong>The inheritance ratcheting mechanism works</strong>: next emergent run (v5) will start with 9 inherited skills including the 2 fresh ones. The knowledge compounds across rounds.</li>\n</ul>\n<h3>GAD v10 — <strong>full planning suite, data layer, zero scenes</strong></h3>\n<ul>\n<li><strong>Stack decision</strong>: DOM (explicitly documented in DECISIONS.xml — took the signal from bare/emergent) + Vite + TypeScript + iconify-icon. Same stack as the others.</li>\n<li><strong>Planning suite authored</strong> (fullest captured to date):<ul>\n<li><code>ROADMAP.xml</code> — 7 phases: scaffold, core-state-and-content, title-and-hud, room-navigation, combat, forge-and-runes, pressure-encounters</li>\n<li><code>TASK-REGISTRY.xml</code> — ~20 tasks with IDs (01-01 through 07-xx) and status fields</li>\n<li><code>STATE.xml</code> — current-phase 02, current-plan &quot;core-state-and-content&quot;, next-action &quot;Phase 02: data layer. Start with task 02-01 (src/types.ts)&quot;</li>\n<li><code>DECISIONS.xml</code> — scaffolded</li>\n<li><code>VERIFICATION.md</code> — phase 01 verified as PASS</li>\n</ul>\n</li>\n<li><strong>Content authored (phase 02, 875 lines TS)</strong>:<ul>\n<li><code>types.ts</code> — 137 lines of entity/combat/narrative stat shapes</li>\n<li><code>state.ts</code> — 72 lines of game state module</li>\n<li><code>content/runes.ts</code> — 221 lines of rune data + crafting combinations</li>\n<li><code>content/floors.ts</code> — 224 lines of authored 2-floor × 8-room graph</li>\n<li><code>content/enemies.ts</code> — 160 lines of enemy definitions</li>\n<li><code>content/events.ts</code> — 43 lines of event rooms</li>\n<li><code>main.ts</code> — 7 lines (stub: imports router and mounts)</li>\n<li><code>scenes/router.ts</code> — 11 lines (stub: renders a static title screen &quot;ESCAPE THE DUNGEON v10 — scaffold booted&quot;)</li>\n<li><code>styles.css</code> — basic title styling</li>\n</ul>\n</li>\n<li><strong>What&#39;s missing</strong>: scenes/title (real), scenes/room, scenes/combat, scenes/forge, scenes/event, scenes/rest, HUD, save/load, any interactivity beyond the scaffold title</li>\n<li><strong>Gates self-traced</strong>: 0 of 4. None were implemented. The scaffold title doesn&#39;t count as G3.</li>\n<li><strong>API interrupted twice</strong>: attempt #1 crashed at tool_uses 18 / 2.3 min (pruned fresh); attempt #2 crashed at tool_uses 55 / 9 min (preserved as v10).</li>\n</ul>\n<h2>The three-way comparison under v4</h2>\n<h3>Design convergence</h3>\n<p><strong>All three conditions independently arrived at the same macro design</strong>:</p>\n<ul>\n<li>DOM over KAPLAY</li>\n<li>iconify-icon + @iconify-json/game-icons for UI</li>\n<li>2 floors × 8 rooms with authored encounters</li>\n<li>Runes + combinations → crafted spells</li>\n<li>Per-floor resistance/reflect encounters requiring specific crafted counters</li>\n</ul>\n<p>This is a strong signal that the v4 REQUIREMENTS.xml is narrow enough to funnel\ncompetent agents toward the same solution. The spec does what it was designed\nto do: it constrains the solution space.</p>\n<h3>Implementation velocity</h3>\n<table>\n<thead>\n<tr>\n<th>Condition</th>\n<th align=\"right\">Tool uses</th>\n<th align=\"right\">Scenes implemented</th>\n<th>Playable loop</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Bare v5</td>\n<td align=\"right\">45</td>\n<td align=\"right\">6+ (title, room, combat, forge, event, rest)</td>\n<td>✓</td>\n</tr>\n<tr>\n<td>Emergent v4</td>\n<td align=\"right\">45</td>\n<td align=\"right\">6+ (title, room, combat, forge, event, rest + victory)</td>\n<td>✓</td>\n</tr>\n<tr>\n<td>GAD v10</td>\n<td align=\"right\">55</td>\n<td align=\"right\">1 stub (router with title screen)</td>\n<td>✗</td>\n</tr>\n</tbody></table>\n<p><strong>GAD used 22% more tool calls and shipped 0% of the playable scenes.</strong> The difference\nwent entirely to planning + data authoring. Had GAD not been API-interrupted, it might\nhave caught up — but the same 45-tool-use budget that Bare and Emergent used to ship\na game was insufficient for GAD to reach scene implementation at all.</p>\n<h3>The freedom hypothesis, round 4 verdict</h3>\n<p><strong>The freedom hypothesis holds under v4 pressure requirements — possibly more strongly\nthan under v3</strong>.</p>\n<p>Round 3 (v3 requirements): Bare v3 human review 0.70, GAD v8 human review 0.20. Framework\nvs direct implementation, bare wins on creative output.</p>\n<p>Round 4 (v4 requirements): Bare v5 and Emergent v4 both ship complete playable games\nwith all 4 gates self-traced passing. GAD v10 ships zero scenes after 55 tool uses.</p>\n<p>The v4 gates were DESIGNED to require ingenuity (the forced-craft encounter pattern),\nwhich should have favored a framework-driven deliberate approach. Instead, the direct-\nimplementation conditions shipped the ingenuity and GAD didn&#39;t ship anything playable.</p>\n<p><strong>Caveat</strong>: API 529 interrupted GAD. A completed GAD run might reach all 7 phases.\nBut the tool-use accounting is damning regardless — at minute 9 of a 12-minute wall\nclock budget, Bare and Emergent were finishing polish while GAD was still writing data\nfiles. The overhead is real.</p>\n<h3>Workflow emergence — the quiet winner</h3>\n<p>The most interesting finding isn&#39;t the GAD-vs-bare comparison, it&#39;s <strong>Emergent working\nas designed for the first time</strong>:</p>\n<ul>\n<li>Inherited 7 skills from previous runs</li>\n<li>Applied them (DOM over KAPLAY inherited from previous emergent runs&#39; failures)</li>\n<li>Evolved them (deprecated <code>kaplay-scene-pattern.md</code> in place)</li>\n<li>Authored 2 new skills that codify round 4 learnings:<ul>\n<li><code>dom-over-kaplay.md</code> — the stack decision with rationale</li>\n<li><code>pressure-forge-coupling.md</code> — the v4 encounter design pattern</li>\n</ul>\n</li>\n<li>Wrote CHANGELOG.md for the next emergent run to inherit</li>\n</ul>\n<p>This is the <strong>knowledge ratcheting mechanism</strong> working end-to-end in a single session.\nEvery previous emergent run either inherited without evolving or authored without\nreflecting. v4 is the first run where the full inheritance → apply → evolve → document\ncycle completed. The next emergent run (v5) will start with 9 inherited skills and\nvisible lineage of what each one taught.</p>\n<h2>API reliability as an experimental variable</h2>\n<p>Both GAD attempts hit HTTP 529 overloaded_error. This is Anthropic-side server load,\nnot anything the framework can fix. It is now an <strong>experimental variable</strong> we have to\nacknowledge:</p>\n<ul>\n<li>Bare and Emergent ran 12-13 minutes uninterrupted</li>\n<li>GAD&#39;s first attempt died at 2.3 min, second at 9 min</li>\n<li>The pattern isn&#39;t random — GAD&#39;s longer setup phase (snapshot + planning + XML writes)\nmay spend more time in server-dependent states, giving 529s more opportunities to land</li>\n</ul>\n<p><strong>Decision candidate (gad-64)</strong>: eval runs that hit API errors (not rate limits) should\nbe categorizable separately from rate-limited runs. Current <code>timing.rate_limited</code>\ncaptures account-cap failures; add <code>timing.api_interrupted</code> + <code>timing.interruption_reason</code>\nfor server-side failures. Both should filter out of cross-round comparisons by default.</p>\n<h2>What to do next</h2>\n<ol>\n<li><strong>Accept v10 as the GAD round 4 data point.</strong> Retrying a third time is unlikely to\nsucceed given the 529 pattern, and the partial data is already informative.</li>\n<li><strong>Human review Bare v5 and Emergent v4</strong>. Both shipped complete games. Score them\nunder the rubric (playability, ui_polish, mechanics_implementation,\ningenuity_requirement_met, stability). Rubric phase 27 track 1 exists in planning\nbut hasn&#39;t been executed — this is the natural trigger.</li>\n<li><strong>Don&#39;t human-review GAD v10</strong>. The agent&#39;s own self-assessment is correct: the\ngame doesn&#39;t exist beyond a scaffold title screen. Leave <code>humanReview.score</code> null\nand let the api_interrupted flag exclude it from aggregates.</li>\n<li><strong>Ship round 4 completion on the site</strong>. Copy all three dists to\n<code>site/public/playable/</code>, regen prebuild, and let the Graphs scatter render the\ntwo completed runs (v5, v4) against the historical dataset. v10 shows on its\nper-run page with the api_interrupted badge but doesn&#39;t pollute the aggregates.</li>\n<li><strong>Queue phase 27 track 1 (rubric)</strong> for the next session so Bare v5 and Emergent v4\ncan be reviewed under the new structured rubric instead of a single-score blob.</li>\n<li><strong>Document the v10 story on the site</strong>. A paragraph on <code>/findings/2026-04-09-round-4-complete</code> explaining why GAD&#39;s tool-use count is higher and implementation depth\nis lower. Include the 875-lines-of-TS breakdown. This is the concrete, numerical\nfreedom-hypothesis evidence the earlier rounds hinted at.</li>\n</ol>\n<h2>Cross-round comparison</h2>\n<p>Freedom hypothesis across rounds (human-reviewed runs only, rate/api failures excluded):</p>\n<table>\n<thead>\n<tr>\n<th>Round</th>\n<th>Req version</th>\n<th>GAD best</th>\n<th>Bare best</th>\n<th>Emergent best</th>\n<th>Hypothesis</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Round 1</td>\n<td>v1</td>\n<td>etd v5 = 0.00 (blank screen)</td>\n<td>—</td>\n<td>—</td>\n<td>not testable</td>\n</tr>\n<tr>\n<td>Round 2</td>\n<td>v2</td>\n<td>etd v7 = 0.30</td>\n<td>bare v2 = 0.50</td>\n<td>emergent v1 = 0.10</td>\n<td>Bare slight edge</td>\n</tr>\n<tr>\n<td>Round 3</td>\n<td>v3</td>\n<td>etd v8 = 0.20</td>\n<td>bare v3 = 0.70</td>\n<td>emergent v2 = 0.50</td>\n<td><strong>Bare wins decisively</strong></td>\n</tr>\n<tr>\n<td>Round 4</td>\n<td>v4</td>\n<td><strong>v10 = N/A</strong> (api interrupted at phase 02)</td>\n<td><strong>v5 = pending review</strong></td>\n<td><strong>v4 = pending review</strong></td>\n<td><strong>Bare + Emergent ship, GAD doesn&#39;t</strong></td>\n</tr>\n</tbody></table>\n<p>The round 4 GAD cell is &quot;N/A&quot; because API failure, not because GAD performed poorly\non a scored dimension. But the tool-use accounting is clear: 55 tool uses → no\nplayable game is a worse ratio than 45 tool uses → playable game. Even if a completed\nGAD run would have outscored the others on polish or architecture, it would have\nneeded significantly more budget to get there.</p>\n<h2>Decisions logged</h2>\n<ul>\n<li><strong>gad-64</strong> (to write): api_interrupted flag in TRACE.json timing separate from\nrate_limited. Both filter from cross-round aggregates. The reason matters for\ninterpreting the data — &quot;Anthropic was overloaded&quot; is different from &quot;the agent\nhit its account quota.&quot;</li>\n</ul>\n",
-    "summary": "**Date:** 2026-04-09 **Requirements version:** v4 (pressure-oriented, 4 gates, authored dungeon, ingenuity-required) **Framework version:** v1.32.0 + commit 459dc36 (trace hooks live, framework-stamped TRACE.json) **Execution model:** serial (per decision gad-62, after round 4 attempt #1's rate-lim…",
+    "summary": "**Date:** 2026-04-09 **Requirements version:** v4 (pressure-oriented, 4 gates, authored dungeon, ingenuity-required) **Framework version:** v1.32.0 + commit 459dc36 (trace hooks live, framework-stamped TRACE.json) **Execution model:** serial (per decision gad-62, after round 4 attempt #1's rate-limâ€¦",
     "projects": [
       "escape-the-dungeon",
       "escape-the-dungeon-bare",
@@ -2331,9 +2305,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 13
+            "count": 3
           }
         },
         {
@@ -2344,9 +2318,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 9
           }
         },
         {
@@ -2357,9 +2331,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -2370,9 +2344,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 7
           }
         },
         {
@@ -2383,9 +2357,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 9
+            "count": 3
           }
         },
         {
@@ -2396,9 +2370,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 12
           }
         },
         {
@@ -2409,9 +2383,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 2
           }
         },
         {
@@ -2422,22 +2396,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-decide-n8",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 240
-          },
-          "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 9
           }
         }
       ],
@@ -2482,12 +2443,6 @@ export const WORKFLOWS: Workflow[] = [
           "id": "gad-decide-e6",
           "source": "gad-decide-n6",
           "target": "gad-decide-n7",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e7",
-          "source": "gad-decide-n7",
-          "target": "gad-decide-n8",
           "animated": false
         }
       ]
@@ -2554,7 +2509,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 6
           }
         },
         {
@@ -2565,9 +2520,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 3
           }
         },
         {
@@ -2580,7 +2535,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 6
           }
         },
         {
@@ -2593,7 +2548,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 5
           }
         },
         {
@@ -2606,7 +2561,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 4
           }
         },
         {
@@ -2632,7 +2587,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -2656,9 +2611,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 11
+            "count": 3
           }
         },
         {
@@ -2671,7 +2626,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/ROADMAP.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 3
           }
         },
         {
@@ -2684,7 +2639,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 8
           }
         },
         {
@@ -2695,9 +2650,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/ROADMAP.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -2708,9 +2663,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2721,9 +2676,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2734,9 +2689,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/ROADMAP.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 1
           }
         },
         {
@@ -2747,9 +2702,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 1
           }
         },
         {
@@ -2773,7 +2728,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -2786,9 +2741,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 20
+            "count": 6
           }
         },
         {
@@ -2799,9 +2754,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2812,9 +2767,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
           }
         },
         {
@@ -2825,9 +2780,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 2
           }
         },
         {
@@ -2838,9 +2793,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -2851,7 +2806,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -2864,9 +2819,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -2877,7 +2832,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -2890,9 +2845,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 6
           }
         },
         {
@@ -2903,9 +2858,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/ROADMAP.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2918,7 +2873,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 8
+            "count": 2
           }
         },
         {
@@ -2931,7 +2886,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -2944,7 +2899,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 6
           }
         },
         {
@@ -2970,7 +2925,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 3
           }
         },
         {
@@ -2983,7 +2938,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 3
           }
         },
         {
@@ -2994,35 +2949,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 960
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n35",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 960
-          },
-          "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n36",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 1080
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 6
+            "count": 1
           }
         }
       ],
@@ -3230,18 +3159,6 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-discuss-plan-execute-n33",
           "target": "gad-discuss-plan-execute-n34",
           "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e34",
-          "source": "gad-discuss-plan-execute-n34",
-          "target": "gad-discuss-plan-execute-n35",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e35",
-          "source": "gad-discuss-plan-execute-n35",
-          "target": "gad-discuss-plan-execute-n36",
-          "animated": false
         }
       ]
     },
@@ -3342,7 +3259,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "site/lib/catalog.generated.ts",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -3459,7 +3376,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 6
           }
         },
         {
@@ -3470,9 +3387,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 3
           }
         },
         {
@@ -3485,7 +3402,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 6
           }
         },
         {
@@ -3498,7 +3415,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 5
           }
         },
         {
@@ -3511,7 +3428,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 4
           }
         },
         {
@@ -3537,7 +3454,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -3561,9 +3478,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 12
+            "count": 3
           }
         },
         {
@@ -3574,9 +3491,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 8
           }
         },
         {
@@ -3587,9 +3504,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 4
           }
         },
         {
@@ -3600,9 +3517,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -3628,7 +3545,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 20
+            "count": 1
           }
         },
         {
@@ -3639,9 +3556,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 1
           }
         },
         {
@@ -3652,9 +3569,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 3
           }
         },
         {
@@ -3665,9 +3582,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 2
           }
         },
         {
@@ -3678,9 +3595,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 6
           }
         },
         {
@@ -3691,7 +3608,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -3704,9 +3621,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -3717,7 +3634,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -3730,9 +3647,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -3745,7 +3662,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 8
+            "count": 2
           }
         },
         {
@@ -3758,7 +3675,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -3769,7 +3686,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -3782,9 +3699,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 6
           }
         },
         {
@@ -3795,9 +3712,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 2
           }
         },
         {
@@ -3808,9 +3725,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 2
           }
         },
         {
@@ -3821,9 +3738,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 840
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -3836,7 +3753,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 6
           }
         },
         {
@@ -3849,7 +3766,46 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-loop-n31",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 840
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n32",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 960
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-loop-n33",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 960
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 1
           }
         }
       ],
@@ -4033,6 +3989,24 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-loop-n29",
           "target": "gad-loop-n30",
           "animated": false
+        },
+        {
+          "id": "gad-loop-e30",
+          "source": "gad-loop-n30",
+          "target": "gad-loop-n31",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e31",
+          "source": "gad-loop-n31",
+          "target": "gad-loop-n32",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e32",
+          "source": "gad-loop-n32",
+          "target": "gad-loop-n33",
+          "animated": false
         }
       ]
     },
@@ -4102,9 +4076,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-191-0",
-    "name": "Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 191× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-191-0` or discard.",
+    "slug": "emergent-bash-bash-bash-211-0",
+    "name": "Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 211Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-211-0` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4119,12 +4093,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>191×</strong>: Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>211Ã—</strong>: Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-191-0-n0",
+          "id": "emergent-bash-bash-bash-211-0-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4133,11 +4107,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 191
+            "count": 211
           }
         },
         {
-          "id": "emergent-bash-bash-bash-191-0-n1",
+          "id": "emergent-bash-bash-bash-211-0-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4146,11 +4120,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 191
+            "count": 211
           }
         },
         {
-          "id": "emergent-bash-bash-bash-191-0-n2",
+          "id": "emergent-bash-bash-bash-211-0-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4159,32 +4133,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 191
+            "count": 211
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-191-0-e0",
-          "source": "emergent-bash-bash-bash-191-0-n0",
-          "target": "emergent-bash-bash-bash-191-0-n1"
+          "id": "emergent-bash-bash-bash-211-0-e0",
+          "source": "emergent-bash-bash-bash-211-0-n0",
+          "target": "emergent-bash-bash-bash-211-0-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-191-0-e1",
-          "source": "emergent-bash-bash-bash-191-0-n1",
-          "target": "emergent-bash-bash-bash-191-0-n2"
+          "id": "emergent-bash-bash-bash-211-0-e1",
+          "source": "emergent-bash-bash-bash-211-0-n1",
+          "target": "emergent-bash-bash-bash-211-0-n2"
         }
       ]
     },
     "support": {
-      "phases": 191,
+      "phases": 211,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-137-1",
-    "name": "Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 137× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-137-1` or discard.",
+    "slug": "emergent-bash-bash-bash-bash-152-1",
+    "name": "Bash â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 152Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-152-1` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4199,12 +4173,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>137×</strong>: Bash → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>152Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-137-1-n0",
+          "id": "emergent-bash-bash-bash-bash-152-1-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4213,11 +4187,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 137
+            "count": 152
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-137-1-n1",
+          "id": "emergent-bash-bash-bash-bash-152-1-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4226,11 +4200,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 137
+            "count": 152
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-137-1-n2",
+          "id": "emergent-bash-bash-bash-bash-152-1-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4239,11 +4213,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 137
+            "count": 152
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-137-1-n3",
+          "id": "emergent-bash-bash-bash-bash-152-1-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4252,37 +4226,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 137
+            "count": 152
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-137-1-e0",
-          "source": "emergent-bash-bash-bash-bash-137-1-n0",
-          "target": "emergent-bash-bash-bash-bash-137-1-n1"
+          "id": "emergent-bash-bash-bash-bash-152-1-e0",
+          "source": "emergent-bash-bash-bash-bash-152-1-n0",
+          "target": "emergent-bash-bash-bash-bash-152-1-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-137-1-e1",
-          "source": "emergent-bash-bash-bash-bash-137-1-n1",
-          "target": "emergent-bash-bash-bash-bash-137-1-n2"
+          "id": "emergent-bash-bash-bash-bash-152-1-e1",
+          "source": "emergent-bash-bash-bash-bash-152-1-n1",
+          "target": "emergent-bash-bash-bash-bash-152-1-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-137-1-e2",
-          "source": "emergent-bash-bash-bash-bash-137-1-n2",
-          "target": "emergent-bash-bash-bash-bash-137-1-n3"
+          "id": "emergent-bash-bash-bash-bash-152-1-e2",
+          "source": "emergent-bash-bash-bash-bash-152-1-n2",
+          "target": "emergent-bash-bash-bash-bash-152-1-n3"
         }
       ]
     },
     "support": {
-      "phases": 137,
+      "phases": 152,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-bash-103-2",
-    "name": "Bash → Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 103× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-103-2` or discard.",
+    "slug": "emergent-bash-bash-bash-bash-bash-115-2",
+    "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 115Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-115-2` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4297,12 +4271,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>103×</strong>: Bash → Bash → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>115Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-n0",
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4311,11 +4285,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 103
+            "count": 115
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-n1",
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4324,11 +4298,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 103
+            "count": 115
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-n2",
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4337,11 +4311,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 103
+            "count": 115
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-n3",
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4350,11 +4324,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 103
+            "count": 115
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-n4",
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -4363,42 +4337,42 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 103
+            "count": 115
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-e0",
-          "source": "emergent-bash-bash-bash-bash-bash-103-2-n0",
-          "target": "emergent-bash-bash-bash-bash-bash-103-2-n1"
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-e0",
+          "source": "emergent-bash-bash-bash-bash-bash-115-2-n0",
+          "target": "emergent-bash-bash-bash-bash-bash-115-2-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-e1",
-          "source": "emergent-bash-bash-bash-bash-bash-103-2-n1",
-          "target": "emergent-bash-bash-bash-bash-bash-103-2-n2"
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-e1",
+          "source": "emergent-bash-bash-bash-bash-bash-115-2-n1",
+          "target": "emergent-bash-bash-bash-bash-bash-115-2-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-e2",
-          "source": "emergent-bash-bash-bash-bash-bash-103-2-n2",
-          "target": "emergent-bash-bash-bash-bash-bash-103-2-n3"
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-e2",
+          "source": "emergent-bash-bash-bash-bash-bash-115-2-n2",
+          "target": "emergent-bash-bash-bash-bash-bash-115-2-n3"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-103-2-e3",
-          "source": "emergent-bash-bash-bash-bash-bash-103-2-n3",
-          "target": "emergent-bash-bash-bash-bash-bash-103-2-n4"
+          "id": "emergent-bash-bash-bash-bash-bash-115-2-e3",
+          "source": "emergent-bash-bash-bash-bash-bash-115-2-n3",
+          "target": "emergent-bash-bash-bash-bash-bash-115-2-n4"
         }
       ]
     },
     "support": {
-      "phases": 103,
+      "phases": 115,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-read-42-3",
-    "name": "Bash → Bash → Read",
-    "description": "Recurring tool-use sequence detected 42× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-42-3` or discard.",
+    "slug": "emergent-bash-bash-read-51-3",
+    "name": "Bash â†’ Bash â†’ Read",
+    "description": "Recurring tool-use sequence detected 51Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-51-3` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4413,12 +4387,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>42×</strong>: Bash → Bash → Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>51Ã—</strong>: Bash â†’ Bash â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-read-42-3-n0",
+          "id": "emergent-bash-bash-read-51-3-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4427,11 +4401,91 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
+            "count": 51
+          }
+        },
+        {
+          "id": "emergent-bash-bash-read-51-3-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 51
+          }
+        },
+        {
+          "id": "emergent-bash-bash-read-51-3-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 51
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-read-51-3-e0",
+          "source": "emergent-bash-bash-read-51-3-n0",
+          "target": "emergent-bash-bash-read-51-3-n1"
+        },
+        {
+          "id": "emergent-bash-bash-read-51-3-e1",
+          "source": "emergent-bash-bash-read-51-3-n1",
+          "target": "emergent-bash-bash-read-51-3-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 51,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-42-4",
+    "name": "Edit â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 42Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-42-4` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>42Ã—</strong>: Edit â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-42-4-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
             "count": 42
           }
         },
         {
-          "id": "emergent-bash-bash-read-42-3-n1",
+          "id": "emergent-edit-bash-bash-42-4-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4444,14 +4498,14 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-bash-bash-read-42-3-n2",
+          "id": "emergent-edit-bash-bash-42-4-n2",
           "type": "live",
           "position": {
             "x": 440,
             "y": 0
           },
           "data": {
-            "label": "Read",
+            "label": "Bash",
             "kind": "skill",
             "count": 42
           }
@@ -4459,14 +4513,14 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-read-42-3-e0",
-          "source": "emergent-bash-bash-read-42-3-n0",
-          "target": "emergent-bash-bash-read-42-3-n1"
+          "id": "emergent-edit-bash-bash-42-4-e0",
+          "source": "emergent-edit-bash-bash-42-4-n0",
+          "target": "emergent-edit-bash-bash-42-4-n1"
         },
         {
-          "id": "emergent-bash-bash-read-42-3-e1",
-          "source": "emergent-bash-bash-read-42-3-n1",
-          "target": "emergent-bash-bash-read-42-3-n2"
+          "id": "emergent-edit-bash-bash-42-4-e1",
+          "source": "emergent-edit-bash-bash-42-4-n1",
+          "target": "emergent-edit-bash-bash-42-4-n2"
         }
       ]
     },
@@ -4476,9 +4530,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-bash-31-4",
-    "name": "Edit → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 31× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-31-4` or discard.",
+    "slug": "emergent-edit-bash-bash-bash-30-5",
+    "name": "Edit â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 30Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-30-5` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4493,12 +4547,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>31×</strong>: Edit → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>30Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-bash-31-4-n0",
+          "id": "emergent-edit-bash-bash-bash-30-5-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4507,11 +4561,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 31
+            "count": 30
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-31-4-n1",
+          "id": "emergent-edit-bash-bash-bash-30-5-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4520,11 +4574,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 30
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-31-4-n2",
+          "id": "emergent-edit-bash-bash-bash-30-5-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4533,11 +4587,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 30
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-31-4-n3",
+          "id": "emergent-edit-bash-bash-bash-30-5-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4546,117 +4600,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 30
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-bash-31-4-e0",
-          "source": "emergent-edit-bash-bash-bash-31-4-n0",
-          "target": "emergent-edit-bash-bash-bash-31-4-n1"
+          "id": "emergent-edit-bash-bash-bash-30-5-e0",
+          "source": "emergent-edit-bash-bash-bash-30-5-n0",
+          "target": "emergent-edit-bash-bash-bash-30-5-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-31-4-e1",
-          "source": "emergent-edit-bash-bash-bash-31-4-n1",
-          "target": "emergent-edit-bash-bash-bash-31-4-n2"
+          "id": "emergent-edit-bash-bash-bash-30-5-e1",
+          "source": "emergent-edit-bash-bash-bash-30-5-n1",
+          "target": "emergent-edit-bash-bash-bash-30-5-n2"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-31-4-e2",
-          "source": "emergent-edit-bash-bash-bash-31-4-n2",
-          "target": "emergent-edit-bash-bash-bash-31-4-n3"
+          "id": "emergent-edit-bash-bash-bash-30-5-e2",
+          "source": "emergent-edit-bash-bash-bash-30-5-n2",
+          "target": "emergent-edit-bash-bash-bash-30-5-n3"
         }
       ]
     },
     "support": {
-      "phases": 31,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-bash-bash-40-5",
-    "name": "Edit → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 40× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-40-5` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>40×</strong>: Edit → Bash → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-bash-bash-40-5-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 40
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-40-5-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 40
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-40-5-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 40
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-bash-bash-40-5-e0",
-          "source": "emergent-edit-bash-bash-40-5-n0",
-          "target": "emergent-edit-bash-bash-40-5-n1"
-        },
-        {
-          "id": "emergent-edit-bash-bash-40-5-e1",
-          "source": "emergent-edit-bash-bash-40-5-n1",
-          "target": "emergent-edit-bash-bash-40-5-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 40,
+      "phases": 30,
       "stability": 1
     }
   },
   {
     "slug": "emergent-bash-bash-bash-read-30-6",
-    "name": "Bash → Bash → Bash → Read",
-    "description": "Recurring tool-use sequence detected 30× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-30-6` or discard.",
+    "name": "Bash â†’ Bash â†’ Bash â†’ Read",
+    "description": "Recurring tool-use sequence detected 30Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-30-6` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4671,7 +4645,7 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>30×</strong>: Bash → Bash → Bash → Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>30Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
@@ -4752,9 +4726,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-edit-edit-36-7",
-    "name": "Edit → Edit → Edit",
-    "description": "Recurring tool-use sequence detected 36× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-36-7` or discard.",
+    "slug": "emergent-bash-read-bash-39-7",
+    "name": "Bash â†’ Read â†’ Bash",
+    "description": "Recurring tool-use sequence detected 39Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-bash-39-7` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4769,72 +4743,72 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>36×</strong>: Edit → Edit → Edit.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>39Ã—</strong>: Bash â†’ Read â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-edit-edit-36-7-n0",
+          "id": "emergent-bash-read-bash-39-7-n0",
           "type": "live",
           "position": {
             "x": 0,
             "y": 0
           },
           "data": {
-            "label": "Edit",
+            "label": "Bash",
             "kind": "skill",
-            "count": 36
+            "count": 39
           }
         },
         {
-          "id": "emergent-edit-edit-edit-36-7-n1",
+          "id": "emergent-bash-read-bash-39-7-n1",
           "type": "live",
           "position": {
             "x": 220,
             "y": 0
           },
           "data": {
-            "label": "Edit",
+            "label": "Read",
             "kind": "skill",
-            "count": 36
+            "count": 39
           }
         },
         {
-          "id": "emergent-edit-edit-edit-36-7-n2",
+          "id": "emergent-bash-read-bash-39-7-n2",
           "type": "live",
           "position": {
             "x": 440,
             "y": 0
           },
           "data": {
-            "label": "Edit",
+            "label": "Bash",
             "kind": "skill",
-            "count": 36
+            "count": 39
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-edit-edit-36-7-e0",
-          "source": "emergent-edit-edit-edit-36-7-n0",
-          "target": "emergent-edit-edit-edit-36-7-n1"
+          "id": "emergent-bash-read-bash-39-7-e0",
+          "source": "emergent-bash-read-bash-39-7-n0",
+          "target": "emergent-bash-read-bash-39-7-n1"
         },
         {
-          "id": "emergent-edit-edit-edit-36-7-e1",
-          "source": "emergent-edit-edit-edit-36-7-n1",
-          "target": "emergent-edit-edit-edit-36-7-n2"
+          "id": "emergent-bash-read-bash-39-7-e1",
+          "source": "emergent-bash-read-bash-39-7-n1",
+          "target": "emergent-bash-read-bash-39-7-n2"
         }
       ]
     },
     "support": {
-      "phases": 36,
+      "phases": 39,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-bash-bash-19-8",
-    "name": "Edit → Bash → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 19× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-19-8` or discard.",
+    "slug": "emergent-bash-bash-read-bash-28-8",
+    "name": "Bash â†’ Bash â†’ Read â†’ Bash",
+    "description": "Recurring tool-use sequence detected 28Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-bash-28-8` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4849,12 +4823,190 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>19×</strong>: Edit → Bash → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>28Ã—</strong>: Bash â†’ Bash â†’ Read â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-n0",
+          "id": "emergent-bash-bash-read-bash-28-8-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 28
+          }
+        },
+        {
+          "id": "emergent-bash-bash-read-bash-28-8-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 28
+          }
+        },
+        {
+          "id": "emergent-bash-bash-read-bash-28-8-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 28
+          }
+        },
+        {
+          "id": "emergent-bash-bash-read-bash-28-8-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 28
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-read-bash-28-8-e0",
+          "source": "emergent-bash-bash-read-bash-28-8-n0",
+          "target": "emergent-bash-bash-read-bash-28-8-n1"
+        },
+        {
+          "id": "emergent-bash-bash-read-bash-28-8-e1",
+          "source": "emergent-bash-bash-read-bash-28-8-n1",
+          "target": "emergent-bash-bash-read-bash-28-8-n2"
+        },
+        {
+          "id": "emergent-bash-bash-read-bash-28-8-e2",
+          "source": "emergent-bash-bash-read-bash-28-8-n2",
+          "target": "emergent-bash-bash-read-bash-28-8-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 28,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-edit-bash-32-9",
+    "name": "Edit â†’ Edit â†’ Bash",
+    "description": "Recurring tool-use sequence detected 32Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-32-9` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>32Ã—</strong>: Edit â†’ Edit â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-edit-bash-32-9-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 32
+          }
+        },
+        {
+          "id": "emergent-edit-edit-bash-32-9-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 32
+          }
+        },
+        {
+          "id": "emergent-edit-edit-bash-32-9-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 32
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-edit-bash-32-9-e0",
+          "source": "emergent-edit-edit-bash-32-9-n0",
+          "target": "emergent-edit-edit-bash-32-9-n1"
+        },
+        {
+          "id": "emergent-edit-edit-bash-32-9-e1",
+          "source": "emergent-edit-edit-bash-32-9-n1",
+          "target": "emergent-edit-edit-bash-32-9-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 32,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-bash-bash-19-10",
+    "name": "Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 19Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-19-10` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>19Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4867,7 +5019,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-n1",
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4880,7 +5032,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-n2",
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4893,7 +5045,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-n3",
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4906,7 +5058,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-n4",
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -4921,24 +5073,24 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-e0",
-          "source": "emergent-edit-bash-bash-bash-bash-19-8-n0",
-          "target": "emergent-edit-bash-bash-bash-bash-19-8-n1"
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-e0",
+          "source": "emergent-edit-bash-bash-bash-bash-19-10-n0",
+          "target": "emergent-edit-bash-bash-bash-bash-19-10-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-e1",
-          "source": "emergent-edit-bash-bash-bash-bash-19-8-n1",
-          "target": "emergent-edit-bash-bash-bash-bash-19-8-n2"
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-e1",
+          "source": "emergent-edit-bash-bash-bash-bash-19-10-n1",
+          "target": "emergent-edit-bash-bash-bash-bash-19-10-n2"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-e2",
-          "source": "emergent-edit-bash-bash-bash-bash-19-8-n2",
-          "target": "emergent-edit-bash-bash-bash-bash-19-8-n3"
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-e2",
+          "source": "emergent-edit-bash-bash-bash-bash-19-10-n2",
+          "target": "emergent-edit-bash-bash-bash-bash-19-10-n3"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-19-8-e3",
-          "source": "emergent-edit-bash-bash-bash-bash-19-8-n3",
-          "target": "emergent-edit-bash-bash-bash-bash-19-8-n4"
+          "id": "emergent-edit-bash-bash-bash-bash-19-10-e3",
+          "source": "emergent-edit-bash-bash-bash-bash-19-10-n3",
+          "target": "emergent-edit-bash-bash-bash-bash-19-10-n4"
         }
       ]
     },
@@ -4948,9 +5100,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-edit-bash-bash-bash-17-9",
-    "name": "Edit → Edit → Bash → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 17× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-bash-bash-17-9` or discard.",
+    "slug": "emergent-edit-edit-bash-bash-bash-18-11",
+    "name": "Edit â†’ Edit â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-bash-bash-18-11` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4965,12 +5117,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>17×</strong>: Edit → Edit → Bash → Bash → Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>18Ã—</strong>: Edit â†’ Edit â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-n0",
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4979,11 +5131,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 17
+            "count": 18
           }
         },
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-n1",
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4992,11 +5144,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 17
+            "count": 18
           }
         },
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-n2",
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -5005,11 +5157,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 17
+            "count": 18
           }
         },
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-n3",
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -5018,11 +5170,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 17
+            "count": 18
           }
         },
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-n4",
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -5031,231 +5183,35 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 17
+            "count": 18
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-e0",
-          "source": "emergent-edit-edit-bash-bash-bash-17-9-n0",
-          "target": "emergent-edit-edit-bash-bash-bash-17-9-n1"
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-e0",
+          "source": "emergent-edit-edit-bash-bash-bash-18-11-n0",
+          "target": "emergent-edit-edit-bash-bash-bash-18-11-n1"
         },
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-e1",
-          "source": "emergent-edit-edit-bash-bash-bash-17-9-n1",
-          "target": "emergent-edit-edit-bash-bash-bash-17-9-n2"
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-e1",
+          "source": "emergent-edit-edit-bash-bash-bash-18-11-n1",
+          "target": "emergent-edit-edit-bash-bash-bash-18-11-n2"
         },
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-e2",
-          "source": "emergent-edit-edit-bash-bash-bash-17-9-n2",
-          "target": "emergent-edit-edit-bash-bash-bash-17-9-n3"
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-e2",
+          "source": "emergent-edit-edit-bash-bash-bash-18-11-n2",
+          "target": "emergent-edit-edit-bash-bash-bash-18-11-n3"
         },
         {
-          "id": "emergent-edit-edit-bash-bash-bash-17-9-e3",
-          "source": "emergent-edit-edit-bash-bash-bash-17-9-n3",
-          "target": "emergent-edit-edit-bash-bash-bash-17-9-n4"
+          "id": "emergent-edit-edit-bash-bash-bash-18-11-e3",
+          "source": "emergent-edit-edit-bash-bash-bash-18-11-n3",
+          "target": "emergent-edit-edit-bash-bash-bash-18-11-n4"
         }
       ]
     },
     "support": {
-      "phases": 17,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-edit-bash-bash-20-10",
-    "name": "Edit → Edit → Bash → Bash",
-    "description": "Recurring tool-use sequence detected 20× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-bash-20-10` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>20×</strong>: Edit → Edit → Bash → Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-bash-bash-20-10-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 20
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-bash-20-10-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 20
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-bash-20-10-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 20
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-bash-20-10-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 20
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-bash-bash-20-10-e0",
-          "source": "emergent-edit-edit-bash-bash-20-10-n0",
-          "target": "emergent-edit-edit-bash-bash-20-10-n1"
-        },
-        {
-          "id": "emergent-edit-edit-bash-bash-20-10-e1",
-          "source": "emergent-edit-edit-bash-bash-20-10-n1",
-          "target": "emergent-edit-edit-bash-bash-20-10-n2"
-        },
-        {
-          "id": "emergent-edit-edit-bash-bash-20-10-e2",
-          "source": "emergent-edit-edit-bash-bash-20-10-n2",
-          "target": "emergent-edit-edit-bash-bash-20-10-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 20,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-edit-edit-edit-19-11",
-    "name": "Edit → Edit → Edit → Edit",
-    "description": "Recurring tool-use sequence detected 19× in trace data (detector v1 — tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored — the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-edit-19-11` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>19×</strong>: Edit → Edit → Edit → Edit.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-edit-edit-19-11-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 19
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-edit-19-11-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 19
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-edit-19-11-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 19
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-edit-19-11-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 19
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-edit-edit-19-11-e0",
-          "source": "emergent-edit-edit-edit-edit-19-11-n0",
-          "target": "emergent-edit-edit-edit-edit-19-11-n1"
-        },
-        {
-          "id": "emergent-edit-edit-edit-edit-19-11-e1",
-          "source": "emergent-edit-edit-edit-edit-19-11-n1",
-          "target": "emergent-edit-edit-edit-edit-19-11-n2"
-        },
-        {
-          "id": "emergent-edit-edit-edit-edit-19-11-e2",
-          "source": "emergent-edit-edit-edit-edit-19-11-n2",
-          "target": "emergent-edit-edit-edit-edit-19-11-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 19,
+      "phases": 18,
       "stability": 1
     }
   }
@@ -5308,71 +5264,55 @@ export const HUMAN_WORKFLOWS: HumanWorkflow[] = [
 ];
 
 export const SIGNAL: Signal = {
-  "totalEvents": 814,
+  "totalEvents": 830,
   "topFiles": [
     {
-      "path": "vendor/get-anything-done/.planning/TASK-REGISTRY.xml",
-      "count": 47
-    },
-    {
-      "path": "vendor/get-anything-done/site/scripts/build-site-data.mjs",
-      "count": 38
-    },
-    {
       "path": "vendor/get-anything-done/bin/gad.cjs",
-      "count": 23
+      "count": 41
     },
     {
-      "path": "vendor/get-anything-done/.planning/STATE.xml",
-      "count": 18
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/planning/PlanningTabbedContent.tsx",
-      "count": 13
-    },
-    {
-      "path": "vendor/get-anything-done/site/components/project-market/ProjectCard.tsx",
-      "count": 12
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/planning/page.tsx",
-      "count": 9
+      "path": "vendor/get-anything-done/.planning/TASK-REGISTRY.xml",
+      "count": 34
     },
     {
       "path": "vendor/get-anything-done/bin/install.js",
-      "count": 8
+      "count": 22
     },
     {
-      "path": "gad-config.toml",
-      "count": 7
+      "path": "vendor/get-anything-done/.planning/STATE.xml",
+      "count": 20
     },
     {
-      "path": "vendor/get-anything-done/site/components/project-market/ProjectMarket.tsx",
-      "count": 6
+      "path": "vendor/get-anything-done/site/scripts/build-site-data.mjs",
+      "count": 11
+    },
+    {
+      "path": "vendor/get-anything-done/site/app/planning/PlanningTabbedContent.tsx",
+      "count": 10
+    },
+    {
+      "path": "vendor/get-anything-done/tests/consumer-init-install.test.cjs",
+      "count": 9
     },
     {
       "path": "vendor/get-anything-done/.planning/DECISIONS.xml",
+      "count": 7
+    },
+    {
+      "path": "vendor/get-anything-done/skills/create-proto-skill/SKILL.md",
       "count": 6
     },
     {
-      "path": "projects/project-editor/.planning/ROADMAP.xml",
+      "path": "vendor/get-anything-done/site/components/project-market/ProjectMarket.tsx",
       "count": 5
     },
     {
-      "path": "vendor/get-anything-done/site/app/project-market/page.tsx",
-      "count": 4
+      "path": "vendor/get-anything-done/workflows/evolution-evolve.md",
+      "count": 5
     },
     {
-      "path": "vendor/get-anything-done/site/app/projects/[...id]/page.tsx",
-      "count": 4
-    },
-    {
-      "path": "vendor/get-anything-done/.planning/workflows/gad-evolution.md",
-      "count": 4
-    },
-    {
-      "path": "vendor/get-anything-done/site/lib/catalog.generated.ts",
-      "count": 4
+      "path": "vendor/get-anything-done/references/proto-skills.md",
+      "count": 5
     },
     {
       "path": "vendor/get-anything-done/site/app/findings/page.tsx",
@@ -5387,43 +5327,51 @@ export const SIGNAL: Signal = {
       "count": 4
     },
     {
-      "path": "vendor/get-anything-done/site/app/api/dev/launch-eval/route.ts",
+      "path": "vendor/get-anything-done/references/skill-shape.md",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/site/lib/catalog.generated.ts",
+      "count": 3
+    },
+    {
+      "path": "gad-config.toml",
+      "count": 3
+    },
+    {
+      "path": "vendor/get-anything-done/site/app/planning/page.tsx",
+      "count": 3
+    },
+    {
+      "path": "vendor/get-anything-done/site/app/project-market/page.tsx",
       "count": 3
     }
   ],
   "topSkills": [],
   "toolMix": {
-    "Grep": {
-      "count": 50,
-      "pct": 6.1
-    },
-    "Agent": {
-      "count": 6,
-      "pct": 0.7
-    },
     "Bash": {
-      "count": 401,
-      "pct": 49.3
-    },
-    "Read": {
-      "count": 167,
-      "pct": 20.5
+      "count": 464,
+      "pct": 55.9
     },
     "Edit": {
-      "count": 147,
-      "pct": 18.1
+      "count": 140,
+      "pct": 16.9
+    },
+    "Grep": {
+      "count": 35,
+      "pct": 4.2
+    },
+    "Read": {
+      "count": 148,
+      "pct": 17.8
+    },
+    "Agent": {
+      "count": 12,
+      "pct": 1.4
     },
     "Write": {
-      "count": 39,
-      "pct": 4.8
-    },
-    "ScheduleWakeup": {
-      "count": 1,
-      "pct": 0.1
-    },
-    "TaskUpdate": {
-      "count": 2,
-      "pct": 0.2
+      "count": 30,
+      "pct": 3.6
     },
     "Glob": {
       "count": 1,
@@ -5431,10 +5379,10 @@ export const SIGNAL: Signal = {
     }
   },
   "agentSplit": {
-    "default": 554,
-    "sub": 260,
+    "default": 593,
+    "sub": 237,
     "byRole": {
-      "(unspecified)": 260
+      "(unspecified)": 237
     }
   }
 };
@@ -5525,7 +5473,7 @@ export const CONTEXT_FRAMEWORKS: ContextFramework[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "44.5",
   "milestone": "gad-v1.1",
-  "nextAction": "Evolution turn checkpoint 1 shipped 2026-04-15: uniform skill shape locked. Decisions gad-190 (SKILL.md is the single command entry point; `workflow:` frontmatter key replaces `skill.json`), gad-191 (proto-skills are self-contained bundles at `.planning/proto-skills/&lt;slug&gt;/` with sibling `workflow.md`), gad-192 (`gad snapshot` surfaces sprint-relevant skills via TASK-REGISTRY `skill=` attribution) written. Canonical contract shipped as `references/skill-shape.md` (10 sections: layout, frontmatter spec, body shapes, workflows/ shape, proto-skill bundles, runtime install, validator rules, migration checklist, deleted artifacts, consumer-project parity). Phase 42.2 gained nine new tasks: 42.2-07 (done — references/skill-shape.md), 42.2-08 (install.js workflow: migration), 42.2-09 (validator update), 42.2-10 (migrate four keeper authoring skills: create-skill, create-proto-skill, gad-skill-creator, merge-skill; delete gad-create-skill, gad-merge-skill, gad-quick-skill), 42.2-11 (bulk-delete ~60 skill.json sidecars), 42.2-12 (verify `gad evolution install/promote` handles proto-skill bundles), 42.2-13 (promote phase-44.5 candidate as first pipeline proof), 42.2-14 (snapshot skills section), 42.2-15 (migrate legacy skills/candidates/ → .planning/candidates/). STOPPING for operator review before touching install.js (next checkpoint = 42.2-08). Interleave with phase 44.5 Project Editor work as operator directs — 42.2 evolution tasks are independent and can ship between 44.5 slices.",
+  "nextAction": "Evolution turn through checkpoint 36 shipped 2026-04-15. New: 42.2-36 (consumer-init-install Flow C parameterized across 5 runtimes + two real bin/install.js bug fixes — sdk/agents ENOENT fallback to repo-root agents/, plus `codexGsdPath` typo fix that had made `gad install all --codex` crash end-of-run on a local checkout; silent skip-on-fail branch removed so future install regressions become hard test failures; 9/9 tests green locally). Parallel-work session nearing end as context fills. New: 42.2-34 (promote-folder scope fix — framework-only, `--project` flag removed), 42.2-35 (consumer init/install integration test + bin/install.js:4860 local-checkout bug fix — canonicalSkillsSrc now falls back from sdk/skills to repo-root skills/; 5/5 tests green, 139 SKILL.md files install correctly from a local clone). Commits 2326bc6, b22397d, 991f443. Shipped since last state update: 42.2-32 (gad skill promote-folder + VCS canonicalized to status: stable), 42.2-33 (gad:proto-skill-battery skill + workflow + evolution-evolve auto-hook). Commits: 6498414, 03497e0. Proto-skill battery is the parallel of the canonical discovery battery but scoped to proto-skills with a proto-vs-proto supersession arm (not proto-vs-canonical — that framing was wrong per operator clarification: canonical is framework-specific, consumer projects have their own ecosystems that grow and obsolete each other). Three scores per proto: findability (0-10), execution_sufficiency (0-10), shed_score (0.0-1.0 derived from proto-vs-proto ranking). Shed thresholds: 0.5 flags, 0.75 recommends eviction. Battery never mutates canonical state; operator decides. Auto-runs as evolution-evolve step 9. Open for next session: (a) third canonical battery rerun after 42.2-30 skill-find shipped to measure Agent C delta, (b) snapshot EQUIPPED SKILLS pinned-skills refactor (still-open P1), (c) more Position B workflow retrofits (gad-plan-phase, gad-debug), (d) first actual `gad evolution evolve` run to exercise the new 9-step pipeline end-to-end including the proto-skill battery hook, (e) unblock 42.2-13 via 42.2-06 (create-proto-skill implementation), (f) phase 44.5 Project Editor work. All committed work is durable. Session can end cleanly.",
   "lastUpdated": "2026-04-15",
   "phases": [
     {
@@ -5783,7 +5731,7 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "21-23b",
       "status": "planned",
-      "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's …"
+      "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's â€¦"
     },
     {
       "id": "35-03",
@@ -5793,7 +5741,7 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "35-05",
       "status": "in-progress",
-      "goal": "After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before restoring any workstream feature. Confirm which parts of the old SDK are worth keeping, which should stay compatibility-only, and whether wo…"
+      "goal": "After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before restoring any workstream feature. Confirm which parts of the old SDK are worth keeping, which should stay compatibility-only, and whether woâ€¦"
     },
     {
       "id": "35-07",
@@ -5803,12 +5751,12 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "35-10",
       "status": "planned",
-      "goal": "Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, and hydration are canonical. Decide whether phase prompts should stay on a fixed file manifest or move to scoped/query-driven hydration, and …"
+      "goal": "Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, and hydration are canonical. Decide whether phase prompts should stay on a fixed file manifest or move to scoped/query-driven hydration, and â€¦"
     },
     {
       "id": "42.2-03",
       "status": "planned",
-      "goal": "Rename `skills/gad-quick-skill/` â†’ `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy ment…"
+      "goal": "Rename `skills/gad-quick-skill/` â†’ `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentâ€¦"
     },
     {
       "id": "42.2-04",
@@ -5818,191 +5766,161 @@ export const PLANNING_STATE: PlanningState = {
     {
       "id": "42.2-05",
       "status": "planned",
-      "goal": "Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-16…"
+      "goal": "Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-16â€¦"
     },
     {
       "id": "42.2-06",
       "status": "planned",
-      "goal": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills/<slug>/{PROVENANCE.md,SKILL.md}` pair, draft…"
-    },
-    {
-      "id": "42.2-08",
-      "status": "planned",
-      "goal": "Migrate `bin/install.js:readCanonicalSkillRecords` (lines 3088-3126) from reading `skill.json.commandPath` to reading the `workflow:` frontmatter key from SKILL.md. Honor both paths during the transition (frontmatter wins when present, fall back to skill.json…"
-    },
-    {
-      "id": "42.2-09",
-      "status": "planned",
-      "goal": "Update `scripts/validate-canonical-assets.mjs:50-81` to validate the uniform shape per decision gad-190: (a) drop the current skill.json/COMMAND.md pairing check, (b) parse `workflow:` frontmatter from every canonical SKILL.md, (c) fail the build when the poi…"
-    },
-    {
-      "id": "42.2-10",
-      "status": "planned",
-      "goal": "Migrate the four authoring keepers to the uniform shape: `create-skill`, `create-proto-skill` (renamed from `gad-quick-skill` per task 42.2-03), `gad-skill-creator`, `merge-skill`. For each: add `workflow: workflows/&lt;name&gt;.md` to SKILL.md frontmatter, w…"
-    },
-    {
-      "id": "42.2-11",
-      "status": "planned",
-      "goal": "Bulk-delete all remaining `skills/**/skill.json` sidecars (~60 files) after tasks 42.2-08/09/10 land. Sweep canonical `skills/` + `dist/release-support/**/skills/` + any eval project `skills/` and confirm zero skill.json files remain under canonical roots. Re…"
-    },
-    {
-      "id": "42.2-12",
-      "status": "planned",
-      "goal": "Verify and wire `gad evolution install` for the proto-skill bundle shape (decision gad-191). Read current implementation in `bin/gad.cjs evolution install`; confirm it copies the `.planning/proto-skills/&lt;slug&gt;/` directory whole (SKILL.md + workflow.md +…"
+      "goal": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills/<slug>/{PROVENANCE.md,SKILL.md}` pair, draftâ€¦"
     },
     {
       "id": "42.2-13",
-      "status": "planned",
-      "goal": "Promote the phase-44.5 candidate (`skills/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.plann…"
-    },
-    {
-      "id": "42.2-14",
-      "status": "planned",
-      "goal": "Add a `SKILLS (top N by sprint attribution)` section to `gad snapshot` output per decision gad-192. New emitter `renderSprintSkills(projectId, sprintWindow)` in `bin/gad.cjs snapshot` path: scans open + recently-done tasks in the current sprint window for `sk…"
-    },
-    {
-      "id": "42.2-15",
-      "status": "planned",
-      "goal": "Migrate legacy `skills/candidates/` to `.planning/candidates/` per decision gad-183 (candidates are planning artifacts, not canonical framework assets). The phase-44.5 candidate is the only current inhabitant. Move the directory, update any references in docs…"
+      "status": "blocked",
+      "goal": "Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.plâ€¦"
     },
     {
       "id": "42.3-13",
       "status": "planned",
-      "goal": "Noise panel on the /planning Workflows tab â€” separate surface from the signal sections per decision gad-174. Two views: (a) raw event timeline (filterable by phase, session, event type) for events the emergent detector could not absorb into any candidate, (…"
+      "goal": "Noise panel on the /planning Workflows tab â€” separate surface from the signal sections per decision gad-174. Two views: (a) raw event timeline (filterable by phase, session, event type) for events the emergent detector could not absorb into any candidate, (â€¦"
     },
     {
       "id": "42.3-17",
       "status": "planned",
-      "goal": "Publish /workflows/methodology (or equivalent) on the site documenting how the workflow detector actually works: trace-event schema, scope classification, participant matching for authored workflows, conformance formula (decision gad-173), v1 tool-level emerg…"
+      "goal": "Publish /workflows/methodology (or equivalent) on the site documenting how the workflow detector actually works: trace-event schema, scope classification, participant matching for authored workflows, conformance formula (decision gad-173), v1 tool-level emergâ€¦"
     },
     {
       "id": "43-09",
       "status": "planned",
-      "goal": "Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a r…"
+      "goal": "Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a râ€¦"
     },
     {
       "id": "43-10",
       "status": "planned",
-      "goal": "Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project fo…"
+      "goal": "Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project foâ€¦"
     },
     {
       "id": "44-09",
       "status": "planned",
-      "goal": "Live project-market data sync in dev. Today /project-market is hydrated from site/lib/eval-data.generated.ts which is rebuilt on `predev`/`prebuild` (site/scripts/build-site-data.mjs). A `gad eval run` or `gad eval preserve` invocation between dev-server rest…"
+      "goal": "Live project-market data sync in dev. Today /project-market is hydrated from site/lib/eval-data.generated.ts which is rebuilt on `predev`/`prebuild` (site/scripts/build-site-data.mjs). A `gad eval run` or `gad eval preserve` invocation between dev-server restâ€¦"
     },
     {
       "id": "44-11",
       "status": "planned",
-      "goal": "In-browser preview of the preserved static-export build on /projects/[id]. Forge now builds to out/ with Next.js static export (task 44-03), and builds are preserved under apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/. BLOCKER: Next.js static export…"
+      "goal": "In-browser preview of the preserved static-export build on /projects/[id]. Forge now builds to out/ with Next.js static export (task 44-03), and builds are preserved under apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/. BLOCKER: Next.js static exportâ€¦"
     },
     {
       "id": "44-12",
       "status": "planned",
-      "goal": "Persistent server-side process tracker for dev eval runs. Today `/api/dev/launch-eval` spawns a child and streams output via SSE, but the process state is tied to the request lifetime â€” close the tab or refresh the page and the running eval disappears from …"
+      "goal": "Persistent server-side process tracker for dev eval runs. Today `/api/dev/launch-eval` spawns a child and streams output via SSE, but the process state is tied to the request lifetime â€” close the tab or refresh the page and the running eval disappears from â€¦"
     },
     {
       "id": "44-13",
       "status": "planned",
-      "goal": "Fix `gad projects init` config-write location: today it registers the new planning root into \"the nearest gad-config.toml\" relative to the CLI binary, which when the CLI runs from `vendor/get-anything-done/bin/gad.cjs` resolves to the submodule's own `vendor/…"
+      "goal": "Fix `gad projects init` config-write location: today it registers the new planning root into \"the nearest gad-config.toml\" relative to the CLI binary, which when the CLI runs from `vendor/get-anything-done/bin/gad.cjs` resolves to the submodule's own `vendor/â€¦"
     },
     {
       "id": "44-28",
       "status": "planned",
-      "goal": "UMBRELLA (see decision gad-188): site-as-project-management-UI + Windows installer + release pipeline. Discuss-phase 2026-04-14 reframed this from a thin \"gad site install\" task into a 5-sub-task spine. User's atomic decisions: no npm publishing ever (distrib…"
+      "goal": "UMBRELLA (see decision gad-188): site-as-project-management-UI + Windows installer + release pipeline. Discuss-phase 2026-04-14 reframed this from a thin \"gad site install\" task into a 5-sub-task spine. User's atomic decisions: no npm publishing ever (distribâ€¦"
     },
     {
       "id": "44-32",
       "status": "planned",
-      "goal": "44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) with: (a) new `--site` flag that installs a self-contained site tree into `&lt;target&gt;/.planning/site/`; (b) new `--planning` flag that …"
+      "goal": "44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) with: (a) new `--site` flag that installs a self-contained site tree into `&lt;target&gt;/.planning/site/`; (b) new `--planning` flag that â€¦"
     },
     {
       "id": "44-33",
       "status": "planned",
-      "goal": "44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js server build output that can run with `node server.js` in place (not `next start` which needs the full next CLI). (b) Bundled Node runtime …"
+      "goal": "44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js server build output that can run with `node server.js` in place (not `next start` which needs the full next CLI). (b) Bundled Node runtime â€¦"
     },
     {
       "id": "44-34",
       "status": "planned",
-      "goal": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned Node zip (current LTS or whatever the site build targets) from our release assets — NO…"
+      "goal": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned Node zip (current LTS or whatever the site build targets) from our release assets — NOâ€¦"
     },
     {
       "id": "44-16",
       "status": "planned",
-      "goal": "Normalize remaining sections to the explicit-id pattern across the app: every user-facing SiteSection should have a stable literal cid token and any redundant Identified wrappers that only restate the same section identity should be removed. Keep Identified o…"
+      "goal": "Normalize remaining sections to the explicit-id pattern across the app: every user-facing SiteSection should have a stable literal cid token and any redundant Identified wrappers that only restate the same section identity should be removed. Keep Identified oâ€¦"
     },
     {
       "id": "44.5-01",
       "status": "planned",
-      "goal": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane p…"
+      "goal": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane pâ€¦"
     },
     {
       "id": "44.5-01b",
       "status": "planned",
-      "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `publis…"
+      "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `publisâ€¦"
     },
     {
       "id": "44.5-01c",
       "status": "planned",
-      "goal": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent fla…"
+      "goal": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flaâ€¦"
     },
     {
       "id": "44.5-01d",
       "status": "planned",
-      "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the p…"
+      "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the pâ€¦"
     },
     {
       "id": "44.5-02",
       "status": "planned",
-      "goal": "Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighti…"
+      "goal": "Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fightiâ€¦"
     },
     {
       "id": "44.5-02b",
       "status": "planned",
-      "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `n…"
+      "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `nâ€¦"
     },
     {
       "id": "44.5-03",
       "status": "planned",
-      "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this …"
+      "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this â€¦"
     },
     {
       "id": "44.5-04",
       "status": "planned",
-      "goal": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marke…"
+      "goal": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 markeâ€¦"
     },
     {
       "id": "44.5-05",
       "status": "planned",
-      "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed s…"
+      "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed sâ€¦"
     },
     {
       "id": "44.5-06",
       "status": "planned",
-      "goal": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of requi…"
+      "goal": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of requiâ€¦"
     },
     {
       "id": "44.5-07",
       "status": "planned",
-      "goal": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 de…"
+      "goal": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 deâ€¦"
     },
     {
       "id": "44.5-08",
       "status": "planned",
-      "goal": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone co…"
+      "goal": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone coâ€¦"
     },
     {
       "id": "44.5-09",
       "status": "planned",
-      "goal": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified f…"
+      "goal": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified fâ€¦"
     },
     {
       "id": "44.5-10",
       "status": "planned",
-      "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-fr…"
+      "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frâ€¦"
     }
   ],
-  "doneTasksCount": 257,
+  "doneTasksCount": 284,
   "recentDecisions": [
+    {
+      "id": "gad-195",
+      "title": "Snapshot rehydration is wasteful — session-scoped static/active split is the canonical contract",
+      "summary": "Operator confirmed 2026-04-15 (after 42.2-26 experiment was designed but before it was run): repeatedly loading the same snapshot context into an already-warm agent session is wasteful, not reinforcing. Once the agent has seen static information (skill catalog, workflow specs, decision history, reference docs, roadmap structure), re-loading it adds zero behavioral signal and pays the token cost. T"
+    },
     {
       "id": "gad-192",
       "title": "`gad snapshot` surfaces sprint-relevant skills via TASK-REGISTRY `skill=` attribution",
@@ -6057,11 +5975,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-182",
       "title": "Canonical framework assets need an automated integrity gate: unique public skill names and resolvable `@...` references",
       "summary": "Manual grep passes are not enough to keep the framework surface coherent after repeated structural migrations. The canonical asset tree now has enough cross-linking (`skills/` â†’ `workflows/` / `references/` / `templates/`, agent prompts, hook docs, site catalog generation) that two failure modes need to be enforced automatically: (1) duplicate public skill identities in canonical `skills/`, and "
-    },
-    {
-      "id": "gad-181",
-      "title": "Command skills are `gad-*`; procedural bodies live in prefixed `gad-*` workflows; templates are scaffolds, not methods",
-      "summary": "GAD's canonical skill catalog is command-oriented. A skill answers \"what do I invoke?\" and therefore should be a concise runtime-facing contract: trigger semantics, flags, required tools, participating agent roles, and the workflow/reference files it delegates to. The long-form methodology that used to live in several legacy plain-name skills (`plan-phase`, `new-project`, `map-codebase`, `debug`, "
     }
   ]
 };

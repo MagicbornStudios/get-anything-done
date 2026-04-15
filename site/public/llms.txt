@@ -1,4 +1,4 @@
-# Get Anything Done — llms.txt
+# Get Anything Done â€” llms.txt
 
 > A research framework for evaluating and evolving AI coding agents under measurable pressure. Everything in this site is backed by files in the repo at https://github.com/MagicbornStudios/get-anything-done. This file follows the llmstxt.org convention.
 
@@ -6,8 +6,8 @@
 
 - [Home](https://get-anything-done.vercel.app/): Evaluate and evolve agents under measurable pressure
 - [Glossary](https://get-anything-done.vercel.app/glossary): Every domain term (CSH, freedom hypothesis, pressure, etc.)
-- [Skeptic](https://get-anything-done.vercel.app/skeptic): Devils-advocate critique of every hypothesis — read this first before trusting any number
-- [Lineage](https://get-anything-done.vercel.app/lineage): GSD → RepoPlanner → GAD
+- [Skeptic](https://get-anything-done.vercel.app/skeptic): Devils-advocate critique of every hypothesis â€” read this first before trusting any number
+- [Lineage](https://get-anything-done.vercel.app/lineage): GSD â†’ RepoPlanner â†’ GAD
 
 ## Evaluation
 
@@ -18,15 +18,15 @@
 
 ## Catalog
 
-- [Skills](https://get-anything-done.vercel.app/skills): 89 skills (some are emergent, agent-authored, excluded from default install)
+- [Skills](https://get-anything-done.vercel.app/skills): 91 skills (some are emergent, agent-authored, excluded from default install)
 - [Requirements](https://get-anything-done.vercel.app/requirements): Every eval project's current REQUIREMENTS.xml
 - [Playable archive](https://get-anything-done.vercel.app/#play): Every scored build playable in-browser
 
 ## System
 
-- [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone → install → open in Claude → talk)
+- [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone â†’ install â†’ open in Claude â†’ talk)
 - [Security](https://get-anything-done.vercel.app/security): Skill attack surfaces, mitigations, future certification model
-- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (315), phases (50), decisions (189), roadmap, requirements, bugs (4)
+- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (336), phases (50), decisions (190), roadmap, requirements, bugs (4)
 
 ## Machine-readable
 

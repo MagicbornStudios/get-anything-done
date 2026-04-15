@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { Database, Play, RefreshCw } from "lucide-react";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DataSource } from "./data-shared";
+import DataJsonTreeView from "./DataJsonTreeView";
 import DataQueryEditor from "./DataQueryEditor";
 import { DEFAULT_QUERY, executeDbQuery, type QueryField } from "./query";
 
@@ -48,7 +49,7 @@ function buildCollections(sources: DataSource[]): DbCollection[] {
   const bySurface = [...grouped.entries()].map(([key, rows]) => ({
     key,
     label: rows[0]?.surface ?? key,
-    description: "Surface-derived collection",
+    description: "Local data group",
     rows,
   }));
 
@@ -63,8 +64,9 @@ function buildCollections(sources: DataSource[]): DbCollection[] {
   ];
 }
 
-export default function DataHeroSection({ sources }: { sources: DataSource[] }) {
+export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { sources: DataSource[]; dbPayload: unknown; dbSourcePath: string }) {
   const collections = useMemo(() => buildCollections(sources), [sources]);
+  const queryEditorCollections = useMemo(() => ["active"], []);
   const collectionsByKey = useMemo(
     () =>
       collections.reduce<Record<string, DataSource[]>>((acc, collection) => {
@@ -76,6 +78,30 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
   const [activeCollectionKey, setActiveCollectionKey] = useState("active");
   const [queryDraft, setQueryDraft] = useState(DEFAULT_QUERY);
   const [queryText, setQueryText] = useState(DEFAULT_QUERY);
+  const [leftPanelTab, setLeftPanelTab] = useState<"collections" | "json">("collections");
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "done" | "error">("idle");
+  const [syncMessage, setSyncMessage] = useState<string>("");
+  const quickPrompts = useMemo(
+    () => [
+      {
+        label: "Create",
+        text: 'For collection \"active\", draft a Mongo-style insert operation example for a new record with fields: id, surface, number, source, formula, trust, page, notes.',
+      },
+      {
+        label: "Read",
+        text: 'Build a Mongo-like read query for collection \"active\" filtering trust=\"deterministic\" and sourceLength > 40, projecting id, number, trust, surface, page, sorted sourceLength desc, limit 20.',
+      },
+      {
+        label: "Update",
+        text: 'Provide a Mongo-style update example for collection \"active\" that finds by id and updates notes and trust fields, returning the updated document.',
+      },
+      {
+        label: "Delete",
+        text: 'Provide a Mongo-style delete example for collection \"active\" that removes documents by id (single) and by trust value (many), with safe confirmation guidance.',
+      },
+    ],
+    [],
+  );
 
   const activeCollection = collections.find((collection) => collection.key === activeCollectionKey) ?? collections[0];
   const { rows, errors, plan, appliedCollection } = useMemo(
@@ -91,6 +117,23 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
     const nextCollection = parsedFrom?.slice(5).trim().toLowerCase();
     if (nextCollection && collectionsByKey[nextCollection]) {
       setActiveCollectionKey(nextCollection);
+    }
+  };
+
+  const syncToMongo = async () => {
+    setSyncState("syncing");
+    setSyncMessage("");
+    try {
+      const res = await fetch("/api/dev/db-sync", { method: "POST" });
+      const json = (await res.json()) as { ok?: boolean; error?: string; target?: string };
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "sync failed");
+      }
+      setSyncState("done");
+      setSyncMessage(`Synced -> ${json.target ?? "mongo"}`);
+    } catch (err) {
+      setSyncState("error");
+      setSyncMessage((err as Error).message);
     }
   };
 
@@ -111,6 +154,39 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
   const trustOptions = useMemo(() => {
     return [...new Set(rows.map((row) => row.trust))].sort();
   }, [rows]);
+
+  const rowsForSuggestions = useMemo(() => {
+    return rows.filter((row) => {
+      if (trustFilter !== "all" && row.trust !== trustFilter) return false;
+      if (hasNotesOnly && !(row.notes && row.notes.trim().length > 0)) return false;
+      return true;
+    });
+  }, [rows, trustFilter, hasNotesOnly]);
+
+  const searchSuggestion = useMemo(() => {
+    const inputWithoutTrailingSpace = resultsSearch.replace(/\s+$/, "");
+    if (!inputWithoutTrailingSpace) return "";
+    const lastSpaceIndex = inputWithoutTrailingSpace.lastIndexOf(" ");
+    const activeTerm =
+      lastSpaceIndex >= 0 ? inputWithoutTrailingSpace.slice(lastSpaceIndex + 1) : inputWithoutTrailingSpace;
+    if (!activeTerm) return "";
+    const needle = activeTerm.toLowerCase();
+    const candidates = new Set<string>();
+    for (const row of rowsForSuggestions) {
+      for (const column of tableColumns) {
+        const raw = rowField(row, column).trim();
+        if (!raw) continue;
+        candidates.add(raw);
+        for (const token of raw.split(/\s+/)) {
+          if (token.length >= 3) candidates.add(token);
+        }
+      }
+    }
+    const best = [...candidates]
+      .filter((candidate) => candidate.toLowerCase().startsWith(needle) && candidate.length > activeTerm.length)
+      .sort((a, b) => a.length - b.length || a.localeCompare(b))[0];
+    return best ? best.slice(activeTerm.length) : "";
+  }, [resultsSearch, rowsForSuggestions, tableColumns]);
 
   const visibleRows = useMemo(() => {
     const search = resultsSearch.trim().toLowerCase();
@@ -161,33 +237,66 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
           <Identified as="DataDbCollectionsPanel">
             <Card className="h-full">
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Database size={14} />
-                  Collections
-                </CardTitle>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Database size={14} />
+                      DB Viewer
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-[10px]">
+                        {dbSourcePath}
+                      </Badge>
+                      <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" onClick={syncToMongo} disabled={syncState === "syncing"}>
+                        {syncState === "syncing" ? "Syncing..." : "Sync Mongo"}
+                      </Button>
+                    </div>
+                  </div>
+                  {syncMessage ? (
+                    <p className={`text-[10px] ${syncState === "error" ? "text-rose-300" : "text-emerald-300"}`}>{syncMessage}</p>
+                  ) : null}
+                  <div className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/20 p-1">
+                    <button
+                      type="button"
+                      className={`rounded px-2 py-1 text-[11px] ${leftPanelTab === "collections" ? "bg-background font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setLeftPanelTab("collections")}
+                    >
+                      Collections
+                    </button>
+                    <button
+                      type="button"
+                      className={`rounded px-2 py-1 text-[11px] ${leftPanelTab === "json" ? "bg-background font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setLeftPanelTab("json")}
+                    >
+                      Raw JSON
+                    </button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-1.5">
-                {collections.map((collection) => {
-                  const active = collection.key === activeCollectionKey;
-                  return (
-                    <button
-                      key={collection.key}
-                      type="button"
-                      onClick={() => setActiveCollectionKey(collection.key)}
-                      className={`w-full rounded-md border px-2.5 py-2 text-left transition ${
-                        active
-                          ? "border-accent bg-accent/10"
-                          : "border-border/70 bg-background/30 hover:border-accent/50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs">{collection.label}</span>
-                        <Badge variant={active ? "default" : "outline"}>{collection.rows.length}</Badge>
-                      </div>
-                      <p className="mt-1 text-[11px] text-muted-foreground">{collection.description}</p>
-                    </button>
-                  );
-                })}
+                {leftPanelTab === "collections"
+                  ? collections.map((collection) => {
+                      const active = collection.key === activeCollectionKey;
+                      return (
+                        <button
+                          key={collection.key}
+                          type="button"
+                          onClick={() => setActiveCollectionKey(collection.key)}
+                          className={`w-full rounded-md border px-2.5 py-2 text-left transition ${
+                            active
+                              ? "border-accent bg-accent/10"
+                              : "border-border/70 bg-background/30 hover:border-accent/50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-xs">{collection.label}</span>
+                            <Badge variant={active ? "default" : "outline"}>{collection.rows.length}</Badge>
+                          </div>
+                          <p className="mt-1 text-[11px] text-muted-foreground">{collection.description}</p>
+                        </button>
+                      );
+                    })
+                  : <DataJsonTreeView data={dbPayload} />}
               </CardContent>
             </Card>
           </Identified>
@@ -197,7 +306,27 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
               <Card>
                 <Identified as="DataDbQueryPanelHeader">
                   <CardHeader className="pb-1.5">
-                    <CardTitle className="text-sm">Query</CardTitle>
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm">Query</CardTitle>
+                      <div className="rounded-md border border-border/60 bg-muted/20 p-1">
+                        <p className="px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">CRUD prompts</p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {quickPrompts.map((prompt) => (
+                            <Button
+                              key={prompt.label}
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px]"
+                              onClick={() => navigator.clipboard?.writeText(prompt.text).catch(() => {})}
+                              title={prompt.text}
+                            >
+                              {prompt.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </CardHeader>
                 </Identified>
                 <CardContent className="space-y-2.5">
@@ -207,7 +336,7 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
                       value={queryDraft}
                       onChange={setQueryDraft}
                       onRun={runQuery}
-                      collections={collections.map((collection) => collection.key)}
+                      collections={queryEditorCollections}
                     />
                   </Identified>
                   <Identified as="DataDbQueryActions">
@@ -236,9 +365,7 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
                     </div>
                   </Identified>
                   <Identified as="DataDbQueryDslHelp" tag="p" className="text-xs text-muted-foreground">
-                    DSL: <code>FROM</code>, <code>WHERE</code> (AND), <code>SORT</code>, <code>LIMIT</code>,{" "}
-                    <code>SELECT</code>. Example condition: <code>trust:deterministic</code> or{" "}
-                    <code>sourceLength&gt;40</code>.
+                    Query help is tuned for Mongo-like JSON assist. Suggestions appear only when context is clear.
                   </Identified>
                 </CardContent>
               </Card>
@@ -270,12 +397,26 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
                     </div>
                   ) : null}
                   <Identified as="DataDbResultsControls" className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
-                    <input
-                      value={resultsSearch}
-                      onChange={(event) => setResultsSearch(event.target.value)}
-                      placeholder="Search visible columns"
-                      className="h-8 rounded-md border border-border bg-background px-2 text-xs outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                    />
+                    <div className="relative">
+                      <input
+                        value={resultsSearch}
+                        onChange={(event) => setResultsSearch(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Tab" && searchSuggestion) {
+                            event.preventDefault();
+                            setResultsSearch((prev) => `${prev.replace(/\s+$/, "")}${searchSuggestion}`);
+                          }
+                        }}
+                        placeholder="Search visible columns"
+                        className="relative z-10 h-8 w-full rounded-md border border-border bg-background/70 px-2 text-xs outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                      {resultsSearch && searchSuggestion ? (
+                        <div className="pointer-events-none absolute inset-0 flex items-center px-2 text-xs">
+                          <span className="invisible whitespace-pre">{resultsSearch}</span>
+                          <span className="whitespace-pre text-muted-foreground/45">{searchSuggestion}</span>
+                        </div>
+                      ) : null}
+                    </div>
                     <select
                       value={sortColumn}
                       onChange={(event) => setSortColumn(event.target.value as QueryField)}
@@ -354,3 +495,5 @@ export default function DataHeroSection({ sources }: { sources: DataSource[] }) 
     </SiteSection>
   );
 }
+
+

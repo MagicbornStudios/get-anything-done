@@ -17,7 +17,7 @@ import { Identified } from "./Identified";
 import {
   DevIdAgentPromptDialog,
 } from "./DevIdAgentPromptDialog";
-import { buildDeletePrompt, buildUpdateLockedPrefix, type PromptVerbosity } from "./DevIdPromptTemplates";
+import { buildDeletePrompt, buildUpdateLockedPrefix } from "./DevIdPromptTemplates";
 import {
   DEV_PANEL_BRAND_MARK,
   DEV_PANEL_LABEL,
@@ -114,7 +114,7 @@ export function DevPanel(props: DevPanelProps) {
   const bandComponentTag = isBand ? props.componentTag : undefined;
   const bandSearchHint = isBand ? props.searchHint : undefined;
   const pathname = usePathname() ?? "";
-  const { enabled, setHighlightCid, flashComponent, highlightCid } = useDevId();
+  const { enabled, setHighlightCid, flashComponent, highlightCid, promptVerbosity, setPromptVerbosity } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const highlightPrevRef = useRef<string | null>(null);
@@ -131,22 +131,12 @@ export function DevPanel(props: DevPanelProps) {
   const [sectionCorner, setSectionCorner] = useState<"left" | "right">("right");
   const [compactEdge, setCompactEdge] = useState<"top" | "bottom">(bandEdge);
   const [compactCorner, setCompactCorner] = useState<"left" | "right">(bandCorner);
-  const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
   const [chromeUpdateCopied, setChromeUpdateCopied] = useState(false);
 
   const sortedSectionEntries = useMemo(
     () => (registry ? sortRegistryEntries(registry.entries) : []),
     [registry],
   );
-
-  useEffect(() => {
-    const raw = window.localStorage.getItem("devid.prompt.verbosity");
-    if (raw === "compact" || raw === "full") setPromptVerbosity(raw);
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("devid.prompt.verbosity", promptVerbosity);
-  }, [promptVerbosity]);
 
   useEffect(() => {
     if (mode !== "section" || !registry) return;
@@ -477,7 +467,7 @@ export function DevPanel(props: DevPanelProps) {
               stableCid={DEV_PANEL_STABLE_CID}
               register={false}
               className={[
-                "pointer-events-auto w-72 max-w-[85vw] rounded-md border border-accent/40 bg-background/95 px-2 py-1 shadow-lg backdrop-blur",
+                "pointer-events-auto w-72 max-w-[85vw] overscroll-contain rounded-md border border-accent/40 bg-background/95 px-2 py-1 shadow-lg backdrop-blur",
                 sectionCorner === "right" ? "ml-auto mr-2" : "ml-2",
               ].join(" ")}
               depth={0}
@@ -597,7 +587,7 @@ export function DevPanel(props: DevPanelProps) {
                   </Button>
                 </div>
               </div>
-              <div className="mt-1 max-h-24 space-y-1 overflow-auto pr-1">
+              <div className="mt-1 max-h-24 min-h-0 space-y-1 overflow-y-auto overscroll-y-contain pr-1">
                 {sectionVisibleEntries.map((entry) => (
                   <DevPanelListItem
                     key={entry.cid}
@@ -661,11 +651,15 @@ export function DevPanel(props: DevPanelProps) {
             edge === "top" ? "top-2" : "bottom-2",
           ].join(" ")}
         >
-          <div
+          <Identified
+            as={DEV_PANEL_LABEL}
+            stableCid={DEV_PANEL_STABLE_CID}
+            register={false}
             className={[
-              "pointer-events-auto w-72 rounded-md border border-accent/40 bg-background/95 px-2 py-1 shadow-lg backdrop-blur",
+              "pointer-events-auto w-72 max-w-[85vw] overscroll-contain rounded-md border border-accent/40 bg-background/95 px-2 py-1 shadow-lg backdrop-blur",
               corner === "right" ? "ml-auto mr-2" : "ml-2",
             ].join(" ")}
+            depth={0}
           >
             <div className="flex items-start justify-between gap-2 text-[10px]">
               <div className="group/paneltitle min-w-0 flex-1">
@@ -779,7 +773,7 @@ export function DevPanel(props: DevPanelProps) {
                 </Button>
               </div>
             </div>
-            <div className="mt-1 max-h-24 space-y-1 overflow-auto pr-1">
+            <div className="mt-1 max-h-24 min-h-0 space-y-1 overflow-y-auto overscroll-y-contain pr-1">
               {bandVisibleEntries.map((entry) => (
                 <DevPanelListItem
                   key={entry.cid}
@@ -807,7 +801,7 @@ export function DevPanel(props: DevPanelProps) {
               onEdgeChange={setCompactEdge}
               onCornerChange={setCompactCorner}
             />
-          </div>
+          </Identified>
         </div>
       </div>
     </>

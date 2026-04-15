@@ -3,7 +3,7 @@ import { Download, ExternalLink, Film } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 import { Button } from "@/components/ui/button";
-import { GSD_UPSTREAM, lineageWatchUrl } from "@/components/landing/lineage/lineage-shared";
+import { GSD_UPSTREAM, handoffCycleWatchUrl } from "@/components/landing/gsd-upstream-media";
 
 export function LandingInstallerUpstreamBand() {
   return (
@@ -46,7 +46,7 @@ export function LandingInstallerUpstreamBand() {
             className="rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold"
             asChild
           >
-            <a href={lineageWatchUrl()} rel="noopener noreferrer" target="_blank">
+            <a href={handoffCycleWatchUrl()} rel="noopener noreferrer" target="_blank">
               <Film size={18} aria-hidden />
               Watch the GSD stream talk
               <ExternalLink className="size-4 opacity-70" aria-hidden />

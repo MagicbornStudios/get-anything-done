@@ -6,24 +6,24 @@
       "days": 9
     },
     "totals": {
-      "events": 6058,
-      "sessions": 22,
-      "gad_cli_calls": 544
+      "events": 6081,
+      "sessions": 23,
+      "gad_cli_calls": 547
     },
     "runtime_distribution": [
       {
         "runtime": "claude-code",
-        "count": 5227
+        "count": 5241
       },
       {
         "runtime": "unknown",
-        "count": 831
+        "count": 840
       }
     ],
     "runtime_sessions": [
       {
         "runtime": "claude-code",
-        "sessions": 22
+        "sessions": 23
       },
       {
         "runtime": "unknown",
@@ -33,11 +33,11 @@
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 2016
+        "count": 2021
       },
       {
         "tool": "unknown",
-        "count": 1226
+        "count": 1244
       },
       {
         "tool": "Read",
@@ -127,7 +127,7 @@
       },
       {
         "day": "2026-04-15",
-        "count": 357
+        "count": 380
       }
     ],
     "framework_overhead": {
@@ -139,16 +139,16 @@
     "gad_cli_breakdown": {
       "snapshot": 79,
       "eval": 124,
-      "other": 341
+      "other": 344
     },
-    "computed_at": "2026-04-15T18:04:15.310Z",
+    "computed_at": "2026-04-15T21:03:04.357Z",
     "tasks": {
-      "done": 289,
+      "done": 309,
       "planned": 54,
       "in_progress": 4,
-      "total": 347
+      "total": 367
     },
-    "decisions": 189,
+    "decisions": 190,
     "phases_pressure": [
       {
         "phase": "10",
@@ -328,10 +328,10 @@
       },
       {
         "phase": "42.2",
-        "tasks_total": 15,
-        "tasks_done": 10,
-        "crosscuts": 9,
-        "pressure_score": 33,
+        "tasks_total": 36,
+        "tasks_done": 30,
+        "crosscuts": 20,
+        "pressure_score": 76,
         "high_pressure": true
       },
       {
@@ -492,10 +492,10 @@
     },
     "project_tokens": {
       "exact_eval_tokens": 0,
-      "estimated_live_input_tokens": 287722,
-      "estimated_live_output_tokens": 772137,
-      "estimated_live_total_tokens": 1059859,
-      "combined_total_tokens": 1059859,
+      "estimated_live_input_tokens": 305127,
+      "estimated_live_output_tokens": 783873,
+      "estimated_live_total_tokens": 1089000,
+      "combined_total_tokens": 1089000,
       "trace_files": 2,
       "trace_events": 2000,
       "runtime_distribution": [
@@ -506,64 +506,64 @@
       ],
       "sources": [
         {
-          "path": ".planning/.trace-events.jsonl",
-          "events": 1000,
-          "estimated_input_tokens": 145877,
-          "estimated_output_tokens": 394876,
-          "estimated_total_tokens": 540753
-        },
-        {
           "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 141845,
-          "estimated_output_tokens": 377261,
-          "estimated_total_tokens": 519106
+          "estimated_input_tokens": 158943,
+          "estimated_output_tokens": 389164,
+          "estimated_total_tokens": 548107
+        },
+        {
+          "path": ".planning/.trace-events.jsonl",
+          "events": 1000,
+          "estimated_input_tokens": 146184,
+          "estimated_output_tokens": 394709,
+          "estimated_total_tokens": 540893
         }
       ]
     },
     "workflow_conformance": {
-      "completed_tasks": 264,
-      "with_skill": 101,
+      "completed_tasks": 284,
+      "with_skill": 121,
       "with_agent": 10,
-      "with_type": 108,
+      "with_type": 128,
       "fully_attributed": 10,
-      "score": 0.038
+      "score": 0.035
     },
     "framework_compliance": {
-      "completed_tasks": 264,
-      "with_skill": 101,
+      "completed_tasks": 284,
+      "with_skill": 121,
       "with_agent": 10,
-      "with_type": 108,
+      "with_type": 128,
       "fully_attributed": 10,
-      "score": 0.038
+      "score": 0.035
     },
     "hydration": {
-      "snapshot_count": 517,
-      "estimated_snapshot_tokens": 2482599,
+      "snapshot_count": 528,
+      "estimated_snapshot_tokens": 2597643,
       "projects": [
         {
           "project": "get-anything-done",
-          "count": 234,
-          "estimated_tokens_per_snapshot": 6636,
-          "estimated_total_tokens": 1552824
+          "count": 239,
+          "estimated_tokens_per_snapshot": 6873,
+          "estimated_total_tokens": 1642647
         },
         {
           "project": "grime-time",
-          "count": 136,
-          "estimated_tokens_per_snapshot": 2567,
-          "estimated_total_tokens": 349112
+          "count": 138,
+          "estimated_tokens_per_snapshot": 2593,
+          "estimated_total_tokens": 357834
         },
         {
           "project": "global",
-          "count": 105,
-          "estimated_tokens_per_snapshot": 4461,
-          "estimated_total_tokens": 468405
+          "count": 107,
+          "estimated_tokens_per_snapshot": 4473,
+          "estimated_total_tokens": 478611
         },
         {
           "project": "app-forge",
-          "count": 41,
-          "estimated_tokens_per_snapshot": 2738,
-          "estimated_total_tokens": 112258
+          "count": 43,
+          "estimated_tokens_per_snapshot": 2757,
+          "estimated_total_tokens": 118551
         },
         {
           "project": "unknown",
@@ -572,8 +572,8 @@
           "estimated_total_tokens": 0
         }
       ],
-      "total_project_tokens": 1059859,
-      "overhead_ratio": 2.342
+      "total_project_tokens": 1089000,
+      "overhead_ratio": 2.385
     },
     "active_assignments": {
       "total_active_agents": 0,
@@ -4751,24 +4751,24 @@
         "days": 9
       },
       "totals": {
-        "events": 6058,
-        "sessions": 22,
-        "gad_cli_calls": 544
+        "events": 6081,
+        "sessions": 23,
+        "gad_cli_calls": 547
       },
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 5227
+          "count": 5241
         },
         {
           "runtime": "unknown",
-          "count": 831
+          "count": 840
         }
       ],
       "runtime_sessions": [
         {
           "runtime": "claude-code",
-          "sessions": 22
+          "sessions": 23
         },
         {
           "runtime": "unknown",
@@ -4778,11 +4778,11 @@
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 2016
+          "count": 2021
         },
         {
           "tool": "unknown",
-          "count": 1226
+          "count": 1244
         },
         {
           "tool": "Read",
@@ -4872,7 +4872,7 @@
         },
         {
           "day": "2026-04-15",
-          "count": 357
+          "count": 380
         }
       ],
       "framework_overhead": {
@@ -4884,16 +4884,16 @@
       "gad_cli_breakdown": {
         "snapshot": 79,
         "eval": 124,
-        "other": 341
+        "other": 344
       },
-      "computed_at": "2026-04-15T18:04:15.310Z",
+      "computed_at": "2026-04-15T21:03:04.357Z",
       "tasks": {
-        "done": 289,
+        "done": 309,
         "planned": 54,
         "in_progress": 4,
-        "total": 347
+        "total": 367
       },
-      "decisions": 189,
+      "decisions": 190,
       "phases_pressure": [
         {
           "phase": "10",
@@ -5073,10 +5073,10 @@
         },
         {
           "phase": "42.2",
-          "tasks_total": 15,
-          "tasks_done": 10,
-          "crosscuts": 9,
-          "pressure_score": 33,
+          "tasks_total": 36,
+          "tasks_done": 30,
+          "crosscuts": 20,
+          "pressure_score": 76,
           "high_pressure": true
         },
         {
@@ -5237,10 +5237,10 @@
       },
       "project_tokens": {
         "exact_eval_tokens": 0,
-        "estimated_live_input_tokens": 287722,
-        "estimated_live_output_tokens": 772137,
-        "estimated_live_total_tokens": 1059859,
-        "combined_total_tokens": 1059859,
+        "estimated_live_input_tokens": 305127,
+        "estimated_live_output_tokens": 783873,
+        "estimated_live_total_tokens": 1089000,
+        "combined_total_tokens": 1089000,
         "trace_files": 2,
         "trace_events": 2000,
         "runtime_distribution": [
@@ -5251,64 +5251,64 @@
         ],
         "sources": [
           {
-            "path": ".planning/.trace-events.jsonl",
-            "events": 1000,
-            "estimated_input_tokens": 145877,
-            "estimated_output_tokens": 394876,
-            "estimated_total_tokens": 540753
-          },
-          {
             "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 141845,
-            "estimated_output_tokens": 377261,
-            "estimated_total_tokens": 519106
+            "estimated_input_tokens": 158943,
+            "estimated_output_tokens": 389164,
+            "estimated_total_tokens": 548107
+          },
+          {
+            "path": ".planning/.trace-events.jsonl",
+            "events": 1000,
+            "estimated_input_tokens": 146184,
+            "estimated_output_tokens": 394709,
+            "estimated_total_tokens": 540893
           }
         ]
       },
       "workflow_conformance": {
-        "completed_tasks": 264,
-        "with_skill": 101,
+        "completed_tasks": 284,
+        "with_skill": 121,
         "with_agent": 10,
-        "with_type": 108,
+        "with_type": 128,
         "fully_attributed": 10,
-        "score": 0.038
+        "score": 0.035
       },
       "framework_compliance": {
-        "completed_tasks": 264,
-        "with_skill": 101,
+        "completed_tasks": 284,
+        "with_skill": 121,
         "with_agent": 10,
-        "with_type": 108,
+        "with_type": 128,
         "fully_attributed": 10,
-        "score": 0.038
+        "score": 0.035
       },
       "hydration": {
-        "snapshot_count": 517,
-        "estimated_snapshot_tokens": 2482599,
+        "snapshot_count": 528,
+        "estimated_snapshot_tokens": 2597643,
         "projects": [
           {
             "project": "get-anything-done",
-            "count": 234,
-            "estimated_tokens_per_snapshot": 6636,
-            "estimated_total_tokens": 1552824
+            "count": 239,
+            "estimated_tokens_per_snapshot": 6873,
+            "estimated_total_tokens": 1642647
           },
           {
             "project": "grime-time",
-            "count": 136,
-            "estimated_tokens_per_snapshot": 2567,
-            "estimated_total_tokens": 349112
+            "count": 138,
+            "estimated_tokens_per_snapshot": 2593,
+            "estimated_total_tokens": 357834
           },
           {
             "project": "global",
-            "count": 105,
-            "estimated_tokens_per_snapshot": 4461,
-            "estimated_total_tokens": 468405
+            "count": 107,
+            "estimated_tokens_per_snapshot": 4473,
+            "estimated_total_tokens": 478611
           },
           {
             "project": "app-forge",
-            "count": 41,
-            "estimated_tokens_per_snapshot": 2738,
-            "estimated_total_tokens": 112258
+            "count": 43,
+            "estimated_tokens_per_snapshot": 2757,
+            "estimated_total_tokens": 118551
           },
           {
             "project": "unknown",
@@ -5317,8 +5317,8 @@
             "estimated_total_tokens": 0
           }
         ],
-        "total_project_tokens": 1059859,
-        "overhead_ratio": 2.342
+        "total_project_tokens": 1089000,
+        "overhead_ratio": 2.385
       },
       "active_assignments": {
         "total_active_agents": 0,

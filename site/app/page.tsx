@@ -1,7 +1,7 @@
 import { LandingEvolutionBand } from "@/components/landing/home/LandingEvolutionBand";
 import { LandingInstallerUpstreamBand } from "@/components/landing/home/LandingInstallerUpstreamBand";
 import { LandingVisualContextAndPromptBand } from "@/components/landing/home/LandingVisualContextAndPromptBand";
-import Lineage from "@/components/landing/lineage/Lineage";
+import AgentHandoffCycle from "@/components/landing/agent-handoff-cycle/AgentHandoffCycle";
 import PlayableTeaser from "@/components/landing/playable/PlayableTeaser";
 import { MarketingShell } from "@/components/site";
 
@@ -11,7 +11,7 @@ export default function Page() {
       <LandingEvolutionBand />
       <LandingVisualContextAndPromptBand />
       <PlayableTeaser />
-      <Lineage />
+      <AgentHandoffCycle />
       <LandingInstallerUpstreamBand />
     </MarketingShell>
   );
