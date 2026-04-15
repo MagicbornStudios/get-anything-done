@@ -4857,7 +4857,19 @@ function install(isGlobal, runtime = 'claude') {
   // Clean up orphaned files from previous versions
   cleanupOrphanedFiles(targetDir);
   const sdkRoot = path.join(src, 'sdk');
-  const canonicalSkillsSrc = path.join(sdkRoot, 'skills');
+  // canonicalSkillsSrc prefers the SDK packaged copy (sdk/skills) when it
+  // exists — that's the shape shipped via the GitHub Release executable.
+  // For local checkouts where sdk/skills is absent, fall back to the
+  // repo-root skills/ directory so `gad install all` works from a clone
+  // without requiring a build step. Task 42.2-35 (consumer init/install
+  // integration test) surfaced the gap.
+  let canonicalSkillsSrc = path.join(sdkRoot, 'skills');
+  if (!fs.existsSync(canonicalSkillsSrc)) {
+    const repoRootSkills = path.join(src, 'skills');
+    if (fs.existsSync(repoRootSkills)) {
+      canonicalSkillsSrc = repoRootSkills;
+    }
+  }
 
   // OpenCode uses command/ (flat), Codex/Cursor/etc use skills/, Gemini uses commands/gad/.
   if (isOpencode) {
