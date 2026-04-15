@@ -1,4 +1,4 @@
-import { FINDINGS, type Finding } from "@/lib/catalog.generated";
+﻿import { FINDINGS, type Finding } from "@/lib/catalog.generated";
 import { Identified } from "@/components/devid/Identified";
 import { ProjectFindingArticle } from "./ProjectFindingArticle";
 import { SiteSection } from "@/components/site";
@@ -11,7 +11,7 @@ export function ProjectFindingsSection({ projectId }: { projectId: string }) {
   if (findings.length === 0) return null;
 
   return (
-    <SiteSection id="findings" className="border-t border-border/60">
+    <SiteSection id="findings" cid="findings-site-section" className="border-t border-border/60">
       <Identified as="ProjectFindings">
       <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Findings</h2>
       <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
@@ -28,3 +28,4 @@ export function ProjectFindingsSection({ projectId }: { projectId: string }) {
     </SiteSection>
   );
 }
+

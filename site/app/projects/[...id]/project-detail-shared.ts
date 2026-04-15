@@ -9,8 +9,15 @@ export function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
 }
 
-export function projectRuns(project: string): EvalRunRecord[] {
-  return EVAL_RUNS.filter((r) => r.project === project).sort((a, b) => {
+export function projectRuns(projectId: string): EvalRunRecord[] {
+  const slash = projectId.indexOf("/");
+  const matches = (r: EvalRunRecord) => {
+    if (slash === -1) return r.project === projectId;
+    const proj = projectId.slice(0, slash);
+    const species = projectId.slice(slash + 1);
+    return r.project === proj && r.species === species;
+  };
+  return EVAL_RUNS.filter(matches).sort((a, b) => {
     const av = parseInt(a.version.slice(1), 10) || 0;
     const bv = parseInt(b.version.slice(1), 10) || 0;
     return av - bv;

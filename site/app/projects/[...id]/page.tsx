@@ -139,7 +139,7 @@ export default async function ProjectPage({
         />
       )}
       <ProjectHeroSection project={project} planning={planning} template={template} />
-      <ProjectSkillsScopeSection project={project} />
+      <ProjectSkillsScopeSection project={project} runs={runs} />
       <ProjectRunsSection runs={runs} />
       {project.workflow === "emergent" && runs.length > 0 ? (
         <ProjectEmergentLineageSection runs={runs} />

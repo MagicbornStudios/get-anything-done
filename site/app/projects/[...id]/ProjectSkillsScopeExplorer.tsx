@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -24,9 +24,15 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { ProjectSkillScopeRow } from "./project-skill-scope-model";
+import { PROJECT_SKILLS_SCOPE_SECTION_BAND_CID } from "./project-skills-scope-constants";
 import { SKILL_PACKAGE_REFERENCE_BLURB } from "./skill-package-reference";
-import { SkillCatalogFilesOnly, SkillPackageFileTreeView } from "./SkillPackageFileTree";
+import {
+  defaultSkillFileSelection,
+  skillFileModalPreview,
+  SkillPackageFileTreeInteractive,
+} from "./SkillPackageFileTree";
 import { ReadonlyCodeMirror } from "./ReadonlyCodeMirror";
+import { DevIdModalContextFooter } from "@/components/devid/DevIdModalContextFooter";
 
 /** 0–100 for telemetry; null = catalog preview (no fill). */
 function derivedUsagePercent(row: ProjectSkillScopeRow): number | null {
@@ -184,6 +190,8 @@ export function ProjectSkillsScopeExplorer({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(() => rows[0]?.skillId ?? null);
   const [skillFilesModalOpen, setSkillFilesModalOpen] = useState(false);
+  const [modalFilePath, setModalFilePath] = useState<string>("");
+  const skillFilesModalScanRef = useRef<HTMLDivElement | null>(null);
   const selected = useMemo(() => rows.find((r) => r.skillId === selectedId) ?? rows[0] ?? null, [rows, selectedId]);
 
   useEffect(() => {
@@ -195,6 +203,18 @@ export function ProjectSkillsScopeExplorer({
       setSelectedId(rows[0]!.skillId);
     }
   }, [rows, selectedId]);
+
+  useEffect(() => {
+    if (!skillFilesModalOpen || !selected) return;
+    setModalFilePath(defaultSkillFileSelection(selected.skillId, selected.sourcePath));
+  }, [skillFilesModalOpen, selected?.skillId, selected?.sourcePath]);
+
+  const effectiveModalFilePath = useMemo(
+    () =>
+      modalFilePath ||
+      (selected ? defaultSkillFileSelection(selected.skillId, selected.sourcePath) : ""),
+    [modalFilePath, selected],
+  );
 
   return (
     <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-stretch">
@@ -316,45 +336,84 @@ export function ProjectSkillsScopeExplorer({
                         <span className="hidden sm:inline">Explore files</span>
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="flex max-h-[min(92vh,900px)] w-[min(96vw,56rem)] flex-col gap-0 p-0 sm:max-w-[56rem]">
-                      <Identified
-                        as="ProjectSkillsScopeSourceFilesModal"
-                        cid="project-skills-scope-source-files-modal"
-                        className="flex min-h-0 flex-1 flex-col"
-                      >
-                        <DialogHeader className="shrink-0 px-5 pb-2 pt-1">
-                          <DialogTitle className="text-base">Skill package & files</DialogTitle>
-                          <DialogDescription className="text-xs leading-relaxed">
-                            {SKILL_PACKAGE_REFERENCE_BLURB}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-                          <div className="grid gap-6 md:grid-cols-2">
-                            <section className="space-y-2 rounded-lg border border-border/50 bg-muted/10 p-3">
+                    <DialogContent
+                      devIdBandCid={PROJECT_SKILLS_SCOPE_SECTION_BAND_CID}
+                      className="flex max-h-[min(92vh,900px)] w-[min(96vw,56rem)] flex-col gap-0 p-0 sm:max-w-[56rem]"
+                    >
+                      <div ref={skillFilesModalScanRef} className="flex min-h-0 flex-1 flex-col">
+                        <Identified
+                          as="Skill package & files"
+                          cid="project-skills-scope-source-files-modal"
+                          depth={1}
+                          className="flex min-h-0 flex-1 flex-col"
+                        >
+                          <Identified
+                            as="Skill package modal header"
+                            cid="project-skills-scope-modal-header"
+                            depth={2}
+                            className="shrink-0"
+                          >
+                            <DialogHeader className="px-5 pb-2 pt-1">
+                              <DialogTitle className="text-base">Skill package & files</DialogTitle>
+                              <DialogDescription className="text-xs leading-relaxed">
+                                {SKILL_PACKAGE_REFERENCE_BLURB}
+                              </DialogDescription>
+                            </DialogHeader>
+                          </Identified>
+                          <div className="flex min-h-0 min-h-[min(52vh,560px)] flex-1 flex-col gap-3 overflow-hidden px-5 pb-5 md:flex-row md:gap-4">
+                            <Identified
+                              as="Modal — package file tree"
+                              cid="project-skills-scope-modal-file-tree"
+                              depth={2}
+                              className="flex min-h-0 w-full min-w-0 shrink-0 flex-col gap-2 rounded-lg border border-border/50 bg-muted/10 p-3 md:w-[min(42%,22rem)]"
+                              tag="section"
+                            >
                               <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                In this site build
+                                Package files
                               </h4>
                               <p className="text-[11px] text-muted-foreground">
-                                Files embedded in the marketing catalog for this skill (often just SKILL.md).
+                                GAD-style tree — click a file; bundled paths match the catalog preview on the right.
                               </p>
-                              <SkillCatalogFilesOnly
-                                skillId={selected.skillId}
-                                sourcePath={selected.sourcePath}
-                              />
-                            </section>
-                            <section className="space-y-2 rounded-lg border border-border/50 bg-muted/10 p-3 md:col-span-1">
+                              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                                <SkillPackageFileTreeInteractive
+                                  skillId={selected.skillId}
+                                  sourcePath={selected.sourcePath}
+                                  selectedPath={effectiveModalFilePath}
+                                  onSelectFile={setModalFilePath}
+                                  compact
+                                />
+                              </div>
+                            </Identified>
+                            <Identified
+                              as="Modal — file preview"
+                              cid="project-skills-scope-modal-file-preview"
+                              depth={2}
+                              className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-lg border border-border/50 bg-muted/10 p-3"
+                              tag="section"
+                            >
                               <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                GAD skill folder (reference)
+                                Preview
                               </h4>
                               <p className="text-[11px] text-muted-foreground">
-                                Typical layout under <code className="rounded bg-background/60 px-1">skills/&lt;id&gt;/</code>{" "}
-                                in the framework repo — your skill may only ship a subset.
+                                Same idea as the skill body panel — pick a file in the tree to read it here (bundled
+                                files show catalog text).
                               </p>
-                              <SkillPackageFileTreeView skillId={selected.skillId} sourcePath={selected.sourcePath} />
-                            </section>
+                              <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-border/40 bg-background/40">
+                                <ReadonlyCodeMirror
+                                  key={`${selected.skillId}-${effectiveModalFilePath}`}
+                                  value={skillFileModalPreview(
+                                    effectiveModalFilePath,
+                                    selected.skillId,
+                                    selected.sourcePath,
+                                    selected.bodyRaw,
+                                  )}
+                                />
+                              </div>
+                            </Identified>
                           </div>
-                        </div>
-                      </Identified>
+                        </Identified>
+                        <DevIdModalContextFooter open={skillFilesModalOpen} scanRootRef={skillFilesModalScanRef} />
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </div>
