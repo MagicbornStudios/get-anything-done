@@ -30,12 +30,7 @@ import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import {
   collectScopedEntries,
   escapeCidSelector,
@@ -56,7 +51,7 @@ type DevPanelProps =
       searchHint?: string;
     };
 
-/** Compact depth pager with delayed tooltip (keeps chrome small; explains slice + chevrons). */
+/** Compact depth pager + hover card (same Radix pattern as planning token KPIs). */
 function DevPanelDepthPager(props: {
   currentDepth: number;
   visibleCount: number;
@@ -78,62 +73,60 @@ function DevPanelDepthPager(props: {
   } = props;
 
   return (
-    <TooltipProvider delayDuration={380}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className="ml-2 flex cursor-help items-center gap-1 rounded-sm px-0.5 py-0.5 ring-offset-background hover:bg-muted/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            tabIndex={0}
-            aria-label={`Landmarks at nesting depth ${currentDepth}, ${visibleCount} in this slice`}
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-5"
-              disabled={prevDisabled}
-              onClick={onPrev}
-              aria-label="Shallower nesting depth"
-            >
-              <ChevronLeft size={10} />
-            </Button>
-            <span className="w-16 text-center tabular-nums">
-              d{currentDepth} - {visibleCount}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-5"
-              disabled={nextDisabled}
-              onClick={onNext}
-              aria-label="Deeper nesting depth"
-            >
-              <ChevronRight size={10} />
-            </Button>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          side="top"
-          sideOffset={6}
-          className="max-w-[13.5rem] border-border/70 bg-popover px-2 py-1.5 text-[10px] leading-snug text-popover-foreground"
+    <HoverCard openDelay={100} closeDelay={80}>
+      <HoverCardTrigger asChild>
+        <div
+          className="ml-2 flex cursor-help items-center gap-1 rounded-sm px-0.5 py-0.5 ring-offset-background hover:bg-muted/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          tabIndex={0}
+          aria-label={`Landmarks at nesting depth ${currentDepth}, ${visibleCount} in this slice`}
         >
-          <p className="font-medium text-foreground">Depth {currentDepth}</p>
-          <p className="mt-1 text-muted-foreground">
-            {visibleCount} landmark{visibleCount === 1 ? "" : "s"} in this slice. Chevrons step toward
-            the section shell (back) or into nested{" "}
-            <code className="rounded bg-muted/80 px-0.5 font-mono text-[9px]">Identified</code>{" "}
-            blocks (forward).
-            {maxScanDepth != null ? (
-              <>
-                {" "}
-                Scan window: depth ≤ {maxScanDepth}.
-              </>
-            ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-5"
+            disabled={prevDisabled}
+            onClick={onPrev}
+            aria-label="Shallower nesting depth"
+          >
+            <ChevronLeft size={10} />
+          </Button>
+          <span className="w-16 text-center tabular-nums">
+            d{currentDepth} - {visibleCount}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-5"
+            disabled={nextDisabled}
+            onClick={onNext}
+            aria-label="Deeper nesting depth"
+          >
+            <ChevronRight size={10} />
+          </Button>
+        </div>
+      </HoverCardTrigger>
+      <HoverCardContent
+        side="top"
+        align="center"
+        sideOffset={8}
+        className="z-[120] w-64 max-w-[min(18rem,85vw)] border-border/70 p-3 text-[10px] leading-relaxed"
+      >
+        <p className="font-medium text-foreground">Depth {currentDepth}</p>
+        <p className="mt-1.5 text-muted-foreground">
+          {visibleCount} landmark{visibleCount === 1 ? "" : "s"} in this slice. Chevrons step toward the
+          section shell (back) or into nested{" "}
+          <code className="rounded bg-muted/80 px-0.5 font-mono text-[9px]">Identified</code> blocks
+          (forward).
+        </p>
+        {maxScanDepth != null ? (
+          <p className="mt-2 border-t border-border/50 pt-2 text-muted-foreground">
+            Section scan window: depth ≤ {maxScanDepth}.
           </p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        ) : null}
+      </HoverCardContent>
+    </HoverCard>
   );
 }
 
