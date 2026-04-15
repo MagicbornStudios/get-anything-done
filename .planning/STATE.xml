@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>44-23 closed — authored gad-visual-context-identity.md (Dev Panel → copy-token → paste-search → agent-prompt loop) and upgraded gad-evolution.md with merge-skill + sprint-shed stage 2b; fixed pre-existing CRLF parser skip; 7 authored workflows now parse. Next pick: 44-26 (cross-config domain-change proto-skill), 44-28 (gad site install discuss-phase), 44-22 (human workflows tab), 44-21 (trace analytics tab).</next-action>
+  <next-action>Shipped in parallel: 44-26 (gad-cross-config-domain-change proto-skill drafted), 44-22 (PlanningTabHumanWorkflows + 2 seed human-workflow files + parseHumanWorkflows sibling in build-site-data + HUMAN_WORKFLOWS export), 44-23 (authored 2 workflow files). 7 agent workflows + 2 human workflows parse; tsc clean. Next: attempt 44-21 (PlanningTabSignal trace analytics) then discuss-phase 44-28 (site-as-project-management-UI).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>

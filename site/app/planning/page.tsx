@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { MarketingShell } from "@/components/site";
-import { PLANNING_STATE } from "@/lib/catalog.generated";
+import { HUMAN_WORKFLOWS, PLANNING_STATE } from "@/lib/catalog.generated";
 import { ALL_TASKS, ALL_PHASES, ALL_DECISIONS, BUGS } from "@/lib/eval-data";
 import { PlanningGanttSection } from "./PlanningGanttSection";
 import { PlanningOverviewSection } from "./PlanningOverviewSection";
@@ -27,6 +27,7 @@ export default function PlanningStatePage() {
           allPhases={ALL_PHASES}
           allDecisions={ALL_DECISIONS}
           gadBugs={gadBugs}
+          humanWorkflows={HUMAN_WORKFLOWS}
         />
       </Suspense>
     </MarketingShell>

@@ -163,6 +163,7 @@ function listEvalProjectDirs() {
   return Array.from(byName.values()).sort((a, b) => a.project.localeCompare(b.project));
 }
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "workflows");
+const HUMAN_WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "human-workflows");
 const CONTEXT_FRAMEWORKS_DIR = path.join(REPO_ROOT, ".planning", "context-frameworks");
 const DATA_DIR = path.join(REPO_ROOT, "data");
 const PUBLIC_DIR = path.join(SITE_ROOT, "public");
@@ -1030,6 +1031,7 @@ function scanCatalog() {
   catalog.inheritance = inheritanceMap;
 
   catalog.workflows = parseWorkflows();
+  catalog.humanWorkflows = parseHumanWorkflows();
   catalog.contextFrameworks = parseContextFrameworks();
   // Live/emergent synthesis reads trace events and enriches workflow entries
   // in place. Authored workflows gain `liveGraph` and `conformance`; emergent
@@ -1092,6 +1094,49 @@ function parseWorkflows() {
     });
   }
   console.log(`  [workflows] parsed ${out.length} workflow(s) from ${path.relative(REPO_ROOT, WORKFLOWS_DIR)}`);
+  return out;
+}
+
+// -------------------------------------------------------------------------
+// Human workflows — hand-authored operator routines. Distinct from
+// .planning/workflows/ (agent workflows): no trace matching, no
+// conformance score, Mermaid is optional, frontmatter shape is different.
+// Decision / task 44-22.
+// -------------------------------------------------------------------------
+
+function parseHumanWorkflows() {
+  const out = [];
+  if (!exists(HUMAN_WORKFLOWS_DIR)) return out;
+  for (const name of fs.readdirSync(HUMAN_WORKFLOWS_DIR).sort()) {
+    if (!name.endsWith(".md")) continue;
+    if (name === "README.md") continue;
+    const file = path.join(HUMAN_WORKFLOWS_DIR, name);
+    const fullSrc = fs.readFileSync(file, "utf8");
+    const { data: meta, body: src } = parseFrontmatter(fullSrc);
+    const slug = meta.slug || name.replace(/\.md$/, "");
+
+    const mermaidMatch = src.match(/```mermaid\n([\s\S]*?)```/);
+    const mermaidBody = mermaidMatch ? mermaidMatch[1].trim() : "";
+
+    const asArray = (v) => (Array.isArray(v) ? v : v == null ? [] : [String(v)]);
+
+    out.push({
+      slug,
+      name: meta.name || slug,
+      operator: meta.operator || "human",
+      frequency: meta.frequency || "",
+      triggers: asArray(meta.triggers).map(String),
+      projectsTouched: asArray(meta["projects-touched"] || meta.projectsTouched).map(String),
+      relatedPhases: asArray(meta["related-phases"] || meta.relatedPhases).map(String),
+      mermaidBody,
+      bodyHtml: renderMarkdown(src),
+      bodyRaw: src,
+      file: path.relative(REPO_ROOT, file).replace(/\\/g, "/"),
+    });
+  }
+  console.log(
+    `  [human-workflows] parsed ${out.length} human workflow(s) from ${path.relative(REPO_ROOT, HUMAN_WORKFLOWS_DIR)}`
+  );
   return out;
 }
 
@@ -2143,6 +2188,28 @@ export interface Workflow {
 }
 
 /**
+ * HumanWorkflow — hand-authored operator routines (task 44-22). Distinct
+ * from Workflow: no trace matching, no conformance score, Mermaid is
+ * optional, frontmatter shape is different. Lives under
+ * .planning/human-workflows/*.md and surfaces on /planning → Human
+ * Workflows tab.
+ */
+export interface HumanWorkflow {
+  slug: string;
+  name: string;
+  operator: string;
+  frequency: string;
+  triggers: string[];
+  projectsTouched: string[];
+  relatedPhases: string[];
+  /** Optional — may be empty string if no mermaid block is present. */
+  mermaidBody: string;
+  bodyHtml: string;
+  bodyRaw: string;
+  file: string;
+}
+
+/**
  * ContextFramework is a bundle that references existing catalog items
  * (skills, agents, workflows) by slug. It is NOT a copy — when the
  * referenced items update, every project on the framework picks up the
@@ -2211,6 +2278,8 @@ export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = ${JSON.stringify(
 export const FINDINGS: Finding[] = ${JSON.stringify(findings || [], null, 2)};
 
 export const WORKFLOWS: Workflow[] = ${JSON.stringify(catalog.workflows || [], null, 2)};
+
+export const HUMAN_WORKFLOWS: HumanWorkflow[] = ${JSON.stringify(catalog.humanWorkflows || [], null, 2)};
 
 export const CONTEXT_FRAMEWORKS: ContextFramework[] = ${JSON.stringify(catalog.contextFrameworks || [], null, 2)};
 

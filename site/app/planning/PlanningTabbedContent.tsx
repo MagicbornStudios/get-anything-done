@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { PlanningState, Workflow } from "@/lib/catalog.generated";
-import { REQUIREMENTS_HISTORY, WORKFLOWS } from "@/lib/catalog.generated";
+import type { HumanWorkflow, PlanningState, Workflow } from "@/lib/catalog.generated";
+import { HUMAN_WORKFLOWS, REQUIREMENTS_HISTORY, WORKFLOWS } from "@/lib/catalog.generated";
 import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
@@ -16,6 +16,7 @@ import { PlanningRoadmapTab } from "./PlanningRoadmapTab";
 import { PlanningSkillCandidatesTab, type SkillCandidate } from "./PlanningSkillCandidatesTab";
 import { PlanningSystemTab } from "./PlanningSystemTab";
 import { PlanningTasksTab } from "./PlanningTasksTab";
+import { PlanningTabHumanWorkflows } from "./PlanningTabHumanWorkflows";
 import { PlanningWorkflowsTab } from "./PlanningWorkflowsTab";
 import selfEvalData from "@/data/self-eval.json";
 
@@ -25,6 +26,7 @@ interface Props {
   allPhases: PhaseRecord[];
   allDecisions: DecisionRecord[];
   gadBugs: BugRecord[];
+  humanWorkflows?: readonly HumanWorkflow[];
 }
 
 const BASE_PLANNING_TABS = new Set([
@@ -37,11 +39,20 @@ const BASE_PLANNING_TABS = new Set([
   "skill-candidates",
   "proto-skills",
   "workflows",
+  "human-workflows",
 ]);
 
 const WORKFLOWS_DATA: readonly Workflow[] = WORKFLOWS;
+const HUMAN_WORKFLOWS_DATA: readonly HumanWorkflow[] = HUMAN_WORKFLOWS;
 
-export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions, gadBugs }: Props) {
+export function PlanningTabbedContent({
+  state,
+  allTasks,
+  allPhases,
+  allDecisions,
+  gadBugs,
+  humanWorkflows = HUMAN_WORKFLOWS_DATA,
+}: Props) {
   const searchParams = useSearchParams();
   const defaultTab = useMemo(() => {
     const raw = searchParams.get("tab") || "system";
@@ -104,6 +115,10 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
           <TabsTrigger value="workflows">
             Workflows{" "}
             <span className="ml-1.5 tabular-nums text-muted-foreground">{WORKFLOWS_DATA.length}</span>
+          </TabsTrigger>
+          <TabsTrigger value="human-workflows">
+            Human Workflows{" "}
+            <span className="ml-1.5 tabular-nums text-muted-foreground">{humanWorkflows.length}</span>
           </TabsTrigger>
         </TabsList>
         </Identified>
@@ -168,6 +183,10 @@ export function PlanningTabbedContent({ state, allTasks, allPhases, allDecisions
           <Identified as="PlanningTabWorkflows">
             <PlanningWorkflowsTab workflows={WORKFLOWS_DATA} />
           </Identified>
+        </TabsContent>
+
+        <TabsContent value="human-workflows">
+          <PlanningTabHumanWorkflows workflows={humanWorkflows} />
         </TabsContent>
       </Tabs>
       </Identified>

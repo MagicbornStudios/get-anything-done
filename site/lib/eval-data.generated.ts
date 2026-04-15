@@ -10236,9 +10236,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44-26",
     "phaseId": "44",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "create-proto-skill",
     "type": "skill",
     "goal": "New proto-skill: generic cross-config domain-change pattern for GAD projects. Replaces the discarded phase-43-eval-vocabulary draft which was too specific to the submodule and baked in paths like apps/public/evals. Single skill entrypoint with TWO workflows selected by project config: (A) monorepo-wide rename (walks all [[planning.roots]] and [[evals.roots]] in gad-config.toml, coordinates across the union), and (B) single-project rename (scoped to one .planning/ root). Both workflows must read the project config first (`gad projects audit` or equivalent) and surface a quick config-status readout before starting. The skill must also formalize \"evals\" vocabulary into something more generic — user explicitly flagged they want the eval vocabulary itself renormalized. Deliverables: proto-skill at .planning/proto-skills/gad-cross-config-domain-change/ with both workflows, references section citing gad-config.toml shape, pre-flight config audit, git-mv-through-temp pattern, planning-doc migration, and translation-note decision template.",
     "keywords": [
