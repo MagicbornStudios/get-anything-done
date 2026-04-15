@@ -12,18 +12,6 @@ const REFERENCE_CONTEXT_WINDOWS = [
   { label: "Codex-class (≈272k ctx)", tokens: 272_000 },
 ] as const;
 
-function pctToneGoodHigh(pct: number) {
-  if (pct >= 85) return "text-emerald-400";
-  if (pct >= 55) return "text-amber-400";
-  return "text-rose-400";
-}
-
-function barToneGoodHigh(pct: number) {
-  if (pct >= 85) return "from-emerald-500/90 to-emerald-700/90";
-  if (pct >= 55) return "from-amber-400/90 to-amber-700/90";
-  return "from-rose-400/90 to-rose-700/90";
-}
-
 /** Lower ratio is better (stress). */
 function overheadTone(ratio: number) {
   if (ratio <= 0.12) return "text-emerald-400";
@@ -57,13 +45,9 @@ export function PlanningSystemStatCards({ selfEval }: { selfEval: PlanningSelfEv
   const snapCount = h.snapshot_count ?? 0;
   const snapTotal = h.estimated_snapshot_tokens ?? 0;
   const avgPerSnapshot = snapCount > 0 ? snapTotal / snapCount : 0;
-  const compliance = selfEval.framework_compliance.score;
   const hydrationShare = h.overhead_ratio;
   const planningOverhead = selfEval.framework_overhead.ratio;
 
-  const docsPct = compliance * 100;
-  const docsTone = pctToneGoodHigh(docsPct);
-  const docsBar = barToneGoodHigh(docsPct);
   const hydrTone = overheadTone(hydrationShare);
   const hydrBar = overheadBar(hydrationShare);
   const planTone = overheadTone(planningOverhead);
@@ -71,32 +55,7 @@ export function PlanningSystemStatCards({ selfEval }: { selfEval: PlanningSelfEv
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-3">
-        <Card className="border-border/60 bg-card/50">
-          <CardHeader className="space-y-2 pb-2 pt-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Docs attribution
-            </p>
-            <CardTitle className={cn("text-3xl tabular-nums tracking-tight", docsTone)}>
-              {planningFmtPercent(compliance)}
-            </CardTitle>
-            <p className="text-[11px] leading-snug text-muted-foreground">
-              Completed tasks with skill, agent, and type —{" "}
-              {planningFmtCount(selfEval.framework_compliance.fully_attributed)} /{" "}
-              {planningFmtCount(selfEval.framework_compliance.completed_tasks)} fully attributed
-            </p>
-            <div
-              className="h-1.5 w-full overflow-hidden rounded-full bg-muted/40"
-              title="Higher is better"
-            >
-              <div
-                className={cn("h-full rounded-full bg-gradient-to-r transition-[width]", docsBar)}
-                style={{ width: `${Math.min(100, docsPct)}%` }}
-              />
-            </div>
-          </CardHeader>
-        </Card>
-
+      <div className="grid gap-3 md:grid-cols-2">
         <Card className="border-border/60 bg-card/50">
           <CardHeader className="space-y-2 pb-2 pt-4">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
