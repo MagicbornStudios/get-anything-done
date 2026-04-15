@@ -10017,7 +10017,27 @@ const evolutionPromote = defineCommand({
       console.error(`Missing SKILL.md in proto-skill — cannot promote`);
       process.exit(1);
     }
-    const finalName = args.name || args.slug;
+    // Resolve final skill name. Precedence:
+    //   1. --name <explicit>  (operator override)
+    //   2. SKILL.md `name:` frontmatter field (what the drafter chose)
+    //   3. args.slug  (candidate slug — ugly fallback, only if SKILL.md
+    //                  has no name: field, which is a malformed proto-skill)
+    // Task 42.2-13 surfaced this: promoting with slug alone left the
+    // canonical skill at skills/phase-44.5-…-local-dev-ga/ instead of
+    // skills/scaffold-visual-context-surface/ because the candidate slug
+    // is the candidate directory name, not the skill's public identity.
+    let frontmatterName = null;
+    try {
+      const skillBody = fs.readFileSync(skillPath, 'utf8');
+      const fmMatch = skillBody.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+      if (fmMatch) {
+        const nameLine = fmMatch[1].match(/^name:\s*(.+?)\s*$/m);
+        if (nameLine && nameLine[1]) frontmatterName = nameLine[1].trim();
+      }
+    } catch {
+      // Fall through to slug.
+    }
+    const finalName = args.name || frontmatterName || args.slug;
     const finalDir = path.join(finalSkillsDir, finalName);
     if (fs.existsSync(finalDir)) {
       console.error(`Final skill dir already exists at ${finalDir} — refusing to overwrite. Pass --name <other> or remove it manually.`);
@@ -10069,18 +10089,29 @@ const evolutionPromote = defineCommand({
     if (hasSiblingWorkflow) {
       // Move sibling → canonical workflow location.
       fs.copyFileSync(siblingWorkflowPath, canonicalWorkflowPath);
+    }
 
-      // Rewrite SKILL.md `workflow:` frontmatter from `./workflow.md`
-      // (or similar sibling ref) to `workflows/<name>.md`.
-      const copiedSkillPath = path.join(finalDir, 'SKILL.md');
-      const src = fs.readFileSync(copiedSkillPath, 'utf8');
+    // Rewrite SKILL.md frontmatter on the copied-into-skills/ file:
+    //   (a) `workflow:` pointer from `./workflow.md` → `workflows/<name>.md`
+    //       (only when a sibling workflow was split out)
+    //   (b) `status: proto` → `status: stable` unconditionally, since
+    //       promotion is the proto → canonical transition
+    // Both rewrites happen against the freshly-copied SKILL.md so the
+    // in-tree proto-skill stays unchanged if promotion aborts below.
+    const copiedSkillPath = path.join(finalDir, 'SKILL.md');
+    let copiedSkillBody = fs.readFileSync(copiedSkillPath, 'utf8');
+    if (hasSiblingWorkflow) {
       const canonicalRef = `workflows/${finalName}.md`;
-      const rewritten = src.replace(
+      copiedSkillBody = copiedSkillBody.replace(
         /^(workflow:\s*)(.+)$/m,
         (_, prefix) => `${prefix}${canonicalRef}`
       );
-      fs.writeFileSync(copiedSkillPath, rewritten);
     }
+    copiedSkillBody = copiedSkillBody.replace(
+      /^(status:\s*)proto\s*$/m,
+      (_, prefix) => `${prefix}stable`
+    );
+    fs.writeFileSync(copiedSkillPath, copiedSkillBody);
 
     fs.rmSync(protoDir, { recursive: true, force: true });
     const candidateDir = path.join(candidatesDir, args.slug);

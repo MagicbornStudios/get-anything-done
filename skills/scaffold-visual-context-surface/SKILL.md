@@ -13,8 +13,8 @@ description: >-
   the retrofit tax of adding Visual Context coverage after features
   already exist. See decisions gad-186 + gad-187 and the 2026-04-15
   Visual Context mandatory feedback for the source constraints.
-status: proto
-workflow: ./workflow.md
+status: stable
+workflow: workflows/scaffold-visual-context-surface.md
 ---
 
 # scaffold-visual-context-surface
