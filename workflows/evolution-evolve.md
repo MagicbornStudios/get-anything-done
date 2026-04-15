@@ -1,3 +1,108 @@
+<workflow slug="evolution-evolve" name="Run one GAD evolution cycle">
+
+<objective>
+Drive one round of the GAD evolution loop: refuse to start if pending
+proto-skills exist, find high-pressure phases via selection pressure,
+write one CANDIDATE.md per phase, draft a proto-skill per candidate,
+validate each, and register a human-review task. Every evolution
+produces a batch of proto-skills that must be reviewed before the
+next cycle can run.
+</objective>
+
+<inputs>
+  <param name="projectid" type="string" required="true">GAD project id (e.g. get-anything-done)</param>
+</inputs>
+
+<outputs>
+  <file>.planning/candidates/&lt;slug&gt;/CANDIDATE.md (per high-pressure phase)</file>
+  <file>.planning/proto-skills/&lt;slug&gt;/SKILL.md + workflow.md + PROVENANCE.md (per candidate)</file>
+  <file>.planning/proto-skills/&lt;slug&gt;/VALIDATION.md (per proto-skill)</file>
+  <file>skills/.evolutions/&lt;evolution-id&gt; marker</file>
+  <metric name="candidates_created" type="int"/>
+  <metric name="proto_skills_drafted" type="int"/>
+  <metric name="proto_skills_validated" type="int"/>
+</outputs>
+
+<process>
+
+<step id="1" name="gate" tool="gad skill list --proto">
+Refuse to start if `.planning/proto-skills/` is non-empty. This is the
+human-review gate — evolutions accumulating without review just rot.
+Print the pending list and exit non-zero if any exist.
+</step>
+
+<branch if="pending_proto_skills.length > 0">
+  <step id="1a" name="exit-with-pending">Print pending proto-skills and exit non-zero.</step>
+</branch>
+
+<else>
+  <step id="2" name="generate-evolution-id" tool="bash">
+    Generate `EVOLUTION_ID = YYYY-MM-DD-NNN` and touch the marker file
+    at `skills/.evolutions/&lt;id&gt;`.
+  </step>
+
+  <step id="3" name="compute-selection-pressure" tool="node site/scripts/compute-self-eval.mjs" output="high_pressure_phases">
+    Run compute-self-eval to populate `site/data/self-eval.json`. Read
+    the `high_pressure_phases` array for phases exceeding the pressure
+    threshold.
+  </step>
+
+  <branch if="high_pressure_phases.length == 0">
+    <step id="3a" name="exit-no-candidates">No pressure → no candidates → exit cleanly with the current evolution id recorded.</step>
+  </branch>
+
+  <else>
+    <loop for="phase in high_pressure_phases" id="candidate-loop">
+      <step id="4" name="write-candidate" tool="fs.write" output="candidate_path">
+        Write `.planning/candidates/&lt;slug&gt;/CANDIDATE.md` — a raw phase
+        dump (tasks, decisions, file refs, CLI surface, git log) with
+        NO curator pre-digestion. See "Why no curator step" note below.
+      </step>
+    </loop>
+
+    <loop for="candidate in candidates" id="draft-loop">
+      <step id="5" name="lock" tool="fs.write">
+        Write `.planning/proto-skills/&lt;slug&gt;/PROVENANCE.md` FIRST as a
+        lock marker (candidate slug, phase id, pressure metrics,
+        timestamp). Lets the loop resume on crash.
+      </step>
+
+      <step id="6" name="draft" skill="create-proto-skill" output="proto_skill_path">
+        Invoke create-proto-skill on the candidate. Writes SKILL.md +
+        sibling workflow.md to the bundle directory.
+      </step>
+
+      <step id="7" name="validate" skill="gad-evolution-validator" output="validation_path">
+        Run the advisory validator. Writes VALIDATION.md alongside
+        SKILL.md. Advisory only — does not block the loop.
+      </step>
+    </loop>
+
+    <step id="8" name="register-review-task" tool="gad task add">
+      Register one TASK-REGISTRY task: "Review evolution &lt;id&gt;
+      proto-skills". The next `gad evolution evolve` cannot run until
+      that task is closed.
+    </step>
+  </else>
+</else>
+
+</process>
+
+<references>
+  <ref>skills/create-proto-skill/SKILL.md — drafter invoked per candidate</ref>
+  <ref>skills/gad-evolution-validator/SKILL.md — advisory validator</ref>
+  <ref>site/scripts/compute-self-eval.mjs — selection-pressure computation</ref>
+  <ref>references/proto-skills.md — proto-skill contract and lifecycle</ref>
+  <ref>references/skill-shape.md §11 — full lifecycle diagram</ref>
+  <ref>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md — curator vs raw data finding</ref>
+  <ref>decision gad-171 — bulk batching with per-candidate checkpoints</ref>
+  <ref>decision gad-183 — proto-skills stage inside .planning/</ref>
+</references>
+
+</workflow>
+
+---
+
 # gad-evolution-evolve
 
 Drives one round of the GAD evolution loop. Every evolution produces a batch of
