@@ -347,5 +347,73 @@ describe('Flow D — bin/install.js --claude --new-project <tmp>', () => {
       return !real.startsWith(fs.realpathSync(projectDir));
     });
     assert.deepStrictEqual(escapes, [], 'no installed skill escapes the project folder');
+
+    // 6. Boot contract files must exist with GAD markers at the project root.
+    for (const fileName of ['CLAUDE.md', 'AGENTS.md']) {
+      const fp = path.join(projectDir, fileName);
+      assert.ok(fs.existsSync(fp), `${fileName} created at project root`);
+      const body = fs.readFileSync(fp, 'utf8');
+      assert.match(body, /<!-- GAD:boot-start -->/, `${fileName} has GAD:boot-start marker`);
+      assert.match(body, /<!-- GAD:boot-end -->/, `${fileName} has GAD:boot-end marker`);
+      assert.match(body, /gad snapshot --projectid my-gad-project/, `${fileName} embeds project id`);
+    }
+
+    // 7. Hooks referenced in settings.json must resolve on disk (fix for
+    // the silent no-op found while answering "where is CLAUDE.md?").
+    const settingsPath = path.join(projectDir, '.claude', 'settings.json');
+    assert.ok(fs.existsSync(settingsPath), '.claude/settings.json exists');
+    const hooksDir = path.join(projectDir, '.claude', 'hooks');
+    assert.ok(fs.existsSync(hooksDir), '.claude/hooks/ dir landed (hooks fallback fix)');
+    const hookFiles = fs.readdirSync(hooksDir);
+    // Spot-check the critical wiring files settings.json references.
+    for (const name of [
+      'gad-check-update.js',
+      'gad-context-monitor.js',
+      'gad-prompt-guard.js',
+      'gad-statusline.js',
+      'gad-phase-boundary.sh',
+      'gad-session-state.sh',
+      'gad-validate-commit.sh',
+    ]) {
+      assert.ok(hookFiles.includes(name), `hook ${name} installed`);
+    }
+  });
+
+  test('re-running against existing CLAUDE.md with GAD markers replaces only the bounded block', () => {
+    // Seed a pre-existing CLAUDE.md with custom header + stale GAD block + custom footer.
+    const claudeMdPath = path.join(projectDir, 'CLAUDE.md');
+    const seeded = [
+      '# Custom project',
+      '',
+      'User header paragraph — MUST SURVIVE.',
+      '',
+      '<!-- GAD:boot-start -->',
+      'STALE GAD CONTENT — MUST BE REPLACED',
+      '<!-- GAD:boot-end -->',
+      '',
+      '## User footer',
+      '',
+      'Footer content — MUST SURVIVE.',
+      '',
+    ].join('\n');
+    fs.writeFileSync(claudeMdPath, seeded);
+
+    // Re-run the installer against the same folder.
+    try {
+      execFileSync(
+        process.execPath,
+        [INSTALL_JS, '--claude', '--new-project', projectDir],
+        { cwd: REPO_ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+      );
+    } catch (err) {
+      assert.fail(`installer re-run failed: ${err.stderr?.toString().slice(0, 400)}`);
+    }
+
+    const body = fs.readFileSync(claudeMdPath, 'utf8');
+    assert.match(body, /^# Custom project/, 'user header preserved');
+    assert.match(body, /User header paragraph — MUST SURVIVE/, 'user header paragraph preserved');
+    assert.match(body, /## User footer/, 'user footer preserved');
+    assert.doesNotMatch(body, /STALE GAD CONTENT/, 'stale GAD block removed');
+    assert.match(body, /gad snapshot --projectid my-gad-project/, 'fresh GAD block injected');
   });
 });

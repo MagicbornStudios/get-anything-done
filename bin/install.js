@@ -5141,9 +5141,19 @@ function install(isGlobal, runtime = 'claude') {
     fs.writeFileSync(pkgJsonDest, '{"type":"commonjs"}\n');
     console.log(`  ${green}✓${reset} Wrote package.json (CommonJS mode)`);
 
-    // Copy hooks from dist/ (bundled with dependencies)
-    // Template paths for the target runtime (replaces '.claude' with correct config dir)
-    const hooksSrc = path.join(sdkRoot, 'hooks', 'dist');
+    // Copy hooks from dist/ (bundled with dependencies).
+    // Preferred source: sdk/hooks/dist (packaged release build).
+    // Local-checkout fallback: hooks/dist at the repo root, same as the
+    // 42.2-35 / 42.2-36 pattern for sdk/skills and sdk/agents. Without the
+    // fallback, a clone-based install leaves settings.json wired to .js
+    // hook paths that do not exist on disk and the hooks silently no-op.
+    let hooksSrc = path.join(sdkRoot, 'hooks', 'dist');
+    if (!fs.existsSync(hooksSrc)) {
+      const repoHooksDist = path.join(src, 'hooks', 'dist');
+      if (fs.existsSync(repoHooksDist)) {
+        hooksSrc = repoHooksDist;
+      }
+    }
     if (fs.existsSync(hooksSrc)) {
       const hooksDest = path.join(targetDir, 'hooks');
       fs.mkdirSync(hooksDest, { recursive: true });
@@ -5169,6 +5179,30 @@ function install(isGlobal, runtime = 'claude') {
           }
         }
       }
+
+      // Shell hooks (.sh) live at hooks/*.sh at the repo root, not under
+      // hooks/dist. settings.json references them alongside the .js hooks
+      // so they must land in the same hooksDest to keep wiring resolved.
+      // Packaged release builds should also ship these — the copy below
+      // is idempotent when dist already contains the .sh files.
+      const repoHooksTopLevel = path.join(src, 'hooks');
+      if (fs.existsSync(repoHooksTopLevel)) {
+        for (const entry of fs.readdirSync(repoHooksTopLevel)) {
+          if (!entry.endsWith('.sh')) continue;
+          const srcFile = path.join(repoHooksTopLevel, entry);
+          const destFile = path.join(hooksDest, entry);
+          if (fs.existsSync(destFile)) continue;
+          try {
+            const stat = fs.statSync(srcFile);
+            if (!stat.isFile()) continue;
+          } catch {
+            continue;
+          }
+          fs.copyFileSync(srcFile, destFile);
+          try { fs.chmodSync(destFile, 0o755); } catch (e) { /* Windows */ }
+        }
+      }
+
       if (verifyInstalled(hooksDest, 'hooks')) {
         console.log(`  ${green}✓${reset} Installed hooks (bundled)`);
       } else {
@@ -5910,6 +5944,157 @@ function promptRuntime(callback) {
 /**
  * Prompt for install location
  */
+// ─── Boot contract files (CLAUDE.md / AGENTS.md) ───────────────────────────
+//
+// The onboard flow writes a minimal boot contract into the chosen project
+// folder so a fresh runtime session knows to run `gad startup` first.
+// Two files for cross-runtime compatibility:
+//   CLAUDE.md  — Claude Code reads this at the project root
+//   AGENTS.md  — Codex / Cursor / Windsurf / other AGENTS.md-aware runtimes
+//
+// Content is wrapped in <!-- GAD:boot-start --> / <!-- GAD:boot-end --> so
+// re-runs can replace the GAD section in-place without clobbering anything
+// the user added above or below the markers. Same pattern Graphify and
+// other skill installers use when they need to inject content into an
+// existing doc.
+//
+// Three collision modes on re-run:
+//   append    — GAD markers present → replace the bounded block only
+//                 no markers → prepend a new GAD block at the top
+//   overwrite — replace the entire file with the freshly-generated body
+//   skip      — leave the file alone
+//
+// In interactive onboard mode the operator is prompted when an existing
+// file is detected. In scripted mode (`--new-project <path>`) the default
+// is `append` which is the safe non-destructive choice.
+
+const GAD_BOOT_MARKER_START = '<!-- GAD:boot-start -->';
+const GAD_BOOT_MARKER_END = '<!-- GAD:boot-end -->';
+
+function renderGadBootBlock(projectId) {
+  return [
+    GAD_BOOT_MARKER_START,
+    '## GAD boot contract',
+    '',
+    '**First action in every session:** run the GAD snapshot to hydrate',
+    'context from `.planning/`. Do not read planning files manually — the',
+    'snapshot gives you STATE, ROADMAP, tasks, decisions, and skills in one',
+    'low-token command.',
+    '',
+    '```sh',
+    `gad snapshot --projectid ${projectId}`,
+    '```',
+    '',
+    '### The loop',
+    '',
+    '1. `gad snapshot --projectid ' + projectId + '` — know where you are',
+    '2. Pick one planned task from `.planning/TASK-REGISTRY.xml`',
+    '3. Implement it',
+    '4. Update `TASK-REGISTRY.xml` (status=done, skill, agent, type),',
+    '   `STATE.xml` (next-action), `DECISIONS.xml` if anything new',
+    '5. Commit',
+    '',
+    '### Planning files',
+    '',
+    '| File | Purpose |',
+    '|------|---------|',
+    '| `.planning/STATE.xml` | Current phase, milestone, next-action |',
+    '| `.planning/ROADMAP.xml` | Phase breakdown with goals + dependencies |',
+    '| `.planning/TASK-REGISTRY.xml` | All tasks with status, attribution |',
+    '| `.planning/DECISIONS.xml` | Architectural decisions |',
+    '| `.planning/REQUIREMENTS.xml` | Intent and non-negotiables |',
+    '',
+    '### Context exhaustion',
+    '',
+    'Auto-compact handles it. After compaction, re-run `gad snapshot` to',
+    're-hydrate and continue. Never stop work mid-task.',
+    '',
+    'This block was generated by `bin/install.js --new-project` on',
+    `${new Date().toISOString().slice(0, 10)}. Re-running the installer with`,
+    '`--append` will replace only the content between the GAD markers and',
+    'leave everything else in this file untouched.',
+    GAD_BOOT_MARKER_END,
+    '',
+  ].join('\n');
+}
+
+function renderBootContractDoc(projectId, projectName) {
+  return [
+    `# ${projectName}`,
+    '',
+    renderGadBootBlock(projectId),
+  ].join('\n');
+}
+
+/**
+ * Write CLAUDE.md / AGENTS.md into the onboarded project folder.
+ * mode: 'append' | 'overwrite' | 'skip'
+ *
+ * Append behavior:
+ *   - If the file exists and contains the GAD boot markers, replace only
+ *     the bounded block.
+ *   - If the file exists and has no markers, prepend a new GAD block at
+ *     the top with the existing content preserved below.
+ *   - If the file does not exist, write the full boot contract doc.
+ */
+function writeBootContractFile(filePath, projectId, projectName, mode) {
+  const generatedBlock = renderGadBootBlock(projectId);
+  const fullDoc = renderBootContractDoc(projectId, projectName);
+
+  const exists = fs.existsSync(filePath);
+
+  if (exists && mode === 'skip') {
+    return { action: 'skipped', path: filePath };
+  }
+
+  if (!exists || mode === 'overwrite') {
+    fs.writeFileSync(filePath, fullDoc);
+    return { action: exists ? 'overwritten' : 'created', path: filePath };
+  }
+
+  // Append mode against an existing file.
+  const existing = fs.readFileSync(filePath, 'utf8');
+  const startIdx = existing.indexOf(GAD_BOOT_MARKER_START);
+  const endIdx = existing.indexOf(GAD_BOOT_MARKER_END);
+
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    // Replace the bounded block in place, preserve surrounding content.
+    const before = existing.slice(0, startIdx);
+    const after = existing.slice(endIdx + GAD_BOOT_MARKER_END.length);
+    fs.writeFileSync(filePath, before + generatedBlock + after);
+    return { action: 'replaced-block', path: filePath };
+  }
+
+  // No markers — prepend a new GAD block at the top, keep the existing
+  // body below a horizontal rule so the user's content is clearly
+  // separated from ours.
+  const prepended = generatedBlock + '\n---\n\n' + existing;
+  fs.writeFileSync(filePath, prepended);
+  return { action: 'prepended', path: filePath };
+}
+
+function writeBootContracts(targetFolder, projectId, projectName, mode) {
+  const results = [];
+  for (const fileName of ['CLAUDE.md', 'AGENTS.md']) {
+    const filePath = path.join(targetFolder, fileName);
+    results.push(writeBootContractFile(filePath, projectId, projectName, mode));
+  }
+  return results;
+}
+
+function detectExistingBootContracts(targetFolder) {
+  const existing = [];
+  for (const fileName of ['CLAUDE.md', 'AGENTS.md']) {
+    const filePath = path.join(targetFolder, fileName);
+    if (fs.existsSync(filePath)) {
+      const body = fs.readFileSync(filePath, 'utf8');
+      const hasMarker = body.includes(GAD_BOOT_MARKER_START);
+      existing.push({ fileName, filePath, hasMarker });
+    }
+  }
+  return existing;
+}
+
 /**
  * Default folder path for the "new GAD project folder" onboard option.
  * Prefers ~/Desktop/my-gad-project (visible to the user), falls back to
@@ -5989,6 +6174,30 @@ function runOnboardFlow(runtimes, targetFolder, isInteractive) {
     console.warn(`  ${yellow}⚠ .planning/ scaffold step failed: ${err.message}${reset}`);
   }
 
+  // Step 3b: write CLAUDE.md / AGENTS.md boot contracts.
+  // Scripted path defaults to 'append' — safe non-destructive for existing
+  // files, replaces only the bounded <!-- GAD:boot --> block if present.
+  // Interactive path sets bootContractMode via the onboarding prompt when
+  // existing files are detected; defaults to 'append' there too.
+  try {
+    const projectName = path.basename(targetFolder);
+    const projectId = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    const mode = process.env.GAD_ONBOARD_BOOT_MODE || 'append';
+    const bootResults = writeBootContracts(targetFolder, projectId, projectName, mode);
+    for (const r of bootResults) {
+      const label = {
+        'created': `${green}✓${reset} Created`,
+        'overwritten': `${yellow}↻${reset} Overwrote`,
+        'replaced-block': `${green}✓${reset} Updated GAD block in`,
+        'prepended': `${green}✓${reset} Prepended GAD block to`,
+        'skipped': `${dim}•${reset} Skipped existing`,
+      }[r.action] || r.action;
+      console.log(`  ${label} ${path.relative(targetFolder, r.path)}`);
+    }
+  } catch (err) {
+    console.warn(`  ${yellow}⚠ boot contract write failed: ${err.message}${reset}`);
+  }
+
   // Step 4: tailored SITREP.
   console.log(`\n  ${green}✓ GAD project ready at${reset} ${targetFolder}`);
   console.log(`  ${dim}Next:${reset}`);
@@ -6032,7 +6241,43 @@ function promptNewProjectFolder(runtimes) {
     if (prep.created) {
       console.log(`  ${green}✓ Created ${prep.abs}${reset}`);
     }
-    runOnboardFlow(runtimes, prep.abs, true);
+    promptBootContractMode(runtimes, prep.abs);
+  });
+}
+
+/**
+ * If CLAUDE.md or AGENTS.md already exists in the target folder, ask the
+ * operator whether to append (safe default), overwrite, or skip. Skip
+ * leaves both files alone. Append replaces only the bounded GAD block
+ * (or prepends a new one if no markers are found). Overwrite clobbers.
+ */
+function promptBootContractMode(runtimes, targetFolder) {
+  const existing = detectExistingBootContracts(targetFolder);
+  if (existing.length === 0) {
+    runOnboardFlow(runtimes, targetFolder, true);
+    return;
+  }
+
+  console.log(`\n  ${yellow}Existing boot contract files detected:${reset}`);
+  for (const ex of existing) {
+    const marker = ex.hasMarker ? `${dim}(has GAD markers)${reset}` : `${dim}(no markers — GAD block will be prepended)${reset}`;
+    console.log(`    ${ex.fileName}   ${marker}`);
+  }
+  console.log('');
+  console.log(`  ${cyan}a${reset}) Append ${dim}(safe — replace only the GAD marker block, leave the rest intact)${reset}`);
+  console.log(`  ${cyan}o${reset}) Overwrite ${dim}(replace the entire file with a fresh boot contract)${reset}`);
+  console.log(`  ${cyan}s${reset}) Skip ${dim}(leave existing CLAUDE.md / AGENTS.md untouched, .planning/ still scaffolds)${reset}`);
+  console.log('');
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  rl.question(`  Choice ${dim}[a]${reset}: `, (answer) => {
+    rl.close();
+    const choice = (answer.trim() || 'a').toLowerCase();
+    let mode = 'append';
+    if (choice === 'o' || choice === 'overwrite') mode = 'overwrite';
+    else if (choice === 's' || choice === 'skip') mode = 'skip';
+    process.env.GAD_ONBOARD_BOOT_MODE = mode;
+    runOnboardFlow(runtimes, targetFolder, true);
   });
 }
 
