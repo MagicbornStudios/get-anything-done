@@ -2,12 +2,12 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-15T21:03:03.519Z
+Generated: 2026-04-15T23:30:45.957Z
 
 
 ---
 
-# Skills (91)
+# Skills (92)
 
 ## build-and-release-locally
 id: build-and-release-locally
@@ -4428,6 +4428,58 @@ npm run build:games
 Treat `npm run prebuild && npx next build` as the public-surface equivalent of a verification step.
 
 
+## scaffold-visual-context-surface
+id: scaffold-visual-context-surface
+description: >-
+origin: official
+
+
+
+# scaffold-visual-context-surface
+
+Scaffolding-first discipline for new dev-only UI surfaces. Every new
+editor pane, admin route, or inspector modal in this repo must ship with
+complete Visual Context coverage before any feature affordance is built
+— stable literal cids on every interactive element, Visual Context Panel
+identities registered, and at least one modal-footer CRUD round-trip
+green against a real cid.
+
+This proto-skill captures the checklist as a reusable pattern so future
+gated-editor work does not re-derive it from scratch or ship drift.
+
+**Workflow:** [./workflow.md](./workflow.md)
+
+## When this fires
+
+- Task acceptance mentions `SiteSection cid` or Visual Context Panel
+- Building a new `/<surface>` route behind a dev-mode gate
+- Adding an editor, inspector, admin console, or modal stack
+- Cleanup pass on a surface that skipped the mandate ("retrofit")
+
+## When NOT to use this
+
+- You're adding a single element to an already-compliant surface — use
+  `gad-visual-context-panel-identities` directly.
+- You're building a production-facing page (no dev gate) — the gate is
+  part of this skill's contract; different rules apply.
+- You're refactoring internals with no visible surface change.
+
+## Provenance
+
+Drafted by `create-proto-skill` from
+`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`
+on 2026-04-15 as the first end-to-end run of the evolution pipeline
+(task 42.2-13). Selection pressure: 29 (phase 44.5, 15 tasks, 7
+crosscuts). See PROVENANCE.md for source metadata and reasoning about
+what the skill abstracts.
+
+## Related
+
+- `gad-visual-context-panel-identities` — identity registration mechanics
+- Decisions gad-186, gad-187, gad-189, gad-191
+- Feedback memory `feedback_visual_context_system_mandatory.md`
+
+
 ## self-eval
 id: self-eval
 description: Score a round of GAD development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics.
@@ -4769,7 +4821,21 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (190)
+# Decisions (191)
+
+## gad-196: Home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming
+
+### Summary
+
+The home-page section `components/landing/lineage/` used `SiteSection` `cid="lineage-site-section"` while the **product meaning** had shifted to a visual-context handoff loop (site → panel → speech → clipboard → coding agent → ship → repeat). "Lineage" remained accurate only for the **GSD upstream reference** (link + YouTube segment), not for the primary UX story. That mismatch persisted across refactors because: (1) **incremental edits** prioritized the prompt payload and media swap over filesystem renames; (2) **no TASK-REGISTRY task** explicitly gated "rename module when semantics change"; (3) **greppable `cid` churn** was deferred to avoid one-shot breakages in the showcase prompt and dev-panel bookmarks.
+
+**GAD loop application:** treat stale public identifiers as **technical debt** the same as an unfinished task — capture in DECISIONS (this entry), rename files + `cid` in one atomic change, update the verbatim showcase string, and **commit** so snapshot and site stay aligned.
+
+**Resolution:** folder `lineage/` → `agent-handoff-cycle/`; components `Lineage*` → `AgentHandoffCycle*`; `cid` → `agent-handoff-cycle-site-section`; `id` → `agent-handoff-cycle`; `media.json` key `lineage_talk` → `gsd_upstream_planning_talk` (content unchanged). Intellectual lineage to GSD stays in copy and links — it is no longer the **module** name.
+
+### Impact
+
+(1) All imports and `Identified as="…"` strings update to the new names. (2) `LANDING_PAGE_GENERATION_PROMPT` and `LandingVisualContextAndPromptBand` reference the new `cid`. (3) `/lineage` route (if reintroduced) remains the **canonical URL** for the long-form GSD→GAD attribution page — distinct from this home band. (4) Future: when a section's **name** and **story** diverge, either rename in the same PR as the copy change or add an explicit TASK-REGISTRY row so the rename does not slip.
 
 ## gad-195: Snapshot rehydration is wasteful — session-scoped static/active split is the canonical contract
 
@@ -7155,7 +7221,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (336)
+# Tasks (345)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -7571,13 +7637,13 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.2-02** [done]: Fix /findings/&lt;slug&gt; 404: ship `site/app/findings/[slug]/page.tsx` using generateStaticParams over FINDINGS catalog so the links from LineageMeasurementSection, RunHeroCallouts, and rubric hero resolve to standalone whitepaper-style pages.
 
-- **42.2-03** [planned]: Rename `skills/gad-quick-skill/` â†’ `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched â€” decision gad-168.
+- **42.2-03** [done]: Rename `skills/gad-quick-skill/` â†’ `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched â€” decision gad-168.
 
 - **42.2-04** [planned]: Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case.
 
 - **42.2-05** [planned]: Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.
 
-- **42.2-06** [planned]: Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then
+- **42.2-06** [done]: Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then
 
 - **42.2-07** [done]: Author `references/skill-shape.md` as the canonical contract for the uniform skill shape: SKILL.md as single entry point, `workflow:` frontmatter key replacing `skill.json`, single `workflows/` dir, proto-skill bundle shape with sibling `workflow.md`, runtime install contract, validator rules, migration checklist. Cited by decisions gad-190/gad-191/gad-192 and by every downstream migration task in
 
@@ -7591,7 +7657,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.2-12** [done]: Verify `gad evolution install` / `gad evolution promote` handle the proto-skill bundle shape per decision gad-191.
 
-- **42.2-13** [blocked]: Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. Then `gad evolution install` into the Claude 
+- **42.2-13** [done]: Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. Then `gad evolution install` into the Claude 
 
 - **42.2-14** [done]: Surface sprint-relevant skills in `gad snapshot` output per decision gad-192.
 
@@ -7638,6 +7704,22 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 - **42.2-35** [done]: End-to-end integration test for the three consumer-related flows: framework promote-folder, consumer projects init, and runtime install into a consumer dir. Covers the full "set up a consumer project and install gad skills after the fact" lifecycle operator requested.
 
 - **42.2-36** [done]: Extend Flow C of the consumer-init-install test across more runtimes than just `--claude` to catch per-runtime install regressions, and tighten the test to make install failures hard fails instead of silent skips.
+
+- **42.2-37** [done]: Fix three real defects in `gad evolution promote` (bin/gad.cjs evolutionPromote) surfaced by the first real end-to-end run of the pipeline in 42.2-13: (1) final skill directory uses the candidate slug instead of the `name:` frontmatter value chosen by the drafter, (2) canonical workflow file inherits the same ugly slug-based filename, (3) `status: proto` is not flipped to `status: stable` during p
+
+- **42.2-38** [done]: Interactive onboard flow for bin/install.js — a third install location option ("new GAD project folder") that prompts for a folder path (default `~/Desktop/my-gad-project/`, created if missing), treats that folder as the local install target for runtime skills, then invokes `gad projects init --path &lt;folder&gt;` to scaffold `.planning/` with the canonical XML ledgers. Addresses the operator-rai
+
+- **42.2-39** [done]: Fill two gaps in the onboard flow surfaced by operator inspection: (a) no CLAUDE.md or AGENTS.md is written at the project root so a fresh Claude Code / Codex session has no boot contract telling it to run `gad startup` first; (b) `bin/install.js` hook install path silently no-ops in a local checkout because it looks for `sdk/hooks/dist` which does not exist in a clone, leaving settings.json wired
+
+- **42.2-40** [planned]: Temporary skill install flow (`gad try &lt;skill&gt;`) — new CLI subcommand that stages an external skill into an ephemeral `.gad-try/&lt;skill&gt;/` sandbox, audits and consents to declared dependencies (binaries, pip/npm packages) before running, hands off to the user's coding agent via a copy-paste prompt, and supports `--cleanup` to tear down the sandbox + list dep removal commands. Designed t
+
+- **42.2-41** [planned]: Graphify trial via `gad try` against this repo's `.planning/ + skills/ + decisions/` tree. Capture `graph.json` + `graph.html` + `GRAPH_REPORT.md` output, produce a FINDINGS-2026-04-NN-graphify-trial.md documenting: node/edge counts, community structure, whether NL queries like "what character is this project part of" resolve against the graph, whether the graph shape is useful for the site's comm
+
+- **42.2-42** [planned]: Decision based on 42.2-41 findings: (A) vendor Graphify as a `skills/gad-graphify/` keeper and accept the Python runtime dep, or (B) build a GAD-native graph extractor in Node that consumes planning XML + markdown + JSON and emits the same `graph.json` shape so third-party tools (Obsidian, Neo4j, Gephi) still work. Produces a decision doc (new gad-NNN entry in DECISIONS.xml).
+
+- **42.2-43** [planned]: Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). Wire the site's existing command+K global search to layer graph results alongside full-text: "related to X", "decisions citing X", "skills depending on X". No LLM at query time — pure graph traversal. Depends on 42.2-42 outcome.
+
+- **42.2-44** [planned]: New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. Every node gets a cid derived from its id so the modal footer CRUD can target nodes. Integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. Depends on 42.2-43.
 
 - **42.3-01** [done]: Design the workflow planning-artifact schema and write `.planning/workflows/README.md`.
 
@@ -7798,6 +7880,8 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 - **44-17** [done]: Write a durable reference methodology for the Visual Context Panel identity workflow so deleted/refactored sections do not erase the pattern memory. Include canonical snippets, prompt-handoff shape, and planning usage rules that make skill usage explicit in TASK-REGISTRY/STATE/DECISIONS.
 
 - **44-26** [done]: Document the real speech-driven visual editing workflow as a reusable methodology: loose UPDATE/DELETE prompts, landmark-first targeting (`cid` as source of truth), cleanup boundaries, and the Mermaid-leak incident as a concrete failure mode for cross-route renderer side effects.
+
+- **44-37** [done]: Retrospective: Visual Context landing band — intro landmarks vs inner showcase scope (2026-04-15). Capture where confusion lived (agent prioritized showcase/meteor demos; user wanted intro kicker/title/body as separate Identified targets for DevPanel), resolution (split `LandingVisualContextIntroKicker`, `IntroTitle`, `IntroBody` under outer `LandingVisualContextShowcase`), and mitigations for fut
 
 - **44.5-01** [planned]: Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config ins
 

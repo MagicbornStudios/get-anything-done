@@ -11362,6 +11362,540 @@ const modelsCmd = defineCommand({
   },
 });
 
+// ─── gad try — temporary skill install flow (task 42.2-40) ─────────────────
+//
+// Stage an external skill into .gad-try/<slug>/ without polluting
+// ~/.claude/skills/ or the current project's .claude/skills/. Designed
+// for trialing skills before full install — codebase maps, knowledge
+// graphs, one-off artifact generators. Supports three source types:
+//   - Local slug: `gad try codebase-map` → resolves to skills/<slug>/
+//   - Git URL:    `gad try https://github.com/safishamsi/graphify`
+//   - Local path: `gad try ./my-skill/`
+//
+// Does NOT execute the skill (decision gad-18: skills are methodology
+// docs, not executable code). Writes ENTRY.md with a copy-paste handoff
+// prompt for the user's coding agent and lists any dependencies the
+// skill declared via `requires:` / `installs:` frontmatter.
+
+function tryPaths(repoRoot) {
+  const cwd = process.cwd();
+  return {
+    cwd,
+    sandboxRoot: path.join(cwd, '.gad-try'),
+  };
+}
+
+function slugifyRef(ref) {
+  // Extract a kebab-case slug from any source ref — always the LAST
+  // meaningful path segment.
+  //   https://github.com/user/REPO         → repo
+  //   https://github.com/user/REPO.git     → repo
+  //   git@github.com:user/REPO.git         → repo
+  //   ./foo/bar/                           → bar
+  //   already-good                         → already-good
+  const normalizeSegment = (s) => s.replace(/\.git$/i, '').toLowerCase().replace(/[^a-z0-9-]/g, '-');
+
+  if (/^https?:\/\/|^git@|^git\+|^ssh:\/\//.test(ref)) {
+    // Strip query / fragment, then take the last non-empty slash segment.
+    const cleaned = ref.replace(/^git\+/, '').replace(/[#?].*$/, '').replace(/:/g, '/');
+    const segments = cleaned.split('/').filter(Boolean);
+    const last = segments[segments.length - 1] || 'skill';
+    return normalizeSegment(last);
+  }
+  if (ref.includes('/') || ref.includes('\\')) {
+    return normalizeSegment(path.basename(ref.replace(/[\\]/g, '/').replace(/\/$/, '')));
+  }
+  return normalizeSegment(ref);
+}
+
+function parseFrontmatterLoose(body) {
+  const match = body.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+  if (!match) return { raw: '', fields: {} };
+  const raw = match[1];
+  const fields = {};
+  const lines = raw.split(/\r?\n/);
+  let currentKey = null;
+  let currentList = null;
+  for (const line of lines) {
+    const keyMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_-]*):\s*(.*)$/);
+    if (keyMatch) {
+      currentKey = keyMatch[1];
+      const value = keyMatch[2].trim();
+      if (value === '' || value === '|' || value === '>-' || value === '>') {
+        currentList = null;
+        fields[currentKey] = '';
+      } else {
+        fields[currentKey] = value;
+        currentList = null;
+      }
+    } else if (/^\s+-\s+/.test(line) && currentKey) {
+      if (!currentList) {
+        currentList = [];
+        fields[currentKey] = currentList;
+      }
+      currentList.push(line.replace(/^\s+-\s+/, '').trim());
+    }
+  }
+  return { raw, fields };
+}
+
+function extractSkillDependencies(skillBody) {
+  // Extract dependency signals from SKILL.md — both declared (via
+  // `requires:`/`installs:` frontmatter) and implicit (pip/npm/curl
+  // commands mentioned in the body). Body signals are advisory only.
+  const { fields } = parseFrontmatterLoose(skillBody);
+  const requires = Array.isArray(fields.requires) ? fields.requires : (fields.requires ? [fields.requires] : []);
+  const installs = Array.isArray(fields.installs) ? fields.installs : (fields.installs ? [fields.installs] : []);
+  const outputs = Array.isArray(fields.outputs) ? fields.outputs : (fields.outputs ? [fields.outputs] : []);
+
+  // Body signal scan — catches skills that don't declare frontmatter.
+  const implicit = [];
+  const bodyText = skillBody.replace(/^---[\s\S]*?---\s*/m, '');
+  const patterns = [
+    /\bpip install\s+[^\s`'"]+/g,
+    /\bnpm install\s+-g\s+[^\s`'"]+/g,
+    /\bnpm i\s+-g\s+[^\s`'"]+/g,
+    /\bpipx install\s+[^\s`'"]+/g,
+    /\buv tool install\s+[^\s`'"]+/g,
+    /\bbrew install\s+[^\s`'"]+/g,
+    /\bcurl -fsSL\s+https?:\/\/[^\s`'"]+/g,
+  ];
+  for (const pat of patterns) {
+    const matches = bodyText.match(pat);
+    if (matches) {
+      for (const m of matches) {
+        if (!implicit.includes(m)) implicit.push(m);
+      }
+    }
+  }
+
+  return { requires, installs, outputs, implicit };
+}
+
+function resolveTrySource(ref, repoRoot) {
+  // Returns { kind, sourceDir, slug, cleanup } where kind is 'local-slug',
+  // 'local-path', or 'git-url'. cleanup is a fn to call when done (e.g.
+  // remove tmp clone).
+  const slug = slugifyRef(ref);
+
+  // Git URL
+  if (/^https?:\/\/|^git@|^git\+|^ssh:\/\//.test(ref)) {
+    const cleanRef = ref.replace(/^git\+/, '').replace(/#.*$/, '');
+    // Parse optional branch/tag from `@ref` suffix: github.com/a/b@v1
+    let cloneUrl = cleanRef;
+    let branch = null;
+    const atMatch = cleanRef.match(/^(.+?@[^:]+?:[^@]+?|[a-z]+:\/\/[^@]+?)@([^\/@]+)$/);
+    if (atMatch) {
+      cloneUrl = atMatch[1];
+      branch = atMatch[2];
+    }
+
+    const tmpBase = path.join(require('os').tmpdir(), `gad-try-clone-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+
+    // Try the default branch first, then fall back to common skill-hosting
+    // branches (v1 is Graphify's pattern, main / master are standard).
+    const branchAttempts = branch
+      ? [branch]
+      : [null, 'v1', 'main', 'master'];
+
+    let cloneErr = null;
+    let cloned = false;
+    for (const attempt of branchAttempts) {
+      if (fs.existsSync(tmpBase)) {
+        fs.rmSync(tmpBase, { recursive: true, force: true });
+      }
+      const cloneArgs = ['clone', '--depth', '1'];
+      if (attempt) cloneArgs.push('-b', attempt);
+      cloneArgs.push(cloneUrl, tmpBase);
+      try {
+        require('child_process').execFileSync('git', cloneArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+        cloned = true;
+        break;
+      } catch (err) {
+        cloneErr = err;
+      }
+    }
+
+    if (!cloned) {
+      throw new Error(`git clone failed for ${cleanRef}: ${cloneErr?.stderr?.toString()?.slice(0, 200) || cloneErr?.message || 'unknown error'}`);
+    }
+
+    // Recursively search for SKILL.md / skill.md up to 3 levels deep.
+    function walkForSkillMd(dir, depth) {
+      if (depth > 3) return null;
+      let entries;
+      try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+      } catch {
+        return null;
+      }
+      // Prefer SKILL.md > skill.md at this level.
+      for (const pref of ['SKILL.md', 'skill.md']) {
+        const hit = entries.find((e) => e.isFile() && e.name === pref);
+        if (hit) return path.join(dir, pref);
+      }
+      for (const e of entries) {
+        if (e.isDirectory() && !e.name.startsWith('.') && e.name !== 'node_modules') {
+          const nested = walkForSkillMd(path.join(dir, e.name), depth + 1);
+          if (nested) return nested;
+        }
+      }
+      return null;
+    }
+
+    const found = walkForSkillMd(tmpBase, 0);
+    if (!found) {
+      fs.rmSync(tmpBase, { recursive: true, force: true });
+      throw new Error(`no SKILL.md or skill.md found in ${cleanRef} within 3 levels`);
+    }
+    return {
+      kind: 'git-url',
+      sourceDir: path.dirname(found),
+      slug,
+      source: cleanRef,
+      cleanup: () => {
+        try { fs.rmSync(tmpBase, { recursive: true, force: true }); } catch {}
+      },
+    };
+  }
+
+  // Local path
+  if (ref.includes('/') || ref.includes('\\') || fs.existsSync(ref)) {
+    const absPath = path.resolve(ref);
+    if (!fs.existsSync(absPath)) {
+      throw new Error(`path does not exist: ${ref}`);
+    }
+    const skillPath = fs.statSync(absPath).isFile() && /SKILL\.md$/i.test(absPath)
+      ? absPath
+      : path.join(absPath, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      throw new Error(`no SKILL.md at ${skillPath}`);
+    }
+    return {
+      kind: 'local-path',
+      sourceDir: path.dirname(skillPath),
+      slug,
+      source: absPath,
+      cleanup: () => {},
+    };
+  }
+
+  // Local slug — resolve against the framework skills/ dir.
+  const slugDir = path.join(repoRoot, 'skills', ref);
+  const slugSkill = path.join(slugDir, 'SKILL.md');
+  if (fs.existsSync(slugSkill)) {
+    return {
+      kind: 'local-slug',
+      sourceDir: slugDir,
+      slug: ref,
+      source: path.relative(repoRoot, slugDir),
+      cleanup: () => {},
+    };
+  }
+
+  throw new Error(`could not resolve skill ref "${ref}" — not a URL, not a path, not a skills/ slug`);
+}
+
+function stageTrySandbox(resolved, sandboxRoot) {
+  const sandboxDir = path.join(sandboxRoot, resolved.slug);
+  if (fs.existsSync(sandboxDir)) {
+    throw new Error(`sandbox already exists at ${path.relative(process.cwd(), sandboxDir)} — run \`gad try cleanup ${resolved.slug}\` first`);
+  }
+  fs.mkdirSync(sandboxDir, { recursive: true });
+
+  // Copy source dir contents into sandbox.
+  fs.cpSync(resolved.sourceDir, sandboxDir, { recursive: true });
+
+  return sandboxDir;
+}
+
+function writeTryProvenance(sandboxDir, resolved, deps) {
+  const body = [
+    '---',
+    `slug: ${resolved.slug}`,
+    `source: ${resolved.source}`,
+    `kind: ${resolved.kind}`,
+    `staged_on: ${new Date().toISOString().slice(0, 10)}`,
+    `staged_by: gad-try`,
+    '---',
+    '',
+    `# Provenance — ${resolved.slug}`,
+    '',
+    `Staged by \`gad try\` from ${resolved.kind} source: ${resolved.source}`,
+    '',
+    '## Declared requires',
+    deps.requires.length === 0 ? '_(none declared)_' : deps.requires.map((r) => `- ${r}`).join('\n'),
+    '',
+    '## Declared installs',
+    deps.installs.length === 0 ? '_(none declared)_' : deps.installs.map((r) => `- ${r}`).join('\n'),
+    '',
+    '## Implicit (body-scanned) install commands',
+    deps.implicit.length === 0 ? '_(no pip/npm/brew/curl install commands found in SKILL.md body)_' : deps.implicit.map((r) => `- \`${r}\``).join('\n'),
+    '',
+    '## Declared outputs',
+    deps.outputs.length === 0 ? '_(none declared — artifacts may land in cwd)_' : deps.outputs.map((r) => `- ${r}`).join('\n'),
+    '',
+  ].join('\n');
+  fs.writeFileSync(path.join(sandboxDir, 'PROVENANCE.md'), body);
+}
+
+function writeTryEntry(sandboxDir, resolved, skillBody) {
+  const { fields } = parseFrontmatterLoose(skillBody);
+  const skillName = fields.name || resolved.slug;
+  const body = [
+    `# ${skillName} — try entry`,
+    '',
+    `Staged by \`gad try\` on ${new Date().toISOString().slice(0, 10)}.`,
+    '',
+    '## How to run it',
+    '',
+    'Open your coding agent (Claude Code, Codex, Cursor, Windsurf, etc.)',
+    `in **${path.dirname(sandboxDir)}** (the parent of .gad-try/) and paste:`,
+    '',
+    '```',
+    `Invoke the skill at .gad-try/${resolved.slug}/SKILL.md on this directory.`,
+    `Follow its instructions exactly. When done, tell me what artifacts it produced.`,
+    '```',
+    '',
+    'Or, if the skill ships its own slash command and is wired into your',
+    'runtime, use that command directly — the skill body will tell you what',
+    'syntax it expects.',
+    '',
+    '## Where artifacts will land',
+    '',
+    'Read `PROVENANCE.md` in this sandbox for declared outputs. If the skill',
+    'does not declare outputs, it will write to the current working directory —',
+    `likely producing files next to \`.gad-try/\`.`,
+    '',
+    '## When you\'re done',
+    '',
+    `\`\`\`sh`,
+    `gad try cleanup ${resolved.slug}    # remove this sandbox`,
+    `\`\`\``,
+    '',
+    'If the skill installed system packages (pip / npm / brew), cleanup will',
+    'print the suggested uninstall commands but will NOT run them — you',
+    'decide whether to roll them back.',
+    '',
+  ].join('\n');
+  fs.writeFileSync(path.join(sandboxDir, 'ENTRY.md'), body);
+}
+
+function printConsentGate(deps, resolved) {
+  console.log('');
+  console.log(`  ${dim('Source:')}  ${resolved.source} (${resolved.kind})`);
+  console.log(`  ${dim('Slug:')}    ${resolved.slug}`);
+  console.log('');
+  if (deps.requires.length > 0) {
+    console.log('  Requires (advisory — not checked):');
+    for (const r of deps.requires) console.log(`    - ${r}`);
+    console.log('');
+  }
+  if (deps.installs.length > 0) {
+    console.log('  Declared installs (skill will run these when invoked):');
+    for (const r of deps.installs) console.log(`    ! ${r}`);
+    console.log('');
+  }
+  if (deps.implicit.length > 0) {
+    console.log('  Implicit installs found in SKILL.md body:');
+    for (const r of deps.implicit) console.log(`    ? ${r}`);
+    console.log('');
+  }
+  if (deps.requires.length === 0 && deps.installs.length === 0 && deps.implicit.length === 0) {
+    console.log('  No install commands declared or detected in SKILL.md.');
+    console.log('  Sandbox will be staged with no system changes.');
+    console.log('');
+  }
+}
+
+// A tiny dim() helper because the existing color constants in bin/gad.cjs
+// may not include one; fall back to identity if not exported.
+function dim(s) { return s; }
+
+const tryStage = defineCommand({
+  meta: { name: 'stage', description: 'Stage a skill into .gad-try/<slug>/ (default subcommand)' },
+  args: {
+    ref: { type: 'positional', description: 'slug | path | git url', required: true },
+    yes: { type: 'boolean', description: 'Skip consent gate (scripted mode)', default: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { cwd, sandboxRoot } = tryPaths(repoRoot);
+
+    let resolved;
+    try {
+      resolved = resolveTrySource(args.ref, repoRoot);
+    } catch (err) {
+      console.error(`gad try: ${err.message}`);
+      process.exit(1);
+    }
+
+    try {
+      const skillBody = fs.readFileSync(path.join(resolved.sourceDir, 'SKILL.md'), 'utf8');
+      const deps = extractSkillDependencies(skillBody);
+
+      console.log(`gad try ${resolved.slug}`);
+      printConsentGate(deps, resolved);
+
+      // Staging itself is non-destructive — we just copy files into
+      // .gad-try/<slug>/. The destructive parts (`pip install`, `npm i`)
+      // only happen when the user invokes the skill through their coding
+      // agent. We print the consent gate for awareness; no prompt.
+      if (!args.yes && (deps.installs.length > 0 || deps.implicit.length > 0)) {
+        console.log('  Note: staging is non-destructive. Install commands above');
+        console.log('  will only run if you invoke the skill via your coding agent.');
+        console.log('');
+      }
+
+      const sandboxDir = stageTrySandbox(resolved, sandboxRoot);
+      writeTryProvenance(sandboxDir, resolved, deps);
+      writeTryEntry(sandboxDir, resolved, skillBody);
+
+      console.log('');
+      console.log(`  Staged ${path.relative(cwd, sandboxDir)}`);
+      console.log(`  Handoff prompt: ${path.relative(cwd, path.join(sandboxDir, 'ENTRY.md'))}`);
+      console.log('');
+      console.log('Next:');
+      console.log(`  cat ${path.relative(cwd, path.join(sandboxDir, 'ENTRY.md'))}`);
+      console.log(`  # then paste the handoff prompt into your coding agent`);
+      console.log('');
+      console.log(`  gad try status                     # list all staged sandboxes`);
+      console.log(`  gad try cleanup ${resolved.slug}   # remove this sandbox when done`);
+    } finally {
+      resolved.cleanup();
+    }
+  },
+});
+
+const tryStatus = defineCommand({
+  meta: { name: 'status', description: 'List staged .gad-try/ sandboxes' },
+  run() {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { sandboxRoot } = tryPaths(repoRoot);
+    if (!fs.existsSync(sandboxRoot)) {
+      console.log('No staged tries in this directory.');
+      return;
+    }
+    const entries = fs.readdirSync(sandboxRoot, { withFileTypes: true }).filter((e) => e.isDirectory());
+    if (entries.length === 0) {
+      console.log('No staged tries in this directory.');
+      return;
+    }
+    console.log(`Staged tries in ${path.relative(process.cwd(), sandboxRoot) || '.gad-try'}:`);
+    for (const e of entries) {
+      const provPath = path.join(sandboxRoot, e.name, 'PROVENANCE.md');
+      let source = '(unknown)';
+      if (fs.existsSync(provPath)) {
+        const body = fs.readFileSync(provPath, 'utf8');
+        const m = body.match(/^source:\s*(.+)$/m);
+        if (m) source = m[1].trim();
+      }
+      console.log(`  - ${e.name}    ${source}`);
+    }
+    console.log('');
+    console.log('Commands:');
+    console.log('  gad try cleanup <slug>   # remove one sandbox');
+    console.log('  gad try cleanup --all    # remove all sandboxes');
+  },
+});
+
+const tryCleanup = defineCommand({
+  meta: { name: 'cleanup', description: 'Remove a staged .gad-try/<slug>/ sandbox' },
+  args: {
+    slug: { type: 'positional', description: 'sandbox slug to remove', required: false },
+    all: { type: 'boolean', description: 'Remove all staged sandboxes', default: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { sandboxRoot } = tryPaths(repoRoot);
+    if (!fs.existsSync(sandboxRoot)) {
+      console.log('No .gad-try/ directory in cwd — nothing to clean up.');
+      return;
+    }
+
+    const toRemove = [];
+    if (args.all) {
+      for (const e of fs.readdirSync(sandboxRoot, { withFileTypes: true })) {
+        if (e.isDirectory()) toRemove.push(e.name);
+      }
+    } else {
+      if (!args.slug) {
+        console.error('gad try cleanup: pass a <slug> or --all');
+        process.exit(1);
+      }
+      const dir = path.join(sandboxRoot, args.slug);
+      if (!fs.existsSync(dir)) {
+        console.error(`No sandbox at ${path.relative(process.cwd(), dir)}`);
+        process.exit(1);
+      }
+      toRemove.push(args.slug);
+    }
+
+    for (const slug of toRemove) {
+      const dir = path.join(sandboxRoot, slug);
+      const provPath = path.join(dir, 'PROVENANCE.md');
+      // Surface install commands that were declared — the user may want
+      // to roll them back manually.
+      if (fs.existsSync(provPath)) {
+        const body = fs.readFileSync(provPath, 'utf8');
+        const installsSection = body.match(/## Declared installs\s*\n([\s\S]*?)\n##/);
+        const implicitSection = body.match(/## Implicit.*?install commands\s*\n([\s\S]*?)\n##/);
+        const allInstallLines = [];
+        for (const section of [installsSection, implicitSection]) {
+          if (section && !/\(none/i.test(section[1]) && !/no pip/i.test(section[1])) {
+            for (const line of section[1].split('\n')) {
+              const trimmed = line.replace(/^[-!?\s]+/, '').replace(/`/g, '').trim();
+              if (trimmed) allInstallLines.push(trimmed);
+            }
+          }
+        }
+        if (allInstallLines.length > 0) {
+          console.log(`  ${slug}: skill declared or referenced these installs:`);
+          for (const l of allInstallLines) console.log(`    ${l}`);
+          console.log('  (not rolled back automatically — run manually if needed)');
+        }
+      }
+      fs.rmSync(dir, { recursive: true, force: true });
+      console.log(`  Removed ${path.relative(process.cwd(), dir)}`);
+    }
+
+    // Remove the .gad-try parent dir if now empty.
+    try {
+      if (fs.readdirSync(sandboxRoot).length === 0) {
+        fs.rmdirSync(sandboxRoot);
+      }
+    } catch {}
+  },
+});
+
+const tryHelp = defineCommand({
+  meta: { name: 'help', description: 'Show gad try usage' },
+  run() {
+    console.log('gad try — temporary skill install flow');
+    console.log('');
+    console.log('Usage:');
+    console.log('  gad try <slug|path|url>       Stage a skill into .gad-try/<slug>/');
+    console.log('  gad try status                List staged sandboxes');
+    console.log('  gad try cleanup <slug>        Remove one sandbox');
+    console.log('  gad try cleanup --all         Remove all sandboxes');
+    console.log('');
+    console.log('Examples:');
+    console.log('  gad try gad-help                                  # local slug from skills/');
+    console.log('  gad try ./my-skill/                               # local path');
+    console.log('  gad try https://github.com/safishamsi/graphify    # git url');
+  },
+});
+
+const tryCmd = defineCommand({
+  meta: { name: 'try', description: 'Stage a skill into .gad-try/<slug>/ without touching ~/.claude/skills/ or the project skill catalog' },
+  subCommands: {
+    stage: tryStage,
+    status: tryStatus,
+    cleanup: tryCleanup,
+    help: tryHelp,
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -11407,9 +11941,28 @@ const main = defineCommand({
     'migrate-schema': migrateSchema,
     install: installCmd,
     uninstall: uninstallCmd,
+    try: tryCmd,
     version: versionCmd,
   },
 });
+
+// `gad try <slug|path|url>` should route to `gad try stage <ref>` so the
+// positional ref doesn't collide with subcommand dispatch. When the first
+// arg after `try` is a known subcommand (stage|status|cleanup|help) or a
+// flag, leave argv alone. Bare `gad try` with no arg maps to `help`.
+(function injectTryStageDefault() {
+  const a = process.argv;
+  const i = a.indexOf('try');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['stage', 'status', 'cleanup', 'help']);
+  if (first === undefined) {
+    a.splice(i + 1, 0, 'help');
+    return;
+  }
+  if (known.has(first) || first.startsWith('-')) return;
+  a.splice(i + 1, 0, 'stage');
+})();
 
 // Bare `gad refs` (and `gad refs --json`, etc.) should behave like `gad refs list`.
 // Citty has no default subcommand; without this, only `gad refs list` works.

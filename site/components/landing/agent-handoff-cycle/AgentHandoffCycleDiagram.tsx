@@ -1,15 +1,102 @@
+import { Bot, CircleUser, Mic } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { CLAUDE_CODE_HANDOFF_IMG } from "@/components/landing/agent-handoff-cycle/agent-handoff-cycle-constants";
 
-const STEPS: { id: string; title: string; short: string; isAgent?: boolean }[] = [
-  { id: "browse", title: "Browse site", short: "Dev IDs · greppable cid" },
-  { id: "panel", title: "Visual context", short: "Hover band → quick prompt" },
-  { id: "speech", title: "Capture", short: "Speech + CRUD verbs" },
-  { id: "clipboard", title: "Clipboard", short: "Structured handoff" },
-  { id: "agent", title: "Coding agent", short: "Claude Code, Cursor, Codex…", isAgent: true },
-  { id: "ship", title: "Ship & return", short: "Reload · next band" },
+type StepKind = "user" | "automatic" | "agent";
+
+const STEPS: {
+  id: string;
+  title: string;
+  short: string;
+  kind: StepKind;
+  isAgent?: boolean;
+}[] = [
+  { id: "browse", title: "Browse site", short: "Dev IDs · greppable cid", kind: "user" },
+  {
+    id: "panel",
+    title: "Visual context",
+    short: "Band hover opens Message",
+    kind: "automatic",
+  },
+  { id: "speech", title: "You capture", short: "Speech + CRUD verbs", kind: "user" },
+  {
+    id: "clipboard",
+    title: "Clipboard",
+    short: "Handoff assembled for you",
+    kind: "automatic",
+  },
+  { id: "agent", title: "Coding agent", short: "Claude Code, Cursor, Codex…", kind: "agent", isAgent: true },
+  { id: "ship", title: "Ship & return", short: "Reload · next band", kind: "user" },
 ];
 
 const N = STEPS.length;
+
+/** Decorative — mirrors DevIdAgentPromptDialog Message strip (Update / Delete + mic). */
+function VisualContextModalMicro({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "mx-auto w-full max-w-[9.75rem] overflow-hidden rounded-lg border border-border/80 bg-popover text-left shadow-md",
+        className,
+      )}
+      aria-hidden
+    >
+      <div className="flex items-center justify-between gap-1 border-b border-border/60 bg-muted/50 px-1.5 py-1">
+        <span className="text-[8px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Message
+        </span>
+        <div className="flex gap-0.5">
+          <span className="rounded-sm bg-accent/25 px-1 py-0.5 text-[7px] font-semibold text-accent">
+            Update
+          </span>
+          <span className="rounded-sm bg-muted px-1 py-0.5 text-[7px] font-medium text-muted-foreground">
+            Delete
+          </span>
+        </div>
+      </div>
+      <div className="space-y-1 p-1.5">
+        <div className="h-1.5 w-full rounded-sm bg-muted/70" />
+        <div className="h-1.5 w-[88%] rounded-sm bg-muted/50" />
+        <div className="flex items-center justify-end pt-0.5">
+          <Mic className="size-3.5 text-accent" aria-hidden />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepAffordance({ kind, dense }: { kind: StepKind; dense?: boolean }) {
+  if (kind === "user") {
+    return (
+      <div className={cn("flex justify-center", dense ? "mb-0.5" : "mb-1.5")} aria-hidden>
+        <span
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/45 bg-accent/10 text-accent"
+          title="You"
+        >
+          <CircleUser className="size-4" strokeWidth={2} />
+        </span>
+      </div>
+    );
+  }
+  if (kind === "automatic") {
+    return (
+      <div className={cn("flex justify-center", dense ? "mb-0.5" : "mb-1.5")} title="Visual Context handoff">
+        <VisualContextModalMicro className={dense ? "max-w-[8.5rem]" : undefined} />
+      </div>
+    );
+  }
+  return (
+    <div className={cn("flex justify-center", dense ? "mb-0.5" : "mb-1.5")} aria-hidden>
+      <span
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-accent/45 bg-accent/10 text-accent"
+        title="Coding agent"
+      >
+        <Bot className="size-4" strokeWidth={2} />
+      </span>
+    </div>
+  );
+}
+
 /** Ellipse in viewBox 0..1000 x 0..720 — node i at angle from top, clockwise */
 function nodeCenter(i: number): { x: number; y: number } {
   const cx = 500;
@@ -30,7 +117,8 @@ function arcSegment(i: number): string {
 }
 
 /**
- * Cyclical handoff diagram — SVG flow + HTML nodes; terminal screenshot sits inside the agent step.
+ * Cyclical handoff diagram — SVG flow + HTML nodes; terminal screenshot in the agent step.
+ * User steps use a user icon; automatic steps use a miniature Visual Context Message modal.
  */
 export function AgentHandoffCycleDiagram() {
   return (
@@ -42,10 +130,13 @@ export function AgentHandoffCycleDiagram() {
       <div className="border-b border-border/50 bg-gradient-to-r from-accent/10 via-transparent to-accent/5 px-4 py-4 text-center md:px-8">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Handoff cycle</p>
         <p className="mt-1 text-balance text-sm text-muted-foreground">
-          Site → context → speech → clipboard → agent → ship — then you point the panel at the next band (
-          <code className="rounded bg-background/80 px-1 font-mono text-[10px]">cid</code> /{" "}
-          <code className="rounded bg-background/80 px-1 font-mono text-[10px]">data-cid</code>
-          ).
+          <span className="inline-flex items-center gap-1">
+            <CircleUser className="inline size-3.5 shrink-0 text-accent" aria-hidden />
+            You
+          </span>{" "}
+          at the browser and mic —{" "}
+          <span className="whitespace-nowrap text-foreground/90">Message</span> modal + clipboard are automatic
+          assembly — then the agent runs the paste.
         </p>
       </div>
 
@@ -54,10 +145,11 @@ export function AgentHandoffCycleDiagram() {
         {STEPS.map((step, i) => (
           <div key={step.id}>
             <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-accent/60 bg-accent/15 text-xs font-bold text-accent">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-accent/50 bg-accent/10 text-xs font-bold text-accent">
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
+                <StepAffordance kind={step.kind} />
                 <p className="font-semibold text-foreground">{step.title}</p>
                 <p className="text-sm text-muted-foreground">{step.short}</p>
                 {step.isAgent ? (
@@ -113,7 +205,6 @@ export function AgentHandoffCycleDiagram() {
               <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)" fillOpacity="0.9" />
             </marker>
           </defs>
-          {/* faint guide ellipse */}
           <ellipse
             cx="500"
             cy="340"
@@ -136,7 +227,6 @@ export function AgentHandoffCycleDiagram() {
               opacity="0.92"
             />
           ))}
-          {/* closing hint: subtle arc from last back toward first */}
           <text
             x="500"
             y="688"
@@ -148,7 +238,6 @@ export function AgentHandoffCycleDiagram() {
           </text>
         </svg>
 
-        {/* HTML overlays — positions in % match viewBox 1000×720 */}
         <div className="absolute inset-0">
           {STEPS.map((step, i) => {
             const { x, y } = nodeCenter(i);
@@ -162,8 +251,11 @@ export function AgentHandoffCycleDiagram() {
                   style={{ left: `${leftPct}%`, top: `${topPct}%` }}
                 >
                   <div className="overflow-hidden rounded-2xl border-2 border-accent/50 bg-card shadow-2xl shadow-black/50 ring-1 ring-accent/20">
-                    <div className="border-b border-border/60 bg-accent/10 px-3 py-2">
-                      <p className="text-center text-[11px] font-bold uppercase tracking-wide text-accent">
+                    <div className="relative border-b border-border/60 bg-accent/10 px-3 py-2">
+                      <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border border-accent/35 bg-accent/15 text-accent">
+                        <Bot className="size-3.5" aria-hidden />
+                      </span>
+                      <p className="pr-8 text-center text-[11px] font-bold uppercase tracking-wide text-accent">
                         {i + 1}. {step.title}
                       </p>
                       <p className="text-center text-[10px] text-muted-foreground">{step.short}</p>
@@ -186,13 +278,20 @@ export function AgentHandoffCycleDiagram() {
             return (
               <div
                 key={step.id}
-                className="absolute z-[5] w-[min(38vw,200px)] max-w-[200px] -translate-x-1/2 -translate-y-1/2"
+                className="absolute z-[5] w-[min(42vw,220px)] max-w-[220px] -translate-x-1/2 -translate-y-1/2"
                 style={{ left: `${leftPct}%`, top: `${topPct}%` }}
               >
-                <div className="rounded-xl border border-border/70 bg-card/95 px-2.5 py-2 text-center shadow-md backdrop-blur-sm">
-                  <span className="mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-[10px] font-bold text-accent">
+                <div
+                  className={cn(
+                    "relative rounded-xl border bg-card/95 px-2 py-2 text-center shadow-md backdrop-blur-sm",
+                    step.kind === "user" && "border-accent/35",
+                    step.kind === "automatic" && "border-primary/30 ring-1 ring-border/60",
+                  )}
+                >
+                  <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-muted/80 text-[9px] font-bold text-muted-foreground">
                     {i + 1}
                   </span>
+                  <StepAffordance kind={step.kind} dense />
                   <p className="text-[11px] font-semibold leading-tight text-foreground">{step.title}</p>
                   <p className="mt-0.5 text-[9px] leading-snug text-muted-foreground">{step.short}</p>
                 </div>

@@ -306,11 +306,11 @@ export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { 
               <Card>
                 <Identified as="DataDbQueryPanelHeader">
                   <CardHeader className="pb-1.5">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-sm">Query</CardTitle>
-                      <div className="rounded-md border border-border/60 bg-muted/20 p-1">
-                        <p className="px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">CRUD prompts</p>
-                        <div className="mt-1 flex flex-wrap gap-1">
+                      <div className="flex items-center gap-1 rounded-md border border-border/60 bg-muted/20 p-1">
+                        <span className="px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">CRUD</span>
+                        <div className="flex items-center gap-1">
                           {quickPrompts.map((prompt) => (
                             <Button
                               key={prompt.label}

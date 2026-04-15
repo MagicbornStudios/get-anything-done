@@ -4675,6 +4675,12 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
   {
+    "id": "gad-196",
+    "title": "Home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming",
+    "summary": "The home-page section `components/landing/lineage/` used `SiteSection` `cid=\"lineage-site-section\"` while the **product meaning** had shifted to a visual-context handoff loop (site → panel → speech → clipboard → coding agent → ship → repeat). \"Lineage\" remained accurate only for the **GSD upstream reference** (link + YouTube segment), not for the primary UX story. That mismatch persisted across refactors because: (1) **incremental edits** prioritized the prompt payload and media swap over filesystem renames; (2) **no TASK-REGISTRY task** explicitly gated \"rename module when semantics change\"; (3) **greppable `cid` churn** was deferred to avoid one-shot breakages in the showcase prompt and dev-panel bookmarks.\r\n\r\n**GAD loop application:** treat stale public identifiers as **technical debt** the same as an unfinished task — capture in DECISIONS (this entry), rename files + `cid` in one atomic change, update the verbatim showcase string, and **commit** so snapshot and site stay aligned.\r\n\r\n**Resolution:** folder `lineage/` → `agent-handoff-cycle/`; components `Lineage*` → `AgentHandoffCycle*`; `cid` → `agent-handoff-cycle-site-section`; `id` → `agent-handoff-cycle`; `media.json` key `lineage_talk` → `gsd_upstream_planning_talk` (content unchanged). Intellectual lineage to GSD stays in copy and links — it is no longer the **module** name.",
+    "impact": "(1) All imports and `Identified as=\"…\"` strings update to the new names. (2) `LANDING_PAGE_GENERATION_PROMPT` and `LandingVisualContextAndPromptBand` reference the new `cid`. (3) `/lineage` route (if reintroduced) remains the **canonical URL** for the long-form GSD→GAD attribution page — distinct from this home band. (4) Future: when a section's **name** and **story** diverge, either rename in the same PR as the copy change or add an explicit TASK-REGISTRY row so the rename does not slip."
+  },
+  {
     "id": "gad-195",
     "title": "Snapshot rehydration is wasteful — session-scoped static/active split is the canonical contract",
     "summary": "Operator confirmed 2026-04-15 (after 42.2-26 experiment was designed but before it was run): repeatedly loading the same snapshot context into an already-warm agent session is wasteful, not reinforcing. Once the agent has seen static information (skill catalog, workflow specs, decision history, reference docs, roadmap structure), re-loading it adds zero behavioral signal and pays the token cost. The rehydration experiment (42.2-26) is therefore cancelled — the answer is known without running it.\r\n\r\n**Canonical snapshot contract going forward:**\r\n\r\n1. **Startup = one-shot full load.** `gad startup` or `gad snapshot` runs ONCE at session start. All static + active info loaded together (~6-7k tokens). This is the only guaranteed full rehydration.\r\n\r\n2. **Mid-session = active-only re-pulls.** When the agent genuinely needs fresh state (after a phase transition, after killing tasks, after writing decisions), run `gad snapshot --mode=active`. Active mode emits ONLY STATE.xml (next-action), ROADMAP (current sprint phases), and TASKS (open sprint). Skips: DECISIONS, file refs, CONVENTIONS, EQUIPPED SKILLS catalog, DOCS-MAP. These are static — already in the agent's working memory from session start.\r\n\r\n3. **Snapshot is scoped by session.** The operator's framing: \"if info has already been given in the session, then we know not to give any redundant info in the snapshot and not waste context.\" Active mode is the first implementation of this scope — a per-call choice between \"I need the changing stuff\" (active) and \"I just started this session\" (full). Future refinements could track emitted sections in a per-session state file and auto-dedupe, but active mode is the minimum viable cut.\r\n\r\n4. **Never auto-rehydrate after auto-compact.** The previous CLAUDE.md instruction \"Run `gad snapshot --projectid <id>` immediately to re-hydrate\" is obsolete for mid-session re-entries. The agent should trust its working memory post-compact and only fetch delta info on-demand. A full rehydration is appropriate only when the agent genuinely lost state (e.g. fresh session), not as a reflexive per-compact ritual.",
@@ -9162,9 +9168,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "42.2-03",
     "phaseId": "42.2",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "skill",
     "goal": "Rename `skills/gad-quick-skill/` â†’ `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched â€” decision gad-168.",
     "keywords": [
@@ -9209,9 +9215,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "42.2-06",
     "phaseId": "42.2",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "skill",
     "goal": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance. Output contract updated by decision gad-191: the skill writes a self-contained bundle at `.planning/proto-skills/&lt;slug&gt;/` with SKILL.md (`status: proto`, `workflow: ./workflow.md`), sibling `workflow.md`, PROVENANCE.md, and optionally CANDIDATE.md — not a flat SKILL.md.",
     "keywords": [
@@ -9219,7 +9225,8 @@ export const ALL_TASKS: TaskRecord[] = [
       "create-proto-skill",
       "batching",
       "checkpoint",
-      "evolution"
+      "evolution",
+      "classifier"
     ],
     "depends": []
   },
@@ -9324,9 +9331,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "42.2-13",
     "phaseId": "42.2",
-    "status": "blocked",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "create-proto-skill",
     "type": "eval",
     "goal": "Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. Then `gad evolution install` into the Claude runtime, exercise the proto-skill on a task in phase 44.5, capture feedback in VALIDATION.md, and either `gad evolution promote` or `gad evolution discard` based on the test run.",
     "keywords": [
@@ -9334,7 +9341,8 @@ export const ALL_TASKS: TaskRecord[] = [
       "pipeline",
       "proof",
       "proto-skill",
-      "phase-44.5"
+      "phase-44.5",
+      "first-real-evolution"
     ],
     "depends": []
   },
@@ -9721,6 +9729,150 @@ export const ALL_TASKS: TaskRecord[] = [
       "codex",
       "bug-fix",
       "test-hardening"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-37",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Fix three real defects in `gad evolution promote` (bin/gad.cjs evolutionPromote) surfaced by the first real end-to-end run of the pipeline in 42.2-13: (1) final skill directory uses the candidate slug instead of the `name:` frontmatter value chosen by the drafter, (2) canonical workflow file inherits the same ugly slug-based filename, (3) `status: proto` is not flipped to `status: stable` during promotion despite promotion being the proto→canonical transition.",
+    "keywords": [
+      "cli",
+      "evolution",
+      "promote",
+      "bug-fix",
+      "frontmatter",
+      "status-flip",
+      "real-installer"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-38",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Interactive onboard flow for bin/install.js — a third install location option (\"new GAD project folder\") that prompts for a folder path (default `~/Desktop/my-gad-project/`, created if missing), treats that folder as the local install target for runtime skills, then invokes `gad projects init --path &lt;folder&gt;` to scaffold `.planning/` with the canonical XML ledgers. Addresses the operator-raised gap from 2026-04-15: `bin/install.js` by itself installs a runtime (skills + agents + hooks + settings) but leaves the consumer staring at an empty folder with no `.planning/` state — two commands are required to get a working project, but a new user only knows about the exe. The onboard flow wraps both primitives into one double-clickable path. Non-interference contract: local install into the chosen folder never touches global state; `gad projects init` only writes under the chosen path; existing non-empty folders trigger a warning before proceeding. Explicit non-goal: do NOT bundle Claude Code / Codex CLIs themselves — detect-and-report only. Supporting flag `--new-project &lt;path&gt;` gives a scriptable path parallel to the interactive choice. Umbrella: task 44-28.",
+    "keywords": [
+      "installer",
+      "onboard",
+      "interactive",
+      "project-init",
+      "double-clickable",
+      "44-28",
+      "self-contained"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-39",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Fill two gaps in the onboard flow surfaced by operator inspection: (a) no CLAUDE.md or AGENTS.md is written at the project root so a fresh Claude Code / Codex session has no boot contract telling it to run `gad startup` first; (b) `bin/install.js` hook install path silently no-ops in a local checkout because it looks for `sdk/hooks/dist` which does not exist in a clone, leaving settings.json wired to .js hook paths that do not resolve. Fix both and add append/overwrite/skip handling so re-runs against existing CLAUDE.md/AGENTS.md files don't clobber user content.",
+    "keywords": [
+      "installer",
+      "claude-md",
+      "agents-md",
+      "boot-contract",
+      "hooks",
+      "fallback",
+      "append-overwrite-skip"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-40",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "cli",
+    "goal": "Temporary skill install flow (`gad try &lt;skill&gt;`) — new CLI subcommand that stages an external skill into an ephemeral `.gad-try/&lt;skill&gt;/` sandbox, audits and consents to declared dependencies (binaries, pip/npm packages) before running, hands off to the user's coding agent via a copy-paste prompt, and supports `--cleanup` to tear down the sandbox + list dep removal commands. Designed to let operators trial external skills (like Graphify) inside a GAD project without polluting `~/.claude/skills/` or committing to a full install. See `.planning/notes/temp-skill-install-and-graphify-2026-04-15.md` for the full design.",
+    "keywords": [
+      "cli",
+      "try",
+      "sandbox",
+      "ephemeral",
+      "consent-gate",
+      "cleanup",
+      "graphify-trial-enabler"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-41",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "eval",
+    "goal": "Graphify trial via `gad try` against this repo's `.planning/ + skills/ + decisions/` tree. Capture `graph.json` + `graph.html` + `GRAPH_REPORT.md` output, produce a FINDINGS-2026-04-NN-graphify-trial.md documenting: node/edge counts, community structure, whether NL queries like \"what character is this project part of\" resolve against the graph, whether the graph shape is useful for the site's command+K / VCS / DB viewer surfaces. Blocks 42.2-42.",
+    "keywords": [
+      "eval",
+      "graphify",
+      "knowledge-graph",
+      "trial",
+      "findings"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-42",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Decision based on 42.2-41 findings: (A) vendor Graphify as a `skills/gad-graphify/` keeper and accept the Python runtime dep, or (B) build a GAD-native graph extractor in Node that consumes planning XML + markdown + JSON and emits the same `graph.json` shape so third-party tools (Obsidian, Neo4j, Gephi) still work. Produces a decision doc (new gad-NNN entry in DECISIONS.xml).",
+    "keywords": [
+      "decision",
+      "graphify",
+      "vendor-vs-native",
+      "tradeoff"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-43",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). Wire the site's existing command+K global search to layer graph results alongside full-text: \"related to X\", \"decisions citing X\", \"skills depending on X\". No LLM at query time — pure graph traversal. Depends on 42.2-42 outcome.",
+    "keywords": [
+      "site",
+      "command-k",
+      "planning-graph",
+      "search",
+      "traversal"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-44",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. Every node gets a cid derived from its id so the modal footer CRUD can target nodes. Integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. Depends on 42.2-43.",
+    "keywords": [
+      "site",
+      "vcs",
+      "graph-panel",
+      "react-flow",
+      "cids",
+      "visual-context-system"
     ],
     "depends": []
   },
@@ -11108,6 +11260,26 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": []
   },
   {
+    "id": "44-37",
+    "phaseId": "44",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "meta",
+    "goal": "Retrospective: Visual Context landing band — intro landmarks vs inner showcase scope (2026-04-15). Capture where confusion lived (agent prioritized showcase/meteor demos; user wanted intro kicker/title/body as separate Identified targets for DevPanel), resolution (split `LandingVisualContextIntroKicker`, `IntroTitle`, `IntroBody` under outer `LandingVisualContextShowcase`), and mitigations for future UI work (name scope explicitly; atomic Identified per DevPanel target; verify with grep before closing).",
+    "keywords": [
+      "retrospective",
+      "visual-context",
+      "identified",
+      "landmarks",
+      "intro",
+      "dev-panel",
+      "44-15",
+      "44-16"
+    ],
+    "depends": []
+  },
+  {
     "id": "44.5-01",
     "phaseId": "44.5",
     "status": "planned",
@@ -11753,6 +11925,13 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-196",
+    "title": "Home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming",
+    "kind": "decision",
+    "href": "/decisions#gad-196",
+    "body": "gad-196 home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming the home-page section `components/landing/lineage/` used `sitesection` `cid=\"lineage-site-section\"` while the **product meaning** had shifted to a visual-context handoff loop (site → panel → speech → clipboard → coding agent → ship → repeat). \"lineage\" remained accurate only for the **gsd upstream reference** (link + youtube segment), not for the primary ux story. that mismatch persisted across re"
+  },
   {
     "id": "gad-195",
     "title": "Snapshot rehydration is wasteful — session-scoped static/active split is the canonical contract",
@@ -14558,7 +14737,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: e",
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-06",
-    "body": "42.2-06 implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. at startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{provenance.md,skill.md}` pair, draft each pending candidate in turn. for each: write provenance.md first as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then skill.md in dot-agent format. on crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the provenance+no-skill state. also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance. output contract updated by decision gad-191: the skill writes a self-contained bundle at `.planning/proto-skills/&lt;slug&gt;/` with skill.md (`status: proto`, `workflow: ./workflow.md`), sibling `workflow.md`, provenance.md, and optionally candidate.md — not a flat skill.md. skill create-proto-skill batching checkpoint evolution"
+    "body": "42.2-06 implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. at startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{provenance.md,skill.md}` pair, draft each pending candidate in turn. for each: write provenance.md first as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then skill.md in dot-agent format. on crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the provenance+no-skill state. also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance. output contract updated by decision gad-191: the skill writes a self-contained bundle at `.planning/proto-skills/&lt;slug&gt;/` with skill.md (`status: proto`, `workflow: ./workflow.md`), sibling `workflow.md`, provenance.md, and optionally candidate.md — not a flat skill.md. skill create-proto-skill batching checkpoint evolution classifier"
   },
   {
     "id": "42.2-07",
@@ -14607,7 +14786,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md",
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-13",
-    "body": "42.2-13 promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/candidate.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. then `gad evolution install` into the claude runtime, exercise the proto-skill on a task in phase 44.5, capture feedback in validation.md, and either `gad evolution promote` or `gad evolution discard` based on the test run. eval pipeline proof proto-skill phase-44.5"
+    "body": "42.2-13 promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/candidate.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. then `gad evolution install` into the claude runtime, exercise the proto-skill on a task in phase 44.5, capture feedback in validation.md, and either `gad evolution promote` or `gad evolution discard` based on the test run. eval pipeline proof proto-skill phase-44.5 first-real-evolution"
   },
   {
     "id": "42.2-14",
@@ -14769,6 +14948,62 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-36",
     "body": "42.2-36 extend flow c of the consumer-init-install test across more runtimes than just `--claude` to catch per-runtime install regressions, and tighten the test to make install failures hard fails instead of silent skips. eval integration install runtimes codex bug-fix test-hardening"
+  },
+  {
+    "id": "42.2-37",
+    "title": "Fix three real defects in `gad evolution promote` (bin/gad.cjs evolutionPromote) surfaced by the first real end-to-end r",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-37",
+    "body": "42.2-37 fix three real defects in `gad evolution promote` (bin/gad.cjs evolutionpromote) surfaced by the first real end-to-end run of the pipeline in 42.2-13: (1) final skill directory uses the candidate slug instead of the `name:` frontmatter value chosen by the drafter, (2) canonical workflow file inherits the same ugly slug-based filename, (3) `status: proto` is not flipped to `status: stable` during promotion despite promotion being the proto→canonical transition. cli evolution promote bug-fix frontmatter status-flip real-installer"
+  },
+  {
+    "id": "42.2-38",
+    "title": "Interactive onboard flow for bin/install.js — a third install location option (\"new GAD project folder\") that prompts fo",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-38",
+    "body": "42.2-38 interactive onboard flow for bin/install.js — a third install location option (\"new gad project folder\") that prompts for a folder path (default `~/desktop/my-gad-project/`, created if missing), treats that folder as the local install target for runtime skills, then invokes `gad projects init --path &lt;folder&gt;` to scaffold `.planning/` with the canonical xml ledgers. addresses the operator-raised gap from 2026-04-15: `bin/install.js` by itself installs a runtime (skills + agents + hooks + settings) but leaves the consumer staring at an empty folder with no `.planning/` state — two commands are required to get a working project, but a new user only knows about the exe. the onboard flow wraps both primitives into one double-clickable path. non-interference contract: local install into the chosen folder never touches global state; `gad projects init` only writes under the chosen path; existing non-empty folders trigger a warning before proceeding. explicit non-goal: do not bundle claude code / codex clis themselves — detect-and-report only. supporting flag `--new-project &lt;path&gt;` gives a scriptable path parallel to the interactive choice. umbrella: task 44-28. installer onboard interactive project-init double-clickable 44-28 self-contained"
+  },
+  {
+    "id": "42.2-39",
+    "title": "Fill two gaps in the onboard flow surfaced by operator inspection: (a) no CLAUDE.md or AGENTS.md is written at the proje",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-39",
+    "body": "42.2-39 fill two gaps in the onboard flow surfaced by operator inspection: (a) no claude.md or agents.md is written at the project root so a fresh claude code / codex session has no boot contract telling it to run `gad startup` first; (b) `bin/install.js` hook install path silently no-ops in a local checkout because it looks for `sdk/hooks/dist` which does not exist in a clone, leaving settings.json wired to .js hook paths that do not resolve. fix both and add append/overwrite/skip handling so re-runs against existing claude.md/agents.md files don't clobber user content. installer claude-md agents-md boot-contract hooks fallback append-overwrite-skip"
+  },
+  {
+    "id": "42.2-40",
+    "title": "Temporary skill install flow (`gad try &lt;skill&gt;`) — new CLI subcommand that stages an external skill into an epheme",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-40",
+    "body": "42.2-40 temporary skill install flow (`gad try &lt;skill&gt;`) — new cli subcommand that stages an external skill into an ephemeral `.gad-try/&lt;skill&gt;/` sandbox, audits and consents to declared dependencies (binaries, pip/npm packages) before running, hands off to the user's coding agent via a copy-paste prompt, and supports `--cleanup` to tear down the sandbox + list dep removal commands. designed to let operators trial external skills (like graphify) inside a gad project without polluting `~/.claude/skills/` or committing to a full install. see `.planning/notes/temp-skill-install-and-graphify-2026-04-15.md` for the full design. cli try sandbox ephemeral consent-gate cleanup graphify-trial-enabler"
+  },
+  {
+    "id": "42.2-41",
+    "title": "Graphify trial via `gad try` against this repo's `.planning/ + skills/ + decisions/` tree. Capture `graph.json` + `graph",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-41",
+    "body": "42.2-41 graphify trial via `gad try` against this repo's `.planning/ + skills/ + decisions/` tree. capture `graph.json` + `graph.html` + `graph_report.md` output, produce a findings-2026-04-nn-graphify-trial.md documenting: node/edge counts, community structure, whether nl queries like \"what character is this project part of\" resolve against the graph, whether the graph shape is useful for the site's command+k / vcs / db viewer surfaces. blocks 42.2-42. eval graphify knowledge-graph trial findings"
+  },
+  {
+    "id": "42.2-42",
+    "title": "Decision based on 42.2-41 findings: (A) vendor Graphify as a `skills/gad-graphify/` keeper and accept the Python runtime",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-42",
+    "body": "42.2-42 decision based on 42.2-41 findings: (a) vendor graphify as a `skills/gad-graphify/` keeper and accept the python runtime dep, or (b) build a gad-native graph extractor in node that consumes planning xml + markdown + json and emits the same `graph.json` shape so third-party tools (obsidian, neo4j, gephi) still work. produces a decision doc (new gad-nnn entry in decisions.xml). decision graphify vendor-vs-native tradeoff"
+  },
+  {
+    "id": "42.2-43",
+    "title": "Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-43",
+    "body": "42.2-43 site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). wire the site's existing command+k global search to layer graph results alongside full-text: \"related to x\", \"decisions citing x\", \"skills depending on x\". no llm at query time — pure graph traversal. depends on 42.2-42 outcome. site command-k planning-graph search traversal"
+  },
+  {
+    "id": "42.2-44",
+    "title": "New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the proj",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-44",
+    "body": "42.2-44 new visual context system primitive `&lt;visualcontextgraphpanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. every node gets a cid derived from its id so the modal footer crud can target nodes. integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. depends on 42.2-43. site vcs graph-panel react-flow cids visual-context-system"
   },
   {
     "id": "42.3-01",
@@ -15329,6 +15564,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#44-26",
     "body": "44-26 document the real speech-driven visual editing workflow as a reusable methodology: loose update/delete prompts, landmark-first targeting (`cid` as source of truth), cleanup boundaries, and the mermaid-leak incident as a concrete failure mode for cross-route renderer side effects. human-workflow speech-input landmarks cleanup-policy mermaid error-log"
+  },
+  {
+    "id": "44-37",
+    "title": "Retrospective: Visual Context landing band — intro landmarks vs inner showcase scope (2026-04-15). Capture where confusi",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-37",
+    "body": "44-37 retrospective: visual context landing band — intro landmarks vs inner showcase scope (2026-04-15). capture where confusion lived (agent prioritized showcase/meteor demos; user wanted intro kicker/title/body as separate identified targets for devpanel), resolution (split `landingvisualcontextintrokicker`, `introtitle`, `introbody` under outer `landingvisualcontextshowcase`), and mitigations for future ui work (name scope explicitly; atomic identified per devpanel target; verify with grep before closing). retrospective visual-context identified landmarks intro dev-panel 44-15 44-16"
   },
   {
     "id": "44.5-01",
@@ -16729,6 +16971,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/portfolio-sync",
     "body": "portfolio-sync portfolio-sync keep the public-facing gad site and generated publishing artifacts in sync with the framework as it evolves. trigger this skill whenever an eval run finishes, a new finding is written, a skill or agent changes, requirements or decisions move, or planning/docs outputs need regeneration."
+  },
+  {
+    "id": "scaffold-visual-context-surface",
+    "title": "scaffold-visual-context-surface",
+    "kind": "skill",
+    "href": "/skills/scaffold-visual-context-surface",
+    "body": "scaffold-visual-context-surface scaffold-visual-context-surface >-"
   },
   {
     "id": "self-eval",

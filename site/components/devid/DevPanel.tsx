@@ -51,7 +51,7 @@ type DevPanelProps =
       searchHint?: string;
     };
 
-/** Compact depth pager + hover card (same Radix pattern as planning token KPIs). */
+/** Compact depth pager + Radix HoverCard (open/close delays match planning KPI tiles). */
 function DevPanelDepthPager(props: {
   currentDepth: number;
   visibleCount: number;
