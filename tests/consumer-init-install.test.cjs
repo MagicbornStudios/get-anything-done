@@ -178,75 +178,90 @@ describe('Flow B — gad projects init (consumer scaffold)', () => {
 });
 
 // ─── Flow C: runtime install into consumer ──────────────────────────────────
+//
+// Parameterized over the runtimes that share the simple `<config-dir>/skills/`
+// layout. gemini / opencode / copilot / antigravity have their own quirks and
+// their own dedicated tests — they're intentionally out of scope here. This
+// flow's job is to catch regressions in the "common" install path across the
+// majority of supported runtimes in one sweep.
 
-describe('Flow C — gad install all --claude --local --config-dir <tmp>', () => {
-  let installRoot;
+const SIMPLE_SHAPE_RUNTIMES = ['claude', 'codex', 'cursor', 'windsurf', 'augment'];
+
+describe('Flow C — gad install all --<runtime> --config-dir <tmp>', () => {
+  const installRoots = new Map();
 
   before(() => {
-    installRoot = createTempDir('gad-install-target-');
+    for (const rt of SIMPLE_SHAPE_RUNTIMES) {
+      installRoots.set(rt, createTempDir(`gad-install-${rt}-`));
+    }
   });
 
   after(() => {
-    cleanup(installRoot);
+    for (const root of installRoots.values()) cleanup(root);
   });
 
-  test('installs gad-* skills into claude runtime dir with valid SKILL.md', () => {
-    // bin/install.js is heavy; use --config-dir to point at the tmp root,
-    // not the real ~/.claude/. --local puts things under the cwd; we use
-    // --config-dir instead for full sandbox.
-    const result = runGadCli(
-      ['install', 'all', '--claude', '--config-dir', installRoot],
-      REPO_ROOT,
-    );
-    if (!result.success) {
-      // eslint-disable-next-line no-console
-      console.warn(`[skip] install all failed in test env: ${result.error?.slice(0, 200)}`);
-      return;
-    }
-
-    // Expected layout: <installRoot>/skills/gad-*/SKILL.md (or <installRoot>/.claude/skills/...)
-    // Probe both common shapes.
-    const candidates = [
-      path.join(installRoot, 'skills'),
-      path.join(installRoot, '.claude', 'skills'),
-      path.join(installRoot, 'claude', 'skills'),
-    ];
-    let skillsDir = null;
-    for (const c of candidates) {
-      if (fs.existsSync(c)) {
-        skillsDir = c;
-        break;
-      }
-    }
-    if (!skillsDir) {
-      // Make this a HARD failure, not a skip — if install reports success
-      // but we can't find skills, that's a real regression we should catch.
-      const entries = fs.readdirSync(installRoot);
-      const outTail = (result.output || '').split('\n').slice(-10).join('\n');
-      assert.fail(
-        `could not locate installed skills dir under ${installRoot}\n` +
-        `  entries at root: ${JSON.stringify(entries)}\n` +
-        `  install output tail:\n${outTail}`
+  for (const runtime of SIMPLE_SHAPE_RUNTIMES) {
+    test(`installs gad-* skills into ${runtime} runtime dir with valid SKILL.md`, () => {
+      const installRoot = installRoots.get(runtime);
+      const result = runGadCli(
+        ['install', 'all', `--${runtime}`, '--config-dir', installRoot],
+        REPO_ROOT,
       );
-    }
+      assert.ok(
+        result.success,
+        `install all --${runtime} failed: ${(result.error || '').slice(0, 400)}`,
+      );
 
-    const gadSkills = fs
-      .readdirSync(skillsDir, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && e.name.startsWith('gad-'))
-      .map((e) => e.name);
+      // All simple-shape runtimes write skills to <config-dir>/skills/.
+      // Probe a couple of fallback shapes just in case a runtime diverges
+      // in the future — a hard failure points at a real regression.
+      const candidates = [
+        path.join(installRoot, 'skills'),
+        path.join(installRoot, `.${runtime}`, 'skills'),
+        path.join(installRoot, runtime, 'skills'),
+      ];
+      let skillsDir = null;
+      for (const c of candidates) {
+        if (fs.existsSync(c)) {
+          skillsDir = c;
+          break;
+        }
+      }
+      if (!skillsDir) {
+        const entries = fs.readdirSync(installRoot);
+        const outTail = (result.output || '').split('\n').slice(-10).join('\n');
+        assert.fail(
+          `could not locate installed skills dir for ${runtime} under ${installRoot}\n` +
+            `  entries at root: ${JSON.stringify(entries)}\n` +
+            `  install output tail:\n${outTail}`,
+        );
+      }
 
-    assert.ok(gadSkills.length > 0, `expected at least one gad-* skill under ${skillsDir}`);
+      const gadSkills = fs
+        .readdirSync(skillsDir, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && e.name.startsWith('gad-'))
+        .map((e) => e.name);
 
-    // Pick the first 3 and validate their SKILL.md frontmatter.
-    const sample = gadSkills.slice(0, 3);
-    for (const s of sample) {
-      const skillFile = path.join(skillsDir, s, 'SKILL.md');
-      assert.ok(fs.existsSync(skillFile), `${s}/SKILL.md exists`);
-      const content = fs.readFileSync(skillFile, 'utf8');
-      const fmMatch = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
-      assert.ok(fmMatch, `${s} has frontmatter block`);
-      assert.match(fmMatch[1], /^name:\s*.+/m, `${s} frontmatter has name:`);
-      assert.match(fmMatch[1], /^description:\s*/m, `${s} frontmatter has description:`);
-    }
-  });
+      assert.ok(
+        gadSkills.length > 0,
+        `expected at least one gad-* skill under ${skillsDir} for ${runtime}`,
+      );
+
+      // Sample the first 3 and validate their SKILL.md frontmatter.
+      const sample = gadSkills.slice(0, 3);
+      for (const s of sample) {
+        const skillFile = path.join(skillsDir, s, 'SKILL.md');
+        assert.ok(fs.existsSync(skillFile), `${runtime}: ${s}/SKILL.md exists`);
+        const content = fs.readFileSync(skillFile, 'utf8');
+        const fmMatch = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+        assert.ok(fmMatch, `${runtime}: ${s} has frontmatter block`);
+        assert.match(fmMatch[1], /^name:\s*.+/m, `${runtime}: ${s} frontmatter has name:`);
+        assert.match(
+          fmMatch[1],
+          /^description:\s*/m,
+          `${runtime}: ${s} frontmatter has description:`,
+        );
+      }
+    });
+  }
 });

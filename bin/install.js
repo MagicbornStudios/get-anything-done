@@ -2664,7 +2664,7 @@ function installCodexConfig(targetDir, agentsSrc) {
     let content = fs.readFileSync(path.join(agentsSrc, file), 'utf8');
     // Replace full .claude/get-anything-done prefix so path resolves to codex GAD install
     content = content.replace(/~\/\.claude\/get-anything-done\//g, codexGadPath);
-    content = content.replace(/\$HOME\/\.claude\/get-anything-done\//g, codexGsdPath);
+    content = content.replace(/\$HOME\/\.claude\/get-anything-done\//g, codexGadPath);
     const { frontmatter } = extractFrontmatterAndBody(content);
     const name = extractFrontmatterField(frontmatter, 'name') || file.replace('.md', '');
     const description = extractFrontmatterField(frontmatter, 'description') || '';
@@ -5011,8 +5011,18 @@ function install(isGlobal, runtime = 'claude') {
     }
   }
 
-  // Copy agents to agents directory
-  const agentsSrc = path.join(sdkRoot, 'agents');
+  // Copy agents to agents directory.
+  // Prefer sdk/agents (SDK packaged copy), fall back to repo-root agents/
+  // for local checkouts. Same shape as canonicalSkillsSrc above; surfaced
+  // by task 42.2-35's runtime sweep when `gad install all --codex` tripped
+  // on ENOENT against sdk/agents in a clean clone.
+  let agentsSrc = path.join(sdkRoot, 'agents');
+  if (!fs.existsSync(agentsSrc)) {
+    const repoRootAgents = path.join(src, 'agents');
+    if (fs.existsSync(repoRootAgents)) {
+      agentsSrc = repoRootAgents;
+    }
+  }
   if (fs.existsSync(agentsSrc)) {
     const agentsDest = path.join(targetDir, 'agents');
     fs.mkdirSync(agentsDest, { recursive: true });
@@ -5207,7 +5217,7 @@ function install(isGlobal, runtime = 'claude') {
     }
   }
 
-  if (isCodex) {
+  if (isCodex && fs.existsSync(agentsSrc)) {
     // Generate Codex config.toml and per-agent .toml files
     const agentCount = installCodexConfig(targetDir, agentsSrc);
     console.log(`  ${green}✓${reset} Generated config.toml with ${agentCount} agent roles`);
