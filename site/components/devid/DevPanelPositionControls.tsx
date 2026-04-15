@@ -18,7 +18,7 @@ export function DevPanelPositionControls({
   return (
     <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-1">
       <div className="flex items-center gap-1">
-        <DevChromeHoverHint body={<p>Pin the Visual Context Panel strip to the top edge of this section.</p>}>
+        <DevChromeHoverHint dockCorner={corner} body={<p>Pin the Visual Context Panel strip to the top edge of this section.</p>}>
           <Button
             type="button"
             variant={edge === "top" ? "secondary" : "ghost"}
@@ -29,7 +29,7 @@ export function DevPanelPositionControls({
             <ArrowUp size={10} />
           </Button>
         </DevChromeHoverHint>
-        <DevChromeHoverHint body={<p>Pin the strip to the bottom edge of this section.</p>}>
+        <DevChromeHoverHint dockCorner={corner} body={<p>Pin the strip to the bottom edge of this section.</p>}>
           <Button
             type="button"
             variant={edge === "bottom" ? "secondary" : "ghost"}
@@ -42,7 +42,7 @@ export function DevPanelPositionControls({
         </DevChromeHoverHint>
       </div>
       <div className="flex items-center gap-1">
-        <DevChromeHoverHint body={<p>Dock the panel toward the left.</p>}>
+        <DevChromeHoverHint dockCorner={corner} body={<p>Dock the panel toward the left.</p>}>
           <Button
             type="button"
             variant={corner === "left" ? "secondary" : "ghost"}
@@ -53,7 +53,7 @@ export function DevPanelPositionControls({
             <ArrowLeft size={10} />
           </Button>
         </DevChromeHoverHint>
-        <DevChromeHoverHint body={<p>Dock the panel toward the right.</p>}>
+        <DevChromeHoverHint dockCorner={corner} body={<p>Dock the panel toward the right.</p>}>
           <Button
             type="button"
             variant={corner === "right" ? "secondary" : "ghost"}

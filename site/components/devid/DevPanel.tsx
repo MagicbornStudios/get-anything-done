@@ -31,7 +31,6 @@ import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
 import { Button } from "@/components/ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import {
   collectScopedEntries,
   escapeCidSelector,
@@ -69,8 +68,9 @@ type DevPanelProps =
       searchHint?: string;
     };
 
-/** Compact depth pager + Radix HoverCard (open/close delays match planning KPI tiles). */
+/** Depth pager — hint card docks beside the panel (`dockCorner`) like other VC chrome. */
 function DevPanelDepthPager(props: {
+  dockCorner: "left" | "right";
   currentDepth: number;
   visibleCount: number;
   onPrev: () => void;
@@ -81,6 +81,7 @@ function DevPanelDepthPager(props: {
   maxScanDepth?: number;
 }) {
   const {
+    dockCorner,
     currentDepth,
     visibleCount,
     onPrev,
@@ -91,60 +92,57 @@ function DevPanelDepthPager(props: {
   } = props;
 
   return (
-    <HoverCard openDelay={100} closeDelay={80}>
-      <HoverCardTrigger asChild>
-        <div
-          className="ml-2 flex cursor-help items-center gap-1 rounded-sm px-0.5 py-0.5 ring-offset-background hover:bg-muted/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          tabIndex={0}
-          aria-label={`Landmarks at nesting depth ${currentDepth}, ${visibleCount} in this slice`}
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-5"
-            disabled={prevDisabled}
-            onClick={onPrev}
-            aria-label="Shallower nesting depth"
-          >
-            <ChevronLeft size={10} />
-          </Button>
-          <span className="w-16 text-center tabular-nums">
-            d{currentDepth} - {visibleCount}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-5"
-            disabled={nextDisabled}
-            onClick={onNext}
-            aria-label="Deeper nesting depth"
-          >
-            <ChevronRight size={10} />
-          </Button>
-        </div>
-      </HoverCardTrigger>
-      <HoverCardContent
-        side="top"
-        align="center"
-        sideOffset={8}
-        className="z-[120] w-64 max-w-[min(18rem,85vw)] border-border/70 p-3 text-[10px] leading-relaxed"
-      >
-        <p className="font-medium text-foreground">Depth {currentDepth}</p>
-        <p className="mt-1.5 text-muted-foreground">
-          {visibleCount} landmark{visibleCount === 1 ? "" : "s"} in this slice. Chevrons step toward the
-          section shell (back) or into nested{" "}
-          <code className="rounded bg-muted/80 px-0.5 font-mono text-[9px]">Identified</code> blocks
-          (forward).
-        </p>
-        {maxScanDepth != null ? (
-          <p className="mt-2 border-t border-border/50 pt-2 text-muted-foreground">
-            Section scan window: depth ≤ {maxScanDepth}.
+    <DevChromeHoverHint
+      dockCorner={dockCorner}
+      openDelay={100}
+      closeDelay={80}
+      contentClassName="p-3 [&_p+p]:mt-1.5"
+      body={
+        <>
+          <p className="font-medium text-foreground">Depth {currentDepth}</p>
+          <p className="text-muted-foreground">
+            {visibleCount} landmark{visibleCount === 1 ? "" : "s"} in this slice. Chevrons step toward the section
+            shell (back) or into nested{" "}
+            <code className="rounded bg-muted/80 px-0.5 font-mono text-[9px]">Identified</code> blocks (forward).
           </p>
-        ) : null}
-      </HoverCardContent>
-    </HoverCard>
+          {maxScanDepth != null ? (
+            <p className="border-t border-border/50 pt-2 text-muted-foreground">Section scan window: depth ≤ {maxScanDepth}.</p>
+          ) : null}
+        </>
+      }
+    >
+      <div
+        className="ml-2 flex cursor-help items-center gap-1 rounded-sm px-0.5 py-0.5 ring-offset-background hover:bg-muted/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        tabIndex={0}
+        aria-label={`Landmarks at nesting depth ${currentDepth}, ${visibleCount} in this slice`}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-5"
+          disabled={prevDisabled}
+          onClick={onPrev}
+          aria-label="Shallower nesting depth"
+        >
+          <ChevronLeft size={10} />
+        </Button>
+        <span className="w-16 text-center tabular-nums">
+          d{currentDepth} - {visibleCount}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-5"
+          disabled={nextDisabled}
+          onClick={onNext}
+          aria-label="Deeper nesting depth"
+        >
+          <ChevronRight size={10} />
+        </Button>
+      </div>
+    </DevChromeHoverHint>
   );
 }
 
@@ -582,6 +580,7 @@ export function DevPanel(props: DevPanelProps) {
                         pathname={pathname}
                         promptVerbosity={promptVerbosity}
                         onAgentPrompt={(e) => setPromptEntry(e)}
+                        dockCorner={sectionCorner}
                         externalDictation={{
                           listening: listeningChrome,
                           interim: interimChrome,
@@ -595,14 +594,14 @@ export function DevPanel(props: DevPanelProps) {
                     Section scan {sectionEntries.length} items
                   </p>
                 </div>
-                <DevChromeHoverHint body={VC_HOVER_FRAMEWORK}>
+                <DevChromeHoverHint dockCorner={sectionCorner} body={VC_HOVER_FRAMEWORK}>
                   <p className="shrink-0 max-w-[5.5rem] cursor-help text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85">
                     {DEV_PANEL_BRAND_MARK}
                   </p>
                 </DevChromeHoverHint>
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-[10px]">
-                <DevChromeHoverHint body={VC_HOVER_UPDATE}>
+                <DevChromeHoverHint dockCorner={sectionCorner} body={VC_HOVER_UPDATE}>
                   <Button
                     type="button"
                     variant="outline"
@@ -621,7 +620,7 @@ export function DevPanel(props: DevPanelProps) {
                     Update
                   </Button>
                 </DevChromeHoverHint>
-                <DevChromeHoverHint body={VC_HOVER_DELETE}>
+                <DevChromeHoverHint dockCorner={sectionCorner} body={VC_HOVER_DELETE}>
                   <Button
                     type="button"
                     variant="outline"
@@ -634,7 +633,7 @@ export function DevPanel(props: DevPanelProps) {
                     Delete
                   </Button>
                 </DevChromeHoverHint>
-                <DevChromeHoverHint body={vcVerbosityHoverBody(promptVerbosity === "full")}>
+                <DevChromeHoverHint dockCorner={sectionCorner} body={vcVerbosityHoverBody(promptVerbosity === "full")}>
                   <Button
                     type="button"
                     variant="ghost"
@@ -656,6 +655,7 @@ export function DevPanel(props: DevPanelProps) {
                   </p>
                 </div>
                 <DevPanelDepthPager
+                  dockCorner={sectionCorner}
                   currentDepth={sectionCurrentDepth}
                   visibleCount={sectionVisibleEntries.length}
                   onPrev={() => setSectionDepthIndex((v) => Math.max(0, v - 1))}
@@ -671,6 +671,7 @@ export function DevPanel(props: DevPanelProps) {
                 {sectionVisibleEntries.map((entry) => (
                   <DevPanelListItem
                     key={entry.cid}
+                    dockCorner={sectionCorner}
                     entry={entry}
                     active={activeTargetCid === entry.cid}
                     onSelect={() => {
@@ -754,6 +755,7 @@ export function DevPanel(props: DevPanelProps) {
                       promptVerbosity={promptVerbosity}
                       onAgentPrompt={(e) => setPromptEntry(e)}
                       size="band"
+                      dockCorner={corner}
                       externalDictation={{
                         listening: listeningChrome,
                         interim: interimChrome,
@@ -767,14 +769,14 @@ export function DevPanel(props: DevPanelProps) {
                   {bandLabel} · {bandEntries.length} items
                 </p>
               </div>
-              <DevChromeHoverHint body={VC_HOVER_FRAMEWORK}>
+              <DevChromeHoverHint dockCorner={corner} body={VC_HOVER_FRAMEWORK}>
                 <p className="shrink-0 max-w-[5.5rem] cursor-help text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85">
                   {DEV_PANEL_BRAND_MARK}
                 </p>
               </DevChromeHoverHint>
             </div>
             <div className="mt-1 flex items-center gap-1.5 text-[10px]">
-              <DevChromeHoverHint body={VC_HOVER_UPDATE}>
+              <DevChromeHoverHint dockCorner={corner} body={VC_HOVER_UPDATE}>
                 <Button
                   type="button"
                   variant="outline"
@@ -792,7 +794,7 @@ export function DevPanel(props: DevPanelProps) {
                   Update
                 </Button>
               </DevChromeHoverHint>
-              <DevChromeHoverHint body={VC_HOVER_DELETE}>
+              <DevChromeHoverHint dockCorner={corner} body={VC_HOVER_DELETE}>
                 <Button
                   type="button"
                   variant="outline"
@@ -804,7 +806,7 @@ export function DevPanel(props: DevPanelProps) {
                   Delete
                 </Button>
               </DevChromeHoverHint>
-              <DevChromeHoverHint body={vcVerbosityHoverBody(promptVerbosity === "full")}>
+              <DevChromeHoverHint dockCorner={corner} body={vcVerbosityHoverBody(promptVerbosity === "full")}>
                 <Button
                   type="button"
                   variant="ghost"
@@ -826,6 +828,7 @@ export function DevPanel(props: DevPanelProps) {
                 </p>
               </div>
               <DevPanelDepthPager
+                dockCorner={corner}
                 currentDepth={bandCurrentDepth}
                 visibleCount={bandVisibleEntries.length}
                 onPrev={() => setDepthIndex((v) => Math.max(0, v - 1))}
@@ -838,6 +841,7 @@ export function DevPanel(props: DevPanelProps) {
               {bandVisibleEntries.map((entry) => (
                 <DevPanelListItem
                   key={entry.cid}
+                  dockCorner={corner}
                   entry={entry}
                   active={activeTargetCid === entry.cid}
                   onSelect={() => {

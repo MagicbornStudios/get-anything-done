@@ -14,6 +14,7 @@ import {
 import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import type { RegistryEntry } from "./SectionRegistry";
+import type { VcPanelCorner } from "@/components/devid/DevChromeHoverHint";
 
 type Size = "section" | "band" | "modal";
 
@@ -48,6 +49,8 @@ export function DevPanelHoverPromptActions({
   className,
   externalDictation,
   updateJustCopied = false,
+  /** When set (section/band VC panel), hover cards open beside the panel toward page center. */
+  dockCorner,
 }: {
   selfEntry: RegistryEntry;
   pathname: string;
@@ -59,6 +62,7 @@ export function DevPanelHoverPromptActions({
   externalDictation?: ExternalDictation;
   /** Parent-driven check on Mic (e.g. after external dictation finalize). */
   updateJustCopied?: boolean;
+  dockCorner?: VcPanelCorner;
 }) {
   const [copied, setCopied] = useState<"update" | "delete" | "cid" | null>(null);
   const is = icon[size];
@@ -120,6 +124,7 @@ export function DevPanelHoverPromptActions({
   return (
     <div className={cn("flex shrink-0 items-center gap-0.5", className)}>
       <DevChromeHoverHint
+        dockCorner={dockCorner}
         body={<p>Dictate additions to the update handoff for this chrome; copies a locked prefix plus your speech.</p>}
       >
         <Button
@@ -141,7 +146,10 @@ export function DevPanelHoverPromptActions({
           )}
         </Button>
       </DevChromeHoverHint>
-      <DevChromeHoverHint body={<p>Copy a delete handoff prompt for this chrome (route, label, source-search hints).</p>}>
+      <DevChromeHoverHint
+        dockCorner={dockCorner}
+        body={<p>Copy a delete handoff prompt for this chrome (route, label, source-search hints).</p>}
+      >
         <Button
           type="button"
           variant="secondary"
@@ -155,7 +163,10 @@ export function DevPanelHoverPromptActions({
           {copied === "delete" ? <Check size={is} /> : <Trash2 size={is} />}
         </Button>
       </DevChromeHoverHint>
-      <DevChromeHoverHint body={<p>Copy the greppable search token for this chrome ({selfEntry.searchHint ?? selfEntry.cid}).</p>}>
+      <DevChromeHoverHint
+        dockCorner={dockCorner}
+        body={<p>Copy the greppable search token for this chrome ({selfEntry.searchHint ?? selfEntry.cid}).</p>}
+      >
         <Button
           type="button"
           variant="secondary"
@@ -170,7 +181,7 @@ export function DevPanelHoverPromptActions({
         </Button>
       </DevChromeHoverHint>
       {onAgentPrompt ? (
-        <DevChromeHoverHint body={<p>Open the full agent handoff dialog for this chrome.</p>}>
+        <DevChromeHoverHint dockCorner={dockCorner} body={<p>Open the full agent handoff dialog for this chrome.</p>}>
           <Button
             type="button"
             variant="secondary"
@@ -186,7 +197,10 @@ export function DevPanelHoverPromptActions({
         </DevChromeHoverHint>
       ) : null}
       {showInlineInterim && listening && interim ? (
-        <DevChromeHoverHint body={<p className="max-h-40 overflow-y-auto font-mono text-[9px] text-emerald-100">{interim}</p>}>
+        <DevChromeHoverHint
+          dockCorner={dockCorner}
+          body={<p className="max-h-40 overflow-y-auto font-mono text-[9px] text-emerald-100">{interim}</p>}
+        >
           <span className="inline-block max-w-[10rem] cursor-help truncate font-mono text-[9px] text-emerald-400/95">
             {interim}
           </span>

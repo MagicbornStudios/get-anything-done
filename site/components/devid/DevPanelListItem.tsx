@@ -1,18 +1,20 @@
 "use client";
 
 import { Copy, MessageSquare } from "lucide-react";
-import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
+import { DevChromeHoverHint, type VcPanelCorner } from "@/components/devid/DevChromeHoverHint";
 import type { RegistryEntry } from "./SectionRegistry";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function DevPanelListItem({
+  dockCorner,
   entry,
   active,
   onSelect,
   onCopy,
   onPrompt,
 }: {
+  dockCorner: VcPanelCorner;
   entry: RegistryEntry;
   active: boolean;
   onSelect: () => void;
@@ -29,6 +31,7 @@ export function DevPanelListItem({
       )}
     >
       <DevChromeHoverHint
+        dockCorner={dockCorner}
         body={
           <p>
             {entry.label} — <span className="font-mono">{entry.cid}</span>. Click the row to select, locate on page, and
@@ -42,13 +45,14 @@ export function DevPanelListItem({
         </button>
       </DevChromeHoverHint>
       <DevChromeHoverHint
+        dockCorner={dockCorner}
         body={<p>Copy the source-search token for this row (cid / stableCid / as — greppable in repo).</p>}
       >
         <Button type="button" variant="ghost" size="icon" className="size-5" onClick={onCopy}>
           <Copy size={10} />
         </Button>
       </DevChromeHoverHint>
-      <DevChromeHoverHint body={<p>Open the agent handoff dialog for this landmark.</p>}>
+      <DevChromeHoverHint dockCorner={dockCorner} body={<p>Open the agent handoff dialog for this landmark.</p>}>
         <Button
           type="button"
           variant="ghost"
