@@ -10,6 +10,9 @@ import { absolutePageUrl } from "./absolutePageUrl";
 import { collectScopedEntries, escapeCidSelector, sortRegistryEntries } from "./devid-dom-scan";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import type { RegistryEntry } from "./SectionRegistry";
+import { Identified } from "./Identified";
+import { DevPanelHoverPromptActions } from "./DevPanelHoverPromptActions";
+import { DEV_MODAL_FOOTER_SELF_ENTRY } from "./dev-modal-footer-constants";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +32,7 @@ function locateInTree(cid: string, root: HTMLElement | null, flash: (c: string) 
 
 /**
  * Compact visual-context strip for portaled modals: scans `scanRootRef` for `[data-cid]`,
- * paginates, syncs with global `highlightCid` (Alt+click on Identified), copy / speech / agent dialog.
+ * paginates, syncs with global `highlightCid` (Alt+click on Identified; Alt+click again clears), copy / speech / agent dialog.
  */
 export function DevIdModalContextFooter({
   open,
@@ -38,6 +41,7 @@ export function DevIdModalContextFooter({
   onActiveEntryChange,
   promptVerbosity,
   onPromptVerbosityChange,
+  onChromeAgentPrompt,
 }: {
   open: boolean;
   scanRootRef: RefObject<HTMLElement | null>;
@@ -45,6 +49,8 @@ export function DevIdModalContextFooter({
   onActiveEntryChange?: (entry: RegistryEntry | null) => void;
   promptVerbosity?: PromptVerbosity;
   onPromptVerbosityChange?: (verbosity: PromptVerbosity) => void;
+  /** Optional: show Message in hover chrome for this strip (omit inside nested agent prompt dialog). */
+  onChromeAgentPrompt?: (entry: RegistryEntry) => void;
 }) {
   const pathname = usePathname() ?? "";
   const { enabled, highlightCid, setHighlightCid, flashComponent } = useDevId();
@@ -182,29 +188,57 @@ export function DevIdModalContextFooter({
   const modalLabel = "VC · modal";
 
   if (!enabled || !open) return null;
+
+  const chromeTitle = (
+    <div className="group/modalvc flex shrink-0 items-center gap-0.5">
+      <span className="shrink-0 font-semibold uppercase tracking-wide text-accent">{modalLabel}</span>
+      <DevPanelHoverPromptActions
+        selfEntry={DEV_MODAL_FOOTER_SELF_ENTRY}
+        pathname={pathname}
+        promptVerbosity={effectivePromptVerbosity}
+        onAgentPrompt={onChromeAgentPrompt}
+        size="modal"
+        className="pointer-events-none opacity-0 transition-opacity group-hover/modalvc:pointer-events-auto group-hover/modalvc:opacity-100"
+      />
+    </div>
+  );
+
   if (!entries.length) {
     return (
-      <div
+      <Identified
+        as="DevIdModalContextFooter"
+        cid="visual-context-modal-footer"
+        register={false}
         className={cn(
           "shrink-0 border-t border-border/60 bg-muted/20 px-2 py-1 text-[9px] leading-tight text-muted-foreground",
           className,
         )}
       >
-        {modalLabel} — no <code className="rounded bg-muted px-0.5 font-mono text-[8px]">data-cid</code> in this modal.
-      </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {chromeTitle}
+          <span>
+            — no <code className="rounded bg-muted px-0.5 font-mono text-[8px]">data-cid</code> in this modal.
+          </span>
+        </div>
+      </Identified>
     );
   }
 
   return (
-    <div
-        title="Alt+click a landmark to sync with the band panel · use arrows to change the active landmark"
-        className={cn(
-          "shrink-0 border-t border-border/60 bg-muted/25 px-2 py-1",
-          className,
-        )}
-      >
-        <div className="flex min-h-7 flex-nowrap items-center gap-x-1.5 gap-y-0 text-[9px] leading-none">
-          <span className="shrink-0 font-semibold uppercase tracking-wide text-accent">{modalLabel}</span>
+    <Identified
+      as="DevIdModalContextFooter"
+      cid="visual-context-modal-footer"
+      register={false}
+      className={cn(
+        "shrink-0 border-t border-border/60 bg-muted/25 px-2 py-1",
+        className,
+      )}
+    >
+        <div
+          title="Alt+click landmark toggles highlight · Esc clears · arrows change target"
+          className="flex min-h-7 flex-nowrap items-center gap-x-1.5 gap-y-0 text-[9px] leading-none"
+        >
+          {chromeTitle}
           <span className="shrink-0 tabular-nums text-muted-foreground">
             {idx + 1}/{entries.length}
           </span>
@@ -301,6 +335,6 @@ export function DevIdModalContextFooter({
             {interim}
           </p>
         ) : null}
-      </div>
+    </Identified>
   );
 }

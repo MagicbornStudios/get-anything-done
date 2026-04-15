@@ -19,7 +19,12 @@ import {
   DevIdAgentPromptDialog,
 } from "./DevIdAgentPromptDialog";
 import { buildDeletePrompt, buildUpdateLockedPrefix, type PromptVerbosity } from "./DevIdPromptTemplates";
-import { DEV_PANEL_LABEL, DEV_PANEL_STABLE_CID } from "./dev-panel-constants";
+import {
+  DEV_PANEL_LABEL,
+  DEV_PANEL_SELF_ENTRY,
+  DEV_PANEL_STABLE_CID,
+} from "./dev-panel-constants";
+import { DevPanelHoverPromptActions } from "./DevPanelHoverPromptActions";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
@@ -112,6 +117,7 @@ export function DevPanel(props: DevPanelProps) {
   const { enabled, setHighlightCid, flashComponent, highlightCid } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const highlightPrevRef = useRef<string | null>(null);
 
   const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
   const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | "cid" | null>(null);
@@ -311,6 +317,32 @@ export function DevPanel(props: DevPanelProps) {
     }
   }, [highlightCid, mode, bandEntries, sectionEntries, bandDepths, sectionDepths]);
 
+  /** When global highlight clears (Escape, or Alt+click same landmark), reset panel target to band/section shell. */
+  useEffect(() => {
+    const prev = highlightPrevRef.current;
+    highlightPrevRef.current = highlightCid;
+    if (!(highlightCid === null && prev != null)) return;
+    if (mode === "band") {
+      setActiveCid(bandCid);
+      setDepthIndex(0);
+      return;
+    }
+    if (mode === "section") {
+      const fallback =
+        mountedSectionEntry?.cid ??
+        sortedSectionEntries[0]?.cid ??
+        DEV_PANEL_STABLE_CID;
+      setActiveCid(fallback);
+      setSectionDepthIndex(0);
+    }
+  }, [
+    highlightCid,
+    mode,
+    bandCid,
+    mountedSectionEntry?.cid,
+    sortedSectionEntries,
+  ]);
+
   const sectionTarget =
     mode === "section"
       ? sectionEntries.find((entry) => entry.cid === activeCid) ?? null
@@ -420,21 +452,24 @@ export function DevPanel(props: DevPanelProps) {
               ].join(" ")}
               depth={0}
             >
-              <div className="flex items-center justify-between gap-2 text-[10px]">
-                <div className="min-w-0">
-                  <p className="font-semibold uppercase tracking-wide text-accent">
-                    {DEV_PANEL_LABEL}
-                  </p>
+              <div className="flex items-start justify-between gap-2 text-[10px]">
+                <div className="group/paneltitle min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                    <p className="font-semibold uppercase tracking-wide text-accent">{DEV_PANEL_LABEL}</p>
+                    <DevPanelHoverPromptActions
+                      selfEntry={DEV_PANEL_SELF_ENTRY}
+                      pathname={pathname}
+                      promptVerbosity={promptVerbosity}
+                      onAgentPrompt={(e) => setPromptEntry(e)}
+                      className="pointer-events-none opacity-0 transition-opacity group-hover/paneltitle:pointer-events-auto group-hover/paneltitle:opacity-100"
+                    />
+                  </div>
                   <p className="truncate text-muted-foreground">
-                    Section scan
-                    {" "}
-                    {sectionEntries.length}
-                    {" "}
-                    items
+                    Section scan {sectionEntries.length} items
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate font-mono text-muted-foreground" title={panelIdDisplay}>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <span className="max-w-[9rem] truncate font-mono text-muted-foreground" title={panelIdDisplay}>
                     {panelIdDisplay}
                   </span>
                   <Button
@@ -607,18 +642,37 @@ export function DevPanel(props: DevPanelProps) {
               corner === "right" ? "ml-auto mr-2" : "ml-2",
             ].join(" ")}
           >
-            <div className="flex items-center justify-between gap-2 text-[10px]">
-              <div className="min-w-0">
-                <p className="font-semibold uppercase tracking-wide text-accent">
-                  {DEV_PANEL_LABEL}
-                </p>
+            <div className="flex items-start justify-between gap-2 text-[10px]">
+              <div className="group/paneltitle min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <p className="font-semibold uppercase tracking-wide text-accent">{DEV_PANEL_LABEL}</p>
+                  <DevPanelHoverPromptActions
+                    selfEntry={DEV_PANEL_SELF_ENTRY}
+                    pathname={pathname}
+                    promptVerbosity={promptVerbosity}
+                    onAgentPrompt={(e) => setPromptEntry(e)}
+                    size="band"
+                    className="pointer-events-none opacity-0 transition-opacity group-hover/paneltitle:pointer-events-auto group-hover/paneltitle:opacity-100"
+                  />
+                </div>
                 <p className="truncate text-muted-foreground">
-                  {bandLabel} - {bandEntries.length} items
+                  {bandLabel} · {bandEntries.length} items
                 </p>
               </div>
-              <span className="truncate font-mono text-muted-foreground" title={panelIdDisplay}>
-                {panelIdDisplay}
-              </span>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className="max-w-[9rem] truncate font-mono text-muted-foreground" title={panelIdDisplay}>
+                  {panelIdDisplay}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyValue(panelIdDisplay)}
+                  className="size-6"
+                >
+                  <Copy size={11} />
+                </Button>
+              </div>
             </div>
             <div className="mt-1 flex items-center gap-1.5 text-[10px]">
               <Button

@@ -11,7 +11,7 @@
  * When dev-ids are enabled, applies data-cid + an optional highlight ring.
  */
 
-import { createElement, useEffect } from "react";
+import { createElement, useCallback, useEffect } from "react";
 import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry } from "./SectionRegistry";
 
@@ -71,14 +71,20 @@ export function Identified({
   const showPersistentRing = enabled && isHighlighted;
   const showFlashRing = enabled && isFlash && !isHighlighted;
 
-  const handleClick = enabled
-    ? (e: React.MouseEvent) => {
-        if (!e.altKey) return;
-        e.stopPropagation();
-        navigator.clipboard?.writeText(searchHint ?? resolvedCid).catch(() => {});
-        setHighlightCid(resolvedCid);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (!enabled) return;
+      if (!e.altKey) return;
+      e.stopPropagation();
+      if (highlightCid === resolvedCid) {
+        setHighlightCid(null);
+        return;
       }
-    : undefined;
+      navigator.clipboard?.writeText(searchHint ?? resolvedCid).catch(() => {});
+      setHighlightCid(resolvedCid);
+    },
+    [enabled, highlightCid, resolvedCid, searchHint, setHighlightCid],
+  );
 
   /**
    * Highlights use **inset** rings so they are not clipped by `overflow-hidden` ancestors
@@ -92,7 +98,7 @@ export function Identified({
       "data-cid-label": enabled ? as : undefined,
       "data-cid-component-tag": enabled ? "Identified" : undefined,
       "data-cid-search": enabled ? searchHint : undefined,
-      onClick: handleClick,
+      onClick: enabled ? handleClick : undefined,
       className: [
         className,
         enabled ? "scroll-mt-3 scroll-mb-1 sm:scroll-mt-4" : "",

@@ -134,7 +134,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
 function DevIdStatusBadge({ onOpenSearch }: { onOpenSearch: () => void }) {
   return (
     <div className="fixed bottom-4 left-4 z-[9999] flex items-center gap-2 rounded-full border border-accent/60 bg-background/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-accent shadow-lg backdrop-blur">
-      <span aria-hidden>DevIds ON · Alt+I toggle</span>
+      <span aria-hidden>DevIds ON · Alt+I toggle · Esc clear · Alt+click landmark toggles</span>
       <button
         type="button"
         onClick={onOpenSearch}
