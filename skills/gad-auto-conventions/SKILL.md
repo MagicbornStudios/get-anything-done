@@ -10,37 +10,9 @@ allowed-tools:
 workflow: workflows/auto-conventions.md
 ---
 
-<objective>
-Analyze the codebase after the first implementation phase and generate a CONVENTIONS.md capturing the patterns established — file structure, naming, import/export patterns, store patterns, component patterns, and type conventions.
-</objective>
 
-<process>
+# gad:auto-conventions
 
-1. **Check if CONVENTIONS.md already exists:**
-   ```bash
-   test -f .planning/CONVENTIONS.md && echo "EXISTS" || echo "MISSING"
-   ```
-   If EXISTS, update it with new patterns. If MISSING, create it.
+**Workflow:** [workflows/auto-conventions.md](../../workflows/auto-conventions.md)
 
-2. **Scan the codebase** for established patterns:
-   - File naming (kebab-case, PascalCase, etc.)
-   - Directory structure
-   - Import/export patterns
-   - State management patterns (zustand, redux, etc.)
-   - Component patterns (functional, class, etc.)
-   - Type conventions (interfaces vs types, naming)
-   - Test patterns
-
-3. **Write .planning/CONVENTIONS.md** with the discovered patterns.
-
-4. **Commit:**
-   ```bash
-   git add .planning/CONVENTIONS.md
-   git commit -m "docs: auto-scaffold CONVENTIONS.md from codebase patterns"
-   ```
-
-</process>
-
-<skill>
-Read and follow the companion `auto-conventions` skill if it is installed.
-</skill>
+Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).

@@ -10,32 +10,9 @@ allowed-tools:
 workflow: workflows/resume-work.md
 ---
 
-<objective>
-Restore complete project context and resume work seamlessly from previous session.
 
-Routes to the resume-project workflow which handles:
+# gad:resume-work
 
-- STATE.md loading (or reconstruction if missing)
-- Checkpoint detection (.continue-here files)
-- Incomplete work detection (PLAN without SUMMARY)
-- Status presentation
-- Context-aware next action routing
-  </objective>
+**Workflow:** [workflows/resume-work.md](../../workflows/resume-work.md)
 
-<execution_context>
-@workflows/resume-project.md
-</execution_context>
-
-<process>
-**Follow the resume-project workflow** from `@workflows/resume-project.md`.
-
-The workflow handles all resumption logic including:
-
-1. Project existence verification
-2. STATE.md loading or reconstruction
-3. Checkpoint and incomplete work detection
-4. Visual status presentation
-5. Context-aware option offering (checks CONTEXT.md before suggesting plan vs discuss)
-6. Routing to appropriate next command
-7. Session continuity updates
-   </process>
+Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).

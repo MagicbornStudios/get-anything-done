@@ -7,27 +7,9 @@ allowed-tools:
 workflow: workflows/eval-report.md
 ---
 
-<objective>
-Generate a comparison report across all eval projects showing scores, discipline, and findings from the latest runs.
-</objective>
 
-<process>
+# gad:eval-report
 
-1. **Run cross-project report:**
-   ```bash
-   gad eval report
-   ```
+**Workflow:** [workflows/eval-report.md](../../workflows/eval-report.md)
 
-2. **For deeper analysis on a specific project:**
-   ```bash
-   gad eval scores --project <name>
-   gad eval diff v1 v2 --project <name>
-   ```
-
-3. **Interpret findings** and recommend next actions.
-
-</process>
-
-<skill>
-Read and follow the companion `eval-report` skill if it is installed.
-</skill>
+Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).

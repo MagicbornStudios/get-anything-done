@@ -7,38 +7,9 @@ allowed-tools:
 workflow: workflows/eval-list.md
 ---
 
-<objective>
-Display all eval projects in `evals/` with their run count, latest run status,
-and last baseline SHA.
-</objective>
 
-<process>
+# gad:eval-list
 
-1. **Find eval projects:**
-   ```bash
-   ls -d evals/*/ 2>/dev/null || echo "NO_PROJECTS"
-   ```
-   If none: `No eval projects found. Create one at evals/<name>/REQUIREMENTS.md.`
+**Workflow:** [workflows/eval-list.md](../../workflows/eval-list.md)
 
-2. **For each project**, read its run history:
-   ```bash
-   ls -d "evals/$PROJECT"/v*/ 2>/dev/null | sort -V
-   ```
-   Read the latest `RUN.md` for status and baseline.
-
-3. **Display table:**
-   ```
-   GAD Eval Projects
-
-   NAME              RUNS   LATEST   STATUS     BASELINE
-   ─────────────────────────────────────────────────────────
-   portfolio-bare    2      v2       completed  abc1234
-   my-feature        0      —        —          —
-   ```
-
-4. **Show totals:**
-   ```
-   2 projects, 2 total runs
-   ```
-
-</process>
+Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).

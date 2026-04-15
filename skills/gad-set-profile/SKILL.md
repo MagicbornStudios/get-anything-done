@@ -8,6 +8,9 @@ allowed-tools:
 workflow: workflows/set-profile.md
 ---
 
-Show the following output to the user verbatim, with no extra commentary:
 
-!`gad-tools config-set-model-profile $ARGUMENTS --raw`
+# gad:set-profile
+
+**Workflow:** [workflows/set-profile.md](../../workflows/set-profile.md)
+
+Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).

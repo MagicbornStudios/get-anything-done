@@ -10,28 +10,9 @@ allowed-tools:
 workflow: workflows/eval-bootstrap.md
 ---
 
-<objective>
-Generate a bootstrap prompt for a single eval project and launch an agent in an isolated worktree. The agent starts with all GAD context inline — it does not need to discover the loop.
-</objective>
 
-<process>
+# gad:eval-bootstrap
 
-1. **Generate the bootstrap prompt:**
-   ```bash
-   gad eval run --project $PROJECT --prompt-only
-   ```
+**Workflow:** [workflows/eval-bootstrap.md](../../workflows/eval-bootstrap.md)
 
-2. **Read the generated PROMPT.md** from the eval run directory.
-
-3. **Launch an agent** with `isolation: "worktree"` using the prompt content.
-
-4. **After completion**, reconstruct the trace:
-   ```bash
-   gad eval trace reconstruct --project $PROJECT
-   ```
-
-</process>
-
-<skill>
-Read and follow the companion `eval-bootstrap` skill if it is installed.
-</skill>
+Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).
