@@ -1309,5 +1309,27 @@ Skills are methodology documents (SKILL.md) â€” agents read and follow them
 **Resolution:** folder `lineage/` → `agent-handoff-cycle/`; components `Lineage*` → `AgentHandoffCycle*`; `cid` → `agent-handoff-cycle-site-section`; `id` → `agent-handoff-cycle`; `media.json` key `lineage_talk` → `gsd_upstream_planning_talk` (content unchanged). Intellectual lineage to GSD stays in copy and links — it is no longer the **module** name.</summary>
     <impact>(1) All imports and `Identified as="…"` strings update to the new names. (2) `LANDING_PAGE_GENERATION_PROMPT` and `LandingVisualContextAndPromptBand` reference the new `cid`. (3) `/lineage` route (if reintroduced) remains the **canonical URL** for the long-form GSD→GAD attribution page — distinct from this home band. (4) Future: when a section's **name** and **story** diverge, either rename in the same PR as the copy change or add an explicit TASK-REGISTRY row so the rename does not slip.</impact>
   </decision>
+  <decision id="gad-197">
+    <title>Graphify integration: Option B (native Node extractor) ships first, Option A (vendor Graphify) gated on evidence</title>
+    <summary>Task 42.2-41 trialed Graphify end-to-end via the newly-shipped `gad try` flow. Findings in `evals/FINDINGS-2026-04-15-graphify-trial.md` — pipeline proven end-to-end, 33 files staged into `.gad-try/graphify/`, consent gate correctly surfaced the implicit `pip install graphifyy` dependency via body scan.
+
+Two integration paths were considered for bringing a knowledge-graph + visualization primitive into GAD alongside our existing workflow/site/visual-context-system:
+
+**Option A — vendor Graphify as `skills/gad-graphify/`.** Copy the Python-backed skill + its ~15 pipeline modules into the canonical skills tree, accept Python 3.10+ as a GAD optional dependency (precedent: `gad models install` already allows opt-in deps), reuse upstream's multimodal extraction (vision, whisper, PDF) that we would not realistically reproduce in Node.
+  Pro: days of work instead of months; multimodal capabilities we cannot match; already-standard `graph.json` shape consumed by Obsidian/Neo4j/Gephi.
+  Con: Python in the dep tree contradicts the zero-deps-first memory feedback (though `gad models` sets a lazy-optional precedent); install.js would need a Python environment path (pyenv/uv/pip); upstream release cadence risk.
+
+**Option B — build a GAD-native extractor as `skills/gad-planning-graph/`.** Node-only pipeline that walks `.planning/*.xml`, `skills/*/SKILL.md`, `decisions/*.xml`, `workflows/*.md` and emits the same `graph.json` shape with typed nodes (phase, task, decision, skill, workflow, file) and typed edges (cites, depends_on, decides, belongs_to, authored_by). Pure structural extraction, no multimodal.
+  Pro: zero new install surface; planning-XML schema awareness baked in from day one; ships fast for the specific planning-graph use case that actually unblocks site integration tasks 42.2-43 + 42.2-44.
+  Con: reinvents extraction; cannot match Graphify's multimodal capabilities for arbitrary folders (screenshots, PDFs, audio).
+
+**Decision — hybrid, sequenced:**
+1. Ship **Option B** first as `skills/gad-planning-graph/`. Scope the first cut narrowly to GAD planning artifacts only. Produces `site/data/planning-graph.json` which unblocks 42.2-43 (command+K integration) and 42.2-44 (Visual Context System graph panel primitive).
+2. Keep **Option A** as an opt-in trial via `gad try graphify` (already shipped under 42.2-40). Operators who want multimodal extraction for an arbitrary folder get it with one command, no framework commitment, cleanup available.
+3. **Promote Option A if usage pattern emerges.** If trial volume or specific user requests justify the Python dep, vendor `skills/gad-graphify/` in a follow-up decision. That call becomes evidence-based rather than speculative.
+
+This sequences to the narrowest-first commitment that still unblocks the site integration work while preserving the operator's "try before you commit" request that spawned `gad try` in the first place.</summary>
+    <impact>(1) New task `42.2-45` ships Option B as `skills/gad-planning-graph/` — Node-only extractor targeting the `graph.json` shape, scoped to `.planning/` + `skills/` + `decisions/` + `workflows/`. Replaces the previous 42.2-42 placeholder (decision now made, so 42.2-42 becomes the decision doc pointer and is marked done). (2) Task `42.2-43` (planning-graph.json site pipeline + command+K) unblocks and depends on 42.2-45. (3) Task `42.2-44` (VCS graph panel primitive) unblocks and depends on 42.2-43. (4) Task `42.2-40.a` polish items (strip .git after clone, `--branch` flag, interactive consent gate for runtime invocation) deferred to a follow-up but not blocking. (5) `gad try` stays the canonical "trial an external skill" primitive — no framework-level mention of graphify in particular, since any external skill can ride this flow. (6) Planning-graph schema design: nodes typed as `phase | task | decision | skill | workflow | file | requirement`; edges typed as `cites | depends_on | decides | belongs_to | authored_by | supersedes`. Shape must remain compatible with Graphify's `graph.json` so downstream tools (Obsidian, Neo4j, Gephi, the upstream Graphify viewer) can consume it if the operator later wants to. (7) If Option B lands and operators ask for multimodal coverage, the decision to promote Option A becomes a matter of weighing measured demand against Python dep cost — an evidence-based call, not a speculative one.</impact>
+  </decision>
 </decisions>
 
