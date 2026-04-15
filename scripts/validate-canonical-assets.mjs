@@ -35,12 +35,45 @@ function walkFiles(dir, predicate = () => true, out = []) {
   return out;
 }
 
+function parseFrontmatterBlock(content) {
+  // Returns the raw frontmatter body or null. Matches `---\n...\n---` at
+  // start of file, tolerating the closing delimiter at EOF with no trailing
+  // newline. Mirrors parseSkillFrontmatterWorkflow in bin/install.js.
+  const match = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+  return match ? match[1] : null;
+}
+
 function parseFrontmatterName(content) {
-  const match = content.match(/^name:\s*(.+)$/m);
+  const fm = parseFrontmatterBlock(content);
+  if (!fm) return null;
+  const match = fm.match(/^name:\s*(.+?)\s*$/m);
   return match ? match[1].trim() : null;
 }
 
+function parseFrontmatterWorkflow(content) {
+  const fm = parseFrontmatterBlock(content);
+  if (!fm) return null;
+  const match = fm.match(/^workflow:\s*(.+?)\s*$/m);
+  if (!match) return null;
+  let value = match[1].trim();
+  if (!value) return null;
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1);
+  }
+  return value.replace(/\\/g, '/');
+}
+
 function validateSkillCatalog(errors, warnings) {
+  // Decision gad-190: SKILL.md is the single command entry point. Validator
+  // enforces (1) every canonical SKILL.md has a `name:` frontmatter key,
+  // (2) no duplicate public names (gad-180), (3) every `workflow:` pointer
+  // resolves to an existing file relative to repo root, (4) legacy skill.json
+  // sidecars emit a migration warning (still honored by install.js during
+  // task 42.2-11 bulk-delete window), (5) legacy plain-name shadows of
+  // canonical gad-* skills emit a warning (gad-181).
   const skillsRoot = path.join(root, 'skills');
   const seenNames = new Map();
 
@@ -63,11 +96,27 @@ function validateSkillCatalog(errors, warnings) {
     siblings.push(entry.name);
     seenNames.set(publicName, siblings);
 
-    const metaFile = path.join(skillDir, 'skill.json');
-    const commandFile = path.join(skillDir, 'COMMAND.md');
-    if (fs.existsSync(metaFile) && !fs.existsSync(commandFile)) {
-      errors.push(`skill.json present but COMMAND.md missing in ${path.relative(root, skillDir)}`);
+    const workflowRef = parseFrontmatterWorkflow(content);
+    if (workflowRef) {
+      // Sibling refs (e.g. `./workflow.md`) resolve relative to SKILL.md dir.
+      // Canonical refs resolve relative to repo root. Absolute refs fail.
+      const isSibling = workflowRef.startsWith('./') || workflowRef.startsWith('../');
+      const resolvedBase = isSibling ? skillDir : root;
+      const target = path.resolve(resolvedBase, toOsPath(workflowRef));
+      if (!fs.existsSync(target)) {
+        errors.push(
+          `Unresolved workflow pointer "${workflowRef}" in ${path.relative(root, skillFile)}`
+        );
+      }
     }
+
+    const metaFile = path.join(skillDir, 'skill.json');
+    if (fs.existsSync(metaFile)) {
+      warnings.push(
+        `Legacy skill.json sidecar in ${path.relative(root, skillDir)} — delete per decision gad-190 (task 42.2-11)`
+      );
+    }
+
     if (!entry.name.startsWith('gad-') && publicName.startsWith('gad:')) {
       warnings.push(`Plain-name skill dir still exposes GAD command identity: ${entry.name} -> ${publicName}`);
     }
