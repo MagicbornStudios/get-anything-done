@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 44 evolution closed. Next pick: 44-26 (cross-config domain-change proto-skill, needs discuss-phase) or 44-28 (gad site install architecture, needs discuss-phase). Smaller open: 44-22 human workflows tab, 44-21 trace analytics tab, 44-23 author workflows on /workflows tab, 44-16 finish explicit-cid rollout. Blockers: none.</next-action>
+  <next-action>Site work session — clean handoff. 6 commits landed this session: explicit-cid rollout (44-16, 46 files), modal portal devid wiring, project skills scope explorer, skill image inventory, communication-style framework default, snapshot/state trim. Next pick: 44-26 (cross-config domain-change discuss-phase), 44-28 (gad site install discuss-phase), 44-22 (human workflows tab), 44-21 (trace analytics tab), 44-23 (workflow authoring). Site tsc clean, snapshot 5642 tokens.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>
