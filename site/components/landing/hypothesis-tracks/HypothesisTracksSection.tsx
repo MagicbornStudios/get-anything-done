@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback } from "react";
 import { HypothesisTracksActiveRoundBar } from "@/components/landing/hypothesis-tracks/HypothesisTracksActiveRoundBar";
@@ -8,7 +8,6 @@ import { HypothesisTracksIntro } from "@/components/landing/hypothesis-tracks/Hy
 import { HypothesisTracksRelatedLinks } from "@/components/landing/hypothesis-tracks/HypothesisTracksRelatedLinks";
 import { buildTrackData } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import { Identified } from "@/components/devid/Identified";
-import { SiteSection } from "@/components/site";
 
 /**
  * Landing-page section rendering the interactive hypothesis-tracks chart.
@@ -46,42 +45,49 @@ export default function HypothesisTracksSection() {
   }, []);
 
   return (
-    <SiteSection id="tracks" cid="tracks-site-section" tone="muted" className="border-t border-border/60">
-      <Identified as="LandingHypothesisTracksSection">
-      <Identified as="HypothesisTracksIntro">
-        <HypothesisTracksIntro />
-      </Identified>
+    <div className="group/site-band relative">
+      <section
+        id="tracks"
+        className="relative border-b border-border/60 border-t border-border/60 bg-card/20"
+      >
+        <div className="section-shell">
+          <Identified as="LandingHypothesisTracksSection">
+            <Identified as="HypothesisTracksIntro">
+              <HypothesisTracksIntro />
+            </Identified>
 
-      <Identified as="HypothesisTracksDomainSelector">
-        <HypothesisTracksDomainSelector
-          selectedDomain={selectedDomain}
-          onSelectDomain={(domainId) => {
-            setSelectedDomain(domainId);
-            setActiveRound(null);
-            window.dispatchEvent(new CustomEvent("domain-filter", { detail: domainId }));
-          }}
-        />
-      </Identified>
+            <Identified as="HypothesisTracksDomainSelector">
+              <HypothesisTracksDomainSelector
+                selectedDomain={selectedDomain}
+                onSelectDomain={(domainId) => {
+                  setSelectedDomain(domainId);
+                  setActiveRound(null);
+                  window.dispatchEvent(new CustomEvent("domain-filter", { detail: domainId }));
+                }}
+              />
+            </Identified>
 
-      <Identified as="HypothesisTracksChartPanel">
-        <HypothesisTracksChartPanel
-          data={data}
-          onRoundClick={handleRoundClick}
-          activeRound={activeRound}
-        />
-      </Identified>
+            <Identified as="HypothesisTracksChartPanel">
+              <HypothesisTracksChartPanel
+                data={data}
+                onRoundClick={handleRoundClick}
+                activeRound={activeRound}
+              />
+            </Identified>
 
-      {activeRound && (
-        <Identified as="HypothesisTracksActiveRoundBar">
-          <HypothesisTracksActiveRoundBar activeRound={activeRound} onClear={clearRoundFilter} />
-        </Identified>
-      )}
+            {activeRound && (
+              <Identified as="HypothesisTracksActiveRoundBar">
+                <HypothesisTracksActiveRoundBar activeRound={activeRound} onClear={clearRoundFilter} />
+              </Identified>
+            )}
 
-      <Identified as="HypothesisTracksRelatedLinks">
-        <HypothesisTracksRelatedLinks />
-      </Identified>
-      </Identified>
-    </SiteSection>
+            <Identified as="HypothesisTracksRelatedLinks">
+              <HypothesisTracksRelatedLinks />
+            </Identified>
+          </Identified>
+        </div>
+      </section>
+    </div>
   );
 }
 
