@@ -57,6 +57,7 @@ export function DevIdModalContextFooter({
   const [entries, setEntries] = useState<RegistryEntry[]>([]);
   const [idx, setIdx] = useState(0);
   const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | "cid" | null>(null);
+  const [chromeFooterUpdateCopied, setChromeFooterUpdateCopied] = useState(false);
   const [localPromptVerbosity, setLocalPromptVerbosity] = useState<PromptVerbosity>("full");
   const effectivePromptVerbosity = promptVerbosity ?? localPromptVerbosity;
 
@@ -144,6 +145,35 @@ export function DevIdModalContextFooter({
     onFinalize: finalizeUpdate,
   });
 
+  const finalizeModalChromeSelfPrompt = useCallback(
+    (transcript: string) => {
+      const prefix = buildUpdateLockedPrefix(
+        absolutePageUrl(pathname),
+        DEV_MODAL_FOOTER_SELF_ENTRY.label,
+        DEV_MODAL_FOOTER_SELF_ENTRY.cid,
+        DEV_MODAL_FOOTER_SELF_ENTRY.componentTag ?? "Identified",
+        DEV_MODAL_FOOTER_SELF_ENTRY.searchHint,
+        undefined,
+        effectivePromptVerbosity,
+      );
+      const resolved = `${prefix}\n${transcript.trim()}`;
+      navigator.clipboard?.writeText(resolved).catch(() => {});
+      setChromeFooterUpdateCopied(true);
+      window.setTimeout(() => setChromeFooterUpdateCopied(false), 1200);
+      toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
+    },
+    [pathname, effectivePromptVerbosity],
+  );
+
+  const {
+    listening: listeningChrome,
+    interim: interimChrome,
+    toggle: toggleChromeSpeech,
+  } = useDictatedPromptCopy({
+    onFinalize: finalizeModalChromeSelfPrompt,
+    listeningMessage: "Listening for modal VC chrome…",
+  });
+
   const copyDelete = useCallback(() => {
     if (!current) return;
     const resolved = buildDeletePrompt(
@@ -189,19 +219,36 @@ export function DevIdModalContextFooter({
 
   if (!enabled || !open) return null;
 
-  const chromeTitle = (
-    <div className="group/modalvc flex shrink-0 items-center gap-0.5">
-      <span className="shrink-0 font-semibold uppercase tracking-wide text-accent">{modalLabel}</span>
-      <DevPanelHoverPromptActions
-        selfEntry={DEV_MODAL_FOOTER_SELF_ENTRY}
-        pathname={pathname}
-        promptVerbosity={effectivePromptVerbosity}
-        onAgentPrompt={onChromeAgentPrompt}
-        size="modal"
-        className="pointer-events-none opacity-0 transition-opacity group-hover/modalvc:pointer-events-auto group-hover/modalvc:opacity-100"
-      />
+  const modalTitleChrome = (
+    <div className="group/modalvc relative z-10 h-6 min-w-[6.5rem] shrink-0">
+      <span className="absolute inset-0 flex items-center font-semibold uppercase tracking-wide text-accent transition-opacity group-hover/modalvc:pointer-events-none group-hover/modalvc:opacity-0">
+        {modalLabel}
+      </span>
+      <div className="absolute inset-0 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover/modalvc:pointer-events-auto group-hover/modalvc:opacity-100">
+        <DevPanelHoverPromptActions
+          selfEntry={DEV_MODAL_FOOTER_SELF_ENTRY}
+          pathname={pathname}
+          promptVerbosity={effectivePromptVerbosity}
+          onAgentPrompt={onChromeAgentPrompt}
+          size="modal"
+          externalDictation={{
+            listening: listeningChrome,
+            interim: interimChrome,
+            toggle: toggleChromeSpeech,
+          }}
+          updateJustCopied={chromeFooterUpdateCopied}
+        />
+      </div>
     </div>
   );
+
+  const liveDictationLine =
+    listening || listeningChrome ? (
+      <p className="mt-1 max-w-full truncate border-t border-border/40 pt-1 text-[9px] text-emerald-400/95">
+        <span className="font-semibold">Live — </span>
+        {(listening ? interim : interimChrome) || "\u00a0"}
+      </p>
+    ) : null;
 
   if (!entries.length) {
     return (
@@ -215,11 +262,12 @@ export function DevIdModalContextFooter({
         )}
       >
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          {chromeTitle}
+          {modalTitleChrome}
           <span>
             — no <code className="rounded bg-muted px-0.5 font-mono text-[8px]">data-cid</code> in this modal.
           </span>
         </div>
+        {liveDictationLine}
       </Identified>
     );
   }
@@ -238,7 +286,7 @@ export function DevIdModalContextFooter({
           title="Alt+click landmark toggles highlight · Esc clears · arrows change target"
           className="flex min-h-7 flex-nowrap items-center gap-x-1.5 gap-y-0 text-[9px] leading-none"
         >
-          {chromeTitle}
+          {modalTitleChrome}
           <span className="shrink-0 tabular-nums text-muted-foreground">
             {idx + 1}/{entries.length}
           </span>
@@ -329,12 +377,7 @@ export function DevIdModalContextFooter({
             </Button>
           </div>
         </div>
-        {listening && interim ? (
-          <p className="mt-1 max-w-full truncate border-t border-border/40 pt-1 text-[9px] text-emerald-400/95">
-            <span className="font-semibold">Live — </span>
-            {interim}
-          </p>
-        ) : null}
+        {liveDictationLine}
     </Identified>
   );
 }
