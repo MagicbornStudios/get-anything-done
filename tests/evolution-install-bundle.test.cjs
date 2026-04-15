@@ -82,6 +82,11 @@ describe('gad evolution install — proto-skill bundle shape (gad-191)', () => {
   });
 
   after(() => {
+    // Clean up promoted artifacts if the promote test ran.
+    const promotedSkillDir = path.resolve(__dirname, '..', 'skills', SLUG);
+    const promotedWorkflow = path.resolve(__dirname, '..', 'workflows', `${SLUG}.md`);
+    if (fs.existsSync(promotedSkillDir)) fs.rmSync(promotedSkillDir, { recursive: true, force: true });
+    if (fs.existsSync(promotedWorkflow)) fs.rmSync(promotedWorkflow);
     cleanupFixture();
     if (tmpRuntimeRoot && fs.existsSync(tmpRuntimeRoot)) {
       fs.rmSync(tmpRuntimeRoot, { recursive: true, force: true });
@@ -112,5 +117,54 @@ describe('gad evolution install — proto-skill bundle shape (gad-191)', () => {
     assert.match(installedSkill, /workflow:\s*\.\/workflow\.md/);
     const siblingWorkflow = path.join(nativeDir, 'workflow.md');
     assert.ok(fs.existsSync(siblingWorkflow), 'sibling workflow.md resolves post-install');
+  });
+
+  test('promote splits sibling workflow.md into canonical workflows/<name>.md and rewrites frontmatter', () => {
+    // Re-create the fixture since install test may have left it in place,
+    // and the promote path destructively removes it.
+    cleanupFixture();
+    writeFixture();
+
+    const repoRoot = path.resolve(__dirname, '..');
+    const result = runGad(['evolution', 'promote', SLUG], repoRoot);
+    assert.strictEqual(result.status, 0, `CLI exit: ${result.stderr}`);
+
+    // Canonical skill dir exists with SKILL.md, PROVENANCE.md, CANDIDATE.md.
+    const promotedSkillDir = path.join(repoRoot, 'skills', SLUG);
+    assert.ok(fs.existsSync(promotedSkillDir), 'skills/<slug>/ created');
+    assert.ok(fs.existsSync(path.join(promotedSkillDir, 'SKILL.md')), 'SKILL.md copied');
+    assert.ok(fs.existsSync(path.join(promotedSkillDir, 'PROVENANCE.md')), 'PROVENANCE.md copied');
+    assert.ok(fs.existsSync(path.join(promotedSkillDir, 'CANDIDATE.md')), 'CANDIDATE.md copied');
+
+    // workflow.md NOT left as a sibling in skills/<slug>/.
+    assert.ok(
+      !fs.existsSync(path.join(promotedSkillDir, 'workflow.md')),
+      'sibling workflow.md removed from skills/<slug>/'
+    );
+
+    // Canonical workflow file created at workflows/<slug>.md.
+    const canonicalWorkflow = path.join(repoRoot, 'workflows', `${SLUG}.md`);
+    assert.ok(fs.existsSync(canonicalWorkflow), 'workflows/<slug>.md created');
+
+    // Content of canonical workflow matches original sibling content.
+    const canonicalBody = fs.readFileSync(canonicalWorkflow, 'utf8');
+    assert.match(canonicalBody, /Sibling workflow file referenced/);
+
+    // SKILL.md frontmatter rewritten: workflow: workflows/<slug>.md.
+    const promotedSkill = fs.readFileSync(path.join(promotedSkillDir, 'SKILL.md'), 'utf8');
+    assert.match(
+      promotedSkill,
+      new RegExp(`workflow:\\s*workflows/${SLUG}\\.md`),
+      'SKILL.md frontmatter rewritten to canonical path'
+    );
+    assert.doesNotMatch(
+      promotedSkill,
+      /workflow:\s*\.\/workflow\.md/,
+      'sibling pointer removed from SKILL.md frontmatter'
+    );
+
+    // Proto-skill dir removed.
+    const protoDir = path.join(repoRoot, '.planning', 'proto-skills', SLUG);
+    assert.ok(!fs.existsSync(protoDir), 'proto-skill dir cleaned up');
   });
 });

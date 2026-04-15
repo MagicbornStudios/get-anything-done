@@ -9868,7 +9868,7 @@ const evolutionInstall = defineCommand({
 });
 
 const evolutionPromote = defineCommand({
-  meta: { name: 'promote', description: 'Promote a proto-skill into skills/ (joins species DNA)' },
+  meta: { name: 'promote', description: 'Promote a proto-skill into skills/ + workflows/ (joins species DNA)' },
   args: {
     slug: { type: 'positional', description: 'proto-skill slug', required: true },
     name: { type: 'string', description: 'final skill name in skills/ (defaults to slug)', required: false },
@@ -9892,19 +9892,76 @@ const evolutionPromote = defineCommand({
       console.error(`Final skill dir already exists at ${finalDir} — refusing to overwrite. Pass --name <other> or remove it manually.`);
       process.exit(1);
     }
+
+    // Decision gad-190 + gad-191 + task 42.2-16: promotion performs the
+    // proto-skill-bundle → canonical split. The proto-skill ships with a
+    // sibling `workflow.md` referenced as `./workflow.md` in SKILL.md
+    // frontmatter. Promotion:
+    //   1. Copy SKILL.md to skills/<name>/SKILL.md and rewrite its
+    //      `workflow:` pointer from `./workflow.md` to `workflows/<name>.md`.
+    //   2. Move sibling workflow.md → workflows/<name>.md (canonical location).
+    //   3. Copy PROVENANCE.md, CANDIDATE.md, and any other bundle files to
+    //      skills/<name>/ as-is.
+    //   4. Clean up: remove the proto-skill dir and the candidate dir.
+    // If no sibling workflow.md exists, promotion degrades gracefully: the
+    // SKILL.md frontmatter is left untouched and the skill ships as
+    // inline-body only (valid per gad-190 §3).
     fs.mkdirSync(finalDir, { recursive: true });
+
+    const siblingWorkflowPath = path.join(protoDir, 'workflow.md');
+    const hasSiblingWorkflow = fs.existsSync(siblingWorkflowPath);
+    const workflowsDir = path.join(repoRoot, 'workflows');
+    const canonicalWorkflowPath = hasSiblingWorkflow
+      ? path.join(workflowsDir, `${finalName}.md`)
+      : null;
+
+    if (hasSiblingWorkflow) {
+      if (fs.existsSync(canonicalWorkflowPath)) {
+        fs.rmSync(finalDir, { recursive: true, force: true });
+        console.error(
+          `Canonical workflow already exists at ${path.relative(repoRoot, canonicalWorkflowPath)} — refusing to overwrite. Pass --name <other> or remove it manually.`
+        );
+        process.exit(1);
+      }
+      fs.mkdirSync(workflowsDir, { recursive: true });
+    }
+
+    // Copy bundle files except sibling workflow.md (handled separately).
     for (const entry of fs.readdirSync(protoDir, { withFileTypes: true })) {
+      if (hasSiblingWorkflow && entry.name === 'workflow.md') continue;
       const src = path.join(protoDir, entry.name);
       const dest = path.join(finalDir, entry.name);
       if (entry.isDirectory()) fs.cpSync(src, dest, { recursive: true });
       else fs.copyFileSync(src, dest);
     }
+
+    if (hasSiblingWorkflow) {
+      // Move sibling → canonical workflow location.
+      fs.copyFileSync(siblingWorkflowPath, canonicalWorkflowPath);
+
+      // Rewrite SKILL.md `workflow:` frontmatter from `./workflow.md`
+      // (or similar sibling ref) to `workflows/<name>.md`.
+      const copiedSkillPath = path.join(finalDir, 'SKILL.md');
+      const src = fs.readFileSync(copiedSkillPath, 'utf8');
+      const canonicalRef = `workflows/${finalName}.md`;
+      const rewritten = src.replace(
+        /^(workflow:\s*)(.+)$/m,
+        (_, prefix) => `${prefix}${canonicalRef}`
+      );
+      fs.writeFileSync(copiedSkillPath, rewritten);
+    }
+
     fs.rmSync(protoDir, { recursive: true, force: true });
     const candidateDir = path.join(candidatesDir, args.slug);
     if (fs.existsSync(candidateDir)) fs.rmSync(candidateDir, { recursive: true, force: true });
+
     console.log(`Promoted ${args.slug} → ${path.relative(repoRoot, finalDir)}`);
+    if (hasSiblingWorkflow) {
+      console.log(`  Split workflow: ${path.relative(repoRoot, canonicalWorkflowPath)}`);
+    } else {
+      console.log('  (no sibling workflow.md — SKILL.md promoted as inline body)');
+    }
     console.log(`  Removed proto-skill: ${path.relative(repoRoot, protoDir)}`);
-    if (fs.existsSync(candidateDir)) console.log(`  (note: candidate at ${candidateDir} still present)`);
   },
 });
 
