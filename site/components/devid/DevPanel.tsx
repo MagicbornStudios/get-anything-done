@@ -31,6 +31,12 @@ import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   collectScopedEntries,
   escapeCidSelector,
   queryByCid,
@@ -49,6 +55,87 @@ type DevPanelProps =
       componentTag?: RegistryEntry["componentTag"];
       searchHint?: string;
     };
+
+/** Compact depth pager with delayed tooltip (keeps chrome small; explains slice + chevrons). */
+function DevPanelDepthPager(props: {
+  currentDepth: number;
+  visibleCount: number;
+  onPrev: () => void;
+  onNext: () => void;
+  prevDisabled: boolean;
+  nextDisabled: boolean;
+  /** Section scan cap from registry; omit in band mode. */
+  maxScanDepth?: number;
+}) {
+  const {
+    currentDepth,
+    visibleCount,
+    onPrev,
+    onNext,
+    prevDisabled,
+    nextDisabled,
+    maxScanDepth,
+  } = props;
+
+  return (
+    <TooltipProvider delayDuration={380}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className="ml-2 flex cursor-help items-center gap-1 rounded-sm px-0.5 py-0.5 ring-offset-background hover:bg-muted/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            tabIndex={0}
+            aria-label={`Landmarks at nesting depth ${currentDepth}, ${visibleCount} in this slice`}
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-5"
+              disabled={prevDisabled}
+              onClick={onPrev}
+              aria-label="Shallower nesting depth"
+            >
+              <ChevronLeft size={10} />
+            </Button>
+            <span className="w-16 text-center tabular-nums">
+              d{currentDepth} - {visibleCount}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-5"
+              disabled={nextDisabled}
+              onClick={onNext}
+              aria-label="Deeper nesting depth"
+            >
+              <ChevronRight size={10} />
+            </Button>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          sideOffset={6}
+          className="max-w-[13.5rem] border-border/70 bg-popover px-2 py-1.5 text-[10px] leading-snug text-popover-foreground"
+        >
+          <p className="font-medium text-foreground">Depth {currentDepth}</p>
+          <p className="mt-1 text-muted-foreground">
+            {visibleCount} landmark{visibleCount === 1 ? "" : "s"} in this slice. Chevrons step toward
+            the section shell (back) or into nested{" "}
+            <code className="rounded bg-muted/80 px-0.5 font-mono text-[9px]">Identified</code>{" "}
+            blocks (forward).
+            {maxScanDepth != null ? (
+              <>
+                {" "}
+                Scan window: depth ≤ {maxScanDepth}.
+              </>
+            ) : null}
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 function locateComponentOnPage(cid: string, flashComponent: (cid: string) => void) {
   const el = queryByCid(cid);
@@ -559,33 +646,17 @@ export function DevPanel(props: DevPanelProps) {
                     </span>
                   </p>
                 </div>
-                <div className="ml-2 flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-5"
-                    disabled={sectionDepthIndex <= 0}
-                    onClick={() => setSectionDepthIndex((v) => Math.max(0, v - 1))}
-                  >
-                    <ChevronLeft size={10} />
-                  </Button>
-                  <span className="w-16 text-center">
-                    d{sectionCurrentDepth} - {sectionVisibleEntries.length}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-5"
-                    disabled={sectionDepthIndex >= sectionDepths.length - 1}
-                    onClick={() =>
-                      setSectionDepthIndex((v) => Math.min(sectionDepths.length - 1, v + 1))
-                    }
-                  >
-                    <ChevronRight size={10} />
-                  </Button>
-                </div>
+                <DevPanelDepthPager
+                  currentDepth={sectionCurrentDepth}
+                  visibleCount={sectionVisibleEntries.length}
+                  onPrev={() => setSectionDepthIndex((v) => Math.max(0, v - 1))}
+                  onNext={() =>
+                    setSectionDepthIndex((v) => Math.min(sectionDepths.length - 1, v + 1))
+                  }
+                  prevDisabled={sectionDepthIndex <= 0}
+                  nextDisabled={sectionDepthIndex >= sectionDepths.length - 1}
+                  maxScanDepth={registry?.maxDepth}
+                />
               </div>
               <div className="mt-1 max-h-24 min-h-0 space-y-1 overflow-y-auto overscroll-y-contain pr-1">
                 {sectionVisibleEntries.map((entry) => (
@@ -747,31 +818,14 @@ export function DevPanel(props: DevPanelProps) {
                   </span>
                 </p>
               </div>
-              <div className="ml-2 flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-5"
-                  disabled={depthIndex <= 0}
-                  onClick={() => setDepthIndex((v) => Math.max(0, v - 1))}
-                >
-                  <ChevronLeft size={10} />
-                </Button>
-                <span className="w-16 text-center">
-                  d{bandCurrentDepth} - {bandVisibleEntries.length}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-5"
-                  disabled={depthIndex >= bandDepths.length - 1}
-                  onClick={() => setDepthIndex((v) => Math.min(bandDepths.length - 1, v + 1))}
-                >
-                  <ChevronRight size={10} />
-                </Button>
-              </div>
+              <DevPanelDepthPager
+                currentDepth={bandCurrentDepth}
+                visibleCount={bandVisibleEntries.length}
+                onPrev={() => setDepthIndex((v) => Math.max(0, v - 1))}
+                onNext={() => setDepthIndex((v) => Math.min(bandDepths.length - 1, v + 1))}
+                prevDisabled={depthIndex <= 0}
+                nextDisabled={depthIndex >= bandDepths.length - 1}
+              />
             </div>
             <div className="mt-1 max-h-24 min-h-0 space-y-1 overflow-y-auto overscroll-y-contain pr-1">
               {bandVisibleEntries.map((entry) => (
