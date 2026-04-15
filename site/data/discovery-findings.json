@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "timestamp": "2026-04-15T21:30:00Z",
+  "source_note": "Baseline run from phase 42.2-21. See .planning/notes/subagent-discovery-findings-2026-04-15.md for the full writeup. Rerun via the gad:discovery-test skill.",
+  "mean_confidence": 7.3,
+  "min_confidence": 5,
+  "max_confidence": 9,
+  "target_confidence": 8.5,
+  "regression": true,
+  "agent_count": 5,
+  "agents": [
+    {
+      "id": "A",
+      "task_name": "plan-a-phase",
+      "confidence": 5,
+      "cli_commands": [
+        "gad --help",
+        "gad skill --help",
+        "gad skill list",
+        "gad skill list --help",
+        "gad context --help",
+        "gad context --project get-anything-done --refs",
+        "gad snapshot --projectid get-anything-done",
+        "gad docs --help",
+        "gad docs list --projectid get-anything-done",
+        "gad workflow --help",
+        "gad workflow status"
+      ],
+      "skills_discovered": [
+        {"id": "gad-plan-phase", "workflow_read": false},
+        {"id": "gad-discuss-phase", "workflow_read": false},
+        {"id": "gad-list-phase-assumptions", "workflow_read": false},
+        {"id": "gad-execute-phase", "workflow_read": false},
+        {"id": "gad-verify-work", "workflow_read": false},
+        {"id": "gad-task-checkpoint", "workflow_read": false}
+      ],
+      "skill_order": ["gad-discuss-phase", "gad-list-phase-assumptions", "gad-plan-phase", "gad-execute-phase", "gad-task-checkpoint", "gad-verify-work"],
+      "gaps": [
+        "No gad CLI subcommand surfaces on-disk path of a skill's SKILL.md",
+        "gad skill list prints ids only",
+        "gad snapshot EQUIPPED SKILLS section did not include gad-plan-phase for sprint 9",
+        "Needed `gad skill show` or `gad skill list --paths` — fixed in task 42.2-20"
+      ]
+    },
+    {
+      "id": "B",
+      "task_name": "evolution-cycle",
+      "confidence": 8,
+      "cli_commands": [
+        "gad --help",
+        "gad evolution --help",
+        "gad self-eval --help",
+        "gad skill --help",
+        "gad skill list",
+        "gad evolution status --projectid get-anything-done",
+        "gad workflow --help",
+        "gad context --projectid get-anything-done"
+      ],
+      "skills_discovered": [
+        {"id": "gad-evolution-evolve", "workflow_read": true, "workflow_ref": "workflows/evolution-evolve.md"},
+        {"id": "create-proto-skill", "workflow_read": true, "workflow_ref": "self-contained"},
+        {"id": "gad-evolution-validator", "workflow_read": false, "workflow_ref": "workflows/evolution-validator.md"}
+      ],
+      "skill_order": ["gad-evolution-evolve", "create-proto-skill", "gad-evolution-validator"],
+      "gaps": [
+        "Did not read workflows/evolution-validator.md — validator internals unverified",
+        "Unclear whether .planning/workflows/gad-evolution.md duplicates workflows/evolution-evolve.md — fixed by skill-shape.md §1a",
+        "site/scripts/compute-self-eval.mjs pressure formula not verified",
+        "create-proto-skill references external ~/.agents/skills/create-skill — unreachable from sandbox"
+      ]
+    },
+    {
+      "id": "C",
+      "task_name": "debug-failing-test",
+      "confidence": 7,
+      "cli_commands": [
+        "gad --help",
+        "gad skill --help",
+        "gad skill list",
+        "gad snapshot --projectid get-anything-done"
+      ],
+      "skills_discovered": [
+        {"id": "gad-debug", "workflow_read": true, "workflow_ref": ".planning/workflows/gad-debug.md"}
+      ],
+      "skill_order": ["gad-debug"],
+      "gaps": [
+        "Path duality: workflows/gad-debug.md vs .planning/workflows/gad-debug.md — two different files, couldn't tell them apart",
+        "gad skill list prints names only — no paths",
+        "Co-participant `debug` skill referenced in frontmatter but not findable via CLI"
+      ]
+    },
+    {
+      "id": "D",
+      "task_name": "fresh-session-plus-create-skill",
+      "confidence": 8,
+      "confidence_detail": {"d1_session_start": 9, "d2_create_skill": 7},
+      "cli_commands": [
+        "gad --help",
+        "gad snapshot --projectid get-anything-done",
+        "gad skill --help",
+        "gad skill list"
+      ],
+      "skills_discovered": [
+        {"id": "create-skill", "workflow_read": false},
+        {"id": "create-proto-skill", "workflow_read": false},
+        {"id": "gad-skill-creator", "workflow_read": false},
+        {"id": "merge-skill", "workflow_read": false}
+      ],
+      "skill_order": ["references/skill-shape.md §10 + §11 guides the four authoring skills"],
+      "gaps": [
+        "No skill governs session start — `gad snapshot` is a CLI command, chicken-and-egg for cold agent (fixed in 42.2-22 gad startup)",
+        "EQUIPPED SKILLS top-5 excluded ALL four authoring skills due to relevance filter",
+        "Three overlapping authoring skills — no CLI disambiguation (fixed in 42.2-23 skill-list footer)",
+        "No single `gad create-skill` CLI verb orchestrating §10 end-to-end"
+      ]
+    },
+    {
+      "id": "E",
+      "task_name": "candidate-to-canonical",
+      "confidence": 8,
+      "cli_commands": [
+        "gad --help",
+        "gad evolution --help",
+        "gad skill --help",
+        "gad evolution status",
+        "gad evolution validate --help",
+        "gad evolution install --help",
+        "gad evolution promote --help",
+        "gad skill list",
+        "gad context",
+        "gad planning --help"
+      ],
+      "skills_discovered": [
+        {"id": "create-proto-skill", "workflow_read": true, "workflow_ref": "references/proto-skills.md"},
+        {"id": "gad-evolution-evolve", "workflow_read": false},
+        {"id": "gad-evolution-validator", "workflow_read": false},
+        {"id": "gad-skill-creator", "workflow_read": false}
+      ],
+      "skill_order": [
+        "gad evolution status",
+        "create-proto-skill",
+        "gad evolution validate",
+        "gad evolution install",
+        "(test in runtime)",
+        "gad evolution promote OR gad evolution discard"
+      ],
+      "gaps": [
+        "Did not read skills/create-proto-skill/SKILL.md body",
+        "STATE.xml task 42.2-13 blocked on 42.2-06 (create-proto-skill implementation)",
+        "promote split-bundle gap deferred — fixed in 42.2-16",
+        "Stale doc: references/proto-skills.md cited skills/candidates/ — fixed in 42.2-20"
+      ]
+    }
+  ],
+  "flow_map": {
+    "nodes": [
+      {"id": "gad snapshot", "kind": "entry", "depth": 0, "label": "gad snapshot --projectid <id>", "reached_by": ["A","B","C","D","E"]},
+      {"id": "gad skill list", "kind": "entry", "depth": 0, "label": "gad skill list", "reached_by": ["A","B","C","D","E"]},
+      {"id": "gad evolution status", "kind": "entry", "depth": 0, "label": "gad evolution status", "reached_by": ["B","E"]},
+      {"id": "STATE.xml", "kind": "file", "depth": 0, "label": ".planning/STATE.xml (via snapshot)", "reached_by": ["A","B","C","D","E"]},
+      {"id": "references/skill-shape.md", "kind": "file", "depth": 0, "label": "references/skill-shape.md", "reached_by": ["D"]},
+      {"id": "references/proto-skills.md", "kind": "file", "depth": 0, "label": "references/proto-skills.md", "reached_by": ["E"]},
+      {"id": ".planning/workflows/gad-debug.md", "kind": "file", "depth": 0, "label": ".planning/workflows/gad-debug.md", "reached_by": ["C"]},
+      {"id": ".planning/workflows/gad-discuss-plan-execute.md", "kind": "file", "depth": 0, "label": ".planning/workflows/gad-discuss-plan-execute.md", "reached_by": ["A"]},
+      {"id": "skills/gad-evolution-evolve/SKILL.md", "kind": "file", "depth": 0, "label": "skills/gad-evolution-evolve/SKILL.md", "reached_by": ["B"]},
+      {"id": "workflows/evolution-evolve.md", "kind": "file", "depth": 1, "label": "workflows/evolution-evolve.md", "reached_by": ["B"]},
+      {"id": "skills/create-proto-skill/SKILL.md", "kind": "file", "depth": 2, "label": "skills/create-proto-skill/SKILL.md", "reached_by": ["B"]},
+      {"id": "skills/gad-evolution-validator/SKILL.md", "kind": "file", "depth": 2, "label": "skills/gad-evolution-validator/SKILL.md", "reached_by": ["B"]},
+      {"id": "skills/gad-debug/SKILL.md", "kind": "file", "depth": 1, "label": "skills/gad-debug/SKILL.md", "reached_by": ["C"]},
+      {"id": "workflows/evolution-validator.md", "kind": "file", "depth": 3, "label": "workflows/evolution-validator.md (NOT REACHED)", "reached_by": [], "status": "unreached"},
+      {"id": "workflows/gad-plan-phase.md", "kind": "file", "depth": 1, "label": "workflows/gad-plan-phase.md (NOT REACHED by A — blocked)", "reached_by": [], "status": "unreached"},
+      {"id": "skills/gad-plan-phase/SKILL.md", "kind": "file", "depth": 1, "label": "skills/gad-plan-phase/SKILL.md (NOT REACHED by A — blocked)", "reached_by": [], "status": "unreached"}
+    ],
+    "edges": [
+      {"from": "gad snapshot", "to": "STATE.xml", "kind": "prints"},
+      {"from": "STATE.xml", "to": ".planning/workflows/gad-debug.md", "kind": "reference"},
+      {"from": "STATE.xml", "to": ".planning/workflows/gad-discuss-plan-execute.md", "kind": "reference"},
+      {"from": "STATE.xml", "to": "references/skill-shape.md", "kind": "reference"},
+      {"from": "STATE.xml", "to": "references/proto-skills.md", "kind": "reference"},
+      {"from": "STATE.xml", "to": "skills/gad-evolution-evolve/SKILL.md", "kind": "reference"},
+      {"from": "gad skill list", "to": "(no file paths)", "kind": "dead-end"},
+      {"from": "skills/gad-evolution-evolve/SKILL.md", "to": "workflows/evolution-evolve.md", "kind": "workflow-pointer"},
+      {"from": "workflows/evolution-evolve.md", "to": "skills/create-proto-skill/SKILL.md", "kind": "reference"},
+      {"from": "workflows/evolution-evolve.md", "to": "skills/gad-evolution-validator/SKILL.md", "kind": "reference"},
+      {"from": ".planning/workflows/gad-debug.md", "to": "skills/gad-debug/SKILL.md", "kind": "reference"},
+      {"from": "gad evolution status", "to": ".planning/candidates/phase-44.5-*", "kind": "prints"}
+    ]
+  },
+  "aggregate_cli_frequency": {
+    "gad --help": 5,
+    "gad skill list": 5,
+    "gad snapshot --projectid": 5,
+    "gad skill --help": 4,
+    "gad evolution --help": 2,
+    "gad evolution status": 2,
+    "gad context --help": 2,
+    "gad context": 2
+  },
+  "unreached_paths": [
+    "workflows/evolution-validator.md",
+    "workflows/gad-plan-phase.md",
+    "skills/gad-plan-phase/SKILL.md",
+    "site/scripts/compute-self-eval.mjs"
+  ],
+  "p0_gaps": [
+    {"id": "no-skill-show", "status": "fixed", "fixed_in": "42.2-20", "description": "No gad skill show <id> to surface file paths"},
+    {"id": "path-duality", "status": "fixed", "fixed_in": "42.2-20", "description": "workflows/ vs .planning/workflows/ confusion — clarified in skill-shape.md §1a"},
+    {"id": "stale-proto-skills-doc", "status": "fixed", "fixed_in": "42.2-20", "description": "references/proto-skills.md had stale skills/candidates/ refs"}
+  ],
+  "p1_gaps": [
+    {"id": "chicken-and-egg-session", "status": "fixed", "fixed_in": "42.2-22", "description": "gad snapshot only discoverable via CLAUDE.md — added gad startup"},
+    {"id": "authoring-disambiguation", "status": "fixed", "fixed_in": "42.2-23", "description": "Four overlapping authoring skills with no CLI disambiguation — added skill-list footer"},
+    {"id": "snapshot-equipped-skills-bias", "status": "open", "description": "EQUIPPED SKILLS top-5 relevance filter misses authoring skills"}
+  ]
+}

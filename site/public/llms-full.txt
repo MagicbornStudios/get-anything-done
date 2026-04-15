@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-15T05:54:40.668Z
+Generated: 2026-04-15T18:04:14.745Z
 
 
 ---
@@ -221,6 +221,308 @@ Every one of those downstream tasks **adds a new artifact** to the release. The 
 4. **Never delete a published tag.** If a release is bad, cut a new version that fixes it. Deleting published tags breaks downstream consumers.
 5. **Never run outside the canonical repo.** The gate in step 1 is load-bearing. Consumer projects should use `gad skill promote --project` to equip skills, not this skill.
 6. **Never push the tag without explicit operator confirmation in the conversation where the skill is running.** The `git push origin v<version>` step is the point of no return.
+
+
+## create-proto-skill
+id: create-proto-skill
+description: >-
+origin: official
+
+
+# create-proto-skill
+
+The lightweight drafter inside the GAD evolution loop. Reads a candidate
+context file, writes a proto-skill bundle to `.planning/proto-skills/<slug>/`,
+and hands off to `gad evolution validate` for advisory scoring and
+`gad evolution install` for runtime test use. Renamed from `gad-quick-skill`
+per decision gad-168; output contract updated to the proto-skill bundle
+shape per decision gad-191.
+
+We use the dot-agent skill **unmodified** — it's already a clean format guide
+that enforces the 200-line rule, the progressive disclosure principle, and the
+references/ split. We take ownership of how it's invoked inside the GAD loop.
+
+## When to use this skill
+
+- `gad:evolution:evolve` calls this for each high-pressure phase candidate.
+- A user explicitly says "draft a skill for X" or "quick skill" or "convert
+  this candidate to a skill."
+- You've finished a workflow and want to capture a SKILL.md immediately
+  without running through `gad-skill-creator`'s eval loop.
+- You have a clear context source — a CANDIDATE.md from compute-self-eval,
+  a raw phase dump, or a working session you want to preserve.
+
+## When NOT to use this
+
+- The skill is high-stakes and you want test runs against real subagents to
+  validate it — use `gad-skill-creator` (heavy path) instead.
+- You're improving an existing skill that already has tests — `gad-skill-creator`
+  knows how to read the existing tests and re-run them.
+- The pattern isn't actually clear yet — write a quick note instead and let
+  the next evolution surface it.
+
+## Step 1 — ensure dot-agent create-skill is installed
+
+Idempotent — only installs if missing:
+
+```sh
+if [ ! -d "$HOME/.agents/skills/create-skill" ]; then
+  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes
+fi
+```
+
+After install, `~/.agents/skills/create-skill/SKILL.md` is the canonical source
+plus four reference files in `references/`. Read SKILL.md once for the full
+authoring guide — this wrapper only handles the input plumbing.
+
+## Step 2 — locate the source context
+
+The drafting input depends on how you were invoked:
+
+- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/CANDIDATE.md` — already
+  exists, written by `compute-self-eval`. Contains the raw phase dump (tasks,
+  decisions, file refs, CLI surface, related skills, git log highlights).
+- **From a direct user request:** decide on a kebab-case slug, create
+  `.planning/proto-skills/<slug>/`, and write a CANDIDATE.md from whatever the
+  user is pointing at (a phase, a working session, a transcript, a file).
+- **From a "redraft this skill" request:** the existing skill's directory.
+
+The CANDIDATE.md is **not curated** and does not contain a proposed name,
+proposed test prompts, or hand-picked decisions. It's the raw source. The
+agent reads it and decides what matters. This is intentional — see the
+2026-04-13 evolution-loop experiment finding: curators are filters, raw input
+pulls in more decisions.
+
+## Step 3 — invoke dot-agent create-skill on the source
+
+Read `~/.agents/skills/create-skill/SKILL.md` and follow its authoring
+workflow, treating CANDIDATE.md (or the user's context) as the source. The
+key constraints from dot-agent's guide:
+
+- **SKILL.md must be under 200 lines** — hard rule.
+- Description should be appropriately "pushy" so the skill triggers reliably.
+- Split deeper content into `references/<file>.md` and reference from SKILL.md.
+- Use the imperative form in instructions.
+- Explain *why*, not just *what*.
+
+Write to `.planning/proto-skills/<slug>/SKILL.md` and any references files under
+`.planning/proto-skills/<slug>/references/`.
+
+Pick the kebab-case skill name yourself, drawing from the phase or context. Do
+not ask the human — the whole point of the autonomous loop is that you make
+the call.
+
+## Step 4 — Hand off to the validator
+
+After SKILL.md is written, the orchestrator (`gad:evolution:evolve`) runs the
+validator skill (`gad-evolution-validator`) on the new proto-skill. The
+validator writes `.planning/proto-skills/<slug>/VALIDATION.md` with advisory
+notes:
+
+- Files cited in SKILL.md that don't exist in the repo
+- CLI commands cited that don't appear in `gad --help`
+- Convention shapes (e.g. `gad.json` examples) that don't match existing
+  files in the repo
+
+VALIDATION.md is **advisory, not blocking**. The human reviewer reads both
+SKILL.md and VALIDATION.md before promote/discard. You don't need to act on
+the validator yourself — just leave the proto-skill in place.
+
+## Step 5 — Stop
+
+Do not iterate. Do not run test prompts. Do not ask for review. The
+proto-skill stays in `.planning/proto-skills/<slug>/` until a human runs
+`gad evolution install <slug> ...`, `gad evolution promote <slug>`, or
+`gad evolution discard <slug>` later.
+
+If the orchestrator passed you multiple candidates, loop steps 2-4 for each
+one. Otherwise stop after one.
+
+## Failure modes
+
+- **dot-agent guide says to ask the user questions.** Don't. Make the call
+  yourself and document the decision in the skill body. We're autonomous
+  here.
+- **Tempted to run test prompts.** That's `gad-skill-creator` territory. Stop
+  at SKILL.md.
+- **CANDIDATE.md is sparse.** Read it anyway and pull from the file references
+  it points at — that's where the depth lives.
+
+## Why this skill is universal (not under `gad:evolution:`)
+
+Quick-skill is useful outside the evolution loop too — anytime you want to
+write a skill fast from clear context. Keeping it general means we don't
+duplicate the wrapper for one-off skill authoring vs evolution drafting.
+
+## Reference
+
+- `~/.agents/skills/create-skill/SKILL.md` — dot-agent's canonical authoring guide
+- `~/.agents/skills/create-skill/references/*` — format, structure, examples, best practices
+- `gad-skill-creator` — the heavy path with full eval loop (Anthropic skill-creator)
+- `gad-evolution-evolve` — the orchestrator that calls this for each candidate
+- 2026-04-13 evolution-loop experiment finding (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)
+
+
+## create-skill
+id: create-skill
+description: >-
+origin: official
+
+
+# create-skill
+
+A skill is a short, concrete methodology document. It captures "when you hit X, do Y, because Z." Skills are the durable memory of an agent that has no other planning framework — write them as soon as you learn something worth keeping, not at the end of a session.
+
+## When to write a skill
+
+Write a skill when ANY of these are true:
+
+- You solved a problem that took more than one attempt.
+- You found a pattern that worked where a more obvious one did not.
+- You hit a bug whose fix is not self-evident from reading the fixed code.
+- You made a design decision that a later agent could reasonably question.
+- You built a reusable primitive (scene transition, state composition, loader, etc.).
+
+Do NOT write a skill for:
+
+- Things any agent would already know (e.g. "use const not var").
+- One-off fixes specific to a single file that nobody will touch again.
+- Speculation about patterns you haven't actually used.
+
+## Where skills live
+
+```
+game/.planning/skills/<kebab-name>.md
+```
+
+One skill per file. Kebab-case filename matching the skill's topic.
+
+## Trace marker contract (for evals)
+
+When running inside an eval with GAD trace hooks installed (`gad install hooks`),
+**any skill you author should write its id to the trace marker file at start and
+clear it at end.** This is how the hook handler attributes subsequent tool calls
+to the active skill and emits a discrete `skill_invocation` event on each
+transition.
+
+```sh
+# At the start of the skill
+echo "my-skill-id" > .planning/.trace-active-skill
+
+# ... skill body runs, tool calls get attributed ...
+
+# At the end of the skill (or before handing control back)
+echo -n "" > .planning/.trace-active-skill
+```
+
+Nested skills: when skill X invokes skill Y, Y overwrites the marker with its
+own id. The hook handler records `parent: "X"` on the `skill_invocation` event
+for Y, then when Y finishes and restores the marker to "X", another transition
+event is emitted. The lineage is preserved as a chain of parent pointers.
+
+**The agent never reads the marker directly.** The hook is the source of truth
+for the event stream. The marker is a one-file write per skill start, zero
+ceremony beyond that. No other coordination required.
+
+Not running inside an eval? The marker file is harmless — it's just an
+untracked file in `.planning/` that nothing reads. Write to it freely; it's
+only consumed by `gad-trace-hook.cjs` when hooks are installed.
+
+## YAML frontmatter format (critical)
+
+Every skill starts with a YAML frontmatter block (`---` delimiters) containing `name` and
+`description` fields. The skill loader in Claude Code, Cursor, Codex, and other runtimes
+all parse this strictly with js-yaml, which means:
+
+- **Descriptions with embedded colons break parsing.** A description like
+  `"methodology: the core idea"` fails because YAML reads `methodology:` as a key.
+- **Always use the folded block scalar form** (`>-`) for descriptions, which lets you
+  write multi-line prose without worrying about colons, quotes, or line length:
+
+  ```yaml
+  ---
+  name: my-skill
+  description: >-
+    First paragraph of the description, as long as you want. The folded scalar joins
+    wrapped lines with spaces so the final string is a single paragraph. Colons inside
+    the prose are safe: they don't get parsed as YAML keys because the scalar is treated
+    as a single opaque string.
+  ---
+  ```
+
+- The `>-` is `>` (folded, lines join with spaces) plus `-` (strip trailing newline).
+  Without the `-`, you get an extra newline at the end; without the `>`, you get literal
+  line breaks preserved.
+- Indentation matters. The body of the folded scalar must be indented more than the
+  `description:` key. Two spaces is the convention.
+
+**Test your skill frontmatter** before shipping by running any YAML parser:
+
+```sh
+node -e "console.log(require('js-yaml').load(require('fs').readFileSync('SKILL.md','utf8').split('---')[1]))"
+```
+
+Or just let `install.js` do it — it validates every SKILL.md during install and warns on
+the exact line and column of any failure (this is how we caught the two broken skills in
+session 6).
+
+## Skill structure
+
+Every skill follows the same shape. Keep it short — a skill longer than one screen is usually two skills.
+
+```markdown
+# <Skill name — imperative or noun phrase>
+
+## When to use
+<1-3 bullets describing the trigger — what situation makes this skill relevant>
+
+## The pattern
+<The concrete recipe. Code snippet preferred over prose. Show the working shape.>
+
+## Why
+<One paragraph. The reason this works, or the reason the obvious alternative fails.
+ If this skill exists because of a specific past failure, describe the failure.>
+
+## Failure modes
+<Bullets. What goes wrong if you do this slightly wrong. How to recognize it.>
+
+## Related
+<Other skills this depends on or supersedes, if any.>
+```
+
+## Writing rules
+
+1. **Lead with the trigger.** A skill nobody reads because they don't know when it applies is dead. The "When to use" section must let a future agent decide in 5 seconds whether to keep reading.
+2. **Show working code, not pseudocode.** Paste the shape that actually worked. An agent reading the skill should be able to adapt the snippet directly.
+3. **Explain the failure you avoided.** "Why" is the most load-bearing section. Without it, future agents cannot judge edge cases — they'll either blindly follow or blindly ignore.
+4. **Write it immediately.** If you defer skill-writing to "the end of the phase," you will forget the details that matter (the specific error message, the alternative you tried first, why it failed). Write the skill in the same commit that contains the fix.
+5. **Update, don't duplicate.** Before creating a new skill, check existing `.planning/skills/` for one covering the same ground. Update and sharpen the existing skill instead of adding a near-duplicate.
+6. **Delete wrong skills.** If a skill turns out to encode a bad pattern, delete or rewrite it. A stale skill is worse than no skill — it actively misleads.
+
+## Emergent condition: inheritance and evolution
+
+If you are running in the `emergent` eval condition, you inherit skills from the previous run under `game/.planning/skills/`. Your job is to:
+
+1. Read every inherited skill before writing code.
+2. Apply the ones that match your situation.
+3. When an inherited skill is wrong or incomplete, REWRITE it in place. Keep the filename so the skill's lineage is trackable.
+4. Write a `CHANGELOG.md` in `game/.planning/skills/` summarizing what you changed from the inherited set and why. This is how the next run learns.
+
+## Bare condition: you start with nothing
+
+If you are running in the `bare` eval condition, you start with only this skill. Everything else is yours to author. The expectation is not that you build a clone of the GAD framework — it's that you write down whatever working methodology emerges, so that you can pick it up again after a context reset and so that future emergent runs can inherit it.
+
+## Confirm capture
+
+After writing a skill, log the capture in your working notes (wherever you're tracking progress):
+
+```
+Skill captured: <name>
+Trigger: <one-line trigger>
+File: game/.planning/skills/<name>.md
+```
+
+Then continue with the work that prompted the skill. Skill capture should take under two minutes — if it takes longer, you are probably writing a design doc, not a skill.
 
 
 ## eval-skill-install
@@ -1233,41 +1535,6 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
 - **Context efficiency:** Archive keeps ROADMAP.md and REQUIREMENTS.md constant size per milestone
 - **Fresh requirements:** Next milestone starts with `/gad:new-milestone` which includes requirements definition
   </critical_rules>
-
-
-## gad:create-skill
-id: gad-create-skill
-description: >-
-origin: official
-
-
-<objective>
-Create a new GAD skill using the gad-skill-creator methodology. The skill should
-use GAD CLI commands where they exist, tag task attribution, and have an eval
-project scaffolded immediately.
-</objective>
-
-<process>
-1. Read the gad-skill-creator SKILL.md at `skills/gad-skill-creator/SKILL.md`
-2. Follow its workflow exactly — it references the Anthropic skill-creator methodology
-3. Key GAD additions:
-   - Check existing CLI commands first (`gad --help`)
-   - Check existing skills for overlap (`ls skills/`)
-   - Add `framework_skill: true` if it's a framework skill (use `--framework` flag)
-   - Add `uses_cli:` frontmatter listing CLI commands the skill chains
-4. Write the skill to `skills/<skill-name>/SKILL.md`
-5. Create test cases in `skills/<skill-name>/evals/evals.json`
-6. **MANDATORY: Scaffold eval project immediately after skill creation:**
-   ```bash
-   gad eval setup --project <skill-name>-eval
-   ```
-   This is NOT optional. Per decision gad-102, every skill must have an eval project
-   on the site. The eval project validates the skill works in isolation. Verify the
-   eval project exists at `evals/<skill-name>-eval/gad.json` before considering the
-   skill creation complete.
-7. Verify skill is discoverable: run `gad snapshot --projectid get-anything-done` and
-   confirm the skill appears in the catalog scan output.
-</process>
 
 
 ## gad-cross-config-domain-change
@@ -2497,7 +2764,7 @@ gad:evolution:evolve
   ├─ for each new candidate phase:
   │     ├─ keep skills/candidates/<slug>/CANDIDATE.md as the raw source
   │     │     = raw phase dump (no curator pre-digestion)
-  │     ├─ invoke gad-quick-skill on CANDIDATE.md
+  │     ├─ invoke create-proto-skill on CANDIDATE.md
   │     │     → writes .planning/proto-skills/<slug>/SKILL.md + references/
   │     └─ invoke gad-evolution-validator on the new proto-skill
   │           → writes .planning/proto-skills/<slug>/VALIDATION.md (advisory)
@@ -2636,16 +2903,16 @@ created_by: gad-evolution-evolve
 ```
 
 **No curator section.** No proposed name. No proposed test prompts. No
-hand-picked decisions. The drafting agent (gad-quick-skill) reads this raw
+hand-picked decisions. The drafting agent (create-proto-skill) reads this raw
 material and decides what matters.
 
-## Step 5: Invoke gad-quick-skill on each CANDIDATE.md
+## Step 5: Invoke create-proto-skill on each CANDIDATE.md
 
-Hand each candidate off to `gad-quick-skill`:
+Hand each candidate off to `create-proto-skill`:
 
 ```
 For each <slug> in this evolution:
-  Invoke gad-quick-skill with: "Process the candidate at
+  Invoke create-proto-skill with: "Process the candidate at
   skills/candidates/<slug>/CANDIDATE.md. Write SKILL.md + references/
   under .planning/proto-skills/<slug>/. Do not ask questions."
 ```
@@ -2814,14 +3081,14 @@ against file-ref totals.
 - **No high-pressure phases found:** valid outcome. Print "no proto-skills
   this evolution" and don't create any files. The evolution marker still
   drops in `.evolutions/` so we have a record that we looked.
-- **gad-quick-skill produces a sparse SKILL.md:** read CANDIDATE.md, see if it
+- **create-proto-skill produces a sparse SKILL.md:** read CANDIDATE.md, see if it
   was sparse. The CANDIDATE.md should always include the full task list,
   decisions, file refs, and git history. If those are missing, fix the
   CANDIDATE.md generation in step 4.
 
 ## Reference
 
-- `gad-quick-skill` — the drafter this skill invokes per candidate
+- `create-proto-skill` — the drafter this skill invokes per candidate
 - `gad-evolution-validator` — the advisory checker
 - `compute-self-eval.mjs` — selection pressure source
 - `evals/FINDINGS-2026-04-13-evolution-loop-experiment.md` — why the curator
@@ -2878,7 +3145,7 @@ that don't actually exist in the repo today.
 
 ## Mental model
 
-A proto-skill is a draft. The drafting agent (gad-quick-skill) reads raw
+A proto-skill is a draft. The drafting agent (create-proto-skill) reads raw
 candidate data and writes a SKILL.md based on what it understood. The
 validator runs after drafting and answers a single question:
 
@@ -2890,7 +3157,7 @@ human reviewer should see the discrepancy before promoting.
 
 ## When to use this
 
-- `gad-evolution-evolve` calls this immediately after `gad-quick-skill` writes
+- `gad-evolution-evolve` calls this immediately after `create-proto-skill` writes
   a new proto-skill.
 - A user asks "validate proto-skill X" or "check if this skill is consistent
   with the repo."
@@ -2967,7 +3234,7 @@ signal to investigate:
 - `lib/evolution-validator.cjs` — the validator engine
 - `gad evolution validate <slug>` — the CLI entry point
 - `gad-evolution-evolve` — the orchestrator that calls this
-- `gad-quick-skill` — the drafter whose output this validates
+- `create-proto-skill` — the drafter whose output this validates
 
 
 ## gad:execute-phase
@@ -3327,32 +3594,6 @@ Check for .planning/STATE.md - loads context if project already initialized
 - [ ] Parallel agents completed without errors
 - [ ] User knows next steps
 </success_criteria>
-
-
-## gad:merge-skill
-id: gad-merge-skill
-description: >-
-origin: official
-
-
-<objective>
-Merge overlapping skills into a single unified skill following the merge-skill
-methodology. Consult agentskills.io and Anthropic guidelines for quality.
-</objective>
-
-<process>
-1. Read the merge-skill SKILL.md at `skills/merge-skill/SKILL.md`
-2. Follow its 6-step procedure exactly:
-   - Step 1: Identify the overlap
-   - Step 1b: Consult agentskills.io guidance (https://agentskills.io/home)
-   - Step 2: Draft the merged skill
-   - Step 3: Deprecate the originals (add `superseded-by` frontmatter)
-   - Step 4: Update CHANGELOG
-   - Step 5: Run evaluation harness (if available)
-   - Step 6: Notify inheriting eval runs
-3. The merged skill must meet the agentskills.io standard and Anthropic skills guide quality bar
-4. Scaffold an eval project for the merged skill: `gad eval setup --project <merged-name>-eval`
-</process>
 
 
 ## gad:migrate-schema
@@ -4035,143 +4276,6 @@ Provides situational awareness before continuing work.
 Execute the progress workflow from @workflows/progress.md end-to-end.
 Preserve all routing logic (Routes A through F) and edge case handling.
 </process>
-
-
-## gad-quick-skill
-id: gad-quick-skill
-description: >-
-origin: official
-
-
-# gad-quick-skill
-
-A thin wrapper around dot-agent's
-[create-skill](https://github.com/siviter-xyz/dot-agent) that lets us draft new
-GAD skills fast without spinning up a full test loop.
-
-We use the dot-agent skill **unmodified** — it's already a clean format guide
-that enforces the 200-line rule, the progressive disclosure principle, and the
-references/ split. We take ownership of how it's invoked inside the GAD loop.
-
-## When to use this skill
-
-- `gad:evolution:evolve` calls this for each high-pressure phase candidate.
-- A user explicitly says "draft a skill for X" or "quick skill" or "convert
-  this candidate to a skill."
-- You've finished a workflow and want to capture a SKILL.md immediately
-  without running through `gad-skill-creator`'s eval loop.
-- You have a clear context source — a CANDIDATE.md from compute-self-eval,
-  a raw phase dump, or a working session you want to preserve.
-
-## When NOT to use this
-
-- The skill is high-stakes and you want test runs against real subagents to
-  validate it — use `gad-skill-creator` (heavy path) instead.
-- You're improving an existing skill that already has tests — `gad-skill-creator`
-  knows how to read the existing tests and re-run them.
-- The pattern isn't actually clear yet — write a quick note instead and let
-  the next evolution surface it.
-
-## Step 1 — ensure dot-agent create-skill is installed
-
-Idempotent — only installs if missing:
-
-```sh
-if [ ! -d "$HOME/.agents/skills/create-skill" ]; then
-  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes
-fi
-```
-
-After install, `~/.agents/skills/create-skill/SKILL.md` is the canonical source
-plus four reference files in `references/`. Read SKILL.md once for the full
-authoring guide — this wrapper only handles the input plumbing.
-
-## Step 2 — locate the source context
-
-The drafting input depends on how you were invoked:
-
-- **From `gad:evolution:evolve`:** `skills/candidates/<slug>/CANDIDATE.md` — already
-  exists, written by `compute-self-eval`. Contains the raw phase dump (tasks,
-  decisions, file refs, CLI surface, related skills, git log highlights).
-- **From a direct user request:** decide on a kebab-case slug, create
-  `.planning/proto-skills/<slug>/`, and write a CANDIDATE.md from whatever the
-  user is pointing at (a phase, a working session, a transcript, a file).
-- **From a "redraft this skill" request:** the existing skill's directory.
-
-The CANDIDATE.md is **not curated** and does not contain a proposed name,
-proposed test prompts, or hand-picked decisions. It's the raw source. The
-agent reads it and decides what matters. This is intentional — see the
-2026-04-13 evolution-loop experiment finding: curators are filters, raw input
-pulls in more decisions.
-
-## Step 3 — invoke dot-agent create-skill on the source
-
-Read `~/.agents/skills/create-skill/SKILL.md` and follow its authoring
-workflow, treating CANDIDATE.md (or the user's context) as the source. The
-key constraints from dot-agent's guide:
-
-- **SKILL.md must be under 200 lines** — hard rule.
-- Description should be appropriately "pushy" so the skill triggers reliably.
-- Split deeper content into `references/<file>.md` and reference from SKILL.md.
-- Use the imperative form in instructions.
-- Explain *why*, not just *what*.
-
-Write to `.planning/proto-skills/<slug>/SKILL.md` and any references files under
-`.planning/proto-skills/<slug>/references/`.
-
-Pick the kebab-case skill name yourself, drawing from the phase or context. Do
-not ask the human — the whole point of the autonomous loop is that you make
-the call.
-
-## Step 4 — Hand off to the validator
-
-After SKILL.md is written, the orchestrator (`gad:evolution:evolve`) runs the
-validator skill (`gad-evolution-validator`) on the new proto-skill. The
-validator writes `.planning/proto-skills/<slug>/VALIDATION.md` with advisory
-notes:
-
-- Files cited in SKILL.md that don't exist in the repo
-- CLI commands cited that don't appear in `gad --help`
-- Convention shapes (e.g. `gad.json` examples) that don't match existing
-  files in the repo
-
-VALIDATION.md is **advisory, not blocking**. The human reviewer reads both
-SKILL.md and VALIDATION.md before promote/discard. You don't need to act on
-the validator yourself — just leave the proto-skill in place.
-
-## Step 5 — Stop
-
-Do not iterate. Do not run test prompts. Do not ask for review. The
-proto-skill stays in `.planning/proto-skills/<slug>/` until a human runs
-`gad evolution install <slug> ...`, `gad evolution promote <slug>`, or
-`gad evolution discard <slug>` later.
-
-If the orchestrator passed you multiple candidates, loop steps 2-4 for each
-one. Otherwise stop after one.
-
-## Failure modes
-
-- **dot-agent guide says to ask the user questions.** Don't. Make the call
-  yourself and document the decision in the skill body. We're autonomous
-  here.
-- **Tempted to run test prompts.** That's `gad-skill-creator` territory. Stop
-  at SKILL.md.
-- **CANDIDATE.md is sparse.** Read it anyway and pull from the file references
-  it points at — that's where the depth lives.
-
-## Why this skill is universal (not under `gad:evolution:`)
-
-Quick-skill is useful outside the evolution loop too — anytime you want to
-write a skill fast from clear context. Keeping it general means we don't
-duplicate the wrapper for one-off skill authoring vs evolution drafting.
-
-## Reference
-
-- `~/.agents/skills/create-skill/SKILL.md` — dot-agent's canonical authoring guide
-- `~/.agents/skills/create-skill/references/*` — format, structure, examples, best practices
-- `gad-skill-creator` — the heavy path with full eval loop (Anthropic skill-creator)
-- `gad-evolution-evolve` — the orchestrator that calls this for each candidate
-- 2026-04-13 evolution-loop experiment finding (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)
 
 
 ## gad:reapply-patches
@@ -5194,7 +5298,7 @@ candidates remain — this is the human-review gate.
 
 - Canonical skill-creator: `~/.agents/skills/skill-creator/SKILL.md`
 - Anthropic skills repo: https://github.com/anthropics/skills
-- Related skills: `gad-evolution-evolve`, `gad-merge-skill`, `gad-find-skills`
+- Related skills: `gad-evolution-evolve`, `merge-skill`, `create-proto-skill`, `create-skill`, `gad-find-skills`
 
 
 
@@ -6607,6 +6711,169 @@ gad docs list --projectid <id>
 - Stale diagrams — if the code changed, update the diagram or delete it
 
 
+## merge-skill
+id: merge-skill
+description: >-
+origin: human-authored
+
+
+# merge-skill
+
+**Experimental — awaiting evaluation harness per decision gad-86.**
+
+Merging is what stops the skill catalog from drowning in near-duplicates. The user's ChatGPT analysis (captured as decision gad-81) names skill collision as the primary failure mode of large skill libraries: two skills with overlapping descriptions produce ambiguous routing, the agent picks wrong or thrashes between them, context budget is wasted on both. Merging is the fix.
+
+## When to merge
+
+Merge when any of these is true:
+
+- **Description overlap**: two skills trigger on nearly the same keywords or use cases. If a new user read both descriptions they could not tell which to use.
+- **Functional overlap**: both skills produce similar outputs from similar inputs, with only minor implementation differences. The differences are not worth two files.
+- **Foundational attunement**: you want to take a generic skill (e.g. `debug`) and produce a project-tailored variant (e.g. `debug-for-kaplay-rune-forge`). The original stays, the merged variant is new.
+- **Experimental convergence**: two experimental skills (per gad-86) addressed the same problem from different angles during different sessions. Their evaluations show similar effectiveness. Merge them into a canonical version.
+
+Do NOT merge when:
+
+- The two skills intentionally handle different edge cases. A skill for "greenfield creation" and a skill for "brownfield refactor" should stay separate even though they sound related.
+- One is canonical (has passing evaluations per gad-86) and the other is experimental. The canonical one wins — deprecate the experimental as superseded rather than merging.
+- They belong to different categories per Anthropic's three-category taxonomy (doc-creation / workflow-automation / mcp-enhancement from gad-70). Cross-category merges usually produce muddled skills.
+
+## Procedure
+
+### Step 1 — Identify the merge
+
+Detect the overlap. Two signals:
+
+```sh
+# Catalog-based: ask find-skills for similar skills
+gad skill find "<keywords from the overlap>"
+
+# Structural-based: read both SKILL.md frontmatters
+cat skills/<skill-a>/SKILL.md
+cat skills/<skill-b>/SKILL.md
+```
+
+Write down the answer to this question for yourself: **"What can each of these skills do that the other cannot?"** If the answer is "nothing," they are merge candidates. If there is a real distinction, document it as a comment on both and do NOT merge.
+
+### Step 1b — Consult agentskills.io guidance
+
+Before drafting the merge, check the agentskills.io standard (https://agentskills.io/home) for professional guidance on skill structure, naming, and interoperability. The Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf, decision gad-70) is also canonical reference. Use these as the quality bar — the merged skill should meet or exceed the standards described in both documents.
+
+### Step 2 — Draft the merged skill
+
+Create a new SKILL.md at `skills/<merged-name>/SKILL.md`. The merged name should be:
+
+- **Shorter than either input** when possible (a merge signals simplification)
+- **More specific** when the merge is foundational-into-project (e.g. `debug` + kaplay context → `kaplay-debug`)
+- **Never** use `merged-` or `combined-` as a prefix — those leak implementation detail
+
+The merged skill's frontmatter:
+
+```yaml
+---
+name: <merged-name>
+status: experimental
+origin: human-authored   # or "emergent" if you are an agent without explicit user request
+authored-by: <user or agent>
+authored-on: <ISO date>
+description: >-
+  <compose a new description that unifies the two inputs. Name the trigger
+  keywords from both. Name the failure modes both addressed. Be more
+  specific than either original to avoid re-introducing overlap.>
+supersedes: [<skill-a>, <skill-b>]
+---
+```
+
+The `supersedes` array is load-bearing — it lets `find-skills` skip the inputs in favor of the merge, and it lets the prebuild mark the originals as deprecated.
+
+The body of the merged SKILL.md should:
+
+1. State the merged purpose in one paragraph.
+2. Have a "When to use" section that unifies the trigger conditions from both inputs without weakening either.
+3. Walk through the procedure end-to-end, ideally as a single coherent workflow rather than two stitched procedures.
+4. Cite the sources (both inputs) in a "History" section at the bottom. This preserves attribution.
+
+### Step 3 — Deprecate the originals
+
+For each input skill, add a frontmatter flag:
+
+```yaml
+---
+name: <original-name>
+status: deprecated
+superseded-by: <merged-name>
+deprecated-on: <ISO date>
+---
+```
+
+Do NOT delete the original SKILL.md files. They are historical artifacts — future sessions looking at the lineage need to see what existed before. The prebuild filters deprecated skills out of the default catalog view but keeps them in the `all skills` filter.
+
+### Step 4 — Update CHANGELOG
+
+Append an entry to `skills/CHANGELOG.md` (create the file if it does not exist):
+
+```markdown
+## <YYYY-MM-DD> — merge: <merged-name>
+
+**Merged:** `<skill-a>` + `<skill-b>` → `<merged-name>`
+**Rationale:** <one sentence explaining the overlap>
+**Inherited by:** <list of eval projects or runs that inherited either input, if any>
+**Verification:** <pending evaluation harness per gad-87, or: "passed with delta.pass_rate = X">
+```
+
+The CHANGELOG is how future agent sessions see that skills were merged without spelunking git history.
+
+### Step 5 — Run the evaluation harness (when it exists)
+
+Once the `gad eval skill <name>` harness lands (tracked as a new task), run it against the merged skill:
+
+```sh
+gad eval skill <merged-name>
+```
+
+The harness reads the merged skill's `evals/evals.json`, runs with_skill vs without_skill in clean subagent contexts, and emits `benchmark.json`. If the merged skill's `delta.pass_rate > 0`, it graduates from experimental to canonical per gad-86.
+
+If the merged skill UNDERPERFORMS the originals (negative delta), the merge was a mistake. Revert:
+
+1. Flip the merged skill's status back to `status: experimental` or delete it.
+2. Unflag both inputs (remove `superseded-by`).
+3. Document the failed merge attempt in CHANGELOG with lessons.
+
+### Step 6 — Notify inheriting runs
+
+If either input skill was inherited by any eval project under `evals/<project>/template/skills/`, update those templates to inherit the merged skill instead. The prebuild's `SKILL_INHERITANCE` map will reflect the change on the next build and the site's /skills page will show the new lineage.
+
+## Frontmatter discipline — colons in descriptions
+
+This is the trap that burned multiple session-authored skills before gad-35. Never put an unquoted colon in a description:
+
+```yaml
+# ❌ BROKEN — js-yaml parses "when:" as a key separator
+description: Use when: the user asks about kaplay runes
+
+# ✓ FIXED — folded block scalar treats the body as opaque
+description: >-
+  Use when the user asks about kaplay runes. Any colon inside is safe because
+  this is a folded block scalar.
+```
+
+Always use `>-` (folded block scalar, chomp-final-newline). Test your merged skill's frontmatter with `node -e "require('js-yaml').load(require('fs').readFileSync(process.argv[1], 'utf8').match(/^---\n([\s\S]*?)\n---/)[1])" skills/<name>/SKILL.md` before committing.
+
+## Anti-patterns
+
+- **Merging three or more skills at once** — too many moving parts, hard to grade. Merge pairwise.
+- **Merging across categories** (doc-creation + workflow-automation). The merged skill ends up muddled. Keep them separate.
+- **Merging canonical skills together** — canonical skills already survived the evaluation harness. Merging them is a regression unless the merge itself is evaluated and beats both.
+- **Using merge-skill to "clean up" a catalog without evidence** — merge because overlap is measured (description similarity score, failed routing in practice), not because you think the names look similar.
+- **Forgetting `supersedes:` in the frontmatter** — without it, `find-skills` still surfaces the deprecated inputs and the overlap problem persists.
+
+## History
+
+This skill was authored on 2026-04-09 after decision gad-73 named the fundamental triumvirate (find-skills + merge-skill + create-skill). It is the merging half of the gad-68 emergent-evolution hypothesis: the claim that skills evolve by merging fundamentals into project-tailored variants. Until this skill exists and has a working evaluation harness, gad-68 has no concrete mechanism to test.
+
+**Current state:** experimental. No evaluation harness has been run against it. Test cases and an `evals/evals.json` are the next authoring step. Once the `gad eval skill` CLI lands (gad-87), run this skill through it and graduate it to canonical if it passes.
+
+
 ## objective-eval-design
 id: objective-eval-design
 description: >-
@@ -7358,7 +7625,81 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (185)
+# Decisions (189)
+
+## gad-192: `gad snapshot` surfaces sprint-relevant skills via TASK-REGISTRY `skill=` attribution
+
+### Summary
+
+`gad snapshot` today dumps STATE, ROADMAP, open tasks, and recent decisions. It does not tell the agent which skills it is most likely to reach for in the current sprint, so agents either cold-read the whole catalog (expensive) or guess (unreliable). Decision gad-18 (the GAD loop: snapshot → work → update → commit) mandates that attribution metadata (`skill="…"`, `agent="…"`, `type="…"`) lives on every completed task in TASK-REGISTRY.xml per decision gad-104. That same attribution is the ground truth for "which skills does this project actually use." Policy: `gad snapshot` gains a new `SKILLS (top N by sprint attribution)` section that scans open + recently-completed tasks in the current sprint window for `skill=` attributes, counts occurrences, and emits the top N skills (N defaults to 5, overridable via config) with one line each: `&lt;name&gt; — &lt;workflow-pointer&gt; — &lt;one-line description&gt;`. Proto-skills staged in `.planning/proto-skills/` are included so in-flight evolution work is immediately visible to the next agent that starts a session. Skills with zero sprint attribution are excluded — this is signal, not a catalog dump.
+
+### Impact
+
+(1) `bin/gad.cjs snapshot` gains a new emitter `renderSprintSkills(projectId, sprintWindow)` that reads TASK-REGISTRY.xml via the existing parser, tallies `skill=` attributes across tasks in the current sprint (open + done within sprint window), and joins against `skills/&lt;name&gt;/SKILL.md` frontmatter (description + workflow pointer) to produce the section output. (2) Proto-skills at `.planning/proto-skills/&lt;slug&gt;/` are scanned and emitted alongside canonical skills with a `[proto]` marker so the agent knows they are staged for test use. (3) Config: new optional `[snapshot] sprint_skills_top_n = 5` key in `gad-config.toml`. (4) Snapshot output grows by roughly 5-10 lines — acceptable given the hydration metric (decision gad-163) already tracks snapshot token cost, and having sprint-relevant skills inline saves a round-trip to the catalog. (5) This closes a known gap where agents rediscover skills via catalog reads instead of being handed the sprint subset. (6) Consumer projects get the same behavior automatically — snapshot is project-agnostic and reads whatever TASK-REGISTRY lives at the queried root.
+
+## gad-191: Proto-skills are self-contained bundles at `.planning/proto-skills/&lt;slug&gt;/` with a sibling `workflow.md`
+
+### Summary
+
+Decision gad-183 already moved proto-skill staging to `.planning/proto-skills/` and established `gad evolution install/validate/promote/discard`. This decision refines the contents of a staged proto-skill directory so it plays nicely with the new uniform skill shape (gad-190). A staged proto-skill is a **self-contained bundle**: `SKILL.md` (frontmatter `status: proto`, `workflow: ./workflow.md`), `workflow.md` as a sibling (not in the canonical `workflows/` tree), `PROVENANCE.md`, and optionally the original `CANDIDATE.md`. The `workflow:` frontmatter pointer uses a relative sibling path — this is the one case where `workflow:` does not point into canonical `workflows/`. Rationale: proto-skills are not canonical framework assets yet. Keeping their workflow file inside the bundle means the whole thing can be copied whole into a runtime (`.claude/skills/&lt;name&gt;/`) by `gad evolution install` without touching canonical `workflows/`, and it can be test-used end-to-end before promotion. Promotion (`gad evolution promote`) performs the split: `workflow.md` moves to `workflows/&lt;name&gt;.md`, SKILL.md moves to `skills/&lt;name&gt;/SKILL.md`, and the `workflow:` pointer is rewritten to the canonical location. This decision is the first to make proto-skills bundle-shaped rather than flat files.
+
+### Impact
+
+(1) `bin/gad.cjs evolution install` must copy the proto-skill directory whole into runtime targets so the sibling `workflow.md` resolves correctly at runtime. If the current implementation only copies `SKILL.md`, it must be extended to walk the directory (2026-04-15 check: verify current behavior before executing task 42.2-12). (2) `bin/gad.cjs evolution promote` must perform the SKILL.md + workflow.md split into `skills/` and `workflows/` and rewrite the frontmatter pointer — confirm current behavior matches; if it previously wrote both files under `skills/`, update it. (3) `references/skill-shape.md §5` documents the proto-skill bundle shape and is the contract that `create-proto-skill`, `gad-skill-creator`, and `gad evolution install/promote` must agree on. (4) Consumer projects follow the exact same bundle shape in their own `.planning/proto-skills/` — no project-type divergence. (5) `scripts/validate-canonical-assets.mjs` treats `.planning/proto-skills/` as excluded (existing behavior retained) so sibling-path `workflow:` refs do not trip the new canonical-workflow-resolution check. (6) Task 42.2-06 (`create-proto-skill` implementation) inherits this bundle shape as its output contract — the skill writes the bundle, not a flat SKILL.md.
+
+## gad-190: SKILL.md is the single command entry point; `workflow:` frontmatter key replaces `skill.json`
+
+### Summary
+
+The canonical skill shape has drifted: some skills ship `SKILL.md`, some ship `SKILL.md + COMMAND.md + skill.json`, some ship `SKILL.md + references/`. `skill.json` is a GAD-only sidecar (upstream GSD has zero of them) with a single load-bearing field: `commandPath`, which points at the workflow file under `workflows/`. There are ~60 of these sidecars in the canonical tree and only two live consumers in code (`bin/install.js:3088-3126` and `scripts/validate-canonical-assets.mjs:66-69`). Policy: every `skills/&lt;name&gt;/` carries exactly one `SKILL.md`, which is the command entry point. Non-trivial procedural bodies live in `workflows/&lt;name&gt;.md` and are referenced from SKILL.md frontmatter via a new `workflow:` key. Trivial skills may inline the body in SKILL.md and omit the workflow file. No more `COMMAND.md`, no more `skill.json`, no more dual-body skills. This operationalizes gad-180 (one canonical body per public name) and gad-181 (command skills are gad-*, procedural bodies live in prefixed workflows). The contract lives at `references/skill-shape.md`.
+
+### Impact
+
+(1) `bin/install.js:readCanonicalSkillRecords` migrates from reading `skill.json.commandPath` to reading the `workflow:` frontmatter key from SKILL.md. During the transition both paths are honored; after migration the `skill.json` read path is removed. (2) `scripts/validate-canonical-assets.mjs` drops its skill.json/COMMAND.md pairing check and gains a new check that every `workflow:` frontmatter pointer resolves to an existing file. (3) All ~60 `skills/**/skill.json` files are deleted in phase 42.2. (4) COMMAND.md files are either merged into `workflows/&lt;name&gt;.md` (if they carry unique procedural content) or deleted (if they are duplicates of the existing workflow file). (5) `references/skill-shape.md` becomes the canonical spec and is cited by every authoring skill (`create-skill`, `create-proto-skill`, `gad-skill-creator`, `merge-skill`) and by `gad evolution install/promote`. (6) The four authoring skills are migrated first so the scaffolding used to create future skills already emits the new shape. (7) `skills/gad-create-skill/`, `skills/gad-merge-skill/`, and `skills/gad-quick-skill/` are deleted as part of the same migration — their bodies collapse into `gad-skill-creator`, `merge-skill`, and the renamed `create-proto-skill` respectively (per task 42.2-03 and decision gad-168).
+
+## gad-189: Phase 44.5 vocabulary + draft/published model: recipe / species / generation / brood / bestiary — and projects default to draft, /project-market filters to published
+
+### Summary
+
+Discuss-phase 2026-04-15 for phase 44.5 (Brood Editor + Project Editor split) locked the vocabulary and the draft/published model before any plan-phase work starts.
+
+**Vocabulary**:
+- **Recipe**: reusable template that describes how to produce a species. Lives inside project data (not framework-level). A recipe is the authored definition; running it produces species instances.
+- **Species**: a recipe attached to a concrete project. Carries the project context, the recipe configuration, and per-species overrides. Matches today's `evals/&lt;project&gt;/species/&lt;species&gt;/species.json` shape — no schema change, just a naming clarification.
+- **Generation**: one concrete run/output of a species. `evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/` IS a generation. Each generation preserves its run code, trace, build artifacts, and scoring per decision gad-38.
+- **Brood**: the accumulated population of generations a species has produced. A brood is the set-of-all-generations-for-species-S-in-project-P at a given point in time. Not a directory — a computed view. The editor surfaces the brood when the operator selects a species.
+- **Bestiary**: the UI view that lists every species and its brood across a project. Rendered in the editor's inline species-detail pane as a grid of bestiary-entry cards with animated trait bars + visual diffs between generations. Grows over time as more generations land.
+
+**Published/draft model** (standard shape picked after operator asked for the most standard option):
+- New boolean field on project metadata: `"published": false` in `&lt;project&gt;/project.json`. Default is `false` — every existing project is treated as draft until explicitly flipped.
+- `/project-market` filters to `published === true`. Until the first project is published, the marketplace renders empty (or shows a "no published projects yet — browse drafts in the editor" empty state).
+- `/projects/[...id]` listing detail pages render for both draft and published projects — the detail page is always available regardless of publication state.
+- The editor (`/projects/[id]/edit` or equivalent new route) shows ALL projects regardless of publication state. Published-filtering is a marketplace-only concern.
+- `gad eval list` shows ALL projects regardless of publication state — it is an operator tool, not a consumer surface.
+- Flipping published is a single-field edit in the editor. Simple checkbox. No review workflow.
+- Same model applies recursively to species: species default to `"published": false`; the marketplace only shows published species inside published projects. Out-of-scope for the first editor slice but the field should be reserved now so schema doesn't churn later.
+
+**Split routes**:
+- `/project-market` (existing) — marketplace, published-only once the field lands.
+- `/projects/[...id]` catch-all (existing) — listing detail for a project or a project+species pair. The existing `http://localhost:3000/projects/app-forge/gad` route is SPECIES DETAIL, not project detail — previously misread as the project editor. This route stays as read-only detail; it is NOT the editor.
+- `/projects/[id]/edit` (new, phase 44.5) — project editor. Contains the brood editor inside it. Dev-gated.
+- `project-skills-scope-section-site-section` (existing panel on listing detail) — STAYS on the listing. Data source changes: it now aggregates skill usage across the project's broods/generations from the project catalog, instead of today's project-level skill catalog. Not the same surface as the editor's own skill panel.
+
+**Visual primitives locked for phase 44.5**:
+(a) Animated trait bars — confirmed.
+(b) Radar chart per species (6-8 trait axes) — prototype, feedback after live.
+(c) Visual diff tree (changed traits glow across generations) — confirmed.
+(d) Minecraft-style inventory grid for config editing — primary config surface. Recipe definitions bind to grid slots.
+(e) Bestiary view — in-game-style grid of bestiary cards showing species + their broods of generations.
+(f) iframe artifact preview — live served build from preserved eval output. Split-viewport right pane.
+(g) Inline species detail — expand in same viewport, not a separate route.
+(h) Visual Context System (cids + search tokens + CRUD modal footer) — mandatory for every section per decision gad-186/187 and the operator's hard requirement; flagged as a non-negotiable default applying to all GUI work including game UI. See feedback memory `feedback_visual_context_system_mandatory.md`.
+
+**Game UI vs web UI**: operator raised "why not make this a game with sprites" — answer is that gamified FEEL lives in the visual primitives (trait bars, bestiary cards, inventory grid, radar), not in a literal game engine. Web editor with gamified primitives gets the aesthetic without giving up API/CLI access or the Visual Context System integration. Not ruling out sprite work in a later phase if the cost/benefit shifts.
+
+### Impact
+
+(1) Phase 44.5 renamed from "Species Editor" to "Project Editor + Brood Editor" — a Project Editor shell that contains the Brood Editor as a species-level surface. (2) Terminology is now load-bearing across `species.json`, `project.json`, the editor UI, the marketplace, the bestiary view, and all future PLAN.md files under phase 44.5. Changes to any of these docs must use the locked words. (3) A `published` boolean must be added to `project.json` (and reserved in `species.json`) in the first 44.5 task — every existing project is implicitly draft. (4) `/project-market` filter logic changes and must ship with the first published project (or with a clearly labeled "no published projects" empty state) to avoid showing nothing without explanation. (5) The existing `/projects/[...id]` route is species/project DETAIL, not an editor — previously mis-identified. The new editor route is separate and must not collide. (6) The `project-skills-scope-section-site-section` panel's data source changes from project-level skills to brood/generation-aggregated skill usage — this is a new site-data contract that build-site-data.mjs must produce. (7) Task 44-14 (register projects/project-editor as [[evals.roots]]) shipped 2026-04-15 with a nested scaffold `projects/project-editor/project-editor/` to avoid colliding with the existing magicborn project in portfolio-legacy evals root. Baseline species `app-forge-baseline` inherits from app-forge v1 per the original plan. (8) Phase 44.5 task list reshaped from 5 tasks (44.5-01..04+02b) to a larger set including 44.5-01b draft/published, 44.5-01c editor CTA, 44.5-01d panel data source, 44.5-05 inventory grid primitive, 44.5-06 recipe CRUD, 44.5-07 bestiary view, 44.5-08 radar chart, 44.5-09 visual diff tree, 44.5-10 iframe preview. Exact task numbering and dependency order to be finalized in plan-phase for 44.5-01 before execution starts.
 
 ## gad-188: 44-28 umbrella: installer + release pipeline + data scoping — distribution is GitHub releases, not npm, with a Windows-first lightweight installer writing only into .planning/ and agent dirs
 
@@ -9650,7 +9991,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (296)
+# Tasks (315)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -10074,6 +10415,24 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.2-06** [planned]: Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then
 
+- **42.2-07** [done]: Author `references/skill-shape.md` as the canonical contract for the uniform skill shape: SKILL.md as single entry point, `workflow:` frontmatter key replacing `skill.json`, single `workflows/` dir, proto-skill bundle shape with sibling `workflow.md`, runtime install contract, validator rules, migration checklist. Cited by decisions gad-190/gad-191/gad-192 and by every downstream migration task in
+
+- **42.2-08** [planned]: Migrate `bin/install.js:readCanonicalSkillRecords` (lines 3088-3126) from reading `skill.json.commandPath` to reading the `workflow:` frontmatter key from SKILL.md. Honor both paths during the transition (frontmatter wins when present, fall back to skill.json). Add a unit test covering: (a) new-shape skill with `workflow:` frontmatter resolves correctly, (b) legacy skill.json still resolves, (c) s
+
+- **42.2-09** [planned]: Update `scripts/validate-canonical-assets.mjs:50-81` to validate the uniform shape per decision gad-190: (a) drop the current skill.json/COMMAND.md pairing check, (b) parse `workflow:` frontmatter from every canonical SKILL.md, (c) fail the build when the pointer does not resolve to an existing file (relative to repo root for canonical skills, relative to SKILL.md dir for proto-skill sibling refs)
+
+- **42.2-10** [planned]: Migrate the four authoring keepers to the uniform shape: `create-skill`, `create-proto-skill` (renamed from `gad-quick-skill` per task 42.2-03), `gad-skill-creator`, `merge-skill`. For each: add `workflow: workflows/&lt;name&gt;.md` to SKILL.md frontmatter, write or relocate the workflow body into `workflows/&lt;name&gt;.md`, delete `skill.json`, delete `COMMAND.md` (merge unique content into the 
+
+- **42.2-11** [planned]: Bulk-delete all remaining `skills/**/skill.json` sidecars (~60 files) after tasks 42.2-08/09/10 land. Sweep canonical `skills/` + `dist/release-support/**/skills/` + any eval project `skills/` and confirm zero skill.json files remain under canonical roots. Regenerate site catalog and verify `site/lib/catalog.generated.ts` still parses. Run `node scripts/validate-canonical-assets.mjs` and `node bin
+
+- **42.2-12** [planned]: Verify and wire `gad evolution install` for the proto-skill bundle shape (decision gad-191). Read current implementation in `bin/gad.cjs evolution install`; confirm it copies the `.planning/proto-skills/&lt;slug&gt;/` directory whole (SKILL.md + workflow.md + PROVENANCE.md + CANDIDATE.md) into each runtime target (`.claude/skills/&lt;name&gt;/`, `.agents/skills/&lt;name&gt;/`, etc.) so the sibling
+
+- **42.2-13** [planned]: Promote the phase-44.5 candidate (`skills/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. Then `gad evolution install` into the Claude run
+
+- **42.2-14** [planned]: Add a `SKILLS (top N by sprint attribution)` section to `gad snapshot` output per decision gad-192. New emitter `renderSprintSkills(projectId, sprintWindow)` in `bin/gad.cjs snapshot` path: scans open + recently-done tasks in the current sprint window for `skill=` attributes, tallies occurrences, joins against `skills/&lt;name&gt;/SKILL.md` frontmatter for description + workflow pointer, emits top
+
+- **42.2-15** [planned]: Migrate legacy `skills/candidates/` to `.planning/candidates/` per decision gad-183 (candidates are planning artifacts, not canonical framework assets). The phase-44.5 candidate is the only current inhabitant. Move the directory, update any references in docs / CLI / compute-self-eval that still scan `skills/candidates/`, and verify `gad evolution status` still picks it up from the new location. T
+
 - **42.3-01** [done]: Design the workflow planning-artifact schema and write `.planning/workflows/README.md`.
 
 - **42.3-02** [done]: Author the first set of hand-written workflows: gad-loop, gad-decide, gad-evolution, gad-debug, gad-discuss-plan-execute, gad-findings.
@@ -10224,7 +10583,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44-29** [done]: Deprecate and remove PageIdentified component.
 
-- **44-14** [planned]: Register `projects/project-editor` as an `[[evals.roots]]` entry once phase 00 of that project has produced a species/generation shape. Today it's registered only as a `[[planning.roots]]` entry â€” project-editor is a meta-project and doesn't yet have species. When phase 01 of project-editor lands (integrating app-forge v1 as the initial species), project-editor will have at least one species and
+- **44-14** [done]: Register `projects/project-editor` as an `[[evals.roots]]` entry once phase 00 of that project has produced a species/generation shape. Today it's registered only as a `[[planning.roots]]` entry â€” project-editor is a meta-project and doesn't yet have species. When phase 01 of project-editor lands (integrating app-forge v1 as the initial species), project-editor will have at least one species and
 
 - **44-15** [done]: Lock the component identity pattern for the Visual Context Panel: use explicit SiteSection cid="...-site-section" literals as the default searchable section handle, keep Identified optional for inner-block granularity, and remove duplicate in-section panel rendering so each section shows one canonical panel surface. Document the pattern and human-in-the-loop prompt handoff workflow in a reusable s
 
@@ -10234,7 +10593,15 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44-26** [done]: Document the real speech-driven visual editing workflow as a reusable methodology: loose UPDATE/DELETE prompts, landmark-first targeting (`cid` as source of truth), cleanup boundaries, and the Mermaid-leak incident as a concrete failure mode for cross-route renderer side effects.
 
-- **44.5-01** [planned]: Scaffold the brood editor route: /brood-editor (or /projects/[id]/edit) gated to NODE_ENV=development, renders a project's eval folder as an editable tree. Reuse the phase 44 marketplace card data but flip affordances from browse to mutate. First cut is read-only view of the tree + "this would be editable in dev mode" placeholder so we can ship the shell before the mutation bridge.
+- **44.5-01** [planned]: Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config ins
+
+- **44.5-01a** [done]: Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal
+
+- **44.5-01b** [planned]: Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a "no published projects yet — browse drafts in the editor" empty state with a CTA that routes to the Project Editor. Upda
+
+- **44.5-01c** [planned]: "Open in Editor" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an "Exit to listing" link in the editor shell that routes back to the listing detail 
+
+- **44.5-01d** [planned]: Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generat
 
 - **44.5-02** [planned]: Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after t
 
@@ -10242,7 +10609,19 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44.5-03** [planned]: Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild).
 
-- **44.5-04** [planned]: Species/population/generation/brood capture surfaces inside the editor: small inspector panes showing the currently-edited project's species rows, each species's generations, and the brood view across all species at the same round. Reuses phase 44 components but with an "active editing" affordance indicating which row is being mutated.
+- **44.5-04** [planned]: Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to "active editing" with visible row-level mutation indicators. Every row gets a cid. Per
+
+- **44.5-05** [planned]: Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit in
+
+- **44.5-06** [planned]: Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/
+
+- **44.5-07** [planned]: Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlight
+
+- **44.5-08** [planned]: Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple 
+
+- **44.5-09** [planned]: Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every di
+
+- **44.5-10** [planned]: iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, "open in new tab" link, URL path input for SPA routes, and a fallback screenshot 
 
 
 ---
@@ -10537,11 +10916,11 @@ Status: planned
 
 Rebuild /project-market as a real marketplace listing modeled on the Unity Asset Store: card grid with per-project cover image, species count badges (gad/bare/emergent), generation count, best human review (stars), DNA summary chip, and review excerpt. Add cardImage + tagline + heroImage fields to project metadata. For the existing 27 projects, generate placeholder gradient cards keyed to dominant species color until real images are dropped into public/projects/&lt;id&gt;.png. Faceted filter sidebar by species / domain / tech-stack. Card detail view stays at /projects/[id], showing the project's species rows with their generations nested. The marketplace should fit naturally next to a Unity Asset Store grid — same density, same affordances — because we already have the underlying data (assets, reviews via rubric scores).
 
-## Phase 44.5: Species Editor — local-dev project/species playground
+## Phase 44.5: Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace
 
 Status: planned
 
-After the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project and its species as a live workspace rather than a read-only catalog entry. **Two routes, reserved here, both gated to NODE_ENV=development**: (a) `/project-editor` (or `/projects/[id]/edit`) — the parent Project Editor surface, scoped to the whole project (requirements, project.json, species roster, shared assets); (b) `/species-editor` (or `/projects/[id]/species/[species]/edit`) — the per-species inner surface, scoped to a single species folder (species.json, per-species overrides, generation list). Scope: (1) Both routes render the relevant eval folder as an editable tree — requirements, project.json, per-species overrides, manifest entries. (2) A Node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) Capture surfaces for species/generation views keyed to the currently-edited project, reusing the Unity Asset Store card data from phase 44 but flipping the affordances from browse to mutate. (4) **Lovable/Bolt-style species-without-build visualization (D-17, D-18)**: the editor previews species + generation state without requiring a full site rebuild — content-model edits reflect immediately in the editor pane, so the operator iterates on requirements/species/generations the way Lovable and Bolt iterate on generated UI. (5) Explicit rejection of any Vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (6) Supports the "I want to iterate without rebuilding the whole site every time" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. Planning requirement: the bridge must refuse all requests unless NODE_ENV=development AND an explicit allow-list of commands is matched, so we never accidentally expose it in production builds.
+After the marketplace lands (phase 44), build a local-dev-only Project Editor surface that contains the Brood Editor as its species-level inner surface. The editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. Discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. Vocabulary: **Recipe** = reusable template for producing a species. **Species** = recipe attached to a concrete project. **Generation** = one concrete run of a species. **Brood** = the accumulated population of generations for a species. **Bestiary** = UI view of every species + its brood across a project. Scope: (1) **New editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `NODE_ENV=development`. NOT the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **Split viewport** — left pane: bestiary grid or React Flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **Visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. Gamified feel comes from primitives, not a literal game engine. (4) **Visual Context System is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `SiteSection cid="*-site-section"` literal, every interactive element is grep-able, and the panel + modal-footer CRUD loop must work on every surface before the feature is considered done. No exceptions for game-styled components. (5) **Draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **Dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only API route. (7) **File-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **Recipe CRUD** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **Bestiary view** — read-only history of generations rendered as bestiary cards. (10) **Data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. Dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). Explicit non-goals: no Vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion).
 
 ## Phase 45: Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model
 

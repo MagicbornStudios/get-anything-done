@@ -291,6 +291,53 @@
     background-clip: text;
     color: transparent;
   }
+
+  /* Evolution hero: vein tubes + traveling pulse (LandingEvolutionBand → EvolutionVeinBackdrop) */
+  @keyframes evolution-vein-travel {
+    to {
+      stroke-dashoffset: -1;
+    }
+  }
+
+  @keyframes evolution-vein-tube-breathe {
+    0%,
+    100% {
+      opacity: 0.12;
+    }
+    50% {
+      opacity: 0.28;
+    }
+  }
+
+  .evolution-vein-flow {
+    animation-name: evolution-vein-travel;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .evolution-vein-flow--bloom {
+    animation-timing-function: linear;
+    filter: blur(0.35px);
+  }
+
+  .evolution-vein-tube-pulse {
+    animation-name: evolution-vein-tube-breathe;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .evolution-vein-flow,
+    .evolution-vein-flow--bloom {
+      animation: none;
+      opacity: 0.3;
+    }
+
+    .evolution-vein-tube-pulse {
+      animation: none;
+      opacity: 0.18;
+    }
+  }
   .grid-bg {
     background-image:
       radial-gradient(circle at 50% 0%, color-mix(in oklch, var(--accent) 12%, transparent) 0%, transparent 60%),

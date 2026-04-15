@@ -7,7 +7,7 @@ interface Props {
 }
 
 /**
- * /planning -> Signal tab (task 44-21). Pure reducer view over
+ * /planning -> Workflows tab → Signal band (task 44-21). Pure reducer view over
  * `.planning/.trace-events.jsonl` (gad-framework scope only). Surfaces:
  *
  *   1. Top files by tool_use count

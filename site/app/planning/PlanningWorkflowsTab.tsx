@@ -1,5 +1,6 @@
-import type { Workflow } from "@/lib/catalog.generated";
+import type { Signal, Workflow } from "@/lib/catalog.generated";
 import { Identified } from "@/components/devid/Identified";
+import { PlanningTabSignal } from "./PlanningTabSignal";
 import { WorkflowCard } from "@/components/workflow/WorkflowCard";
 import {
   buildWorkflowTree,
@@ -9,15 +10,17 @@ import {
 
 interface Props {
   workflows: readonly Workflow[];
+  signal: Signal;
 }
 
 /**
- * /planning -> Workflows tab. Three sections per decision gad-174:
+ * /planning -> Workflows tab. Sections per decision gad-174:
  *  1. Authored — hand-authored workflows with expected Mermaid + live React Flow
  *  2. Emergent — proto-workflows drafted from trace synthesis (empty until 42.3-09)
  *  3. Noise panel — deferred to 42.3-13
+ *  4. Signal — trace reducer band (`cid="planning-signal-site-section"`, same subtree as former Signal tab)
  */
-export function PlanningWorkflowsTab({ workflows }: Props) {
+export function PlanningWorkflowsTab({ workflows, signal }: Props) {
   const { authored, emergent } = partitionWorkflows(workflows);
   const authoredTree = buildWorkflowTree(authored);
   const emergentTree = buildWorkflowTree(emergent);
@@ -66,6 +69,8 @@ export function PlanningWorkflowsTab({ workflows }: Props) {
           accent="noise"
         />
         <EmptyState message="Deferred — still under discussion." />
+
+        <PlanningTabSignal signal={signal} />
       </div>
     </Identified>
   );

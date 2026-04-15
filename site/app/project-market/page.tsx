@@ -16,12 +16,16 @@ export const metadata: Metadata = {
 // Task 44-30: when ?projectid= names a project that has eval rows, collapse
 // the marketplace to that project's species. For the default framework id
 // (no EVAL_PROJECTS rows) show the full marketplace untouched.
-export default function ProjectMarketPage({
+type PageSearchParams = Promise<{ projectid?: string | string[] }>;
+
+export default async function ProjectMarketPage({
   searchParams,
 }: {
-  searchParams?: { projectid?: string };
+  searchParams?: PageSearchParams;
 }) {
-  const paramId = searchParams?.projectid;
+  const resolvedSearchParams = await searchParams;
+  const rawProjectId = resolvedSearchParams?.projectid;
+  const paramId = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
   const currentProject =
     paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
       ? paramId

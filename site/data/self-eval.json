@@ -6,24 +6,24 @@
       "days": 9
     },
     "totals": {
-      "events": 5984,
-      "sessions": 21,
-      "gad_cli_calls": 539
+      "events": 6058,
+      "sessions": 22,
+      "gad_cli_calls": 544
     },
     "runtime_distribution": [
       {
         "runtime": "claude-code",
-        "count": 5193
+        "count": 5227
       },
       {
         "runtime": "unknown",
-        "count": 791
+        "count": 831
       }
     ],
     "runtime_sessions": [
       {
         "runtime": "claude-code",
-        "sessions": 21
+        "sessions": 22
       },
       {
         "runtime": "unknown",
@@ -33,15 +33,15 @@
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 1993
+        "count": 2016
       },
       {
         "tool": "unknown",
-        "count": 1183
+        "count": 1226
       },
       {
         "tool": "Read",
-        "count": 863
+        "count": 866
       },
       {
         "tool": "Edit",
@@ -57,7 +57,7 @@
       },
       {
         "tool": "Grep",
-        "count": 219
+        "count": 224
       },
       {
         "tool": "TaskCreate",
@@ -127,28 +127,28 @@
       },
       {
         "day": "2026-04-15",
-        "count": 283
+        "count": 357
       }
     ],
     "framework_overhead": {
-      "planning_ops": 604,
-      "source_ops": 1735,
-      "ratio": 0.258,
+      "planning_ops": 608,
+      "source_ops": 1738,
+      "ratio": 0.259,
       "score": 0.4
     },
     "gad_cli_breakdown": {
-      "snapshot": 78,
-      "eval": 121,
-      "other": 340
+      "snapshot": 79,
+      "eval": 124,
+      "other": 341
     },
-    "computed_at": "2026-04-15T05:54:41.132Z",
+    "computed_at": "2026-04-15T18:04:15.310Z",
     "tasks": {
-      "done": 279,
-      "planned": 46,
+      "done": 289,
+      "planned": 54,
       "in_progress": 4,
-      "total": 329
+      "total": 347
     },
-    "decisions": 185,
+    "decisions": 189,
     "phases_pressure": [
       {
         "phase": "10",
@@ -328,10 +328,10 @@
       },
       {
         "phase": "42.2",
-        "tasks_total": 6,
-        "tasks_done": 2,
-        "crosscuts": 3,
-        "pressure_score": 12,
+        "tasks_total": 15,
+        "tasks_done": 10,
+        "crosscuts": 9,
+        "pressure_score": 33,
         "high_pressure": true
       },
       {
@@ -361,21 +361,117 @@
       {
         "phase": "44",
         "tasks_total": 33,
-        "tasks_done": 23,
+        "tasks_done": 24,
         "crosscuts": 27,
         "pressure_score": 87,
         "high_pressure": true
       },
       {
         "phase": "44.5",
-        "tasks_total": 5,
-        "tasks_done": 0,
-        "crosscuts": 1,
-        "pressure_score": 7,
-        "high_pressure": false
+        "tasks_total": 15,
+        "tasks_done": 1,
+        "crosscuts": 7,
+        "pressure_score": 29,
+        "high_pressure": true
       }
     ],
-    "skill_candidates": [],
+    "skill_candidates": [
+      {
+        "name": "phase-44.5-project-editor-brood-editor-local-dev-ga",
+        "source_phase": "44.5",
+        "source_phase_title": "Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace",
+        "pressure_score": 29,
+        "tasks_total": 15,
+        "tasks_done": 1,
+        "crosscuts": 7,
+        "candidate_file": ".planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md",
+        "proto_skill_dir": null,
+        "stage": "candidate",
+        "file_path": ".planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md",
+        "reviewed": false,
+        "reviewed_on": null,
+        "reviewed_notes": null,
+        "body_raw": "---\nstatus: candidate\nsource_phase: \"44.5\"\nsource_phase_title: \"Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace\"\npressure_score: 29\ntasks_total: 15\ntasks_done: 1\ncrosscuts: 7\ncreated_on: \"2026-04-15\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 44.5\n\n## Phase\n\n```\nget-anything-done | 44.5 | Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace\nselection pressure: 29  (15 tasks, 1 done, 7 crosscuts)\n```\n\n## Tasks\n\n```\n44.5-01 planned Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=\"project-editor-&lt;pane&gt;-site-section\"` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible \"Project Editor (dev mode)\" dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts).\n44.5-01a done Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the \"references\" section of 44.5-01's KICKOFF.md. This closes the user's \"make sure what references will be needed for implementation is understood\" instruction from 2026-04-15.\n44.5-01b planned Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.\n44.5-01c planned \"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an \"Exit to listing\" link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel.\n44.5-01d planned Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet).\n44.5-02 planned Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor's happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod.\n44.5-02b planned Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.\n44.5-03 planned Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild).\n44.5-04 planned Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read \"Species\", \"Brood\", \"Generation\", \"Recipe\" and must not drift.\n44.5-05 planned Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.\n44.5-06 planned Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) \"run recipe\" action that produces a new species in the project's species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is \"recipe authors a species, species runs normally\".\n44.5-07 planned Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor's split viewport for 44.5-01. Acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own.\n44.5-08 planned Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.\n44.5-09 planned Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.\n44.5-10 planned iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n44.5 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`create-proto-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
+        "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;44.5&quot;\nsource_phase_title: &quot;Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace&quot;\npressure_score: 29\ntasks_total: 15\ntasks_done: 1\ncrosscuts: 7\ncreated_on: &quot;2026-04-15&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 44.5</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 44.5 | Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace\nselection pressure: 29  (15 tasks, 1 done, 7 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>44.5-01 planned Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=&quot;project-editor-&amp;lt;pane&amp;gt;-site-section&quot;` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible &quot;Project Editor (dev mode)&quot; dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts).\n44.5-01a done Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the &quot;references&quot; section of 44.5-01&#39;s KICKOFF.md. This closes the user&#39;s &quot;make sure what references will be needed for implementation is understood&quot; instruction from 2026-04-15.\n44.5-01b planned Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a &quot;no published projects yet — browse drafts in the editor&quot; empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `&quot;published&quot;: false` explicitly — do not rely on missing-field-means-draft, because the difference between &quot;not yet touched&quot; and &quot;explicitly draft&quot; matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.\n44.5-01c planned &quot;Open in Editor&quot; CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an &quot;Exit to listing&quot; link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel.\n44.5-01d planned Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project&#39;s accumulated broods. The aggregation walks every species&#39;s generations under the project and sums skill invocations from each generation&#39;s preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1&#39;s preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet).\n44.5-02 planned Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor&#39;s happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod.\n44.5-02b planned Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive &quot;any gad/npx&quot; acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.\n44.5-03 planned Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild).\n44.5-04 planned Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project&#39;s species rows, each species&#39;s brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to &quot;active editing&quot; with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read &quot;Species&quot;, &quot;Brood&quot;, &quot;Generation&quot;, &quot;Recipe&quot; and must not drift.\n44.5-05 planned Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual &quot;crafting&quot; animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.\n44.5-06 planned Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&amp;lt;project&amp;gt;/&amp;lt;project-editor-slug&amp;gt;/recipes/&amp;lt;recipe-slug&amp;gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) &quot;run recipe&quot; action that produces a new species in the project&#39;s species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is &quot;recipe authors a species, species runs normally&quot;.\n44.5-07 planned Bestiary view — read-only UI for a project&#39;s accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species&#39;s brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor&#39;s split viewport for 44.5-01. Acceptance: app-forge&#39;s bestiary shows one species (gad) with one generation (v1); project-editor&#39;s bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own.\n44.5-08 planned Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species&#39;s trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.\n44.5-09 planned Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species&#39;s brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.\n44.5-10 planned iframe live-preview primitive for the editor&#39;s right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&amp;lt;project&amp;gt;/v&amp;lt;N&amp;gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, &quot;open in new tab&quot; link, URL path input for SPA routes, and a fallback screenshot when the build isn&#39;t live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01&#39;s split viewport.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n44.5 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>create-proto-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
+        "tasks": [
+          {
+            "id": "44.5-01",
+            "status": "planned",
+            "goal": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=\"project-editor-&lt;pane&gt;-site-section\"` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible \"Project Editor (dev mode)\" dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts)."
+          },
+          {
+            "id": "44.5-01a",
+            "status": "done",
+            "goal": "Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the \"references\" section of 44.5-01's KICKOFF.md. This closes the user's \"make sure what references will be needed for implementation is understood\" instruction from 2026-04-15."
+          },
+          {
+            "id": "44.5-01b",
+            "status": "planned",
+            "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published."
+          },
+          {
+            "id": "44.5-01c",
+            "status": "planned",
+            "goal": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an \"Exit to listing\" link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel."
+          },
+          {
+            "id": "44.5-01d",
+            "status": "planned",
+            "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet)."
+          },
+          {
+            "id": "44.5-02",
+            "status": "planned",
+            "goal": "Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor's happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod."
+          },
+          {
+            "id": "44.5-02b",
+            "status": "planned",
+            "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth."
+          },
+          {
+            "id": "44.5-03",
+            "status": "planned",
+            "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild)."
+          },
+          {
+            "id": "44.5-04",
+            "status": "planned",
+            "goal": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read \"Species\", \"Brood\", \"Generation\", \"Recipe\" and must not drift."
+          },
+          {
+            "id": "44.5-05",
+            "status": "planned",
+            "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data."
+          },
+          {
+            "id": "44.5-06",
+            "status": "planned",
+            "goal": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) \"run recipe\" action that produces a new species in the project's species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is \"recipe authors a species, species runs normally\"."
+          },
+          {
+            "id": "44.5-07",
+            "status": "planned",
+            "goal": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor's split viewport for 44.5-01. Acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own."
+          },
+          {
+            "id": "44.5-08",
+            "status": "planned",
+            "goal": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data."
+          },
+          {
+            "id": "44.5-09",
+            "status": "planned",
+            "goal": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types."
+          },
+          {
+            "id": "44.5-10",
+            "status": "planned",
+            "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport."
+          }
+        ]
+      }
+    ],
     "evals": {
       "runs": 0,
       "projects": 0,
@@ -396,10 +492,10 @@
     },
     "project_tokens": {
       "exact_eval_tokens": 0,
-      "estimated_live_input_tokens": 291324,
-      "estimated_live_output_tokens": 788492,
-      "estimated_live_total_tokens": 1079816,
-      "combined_total_tokens": 1079816,
+      "estimated_live_input_tokens": 287722,
+      "estimated_live_output_tokens": 772137,
+      "estimated_live_total_tokens": 1059859,
+      "combined_total_tokens": 1059859,
       "trace_files": 2,
       "trace_events": 2000,
       "runtime_distribution": [
@@ -412,62 +508,62 @@
         {
           "path": ".planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 147307,
-          "estimated_output_tokens": 397153,
-          "estimated_total_tokens": 544460
+          "estimated_input_tokens": 145877,
+          "estimated_output_tokens": 394876,
+          "estimated_total_tokens": 540753
         },
         {
           "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 144017,
-          "estimated_output_tokens": 391339,
-          "estimated_total_tokens": 535356
+          "estimated_input_tokens": 141845,
+          "estimated_output_tokens": 377261,
+          "estimated_total_tokens": 519106
         }
       ]
     },
     "workflow_conformance": {
-      "completed_tasks": 254,
-      "with_skill": 91,
+      "completed_tasks": 264,
+      "with_skill": 101,
       "with_agent": 10,
-      "with_type": 98,
+      "with_type": 108,
       "fully_attributed": 10,
-      "score": 0.039
+      "score": 0.038
     },
     "framework_compliance": {
-      "completed_tasks": 254,
-      "with_skill": 91,
+      "completed_tasks": 264,
+      "with_skill": 101,
       "with_agent": 10,
-      "with_type": 98,
+      "with_type": 108,
       "fully_attributed": 10,
-      "score": 0.039
+      "score": 0.038
     },
     "hydration": {
-      "snapshot_count": 483,
-      "estimated_snapshot_tokens": 2189655,
+      "snapshot_count": 517,
+      "estimated_snapshot_tokens": 2482599,
       "projects": [
         {
           "project": "get-anything-done",
-          "count": 221,
-          "estimated_tokens_per_snapshot": 6054,
-          "estimated_total_tokens": 1337934
+          "count": 234,
+          "estimated_tokens_per_snapshot": 6636,
+          "estimated_total_tokens": 1552824
         },
         {
           "project": "grime-time",
-          "count": 129,
-          "estimated_tokens_per_snapshot": 2561,
-          "estimated_total_tokens": 330369
+          "count": 136,
+          "estimated_tokens_per_snapshot": 2567,
+          "estimated_total_tokens": 349112
         },
         {
           "project": "global",
-          "count": 98,
-          "estimated_tokens_per_snapshot": 4370,
-          "estimated_total_tokens": 428260
+          "count": 105,
+          "estimated_tokens_per_snapshot": 4461,
+          "estimated_total_tokens": 468405
         },
         {
           "project": "app-forge",
-          "count": 34,
+          "count": 41,
           "estimated_tokens_per_snapshot": 2738,
-          "estimated_total_tokens": 93092
+          "estimated_total_tokens": 112258
         },
         {
           "project": "unknown",
@@ -476,8 +572,8 @@
           "estimated_total_tokens": 0
         }
       ],
-      "total_project_tokens": 1079816,
-      "overhead_ratio": 2.028
+      "total_project_tokens": 1059859,
+      "overhead_ratio": 2.342
     },
     "active_assignments": {
       "total_active_agents": 0,
@@ -4655,24 +4751,24 @@
         "days": 9
       },
       "totals": {
-        "events": 5984,
-        "sessions": 21,
-        "gad_cli_calls": 539
+        "events": 6058,
+        "sessions": 22,
+        "gad_cli_calls": 544
       },
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 5193
+          "count": 5227
         },
         {
           "runtime": "unknown",
-          "count": 791
+          "count": 831
         }
       ],
       "runtime_sessions": [
         {
           "runtime": "claude-code",
-          "sessions": 21
+          "sessions": 22
         },
         {
           "runtime": "unknown",
@@ -4682,15 +4778,15 @@
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 1993
+          "count": 2016
         },
         {
           "tool": "unknown",
-          "count": 1183
+          "count": 1226
         },
         {
           "tool": "Read",
-          "count": 863
+          "count": 866
         },
         {
           "tool": "Edit",
@@ -4706,7 +4802,7 @@
         },
         {
           "tool": "Grep",
-          "count": 219
+          "count": 224
         },
         {
           "tool": "TaskCreate",
@@ -4776,28 +4872,28 @@
         },
         {
           "day": "2026-04-15",
-          "count": 283
+          "count": 357
         }
       ],
       "framework_overhead": {
-        "planning_ops": 604,
-        "source_ops": 1735,
-        "ratio": 0.258,
+        "planning_ops": 608,
+        "source_ops": 1738,
+        "ratio": 0.259,
         "score": 0.4
       },
       "gad_cli_breakdown": {
-        "snapshot": 78,
-        "eval": 121,
-        "other": 340
+        "snapshot": 79,
+        "eval": 124,
+        "other": 341
       },
-      "computed_at": "2026-04-15T05:54:41.132Z",
+      "computed_at": "2026-04-15T18:04:15.310Z",
       "tasks": {
-        "done": 279,
-        "planned": 46,
+        "done": 289,
+        "planned": 54,
         "in_progress": 4,
-        "total": 329
+        "total": 347
       },
-      "decisions": 185,
+      "decisions": 189,
       "phases_pressure": [
         {
           "phase": "10",
@@ -4977,10 +5073,10 @@
         },
         {
           "phase": "42.2",
-          "tasks_total": 6,
-          "tasks_done": 2,
-          "crosscuts": 3,
-          "pressure_score": 12,
+          "tasks_total": 15,
+          "tasks_done": 10,
+          "crosscuts": 9,
+          "pressure_score": 33,
           "high_pressure": true
         },
         {
@@ -5010,21 +5106,117 @@
         {
           "phase": "44",
           "tasks_total": 33,
-          "tasks_done": 23,
+          "tasks_done": 24,
           "crosscuts": 27,
           "pressure_score": 87,
           "high_pressure": true
         },
         {
           "phase": "44.5",
-          "tasks_total": 5,
-          "tasks_done": 0,
-          "crosscuts": 1,
-          "pressure_score": 7,
-          "high_pressure": false
+          "tasks_total": 15,
+          "tasks_done": 1,
+          "crosscuts": 7,
+          "pressure_score": 29,
+          "high_pressure": true
         }
       ],
-      "skill_candidates": [],
+      "skill_candidates": [
+        {
+          "name": "phase-44.5-project-editor-brood-editor-local-dev-ga",
+          "source_phase": "44.5",
+          "source_phase_title": "Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace",
+          "pressure_score": 29,
+          "tasks_total": 15,
+          "tasks_done": 1,
+          "crosscuts": 7,
+          "candidate_file": ".planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md",
+          "proto_skill_dir": null,
+          "stage": "candidate",
+          "file_path": ".planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md",
+          "reviewed": false,
+          "reviewed_on": null,
+          "reviewed_notes": null,
+          "body_raw": "---\nstatus: candidate\nsource_phase: \"44.5\"\nsource_phase_title: \"Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace\"\npressure_score: 29\ntasks_total: 15\ntasks_done: 1\ncrosscuts: 7\ncreated_on: \"2026-04-15\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 44.5\n\n## Phase\n\n```\nget-anything-done | 44.5 | Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace\nselection pressure: 29  (15 tasks, 1 done, 7 crosscuts)\n```\n\n## Tasks\n\n```\n44.5-01 planned Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=\"project-editor-&lt;pane&gt;-site-section\"` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible \"Project Editor (dev mode)\" dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts).\n44.5-01a done Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the \"references\" section of 44.5-01's KICKOFF.md. This closes the user's \"make sure what references will be needed for implementation is understood\" instruction from 2026-04-15.\n44.5-01b planned Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.\n44.5-01c planned \"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an \"Exit to listing\" link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel.\n44.5-01d planned Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet).\n44.5-02 planned Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor's happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod.\n44.5-02b planned Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.\n44.5-03 planned Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild).\n44.5-04 planned Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read \"Species\", \"Brood\", \"Generation\", \"Recipe\" and must not drift.\n44.5-05 planned Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.\n44.5-06 planned Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) \"run recipe\" action that produces a new species in the project's species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is \"recipe authors a species, species runs normally\".\n44.5-07 planned Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor's split viewport for 44.5-01. Acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own.\n44.5-08 planned Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.\n44.5-09 planned Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.\n44.5-10 planned iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n44.5 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`create-proto-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
+          "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;44.5&quot;\nsource_phase_title: &quot;Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace&quot;\npressure_score: 29\ntasks_total: 15\ntasks_done: 1\ncrosscuts: 7\ncreated_on: &quot;2026-04-15&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 44.5</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 44.5 | Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace\nselection pressure: 29  (15 tasks, 1 done, 7 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>44.5-01 planned Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=&quot;project-editor-&amp;lt;pane&amp;gt;-site-section&quot;` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible &quot;Project Editor (dev mode)&quot; dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts).\n44.5-01a done Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the &quot;references&quot; section of 44.5-01&#39;s KICKOFF.md. This closes the user&#39;s &quot;make sure what references will be needed for implementation is understood&quot; instruction from 2026-04-15.\n44.5-01b planned Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a &quot;no published projects yet — browse drafts in the editor&quot; empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `&quot;published&quot;: false` explicitly — do not rely on missing-field-means-draft, because the difference between &quot;not yet touched&quot; and &quot;explicitly draft&quot; matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.\n44.5-01c planned &quot;Open in Editor&quot; CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an &quot;Exit to listing&quot; link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel.\n44.5-01d planned Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project&#39;s accumulated broods. The aggregation walks every species&#39;s generations under the project and sums skill invocations from each generation&#39;s preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1&#39;s preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet).\n44.5-02 planned Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor&#39;s happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod.\n44.5-02b planned Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive &quot;any gad/npx&quot; acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.\n44.5-03 planned Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild).\n44.5-04 planned Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project&#39;s species rows, each species&#39;s brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to &quot;active editing&quot; with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read &quot;Species&quot;, &quot;Brood&quot;, &quot;Generation&quot;, &quot;Recipe&quot; and must not drift.\n44.5-05 planned Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual &quot;crafting&quot; animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.\n44.5-06 planned Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&amp;lt;project&amp;gt;/&amp;lt;project-editor-slug&amp;gt;/recipes/&amp;lt;recipe-slug&amp;gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) &quot;run recipe&quot; action that produces a new species in the project&#39;s species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is &quot;recipe authors a species, species runs normally&quot;.\n44.5-07 planned Bestiary view — read-only UI for a project&#39;s accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species&#39;s brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor&#39;s split viewport for 44.5-01. Acceptance: app-forge&#39;s bestiary shows one species (gad) with one generation (v1); project-editor&#39;s bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own.\n44.5-08 planned Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species&#39;s trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.\n44.5-09 planned Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species&#39;s brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.\n44.5-10 planned iframe live-preview primitive for the editor&#39;s right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&amp;lt;project&amp;gt;/v&amp;lt;N&amp;gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, &quot;open in new tab&quot; link, URL path input for SPA routes, and a fallback screenshot when the build isn&#39;t live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01&#39;s split viewport.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n44.5 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>create-proto-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
+          "tasks": [
+            {
+              "id": "44.5-01",
+              "status": "planned",
+              "goal": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=\"project-editor-&lt;pane&gt;-site-section\"` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible \"Project Editor (dev mode)\" dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts)."
+            },
+            {
+              "id": "44.5-01a",
+              "status": "done",
+              "goal": "Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the \"references\" section of 44.5-01's KICKOFF.md. This closes the user's \"make sure what references will be needed for implementation is understood\" instruction from 2026-04-15."
+            },
+            {
+              "id": "44.5-01b",
+              "status": "planned",
+              "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published."
+            },
+            {
+              "id": "44.5-01c",
+              "status": "planned",
+              "goal": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an \"Exit to listing\" link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel."
+            },
+            {
+              "id": "44.5-01d",
+              "status": "planned",
+              "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet)."
+            },
+            {
+              "id": "44.5-02",
+              "status": "planned",
+              "goal": "Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor's happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod."
+            },
+            {
+              "id": "44.5-02b",
+              "status": "planned",
+              "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth."
+            },
+            {
+              "id": "44.5-03",
+              "status": "planned",
+              "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild)."
+            },
+            {
+              "id": "44.5-04",
+              "status": "planned",
+              "goal": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read \"Species\", \"Brood\", \"Generation\", \"Recipe\" and must not drift."
+            },
+            {
+              "id": "44.5-05",
+              "status": "planned",
+              "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data."
+            },
+            {
+              "id": "44.5-06",
+              "status": "planned",
+              "goal": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) \"run recipe\" action that produces a new species in the project's species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is \"recipe authors a species, species runs normally\"."
+            },
+            {
+              "id": "44.5-07",
+              "status": "planned",
+              "goal": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor's split viewport for 44.5-01. Acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own."
+            },
+            {
+              "id": "44.5-08",
+              "status": "planned",
+              "goal": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data."
+            },
+            {
+              "id": "44.5-09",
+              "status": "planned",
+              "goal": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types."
+            },
+            {
+              "id": "44.5-10",
+              "status": "planned",
+              "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport."
+            }
+          ]
+        }
+      ],
       "evals": {
         "runs": 0,
         "projects": 0,
@@ -5045,10 +5237,10 @@
       },
       "project_tokens": {
         "exact_eval_tokens": 0,
-        "estimated_live_input_tokens": 291324,
-        "estimated_live_output_tokens": 788492,
-        "estimated_live_total_tokens": 1079816,
-        "combined_total_tokens": 1079816,
+        "estimated_live_input_tokens": 287722,
+        "estimated_live_output_tokens": 772137,
+        "estimated_live_total_tokens": 1059859,
+        "combined_total_tokens": 1059859,
         "trace_files": 2,
         "trace_events": 2000,
         "runtime_distribution": [
@@ -5061,62 +5253,62 @@
           {
             "path": ".planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 147307,
-            "estimated_output_tokens": 397153,
-            "estimated_total_tokens": 544460
+            "estimated_input_tokens": 145877,
+            "estimated_output_tokens": 394876,
+            "estimated_total_tokens": 540753
           },
           {
             "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 144017,
-            "estimated_output_tokens": 391339,
-            "estimated_total_tokens": 535356
+            "estimated_input_tokens": 141845,
+            "estimated_output_tokens": 377261,
+            "estimated_total_tokens": 519106
           }
         ]
       },
       "workflow_conformance": {
-        "completed_tasks": 254,
-        "with_skill": 91,
+        "completed_tasks": 264,
+        "with_skill": 101,
         "with_agent": 10,
-        "with_type": 98,
+        "with_type": 108,
         "fully_attributed": 10,
-        "score": 0.039
+        "score": 0.038
       },
       "framework_compliance": {
-        "completed_tasks": 254,
-        "with_skill": 91,
+        "completed_tasks": 264,
+        "with_skill": 101,
         "with_agent": 10,
-        "with_type": 98,
+        "with_type": 108,
         "fully_attributed": 10,
-        "score": 0.039
+        "score": 0.038
       },
       "hydration": {
-        "snapshot_count": 483,
-        "estimated_snapshot_tokens": 2189655,
+        "snapshot_count": 517,
+        "estimated_snapshot_tokens": 2482599,
         "projects": [
           {
             "project": "get-anything-done",
-            "count": 221,
-            "estimated_tokens_per_snapshot": 6054,
-            "estimated_total_tokens": 1337934
+            "count": 234,
+            "estimated_tokens_per_snapshot": 6636,
+            "estimated_total_tokens": 1552824
           },
           {
             "project": "grime-time",
-            "count": 129,
-            "estimated_tokens_per_snapshot": 2561,
-            "estimated_total_tokens": 330369
+            "count": 136,
+            "estimated_tokens_per_snapshot": 2567,
+            "estimated_total_tokens": 349112
           },
           {
             "project": "global",
-            "count": 98,
-            "estimated_tokens_per_snapshot": 4370,
-            "estimated_total_tokens": 428260
+            "count": 105,
+            "estimated_tokens_per_snapshot": 4461,
+            "estimated_total_tokens": 468405
           },
           {
             "project": "app-forge",
-            "count": 34,
+            "count": 41,
             "estimated_tokens_per_snapshot": 2738,
-            "estimated_total_tokens": 93092
+            "estimated_total_tokens": 112258
           },
           {
             "project": "unknown",
@@ -5125,8 +5317,8 @@
             "estimated_total_tokens": 0
           }
         ],
-        "total_project_tokens": 1079816,
-        "overhead_ratio": 2.028
+        "total_project_tokens": 1059859,
+        "overhead_ratio": 2.342
       },
       "active_assignments": {
         "total_active_agents": 0,

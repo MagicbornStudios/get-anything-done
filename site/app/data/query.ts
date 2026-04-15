@@ -51,11 +51,45 @@ export const QUERY_FIELDS: QueryField[] = [
   "notesLength",
 ];
 
+export const QUERY_KEYWORDS = ["FROM", "WHERE", "AND", "SORT", "LIMIT", "SELECT", "asc", "desc"] as const;
+export const QUERY_OPERATORS = [":", "=", "!=", ">", "<", ">=", "<="] as const;
+export const QUERY_TRUST_VALUES = ["deterministic", "heuristic", "review"] as const;
+
 export const DEFAULT_QUERY = `FROM active
 WHERE trust:deterministic
 SORT number asc
 LIMIT 25
 SELECT id,number,trust,surface,page`;
+
+export const QUERY_HELP_EXAMPLES: { label: string; description: string; query: string }[] = [
+  {
+    label: "Trust Filter",
+    description: "Start from active records and filter by trust level.",
+    query: `FROM active
+WHERE trust:deterministic
+SORT number asc
+LIMIT 25
+SELECT id,number,trust,surface,page`,
+  },
+  {
+    label: "Long Sources",
+    description: "Find records where source text is longer than 40 chars.",
+    query: `FROM active
+WHERE sourceLength>40
+SORT sourceLength desc
+LIMIT 20
+SELECT id,sourceLength,trust,surface,page`,
+  },
+  {
+    label: "Surface Search",
+    description: "Search source text for a word and keep the latest by number.",
+    query: `FROM active
+WHERE source:mercy
+SORT number desc
+LIMIT 15
+SELECT id,number,source,trust,page`,
+  },
+];
 
 const NUMERIC_FIELDS = new Set<QueryField>(["sourceLength", "formulaLength", "notesLength"]);
 

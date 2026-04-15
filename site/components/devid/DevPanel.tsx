@@ -6,7 +6,6 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Copy,
   Mic,
   MicOff,
   Trash2,
@@ -363,10 +362,6 @@ export function DevPanel(props: DevPanelProps) {
             }
           : null);
 
-  const panelIdDisplay =
-    mode === "section"
-      ? mountedSectionEntry?.cid ?? sectionTarget?.cid ?? DEV_PANEL_STABLE_CID
-      : sectionTarget?.cid ?? bandEntries[0]?.cid ?? bandCid;
   const activeTargetCid =
     mode === "section"
       ? activeCid ?? mountedSectionEntry?.cid ?? DEV_PANEL_STABLE_CID
@@ -524,6 +519,7 @@ export function DevPanel(props: DevPanelProps) {
                   type="button"
                   variant="outline"
                   size="sm"
+                  title="Mic: dictate additions to the update handoff for the selected target. Copies a locked prefix (route, label, source-search hints) plus your text."
                   onClick={toggleUpdatePromptWithSpeech}
                   disabled={!sectionTarget}
                   className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
@@ -541,6 +537,7 @@ export function DevPanel(props: DevPanelProps) {
                   type="button"
                   variant="outline"
                   size="sm"
+                  title="Copy a delete handoff prompt for the selected target (route, label, and source-search hints)."
                   onClick={copyResolvedDeletePrompt}
                   disabled={!sectionTarget}
                   className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
@@ -550,18 +547,13 @@ export function DevPanel(props: DevPanelProps) {
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => sectionTarget && copyEntry(sectionTarget)}
-                  className="size-6"
-                >
-                  <Copy size={11} />
-                </Button>
-                <Button
-                  type="button"
                   variant="ghost"
                   size="sm"
-                  title="Toggle prompt verbosity"
+                  title={
+                    promptVerbosity === "full"
+                      ? "Prompts include full context. Click for compact templates."
+                      : "Prompts use compact templates. Click for full context."
+                  }
                   onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
                   className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
                 >
@@ -575,9 +567,6 @@ export function DevPanel(props: DevPanelProps) {
                     <span className="font-medium text-foreground">
                       {sectionTarget?.label ?? "None"}
                     </span>
-                  </p>
-                  <p className="truncate font-mono">
-                    {sectionTarget?.searchHint ?? sectionTarget?.cid ?? "No target selected"}
                   </p>
                 </div>
                 <div className="ml-2 flex items-center gap-1">
@@ -716,6 +705,7 @@ export function DevPanel(props: DevPanelProps) {
                 type="button"
                 variant="outline"
                 size="sm"
+                title="Mic: dictate additions to the update handoff for the selected target. Copies a locked prefix (route, label, source-search hints) plus your text."
                 onClick={toggleUpdatePromptWithSpeech}
                 className="h-6 gap-1 px-1.5 text-[10px]"
               >
@@ -732,6 +722,7 @@ export function DevPanel(props: DevPanelProps) {
                 type="button"
                 variant="outline"
                 size="sm"
+                title="Copy a delete handoff prompt for the selected target (route, label, and source-search hints)."
                 onClick={copyResolvedDeletePrompt}
                 className="h-6 gap-1 px-1.5 text-[10px]"
               >
@@ -740,19 +731,13 @@ export function DevPanel(props: DevPanelProps) {
               </Button>
               <Button
                 type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => sectionTarget && copyEntry(sectionTarget)}
-                disabled={!sectionTarget}
-                className="size-6"
-              >
-                <Copy size={11} />
-              </Button>
-              <Button
-                type="button"
                 variant="ghost"
                 size="sm"
-                title="Toggle prompt verbosity"
+                title={
+                  promptVerbosity === "full"
+                    ? "Prompts include full context. Click for compact templates."
+                    : "Prompts use compact templates. Click for full context."
+                }
                 onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
                 className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
               >
@@ -766,9 +751,6 @@ export function DevPanel(props: DevPanelProps) {
                   <span className="font-medium text-foreground">
                     {sectionTarget?.label ?? bandLabel}
                   </span>
-                </p>
-                <p className="truncate font-mono">
-                  {sectionTarget?.searchHint ?? sectionTarget?.cid ?? panelIdDisplay}
                 </p>
               </div>
               <div className="ml-2 flex items-center gap-1">

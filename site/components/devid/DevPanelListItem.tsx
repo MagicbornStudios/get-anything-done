@@ -36,10 +36,25 @@ export function DevPanelListItem({
         <span className="block truncate text-[10px]">{entry.label}</span>
         <span className="block truncate text-[10px] font-mono text-muted-foreground">{entry.cid}</span>
       </button>
-      <Button type="button" variant="ghost" size="icon" className="size-5" onClick={onCopy}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-5"
+        title="Copy the source-search token for this row (cid / stableCid / as — greppable in repo)."
+        onClick={onCopy}
+      >
         <Copy size={10} />
       </Button>
-      <Button type="button" variant="ghost" size="icon" className="size-5" onClick={onPrompt}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-5"
+        title="Open Agent handoff dialog"
+        aria-label="Open Agent handoff dialog"
+        onClick={onPrompt}
+      >
         <MessageSquare size={10} />
       </Button>
     </div>

@@ -45,7 +45,7 @@ export const REGISTERED_PROJECTS: RegisteredProject[] = [
   },
   {
     "id": "project-editor",
-    "kind": "planning",
+    "kind": "both",
     "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\projects\\project-editor"
   },
   {

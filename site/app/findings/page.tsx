@@ -16,12 +16,16 @@ export const metadata = {
 // Task 44-30: show findings whose `projects` array includes the current
 // project, PLUS framework-level findings (empty `projects`) which are
 // global. Absent/invalid projectid falls back to DEFAULT_PROJECT_ID.
-export default function FindingsPage({
+type PageSearchParams = Promise<{ projectid?: string | string[] }>;
+
+export default async function FindingsPage({
   searchParams,
 }: {
-  searchParams?: { projectid?: string };
+  searchParams?: PageSearchParams;
 }) {
-  const paramId = searchParams?.projectid;
+  const resolvedSearchParams = await searchParams;
+  const rawProjectId = resolvedSearchParams?.projectid;
+  const paramId = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
   const currentProject =
     paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
       ? paramId

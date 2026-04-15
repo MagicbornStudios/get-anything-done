@@ -13,8 +13,12 @@ export function generateStaticParams() {
   return FINDINGS.map((f) => ({ slug: f.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const finding = FINDINGS.find((f) => f.slug === params.slug);
+type PageParams = Promise<{ slug: string }>;
+type PageSearchParams = Promise<{ projectid?: string | string[] }>;
+
+export async function generateMetadata({ params }: { params: PageParams }) {
+  const resolvedParams = await params;
+  const finding = FINDINGS.find((f) => f.slug === resolvedParams.slug);
   if (!finding) return { title: "Finding not found — GAD" };
   return {
     title: `${finding.title} — GAD Findings`,
@@ -22,20 +26,23 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   };
 }
 
-export default function FindingDetailPage({
+export default async function FindingDetailPage({
   params,
   searchParams,
 }: {
-  params: { slug: string };
-  searchParams?: { projectid?: string };
+  params: PageParams;
+  searchParams?: PageSearchParams;
 }) {
-  const finding = FINDINGS.find((f) => f.slug === params.slug);
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const finding = FINDINGS.find((f) => f.slug === resolvedParams.slug);
   if (!finding) notFound();
 
   // Task 44-30: soft scoping — do NOT 404 on project mismatch; just surface
   // a banner so the user knows the finding is tagged for a different
   // project. Framework-level findings (empty projects) show everywhere.
-  const paramId = searchParams?.projectid;
+  const rawProjectId = resolvedSearchParams?.projectid;
+  const paramId = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
   const currentProject =
     paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
       ? paramId

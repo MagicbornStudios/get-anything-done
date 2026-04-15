@@ -1,25 +1,54 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { HumanWorkflow, PlanningState, Signal, Workflow } from "@/lib/catalog.generated";
 import { HUMAN_WORKFLOWS, REQUIREMENTS_HISTORY, SIGNAL, WORKFLOWS } from "@/lib/catalog.generated";
 import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
-import { SiteSection } from "@/components/site";
-import { PlanningBugsTab } from "./PlanningBugsTab";
-import { PlanningDecisionsTab } from "./PlanningDecisionsTab";
-import { PlanningPhasesTab } from "./PlanningPhasesTab";
-import { PlanningRequirementsTab } from "./PlanningRequirementsTab";
-import { PlanningRoadmapTab } from "./PlanningRoadmapTab";
-import { PlanningSkillCandidatesTab, type SkillCandidate } from "./PlanningSkillCandidatesTab";
-import { PlanningSystemTab } from "./PlanningSystemTab";
-import { PlanningTasksTab } from "./PlanningTasksTab";
-import { PlanningTabHumanWorkflows } from "./PlanningTabHumanWorkflows";
-import { PlanningTabSignal } from "./PlanningTabSignal";
-import { PlanningWorkflowsTab } from "./PlanningWorkflowsTab";
-import selfEvalData from "@/data/self-eval.json";
+import { SiteSection, SiteSectionHeading } from "@/components/site";
+import { PlanningGanttSection } from "./PlanningGanttSection";
+import { PlanningGanttToolbar } from "./PlanningGanttToolbar";
+import { usePlanningGanttSprint } from "./PlanningGanttSprintContext";
+import type { SkillCandidate } from "./PlanningSkillCandidatesTab";
+import type { PlanningSelfEvalLatest } from "./PlanningSystemTab";
+
+const PlanningBugsTab = dynamic(() =>
+  import("./PlanningBugsTab").then((m) => m.PlanningBugsTab),
+);
+const PlanningDecisionsTab = dynamic(() =>
+  import("./PlanningDecisionsTab").then((m) => m.PlanningDecisionsTab),
+);
+const PlanningPhasesTab = dynamic(() =>
+  import("./PlanningPhasesTab").then((m) => m.PlanningPhasesTab),
+);
+const PlanningRequirementsTab = dynamic(() =>
+  import("./PlanningRequirementsTab").then((m) => m.PlanningRequirementsTab),
+);
+const PlanningRoadmapTab = dynamic(() =>
+  import("./PlanningRoadmapTab").then((m) => m.PlanningRoadmapTab),
+);
+const PlanningSkillCandidatesTab = dynamic(() =>
+  import("./PlanningSkillCandidatesTab").then((m) => m.PlanningSkillCandidatesTab),
+);
+const PlanningSystemTab = dynamic(() =>
+  import("./PlanningSystemTab").then((m) => m.PlanningSystemTab),
+);
+const PlanningTasksTab = dynamic(() =>
+  import("./PlanningTasksTab").then((m) => m.PlanningTasksTab),
+);
+const PlanningTabHumanWorkflows = dynamic(() =>
+  import("./PlanningTabHumanWorkflows").then((m) => m.PlanningTabHumanWorkflows),
+);
+const PlanningWorkflowsTab = dynamic(() =>
+  import("./PlanningWorkflowsTab").then((m) => m.PlanningWorkflowsTab),
+);
+const PlanningDiscoveryTab = dynamic(() =>
+  import("./PlanningDiscoveryTab").then((m) => m.PlanningDiscoveryTab),
+);
 
 interface Props {
   state: PlanningState;
@@ -42,7 +71,6 @@ const BASE_PLANNING_TABS = new Set([
   "proto-skills",
   "workflows",
   "human-workflows",
-  "signal",
 ]);
 
 const WORKFLOWS_DATA: readonly Workflow[] = WORKFLOWS;
@@ -58,10 +86,24 @@ export function PlanningTabbedContent({
   humanWorkflows = HUMAN_WORKFLOWS_DATA,
   signal = SIGNAL_DATA,
 }: Props) {
+  const {
+    phases,
+    sprintSize,
+    sprintOffset,
+    onSprintSizeDelta,
+    onPrevSprint,
+    onNextSprint,
+    currentSprintNum,
+    totalSprints,
+  } = usePlanningGanttSprint();
   const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState("system");
+  const [selfEvalLatest, setSelfEvalLatest] = useState<PlanningSelfEvalLatest | null>(null);
+  const [selfEvalCandidates, setSelfEvalCandidates] = useState<SkillCandidate[]>([]);
   const defaultTab = useMemo(() => {
     const raw = searchParams.get("tab") || "system";
     if (raw === "bugs") return gadBugs.length > 0 ? "bugs" : "system";
+    if (raw === "signal") return "workflows";
     return BASE_PLANNING_TABS.has(raw) ? raw : "system";
   }, [searchParams, gadBugs.length]);
 
@@ -69,11 +111,36 @@ export function PlanningTabbedContent({
   const doneTasks = allTasks.filter((t) => t.status === "done");
   const versions = REQUIREMENTS_HISTORY ?? [];
   const topOpen = openTasks.slice(0, 40);
-  const allCandidates = (selfEvalData.latest?.skill_candidates ?? []) as SkillCandidate[];
+  const allCandidates = selfEvalCandidates;
   // Phase 42 split: stage="candidate" = raw, awaiting drafting; stage="drafted" = proto-skill awaiting review.
   // Items without a stage field (legacy data) default to "candidate" for backwards compat.
   const skillCandidates = allCandidates.filter((c) => (c.stage ?? "candidate") === "candidate");
   const protoSkills = allCandidates.filter((c) => c.stage === "drafted");
+
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
+
+  useEffect(() => {
+    if (
+      selfEvalLatest ||
+      (activeTab !== "system" &&
+        activeTab !== "skill-candidates" &&
+        activeTab !== "proto-skills")
+    ) {
+      return;
+    }
+    let cancelled = false;
+    void import("@/data/self-eval.json").then((mod) => {
+      if (cancelled) return;
+      const latest = (mod.default as { latest?: PlanningSelfEvalLatest & { skill_candidates?: SkillCandidate[] } }).latest;
+      setSelfEvalLatest(latest ?? null);
+      setSelfEvalCandidates(latest?.skill_candidates ?? []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, selfEvalLatest]);
 
   useEffect(() => {
     const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
@@ -87,7 +154,7 @@ export function PlanningTabbedContent({
   return (
     <SiteSection cid="planning-tabbed-content-site-section">
       <Identified as="PlanningTabbedContent">
-      <Tabs key={defaultTab} defaultValue={defaultTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <Identified as="PlanningTabsList" className="mb-6">
           <TabsList className="flex-wrap">
           <TabsTrigger value="system">System</TabsTrigger>
@@ -125,16 +192,22 @@ export function PlanningTabbedContent({
             Human Workflows{" "}
             <span className="ml-1.5 tabular-nums text-muted-foreground">{humanWorkflows.length}</span>
           </TabsTrigger>
-          <TabsTrigger value="signal">
-            Signal{" "}
-            <span className="ml-1.5 tabular-nums text-muted-foreground">{signal.totalEvents}</span>
-          </TabsTrigger>
+          <TabsTrigger value="discovery">Discovery</TabsTrigger>
         </TabsList>
         </Identified>
 
         <TabsContent value="system">
           <Identified as="PlanningTabSystem">
-            <PlanningSystemTab selfEval={selfEvalData.latest} />
+            <div className="space-y-6">
+              <PlanningGanttSection />
+              {selfEvalLatest ? (
+                <PlanningSystemTab selfEval={selfEvalLatest} />
+              ) : (
+                <div className="rounded-md border border-border/60 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+                  Loading system telemetry...
+                </div>
+              )}
+            </div>
           </Identified>
         </TabsContent>
 
@@ -190,7 +263,7 @@ export function PlanningTabbedContent({
 
         <TabsContent value="workflows">
           <Identified as="PlanningTabWorkflows">
-            <PlanningWorkflowsTab workflows={WORKFLOWS_DATA} />
+            <PlanningWorkflowsTab workflows={WORKFLOWS_DATA} signal={signal} />
           </Identified>
         </TabsContent>
 
@@ -198,12 +271,13 @@ export function PlanningTabbedContent({
           <PlanningTabHumanWorkflows workflows={humanWorkflows} />
         </TabsContent>
 
-        <TabsContent value="signal">
-          <PlanningTabSignal signal={signal} />
+        <TabsContent value="discovery">
+          <Identified as="PlanningTabDiscovery">
+            <PlanningDiscoveryTab />
+          </Identified>
         </TabsContent>
       </Tabs>
       </Identified>
     </SiteSection>
   );
 }
-

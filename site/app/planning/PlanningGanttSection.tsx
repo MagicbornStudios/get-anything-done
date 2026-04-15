@@ -1,27 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { GanttChart, type GanttItem } from "@/components/charts/GanttChart";
-import type { PlanningPhase } from "@/lib/catalog.generated";
-import { ALL_TASKS } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
-import { PlanningGanttSelectedPhasePanel } from "./PlanningGanttSelectedPhasePanel";
+import { usePlanningGanttSprint } from "./PlanningGanttSprintContext";
 import { PlanningGanttToolbar } from "./PlanningGanttToolbar";
+import { SiteSectionHeading } from "@/components/site";
 
-const DEFAULT_SPRINT_SIZE = 5;
-
-export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
-  const [sprintSize, setSprintSize] = useState(DEFAULT_SPRINT_SIZE);
-  const [sprintOffset, setSprintOffset] = useState(() => {
-    const activeIdx = phases.findIndex((p) => p.status === "active");
-    const idx = activeIdx >= 0 ? activeIdx : phases.length - 1;
-    return Math.floor(idx / DEFAULT_SPRINT_SIZE) * DEFAULT_SPRINT_SIZE;
-  });
+function PlanningGanttSection() {
+  const { phases, sprintSize, sprintOffset, currentSprintNum, totalSprints, onSprintSizeDelta, onPrevSprint, onNextSprint } = usePlanningGanttSprint();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
-
-  const totalSprints = Math.ceil(phases.length / sprintSize);
-  const currentSprintNum = Math.floor(sprintOffset / sprintSize) + 1;
 
   const visiblePhases = useMemo(
     () => phases.slice(sprintOffset, sprintOffset + sprintSize),
@@ -42,58 +31,44 @@ export function PlanningGanttSection({ phases }: { phases: PlanningPhase[] }) {
     },
   }));
 
-  const selectedPhase = phases.find((p) => p.id === selectedPhaseId);
-  const selectedTasks = useMemo(
-    () => (selectedPhaseId ? ALL_TASKS.filter((t) => t.phaseId === selectedPhaseId) : []),
-    [selectedPhaseId],
-  );
-
-  function onSprintSizeDelta(delta: number) {
-    setSprintSize((s) => Math.min(15, Math.max(3, s + delta)));
-  }
-
-  function prevSprint() {
-    setSprintOffset((o) => Math.max(0, o - sprintSize));
-  }
-
-  function nextSprint() {
-    setSprintOffset((o) => Math.min((totalSprints - 1) * sprintSize, o + sprintSize));
-  }
-
   return (
-    <SiteSection cid="planning-gantt-section-site-section">
+    <SiteSection
+      cid="planning-gantt-section-site-section"
+      className="border-b-0"
+      allowContextPanel={false}
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <Identified as="PlanningGanttToolbarHeading" register={false} className="min-w-0 flex-1">
+          <SiteSectionHeading
+            kicker="Phase timeline"
+            title={`Sprint ${currentSprintNum} of ${totalSprints}`}
+            preset="section"
+            className="min-w-0"
+          />
+        </Identified>
+        <Identified as="PlanningGanttToolbar">
+          <PlanningGanttToolbar
+            sprintSize={sprintSize}
+            onSprintSizeDelta={onSprintSizeDelta}
+            sprintOffset={sprintOffset}
+            phasesLength={phases.length}
+            onPrevSprint={onPrevSprint}
+            onNextSprint={onNextSprint}
+          />
+        </Identified>
+      </div>
       <Identified as="PlanningGanttSection">
-      <Identified as="PlanningGanttToolbar">
-        <PlanningGanttToolbar
-          currentSprintNum={currentSprintNum}
-          totalSprints={totalSprints}
-          sprintSize={sprintSize}
-          onSprintSizeDelta={onSprintSizeDelta}
-          sprintOffset={sprintOffset}
-          phasesLength={phases.length}
-          onPrevSprint={prevSprint}
-          onNextSprint={nextSprint}
-        />
-      </Identified>
-
-      <Identified as="PlanningGanttHint" tag="p" className="mt-2 text-sm text-muted-foreground">
-        Click a phase for tasks. Hover for stats. Resize sprint window with +/- controls.
-      </Identified>
-
-      <Identified as="PlanningGanttChart" className="mt-6">
-        <GanttChart
-          items={items}
-          columns={columns}
-          onItemClick={(item) => setSelectedPhaseId(item.id === selectedPhaseId ? null : item.id)}
-          selectedId={selectedPhaseId}
-        />
-      </Identified>
-
-      <Identified as="PlanningGanttSelectedPhasePanel">
-        <PlanningGanttSelectedPhasePanel selectedPhase={selectedPhase} selectedTasks={selectedTasks} />
-      </Identified>
+        <Identified as="PlanningGanttChart" className="mt-0">
+          <GanttChart
+            items={items}
+            columns={columns}
+            onItemClick={(item) => setSelectedPhaseId(item.id === selectedPhaseId ? null : item.id)}
+            selectedId={selectedPhaseId}
+          />
+        </Identified>
       </Identified>
     </SiteSection>
   );
 }
 
+export { PlanningGanttSection };

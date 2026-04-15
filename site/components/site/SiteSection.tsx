@@ -29,14 +29,22 @@ export type SiteSectionProps = {
    * Legacy alias for `cid`. When omitted, the band id falls back to the route-based auto id.
    */
   stableBandCid?: string;
-  /** Opt out of the DevId panel on this section (enabled by default when DevId mode is ON). */
+  /** Opt out of dev-id attributes, highlights, Alt+click, and band panel on this section (on by default when DevId mode is ON). */
   devIds?: boolean;
   /** Kept for compatibility; section scanning now uses the outer band panel path. */
   devIdDepth?: number;
+  /**
+   * When false, do not mount the band Visual Context Panel (`BandDevPanel`) on this section.
+   * `data-cid`, highlight rings, and Alt+click copy still apply when `devIds` is true.
+   * Use for dense UI (charts, drag surfaces) where the hover overlay gets in the way.
+   * @default true
+   */
+  allowContextPanel?: boolean;
 };
 
 type SurfaceProps = Omit<SiteSectionProps, "devIds" | "devIdDepth"> & {
   devIds: boolean;
+  allowContextPanel: boolean;
 };
 
 function toPascalToken(token: string) {
@@ -69,6 +77,7 @@ function SiteSectionSurface({
   sectionShell = true,
   devIds,
   stableBandCid,
+  allowContextPanel,
 }: SurfaceProps) {
   const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
   const pathname = usePathname() ?? "/";
@@ -123,7 +132,7 @@ function SiteSectionSurface({
         </div>
         {afterShell}
       </section>
-      {devIds && enabled && sectionBandCid ? (
+      {devIds && enabled && sectionBandCid && allowContextPanel ? (
         <BandDevPanel
           cid={sectionBandCid}
           label={sectionBandLabel}
@@ -150,6 +159,7 @@ export function SiteSection({
   stableBandCid,
   devIds = true,
   devIdDepth: _devIdDepth = 3,
+  allowContextPanel = true,
 }: SiteSectionProps) {
   return (
     <SiteSectionSurface
@@ -163,6 +173,7 @@ export function SiteSection({
       sectionShell={sectionShell}
       devIds={devIds}
       stableBandCid={stableBandCid}
+      allowContextPanel={allowContextPanel}
     >
       {children}
     </SiteSectionSurface>

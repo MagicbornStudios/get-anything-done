@@ -6,8 +6,7 @@ import {
   DEFAULT_PROJECT_ID,
   REGISTERED_PROJECTS,
 } from "@/lib/project-config";
-import { PlanningGanttSection } from "./PlanningGanttSection";
-import { PlanningOverviewSection } from "./PlanningOverviewSection";
+import { PlanningGanttSprintProvider } from "./PlanningGanttSprintContext";
 import { PlanningTabbedContent } from "./PlanningTabbedContent";
 
 export const metadata = {
@@ -19,13 +18,17 @@ export const metadata = {
 // Task 44-30: route-level scoping via ?projectid=. BUGS carry a project
 // field so we filter here; tasks/phases/decisions are still single-project
 // at build time (Option B in scoping research, deferred to follow-up).
-export default function PlanningStatePage({
+type PageSearchParams = Promise<{ projectid?: string | string[] }>;
+
+export default async function PlanningStatePage({
   searchParams,
 }: {
-  searchParams?: { projectid?: string };
+  searchParams?: PageSearchParams;
 }) {
+  const resolvedSearchParams = await searchParams;
   const state = PLANNING_STATE;
-  const paramId = searchParams?.projectid;
+  const rawProjectId = resolvedSearchParams?.projectid;
+  const paramId = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
   const currentProject =
     paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
       ? paramId
@@ -42,19 +45,19 @@ export default function PlanningStatePage({
 
   return (
     <MarketingShell>
-      <PlanningOverviewSection state={state} />
-      <PlanningGanttSection phases={state.phases} />
-      <Suspense>
-        <PlanningTabbedContent
-          state={state}
-          allTasks={ALL_TASKS}
-          allPhases={ALL_PHASES}
-          allDecisions={ALL_DECISIONS}
-          gadBugs={gadBugs}
-          humanWorkflows={HUMAN_WORKFLOWS}
-          signal={SIGNAL}
-        />
-      </Suspense>
+      <PlanningGanttSprintProvider phases={state.phases}>
+        <Suspense>
+          <PlanningTabbedContent
+            state={state}
+            allTasks={ALL_TASKS}
+            allPhases={ALL_PHASES}
+            allDecisions={ALL_DECISIONS}
+            gadBugs={gadBugs}
+            humanWorkflows={HUMAN_WORKFLOWS}
+            signal={SIGNAL}
+          />
+        </Suspense>
+      </PlanningGanttSprintProvider>
     </MarketingShell>
   );
 }

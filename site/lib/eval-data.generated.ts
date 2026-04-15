@@ -3404,6 +3404,47 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
     "buildRequirement": null
   },
   {
+    "id": "project-editor/app-forge-baseline",
+    "project": "project-editor",
+    "species": "app-forge-baseline",
+    "name": "project-editor/app-forge-baseline",
+    "description": "Inherited baseline species — project-editor starts from app-forge v1 as its initial shape. Until project-editor produces its own generations, this species points at the app-forge v1 preserved build as the visible artifact so the Brood Editor has something to render when project-editor is selected.",
+    "workflow": "gad",
+    "contextFramework": "gad",
+    "baseline": {
+      "project": "app-forge",
+      "species": "gad",
+      "version": "v1",
+      "source": "apps/forge/evals/app-forge/v1"
+    },
+    "constraints": {
+      "inheritsFromBaseline": true,
+      "note": "Do not run evals against this species directly. It exists so the project has a visible rendering target. Real project-editor species are produced by the editor's own generation runs once phase 44.5 lands."
+    },
+    "scoringWeights": {
+      "requirementCoverage": 0,
+      "planningQuality": 0,
+      "perTaskDiscipline": 0,
+      "skillAccuracy": 0,
+      "timeEfficiency": 0,
+      "humanReview": 1
+    },
+    "humanReviewRubric": {
+      "version": "v1-inherited",
+      "dimensions": [
+        {
+          "key": "rendersInEditor",
+          "label": "Renders in the editor",
+          "weight": 1,
+          "description": "Selecting project-editor in the Brood Editor shows the inherited app-forge v1 build in the iframe preview pane and surfaces the baseline species in the bestiary view. Placeholder until project-editor produces its own generations."
+        }
+      ]
+    },
+    "domain": "app",
+    "techStack": "next.js",
+    "buildRequirement": "Inherits app-forge v1 build — no independent build"
+  },
+  {
     "id": "repub-builder/gad",
     "project": "repub-builder",
     "species": "gad",
@@ -4633,6 +4674,30 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-192",
+    "title": "`gad snapshot` surfaces sprint-relevant skills via TASK-REGISTRY `skill=` attribution",
+    "summary": "`gad snapshot` today dumps STATE, ROADMAP, open tasks, and recent decisions. It does not tell the agent which skills it is most likely to reach for in the current sprint, so agents either cold-read the whole catalog (expensive) or guess (unreliable). Decision gad-18 (the GAD loop: snapshot → work → update → commit) mandates that attribution metadata (`skill=\"…\"`, `agent=\"…\"`, `type=\"…\"`) lives on every completed task in TASK-REGISTRY.xml per decision gad-104. That same attribution is the ground truth for \"which skills does this project actually use.\" Policy: `gad snapshot` gains a new `SKILLS (top N by sprint attribution)` section that scans open + recently-completed tasks in the current sprint window for `skill=` attributes, counts occurrences, and emits the top N skills (N defaults to 5, overridable via config) with one line each: `&lt;name&gt; — &lt;workflow-pointer&gt; — &lt;one-line description&gt;`. Proto-skills staged in `.planning/proto-skills/` are included so in-flight evolution work is immediately visible to the next agent that starts a session. Skills with zero sprint attribution are excluded — this is signal, not a catalog dump.",
+    "impact": "(1) `bin/gad.cjs snapshot` gains a new emitter `renderSprintSkills(projectId, sprintWindow)` that reads TASK-REGISTRY.xml via the existing parser, tallies `skill=` attributes across tasks in the current sprint (open + done within sprint window), and joins against `skills/&lt;name&gt;/SKILL.md` frontmatter (description + workflow pointer) to produce the section output. (2) Proto-skills at `.planning/proto-skills/&lt;slug&gt;/` are scanned and emitted alongside canonical skills with a `[proto]` marker so the agent knows they are staged for test use. (3) Config: new optional `[snapshot] sprint_skills_top_n = 5` key in `gad-config.toml`. (4) Snapshot output grows by roughly 5-10 lines — acceptable given the hydration metric (decision gad-163) already tracks snapshot token cost, and having sprint-relevant skills inline saves a round-trip to the catalog. (5) This closes a known gap where agents rediscover skills via catalog reads instead of being handed the sprint subset. (6) Consumer projects get the same behavior automatically — snapshot is project-agnostic and reads whatever TASK-REGISTRY lives at the queried root."
+  },
+  {
+    "id": "gad-191",
+    "title": "Proto-skills are self-contained bundles at `.planning/proto-skills/&lt;slug&gt;/` with a sibling `workflow.md`",
+    "summary": "Decision gad-183 already moved proto-skill staging to `.planning/proto-skills/` and established `gad evolution install/validate/promote/discard`. This decision refines the contents of a staged proto-skill directory so it plays nicely with the new uniform skill shape (gad-190). A staged proto-skill is a **self-contained bundle**: `SKILL.md` (frontmatter `status: proto`, `workflow: ./workflow.md`), `workflow.md` as a sibling (not in the canonical `workflows/` tree), `PROVENANCE.md`, and optionally the original `CANDIDATE.md`. The `workflow:` frontmatter pointer uses a relative sibling path — this is the one case where `workflow:` does not point into canonical `workflows/`. Rationale: proto-skills are not canonical framework assets yet. Keeping their workflow file inside the bundle means the whole thing can be copied whole into a runtime (`.claude/skills/&lt;name&gt;/`) by `gad evolution install` without touching canonical `workflows/`, and it can be test-used end-to-end before promotion. Promotion (`gad evolution promote`) performs the split: `workflow.md` moves to `workflows/&lt;name&gt;.md`, SKILL.md moves to `skills/&lt;name&gt;/SKILL.md`, and the `workflow:` pointer is rewritten to the canonical location. This decision is the first to make proto-skills bundle-shaped rather than flat files.",
+    "impact": "(1) `bin/gad.cjs evolution install` must copy the proto-skill directory whole into runtime targets so the sibling `workflow.md` resolves correctly at runtime. If the current implementation only copies `SKILL.md`, it must be extended to walk the directory (2026-04-15 check: verify current behavior before executing task 42.2-12). (2) `bin/gad.cjs evolution promote` must perform the SKILL.md + workflow.md split into `skills/` and `workflows/` and rewrite the frontmatter pointer — confirm current behavior matches; if it previously wrote both files under `skills/`, update it. (3) `references/skill-shape.md §5` documents the proto-skill bundle shape and is the contract that `create-proto-skill`, `gad-skill-creator`, and `gad evolution install/promote` must agree on. (4) Consumer projects follow the exact same bundle shape in their own `.planning/proto-skills/` — no project-type divergence. (5) `scripts/validate-canonical-assets.mjs` treats `.planning/proto-skills/` as excluded (existing behavior retained) so sibling-path `workflow:` refs do not trip the new canonical-workflow-resolution check. (6) Task 42.2-06 (`create-proto-skill` implementation) inherits this bundle shape as its output contract — the skill writes the bundle, not a flat SKILL.md."
+  },
+  {
+    "id": "gad-190",
+    "title": "SKILL.md is the single command entry point; `workflow:` frontmatter key replaces `skill.json`",
+    "summary": "The canonical skill shape has drifted: some skills ship `SKILL.md`, some ship `SKILL.md + COMMAND.md + skill.json`, some ship `SKILL.md + references/`. `skill.json` is a GAD-only sidecar (upstream GSD has zero of them) with a single load-bearing field: `commandPath`, which points at the workflow file under `workflows/`. There are ~60 of these sidecars in the canonical tree and only two live consumers in code (`bin/install.js:3088-3126` and `scripts/validate-canonical-assets.mjs:66-69`). Policy: every `skills/&lt;name&gt;/` carries exactly one `SKILL.md`, which is the command entry point. Non-trivial procedural bodies live in `workflows/&lt;name&gt;.md` and are referenced from SKILL.md frontmatter via a new `workflow:` key. Trivial skills may inline the body in SKILL.md and omit the workflow file. No more `COMMAND.md`, no more `skill.json`, no more dual-body skills. This operationalizes gad-180 (one canonical body per public name) and gad-181 (command skills are gad-*, procedural bodies live in prefixed workflows). The contract lives at `references/skill-shape.md`.",
+    "impact": "(1) `bin/install.js:readCanonicalSkillRecords` migrates from reading `skill.json.commandPath` to reading the `workflow:` frontmatter key from SKILL.md. During the transition both paths are honored; after migration the `skill.json` read path is removed. (2) `scripts/validate-canonical-assets.mjs` drops its skill.json/COMMAND.md pairing check and gains a new check that every `workflow:` frontmatter pointer resolves to an existing file. (3) All ~60 `skills/**/skill.json` files are deleted in phase 42.2. (4) COMMAND.md files are either merged into `workflows/&lt;name&gt;.md` (if they carry unique procedural content) or deleted (if they are duplicates of the existing workflow file). (5) `references/skill-shape.md` becomes the canonical spec and is cited by every authoring skill (`create-skill`, `create-proto-skill`, `gad-skill-creator`, `merge-skill`) and by `gad evolution install/promote`. (6) The four authoring skills are migrated first so the scaffolding used to create future skills already emits the new shape. (7) `skills/gad-create-skill/`, `skills/gad-merge-skill/`, and `skills/gad-quick-skill/` are deleted as part of the same migration — their bodies collapse into `gad-skill-creator`, `merge-skill`, and the renamed `create-proto-skill` respectively (per task 42.2-03 and decision gad-168)."
+  },
+  {
+    "id": "gad-189",
+    "title": "Phase 44.5 vocabulary + draft/published model: recipe / species / generation / brood / bestiary — and projects default to draft, /project-market filters to published",
+    "summary": "Discuss-phase 2026-04-15 for phase 44.5 (Brood Editor + Project Editor split) locked the vocabulary and the draft/published model before any plan-phase work starts.\r\n\r\n**Vocabulary**:\r\n- **Recipe**: reusable template that describes how to produce a species. Lives inside project data (not framework-level). A recipe is the authored definition; running it produces species instances.\r\n- **Species**: a recipe attached to a concrete project. Carries the project context, the recipe configuration, and per-species overrides. Matches today's `evals/&lt;project&gt;/species/&lt;species&gt;/species.json` shape — no schema change, just a naming clarification.\r\n- **Generation**: one concrete run/output of a species. `evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/` IS a generation. Each generation preserves its run code, trace, build artifacts, and scoring per decision gad-38.\r\n- **Brood**: the accumulated population of generations a species has produced. A brood is the set-of-all-generations-for-species-S-in-project-P at a given point in time. Not a directory — a computed view. The editor surfaces the brood when the operator selects a species.\r\n- **Bestiary**: the UI view that lists every species and its brood across a project. Rendered in the editor's inline species-detail pane as a grid of bestiary-entry cards with animated trait bars + visual diffs between generations. Grows over time as more generations land.\r\n\r\n**Published/draft model** (standard shape picked after operator asked for the most standard option):\r\n- New boolean field on project metadata: `\"published\": false` in `&lt;project&gt;/project.json`. Default is `false` — every existing project is treated as draft until explicitly flipped.\r\n- `/project-market` filters to `published === true`. Until the first project is published, the marketplace renders empty (or shows a \"no published projects yet — browse drafts in the editor\" empty state).\r\n- `/projects/[...id]` listing detail pages render for both draft and published projects — the detail page is always available regardless of publication state.\r\n- The editor (`/projects/[id]/edit` or equivalent new route) shows ALL projects regardless of publication state. Published-filtering is a marketplace-only concern.\r\n- `gad eval list` shows ALL projects regardless of publication state — it is an operator tool, not a consumer surface.\r\n- Flipping published is a single-field edit in the editor. Simple checkbox. No review workflow.\r\n- Same model applies recursively to species: species default to `\"published\": false`; the marketplace only shows published species inside published projects. Out-of-scope for the first editor slice but the field should be reserved now so schema doesn't churn later.\r\n\r\n**Split routes**:\r\n- `/project-market` (existing) — marketplace, published-only once the field lands.\r\n- `/projects/[...id]` catch-all (existing) — listing detail for a project or a project+species pair. The existing `http://localhost:3000/projects/app-forge/gad` route is SPECIES DETAIL, not project detail — previously misread as the project editor. This route stays as read-only detail; it is NOT the editor.\r\n- `/projects/[id]/edit` (new, phase 44.5) — project editor. Contains the brood editor inside it. Dev-gated.\r\n- `project-skills-scope-section-site-section` (existing panel on listing detail) — STAYS on the listing. Data source changes: it now aggregates skill usage across the project's broods/generations from the project catalog, instead of today's project-level skill catalog. Not the same surface as the editor's own skill panel.\r\n\r\n**Visual primitives locked for phase 44.5**:\r\n(a) Animated trait bars — confirmed.\r\n(b) Radar chart per species (6-8 trait axes) — prototype, feedback after live.\r\n(c) Visual diff tree (changed traits glow across generations) — confirmed.\r\n(d) Minecraft-style inventory grid for config editing — primary config surface. Recipe definitions bind to grid slots.\r\n(e) Bestiary view — in-game-style grid of bestiary cards showing species + their broods of generations.\r\n(f) iframe artifact preview — live served build from preserved eval output. Split-viewport right pane.\r\n(g) Inline species detail — expand in same viewport, not a separate route.\r\n(h) Visual Context System (cids + search tokens + CRUD modal footer) — mandatory for every section per decision gad-186/187 and the operator's hard requirement; flagged as a non-negotiable default applying to all GUI work including game UI. See feedback memory `feedback_visual_context_system_mandatory.md`.\r\n\r\n**Game UI vs web UI**: operator raised \"why not make this a game with sprites\" — answer is that gamified FEEL lives in the visual primitives (trait bars, bestiary cards, inventory grid, radar), not in a literal game engine. Web editor with gamified primitives gets the aesthetic without giving up API/CLI access or the Visual Context System integration. Not ruling out sprite work in a later phase if the cost/benefit shifts.",
+    "impact": "(1) Phase 44.5 renamed from \"Species Editor\" to \"Project Editor + Brood Editor\" — a Project Editor shell that contains the Brood Editor as a species-level surface. (2) Terminology is now load-bearing across `species.json`, `project.json`, the editor UI, the marketplace, the bestiary view, and all future PLAN.md files under phase 44.5. Changes to any of these docs must use the locked words. (3) A `published` boolean must be added to `project.json` (and reserved in `species.json`) in the first 44.5 task — every existing project is implicitly draft. (4) `/project-market` filter logic changes and must ship with the first published project (or with a clearly labeled \"no published projects\" empty state) to avoid showing nothing without explanation. (5) The existing `/projects/[...id]` route is species/project DETAIL, not an editor — previously mis-identified. The new editor route is separate and must not collide. (6) The `project-skills-scope-section-site-section` panel's data source changes from project-level skills to brood/generation-aggregated skill usage — this is a new site-data contract that build-site-data.mjs must produce. (7) Task 44-14 (register projects/project-editor as [[evals.roots]]) shipped 2026-04-15 with a nested scaffold `projects/project-editor/project-editor/` to avoid colliding with the existing magicborn project in portfolio-legacy evals root. Baseline species `app-forge-baseline` inherits from app-forge v1 per the original plan. (8) Phase 44.5 task list reshaped from 5 tasks (44.5-01..04+02b) to a larger set including 44.5-01b draft/published, 44.5-01c editor CTA, 44.5-01d panel data source, 44.5-05 inventory grid primitive, 44.5-06 recipe CRUD, 44.5-07 bestiary view, 44.5-08 radar chart, 44.5-09 visual diff tree, 44.5-10 iframe preview. Exact task numbering and dependency order to be finalized in plan-phase for 44.5-01 before execution starts."
+  },
   {
     "id": "gad-188",
     "title": "44-28 umbrella: installer + release pipeline + data scoping — distribution is GitHub releases, not npm, with a Windows-first lightweight installer writing only into .planning/ and agent dirs",
@@ -9142,12 +9207,159 @@ export const ALL_TASKS: TaskRecord[] = [
     "agentId": null,
     "skill": null,
     "type": "skill",
-    "goal": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance.",
+    "goal": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance. Output contract updated by decision gad-191: the skill writes a self-contained bundle at `.planning/proto-skills/&lt;slug&gt;/` with SKILL.md (`status: proto`, `workflow: ./workflow.md`), sibling `workflow.md`, PROVENANCE.md, and optionally CANDIDATE.md — not a flat SKILL.md.",
     "keywords": [
       "skill",
       "create-proto-skill",
       "batching",
       "checkpoint",
+      "evolution"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-07",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "docs",
+    "goal": "Author `references/skill-shape.md` as the canonical contract for the uniform skill shape: SKILL.md as single entry point, `workflow:` frontmatter key replacing `skill.json`, single `workflows/` dir, proto-skill bundle shape with sibling `workflow.md`, runtime install contract, validator rules, migration checklist. Cited by decisions gad-190/gad-191/gad-192 and by every downstream migration task in phase 42.2.",
+    "keywords": [
+      "skill-shape",
+      "references",
+      "contract",
+      "uniform",
+      "migration"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-08",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Migrate `bin/install.js:readCanonicalSkillRecords` from reading `skill.json.commandPath` to reading the `workflow:` frontmatter key from SKILL.md, honor both paths during transition, add unit tests.",
+    "keywords": [
+      "install",
+      "frontmatter",
+      "migration",
+      "backcompat"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-09",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Update `scripts/validate-canonical-assets.mjs` to enforce `workflow:` pointer resolution and warn on legacy skill.json sidecars per decision gad-190.",
+    "keywords": [
+      "validator",
+      "canonical",
+      "frontmatter",
+      "workflow-pointer"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-10",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "skill",
+    "goal": "Consolidate the four authoring keepers to the uniform shape and delete the three redundant legacy skills.",
+    "keywords": [
+      "skill",
+      "migration",
+      "uniform-shape",
+      "consolidation"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-11",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cleanup",
+    "goal": "Bulk-delete ~60 `skills/**/skill.json` sidecars and inject `workflow:` frontmatter into SKILL.md where the referenced workflow file resolves.",
+    "keywords": [
+      "cleanup",
+      "skill-json",
+      "sidecar",
+      "delete"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-12",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Verify `gad evolution install` / `gad evolution promote` handle the proto-skill bundle shape per decision gad-191.",
+    "keywords": [
+      "evolution",
+      "install",
+      "promote",
+      "proto-skill",
+      "bundle"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-13",
+    "phaseId": "42.2",
+    "status": "blocked",
+    "agentId": null,
+    "skill": null,
+    "type": "eval",
+    "goal": "Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. Then `gad evolution install` into the Claude runtime, exercise the proto-skill on a task in phase 44.5, capture feedback in VALIDATION.md, and either `gad evolution promote` or `gad evolution discard` based on the test run.",
+    "keywords": [
+      "eval",
+      "pipeline",
+      "proof",
+      "proto-skill",
+      "phase-44.5"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-14",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Surface sprint-relevant skills in `gad snapshot` output per decision gad-192.",
+    "keywords": [
+      "snapshot",
+      "skills",
+      "sprint-attribution",
+      "hydration"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-15",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cleanup",
+    "goal": "Migrate legacy `skills/candidates/` to `.planning/candidates/` per decision gad-183.",
+    "keywords": [
+      "cleanup",
+      "candidates",
+      "planning",
       "evolution"
     ],
     "depends": []
@@ -10449,16 +10661,19 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44-14",
     "phaseId": "44",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "cleanup",
     "goal": "Register `projects/project-editor` as an `[[evals.roots]]` entry once phase 00 of that project has produced a species/generation shape. Today it's registered only as a `[[planning.roots]]` entry â€” project-editor is a meta-project and doesn't yet have species. When phase 01 of project-editor lands (integrating app-forge v1 as the initial species), project-editor will have at least one species and should become discoverable via `gad eval list` and /project-market alongside the other eval projects. Low effort: one toml append + a species.json stub pointing at app-forge v1 as the inherited baseline.",
     "keywords": [
       "eval-roots",
       "project-editor",
       "registration",
-      "multi-root"
+      "multi-root",
+      "scaffold",
+      "baseline",
+      "inheritance"
     ],
     "depends": []
   },
@@ -10539,12 +10754,87 @@ export const ALL_TASKS: TaskRecord[] = [
     "agentId": null,
     "skill": null,
     "type": "site",
-    "goal": "Scaffold the brood editor route: /brood-editor (or /projects/[id]/edit) gated to NODE_ENV=development, renders a project's eval folder as an editable tree. Reuse the phase 44 marketplace card data but flip affordances from browse to mutate. First cut is read-only view of the tree + \"this would be editable in dev mode\" placeholder so we can ship the shell before the mutation bridge.",
+    "goal": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=\"project-editor-&lt;pane&gt;-site-section\"` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible \"Project Editor (dev mode)\" dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts).",
     "keywords": [
+      "project-editor",
       "brood-editor",
-      "site",
-      "local-dev",
-      "scaffold"
+      "scaffold",
+      "route",
+      "cid",
+      "visual-context",
+      "local-dev"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-01a",
+    "phaseId": "44.5",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the \"references\" section of 44.5-01's KICKOFF.md. This closes the user's \"make sure what references will be needed for implementation is understood\" instruction from 2026-04-15.",
+    "keywords": [
+      "project-editor",
+      "visual-context-system",
+      "research",
+      "references",
+      "kickoff-input",
+      "clipboard-crud",
+      "cid",
+      "modal-footer"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-01b",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.",
+    "keywords": [
+      "project-editor",
+      "published",
+      "draft",
+      "project-json",
+      "marketplace-filter",
+      "schema"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-01c",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an \"Exit to listing\" link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel.",
+    "keywords": [
+      "project-editor",
+      "cta",
+      "nav",
+      "cid",
+      "listing-detail"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-01d",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet).",
+    "keywords": [
+      "project-editor",
+      "listing-detail",
+      "skills-scope",
+      "aggregation",
+      "build-site-data"
     ],
     "depends": []
   },
@@ -10602,12 +10892,125 @@ export const ALL_TASKS: TaskRecord[] = [
     "agentId": null,
     "skill": null,
     "type": "site",
-    "goal": "Species/population/generation/brood capture surfaces inside the editor: small inspector panes showing the currently-edited project's species rows, each species's generations, and the brood view across all species at the same round. Reuses phase 44 components but with an \"active editing\" affordance indicating which row is being mutated.",
+    "goal": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read \"Species\", \"Brood\", \"Generation\", \"Recipe\" and must not drift.",
     "keywords": [
       "brood-editor",
       "species",
       "generations",
+      "brood",
+      "recipe",
+      "site",
+      "cid"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-05",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.",
+    "keywords": [
+      "project-editor",
+      "inventory-grid",
+      "config-editor",
+      "primitive",
+      "gamified",
+      "cid"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-06",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) \"run recipe\" action that produces a new species in the project's species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is \"recipe authors a species, species runs normally\".",
+    "keywords": [
+      "project-editor",
+      "recipe",
+      "crud",
+      "schema",
+      "inventory-grid",
       "site"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-07",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor's split viewport for 44.5-01. Acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own.",
+    "keywords": [
+      "project-editor",
+      "bestiary",
+      "brood",
+      "species-detail",
+      "site",
+      "cid"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-08",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.",
+    "keywords": [
+      "project-editor",
+      "trait-bar",
+      "radar-chart",
+      "primitive",
+      "animation",
+      "site"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-09",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.",
+    "keywords": [
+      "project-editor",
+      "visual-diff",
+      "tree",
+      "generations",
+      "brood",
+      "primitive",
+      "site"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-10",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport.",
+    "keywords": [
+      "project-editor",
+      "iframe",
+      "preview",
+      "split-viewport",
+      "artifact",
+      "site",
+      "cid"
     ],
     "depends": []
   }
@@ -10963,9 +11366,9 @@ export const ALL_PHASES: PhaseRecord[] = [
   },
   {
     "id": "44.5",
-    "title": "Species Editor — local-dev project/species playground",
+    "title": "Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace",
     "status": "planned",
-    "goal": "After the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project and its species as a live workspace rather than a read-only catalog entry. **Two routes, reserved here, both gated to NODE_ENV=development**: (a) `/project-editor` (or `/projects/[id]/edit`) — the parent Project Editor surface, scoped to the whole project (requirements, project.json, species roster, shared assets); (b) `/species-editor` (or `/projects/[id]/species/[species]/edit`) — the per-species inner surface, scoped to a single species folder (species.json, per-species overrides, generation list). Scope: (1) Both routes render the relevant eval folder as an editable tree — requirements, project.json, per-species overrides, manifest entries. (2) A Node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) Capture surfaces for species/generation views keyed to the currently-edited project, reusing the Unity Asset Store card data from phase 44 but flipping the affordances from browse to mutate. (4) **Lovable/Bolt-style species-without-build visualization (D-17, D-18)**: the editor previews species + generation state without requiring a full site rebuild — content-model edits reflect immediately in the editor pane, so the operator iterates on requirements/species/generations the way Lovable and Bolt iterate on generated UI. (5) Explicit rejection of any Vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (6) Supports the \"I want to iterate without rebuilding the whole site every time\" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. Planning requirement: the bridge must refuse all requests unless NODE_ENV=development AND an explicit allow-list of commands is matched, so we never accidentally expose it in production builds.",
+    "goal": "After the marketplace lands (phase 44), build a local-dev-only Project Editor surface that contains the Brood Editor as its species-level inner surface. The editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. Discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. Vocabulary: **Recipe** = reusable template for producing a species. **Species** = recipe attached to a concrete project. **Generation** = one concrete run of a species. **Brood** = the accumulated population of generations for a species. **Bestiary** = UI view of every species + its brood across a project. Scope: (1) **New editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `NODE_ENV=development`. NOT the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **Split viewport** — left pane: bestiary grid or React Flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **Visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. Gamified feel comes from primitives, not a literal game engine. (4) **Visual Context System is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `SiteSection cid=\"*-site-section\"` literal, every interactive element is grep-able, and the panel + modal-footer CRUD loop must work on every surface before the feature is considered done. No exceptions for game-styled components. (5) **Draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **Dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only API route. (7) **File-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **Recipe CRUD** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **Bestiary view** — read-only history of generations rendered as bestiary cards. (10) **Data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. Dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). Explicit non-goals: no Vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion).",
     "outcome": null
   },
   {
@@ -10990,6 +11393,34 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-192",
+    "title": "`gad snapshot` surfaces sprint-relevant skills via TASK-REGISTRY `skill=` attribution",
+    "kind": "decision",
+    "href": "/decisions#gad-192",
+    "body": "gad-192 `gad snapshot` surfaces sprint-relevant skills via task-registry `skill=` attribution `gad snapshot` today dumps state, roadmap, open tasks, and recent decisions. it does not tell the agent which skills it is most likely to reach for in the current sprint, so agents either cold-read the whole catalog (expensive) or guess (unreliable). decision gad-18 (the gad loop: snapshot → work → update → commit) mandates that attribution metadata (`skill=\"…\"`, `agent=\"…\"`, `type=\"…\"`) lives on "
+  },
+  {
+    "id": "gad-191",
+    "title": "Proto-skills are self-contained bundles at `.planning/proto-skills/&lt;slug&gt;/` with a sibling `workflow.md`",
+    "kind": "decision",
+    "href": "/decisions#gad-191",
+    "body": "gad-191 proto-skills are self-contained bundles at `.planning/proto-skills/&lt;slug&gt;/` with a sibling `workflow.md` decision gad-183 already moved proto-skill staging to `.planning/proto-skills/` and established `gad evolution install/validate/promote/discard`. this decision refines the contents of a staged proto-skill directory so it plays nicely with the new uniform skill shape (gad-190). a staged proto-skill is a **self-contained bundle**: `skill.md` (frontmatter `status: proto`, `workflow: ./workflow.md`), "
+  },
+  {
+    "id": "gad-190",
+    "title": "SKILL.md is the single command entry point; `workflow:` frontmatter key replaces `skill.json`",
+    "kind": "decision",
+    "href": "/decisions#gad-190",
+    "body": "gad-190 skill.md is the single command entry point; `workflow:` frontmatter key replaces `skill.json` the canonical skill shape has drifted: some skills ship `skill.md`, some ship `skill.md + command.md + skill.json`, some ship `skill.md + references/`. `skill.json` is a gad-only sidecar (upstream gsd has zero of them) with a single load-bearing field: `commandpath`, which points at the workflow file under `workflows/`. there are ~60 of these sidecars in the canonical tree and only two live consum"
+  },
+  {
+    "id": "gad-189",
+    "title": "Phase 44.5 vocabulary + draft/published model: recipe / species / generation / brood / bestiary — and projects default to draft, /project-market filters to published",
+    "kind": "decision",
+    "href": "/decisions#gad-189",
+    "body": "gad-189 phase 44.5 vocabulary + draft/published model: recipe / species / generation / brood / bestiary — and projects default to draft, /project-market filters to published discuss-phase 2026-04-15 for phase 44.5 (brood editor + project editor split) locked the vocabulary and the draft/published model before any plan-phase work starts.\r\n\r\n**vocabulary**:\r\n- **recipe**: reusable template that describes how to produce a species. lives inside project data (not framework-level). a recipe is the authored definition; running it produces species instances.\r\n- **species**: a"
+  },
   {
     "id": "gad-188",
     "title": "44-28 umbrella: installer + release pipeline + data scoping — distribution is GitHub releases, not npm, with a Windows-first lightweight installer writing only into .planning/ and agent dirs",
@@ -13760,7 +14191,70 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: e",
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-06",
-    "body": "42.2-06 implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. at startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{provenance.md,skill.md}` pair, draft each pending candidate in turn. for each: write provenance.md first as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then skill.md in dot-agent format. on crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the provenance+no-skill state. also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance. skill create-proto-skill batching checkpoint evolution"
+    "body": "42.2-06 implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. at startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{provenance.md,skill.md}` pair, draft each pending candidate in turn. for each: write provenance.md first as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then skill.md in dot-agent format. on crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the provenance+no-skill state. also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance. output contract updated by decision gad-191: the skill writes a self-contained bundle at `.planning/proto-skills/&lt;slug&gt;/` with skill.md (`status: proto`, `workflow: ./workflow.md`), sibling `workflow.md`, provenance.md, and optionally candidate.md — not a flat skill.md. skill create-proto-skill batching checkpoint evolution"
+  },
+  {
+    "id": "42.2-07",
+    "title": "Author `references/skill-shape.md` as the canonical contract for the uniform skill shape: SKILL.md as single entry point",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-07",
+    "body": "42.2-07 author `references/skill-shape.md` as the canonical contract for the uniform skill shape: skill.md as single entry point, `workflow:` frontmatter key replacing `skill.json`, single `workflows/` dir, proto-skill bundle shape with sibling `workflow.md`, runtime install contract, validator rules, migration checklist. cited by decisions gad-190/gad-191/gad-192 and by every downstream migration task in phase 42.2. skill-shape references contract uniform migration"
+  },
+  {
+    "id": "42.2-08",
+    "title": "Migrate `bin/install.js:readCanonicalSkillRecords` from reading `skill.json.commandPath` to reading the `workflow:` fron",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-08",
+    "body": "42.2-08 migrate `bin/install.js:readcanonicalskillrecords` from reading `skill.json.commandpath` to reading the `workflow:` frontmatter key from skill.md, honor both paths during transition, add unit tests. install frontmatter migration backcompat"
+  },
+  {
+    "id": "42.2-09",
+    "title": "Update `scripts/validate-canonical-assets.mjs` to enforce `workflow:` pointer resolution and warn on legacy skill.json s",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-09",
+    "body": "42.2-09 update `scripts/validate-canonical-assets.mjs` to enforce `workflow:` pointer resolution and warn on legacy skill.json sidecars per decision gad-190. validator canonical frontmatter workflow-pointer"
+  },
+  {
+    "id": "42.2-10",
+    "title": "Consolidate the four authoring keepers to the uniform shape and delete the three redundant legacy skills.",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-10",
+    "body": "42.2-10 consolidate the four authoring keepers to the uniform shape and delete the three redundant legacy skills. skill migration uniform-shape consolidation"
+  },
+  {
+    "id": "42.2-11",
+    "title": "Bulk-delete ~60 `skills/**/skill.json` sidecars and inject `workflow:` frontmatter into SKILL.md where the referenced wo",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-11",
+    "body": "42.2-11 bulk-delete ~60 `skills/**/skill.json` sidecars and inject `workflow:` frontmatter into skill.md where the referenced workflow file resolves. cleanup skill-json sidecar delete"
+  },
+  {
+    "id": "42.2-12",
+    "title": "Verify `gad evolution install` / `gad evolution promote` handle the proto-skill bundle shape per decision gad-191.",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-12",
+    "body": "42.2-12 verify `gad evolution install` / `gad evolution promote` handle the proto-skill bundle shape per decision gad-191. evolution install promote proto-skill bundle"
+  },
+  {
+    "id": "42.2-13",
+    "title": "Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-13",
+    "body": "42.2-13 promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/candidate.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. then `gad evolution install` into the claude runtime, exercise the proto-skill on a task in phase 44.5, capture feedback in validation.md, and either `gad evolution promote` or `gad evolution discard` based on the test run. eval pipeline proof proto-skill phase-44.5"
+  },
+  {
+    "id": "42.2-14",
+    "title": "Surface sprint-relevant skills in `gad snapshot` output per decision gad-192.",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-14",
+    "body": "42.2-14 surface sprint-relevant skills in `gad snapshot` output per decision gad-192. snapshot skills sprint-attribution hydration"
+  },
+  {
+    "id": "42.2-15",
+    "title": "Migrate legacy `skills/candidates/` to `.planning/candidates/` per decision gad-183.",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-15",
+    "body": "42.2-15 migrate legacy `skills/candidates/` to `.planning/candidates/` per decision gad-183. cleanup candidates planning evolution"
   },
   {
     "id": "42.3-01",
@@ -14292,7 +14786,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Register `projects/project-editor` as an `[[evals.roots]]` entry once phase 00 of that project has produced a species/ge",
     "kind": "task",
     "href": "/planning?tab=tasks#44-14",
-    "body": "44-14 register `projects/project-editor` as an `[[evals.roots]]` entry once phase 00 of that project has produced a species/generation shape. today it's registered only as a `[[planning.roots]]` entry â€” project-editor is a meta-project and doesn't yet have species. when phase 01 of project-editor lands (integrating app-forge v1 as the initial species), project-editor will have at least one species and should become discoverable via `gad eval list` and /project-market alongside the other eval projects. low effort: one toml append + a species.json stub pointing at app-forge v1 as the inherited baseline. eval-roots project-editor registration multi-root"
+    "body": "44-14 register `projects/project-editor` as an `[[evals.roots]]` entry once phase 00 of that project has produced a species/generation shape. today it's registered only as a `[[planning.roots]]` entry â€” project-editor is a meta-project and doesn't yet have species. when phase 01 of project-editor lands (integrating app-forge v1 as the initial species), project-editor will have at least one species and should become discoverable via `gad eval list` and /project-market alongside the other eval projects. low effort: one toml append + a species.json stub pointing at app-forge v1 as the inherited baseline. eval-roots project-editor registration multi-root scaffold baseline inheritance"
   },
   {
     "id": "44-15",
@@ -14324,10 +14818,38 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "44.5-01",
-    "title": "Scaffold the brood editor route: /brood-editor (or /projects/[id]/edit) gated to NODE_ENV=development, renders a project",
+    "title": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` li",
     "kind": "task",
     "href": "/planning?tab=tasks#44.5-01",
-    "body": "44.5-01 scaffold the brood editor route: /brood-editor (or /projects/[id]/edit) gated to node_env=development, renders a project's eval folder as an editable tree. reuse the phase 44 marketplace card data but flip affordances from browse to mutate. first cut is read-only view of the tree + \"this would be editable in dev mode\" placeholder so we can ship the shell before the mutation bridge. brood-editor site local-dev scaffold"
+    "body": "44.5-01 scaffold the project editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `node_env=development`. first cut: three-pane split viewport shell with no real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. every pane gets an explicit `sitesection cid=\"project-editor-&lt;pane&gt;-site-section\"` literal, participates in the visual context panel + modal-footer crud loop, and is grep-able by cid — per decision gad-189 and the visual context system mandate. renders against `projects/project-editor/project-editor/` as the dogfood target. does not implement edit affordances or the dev bridge — this task is the shell only. must include a visible \"project editor (dev mode)\" dev-panel badge so the operator can see the gate status. acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the visual context system is wired before any editor feature work starts). project-editor brood-editor scaffold route cid visual-context local-dev"
+  },
+  {
+    "id": "44.5-01a",
+    "title": "Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is wri",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-01a",
+    "body": "44.5-01a visual context system reference research for 44.5-01 (discuss-phase deliverable, not a code task). before plan.md is written for 44.5-01, enumerate the exact set of existing visual context system components, skills, decisions, and file paths that the project editor route will consume: (a) the `sitesection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer crud form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory visual context coverage requirement. produce a short reference index (not a full plan) used as the \"references\" section of 44.5-01's kickoff.md. this closes the user's \"make sure what references will be needed for implementation is understood\" instruction from 2026-04-15. project-editor visual-context-system research references kickoff-input clipboard-crud cid modal-footer"
+  },
+  {
+    "id": "44.5-01b",
+    "title": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-01b",
+    "body": "44.5-01b draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. update `/project-market` page component to filter `featured_projects` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a cta that routes to the project editor. update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. operator-facing flip is a single checkbox in the editor (44.5-01c). schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. acceptance: `/project-market` renders the empty state with the editor cta until at least one project flips published. project-editor published draft project-json marketplace-filter schema"
+  },
+  {
+    "id": "44.5-01c",
+    "title": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing h",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-01c",
+    "body": "44.5-01c \"open in editor\" cta on the existing `/projects/[...id]` listing detail page. adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `node_env=development` or the dev-panel equivalent flag. button gets its own cid. also adds the reverse nav — an \"exit to listing\" link in the editor shell that routes back to the listing detail for the same project. both links participate in the visual context panel. project-editor cta nav cid listing-detail"
+  },
+  {
+    "id": "44.5-01d",
+    "title": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel st",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-01d",
+    "body": "44.5-01d update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). the panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. the aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectbroodskillaggregation` helper that produces the input record. panel ui unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet). project-editor listing-detail skills-scope aggregation build-site-data"
   },
   {
     "id": "44.5-02",
@@ -14352,10 +14874,52 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "44.5-04",
-    "title": "Species/population/generation/brood capture surfaces inside the editor: small inspector panes showing the currently-edit",
+    "title": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited pro",
     "kind": "task",
     "href": "/planning?tab=tasks#44.5-04",
-    "body": "44.5-04 species/population/generation/brood capture surfaces inside the editor: small inspector panes showing the currently-edited project's species rows, each species's generations, and the brood view across all species at the same round. reuses phase 44 components but with an \"active editing\" affordance indicating which row is being mutated. brood-editor species generations site"
+    "body": "44.5-04 species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. every row gets a cid. per decision gad-189 the vocabulary is locked — inspector pane labels read \"species\", \"brood\", \"generation\", \"recipe\" and must not drift. brood-editor species generations brood recipe site cid"
+  },
+  {
+    "id": "44.5-05",
+    "title": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json /",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-05",
+    "body": "44.5-05 minecraft-style inventory grid primitive for config editing. reusable react component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). primary surface for 44.5-03 file-system round-trip. prototype first in storybook-equivalent isolation before wiring to real data. project-editor inventory-grid config-editor primitive gamified cid"
+  },
+  {
+    "id": "44.5-06",
+    "title": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-06",
+    "body": "44.5-06 recipe crud surface inside the project editor. recipes are reusable species templates owned by the project (per decision gad-189). this task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/recipe.json` alongside species/; (c) editor ui: list of recipes in the project editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) \"run recipe\" action that produces a new species in the project's species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer crud can target recipes. no inheritance-from-recipe runtime yet — first cut is \"recipe authors a species, species runs normally\". project-editor recipe crud schema inventory-grid site"
+  },
+  {
+    "id": "44.5-07",
+    "title": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per spec",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-07",
+    "body": "44.5-07 bestiary view — read-only ui for a project's accumulated broods. renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. card cids are deterministic on species slug; generation-row cids are deterministic on species+version. the bestiary is the primary left-pane in the editor's split viewport for 44.5-01. acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own. project-editor bestiary brood species-detail site cid"
+  },
+  {
+    "id": "44.5-08",
+    "title": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to curren",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-08",
+    "body": "44.5-08 animated trait bar + radar chart primitives. (a) trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). reusable as both a standalone component and a row inside a bestiary card. (b) radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. prototype first — operator has not seen one yet and will give feedback after live. both primitives get cids and a modal-footer-editable representation. prototype in isolation before wiring to real species data. project-editor trait-bar radar-chart primitive animation site"
+  },
+  {
+    "id": "44.5-09",
+    "title": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-09",
+    "body": "44.5-09 visual diff tree primitive. renders a side-by-side (or overlaid) tree view of two config objects (typically generation n vs generation n+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. every diff-row has a cid derived from the config key path for grep-ability. accepts arbitrary json — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types. project-editor visual-diff tree generations brood primitive site"
+  },
+  {
+    "id": "44.5-10",
+    "title": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and r",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-10",
+    "body": "44.5-10 iframe live-preview primitive for the editor's right pane. takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;n&gt;/` in a sandboxed iframe. includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, url path input for spa routes, and a fallback screenshot when the build isn't live-servable. gets a cid. integrates with the visual context system such that the modal footer can target either the iframe wrapper or (via postmessage when the inner build opts in) the selected element inside the iframe. primary right-pane content for 44.5-01's split viewport. project-editor iframe preview split-viewport artifact site cid"
   },
   {
     "id": "01",
@@ -14695,10 +15259,10 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "44.5",
-    "title": "Phase 44.5 — Species Editor — local-dev project/species playground",
+    "title": "Phase 44.5 — Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace",
     "kind": "phase",
     "href": "/planning?tab=phases#44.5",
-    "body": "44.5 species editor — local-dev project/species playground after the marketplace lands (phase 44), build a local-dev-only editor surface that lets the operator interact with a project and its species as a live workspace rather than a read-only catalog entry. **two routes, reserved here, both gated to node_env=development**: (a) `/project-editor` (or `/projects/[id]/edit`) — the parent project editor surface, scoped to the whole project (requirements, project.json, species roster, shared assets); (b) `/species-editor` (or `/projects/[id]/species/[species]/edit`) — the per-species inner surface, scoped to a single species folder (species.json, per-species overrides, generation list). scope: (1) both routes render the relevant eval folder as an editable tree — requirements, project.json, per-species overrides, manifest entries. (2) a node child-process bridge reachable only from the dev server that can run vetted commands (`gad evolution status|validate|promote|discard`, `npx` commands scoped to the eval repo, build/verify commands) and stream output back to the browser. (3) capture surfaces for species/generation views keyed to the currently-edited project, reusing the unity asset store card data from phase 44 but flipping the affordances from browse to mutate. (4) **lovable/bolt-style species-without-build visualization (d-17, d-18)**: the editor previews species + generation state without requiring a full site rebuild — content-model edits reflect immediately in the editor pane, so the operator iterates on requirements/species/generations the way lovable and bolt iterate on generated ui. (5) explicit rejection of any vercel-hosted mutation path in this phase per decision gad-170 — production /project-market stays read-only. (6) supports the \"i want to iterate without rebuilding the whole site every time\" workflow the user called out: run terminal commands directly against the eval folder, see results in the editor pane, repeat. planning requirement: the bridge must refuse all requests unless node_env=development and an explicit allow-list of commands is matched, so we never accidentally expose it in production builds."
+    "body": "44.5 project editor + brood editor — local-dev gamified species/brood/generation workspace after the marketplace lands (phase 44), build a local-dev-only project editor surface that contains the brood editor as its species-level inner surface. the editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. vocabulary: **recipe** = reusable template for producing a species. **species** = recipe attached to a concrete project. **generation** = one concrete run of a species. **brood** = the accumulated population of generations for a species. **bestiary** = ui view of every species + its brood across a project. scope: (1) **new editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `node_env=development`. not the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **split viewport** — left pane: bestiary grid or react flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. gamified feel comes from primitives, not a literal game engine. (4) **visual context system is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `sitesection cid=\"*-site-section\"` literal, every interactive element is grep-able, and the panel + modal-footer crud loop must work on every surface before the feature is considered done. no exceptions for game-styled components. (5) **draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only api route. (7) **file-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **recipe crud** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **bestiary view** — read-only history of generations rendered as bestiary cards. (10) **data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). explicit non-goals: no vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion)."
   },
   {
     "id": "45",
@@ -15044,6 +15608,20 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "build-and-release-locally build-and-release-locally cut a new gad release — version bump, changelog entry, node sea rebuild, git tag, and `gh release create` with artifacts attached. operator-triggered only, no ci, no npm publish. trigger this skill whenever the user asks to \"cut a release\", \"ship v<n>\", \"publish a new release\", \"bump the version\", or any variation that means \"the canonical gad repo should have a new downloadable installer artifact on github releases.\" canonical-repo-only: refuses to run outside the magicbornstudios/get-anything-done clone. see decision gad-188 (44-28 umbrella — distribution is github releases + executable download, no github actions)."
   },
   {
+    "id": "create-proto-skill",
+    "title": "create-proto-skill",
+    "kind": "skill",
+    "href": "/skills/create-proto-skill",
+    "body": "create-proto-skill create-proto-skill >-"
+  },
+  {
+    "id": "create-skill",
+    "title": "create-skill",
+    "kind": "skill",
+    "href": "/skills/create-skill",
+    "body": "create-skill create-skill >-"
+  },
+  {
     "id": "eval-skill-install",
     "title": "eval-skill-install",
     "kind": "skill",
@@ -15147,13 +15725,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/gad-complete-milestone",
     "body": "gad-complete-milestone gad:complete-milestone archive completed milestone and prepare for next version"
-  },
-  {
-    "id": "gad-create-skill",
-    "title": "gad:create-skill",
-    "kind": "skill",
-    "href": "/skills/gad-create-skill",
-    "body": "gad-create-skill gad:create-skill >-"
   },
   {
     "id": "gad-cross-config-domain-change",
@@ -15324,13 +15895,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "gad-map-codebase gad:map-codebase analyze codebase with parallel mapper agents to produce .planning/codebase/ documents"
   },
   {
-    "id": "gad-merge-skill",
-    "title": "gad:merge-skill",
-    "kind": "skill",
-    "href": "/skills/gad-merge-skill",
-    "body": "gad-merge-skill gad:merge-skill >-"
-  },
-  {
     "id": "gad-migrate-schema",
     "title": "gad:migrate-schema",
     "kind": "skill",
@@ -15413,13 +15977,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/gad-progress",
     "body": "gad-progress gad:progress check project progress, show context, and route to next action (execute or plan)"
-  },
-  {
-    "id": "gad-quick-skill",
-    "title": "gad-quick-skill",
-    "kind": "skill",
-    "href": "/skills/gad-quick-skill",
-    "body": "gad-quick-skill gad-quick-skill >-"
   },
   {
     "id": "gad-reapply-patches",
@@ -15616,6 +16173,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "skill",
     "href": "/skills/gad-write-tech-doc",
     "body": "gad-write-tech-doc gad:write-tech-doc produce a technical breakdown doc — architecture, data flow, component design. use when a system needs to be explained structurally for agent or developer onboarding."
+  },
+  {
+    "id": "merge-skill",
+    "title": "merge-skill",
+    "kind": "skill",
+    "href": "/skills/merge-skill",
+    "body": "merge-skill merge-skill >-"
   },
   {
     "id": "objective-eval-design",
