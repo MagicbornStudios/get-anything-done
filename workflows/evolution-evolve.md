@@ -121,7 +121,7 @@ The loop:
 gad:evolution:evolve
   ├─ compute-self-eval finds high-pressure phases (selection pressure)
   ├─ for each new candidate phase:
-  │     ├─ keep skills/candidates/<slug>/CANDIDATE.md as the raw source
+  │     ├─ keep .planning/candidates/<slug>/CANDIDATE.md as the raw source
   │     │     = raw phase dump (no curator pre-digestion)
   │     ├─ invoke create-proto-skill on CANDIDATE.md
   │     │     → writes .planning/proto-skills/<slug>/SKILL.md + references/
@@ -221,7 +221,7 @@ gad decisions --projectid get-anything-done | grep -i "phase $PHASE_ID"
 
 ## Step 4: Write CANDIDATE.md per candidate phase
 
-For each candidate phase, keep `skills/candidates/<slug>/CANDIDATE.md` as the raw source and write the staged proto-skill to `.planning/proto-skills/<slug>/`. The
+For each candidate phase, keep `.planning/candidates/<slug>/CANDIDATE.md` as the raw source and write the staged proto-skill to `.planning/proto-skills/<slug>/`. The
 slug is `phase-<N>-<short-kebab-of-title>`.
 
 CANDIDATE.md is a structured raw dump:
@@ -272,7 +272,7 @@ Hand each candidate off to `create-proto-skill`:
 ```
 For each <slug> in this evolution:
   Invoke create-proto-skill with: "Process the candidate at
-  skills/candidates/<slug>/CANDIDATE.md. Write SKILL.md + references/
+  .planning/candidates/<slug>/CANDIDATE.md. Write SKILL.md + references/
   under .planning/proto-skills/<slug>/. Do not ask questions."
 ```
 
