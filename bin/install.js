@@ -333,6 +333,32 @@ function parseConfigDirArg() {
   return null;
 }
 const explicitConfigDir = parseConfigDirArg();
+
+// Parse --new-project <path> argument (task 42.2-38 onboard flow)
+// Scriptable equivalent of interactive "new GAD project folder" choice.
+function parseNewProjectArg() {
+  const idx = args.findIndex((a) => a === '--new-project');
+  if (idx !== -1) {
+    const next = args[idx + 1];
+    if (!next || next.startsWith('-')) {
+      console.error(`  ${yellow}--new-project requires a path argument${reset}`);
+      process.exit(1);
+    }
+    return next;
+  }
+  const eq = args.find((a) => a.startsWith('--new-project='));
+  if (eq) {
+    const value = eq.split('=')[1];
+    if (!value) {
+      console.error(`  ${yellow}--new-project requires a non-empty path${reset}`);
+      process.exit(1);
+    }
+    return value;
+  }
+  return null;
+}
+const explicitNewProjectPath = parseNewProjectArg();
+
 const hasHelp = args.includes('--help') || args.includes('-h');
 const forceStatusline = args.includes('--force-statusline');
 
