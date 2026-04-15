@@ -1,6 +1,7 @@
 ---
 name: gad:help
 description: Show available GAD commands and usage guide
+workflow: workflows/help.md
 ---
 <objective>
 Display the complete GAD command reference.

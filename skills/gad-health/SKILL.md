@@ -7,6 +7,7 @@ allowed-tools:
   - Bash
   - Write
   - AskUserQuestion
+workflow: workflows/health.md
 ---
 <objective>
 Validate `.planning/` directory integrity and report actionable issues. Checks for missing files, invalid configurations, inconsistent state, and orphaned plans.

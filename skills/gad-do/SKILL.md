@@ -6,6 +6,7 @@ allowed-tools:
   - Read
   - Bash
   - AskUserQuestion
+workflow: workflows/do.md
 ---
 <objective>
 Analyze freeform natural language input and dispatch to the most appropriate GAD command.

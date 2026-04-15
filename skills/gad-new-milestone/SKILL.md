@@ -8,6 +8,7 @@ allowed-tools:
   - Bash
   - Task
   - AskUserQuestion
+workflow: workflows/new-milestone.md
 ---
 <objective>
 Start a new milestone: questioning → research (optional) → requirements → roadmap.

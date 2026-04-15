@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - Bash
   - Glob
+workflow: workflows/remove-phase.md
 ---
 <objective>
 Remove an unstarted future phase from the roadmap and renumber all subsequent phases to maintain a clean, linear sequence.

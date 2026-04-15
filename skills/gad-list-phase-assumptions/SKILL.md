@@ -7,6 +7,7 @@ allowed-tools:
   - Bash
   - Grep
   - Glob
+workflow: workflows/list-phase-assumptions.md
 ---
 
 <objective>

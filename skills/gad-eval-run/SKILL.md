@@ -6,6 +6,7 @@ allowed-tools:
   - Read
   - Write
   - Bash
+workflow: workflows/gad-eval-run.md
 ---
 
 <execution_context>

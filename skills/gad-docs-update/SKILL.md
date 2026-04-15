@@ -11,6 +11,7 @@ allowed-tools:
   - Grep
   - Task
   - AskUserQuestion
+workflow: workflows/docs-update.md
 ---
 <objective>
 Generate and update up to 9 documentation files for the current project. Each doc type is written by a gad-doc-writer subagent that explores the codebase directly — no hallucinated paths, phantom endpoints, or stale signatures.

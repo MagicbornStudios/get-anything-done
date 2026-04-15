@@ -7,6 +7,7 @@ allowed-tools:
   - Read
   - Write
   - Bash
+workflow: workflows/complete-milestone.md
 ---
 
 <objective>

@@ -9,6 +9,7 @@ allowed-tools:
   - Bash
   - Task
   - Write
+workflow: workflows/audit-milestone.md
 ---
 <objective>
 Verify milestone achieved its definition of done. Check requirements coverage, cross-phase integration, and end-to-end flows.

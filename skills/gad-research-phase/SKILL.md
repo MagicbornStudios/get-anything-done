@@ -6,6 +6,7 @@ allowed-tools:
   - Read
   - Bash
   - Task
+workflow: workflows/research-phase.md
 ---
 
 <objective>

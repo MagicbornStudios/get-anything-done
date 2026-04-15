@@ -7,6 +7,7 @@ allowed-tools:
   - Grep
   - Glob
   - SlashCommand
+workflow: workflows/next.md
 ---
 <objective>
 Detect the current project state and automatically invoke the next logical GAD workflow step.

@@ -8,6 +8,7 @@ allowed-tools:
   - Write
   - Task
   - AskUserQuestion
+workflow: workflows/gad-new-project.md
 ---
 <context>
 **Flags:**

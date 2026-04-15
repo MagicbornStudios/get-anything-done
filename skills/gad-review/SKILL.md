@@ -8,6 +8,7 @@ allowed-tools:
   - Bash
   - Glob
   - Grep
+workflow: workflows/review.md
 ---
 
 <objective>

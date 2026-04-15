@@ -1,6 +1,0 @@
-{
-  "id": "gad-migrate-schema",
-  "canonical": true,
-  "source": "command",
-  "commandPath": "migrate-schema.md"
-}

@@ -9,6 +9,7 @@ allowed-tools:
   - Grep
   - Write
   - Task
+workflow: workflows/gad-map-codebase.md
 ---
 
 <objective>

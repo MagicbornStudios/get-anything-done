@@ -5,6 +5,7 @@ allowed-tools:
   - Read
   - Bash
   - Write
+workflow: workflows/session-report.md
 ---
 <objective>
 Generate a structured SESSION_REPORT.md document capturing session outcomes, work performed, and estimated resource usage. Provides a shareable artifact for post-session review.

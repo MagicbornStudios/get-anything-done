@@ -12,6 +12,7 @@ allowed-tools:
   - Task
   - mcp__context7__resolve-library-id
   - mcp__context7__query-docs
+workflow: workflows/discuss-phase.md
 ---
 
 <objective>

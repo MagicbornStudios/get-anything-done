@@ -9,6 +9,7 @@ allowed-tools:
   - Bash
   - Grep
   - Glob
+workflow: workflows/milestone-summary.md
 ---
 
 <objective>

@@ -8,6 +8,7 @@ allowed-tools:
   - Edit
   - Bash
   - AskUserQuestion
+workflow: workflows/plant-seed.md
 ---
 
 <objective>

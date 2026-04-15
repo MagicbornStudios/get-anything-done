@@ -7,6 +7,7 @@ allowed-tools:
   - Bash
   - Task
   - AskUserQuestion
+workflow: workflows/gad-debug.md
 ---
 
 <execution_context>

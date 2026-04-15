@@ -12,6 +12,7 @@ allowed-tools:
   - Task
   - WebFetch
   - mcp__context7__*
+workflow: workflows/gad-plan-phase.md
 ---
 <objective>
 Create executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification.

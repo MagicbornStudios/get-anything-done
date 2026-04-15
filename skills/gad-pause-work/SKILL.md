@@ -5,6 +5,7 @@ allowed-tools:
   - Read
   - Write
   - Bash
+workflow: workflows/pause-work.md
 ---
 
 <objective>

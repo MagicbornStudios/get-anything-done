@@ -10,6 +10,7 @@ allowed-tools:
   - Edit
   - Write
   - Task
+workflow: workflows/verify-work.md
 ---
 <objective>
 Validate built features through conversational testing with persistent state.

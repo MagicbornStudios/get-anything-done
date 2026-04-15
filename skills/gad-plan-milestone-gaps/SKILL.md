@@ -8,6 +8,7 @@ allowed-tools:
   - Glob
   - Grep
   - AskUserQuestion
+workflow: workflows/plan-milestone-gaps.md
 ---
 <objective>
 Create all phases necessary to close gaps identified by `/gad:audit-milestone`.

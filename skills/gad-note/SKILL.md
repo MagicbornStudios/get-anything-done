@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - Glob
   - Grep
+workflow: workflows/note.md
 ---
 <objective>
 Zero-friction idea capture — one Write call, one confirmation line.

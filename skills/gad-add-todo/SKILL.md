@@ -7,6 +7,7 @@ allowed-tools:
   - Write
   - Bash
   - AskUserQuestion
+workflow: workflows/add-todo.md
 ---
 
 <objective>

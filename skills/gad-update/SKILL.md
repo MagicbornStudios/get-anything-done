@@ -4,6 +4,7 @@ description: Update GAD to latest version with changelog display
 allowed-tools:
   - Bash
   - AskUserQuestion
+workflow: workflows/update.md
 ---
 
 <objective>

@@ -12,6 +12,7 @@ allowed-tools:
   - Task
   - TodoWrite
   - AskUserQuestion
+workflow: workflows/gad-execute-phase.md
 ---
 <objective>
 Execute all plans in a phase using wave-based parallel execution.

@@ -10,6 +10,7 @@ allowed-tools:
   - Grep
   - AskUserQuestion
   - Task
+workflow: workflows/autonomous.md
 ---
 <objective>
 Execute all remaining milestone phases autonomously. For each phase: discuss → plan → execute. Pauses only for user decisions (grey area acceptance, blockers, validation requests).

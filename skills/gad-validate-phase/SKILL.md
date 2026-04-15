@@ -11,6 +11,7 @@ allowed-tools:
   - Grep
   - Task
   - AskUserQuestion
+workflow: workflows/validate-phase.md
 ---
 <objective>
 Audit Nyquist validation coverage for a completed phase. Three states:
