@@ -14,6 +14,7 @@ import { Identified } from "./Identified";
 import { DevPanelHoverPromptActions } from "./DevPanelHoverPromptActions";
 import { DEV_MODAL_FOOTER_SELF_ENTRY } from "./dev-modal-footer-constants";
 import { Button } from "@/components/ui/button";
+import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
 import { cn } from "@/lib/utils";
 
 function locateInTree(cid: string, root: HTMLElement | null, flash: (c: string) => void) {
@@ -278,10 +279,15 @@ export function DevIdModalContextFooter({
         className,
       )}
     >
-        <div
-          title="Alt+click landmark toggles highlight · Esc clears · arrows change target"
-          className="flex min-h-7 flex-nowrap items-center gap-x-1.5 gap-y-0 text-[9px] leading-none"
+        <DevChromeHoverHint
+          body={
+            <p>
+              Alt+click a landmark toggles a persistent highlight. Esc clears. Chevrons change the active target in
+              this modal footer.
+            </p>
+          }
         >
+          <div className="flex min-h-7 flex-nowrap items-center gap-x-1.5 gap-y-0 text-[9px] leading-none">
           {modalTitleChrome}
           <span className="shrink-0 tabular-nums text-muted-foreground">
             {idx + 1}/{entries.length}
@@ -357,22 +363,32 @@ export function DevIdModalContextFooter({
             <Button type="button" variant="secondary" size="icon" className="size-6" onClick={copyCid}>
               {headerCopied === "cid" ? <Check size={10} /> : <Copy size={10} />}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 px-1 text-[9px] font-semibold uppercase tracking-wide"
-              title="Toggle prompt verbosity"
-              onClick={() => {
-                const next = effectivePromptVerbosity === "full" ? "compact" : "full";
-                if (onPromptVerbosityChange) onPromptVerbosityChange(next);
-                else setSharedPromptVerbosity(next);
-              }}
+            <DevChromeHoverHint
+              body={
+                effectivePromptVerbosity === "full" ? (
+                  <p>Prompts include full context. Click to switch to compact templates.</p>
+                ) : (
+                  <p>Prompts use compact templates. Click to include full context.</p>
+                )
+              }
             >
-              {effectivePromptVerbosity === "compact" ? "Short" : "Full"}
-            </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-1 text-[9px] font-semibold uppercase tracking-wide"
+                onClick={() => {
+                  const next = effectivePromptVerbosity === "full" ? "compact" : "full";
+                  if (onPromptVerbosityChange) onPromptVerbosityChange(next);
+                  else setSharedPromptVerbosity(next);
+                }}
+              >
+                {effectivePromptVerbosity === "compact" ? "Short" : "Full"}
+              </Button>
+            </DevChromeHoverHint>
           </div>
-        </div>
+          </div>
+        </DevChromeHoverHint>
         {liveDictationLine}
     </Identified>
   );

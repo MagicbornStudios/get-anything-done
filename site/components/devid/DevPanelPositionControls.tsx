@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from "lucide-react";
+import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
 import { Button } from "@/components/ui/button";
 
 export function DevPanelPositionControls({
@@ -17,48 +18,52 @@ export function DevPanelPositionControls({
   return (
     <div className="mt-1 flex items-center justify-between border-t border-border/60 pt-1">
       <div className="flex items-center gap-1">
-        <Button
-          type="button"
-          variant={edge === "top" ? "secondary" : "ghost"}
-          size="icon"
-          className="size-5"
-          title="Place panel at top"
-          onClick={() => onEdgeChange("top")}
-        >
-          <ArrowUp size={10} />
-        </Button>
-        <Button
-          type="button"
-          variant={edge === "bottom" ? "secondary" : "ghost"}
-          size="icon"
-          className="size-5"
-          title="Place panel at bottom"
-          onClick={() => onEdgeChange("bottom")}
-        >
-          <ArrowDown size={10} />
-        </Button>
+        <DevChromeHoverHint body={<p>Pin the Visual Context Panel strip to the top edge of this section.</p>}>
+          <Button
+            type="button"
+            variant={edge === "top" ? "secondary" : "ghost"}
+            size="icon"
+            className="size-5"
+            onClick={() => onEdgeChange("top")}
+          >
+            <ArrowUp size={10} />
+          </Button>
+        </DevChromeHoverHint>
+        <DevChromeHoverHint body={<p>Pin the strip to the bottom edge of this section.</p>}>
+          <Button
+            type="button"
+            variant={edge === "bottom" ? "secondary" : "ghost"}
+            size="icon"
+            className="size-5"
+            onClick={() => onEdgeChange("bottom")}
+          >
+            <ArrowDown size={10} />
+          </Button>
+        </DevChromeHoverHint>
       </div>
       <div className="flex items-center gap-1">
-        <Button
-          type="button"
-          variant={corner === "left" ? "secondary" : "ghost"}
-          size="icon"
-          className="size-5"
-          title="Place panel at left"
-          onClick={() => onCornerChange("left")}
-        >
-          <ArrowLeft size={10} />
-        </Button>
-        <Button
-          type="button"
-          variant={corner === "right" ? "secondary" : "ghost"}
-          size="icon"
-          className="size-5"
-          title="Place panel at right"
-          onClick={() => onCornerChange("right")}
-        >
-          <ArrowRight size={10} />
-        </Button>
+        <DevChromeHoverHint body={<p>Dock the panel toward the left.</p>}>
+          <Button
+            type="button"
+            variant={corner === "left" ? "secondary" : "ghost"}
+            size="icon"
+            className="size-5"
+            onClick={() => onCornerChange("left")}
+          >
+            <ArrowLeft size={10} />
+          </Button>
+        </DevChromeHoverHint>
+        <DevChromeHoverHint body={<p>Dock the panel toward the right.</p>}>
+          <Button
+            type="button"
+            variant={corner === "right" ? "secondary" : "ghost"}
+            size="icon"
+            className="size-5"
+            onClick={() => onCornerChange("right")}
+          >
+            <ArrowRight size={10} />
+          </Button>
+        </DevChromeHoverHint>
       </div>
     </div>
   );

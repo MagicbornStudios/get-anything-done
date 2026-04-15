@@ -24,6 +24,7 @@ import {
   DEV_PANEL_SELF_ENTRY,
   DEV_PANEL_STABLE_CID,
 } from "./dev-panel-constants";
+import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
 import { DevPanelHoverPromptActions } from "./DevPanelHoverPromptActions";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
@@ -38,6 +39,23 @@ import {
   readEntryFromElement,
   sortRegistryEntries,
 } from "./devid-dom-scan";
+
+const VC_HOVER_FRAMEWORK = <p className="text-muted-foreground">Framework wordmark on this strip.</p>;
+const VC_HOVER_UPDATE = (
+  <p>
+    Mic: dictate additions to the update handoff for the selected target. Copies a locked prefix (route, label,
+    source-search hints) plus your text.
+  </p>
+);
+const VC_HOVER_DELETE = <p>Copy a delete handoff prompt for the selected target (route, label, and source-search hints).</p>;
+
+function vcVerbosityHoverBody(isFull: boolean) {
+  return isFull ? (
+    <p>Prompts include full context. Click to switch to compact templates.</p>
+  ) : (
+    <p>Prompts use compact templates. Click to include full context.</p>
+  );
+}
 
 type DevPanelProps =
   | { mode: "section" }
@@ -577,58 +595,56 @@ export function DevPanel(props: DevPanelProps) {
                     Section scan {sectionEntries.length} items
                   </p>
                 </div>
-                <p
-                  className="shrink-0 max-w-[5.5rem] text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85"
-                  title="Framework"
-                >
-                  {DEV_PANEL_BRAND_MARK}
-                </p>
+                <DevChromeHoverHint body={VC_HOVER_FRAMEWORK}>
+                  <p className="shrink-0 max-w-[5.5rem] cursor-help text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85">
+                    {DEV_PANEL_BRAND_MARK}
+                  </p>
+                </DevChromeHoverHint>
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-[10px]">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  title="Mic: dictate additions to the update handoff for the selected target. Copies a locked prefix (route, label, source-search hints) plus your text."
-                  onClick={toggleUpdatePromptWithSpeech}
-                  disabled={!sectionTarget}
-                  className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
-                >
-                  {headerCopied === "update" ? (
-                    <Check size={12} />
-                  ) : listening ? (
-                    <MicOff size={12} />
-                  ) : (
-                    <Mic size={12} />
-                  )}
-                  Update
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  title="Copy a delete handoff prompt for the selected target (route, label, and source-search hints)."
-                  onClick={copyResolvedDeletePrompt}
-                  disabled={!sectionTarget}
-                  className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
-                >
-                  {headerCopied === "delete" ? <Check size={12} /> : <Trash2 size={12} />}
-                  Delete
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  title={
-                    promptVerbosity === "full"
-                      ? "Prompts include full context. Click for compact templates."
-                      : "Prompts use compact templates. Click for full context."
-                  }
-                  onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
-                  className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
-                >
-                  {promptVerbosity === "compact" ? "Short" : "Full"}
-                </Button>
+                <DevChromeHoverHint body={VC_HOVER_UPDATE}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleUpdatePromptWithSpeech}
+                    disabled={!sectionTarget}
+                    className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
+                  >
+                    {headerCopied === "update" ? (
+                      <Check size={12} />
+                    ) : listening ? (
+                      <MicOff size={12} />
+                    ) : (
+                      <Mic size={12} />
+                    )}
+                    Update
+                  </Button>
+                </DevChromeHoverHint>
+                <DevChromeHoverHint body={VC_HOVER_DELETE}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={copyResolvedDeletePrompt}
+                    disabled={!sectionTarget}
+                    className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
+                  >
+                    {headerCopied === "delete" ? <Check size={12} /> : <Trash2 size={12} />}
+                    Delete
+                  </Button>
+                </DevChromeHoverHint>
+                <DevChromeHoverHint body={vcVerbosityHoverBody(promptVerbosity === "full")}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
+                    className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
+                  >
+                    {promptVerbosity === "compact" ? "Short" : "Full"}
+                  </Button>
+                </DevChromeHoverHint>
               </div>
               <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
                 <div className="min-w-0">
@@ -751,56 +767,54 @@ export function DevPanel(props: DevPanelProps) {
                   {bandLabel} · {bandEntries.length} items
                 </p>
               </div>
-              <p
-                className="shrink-0 max-w-[5.5rem] text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85"
-                title="Framework"
-              >
-                {DEV_PANEL_BRAND_MARK}
-              </p>
+              <DevChromeHoverHint body={VC_HOVER_FRAMEWORK}>
+                <p className="shrink-0 max-w-[5.5rem] cursor-help text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85">
+                  {DEV_PANEL_BRAND_MARK}
+                </p>
+              </DevChromeHoverHint>
             </div>
             <div className="mt-1 flex items-center gap-1.5 text-[10px]">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                title="Mic: dictate additions to the update handoff for the selected target. Copies a locked prefix (route, label, source-search hints) plus your text."
-                onClick={toggleUpdatePromptWithSpeech}
-                className="h-6 gap-1 px-1.5 text-[10px]"
-              >
-                {headerCopied === "update" ? (
-                  <Check size={11} />
-                ) : listening ? (
-                  <MicOff size={11} />
-                ) : (
-                  <Mic size={11} />
-                )}
-                Update
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                title="Copy a delete handoff prompt for the selected target (route, label, and source-search hints)."
-                onClick={copyResolvedDeletePrompt}
-                className="h-6 gap-1 px-1.5 text-[10px]"
-              >
-                {headerCopied === "delete" ? <Check size={11} /> : <Trash2 size={11} />}
-                Delete
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                title={
-                  promptVerbosity === "full"
-                    ? "Prompts include full context. Click for compact templates."
-                    : "Prompts use compact templates. Click for full context."
-                }
-                onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
-                className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
-              >
-                {promptVerbosity === "compact" ? "Short" : "Full"}
-              </Button>
+              <DevChromeHoverHint body={VC_HOVER_UPDATE}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleUpdatePromptWithSpeech}
+                  className="h-6 gap-1 px-1.5 text-[10px]"
+                >
+                  {headerCopied === "update" ? (
+                    <Check size={11} />
+                  ) : listening ? (
+                    <MicOff size={11} />
+                  ) : (
+                    <Mic size={11} />
+                  )}
+                  Update
+                </Button>
+              </DevChromeHoverHint>
+              <DevChromeHoverHint body={VC_HOVER_DELETE}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={copyResolvedDeletePrompt}
+                  className="h-6 gap-1 px-1.5 text-[10px]"
+                >
+                  {headerCopied === "delete" ? <Check size={11} /> : <Trash2 size={11} />}
+                  Delete
+                </Button>
+              </DevChromeHoverHint>
+              <DevChromeHoverHint body={vcVerbosityHoverBody(promptVerbosity === "full")}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
+                  className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
+                >
+                  {promptVerbosity === "compact" ? "Short" : "Full"}
+                </Button>
+              </DevChromeHoverHint>
             </div>
             <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
               <div className="min-w-0">

@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Eye, MessageSquare } from "lucide-react";
+import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
 import { cn } from "@/lib/utils";
 import type { RegistryEntry } from "./SectionRegistry";
 
@@ -32,58 +33,68 @@ export function SectionRegistryListRow({
         isHl ? "bg-accent/15" : "hover:bg-card/60",
       )}
     >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setHighlightCid(isHl ? null : entry.cid);
-        }}
-        className="shrink-0 text-muted-foreground hover:text-accent"
-        aria-label="Toggle persistent highlight"
-        title="Toggle persistent highlight"
-      >
-        <Eye size={12} />
-      </button>
+      <DevChromeHoverHint body={<p>Toggle persistent highlight for this landmark (Alt+click on page does the same).</p>}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setHighlightCid(isHl ? null : entry.cid);
+          }}
+          className="shrink-0 text-muted-foreground hover:text-accent"
+          aria-label="Toggle persistent highlight"
+        >
+          <Eye size={12} />
+        </button>
+      </DevChromeHoverHint>
 
-      <button
-        type="button"
-        onClick={() => onLocate(entry.cid)}
-        className={cn(
-          "min-w-0 flex-1 cursor-pointer select-none truncate rounded px-1 py-0.5 text-left transition-colors",
-          "hover:bg-background/40",
-        )}
-        aria-label={`Scroll to ${entry.label} on the page`}
-        title={`${entry.label} · depth ${entry.depth} · click to scroll to component and flash highlight`}
+      <DevChromeHoverHint
+        body={
+          <p>
+            {entry.label} · depth {entry.depth}. Click to scroll to the component and flash the highlight.
+          </p>
+        }
       >
-        <span className="text-muted-foreground/80">{entry.label}</span>
-        <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
-      </button>
+        <button
+          type="button"
+          onClick={() => onLocate(entry.cid)}
+          className={cn(
+            "min-w-0 flex-1 cursor-pointer select-none truncate rounded px-1 py-0.5 text-left transition-colors",
+            "hover:bg-background/40",
+          )}
+          aria-label={`Scroll to ${entry.label} on the page`}
+        >
+          <span className="text-muted-foreground/80">{entry.label}</span>
+          <span className="ml-1.5 font-mono text-accent">{entry.cid}</span>
+        </button>
+      </DevChromeHoverHint>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onPrompt(entry);
-        }}
-        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
-        aria-label="Open agent prompt handoff"
-        title="Agent handoff (update / delete)"
-      >
-        <MessageSquare size={12} />
-      </button>
+      <DevChromeHoverHint body={<p>Open the agent handoff dialog (update / delete prompts).</p>}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPrompt(entry);
+          }}
+          className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
+          aria-label="Open agent prompt handoff"
+        >
+          <MessageSquare size={12} />
+        </button>
+      </DevChromeHoverHint>
 
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onCopy(entry.cid);
-        }}
-        className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
-        aria-label="Copy ID"
-        title="Copy ID"
-      >
-        <Copy size={12} />
-      </button>
+      <DevChromeHoverHint body={<p>Copy this landmark’s id / search token.</p>}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCopy(entry.cid);
+          }}
+          className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover/cid:opacity-100"
+          aria-label="Copy ID"
+        >
+          <Copy size={12} />
+        </button>
+      </DevChromeHoverHint>
       {justCopied === entry.cid && (
         <span className="shrink-0 text-[9px] uppercase tracking-wider text-emerald-400">copied</span>
       )}

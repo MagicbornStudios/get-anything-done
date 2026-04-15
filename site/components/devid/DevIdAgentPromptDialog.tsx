@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
 import { cn } from "@/lib/utils";
 import { Identified } from "./Identified";
 import type { RegistryEntry } from "./SectionRegistry";
@@ -124,32 +125,31 @@ function CopyableContextField({
 
   return (
     <div className="min-w-0 flex-1">
-      <button
-        type="button"
-        disabled={empty}
-        title={empty ? "Nothing to copy" : "Copy to clipboard"}
-        aria-label={empty ? "Empty value" : "Copy to clipboard"}
-        onClick={() => {
-          if (!empty) onCopy(copyKey, value);
-        }}
-        className={cn(
-          "group flex w-full min-w-0 items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-left",
-          "border-border/60 bg-muted/35 text-foreground transition-colors hover:bg-muted/55",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1",
-          justCopied && "border-emerald-500/40 bg-emerald-500/10",
-          empty && "cursor-not-allowed opacity-50",
-        )}
+      <DevChromeHoverHint
+        body={empty ? <p>Nothing to copy</p> : <p>Click to copy this context field to the clipboard.</p>}
       >
-        <span
-          className="min-w-0 truncate font-mono text-[11px] leading-snug"
-        >
-          {text}
+        <span className="block w-full min-w-0">
+          <button
+            type="button"
+            disabled={empty}
+            aria-label={empty ? "Empty value" : "Copy to clipboard"}
+            onClick={() => {
+              if (!empty) onCopy(copyKey, value);
+            }}
+            className={cn(
+              "group flex w-full min-w-0 items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-left",
+              "border-border/60 bg-muted/35 text-foreground transition-colors hover:bg-muted/55",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1",
+              justCopied && "border-emerald-500/40 bg-emerald-500/10",
+              empty && "cursor-not-allowed opacity-50",
+            )}
+          >
+            <span className="min-w-0 truncate font-mono text-[11px] leading-snug">{text}</span>
+            {justCopied ? <Check className="size-3 shrink-0 text-emerald-400" aria-hidden /> : null}
+            {justCopied ? <span className="sr-only">Copied to clipboard</span> : null}
+          </button>
         </span>
-        {justCopied ? <Check className="size-3 shrink-0 text-emerald-400" aria-hidden /> : null}
-        {justCopied ? (
-          <span className="sr-only">Copied to clipboard</span>
-        ) : null}
-      </button>
+      </DevChromeHoverHint>
     </div>
   );
 }
@@ -249,66 +249,74 @@ function HoverPromptChrome({
       <div className="pointer-events-auto flex flex-row items-center justify-end gap-3">
         {showDictation ? (
           !listening ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                onStartDictation();
-              }}
-              disabled={!speechOk}
-              title={
-                speechOk
-                  ? "Speech inserts at the caret in the editable editor (below the fixed header on Upd)."
-                  : "Speech recognition not available"
+            <DevChromeHoverHint
+              body={
+                speechOk ? (
+                  <p>Speech inserts at the caret in the editable editor (below the fixed header on Upd).</p>
+                ) : (
+                  <p>Speech recognition is not available in this browser.</p>
+                )
               }
-              className={cn(
-                "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
-                "bg-gradient-to-br from-emerald-500 to-teal-700 text-white",
-                "transition-transform hover:scale-105 active:scale-95",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                !speechOk && "cursor-not-allowed opacity-40",
-              )}
-              aria-label="Start dictation at cursor"
             >
-              <Mic className="size-4" strokeWidth={2} aria-hidden />
-            </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onStartDictation();
+                }}
+                disabled={!speechOk}
+                className={cn(
+                  "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600/80",
+                  "bg-gradient-to-br from-emerald-500 to-teal-700 text-white",
+                  "transition-transform hover:scale-105 active:scale-95",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  !speechOk && "cursor-not-allowed opacity-40",
+                )}
+                aria-label="Start dictation at cursor"
+              >
+                <Mic className="size-4" strokeWidth={2} aria-hidden />
+              </button>
+            </DevChromeHoverHint>
           ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                onStopDictation();
-              }}
-              title="Stop dictation"
-              className={cn(
-                "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
-                "bg-gradient-to-br from-red-600 to-rose-800 text-white",
-                "ring-2 ring-red-400/50",
-                "animate-[pulse_1.1s_ease-in-out_infinite]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2",
-              )}
-              aria-label="Stop dictation"
-              aria-pressed="true"
-            >
-              <MicOff className="size-4" strokeWidth={2} aria-hidden />
-            </button>
+            <DevChromeHoverHint body={<p>Stop dictation and flush any pending transcript.</p>}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onStopDictation();
+                }}
+                className={cn(
+                  "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-red-500/80",
+                  "bg-gradient-to-br from-red-600 to-rose-800 text-white",
+                  "ring-2 ring-red-400/50",
+                  "animate-[pulse_1.1s_ease-in-out_infinite]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2",
+                )}
+                aria-label="Stop dictation"
+                aria-pressed="true"
+              >
+                <MicOff className="size-4" strokeWidth={2} aria-hidden />
+              </button>
+            </DevChromeHoverHint>
           )
         ) : null}
 
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          disabled={copyDisabled}
-          className="h-9 gap-1.5 px-3 text-xs font-semibold"
-          onClick={(e) => {
-            e.preventDefault();
-            onCopy();
-          }}
-        >
-          {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
-          Copy
-        </Button>
+        <DevChromeHoverHint body={<p>Copy the full handoff text for this tab (locked template plus your edits on Upd).</p>}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={copyDisabled}
+            className="h-9 gap-1.5 px-3 text-xs font-semibold"
+            onClick={(e) => {
+              e.preventDefault();
+              onCopy();
+            }}
+          >
+            {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
+            Copy
+          </Button>
+        </DevChromeHoverHint>
       </div>
     </div>
   );
@@ -513,26 +521,30 @@ export function DevIdAgentPromptDialog({
           >
             <div className="shrink-0 px-3 pt-1 sm:px-4">
               <TabsList className="inline-flex h-6 w-fit gap-px rounded border border-border/40 bg-muted/30 p-px">
-              <TabsTrigger
-                value="update"
-                title="Update prompt"
-                aria-label="Update handoff prompt"
-                className="flex h-[1.375rem] items-center gap-0.5 rounded-sm px-1.5 py-0 text-[9px] font-semibold leading-none data-[state=active]:bg-background data-[state=active]:shadow-sm [&_svg]:shrink-0"
-              >
-                <FilePenLine className="size-2.5" strokeWidth={2} aria-hidden />
-                <span aria-hidden>Upd</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="delete"
-                title="Delete prompt"
-                aria-label="Delete handoff prompt"
-                className="flex h-[1.375rem] items-center gap-0.5 rounded-sm px-1.5 py-0 text-[9px] font-semibold leading-none data-[state=active]:bg-background data-[state=active]:shadow-sm [&_svg]:shrink-0"
-              >
-                <FileX2 className="size-2.5" strokeWidth={2} aria-hidden />
-                <span aria-hidden>Del</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+                <DevChromeHoverHint
+                  body={<p>Update handoff: locked prefix plus editable note below (dictation inserts at caret).</p>}
+                >
+                  <TabsTrigger
+                    value="update"
+                    aria-label="Update handoff prompt"
+                    className="flex h-[1.375rem] items-center gap-0.5 rounded-sm px-1.5 py-0 text-[9px] font-semibold leading-none data-[state=active]:bg-background data-[state=active]:shadow-sm [&_svg]:shrink-0"
+                  >
+                    <FilePenLine className="size-2.5" strokeWidth={2} aria-hidden />
+                    <span aria-hidden>Upd</span>
+                  </TabsTrigger>
+                </DevChromeHoverHint>
+                <DevChromeHoverHint body={<p>Delete handoff: read-only template you can copy as-is.</p>}>
+                  <TabsTrigger
+                    value="delete"
+                    aria-label="Delete handoff prompt"
+                    className="flex h-[1.375rem] items-center gap-0.5 rounded-sm px-1.5 py-0 text-[9px] font-semibold leading-none data-[state=active]:bg-background data-[state=active]:shadow-sm [&_svg]:shrink-0"
+                  >
+                    <FileX2 className="size-2.5" strokeWidth={2} aria-hidden />
+                    <span aria-hidden>Del</span>
+                  </TabsTrigger>
+                </DevChromeHoverHint>
+              </TabsList>
+            </div>
 
             <Identified as="DevIdAgentPromptTabsBody" cid="devid-agent-prompt-tabs-body" register={false} depth={1} className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <TabsContent

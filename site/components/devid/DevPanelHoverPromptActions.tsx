@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Check, Copy, MessageSquare, Mic, MicOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
 import { cn } from "@/lib/utils";
 import {
   buildDeletePrompt,
@@ -118,70 +119,78 @@ export function DevPanelHoverPromptActions({
 
   return (
     <div className={cn("flex shrink-0 items-center gap-0.5", className)}>
-      <Button
-        type="button"
-        variant="secondary"
-        size="icon"
-        className={cn(b, "shrink-0")}
-        title="Dictate update prompt for this chrome"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleSpeech();
-        }}
+      <DevChromeHoverHint
+        body={<p>Dictate additions to the update handoff for this chrome; copies a locked prefix plus your speech.</p>}
       >
-        {copied === "update" || updateJustCopied ? (
-          <Check size={is} />
-        ) : listening ? (
-          <MicOff size={is} />
-        ) : (
-          <Mic size={is} />
-        )}
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        size="icon"
-        className={cn(b, "shrink-0")}
-        title="Copy delete prompt"
-        onClick={(e) => {
-          e.stopPropagation();
-          copyDelete();
-        }}
-      >
-        {copied === "delete" ? <Check size={is} /> : <Trash2 size={is} />}
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        size="icon"
-        className={cn(b, "shrink-0")}
-        title="Copy search token"
-        onClick={(e) => {
-          e.stopPropagation();
-          copyCid();
-        }}
-      >
-        {copied === "cid" ? <Check size={is} /> : <Copy size={is} />}
-      </Button>
-      {onAgentPrompt ? (
         <Button
           type="button"
           variant="secondary"
           size="icon"
           className={cn(b, "shrink-0")}
-          title="Open agent handoff dialog"
           onClick={(e) => {
             e.stopPropagation();
-            onAgentPrompt(selfEntry);
+            toggleSpeech();
           }}
         >
-          <MessageSquare size={is} />
+          {copied === "update" || updateJustCopied ? (
+            <Check size={is} />
+          ) : listening ? (
+            <MicOff size={is} />
+          ) : (
+            <Mic size={is} />
+          )}
         </Button>
+      </DevChromeHoverHint>
+      <DevChromeHoverHint body={<p>Copy a delete handoff prompt for this chrome (route, label, source-search hints).</p>}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className={cn(b, "shrink-0")}
+          onClick={(e) => {
+            e.stopPropagation();
+            copyDelete();
+          }}
+        >
+          {copied === "delete" ? <Check size={is} /> : <Trash2 size={is} />}
+        </Button>
+      </DevChromeHoverHint>
+      <DevChromeHoverHint body={<p>Copy the greppable search token for this chrome ({selfEntry.searchHint ?? selfEntry.cid}).</p>}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className={cn(b, "shrink-0")}
+          onClick={(e) => {
+            e.stopPropagation();
+            copyCid();
+          }}
+        >
+          {copied === "cid" ? <Check size={is} /> : <Copy size={is} />}
+        </Button>
+      </DevChromeHoverHint>
+      {onAgentPrompt ? (
+        <DevChromeHoverHint body={<p>Open the full agent handoff dialog for this chrome.</p>}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className={cn(b, "shrink-0")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAgentPrompt(selfEntry);
+            }}
+          >
+            <MessageSquare size={is} />
+          </Button>
+        </DevChromeHoverHint>
       ) : null}
       {showInlineInterim && listening && interim ? (
-        <span className="max-w-[10rem] truncate font-mono text-[9px] text-emerald-400/95" title={interim}>
-          {interim}
-        </span>
+        <DevChromeHoverHint body={<p className="max-h-40 overflow-y-auto font-mono text-[9px] text-emerald-100">{interim}</p>}>
+          <span className="inline-block max-w-[10rem] cursor-help truncate font-mono text-[9px] text-emerald-400/95">
+            {interim}
+          </span>
+        </DevChromeHoverHint>
       ) : null}
     </div>
   );
