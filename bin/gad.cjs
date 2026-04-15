@@ -9214,7 +9214,11 @@ const roundsCmd = defineCommand({
 // ---------------------------------------------------------------------------
 
 const evolutionPaths = (repoRoot) => ({
-  candidatesDir: path.join(repoRoot, 'skills', 'candidates'),
+  // Decision gad-183 + task 42.2-15: candidates are planning artifacts, not
+  // canonical framework assets — they live in .planning/candidates/ not
+  // skills/candidates/. The legacy path is still handled downstream via a
+  // fallback check so older checkouts keep working during migration.
+  candidatesDir: path.join(repoRoot, '.planning', 'candidates'),
   protoSkillsDir: path.join(repoRoot, '.planning', 'proto-skills'),
   finalSkillsDir: path.join(repoRoot, 'skills'),
   evolutionsDir: path.join(repoRoot, 'skills', '.evolutions'),
@@ -10094,7 +10098,7 @@ const evolutionStatus = defineCommand({
     console.log('');
     if (candidates.length > 0) {
       console.log(`Candidates (raw, awaiting drafting): ${candidates.length}`);
-      for (const c of candidates) console.log(`  - skills/candidates/${c}/`);
+      for (const c of candidates) console.log(`  - .planning/candidates/${c}/`);
       console.log('');
     }
     if (protoSkills.length > 0) {
@@ -10134,7 +10138,7 @@ const evolutionSimilarity = defineCommand({
     const obsoleteThreshold = args.obsoleteThreshold ? parseFloat(args.obsoleteThreshold) : obsoleteDefault;
 
     const candidateDocs = sim.loadCorpusFromDirs([
-      { kind: 'candidate', root: path.join(repoRoot, 'skills', 'candidates') },
+      { kind: 'candidate', root: path.join(repoRoot, '.planning', 'candidates') },
       { kind: 'proto',     root: path.join(repoRoot, '.planning', 'proto-skills') },
     ]);
     const promotedDocs = sim.loadCorpusFromDirs([
@@ -10340,7 +10344,7 @@ const evolutionSimilarity = defineCommand({
 // skills/.shed/<slug> that compute-self-eval.mjs respects.
 // ---------------------------------------------------------------------------
 function shedOne(repoRoot, slug, reason) {
-  const candidateDir = path.join(repoRoot, 'skills', 'candidates', slug);
+  const candidateDir = path.join(repoRoot, '.planning', 'candidates', slug);
   const shedDir = path.join(repoRoot, 'skills', '.shed');
   if (!fs.existsSync(candidateDir)) return { ok: false, reason: 'not-found', slug };
   if (!fs.existsSync(shedDir)) fs.mkdirSync(shedDir, { recursive: true });
@@ -10353,7 +10357,7 @@ const evolutionShed = defineCommand({
   meta: { name: 'shed', description: 'Dismiss candidates — delete and prevent regeneration. Use --all to clear, --obsolete to shed only ones below the sprint-window threshold.' },
   args: {
     slug: { type: 'positional', description: 'Candidate slug (omit when using --all or --obsolete)', required: false, default: '' },
-    all: { type: 'boolean', description: 'Shed every candidate currently under skills/candidates/', default: false },
+    all: { type: 'boolean', description: 'Shed every candidate currently under .planning/candidates/', default: false },
     obsolete: { type: 'boolean', description: 'Shed only candidates flagged obsolete by sprint-window analysis (uses --threshold)', default: false },
     threshold: { type: 'string', description: 'Obsolete cutoff for --obsolete (default 0.65 with embeddings, 0.40 TF-IDF)', default: '' },
     embeddings: { type: 'boolean', description: 'Use embeddings backend for --obsolete (default TF-IDF)', default: false },
@@ -10362,7 +10366,7 @@ const evolutionShed = defineCommand({
   },
   async run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
-    const candidatesDir = path.join(repoRoot, 'skills', 'candidates');
+    const candidatesDir = path.join(repoRoot, '.planning', 'candidates');
 
     let targets = [];
     if (args.all) {
@@ -10413,7 +10417,7 @@ const evolutionShed = defineCommand({
     const ok = results.filter((r) => r.ok);
     const missing = results.filter((r) => !r.ok);
     console.log(`Shed: ${ok.length}/${targets.length}`);
-    for (const r of ok) console.log(`  ${path.relative(repoRoot, path.join(repoRoot, 'skills', 'candidates', r.slug))}`);
+    for (const r of ok) console.log(`  ${path.relative(repoRoot, path.join(repoRoot, '.planning', 'candidates', r.slug))}`);
     if (missing.length) {
       console.log('');
       console.log(`Not found: ${missing.length}`);

@@ -741,7 +741,7 @@ The human reviewer runs \`gad evolution promote <slug>\` or
  *    pre-digesting context. Drafter discovers what it needs.
  */
 function writeCandidates(phasesPressure) {
-  const candidatesDir = path.join(REPO_ROOT, "skills", "candidates");
+  const candidatesDir = path.join(REPO_ROOT, ".planning", "candidates");
   const protoSkillsDir = path.join(REPO_ROOT, ".planning", "proto-skills");
   const shedDir = path.join(REPO_ROOT, "skills", ".shed");
   if (!fs.existsSync(candidatesDir)) {
@@ -789,11 +789,11 @@ function writeCandidates(phasesPressure) {
         tasks_total: phase.tasks_total,
         tasks_done: phase.tasks_done,
         crosscuts: phase.crosscuts,
-        candidate_file: `skills/candidates/${name}/CANDIDATE.md`,
+        candidate_file: `.planning/candidates/${name}/CANDIDATE.md`,
         proto_skill_dir: `.planning/proto-skills/${name}/`,
         stage: "drafted",
         // Legacy fields for backwards compat with existing detail page
-        file_path: `skills/candidates/${name}/CANDIDATE.md`,
+        file_path: `.planning/candidates/${name}/CANDIDATE.md`,
         reviewed: false,
         reviewed_on: null,
         reviewed_notes: null,
@@ -822,11 +822,11 @@ function writeCandidates(phasesPressure) {
       tasks_total: phase.tasks_total,
       tasks_done: phase.tasks_done,
       crosscuts: phase.crosscuts,
-      candidate_file: `skills/candidates/${name}/CANDIDATE.md`,
+      candidate_file: `.planning/candidates/${name}/CANDIDATE.md`,
       proto_skill_dir: null,
       stage: "candidate",
       // Legacy fields for backwards compat with existing detail page
-      file_path: `skills/candidates/${name}/CANDIDATE.md`,
+      file_path: `.planning/candidates/${name}/CANDIDATE.md`,
       reviewed: false,
       reviewed_on: null,
       reviewed_notes: null,
