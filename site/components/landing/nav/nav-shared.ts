@@ -37,7 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Internals",
         links: [
           { href: "/planning", label: "Planning", note: "state, tasks, phases, decisions, candidates, proto-skills" },
-          { href: "/requirements", label: "Requirements", note: "v5 + history" },
+          
           {
             href: "/data",
             label: "Local DB",
@@ -48,14 +48,13 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Catalog",
         links: [
-          { href: "/context-frameworks", label: "Context frameworks", note: "bare / GSD / GAD bundles" },
+          
           { href: "/downloads", label: "Downloads", note: "eval templates + planning packs" },
         ],
       },
       {
         label: "Reference",
         links: [
-          { href: "/roadmap", label: "Evidence", note: "round-by-round outcomes and pressure history" },
           { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
           { href: "/roadmap", label: "Roadmap", note: "phases, rounds, and pressure progression" },
         ],
@@ -64,8 +63,6 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Engage",
         links: [
           { href: "/security", label: "Security", note: "skill risks + certification" },
-          { href: "/roadmap", label: "Roadmap", note: "what we are testing next" },
-          { href: "/downloads", label: "Get Started", note: "templates and packs to run locally" },
         ],
       },
     ],
@@ -75,6 +72,8 @@ export const NAV_GROUPS: NavGroup[] = [
 export const NAV_TOP_LEVEL: NavLink[] = [];
 
 export const NAV_GITHUB_HREF = "https://github.com/MagicbornStudios/get-anything-done";
+
+
 
 
 

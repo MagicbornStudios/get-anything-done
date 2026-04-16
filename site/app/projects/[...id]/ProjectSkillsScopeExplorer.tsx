@@ -305,7 +305,7 @@ export function ProjectSkillsScopeExplorer({
           <div className="mt-3 flex flex-wrap items-center gap-2 px-1">
             <span className="text-[10px] text-muted-foreground">Full framework catalog · {catalogTotal} skills</span>
             <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[10px]" asChild>
-              <Link href="/context-frameworks">
+              <Link href="/roadmap">
                 Catalog <ExternalLink className="size-3 opacity-70" aria-hidden />
               </Link>
             </Button>
@@ -332,7 +332,7 @@ export function ProjectSkillsScopeExplorer({
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <Button variant="default" size="sm" className="h-8 rounded-full text-xs" asChild>
-                    <Link href="/context-frameworks">See framework detail</Link>
+                    <Link href="/roadmap">See roadmap context</Link>
                   </Button>
                   <Dialog open={skillFilesModalOpen} onOpenChange={setSkillFilesModalOpen}>
                     <DialogTrigger asChild>
@@ -387,10 +387,10 @@ export function ProjectSkillsScopeExplorer({
                                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] leading-snug text-muted-foreground">
                                   <span className="min-w-0">This skill’s folder shape and bundled paths.</span>
                                   <Link
-                                    href="/context-frameworks"
+                                    href="/roadmap"
                                     className="inline-flex shrink-0 items-center gap-1 font-medium text-accent/95 underline-offset-4 hover:underline"
                                   >
-                                    Agent skills reference
+                                    Roadmap reference
                                     <ExternalLink className="size-3 opacity-80" aria-hidden />
                                   </Link>
                                 </div>
@@ -463,3 +463,4 @@ export function ProjectSkillsScopeExplorer({
     </div>
   );
 }
+

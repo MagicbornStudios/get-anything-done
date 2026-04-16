@@ -18,7 +18,7 @@ import { REF_KIND_TINT } from "./ref-segment-styles";
  *   gad-NN / GAD-D-NN     → /decisions#gad-NN
  *   NN-NN / GAD-T-NN-NN   → /planning?tab=tasks#NN-NN
  *   P-NN / GAD-P-NN       → /planning?tab=phases#NN
- *   R-vX.YY               → /requirements#R-vX.YY
+ *   R-vX.YY               → /roadmap
  *   Q-slug / kebab        → /questions#slug
  *   B-slug / kebab        → /planning?tab=bugs#slug
  */

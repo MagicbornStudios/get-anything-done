@@ -19,11 +19,7 @@ export default function RoadmapHeroSection() {
         }
       />
       <SiteProse className="mt-6">
-        Every round is defined by a{" "}
-        <Link href="/requirements" className="text-accent underline decoration-dotted">
-          requirements version
-        </Link>
-        . Requirements expand monotonically — v1 was 12 flat criteria, v5 is {"~"}40 criteria with
+        Every round is defined by a requirements version. Requirements expand monotonically — v1 was 12 flat criteria, v5 is {"~"}40 criteria with
         cross-cutting pressure mechanics. This page shows what we asked, what the agents shipped, the
         honest shortcomings we documented, and how each round set up the next. Pressure rating per
         round is self-assessed (gad-75) until the pressure-score formula is programmatic.
@@ -58,4 +54,5 @@ export default function RoadmapHeroSection() {
     </SiteSection>
   );
 }
+
 

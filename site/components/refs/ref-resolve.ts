@@ -119,7 +119,7 @@ export function resolveRef(id: string): ResolvedRef {
   if (/^R-v\d+/i.test(id)) {
     return {
       ...base,
-      href: `/requirements#${id}`,
+      href: `/roadmap`,
       label: id,
       preview: `Requirement ${id}`,
       found: true,
