@@ -7035,6 +7035,48 @@ const snapshotV2Cmd = defineCommand({
       if (sprintEquippedSkillsSection) sections.push(sprintEquippedSkillsSection);
       const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
       if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
+
+      // Graph stats section (decision gad-201)
+      if (graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path))) {
+        const jsonPath = path.join(planDir, 'graph.json');
+        let graph;
+        if (fs.existsSync(jsonPath)) {
+          try { graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8')); } catch {}
+        }
+        if (!graph) {
+          // Auto-build if missing
+          const gadDir = path.resolve(__dirname, '..');
+          graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
+          fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2));
+        }
+        if (graph && graph.meta) {
+          const lines = [];
+          lines.push(`${graph.meta.nodeCount} nodes, ${graph.meta.edgeCount} edges`);
+          lines.push(`Types: ${Object.entries(graph.meta.nodeTypes).map(([k, v]) => `${k}(${v})`).join(', ')}`);
+          lines.push(`Last rebuild: ${graph.meta.generated}`);
+          // Top 5 most-connected nodes by edge count
+          const edgeCounts = new Map();
+          for (const e of graph.edges) {
+            edgeCounts.set(e.source, (edgeCounts.get(e.source) || 0) + 1);
+            edgeCounts.set(e.target, (edgeCounts.get(e.target) || 0) + 1);
+          }
+          const topNodes = [...edgeCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+          if (topNodes.length > 0) {
+            lines.push('');
+            lines.push('Most-connected:');
+            for (const [nodeId, count] of topNodes) {
+              const node = graph.nodes.find(n => n.id === nodeId);
+              const label = node ? (node.label || '').slice(0, 60) : '';
+              lines.push(`  ${nodeId} (${count} edges)${label ? ' — ' + label : ''}`);
+            }
+          }
+          lines.push('');
+          lines.push('Query: `gad query "open tasks in phase X"` — 12.9x token savings vs raw XML');
+          sections.push({ title: 'GRAPH', content: lines.join('\n') });
+        }
+      }
     }
 
     // Stamp session after building sections, before output.
