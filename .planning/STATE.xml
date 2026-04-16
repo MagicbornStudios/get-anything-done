@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
-  <current-phase>44.5</current-phase>
+  <current-phase>42.4</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-16b: ~43 deliverables. Phase 44.5 COMPLETE (22 tasks). Phase 45 waves 1+2 COMPLETE (12 tasks — tabs, data, migration, /planning rewired). Generate-publish-play pipeline shipped (3 tasks). VCS: dismiss, speech, Ctrl+arrow. REMAINING: phase 45 waves 3+4 (visual rebrand, vocab audit, hero copy, logo, cleanup). Todos: media-service-infra, editor-ux-platform, generate-publish-play refinement. tweakcn cloned to tmp/.</next-action>
+  <next-action>Session 2026-04-16c COMPLETE. Phase 46 shipped (8/8 tasks done): site architecture redesign, CLI consolidation, SpriteAnimation, salvage pipeline, /how-it-works content, /downloads expansion. Decisions gad-207..215 captured. Build passes clean. NEXT: (1) eval→species CLI rename (gad-212), (2) VCS downloads page needs live component demos not just cards + multiple install paths, (3) site content gaps — images, GSD YouTube videos, Ralph Wiggum articles, reverse-engineering showcase. (4) Species tracking schema (authorship chain, usage counts, media showcase — gad-213/215). (5) Context framework builder as new GAD project. (6) Phase 42.4 (context framework catalog type) and 43 (domain rename) still planned. Todos: context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, editor-ux-and-platform.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>

@@ -86,13 +86,7 @@ function resolveLatestGeneration(projectName: string): ProjectOperatorProps["lat
   return null;
 }
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  // Route is a catch-all so project ids with slashes (e.g. "app-forge/gad")
-  // map to a url path. `id` must be a string[] for catch-all routes.
-  return EVAL_PROJECTS.map((p) => ({ id: p.id.split("/") }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

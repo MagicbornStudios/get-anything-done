@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { MarketingShell } from "@/components/site";
 import { scanPublished } from "./scan-published";
 import { LibraryGrid } from "./LibraryGrid";

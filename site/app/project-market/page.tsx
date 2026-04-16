@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { MarketingShell } from "@/components/site";
 import ProjectMarket from "@/components/project-market/ProjectMarket";

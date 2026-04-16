@@ -300,5 +300,11 @@
     <status>planned</status>
     <depends>44,44.5</depends>
   </phase>
+  <phase id="46">
+    <title>Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning</title>
+    <goal>Redesign the landing site from 25+ routes to 9 focused public pages (decisions gad-207..211). Consolidate gad workspace into gad projects. Add SpriteAnimation component. Scaffold species-level .planning/ dirs on species create. Expand /downloads as VCS component showcase + installer hub. Build /how-it-works methodology page absorbing glossary, formulas, standards, eval-guide content. Define project-level assets convention and generation data salvage pipeline.</goal>
+    <status>active</status>
+    <depends>44.5</depends>
+  </phase>
 </roadmap>
 

@@ -1,11 +1,6 @@
 /**
- * IA refactor (decision gad-76 / ASSUMPTIONS.md): 14 flat nav items were
- * breaking on mobile and confusing on desktop. Grouped into dropdowns
- * plus top-level Emergent + GitHub.
- *
- * Phase 42 update: the System group got too heavy (11 items). It now
- * supports nested subgroups via DropdownMenuSub, so System has four
- * subcategories: Internals / Catalog / Reference / Engage.
+ * Nav config — decision gad-207: collapsed from Play + System (with subgroups)
+ * to Explore + Get Started (flat links). Dead routes removed.
  */
 
 export type NavLink = { href: string; label: string; note?: string; tint?: string };
@@ -23,58 +18,22 @@ export type NavGroup =
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Play",
+    label: "Explore",
     links: [
-      { href: "/library", label: "Library", note: "play all published generation builds" },
-      { href: "/project-market", label: "Project Market", note: "browse all eval projects + playable builds" },
-      { href: "/videos", label: "Videos", note: "walkthroughs" },
+      { href: "/library", label: "Library", note: "play published generation builds" },
+      { href: "/projects", label: "Projects", note: "browse all projects" },
+      { href: "/videos", label: "Videos", note: "demos and walkthroughs" },
     ],
   },
   {
-    label: "System",
-    subGroups: [
-      {
-        label: "Internals",
-        links: [
-          { href: "/planning", label: "Planning", note: "state, tasks, phases, decisions, candidates, proto-skills" },
-          
-          {
-            href: "/data",
-            label: "Local DB",
-            note: "generated site data index + field lineage (same catalog `gad data` targets)",
-          },
-        ],
-      },
-      {
-        label: "Catalog",
-        links: [
-          
-          { href: "/downloads", label: "Downloads", note: "eval templates + planning packs" },
-        ],
-      },
-      {
-        label: "Reference",
-        links: [
-          { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
-          { href: "/roadmap", label: "Roadmap", note: "phases, rounds, and pressure progression" },
-        ],
-      },
-      {
-        label: "Engage",
-        links: [
-          { href: "/security", label: "Security", note: "skill risks + certification" },
-        ],
-      },
+    label: "Get Started",
+    links: [
+      { href: "/quickstart", label: "Quickstart", note: "install and run your first eval" },
+      { href: "/how-it-works", label: "How It Works", note: "methodology, scoring, species model" },
+      { href: "/downloads", label: "Downloads", note: "installer, components, planning packs" },
     ],
   },
 ];
 
 export const NAV_TOP_LEVEL: NavLink[] = [];
-
 export const NAV_GITHUB_HREF = "https://github.com/MagicbornStudios/get-anything-done";
-
-
-
-
-
-

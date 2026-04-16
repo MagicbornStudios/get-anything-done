@@ -5,7 +5,7 @@
 
 type WindowWithDirPicker = Window &
   typeof globalThis & {
-    showDirectoryPicker?: (options?: { mode?: "read" | "readwrite" }) => Promise<FileSystemDirectoryHandle>;
+    showDirectoryPicker?: (options?: { mode?: "read" | "readwrite"; id?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemDirectoryHandle>;
     showOpenFilePicker?: (options?: {
       multiple?: boolean;
       startIn?: FileSystemDirectoryHandle;
@@ -38,9 +38,9 @@ export function supportsVcOpenFilePicker(): boolean {
 
 export async function ensureVcDirectoryWritable(handle: FileSystemDirectoryHandle): Promise<boolean> {
   try {
-    let perm = await handle.queryPermission({ mode: "readwrite" });
+    let perm = await (handle as any).queryPermission({ mode: "readwrite" });
     if (perm === "granted") return true;
-    perm = await handle.requestPermission({ mode: "readwrite" });
+    perm = await (handle as any).requestPermission({ mode: "readwrite" });
     return perm === "granted";
   } catch {
     return false;

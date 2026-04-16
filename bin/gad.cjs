@@ -8,8 +8,8 @@
  *
  * Usage:
  *   gad --help
- *   gad workspace show
- *   gad workspace sync
+ *   gad projects list
+ *   gad projects sync
  *   gad projects list
  *   gad state
  *   gad phases [--projectid <id>]
@@ -605,32 +605,10 @@ function listActiveSessionsHint(baseDir, config, subcommand) {
 }
 
 // ---------------------------------------------------------------------------
-// workspace subcommands
+// projects sync/add/ignore subcommands (was workspace — decision gad-208)
 // ---------------------------------------------------------------------------
 
-const workspaceShow = defineCommand({
-  meta: { name: 'show', description: 'Show all registered planning roots' },
-  run() {
-    const root = findRepoRoot();
-    const config = gadConfig.load(root);
-    if (config.roots.length === 0) {
-      console.log('No planning roots registered. Run `gad workspace sync` to discover them.');
-      return;
-    }
-    const rows = config.roots.map(r => ({
-      id: r.id,
-      path: r.path,
-      planningDir: r.planningDir,
-      discover: r.discover ? 'yes' : 'no',
-    }));
-    output(rows, { title: `GAD Workspaces (${config.roots.length} roots)  [source: ${config.source}]` });
-    if (config.docs_sink) {
-      console.log(`\nDocs sink: ${config.docs_sink}`);
-    }
-  },
-});
-
-const workspaceSync = defineCommand({
+const projectsSync = defineCommand({
   meta: { name: 'sync', description: 'Crawl repo for .planning/ dirs and sync gad-config.toml roots' },
   args: {
     yes: { type: 'boolean', alias: 'y', description: 'Apply changes without prompting', default: false },
@@ -650,11 +628,11 @@ const workspaceSync = defineCommand({
     });
 
     if (newPaths.length === 0 && missingPaths.length === 0) {
-      console.log(`✓ Workspace is up to date — ${config.roots.length} roots registered`);
+      console.log(`✓ Projects up to date — ${config.roots.length} roots registered`);
       return;
     }
 
-    console.log('\nWorkspace sync\n');
+    console.log('\nProjects sync\n');
     for (const r of config.roots) {
       const missing = missingPaths.find(m => m.id === r.id);
       console.log(`  ${missing ? '! MISSING ' : '✓ OK      '} [${r.id}]  ${r.path}`);
@@ -686,7 +664,7 @@ const workspaceSync = defineCommand({
   },
 });
 
-const workspaceAdd = defineCommand({
+const projectsAdd = defineCommand({
   meta: { name: 'add', description: 'Add a path as a planning root' },
   args: {
     path: { type: 'positional', description: 'Path to add', required: true },
@@ -721,7 +699,7 @@ const workspaceAdd = defineCommand({
   },
 });
 
-const workspaceIgnore = defineCommand({
+const projectsIgnore = defineCommand({
   meta: { name: 'ignore', description: 'Add a gitignore-style ignore pattern' },
   args: {
     pattern: { type: 'positional', description: 'Glob pattern to ignore', required: true },
@@ -742,15 +720,7 @@ const workspaceIgnore = defineCommand({
   },
 });
 
-const workspaceCmd = defineCommand({
-  meta: { name: 'workspace', description: 'Manage planning-root workspace registry (not git worktrees)' },
-  subCommands: {
-    show: workspaceShow,
-    sync: workspaceSync,
-    add: workspaceAdd,
-    ignore: workspaceIgnore,
-  },
-});
+
 
 // ---------------------------------------------------------------------------
 // projects subcommands
@@ -1248,7 +1218,7 @@ const projectsArchive = defineCommand({
 });
 
 const projectsCmd = defineCommand({
-  meta: { name: 'projects', description: 'List, create, edit, or archive eval projects' },
+  meta: { name: 'projects', description: 'Manage projects — list, sync roots, create, edit, archive' },
   subCommands: {
     list: projectsList,
     init: projectsInit,
@@ -1256,6 +1226,23 @@ const projectsCmd = defineCommand({
     create: projectsCreate,
     edit: projectsEdit,
     archive: projectsArchive,
+    sync: projectsSync,
+    add: projectsAdd,
+    ignore: projectsIgnore,
+  },
+});
+
+// Deprecated alias — workspace concept eliminated per decision gad-208
+const workspaceCmd = defineCommand({
+  meta: { name: 'workspace', description: '[DEPRECATED] Use `gad projects <subcommand>` instead' },
+  subCommands: {
+    show: projectsList,
+    sync: projectsSync,
+    add: projectsAdd,
+    ignore: projectsIgnore,
+  },
+  run() {
+    console.warn('DEPRECATED: `gad workspace` is deprecated. Use `gad projects <subcommand>` instead.');
   },
 });
 
@@ -1499,6 +1486,217 @@ const recipesCmd = defineCommand({
     create: recipesCreate,
     apply: recipesApply,
     delete: recipesDelete,
+  },
+});
+
+// ---------------------------------------------------------------------------
+// gad generation salvage — extract reusable data from completed generation runs
+// (decision gad-210: project assets convention)
+// ---------------------------------------------------------------------------
+
+/**
+ * Simple glob-to-regex converter for salvage patterns.
+ * Supports *, **, and ? wildcards. No brace expansion.
+ */
+function globToRegex(pattern) {
+  let re = '';
+  let i = 0;
+  while (i < pattern.length) {
+    const ch = pattern[i];
+    if (ch === '*') {
+      if (pattern[i + 1] === '*') {
+        // ** matches any path segment(s)
+        re += '.*';
+        i += 2;
+        if (pattern[i] === '/' || pattern[i] === '\\') i++; // skip trailing separator
+        continue;
+      }
+      re += '[^/\\\\]*';
+    } else if (ch === '?') {
+      re += '[^/\\\\]';
+    } else if ('.+^${}()|[]\\'.includes(ch)) {
+      re += '\\' + ch;
+    } else {
+      re += ch;
+    }
+    i++;
+  }
+  return new RegExp('^' + re + '$', 'i');
+}
+
+/**
+ * Walk a directory recursively, returning relative paths of all files.
+ * Skips node_modules, .git, .planning, and dist/build dirs.
+ */
+function walkFiles(dir, base) {
+  base = base || dir;
+  const results = [];
+  if (!fs.existsSync(dir)) return results;
+  const skipDirs = new Set(['node_modules', '.git', '.planning', 'dist', 'build', '.next', 'out']);
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (skipDirs.has(entry.name)) continue;
+      results.push(...walkFiles(fullPath, base));
+    } else if (entry.isFile()) {
+      results.push(path.relative(base, fullPath).replace(/\\/g, '/'));
+    }
+  }
+  return results;
+}
+
+const generationSalvage = defineCommand({
+  meta: { name: 'salvage', description: 'Extract reusable data assets from a completed generation run' },
+  args: {
+    project:  { type: 'string',  description: 'Project id', required: true },
+    species:  { type: 'string',  description: 'Species name', required: true },
+    version:  { type: 'string',  description: 'Generation version (e.g. v12)', required: true },
+    patterns: { type: 'string',  description: 'Comma-separated glob patterns (default: **/*.json)', default: '**/*.json' },
+    'dry-run':{ type: 'boolean', description: 'Preview without copying', default: false },
+    json:     { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+
+    // 1. Resolve species and generation
+    const species = da.getSpecies(args.project, args.species);
+    if (!species) {
+      outputError(`Species "${args.species}" not found in project "${args.project}".`);
+      return;
+    }
+
+    const gen = da.getGeneration(args.project, args.species, args.version);
+    if (!gen) {
+      outputError(`Generation "${args.version}" not found for species "${args.species}" in project "${args.project}".`);
+      return;
+    }
+
+    const runDir = path.join(gen.dir, 'run');
+    if (!fs.existsSync(runDir)) {
+      outputError(
+        `No run/ directory found at ${gen.dir}.\n` +
+        `  Has this generation been preserved? Run \`gad eval preserve\` first.`
+      );
+      return;
+    }
+
+    // 2. Build glob patterns — merge CLI patterns with species.json salvagePatterns
+    const patternStrings = args.patterns.split(',').map(p => p.trim()).filter(Boolean);
+    if (species.salvagePatterns && Array.isArray(species.salvagePatterns)) {
+      for (const sp of species.salvagePatterns) {
+        if (!patternStrings.includes(sp)) patternStrings.push(sp);
+      }
+    }
+    const regexes = patternStrings.map(p => ({ pattern: p, re: globToRegex(p) }));
+
+    // 3. Search for data files in common locations within run/
+    const searchDirs = ['public/data', 'src/data', 'game/data', 'data'];
+    const candidates = [];
+
+    // First pass: search well-known data directories
+    for (const sub of searchDirs) {
+      const searchRoot = path.join(runDir, sub);
+      if (!fs.existsSync(searchRoot)) continue;
+      const files = walkFiles(searchRoot);
+      for (const rel of files) {
+        if (regexes.some(r => r.re.test(rel))) {
+          candidates.push({ source: sub, relativePath: rel });
+        }
+      }
+    }
+
+    // Second pass: if salvagePatterns from species.json exist, also search
+    // the entire run/ directory for matches (patterns may reference non-data dirs)
+    if (species.salvagePatterns && Array.isArray(species.salvagePatterns) && species.salvagePatterns.length > 0) {
+      const speciesRegexes = species.salvagePatterns.map(p => ({ pattern: p, re: globToRegex(p) }));
+      const allFiles = walkFiles(runDir);
+      const alreadyFound = new Set(candidates.map(c => path.join(c.source, c.relativePath)));
+      for (const rel of allFiles) {
+        if (speciesRegexes.some(r => r.re.test(rel))) {
+          // Determine source prefix for display
+          const firstSeg = rel.split('/')[0];
+          const source = searchDirs.find(d => d.startsWith(firstSeg)) || '.';
+          const key = source === '.' ? rel : rel;
+          if (!alreadyFound.has(key)) {
+            candidates.push({ source: '.', relativePath: rel });
+          }
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
+      const msg = `No files matched patterns [${patternStrings.join(', ')}] in ${runDir}`;
+      if (args.json) {
+        console.log(JSON.stringify({ salvaged: [], message: msg }));
+      } else {
+        console.log(msg);
+        console.log(`  Searched: ${searchDirs.map(d => 'run/' + d).join(', ')}`);
+        if (species.salvagePatterns) console.log(`  Also searched entire run/ with species salvagePatterns`);
+      }
+      return;
+    }
+
+    // 4. Determine output directory
+    const resolved = da.resolveProject(args.project);
+    const speciesDir = path.join(resolved.projectDir, 'species', args.species);
+    const salvageDir = path.join(speciesDir, 'assets', 'data', 'salvaged', args.version);
+
+    // 5. Copy (or preview) files
+    const results = [];
+    for (const c of candidates) {
+      const srcFull = c.source === '.'
+        ? path.join(runDir, c.relativePath)
+        : path.join(runDir, c.source, c.relativePath);
+      const dstFull = path.join(salvageDir, c.source === '.' ? c.relativePath : path.join(c.source, c.relativePath));
+      const dstRel = path.relative(speciesDir, dstFull).replace(/\\/g, '/');
+
+      results.push({
+        from: `run/${c.source === '.' ? '' : c.source + '/'}${c.relativePath}`,
+        to: dstRel,
+        size: fs.existsSync(srcFull) ? fs.statSync(srcFull).size : 0,
+      });
+
+      if (!args['dry-run']) {
+        fs.mkdirSync(path.dirname(dstFull), { recursive: true });
+        fs.copyFileSync(srcFull, dstFull);
+      }
+    }
+
+    // 6. Output summary
+    if (args.json) {
+      console.log(JSON.stringify({
+        dryRun: args['dry-run'],
+        project: args.project,
+        species: args.species,
+        version: args.version,
+        patterns: patternStrings,
+        salvageDir: salvageDir,
+        salvaged: results,
+      }, null, 2));
+    } else {
+      const label = args['dry-run'] ? 'DRY RUN — would salvage' : 'Salvaged';
+      console.log(`${label} ${results.length} file(s) from ${args.project}/${args.species}/${args.version}\n`);
+      console.log('  Source                                    → Destination');
+      console.log('  ' + '─'.repeat(70));
+      for (const r of results) {
+        const sizeStr = r.size > 1024 ? `${(r.size / 1024).toFixed(1)}KB` : `${r.size}B`;
+        console.log(`  ${r.from.padEnd(40)} → ${r.to}  (${sizeStr})`);
+      }
+      console.log('');
+      if (args['dry-run']) {
+        console.log(`  Target: ${salvageDir}`);
+        console.log('  Re-run without --dry-run to copy.');
+      } else {
+        console.log(`  Written to: ${salvageDir}`);
+      }
+    }
+  },
+});
+
+const generationCmd = defineCommand({
+  meta: { name: 'generation', description: 'Manage generation runs (salvage data assets)' },
+  subCommands: {
+    salvage: generationSalvage,
   },
 });
 
@@ -6260,7 +6458,7 @@ const sessionNew = defineCommand({
       if (roots.length === 0) { outputError(`Project not found: ${args.project}`); return; }
     }
 
-    if (roots.length === 0) { outputError('No projects configured. Run `gad workspace sync` first.'); return; }
+    if (roots.length === 0) { outputError('No projects configured. Run `gad projects sync` first.'); return; }
 
     const root = roots[0];
     const dir = sessionsDir(baseDir, root);
@@ -6413,7 +6611,7 @@ const contextCmd = defineCommand({
     }
 
     const root = session?._root || roots[0];
-    if (!root) { outputError('No projects configured. Run `gad workspace sync` first.'); return; }
+    if (!root) { outputError('No projects configured. Run `gad projects sync` first.'); return; }
 
     const refs = buildContextRefs(root, baseDir, session);
 
@@ -6506,7 +6704,7 @@ const snapshotCmd = defineCommand({
       }
     }
 
-    if (roots.length === 0) { outputError('No projects configured. Run `gad workspace sync` first.'); return; }
+    if (roots.length === 0) { outputError('No projects configured. Run `gad projects sync` first.'); return; }
     const root = roots[0];
     const planDir = path.join(baseDir, root.path, root.planningDir);
     const sprintSize = config.sprintSize || 5;
@@ -6813,7 +7011,7 @@ const snapshotV2Cmd = defineCommand({
     }
 
     if (roots.length === 0) {
-      outputError('No projects configured. Run `gad workspace sync` first.');
+      outputError('No projects configured. Run `gad projects sync` first.');
       return;
     }
 
@@ -7621,7 +7819,7 @@ function resolveSingleTaskRoot(projectid) {
   const config = gadConfig.load(baseDir);
   const roots = resolveRoots({ projectid }, baseDir, config.roots);
   if (roots.length === 0) {
-    outputError('No projects configured. Run `gad workspace sync` first.');
+    outputError('No projects configured. Run `gad projects sync` first.');
   }
   return { baseDir, config, root: roots[0] };
 }
@@ -9308,7 +9506,7 @@ const startupCmd = defineCommand({
         lines.push(`  - ${root.id}`);
       }
     } catch {
-      lines.push('  (run `gad workspace list` to see available project ids)');
+      lines.push('  (run `gad projects list` to see available project ids)');
     }
     lines.push('');
     lines.push('Single most important command: `gad snapshot --projectid <id>`.');
@@ -12780,6 +12978,7 @@ const main = defineCommand({
     projects: projectsCmd,
     species: speciesCmd,
     recipes: recipesCmd,
+    generation: generationCmd,
     session: sessionCmd,
     context: contextCmd,
     state: stateCmd,

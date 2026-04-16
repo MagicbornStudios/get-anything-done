@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { LandingEvolutionBand } from "@/components/landing/home/LandingEvolutionBand";
 import { LandingGraphifyChaosBand } from "@/components/landing/home/LandingGraphifyChaosBand";
 import { LandingInstallerUpstreamBand } from "@/components/landing/home/LandingInstallerUpstreamBand";

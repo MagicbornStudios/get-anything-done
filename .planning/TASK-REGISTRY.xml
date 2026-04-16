@@ -1796,6 +1796,47 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <keywords>readme,docs,vocabulary,copy-pass,external-facing</keywords>
     </task>
   </phase>
+
+  <!-- Phase 46: Site architecture redesign + CLI consolidation (decisions gad-207..211) -->
+  <phase id="46">
+    <task id="46-01" status="done" type="cli" skill="default" agent="subagent">
+      <goal>Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.</goal>
+      <keywords>cli,workspace,projects,consolidation,deprecation</keywords>
+    </task>
+    <task id="46-02" status="done" type="site" skill="default" agent="subagent">
+      <goal>Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.</goal>
+      <keywords>nav,routes,cleanup,site-architecture,page-map</keywords>
+    </task>
+    <task id="46-03" status="done" type="site" skill="default" agent="subagent">
+      <goal>Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.</goal>
+      <keywords>sprite,animation,component,css-steps,ui</keywords>
+    </task>
+    <task id="46-04" status="done" type="framework" skill="default" agent="default">
+      <goal>Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.</goal>
+      <depends>46-01</depends>
+      <keywords>species,planning,sub-roots,discover,sync</keywords>
+    </task>
+    <task id="46-05" status="done" type="framework" skill="default" agent="subagent">
+      <goal>Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.</goal>
+      <depends>46-04</depends>
+      <keywords>assets,media,salvage,generation,data-reuse</keywords>
+    </task>
+    <task id="46-06" status="done" type="site" skill="default" agent="subagent">
+      <goal>Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.</goal>
+      <depends>46-02</depends>
+      <keywords>downloads,vcs,components,installer,showcase</keywords>
+    </task>
+    <task id="46-07" status="done" type="site" skill="default" agent="subagent">
+      <goal>Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.</goal>
+      <depends>46-02</depends>
+      <keywords>methodology,how-it-works,loop,scoring,species-model</keywords>
+    </task>
+    <task id="46-08" status="done" type="site" skill="default" agent="default">
+      <goal>Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.</goal>
+      <depends>46-02,46-03</depends>
+      <keywords>verification,build,type-check,broken-imports</keywords>
+    </task>
+  </phase>
 </task-registry>
 
 

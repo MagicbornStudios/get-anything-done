@@ -1421,5 +1421,68 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Species editor confirmed as inspector sidebar. Project shape = .planning/ monorepo shape. Species = evolutionary branch (inherits project, configures differently). Generation = commit on a branch. Recipe = branch template. Sink compiles all branches into the editor view. Subagents can work on species-scoped sections. This framing guides all future editor and marketplace work.</impact>
   </decision>
 
+  <decision id="gad-207">
+    <title>Landing site page map: 9 public routes, everything else dev-only or removed</title>
+    <date>2026-04-16</date>
+    <summary>The GAD landing site serves two audiences: visitors (what is GAD, let me try it) and operators (managing projects). Public pages: / (home), /how-it-works (methodology, replaces eval-guide+formulas+standards), /library (play published builds), /library/play (iframe player), /projects (showcase grid), /projects/[id] (detail with tabs), /downloads (installer, CLI clients, VCS component showcase, planning packs), /videos (Remotion compositions, walkthrough demos), /quickstart (5-step onboarding). Removed from public nav: /planning (content lives in /projects/[id]?tab=planning), /project-market (merges into /library for public; marketplace trading is platform/editor feature), /data (dev-only), /decisions, /tasks, /phases, /bugs (internal — accessible via project detail or CLI), /glossary, /formulas, /insights, /standards, /eval-guide (merged into /how-it-works or /downloads), /agents/[id], /commands/[id], /runs/[project]/[version] (catalog detail — dev-only or removed).</summary>
+    <impact>Site drops from 25+ routes to 9 public pages. Cleaner visitor experience. Dev-only routes kept but not in nav. /downloads becomes the component showcase + installer hub. /videos is the demo surface.</impact>
+  </decision>
+
+  <decision id="gad-208">
+    <title>Workspace concept eliminated — everything is a GAD project, workspace is just a repo with multiple projects</title>
+    <date>2026-04-16</date>
+    <summary>`gad workspace` commands (show/sync/add/ignore) merge into `gad projects` (list/sync/add/ignore). A "workspace" is not a separate concept — it is simply a repo that has multiple GAD projects registered in gad-config.toml. The config.roots array IS the project registry. `gad workspace` becomes a deprecated alias pointing to `gad projects` with a deprecation notice, removed after one version. The word "workspace" only appears casually to describe "a repo with multiple GAD projects." CLI surface is exclusively `gad projects`. Species and generations nest under their project via the existing planning root model — no workspace-level management needed.</summary>
+    <impact>CLI simplification: one noun (projects) instead of two (projects + workspace). Reduces confusion for new users. `gad projects sync` crawls for .planning/ dirs. `gad projects add` registers a root. No conceptual overhead.</impact>
+  </decision>
+
+  <decision id="gad-209">
+    <title>Species get durable .planning/ subtrees — transferable config bundles with their own planning scope</title>
+    <date>2026-04-16</date>
+    <summary>Species are transferable configuration bundles (tech stack + skills + context framework + workflow). They get their own .planning/ subtree under the project for decisions, notes, and depth documentation. Generations inherit the species .planning/ and add generation-specific brownfield state that persists across runs. Hierarchy: project/.planning/ (project-level) → species/&lt;name&gt;/.planning/ (species-level) → species/&lt;name&gt;/generations/&lt;version&gt;/.planning/ (generation brownfield). When someone imports a species into their project, they get the species config and its .planning/ docs but NOT the original project's requirements or generations. `gad projects sync` with discover=true on a project root auto-detects species-level .planning/ dirs.</summary>
+    <impact>Species become first-class planning entities with durable docs. Enables trading/sharing species between accounts. Generation brownfield state survives across runs. Planning doc hierarchy mirrors the project→species→generation data model.</impact>
+  </decision>
+
+  <decision id="gad-210">
+    <title>Project-level media assets + generation data salvage pipeline</title>
+    <date>2026-04-16</date>
+    <summary>Each project gets a conventional assets/ directory for marketing, audio, video, and reusable media. Generations produce unique data (game content JSON, dialogue trees, entity definitions, level layouts) that should be salvageable back to the species or project level for reuse. The salvage pipeline: (1) generation completes, (2) extract valuable data assets from run output, (3) reshape to fit project-level data schemas, (4) store at species level for next generation to inherit. New generations can seed from species-level salvaged data instead of regenerating from scratch. This prevents the "rebuild everything every run" problem and lets content compound across generations, especially for video games where authored content (maps, items, dialogue) is expensive to recreate.</summary>
+    <impact>Generations build on prior work instead of starting fresh. Species accumulate not just skills but data assets. Project-level media assets are available for marketing/showcase on the landing site. Content compounds across the evolutionary tree.</impact>
+  </decision>
+
+  <decision id="gad-211">
+    <title>Sprite sheet animation as a site-wide capability — CSS steps() component</title>
+    <date>2026-04-16</date>
+    <summary>Add a SpriteAnimation React component to the site UI library. Uses CSS background-position with steps() animation for performance. Props: src (sprite sheet URL), frameWidth, frameHeight, frameCount, fps, loop, className. Use cases: hero mascot/logo animation, project card thumbnails (animated preview of generation gameplay), loading states, page transitions. Canvas fallback available for complex cases (multiple layers, runtime tinting) but CSS is the default. Sprite sheets are stored in public/sprites/ or per-project in the assets convention.</summary>
+    <impact>Landing site gains animated visual personality. Project showcase cards can show gameplay previews. Reusable across all site surfaces. Lightweight — no JS animation library dependency.</impact>
+  </decision>
+
+  <decision id="gad-212">
+    <title>Eval vocabulary replaced by species/generation throughout — "eval" is an internal implementation detail</title>
+    <date>2026-04-16</date>
+    <summary>All user-facing references to "eval" become species/generation language. `gad eval run` becomes species/generation commands. "Eval project templates" become "species templates" — they carry skills, content, context framework, tech stack. The word "eval" only appears in internal code paths and legacy data. This aligns with the evolutionary metaphor: species are character builds, generations are playing the game. The act of running a generation IS the game — the editors and communication of notes and requirements are the gameplay surface.</summary>
+    <impact>CLI rename needed: eval → species/generation commands. Site copy, nav labels, template naming all shift. Downloads page "planning packs" section becomes "species templates".</impact>
+  </decision>
+
+  <decision id="gad-213">
+    <title>GAD as RPG: species are character builds, generations are gameplay, editors are the game surface</title>
+    <date>2026-04-16</date>
+    <summary>The GAD experience is explicitly gamified. Species configuration is analogous to RPG character building — selecting tech stack, skills, context framework, constraints. Running a generation is "playing the game" with that build against a project's requirements. The editors (project editor, species editor, generation editor) are the game surface. Voice-first interaction with VCS landmarks for spatial context. The system should be fun to use. Species usage stats (times used across projects, original author, editing authors) function like RPG character sheets with play history. Species and generations accumulate media showcasing what the build can do — like a trophy case.</summary>
+    <impact>Editor UX design should lean into gamification. Species cards show usage stats, authorship chain, showcase media. Generation completion feels like finishing a game session with loot (salvaged data, new skills learned). Editors are voice-first with quick-prompt VCS shortcuts.</impact>
+  </decision>
+
+  <decision id="gad-214">
+    <title>VCS as universal agent-addressability layer — minimal surface for any system (React, Kaplay, Phaser, etc.)</title>
+    <date>2026-04-16</date>
+    <summary>The Visual Context System goal is the minimal component/ID surface needed for an agent to understand what the user sees and reference specific elements on screen. Every species using VCS skills implements dev tooling, sectioning, and IDs. The system must work across rendering boundaries (React DOM, Kaplay canvas, Phaser, etc.). Three approaches: (1) species place IDs/formats in code, our editor scans and highlights/selects on their behalf, (2) landmark-based spatial context — identify general location, talk about what's visible, (3) collect-all-IDs button for quick prompt injection. Voice-first with VCS landmark navigation as the primary interaction pattern. Removable UI surfaces — minimize chrome, maximize agent context.</summary>
+    <impact>VCS skill files become the core deliverable species install. Cross-renderer ID scanning is a research problem. Editor needs a "collect visible IDs" action. Minimal UI chrome — landmarks + voice + quick prompts.</impact>
+  </decision>
+
+  <decision id="gad-215">
+    <title>Bidirectional data flow: generation learnings and requirements flow back to project and species</title>
+    <date>2026-04-16</date>
+    <summary>Data flows both directions in the hierarchy. Down: project requirements + species config → generation. Up: generation produces learnings, discovered requirements, salvaged data, new skills that should flow back to the project (as new requirements) and species (as improved config). When editing a species or generation, insights that are better suited as project requirements get promoted upward. Same for species-level discoveries that should become project-level. The reverse-engineering flow (generation → requirements) is the same mechanism. Species track which projects and generations have used them, providing a usage/impact graph.</summary>
+    <impact>Need "promote to project" and "promote to species" actions in editors. Salvage pipeline (gad-210) is the data direction; this adds the requirements/learnings direction. Species usage tracking feeds the marketplace showcase.</impact>
+  </decision>
+
 </decisions>
 

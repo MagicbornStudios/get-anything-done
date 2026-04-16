@@ -210,7 +210,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       try {
         const h = await restoreVcExportDirectoryHandle();
         if (cancelled || !h) return;
-        const perm = await h.queryPermission({ mode: "readwrite" });
+        const perm = await (h as any).queryPermission({ mode: "readwrite" });
         if (perm === "granted") {
           vcExportDirHandleRef.current = h;
         }
