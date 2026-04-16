@@ -21,7 +21,7 @@ function Bar({ trait }: { trait: Trait }) {
   }, [trait.value]);
 
   const color =
-    trait.value > 0.7
+    trait.value > 0.6
       ? "bg-emerald-500"
       : trait.value >= 0.3
         ? "bg-amber-500"

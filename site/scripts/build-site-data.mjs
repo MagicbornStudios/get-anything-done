@@ -1733,7 +1733,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 
 - [Home](${SITE_URL}/): Evaluate and evolve agents under measurable pressure
 - [Glossary](${SITE_URL}/glossary): Every domain term (CSH, freedom hypothesis, pressure, etc.)
-- [Skeptic](${SITE_URL}/skeptic): Devils-advocate critique of every hypothesis â€” read this first before trusting any number
+- [Hypotheses](${SITE_URL}/hypotheses): Active hypothesis tracks, evidence status, and caveats
 - [Lineage](${SITE_URL}/lineage): GSD â†’ RepoPlanner â†’ GAD
 
 ## Evaluation
@@ -2827,6 +2827,45 @@ function writeDbJson({ pseudoDb, allDecisions, allTasks, allPhases }) {
   console.log(`  [write] ${path.relative(SITE_ROOT, DB_JSON_FILE)} (db viewer payload)`);
 }
 
+/**
+ * Aggregate skill invocations across all generations (species x version) per project.
+ * Reads TRACE.json `skill_triggers` from every preserved generation and counts
+ * occurrences per skill name. Returns `{ [projectId]: { [skillName]: count } }`.
+ *
+ * The skill name is normalized to a catalog-style id (e.g. `/gad:plan-phase` -> `gad-plan-phase`).
+ */
+function projectBroodSkillAggregation() {
+  console.log("[2j/4] Aggregating brood-level skill triggers per project");
+  const result = {};
+  for (const gen of listEvalGenerations()) {
+    const traceFile = path.join(gen.dir, "TRACE.json");
+    if (!exists(traceFile)) continue;
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(traceFile, "utf8"));
+    } catch {
+      continue;
+    }
+    const triggers = data.skill_triggers;
+    if (!Array.isArray(triggers) || triggers.length === 0) continue;
+    if (!result[gen.project]) result[gen.project] = {};
+    const bag = result[gen.project];
+    for (const entry of triggers) {
+      const raw = typeof entry === "string" ? entry : entry?.skill;
+      if (!raw || typeof raw !== "string") continue;
+      // Normalize to catalog id form: /gad:plan-phase -> gad-plan-phase
+      const m = raw.trim().match(/^\/?gad:([\w-]+)/i);
+      const id = m ? `gad-${m[1]}` : raw.trim().replace(/^gad:/i, "").replace(/^\//, "");
+      if (!id) continue;
+      bag[id] = (bag[id] || 0) + 1;
+    }
+  }
+  const projectCount = Object.keys(result).length;
+  const totalSkills = Object.values(result).reduce((s, bag) => s + Object.keys(bag).length, 0);
+  console.log(`  [agg] ${totalSkills} distinct skill(s) across ${projectCount} project(s)`);
+  return result;
+}
+
 function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
   console.log("[3/4] Writing lib/eval-data.generated.ts");
   const records = traces
@@ -3362,6 +3401,13 @@ export interface TaskPressureRecord {
  */
 export const TASK_PRESSURE: Record<string, TaskPressureRecord> = ${JSON.stringify(extras.taskPressureByVersion ?? {}, null, 2)};
 
+/**
+ * Aggregated skill trigger counts across all generations in a project's brood.
+ * Keyed by project id, value is \`{ [catalogSkillId]: invocationCount }\`.
+ * Built from TRACE.json \`skill_triggers\` arrays across every species and version.
+ */
+export const BROOD_SKILL_AGGREGATION: Record<string, Record<string, number>> = ${JSON.stringify(extras.broodSkillAggregation ?? {}, null, 2)};
+
 export const WORKFLOW_LABELS: Record<Workflow, string> = {
   gad: "GAD",
   bare: "Bare",
@@ -3578,6 +3624,7 @@ function main() {
   const planningState = parsePlanningState();
   const evalProjects = scanEvalProjects();
   const producedArtifacts = scanProducedArtifacts();
+  const broodSkillAggregation = projectBroodSkillAggregation();
   const traces = findTraceFiles();
   const pseudoDb = loadJsonDataPseudoDb();
   const allDecisions = parseAllDecisions();
@@ -3603,6 +3650,7 @@ function main() {
     findings: roundData.findings,
     evalProjects,
     producedArtifacts,
+    broodSkillAggregation,
     pseudoDb,
     allDecisions,
     allTasks,

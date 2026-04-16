@@ -17,14 +17,12 @@ export function PlanningSystemTab({ selfEval }: { selfEval: PlanningSelfEvalLate
       </Identified>
 
       <div className="grid gap-6">
-        <Identified as="PlanningSystemRuntimeActivityPanel">
-          <PlanningSystemRuntimeActivityPanel
-            topRuntimeCount={topRuntimeCount}
-            runtimeDistribution={runtimeDistribution}
-            runtimeSessions={runtimeSessions}
-            activeAssignments={selfEval.active_assignments}
-          />
-        </Identified>
+        <PlanningSystemRuntimeActivityPanel
+          topRuntimeCount={topRuntimeCount}
+          runtimeDistribution={runtimeDistribution}
+          runtimeSessions={runtimeSessions}
+          activeAssignments={selfEval.active_assignments}
+        />
       </div>
     </div>
   );

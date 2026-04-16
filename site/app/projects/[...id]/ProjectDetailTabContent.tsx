@@ -1,0 +1,81 @@
+"use client";
+
+import { type ReactNode, useState } from "react";
+import { cn } from "@/lib/utils";
+import type { DetailTab } from "./ProjectDetailTabs";
+import { ProjectPlanningTasksTab } from "./ProjectPlanningTasksTab";
+import { ProjectPlanningRequirementsTab } from "./ProjectPlanningRequirementsTab";
+import { ProjectPlanningNotesTab } from "./ProjectPlanningNotesTab";
+import { ProjectSystemTab } from "./ProjectSystemTab";
+import { ProjectEvolutionTab } from "./ProjectEvolutionTab";
+
+const PLANNING_SUBTABS = [
+  { key: "tasks", label: "Tasks" },
+  { key: "decisions", label: "Decisions" },
+  { key: "roadmap", label: "Roadmap" },
+  { key: "requirements", label: "Requirements" },
+  { key: "notes", label: "Notes" },
+] as const;
+
+type PlanningSubTab = (typeof PLANNING_SUBTABS)[number]["key"];
+
+export function ProjectDetailTabContent({
+  activeTab,
+  overviewContent,
+  projectId,
+}: {
+  activeTab: DetailTab;
+  overviewContent: ReactNode;
+  projectId: string;
+}) {
+  const [planningSubTab, setPlanningSubTab] = useState<PlanningSubTab>("tasks");
+
+  if (activeTab === "overview") {
+    return <>{overviewContent}</>;
+  }
+
+  if (activeTab === "planning") {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <div className="mb-6 flex gap-0 border-b border-border/40">
+          {PLANNING_SUBTABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setPlanningSubTab(tab.key)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium transition-colors",
+                planningSubTab === tab.key
+                  ? "border-b-2 border-accent text-accent"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {planningSubTab === "tasks" && (
+          <ProjectPlanningTasksTab projectId={projectId} />
+        )}
+        {planningSubTab === "decisions" && (
+          <p className="text-sm text-muted-foreground">Decisions -- coming soon</p>
+        )}
+        {planningSubTab === "roadmap" && (
+          <p className="text-sm text-muted-foreground">Roadmap -- coming soon</p>
+        )}
+        {planningSubTab === "requirements" && (
+          <ProjectPlanningRequirementsTab projectId={projectId} />
+        )}
+        {planningSubTab === "notes" && (
+          <ProjectPlanningNotesTab projectId={projectId} />
+        )}
+      </div>
+    );
+  }
+
+  if (activeTab === "system") {
+    return <ProjectSystemTab projectId={projectId} />;
+  }
+
+  return <ProjectEvolutionTab projectId={projectId} />;
+}

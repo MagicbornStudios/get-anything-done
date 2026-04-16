@@ -8,6 +8,7 @@ import {
   PLANNING_ZIPS,
 } from "@/lib/eval-data";
 import { ProjectBugsSection } from "./ProjectBugsSection";
+import { ProjectDetailTabs } from "./ProjectDetailTabs";
 import { ProjectEmergentLineageSection } from "./ProjectEmergentLineageSection";
 import { ProjectFindingsSection } from "./ProjectFindingsSection";
 import { ProjectHeroSection } from "./ProjectHeroSection";
@@ -128,16 +129,8 @@ export default async function ProjectPage({
   const preservedBuild = IS_DEV ? resolvePreservedBuild(projectName) : null;
   const latestGeneration = IS_DEV ? resolveLatestGeneration(projectName) : null;
 
-  return (
-    <MarketingShell>
-      {IS_DEV && (
-        <ProjectOperator
-          projectName={projectName}
-          speciesName={project.species}
-          preservedBuild={preservedBuild}
-          latestGeneration={latestGeneration}
-        />
-      )}
+  const overviewContent = (
+    <>
       <ProjectHeroSection project={project} planning={planning} template={template} />
       <ProjectSkillsScopeSection project={project} runs={runs} />
       <ProjectRunsSection runs={runs} />
@@ -148,6 +141,20 @@ export default async function ProjectPage({
       <ProjectFindingsSection projectId={project.id} />
       <ProjectBugsSection projectId={project.id} />
       <ProjectScoringWeightsSection project={project} />
+    </>
+  );
+
+  return (
+    <MarketingShell>
+      {IS_DEV && (
+        <ProjectOperator
+          projectName={projectName}
+          speciesName={project.species}
+          preservedBuild={preservedBuild}
+          latestGeneration={latestGeneration}
+        />
+      )}
+      <ProjectDetailTabs overviewContent={overviewContent} projectId={project.id} />
     </MarketingShell>
   );
 }

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { EVAL_PROJECTS } from "@/lib/eval-data";
+import type { EvalProjectMeta } from "@/lib/eval-data";
+import { loadAllProjectMeta } from "./eval-data-runtime";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,10 @@ export default function ProjectEditIndex() {
     notFound();
   }
 
+  const EVAL_PROJECTS = loadAllProjectMeta();
+
   // Group by project slug — each project may have multiple species rows
-  const byProject = new Map<string, typeof EVAL_PROJECTS>();
+  const byProject = new Map<string, EvalProjectMeta[]>();
   for (const p of EVAL_PROJECTS) {
     const slug = p.project ?? p.id.split("/")[0];
     const list = byProject.get(slug) ?? [];

@@ -64,6 +64,16 @@ interface DevIdContextValue {
    */
   vcIdentifiedRingsSuppressedForPngCapture: boolean;
   setVcIdentifiedRingsSuppressedForPngCapture: Dispatch<SetStateAction<boolean>>;
+  /** Octant-drag spatial hints: live insert when handoff dialog is open, else queued for next open / dictation copy. */
+  submitVcHandoffUpdateSnippet: (snippet: string) => void;
+  registerVcHandoffSnippetInserter: (fn: ((snippet: string) => void) | null) => void;
+  consumeVcHandoffQueuedSnippets: () => string[];
+  /** Band-level context panels dismissed by the user (localStorage-backed). */
+  dismissedBandCids: Set<string>;
+  /** Toggle dismiss state for a single band cid. */
+  toggleBandDismiss: (cid: string) => void;
+  /** Clear all dismissed bands, restoring all panels. */
+  resetDismissedBands: () => void;
 }
 
 const noopRef = { current: null } as MutableRefObject<FileSystemDirectoryHandle | null>;
@@ -92,6 +102,12 @@ const DevIdContext = createContext<DevIdContextValue>({
   vcChordModifiers: VC_CHORD_IDLE,
   vcIdentifiedRingsSuppressedForPngCapture: false,
   setVcIdentifiedRingsSuppressedForPngCapture: () => {},
+  submitVcHandoffUpdateSnippet: () => {},
+  registerVcHandoffSnippetInserter: () => {},
+  consumeVcHandoffQueuedSnippets: () => [],
+  dismissedBandCids: new Set<string>(),
+  toggleBandDismiss: () => {},
+  resetDismissedBands: () => {},
 });
 
 export function DevIdProvider({ children }: { children: React.ReactNode }) {
@@ -111,6 +127,72 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const [vcChordModifiers, setVcChordModifiers] = useState<VcChordModifiers>(VC_CHORD_IDLE);
   const [vcIdentifiedRingsSuppressedForPngCapture, setVcIdentifiedRingsSuppressedForPngCapture] =
     useState(false);
+
+  const vcHandoffSnippetInserterRef = useRef<((snippet: string) => void) | null>(null);
+  const vcHandoffSnippetQueueRef = useRef<string[]>([]);
+
+  const LS_DISMISSED_KEY = "vcs-dismissed-panels";
+  const [dismissedBandCids, setDismissedBandCids] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set<string>();
+    try {
+      const raw = localStorage.getItem(LS_DISMISSED_KEY);
+      if (!raw) return new Set<string>();
+      const arr: unknown = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set<string>(arr.filter((v): v is string => typeof v === "string"));
+    } catch {
+      // ignore
+    }
+    return new Set<string>();
+  });
+
+  const persistDismissed = useCallback((next: Set<string>) => {
+    try {
+      localStorage.setItem(LS_DISMISSED_KEY, JSON.stringify(Array.from(next)));
+    } catch {
+      // ignore storage issues
+    }
+  }, []);
+
+  const toggleBandDismiss = useCallback((cid: string) => {
+    setDismissedBandCids((prev) => {
+      const next = new Set(prev);
+      if (next.has(cid)) next.delete(cid);
+      else next.add(cid);
+      persistDismissed(next);
+      return next;
+    });
+  }, [persistDismissed]);
+
+  const resetDismissedBands = useCallback(() => {
+    setDismissedBandCids(new Set<string>());
+    persistDismissed(new Set<string>());
+    toast.success("All dismissed context panels restored.");
+  }, [persistDismissed]);
+
+  const submitVcHandoffUpdateSnippet = useCallback((snippet: string) => {
+    const t = snippet.trim();
+    if (!t) return;
+    const ins = vcHandoffSnippetInserterRef.current;
+    if (ins) {
+      try {
+        ins(t);
+        return;
+      } catch {
+        /* fall through to queue */
+      }
+    }
+    vcHandoffSnippetQueueRef.current.push(t);
+  }, []);
+
+  const registerVcHandoffSnippetInserter = useCallback((fn: ((snippet: string) => void) | null) => {
+    vcHandoffSnippetInserterRef.current = fn;
+  }, []);
+
+  const consumeVcHandoffQueuedSnippets = useCallback((): string[] => {
+    const q = vcHandoffSnippetQueueRef.current;
+    vcHandoffSnippetQueueRef.current = [];
+    return q.slice();
+  }, []);
 
   const clearPersistedVcExportFolder = useCallback(async () => {
     vcExportDirHandleRef.current = null;
@@ -244,6 +326,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
         setCtrlLaneCids([]);
         setUpdatePromptMediaRefs([]);
         setDeletePromptMediaRefs([]);
+        vcHandoffSnippetQueueRef.current = [];
         setFlashCid(null);
         if (flashTimeoutRef.current) {
           clearTimeout(flashTimeoutRef.current);
@@ -280,6 +363,12 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       vcChordModifiers,
       vcIdentifiedRingsSuppressedForPngCapture,
       setVcIdentifiedRingsSuppressedForPngCapture,
+      submitVcHandoffUpdateSnippet,
+      registerVcHandoffSnippetInserter,
+      consumeVcHandoffQueuedSnippets,
+      dismissedBandCids,
+      toggleBandDismiss,
+      resetDismissedBands,
     }),
     [
       enabled,
@@ -296,6 +385,12 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       deletePromptMediaRefs,
       vcChordModifiers,
       vcIdentifiedRingsSuppressedForPngCapture,
+      submitVcHandoffUpdateSnippet,
+      registerVcHandoffSnippetInserter,
+      consumeVcHandoffQueuedSnippets,
+      dismissedBandCids,
+      toggleBandDismiss,
+      resetDismissedBands,
     ],
   );
 
@@ -304,7 +399,11 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       {children}
       {enabled ? (
         <>
-          <DevIdStatusBadge onOpenSearch={() => setSearchOpen(true)} />
+          <DevIdStatusBadge
+            onOpenSearch={() => setSearchOpen(true)}
+            dismissedCount={dismissedBandCids.size}
+            onResetDismissed={resetDismissedBands}
+          />
           <DevIdSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
         </>
       ) : null}
@@ -312,7 +411,15 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function DevIdStatusBadge({ onOpenSearch }: { onOpenSearch: () => void }) {
+function DevIdStatusBadge({
+  onOpenSearch,
+  dismissedCount,
+  onResetDismissed,
+}: {
+  onOpenSearch: () => void;
+  dismissedCount: number;
+  onResetDismissed: () => void;
+}) {
   return (
     <div className="fixed bottom-4 left-4 z-[9999] flex items-center gap-2 rounded-full border border-accent/60 bg-background/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-accent shadow-lg backdrop-blur">
       <span aria-hidden>
@@ -325,6 +432,15 @@ function DevIdStatusBadge({ onOpenSearch }: { onOpenSearch: () => void }) {
       >
         Search (Alt+K)
       </button>
+      {dismissedCount > 0 ? (
+        <button
+          type="button"
+          onClick={onResetDismissed}
+          className="rounded border border-border/60 bg-card/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-foreground hover:bg-card"
+        >
+          Reset {dismissedCount} dismissed
+        </button>
+      ) : null}
     </div>
   );
 }

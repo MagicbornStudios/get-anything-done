@@ -16,12 +16,11 @@ export function HypothesisTracksIntro() {
       workflow. GAD framework = full framework. Planned tracks (content-driven, codex runtime)
       show as dashed ghost lines so you can see the research plan even where no data exists yet.{" "}
       <strong className="text-foreground">Click a round</strong> to filter the Playable Archive
-      below. Read{" "}
-      <Link href="/skeptic" className="text-accent underline decoration-dotted">
-        /skeptic
-      </Link>{" "}
+      below. Review{" "}
+
       before trusting any individual point — sample sizes are small.
     </SiteSectionIntro>
   );
 }
+
 

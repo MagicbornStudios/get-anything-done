@@ -79,7 +79,7 @@ function SiteSectionSurface({
   stableBandCid,
   allowContextPanel,
 }: SurfaceProps) {
-  const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
+  const { enabled, highlightCid, setHighlightCid, flashCid, dismissedBandCids, toggleBandDismiss } = useDevId();
   const pathname = usePathname() ?? "/";
   const prefix = routePrefix(pathname);
   const sectionBandCid = cid ?? stableBandCid ?? id;
@@ -132,7 +132,7 @@ function SiteSectionSurface({
         </div>
         {afterShell}
       </section>
-      {devIds && enabled && sectionBandCid && allowContextPanel ? (
+      {devIds && enabled && sectionBandCid && allowContextPanel && !dismissedBandCids.has(sectionBandCid) ? (
         <BandDevPanel
           cid={sectionBandCid}
           label={sectionBandLabel}
@@ -140,6 +140,7 @@ function SiteSectionSurface({
           corner="right"
           componentTag="SiteSection"
           searchHint={searchHint}
+          onDismiss={() => toggleBandDismiss(sectionBandCid)}
         />
       ) : null}
     </div>

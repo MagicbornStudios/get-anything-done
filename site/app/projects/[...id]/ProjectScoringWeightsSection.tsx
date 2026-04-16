@@ -10,15 +10,6 @@ export function ProjectScoringWeightsSection({ project }: { project: EvalProject
       <Identified as="ProjectScoringWeights">
       <SiteSectionHeading kicker="Scoring weights" preset="section" title="How this project is scored" />
       <>
-        <SiteProse size="md" className="mt-3">
-          Defined in{" "}
-          <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">evals/{project.id}/gad.json</code>. The
-          composite score is a weighted sum of these dimensions. See{" "}
-          <Link href="/methodology" className="text-accent hover:underline">
-            /methodology
-          </Link>{" "}
-          for the formula and caps.
-        </SiteProse>
         <div className="mt-8 overflow-hidden rounded-2xl border border-border/70 bg-card/40">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border/70 bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">

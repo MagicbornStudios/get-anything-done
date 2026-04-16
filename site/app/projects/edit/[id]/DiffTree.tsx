@@ -68,7 +68,8 @@ function diffObjects(
 }
 
 function DiffRow({ node, depth }: { node: DiffNode; depth: number }) {
-  const [expanded, setExpanded] = useState(true);
+  // Start expanded for changed nodes, collapsed for unchanged nested objects
+  const [expanded, setExpanded] = useState(node.kind !== "unchanged");
   const hasChildren = node.children && node.children.length > 0;
 
   const kindColor: Record<DiffKind, string> = {
@@ -115,11 +116,25 @@ function DiffRow({ node, depth }: { node: DiffNode; depth: number }) {
           <span className="w-3 shrink-0" />
         )}
 
+        {/* Change type indicator badge */}
+        {node.kind === "added" && (
+          <span className="shrink-0 w-4 text-center rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">+</span>
+        )}
+        {node.kind === "removed" && (
+          <span className="shrink-0 w-4 text-center rounded text-[9px] font-bold bg-red-500/15 text-red-400">-</span>
+        )}
+        {node.kind === "modified" && (
+          <span className="shrink-0 w-4 text-center rounded text-[9px] font-bold bg-amber-500/15 text-amber-400">~</span>
+        )}
+        {node.kind === "unchanged" && (
+          <span className="shrink-0 w-4" />
+        )}
+
         <span className="shrink-0 text-foreground/70">{node.key}</span>
 
         {!hasChildren && node.kind === "added" && (
           <span className="truncate text-emerald-400">
-            + {formatValue(node.after)}
+            {formatValue(node.after)}
           </span>
         )}
         {!hasChildren && node.kind === "removed" && (

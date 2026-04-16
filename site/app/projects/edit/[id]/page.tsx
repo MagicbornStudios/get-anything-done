@@ -1,23 +1,16 @@
-import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { notFound } from "next/navigation";
-import { EVAL_PROJECTS, EVAL_RUNS } from "@/lib/eval-data";
 import { ProjectEditor } from "./ProjectEditor";
+import { loadAllProjectMeta, loadAllRunRecords } from "../eval-data-runtime";
 
 export const dynamic = "force-dynamic";
 
-/** Read the human-readable name from evals/<slug>/project.json */
-function resolveProjectName(slug: string): string | null {
+function getDataAccess() {
   const siteDir = process.cwd();
   const repoRoot = path.resolve(siteDir, "..");
-  const projectJson = path.join(repoRoot, "evals", slug, "project.json");
-  try {
-    if (fs.existsSync(projectJson)) {
-      const data = JSON.parse(fs.readFileSync(projectJson, "utf8"));
-      return data.name ?? null;
-    }
-  } catch { /* ignore */ }
-  return null;
+  const dynamicRequire = createRequire(path.join(repoRoot, "lib", "package.json"));
+  return dynamicRequire("./eval-data-access.cjs");
 }
 
 export async function generateMetadata({
@@ -26,10 +19,9 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const project = EVAL_PROJECTS.find((p) => p.id === id || p.project === id);
-  if (!project) return { title: "Project not found" };
-  const slug = project.project ?? project.id.split("/")[0];
-  const humanName = resolveProjectName(slug) ?? slug;
+  const da = getDataAccess();
+  const project = da.getProject(id);
+  const humanName = project?.name ?? id;
   return { title: `Edit — ${humanName}` };
 }
 
@@ -43,6 +35,9 @@ export default async function ProjectEditPage({
   }
 
   const { id } = await params;
+  const EVAL_PROJECTS = loadAllProjectMeta();
+  const EVAL_RUNS = loadAllRunRecords();
+
   const project = EVAL_PROJECTS.find((p) => p.id === id || p.project === id);
   if (!project) notFound();
 
@@ -52,8 +47,9 @@ export default async function ProjectEditPage({
   );
   const allRuns = EVAL_RUNS.filter((r) => r.project === projectSlug);
 
-  // Resolve human-readable project name from project.json
-  const projectDisplayName = resolveProjectName(projectSlug) ?? projectSlug;
+  const da = getDataAccess();
+  const projectCfg = da.getProject(projectSlug);
+  const projectDisplayName = projectCfg?.name ?? projectSlug;
 
   return (
     <ProjectEditor

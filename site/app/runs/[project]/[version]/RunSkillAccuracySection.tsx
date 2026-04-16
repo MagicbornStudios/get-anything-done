@@ -91,12 +91,6 @@ export function RunSkillAccuracySection({
               runs like this one will keep their aggregate score but new runs will land with the
               full breakdown.
             </p>
-            <Link
-              href="/methodology"
-              className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
-            >
-              How tracing works →
-            </Link>
           </Identified>
         ) : (
           <Identified as="RunSkillAccuracyEmpty" className="mt-6 text-sm text-muted-foreground" tag="p">

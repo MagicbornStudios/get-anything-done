@@ -33,20 +33,19 @@ export function LandingEvolutionBand() {
     >
       <Identified as="LandingEvolutionBand">
         <SiteSectionIntro
-          kicker="Site hero · Evolution"
+          kicker="Site hero - Evolution"
           preset="hero"
           as="h1"
           title={
             <>
-              Get anything done:{" "}
-              <span className="gradient-text">context under pressure.</span>
+              Get anything done: <span className="gradient-text">context under pressure.</span>
             </>
           }
           proseSize="md"
           proseClassName="max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg"
         >
           GAD is a context system: uncertainty in a phase (Shannon entropy) signals where new skills
-          should form. Pressure comes from the work itself — then candidates, review, and promotion
+          should form. Pressure comes from the work itself - then candidates, review, and promotion
           into permanent roto skills for your workflow.
         </SiteSectionIntro>
 
@@ -55,18 +54,22 @@ export function LandingEvolutionBand() {
             <div className="rounded-2xl border border-border/60 bg-card/40 p-6 shadow-sm">
               <p className="section-kicker !mb-2">Shannon entropy</p>
               <p className="font-mono text-sm leading-relaxed text-foreground md:text-base">
-                H(X) = −<span className="whitespace-nowrap">∑</span>
-                <sub className="text-xs">x</sub> p(x) log
-                <sub className="text-xs">2</sub> p(x)
+                H(X) = -sum p(x) log2 p(x)
               </p>
+
+              <p className="mt-4 section-kicker !mb-2">Phase pressure</p>
+              <p className="font-mono text-sm leading-relaxed text-foreground md:text-base">
+                pressure(phase) = tasks_total + (crosscuts * crosscut_weight)
+              </p>
+
               <p className="mt-4 text-sm text-muted-foreground">
                 Maximum when outcomes are evenly uncertain; drops to zero when you already know the
-                answer. We borrow the same lens for “where is the phase still ambiguous?”
+                answer. We borrow the same lens for "where is the phase still ambiguous?" and
+                operationalize it with per-phase task and crosscut counts.
               </p>
             </div>
           </Identified>
         </div>
-
       </Identified>
     </SiteSection>
   );

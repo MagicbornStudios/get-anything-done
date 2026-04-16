@@ -22,7 +22,7 @@ export function RubricHero() {
         <code className="rounded bg-card/60 px-1 py-0.5 text-sm">human_review.score</code> the
         composite formula consumes. The emergent workflow gets a sixth dimension that specifically
         tests the{" "}
-        <Link href="/findings" className="text-accent underline decoration-dotted">
+        <Link href="/roadmap" className="text-accent underline decoration-dotted">
           compound-skills hypothesis
         </Link>
         .
@@ -38,4 +38,5 @@ export function RubricHero() {
     </SiteSection>
   );
 }
+
 

@@ -175,6 +175,7 @@ export function ProjectSkillsScopeExplorer({
   latestVersion,
   hasPlayableBuild,
   hasTriggerTelemetry,
+  hasBroodTelemetry,
   catalogTotal,
   scopeKind,
 }: {
@@ -182,6 +183,7 @@ export function ProjectSkillsScopeExplorer({
   latestVersion: string | null;
   hasPlayableBuild: boolean;
   hasTriggerTelemetry: boolean;
+  hasBroodTelemetry: boolean;
   catalogTotal: number;
   scopeKind: "framework" | "bootstrap-only" | "none";
 }) {
@@ -264,6 +266,14 @@ export function ProjectSkillsScopeExplorer({
                           <span className="block truncate font-mono text-[10px] text-muted-foreground">{row.skillId}</span>
                         ) : null}
                       </div>
+                      {row.broodInvocations > 0 ? (
+                        <span
+                          className="shrink-0 rounded bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[9px] font-semibold tabular-nums text-zinc-300"
+                          title={`${row.broodInvocations} invocation(s) across all generations`}
+                        >
+                          {row.broodInvocations}x
+                        </span>
+                      ) : null}
                       {row.triggered === true ? (
                         <span className="flex shrink-0 items-center gap-0.5 text-[9px] font-semibold uppercase text-emerald-400/90">
                           <CheckCircle2 className="size-3" aria-hidden />
@@ -287,13 +297,15 @@ export function ProjectSkillsScopeExplorer({
             ? hasPlayableBuild
               ? "Health bar + % from latest run (playable). Sprite slot is a placeholder for sheet art."
               : "Trace sets % from expected triggers; add a playable build to lock bar + telemetry. Sprite slot reserved."
-            : "Preview — % shows —%. Swap sprites when assets ship."}
+            : hasBroodTelemetry
+              ? "Invocation counts from brood trace data. No expected-trigger telemetry on latest run."
+              : "Preview — % shows —%. Swap sprites when assets ship."}
         </p>
         {scopeKind === "framework" && catalogTotal > rows.length ? (
           <div className="mt-3 flex flex-wrap items-center gap-2 px-1">
             <span className="text-[10px] text-muted-foreground">Full framework catalog · {catalogTotal} skills</span>
             <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[10px]" asChild>
-              <Link href="/gad">
+              <Link href="/context-frameworks">
                 Catalog <ExternalLink className="size-3 opacity-70" aria-hidden />
               </Link>
             </Button>
@@ -320,7 +332,7 @@ export function ProjectSkillsScopeExplorer({
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <Button variant="default" size="sm" className="h-8 rounded-full text-xs" asChild>
-                    <Link href={`/skills/${selected.skillId}`}>See skill detail</Link>
+                    <Link href="/context-frameworks">See framework detail</Link>
                   </Button>
                   <Dialog open={skillFilesModalOpen} onOpenChange={setSkillFilesModalOpen}>
                     <DialogTrigger asChild>
@@ -375,7 +387,7 @@ export function ProjectSkillsScopeExplorer({
                                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] leading-snug text-muted-foreground">
                                   <span className="min-w-0">This skill’s folder shape and bundled paths.</span>
                                   <Link
-                                    href="/skills"
+                                    href="/context-frameworks"
                                     className="inline-flex shrink-0 items-center gap-1 font-medium text-accent/95 underline-offset-4 hover:underline"
                                   >
                                     Agent skills reference

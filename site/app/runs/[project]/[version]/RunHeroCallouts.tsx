@@ -42,10 +42,10 @@ export function RunHeroCallouts({
             </p>
           )}
           <Link
-            href="/findings/2026-04-09-round-4-partial"
+            href="/roadmap"
             className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
           >
-            Full round 4 partial-results finding →
+            Round 4 evidence →
           </Link>
         </div>
       )}
@@ -69,7 +69,7 @@ export function RunHeroCallouts({
             </p>
           )}
           <Button variant="link" className="mt-4 h-auto gap-1 p-0 text-xs font-semibold text-accent" asChild>
-            <Link href="/findings/2026-04-09-round-4-complete">Full round 4 findings →</Link>
+            <Link href="/roadmap">Round 4 evidence →</Link>
           </Button>
         </div>
       )}
@@ -91,3 +91,4 @@ export function RunHeroCallouts({
     </>
   );
 }
+

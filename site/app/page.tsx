@@ -1,5 +1,5 @@
 import { LandingEvolutionBand } from "@/components/landing/home/LandingEvolutionBand";
-import { LandingGraphifyEyeballBand } from "@/components/landing/home/LandingGraphifyEyeballBand";
+import { LandingGraphifyChaosBand } from "@/components/landing/home/LandingGraphifyChaosBand";
 import { LandingInstallerUpstreamBand } from "@/components/landing/home/LandingInstallerUpstreamBand";
 import { LandingVisualContextAndPromptBand } from "@/components/landing/home/LandingVisualContextAndPromptBand";
 import AgentHandoffCycle from "@/components/landing/agent-handoff-cycle/AgentHandoffCycle";
@@ -10,7 +10,7 @@ export default function Page() {
   return (
     <MarketingShell>
       <LandingEvolutionBand />
-      <LandingGraphifyEyeballBand />
+      <LandingGraphifyChaosBand />
       <LandingVisualContextAndPromptBand />
       <PlayableTeaser />
       <AgentHandoffCycle />

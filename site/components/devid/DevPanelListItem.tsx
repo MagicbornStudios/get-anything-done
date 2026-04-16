@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { Copy, MessageSquare } from "lucide-react";
+import { Copy, Landmark, MessageSquare, Mic } from "lucide-react";
 import { DevChromeHoverHint, type VcPanelCorner } from "@/components/devid/DevChromeHoverHint";
 import type { RegistryEntry } from "./SectionRegistry";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,11 @@ export function DevPanelListItem({
   active,
   altMergeSelected,
   ctrlLaneSelected,
+  listening,
   onRowClick,
   onCopy,
+  onLandmarkCopy,
+  onMicToggle,
   onPrompt,
 }: {
   dockCorner: VcPanelCorner;
@@ -24,8 +27,14 @@ export function DevPanelListItem({
   altMergeSelected?: boolean;
   /** Ctrl/Cmd-lane: cross-depth reference selection. */
   ctrlLaneSelected?: boolean;
+  /** Speech recognition active for this row. */
+  listening?: boolean;
   onRowClick: (e: MouseEvent<HTMLButtonElement>) => void;
   onCopy: () => void;
+  /** Copy `landmark: {cid}` to clipboard. */
+  onLandmarkCopy: () => void;
+  /** Toggle per-row speech capture. */
+  onMicToggle: () => void;
   onPrompt: () => void;
 }) {
   return (
@@ -57,6 +66,34 @@ export function DevPanelListItem({
           <span className="block truncate text-[10px]">{entry.label}</span>
           <span className="block truncate text-[10px] font-mono text-muted-foreground">{entry.cid}</span>
         </button>
+      </DevChromeHoverHint>
+      <DevChromeHoverHint
+        dockCorner={dockCorner}
+        body={<p>Copy landmark identifier snippet for any prompt: <code>landmark: {"{cid}"}</code>.</p>}
+      >
+        <Button type="button" variant="ghost" size="icon" className="size-3.5" onClick={onLandmarkCopy}>
+          <Landmark size={9} />
+        </Button>
+      </DevChromeHoverHint>
+      <DevChromeHoverHint
+        dockCorner={dockCorner}
+        body={
+          <p>
+            Dictate a freeform note about this landmark. Captures speech and queues{" "}
+            <code>landmark identifier: {"{cid}"} — {"{speech}"}</code> into the handoff prompt.
+          </p>
+        }
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn("size-3.5", listening && "text-emerald-400")}
+          aria-label={listening ? "Stop dictation" : "Dictate landmark note"}
+          onClick={onMicToggle}
+        >
+          <Mic size={9} />
+        </Button>
       </DevChromeHoverHint>
       <DevChromeHoverHint
         dockCorner={dockCorner}

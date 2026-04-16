@@ -3780,9 +3780,9 @@
       "type": "task",
       "id": "task:44.5-01b",
       "label": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on",
-      "status": "planned",
+      "status": "done",
       "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,published,draft,project-json,marketplace-filter,schema"
     },
@@ -3800,9 +3800,9 @@
       "type": "task",
       "id": "task:44.5-01d",
       "label": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel st",
-      "status": "planned",
+      "status": "done",
       "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet).",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,listing-detail,skills-scope,aggregation,build-site-data"
     },
@@ -3818,31 +3818,21 @@
     },
     {
       "type": "task",
-      "id": "task:44.5-02b",
-      "label": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad",
+      "id": "task:",
+      "label": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive “any gad",
       "status": "planned",
-      "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.",
+      "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive “any gad/npx” acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.",
       "skill": "",
-      "taskType": "site",
+      "taskType": "",
       "keywords": "brood-editor,dev-bridge,security,hardening"
-    },
-    {
-      "type": "task",
-      "id": "task:44.5-03",
-      "label": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species over",
-      "status": "planned",
-      "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild).",
-      "skill": "",
-      "taskType": "site",
-      "keywords": "brood-editor,filesystem,local-dev"
     },
     {
       "type": "task",
       "id": "task:44.5-04",
       "label": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited pro",
-      "status": "planned",
+      "status": "done",
       "goal": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read \"Species\", \"Brood\", \"Generation\", \"Recipe\" and must not drift.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "brood-editor,species,generations,brood,recipe,site,cid"
     },
@@ -3850,9 +3840,9 @@
       "type": "task",
       "id": "task:44.5-05",
       "label": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json /",
-      "status": "planned",
+      "status": "done",
       "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,inventory-grid,config-editor,primitive,gamified,cid"
     },
@@ -3860,9 +3850,9 @@
       "type": "task",
       "id": "task:44.5-06",
       "label": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision",
-      "status": "planned",
+      "status": "done",
       "goal": "Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/recipe.json` alongside species/; (c) editor UI: list of recipes in the Project Editor shell, create/edit/delete buttons (each with a cid), a form backed by the inventory-grid primitive from 44.5-05; (d) \"run recipe\" action that produces a new species in the project's species/ directory and triggers an eval generation via the command bridge; (e) a recipe-level cid so the modal footer CRUD can target recipes. No inheritance-from-recipe runtime yet — first cut is \"recipe authors a species, species runs normally\".",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,recipe,crud,schema,inventory-grid,site"
     },
@@ -3870,9 +3860,9 @@
       "type": "task",
       "id": "task:44.5-07",
       "label": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per spec",
-      "status": "planned",
+      "status": "done",
       "goal": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor's split viewport for 44.5-01. Acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,bestiary,brood,species-detail,site,cid"
     },
@@ -3880,9 +3870,9 @@
       "type": "task",
       "id": "task:44.5-08",
       "label": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to curren",
-      "status": "planned",
+      "status": "done",
       "goal": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,trait-bar,radar-chart,primitive,animation,site"
     },
@@ -3890,9 +3880,9 @@
       "type": "task",
       "id": "task:44.5-09",
       "label": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N",
-      "status": "planned",
+      "status": "done",
       "goal": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,visual-diff,tree,generations,brood,primitive,site"
     },
@@ -3900,9 +3890,9 @@
       "type": "task",
       "id": "task:44.5-10",
       "label": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and r",
-      "status": "planned",
+      "status": "done",
       "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-editor,iframe,preview,split-viewport,artifact,site,cid"
     },
@@ -3958,6 +3948,46 @@
     },
     {
       "type": "task",
+      "id": "task:44.5-17",
+      "label": "VCS context panel dismiss/expand — add X dismiss button to band dev panels, localStorage-backed dismissed set, \"Reset N ",
+      "status": "done",
+      "goal": "VCS context panel dismiss/expand — add X dismiss button to band dev panels, localStorage-backed dismissed set, \"Reset N dismissed\" in status badge. Addresses panel noise on dense pages like the editor.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "vcs,context-panel,dismiss,expand,devid,ux"
+    },
+    {
+      "type": "task",
+      "id": "task:44.5-18",
+      "label": "VCS speech capture + landmark neutral prompt — add mic icon and landmark icon per panel list item row. Mic captures spee",
+      "status": "done",
+      "goal": "VCS speech capture + landmark neutral prompt — add mic icon and landmark icon per panel list item row. Mic captures speech and injects \"landmark identifier: {cid} --- {transcribed text}\" as freeform prompt snippet. Landmark copies \"landmark: {cid}\" to clipboard. Neutral prompt with no CRUD verb for spatial/layout references.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "vcs,speech,landmark,dictation,prompt,devpanel,ux"
+    },
+    {
+      "type": "task",
+      "id": "task:44.5-19",
+      "label": "Editor pane height fix — left pane and inspector pane did not extend full viewport height. Switched from SiteSection wra",
+      "status": "done",
+      "goal": "Editor pane height fix — left pane and inspector pane did not extend full viewport height. Switched from SiteSection wrappers to plain div elements with h-full + flex layout for proper height propagation in the flex container.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "editor,height,layout,flex,css,ux"
+    },
+    {
+      "type": "task",
+      "id": "task:44.5-16",
+      "label": "Build lib/eval-data-access.cjs — unified CRUD module for eval projects, species, and generations (decision gad-203). Fil",
+      "status": "done",
+      "goal": "Build lib/eval-data-access.cjs — unified CRUD module for eval projects, species, and generations (decision gad-203). Filesystem-as-database: JSON files on disk are the database. Single shared Node module provides read (delegating to eval-loader.cjs for merge semantics) and write (create/update/archive for projects and species) operations. REST API routes at /api/dev/evals/projects/*, /api/dev/evals/projects/[id]/species/*, and /api/dev/evals/projects/[id]/species/[name]/generations. CLI commands: gad projects create/edit/archive, gad species list/create/edit/clone/archive. Editor server components rewired from static eval-data.generated.ts imports to runtime eval-data-access.cjs via eval-data-runtime.ts adapter. All type-safe, zero new type errors.",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": "eval-data-access,crud,data-layer,api-routes,cli,gad-203,filesystem-database"
+    },
+    {
+      "type": "task",
       "id": "task:42.2-46",
       "label": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**expr",
       "status": "planned",
@@ -3965,6 +3995,216 @@
       "skill": "",
       "taskType": "docs",
       "keywords": "docs,skill-lifecycle,verb-collapse,references,gad-198"
+    },
+    {
+      "type": "task",
+      "id": "task:45-01",
+      "label": "Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL s",
+      "status": "planned",
+      "goal": "Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL search param ?tab= routing.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "route,tabs,project-detail,scaffold"
+    },
+    {
+      "type": "task",
+      "id": "task:45-02",
+      "label": "Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, d",
+      "status": "planned",
+      "goal": "Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, decisions, phases, requirements, notes as typed props.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "data-adapter,planning-xml,server-component,loader"
+    },
+    {
+      "type": "task",
+      "id": "task:45-03",
+      "label": "Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/sy",
+      "status": "planned",
+      "goal": "Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "api-routes,planning-data,system-data,rest"
+    },
+    {
+      "type": "task",
+      "id": "task:45-04",
+      "label": "Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad",
+      "status": "planned",
+      "goal": "Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. Exports VOCAB object used by all components.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "vocabulary,constants,gad-166,gad-169,gad-189,terminology"
+    },
+    {
+      "type": "task",
+      "id": "task:45-05",
+      "label": "Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, s",
+      "status": "planned",
+      "goal": "Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "epigraphs,art-of-war,copy,visual-identity"
+    },
+    {
+      "type": "task",
+      "id": "task:45-06",
+      "label": "Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire int",
+      "status": "planned",
+      "goal": "Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire into Planning tab.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "component-migration,tasks-tab,project-scoped"
+    },
+    {
+      "type": "task",
+      "id": "task:45-07",
+      "label": "Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.",
+      "status": "planned",
+      "goal": "Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "component-migration,decisions-tab,project-scoped"
+    },
+    {
+      "type": "task",
+      "id": "task:45-08",
+      "label": "Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.",
+      "status": "planned",
+      "goal": "Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "component-migration,roadmap-tab,gantt,project-scoped"
+    },
+    {
+      "type": "task",
+      "id": "task:45-09",
+      "label": "Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.",
+      "status": "planned",
+      "goal": "Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "component-migration,requirements-tab,notes-tab,project-scoped"
+    },
+    {
+      "type": "task",
+      "id": "task:45-10",
+      "label": "Migrate Evolution tab components — PlanningWorkflowsTab + PlanningSkillCandidatesTab become per-project Evolution tab sh",
+      "status": "planned",
+      "goal": "Migrate Evolution tab components — PlanningWorkflowsTab + PlanningSkillCandidatesTab become per-project Evolution tab showing workflow patterns and proto-skills.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "component-migration,evolution-tab,workflows,skill-candidates,project-scoped"
+    },
+    {
+      "type": "task",
+      "id": "task:45-11",
+      "label": "Migrate System tab components — PlanningSystemStatCards + PlanningSystemRuntimeActivityPanel become per-project System t",
+      "status": "planned",
+      "goal": "Migrate System tab components — PlanningSystemStatCards + PlanningSystemRuntimeActivityPanel become per-project System tab fed by self-eval.json and trace data via command bridge.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "component-migration,system-tab,stats,runtime-activity,project-scoped"
+    },
+    {
+      "type": "task",
+      "id": "task:45-12",
+      "label": "Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content",
+      "status": "planned",
+      "goal": "Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content now lives per-project.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "planning-route,redirect,dashboard,cleanup"
+    },
+    {
+      "type": "task",
+      "id": "task:45-13",
+      "label": "Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human revi",
+      "status": "planned",
+      "goal": "Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "landing-page,workflow-viz,findings,marketing,overview"
+    },
+    {
+      "type": "task",
+      "id": "task:45-14",
+      "label": "Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base",
+      "status": "planned",
+      "goal": "Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "type-ramp,color-palette,visual-identity,css,gradients"
+    },
+    {
+      "type": "task",
+      "id": "task:45-15",
+      "label": "Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species",
+      "status": "planned",
+      "goal": "Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "vocabulary-audit,string-sweep,gad-166,gad-169,terminology"
+    },
+    {
+      "type": "task",
+      "id": "task:45-16",
+      "label": "Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful",
+      "status": "planned",
+      "goal": "Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "hero-copy,epigraphs,evolutionary-language,copy-pass"
+    },
+    {
+      "type": "task",
+      "id": "task:45-17",
+      "label": "Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metad",
+      "status": "planned",
+      "goal": "Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metadata references.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "logo,favicon,og-image,visual-identity"
+    },
+    {
+      "type": "task",
+      "id": "task:45-18",
+      "label": "Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft fi",
+      "status": "planned",
+      "goal": "Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "marketplace,project-market,integration,verification"
+    },
+    {
+      "type": "task",
+      "id": "task:45-19",
+      "label": "Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/",
+      "status": "planned",
+      "goal": "Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.",
+      "skill": "",
+      "taskType": "cleanup",
+      "keywords": "cleanup,dead-imports,planning-route,unused-files"
+    },
+    {
+      "type": "task",
+      "id": "task:45-20",
+      "label": "Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new ",
+      "status": "planned",
+      "goal": "Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new section is discoverable.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": "verification,build,vcs-audit,data-cid,type-check"
+    },
+    {
+      "type": "task",
+      "id": "task:45-21",
+      "label": "README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing",
+      "status": "planned",
+      "goal": "README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers.",
+      "skill": "",
+      "taskType": "docs",
+      "keywords": "readme,docs,vocabulary,copy-pass,external-facing"
     },
     {
       "type": "decision",
@@ -5387,6 +5627,30 @@
       "id": "skill:gad-check-todos",
       "label": "gad-check-todos",
       "source": "decision-citation"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-203",
+      "label": "Data architecture: filesystem-as-database with eval-data-access.cjs unified module",
+      "summary": "The editor's data layer uses the filesystem directly as the database — JSON files on disk (project.json, species.json, TRACE.json), no separate DB server. A single shared Node module (lib/eval-data-access.cjs) provides CRUD for both CLI and site API routes. Schema adds nullable createdAt/updatedAt/c"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-204",
+      "label": "Graphify is shelfware — native graph extractor is the production system",
+      "summary": "Graphify (Python) was never installed or run. All graph functionality (829 nodes, 1142 edges, 12.9x token savings, force-directed viz, auto-rebuild via file watcher) is our own zero-dep Node code in lib/graph-extractor.cjs. Graphify would only matter for reverse-engineering external codebases that h"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-205",
+      "label": "Multi-tenant platform vision — local-first data model maps to hosted",
+      "summary": "The operator envisions a hosted platform where users text an agent (via WhatsApp or similar) to build projects, paying per run. Each project is a repo. The data architecture must support: (1) local single-user dev (filesystem), (2) hosted multi-tenant (database). The migration path: build eval-data-"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-206",
+      "label": "Species are evolutionary branches of a project — inheritance-based configuration forking",
+      "summary": "Species are not just \"eval configurations\" — they are evolutionary branches of a project. Each species inherits the project's requirements, skills, and structure but configures differently (different workflow, different skill set, different constraints). Creating a species is like branching. Running"
     },
     {
       "type": "workflow",
@@ -10072,6 +10336,11 @@
     },
     {
       "source": "task:44.5-01b",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-01b",
       "target": "decision:gad-189",
       "type": "CITES"
     },
@@ -10096,6 +10365,11 @@
       "type": "BELONGS_TO"
     },
     {
+      "source": "task:44.5-01d",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:44.5-02",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
@@ -10106,22 +10380,22 @@
       "type": "USES_SKILL"
     },
     {
-      "source": "task:44.5-02b",
+      "source": "task:",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
     },
     {
-      "source": "task:44.5-02b",
+      "source": "task:",
       "target": "task:44.5-02",
       "type": "CITES"
     },
     {
-      "source": "task:44.5-03",
+      "source": "task:",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
     },
     {
-      "source": "task:44.5-03",
+      "source": "task:",
       "target": "task:44.5-02",
       "type": "CITES"
     },
@@ -10129,6 +10403,11 @@
       "source": "task:44.5-04",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-04",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:44.5-04",
@@ -10147,6 +10426,11 @@
     },
     {
       "source": "task:44.5-05",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-05",
       "target": "task:44.5-03",
       "type": "CITES"
     },
@@ -10154,6 +10438,11 @@
       "source": "task:44.5-06",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-06",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:44.5-06",
@@ -10169,6 +10458,11 @@
       "source": "task:44.5-07",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-07",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:44.5-07",
@@ -10197,6 +10491,11 @@
     },
     {
       "source": "task:44.5-08",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-08",
       "target": "task:6-8",
       "type": "CITES"
     },
@@ -10207,6 +10506,11 @@
     },
     {
       "source": "task:44.5-09",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-09",
       "target": "task:44.5-07",
       "type": "CITES"
     },
@@ -10214,6 +10518,11 @@
       "source": "task:44.5-10",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-10",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:44.5-10",
@@ -10366,6 +10675,51 @@
       "type": "CITES"
     },
     {
+      "source": "task:44.5-17",
+      "target": "phase:44.5",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-17",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-18",
+      "target": "phase:44.5",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-18",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-19",
+      "target": "phase:44.5",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-19",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-16",
+      "target": "phase:44.5",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44.5-16",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-16",
+      "target": "decision:gad-203",
+      "type": "CITES"
+    },
+    {
       "source": "task:42.2-46",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
@@ -10374,6 +10728,256 @@
       "source": "task:42.2-46",
       "target": "decision:gad-198",
       "type": "CITES"
+    },
+    {
+      "source": "task:45-01",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-02",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-03",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-04",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-04",
+      "target": "decision:gad-166",
+      "type": "CITES"
+    },
+    {
+      "source": "task:45-04",
+      "target": "decision:gad-169",
+      "type": "CITES"
+    },
+    {
+      "source": "task:45-04",
+      "target": "decision:gad-189",
+      "type": "CITES"
+    },
+    {
+      "source": "task:45-05",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-06",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-06",
+      "target": "task:45-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-06",
+      "target": "task:45-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-07",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-07",
+      "target": "task:45-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-07",
+      "target": "task:45-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-08",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-08",
+      "target": "task:45-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-08",
+      "target": "task:45-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-09",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-09",
+      "target": "task:45-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-09",
+      "target": "task:45-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-10",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-10",
+      "target": "task:45-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-10",
+      "target": "task:45-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-11",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-11",
+      "target": "task:45-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-11",
+      "target": "task:45-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-12",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-12",
+      "target": "task:45-06",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-12",
+      "target": "task:45-07",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-12",
+      "target": "task:45-08",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-12",
+      "target": "task:45-09",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-12",
+      "target": "task:45-10",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-12",
+      "target": "task:45-11",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-13",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-13",
+      "target": "task:45-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-14",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-15",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-15",
+      "target": "task:45-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-16",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-16",
+      "target": "task:45-05",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-16",
+      "target": "task:45-13",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-17",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-18",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-18",
+      "target": "task:45-13",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-19",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-19",
+      "target": "task:45-12",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-20",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-20",
+      "target": "task:45-19",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-21",
+      "target": "phase:45",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-21",
+      "target": "task:45-15",
+      "type": "DEPENDS_ON"
     },
     {
       "source": "decision:gad-92",
@@ -11986,6 +12590,11 @@
       "type": "REFERENCES"
     },
     {
+      "source": "decision:gad-204",
+      "target": "decision:gad-199",
+      "type": "CITES"
+    },
+    {
       "source": "decision:gad-199",
       "target": "task:42.2-45",
       "type": "CITES"
@@ -12403,21 +13012,21 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-16T06:03:11.956Z",
-    "nodeCount": 834,
-    "edgeCount": 1149,
+    "generated": "2026-04-16T11:05:56.325Z",
+    "nodeCount": 862,
+    "edgeCount": 1218,
     "nodeTypes": {
       "phase": 50,
-      "task": 355,
+      "task": 379,
       "skill": 128,
-      "decision": 197,
+      "decision": 201,
       "workflow": 104
     },
     "edgeTypes": {
-      "BELONGS_TO": 356,
-      "CITES": 458,
-      "DEPENDS_ON": 31,
-      "USES_SKILL": 144,
+      "BELONGS_TO": 381,
+      "CITES": 463,
+      "DEPENDS_ON": 57,
+      "USES_SKILL": 157,
       "REFERENCES": 81,
       "USES_WORKFLOW": 79
     }

@@ -25,13 +25,12 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Theory",
     links: [
-      { href: "/gad", label: "GAD", note: "what the framework is" },
-      { href: "/skeptic", label: "Skeptic", note: "devils advocate against our claims" },
     ],
   },
   {
     label: "Play",
     links: [
+      { href: "/library", label: "Library", note: "play all published generation builds" },
       { href: "/project-market", label: "Project Market", note: "browse all eval projects + playable builds" },
       { href: "/videos", label: "Videos", note: "walkthroughs" },
     ],
@@ -54,19 +53,16 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Catalog",
         links: [
-          { href: "/skills", label: "Skills", note: "every authored skill + provenance" },
-          { href: "/skills?tab=agents", label: "Agents", note: "subagent roster + usage" },
           { href: "/context-frameworks", label: "Context frameworks", note: "bare / GSD / GAD bundles" },
-          { href: "/gad", label: "Commands", note: "framework overview (CLI in quickstart + docs)" },
           { href: "/downloads", label: "Downloads", note: "eval templates + planning packs" },
         ],
       },
       {
         label: "Reference",
         links: [
-          { href: "/lineage", label: "Lineage", note: "GSD → RepoPlanner → GAD" },
+          { href: "/roadmap", label: "Evidence", note: "round-by-round outcomes and pressure history" },
           { href: "/standards", label: "Standards", note: "Anthropic guide + agentskills.io" },
-          { href: "/findings", label: "Findings", note: "experiment writeups + framework-level lessons" },
+          { href: "/roadmap", label: "Roadmap", note: "phases, rounds, and pressure progression" },
         ],
       },
       {
@@ -74,19 +70,16 @@ export const NAV_GROUPS: NavGroup[] = [
         links: [
           { href: "/security", label: "Security", note: "skill risks + certification" },
           { href: "/contribute", label: "Contribute", note: "clone and run your own" },
-          { href: "/feature-requests", label: "Feature Requests", note: "what we need from others" },
+          { href: "/contribute", label: "Contribute", note: "how to help and where to start" },
         ],
       },
     ],
   },
 ];
 
-export const NAV_TOP_LEVEL: NavLink[] = [
-  {
-    href: "/skeptic",
-    label: "Skeptic",
-    tint: "border-rose-500/30 bg-rose-500/10 text-rose-300 hover:border-rose-400 hover:bg-rose-500/20",
-  },
-];
+export const NAV_TOP_LEVEL: NavLink[] = [];
 
 export const NAV_GITHUB_HREF = "https://github.com/MagicbornStudios/get-anything-done";
+
+
+

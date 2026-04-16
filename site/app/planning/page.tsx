@@ -1,63 +1,110 @@
-import { Suspense } from "react";
-import { MarketingShell } from "@/components/site";
-import { HUMAN_WORKFLOWS, PLANNING_STATE, SIGNAL } from "@/lib/catalog.generated";
-import { ALL_TASKS, ALL_PHASES, ALL_DECISIONS, BUGS } from "@/lib/eval-data";
-import {
-  DEFAULT_PROJECT_ID,
-  REGISTERED_PROJECTS,
-} from "@/lib/project-config";
-import { PlanningGanttSprintProvider } from "./PlanningGanttSprintContext";
-import { PlanningTabbedContent } from "./PlanningTabbedContent";
+import Link from "next/link";
+import { MarketingShell, SiteSection } from "@/components/site";
+import { getEpigraph } from "@/lib/epigraphs";
+import { ALL_TASKS, ALL_PHASES } from "@/lib/eval-data";
+import { REGISTERED_PROJECTS } from "@/lib/project-config";
 
 export const metadata = {
-  title: "Planning state — GAD self-transparency",
+  title: "Planning Dashboard — GAD",
   description:
-    "Phases, tasks, decisions, roadmap, requirements, and bugs driving the get-anything-done framework.",
+    "Cross-project planning hub linking to per-project Planning, Evolution, and System tabs.",
 };
 
-// Task 44-30: route-level scoping via ?projectid=. BUGS carry a project
-// field so we filter here; tasks/phases/decisions are still single-project
-// at build time (Option B in scoping research, deferred to follow-up).
-type PageSearchParams = Promise<{ projectid?: string | string[] }>;
+/** Count items whose status is not done/cancelled. */
+function countOpen(
+  items: readonly { status?: string }[],
+): number {
+  return items.filter(
+    (t) => t.status !== "done" && t.status !== "cancelled",
+  ).length;
+}
 
-export default async function PlanningStatePage({
-  searchParams,
-}: {
-  searchParams?: PageSearchParams;
-}) {
-  const resolvedSearchParams = await searchParams;
-  const state = PLANNING_STATE;
-  const rawProjectId = resolvedSearchParams?.projectid;
-  const paramId = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
-  const currentProject =
-    paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
-      ? paramId
-      : DEFAULT_PROJECT_ID;
-  // Legacy hardcoded filter pinned BUGS to "gad"; keep that alias for the
-  // framework project id so pre-existing bug records stay visible.
-  const bugProjectAliases =
-    currentProject === "get-anything-done"
-      ? ["get-anything-done", "gad"]
-      : [currentProject];
-  const gadBugs = (BUGS ?? []).filter(
-    (b) => !b.project || bugProjectAliases.includes(b.project),
-  );
+export default function PlanningDashboardPage() {
+  const epigraph = getEpigraph("planning");
+
+  // Build-time counts from the default (GAD) dataset — shown on the GAD card.
+  // Per-project datasets are not yet available at this route; other projects
+  // show "--" until project-scoped data loading lands.
+  const gadOpenTasks = countOpen(ALL_TASKS);
+  const gadPhaseCount = ALL_PHASES.length;
 
   return (
     <MarketingShell>
-      <PlanningGanttSprintProvider phases={state.phases}>
-        <Suspense>
-          <PlanningTabbedContent
-            state={state}
-            allTasks={ALL_TASKS}
-            allPhases={ALL_PHASES}
-            allDecisions={ALL_DECISIONS}
-            gadBugs={gadBugs}
-            humanWorkflows={HUMAN_WORKFLOWS}
-            signal={SIGNAL}
-          />
-        </Suspense>
-      </PlanningGanttSprintProvider>
+      <SiteSection cid="planning-dashboard-site-section">
+        <div className="mx-auto max-w-4xl space-y-8 py-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Planning Dashboard
+            </h1>
+            {epigraph && (
+              <blockquote className="mt-3 border-l-2 border-muted-foreground/30 pl-4 text-sm italic text-muted-foreground">
+                <p>{epigraph.adapted}</p>
+                <footer className="mt-1 text-xs not-italic">
+                  — {epigraph.attribution}
+                </footer>
+              </blockquote>
+            )}
+            <p className="mt-4 text-sm text-muted-foreground">
+              Per-project planning, evolution, and system views. Select a
+              project to drill in.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {REGISTERED_PROJECTS.filter((p) => p.kind !== "evals").map(
+              (project) => {
+                const isGad = project.id === "get-anything-done";
+                const openTasks = isGad ? gadOpenTasks : null;
+                const phases = isGad ? gadPhaseCount : null;
+
+                return (
+                  <div
+                    key={project.id}
+                    className="rounded-lg border border-border bg-card p-5 shadow-sm"
+                  >
+                    <h2 className="text-lg font-semibold leading-tight">
+                      {project.id}
+                    </h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {project.kind}
+                    </p>
+
+                    <div className="mt-3 flex items-center gap-4 text-sm tabular-nums text-muted-foreground">
+                      <span>
+                        Phases: {phases !== null ? phases : "--"}
+                      </span>
+                      <span>
+                        Open tasks: {openTasks !== null ? openTasks : "--"}
+                      </span>
+                    </div>
+
+                    <nav className="mt-4 flex flex-wrap gap-2">
+                      <Link
+                        href={`/projects/${project.id}?tab=planning`}
+                        className="rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+                      >
+                        Planning
+                      </Link>
+                      <Link
+                        href={`/projects/${project.id}?tab=evolution`}
+                        className="rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+                      >
+                        Evolution
+                      </Link>
+                      <Link
+                        href={`/projects/${project.id}?tab=system`}
+                        className="rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+                      >
+                        System
+                      </Link>
+                    </nav>
+                  </div>
+                );
+              },
+            )}
+          </div>
+        </div>
+      </SiteSection>
     </MarketingShell>
   );
 }

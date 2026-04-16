@@ -9,7 +9,7 @@ import {
   type MouseEvent,
 } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { toast } from "sonner";
 import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
@@ -50,6 +50,7 @@ import {
 import { mergeUniqueMediaPaths } from "./vcMediaPaths";
 import { pickImagesFromSessionFolder, supportsVcLocalFolder, supportsVcOpenFilePicker } from "./vc-screenshot";
 import { VcPanelHoverAnchorContext } from "./VcPanelHoverAnchorContext";
+import { VcOctantDragSnippet } from "./VcOctantDragSnippet";
 import { Button } from "@/components/ui/button";
 import {
   collectScopedEntries,
@@ -89,6 +90,7 @@ type DevPanelProps =
       corner?: "left" | "right";
       componentTag?: RegistryEntry["componentTag"];
       searchHint?: string;
+      onDismiss?: () => void;
     };
 
 /** Depth pager — hint card docks beside the panel (`dockCorner`) like other VC chrome. */
@@ -102,6 +104,8 @@ function DevPanelDepthPager(props: {
   nextDisabled: boolean;
   /** Section scan cap from registry; omit in band mode. */
   maxScanDepth?: number;
+  /** While Control is held, disabled chevrons become dismiss (X) if this is set. */
+  onDismissPanel?: () => void;
 }) {
   const {
     dockCorner,
@@ -112,7 +116,34 @@ function DevPanelDepthPager(props: {
     prevDisabled,
     nextDisabled,
     maxScanDepth,
+    onDismissPanel,
   } = props;
+
+  const [ctrlHeld, setCtrlHeld] = useState(false);
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Control" || e.code === "ControlLeft" || e.code === "ControlRight") {
+        setCtrlHeld(true);
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Control" || e.code === "ControlLeft" || e.code === "ControlRight") {
+        setCtrlHeld(false);
+      }
+    };
+    const clear = () => setCtrlHeld(false);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", clear);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", clear);
+    };
+  }, []);
+
+  const prevClose = Boolean(ctrlHeld && prevDisabled && onDismissPanel);
+  const nextClose = Boolean(ctrlHeld && nextDisabled && onDismissPanel);
 
   return (
     <DevChromeHoverHint
@@ -128,6 +159,12 @@ function DevPanelDepthPager(props: {
             shell (back) or into nested{" "}
             <code className="rounded bg-muted/80 px-0.5 font-mono text-[9px]">Identified</code> blocks (forward).
           </p>
+          {onDismissPanel ? (
+            <p className="border-t border-border/50 pt-2 text-muted-foreground">
+              Hold <kbd className="rounded bg-muted/80 px-1 font-mono text-[9px]">Ctrl</kbd> to turn a blocked chevron
+              into <span className="text-foreground">close</span> (<span className="font-mono">X</span>).
+            </p>
+          ) : null}
           {maxScanDepth != null ? (
             <p className="border-t border-border/50 pt-2 text-muted-foreground">Section scan window: depth ≤ {maxScanDepth}.</p>
           ) : null}
@@ -143,12 +180,15 @@ function DevPanelDepthPager(props: {
           type="button"
           variant="ghost"
           size="icon"
-          className="size-5"
-          disabled={prevDisabled}
-          onClick={onPrev}
-          aria-label="Shallower nesting depth"
+          className={[
+            "size-5",
+            prevClose ? "text-destructive hover:bg-destructive/15 hover:text-destructive" : "",
+          ].join(" ")}
+          disabled={!prevClose && prevDisabled}
+          onClick={prevClose ? () => onDismissPanel?.() : onPrev}
+          aria-label={prevClose ? "Close context panel" : "Shallower nesting depth"}
         >
-          <ChevronLeft size={10} />
+          {prevClose ? <X size={10} strokeWidth={2.5} /> : <ChevronLeft size={10} />}
         </Button>
         <span className="w-16 text-center tabular-nums">
           d{currentDepth} - {visibleCount}
@@ -157,12 +197,15 @@ function DevPanelDepthPager(props: {
           type="button"
           variant="ghost"
           size="icon"
-          className="size-5"
-          disabled={nextDisabled}
-          onClick={onNext}
-          aria-label="Deeper nesting depth"
+          className={[
+            "size-5",
+            nextClose ? "text-destructive hover:bg-destructive/15 hover:text-destructive" : "",
+          ].join(" ")}
+          disabled={!nextClose && nextDisabled}
+          onClick={nextClose ? () => onDismissPanel?.() : onNext}
+          aria-label={nextClose ? "Close context panel" : "Deeper nesting depth"}
         >
-          <ChevronRight size={10} />
+          {nextClose ? <X size={10} strokeWidth={2.5} /> : <ChevronRight size={10} />}
         </Button>
       </div>
     </DevChromeHoverHint>
@@ -232,6 +275,7 @@ export function DevPanel(props: DevPanelProps) {
   const bandCorner = isBand ? props.corner ?? "right" : "right";
   const bandComponentTag = isBand ? props.componentTag : undefined;
   const bandSearchHint = isBand ? props.searchHint : undefined;
+  const bandOnDismiss = isBand ? props.onDismiss : undefined;
   const pathname = usePathname() ?? "";
   const {
     enabled,
@@ -252,6 +296,8 @@ export function DevPanel(props: DevPanelProps) {
     clearPersistedVcExportFolder,
     vcChordModifiers,
     vcExportDirHandleRef,
+    submitVcHandoffUpdateSnippet,
+    consumeVcHandoffQueuedSnippets,
   } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -554,6 +600,7 @@ export function DevPanel(props: DevPanelProps) {
   const finalizeUpdatePromptCopy = useCallback(
     (transcript: string) => {
       if (!panelHandoffEntriesResolved.length) return;
+      const queued = consumeVcHandoffQueuedSnippets();
       const prefix = buildUpdateLockedPrefixMerged(
         absolutePageUrl(pathname),
         panelHandoffEntriesResolved,
@@ -561,7 +608,8 @@ export function DevPanel(props: DevPanelProps) {
         ctrlLaneEntriesResolved,
       );
       const media = formatVcPromptMediaRefs(updatePromptMediaRefs, "update", promptVerbosity);
-      const resolved = `${prefix}${media}\n${transcript.trim()}`;
+      const qBlock = queued.length ? `${queued.join("\n\n")}\n\n` : "";
+      const resolved = `${prefix}${media}\n${qBlock}${transcript.trim()}`;
       navigator.clipboard?.writeText(resolved).catch(() => {});
       setHeaderCopied("update");
       window.setTimeout(() => setHeaderCopied(null), 1200);
@@ -573,6 +621,7 @@ export function DevPanel(props: DevPanelProps) {
       panelHandoffEntriesResolved,
       ctrlLaneEntriesResolved,
       updatePromptMediaRefs,
+      consumeVcHandoffQueuedSnippets,
     ],
   );
 
@@ -784,6 +833,56 @@ export function DevPanel(props: DevPanelProps) {
     [bandVisibleEntries, setSameDepthMergeCids, setCtrlLaneCids, setActiveCid, setHighlightCid, locate],
   );
 
+  /* -- Per-row landmark dictation ----------------------------------------- */
+  const rowDictationCidRef = useRef<string | null>(null);
+
+  const finalizeRowDictation = useCallback(
+    (transcript: string) => {
+      const cid = rowDictationCidRef.current;
+      rowDictationCidRef.current = null;
+      if (!cid) return;
+      const text = transcript.trim();
+      const snippet = text
+        ? `landmark identifier: ${cid} \u2014 ${text}`
+        : `landmark identifier: ${cid}`;
+      submitVcHandoffUpdateSnippet(snippet);
+      toast.success(text ? "Landmark note queued" : "Landmark identifier queued");
+    },
+    [submitVcHandoffUpdateSnippet],
+  );
+
+  const {
+    listening: rowDictationListening,
+    interim: rowDictationInterim,
+    toggle: toggleRowDictation,
+    stop: stopRowDictation,
+  } = useDictatedPromptCopy({
+    onFinalize: finalizeRowDictation,
+    listeningMessage: "Listening for landmark note\u2026 click mic again to stop.",
+  });
+
+  const handleRowMicToggle = useCallback(
+    (entry: RegistryEntry) => {
+      if (rowDictationListening && rowDictationCidRef.current === entry.cid) {
+        stopRowDictation();
+        return;
+      }
+      if (rowDictationListening) {
+        stopRowDictation();
+      }
+      rowDictationCidRef.current = entry.cid;
+      toggleRowDictation();
+    },
+    [rowDictationListening, stopRowDictation, toggleRowDictation],
+  );
+
+  const copyLandmark = useCallback((entry: RegistryEntry) => {
+    const text = `landmark: ${entry.cid}`;
+    navigator.clipboard?.writeText(text).catch(() => {});
+    toast.success("Landmark copied");
+  }, []);
+
+  /* -- Generic copy helpers ------------------------------------------------ */
   const copyValue = (value: string) => {
     navigator.clipboard?.writeText(value).catch(() => {});
     setHeaderCopied("cid");
@@ -880,14 +979,22 @@ export function DevPanel(props: DevPanelProps) {
                 onToggleVerbosity={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
                 firstAltLaneCid={firstAltLaneCid}
               />
-              <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
-                <div className="min-w-0">
-                  <p className="truncate">
-                    <span className="text-muted-foreground">Target - </span>
-                    <span className="font-medium text-foreground" title={panelTargetSummary}>
-                      {panelTargetSummary}
-                    </span>
-                  </p>
+              <div className="relative z-10 mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  <VcOctantDragSnippet
+                    dockCorner={sectionCorner}
+                    disabled={!panelHandoffEntriesResolved.length}
+                    entries={panelHandoffEntriesResolved}
+                    onCommitSnippet={submitVcHandoffUpdateSnippet}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate">
+                      <span className="text-muted-foreground">Target - </span>
+                      <span className="font-medium text-foreground" title={panelTargetSummary}>
+                        {panelTargetSummary}
+                      </span>
+                    </p>
+                  </div>
                 </div>
                 <DevPanelDepthPager
                   dockCorner={sectionCorner}
@@ -913,18 +1020,21 @@ export function DevPanel(props: DevPanelProps) {
                       sameDepthMergeCids.includes(entry.cid) && activeTargetCid !== entry.cid
                     }
                     ctrlLaneSelected={ctrlLaneCids.includes(entry.cid)}
+                    listening={rowDictationListening && rowDictationCidRef.current === entry.cid}
                     onRowClick={(e) => handleSectionRowClick(entry, e)}
                     onCopy={() => copyEntry(entry)}
+                    onLandmarkCopy={() => copyLandmark(entry)}
+                    onMicToggle={() => handleRowMicToggle(entry)}
                     onPrompt={() =>
                       setHandoffEntries(resolveHandoffEntries(entry, sectionVisibleEntries, sameDepthMergeCids))
                     }
                   />
                 ))}
               </div>
-              {listening || listeningChrome ? (
+              {listening || listeningChrome || rowDictationListening ? (
                 <p className="mt-1 max-w-full truncate text-[10px] text-emerald-300">
-                  <span className="font-semibold">Live — </span>
-                  {(listening ? interim : interimChrome) || "\u00a0"}
+                  <span className="font-semibold">{rowDictationListening ? `Landmark (${rowDictationCidRef.current})` : "Live"} — </span>
+                  {(rowDictationListening ? rowDictationInterim : listening ? interim : interimChrome) || "\u00a0"}
                 </p>
               ) : null}
               <div className="mt-1 text-[10px] text-muted-foreground">
@@ -1022,6 +1132,20 @@ export function DevPanel(props: DevPanelProps) {
                   {DEV_PANEL_BRAND_MARK}
                 </p>
               </DevChromeHoverHint>
+              {bandOnDismiss ? (
+                <DevChromeHoverHint dockCorner={corner} body={<p>Dismiss this context panel. Restore via the status badge.</p>}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-5 text-muted-foreground hover:text-foreground"
+                    onClick={bandOnDismiss}
+                    aria-label="Dismiss context panel"
+                  >
+                    <X size={10} />
+                  </Button>
+                </DevChromeHoverHint>
+              ) : null}
             </div>
             <DevPanelHandoffActionRow
               dockCorner={corner}
@@ -1037,14 +1161,22 @@ export function DevPanel(props: DevPanelProps) {
               onToggleVerbosity={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
               firstAltLaneCid={firstAltLaneCid}
             />
-            <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
-              <div className="min-w-0">
-                <p className="truncate">
-                  <span className="text-muted-foreground">Target - </span>
-                  <span className="font-medium text-foreground" title={panelTargetSummary}>
-                    {panelTargetSummary}
-                  </span>
-                </p>
+            <div className="relative z-10 mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+              <div className="flex min-w-0 flex-1 items-center gap-1">
+                <VcOctantDragSnippet
+                  dockCorner={corner}
+                  disabled={!panelHandoffEntriesResolved.length}
+                  entries={panelHandoffEntriesResolved}
+                  onCommitSnippet={submitVcHandoffUpdateSnippet}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate">
+                    <span className="text-muted-foreground">Target - </span>
+                    <span className="font-medium text-foreground" title={panelTargetSummary}>
+                      {panelTargetSummary}
+                    </span>
+                  </p>
+                </div>
               </div>
               <DevPanelDepthPager
                 dockCorner={corner}
@@ -1054,6 +1186,7 @@ export function DevPanel(props: DevPanelProps) {
                 onNext={() => setDepthIndex((v) => Math.min(bandDepths.length - 1, v + 1))}
                 prevDisabled={depthIndex <= 0}
                 nextDisabled={depthIndex >= bandDepths.length - 1}
+                onDismissPanel={bandOnDismiss}
               />
             </div>
             <div className="mt-1 max-h-24 min-h-0 space-y-1 overflow-y-auto overscroll-y-contain pr-1">
@@ -1067,18 +1200,21 @@ export function DevPanel(props: DevPanelProps) {
                     sameDepthMergeCids.includes(entry.cid) && activeTargetCid !== entry.cid
                   }
                   ctrlLaneSelected={ctrlLaneCids.includes(entry.cid)}
+                  listening={rowDictationListening && rowDictationCidRef.current === entry.cid}
                   onRowClick={(e) => handleBandRowClick(entry, e)}
                   onCopy={() => copyEntry(entry)}
+                  onLandmarkCopy={() => copyLandmark(entry)}
+                  onMicToggle={() => handleRowMicToggle(entry)}
                   onPrompt={() =>
                     setHandoffEntries(resolveHandoffEntries(entry, bandVisibleEntries, sameDepthMergeCids))
                   }
                 />
               ))}
             </div>
-            {listening || listeningChrome ? (
+            {listening || listeningChrome || rowDictationListening ? (
               <p className="mt-1 max-w-full truncate text-[10px] text-emerald-300">
-                <span className="font-semibold">Live — </span>
-                {(listening ? interim : interimChrome) || "\u00a0"}
+                <span className="font-semibold">{rowDictationListening ? `Landmark (${rowDictationCidRef.current})` : "Live"} — </span>
+                {(rowDictationListening ? rowDictationInterim : listening ? interim : interimChrome) || "\u00a0"}
               </p>
             ) : null}
             <DevPanelPositionControls
@@ -1086,6 +1222,7 @@ export function DevPanel(props: DevPanelProps) {
               corner={compactCorner}
               onEdgeChange={setCompactEdge}
               onCornerChange={setCompactCorner}
+              onDismissPanel={bandOnDismiss}
               trailing={
                 <DevPanelVcHintsFooter
                   dockCorner={corner}

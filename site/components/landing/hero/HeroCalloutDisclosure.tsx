@@ -7,13 +7,9 @@ export function HeroCalloutDisclosure() {
       N=2-5 runs per condition. One human reviewer. One task domain. The
       &quot;hypotheses&quot; on this site are exploratory observations, not
       tested claims. We hold every claim to its strongest critique on{" "}
-      <Link
-        href="/skeptic"
-        className="underline decoration-rose-300 underline-offset-2 hover:text-rose-100"
-      >
-        /skeptic
-      </Link>{" "}
+
       &mdash; read it before trusting any number on this site.
     </p>
   );
 }
+

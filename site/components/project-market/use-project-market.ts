@@ -41,9 +41,14 @@ export function useProjectMarket() {
     [],
   );
 
-  // Enriched projects
+  // Enriched projects — marketplace only shows published projects (task 44.5-01b).
+  // The detail page /projects/[...id] and `gad eval list` remain unfiltered.
   const enrichedProjects = useMemo(
-    () => enrichProjects(EVAL_PROJECTS, EVAL_RUNS, PLAYABLE_INDEX),
+    () => enrichProjects(
+      EVAL_PROJECTS.filter((p) => p.published === true),
+      EVAL_RUNS,
+      PLAYABLE_INDEX,
+    ),
     [],
   );
 

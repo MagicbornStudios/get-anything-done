@@ -1157,12 +1157,348 @@ const projectsAudit = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// gad projects create / edit / archive — eval project CRUD (decision gad-203)
+// ---------------------------------------------------------------------------
+
+const evalDataAccess = (() => {
+  let _mod;
+  return () => {
+    if (!_mod) _mod = require('../lib/eval-data-access.cjs');
+    return _mod;
+  };
+})();
+
+const projectsCreate = defineCommand({
+  meta: { name: 'create', description: 'Create a new eval project' },
+  args: {
+    id:          { type: 'string',  description: 'Project id (kebab-case)', required: true },
+    name:        { type: 'string',  description: 'Display name', default: '' },
+    description: { type: 'string',  description: 'Project description', default: '' },
+    domain:      { type: 'string',  description: 'Domain (game, site, cli, etc.)', default: '' },
+    techStack:   { type: 'string',  description: 'Tech stack (kaplay, next.js, etc.)', default: '' },
+    root:        { type: 'string',  description: 'Target eval root id', default: '' },
+    json:        { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const data = {};
+    if (args.name) data.name = args.name;
+    if (args.description) data.description = args.description;
+    if (args.domain) data.domain = args.domain;
+    if (args.techStack) data.techStack = args.techStack;
+    const opts = {};
+    if (args.root) opts.rootId = args.root;
+    const result = da.createProject(args.id, data, opts);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Created project "${args.id}" at ${result.projectDir}`);
+    }
+  },
+});
+
+const projectsEdit = defineCommand({
+  meta: { name: 'edit', description: 'Update an existing eval project\'s metadata' },
+  args: {
+    id:          { type: 'string',  description: 'Project id', required: true },
+    name:        { type: 'string',  description: 'Display name', default: '' },
+    description: { type: 'string',  description: 'Description', default: '' },
+    domain:      { type: 'string',  description: 'Domain', default: '' },
+    techStack:   { type: 'string',  description: 'Tech stack', default: '' },
+    tagline:     { type: 'string',  description: 'Tagline', default: '' },
+    json:        { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const updates = {};
+    if (args.name) updates.name = args.name;
+    if (args.description) updates.description = args.description;
+    if (args.domain) updates.domain = args.domain;
+    if (args.techStack) updates.techStack = args.techStack;
+    if (args.tagline) updates.tagline = args.tagline;
+    if (Object.keys(updates).length === 0) {
+      console.error('No fields to update. Pass --name, --description, --domain, --techStack, or --tagline.');
+      process.exit(1);
+    }
+    const result = da.updateProject(args.id, updates);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Updated project "${args.id}"`);
+    }
+  },
+});
+
+const projectsArchive = defineCommand({
+  meta: { name: 'archive', description: 'Archive (soft-delete) an eval project' },
+  args: {
+    id:   { type: 'string',  description: 'Project id', required: true },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const result = da.archiveProject(args.id);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Archived project "${args.id}" -> ${result.archivedTo}`);
+    }
+  },
+});
+
 const projectsCmd = defineCommand({
-  meta: { name: 'projects', description: 'List or initialize projects' },
+  meta: { name: 'projects', description: 'List, create, edit, or archive eval projects' },
   subCommands: {
     list: projectsList,
     init: projectsInit,
     audit: projectsAudit,
+    create: projectsCreate,
+    edit: projectsEdit,
+    archive: projectsArchive,
+  },
+});
+
+// ---------------------------------------------------------------------------
+// gad species create / edit / clone / archive — species CRUD (decision gad-203)
+// ---------------------------------------------------------------------------
+
+const speciesCreate = defineCommand({
+  meta: { name: 'create', description: 'Create a new species under a project' },
+  args: {
+    project:     { type: 'string',  description: 'Project id', required: true },
+    name:        { type: 'string',  description: 'Species name (kebab-case)', required: true },
+    workflow:    { type: 'string',  description: 'Workflow (gad, bare, emergent)', default: '' },
+    description: { type: 'string',  description: 'Description', default: '' },
+    inherits:    { type: 'string',  description: 'Parent species name', default: '' },
+    json:        { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const data = {};
+    if (args.workflow) data.workflow = args.workflow;
+    if (args.description) data.description = args.description;
+    if (args.inherits) data.inherits_from = args.inherits;
+    const result = da.createSpecies(args.project, args.name, data);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Created species "${args.name}" in project "${args.project}" at ${result.speciesDir}`);
+    }
+  },
+});
+
+const speciesEdit = defineCommand({
+  meta: { name: 'edit', description: 'Update a species\' metadata' },
+  args: {
+    project:     { type: 'string',  description: 'Project id', required: true },
+    name:        { type: 'string',  description: 'Species name', required: true },
+    workflow:    { type: 'string',  description: 'Workflow', default: '' },
+    description: { type: 'string',  description: 'Description', default: '' },
+    json:        { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const updates = {};
+    if (args.workflow) updates.workflow = args.workflow;
+    if (args.description) updates.description = args.description;
+    if (Object.keys(updates).length === 0) {
+      console.error('No fields to update. Pass --workflow or --description.');
+      process.exit(1);
+    }
+    const result = da.updateSpecies(args.project, args.name, updates);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Updated species "${args.name}" in project "${args.project}"`);
+    }
+  },
+});
+
+const speciesClone = defineCommand({
+  meta: { name: 'clone', description: 'Clone a species to a new name (optionally inheriting)' },
+  args: {
+    project:     { type: 'string',  description: 'Project id', required: true },
+    source:      { type: 'string',  description: 'Source species name', required: true },
+    name:        { type: 'string',  description: 'New species name (kebab-case)', required: true },
+    description: { type: 'string',  description: 'Override description', default: '' },
+    noInherit:   { type: 'boolean', description: 'Do not set inherits_from on the clone', default: false },
+    json:        { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const result = da.cloneSpecies(args.project, args.source, args.name, {
+      inherit: !args.noInherit,
+      description: args.description || undefined,
+    });
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Cloned "${args.source}" -> "${args.name}" in project "${args.project}"`);
+    }
+  },
+});
+
+const speciesArchive = defineCommand({
+  meta: { name: 'archive', description: 'Archive (soft-delete) a species' },
+  args: {
+    project: { type: 'string',  description: 'Project id', required: true },
+    name:    { type: 'string',  description: 'Species name', required: true },
+    json:    { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const result = da.archiveSpecies(args.project, args.name);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Archived species "${args.name}" in project "${args.project}" -> ${result.archivedTo}`);
+    }
+  },
+});
+
+const speciesList = defineCommand({
+  meta: { name: 'list', description: 'List all species for a project' },
+  args: {
+    project:  { type: 'string',  description: 'Project id', required: true },
+    resolved: { type: 'boolean', description: 'Show resolved (merged) configs', default: false },
+    json:     { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    if (args.resolved) {
+      const species = da.getAllResolvedSpecies(args.project);
+      if (args.json) {
+        console.log(JSON.stringify(species, null, 2));
+      } else {
+        for (const s of species) {
+          const gens = da.listGenerations(args.project, s.species);
+          console.log(`  ${s.species}  workflow=${s.workflow || '?'}  gens=${gens.length}`);
+        }
+      }
+    } else {
+      const raw = da.listSpecies(args.project);
+      if (args.json) {
+        console.log(JSON.stringify(raw, null, 2));
+      } else {
+        for (const [name, cfg] of Object.entries(raw)) {
+          const gens = da.listGenerations(args.project, name);
+          console.log(`  ${name}  workflow=${cfg.workflow || '?'}  gens=${gens.length}`);
+        }
+      }
+    }
+  },
+});
+
+const speciesCmd = defineCommand({
+  meta: { name: 'species', description: 'Manage eval species (list, create, edit, clone, archive)' },
+  subCommands: {
+    list: speciesList,
+    create: speciesCreate,
+    edit: speciesEdit,
+    clone: speciesClone,
+    archive: speciesArchive,
+  },
+});
+
+// ---------------------------------------------------------------------------
+// recipes commands (decision gad-206: recipes are branch templates)
+// ---------------------------------------------------------------------------
+
+const recipesList = defineCommand({
+  meta: { name: 'list', description: 'List all recipes for a project' },
+  args: {
+    project: { type: 'string',  description: 'Project id', required: true },
+    json:    { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const recipes = da.listRecipes(args.project);
+    if (args.json) {
+      console.log(JSON.stringify(recipes, null, 2));
+    } else {
+      if (recipes.length === 0) {
+        console.log(`No recipes in project "${args.project}"`);
+        return;
+      }
+      for (const r of recipes) {
+        const skills = (r.installedSkills || []).length;
+        const constraints = r.constraints ? Object.keys(r.constraints).length : 0;
+        console.log(`  ${r.slug}  workflow=${r.workflow || '?'}  constraints=${constraints}  skills=${skills}`);
+      }
+    }
+  },
+});
+
+const recipesCreate = defineCommand({
+  meta: { name: 'create', description: 'Create a new recipe under a project' },
+  args: {
+    project:     { type: 'string',  description: 'Project id', required: true },
+    name:        { type: 'string',  description: 'Recipe slug (kebab-case)', required: true },
+    workflow:    { type: 'string',  description: 'Workflow (gad, bare, emergent)', default: '' },
+    description: { type: 'string',  description: 'Description', default: '' },
+    json:        { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const data = {};
+    if (args.workflow) data.workflow = args.workflow;
+    if (args.description) data.description = args.description;
+    data.name = args.name;
+    const result = da.createRecipe(args.project, args.name, data);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Created recipe "${args.name}" in project "${args.project}" at ${result.recipeDir}`);
+    }
+  },
+});
+
+const recipesApply = defineCommand({
+  meta: { name: 'apply', description: 'Create a new species from a recipe template' },
+  args: {
+    project: { type: 'string',  description: 'Project id', required: true },
+    recipe:  { type: 'string',  description: 'Recipe slug', required: true },
+    species: { type: 'string',  description: 'New species name (kebab-case)', required: true },
+    json:    { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const result = da.applyRecipe(args.project, args.recipe, args.species);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Applied recipe "${args.recipe}" -> new species "${args.species}" in project "${args.project}"`);
+      console.log(`  ${result.speciesDir}`);
+    }
+  },
+});
+
+const recipesDelete = defineCommand({
+  meta: { name: 'delete', description: 'Delete a recipe' },
+  args: {
+    project: { type: 'string',  description: 'Project id', required: true },
+    name:    { type: 'string',  description: 'Recipe slug', required: true },
+    json:    { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const da = evalDataAccess();
+    const result = da.deleteRecipe(args.project, args.name);
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Deleted recipe "${args.name}" from project "${args.project}"`);
+    }
+  },
+});
+
+const recipesCmd = defineCommand({
+  meta: { name: 'recipes', description: 'Manage recipes (list, create, apply, delete)' },
+  subCommands: {
+    list: recipesList,
+    create: recipesCreate,
+    apply: recipesApply,
+    delete: recipesDelete,
   },
 });
 
@@ -12442,6 +12778,8 @@ const main = defineCommand({
     ls: lsCmd,
     workspace: workspaceCmd,
     projects: projectsCmd,
+    species: speciesCmd,
+    recipes: recipesCmd,
     session: sessionCmd,
     context: contextCmd,
     state: stateCmd,

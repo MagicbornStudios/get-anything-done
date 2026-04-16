@@ -26,6 +26,7 @@ export {
   ALL_PHASES,
   SEARCH_INDEX,
   TASK_PRESSURE,
+  BROOD_SKILL_AGGREGATION,
   type EvalRunRecord,
   type EvalScores,
   type EvalTemplateAsset,

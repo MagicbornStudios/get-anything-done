@@ -10,6 +10,8 @@ import { HUMAN_WORKFLOWS, REQUIREMENTS_HISTORY, SIGNAL, WORKFLOWS } from "@/lib/
 import type { TaskRecord, PhaseRecord, DecisionRecord, BugRecord } from "@/lib/eval-data";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
+import { PlanningLiveStatusPanel } from "./PlanningLiveStatusPanel";
+import { PlanningNotesTab } from "./PlanningNotesTab";
 import type { SkillCandidate } from "./PlanningSkillCandidatesTab";
 import type { PlanningSelfEvalLatest } from "./PlanningSystemTab";
 
@@ -18,9 +20,6 @@ const PlanningBugsTab = dynamic(() =>
 );
 const PlanningDecisionsTab = dynamic(() =>
   import("./PlanningDecisionsTab").then((m) => m.PlanningDecisionsTab),
-);
-const PlanningPhasesTab = dynamic(() =>
-  import("./PlanningPhasesTab").then((m) => m.PlanningPhasesTab),
 );
 const PlanningRequirementsTab = dynamic(() =>
   import("./PlanningRequirementsTab").then((m) => m.PlanningRequirementsTab),
@@ -54,9 +53,7 @@ interface Props {
 const BASE_PLANNING_TABS = new Set([
   "system",
   "planning",
-  "skill-candidates",
-  "proto-skills",
-  "workflows",
+  "evolution",
 ]);
 
 const WORKFLOWS_DATA: readonly Workflow[] = WORKFLOWS;
@@ -79,15 +76,23 @@ export function PlanningTabbedContent({
   const defaultTab = useMemo(() => {
     const raw = searchParams.get("tab") || "system";
     if (raw === "bugs") return gadBugs.length > 0 ? "bugs" : "system";
-    if (raw === "signal") return "workflows";
-    if (raw === "human-workflows" || raw === "discovery") return "workflows";
-    if (raw === "phases" || raw === "tasks" || raw === "decisions") return "planning";
+    if (raw === "signal") return "evolution";
+    if (raw === "human-workflows" || raw === "discovery") return "evolution";
+    if (raw === "workflows" || raw === "skill-candidates" || raw === "proto-skills") return "evolution";
+    if (raw === "phases" || raw === "tasks" || raw === "decisions" || raw === "roadmap" || raw === "requirements" || raw === "notes") return "planning";
     return BASE_PLANNING_TABS.has(raw) ? raw : "system";
   }, [searchParams, gadBugs.length]);
   const planningInnerDefault = useMemo(() => {
     const raw = searchParams.get("tab") || "";
-    if (raw === "phases" || raw === "tasks" || raw === "decisions") return raw;
-    return "phases";
+    if (raw === "tasks" || raw === "decisions" || raw === "roadmap" || raw === "requirements" || raw === "notes") return raw;
+    return "tasks";
+  }, [searchParams]);
+  const evolutionInnerDefault = useMemo(() => {
+    const raw = searchParams.get("tab") || "";
+    if (raw === "workflows" || raw === "signal" || raw === "human-workflows" || raw === "discovery") return "workflows";
+    if (raw === "skill-candidates") return "skill-candidates";
+    if (raw === "proto-skills") return "proto-skills";
+    return "workflows";
   }, [searchParams]);
 
   const openTasks = allTasks.filter((t) => t.status !== "done" && t.status !== "cancelled");
@@ -106,8 +111,7 @@ export function PlanningTabbedContent({
     if (
       selfEvalLatest ||
       (activeTab !== "system" &&
-        activeTab !== "skill-candidates" &&
-        activeTab !== "proto-skills")
+        activeTab !== "evolution")
     ) {
       return;
     }
@@ -136,6 +140,9 @@ export function PlanningTabbedContent({
     <SiteSection cid="planning-tabbed-content-site-section">
       <Identified as="PlanningTabbedContent">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Identified as="PlanningLiveStatusBand" className="mb-4">
+            <PlanningLiveStatusPanel />
+          </Identified>
           <Identified as="PlanningTabsList" className="mb-6">
             <TabsList className="flex-wrap">
               <Identified as="PlanningTabsTriggerSystem">
@@ -154,22 +161,12 @@ export function PlanningTabbedContent({
                   Bugs <span className="ml-1.5 tabular-nums text-muted-foreground">{gadBugs.length}</span>
                 </TabsTrigger>
               )}
-              <Identified as="PlanningTabsTriggerCandidates">
-                <TabsTrigger value="skill-candidates">
-                  Candidates{" "}
-                  <span className="ml-1.5 tabular-nums text-muted-foreground">{skillCandidates.length}</span>
-                </TabsTrigger>
-              </Identified>
-              <Identified as="PlanningTabsTriggerProtoSkills">
-                <TabsTrigger value="proto-skills">
-                  Proto-skills{" "}
-                  <span className="ml-1.5 tabular-nums text-muted-foreground">{protoSkills.length}</span>
-                </TabsTrigger>
-              </Identified>
-              <Identified as="PlanningTabsTriggerWorkflows">
-                <TabsTrigger value="workflows">
-                  Workflows{" "}
-                  <span className="ml-1.5 tabular-nums text-muted-foreground">{WORKFLOWS_DATA.length}</span>
+              <Identified as="PlanningTabsTriggerEvolution">
+                <TabsTrigger value="evolution">
+                  Evolution{" "}
+                  <span className="ml-1.5 tabular-nums text-muted-foreground">
+                    {WORKFLOWS_DATA.length + skillCandidates.length + protoSkills.length}
+                  </span>
                 </TabsTrigger>
               </Identified>
             </TabsList>
@@ -194,11 +191,6 @@ export function PlanningTabbedContent({
               <Tabs defaultValue={planningInnerDefault}>
                 <Identified as="PlanningInnerTabsList" className="mb-6">
                   <TabsList className="flex-wrap">
-                    <Identified as="PlanningInnerTabsTriggerPhases">
-                      <TabsTrigger value="phases">
-                        Phases <span className="ml-1.5 tabular-nums text-muted-foreground">{allPhases.length}</span>
-                      </TabsTrigger>
-                    </Identified>
                     <Identified as="PlanningInnerTabsTriggerTasks">
                       <TabsTrigger value="tasks">
                         Tasks <span className="ml-1.5 tabular-nums text-muted-foreground">{allTasks.length}</span>
@@ -217,14 +209,11 @@ export function PlanningTabbedContent({
                         Requirements <span className="ml-1.5 tabular-nums text-muted-foreground">{versions.length}</span>
                       </TabsTrigger>
                     </Identified>
+                    <Identified as="PlanningInnerTabsTriggerNotes">
+                      <TabsTrigger value="notes">Notes</TabsTrigger>
+                    </Identified>
                   </TabsList>
                 </Identified>
-
-                <TabsContent value="phases">
-                  <Identified as="PlanningTabPhases">
-                    <PlanningPhasesTab phases={state.phases} />
-                  </Identified>
-                </TabsContent>
 
                 <TabsContent value="tasks">
                   <Identified as="PlanningTabTasks">
@@ -249,6 +238,12 @@ export function PlanningTabbedContent({
                     <PlanningRequirementsTab versions={versions} />
                   </Identified>
                 </TabsContent>
+
+                <TabsContent value="notes">
+                  <Identified as="PlanningTabNotes">
+                    <PlanningNotesTab />
+                  </Identified>
+                </TabsContent>
               </Tabs>
             </Identified>
           </TabsContent>
@@ -261,25 +256,60 @@ export function PlanningTabbedContent({
             </TabsContent>
           )}
 
-          <TabsContent value="skill-candidates">
-            <Identified as="PlanningTabSkillCandidates">
-              <PlanningSkillCandidatesTab candidates={skillCandidates} />
-            </Identified>
-          </TabsContent>
+          <TabsContent value="evolution">
+            <Identified as="PlanningTabEvolution">
+              <Tabs defaultValue={evolutionInnerDefault}>
+                <Identified as="PlanningEvolutionTabsList" className="mb-6">
+                  <TabsList className="flex-wrap">
+                    <Identified as="PlanningEvolutionTriggerWorkflows">
+                      <TabsTrigger value="workflows">
+                        Workflows{" "}
+                        <span className="ml-1.5 tabular-nums text-muted-foreground">{WORKFLOWS_DATA.length}</span>
+                      </TabsTrigger>
+                    </Identified>
+                    <Identified as="PlanningEvolutionTriggerCandidates">
+                      <TabsTrigger value="skill-candidates">
+                        Candidates{" "}
+                        <span className="ml-1.5 tabular-nums text-muted-foreground">{skillCandidates.length}</span>
+                      </TabsTrigger>
+                    </Identified>
+                    <Identified as="PlanningEvolutionTriggerProtoSkills">
+                      <TabsTrigger value="proto-skills">
+                        Proto-skills{" "}
+                        <span className="ml-1.5 tabular-nums text-muted-foreground">{protoSkills.length}</span>
+                      </TabsTrigger>
+                    </Identified>
+                  </TabsList>
+                </Identified>
 
-          <TabsContent value="proto-skills">
-            <Identified as="PlanningTabProtoSkills">
-              <PlanningSkillCandidatesTab candidates={protoSkills} />
-            </Identified>
-          </TabsContent>
+                <TabsContent value="workflows">
+                  <Identified as="PlanningEvolutionPanelWorkflows">
+                    <Identified as="PlanningTabWorkflows">
+                      <PlanningWorkflowsTab
+                        workflows={WORKFLOWS_DATA}
+                        signal={signal}
+                        humanWorkflows={humanWorkflows}
+                      />
+                    </Identified>
+                  </Identified>
+                </TabsContent>
 
-          <TabsContent value="workflows">
-            <Identified as="PlanningTabWorkflows">
-              <PlanningWorkflowsTab
-                workflows={WORKFLOWS_DATA}
-                signal={signal}
-                humanWorkflows={humanWorkflows}
-              />
+                <TabsContent value="skill-candidates">
+                  <Identified as="PlanningEvolutionPanelCandidates">
+                    <Identified as="PlanningTabSkillCandidates">
+                      <PlanningSkillCandidatesTab candidates={skillCandidates} />
+                    </Identified>
+                  </Identified>
+                </TabsContent>
+
+                <TabsContent value="proto-skills">
+                  <Identified as="PlanningEvolutionPanelProtoSkills">
+                    <Identified as="PlanningTabProtoSkills">
+                      <PlanningSkillCandidatesTab candidates={protoSkills} />
+                    </Identified>
+                  </Identified>
+                </TabsContent>
+              </Tabs>
             </Identified>
           </TabsContent>
         </Tabs>

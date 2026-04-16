@@ -29,20 +29,8 @@ export function HeroCtaRow() {
         </Link>
       </Button>
 
-      <Button
-        variant="outline"
-        size="lg"
-        className="rounded-full border-border/70 bg-card/40 px-6 py-3 text-sm font-semibold"
-        asChild
-      >
-        <Link href="/methodology">
-          <ClipboardCheck size={16} aria-hidden />
-          Methodology
-        </Link>
-      </Button>
-
       <Button variant="ghost" size="lg" className="rounded-full px-6 py-3 text-sm font-medium text-muted-foreground" asChild>
-        <Link href="/gad">The hypothesis</Link>
+        <Link href="/roadmap">The evidence</Link>
       </Button>
 
       <Button variant="ghost" size="lg" className="rounded-full px-6 py-3 text-sm font-medium text-muted-foreground" asChild>
@@ -54,3 +42,6 @@ export function HeroCtaRow() {
     </div>
   );
 }
+
+
+

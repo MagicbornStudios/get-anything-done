@@ -6,7 +6,7 @@
 
 - [Home](https://get-anything-done.vercel.app/): Evaluate and evolve agents under measurable pressure
 - [Glossary](https://get-anything-done.vercel.app/glossary): Every domain term (CSH, freedom hypothesis, pressure, etc.)
-- [Skeptic](https://get-anything-done.vercel.app/skeptic): Devils-advocate critique of every hypothesis â€” read this first before trusting any number
+- [Hypotheses](https://get-anything-done.vercel.app/hypotheses): Active hypothesis tracks, evidence status, and caveats
 - [Lineage](https://get-anything-done.vercel.app/lineage): GSD â†’ RepoPlanner â†’ GAD
 
 ## Evaluation
@@ -26,7 +26,7 @@
 
 - [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone â†’ install â†’ open in Claude â†’ talk)
 - [Security](https://get-anything-done.vercel.app/security): Skill attack surfaces, mitigations, future certification model
-- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (356), phases (50), decisions (196), roadmap, requirements, bugs (4)
+- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (358), phases (50), decisions (202), roadmap, requirements, bugs (4)
 
 ## Machine-readable
 

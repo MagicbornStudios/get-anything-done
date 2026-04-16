@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiteSection } from "@/components/site";
 import { cn } from "@/lib/utils";
 import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
@@ -12,8 +12,47 @@ import { CommandPalette } from "./CommandPalette";
 import { BestiaryTab } from "./BestiaryTab";
 import { RecipesTab } from "./RecipesTab";
 import { DiffTree } from "./DiffTree";
+import { PreviewFrame } from "./PreviewFrame";
 
 type LeftTab = "dna" | "bestiary" | "recipes";
+
+/** Compact battery bar showing species/generation/file counts with color thresholds. */
+function ContextBatteryBar({
+  speciesCount,
+  generationCount,
+}: {
+  speciesCount: number;
+  generationCount: number;
+}) {
+  const level =
+    generationCount > 30 ? "red" : generationCount >= 10 ? "amber" : "green";
+  const colorMap = {
+    green: { bg: "bg-emerald-500/30", fill: "bg-emerald-500", text: "text-emerald-400" },
+    amber: { bg: "bg-amber-500/30", fill: "bg-amber-500", text: "text-amber-400" },
+    red: { bg: "bg-red-500/30", fill: "bg-red-500", text: "text-red-400" },
+  } as const;
+  const c = colorMap[level];
+  // Normalize to 0..1 with max at 50 gens
+  const pct = Math.min(generationCount / 50, 1);
+
+  return (
+    <div
+      data-cid="project-editor-context-battery"
+      className="flex items-center gap-1.5 rounded-full border border-border/30 bg-card/30 px-2 py-0.5"
+      title={`${speciesCount} species, ${generationCount} generations`}
+    >
+      <span className={cn("text-[9px] font-mono", c.text)}>
+        {speciesCount}sp {generationCount}gen
+      </span>
+      <div className={cn("h-2 w-10 rounded-full overflow-hidden", c.bg)}>
+        <div
+          className={cn("h-full rounded-full transition-all", c.fill)}
+          style={{ width: `${Math.max(pct * 100, 4)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 type CanvasMode =
   | { kind: "species" }
@@ -44,6 +83,11 @@ export function ProjectEditor({
   const [geneList, setGeneList] = useState<{ slug: string; name: string; status: string }[]>([]);
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
+
+  const contextStats = useMemo(() => ({
+    speciesCount: allProjects.length,
+    generationCount: allRuns.length,
+  }), [allProjects.length, allRuns.length]);
 
   // Auto-collapse both panes when iframe preview is showing — give game max space
   useEffect(() => {
@@ -123,24 +167,11 @@ export function ProjectEditor({
 
     if (canvasMode.kind === "preview") {
       return (
-        <div data-cid="project-editor-artifact-preview-site-section" className="flex h-full flex-col">
-          <div className="flex items-center gap-2 border-b border-border/40 px-3 py-1.5">
-            <span className="text-[11px] font-medium">{canvasMode.title}</span>
-            <button
-              type="button"
-              onClick={() => setCanvasMode({ kind: "species" })}
-              className="ml-auto text-[10px] text-muted-foreground hover:text-foreground"
-            >
-              Close
-            </button>
-          </div>
-          <iframe
-            src={canvasMode.url}
-            title={canvasMode.title}
-            className="flex-1 w-full border-0"
-            sandbox="allow-scripts allow-same-origin"
-          />
-        </div>
+        <PreviewFrame
+          src={canvasMode.url}
+          title={canvasMode.title}
+          onClose={() => setCanvasMode({ kind: "species" })}
+        />
       );
     }
 
@@ -188,12 +219,9 @@ export function ProjectEditor({
 
     if (selection.kind === "generation") {
       return (
-        <iframe
-          data-cid="project-editor-preview-pane-site-section"
+        <PreviewFrame
           src={`/playable/${project.project ?? project.id.split("/")[0]}/${selection.species}/${selection.version}/index.html`}
           title={`${selection.species} ${selection.version} preview`}
-          className="h-full w-full border-0"
-          sandbox="allow-scripts allow-same-origin"
         />
       );
     }
@@ -259,6 +287,12 @@ export function ProjectEditor({
             </>
           )}
 
+          {/* Context battery bar */}
+          <ContextBatteryBar
+            speciesCount={contextStats.speciesCount}
+            generationCount={contextStats.generationCount}
+          />
+
           {/* Mode toggle */}
           <div className="ml-auto flex items-center gap-1">
             {(["species", "graph"] as const).map((kind) => (
@@ -310,59 +344,59 @@ export function ProjectEditor({
               </button>
             </div>
           ) : (
-            <SiteSection
-              cid="project-editor-left-pane-site-section"
-              sectionShell={false}
-              className="w-72 shrink-0 border-r border-border/60 overflow-y-auto border-b-0"
+            <div
+              data-cid="project-editor-left-pane-site-section"
+              className="w-72 shrink-0 border-r border-border/60 overflow-y-auto h-full flex flex-col"
             >
-              <div className="flex flex-col">
-                <div className="flex border-b border-border/40">
-                  {(
-                    [
-                      { key: "dna", label: "DNA" },
-                      { key: "bestiary", label: "Bestiary" },
-                      { key: "recipes", label: "Recipes" },
-                    ] as const
-                  ).map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setActiveTab(tab.key)}
-                      className={cn(
-                        "flex-1 py-2 text-xs font-medium transition-colors",
-                        activeTab === tab.key
-                          ? "border-b-2 border-accent text-accent"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+              <div className="flex border-b border-border/40 shrink-0">
+                {(
+                  [
+                    { key: "dna", label: "DNA" },
+                    { key: "bestiary", label: "Bestiary" },
+                    { key: "recipes", label: "Recipes" },
+                  ] as const
+                ).map((tab) => (
                   <button
+                    key={tab.key}
                     type="button"
-                    onClick={() => setLeftCollapsed(true)}
-                    className="px-2 py-2 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors"
-                    title="Collapse left pane"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={cn(
+                      "flex-1 py-2 text-xs font-medium transition-colors",
+                      activeTab === tab.key
+                        ? "border-b-2 border-accent text-accent"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
                   >
-                    &laquo;
+                    {tab.label}
                   </button>
-                </div>
-                <div className="p-3">
-                  {activeTab === "dna" && <DnaEditor onPreview={handlePreview} />}
-                  {activeTab === "bestiary" && (
-                    <BestiaryTab
-                      allProjects={allProjects}
-                      allRuns={allRuns}
-                      selection={selection}
-                      onSelect={setSelection}
-                    />
-                  )}
-                  {activeTab === "recipes" && (
-                    <RecipesTab allProjects={allProjects} />
-                  )}
-                </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setLeftCollapsed(true)}
+                  className="px-2 py-2 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors"
+                  title="Collapse left pane"
+                >
+                  &laquo;
+                </button>
               </div>
-            </SiteSection>
+              <div className="p-3 flex-1 overflow-y-auto">
+                {activeTab === "dna" && <DnaEditor onPreview={handlePreview} />}
+                {activeTab === "bestiary" && (
+                  <BestiaryTab
+                    allProjects={allProjects}
+                    allRuns={allRuns}
+                    selection={selection}
+                    onSelect={setSelection}
+                    projectId={project.project ?? project.id.split("/")[0]}
+                  />
+                )}
+                {activeTab === "recipes" && (
+                  <RecipesTab
+                    projectId={project.project ?? project.id.split("/")[0]}
+                  />
+                )}
+              </div>
+            </div>
           )}
 
           {/* ── Canvas (center) ────────────────────────────── */}
@@ -386,12 +420,11 @@ export function ProjectEditor({
               </button>
             </div>
           ) : (
-            <SiteSection
-              cid="project-editor-right-pane-site-section"
-              sectionShell={false}
-              className="w-64 shrink-0 border-l border-border/60 overflow-y-auto border-b-0"
+            <div
+              data-cid="project-editor-right-pane-site-section"
+              className="w-64 shrink-0 border-l border-border/60 h-full flex flex-col"
             >
-              <div className="flex items-center justify-between border-b border-border/40 px-3 py-1.5">
+              <div className="flex items-center justify-between border-b border-border/40 px-3 py-1.5 shrink-0">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Inspector
                 </span>
@@ -404,15 +437,17 @@ export function ProjectEditor({
                   &raquo;
                 </button>
               </div>
-              <InspectorPane
-                project={project}
-                allProjects={allProjects}
-                allRuns={allRuns}
-                selection={selection}
-                onCompare={handleCompare}
-              />
-              <LiveDataPanel />
-            </SiteSection>
+              <div className="flex-1 overflow-y-auto">
+                <InspectorPane
+                  project={project}
+                  allProjects={allProjects}
+                  allRuns={allRuns}
+                  selection={selection}
+                  onCompare={handleCompare}
+                />
+                <LiveDataPanel />
+              </div>
+            </div>
           )}
         </div>
       </SiteSection>

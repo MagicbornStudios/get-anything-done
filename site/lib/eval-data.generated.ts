@@ -232,6 +232,7 @@ export interface EvalProjectMeta {
   domain: string | null;
   techStack: string | null;
   buildRequirement: string | null;
+  published?: boolean;
 }
 
 export interface ProducedArtifacts {
@@ -4674,6 +4675,42 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-206",
+    "title": "Species are evolutionary branches of a project — inheritance-based configuration forking",
+    "summary": "Species are not just \"eval configurations\" — they are evolutionary branches of a project. Each species inherits the project's requirements, skills, and structure but configures differently (different workflow, different skill set, different constraints). Creating a species is like branching. Running a generation is like a commit on that branch. The project is the monorepo-shaped GAD project with .planning/ structure and sink compilation. The sink compiles all species and generations into sections that make up the project editor view. Species editing happens in the inspector sidebar (confirmed UX). The editor flow mirrors GAD's own loop — subagents can work on specific species sections (requirements, skills, config) while the project-level context stays global. This is an evolutionary branching mechanism: species diverge from the project trunk, generations accumulate on each branch, and the bestiary is the read-only view of all branches and their history. Recipes are templates that produce new branches (draft species). The project shape in the editor is the same .planning/ monorepo shape GAD itself uses — dogfooding the framework's own structure as the editing surface.",
+    "impact": "Species editor confirmed as inspector sidebar. Project shape = .planning/ monorepo shape. Species = evolutionary branch (inherits project, configures differently). Generation = commit on a branch. Recipe = branch template. Sink compiles all branches into the editor view. Subagents can work on species-scoped sections. This framing guides all future editor and marketplace work."
+  },
+  {
+    "id": "gad-205",
+    "title": "Multi-tenant platform vision — local-first data model maps to hosted",
+    "summary": "The operator envisions a hosted platform where users text an agent (via WhatsApp or similar) to build projects, paying per run. Each project is a repo. The data architecture must support: (1) local single-user dev (filesystem), (2) hosted multi-tenant (database). The migration path: build eval-data-access.cjs as the abstraction layer now, swap the backend later. Key concerns: generation-level application data (game DBs, app backends) is per-project not per-platform; user/billing association deferred but schema leaves room; DB viewer needs to separate framework-research data from project-operational data.",
+    "impact": "Data architecture designed for portability. No premature infrastructure. Local filesystem → database swap is the migration path. WhatsApp/messaging integration is a future platform layer, not a framework concern."
+  },
+  {
+    "id": "gad-204",
+    "title": "Graphify is shelfware — native graph extractor is the production system",
+    "summary": "Graphify (Python) was never installed or run. All graph functionality (829 nodes, 1142 edges, 12.9x token savings, force-directed viz, auto-rebuild via file watcher) is our own zero-dep Node code in lib/graph-extractor.cjs. Graphify would only matter for reverse-engineering external codebases that have no .planning/ structure — it uses LLMs/vision/whisper to infer entities from unstructured content. Our extractor parses known XML schemas via regex. The gad try system can stage Graphify for future reverse-engineer use cases but it is not part of the framework core. Supersedes gad-199 which incorrectly stated Graphify was accepted as a dependency.",
+    "impact": "No Python dependency in the framework. The native extractor is the canonical graph system. Reverse-engineer skill has a tiered fallback (native → pdf-parse → graphify-if-installed → manual). Decision gad-199 superseded."
+  },
+  {
+    "id": "gad-203",
+    "title": "Data architecture: filesystem-as-database with eval-data-access.cjs unified module",
+    "summary": "The editor's data layer uses the filesystem directly as the database — JSON files on disk (project.json, species.json, TRACE.json), no separate DB server. A single shared Node module (lib/eval-data-access.cjs) provides CRUD for both CLI and site API routes. Schema adds nullable createdAt/updatedAt/createdBy to project.json and species.json. Runtime API at /api/dev/evals/ provides REST routes for projects, species, generations, and queries. The prebuild-generated TS files remain the production path for the static site — the runtime API is additive for dev. This maps directly to database tables when going hosted (swap filesystem backend for DB behind same API).",
+    "impact": "New module lib/eval-data-access.cjs. New API routes /api/dev/evals/*. New CLI commands gad projects create/edit/archive, gad species create/edit/clone/archive. Graph gains eval-project/eval-species/eval-run node types. Editor rewired from generated TS to runtime API. DB viewer collections split into framework-research vs project-operational."
+  },
+  {
+    "id": "gad-202",
+    "title": "All GAD workflows prefer `gad query` over raw XML reads for targeted lookups",
+    "summary": "All GAD skill and workflow instructions now prefer `gad query` over raw XML reads when `useGraphQuery=true` is set in gad-config.toml. Skills updated: gad-plan-phase (query decisions/tasks before planning), gad-execute-phase (query planned tasks in phase), gad-verify-work (query done tasks in phase), gad-check-todos (query open tasks). Snapshot task listing uses graph-backed path when enabled. Task-checkpoint workflow updated to reference gad query. Graceful fallback to raw XML when graph query is unavailable.",
+    "impact": "Agents following updated skills will use graph queries for 12.9x token savings on targeted lookups. Snapshot command uses graph-backed task listing. All changes are gated on the existing useGraphQuery feature flag — no behavioral change when flag is false."
+  },
+  {
+    "id": "gad-201",
+    "title": "Graph query is the default lookup mechanism for all GAD projects",
+    "summary": "Graph queries (gad query, gad tasks --graph, gad state --graph) are the default for targeted planning lookups across all GAD projects. 12.9x token savings (1770 tokens raw vs 137 tokens graph query). ~320ms rebuild, zero external deps. Auto-rebuild hooks on task claim/release and state set-next-action keep graph.json fresh. New gad-config.toml template includes useGraphQuery=true. Snapshot gains GRAPH section (node/edge counts, types, top 5 most-connected nodes). AGENTS.md and gad-loop.md updated.",
+    "impact": "All new projects get graph queries enabled by default. gad tasks/state gain --graph flag. Snapshot includes GRAPH section in full mode. gad-loop.md flowchart includes graph rebuild step 4.5. Feature flag useGraphQuery=false for fallback."
+  },
   {
     "id": "gad-200",
     "title": "Post-shed cleanup pass: review code touched by shed skills, remove dead code, re-graphify",
@@ -11441,9 +11478,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44.5-01b",
     "phaseId": "44.5",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.",
     "keywords": [
@@ -11507,42 +11544,11 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": []
   },
   {
-    "id": "44.5-02b",
-    "phaseId": "44.5",
-    "status": "planned",
-    "agentId": null,
-    "skill": null,
-    "type": "site",
-    "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.",
-    "keywords": [
-      "brood-editor",
-      "dev-bridge",
-      "security",
-      "hardening"
-    ],
-    "depends": []
-  },
-  {
-    "id": "44.5-03",
-    "phaseId": "44.5",
-    "status": "planned",
-    "agentId": null,
-    "skill": null,
-    "type": "site",
-    "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild).",
-    "keywords": [
-      "brood-editor",
-      "filesystem",
-      "local-dev"
-    ],
-    "depends": []
-  },
-  {
     "id": "44.5-04",
     "phaseId": "44.5",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited project's species rows, each species's brood (accumulated generations), and the cross-species view for the same project. Reuses phase 44 marketplace components but flips affordances from browse to \"active editing\" with visible row-level mutation indicators. Every row gets a cid. Per decision gad-189 the vocabulary is locked — inspector pane labels read \"Species\", \"Brood\", \"Generation\", \"Recipe\" and must not drift.",
     "keywords": [
@@ -11559,9 +11565,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44.5-05",
     "phaseId": "44.5",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.",
     "keywords": [
@@ -11650,9 +11656,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44.5-10",
     "phaseId": "44.5",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport.",
     "keywords": [
@@ -11704,9 +11710,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44.5-13",
     "phaseId": "44.5",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "DNA Editor action row wiring via the 44.5-02 dev bridge. Each gene state gets state-appropriate buttons that spawn the corresponding CLI command and stream output via SSE: **Try** (run `gad try &lt;ref&gt;` for a URL/slug/path input form), **Promote** (run `gad evolution promote &lt;slug&gt;` on a mutation), **Shed** (run `gad evolution shed &lt;slug&gt;` or `discard`), **Cleanup** (run `gad try cleanup &lt;slug&gt;` on an expressed trial), **Copy prompt** (read ENTRY.md + use the existing clipboard helper from 42.2-40.a), **Preview** (load the trial artifact into the right-pane iframe — 44.5-14's scope). Every button is a `SiteSection` with a deterministic cid (`dna-editor-action-&lt;verb&gt;-&lt;slug&gt;-site-section`). Depends on 44.5-11 (scaffold), 44.5-12 (list population), 44.5-02 (dev bridge). Per decision gad-198.",
     "keywords": [
@@ -11722,9 +11728,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44.5-14",
     "phaseId": "44.5",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Iframe preview integration for DNA Editor trial artifacts. Extends the 44.5-10 iframe live-preview primitive to detect and render non-generation artifacts: auto-detect `graph.html` (graphify trials), generic `index.html` (codebase maps, game builds), or a SKILL.md-declared `outputs:` path. When an operator clicks Preview on an expressed trial, the right pane loads the detected artifact in the sandboxed iframe. Integrates with the Visual Context System — the iframe wrapper gets a cid derived from `&lt;slug&gt;-preview-iframe-site-section`. Falls back to a \"no viewable artifact\" placeholder when no HTML output is detected. Depends on 44.5-13 (Preview button) and 44.5-10 (iframe primitive). Per decision gad-198.",
     "keywords": [
@@ -11741,9 +11747,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "44.5-15",
     "phaseId": "44.5",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "DNA Editor command+K shortcuts. Integrates with 42.2-43's command+K global search to add gene-lifecycle shortcuts: typing \"try &lt;ref&gt;\" triggers the same flow as the Try button; \"promote &lt;slug&gt;\" runs evolution promote; \"shed &lt;slug&gt;\" runs evolution shed; \"preview &lt;slug&gt;\" loads the trial artifact into the iframe. Autocompletes slug names from the current DNA Editor's enumerated genes. Depends on 44.5-13 (action wiring) and 42.2-43 (command+K infrastructure). Per decision gad-198.",
     "keywords": [
@@ -11753,6 +11759,80 @@ export const ALL_TASKS: TaskRecord[] = [
       "search",
       "project-editor",
       "gad-198"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-17",
+    "phaseId": "44.5",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "VCS context panel dismiss/expand — add X dismiss button to band dev panels, localStorage-backed dismissed set, \"Reset N dismissed\" in status badge. Addresses panel noise on dense pages like the editor.",
+    "keywords": [
+      "vcs",
+      "context-panel",
+      "dismiss",
+      "expand",
+      "devid",
+      "ux"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-18",
+    "phaseId": "44.5",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "VCS speech capture + landmark neutral prompt — add mic icon and landmark icon per panel list item row. Mic captures speech and injects \"landmark identifier: {cid} --- {transcribed text}\" as freeform prompt snippet. Landmark copies \"landmark: {cid}\" to clipboard. Neutral prompt with no CRUD verb for spatial/layout references.",
+    "keywords": [
+      "vcs",
+      "speech",
+      "landmark",
+      "dictation",
+      "prompt",
+      "devpanel",
+      "ux"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-19",
+    "phaseId": "44.5",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Editor pane height fix — left pane and inspector pane did not extend full viewport height. Switched from SiteSection wrappers to plain div elements with h-full + flex layout for proper height propagation in the flex container.",
+    "keywords": [
+      "editor",
+      "height",
+      "layout",
+      "flex",
+      "css",
+      "ux"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-16",
+    "phaseId": "44.5",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Build lib/eval-data-access.cjs — unified CRUD module for eval projects, species, and generations (decision gad-203). Filesystem-as-database: JSON files on disk are the database. Single shared Node module provides read (delegating to eval-loader.cjs for merge semantics) and write (create/update/archive for projects and species) operations. REST API routes at /api/dev/evals/projects/*, /api/dev/evals/projects/[id]/species/*, and /api/dev/evals/projects/[id]/species/[name]/generations. CLI commands: gad projects create/edit/archive, gad species list/create/edit/clone/archive. Editor server components rewired from static eval-data.generated.ts imports to runtime eval-data-access.cjs via eval-data-runtime.ts adapter. All type-safe, zero new type errors.",
+    "keywords": [
+      "eval-data-access",
+      "crud",
+      "data-layer",
+      "api-routes",
+      "cli",
+      "gad-203",
+      "filesystem-database"
     ],
     "depends": []
   },
@@ -12152,6 +12232,48 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-206",
+    "title": "Species are evolutionary branches of a project — inheritance-based configuration forking",
+    "kind": "decision",
+    "href": "/decisions#gad-206",
+    "body": "gad-206 species are evolutionary branches of a project — inheritance-based configuration forking species are not just \"eval configurations\" — they are evolutionary branches of a project. each species inherits the project's requirements, skills, and structure but configures differently (different workflow, different skill set, different constraints). creating a species is like branching. running a generation is like a commit on that branch. the project is the monorepo-shaped gad project with ."
+  },
+  {
+    "id": "gad-205",
+    "title": "Multi-tenant platform vision — local-first data model maps to hosted",
+    "kind": "decision",
+    "href": "/decisions#gad-205",
+    "body": "gad-205 multi-tenant platform vision — local-first data model maps to hosted the operator envisions a hosted platform where users text an agent (via whatsapp or similar) to build projects, paying per run. each project is a repo. the data architecture must support: (1) local single-user dev (filesystem), (2) hosted multi-tenant (database). the migration path: build eval-data-access.cjs as the abstraction layer now, swap the backend later. key concerns: generation-level appl"
+  },
+  {
+    "id": "gad-204",
+    "title": "Graphify is shelfware — native graph extractor is the production system",
+    "kind": "decision",
+    "href": "/decisions#gad-204",
+    "body": "gad-204 graphify is shelfware — native graph extractor is the production system graphify (python) was never installed or run. all graph functionality (829 nodes, 1142 edges, 12.9x token savings, force-directed viz, auto-rebuild via file watcher) is our own zero-dep node code in lib/graph-extractor.cjs. graphify would only matter for reverse-engineering external codebases that have no .planning/ structure — it uses llms/vision/whisper to infer entities from unstructured conten"
+  },
+  {
+    "id": "gad-203",
+    "title": "Data architecture: filesystem-as-database with eval-data-access.cjs unified module",
+    "kind": "decision",
+    "href": "/decisions#gad-203",
+    "body": "gad-203 data architecture: filesystem-as-database with eval-data-access.cjs unified module the editor's data layer uses the filesystem directly as the database — json files on disk (project.json, species.json, trace.json), no separate db server. a single shared node module (lib/eval-data-access.cjs) provides crud for both cli and site api routes. schema adds nullable createdat/updatedat/createdby to project.json and species.json. runtime api at /api/dev/evals/ provides rest routes for p"
+  },
+  {
+    "id": "gad-202",
+    "title": "All GAD workflows prefer `gad query` over raw XML reads for targeted lookups",
+    "kind": "decision",
+    "href": "/decisions#gad-202",
+    "body": "gad-202 all gad workflows prefer `gad query` over raw xml reads for targeted lookups all gad skill and workflow instructions now prefer `gad query` over raw xml reads when `usegraphquery=true` is set in gad-config.toml. skills updated: gad-plan-phase (query decisions/tasks before planning), gad-execute-phase (query planned tasks in phase), gad-verify-work (query done tasks in phase), gad-check-todos (query open tasks). snapshot task listing uses graph-backed path when enabled. tas"
+  },
+  {
+    "id": "gad-201",
+    "title": "Graph query is the default lookup mechanism for all GAD projects",
+    "kind": "decision",
+    "href": "/decisions#gad-201",
+    "body": "gad-201 graph query is the default lookup mechanism for all gad projects graph queries (gad query, gad tasks --graph, gad state --graph) are the default for targeted planning lookups across all gad projects. 12.9x token savings (1770 tokens raw vs 137 tokens graph query). ~320ms rebuild, zero external deps. auto-rebuild hooks on task claim/release and state set-next-action keep graph.json fresh. new gad-config.toml template includes usegraphquery=true. snapshot gains g"
+  },
   {
     "id": "gad-200",
     "title": "Post-shed cleanup pass: review code touched by shed skills, remove dead code, re-graphify",
@@ -15912,20 +16034,6 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "44.5-02 dev-server command bridge: node child-process bridge behind a dev-only api route that rejects all requests unless node_env=development. first cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor's happy path is proven. stream stdout/stderr back to the browser via server-sent events or similar. explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod. brood-editor dev-bridge security local-dev"
   },
   {
-    "id": "44.5-02b",
-    "title": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad",
-    "kind": "task",
-    "href": "/planning?tab=tasks#44.5-02b",
-    "body": "44.5-02b hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. keep the node_env=development gate as the primary safety â€” the allow-list is defense in depth. brood-editor dev-bridge security hardening"
-  },
-  {
-    "id": "44.5-03",
-    "title": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species over",
-    "kind": "task",
-    "href": "/planning?tab=tasks#44.5-03",
-    "body": "44.5-03 live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. no schema validation in this task â€” focus on the round-trip (read file â†’ edit in browser â†’ write file â†’ trigger rebuild). brood-editor filesystem local-dev"
-  },
-  {
     "id": "44.5-04",
     "title": "Species/population/generation/brood capture surfaces inside the editor: inspector panes showing the currently-edited pro",
     "kind": "task",
@@ -16008,6 +16116,34 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#44.5-15",
     "body": "44.5-15 dna editor command+k shortcuts. integrates with 42.2-43's command+k global search to add gene-lifecycle shortcuts: typing \"try &lt;ref&gt;\" triggers the same flow as the try button; \"promote &lt;slug&gt;\" runs evolution promote; \"shed &lt;slug&gt;\" runs evolution shed; \"preview &lt;slug&gt;\" loads the trial artifact into the iframe. autocompletes slug names from the current dna editor's enumerated genes. depends on 44.5-13 (action wiring) and 42.2-43 (command+k infrastructure). per decision gad-198. dna-editor command-k shortcuts search project-editor gad-198"
+  },
+  {
+    "id": "44.5-17",
+    "title": "VCS context panel dismiss/expand — add X dismiss button to band dev panels, localStorage-backed dismissed set, \"Reset N ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-17",
+    "body": "44.5-17 vcs context panel dismiss/expand — add x dismiss button to band dev panels, localstorage-backed dismissed set, \"reset n dismissed\" in status badge. addresses panel noise on dense pages like the editor. vcs context-panel dismiss expand devid ux"
+  },
+  {
+    "id": "44.5-18",
+    "title": "VCS speech capture + landmark neutral prompt — add mic icon and landmark icon per panel list item row. Mic captures spee",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-18",
+    "body": "44.5-18 vcs speech capture + landmark neutral prompt — add mic icon and landmark icon per panel list item row. mic captures speech and injects \"landmark identifier: {cid} --- {transcribed text}\" as freeform prompt snippet. landmark copies \"landmark: {cid}\" to clipboard. neutral prompt with no crud verb for spatial/layout references. vcs speech landmark dictation prompt devpanel ux"
+  },
+  {
+    "id": "44.5-19",
+    "title": "Editor pane height fix — left pane and inspector pane did not extend full viewport height. Switched from SiteSection wra",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-19",
+    "body": "44.5-19 editor pane height fix — left pane and inspector pane did not extend full viewport height. switched from sitesection wrappers to plain div elements with h-full + flex layout for proper height propagation in the flex container. editor height layout flex css ux"
+  },
+  {
+    "id": "44.5-16",
+    "title": "Build lib/eval-data-access.cjs — unified CRUD module for eval projects, species, and generations (decision gad-203). Fil",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-16",
+    "body": "44.5-16 build lib/eval-data-access.cjs — unified crud module for eval projects, species, and generations (decision gad-203). filesystem-as-database: json files on disk are the database. single shared node module provides read (delegating to eval-loader.cjs for merge semantics) and write (create/update/archive for projects and species) operations. rest api routes at /api/dev/evals/projects/*, /api/dev/evals/projects/[id]/species/*, and /api/dev/evals/projects/[id]/species/[name]/generations. cli commands: gad projects create/edit/archive, gad species list/create/edit/clone/archive. editor server components rewired from static eval-data.generated.ts imports to runtime eval-data-access.cjs via eval-data-runtime.ts adapter. all type-safe, zero new type errors. eval-data-access crud data-layer api-routes cli gad-203 filesystem-database"
   },
   {
     "id": "42.2-46",
@@ -17517,6 +17653,19 @@ export const TASK_PRESSURE: Record<string, TaskPressureRecord> = {
     "W": 2978,
     "raw": 37,
     "score": 0.8714060111191667
+  }
+};
+
+/**
+ * Aggregated skill trigger counts across all generations in a project's brood.
+ * Keyed by project id, value is `{ [catalogSkillId]: invocationCount }`.
+ * Built from TRACE.json `skill_triggers` arrays across every species and version.
+ */
+export const BROOD_SKILL_AGGREGATION: Record<string, Record<string, number>> = {
+  "escape-the-dungeon": {
+    "gad-discuss-phase": 1,
+    "gad-plan-phase": 1,
+    "gad-execute-phase": 7
   }
 };
 

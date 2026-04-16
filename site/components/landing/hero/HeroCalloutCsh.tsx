@@ -16,11 +16,14 @@ export function HeroCalloutCsh() {
       authoring two new skills and deprecating one — the first observed full
       skill-ratcheting cycle.{" "}
       <Link
-        href="/skeptic"
+        href="/roadmap"
         className="underline decoration-amber-300 underline-offset-2 hover:text-amber-100"
       >
-        See the evidence <ArrowRight size={11} className="inline" aria-hidden />
+        See hypothesis evidence <ArrowRight size={11} className="inline" aria-hidden />
       </Link>
     </p>
   );
 }
+
+
+

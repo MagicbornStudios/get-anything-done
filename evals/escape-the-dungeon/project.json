@@ -6,5 +6,6 @@
   "techStack": "kaplay",
   "tagline": null,
   "cardImage": null,
-  "heroImage": null
+  "heroImage": null,
+  "published": false
 }

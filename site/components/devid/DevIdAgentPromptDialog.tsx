@@ -254,6 +254,8 @@ export function DevIdAgentPromptDialog({
     setPromptVerbosity,
     updatePromptMediaRefs,
     deletePromptMediaRefs,
+    registerVcHandoffSnippetInserter,
+    consumeVcHandoffQueuedSnippets,
   } = useDevId();
   const ctrlRefResolved = ctrlReferenceEntries ?? EMPTY_CTRL_REF_ENTRIES;
 
@@ -278,7 +280,32 @@ export function DevIdAgentPromptDialog({
     }
     setListening(false);
     setHandoffEpoch((e) => e + 1);
-  }, [open, entries]);
+
+    const pending = consumeVcHandoffQueuedSnippets();
+    if (pending.length) {
+      const tid = window.setTimeout(() => {
+        for (const s of pending) {
+          insertTranscriptAtEditor(updateEditorRef.current, s);
+        }
+      }, 0);
+      return () => clearTimeout(tid);
+    }
+  }, [open, entries, consumeVcHandoffQueuedSnippets]);
+
+  useEffect(() => {
+    if (!open || !entries?.length) {
+      registerVcHandoffSnippetInserter(null);
+      return;
+    }
+    if (tab !== "update") {
+      registerVcHandoffSnippetInserter(null);
+      return;
+    }
+    registerVcHandoffSnippetInserter((snippet) => {
+      insertTranscriptAtEditor(updateEditorRef.current, snippet);
+    });
+    return () => registerVcHandoffSnippetInserter(null);
+  }, [open, entries, tab, handoffEpoch, registerVcHandoffSnippetInserter]);
 
   useEffect(() => {
     if (!open || !entries?.length) return;

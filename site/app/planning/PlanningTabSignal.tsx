@@ -1,131 +1,105 @@
 import type { Signal } from "@/lib/catalog.generated";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Props {
   signal: Signal;
 }
 
 /**
- * /planning -> Workflows tab → Signal band (task 44-21). Pure reducer view over
- * `.planning/.trace-events.jsonl` (gad-framework scope only). Surfaces:
- *
- *   1. Top files by tool_use count
- *   2. Top skills by trigger_skill invocation
- *   3. Tool mix percentage histogram
- *   4. Default vs subagent split + role breakdown
- *
- * v2 (NOT shipped): Bash command path extraction, WebFetch URL frequency,
- * tool/skill n-gram sequences (frequent-subgraph mining via the same
- * pattern as `synthesizeWorkflowTraceData`), per-session trends.
+ * /planning -> Workflows tab -> Signal band (task 44-21).
  */
 export function PlanningTabSignal({ signal }: Props) {
   const toolEntries = Object.entries(signal.toolMix).sort(
-    (a, b) => b[1].count - a[1].count
+    (a, b) => b[1].count - a[1].count,
   );
-  const roleEntries = Object.entries(signal.agentSplit.byRole).sort(
-    (a, b) => b[1] - a[1]
-  );
-  const topRoles = roleEntries
-    .slice(0, 5)
-    .map(([role, count]) => `${role} (${count})`)
-    .join(", ");
 
   return (
     <SiteSection cid="planning-signal-site-section">
       <Identified as="PlanningTabSignal">
-        <div className="space-y-8">
-          <MethodologyCallout />
+        <div className="space-y-4">
 
-          <header className="border-l-4 border-cyan-500/40 pl-4">
-            <div className="flex items-baseline gap-3">
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Signal
-              </h2>
-              <span className="tabular-nums text-sm text-muted-foreground">
-                {signal.totalEvents} tool_use events
-              </span>
-            </div>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-              Trace-based agent behavior — what the coding agent is actually
-              touching, ranked. Pure reducers over the gad-framework slice of
-              <code className="ml-1 text-foreground/80">
-                .planning/.trace-events.jsonl
-              </code>
-              .
-            </p>
-          </header>
+          <Tabs defaultValue="top-files">
+            <Identified as="PlanningSignalAnalyticsTabsList">
+              <TabsList>
+                <Identified as="PlanningSignalTriggerTopFiles">
+                  <TabsTrigger value="top-files">Top Files</TabsTrigger>
+                </Identified>
+                <Identified as="PlanningSignalTriggerTopSkills">
+                  <TabsTrigger value="top-skills">Top Skills</TabsTrigger>
+                </Identified>
+                <Identified as="PlanningSignalTriggerToolMix">
+                  <TabsTrigger value="tool-mix">Tool Mix</TabsTrigger>
+                </Identified>
+              </TabsList>
+            </Identified>
 
-          <Section title="Top files" subtitle="Ranked by tool_use count">
-            {signal.topFiles.length === 0 ? (
-              <EmptyState message="No file-touch events recorded yet." />
-            ) : (
-              <Table
-                headers={["#", "path", "count"]}
-                rows={signal.topFiles.map((f, i) => [
-                  String(i + 1),
-                  <span key="p" className="font-mono text-xs text-foreground/90">
-                    {f.path}
-                  </span>,
-                  <span key="c" className="tabular-nums">
-                    {f.count}
-                  </span>,
-                ])}
-              />
-            )}
-          </Section>
+            <MethodologyCallout totalEvents={signal.totalEvents} />
 
-          <Section
-            title="Top skills"
-            subtitle="Ranked by trigger_skill invocation"
-          >
-            {signal.topSkills.length === 0 ? (
-              <EmptyState message="No trigger_skill tags in the trace yet — skills are not yet stamping their invocations (decision gad-178 v2 work)." />
-            ) : (
-              <Table
-                headers={["#", "skill", "count"]}
-                rows={signal.topSkills.map((s, i) => [
-                  String(i + 1),
-                  <span key="s" className="text-foreground/90">{s.skill}</span>,
-                  <span key="c" className="tabular-nums">
-                    {s.count}
-                  </span>,
-                ])}
-              />
-            )}
-          </Section>
+            <TabsContent value="top-files">
+              <Identified as="PlanningSignalPanelTopFiles">
+                <Section title="Top files" subtitle="Ranked by tool_use count">
+                  {signal.topFiles.length === 0 ? (
+                    <EmptyState message="No file-touch events recorded yet." />
+                  ) : (
+                    <Table
+                      headers={["#", "path", "count"]}
+                      rows={signal.topFiles.map((f, i) => [
+                        String(i + 1),
+                        <span key="p" className="font-mono text-xs text-foreground/90">
+                          {f.path}
+                        </span>,
+                        <span key="c" className="tabular-nums">
+                          {f.count}
+                        </span>,
+                      ])}
+                    />
+                  )}
+                </Section>
+              </Identified>
+            </TabsContent>
 
-          <Section title="Tool mix" subtitle="Share of all tool_use events">
-            {toolEntries.length === 0 ? (
-              <EmptyState message="No tool_use events recorded yet." />
-            ) : (
-              <div className="space-y-2">
-                {toolEntries.map(([tool, entry]) => (
-                  <ToolBar
-                    key={tool}
-                    tool={tool}
-                    count={entry.count}
-                    pct={entry.pct}
-                  />
-                ))}
-              </div>
-            )}
-          </Section>
+            <TabsContent value="top-skills">
+              <Identified as="PlanningSignalPanelTopSkills">
+                <Section title="Top skills" subtitle="Ranked by trigger_skill invocation">
+                  {signal.topSkills.length === 0 ? (
+                    <EmptyState message="No trigger_skill tags in the trace yet - skills are not yet stamping their invocations (decision gad-178 v2 work)." />
+                  ) : (
+                    <Table
+                      headers={["#", "skill", "count"]}
+                      rows={signal.topSkills.map((s, i) => [
+                        String(i + 1),
+                        <span key="s" className="text-foreground/90">{s.skill}</span>,
+                        <span key="c" className="tabular-nums">{s.count}</span>,
+                      ])}
+                    />
+                  )}
+                </Section>
+              </Identified>
+            </TabsContent>
 
-          <Section title="Agent split" subtitle="Default session vs subagent">
-            <div className="grid grid-cols-2 gap-3">
-              <SplitCell
-                label="Default (main session)"
-                count={signal.agentSplit.default}
-              />
-              <SplitCell label="Subagents" count={signal.agentSplit.sub} />
-            </div>
-            {topRoles && (
-              <p className="mt-3 text-xs text-muted-foreground">
-                Top subagent roles: {topRoles}
-              </p>
-            )}
-          </Section>
+            <TabsContent value="tool-mix">
+              <Identified as="PlanningSignalPanelToolMix">
+                <Section title="Tool mix" subtitle="Share of all tool_use events">
+                  {toolEntries.length === 0 ? (
+                    <EmptyState message="No tool_use events recorded yet." />
+                  ) : (
+                    <div className="space-y-2">
+                      {toolEntries.map(([tool, entry]) => (
+                        <ToolBar
+                          key={tool}
+                          tool={tool}
+                          count={entry.count}
+                          pct={entry.pct}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </Section>
+              </Identified>
+            </TabsContent>
+          </Tabs>
         </div>
       </Identified>
     </SiteSection>
@@ -222,19 +196,6 @@ function ToolBar({
   );
 }
 
-function SplitCell({ label, count }: { label: string; count: number }) {
-  return (
-    <div className="rounded-md border border-border/60 bg-muted/10 px-3 py-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-        {count}
-      </div>
-    </div>
-  );
-}
-
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="rounded-md border border-dashed border-border/50 bg-muted/10 px-4 py-6 text-center text-xs text-muted-foreground">
@@ -243,20 +204,19 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-function MethodologyCallout() {
+function MethodologyCallout({ totalEvents }: { totalEvents: number }) {
   return (
-    <details className="rounded-md border border-cyan-500/30 bg-cyan-500/5 px-3 py-2 text-xs text-muted-foreground">
-      <summary className="cursor-pointer text-foreground/90">
-        What this tab is
-      </summary>
-      <div className="mt-2 space-y-2 leading-6">
+    <div className="mt-2 text-xs text-muted-foreground">
+      <p className="font-medium text-foreground/90">What this tab is</p>
+      <p className="mt-1 tabular-nums">{totalEvents} tool_use events</p>
+      <div className="mt-1 space-y-2 leading-6">
         <p>
           Pure reducers over the <code>gad-framework</code> slice of{" "}
           <code className="text-foreground/80">
             .planning/.trace-events.jsonl
           </code>
           . v1 surfaces the simplest possible signal: top files, top skills,
-          tool mix, and default vs subagent split.
+          and tool mix.
         </p>
         <p>
           Deferred to v2: Bash command path extraction, WebFetch URL frequency,
@@ -264,6 +224,6 @@ function MethodologyCallout() {
           Workflows tab uses for emergent detection), per-session trends.
         </p>
       </div>
-    </details>
+    </div>
   );
 }

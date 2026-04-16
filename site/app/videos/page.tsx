@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Play } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,9 @@ import VideoEmbed from "@/components/video/VideoEmbed";
 import { COMPOSITIONS } from "@/remotion/registry";
 
 export const metadata = {
-  title: "Videos â€” GAD",
+  title: "Videos — GAD",
   description:
-    "Remotion compositions from the site registry â€” embeddable explainers up to 30s, built as TypeScript + React.",
+    "Remotion compositions from the site registry — embeddable explainers up to 30s, built as TypeScript + React.",
 };
 
 export default function VideosPage() {
@@ -31,7 +31,7 @@ export default function VideosPage() {
           />
           <SiteProse className="mt-6">
             Each embed below is a row in{" "}
-            <code className="rounded bg-card/60 px-1 py-0.5 text-sm">remotion/registry.ts</code> â€” same
+            <code className="rounded bg-card/60 px-1 py-0.5 text-sm">remotion/registry.ts</code> — same
             metadata the per-run pages use when a composition is tied to a preserved eval. Add a
             composition there and it appears here automatically.
           </SiteProse>
@@ -62,7 +62,7 @@ export default function VideosPage() {
                   {c.slug}
                 </Badge>
                 <Badge variant="outline">
-                  {Math.round(c.durationInFrames / c.fps)}s Â· {c.width}Ã—{c.height} Â· {c.fps}fps
+                  {Math.round(c.durationInFrames / c.fps)}s · {c.width}×{c.height} · {c.fps}fps
                 </Badge>
                 <Badge variant="outline">{c.status}</Badge>
               </div>
@@ -71,29 +71,9 @@ export default function VideosPage() {
           </SiteSection>
         ))
       )}
-
-      <SiteSection cid="videos-page-notes-site-section" tone="muted">
-        <Identified as="VideosPageFooterLinks" className="flex flex-wrap gap-3 text-sm">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-auto gap-1 rounded-full border-border/70 bg-card/40 px-4 py-2 font-semibold hover:border-accent hover:text-accent"
-            asChild
-          >
-            <Link href="/hypotheses">What this explains</Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-auto gap-1 rounded-full border-rose-500/40 bg-rose-500/10 px-4 py-2 font-semibold text-rose-300 hover:bg-rose-500/20"
-            asChild
-          >
-            <Link href="/skeptic">Skeptic critique</Link>
-          </Button>
-        </Identified>
-      </SiteSection>
     </MarketingShell>
   );
 }
+
 
 

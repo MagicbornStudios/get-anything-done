@@ -35,6 +35,8 @@ function PlanningGanttSection() {
     <SiteSection
       cid="planning-gantt-section-site-section"
       className="border-b-0"
+      sectionShell={false}
+      shellClassName="w-full px-4 py-10 md:px-8 md:py-12 xl:px-10"
       allowContextPanel={false}
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

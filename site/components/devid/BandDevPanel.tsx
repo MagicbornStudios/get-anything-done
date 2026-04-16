@@ -10,6 +10,7 @@ export function BandDevPanel({
   corner = "right",
   componentTag,
   searchHint,
+  onDismiss,
 }: {
   cid: string;
   label: string;
@@ -17,6 +18,8 @@ export function BandDevPanel({
   corner?: "left" | "right";
   componentTag?: DevIdComponentTag;
   searchHint?: string;
+  /** Called when the user dismisses this band panel. */
+  onDismiss?: () => void;
 }) {
   return (
     <DevPanel
@@ -27,6 +30,7 @@ export function BandDevPanel({
       corner={corner}
       componentTag={componentTag}
       searchHint={searchHint}
+      onDismiss={onDismiss}
     />
   );
 }

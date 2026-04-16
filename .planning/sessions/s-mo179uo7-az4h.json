@@ -1,0 +1,29 @@
+{
+  "id": "s-mo179uo7-az4h",
+  "projectId": "get-anything-done",
+  "contextMode": "loaded",
+  "position": {
+    "phase": "44.5",
+    "plan": null,
+    "task": null
+  },
+  "status": "active",
+  "refs": [
+    {
+      "file": "AGENTS.md",
+      "reason": "agent conventions"
+    },
+    {
+      "file": ".planning\\STATE.xml",
+      "reason": "current position and status"
+    },
+    {
+      "file": ".planning\\ROADMAP.xml",
+      "reason": "phase roadmap"
+    }
+  ],
+  "createdAt": "2026-04-16T08:11:09.319Z",
+  "updatedAt": "2026-04-16T08:11:09.838Z",
+  "lastSnapshotAt": "2026-04-16T08:11:09.836Z",
+  "staticLoadedAt": "2026-04-16T08:11:09.836Z"
+}

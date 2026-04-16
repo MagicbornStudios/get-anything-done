@@ -4,12 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlanningDiscoveryTab } from "./PlanningDiscoveryTab";
 import { PlanningTabHumanWorkflows } from "./PlanningTabHumanWorkflows";
 import { PlanningTabSignal } from "./PlanningTabSignal";
-import { WorkflowCard } from "@/components/workflow/WorkflowCard";
-import {
-  buildWorkflowTree,
-  partitionWorkflows,
-  type WorkflowNode,
-} from "@/components/workflow/workflow-tree";
 
 interface Props {
   workflows: readonly Workflow[];
@@ -19,58 +13,74 @@ interface Props {
 
 /**
  * /planning -> Workflows tab:
- *  1. Local tabs: Authored / Signal / Human workflows / Discovery
- *  2. Authored is hand-authored workflows with expected Mermaid + live React Flow
+ *  1. Agent split band
+ *  2. Local tabs: Signal / Human workflows / Discovery
  */
-export function PlanningWorkflowsTab({ workflows, signal, humanWorkflows }: Props) {
-  const { authored } = partitionWorkflows(workflows);
-  const authoredTree = buildWorkflowTree(authored);
+export function PlanningWorkflowsTab({ signal, humanWorkflows }: Props) {
+  const roleEntries = Object.entries(signal.agentSplit.byRole).sort(
+    (a, b) => b[1] - a[1],
+  );
+  const topRoles = roleEntries
+    .slice(0, 5)
+    .map(([role, count]) => `${role} (${count})`)
+    .join(", ");
 
   return (
     <Identified as="PlanningTabWorkflows">
       <div className="space-y-8">
         <MethodologyCallout />
 
-        <Tabs defaultValue="signal">
-          <TabsList>
-            <TabsTrigger value="authored">
-              Authored{" "}
-              <span className="ml-1.5 tabular-nums text-muted-foreground">{authored.length}</span>
-            </TabsTrigger>
-            <TabsTrigger value="signal">Signal</TabsTrigger>
-            <TabsTrigger value="human-workflows">Human workflows</TabsTrigger>
-            <TabsTrigger value="discovery">Discovery</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="authored">
-            <div className="space-y-4">
-              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Designed workflows. Live React Flow graph is primary; authored Mermaid is tucked under a disclosure.
-              </p>
-              {authoredTree.length === 0 ? (
-                <div className="rounded-md border border-dashed border-border/50 bg-muted/10 px-4 py-6 text-center text-xs text-muted-foreground">
-                  No authored workflows. Add files under .planning/workflows/.
-                </div>
-              ) : (
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {flattenTree(authoredTree).map(({ node, depth }) => (
-                    <WorkflowCard key={node.workflow.slug} workflow={node.workflow} depth={depth} compact />
-                  ))}
-                </div>
-              )}
+        <Identified as="PlanningWorkflowsAgentSplitBand">
+          <section className="space-y-3">
+            <header>
+              <h3 className="text-lg font-semibold tracking-tight text-foreground">Agent split</h3>
+              <p className="text-xs text-muted-foreground">Default session vs subagent</p>
+            </header>
+            <div className="grid grid-cols-2 gap-3">
+              <Identified as="PlanningWorkflowsAgentSplitDefault">
+                <SplitCell label="Default (main session)" count={signal.agentSplit.default} />
+              </Identified>
+              <Identified as="PlanningWorkflowsAgentSplitSubagents">
+                <SplitCell label="Subagents" count={signal.agentSplit.sub} />
+              </Identified>
             </div>
-          </TabsContent>
+            {topRoles && (
+              <p className="mt-3 text-xs text-muted-foreground">Top subagent roles: {topRoles}</p>
+            )}
+          </section>
+        </Identified>
+
+        <Tabs defaultValue="signal">
+          <Identified as="PlanningWorkflowsTabsList">
+            <TabsList>
+              <Identified as="PlanningWorkflowsTriggerSignal">
+                <TabsTrigger value="signal">Signal</TabsTrigger>
+              </Identified>
+              <Identified as="PlanningWorkflowsTriggerHumanWorkflows">
+                <TabsTrigger value="human-workflows">Human workflows</TabsTrigger>
+              </Identified>
+              <Identified as="PlanningWorkflowsTriggerDiscovery">
+                <TabsTrigger value="discovery">Discovery</TabsTrigger>
+              </Identified>
+            </TabsList>
+          </Identified>
 
           <TabsContent value="signal">
-            <PlanningTabSignal signal={signal} />
+            <Identified as="PlanningWorkflowsPanelSignal">
+              <PlanningTabSignal signal={signal} />
+            </Identified>
           </TabsContent>
 
           <TabsContent value="human-workflows">
-            <PlanningTabHumanWorkflows workflows={humanWorkflows} />
+            <Identified as="PlanningWorkflowsPanelHumanWorkflows">
+              <PlanningTabHumanWorkflows workflows={humanWorkflows} />
+            </Identified>
           </TabsContent>
 
           <TabsContent value="discovery">
-            <PlanningDiscoveryTab />
+            <Identified as="PlanningWorkflowsPanelDiscovery">
+              <PlanningDiscoveryTab />
+            </Identified>
           </TabsContent>
         </Tabs>
       </div>
@@ -78,15 +88,13 @@ export function PlanningWorkflowsTab({ workflows, signal, humanWorkflows }: Prop
   );
 }
 
-function flattenTree(tree: WorkflowNode[], depth = 0): Array<{ node: WorkflowNode; depth: number }> {
-  const out: Array<{ node: WorkflowNode; depth: number }> = [];
-  for (const node of tree) {
-    out.push({ node, depth });
-    if (node.children.length > 0) {
-      out.push(...flattenTree(node.children, depth + 1));
-    }
-  }
-  return out;
+function SplitCell({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="rounded-md border border-border/60 bg-muted/10 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{count}</div>
+    </div>
+  );
 }
 
 /**
@@ -98,10 +106,10 @@ function MethodologyCallout() {
       <summary className="cursor-pointer text-foreground/90">How this tab is built</summary>
       <div className="mt-2 space-y-2 leading-6">
         <p>
-          Authored workflows come from <code className="text-foreground/80">.planning/workflows/*.md</code>. Live graphs are computed from <code className="text-foreground/80">.planning/.trace-events.jsonl</code> (gad-framework scope only - decision gad-175).
+          Signal uses reducers over <code className="text-foreground/80">.planning/.trace-events.jsonl</code> (gad-framework scope only - decision gad-175).
         </p>
         <p>
-          Emergent patterns are mined via a v1 DFG + n-gram detector (decision gad-178); the v2 target is skill-invocation sequences, not raw tool names. Full methodology doc is task 42.3-17.
+          Human workflows live under <code className="text-foreground/80">.planning/human-workflows/*.md</code>. Discovery surfaces the subagent discovery battery outputs.
         </p>
       </div>
     </details>

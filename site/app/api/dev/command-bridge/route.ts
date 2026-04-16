@@ -31,7 +31,16 @@ const ALLOWED_SUBCOMMANDS = new Set([
   "sink",
   "graph",
   "query",
+  "species",
 ]);
+
+/** Per-command timeout in milliseconds. Unlisted commands get DEFAULT_TIMEOUT. */
+const DEFAULT_TIMEOUT = 30_000;
+const TIMEOUT_MAP: Record<string, number> = {
+  eval: 120_000,
+  evolution: 120_000,
+  snapshot: 60_000,
+};
 
 type BridgeBody = {
   subcommand?: unknown;
@@ -47,9 +56,10 @@ function isStringArray(v: unknown): v is string[] {
   return Array.isArray(v) && v.every((x) => typeof x === "string");
 }
 
+/** Block shell metacharacters and path traversal. */
+const UNSAFE_ARG_RE = /[;&|`$(){}\\><!\n\r\0"']/;
 function isSafeArg(arg: string): boolean {
-  // Block shell metacharacters and path traversal
-  return arg.length < 256 && !/[;&|`$(){}\\]/.test(arg) && !arg.includes("..");
+  return arg.length < 256 && !UNSAFE_ARG_RE.test(arg) && !arg.includes("..");
 }
 
 export async function POST(request: Request) {
@@ -109,13 +119,18 @@ export async function POST(request: Request) {
 
       send("start", { subcommand, args: extraArgs, projectId });
 
+      const timeout = TIMEOUT_MAP[subcommand] ?? DEFAULT_TIMEOUT;
       const child = spawn("node", cmdArgs, {
         cwd: repoRoot,
         env: { ...process.env, FORCE_COLOR: "0" },
+        timeout,
       });
+
+      const stderrChunks: string[] = [];
 
       const emitLines = (event: "stdout" | "stderr") => (chunk: Buffer) => {
         const text = chunk.toString("utf8");
+        if (event === "stderr") stderrChunks.push(text);
         for (const line of text.split(/\r?\n/)) {
           if (line.length > 0) send(event, { line });
         }
@@ -125,11 +140,22 @@ export async function POST(request: Request) {
       child.stderr.on("data", emitLines("stderr"));
 
       child.on("error", (err) => {
-        send("error", { message: err.message });
+        send("error", {
+          error: err.message,
+          exitCode: null,
+          stderr: stderrChunks.join(""),
+        });
         controller.close();
       });
 
       child.on("close", (code, signal) => {
+        if (code !== 0 && code !== null) {
+          send("error", {
+            error: `Command exited with code ${code}`,
+            exitCode: code,
+            stderr: stderrChunks.join(""),
+          });
+        }
         send("exit", { code, signal });
         controller.close();
       });

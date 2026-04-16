@@ -38,6 +38,8 @@ export type ProjectSkillScopeRow = {
   rawToken: string | null;
   sourcePath: string;
   bodyRaw: string;
+  /** Total invocations across all generations in the brood (from TRACE.json skill_triggers). */
+  broodInvocations: number;
 };
 
 function findCatalogSkill(
@@ -57,7 +59,7 @@ function trimSkillSubtitle(description: string | null | undefined): string | nul
   return `${description.slice(0, 117)}${description.length > 117 ? "…" : ""}`;
 }
 
-function rowFromCatalogSkill(cat: CatalogSkill): ProjectSkillScopeRow {
+function rowFromCatalogSkill(cat: CatalogSkill, broodInvocations = 0): ProjectSkillScopeRow {
   return {
     skillId: cat.id,
     label: cat.name,
@@ -68,6 +70,7 @@ function rowFromCatalogSkill(cat: CatalogSkill): ProjectSkillScopeRow {
     rawToken: null,
     sourcePath: cat.file,
     bodyRaw: cat.bodyRaw,
+    broodInvocations,
   };
 }
 
@@ -76,6 +79,7 @@ function appendFrameworkCatalogPreview(
   rows: ProjectSkillScopeRow[],
   skillsById: Map<string, CatalogSkill>,
   cap: number,
+  brood: Record<string, number> = {},
 ) {
   const seen = new Set(rows.map((r) => r.skillId));
   const sorted = [...skillsById.values()].sort((a, b) => a.id.localeCompare(b.id));
@@ -83,7 +87,7 @@ function appendFrameworkCatalogPreview(
     if (rows.length >= cap) break;
     if (seen.has(cat.id)) continue;
     seen.add(cat.id);
-    rows.push(rowFromCatalogSkill(cat));
+    rows.push(rowFromCatalogSkill(cat, brood[cat.id] ?? 0));
   }
 }
 
@@ -91,14 +95,21 @@ export function buildProjectSkillScopeRows(params: {
   scope: { kind: "framework" | "bootstrap-only" | "none"; skills: CatalogSkill[] };
   latestRun: EvalRunRecord | null;
   skillsById: Map<string, CatalogSkill>;
+  /** Aggregated skill trigger counts across all generations in this project's brood. */
+  broodAggregation?: Record<string, number>;
 }): {
   rows: ProjectSkillScopeRow[];
   latestVersion: string | null;
   hasPlayableBuild: boolean;
   hasTriggerTelemetry: boolean;
+  hasBroodTelemetry: boolean;
   catalogTotal: number;
+  broodTotal: number;
 } {
-  const { scope, latestRun, skillsById } = params;
+  const { scope, latestRun, skillsById, broodAggregation } = params;
+  const brood = broodAggregation ?? {};
+  const broodTotal = Object.values(brood).reduce((s, n) => s + n, 0);
+  const hasBroodTelemetry = broodTotal > 0;
   const triggers = latestRun?.skillAccuracyBreakdown?.expected_triggers ?? [];
   const hasTriggerTelemetry = triggers.length > 0;
   const hasPlayableBuild = latestRun ? Boolean(playableUrl(latestRun)) : false;
@@ -114,8 +125,9 @@ export function buildProjectSkillScopeRows(params: {
       const triggered = typeof tr.triggered === "boolean" ? tr.triggered : null;
       const pct = showBars && triggered !== null ? (triggered ? 100 : 0) : null;
       const when = typeof tr.when === "string" ? tr.when : null;
+      const resolvedId = cat?.id ?? catalogId ?? token;
       rows.push({
-        skillId: cat?.id ?? catalogId ?? token,
+        skillId: resolvedId,
         label: cat?.name ?? catalogId ?? token,
         subtitle: when,
         imagePath: cat?.imagePath ?? null,
@@ -124,6 +136,7 @@ export function buildProjectSkillScopeRows(params: {
         rawToken: token,
         sourcePath: cat?.file ?? `skills/${catalogId ?? "unknown"}/SKILL.md`,
         bodyRaw: cat?.bodyRaw ?? `No catalog SKILL.md matched this trace token.\n\nToken: ${token}\n\nOpen the skills grid or run prebuild after adding the skill.`,
+        broodInvocations: brood[resolvedId] ?? 0,
       });
     }
     if (scope.kind === "bootstrap-only" && scope.skills.length > 0) {
@@ -131,17 +144,45 @@ export function buildProjectSkillScopeRows(params: {
       for (const cat of scope.skills) {
         if (seen.has(cat.id)) continue;
         seen.add(cat.id);
-        rows.push(rowFromCatalogSkill(cat));
+        rows.push(rowFromCatalogSkill(cat, brood[cat.id] ?? 0));
+      }
+    }
+  } else if (hasBroodTelemetry) {
+    // No expected_triggers from latest run but we have brood-level aggregation.
+    // Build rows from the aggregated skill data.
+    const sortedSkills = Object.entries(brood).sort(([, a], [, b]) => b - a);
+    for (const [skillId, count] of sortedSkills) {
+      const cat = findCatalogSkill(skillsById, skillId);
+      rows.push({
+        skillId: cat?.id ?? skillId,
+        label: cat?.name ?? skillId,
+        subtitle: null,
+        imagePath: cat?.imagePath ?? null,
+        usagePercent: null,
+        triggered: null,
+        rawToken: null,
+        sourcePath: cat?.file ?? `skills/${skillId}/SKILL.md`,
+        bodyRaw: cat?.bodyRaw ?? `No catalog SKILL.md matched this aggregated skill id.\n\nId: ${skillId}`,
+        broodInvocations: count,
+      });
+    }
+    // Append scoped skills not already listed
+    if (scope.kind !== "framework" && scope.skills.length > 0) {
+      const seen = new Set(rows.map((r) => r.skillId));
+      for (const cat of scope.skills) {
+        if (seen.has(cat.id)) continue;
+        seen.add(cat.id);
+        rows.push(rowFromCatalogSkill(cat, 0));
       }
     }
   } else if (scope.kind !== "framework" && scope.skills.length > 0) {
     for (const cat of scope.skills) {
-      rows.push(rowFromCatalogSkill(cat));
+      rows.push(rowFromCatalogSkill(cat, brood[cat.id] ?? 0));
     }
   }
 
   if (scope.kind === "framework") {
-    appendFrameworkCatalogPreview(rows, skillsById, FRAMEWORK_CATALOG_LIST_CAP);
+    appendFrameworkCatalogPreview(rows, skillsById, FRAMEWORK_CATALOG_LIST_CAP, brood);
   }
 
   return {
@@ -149,7 +190,9 @@ export function buildProjectSkillScopeRows(params: {
     latestVersion: latestRun?.version ?? null,
     hasPlayableBuild,
     hasTriggerTelemetry,
+    hasBroodTelemetry,
     catalogTotal: scope.kind === "framework" ? skillsById.size : scope.skills.length,
+    broodTotal,
   };
 }
 

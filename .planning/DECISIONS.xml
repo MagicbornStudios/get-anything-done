@@ -1413,5 +1413,13 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Task 42.2-45 (native extractor) marked done. New tasks 42.2-47 (gad query) and 42.2-48 (gad graph) shipped same session. .planning/graph.json and .planning/graph.html are new artifacts. gad-197 hybrid approach superseded — no Python in the framework dependency tree. The graph can be regenerated on demand via `gad graph build` and queried via `gad query`.</impact>
   </decision>
 
+
+  <decision id="gad-206">
+    <title>Species are evolutionary branches of a project — inheritance-based configuration forking</title>
+    <date>2026-04-16</date>
+    <summary>Species are not just "eval configurations" — they are evolutionary branches of a project. Each species inherits the project's requirements, skills, and structure but configures differently (different workflow, different skill set, different constraints). Creating a species is like branching. Running a generation is like a commit on that branch. The project is the monorepo-shaped GAD project with .planning/ structure and sink compilation. The sink compiles all species and generations into sections that make up the project editor view. Species editing happens in the inspector sidebar (confirmed UX). The editor flow mirrors GAD's own loop — subagents can work on specific species sections (requirements, skills, config) while the project-level context stays global. This is an evolutionary branching mechanism: species diverge from the project trunk, generations accumulate on each branch, and the bestiary is the read-only view of all branches and their history. Recipes are templates that produce new branches (draft species). The project shape in the editor is the same .planning/ monorepo shape GAD itself uses — dogfooding the framework's own structure as the editing surface.</summary>
+    <impact>Species editor confirmed as inspector sidebar. Project shape = .planning/ monorepo shape. Species = evolutionary branch (inherits project, configures differently). Generation = commit on a branch. Recipe = branch template. Sink compiles all branches into the editor view. Subagents can work on species-scoped sections. This framing guides all future editor and marketplace work.</impact>
+  </decision>
+
 </decisions>
 
