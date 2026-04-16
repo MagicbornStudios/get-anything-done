@@ -48,7 +48,7 @@ export function Identified({
     : stableCid
       ? `stableCid="${stableCid}"`
       : `as="${as}"`;
-  const { enabled, highlightCid, setHighlightCid, flashCid } = useDevId();
+  const { enabled, highlightCid, setHighlightCid, sameDepthMergeCids, flashCid } = useDevId();
   const registry = useSectionRegistry();
   const registerFn = registry?.register;
   const maxDepth = registry?.maxDepth;
@@ -66,7 +66,7 @@ export function Identified({
     });
   }, [register, registerFn, maxDepth, resolvedCid, as, depth, searchHint]);
 
-  const isHighlighted = highlightCid === resolvedCid;
+  const isHighlighted = highlightCid === resolvedCid || sameDepthMergeCids.includes(resolvedCid);
   const isFlash = flashCid === resolvedCid;
   const showPersistentRing = enabled && isHighlighted;
   const showFlashRing = enabled && isFlash && !isHighlighted;

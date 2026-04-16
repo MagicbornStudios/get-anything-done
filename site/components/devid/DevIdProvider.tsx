@@ -19,6 +19,9 @@ interface DevIdContextValue {
   toggle: () => void;
   highlightCid: string | null;
   setHighlightCid: (cid: string | null) => void;
+  /** Cids selected for one merged handoff at the current list depth (panel: Ctrl/Cmd+click rows). */
+  sameDepthMergeCids: string[];
+  setSameDepthMergeCids: Dispatch<SetStateAction<string[]>>;
   flashCid: string | null;
   flashComponent: (cid: string) => void;
   promptVerbosity: PromptVerbosity;
@@ -30,6 +33,8 @@ const DevIdContext = createContext<DevIdContextValue>({
   toggle: () => {},
   highlightCid: null,
   setHighlightCid: () => {},
+  sameDepthMergeCids: [],
+  setSameDepthMergeCids: () => {},
   flashCid: null,
   flashComponent: () => {},
   promptVerbosity: "full",
@@ -40,6 +45,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const [enabled, setEnabled] = useState(false);
   const [highlightCid, setHighlightCid] = useState<string | null>(null);
+  const [sameDepthMergeCids, setSameDepthMergeCids] = useState<string[]>([]);
   const [flashCid, setFlashCid] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
@@ -116,6 +122,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       }
       if (e.key === "Escape") {
         setHighlightCid(null);
+        setSameDepthMergeCids([]);
         setFlashCid(null);
         if (flashTimeoutRef.current) {
           clearTimeout(flashTimeoutRef.current);
@@ -134,6 +141,8 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
         toggle,
         highlightCid,
         setHighlightCid,
+        sameDepthMergeCids,
+        setSameDepthMergeCids,
         flashCid,
         flashComponent,
         promptVerbosity,
@@ -154,7 +163,9 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
 function DevIdStatusBadge({ onOpenSearch }: { onOpenSearch: () => void }) {
   return (
     <div className="fixed bottom-4 left-4 z-[9999] flex items-center gap-2 rounded-full border border-accent/60 bg-background/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-accent shadow-lg backdrop-blur">
-      <span aria-hidden>DevIds ON · Alt+I toggle · Esc clear · Alt+click landmark toggles</span>
+      <span aria-hidden>
+        DevIds ON · Alt+I toggle · Esc clear · Alt+click landmark · Panel: Ctrl+click rows to merge @ depth
+      </span>
       <button
         type="button"
         onClick={onOpenSearch}

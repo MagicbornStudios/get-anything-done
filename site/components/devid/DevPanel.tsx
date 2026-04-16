@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { usePathname } from "next/navigation";
 import {
   Check,
@@ -17,7 +17,12 @@ import { Identified } from "./Identified";
 import {
   DevIdAgentPromptDialog,
 } from "./DevIdAgentPromptDialog";
-import { buildDeletePrompt, buildUpdateLockedPrefix } from "./DevIdPromptTemplates";
+import {
+  buildDeletePrompt,
+  buildDeletePromptMerged,
+  buildUpdateLockedPrefix,
+  buildUpdateLockedPrefixMerged,
+} from "./DevIdPromptTemplates";
 import {
   DEV_PANEL_BRAND_MARK,
   DEV_PANEL_LABEL,
@@ -38,6 +43,20 @@ import {
   readEntryFromElement,
   sortRegistryEntries,
 } from "./devid-dom-scan";
+
+/** Ordered merge list for handoff when ≥2 cids selected at the current depth slice. */
+function resolveHandoffEntries(
+  clicked: RegistryEntry,
+  visible: RegistryEntry[],
+  mergeCids: string[],
+): RegistryEntry[] {
+  const ordered = mergeCids
+    .filter((c) => visible.some((e) => e.cid === c))
+    .map((c) => visible.find((e) => e.cid === c)!)
+    .filter((e): e is RegistryEntry => Boolean(e));
+  if (ordered.length >= 2) return ordered;
+  return [clicked];
+}
 
 const VC_HOVER_FRAMEWORK = <p className="text-muted-foreground">Framework wordmark on this strip.</p>;
 const VC_HOVER_UPDATE = (
@@ -210,13 +229,22 @@ export function DevPanel(props: DevPanelProps) {
   const bandComponentTag = isBand ? props.componentTag : undefined;
   const bandSearchHint = isBand ? props.searchHint : undefined;
   const pathname = usePathname() ?? "";
-  const { enabled, setHighlightCid, flashComponent, highlightCid, promptVerbosity, setPromptVerbosity } = useDevId();
+  const {
+    enabled,
+    setHighlightCid,
+    flashComponent,
+    highlightCid,
+    sameDepthMergeCids,
+    setSameDepthMergeCids,
+    promptVerbosity,
+    setPromptVerbosity,
+  } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
   const highlightPrevRef = useRef<string | null>(null);
   const highlightDepthSyncRef = useRef<string | null>(null);
 
-  const [promptEntry, setPromptEntry] = useState<RegistryEntry | null>(null);
+  const [handoffEntries, setHandoffEntries] = useState<RegistryEntry[] | null>(null);
   const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | "cid" | null>(null);
   const [mountedSectionEntry, setMountedSectionEntry] = useState<RegistryEntry | null>(null);
   const [bandEntries, setBandEntries] = useState<RegistryEntry[]>([]);
@@ -350,6 +378,31 @@ export function DevPanel(props: DevPanelProps) {
   const sectionVisibleEntries = sectionEntries.filter((e) => e.depth === sectionCurrentDepth);
 
   useEffect(() => {
+    setSameDepthMergeCids((prev) => {
+      if (mode === "section") {
+        return prev.filter((cid) =>
+          sectionEntries.some((e) => e.cid === cid && e.depth === sectionCurrentDepth),
+        );
+      }
+      if (mode === "band") {
+        return prev.filter((cid) =>
+          bandEntries.some((e) => e.cid === cid && e.depth === bandCurrentDepth),
+        );
+      }
+      return prev;
+    });
+  }, [
+    mode,
+    sectionDepthIndex,
+    depthIndex,
+    sectionCurrentDepth,
+    bandCurrentDepth,
+    sectionEntries,
+    bandEntries,
+    setSameDepthMergeCids,
+  ]);
+
+  useEffect(() => {
     if (mode !== "band") return;
     if (depthIndex >= bandDepths.length) setDepthIndex(0);
   }, [mode, depthIndex, bandDepths.length]);
@@ -453,23 +506,33 @@ export function DevPanel(props: DevPanelProps) {
       ? activeCid ?? mountedSectionEntry?.cid ?? DEV_PANEL_STABLE_CID
       : sectionTarget?.cid ?? activeCid ?? bandCid;
 
-  const finalizeUpdatePromptCopy = (transcript: string) => {
-    if (!sectionTarget) return;
-    const prefix = buildUpdateLockedPrefix(
-      absolutePageUrl(pathname),
-      sectionTarget.label,
-      sectionTarget.cid,
-      sectionTarget.componentTag ?? "Identified",
-      sectionTarget.searchHint,
-      undefined,
-      promptVerbosity,
-    );
-    const resolved = `${prefix}\n${transcript.trim()}`;
-    navigator.clipboard?.writeText(resolved).catch(() => {});
-    setHeaderCopied("update");
-    window.setTimeout(() => setHeaderCopied(null), 1200);
-    toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
-  };
+  const panelHandoffEntriesResolved = useMemo(() => {
+    if (!sectionTarget) return [] as RegistryEntry[];
+    const visible = mode === "section" ? sectionVisibleEntries : bandVisibleEntries;
+    return resolveHandoffEntries(sectionTarget, visible, sameDepthMergeCids);
+  }, [mode, sectionTarget, sectionVisibleEntries, bandVisibleEntries, sameDepthMergeCids]);
+
+  const panelTargetSummary =
+    panelHandoffEntriesResolved.length >= 2
+      ? `${panelHandoffEntriesResolved.length} merged @ d${panelHandoffEntriesResolved[0]?.depth ?? 0}`
+      : (sectionTarget?.label ?? (mode === "band" ? bandLabel : "None"));
+
+  const finalizeUpdatePromptCopy = useCallback(
+    (transcript: string) => {
+      if (!panelHandoffEntriesResolved.length) return;
+      const prefix = buildUpdateLockedPrefixMerged(
+        absolutePageUrl(pathname),
+        panelHandoffEntriesResolved,
+        promptVerbosity,
+      );
+      const resolved = `${prefix}\n${transcript.trim()}`;
+      navigator.clipboard?.writeText(resolved).catch(() => {});
+      setHeaderCopied("update");
+      window.setTimeout(() => setHeaderCopied(null), 1200);
+      toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
+    },
+    [pathname, promptVerbosity, panelHandoffEntriesResolved],
+  );
 
   const { listening, interim, toggle: toggleUpdatePromptWithSpeech } = useDictatedPromptCopy({
     onFinalize: finalizeUpdatePromptCopy,
@@ -504,22 +567,66 @@ export function DevPanel(props: DevPanelProps) {
     listeningMessage: "Listening for panel chrome…",
   });
 
-  const copyResolvedDeletePrompt = () => {
-    if (!sectionTarget) return;
-    const resolved = buildDeletePrompt(
+  const copyResolvedDeletePrompt = useCallback(() => {
+    if (!panelHandoffEntriesResolved.length) return;
+    const resolved = buildDeletePromptMerged(
       absolutePageUrl(pathname),
-      sectionTarget.label,
-      sectionTarget.cid,
-      sectionTarget.componentTag ?? "Identified",
-      sectionTarget.searchHint,
-      undefined,
+      panelHandoffEntriesResolved,
       promptVerbosity,
     );
     navigator.clipboard?.writeText(resolved).catch(() => {});
     setHeaderCopied("delete");
     window.setTimeout(() => setHeaderCopied(null), 1200);
     toast.success("Delete prompt copied");
-  };
+  }, [pathname, promptVerbosity, panelHandoffEntriesResolved]);
+
+  const handleSectionRowClick = useCallback(
+    (entry: RegistryEntry, e: MouseEvent<HTMLButtonElement>) => {
+      const merge = e.ctrlKey || e.metaKey;
+      const visible = sectionVisibleEntries;
+      if (merge) {
+        setSameDepthMergeCids((prev) => {
+          const allowed = new Set(visible.map((x) => x.cid));
+          if (!allowed.has(entry.cid)) return prev;
+          if (prev.includes(entry.cid)) {
+            const next = prev.filter((c) => c !== entry.cid);
+            return next.length > 0 ? next : [entry.cid];
+          }
+          return [...prev.filter((c) => allowed.has(c)), entry.cid];
+        });
+      } else {
+        setSameDepthMergeCids([entry.cid]);
+      }
+      setActiveCid(entry.cid);
+      setHighlightCid(entry.cid);
+      locate(entry.cid);
+    },
+    [sectionVisibleEntries, setSameDepthMergeCids, setActiveCid, setHighlightCid, locate],
+  );
+
+  const handleBandRowClick = useCallback(
+    (entry: RegistryEntry, e: MouseEvent<HTMLButtonElement>) => {
+      const merge = e.ctrlKey || e.metaKey;
+      const visible = bandVisibleEntries;
+      if (merge) {
+        setSameDepthMergeCids((prev) => {
+          const allowed = new Set(visible.map((x) => x.cid));
+          if (!allowed.has(entry.cid)) return prev;
+          if (prev.includes(entry.cid)) {
+            const next = prev.filter((c) => c !== entry.cid);
+            return next.length > 0 ? next : [entry.cid];
+          }
+          return [...prev.filter((c) => allowed.has(c)), entry.cid];
+        });
+      } else {
+        setSameDepthMergeCids([entry.cid]);
+      }
+      setActiveCid(entry.cid);
+      setHighlightCid(entry.cid);
+      locate(entry.cid);
+    },
+    [bandVisibleEntries, setSameDepthMergeCids, setActiveCid, setHighlightCid, locate],
+  );
 
   const copyValue = (value: string) => {
     navigator.clipboard?.writeText(value).catch(() => {});
@@ -538,9 +645,9 @@ export function DevPanel(props: DevPanelProps) {
     return (
       <>
         <DevIdAgentPromptDialog
-          open={promptEntry != null}
-          onOpenChange={(v) => !v && setPromptEntry(null)}
-          entry={promptEntry}
+          open={handoffEntries != null}
+          onOpenChange={(v) => !v && setHandoffEntries(null)}
+          entries={handoffEntries}
           pathname={pathname}
         />
         <div
@@ -579,7 +686,7 @@ export function DevPanel(props: DevPanelProps) {
                         selfEntry={DEV_PANEL_SELF_ENTRY}
                         pathname={pathname}
                         promptVerbosity={promptVerbosity}
-                        onAgentPrompt={(e) => setPromptEntry(e)}
+                        onAgentPrompt={(e) => setHandoffEntries([e])}
                         dockCorner={sectionCorner}
                         externalDictation={{
                           listening: listeningChrome,
@@ -607,7 +714,7 @@ export function DevPanel(props: DevPanelProps) {
                     variant="outline"
                     size="sm"
                     onClick={toggleUpdatePromptWithSpeech}
-                    disabled={!sectionTarget}
+                    disabled={!panelHandoffEntriesResolved.length}
                     className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
                   >
                     {headerCopied === "update" ? (
@@ -626,7 +733,7 @@ export function DevPanel(props: DevPanelProps) {
                     variant="outline"
                     size="sm"
                     onClick={copyResolvedDeletePrompt}
-                    disabled={!sectionTarget}
+                    disabled={!panelHandoffEntriesResolved.length}
                     className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
                   >
                     {headerCopied === "delete" ? <Check size={12} /> : <Trash2 size={12} />}
@@ -649,8 +756,8 @@ export function DevPanel(props: DevPanelProps) {
                 <div className="min-w-0">
                   <p className="truncate">
                     <span className="text-muted-foreground">Target - </span>
-                    <span className="font-medium text-foreground">
-                      {sectionTarget?.label ?? "None"}
+                    <span className="font-medium text-foreground" title={panelTargetSummary}>
+                      {panelTargetSummary}
                     </span>
                   </p>
                 </div>
@@ -674,13 +781,14 @@ export function DevPanel(props: DevPanelProps) {
                     dockCorner={sectionCorner}
                     entry={entry}
                     active={activeTargetCid === entry.cid}
-                    onSelect={() => {
-                      setActiveCid(entry.cid);
-                      setHighlightCid(entry.cid);
-                      locate(entry.cid);
-                    }}
+                    mergeSelected={
+                      sameDepthMergeCids.includes(entry.cid) && activeTargetCid !== entry.cid
+                    }
+                    onRowClick={(e) => handleSectionRowClick(entry, e)}
                     onCopy={() => copyEntry(entry)}
-                    onPrompt={() => setPromptEntry(entry)}
+                    onPrompt={() =>
+                      setHandoffEntries(resolveHandoffEntries(entry, sectionVisibleEntries, sameDepthMergeCids))
+                    }
                   />
                 ))}
               </div>
@@ -714,9 +822,9 @@ export function DevPanel(props: DevPanelProps) {
   return (
     <>
       <DevIdAgentPromptDialog
-        open={promptEntry != null}
-        onOpenChange={(v) => !v && setPromptEntry(null)}
-        entry={promptEntry}
+        open={handoffEntries != null}
+        onOpenChange={(v) => !v && setHandoffEntries(null)}
+        entries={handoffEntries}
         pathname={pathname}
       />
       <div
@@ -753,7 +861,7 @@ export function DevPanel(props: DevPanelProps) {
                       selfEntry={DEV_PANEL_SELF_ENTRY}
                       pathname={pathname}
                       promptVerbosity={promptVerbosity}
-                      onAgentPrompt={(e) => setPromptEntry(e)}
+                      onAgentPrompt={(e) => setHandoffEntries([e])}
                       size="band"
                       dockCorner={corner}
                       externalDictation={{
@@ -782,6 +890,7 @@ export function DevPanel(props: DevPanelProps) {
                   variant="outline"
                   size="sm"
                   onClick={toggleUpdatePromptWithSpeech}
+                  disabled={!panelHandoffEntriesResolved.length}
                   className="h-6 gap-1 px-1.5 text-[10px]"
                 >
                   {headerCopied === "update" ? (
@@ -800,6 +909,7 @@ export function DevPanel(props: DevPanelProps) {
                   variant="outline"
                   size="sm"
                   onClick={copyResolvedDeletePrompt}
+                  disabled={!panelHandoffEntriesResolved.length}
                   className="h-6 gap-1 px-1.5 text-[10px]"
                 >
                   {headerCopied === "delete" ? <Check size={11} /> : <Trash2 size={11} />}
@@ -822,8 +932,8 @@ export function DevPanel(props: DevPanelProps) {
               <div className="min-w-0">
                 <p className="truncate">
                   <span className="text-muted-foreground">Target - </span>
-                  <span className="font-medium text-foreground">
-                    {sectionTarget?.label ?? bandLabel}
+                  <span className="font-medium text-foreground" title={panelTargetSummary}>
+                    {panelTargetSummary}
                   </span>
                 </p>
               </div>
@@ -844,13 +954,14 @@ export function DevPanel(props: DevPanelProps) {
                   dockCorner={corner}
                   entry={entry}
                   active={activeTargetCid === entry.cid}
-                  onSelect={() => {
-                    setActiveCid(entry.cid);
-                    setHighlightCid(entry.cid);
-                    locate(entry.cid);
-                  }}
+                  mergeSelected={
+                    sameDepthMergeCids.includes(entry.cid) && activeTargetCid !== entry.cid
+                  }
+                  onRowClick={(e) => handleBandRowClick(entry, e)}
                   onCopy={() => copyEntry(entry)}
-                  onPrompt={() => setPromptEntry(entry)}
+                  onPrompt={() =>
+                    setHandoffEntries(resolveHandoffEntries(entry, bandVisibleEntries, sameDepthMergeCids))
+                  }
                 />
               ))}
             </div>

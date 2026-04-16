@@ -27,8 +27,8 @@ import { getSpeechRecognition, type SpeechRecInstance } from "./speechRecognitio
 import { DevIdModalContextFooter } from "./DevIdModalContextFooter";
 import { useDevId } from "./DevIdProvider";
 import {
-  buildDeletePrompt,
-  buildUpdateLockedPrefix,
+  buildDeletePromptMerged,
+  buildUpdateLockedPrefixMerged,
   type HandoffComponentTag,
 } from "./DevIdPromptTemplates";
 
@@ -325,14 +325,15 @@ function HoverPromptChrome({
 export function DevIdAgentPromptDialog({
   open,
   onOpenChange,
-  entry,
+  entries,
   pathname,
   /** Component kind: SiteSection band vs in-section Identified row. */
   componentTag = "Identified",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entry: RegistryEntry | null;
+  /** Primary is `entries[0]`; when length ≥ 2, locked templates list every target at the same depth. */
+  entries: RegistryEntry[] | null;
   pathname: string;
   componentTag?: HandoffComponentTag;
 }) {
@@ -350,19 +351,17 @@ export function DevIdAgentPromptDialog({
   const tabRef = useRef<"update" | "delete">(tab);
   const [copied, setCopied] = useState<"update" | "delete" | null>(null);
   const [handoffEpoch, setHandoffEpoch] = useState(0);
-  const [activeEntry, setActiveEntry] = useState<RegistryEntry | null>(entry);
+  const [activeEntry, setActiveEntry] = useState<RegistryEntry | null>(null);
   const modalScanRef = useRef<HTMLDivElement | null>(null);
   const { promptVerbosity, setPromptVerbosity } = useDevId();
 
-  const label = activeEntry?.label ?? "";
-  const cid = activeEntry?.cid ?? "";
   const pageUrl = useMemo(() => absolutePageUrl(pathname), [pathname]);
 
   tabRef.current = tab;
 
   useEffect(() => {
     if (!open) return;
-    setActiveEntry(entry);
+    if (entries?.length) setActiveEntry(entries[0]);
     setUpdateUserDraft("");
     setInterim("");
     setTab("update");
@@ -377,34 +376,13 @@ export function DevIdAgentPromptDialog({
     }
     setListening(false);
     setHandoffEpoch((e) => e + 1);
-  }, [open, entry]);
+  }, [open, entries]);
 
   useEffect(() => {
-    if (!open || !activeEntry) return;
-    const resolvedComponentTag = activeEntry.componentTag ?? componentTag;
-    setUpdateLockedPrefix(
-      buildUpdateLockedPrefix(
-        pageUrl,
-        label,
-        cid,
-        resolvedComponentTag,
-        activeEntry.searchHint,
-        undefined,
-        promptVerbosity,
-      ),
-    );
-    setDeleteLockedText(
-      buildDeletePrompt(
-        pageUrl,
-        label,
-        cid,
-        resolvedComponentTag,
-        activeEntry.searchHint,
-        undefined,
-        promptVerbosity,
-      ),
-    );
-  }, [open, activeEntry, pageUrl, label, cid, componentTag, promptVerbosity]);
+    if (!open || !entries?.length) return;
+    setUpdateLockedPrefix(buildUpdateLockedPrefixMerged(pageUrl, entries, promptVerbosity));
+    setDeleteLockedText(buildDeletePromptMerged(pageUrl, entries, promptVerbosity));
+  }, [open, entries, pageUrl, promptVerbosity]);
 
   useEffect(() => {
     return () => {
@@ -486,7 +464,15 @@ export function DevIdAgentPromptDialog({
     window.setTimeout(() => setCopied(null), 1400);
   };
 
-  if (!activeEntry) return null;
+  if (!open || !entries?.length) return null;
+
+  const stripSource = activeEntry ?? entries[0];
+  const stripLabel =
+    entries.length > 1
+      ? `${entries.length} merged targets @ depth ${entries[0]?.depth ?? 0}`
+      : (stripSource?.label ?? "");
+  const stripCid =
+    entries.length > 1 ? `${entries[0]?.cid ?? ""} (+${entries.length - 1})` : (stripSource?.cid ?? "");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -508,7 +494,7 @@ export function DevIdAgentPromptDialog({
           </Identified>
 
           <Identified as="DevIdAgentPromptContextStrip" cid="devid-agent-prompt-context-strip" register={false} depth={1}>
-            <PromptContextStrip pageUrl={pageUrl} cid={cid} label={label} />
+            <PromptContextStrip pageUrl={pageUrl} cid={stripCid} label={stripLabel} />
           </Identified>
 
           <Tabs
