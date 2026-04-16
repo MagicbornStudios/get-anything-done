@@ -7597,8 +7597,13 @@ function normalizePath(p) {
 function writeRootsToToml(baseDir, roots, config) {
   const tomlPath = findTomlPath(baseDir);
   if (!fs.existsSync(tomlPath)) {
-    // Create minimal toml
+    // Create minimal toml with graph query enabled by default (decision gad-201)
     const lines = ['[planning]', `sprintSize = ${config.sprintSize || 5}`, ''];
+    lines.push('[features]');
+    lines.push('# Graph-backed queries for targeted lookups (~12.9x token savings).');
+    lines.push('# Set to false to fall back to raw XML reads.');
+    lines.push('useGraphQuery = true');
+    lines.push('');
     for (const r of roots) {
       lines.push('[[planning.roots]]');
       lines.push(`id = "${r.id}"`);
