@@ -14,6 +14,7 @@
 import { createElement, useCallback, useEffect } from "react";
 import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry } from "./SectionRegistry";
+import { queryByCid } from "./devid-dom-scan";
 
 export interface IdentifiedProps {
   as: string;
@@ -32,6 +33,31 @@ export interface IdentifiedProps {
   stableCid?: string;
 }
 
+function readDepthForCid(cid: string): number | null {
+  const el = typeof document === "undefined" ? null : queryByCid(cid);
+  if (!el) return null;
+  const raw = el.getAttribute("data-cid-depth");
+  if (raw == null || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+function pickLeafFromEvent(event: React.MouseEvent): { cid: string; searchHint: string; depth: number } | null {
+  const path =
+    typeof event.nativeEvent.composedPath === "function" ? event.nativeEvent.composedPath() : [];
+  for (const node of path) {
+    if (!(node instanceof HTMLElement)) continue;
+    const nodeCid = node.getAttribute("data-cid");
+    if (!nodeCid) continue;
+    const dh = node.getAttribute("data-cid-depth");
+    const depth =
+      dh != null && dh !== "" && Number.isFinite(Number(dh)) ? Number(dh) : 0;
+    const searchHint = node.getAttribute("data-cid-search") ?? nodeCid;
+    return { cid: nodeCid, searchHint, depth };
+  }
+  return null;
+}
+
 export function Identified({
   as,
   tag = "div",
@@ -48,7 +74,16 @@ export function Identified({
     : stableCid
       ? `stableCid="${stableCid}"`
       : `as="${as}"`;
-  const { enabled, highlightCid, setHighlightCid, sameDepthMergeCids, flashCid } = useDevId();
+  const {
+    enabled,
+    highlightCid,
+    setHighlightCid,
+    sameDepthMergeCids,
+    setSameDepthMergeCids,
+    ctrlLaneCids,
+    setCtrlLaneCids,
+    flashCid,
+  } = useDevId();
   const registry = useSectionRegistry();
   const registerFn = registry?.register;
   const maxDepth = registry?.maxDepth;
@@ -66,52 +101,56 @@ export function Identified({
     });
   }, [register, registerFn, maxDepth, resolvedCid, as, depth, searchHint]);
 
-  const isHighlighted = highlightCid === resolvedCid || sameDepthMergeCids.includes(resolvedCid);
+  const inAltMerge = sameDepthMergeCids.includes(resolvedCid);
+  const inCtrl = ctrlLaneCids.includes(resolvedCid);
+  const isPrimaryHighlight = highlightCid === resolvedCid;
   const isFlash = flashCid === resolvedCid;
-  const showPersistentRing = enabled && isHighlighted;
-  const showFlashRing = enabled && isFlash && !isHighlighted;
-
-  function cycleTargetFromEvent(
-    event: React.MouseEvent,
-    currentHighlight: string | null,
-  ): { cid: string; searchHint: string } {
-    const path = typeof event.nativeEvent.composedPath === "function"
-      ? event.nativeEvent.composedPath()
-      : [];
-    const seen = new Set<string>();
-    const candidates: Array<{ cid: string; searchHint: string }> = [];
-    for (const node of path) {
-      if (!(node instanceof HTMLElement)) continue;
-      const nodeCid = node.getAttribute("data-cid");
-      if (!nodeCid || seen.has(nodeCid)) continue;
-      seen.add(nodeCid);
-      candidates.push({
-        cid: nodeCid,
-        searchHint: node.getAttribute("data-cid-search") ?? nodeCid,
-      });
-    }
-
-    if (candidates.length === 0) {
-      return { cid: resolvedCid, searchHint: searchHint ?? resolvedCid };
-    }
-
-    if (!currentHighlight) return candidates[0];
-    const currentIndex = candidates.findIndex((candidate) => candidate.cid === currentHighlight);
-    if (currentIndex < 0) return candidates[0];
-    return candidates[(currentIndex + 1) % candidates.length];
-  }
+  const hasPersistentSelection = isPrimaryHighlight || inAltMerge || inCtrl;
+  const showFlashRing = enabled && isFlash && !hasPersistentSelection;
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if (!enabled) return;
-      if (!e.altKey) return;
-      e.stopPropagation();
-      const next = cycleTargetFromEvent(e, highlightCid);
-      navigator.clipboard?.writeText(next.searchHint).catch(() => {});
-      setHighlightCid(next.cid);
+      const leaf = pickLeafFromEvent(e);
+      if (!leaf) return;
+
+      if (e.altKey) {
+        e.stopPropagation();
+        navigator.clipboard?.writeText(leaf.searchHint).catch(() => {});
+        setHighlightCid(leaf.cid);
+        setSameDepthMergeCids((prev) => {
+          if (prev.length === 0) return [leaf.cid];
+          const anchorDepth = readDepthForCid(prev[0]);
+          if (anchorDepth != null && leaf.depth !== anchorDepth) return [leaf.cid];
+          if (prev.includes(leaf.cid)) {
+            const next = prev.filter((c) => c !== leaf.cid);
+            return next.length > 0 ? next : [leaf.cid];
+          }
+          const sameDepthKeep = prev.filter((c) => readDepthForCid(c) === leaf.depth);
+          return [...sameDepthKeep, leaf.cid];
+        });
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        e.stopPropagation();
+        setCtrlLaneCids((prev) => {
+          if (prev.includes(leaf.cid)) return prev.filter((c) => c !== leaf.cid);
+          return [...prev, leaf.cid];
+        });
+      }
     },
-    [enabled, highlightCid, setHighlightCid],
+    [enabled, setHighlightCid, setSameDepthMergeCids, setCtrlLaneCids],
   );
+
+  const ctrlHalo =
+    enabled && inCtrl ? "shadow-[inset_0_0_0_2px_rgba(56,189,248,0.78)]" : "";
+  let altRing = "";
+  if (enabled && (isPrimaryHighlight || inAltMerge)) {
+    altRing = isPrimaryHighlight
+      ? "ring-2 ring-inset ring-accent"
+      : "ring-2 ring-inset ring-violet-500/65";
+  }
 
   /**
    * Highlights use **inset** rings so they are not clipped by `overflow-hidden` ancestors
@@ -122,6 +161,7 @@ export function Identified({
     tag,
     {
       "data-cid": enabled ? resolvedCid : undefined,
+      "data-cid-depth": enabled ? String(depth) : undefined,
       "data-cid-label": enabled ? as : undefined,
       "data-cid-component-tag": enabled ? "Identified" : undefined,
       "data-cid-search": enabled ? searchHint : undefined,
@@ -129,7 +169,8 @@ export function Identified({
       className: [
         className,
         enabled ? "scroll-mt-3 scroll-mb-1 sm:scroll-mt-4" : "",
-        showPersistentRing ? "ring-2 ring-inset ring-accent" : "",
+        ctrlHalo,
+        altRing,
         showFlashRing
           ? "ring-2 ring-inset ring-emerald-400/90 shadow-[inset_0_0_12px_rgba(52,211,153,0.2)] transition-[box-shadow,ring-color] duration-300"
           : "",

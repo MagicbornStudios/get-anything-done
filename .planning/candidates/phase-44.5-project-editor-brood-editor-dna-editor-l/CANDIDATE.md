@@ -1,11 +1,11 @@
 ---
 status: candidate
 source_phase: "44.5"
-source_phase_title: "Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace"
-pressure_score: 29
-tasks_total: 15
+source_phase_title: "Project Editor + Brood Editor + DNA Editor — local-dev gamified species/brood/generation workspace"
+pressure_score: 45
+tasks_total: 21
 tasks_done: 1
-crosscuts: 7
+crosscuts: 12
 created_on: "2026-04-16"
 created_by: compute-self-eval
 ---
@@ -15,8 +15,8 @@ created_by: compute-self-eval
 ## Phase
 
 ```
-get-anything-done | 44.5 | Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace
-selection pressure: 29  (15 tasks, 1 done, 7 crosscuts)
+get-anything-done | 44.5 | Project Editor + Brood Editor + DNA Editor — local-dev gamified species/brood/generation workspace
+selection pressure: 45  (21 tasks, 1 done, 12 crosscuts)
 ```
 
 ## Tasks
@@ -37,6 +37,12 @@ selection pressure: 29  (15 tasks, 1 done, 7 crosscuts)
 44.5-08 planned Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.
 44.5-09 planned Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.
 44.5-10 planned iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, "open in new tab" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport.
+44.5-11 planned Scaffold the DNA Editor pane inside the Project Editor left-pane region (sibling to the Bestiary pane) using the `scaffold-visual-context-surface` skill promoted 2026-04-15. Follow its 6-step checklist: (1) dev gate via `NODE_ENV === 'development'`, (2) enumerate panes + cid assignments (pane shell `dna-editor-pane-site-section`, four state groups `dna-editor-state-{dna,expressed,mutation,shed}-site-section`, row prototype `dna-editor-gene-&lt;slug&gt;-site-section`), (3) emit cids as literal strings (no computed cids — include a prototype literal in a comment for the row family), (4) register identities with the Visual Context Panel, (5) round-trip one modal-footer CRUD prompt against a real cid BEFORE any feature wiring, (6) only then begin list rendering / action wiring. Ships with empty state groups — the list population is 44.5-12's scope. Dev-panel badge "DNA Editor (dev mode)" visible. First real application of the `scaffold-visual-context-surface` skill; success criterion is that the skill's checklist guides the scaffolding without re-derivation. Per decision gad-198.
+44.5-12 planned DNA Editor list population — read the four gene states into the scaffolded 44.5-11 pane. **DNA**: enumerate `.claude/skills/` (or the per-runtime skills dir) in the current project, read SKILL.md frontmatter for name/description/status. **Expressed**: enumerate `.gad-try/&lt;slug&gt;/` sandboxes in cwd, read PROVENANCE.md for source/kind/staged_on and ENTRY.md for the handoff prompt. **Mutations**: enumerate `.planning/proto-skills/&lt;slug&gt;/`, read PROVENANCE status + SKILL.md name + VALIDATION.md verdict. **Shed**: enumerate shed-score data (when 42.2-33 battery output is available) and manually-flagged entries. Each row renders with state-appropriate metadata badges and a cid derived from the slug (literal-prototype comment for grep-ability). No actions wired yet — pure read + render. File-system adapter extends 44.5-03's round-trip primitive. Per decision gad-198.
+44.5-13 planned DNA Editor action row wiring via the 44.5-02 dev bridge. Each gene state gets state-appropriate buttons that spawn the corresponding CLI command and stream output via SSE: **Try** (run `gad try &lt;ref&gt;` for a URL/slug/path input form), **Promote** (run `gad evolution promote &lt;slug&gt;` on a mutation), **Shed** (run `gad evolution shed &lt;slug&gt;` or `discard`), **Cleanup** (run `gad try cleanup &lt;slug&gt;` on an expressed trial), **Copy prompt** (read ENTRY.md + use the existing clipboard helper from 42.2-40.a), **Preview** (load the trial artifact into the right-pane iframe — 44.5-14's scope). Every button is a `SiteSection` with a deterministic cid (`dna-editor-action-&lt;verb&gt;-&lt;slug&gt;-site-section`). Depends on 44.5-11 (scaffold), 44.5-12 (list population), 44.5-02 (dev bridge). Per decision gad-198.
+44.5-14 planned Iframe preview integration for DNA Editor trial artifacts. Extends the 44.5-10 iframe live-preview primitive to detect and render non-generation artifacts: auto-detect `graph.html` (graphify trials), generic `index.html` (codebase maps, game builds), or a SKILL.md-declared `outputs:` path. When an operator clicks Preview on an expressed trial, the right pane loads the detected artifact in the sandboxed iframe. Integrates with the Visual Context System — the iframe wrapper gets a cid derived from `&lt;slug&gt;-preview-iframe-site-section`. Falls back to a "no viewable artifact" placeholder when no HTML output is detected. Depends on 44.5-13 (Preview button) and 44.5-10 (iframe primitive). Per decision gad-198.
+44.5-15 planned DNA Editor command+K shortcuts. Integrates with 42.2-43's command+K global search to add gene-lifecycle shortcuts: typing "try &lt;ref&gt;" triggers the same flow as the Try button; "promote &lt;slug&gt;" runs evolution promote; "shed &lt;slug&gt;" runs evolution shed; "preview &lt;slug&gt;" loads the trial artifact into the iframe. Autocompletes slug names from the current DNA Editor's enumerated genes. Depends on 44.5-13 (action wiring) and 42.2-43 (command+K infrastructure). Per decision gad-198.
+42.2-46 planned Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the three states (**expressed** in `.gad-try/`, **mutation** in `.planning/proto-skills/`, **integrated** in `.claude/skills/` or canonical `skills/`). Map every existing CLI command to its lifecycle role: `gad try`, `gad try cleanup`, `gad evolution install`, `gad evolution promote`, `gad evolution shed`, `gad evolution discard`, `gad skill promote-folder`, `gad install` (local), `gad install --global`. Deprecate `gad install --global` as the default first-encounter path for new skills (route new users through `gad try` + `gad evolution promote` instead). Backward compatible — no CLI changes, docs only. Update `references/skill-shape.md` §1 and AGENTS.md loop section to cite the new lifecycle model. Per decision gad-198.
 ```
 
 ## What this candidate is for
@@ -70,7 +76,7 @@ document them in the SKILL.md.
 
 ## Output location
 
-The drafter writes to `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/SKILL.md` — a
+The drafter writes to `.planning/proto-skills/phase-44.5-project-editor-brood-editor-dna-editor-l/SKILL.md` — a
 **different directory** from this candidate. Candidates and proto-skills
 are two distinct stages:
 

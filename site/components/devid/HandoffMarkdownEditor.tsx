@@ -14,11 +14,14 @@ export type HandoffEditorHandle = {
 type Props = {
   /** Initial document; remount the editor (parent `key`) when this must reset. */
   initialDoc: string;
+  /** Ignored when `readOnly`. */
   onChange: (doc: string) => void;
   className?: string;
   ariaLabel: string;
   /** Focus the editor after mount (e.g. empty user-only region below a locked header). */
   autoFocus?: boolean;
+  /** Read-only display (e.g. landing demo of handoff templates). */
+  readOnly?: boolean;
 };
 
 const handoffEditorTheme = EditorView.theme(
@@ -77,7 +80,7 @@ const handoffEditorTheme = EditorView.theme(
 );
 
 export const HandoffMarkdownEditor = forwardRef<HandoffEditorHandle, Props>(function HandoffMarkdownEditor(
-  { initialDoc, onChange, className, ariaLabel, autoFocus },
+  { initialDoc, onChange, className, ariaLabel, autoFocus, readOnly = false },
   ref,
 ) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -111,7 +114,9 @@ export const HandoffMarkdownEditor = forwardRef<HandoffEditorHandle, Props>(func
         markdown(),
         EditorView.lineWrapping,
         handoffEditorTheme,
+        ...(readOnly ? [EditorState.readOnly.of(true)] : []),
         EditorView.updateListener.of((update) => {
+          if (readOnly) return;
           if (update.docChanged) onChange(update.state.doc.toString());
         }),
       ],
@@ -131,7 +136,7 @@ export const HandoffMarkdownEditor = forwardRef<HandoffEditorHandle, Props>(func
       viewRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once; parent remounts via `key` when doc resets
-  }, []);
+  }, [readOnly]);
 
   return (
     <div

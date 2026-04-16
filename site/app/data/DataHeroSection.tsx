@@ -66,6 +66,7 @@ function buildCollections(sources: DataSource[]): DbCollection[] {
 
 export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { sources: DataSource[]; dbPayload: unknown; dbSourcePath: string }) {
   const collections = useMemo(() => buildCollections(sources), [sources]);
+  const isLocalJsonSource = useMemo(() => !dbSourcePath.startsWith("mongo:"), [dbSourcePath]);
   const queryEditorCollections = useMemo(() => ["active"], []);
   const collectionsByKey = useMemo(
     () =>
@@ -78,6 +79,7 @@ export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { 
   const [activeCollectionKey, setActiveCollectionKey] = useState("active");
   const [queryDraft, setQueryDraft] = useState(DEFAULT_QUERY);
   const [queryText, setQueryText] = useState(DEFAULT_QUERY);
+  const [dbPanelTab, setDbPanelTab] = useState<"results" | "query">("results");
   const [leftPanelTab, setLeftPanelTab] = useState<"collections" | "json">("collections");
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "done" | "error">("idle");
   const [syncMessage, setSyncMessage] = useState<string>("");
@@ -265,8 +267,12 @@ export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { 
                     </button>
                     <button
                       type="button"
-                      className={`rounded px-2 py-1 text-[11px] ${leftPanelTab === "json" ? "bg-background font-medium" : "text-muted-foreground"}`}
-                      onClick={() => setLeftPanelTab("json")}
+                      className={`rounded px-2 py-1 text-[11px] ${leftPanelTab === "json" ? "bg-background font-medium" : "text-muted-foreground"} ${isLocalJsonSource ? "" : "cursor-not-allowed opacity-50"}`}
+                      onClick={() => {
+                        if (isLocalJsonSource) setLeftPanelTab("json");
+                      }}
+                      disabled={!isLocalJsonSource}
+                      title={isLocalJsonSource ? "View raw local JSON payload" : "Raw JSON viewer is local-only"}
                     >
                       Raw JSON
                     </button>
@@ -296,99 +302,53 @@ export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { 
                         </button>
                       );
                     })
-                  : <DataJsonTreeView data={dbPayload} />}
+                  : isLocalJsonSource ? (
+                    <DataJsonTreeView data={dbPayload} />
+                  ) : (
+                    <div className="rounded-md border border-border/70 bg-background/40 p-2 text-[11px] text-muted-foreground">
+                      Raw JSON viewer is local-only. Current source: <code>{dbSourcePath}</code>.
+                    </div>
+                  )}
               </CardContent>
             </Card>
           </Identified>
 
-          <div className="space-y-2">
-            <Identified as="DataDbQueryPanel">
-              <Card>
-                <Identified as="DataDbQueryPanelHeader">
-                  <CardHeader className="pb-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="text-sm">Query</CardTitle>
-                      <div className="flex items-center gap-1 rounded-md border border-border/60 bg-muted/20 p-1">
-                        <span className="px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">CRUD</span>
-                        <div className="flex items-center gap-1">
-                          {quickPrompts.map((prompt) => (
-                            <Button
-                              key={prompt.label}
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="h-6 px-2 text-[10px]"
-                              onClick={() => navigator.clipboard?.writeText(prompt.text).catch(() => {})}
-                              title={prompt.text}
-                            >
-                              {prompt.label}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Identified>
-                <CardContent className="space-y-2.5">
-                  <Identified as="DataDbQueryEditor">
-                    <DataQueryEditor
-                      className="min-h-[52vh]"
-                      value={queryDraft}
-                      onChange={setQueryDraft}
-                      onRun={runQuery}
-                      collections={queryEditorCollections}
-                    />
-                  </Identified>
-                  <Identified as="DataDbQueryActions">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button size="sm" onClick={runQuery}>
-                        <Play size={13} className="mr-1" />
-                        Run
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setQueryDraft(DEFAULT_QUERY);
-                          setQueryText(DEFAULT_QUERY);
-                          setActiveCollectionKey("active");
-                        }}
-                      >
-                        <RefreshCw size={13} className="mr-1" />
-                        Reset
-                      </Button>
-                      <Badge variant="outline">FROM {appliedCollection}</Badge>
-                      <Badge variant="outline">LIMIT {plan.limit}</Badge>
-                      <Badge variant="outline">
-                        SORT {plan.sortField} {plan.sortDirection}
-                      </Badge>
-                    </div>
-                  </Identified>
-                  <Identified as="DataDbQueryDslHelp" tag="p" className="text-xs text-muted-foreground">
-                    Query help is tuned for Mongo-like JSON assist. Suggestions appear only when context is clear.
-                  </Identified>
-                </CardContent>
-              </Card>
-            </Identified>
-
-            <Identified as="DataDbResultsPanel">
-              <Card>
-                <CardHeader className="pb-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-sm">Results</CardTitle>
+          <div>
+            <Card>
+              <CardHeader className="pb-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/20 p-1">
+                    <button
+                      type="button"
+                      className={`rounded px-2 py-1 text-[11px] ${dbPanelTab === "results" ? "bg-background font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setDbPanelTab("results")}
+                    >
+                      Results
+                    </button>
+                    <button
+                      type="button"
+                      className={`rounded px-2 py-1 text-[11px] ${dbPanelTab === "query" ? "bg-background font-medium" : "text-muted-foreground"}`}
+                      onClick={() => setDbPanelTab("query")}
+                    >
+                      Query
+                    </button>
+                  </div>
+                  {dbPanelTab === "results" ? (
                     <Badge variant="secondary" className="text-[11px]">
                       {visibleRows.length}/{rows.length} row{visibleRows.length === 1 ? "" : "s"}
                     </Badge>
-                  </div>
-                  {errors.length > 0 ? (
-                    <div className="mt-1">
-                      <Badge variant="danger" className="text-[11px]">
-                        {errors.length} parse issue(s)
-                      </Badge>
-                    </div>
                   ) : null}
-                </CardHeader>
-                <CardContent className="space-y-2.5">
+                </div>
+                {dbPanelTab === "results" && errors.length > 0 ? (
+                  <div className="mt-1">
+                    <Badge variant="danger" className="text-[11px]">
+                      {errors.length} parse issue(s)
+                    </Badge>
+                  </div>
+                ) : null}
+              </CardHeader>
+              <CardContent className="space-y-2.5">
+                <Identified as="DataDbResultsPanel" className={dbPanelTab === "results" ? "" : "hidden"}>
                   {errors.length > 0 ? (
                     <div className="rounded-lg border border-rose-400/40 bg-rose-500/10 p-2.5 text-xs text-rose-200">
                       {errors.map((error) => (
@@ -486,9 +446,72 @@ export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { 
                       </tbody>
                     </table>
                   </Identified>
-                </CardContent>
-              </Card>
-            </Identified>
+                </Identified>
+
+                <Identified as="DataDbQueryPanel" className={dbPanelTab === "query" ? "" : "hidden"}>
+                  <Identified as="DataDbQueryPanelHeader">
+                    <div className="flex items-center justify-start gap-2">
+                      <CardTitle className="text-sm">Query</CardTitle>
+                      <div className="flex items-center gap-1 rounded-md border border-border/60 bg-muted/20 p-1">
+                        <span className="px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">CRUD</span>
+                        <div className="flex items-center gap-1">
+                          {quickPrompts.map((prompt) => (
+                            <Button
+                              key={prompt.label}
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px]"
+                              onClick={() => navigator.clipboard?.writeText(prompt.text).catch(() => {})}
+                              title={prompt.text}
+                            >
+                              {prompt.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </Identified>
+                  <Identified as="DataDbQueryEditor">
+                    <DataQueryEditor
+                      className="min-h-[52vh]"
+                      value={queryDraft}
+                      onChange={setQueryDraft}
+                      onRun={runQuery}
+                      collections={queryEditorCollections}
+                    />
+                  </Identified>
+                  <Identified as="DataDbQueryActions">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button size="sm" onClick={runQuery}>
+                        <Play size={13} className="mr-1" />
+                        Run
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setQueryDraft(DEFAULT_QUERY);
+                          setQueryText(DEFAULT_QUERY);
+                          setActiveCollectionKey("active");
+                        }}
+                      >
+                        <RefreshCw size={13} className="mr-1" />
+                        Reset
+                      </Button>
+                      <Badge variant="outline">FROM {appliedCollection}</Badge>
+                      <Badge variant="outline">LIMIT {plan.limit}</Badge>
+                      <Badge variant="outline">
+                        SORT {plan.sortField} {plan.sortDirection}
+                      </Badge>
+                    </div>
+                  </Identified>
+                  <Identified as="DataDbQueryDslHelp" tag="p" className="text-xs text-muted-foreground">
+                    Query help is tuned for Mongo-like JSON assist. Suggestions appear only when context is clear.
+                  </Identified>
+                </Identified>
+              </CardContent>
+            </Card>
           </div>
         </Identified>
       </Identified>

@@ -45,6 +45,12 @@ import {
   sortRegistryEntries,
 } from "./devid-dom-scan";
 
+function resolveEntriesOrdered(pool: RegistryEntry[], cids: string[]): RegistryEntry[] {
+  return cids
+    .map((c) => pool.find((e) => e.cid === c))
+    .filter((e): e is RegistryEntry => Boolean(e));
+}
+
 /** Ordered merge list for handoff when ≥2 cids selected at the current depth slice. */
 function resolveHandoffEntries(
   clicked: RegistryEntry,
@@ -237,6 +243,8 @@ export function DevPanel(props: DevPanelProps) {
     highlightCid,
     sameDepthMergeCids,
     setSameDepthMergeCids,
+    ctrlLaneCids,
+    setCtrlLaneCids,
     promptVerbosity,
     setPromptVerbosity,
   } = useDevId();
@@ -514,10 +522,20 @@ export function DevPanel(props: DevPanelProps) {
     return resolveHandoffEntries(sectionTarget, visible, sameDepthMergeCids);
   }, [mode, sectionTarget, sectionVisibleEntries, bandVisibleEntries, sameDepthMergeCids]);
 
-  const panelTargetSummary =
-    panelHandoffEntriesResolved.length >= 2
-      ? `${panelHandoffEntriesResolved.length} merged @ d${panelHandoffEntriesResolved[0]?.depth ?? 0}`
-      : (sectionTarget?.label ?? (mode === "band" ? bandLabel : "None"));
+  const ctrlLaneEntriesResolved = useMemo(() => {
+    const pool = mode === "section" ? sectionEntries : bandEntries;
+    return resolveEntriesOrdered(pool, ctrlLaneCids);
+  }, [mode, sectionEntries, bandEntries, ctrlLaneCids]);
+
+  const panelTargetSummary = (() => {
+    const altSummary =
+      panelHandoffEntriesResolved.length >= 2
+        ? `${panelHandoffEntriesResolved.length} Alt @ d${panelHandoffEntriesResolved[0]?.depth ?? 0}`
+        : (sectionTarget?.label ?? (mode === "band" ? bandLabel : "None"));
+    const ctrlHint =
+      ctrlLaneEntriesResolved.length > 0 ? ` · Ctrl×${ctrlLaneEntriesResolved.length}` : "";
+    return `${altSummary}${ctrlHint}`;
+  })();
 
   const finalizeUpdatePromptCopy = useCallback(
     (transcript: string) => {
@@ -526,6 +544,7 @@ export function DevPanel(props: DevPanelProps) {
         absolutePageUrl(pathname),
         panelHandoffEntriesResolved,
         promptVerbosity,
+        ctrlLaneEntriesResolved,
       );
       const resolved = `${prefix}\n${transcript.trim()}`;
       navigator.clipboard?.writeText(resolved).catch(() => {});
@@ -533,7 +552,7 @@ export function DevPanel(props: DevPanelProps) {
       window.setTimeout(() => setHeaderCopied(null), 1200);
       toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
     },
-    [pathname, promptVerbosity, panelHandoffEntriesResolved],
+    [pathname, promptVerbosity, panelHandoffEntriesResolved, ctrlLaneEntriesResolved],
   );
 
   const { listening, interim, toggle: toggleUpdatePromptWithSpeech } = useDictatedPromptCopy({
@@ -575,18 +594,19 @@ export function DevPanel(props: DevPanelProps) {
       absolutePageUrl(pathname),
       panelHandoffEntriesResolved,
       promptVerbosity,
+      ctrlLaneEntriesResolved,
     );
     navigator.clipboard?.writeText(resolved).catch(() => {});
     setHeaderCopied("delete");
     window.setTimeout(() => setHeaderCopied(null), 1200);
     toast.success("Delete prompt copied");
-  }, [pathname, promptVerbosity, panelHandoffEntriesResolved]);
+  }, [pathname, promptVerbosity, panelHandoffEntriesResolved, ctrlLaneEntriesResolved]);
 
   const handleSectionRowClick = useCallback(
     (entry: RegistryEntry, e: MouseEvent<HTMLButtonElement>) => {
-      const merge = e.ctrlKey || e.metaKey;
       const visible = sectionVisibleEntries;
-      if (merge) {
+
+      if (e.altKey) {
         setSameDepthMergeCids((prev) => {
           const allowed = new Set(visible.map((x) => x.cid));
           if (!allowed.has(entry.cid)) return prev;
@@ -596,21 +616,35 @@ export function DevPanel(props: DevPanelProps) {
           }
           return [...prev.filter((c) => allowed.has(c)), entry.cid];
         });
-      } else {
-        setSameDepthMergeCids([entry.cid]);
+        setActiveCid(entry.cid);
+        setHighlightCid(entry.cid);
+        locate(entry.cid);
+        return;
       }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        setCtrlLaneCids((prev) => {
+          if (prev.includes(entry.cid)) return prev.filter((c) => c !== entry.cid);
+          return [...prev, entry.cid];
+        });
+        locate(entry.cid);
+        return;
+      }
+
+      setCtrlLaneCids([]);
+      setSameDepthMergeCids([entry.cid]);
       setActiveCid(entry.cid);
       setHighlightCid(entry.cid);
       locate(entry.cid);
     },
-    [sectionVisibleEntries, setSameDepthMergeCids, setActiveCid, setHighlightCid, locate],
+    [sectionVisibleEntries, setSameDepthMergeCids, setCtrlLaneCids, setActiveCid, setHighlightCid, locate],
   );
 
   const handleBandRowClick = useCallback(
     (entry: RegistryEntry, e: MouseEvent<HTMLButtonElement>) => {
-      const merge = e.ctrlKey || e.metaKey;
       const visible = bandVisibleEntries;
-      if (merge) {
+
+      if (e.altKey) {
         setSameDepthMergeCids((prev) => {
           const allowed = new Set(visible.map((x) => x.cid));
           if (!allowed.has(entry.cid)) return prev;
@@ -620,14 +654,28 @@ export function DevPanel(props: DevPanelProps) {
           }
           return [...prev.filter((c) => allowed.has(c)), entry.cid];
         });
-      } else {
-        setSameDepthMergeCids([entry.cid]);
+        setActiveCid(entry.cid);
+        setHighlightCid(entry.cid);
+        locate(entry.cid);
+        return;
       }
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        setCtrlLaneCids((prev) => {
+          if (prev.includes(entry.cid)) return prev.filter((c) => c !== entry.cid);
+          return [...prev, entry.cid];
+        });
+        locate(entry.cid);
+        return;
+      }
+
+      setCtrlLaneCids([]);
+      setSameDepthMergeCids([entry.cid]);
       setActiveCid(entry.cid);
       setHighlightCid(entry.cid);
       locate(entry.cid);
     },
-    [bandVisibleEntries, setSameDepthMergeCids, setActiveCid, setHighlightCid, locate],
+    [bandVisibleEntries, setSameDepthMergeCids, setCtrlLaneCids, setActiveCid, setHighlightCid, locate],
   );
 
   const copyValue = (value: string) => {
@@ -650,6 +698,7 @@ export function DevPanel(props: DevPanelProps) {
           open={handoffEntries != null}
           onOpenChange={(v) => !v && setHandoffEntries(null)}
           entries={handoffEntries}
+          ctrlReferenceEntries={ctrlLaneEntriesResolved}
           pathname={pathname}
         />
         <div
@@ -785,9 +834,10 @@ export function DevPanel(props: DevPanelProps) {
                     dockCorner={sectionCorner}
                     entry={entry}
                     active={activeTargetCid === entry.cid}
-                    mergeSelected={
+                    altMergeSelected={
                       sameDepthMergeCids.includes(entry.cid) && activeTargetCid !== entry.cid
                     }
+                    ctrlLaneSelected={ctrlLaneCids.includes(entry.cid)}
                     onRowClick={(e) => handleSectionRowClick(entry, e)}
                     onCopy={() => copyEntry(entry)}
                     onPrompt={() =>
@@ -831,6 +881,7 @@ export function DevPanel(props: DevPanelProps) {
         open={handoffEntries != null}
         onOpenChange={(v) => !v && setHandoffEntries(null)}
         entries={handoffEntries}
+        ctrlReferenceEntries={ctrlLaneEntriesResolved}
         pathname={pathname}
       />
       <div
@@ -962,9 +1013,10 @@ export function DevPanel(props: DevPanelProps) {
                   dockCorner={corner}
                   entry={entry}
                   active={activeTargetCid === entry.cid}
-                  mergeSelected={
+                  altMergeSelected={
                     sameDepthMergeCids.includes(entry.cid) && activeTargetCid !== entry.cid
                   }
+                  ctrlLaneSelected={ctrlLaneCids.includes(entry.cid)}
                   onRowClick={(e) => handleBandRowClick(entry, e)}
                   onCopy={() => copyEntry(entry)}
                   onPrompt={() =>

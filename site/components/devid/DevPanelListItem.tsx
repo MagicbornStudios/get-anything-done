@@ -11,7 +11,8 @@ export function DevPanelListItem({
   dockCorner,
   entry,
   active,
-  mergeSelected,
+  altMergeSelected,
+  ctrlLaneSelected,
   onRowClick,
   onCopy,
   onPrompt,
@@ -19,8 +20,10 @@ export function DevPanelListItem({
   dockCorner: VcPanelCorner;
   entry: RegistryEntry;
   active: boolean;
-  /** In merge group at this depth but not the primary focused row. */
-  mergeSelected?: boolean;
+  /** Alt-lane: in same-depth merge group but not the primary focused row. */
+  altMergeSelected?: boolean;
+  /** Ctrl/Cmd-lane: cross-depth reference selection. */
+  ctrlLaneSelected?: boolean;
   onRowClick: (e: MouseEvent<HTMLButtonElement>) => void;
   onCopy: () => void;
   onPrompt: () => void;
@@ -31,17 +34,22 @@ export function DevPanelListItem({
         "flex items-center gap-1 rounded border p-0.5",
         active
           ? "border-accent/60 bg-accent/10 text-accent"
-          : mergeSelected
-            ? "border-violet-500/50 bg-violet-500/10 text-foreground"
-            : "border-border/50 text-muted-foreground hover:border-accent/40 hover:text-foreground",
+          : ctrlLaneSelected && altMergeSelected
+            ? "border-violet-500/50 bg-violet-500/10 text-foreground ring-1 ring-inset ring-sky-400/55"
+            : ctrlLaneSelected
+              ? "border-sky-500/55 bg-sky-500/10 text-foreground"
+              : altMergeSelected
+                ? "border-violet-500/50 bg-violet-500/10 text-foreground"
+                : "border-border/50 text-muted-foreground hover:border-accent/40 hover:text-foreground",
       )}
     >
       <DevChromeHoverHint
         dockCorner={dockCorner}
         body={
           <p>
-            {entry.label} — <span className="font-mono">{entry.cid}</span>. Click to select and locate. Ctrl or ⌘+click
-            toggles this row in a same-depth merge group for one agent handoff.
+            {entry.label} — <span className="font-mono">{entry.cid}</span>. Click: single Alt-lane target (clears Ctrl
+            lane) and locate. Alt+click: toggle this row in the same-depth Alt merge group. Ctrl or ⌘+click: toggle the
+            cross-depth Ctrl reference lane (independent of Alt).
           </p>
         }
       >
@@ -62,7 +70,8 @@ export function DevPanelListItem({
         dockCorner={dockCorner}
         body={
           <p>
-            Open the agent handoff dialog. If several rows are merged at this depth, the prompt lists every target.
+            Open the agent handoff dialog. Alt-lane merges list every merged target; active Ctrl-lane picks append as an
+            extra reference block when present.
           </p>
         }
       >

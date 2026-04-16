@@ -6385,7 +6385,8 @@ const snapshotV2Cmd = defineCommand({
     full: { type: 'boolean', description: 'Full dump (no sprint filtering)', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
     skills: { type: 'string', description: 'Number of equipped skills to surface (44-35). 0 disables. Default: 5.', default: '5' },
-    mode: { type: 'string', description: 'full (default) | active — "active" emits ONLY STATE.xml next-action + current phase + open sprint tasks (skips static catalog, references, decisions). Decision gad-195: static info loaded once at session start, active info re-pullable cheap without context waste.', default: 'full' },
+    mode: { type: 'string', description: 'full (default) | active — "active" emits ONLY STATE.xml next-action + current phase + open sprint tasks (skips static catalog, references, decisions). Decision gad-195: static info loaded once at session start, active info re-pullable cheap without context waste.', default: '' },
+    session: { type: 'string', description: 'Session ID. When provided, auto-downgrades to mode=active if static context was already delivered in this session. Env fallback: GAD_SESSION_ID.', default: '' },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
@@ -6413,6 +6414,22 @@ const snapshotV2Cmd = defineCommand({
     const planDir = path.join(baseDir, root.path, root.planningDir);
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
+
+    // Session-aware mode resolution: auto-downgrade to active when session
+    // has already received static context, unless --mode was explicitly passed.
+    const sessionId = (args.session || process.env.GAD_SESSION_ID || '').trim();
+    let snapshotSession = null;
+    if (sessionId) {
+      const allSessions = loadSessions(baseDir, [root]);
+      snapshotSession = allSessions.find((s) => s.id === sessionId) || null;
+    }
+    const explicitMode = (args.mode || '').trim().toLowerCase();
+    const resolvedMode = (() => {
+      if (explicitMode) return explicitMode;
+      if (snapshotSession && snapshotSession.staticLoadedAt) return 'active';
+      return 'full';
+    })();
+
     const sdkAssetAliases = {
       '@skills': 'skills',
       '@workflows': 'workflows',
@@ -6970,7 +6987,7 @@ const snapshotV2Cmd = defineCommand({
     // docs-map) are loaded once at session start via --mode=full (default)
     // and NOT re-emitted mid-session. This is the session-scoped snapshot
     // contract that prevents redundant context re-loading.
-    const isActiveMode = String(args.mode || 'full').toLowerCase() === 'active';
+    const isActiveMode = resolvedMode === 'active';
     if (!isActiveMode) {
       const sprintDecisionsSection = buildDecisionsSection();
       if (sprintDecisionsSection) sections.push(sprintDecisionsSection);
@@ -6985,10 +7002,23 @@ const snapshotV2Cmd = defineCommand({
       if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
     }
 
+    // Stamp session after building sections, before output.
+    if (snapshotSession) {
+      const now = new Date().toISOString();
+      snapshotSession.lastSnapshotAt = now;
+      if (!isActiveMode) snapshotSession.staticLoadedAt = now;
+      writeSession(snapshotSession);
+    }
+
+    const sessionSuffix = snapshotSession
+      ? `  session=${snapshotSession.id}${isActiveMode ? ' (active-only, static elided)' : ''}`
+      : '';
+
     if (args.json || shouldUseJson()) {
       console.log(JSON.stringify({
         project: root.id,
-        mode: 'sprint',
+        mode: isActiveMode ? 'active' : 'sprint',
+        session: snapshotSession ? snapshotSession.id : null,
         scope,
         agent: agentView,
         assignments,
@@ -6999,7 +7029,8 @@ const snapshotV2Cmd = defineCommand({
       return;
     }
 
-    console.log(`\nSnapshot (sprint ${k}): ${root.id} - phases ${sprintPhaseIds.join(', ')}\n`);
+    const modeTag = isActiveMode ? 'active' : `sprint ${k}`;
+    console.log(`\nSnapshot (${modeTag}): ${root.id} - phases ${sprintPhaseIds.join(', ')}${sessionSuffix}\n`);
     for (const section of sections) {
       console.log(`-- ${section.title} ${'-'.repeat(Math.max(0, 60 - section.title.length))}`);
       console.log(section.content);
@@ -7007,6 +7038,9 @@ const snapshotV2Cmd = defineCommand({
     }
     const totalChars = sections.reduce((sum, section) => sum + section.content.length, 0);
     console.log(`-- end snapshot (~${Math.round(totalChars / 4)} tokens) --`);
+    if (snapshotSession) {
+      console.log(`Reuse: --session ${snapshotSession.id}  (next call auto-downgrades to active mode)`);
+    }
   },
 });
 
@@ -8747,12 +8781,45 @@ const startupCmd = defineCommand({
 
     if (args.projectid) {
       console.log('');
+      // Auto-create a session so the snapshot stamps staticLoadedAt and
+      // subsequent calls with --session auto-downgrade to active mode.
+      let sessionArg = [];
+      try {
+        const startupBaseDir = findRepoRoot();
+        const startupConfig = gadConfig.load(startupBaseDir);
+        const startupRoots = startupConfig.roots.filter(r => r.id === args.projectid);
+        if (startupRoots.length > 0) {
+          const startupRoot = startupRoots[0];
+          const sDir = sessionsDir(startupBaseDir, startupRoot);
+          fs.mkdirSync(sDir, { recursive: true });
+          const state = readState(startupRoot, startupBaseDir);
+          const newSession = {
+            id: generateSessionId(),
+            projectId: startupRoot.id,
+            contextMode: 'loaded',
+            position: { phase: state.currentPhase || null, plan: null, task: null },
+            status: SESSION_STATUS.ACTIVE,
+            refs: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            _root: startupRoot,
+            _file: path.join(sDir, `${generateSessionId()}.json`),
+          };
+          // Re-derive file path with the correct id
+          newSession._file = path.join(sDir, `${newSession.id}.json`);
+          newSession.refs = buildContextRefs(startupRoot, startupBaseDir, newSession);
+          writeSession(newSession);
+          sessionArg = ['--session', newSession.id];
+          console.log(`Session created: ${newSession.id}`);
+        }
+      } catch { /* non-fatal — snapshot still works without session */ }
+
       console.log(`Running snapshot now for projectid=${args.projectid}...`);
       console.log('');
       // Delegate to snapshot by re-invoking the process — simplest path.
       const result = require('child_process').spawnSync(
         process.execPath,
-        [__filename, 'snapshot', '--projectid', args.projectid],
+        [__filename, 'snapshot', '--projectid', args.projectid, ...sessionArg],
         { stdio: 'inherit' }
       );
       process.exit(result.status || 0);

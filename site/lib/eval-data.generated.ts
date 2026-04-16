@@ -4675,6 +4675,18 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
   {
+    "id": "gad-198",
+    "title": "Skills are the genes in the DNA — install/try/proto/shed/promote collapse into one lifecycle, surfaced as the DNA Editor inside the Project Editor",
+    "summary": "Operator (2026-04-15) made the biological metaphor explicit and the scattered commands suddenly line up:\r\n\r\n**Genes = skills.** A skill (SKILL.md + workflow) is the atomic hereditary unit. The project's `.claude/skills/` dir is the DNA — the permanent, integrated set of genes the organism expresses by default.\r\n\r\n**`gad try` is epigenetic expression.** Staging a skill into `.gad-try/&lt;slug&gt;/` expresses a gene temporarily and reversibly without writing it into the DNA. That is what `install-skill` global was always *trying* to be — a reversible trial — but `install-skill` conflated \"write to DNA\" with \"run once,\" so operators either committed permanently or got nothing. `gad try` is the correct epigenetic primitive and supersedes the ambiguous install-skill story.\r\n\r\n**Proto-skills are mutations.** `.planning/proto-skills/&lt;slug&gt;/` entries are candidate new alleles awaiting review. The proto-skill battery (42.2-33) is natural selection — findability + execution sufficiency + shed score determine whether a mutation survives. `gad evolution promote` is the integration event where a surviving mutation joins the DNA. `gad evolution shed` / `discard` removes an unsuccessful mutation from the candidate pool.\r\n\r\n**Phenotype = species + broods.** A species is a recipe attached to a project — the specific organism. A brood is the accumulated population of generations for that species. The Bestiary is the UI view of every species and its brood. These are *observations* of what the DNA produces, not manipulations of the DNA itself.\r\n\r\n**Lifecycle verb collapse.** The scattered command set — `gad install`, `gad try`, `gad evolution install`, `gad evolution promote`, `gad evolution shed`, `gad evolution discard`, `gad skill promote-folder` — actually factors into two verbs against three states:\r\n  - **express** (temporary, reversible): `gad try &lt;ref&gt;` — stage a gene for epigenetic expression in the current project without writing it to the DNA\r\n  - **integrate** (permanent): `gad evolution promote &lt;slug&gt;` — write a surviving mutation or a proven trial into the DNA\r\nStates: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `integrated` (`.claude/skills/` or canonical `skills/`). Shedding is removal from `mutation`. Cleanup is removal from `expressed`. Promotion is the one-way flip from either intermediate state to `integrated`.\r\n\r\n**DNA Editor is the unified surface.** Not a new route, not a separate tool, not another backlog phase — a new pane in the already-planned Project Editor (phase 44.5), consistent with Project Editor / Brood Editor / Bestiary naming. Shows all four gene states (DNA / Expressed / Mutations / Shed pile) in one view, every row has state-appropriate actions wired through the dev-bridge to the CLI, artifacts with an HTML output render in the existing right-pane iframe. Built using the `scaffold-visual-context-surface` skill shipped 2026-04-15 — this is the first real application of that skill and the fractal closure of the 42.2-13 evolution pipeline proof: we used the evolution loop to surface a skill, promoted it, and now we're using it to build the gene-management UI for the evolution loop itself.\r\n\r\n**Why this is the right shape.** The existing scatter (install-skill does one thing, gad try does another, evolution promote does a third, the site has no surface for any of them) reflects accumulated tools, not a coherent model. The metaphor exposes that they were always one thing. Unifying them in the DNA Editor pane:\r\n  (a) gives operators a single surface to see and manipulate genes at any lifecycle state\r\n  (b) makes the \"trial before commit\" story default — skills are expressed via `gad try`, only promoted to DNA when the trial produces good evidence\r\n  (c) reuses phase 44.5 infrastructure (dev gate, Visual Context System cids, dev bridge, inventory grid, iframe preview, modal footer CRUD) instead of building a parallel stack\r\n  (d) aligns the CLI verbs with the UI — every UI action is a CLI command, headless and headed paths stay equivalent (consistent with decision gad-18 / gad-183)",
+    "impact": "(1) Phase 44.5 goal extended from \"Project Editor + Brood Editor\" to \"Project Editor + Brood Editor + DNA Editor\" — no new phase number, the DNA Editor is a sibling pane inside the existing editor route. (2) New tasks land in 44.5: **44.5-11** scaffold the DNA Editor pane via the `scaffold-visual-context-surface` skill (dev gate + cids + modal-footer round-trip); **44.5-12** DNA/Expressed/Mutations/Shed list views reading `.claude/skills/`, `.gad-try/`, `.planning/proto-skills/`, shed-score data; **44.5-13** action row wiring through the 44.5-02 dev bridge (try/promote/shed/cleanup/copy-prompt/preview buttons each running the corresponding CLI command); **44.5-14** iframe right-pane integration for trial artifacts (auto-detect `graph.html`, generic `index.html`, or a SKILL.md-declared `outputs:` path); **44.5-15** command+K integration via the 42.2-43 planning-graph so operators can type \"try X\", \"promote Y\", \"shed Z\" as shortcuts. (3) New task **42.2-46** writes the verb-collapse doc: references/skill-lifecycle.md explains the two verbs (express/integrate) against the three states (expressed/mutation/integrated), maps every existing CLI to the new verb model, and deprecates `install-skill` global as the default path (backward compatible — shim stays, but docs route new users through `gad try` + `gad evolution promote`). (4) `scaffold-visual-context-surface` skill gets its first real use — applies its 6-step checklist to every pane in the DNA Editor build. This is also the success criterion for the skill: if the DNA Editor scaffolds cleanly using it, the skill is validated against real work, not just the phase 44.5 candidate it was drafted from. (5) Graphify integration via `gad try graphify` inside the DNA Editor iframe may supersede or replace task 42.2-45 (native planning-graph extractor) depending on what the operator sees when they run the Graphify trial live — that decision stays evidence-gated and is noted as a superseding-candidate for gad-197. (6) All four gene-state dirs (`.claude/skills/`, `.gad-try/`, `.planning/proto-skills/`, shed records) become canonical read sources for the DNA Editor pane — documented in references/skill-shape.md as part of 42.2-46. (7) Visual Context System cid naming contract: every gene row uses `dna-editor-gene-&lt;slug&gt;-site-section`; every state-group header uses `dna-editor-state-&lt;state&gt;-site-section`; the panel shell uses `dna-editor-pane-site-section`. All literal, grep-able, deterministic on slug."
+  },
+  {
+    "id": "gad-197",
+    "title": "Graphify integration: Option B (native Node extractor) ships first, Option A (vendor Graphify) gated on evidence",
+    "summary": "Task 42.2-41 trialed Graphify end-to-end via the newly-shipped `gad try` flow. Findings in `evals/FINDINGS-2026-04-15-graphify-trial.md` — pipeline proven end-to-end, 33 files staged into `.gad-try/graphify/`, consent gate correctly surfaced the implicit `pip install graphifyy` dependency via body scan.\r\n\r\nTwo integration paths were considered for bringing a knowledge-graph + visualization primitive into GAD alongside our existing workflow/site/visual-context-system:\r\n\r\n**Option A — vendor Graphify as `skills/gad-graphify/`.** Copy the Python-backed skill + its ~15 pipeline modules into the canonical skills tree, accept Python 3.10+ as a GAD optional dependency (precedent: `gad models install` already allows opt-in deps), reuse upstream's multimodal extraction (vision, whisper, PDF) that we would not realistically reproduce in Node.\r\n  Pro: days of work instead of months; multimodal capabilities we cannot match; already-standard `graph.json` shape consumed by Obsidian/Neo4j/Gephi.\r\n  Con: Python in the dep tree contradicts the zero-deps-first memory feedback (though `gad models` sets a lazy-optional precedent); install.js would need a Python environment path (pyenv/uv/pip); upstream release cadence risk.\r\n\r\n**Option B — build a GAD-native extractor as `skills/gad-planning-graph/`.** Node-only pipeline that walks `.planning/*.xml`, `skills/*/SKILL.md`, `decisions/*.xml`, `workflows/*.md` and emits the same `graph.json` shape with typed nodes (phase, task, decision, skill, workflow, file) and typed edges (cites, depends_on, decides, belongs_to, authored_by). Pure structural extraction, no multimodal.\r\n  Pro: zero new install surface; planning-XML schema awareness baked in from day one; ships fast for the specific planning-graph use case that actually unblocks site integration tasks 42.2-43 + 42.2-44.\r\n  Con: reinvents extraction; cannot match Graphify's multimodal capabilities for arbitrary folders (screenshots, PDFs, audio).\r\n\r\n**Decision — hybrid, sequenced:**\r\n1. Ship **Option B** first as `skills/gad-planning-graph/`. Scope the first cut narrowly to GAD planning artifacts only. Produces `site/data/planning-graph.json` which unblocks 42.2-43 (command+K integration) and 42.2-44 (Visual Context System graph panel primitive).\r\n2. Keep **Option A** as an opt-in trial via `gad try graphify` (already shipped under 42.2-40). Operators who want multimodal extraction for an arbitrary folder get it with one command, no framework commitment, cleanup available.\r\n3. **Promote Option A if usage pattern emerges.** If trial volume or specific user requests justify the Python dep, vendor `skills/gad-graphify/` in a follow-up decision. That call becomes evidence-based rather than speculative.\r\n\r\nThis sequences to the narrowest-first commitment that still unblocks the site integration work while preserving the operator's \"try before you commit\" request that spawned `gad try` in the first place.",
+    "impact": "(1) New task `42.2-45` ships Option B as `skills/gad-planning-graph/` — Node-only extractor targeting the `graph.json` shape, scoped to `.planning/` + `skills/` + `decisions/` + `workflows/`. Replaces the previous 42.2-42 placeholder (decision now made, so 42.2-42 becomes the decision doc pointer and is marked done). (2) Task `42.2-43` (planning-graph.json site pipeline + command+K) unblocks and depends on 42.2-45. (3) Task `42.2-44` (VCS graph panel primitive) unblocks and depends on 42.2-43. (4) Task `42.2-40.a` polish items (strip .git after clone, `--branch` flag, interactive consent gate for runtime invocation) deferred to a follow-up but not blocking. (5) `gad try` stays the canonical \"trial an external skill\" primitive — no framework-level mention of graphify in particular, since any external skill can ride this flow. (6) Planning-graph schema design: nodes typed as `phase | task | decision | skill | workflow | file | requirement`; edges typed as `cites | depends_on | decides | belongs_to | authored_by | supersedes`. Shape must remain compatible with Graphify's `graph.json` so downstream tools (Obsidian, Neo4j, Gephi, the upstream Graphify viewer) can consume it if the operator later wants to. (7) If Option B lands and operators ask for multimodal coverage, the decision to promote Option A becomes a matter of weighing measured demand against Python dep cost — an evidence-based call, not a speculative one."
+  },
+  {
     "id": "gad-196",
     "title": "Home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming",
     "summary": "The home-page section `components/landing/lineage/` used `SiteSection` `cid=\"lineage-site-section\"` while the **product meaning** had shifted to a visual-context handoff loop (site → panel → speech → clipboard → coding agent → ship → repeat). \"Lineage\" remained accurate only for the **GSD upstream reference** (link + YouTube segment), not for the primary UX story. That mismatch persisted across refactors because: (1) **incremental edits** prioritized the prompt payload and media swap over filesystem renames; (2) **no TASK-REGISTRY task** explicitly gated \"rename module when semantics change\"; (3) **greppable `cid` churn** was deferred to avoid one-shot breakages in the showcase prompt and dev-panel bookmarks.\r\n\r\n**GAD loop application:** treat stale public identifiers as **technical debt** the same as an unfinished task — capture in DECISIONS (this entry), rename files + `cid` in one atomic change, update the verbatim showcase string, and **commit** so snapshot and site stay aligned.\r\n\r\n**Resolution:** folder `lineage/` → `agent-handoff-cycle/`; components `Lineage*` → `AgentHandoffCycle*`; `cid` → `agent-handoff-cycle-site-section`; `id` → `agent-handoff-cycle`; `media.json` key `lineage_talk` → `gsd_upstream_planning_talk` (content unchanged). Intellectual lineage to GSD stays in copy and links — it is no longer the **module** name.",
@@ -9792,11 +9804,11 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "42.2-40",
     "phaseId": "42.2",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "cli",
-    "goal": "Temporary skill install flow (`gad try &lt;skill&gt;`) — new CLI subcommand that stages an external skill into an ephemeral `.gad-try/&lt;skill&gt;/` sandbox, audits and consents to declared dependencies (binaries, pip/npm packages) before running, hands off to the user's coding agent via a copy-paste prompt, and supports `--cleanup` to tear down the sandbox + list dep removal commands. Designed to let operators trial external skills (like Graphify) inside a GAD project without polluting `~/.claude/skills/` or committing to a full install. See `.planning/notes/temp-skill-install-and-graphify-2026-04-15.md` for the full design.",
+    "goal": "Temporary skill install flow (`gad try &lt;skill&gt;`) — new CLI subcommand that stages an external skill into an ephemeral `.gad-try/&lt;skill&gt;/` sandbox, audits and consents to declared dependencies (binaries, pip/npm packages) before running, hands off to the user's coding agent via a copy-paste prompt, and supports `--cleanup` to tear down the sandbox + list dep removal commands. Designed to let operators trial external skills (like Graphify) inside a GAD project without polluting `~/.claude/skills/` or committing to a full install.",
     "keywords": [
       "cli",
       "try",
@@ -9804,40 +9816,77 @@ export const ALL_TASKS: TaskRecord[] = [
       "ephemeral",
       "consent-gate",
       "cleanup",
-      "graphify-trial-enabler"
+      "temporary-install",
+      "42.2-40"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-40.a",
+    "phaseId": "42.2",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Polish items for `gad try` surfaced by operator questions after shipping 42.2-40: (1) clipboard auto-populate with the handoff prompt so the user can paste directly into their coding agent without opening ENTRY.md, (2) clearer documentation that the sandbox is always cwd-relative regardless of whether the gad binary is globally or locally installed, (3) stdout prints the handoff prompt inline alongside the clipboard status so the flow is self-documenting. Originally scoped alongside lower-priority items (strip .git, --branch flag, interactive consent, lowercase SKILL.md warning) — those four are pushed to 42.2-40.b.",
+    "keywords": [
+      "cli",
+      "try",
+      "polish",
+      "clipboard",
+      "cwd-docs",
+      "shipped"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-40.b",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "cli",
+    "goal": "Remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2) add a `--branch &lt;name&gt;` flag for explicit branch selection instead of the fallback probe, (3) interactive consent gate `y/N` prompt for future runtime-invocation flows where the skill actually runs (not needed for the current stage-only flow), (4) warn or normalize when external skills use lowercase `skill.md` instead of the canonical `SKILL.md`.",
+    "keywords": [
+      "cli",
+      "try",
+      "polish",
+      "follow-up"
     ],
     "depends": []
   },
   {
     "id": "42.2-41",
     "phaseId": "42.2",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "eval",
-    "goal": "Graphify trial via `gad try` against this repo's `.planning/ + skills/ + decisions/` tree. Capture `graph.json` + `graph.html` + `GRAPH_REPORT.md` output, produce a FINDINGS-2026-04-NN-graphify-trial.md documenting: node/edge counts, community structure, whether NL queries like \"what character is this project part of\" resolve against the graph, whether the graph shape is useful for the site's command+K / VCS / DB viewer surfaces. Blocks 42.2-42.",
+    "goal": "Graphify trial via `gad try` against the real github.com/safishamsi/graphify repository. Capture what the skill looks like when staged, what dependencies it declares, whether the output shape is useful for the GAD site's planning-graph use case, and whether the `gad try` flow handles a real third-party skill cleanly. Blocks the vendor-vs-native decision for the knowledge-graph feature.",
     "keywords": [
       "eval",
       "graphify",
       "knowledge-graph",
       "trial",
-      "findings"
+      "findings",
+      "first-gad-try-external-skill"
     ],
     "depends": []
   },
   {
     "id": "42.2-42",
     "phaseId": "42.2",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "framework",
     "goal": "Decision based on 42.2-41 findings: (A) vendor Graphify as a `skills/gad-graphify/` keeper and accept the Python runtime dep, or (B) build a GAD-native graph extractor in Node that consumes planning XML + markdown + JSON and emits the same `graph.json` shape so third-party tools (Obsidian, Neo4j, Gephi) still work. Produces a decision doc (new gad-NNN entry in DECISIONS.xml).",
     "keywords": [
       "decision",
       "graphify",
       "vendor-vs-native",
-      "tradeoff"
+      "hybrid",
+      "gad-197"
     ],
     "depends": []
   },
@@ -9848,7 +9897,7 @@ export const ALL_TASKS: TaskRecord[] = [
     "agentId": null,
     "skill": null,
     "type": "site",
-    "goal": "Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). Wire the site's existing command+K global search to layer graph results alongside full-text: \"related to X\", \"decisions citing X\", \"skills depending on X\". No LLM at query time — pure graph traversal. Depends on 42.2-42 outcome.",
+    "goal": "Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). Wire the site's existing command+K global search to layer graph results alongside full-text: \"related to X\", \"decisions citing X\", \"skills depending on X\". No LLM at query time — pure graph traversal. Depends on 42.2-45 (native planning-graph extractor shipping first).",
     "keywords": [
       "site",
       "command-k",
@@ -9873,6 +9922,24 @@ export const ALL_TASKS: TaskRecord[] = [
       "react-flow",
       "cids",
       "visual-context-system"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-45",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Implement `skills/gad-planning-graph/` — Node-only knowledge-graph extractor that walks `.planning/*.xml`, `skills/*/SKILL.md`, `decisions/*.xml`, `workflows/*.md` and emits `site/data/planning-graph.json` in a shape compatible with Graphify's `graph.json` (typed nodes + typed edges + community detection so downstream tools like Obsidian, Neo4j, Gephi can consume it). Node types: `phase`, `task`, `decision`, `skill`, `workflow`, `file`, `requirement`. Edge types: `cites`, `depends_on`, `decides`, `belongs_to`, `authored_by`, `supersedes`. Uses Node `graphology` or similar for graph primitives. First-cut scope: structural extraction only, no NL query surface (that's 42.2-43's domain via command+K traversal). Per decision gad-197.",
+    "keywords": [
+      "framework",
+      "planning-graph",
+      "extractor",
+      "native",
+      "node",
+      "gad-197"
     ],
     "depends": []
   },
@@ -11545,6 +11612,113 @@ export const ALL_TASKS: TaskRecord[] = [
       "cid"
     ],
     "depends": []
+  },
+  {
+    "id": "44.5-11",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Scaffold the DNA Editor pane inside the Project Editor left-pane region (sibling to the Bestiary pane) using the `scaffold-visual-context-surface` skill promoted 2026-04-15. Follow its 6-step checklist: (1) dev gate via `NODE_ENV === 'development'`, (2) enumerate panes + cid assignments (pane shell `dna-editor-pane-site-section`, four state groups `dna-editor-state-{dna,expressed,mutation,shed}-site-section`, row prototype `dna-editor-gene-&lt;slug&gt;-site-section`), (3) emit cids as literal strings (no computed cids — include a prototype literal in a comment for the row family), (4) register identities with the Visual Context Panel, (5) round-trip one modal-footer CRUD prompt against a real cid BEFORE any feature wiring, (6) only then begin list rendering / action wiring. Ships with empty state groups — the list population is 44.5-12's scope. Dev-panel badge \"DNA Editor (dev mode)\" visible. First real application of the `scaffold-visual-context-surface` skill; success criterion is that the skill's checklist guides the scaffolding without re-derivation. Per decision gad-198.",
+    "keywords": [
+      "dna-editor",
+      "project-editor",
+      "scaffold",
+      "vcs",
+      "visual-context-system",
+      "gad-198"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-12",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "DNA Editor list population — read the four gene states into the scaffolded 44.5-11 pane. **DNA**: enumerate `.claude/skills/` (or the per-runtime skills dir) in the current project, read SKILL.md frontmatter for name/description/status. **Expressed**: enumerate `.gad-try/&lt;slug&gt;/` sandboxes in cwd, read PROVENANCE.md for source/kind/staged_on and ENTRY.md for the handoff prompt. **Mutations**: enumerate `.planning/proto-skills/&lt;slug&gt;/`, read PROVENANCE status + SKILL.md name + VALIDATION.md verdict. **Shed**: enumerate shed-score data (when 42.2-33 battery output is available) and manually-flagged entries. Each row renders with state-appropriate metadata badges and a cid derived from the slug (literal-prototype comment for grep-ability). No actions wired yet — pure read + render. File-system adapter extends 44.5-03's round-trip primitive. Per decision gad-198.",
+    "keywords": [
+      "dna-editor",
+      "file-system-adapter",
+      "gene-states",
+      "project-editor",
+      "gad-198"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-13",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "DNA Editor action row wiring via the 44.5-02 dev bridge. Each gene state gets state-appropriate buttons that spawn the corresponding CLI command and stream output via SSE: **Try** (run `gad try &lt;ref&gt;` for a URL/slug/path input form), **Promote** (run `gad evolution promote &lt;slug&gt;` on a mutation), **Shed** (run `gad evolution shed &lt;slug&gt;` or `discard`), **Cleanup** (run `gad try cleanup &lt;slug&gt;` on an expressed trial), **Copy prompt** (read ENTRY.md + use the existing clipboard helper from 42.2-40.a), **Preview** (load the trial artifact into the right-pane iframe — 44.5-14's scope). Every button is a `SiteSection` with a deterministic cid (`dna-editor-action-&lt;verb&gt;-&lt;slug&gt;-site-section`). Depends on 44.5-11 (scaffold), 44.5-12 (list population), 44.5-02 (dev bridge). Per decision gad-198.",
+    "keywords": [
+      "dna-editor",
+      "dev-bridge",
+      "actions",
+      "cli-spawn",
+      "project-editor",
+      "gad-198"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-14",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Iframe preview integration for DNA Editor trial artifacts. Extends the 44.5-10 iframe live-preview primitive to detect and render non-generation artifacts: auto-detect `graph.html` (graphify trials), generic `index.html` (codebase maps, game builds), or a SKILL.md-declared `outputs:` path. When an operator clicks Preview on an expressed trial, the right pane loads the detected artifact in the sandboxed iframe. Integrates with the Visual Context System — the iframe wrapper gets a cid derived from `&lt;slug&gt;-preview-iframe-site-section`. Falls back to a \"no viewable artifact\" placeholder when no HTML output is detected. Depends on 44.5-13 (Preview button) and 44.5-10 (iframe primitive). Per decision gad-198.",
+    "keywords": [
+      "dna-editor",
+      "iframe",
+      "preview",
+      "artifact",
+      "trial",
+      "project-editor",
+      "gad-198"
+    ],
+    "depends": []
+  },
+  {
+    "id": "44.5-15",
+    "phaseId": "44.5",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "DNA Editor command+K shortcuts. Integrates with 42.2-43's command+K global search to add gene-lifecycle shortcuts: typing \"try &lt;ref&gt;\" triggers the same flow as the Try button; \"promote &lt;slug&gt;\" runs evolution promote; \"shed &lt;slug&gt;\" runs evolution shed; \"preview &lt;slug&gt;\" loads the trial artifact into the iframe. Autocompletes slug names from the current DNA Editor's enumerated genes. Depends on 44.5-13 (action wiring) and 42.2-43 (command+K infrastructure). Per decision gad-198.",
+    "keywords": [
+      "dna-editor",
+      "command-k",
+      "shortcuts",
+      "search",
+      "project-editor",
+      "gad-198"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.2-46",
+    "phaseId": "42.2",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "docs",
+    "goal": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the three states (**expressed** in `.gad-try/`, **mutation** in `.planning/proto-skills/`, **integrated** in `.claude/skills/` or canonical `skills/`). Map every existing CLI command to its lifecycle role: `gad try`, `gad try cleanup`, `gad evolution install`, `gad evolution promote`, `gad evolution shed`, `gad evolution discard`, `gad skill promote-folder`, `gad install` (local), `gad install --global`. Deprecate `gad install --global` as the default first-encounter path for new skills (route new users through `gad try` + `gad evolution promote` instead). Backward compatible — no CLI changes, docs only. Update `references/skill-shape.md` §1 and AGENTS.md loop section to cite the new lifecycle model. Per decision gad-198.",
+    "keywords": [
+      "docs",
+      "skill-lifecycle",
+      "verb-collapse",
+      "references",
+      "gad-198"
+    ],
+    "depends": []
   }
 ];
 
@@ -11898,9 +12072,9 @@ export const ALL_PHASES: PhaseRecord[] = [
   },
   {
     "id": "44.5",
-    "title": "Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace",
+    "title": "Project Editor + Brood Editor + DNA Editor — local-dev gamified species/brood/generation workspace",
     "status": "planned",
-    "goal": "After the marketplace lands (phase 44), build a local-dev-only Project Editor surface that contains the Brood Editor as its species-level inner surface. The editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. Discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. Vocabulary: **Recipe** = reusable template for producing a species. **Species** = recipe attached to a concrete project. **Generation** = one concrete run of a species. **Brood** = the accumulated population of generations for a species. **Bestiary** = UI view of every species + its brood across a project. Scope: (1) **New editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `NODE_ENV=development`. NOT the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **Split viewport** — left pane: bestiary grid or React Flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **Visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. Gamified feel comes from primitives, not a literal game engine. (4) **Visual Context System is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `SiteSection cid=\"*-site-section\"` literal, every interactive element is grep-able, and the panel + modal-footer CRUD loop must work on every surface before the feature is considered done. No exceptions for game-styled components. (5) **Draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **Dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only API route. (7) **File-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **Recipe CRUD** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **Bestiary view** — read-only history of generations rendered as bestiary cards. (10) **Data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. Dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). Explicit non-goals: no Vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion).",
+    "goal": "After the marketplace lands (phase 44), build a local-dev-only Project Editor surface that contains the Brood Editor as its species-level inner surface. The editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. Discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. Vocabulary: **Recipe** = reusable template for producing a species. **Species** = recipe attached to a concrete project. **Generation** = one concrete run of a species. **Brood** = the accumulated population of generations for a species. **Bestiary** = UI view of every species + its brood across a project. Scope: (1) **New editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `NODE_ENV=development`. NOT the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **Split viewport** — left pane: bestiary grid or React Flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **Visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. Gamified feel comes from primitives, not a literal game engine. (4) **Visual Context System is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `SiteSection cid=\"*-site-section\"` literal, every interactive element is grep-able, and the panel + modal-footer CRUD loop must work on every surface before the feature is considered done. No exceptions for game-styled components. (5) **Draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **Dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only API route. (7) **File-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **Recipe CRUD** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **Bestiary view** — read-only history of generations rendered as bestiary cards. (10) **Data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. Dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). Explicit non-goals: no Vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion). **(11) DNA Editor pane** (decision gad-198, 2026-04-15): sibling pane alongside Bestiary showing the project's skill genome in four states — DNA (integrated into `.claude/skills/`), Expressed (`.gad-try/` sandboxes = epigenetic), Mutations (`.planning/proto-skills/` candidates), Shed pile (flagged via shed score or manual). Every row is a cid-registered SiteSection; every action row button runs a CLI command through the 44.5-02 dev bridge (`gad try`, `gad evolution promote`, `gad evolution shed`, `gad try cleanup`, copy-prompt-to-clipboard, iframe-preview trial artifacts). Built using the `scaffold-visual-context-surface` skill promoted 2026-04-15 — its first real application. Supersedes the need for a separate skill-management surface and unifies install/try/proto/shed/promote into one lifecycle view.",
     "outcome": null
   },
   {
@@ -11925,6 +12099,20 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-198",
+    "title": "Skills are the genes in the DNA — install/try/proto/shed/promote collapse into one lifecycle, surfaced as the DNA Editor inside the Project Editor",
+    "kind": "decision",
+    "href": "/decisions#gad-198",
+    "body": "gad-198 skills are the genes in the dna — install/try/proto/shed/promote collapse into one lifecycle, surfaced as the dna editor inside the project editor operator (2026-04-15) made the biological metaphor explicit and the scattered commands suddenly line up:\r\n\r\n**genes = skills.** a skill (skill.md + workflow) is the atomic hereditary unit. the project's `.claude/skills/` dir is the dna — the permanent, integrated set of genes the organism expresses by default.\r\n\r\n**`gad try` is epigenetic expression.** staging a skill into `.gad-try/&lt;slug&gt;/`"
+  },
+  {
+    "id": "gad-197",
+    "title": "Graphify integration: Option B (native Node extractor) ships first, Option A (vendor Graphify) gated on evidence",
+    "kind": "decision",
+    "href": "/decisions#gad-197",
+    "body": "gad-197 graphify integration: option b (native node extractor) ships first, option a (vendor graphify) gated on evidence task 42.2-41 trialed graphify end-to-end via the newly-shipped `gad try` flow. findings in `evals/findings-2026-04-15-graphify-trial.md` — pipeline proven end-to-end, 33 files staged into `.gad-try/graphify/`, consent gate correctly surfaced the implicit `pip install graphifyy` dependency via body scan.\r\n\r\ntwo integration paths were considered for bringing a knowledge-graph + visualization primiti"
+  },
   {
     "id": "gad-196",
     "title": "Home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming",
@@ -14975,28 +15163,42 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Temporary skill install flow (`gad try &lt;skill&gt;`) — new CLI subcommand that stages an external skill into an epheme",
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-40",
-    "body": "42.2-40 temporary skill install flow (`gad try &lt;skill&gt;`) — new cli subcommand that stages an external skill into an ephemeral `.gad-try/&lt;skill&gt;/` sandbox, audits and consents to declared dependencies (binaries, pip/npm packages) before running, hands off to the user's coding agent via a copy-paste prompt, and supports `--cleanup` to tear down the sandbox + list dep removal commands. designed to let operators trial external skills (like graphify) inside a gad project without polluting `~/.claude/skills/` or committing to a full install. see `.planning/notes/temp-skill-install-and-graphify-2026-04-15.md` for the full design. cli try sandbox ephemeral consent-gate cleanup graphify-trial-enabler"
+    "body": "42.2-40 temporary skill install flow (`gad try &lt;skill&gt;`) — new cli subcommand that stages an external skill into an ephemeral `.gad-try/&lt;skill&gt;/` sandbox, audits and consents to declared dependencies (binaries, pip/npm packages) before running, hands off to the user's coding agent via a copy-paste prompt, and supports `--cleanup` to tear down the sandbox + list dep removal commands. designed to let operators trial external skills (like graphify) inside a gad project without polluting `~/.claude/skills/` or committing to a full install. cli try sandbox ephemeral consent-gate cleanup temporary-install 42.2-40"
+  },
+  {
+    "id": "42.2-40.a",
+    "title": "Polish items for `gad try` surfaced by operator questions after shipping 42.2-40: (1) clipboard auto-populate with the h",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-40.a",
+    "body": "42.2-40.a polish items for `gad try` surfaced by operator questions after shipping 42.2-40: (1) clipboard auto-populate with the handoff prompt so the user can paste directly into their coding agent without opening entry.md, (2) clearer documentation that the sandbox is always cwd-relative regardless of whether the gad binary is globally or locally installed, (3) stdout prints the handoff prompt inline alongside the clipboard status so the flow is self-documenting. originally scoped alongside lower-priority items (strip .git, --branch flag, interactive consent, lowercase skill.md warning) — those four are pushed to 42.2-40.b. cli try polish clipboard cwd-docs shipped"
+  },
+  {
+    "id": "42.2-40.b",
+    "title": "Remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-40.b",
+    "body": "42.2-40.b remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2) add a `--branch &lt;name&gt;` flag for explicit branch selection instead of the fallback probe, (3) interactive consent gate `y/n` prompt for future runtime-invocation flows where the skill actually runs (not needed for the current stage-only flow), (4) warn or normalize when external skills use lowercase `skill.md` instead of the canonical `skill.md`. cli try polish follow-up"
   },
   {
     "id": "42.2-41",
-    "title": "Graphify trial via `gad try` against this repo's `.planning/ + skills/ + decisions/` tree. Capture `graph.json` + `graph",
+    "title": "Graphify trial via `gad try` against the real github.com/safishamsi/graphify repository. Capture what the skill looks li",
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-41",
-    "body": "42.2-41 graphify trial via `gad try` against this repo's `.planning/ + skills/ + decisions/` tree. capture `graph.json` + `graph.html` + `graph_report.md` output, produce a findings-2026-04-nn-graphify-trial.md documenting: node/edge counts, community structure, whether nl queries like \"what character is this project part of\" resolve against the graph, whether the graph shape is useful for the site's command+k / vcs / db viewer surfaces. blocks 42.2-42. eval graphify knowledge-graph trial findings"
+    "body": "42.2-41 graphify trial via `gad try` against the real github.com/safishamsi/graphify repository. capture what the skill looks like when staged, what dependencies it declares, whether the output shape is useful for the gad site's planning-graph use case, and whether the `gad try` flow handles a real third-party skill cleanly. blocks the vendor-vs-native decision for the knowledge-graph feature. eval graphify knowledge-graph trial findings first-gad-try-external-skill"
   },
   {
     "id": "42.2-42",
     "title": "Decision based on 42.2-41 findings: (A) vendor Graphify as a `skills/gad-graphify/` keeper and accept the Python runtime",
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-42",
-    "body": "42.2-42 decision based on 42.2-41 findings: (a) vendor graphify as a `skills/gad-graphify/` keeper and accept the python runtime dep, or (b) build a gad-native graph extractor in node that consumes planning xml + markdown + json and emits the same `graph.json` shape so third-party tools (obsidian, neo4j, gephi) still work. produces a decision doc (new gad-nnn entry in decisions.xml). decision graphify vendor-vs-native tradeoff"
+    "body": "42.2-42 decision based on 42.2-41 findings: (a) vendor graphify as a `skills/gad-graphify/` keeper and accept the python runtime dep, or (b) build a gad-native graph extractor in node that consumes planning xml + markdown + json and emits the same `graph.json` shape so third-party tools (obsidian, neo4j, gephi) still work. produces a decision doc (new gad-nnn entry in decisions.xml). decision graphify vendor-vs-native hybrid gad-197"
   },
   {
     "id": "42.2-43",
     "title": "Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit ",
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-43",
-    "body": "42.2-43 site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). wire the site's existing command+k global search to layer graph results alongside full-text: \"related to x\", \"decisions citing x\", \"skills depending on x\". no llm at query time — pure graph traversal. depends on 42.2-42 outcome. site command-k planning-graph search traversal"
+    "body": "42.2-43 site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). wire the site's existing command+k global search to layer graph results alongside full-text: \"related to x\", \"decisions citing x\", \"skills depending on x\". no llm at query time — pure graph traversal. depends on 42.2-45 (native planning-graph extractor shipping first). site command-k planning-graph search traversal"
   },
   {
     "id": "42.2-44",
@@ -15004,6 +15206,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#42.2-44",
     "body": "42.2-44 new visual context system primitive `&lt;visualcontextgraphpanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. every node gets a cid derived from its id so the modal footer crud can target nodes. integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. depends on 42.2-43. site vcs graph-panel react-flow cids visual-context-system"
+  },
+  {
+    "id": "42.2-45",
+    "title": "Implement `skills/gad-planning-graph/` — Node-only knowledge-graph extractor that walks `.planning/*.xml`, `skills/*/SKI",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-45",
+    "body": "42.2-45 implement `skills/gad-planning-graph/` — node-only knowledge-graph extractor that walks `.planning/*.xml`, `skills/*/skill.md`, `decisions/*.xml`, `workflows/*.md` and emits `site/data/planning-graph.json` in a shape compatible with graphify's `graph.json` (typed nodes + typed edges + community detection so downstream tools like obsidian, neo4j, gephi can consume it). node types: `phase`, `task`, `decision`, `skill`, `workflow`, `file`, `requirement`. edge types: `cites`, `depends_on`, `decides`, `belongs_to`, `authored_by`, `supersedes`. uses node `graphology` or similar for graph primitives. first-cut scope: structural extraction only, no nl query surface (that's 42.2-43's domain via command+k traversal). per decision gad-197. framework planning-graph extractor native node gad-197"
   },
   {
     "id": "42.3-01",
@@ -15678,6 +15887,48 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "44.5-10 iframe live-preview primitive for the editor's right pane. takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;n&gt;/` in a sandboxed iframe. includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, url path input for spa routes, and a fallback screenshot when the build isn't live-servable. gets a cid. integrates with the visual context system such that the modal footer can target either the iframe wrapper or (via postmessage when the inner build opts in) the selected element inside the iframe. primary right-pane content for 44.5-01's split viewport. project-editor iframe preview split-viewport artifact site cid"
   },
   {
+    "id": "44.5-11",
+    "title": "Scaffold the DNA Editor pane inside the Project Editor left-pane region (sibling to the Bestiary pane) using the `scaffo",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-11",
+    "body": "44.5-11 scaffold the dna editor pane inside the project editor left-pane region (sibling to the bestiary pane) using the `scaffold-visual-context-surface` skill promoted 2026-04-15. follow its 6-step checklist: (1) dev gate via `node_env === 'development'`, (2) enumerate panes + cid assignments (pane shell `dna-editor-pane-site-section`, four state groups `dna-editor-state-{dna,expressed,mutation,shed}-site-section`, row prototype `dna-editor-gene-&lt;slug&gt;-site-section`), (3) emit cids as literal strings (no computed cids — include a prototype literal in a comment for the row family), (4) register identities with the visual context panel, (5) round-trip one modal-footer crud prompt against a real cid before any feature wiring, (6) only then begin list rendering / action wiring. ships with empty state groups — the list population is 44.5-12's scope. dev-panel badge \"dna editor (dev mode)\" visible. first real application of the `scaffold-visual-context-surface` skill; success criterion is that the skill's checklist guides the scaffolding without re-derivation. per decision gad-198. dna-editor project-editor scaffold vcs visual-context-system gad-198"
+  },
+  {
+    "id": "44.5-12",
+    "title": "DNA Editor list population — read the four gene states into the scaffolded 44.5-11 pane. **DNA**: enumerate `.claude/ski",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-12",
+    "body": "44.5-12 dna editor list population — read the four gene states into the scaffolded 44.5-11 pane. **dna**: enumerate `.claude/skills/` (or the per-runtime skills dir) in the current project, read skill.md frontmatter for name/description/status. **expressed**: enumerate `.gad-try/&lt;slug&gt;/` sandboxes in cwd, read provenance.md for source/kind/staged_on and entry.md for the handoff prompt. **mutations**: enumerate `.planning/proto-skills/&lt;slug&gt;/`, read provenance status + skill.md name + validation.md verdict. **shed**: enumerate shed-score data (when 42.2-33 battery output is available) and manually-flagged entries. each row renders with state-appropriate metadata badges and a cid derived from the slug (literal-prototype comment for grep-ability). no actions wired yet — pure read + render. file-system adapter extends 44.5-03's round-trip primitive. per decision gad-198. dna-editor file-system-adapter gene-states project-editor gad-198"
+  },
+  {
+    "id": "44.5-13",
+    "title": "DNA Editor action row wiring via the 44.5-02 dev bridge. Each gene state gets state-appropriate buttons that spawn the c",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-13",
+    "body": "44.5-13 dna editor action row wiring via the 44.5-02 dev bridge. each gene state gets state-appropriate buttons that spawn the corresponding cli command and stream output via sse: **try** (run `gad try &lt;ref&gt;` for a url/slug/path input form), **promote** (run `gad evolution promote &lt;slug&gt;` on a mutation), **shed** (run `gad evolution shed &lt;slug&gt;` or `discard`), **cleanup** (run `gad try cleanup &lt;slug&gt;` on an expressed trial), **copy prompt** (read entry.md + use the existing clipboard helper from 42.2-40.a), **preview** (load the trial artifact into the right-pane iframe — 44.5-14's scope). every button is a `sitesection` with a deterministic cid (`dna-editor-action-&lt;verb&gt;-&lt;slug&gt;-site-section`). depends on 44.5-11 (scaffold), 44.5-12 (list population), 44.5-02 (dev bridge). per decision gad-198. dna-editor dev-bridge actions cli-spawn project-editor gad-198"
+  },
+  {
+    "id": "44.5-14",
+    "title": "Iframe preview integration for DNA Editor trial artifacts. Extends the 44.5-10 iframe live-preview primitive to detect a",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-14",
+    "body": "44.5-14 iframe preview integration for dna editor trial artifacts. extends the 44.5-10 iframe live-preview primitive to detect and render non-generation artifacts: auto-detect `graph.html` (graphify trials), generic `index.html` (codebase maps, game builds), or a skill.md-declared `outputs:` path. when an operator clicks preview on an expressed trial, the right pane loads the detected artifact in the sandboxed iframe. integrates with the visual context system — the iframe wrapper gets a cid derived from `&lt;slug&gt;-preview-iframe-site-section`. falls back to a \"no viewable artifact\" placeholder when no html output is detected. depends on 44.5-13 (preview button) and 44.5-10 (iframe primitive). per decision gad-198. dna-editor iframe preview artifact trial project-editor gad-198"
+  },
+  {
+    "id": "44.5-15",
+    "title": "DNA Editor command+K shortcuts. Integrates with 42.2-43's command+K global search to add gene-lifecycle shortcuts: typin",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44.5-15",
+    "body": "44.5-15 dna editor command+k shortcuts. integrates with 42.2-43's command+k global search to add gene-lifecycle shortcuts: typing \"try &lt;ref&gt;\" triggers the same flow as the try button; \"promote &lt;slug&gt;\" runs evolution promote; \"shed &lt;slug&gt;\" runs evolution shed; \"preview &lt;slug&gt;\" loads the trial artifact into the iframe. autocompletes slug names from the current dna editor's enumerated genes. depends on 44.5-13 (action wiring) and 42.2-43 (command+k infrastructure). per decision gad-198. dna-editor command-k shortcuts search project-editor gad-198"
+  },
+  {
+    "id": "42.2-46",
+    "title": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**expr",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.2-46",
+    "body": "42.2-46 verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent dna integration) against the three states (**expressed** in `.gad-try/`, **mutation** in `.planning/proto-skills/`, **integrated** in `.claude/skills/` or canonical `skills/`). map every existing cli command to its lifecycle role: `gad try`, `gad try cleanup`, `gad evolution install`, `gad evolution promote`, `gad evolution shed`, `gad evolution discard`, `gad skill promote-folder`, `gad install` (local), `gad install --global`. deprecate `gad install --global` as the default first-encounter path for new skills (route new users through `gad try` + `gad evolution promote` instead). backward compatible — no cli changes, docs only. update `references/skill-shape.md` §1 and agents.md loop section to cite the new lifecycle model. per decision gad-198. docs skill-lifecycle verb-collapse references gad-198"
+  },
+  {
     "id": "01",
     "title": "Phase 01 â€” Foundation",
     "kind": "phase",
@@ -16015,10 +16266,10 @@ export const SEARCH_INDEX: SearchEntry[] = [
   },
   {
     "id": "44.5",
-    "title": "Phase 44.5 â€” Project Editor + Brood Editor — local-dev gamified species/brood/generation workspace",
+    "title": "Phase 44.5 â€” Project Editor + Brood Editor + DNA Editor — local-dev gamified species/brood/generation workspace",
     "kind": "phase",
     "href": "/planning?tab=phases#44.5",
-    "body": "44.5 project editor + brood editor — local-dev gamified species/brood/generation workspace after the marketplace lands (phase 44), build a local-dev-only project editor surface that contains the brood editor as its species-level inner surface. the editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. vocabulary: **recipe** = reusable template for producing a species. **species** = recipe attached to a concrete project. **generation** = one concrete run of a species. **brood** = the accumulated population of generations for a species. **bestiary** = ui view of every species + its brood across a project. scope: (1) **new editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `node_env=development`. not the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **split viewport** — left pane: bestiary grid or react flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. gamified feel comes from primitives, not a literal game engine. (4) **visual context system is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `sitesection cid=\"*-site-section\"` literal, every interactive element is grep-able, and the panel + modal-footer crud loop must work on every surface before the feature is considered done. no exceptions for game-styled components. (5) **draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only api route. (7) **file-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **recipe crud** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **bestiary view** — read-only history of generations rendered as bestiary cards. (10) **data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). explicit non-goals: no vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion)."
+    "body": "44.5 project editor + brood editor + dna editor — local-dev gamified species/brood/generation workspace after the marketplace lands (phase 44), build a local-dev-only project editor surface that contains the brood editor as its species-level inner surface. the editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. vocabulary: **recipe** = reusable template for producing a species. **species** = recipe attached to a concrete project. **generation** = one concrete run of a species. **brood** = the accumulated population of generations for a species. **bestiary** = ui view of every species + its brood across a project. scope: (1) **new editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `node_env=development`. not the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **split viewport** — left pane: bestiary grid or react flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. gamified feel comes from primitives, not a literal game engine. (4) **visual context system is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `sitesection cid=\"*-site-section\"` literal, every interactive element is grep-able, and the panel + modal-footer crud loop must work on every surface before the feature is considered done. no exceptions for game-styled components. (5) **draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only api route. (7) **file-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **recipe crud** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **bestiary view** — read-only history of generations rendered as bestiary cards. (10) **data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). explicit non-goals: no vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion). **(11) dna editor pane** (decision gad-198, 2026-04-15): sibling pane alongside bestiary showing the project's skill genome in four states — dna (integrated into `.claude/skills/`), expressed (`.gad-try/` sandboxes = epigenetic), mutations (`.planning/proto-skills/` candidates), shed pile (flagged via shed score or manual). every row is a cid-registered sitesection; every action row button runs a cli command through the 44.5-02 dev bridge (`gad try`, `gad evolution promote`, `gad evolution shed`, `gad try cleanup`, copy-prompt-to-clipboard, iframe-preview trial artifacts). built using the `scaffold-visual-context-surface` skill promoted 2026-04-15 — its first real application. supersedes the need for a separate skill-management surface and unifies install/try/proto/shed/promote into one lifecycle view."
   },
   {
     "id": "45",

@@ -2,23 +2,23 @@ import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteProse } from "@/components/site";
 
 /**
- * Home band: how proto-skills and human eyeball passes fit together — graphify recommendation,
- * graduation/shedding metaphor, Sun Tzu epigraph. `cid="graphify-eyeball-site-section"` for VC handoff.
+ * Home band: evolution as try / keep / shed, proto-skills from the mess, Claude Code graphify quote,
+ * Sun Tzu epigraph. `cid="graphify-eyeball-site-section"` for VC handoff.
  */
 export function LandingGraphifyEyeballBand() {
   return (
     <SiteSection id="eyeball-chaos" cid="graphify-eyeball-site-section" className="border-t border-border/60">
       <Identified as="LandingGraphifyEyeballBand">
         <Identified as="LandingGraphifyRecommend" className="block">
-          <p className="section-kicker">Graph first, then judgment</p>
+          <p className="section-kicker">Try, learn, shed</p>
           <figure className="mt-3 max-w-3xl">
             <blockquote className="rounded-xl border border-border/60 bg-muted/15 px-5 py-4 text-base font-normal leading-relaxed text-foreground/90 md:text-lg [&>p]:m-0">
               <p>
-                &ldquo;Recommend: run{" "}
+                &ldquo;Run{" "}
                 <code className="whitespace-nowrap rounded border border-border/60 bg-background/80 px-1.5 py-0.5 font-mono text-[0.85em] text-foreground">
                   gad try graphify
                 </code>{" "}
-                against this repo&apos;s{" "}
+                on{" "}
                 <code className="rounded border border-border/60 bg-background/80 px-1.5 py-0.5 font-mono text-[0.85em] text-foreground">
                   .planning/
                 </code>
@@ -26,11 +26,11 @@ export function LandingGraphifyEyeballBand() {
                 <code className="rounded border border-border/60 bg-background/80 px-1.5 py-0.5 font-mono text-[0.85em] text-foreground">
                   skills/
                 </code>
-                , and decisions (
+                , and{" "}
                 <code className="rounded border border-border/60 bg-background/80 px-1.5 py-0.5 font-mono text-[0.85em] text-foreground">
                   DECISIONS.xml
                 </code>
-                ) — eyeball the output, then decide.&rdquo;
+                . Squint at the graph. Then decide.&rdquo;
               </p>
             </blockquote>
             <figcaption className="mt-3 border-l-2 border-accent/40 pl-4 text-sm text-muted-foreground">
@@ -42,13 +42,14 @@ export function LandingGraphifyEyeballBand() {
 
         <Identified as="LandingProtoSkillEyeballNarrative" className="mt-6 block">
           <SiteProse size="lg" className="max-w-3xl text-muted-foreground">
-            That habit is how this repo stays grounded: GAD is built for{" "}
-            <strong className="font-medium text-foreground">proto-skills</strong> that appear while
-            you work — small, eyeballed workflows that can graduate into canonical skills or shed when
-            they overlap something better. The{" "}
-            <strong className="font-medium text-foreground">visual context system</strong> itself
-            started that way: ship the loop, read it in the UI, promote what survives. Nothing
-            replaces your eyes on the artifact; automation proposes, humans dispose.
+            <strong className="font-medium text-foreground">Evolution</strong> means trying things
+            in the open, keeping what works, and{" "}
+            <strong className="font-medium text-foreground">shedding</strong> the rest — good enough
+            now beats a perfect plan you never ship; you can always improve later.{" "}
+            <strong className="font-medium text-foreground">Get Anything Done</strong> is built for
+            that: skills grow out of real attempts, chaos included. The{" "}
+            <strong className="font-medium text-foreground">visual context system</strong> began as
+            exactly that kind of experiment.
           </SiteProse>
         </Identified>
 
@@ -66,8 +67,7 @@ export function LandingGraphifyEyeballBand() {
             </figcaption>
           </figure>
           <p className="mt-5 max-w-3xl text-sm font-medium text-foreground/90">
-            Everything is an eyeball pass — even the graph. The point is to see structure in the
-            noise, then act.
+            Still you with eyeballs — the graph just makes the chaos legible.
           </p>
         </Identified>
       </Identified>

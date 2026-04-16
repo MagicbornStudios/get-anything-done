@@ -19,9 +19,12 @@ interface DevIdContextValue {
   toggle: () => void;
   highlightCid: string | null;
   setHighlightCid: (cid: string | null) => void;
-  /** Cids selected for one merged handoff at the current list depth (panel: Ctrl/Cmd+click rows). */
+  /** Alt-lane: same-depth merge / primary handoff group (panel: Alt+click rows; page: Alt+click landmarks). */
   sameDepthMergeCids: string[];
   setSameDepthMergeCids: Dispatch<SetStateAction<string[]>>;
+  /** Ctrl/Cmd-lane: cross-depth reference targets (panel: Ctrl/Cmd+click rows; page: Ctrl/Cmd+click landmarks). */
+  ctrlLaneCids: string[];
+  setCtrlLaneCids: Dispatch<SetStateAction<string[]>>;
   flashCid: string | null;
   flashComponent: (cid: string) => void;
   promptVerbosity: PromptVerbosity;
@@ -35,6 +38,8 @@ const DevIdContext = createContext<DevIdContextValue>({
   setHighlightCid: () => {},
   sameDepthMergeCids: [],
   setSameDepthMergeCids: () => {},
+  ctrlLaneCids: [],
+  setCtrlLaneCids: () => {},
   flashCid: null,
   flashComponent: () => {},
   promptVerbosity: "full",
@@ -46,6 +51,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const [enabled, setEnabled] = useState(false);
   const [highlightCid, setHighlightCid] = useState<string | null>(null);
   const [sameDepthMergeCids, setSameDepthMergeCids] = useState<string[]>([]);
+  const [ctrlLaneCids, setCtrlLaneCids] = useState<string[]>([]);
   const [flashCid, setFlashCid] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
@@ -110,6 +116,11 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const target = e.target;
+      const inEditable =
+        target instanceof HTMLElement &&
+        Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+      if (inEditable && e.key !== "Escape") return;
       if (e.altKey && (e.key === "i" || e.key === "I")) {
         e.preventDefault();
         toggle();
@@ -120,9 +131,20 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
         setSearchOpen((v) => !v);
         return;
       }
+      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "d" || e.key === "D")) {
+        e.preventDefault();
+        setSameDepthMergeCids(highlightCid ? [highlightCid] : []);
+        return;
+      }
+      if (!e.altKey && (e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D")) {
+        e.preventDefault();
+        setCtrlLaneCids([]);
+        return;
+      }
       if (e.key === "Escape") {
         setHighlightCid(null);
         setSameDepthMergeCids([]);
+        setCtrlLaneCids([]);
         setFlashCid(null);
         if (flashTimeoutRef.current) {
           clearTimeout(flashTimeoutRef.current);
@@ -132,7 +154,7 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [toggle]);
+  }, [toggle, highlightCid]);
 
   return (
     <DevIdContext.Provider
@@ -143,6 +165,8 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
         setHighlightCid,
         sameDepthMergeCids,
         setSameDepthMergeCids,
+        ctrlLaneCids,
+        setCtrlLaneCids,
         flashCid,
         flashComponent,
         promptVerbosity,
@@ -164,7 +188,7 @@ function DevIdStatusBadge({ onOpenSearch }: { onOpenSearch: () => void }) {
   return (
     <div className="fixed bottom-4 left-4 z-[9999] flex items-center gap-2 rounded-full border border-accent/60 bg-background/95 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-accent shadow-lg backdrop-blur">
       <span aria-hidden>
-        DevIds ON · Alt+I toggle · Esc clear · Alt+click landmark · Panel: Ctrl+click rows to merge @ depth
+        DevIds ON · Alt+I toggle · Esc clear · Alt+click / Alt+row: depth merge · Ctrl/Cmd+click / Ctrl+row: cross-depth lane · Alt+D / Ctrl+D clear lane
       </span>
       <button
         type="button"

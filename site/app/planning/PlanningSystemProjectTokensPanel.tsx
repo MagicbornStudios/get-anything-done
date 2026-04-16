@@ -151,10 +151,16 @@ export function PlanningSystemProjectTokensPanel({
           <TabsContent value="cli" className="mt-0 space-y-4 ring-offset-0 focus-visible:ring-0">
             <Identified as="PlanningSystemProjectTokensTabCli" className="space-y-4">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                This is <strong className="font-medium text-foreground/90">not</strong> “tokens the model consumed”
-                from an API. It is a <strong className="font-medium text-foreground/90">heuristic on logged CLI/tool
-                payloads</strong> (chars ÷ 4) so you can compare relative local activity — skip this tab if you only
-                care about eval harness totals.
+                These totals sum <strong className="font-medium text-foreground/90">every</strong> line in{" "}
+                <code className="rounded bg-muted/60 px-1 py-0.5 text-[10px]">.planning/.trace-events.jsonl</code>{" "}
+                — each event’s logged <code className="rounded bg-muted/60 px-1 py-0.5 text-[10px]">inputs</code> /{" "}
+                <code className="rounded bg-muted/60 px-1 py-0.5 text-[10px]">outputs</code> fields, estimated as
+                serialized length ÷ 4. A <code className="rounded bg-muted/60 px-1 py-0.5 text-[10px]">gad snapshot</code>{" "}
+                run is just one kind of row in that stream; so yes, snapshot (and other CLI) traffic is in the
+                mix, but this tab is <strong className="font-medium text-foreground/90">not</strong> “snapshot stdout
+                only” and it is <strong className="font-medium text-foreground/90">not</strong> provider-reported model
+                tokens. For snapshot-sized hydration math, use the hydration cards above — those re-estimate snapshot
+                payload separately from this aggregate.
               </p>
               <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                 <StatTile

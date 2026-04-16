@@ -1,6 +1,6 @@
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteProse } from "@/components/site";
-import { LANDING_PAGE_GENERATION_PROMPT } from "@/components/landing/examples/landing-page-generation-prompt.example";
+import { LandingHandoffTemplatesShowcase } from "@/components/landing/home/LandingHandoffTemplatesShowcase";
 import { LandingVisualContextPanelShowcase } from "@/components/landing/home/LandingVisualContextPanelShowcase";
 
 /** Band pattern matches Playable / agent-handoff — section shell + band dev panel on `visual-context-site-section`. */
@@ -17,8 +17,8 @@ export function LandingVisualContextAndPromptBand() {
           </h2>
         </Identified>
         <Identified as="LandingVisualContextIntroBody">
-          <SiteProse size="lg" className="mt-5">
-            Press{" "}
+          <SiteProse size="lg" className="mt-5 max-w-3xl">
+            <strong className="font-semibold text-foreground">Point at the UI, not a screenshot.</strong>{" "}
             <kbd className="rounded border border-border/70 bg-muted/50 px-1.5 py-0.5 font-mono text-xs text-foreground">
               Alt
             </kbd>
@@ -26,8 +26,8 @@ export function LandingVisualContextAndPromptBand() {
             <kbd className="rounded border border-border/70 bg-muted/50 px-1.5 py-0.5 font-mono text-xs text-foreground">
               I
             </kbd>{" "}
-            to toggle dev IDs, then hover any section band to open the live Visual Context Panel on the
-            page. With dev IDs on, press{" "}
+            lights greppable landmarks on every band — hover for the Visual Context Panel: one handoff
+            with route, tokens, and context already wired.{" "}
             <kbd className="rounded border border-border/70 bg-muted/50 px-1.5 py-0.5 font-mono text-xs text-foreground">
               Alt
             </kbd>
@@ -35,16 +35,7 @@ export function LandingVisualContextAndPromptBand() {
             <kbd className="rounded border border-border/70 bg-muted/50 px-1.5 py-0.5 font-mono text-xs text-foreground">
               K
             </kbd>{" "}
-            to open the real component ID search (repo-backed). Landmarks use literal, source-searchable
-            tokens:{" "}
-            <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">SiteSection cid="…"</code> for
-            outer bands,{" "}
-            <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">Identified as="…"</code> for
-            inner targets, mirrored into{" "}
-            <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">data-cid</code> for the dev
-            panel. The panel can merge Web Speech transcripts into the quick prompt so you dictate
-            CRUD verbs (create / read / update / delete) against the highlighted node without retyping
-            route + component data by hand.
+            searches the repo by the same names; dictate into the prompt when you want speed over typing.
           </SiteProse>
         </Identified>
 
@@ -80,16 +71,17 @@ export function LandingVisualContextAndPromptBand() {
         </Identified>
 
         <Identified as="LandingPageGenerationPromptExample" className="mt-10">
-          <p className="text-sm font-semibold text-foreground">Showcase prompt (verbatim)</p>
+          <p className="text-sm font-semibold text-foreground">Agent handoff templates (quick prompts)</p>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Live target on this page:{" "}
+            Same Update / Delete template strings as the Agent handoff modal, built for a live landmark on
+            this route:{" "}
             <code className="rounded bg-card/60 px-1.5 py-0.5 text-xs">cid="agent-handoff-cycle-site-section"</code>{" "}
-            — the band below is what shipped when this block was last run through the panel; copy it
-            without opening a modal if you want the same payload shape.
+            (the band below). Read-only CodeMirror — open the real modal from any band panel to edit, dictate,
+            and copy.
           </p>
-          <pre className="mt-4 max-h-[min(28rem,55vh)] overflow-auto rounded-2xl border border-border/70 bg-muted/25 p-4 text-left text-xs leading-relaxed text-foreground/90 shadow-inner shadow-black/20">
-            {LANDING_PAGE_GENERATION_PROMPT}
-          </pre>
+          <div className="mt-4">
+            <LandingHandoffTemplatesShowcase />
+          </div>
         </Identified>
       </Identified>
     </SiteSection>

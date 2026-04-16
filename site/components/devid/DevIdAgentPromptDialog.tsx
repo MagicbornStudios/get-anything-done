@@ -9,13 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Mic, MicOff, Copy, Check, FilePenLine, FileX2 } from "lucide-react";
 import { HandoffMarkdownEditor, type HandoffEditorHandle } from "./HandoffMarkdownEditor";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
@@ -32,6 +26,7 @@ import {
   type HandoffComponentTag,
 } from "./DevIdPromptTemplates";
 
+const EMPTY_CTRL_REF_ENTRIES: RegistryEntry[] = [];
 
 function HandoffPromptPane({
   draft,
@@ -104,109 +99,6 @@ function HandoffPromptPane({
 
 function insertTranscriptAtEditor(api: HandoffEditorHandle | null, transcript: string) {
   api?.insertAtCaret(transcript);
-}
-
-type StripCopyKey = "pageUrl" | "cid" | "label";
-
-function CopyableContextField({
-  value,
-  copyKey,
-  activeKey,
-  onCopy,
-}: {
-  value: string;
-  copyKey: StripCopyKey;
-  activeKey: StripCopyKey | null;
-  onCopy: (key: StripCopyKey, text: string) => void;
-}) {
-  const text = value || "—";
-  const empty = !value.trim();
-  const justCopied = activeKey === copyKey;
-
-  return (
-    <div className="min-w-0 flex-1">
-      <DevChromeHoverHint
-        body={empty ? <p>Nothing to copy</p> : <p>Click to copy this context field to the clipboard.</p>}
-      >
-        <span className="block w-full min-w-0">
-          <button
-            type="button"
-            disabled={empty}
-            aria-label={empty ? "Empty value" : "Copy to clipboard"}
-            onClick={() => {
-              if (!empty) onCopy(copyKey, value);
-            }}
-            className={cn(
-              "group flex w-full min-w-0 items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-left",
-              "border-border/60 bg-muted/35 text-foreground transition-colors hover:bg-muted/55",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1",
-              justCopied && "border-emerald-500/40 bg-emerald-500/10",
-              empty && "cursor-not-allowed opacity-50",
-            )}
-          >
-            <span className="min-w-0 truncate font-mono text-[11px] leading-snug">{text}</span>
-            {justCopied ? <Check className="size-3 shrink-0 text-emerald-400" aria-hidden /> : null}
-            {justCopied ? <span className="sr-only">Copied to clipboard</span> : null}
-          </button>
-        </span>
-      </DevChromeHoverHint>
-    </div>
-  );
-}
-
-function PromptContextStrip({ pageUrl, cid, label }: { pageUrl: string; cid: string; label: string }) {
-  const [copiedKey, setCopiedKey] = useState<StripCopyKey | null>(null);
-  const clearTimer = useRef<number | null>(null);
-
-  const flashCopied = useCallback((key: StripCopyKey) => {
-    if (clearTimer.current != null) window.clearTimeout(clearTimer.current);
-    setCopiedKey(key);
-    clearTimer.current = window.setTimeout(() => {
-      setCopiedKey(null);
-      clearTimer.current = null;
-    }, 1600);
-  }, []);
-
-  const copyStripValue = useCallback(
-    (key: StripCopyKey, text: string) => {
-      navigator.clipboard?.writeText(text).catch(() => {});
-      flashCopied(key);
-    },
-    [flashCopied],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (clearTimer.current != null) window.clearTimeout(clearTimer.current);
-    };
-  }, []);
-
-  return (
-    <div
-      className={cn(
-        "grid shrink-0 grid-cols-3 gap-2 overflow-hidden border-b border-border/50 bg-muted/20 px-3 py-2",
-      )}
-    >
-      <CopyableContextField
-        value={pageUrl}
-        copyKey="pageUrl"
-        activeKey={copiedKey}
-        onCopy={copyStripValue}
-      />
-      <CopyableContextField
-        value={cid}
-        copyKey="cid"
-        activeKey={copiedKey}
-        onCopy={copyStripValue}
-      />
-      <CopyableContextField
-        value={label}
-        copyKey="label"
-        activeKey={copiedKey}
-        onCopy={copyStripValue}
-      />
-    </div>
-  );
 }
 
 function HoverPromptChrome({
@@ -326,6 +218,7 @@ export function DevIdAgentPromptDialog({
   open,
   onOpenChange,
   entries,
+  ctrlReferenceEntries,
   pathname,
   /** Component kind: SiteSection band vs in-section Identified row. */
   componentTag = "Identified",
@@ -334,6 +227,8 @@ export function DevIdAgentPromptDialog({
   onOpenChange: (open: boolean) => void;
   /** Primary is `entries[0]`; when length ≥ 2, locked templates list every target at the same depth. */
   entries: RegistryEntry[] | null;
+  /** Optional Ctrl/Cmd-lane targets appended after the Alt-lane locked templates. */
+  ctrlReferenceEntries?: RegistryEntry[];
   pathname: string;
   componentTag?: HandoffComponentTag;
 }) {
@@ -354,6 +249,7 @@ export function DevIdAgentPromptDialog({
   const [activeEntry, setActiveEntry] = useState<RegistryEntry | null>(null);
   const modalScanRef = useRef<HTMLDivElement | null>(null);
   const { promptVerbosity, setPromptVerbosity } = useDevId();
+  const ctrlRefResolved = ctrlReferenceEntries ?? EMPTY_CTRL_REF_ENTRIES;
 
   const pageUrl = useMemo(() => absolutePageUrl(pathname), [pathname]);
 
@@ -380,9 +276,13 @@ export function DevIdAgentPromptDialog({
 
   useEffect(() => {
     if (!open || !entries?.length) return;
-    setUpdateLockedPrefix(buildUpdateLockedPrefixMerged(pageUrl, entries, promptVerbosity));
-    setDeleteLockedText(buildDeletePromptMerged(pageUrl, entries, promptVerbosity));
-  }, [open, entries, pageUrl, promptVerbosity]);
+    setUpdateLockedPrefix(
+      buildUpdateLockedPrefixMerged(pageUrl, entries, promptVerbosity, ctrlRefResolved),
+    );
+    setDeleteLockedText(
+      buildDeletePromptMerged(pageUrl, entries, promptVerbosity, ctrlRefResolved),
+    );
+  }, [open, entries, ctrlRefResolved, pageUrl, promptVerbosity]);
 
   useEffect(() => {
     return () => {
@@ -466,14 +366,6 @@ export function DevIdAgentPromptDialog({
 
   if (!open || !entries?.length) return null;
 
-  const stripSource = activeEntry ?? entries[0];
-  const stripLabel =
-    entries.length > 1
-      ? `${entries.length} merged targets @ depth ${entries[0]?.depth ?? 0}`
-      : (stripSource?.label ?? "");
-  const stripCid =
-    entries.length > 1 ? `${entries[0]?.cid ?? ""} (+${entries.length - 1})` : (stripSource?.cid ?? "");
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -491,10 +383,6 @@ export function DevIdAgentPromptDialog({
             <DialogHeader className="shrink-0 space-y-0.5 border-b border-border/60 px-4 py-3 text-left">
               <DialogTitle className="text-base font-semibold tracking-tight">Agent handoff</DialogTitle>
             </DialogHeader>
-          </Identified>
-
-          <Identified as="DevIdAgentPromptContextStrip" cid="devid-agent-prompt-context-strip" register={false} depth={1}>
-            <PromptContextStrip pageUrl={pageUrl} cid={stripCid} label={stripLabel} />
           </Identified>
 
           <Tabs
