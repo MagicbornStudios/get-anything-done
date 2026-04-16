@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SiteSection } from "@/components/site";
 import { cn } from "@/lib/utils";
 import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
@@ -8,6 +8,7 @@ import { DnaEditor } from "./DnaEditor";
 import { ProjectCanvas } from "./ProjectCanvas";
 import { InspectorPane } from "./InspectorPane";
 import { LiveDataPanel } from "./LiveDataPanel";
+import { CommandPalette } from "./CommandPalette";
 
 type LeftTab = "dna" | "bestiary" | "recipes";
 
@@ -33,6 +34,43 @@ export function ProjectEditor({
   const [activeTab, setActiveTab] = useState<LeftTab>("dna");
   const [canvasMode, setCanvasMode] = useState<CanvasMode>({ kind: "species" });
   const [selection, setSelection] = useState<EditorSelection>({ kind: "project" });
+  const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
+  const [geneList, setGeneList] = useState<{ slug: string; name: string; status: string }[]>([]);
+
+  // Fetch gene slugs for command palette autocomplete
+  useEffect(() => {
+    fetch("/api/dev/gene-states")
+      .then((r) => r.json())
+      .then((data) => {
+        const all = [
+          ...data.integrated.genes,
+          ...data.expressed.genes,
+          ...data.mutations.genes,
+          ...data.shed.genes,
+        ];
+        setGeneList(all.map((g: { slug: string; name: string; status: string }) => ({
+          slug: g.slug,
+          name: g.name,
+          status: g.status,
+        })));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Cmd+K / Ctrl+K to open command palette
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdPaletteOpen((v) => !v);
+      }
+      if (e.key === "Escape" && cmdPaletteOpen) {
+        setCmdPaletteOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [cmdPaletteOpen]);
 
   const handleModeButton = (kind: "species" | "graph") => {
     setCanvasMode({ kind });
@@ -187,7 +225,14 @@ export function ProjectEditor({
                 {kind === "species" ? "Species" : "Graph"}
               </button>
             ))}
-            <span className="ml-2 text-[10px] text-muted-foreground/60">
+            <button
+              type="button"
+              onClick={() => setCmdPaletteOpen(true)}
+              className="ml-2 rounded border border-border/40 px-1.5 py-0.5 text-[10px] text-muted-foreground/60 hover:text-foreground transition-colors"
+            >
+              ⌘K
+            </button>
+            <span className="text-[10px] text-muted-foreground/60">
               /projects/edit/{project.project ?? project.id.split("/")[0]}
             </span>
           </div>
@@ -272,6 +317,15 @@ export function ProjectEditor({
           </SiteSection>
         </div>
       </SiteSection>
+
+      {/* Command palette overlay */}
+      {cmdPaletteOpen && (
+        <CommandPalette
+          genes={geneList}
+          onClose={() => setCmdPaletteOpen(false)}
+          onPreview={handlePreview}
+        />
+      )}
     </div>
   );
 }
