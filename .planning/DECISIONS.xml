@@ -1565,5 +1565,19 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Self-eval pressure scores change significantly. Phases with many latent crosscuts (42.2: 25 latent, 44: 22 latent) score higher. Phase 21 (14 crosscuts, 0 decisions) is flagged as pure unknown territory. The L/C ratio becomes a new project health metric.</impact>
   </decision>
 
+  <decision id="gad-223">
+    <title>Question the VCS component hierarchy — Identified and SiteSection may not be the right primitives</title>
+    <date>2026-04-16</date>
+    <summary>The current VCS uses SiteSection (structural wrapper with cid) and Identified (inner landmark wrapper). But these may be unnecessary component abstractions. The universal requirement is simpler: a way to place source-searchable identity literals on any element, trace them from built output back to source, and collect them quickly for agent prompts. A plain data attribute on a standard div might be all that's needed. The component wrappers add convenience but also coupling. Research needed: what is the absolute minimal instrumentation pattern that works across React, Kaplay/canvas, Phaser, terminal, and arbitrary renderers? Maybe it's just a naming convention + a scan script, not components at all. The panels (DevPanel, BandDevPanel) add visual noise — they make section layout visible but clutter the dev experience. Worth exploring: panels as opt-in overlays toggled by keyboard, not always-present UI chrome. The goal is context capture speed, not visual density.</summary>
+    <impact>Next VCS iteration should test: (1) bare data attributes vs component wrappers, (2) panels as keyboard-toggled overlays vs persistent UI, (3) cross-renderer ID patterns. The VCS test species on escape-the-dungeon is the testing ground.</impact>
+  </decision>
+
+  <decision id="gad-224">
+    <title>Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash</title>
+    <date>2026-04-16</date>
+    <summary>Open-source contribution model where users opt in to having their local coding agent work on project features/bugs. The project publishes a feature/bug queue. Users with GAD CLI + hooks installed can opt in. Their local agent picks up a feature, works on it using their coding agent subscription (their tokens, their machine), and submits a PR. The project gets contributions measured in AI tokens spent, not cash. Users get contributor credit + their agent learns from the codebase. Hooks enable this: on opt-in, the GAD CLI pulls a feature from the queue, sets up a worktree, spawns a subagent, and submits the result. Private repos need explicit access grants. Public repos work out of the box. This is decentralized CI/CD where the compute is distributed across contributor machines.</summary>
+    <impact>New GAD feature: contributor queue (feature/bug list), opt-in hook, PR submission pipeline. Requires: feature queue format, contributor agent prompt template, PR review workflow. Long-term: this is how GAD itself gets maintained — by its users' agents.</impact>
+  </decision>
+
 </decisions>
 
