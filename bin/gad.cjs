@@ -11229,10 +11229,7 @@ const bundleExport = defineCommand({
             /^workflow:\s*.+$/m,
             `workflow_content: |\n${workflowContent.split('\n').map(l => '  ' + l).join('\n')}`
           );
-          bundled = bundled
-            .split('\n')
-            .filter(line => line.trim() !== '---')
-            .join('\n');
+          bundled = bundled.replace(/\n---\n[\s\S]*$/, '\n');
         } else {
           console.warn(`  [warn] Workflow not found: ${workflowPath}`);
         }
