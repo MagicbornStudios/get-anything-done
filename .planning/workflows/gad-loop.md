@@ -37,7 +37,8 @@ flowchart TD
   D --> E[task-checkpoint skill: verify planning docs updated]
   E --> F[TASK-REGISTRY.xml: status=done + skill + agent + type]
   F --> G[STATE.xml next-action updated]
-  G --> H{new decisions?}
+  G --> G2[graph.json auto-rebuilt ~320ms]
+  G2 --> H{new decisions?}
   H -->|yes| I[DECISIONS.xml: gad-NNN entry]
   H -->|no| J[commit]
   I --> J
@@ -45,3 +46,9 @@ flowchart TD
   K -->|yes| C
   K -->|no| L[end session or gad-next]
 ```
+
+**Step 4.5 — Graph rebuild (gad-201):** After task status and state updates,
+`graph.json` auto-rebuilds when `useGraphQuery=true` in `gad-config.toml`.
+This keeps the graph fresh for `gad query` without manual `gad graph build`.
+~320ms, zero deps, silent on success. Downstream consumers (`gad tasks --graph`,
+`gad state --graph`, snapshot GRAPH section) read the rebuilt file.

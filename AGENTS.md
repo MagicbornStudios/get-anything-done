@@ -35,6 +35,7 @@ tone — otherwise inherit the default.
    - Set `type="<category>"` — one of: `framework`, `cli`, `site`, `eval`, `pipeline`, `skill`, `cleanup`, `docs`
    - Example: `<task id="22-50" status="done" skill="execute-phase" agent="default" type="site">`
 5. Update STATE.xml (next-action), DECISIONS.xml (if new decisions — use GAD-D-NNN format per GAD-D-125)
+   - Graph auto-rebuilds after task status change and state update (gad-201) — no manual `gad graph build` needed
 6. Commit
 
 **Task attribution is mandatory (GAD-D-104).** Every completed task must have skill, agent, and type attributes. This feeds the self-eval pipeline and site data. Empty skill/agent is OK if genuinely no skill or agent was involved — but type is always required.
@@ -64,6 +65,21 @@ gad snapshot --projectid get-anything-done
 **`gad refs`** with no subcommand is the same as **`gad refs list`** (aggregated paths from decisions, requirements, phases, docs-map). After refactors, run **`gad refs verify`** to ensure `<file path>` / `<reference>` in planning XML still exist. Use **`gad refs migrate --from <old> --to <new>`** (dry-run; add **`--apply`** to write) to bulk-update path strings. **`gad refs watch`** re-runs verify when planning XML changes; **`gad refs watch --poll 3000`** if native file watching is unreliable.
 
 GAD does **not** infer paths from TypeScript or imports — only explicit strings in XML and migrate/verify operations.
+
+## Graph queries (gad-201)
+
+`gad query` is the preferred path for targeted planning lookups. It queries a structural
+knowledge graph built from .planning/ XML files — no LLM, no external deps, ~320ms rebuild.
+
+| Command | What it does |
+|---|---|
+| `gad graph build` | Rebuild `.planning/graph.json` + `graph.html` (runs automatically after task/state mutations) |
+| `gad query "open tasks in phase 44.5"` | Natural-language-ish graph query — 12.9x token savings vs raw XML |
+| `gad tasks --graph` | Graph-backed task listing (auto-enabled when `useGraphQuery=true`) |
+| `gad state --graph` | State output with graph stats appended |
+
+Graph auto-rebuilds after: `gad tasks release --done`, `gad tasks claim`, `gad state set-next-action`.
+Feature flag: `[features] useGraphQuery = true` in `.planning/gad-config.toml`. Set to `false` to fall back to raw XML reads.
 
 ## Snapshot output vs telemetry
 
