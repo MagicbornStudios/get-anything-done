@@ -33,17 +33,6 @@ export default function Footer() {
                     </a>
                   </Button>
                 </li>
-                <li>
-                  <Button
-                    variant="ghost"
-                    className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
-                    asChild
-                  >
-                    <a href="https://github.com/gsd-build/get-shit-done" rel="noopener noreferrer" target="_blank">
-                      Upstream: gsd-build / get-shit-done
-                    </a>
-                  </Button>
-                </li>
               </ul>
             </div>
           </Identified>

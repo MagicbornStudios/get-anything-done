@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-16T09:33:29.148Z
+Generated: 2026-04-16T16:44:57.740Z
 
 
 ---
@@ -7421,7 +7421,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (358)
+# Tasks (379)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -8101,7 +8101,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44.5-01c** [done]: "Open in Editor" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an "Exit to listing" link in the editor shell that routes back to the listing detail 
 
-- **44.5-01d** [planned]: Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generat
+- **44.5-01d** [done]: Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generat
 
 - **44.5-02** [done]: Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after t
 
@@ -8109,13 +8109,13 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44.5-05** [done]: Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit in
 
-- **44.5-06** [planned]: Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/
+- **44.5-06** [done]: Recipe CRUD surface inside the Project Editor. Recipes are reusable species templates owned by the project (per decision gad-189). This task: (a) define the `recipe.json` schema — name, description, base species slug, default gad.json overrides, list of required inputs, list of expected outputs; (b) store recipes at `projects/&lt;project&gt;/&lt;project-editor-slug&gt;/recipes/&lt;recipe-slug&gt;/
 
-- **44.5-07** [planned]: Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlight
+- **44.5-07** [done]: Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlight
 
-- **44.5-08** [planned]: Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple 
+- **44.5-08** [done]: Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple 
 
-- **44.5-09** [planned]: Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every di
+- **44.5-09** [done]: Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every di
 
 - **44.5-10** [done]: iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, "open in new tab" link, URL path input for SPA routes, and a fallback screenshot 
 
@@ -8138,6 +8138,48 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 - **44.5-16** [done]: Build lib/eval-data-access.cjs — unified CRUD module for eval projects, species, and generations (decision gad-203). Filesystem-as-database: JSON files on disk are the database. Single shared Node module provides read (delegating to eval-loader.cjs for merge semantics) and write (create/update/archive for projects and species) operations. REST API routes at /api/dev/evals/projects/*, /api/dev/eval
 
 - **42.2-46** [planned]: Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the three states (**expressed** in `.gad-try/`, **mutation** in `.planning/proto-skills/`, **integrated** in `.claude/skills/` or canonical `skill
+
+- **45-01** [planned]: Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL search param ?tab= routing.
+
+- **45-02** [planned]: Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, decisions, phases, requirements, notes as typed props.
+
+- **45-03** [planned]: Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.
+
+- **45-04** [planned]: Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. Exports VOCAB object used by all components.
+
+- **45-05** [planned]: Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants.
+
+- **45-06** [planned]: Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire into Planning tab.
+
+- **45-07** [planned]: Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.
+
+- **45-08** [planned]: Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.
+
+- **45-09** [planned]: Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.
+
+- **45-10** [planned]: Migrate Evolution tab components — PlanningWorkflowsTab + PlanningSkillCandidatesTab become per-project Evolution tab showing workflow patterns and proto-skills.
+
+- **45-11** [planned]: Migrate System tab components — PlanningSystemStatCards + PlanningSystemRuntimeActivityPanel become per-project System tab fed by self-eval.json and trace data via command bridge.
+
+- **45-12** [planned]: Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content now lives per-project.
+
+- **45-13** [planned]: Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase.
+
+- **45-14** [planned]: Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.
+
+- **45-15** [planned]: Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.
+
+- **45-16** [planned]: Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.
+
+- **45-17** [planned]: Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metadata references.
+
+- **45-18** [planned]: Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.
+
+- **45-19** [planned]: Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.
+
+- **45-20** [planned]: Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new section is discoverable.
+
+- **45-21** [planned]: README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers.
 
 
 ---

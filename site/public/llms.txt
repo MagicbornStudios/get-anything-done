@@ -26,7 +26,7 @@
 
 - [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone â†’ install â†’ open in Claude â†’ talk)
 - [Security](https://get-anything-done.vercel.app/security): Skill attack surfaces, mitigations, future certification model
-- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (358), phases (50), decisions (202), roadmap, requirements, bugs (4)
+- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (379), phases (50), decisions (202), roadmap, requirements, bugs (4)
 
 ## Machine-readable
 

@@ -1752,7 +1752,6 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 ## System
 
 - [Contribute](${SITE_URL}/contribute): Human-first workflow (clone â†’ install â†’ open in Claude â†’ talk)
-- [Security](${SITE_URL}/security): Skill attack surfaces, mitigations, future certification model
 - [Planning](${SITE_URL}/planning): State + tabs for tasks (${allTasks.length}), phases (${allPhases.length}), decisions (${allDecisions.length}), roadmap, requirements, bugs (${(pseudoDb.bugs?.bugs ?? []).length})
 
 ## Machine-readable

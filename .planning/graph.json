@@ -351,6 +351,13 @@
       "goal": "The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/DNA/evolution language. Make the site read playfully (e.g. \"the bare species' generation 4 evolved a fitter descendant that crushed the earlier run\"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor. Must drop any remaining \"GAD+emergent\" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169."
     },
     {
+      "type": "phase",
+      "id": "phase:46",
+      "label": "Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning",
+      "status": "active",
+      "goal": "Redesign the landing site from 25+ routes to 9 focused public pages (decisions gad-207..211). Consolidate gad workspace into gad projects. Add SpriteAnimation component. Scaffold species-level .planning/ dirs on species create. Expand /downloads as VCS component showcase + installer hub. Build /how-it-works methodology page absorbing glossary, formulas, standards, eval-guide content. Define project-level assets convention and generation data salvage pipeline."
+    },
+    {
       "type": "task",
       "id": "task:10-01",
       "label": "Create .planning/ scaffold for get-anything-done and register in planning-config.toml.",
@@ -4207,6 +4214,86 @@
       "keywords": "readme,docs,vocabulary,copy-pass,external-facing"
     },
     {
+      "type": "task",
+      "id": "task:46-01",
+      "label": "Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update",
+      "status": "done",
+      "goal": "Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.",
+      "skill": "default",
+      "taskType": "cli",
+      "keywords": "cli,workspace,projects,consolidation,deprecation"
+    },
+    {
+      "type": "task",
+      "id": "task:46-02",
+      "label": "Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tas",
+      "status": "done",
+      "goal": "Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "nav,routes,cleanup,site-architecture,page-map"
+    },
+    {
+      "type": "task",
+      "id": "task:46-03",
+      "label": "Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, fr",
+      "status": "done",
+      "goal": "Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "sprite,animation,component,css-steps,ui"
+    },
+    {
+      "type": "task",
+      "id": "task:46-04",
+      "label": "Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ di",
+      "status": "done",
+      "goal": "Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": "species,planning,sub-roots,discover,sync"
+    },
+    {
+      "type": "task",
+      "id": "task:46-05",
+      "label": "Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from compl",
+      "status": "done",
+      "goal": "Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": "assets,media,salvage,generation,data-reuse"
+    },
+    {
+      "type": "task",
+      "id": "task:46-06",
+      "label": "Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos",
+      "status": "done",
+      "goal": "Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "downloads,vcs,components,installer,showcase"
+    },
+    {
+      "type": "task",
+      "id": "task:46-07",
+      "label": "Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards re",
+      "status": "done",
+      "goal": "Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "methodology,how-it-works,loop,scoring,species-model"
+    },
+    {
+      "type": "task",
+      "id": "task:46-08",
+      "label": "Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.",
+      "status": "done",
+      "goal": "Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "verification,build,type-check,broken-imports"
+    },
+    {
       "type": "decision",
       "id": "decision:gad-92",
       "label": "docs/ is GSD upstream â€” archive it, don't rewrite it",
@@ -5651,6 +5738,114 @@
       "id": "decision:gad-206",
       "label": "Species are evolutionary branches of a project — inheritance-based configuration forking",
       "summary": "Species are not just \"eval configurations\" — they are evolutionary branches of a project. Each species inherits the project's requirements, skills, and structure but configures differently (different workflow, different skill set, different constraints). Creating a species is like branching. Running"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-207",
+      "label": "Landing site page map: 9 public routes, everything else dev-only or removed",
+      "summary": "The GAD landing site serves two audiences: visitors (what is GAD, let me try it) and operators (managing projects). Public pages: / (home), /how-it-works (methodology, replaces eval-guide+formulas+standards), /library (play published builds), /library/play (iframe player), /projects (showcase grid),"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-208",
+      "label": "Workspace concept eliminated — everything is a GAD project, workspace is just a repo with multiple projects",
+      "summary": "`gad workspace` commands (show/sync/add/ignore) merge into `gad projects` (list/sync/add/ignore). A \"workspace\" is not a separate concept — it is simply a repo that has multiple GAD projects registered in gad-config.toml. The config.roots array IS the project registry. `gad workspace` becomes a depr"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-209",
+      "label": "Species get durable .planning/ subtrees — transferable config bundles with their own planning scope",
+      "summary": "Species are transferable configuration bundles (tech stack + skills + context framework + workflow). They get their own .planning/ subtree under the project for decisions, notes, and depth documentation. Generations inherit the species .planning/ and add generation-specific brownfield state that per"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-210",
+      "label": "Project-level media assets + generation data salvage pipeline",
+      "summary": "Each project gets a conventional assets/ directory for marketing, audio, video, and reusable media. Generations produce unique data (game content JSON, dialogue trees, entity definitions, level layouts) that should be salvageable back to the species or project level for reuse. The salvage pipeline: "
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-211",
+      "label": "Sprite sheet animation as a site-wide capability — CSS steps() component",
+      "summary": "Add a SpriteAnimation React component to the site UI library. Uses CSS background-position with steps() animation for performance. Props: src (sprite sheet URL), frameWidth, frameHeight, frameCount, fps, loop, className. Use cases: hero mascot/logo animation, project card thumbnails (animated previe"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-212",
+      "label": "Eval vocabulary replaced by species/generation throughout — \"eval\" is an internal implementation detail",
+      "summary": "All user-facing references to \"eval\" become species/generation language. `gad eval run` becomes species/generation commands. \"Eval project templates\" become \"species templates\" — they carry skills, content, context framework, tech stack. The word \"eval\" only appears in internal code paths and legacy"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-213",
+      "label": "GAD as RPG: species are character builds, generations are gameplay, editors are the game surface",
+      "summary": "The GAD experience is explicitly gamified. Species configuration is analogous to RPG character building — selecting tech stack, skills, context framework, constraints. Running a generation is \"playing the game\" with that build against a project's requirements. The editors (project editor, species ed"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-214",
+      "label": "VCS as universal agent-addressability layer — minimal surface for any system (React, Kaplay, Phaser, etc.)",
+      "summary": "The Visual Context System goal is the minimal component/ID surface needed for an agent to understand what the user sees and reference specific elements on screen. Every species using VCS skills implements dev tooling, sectioning, and IDs. The system must work across rendering boundaries (React DOM, "
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-215",
+      "label": "Bidirectional data flow: generation learnings and requirements flow back to project and species",
+      "summary": "Data flows both directions in the hierarchy. Down: project requirements + species config → generation. Up: generation produces learnings, discovered requirements, salvaged data, new skills that should flow back to the project (as new requirements) and species (as improved config). When editing a spe"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-216",
+      "label": "VCS primitives are the core deliverable — minimal identifiers + panel + context capture that any project species installs",
+      "summary": "The VCS is not a site-specific feature — it is the primitive layer every GAD project should build first. The minimal surface: (1) Identifiers coded into compartmentalized UI sections, (2) a panel/footer that attaches to sections for localized landmark data, (3) self-referential context capture — the"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-217",
+      "label": "GAD CLI supports AI generation fundamentals — image, audio, video, text as one-shot file creation",
+      "summary": "The GAD CLI needs basic AI generation commands that don't require a coding agent: simple prompt → file output. Use cases: generate an image (cover art, sprite), generate audio (sound effect, music), generate video (trailer clip), generate text (markdown, code, config) and write it to a target output"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-218",
+      "label": "Desktop client is a local-first project management tool — users build locally, publish to platform",
+      "summary": "GAD's distribution model: desktop client for local project management, platform for publishing. Users bring their own coding agent subscription (Claude Code, Cursor, etc.) and build locally on their machine. The desktop client provides white-glove setup, project/species/generation management, skill "
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-219",
+      "label": "Command vocabulary: play/spawn/breed are distinct evolutionary operations, not aliases",
+      "summary": "Three verbs for three operations: (1) `gad play &lt;project&gt;/&lt;species&gt;/&lt;version&gt;` — opens the built artifact (HTML game, app, book, website). Playing is consuming the output. (2) `gad spawn &lt;project&gt;/&lt;species&gt;` — creates a new generation by running a species in an ecosyste"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-220",
+      "label": "Pressure formula v2: add decision entropy as a core dimension alongside task count and crosscuts",
+      "summary": "Current pressure formula P = T + C*w is too basic — it counts tasks and crosscuts but ignores the information-theoretic signal: decisions. A decision is produced when a question of high importance and directional consequence is resolved. Decision count per phase/task is a direct proxy for informatio"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-221",
+      "label": "Epigenetic skills: install, use, shed — skills that build once and are no longer needed",
+      "summary": "Not all skills are permanent. Some build a complex capability once (e.g., \"build an EPUB reader\", \"add export adapter for epub3 format\") and are then unneeded. These are epigenetic skills — they modify the generation's phenotype but aren't part of the ongoing species DNA. The lifecycle: install skil"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-222",
+      "label": "Pressure v3: crosscuts classified as anticipated (with decision) vs latent (unknown unknowns)",
+      "summary": "Crosscut tasks are now classified by whether they have an associated decision. A crosscut WITH a decision = anticipated complexity (someone saw the question coming and resolved it). A crosscut WITHOUT a decision = latent entropy — an unknown unknown that manifested as cross-system work without anyon"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-223",
+      "label": "Question the VCS component hierarchy — Identified and SiteSection may not be the right primitives",
+      "summary": "The current VCS uses SiteSection (structural wrapper with cid) and Identified (inner landmark wrapper). But these may be unnecessary component abstractions. The universal requirement is simpler: a way to place source-searchable identity literals on any element, trace them from built output back to s"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-224",
+      "label": "Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash",
+      "summary": "Open-source contribution model where users opt in to having their local coding agent work on project features/bugs. The project publishes a feature/bug queue. Users with GAD CLI + hooks installed can opt in. Their local agent picks up a feature, works on it using their coding agent subscription (the"
     },
     {
       "type": "workflow",
@@ -10980,6 +11175,146 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:46-01",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-01",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-01",
+      "target": "decision:gad-208",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-02",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-02",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-02",
+      "target": "decision:gad-207",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-03",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-03",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-03",
+      "target": "decision:gad-211",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-04",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-04",
+      "target": "task:46-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:46-04",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-04",
+      "target": "decision:gad-209",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-05",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-05",
+      "target": "task:46-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:46-05",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-05",
+      "target": "decision:gad-210",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-06",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-06",
+      "target": "task:46-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:46-06",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-06",
+      "target": "decision:gad-207",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-07",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-07",
+      "target": "task:46-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:46-07",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-08",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-08",
+      "target": "task:46-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:46-08",
+      "target": "task:46-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:46-08",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "decision:gad-92",
       "target": "task:2026-04",
       "type": "CITES"
@@ -12615,6 +12950,31 @@
       "type": "CITES"
     },
     {
+      "source": "decision:gad-208",
+      "target": "skill:gad-config",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-215",
+      "target": "decision:gad-210",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-217",
+      "target": "decision:gad-210",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-218",
+      "target": "decision:gad-188",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-222",
+      "target": "phase:21",
+      "type": "CITES"
+    },
+    {
       "source": "skill:create-proto-skill",
       "target": "workflow:./workflow.md",
       "type": "USES_WORKFLOW"
@@ -13012,22 +13372,22 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-16T11:05:56.325Z",
-    "nodeCount": 862,
-    "edgeCount": 1218,
+    "generated": "2026-04-16T21:13:15.139Z",
+    "nodeCount": 889,
+    "edgeCount": 1251,
     "nodeTypes": {
-      "phase": 50,
-      "task": 379,
+      "phase": 51,
+      "task": 387,
       "skill": 128,
-      "decision": 201,
+      "decision": 219,
       "workflow": 104
     },
     "edgeTypes": {
-      "BELONGS_TO": 381,
-      "CITES": 463,
-      "DEPENDS_ON": 57,
-      "USES_SKILL": 157,
-      "REFERENCES": 81,
+      "BELONGS_TO": 389,
+      "CITES": 473,
+      "DEPENDS_ON": 63,
+      "USES_SKILL": 165,
+      "REFERENCES": 82,
       "USES_WORKFLOW": 79
     }
   }
