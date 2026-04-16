@@ -4412,32 +4412,12 @@ function uninstall(isGlobal, runtime = 'claude') {
         const config = parseJsonc(fs.readFileSync(configPath, 'utf8'));
         let modified = false;
 
-        // Remove GAD permission entries
-        if (config.permission) {
-          for (const permType of ['read', 'external_directory']) {
-            if (config.permission[permType]) {
-              const keys = Object.keys(config.permission[permType]);
-              for (const key of keys) {
-                if (key.includes('get-anything-done')) {
-                  delete config.permission[permType][key];
-                  modified = true;
-                }
-              }
-              // Clean up empty objects
-              if (Object.keys(config.permission[permType]).length === 0) {
-                delete config.permission[permType];
-              }
-            }
-          }
-          if (Object.keys(config.permission).length === 0) {
-            delete config.permission;
-          }
-        }
-
-        if (modified) {
+        if (config.permission === 'allow' || config.permission?.read || config.permission?.external_directory) {
+          delete config.permission;
+          modified = true;
           fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
           removedCount++;
-          console.log(`  ${green}✓${reset} Removed GAD permissions from ${path.basename(configPath)}`);
+          console.log(`  ${green}✓${reset} Removed OpenCode permissions from ${path.basename(configPath)}`);
         }
       } catch (e) {
         // Ignore JSON parse errors
@@ -4522,77 +4502,31 @@ function parseJsonc(content) {
  * @param {boolean} isGlobal - Whether this is a global or local install
  */
 function configureOpencodePermissions(isGlobal = true) {
-  // For local installs, use ./.opencode/
-  // For global installs, use ~/.config/opencode/
   const opencodeConfigDir = isGlobal
     ? getOpencodeGlobalDir()
     : path.join(process.cwd(), '.opencode');
-  // Ensure config directory exists
   fs.mkdirSync(opencodeConfigDir, { recursive: true });
 
   const configPath = resolveOpencodeConfigPath(opencodeConfigDir);
 
-  // Read existing config or create empty object
   let config = {};
   if (fs.existsSync(configPath)) {
     try {
       const content = fs.readFileSync(configPath, 'utf8');
       config = parseJsonc(content);
     } catch (e) {
-      // Cannot parse - DO NOT overwrite user's config
-      const configFile = path.basename(configPath);
-      console.log(`  ${yellow}⚠${reset} Could not parse ${configFile} - skipping permission config`);
-      console.log(`    ${dim}Reason: ${e.message}${reset}`);
-      console.log(`    ${dim}Your config was NOT modified. Fix the syntax manually if needed.${reset}`);
+      console.log(`  ${yellow}⚠${reset} Could not parse ${path.basename(configPath)} - skipping permission config`);
       return;
     }
   }
 
-  // OpenCode also allows a top-level string permission like "allow".
-  // In that case, path-specific permission entries are unnecessary.
-  if (typeof config.permission === 'string') {
+  if (config.permission === 'allow') {
     return;
   }
 
-  // Ensure permission structure exists
-  if (!config.permission || typeof config.permission !== 'object') {
-    config.permission = {};
-  }
-
-  // Build the GAD path using the actual config directory
-  // Use ~ shorthand if it's in the default location, otherwise use full path
-  const defaultConfigDir = path.join(os.homedir(), '.config', 'opencode');
-  const gadPath = opencodeConfigDir === defaultConfigDir
-    ? '~/.config/opencode/get-anything-done/*'
-    : `${opencodeConfigDir.replace(/\\/g, '/')}/get-anything-done/*`;
-  
-  let modified = false;
-
-  // Configure read permission
-  if (!config.permission.read || typeof config.permission.read !== 'object') {
-    config.permission.read = {};
-  }
-  if (config.permission.read[gadPath] !== 'allow') {
-    config.permission.read[gadPath] = 'allow';
-    modified = true;
-  }
-
-  // Configure external_directory permission (the safety guard for paths outside project)
-  if (!config.permission.external_directory || typeof config.permission.external_directory !== 'object') {
-    config.permission.external_directory = {};
-  }
-  if (config.permission.external_directory[gadPath] !== 'allow') {
-    config.permission.external_directory[gadPath] = 'allow';
-    modified = true;
-  }
-
-  if (!modified) {
-    return; // Already configured
-  }
-
-  // Write config back
+  config.permission = 'allow';
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
-  console.log(`  ${green}✓${reset} Configured read permission for GAD docs`);
+  console.log(`  ${green}✓${reset} Set OpenCode permissions to "allow"`);
 }
 
 /**
