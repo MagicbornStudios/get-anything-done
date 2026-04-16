@@ -1765,7 +1765,7 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <goal>Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.</goal>
       <depends>45-04</depends>
       <keywords>vocabulary-audit,string-sweep,gad-166,gad-169,terminology</keywords>
-      <notes>2026-04-16d partial: nav-shared.ts, PlayableTeaser home copy, docs/quick-start.md (CLI updated to gad projects init / species create / spawn / generation), /downloads metadata + Section 3 heading, TemplatesIntro + TemplatesEvalSection (eval project → species). Footer owned by user (opt-out). Remaining: /how-it-works, /project-market, playable-shared descriptions, round-results, results, hypothesis-tracks (descriptions that render in non-home routes).</notes>
+      <notes>2026-04-16d partial: nav-shared.ts, PlayableTeaser home copy, docs/quick-start.md (CLI updated to gad projects init / species create / spawn / generation), /downloads metadata + Section 3 heading, TemplatesIntro + TemplatesEvalSection (eval project → species), Footer.tsx (blurb rebranded; stale jump links #lineage/#framework/#templates repointed to #agent-handoff-cycle/#visual-context/downloads, fixing decision gad-196 drift). Remaining: /how-it-works, /project-market, playable-shared descriptions, round-results, results, hypothesis-tracks (descriptions that render in non-home routes).</notes>
     </task>
     <task id="45-16" status="planned" type="site">
       <goal>Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.</goal>

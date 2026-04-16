@@ -12,7 +12,7 @@ export default function Footer() {
             <div>
               <p className="text-sm font-semibold tracking-tight text-foreground">get-anything-done</p>
               <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-                Planning + evaluation framework for AI coding agents. Open source. Measured, not vibed.
+                Evolutionary framework for AI coding agents — species, generations, and measurable pressure. Open source. Measured, not vibed.
               </p>
             </div>
           </Identified>
@@ -47,7 +47,7 @@ export default function Footer() {
                     className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
                     asChild
                   >
-                    <a href="/#lineage">Lineage</a>
+                    <a href="/#agent-handoff-cycle">Agent Handoff</a>
                   </Button>
                 </li>
                 <li>
@@ -56,7 +56,7 @@ export default function Footer() {
                     className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
                     asChild
                   >
-                    <a href="/#framework">Framework</a>
+                    <a href="/#visual-context">Visual Context</a>
                   </Button>
                 </li>
                 <li>
@@ -74,7 +74,7 @@ export default function Footer() {
                     className="h-auto p-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
                     asChild
                   >
-                    <a href="/#templates">Downloads</a>
+                    <a href="/downloads">Downloads</a>
                   </Button>
                 </li>
               </ul>
