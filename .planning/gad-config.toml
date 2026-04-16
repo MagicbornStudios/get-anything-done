@@ -1,6 +1,12 @@
 [planning]
 sprintSize = 5
 
+[features]
+# Toggle graph-backed queries on/off. When false, all code paths
+# fall back to raw XML reads (the pre-graph behavior).
+# Flip this if graph queries cause perf issues or return wrong results.
+useGraphQuery = true
+
 [[planning.roots]]
 id = "get-anything-done"
 path = "."

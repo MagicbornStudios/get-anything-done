@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { SiteSection } from "@/components/site";
 import { cn } from "@/lib/utils";
+import { DnaActionRow } from "./DnaActionRow";
 
 type GeneEntry = {
   slug: string;
@@ -59,13 +60,13 @@ const GENE_SECTIONS: {
   },
 ];
 
-function GeneCard({ gene }: { gene: GeneEntry }) {
+function GeneCard({ gene, geneState }: { gene: GeneEntry; geneState: GeneState }) {
   return (
     // cid prototype: dna-gene-card-<skill-slug>-site-section
     <div
       className={cn(
         "rounded border border-border/40 px-2 py-1.5 text-[11px] transition-colors",
-        "hover:border-accent/40 hover:bg-accent/5 cursor-default",
+        "hover:border-accent/40 hover:bg-accent/5",
       )}
     >
       <div className="flex items-center justify-between gap-1">
@@ -81,11 +82,12 @@ function GeneCard({ gene }: { gene: GeneEntry }) {
           {gene.description}
         </p>
       )}
+      <DnaActionRow slug={gene.slug} geneState={geneState} />
     </div>
   );
 }
 
-export function DnaEditor() {
+export function DnaEditor({ onPreview }: { onPreview?: (url: string, title: string) => void }) {
   const [data, setData] = useState<GeneStates | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -172,7 +174,7 @@ export function DnaEditor() {
                 {expanded && stateData && stateData.genes.length > 0 && (
                   <div className="mt-2 flex flex-col gap-1 max-h-60 overflow-y-auto">
                     {stateData.genes.map((gene) => (
-                      <GeneCard key={gene.slug} gene={gene} />
+                      <GeneCard key={gene.slug} gene={gene} geneState={section.key} />
                     ))}
                   </div>
                 )}
