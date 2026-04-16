@@ -94,9 +94,9 @@ export default function PlayableTeaser() {
             </>
           }
         >
-          This is the on-page slice of the eval archive — pick a scored build, load the iframe, and
-          jump into requirements or skill text without leaving the landing route. The project market
-          still lists all {EVAL_RUNS.length}+ runs when you need the full catalog.
+          This is the on-page slice of the generation archive — pick a scored build, load the iframe,
+          and jump into requirements or skill text without leaving the landing route. The project market
+          still lists all {EVAL_RUNS.length}+ generations when you need the full catalog.
         </SiteSectionIntro>
       </Identified>
 

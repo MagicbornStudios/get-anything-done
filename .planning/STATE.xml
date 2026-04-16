@@ -4,17 +4,22 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-16c END. 7 commits, 18 decisions (gad-207..224). Phase 46 complete (site redesign 25→9 routes, CLI consolidation, SpriteAnimation, salvage pipeline). Extended: eval→species rename, species tracking schema, pressure v3 (latent entropy), gad spawn/play/generate text, VCS test species.
+  <next-action>Session 2026-04-16d in progress. TRACK 1 partial: nav-shared + PlayableTeaser vocabulary rebrand (eval→generation/species/spawn) + pre-existing TS fix (EvalProjectMeta.published optional). Build passes. 3 new todos captured: site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot.
 
-NEXT SESSION — three tracks with stopping points:
+REMAINING — still planned:
 
-TRACK 1 (site rebrand): Use frontend web design skill + VCS skill. Rebrand landing site with new vocabulary. Explore alternative UX — panels may be too noisy, test bare data-attributes vs component wrappers (decision gad-223). STOP after: nav + home page rebrand passes build.
+TRACK 1 (site rebrand) — continue: rest of /downloads, /quickstart, /how-it-works, /project-market, templates/*, playable/* descriptions still have "eval" copy. Task 45-15 (vocabulary audit) is the umbrella.
 
-TRACK 2 (VCS portability): Run `gad spawn escape-the-dungeon/vcs-test`. Observe what agent builds in KAPLAY canvas. Compare bare data-attributes vs React component approach. Iterate VCS skill based on results. STOP after: one generation complete + skill iterated.
+TRACK 2 (VCS portability): Run `gad spawn escape-the-dungeon/vcs-test`. Compare bare data-attributes vs React component. Iterate VCS skill. STOP after: one generation complete + skill iterated.
 
-TRACK 3 (breed command + formula): Implement `gad breed` (merge two species configs, shed redundancy). Refine pressure formula display on site. STOP after: breed works + formula visible on /how-it-works.
+TRACK 3 (breed command + formula): Implement `gad breed`. Refine pressure formula display on /how-it-works.
 
-TODOS (8): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase.</next-action>
+STRUCTURAL INVESTIGATIONS (not decided, captured as todos):
+- Per-agent task outbox pattern — avoid shared-file merge conflicts (structural-parallelism-task-outbox)
+- Scoped snapshot + lightweight agent profile — drop subagent cold-start cost (lightweight-agent-and-scoped-snapshot)
+- Landing-site article on parallel-subagent cost (site-article-parallel-subagent-cost)
+
+TODOS (11): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>
@@ -55,7 +60,7 @@ TODOS (8): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-comma
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-16T02:00:00.000Z</last-updated>
+  <last-updated>2026-04-16T21:55:00.000Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
 

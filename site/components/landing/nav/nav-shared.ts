@@ -28,9 +28,9 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Get Started",
     links: [
-      { href: "/quickstart", label: "Quickstart", note: "install and run your first eval" },
-      { href: "/how-it-works", label: "How It Works", note: "methodology, scoring, species model" },
-      { href: "/downloads", label: "Downloads", note: "installer, components, planning packs" },
+      { href: "/quickstart", label: "Quickstart", note: "install and spawn your first generation" },
+      { href: "/how-it-works", label: "How It Works", note: "methodology, pressure, species model" },
+      { href: "/downloads", label: "Downloads", note: "installer, components, species templates" },
     ],
   },
 ];

@@ -3237,6 +3237,7 @@ export interface EvalProjectMeta {
   domain: string | null;
   techStack: string | null;
   buildRequirement: string | null;
+  published?: boolean;
 }
 
 export interface ProducedArtifacts {
