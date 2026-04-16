@@ -35,6 +35,7 @@ import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
+import { DevPanelScreenshotButton } from "./DevPanelScreenshotButton";
 import { VcPanelHoverAnchorContext } from "./VcPanelHoverAnchorContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -527,6 +528,12 @@ export function DevPanel(props: DevPanelProps) {
     return resolveEntriesOrdered(pool, ctrlLaneCids);
   }, [mode, sectionEntries, bandEntries, ctrlLaneCids]);
 
+  /** First Alt-lane pick for PNG capture (merge order, else global highlight). */
+  const firstAltLaneCid = useMemo(
+    () => sameDepthMergeCids[0] ?? highlightCid ?? null,
+    [sameDepthMergeCids, highlightCid],
+  );
+
   const panelTargetSummary = (() => {
     const altSummary =
       panelHandoffEntriesResolved.length >= 2
@@ -793,6 +800,7 @@ export function DevPanel(props: DevPanelProps) {
                     Delete
                   </Button>
                 </DevChromeHoverHint>
+                <DevPanelScreenshotButton dockCorner={sectionCorner} firstAltLaneCid={firstAltLaneCid} />
                 <DevChromeHoverHint dockCorner={sectionCorner} body={vcVerbosityHoverBody(promptVerbosity === "full")}>
                   <Button
                     type="button"
@@ -975,6 +983,7 @@ export function DevPanel(props: DevPanelProps) {
                   Delete
                 </Button>
               </DevChromeHoverHint>
+              <DevPanelScreenshotButton dockCorner={corner} firstAltLaneCid={firstAltLaneCid} size="band" />
               <DevChromeHoverHint dockCorner={corner} body={vcVerbosityHoverBody(promptVerbosity === "full")}>
                 <Button
                   type="button"
