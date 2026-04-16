@@ -1371,5 +1371,12 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Evolution shed workflow gains a cleanup gate. References/skill-lifecycle.md must document this as step N+1 after shed.</impact>
   </decision>
 
+  <decision id="gad-199">
+    <title>Full native planning-graph implementation — supersedes gad-197 hybrid approach</title>
+    <date>2026-04-15</date>
+    <summary>Operator accepted the Graphify concept but chose full native Node implementation over vendoring the Python package. Supersedes gad-197 (which recommended hybrid: native extractor first, Graphify as opt-in trial). Rationale: the planning-graph use case is fully structural — walking typed XML files with known schemas — and does not need Graphify's multimodal extraction (vision, audio, PDF). A 500-line Node module (lib/graph-extractor.cjs) covers 100% of the planning-graph extraction, query, and visualization needs with zero new dependencies. Result: 827 nodes, 1129 edges from GAD's own planning files. Query engine handles natural-language-ish patterns and structured flags. Measured 53x token savings vs full snapshot, 589x vs raw XML read. The `gad try graphify` path remains available for operators who want multimodal extraction on arbitrary folders, but the framework's own graph pipeline is self-contained Node. Python dependency NOT accepted into the framework core.</summary>
+    <impact>Task 42.2-45 (native extractor) marked done. New tasks 42.2-47 (gad query) and 42.2-48 (gad graph) shipped same session. .planning/graph.json and .planning/graph.html are new artifacts. gad-197 hybrid approach superseded — no Python in the framework dependency tree. The graph can be regenerated on demand via `gad graph build` and queried via `gad query`.</impact>
+  </decision>
+
 </decisions>
 
