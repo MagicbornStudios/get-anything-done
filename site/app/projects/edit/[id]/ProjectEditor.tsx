@@ -10,6 +10,7 @@ import { InspectorPane } from "./InspectorPane";
 import { LiveDataPanel } from "./LiveDataPanel";
 import { CommandPalette } from "./CommandPalette";
 import { BestiaryTab } from "./BestiaryTab";
+import { RecipesTab } from "./RecipesTab";
 
 type LeftTab = "dna" | "bestiary" | "recipes";
 
@@ -291,9 +292,7 @@ export function ProjectEditor({
                   />
                 )}
                 {activeTab === "recipes" && (
-                  <p className="text-xs text-muted-foreground">
-                    Recipes — species templates will populate here (44.5-06)
-                  </p>
+                  <RecipesTab allProjects={allProjects} />
                 )}
               </div>
             </div>
