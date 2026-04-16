@@ -1181,6 +1181,7 @@ const stateShowCmd = defineCommand({
   args: {
     projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
     all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
+    graph: { type: 'boolean', description: 'Include graph stats (auto-enabled when useGraphQuery=true)', default: false },
     json: { type: 'boolean', description: 'JSON output (includes full next-action)', default: false },
     full: { type: 'boolean', description: 'Include full next-action text in output', default: false },
   },
@@ -1190,11 +1191,28 @@ const stateShowCmd = defineCommand({
     const roots = resolveRoots(args, baseDir, config.roots);
     if (roots.length === 0) return;
 
+    // Resolve graph stats for each root if --graph or useGraphQuery enabled
+    function getGraphStats(root) {
+      const showGraph = args.graph || graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path));
+      if (!showGraph) return null;
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      const jsonPath = path.join(planDir, 'graph.json');
+      if (!fs.existsSync(jsonPath)) return null;
+      try {
+        const graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        return {
+          nodes: graph.meta.nodeCount,
+          edges: graph.meta.edgeCount,
+          generated: graph.meta.generated,
+          nodeTypes: graph.meta.nodeTypes,
+        };
+      } catch { return null; }
+    }
+
     if (args.json) {
-      // JSON: emit full structured state per project
       const out = roots.map(root => {
         const state = readState(root, baseDir);
-        return {
+        const result = {
           project: root.id,
           phase: state.phasesTotal > 0 ? `${state.phasesComplete}/${state.phasesTotal}` : (state.currentPhase || null),
           milestone: state.milestone || null,
@@ -1203,6 +1221,9 @@ const stateShowCmd = defineCommand({
           lastActivity: state.lastActivity || null,
           nextAction: state.nextAction || null,
         };
+        const gs = getGraphStats(root);
+        if (gs) result.graph = gs;
+        return result;
       });
       console.log(JSON.stringify(out, null, 2));
       return;
@@ -1219,10 +1240,11 @@ const stateShowCmd = defineCommand({
         'open tasks': state.openTasks > 0 ? String(state.openTasks) : '—',
         'last activity': state.lastActivity || '—',
         _nextAction: state.nextAction || null,
+        _graphStats: getGraphStats(root),
       };
     });
 
-    const displayRows = rows.map(({ _nextAction, ...r }) => r);
+    const displayRows = rows.map(({ _nextAction, _graphStats, ...r }) => r);
     console.log(render(displayRows, { format: 'table', title: 'GAD State' }));
 
     if (args.full) {
@@ -1231,6 +1253,17 @@ const stateShowCmd = defineCommand({
           console.log(`\n── next action [${r.project}] ──────────────────────────────`);
           console.log(r._nextAction);
         }
+      }
+    }
+
+    // Graph stats block (decision gad-201)
+    for (const r of rows) {
+      if (r._graphStats) {
+        const gs = r._graphStats;
+        console.log(`\n── graph [${r.project}] ──────────────────────────────`);
+        console.log(`  ${gs.nodes} nodes, ${gs.edges} edges`);
+        console.log(`  Types: ${Object.entries(gs.nodeTypes).map(([k, v]) => `${k}(${v})`).join(', ')}`);
+        console.log(`  Last rebuild: ${gs.generated}`);
       }
     }
   },
@@ -7066,22 +7099,61 @@ function runTasksListView(args) {
   if (args.status) filter.status = args.status;
   if (args.phase) filter.phase = args.phase;
 
+  // Graph-backed mode: --graph flag or useGraphQuery=true in config (decision gad-201)
+  const useGraph = args.graph || roots.some(r => graphExtractor.isGraphQueryEnabled(path.join(baseDir, r.path)));
+
   const rows = [];
   for (const root of roots) {
-    const tasks = readTasks(root, baseDir, filter);
-    for (const task of tasks) {
-      const limit = args.full ? Infinity : 200;
-      rows.push({
-        project: root.id,
-        id: formatId(root.id, 'T', task.id),
-        'legacy-id': task.id,
-        goal: task.goal.length > limit ? task.goal.slice(0, limit - 1) + '…' : task.goal,
-        status: task.status,
-        phase: task.phase,
-        'agent-id': task.agentId || '',
-        'agent-role': task.agentRole || '',
-        runtime: task.runtime || '',
-      });
+    if (useGraph) {
+      // Graph-backed task listing
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      const jsonPath = path.join(planDir, 'graph.json');
+      const gadDir = path.resolve(__dirname, '..');
+
+      // Auto-build graph if missing
+      if (!fs.existsSync(jsonPath)) {
+        const graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
+        fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2));
+      }
+
+      const graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      const query = { type: 'task' };
+      if (filter.status) query.status = filter.status;
+      if (filter.phase) query.phase = filter.phase;
+      const result = graphExtractor.queryGraph(graph, query);
+
+      for (const m of result.matches) {
+        const taskId = m.id.replace(/^task:/, '');
+        const limit = args.full ? Infinity : 200;
+        const goalText = m.goal || m.label || '';
+        rows.push({
+          project: root.id,
+          id: formatId(root.id, 'T', taskId),
+          'legacy-id': taskId,
+          goal: goalText.length > limit ? goalText.slice(0, limit - 1) + '…' : goalText,
+          status: m.status || '',
+          phase: taskId.replace(/-\d+$/, ''),
+          'agent-id': '',
+          'agent-role': '',
+          runtime: '',
+        });
+      }
+    } else {
+      const tasks = readTasks(root, baseDir, filter);
+      for (const task of tasks) {
+        const limit = args.full ? Infinity : 200;
+        rows.push({
+          project: root.id,
+          id: formatId(root.id, 'T', task.id),
+          'legacy-id': task.id,
+          goal: task.goal.length > limit ? task.goal.slice(0, limit - 1) + '…' : task.goal,
+          status: task.status,
+          phase: task.phase,
+          'agent-id': task.agentId || '',
+          'agent-role': task.agentRole || '',
+          runtime: task.runtime || '',
+        });
+      }
     }
   }
 
@@ -7091,7 +7163,8 @@ function runTasksListView(args) {
   }
 
   const fmt = args.json ? 'json' : 'table';
-  console.log(render(rows, { format: fmt, title: `Tasks (${rows.length})` }));
+  const modeLabel = useGraph ? ' (graph)' : '';
+  console.log(render(rows, { format: fmt, title: `Tasks${modeLabel} (${rows.length})` }));
 }
 
 function resolveSingleTaskRoot(projectid) {
@@ -7318,6 +7391,7 @@ const tasksListCmd = defineCommand({
     status: { type: 'string', description: 'Filter by status (e.g. in-progress, planned)', default: '' },
     phase: { type: 'string', description: 'Filter by phase id (e.g. 03)', default: '' },
     full: { type: 'boolean', description: 'Show full goal text (no truncation)', default: false },
+    graph: { type: 'boolean', description: 'Use graph-backed query (auto-enabled when useGraphQuery=true)', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
