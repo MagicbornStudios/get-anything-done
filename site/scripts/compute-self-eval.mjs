@@ -35,7 +35,7 @@ const EVALS_DIR = path.join(REPO_ROOT, "evals");
 /** Load pressure + crosscut config with sensible fallbacks (GAD-D-145) */
 function loadConfig() {
   const defaults = {
-    pressure: { crosscut_weight: 2, decision_weight: 3, decision_rate_weight: 5, high_pressure_threshold: 10 },
+    pressure: { crosscut_weight: 2, latent_crosscut_weight: 4, decision_weight: 3, decision_rate_weight: 5, high_pressure_threshold: 10 },
     crosscut_detection: {
       systems: ["cli", "site", "eval", "skill", "agent", "trace", "hook", "planning", "state", "decision"],
       min_systems_to_count: 2,
@@ -644,29 +644,57 @@ function computePhasesPressure() {
     const decisionRateWeight = CONFIG.pressure.decision_rate_weight || 5;
     const threshold = CONFIG.pressure.high_pressure_threshold;
 
-    const crosscuts = tasks.filter(t => {
+    const crosscutTasks = tasks.filter(t => {
       const words = t.goal.toLowerCase();
       return systems.filter(s => words.includes(s)).length >= minSystems;
-    }).length;
+    });
+    const crosscuts = crosscutTasks.length;
 
     // Count decisions associated with this phase (referenced in task goals or decision summaries)
     const decisions = countDecisionsForPhase(phaseId, tasks);
     const decisionRate = total > 0 ? decisions / total : 0;
-    // H_phase = D * log2(T/D + 1) — decision entropy scaled by task space
+
+    // Classify crosscuts (GAD-D-222): anticipated vs latent entropy
+    // Anticipated: crosscut task has an associated decision (someone asked the question)
+    // Latent: crosscut task with NO decision (unknown unknown — harder)
+    const allDecisions = loadDecisions();
+    const anticipatedCrosscuts = crosscutTasks.filter(t => {
+      if (!t.id) return false;
+      return allDecisions.some(d => {
+        const text = `${d.title} ${d.summary}`.toLowerCase();
+        return text.includes(t.id.toLowerCase());
+      });
+    }).length;
+    const latentCrosscuts = crosscuts - anticipatedCrosscuts;
+
+    // H_phase = D * log2(T/D + 1) — resolved decision entropy
     const decisionEntropy = decisions > 0 && total > 0
       ? decisions * Math.log2(total / decisions + 1)
       : 0;
+    // L = latent crosscuts * log2(C/L + 1) — latent entropy (unknown unknowns)
+    const latentEntropy = latentCrosscuts > 0 && crosscuts > 0
+      ? latentCrosscuts * Math.log2(crosscuts / latentCrosscuts + 1)
+      : 0;
 
-    const pressure = total + (crosscuts * crosscutWeight) + (decisions * decisionWeight) + (decisionRate * decisionRateWeight);
+    // Pressure v3: anticipated crosscuts weighted normally, latent crosscuts weighted higher
+    const latentWeight = (CONFIG.pressure.latent_crosscut_weight || crosscutWeight * 2);
+    const pressure = total
+      + (anticipatedCrosscuts * crosscutWeight)
+      + (latentCrosscuts * latentWeight)
+      + (decisions * decisionWeight)
+      + (decisionRate * decisionRateWeight);
 
     phases.push({
       phase: phaseId,
       tasks_total: total,
       tasks_done: done,
       crosscuts,
+      crosscuts_anticipated: anticipatedCrosscuts,
+      crosscuts_latent: latentCrosscuts,
       decisions,
       decision_rate: Math.round(decisionRate * 100) / 100,
       decision_entropy: Math.round(decisionEntropy * 100) / 100,
+      latent_entropy: Math.round(latentEntropy * 100) / 100,
       pressure_score: Math.round(pressure * 100) / 100,
       high_pressure: pressure > threshold,
       tasks,

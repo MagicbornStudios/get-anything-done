@@ -1546,5 +1546,24 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Species config gains skill lifecycle tracking. Editors show skill status (active/epigenetic/shed). Generation runs can auto-shed skills marked epigenetic after successful build. Skill authoring workflow needs "mark as epigenetic" option.</impact>
   </decision>
 
+  <decision id="gad-222">
+    <title>Pressure v3: crosscuts classified as anticipated (with decision) vs latent (unknown unknowns)</title>
+    <date>2026-04-16</date>
+    <summary>Crosscut tasks are now classified by whether they have an associated decision. A crosscut WITH a decision = anticipated complexity (someone saw the question coming and resolved it). A crosscut WITHOUT a decision = latent entropy — an unknown unknown that manifested as cross-system work without anyone even formulating the question. Latent crosscuts are weighted higher (default 4x vs 2x for anticipated) because the hardest problems are the ones nobody knew to ask about.
+
+    Formal model — three entropy dimensions:
+    1. Resolved entropy: H_d = D * log₂(T/D + 1) — decisions that answered known questions
+    2. Latent entropy: H_l = L * log₂(C/L + 1) — crosscuts that appeared without a question being asked
+    3. Task volume: T — raw work count
+
+    Full formula v3:
+    P = T + C_a * w_c + C_l * w_l + D * w_d + (D/T) * w_r
+
+    Where C_a = anticipated crosscuts, C_l = latent crosscuts, w_l = latent weight (default 4).
+
+    The latent/anticipated ratio (L/C) is a project health metric: high L/C means the project has many unknown unknowns — the team is surprised by complexity. Low L/C means crosscuts were anticipated and addressed with decisions.</summary>
+    <impact>Self-eval pressure scores change significantly. Phases with many latent crosscuts (42.2: 25 latent, 44: 22 latent) score higher. Phase 21 (14 crosscuts, 0 decisions) is flagged as pure unknown territory. The L/C ratio becomes a new project health metric.</impact>
+  </decision>
+
 </decisions>
 

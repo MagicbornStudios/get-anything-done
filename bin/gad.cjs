@@ -89,6 +89,19 @@ function findRepoRoot(start) {
 }
 
 // ---------------------------------------------------------------------------
+// Load .env if present (for API keys like ANTHROPIC_API_KEY)
+// ---------------------------------------------------------------------------
+try {
+  const envPath = path.join(findRepoRoot() || process.cwd(), '.env');
+  if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+      const match = line.match(/^([^#=]+)=(.*)$/);
+      if (match) process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+} catch {}
+
+// ---------------------------------------------------------------------------
 // Multi-root eval discovery (task 42.4-12, decision GAD-D-184)
 // ---------------------------------------------------------------------------
 //
@@ -12775,6 +12788,83 @@ function printConsentGate(deps, resolved) {
 // may not include one; fall back to identity if not exported.
 function dim(s) { return s; }
 
+// ---------------------------------------------------------------------------
+// generate — AI generation fundamentals (decision gad-217)
+// ---------------------------------------------------------------------------
+
+const generateText = defineCommand({
+  meta: { name: 'text', description: 'Generate text from a prompt and write to file' },
+  args: {
+    prompt: { type: 'positional', description: 'The prompt text', required: true },
+    out: { type: 'string', alias: 'o', description: 'Output file path (default: stdout)', default: '' },
+    model: { type: 'string', alias: 'm', description: 'Model to use (default: claude-sonnet-4-20250514)', default: 'claude-sonnet-4-20250514' },
+    system: { type: 'string', alias: 's', description: 'System prompt', default: '' },
+    maxTokens: { type: 'string', description: 'Max output tokens', default: '4096' },
+  },
+  async run({ args }) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      outputError('ANTHROPIC_API_KEY not set. Export it or add to .env');
+      process.exit(1);
+    }
+
+    const body = {
+      model: args.model,
+      max_tokens: parseInt(args.maxTokens, 10),
+      messages: [{ role: 'user', content: args.prompt }],
+    };
+    if (args.system) {
+      body.system = args.system;
+    }
+
+    try {
+      // Use fetch directly — no SDK dependency needed
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.text();
+        outputError(`API error ${resp.status}: ${err}`);
+        process.exit(1);
+      }
+
+      const data = await resp.json();
+      const text = data.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('\n');
+
+      if (args.out) {
+        const outPath = path.resolve(args.out);
+        const dir = path.dirname(outPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(outPath, text, 'utf8');
+        console.log(`Written to ${args.out} (${text.length} chars)`);
+      } else {
+        console.log(text);
+      }
+    } catch (err) {
+      outputError(`Generation failed: ${err.message}`);
+      process.exit(1);
+    }
+  },
+});
+
+const generateCmd = defineCommand({
+  meta: { name: 'generate', description: 'AI generation fundamentals — prompt in, file out' },
+  subCommands: {
+    text: generateText,
+    // image, audio, video will be added later
+  },
+});
+
 const tryStage = defineCommand({
   meta: { name: 'stage', description: 'Stage a skill into .gad-try/<slug>/ (default subcommand)' },
   args: {
@@ -12984,6 +13074,55 @@ const tryCmd = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Top-level shortcuts: spawn / play (decision gad-219)
+// ---------------------------------------------------------------------------
+
+const spawnCmd = defineCommand({
+  meta: { name: 'spawn', description: 'Spawn a new generation from a species (evolutionary: create a build)' },
+  args: {
+    target: { type: 'positional', description: 'Project/species path (e.g. escape-the-dungeon/vcs-test)', required: true },
+    runtime: { type: 'string', description: 'Runtime driving the eval (claude-code, codex, cursor, etc.)', default: '' },
+    'prompt-only': { type: 'boolean', description: 'Only generate the bootstrap prompt, do not create worktree', default: false },
+    execute: { type: 'boolean', description: 'Output JSON for the orchestrating agent to spawn a worktree agent with full tracing', default: false },
+    'install-skills': { type: 'string', description: 'Comma-separated paths to skills to install into the eval template before running', default: '' },
+  },
+  async run({ args }) {
+    const parts = args.target.split('/');
+    if (parts.length < 2) {
+      outputError('Usage: gad spawn <project>/<species>');
+      process.exit(1);
+    }
+    // Delegate to evalRun — it expects the full slash-separated species path as project
+    await evalRun.run({ args: {
+      project: args.target,
+      baseline: 'HEAD',
+      runtime: args.runtime,
+      'prompt-only': args['prompt-only'],
+      execute: args.execute,
+      'install-skills': args['install-skills'],
+    }});
+  },
+});
+
+const playCmd = defineCommand({
+  meta: { name: 'play', description: "Play a generation's built artifact (open in browser)" },
+  args: {
+    target: { type: 'positional', description: 'Project/species/version (e.g. escape-the-dungeon/bare/v3)', required: true },
+  },
+  run({ args }) {
+    const parts = args.target.split('/');
+    if (parts.length < 3) {
+      outputError('Usage: gad play <project>/<species>/<version>');
+      process.exit(1);
+    }
+    const version = parts[parts.length - 1];
+    const project = parts.slice(0, -1).join('/');
+    // Delegate to evalOpen with parsed project and version
+    evalOpen.run({ args: { project, version } });
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -13035,6 +13174,9 @@ const main = defineCommand({
     install: installCmd,
     uninstall: uninstallCmd,
     try: tryCmd,
+    generate: generateCmd,
+    spawn: spawnCmd,
+    play: playCmd,
     version: versionCmd,
   },
 });
