@@ -1378,6 +1378,34 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Evolution shed workflow gains a cleanup gate. References/skill-lifecycle.md must document this as step N+1 after shed.</impact>
   </decision>
 
+  <decision id="gad-202">
+    <title>All GAD workflows prefer `gad query` over raw XML reads for targeted lookups</title>
+    <date>2026-04-15</date>
+    <summary>All GAD skill and workflow instructions now prefer `gad query` over raw XML reads when `useGraphQuery=true` is set in gad-config.toml. Skills updated: gad-plan-phase (query decisions/tasks before planning), gad-execute-phase (query planned tasks in phase), gad-verify-work (query done tasks in phase), gad-check-todos (query open tasks). Snapshot task listing uses graph-backed path when enabled. Task-checkpoint workflow updated to reference gad query. Graceful fallback to raw XML when graph query is unavailable.</summary>
+    <impact>Agents following updated skills will use graph queries for 12.9x token savings on targeted lookups. Snapshot command uses graph-backed task listing. All changes are gated on the existing useGraphQuery feature flag — no behavioral change when flag is false.</impact>
+  </decision>
+
+  <decision id="gad-203">
+    <title>Data architecture: filesystem-as-database with eval-data-access.cjs unified module</title>
+    <date>2026-04-16</date>
+    <summary>The editor's data layer uses the filesystem directly as the database — JSON files on disk (project.json, species.json, TRACE.json), no separate DB server. A single shared Node module (lib/eval-data-access.cjs) provides CRUD for both CLI and site API routes. Schema adds nullable createdAt/updatedAt/createdBy to project.json and species.json. Runtime API at /api/dev/evals/ provides REST routes for projects, species, generations, and queries. The prebuild-generated TS files remain the production path for the static site — the runtime API is additive for dev. This maps directly to database tables when going hosted (swap filesystem backend for DB behind same API).</summary>
+    <impact>New module lib/eval-data-access.cjs. New API routes /api/dev/evals/*. New CLI commands gad projects create/edit/archive, gad species create/edit/clone/archive. Graph gains eval-project/eval-species/eval-run node types. Editor rewired from generated TS to runtime API. DB viewer collections split into framework-research vs project-operational.</impact>
+  </decision>
+
+  <decision id="gad-204">
+    <title>Graphify is shelfware — native graph extractor is the production system</title>
+    <date>2026-04-16</date>
+    <summary>Graphify (Python) was never installed or run. All graph functionality (829 nodes, 1142 edges, 12.9x token savings, force-directed viz, auto-rebuild via file watcher) is our own zero-dep Node code in lib/graph-extractor.cjs. Graphify would only matter for reverse-engineering external codebases that have no .planning/ structure — it uses LLMs/vision/whisper to infer entities from unstructured content. Our extractor parses known XML schemas via regex. The gad try system can stage Graphify for future reverse-engineer use cases but it is not part of the framework core. Supersedes gad-199 which incorrectly stated Graphify was accepted as a dependency.</summary>
+    <impact>No Python dependency in the framework. The native extractor is the canonical graph system. Reverse-engineer skill has a tiered fallback (native → pdf-parse → graphify-if-installed → manual). Decision gad-199 superseded.</impact>
+  </decision>
+
+  <decision id="gad-205">
+    <title>Multi-tenant platform vision — local-first data model maps to hosted</title>
+    <date>2026-04-16</date>
+    <summary>The operator envisions a hosted platform where users text an agent (via WhatsApp or similar) to build projects, paying per run. Each project is a repo. The data architecture must support: (1) local single-user dev (filesystem), (2) hosted multi-tenant (database). The migration path: build eval-data-access.cjs as the abstraction layer now, swap the backend later. Key concerns: generation-level application data (game DBs, app backends) is per-project not per-platform; user/billing association deferred but schema leaves room; DB viewer needs to separate framework-research data from project-operational data.</summary>
+    <impact>Data architecture designed for portability. No premature infrastructure. Local filesystem → database swap is the migration path. WhatsApp/messaging integration is a future platform layer, not a framework concern.</impact>
+  </decision>
+
   <decision id="gad-199">
     <title>Full native planning-graph implementation — supersedes gad-197 hybrid approach</title>
     <date>2026-04-15</date>
