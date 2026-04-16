@@ -3,6 +3,7 @@
 import { SiteSection } from "@/components/site";
 import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
 import type { EditorSelection } from "./ProjectEditor";
+import { InventoryGrid } from "./InventoryGrid";
 
 function ProjectInspector({ project }: { project: EvalProjectMeta }) {
   return (
@@ -84,20 +85,13 @@ function SpeciesInspector({
             </dd>
           </div>
         )}
-        {speciesRow.scoringWeights && (
-          <div>
-            <dt className="text-muted-foreground mb-1">Scoring Weights</dt>
-            <dd>
-              {Object.entries(speciesRow.scoringWeights).map(([k, v]) => (
-                <div key={k} className="flex justify-between font-mono">
-                  <span className="text-muted-foreground">{k}</span>
-                  <span>{v}</span>
-                </div>
-              ))}
-            </dd>
-          </div>
-        )}
       </dl>
+      {speciesRow.scoringWeights && (
+        <InventoryGrid data={speciesRow.scoringWeights} title="Scoring Weights" />
+      )}
+      {speciesRow.constraints && (
+        <InventoryGrid data={speciesRow.constraints} title="Constraints" />
+      )}
     </div>
   );
 }

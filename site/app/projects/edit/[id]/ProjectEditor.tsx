@@ -9,6 +9,7 @@ import { ProjectCanvas } from "./ProjectCanvas";
 import { InspectorPane } from "./InspectorPane";
 import { LiveDataPanel } from "./LiveDataPanel";
 import { CommandPalette } from "./CommandPalette";
+import { BestiaryTab } from "./BestiaryTab";
 
 type LeftTab = "dna" | "bestiary" | "recipes";
 
@@ -282,9 +283,12 @@ export function ProjectEditor({
               <div className="p-3">
                 {activeTab === "dna" && <DnaEditor onPreview={handlePreview} />}
                 {activeTab === "bestiary" && (
-                  <p className="text-xs text-muted-foreground">
-                    Bestiary — brood cards will populate here (44.5-07)
-                  </p>
+                  <BestiaryTab
+                    allProjects={allProjects}
+                    allRuns={allRuns}
+                    selection={selection}
+                    onSelect={setSelection}
+                  />
                 )}
                 {activeTab === "recipes" && (
                   <p className="text-xs text-muted-foreground">
