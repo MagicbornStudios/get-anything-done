@@ -1,111 +1,107 @@
-# Session dump heuristics — when to restart a GAD session
+# Session cost shape + agent profile modes
 
-**Source:** Session 2026-04-16d operator question: *"we need to determine
-better how to spot when to dump context and begin a new session. Like a
-learning session, I'm sure it's just distinctive tasks that are different.
-But what about skills and etc? ... the more skills you have and context, the
-slower and more expensive you are. Sounds like a junior vs a senior. We need
-to find our operational balances we like and be able to easily configure."*
+**Superseded title:** "Session dump heuristics" — the heuristic-triggered
+auto-dump proposal is **rejected (too fragile)**. What survives: the cost
+analysis and the configurable agent-profile model.
 
-**Anchor decisions:** gad-17 (session exhaustion policy refinement),
-gad-195 (static vs active context).
+**Source:** Session 2026-04-16d. Operator flagged the cost of loading
+~5286k tokens for a full session, asked about the skill/context tradeoff,
+asked how to spot when to restart. Follow-up correction: heuristic-dump is
+too fragile; junior/senior analogy had been inverted.
 
-## The cost shape
+**Anchor decisions:** gad-17 (session exhaustion policy), gad-195 (static
+vs active context).
 
-- **Session load:** ~5286k tokens for full snapshot + skills + agent prompts
-  on this repo (operator measurement). This is the sunk cost of any session
-  start.
+## Cost shape (valid — stays)
+
+- **Session load:** ~5286k tokens for full snapshot + skills + agent
+  prompts on this repo. Sunk cost of any session start.
 - **Per-turn input:** linear growth as conversation extends. Every turn
   re-sends full history. Turn 100 pays for turns 1–99 again.
 - **Cache TTL:** Anthropic prompt cache is 5 minutes. Idle gaps cold-start.
 - **Attention quality:** degrades as irrelevant history fills the window.
   Accuracy on the current task drops even though old turns are still there.
-- **Skill/context tradeoff:** more installed skills = larger base context =
-  slower + more expensive. Fewer skills = faster but fewer available
-  capabilities. Analogy: **junior vs senior** — senior knows less explicit
-  methodology, just moves. Junior needs the playbook inlined.
 
-## Signals that favor DUMP (restart now)
+## Skill/context tradeoff — junior vs senior (corrected)
 
-| signal | why |
-|--|--|
-| **Task boundary crossed and committed** | rehydration story is clean; planning docs hold the state |
-| **Cognitive zone switch** | e.g. site copy → CLI implementation, or implementation → discuss-phase |
-| **Context > 60–70%** | attention degradation starts to show |
-| **Auto-compact imminent** | planned restart beats forced compaction mid-task |
-| **In-head state is empty** | no "what we ruled out" trail carrying weight |
-| **Next chunk is mechanical + scoped** | scoped snapshot + one skill can rehydrate cleanly |
+Operator correction (2026-04-16d): the analogy was inverted in the first
+draft. Correct framing:
 
-## Signals that favor CONTINUE (don't dump yet)
+> "A junior has less, therefore is less expensive."
 
-| signal | why |
-|--|--|
-| **Mid-task with unwritten state** | restart loses context not yet in docs |
-| **Investigation trail matters** | what we ruled out carries weight |
-| **Next thing depends on subtle recent context** | diff review, bug chase, subtle refactor |
-| **User in flow** | restart interrupts thinking |
-| **Small incremental edits with cache hot** | cache hit is cheaper than restart |
-| **Rehydration cost > remaining work cost** | if task is 5 min and restart is 5286k, don't restart |
+Mapping to agent sessions:
 
-## Proposed operational balances (configurable)
+| role | skills / context equipped | cost | capability |
+|--|--|--|--|
+| **junior agent** | **fewer** skills preloaded | **cheap** | narrower — limited to what was given |
+| **senior agent** | **more** skills preloaded | **expensive** | broader — more tools on hand |
 
-Three modes, picked at `gad snapshot --profile <mode>`:
+This is the *equipment* model, not the *internal-knowledge* model. The
+senior-owns-it-internally read is a real human distinction but **not what
+we are modeling here**. In our system, capability comes from what we
+*provide* the agent in context. Less equipment = cheaper. More equipment =
+costlier and more capable.
+
+Implication: "senior mode" is the **bigger, more expensive** configuration,
+not the leaner one.
+
+## Proposed profile modes (configurable, not heuristic)
+
+Three modes, selectable at session start via `gad snapshot --profile <mode>`
+or `gad-config.toml [session] default_profile = "<mode>"`:
 
 | mode | base tokens | skills | use |
 |--|--|--|--|
-| **senior** | ~2k (STATE + ROADMAP only) | 0 preloaded | experienced operator, trust working memory, fast turns |
+| **junior** | ~2k (STATE + ROADMAP only) | 0 preloaded | small scoped tasks, cheap turns, accept narrower capability |
 | **balanced** | ~4k (STATE + ROADMAP + top 5 skills + recent decisions) | 5 | default |
-| **junior** | ~7k (full static+active snapshot) | all equipped | onboarding, cross-context switching, unfamiliar project |
+| **senior** | ~7k (full static+active snapshot) | all equipped | broad cross-context work, unfamiliar surfaces, willing to pay for capability |
 
-Configure via `gad-config.toml`:
+This is a **configuration** knob, not a triggered behavior. The operator
+picks the mode when starting the session. No runtime heuristic decides
+for them.
 
-```toml
-[session]
-default_profile = "balanced"
-skill_pressure_threshold = 5  # skills trigger when N+ installed → warn & suggest senior mode
-```
+## Rejected: heuristic-driven auto-dump
 
-## "Learning session" trigger — distinctive task detection
+**Proposed and discarded (2026-04-16d): too fragile.**
 
-Operator hypothesis: **a task distinctive from current context is a dump
-signal**. Mechanization candidates:
+The earlier draft of this note listed "signals that favor DUMP" (task
+boundary crossed, context > 60%, cognitive zone switch, etc.) and
+mechanization paths (embedding distance, phase graph walk, file-zone
+overlap). Operator ruled this out:
 
-1. **Embedding distance** — compute current active task vs prior session's
-   primary task using embeddings. Distance > threshold → suggest dump.
-2. **Phase graph walk** — if next task is in a different phase cluster on
-   the planning graph (no edges from current phase), suggest dump.
-3. **File-zone overlap** — if next task's file refs have < 20% overlap with
-   recent commits, suggest dump.
-4. **Simple heuristic** — if `gad snapshot` shows `<next-action>` names a
-   different TRACK / PHASE / DOMAIN than current, suggest dump.
+- Rule-based triggers mis-fire on edge cases
+- The cost of a wrong auto-dump (fresh 5286k cold-start when the session
+  was fine) exceeds the savings
+- Mechanization paths (embeddings, graph walks) add their own complexity
+  and still produce false positives
+- Operator prefers explicit control over mid-session behavior
 
-Option 4 is shippable today with zero ML. Options 1–3 are follow-ups.
+What the agent MAY still do (per gad-17): **loosely suggest** a restart at
+clean planning boundaries when context is filling, with one-line
+reasoning. The operator decides. Never a rule, never unilateral.
 
-## Restart contract
+## What this means practically
 
-When dumping, leave the repo in a state that rehydrates to exactly the
-in-flight task in < 1 snapshot:
-
-- ✅ All intentional edits committed + pushed
-- ✅ STATE.xml `<next-action>` names the exact next task
-- ✅ TASK-REGISTRY.xml statuses current
-- ✅ Any unresolved decisions captured in DECISIONS.xml or a session note
-- ✅ Submodule pointer bumped in outer repo (if relevant)
-
-If any ✅ fails, finish that before dumping — don't shift cognitive load onto
-the next session's agent.
+1. Ship the three profile modes as a configuration feature (junior /
+   balanced / senior). Operator picks per session.
+2. Do NOT build an auto-dump detector.
+3. Keep gad-17's "loosely suggest at clean boundaries" behavior unchanged.
+4. The cost analysis above is worth publishing as landing-site content
+   (see todo `site-article-parallel-subagent-cost` — extend to cover
+   session cost as well).
 
 ## Related todos
 
-- `structural-parallelism-task-outbox` — scratch-file pattern reduces
-  shared-file contention across parallel agents
-- `lightweight-agent-and-scoped-snapshot` — agent profiles + scoped snapshots,
-  the mechanization path for this heuristic
-- `site-article-parallel-subagent-cost` — landing article where this
-  reasoning should eventually be published
+- `structural-parallelism-task-outbox` — scratch-file pattern for parallel
+  agent work
+- `lightweight-agent-and-scoped-snapshot` — the scoped snapshot machinery
+  that makes junior mode possible
+- `site-article-parallel-subagent-cost` — candidate surface for publishing
+  the cost-shape analysis
 
 ## Next step
 
-Graduate to a decision (`gad-NNN: Session dump heuristics`) once one of
-the proposed mechanization paths has been piloted. Until then, this note
-is the operating playbook.
+Graduate profile modes (junior/balanced/senior) to a real `gad snapshot
+--profile <mode>` flag. Depends on the scoped-snapshot work in
+`lightweight-agent-and-scoped-snapshot`. Until then, this note is the
+operating playbook on cost, not on dumps.
