@@ -35,7 +35,7 @@ const EVALS_DIR = path.join(REPO_ROOT, "evals");
 /** Load pressure + crosscut config with sensible fallbacks (GAD-D-145) */
 function loadConfig() {
   const defaults = {
-    pressure: { crosscut_weight: 2, high_pressure_threshold: 10 },
+    pressure: { crosscut_weight: 2, decision_weight: 3, decision_rate_weight: 5, high_pressure_threshold: 10 },
     crosscut_detection: {
       systems: ["cli", "site", "eval", "skill", "agent", "trace", "hook", "planning", "state", "decision"],
       min_systems_to_count: 2,
@@ -571,7 +571,41 @@ function computeMetrics(events) {
   };
 }
 
-/** Compute pressure per phase from TASK-REGISTRY.xml (gad-75/gad-79/gad-115) */
+/** Count decisions associated with a phase — scans DECISIONS.xml for phase ID mentions */
+let _decisionsCache = null;
+function loadDecisions() {
+  if (_decisionsCache) return _decisionsCache;
+  const decFile = path.join(REPO_ROOT, ".planning", "DECISIONS.xml");
+  if (!fs.existsSync(decFile)) { _decisionsCache = []; return []; }
+  const content = fs.readFileSync(decFile, "utf8");
+  const decisions = [];
+  const re = /<decision id="([^"]*)">\s*<title>([\s\S]*?)<\/title>[\s\S]*?<summary>([\s\S]*?)<\/summary>/g;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    decisions.push({ id: m[1], title: m[2].trim(), summary: m[3].trim() });
+  }
+  _decisionsCache = decisions;
+  return decisions;
+}
+
+function countDecisionsForPhase(phaseId, tasks) {
+  const decisions = loadDecisions();
+  const taskIds = tasks.map(t => t.id).filter(Boolean);
+  const phaseStr = `phase ${phaseId}`;
+  const phaseStrAlt = `phase-${phaseId}`;
+  let count = 0;
+  for (const d of decisions) {
+    const text = `${d.title} ${d.summary}`.toLowerCase();
+    // Match if decision mentions the phase ID or any task ID from this phase
+    if (text.includes(phaseStr) || text.includes(phaseStrAlt)) { count++; continue; }
+    for (const tid of taskIds) {
+      if (tid && text.includes(tid.toLowerCase())) { count++; break; }
+    }
+  }
+  return count;
+}
+
+/** Compute pressure per phase from TASK-REGISTRY.xml (gad-75/gad-79/gad-115/gad-220) */
 function computePhasesPressure() {
   const regFile = path.join(REPO_ROOT, ".planning", "TASK-REGISTRY.xml");
   if (!fs.existsSync(regFile)) return [];
@@ -601,11 +635,13 @@ function computePhasesPressure() {
 
     const done = tasks.filter(t => t.status === "done").length;
     const total = tasks.length;
-    // Configurable pressure formula (GAD-D-145): tasks_total + crosscuts * crosscut_weight
-    // Shannon framing: tasks_total = raw phase entropy, crosscuts = mutual-information across subsystems
+    // Pressure formula v2 (GAD-D-145, GAD-D-220): tasks + crosscuts + decision entropy
+    // Shannon parallel: decisions resolve uncertainty branches, D/T ratio = information density
     const systems = CONFIG.crosscut_detection.systems;
     const minSystems = CONFIG.crosscut_detection.min_systems_to_count;
     const crosscutWeight = CONFIG.pressure.crosscut_weight;
+    const decisionWeight = CONFIG.pressure.decision_weight || 3;
+    const decisionRateWeight = CONFIG.pressure.decision_rate_weight || 5;
     const threshold = CONFIG.pressure.high_pressure_threshold;
 
     const crosscuts = tasks.filter(t => {
@@ -613,14 +649,25 @@ function computePhasesPressure() {
       return systems.filter(s => words.includes(s)).length >= minSystems;
     }).length;
 
-    const pressure = total + (crosscuts * crosscutWeight);
+    // Count decisions associated with this phase (referenced in task goals or decision summaries)
+    const decisions = countDecisionsForPhase(phaseId, tasks);
+    const decisionRate = total > 0 ? decisions / total : 0;
+    // H_phase = D * log2(T/D + 1) — decision entropy scaled by task space
+    const decisionEntropy = decisions > 0 && total > 0
+      ? decisions * Math.log2(total / decisions + 1)
+      : 0;
+
+    const pressure = total + (crosscuts * crosscutWeight) + (decisions * decisionWeight) + (decisionRate * decisionRateWeight);
 
     phases.push({
       phase: phaseId,
       tasks_total: total,
       tasks_done: done,
       crosscuts,
-      pressure_score: pressure,
+      decisions,
+      decision_rate: Math.round(decisionRate * 100) / 100,
+      decision_entropy: Math.round(decisionEntropy * 100) / 100,
+      pressure_score: Math.round(pressure * 100) / 100,
       high_pressure: pressure > threshold,
       tasks,
     });

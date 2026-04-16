@@ -1505,5 +1505,46 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Installer work (decision gad-188) targets desktop distribution. Site components must work both hosted and local. Build pipeline stays local. Platform hosts published artifacts only.</impact>
   </decision>
 
+  <decision id="gad-219">
+    <title>Command vocabulary: play/spawn/breed are distinct evolutionary operations, not aliases</title>
+    <date>2026-04-16</date>
+    <summary>Three verbs for three operations: (1) `gad play &lt;project&gt;/&lt;species&gt;/&lt;version&gt;` — opens the built artifact (HTML game, app, book, website). Playing is consuming the output. (2) `gad spawn &lt;project&gt;/&lt;species&gt;` — creates a new generation by running a species in an ecosystem/environment. Spawning is the act of generation. The ecosystem is the project context the species enters. (3) `gad breed &lt;gen1&gt; &lt;gen2&gt;` — merges two generations' species configurations and requirements, shedding redundancy. Breeding produces a new species from two parents. `gad run` is too generic. These verbs map to the evolutionary metaphor: species live in ecosystems, spawn generations, and breed to produce new species.</summary>
+    <impact>CLI gets three distinct verbs. play replaces eval open. spawn replaces eval run. breed is new — merges species configs. Ecosystem = project context. All editor surfaces use these verbs consistently.</impact>
+  </decision>
+
+  <decision id="gad-220">
+    <title>Pressure formula v2: add decision entropy as a core dimension alongside task count and crosscuts</title>
+    <date>2026-04-16</date>
+    <summary>Current pressure formula P = T + C*w is too basic — it counts tasks and crosscuts but ignores the information-theoretic signal: decisions. A decision is produced when a question of high importance and directional consequence is resolved. Decision count per phase/task is a direct proxy for information entropy — how much uncertainty was resolved. Shannon entropy H = -Σ p(x) log₂ p(x) measures information content. In our context: each decision resolves one branch of uncertainty, reducing the project's state space. A phase with 5 tasks and 12 decisions had much higher information entropy than a phase with 15 tasks and 0 decisions (mechanical work vs genuine problem-solving).
+
+    Proposed formula v2:
+    P = T + C*w_c + D*w_d + (D/T)*w_r
+
+    Where:
+    - T = total tasks
+    - C = crosscut tasks (touch ≥2 subsystems)
+    - D = decisions produced in this phase
+    - w_c = crosscut weight (default 2)
+    - w_d = decision weight (default 3 — decisions are harder than tasks)
+    - w_r = decision-rate weight (default 5 — high D/T ratio signals every task was hard)
+    - D/T = decision rate (decisions per task — the density of uncertainty)
+
+    The D/T ratio is the key insight: it's analogous to the inverse of Shannon's redundancy. High D/T = low redundancy = high information content = hard phase. Low D/T = high redundancy = mechanical work = easy phase.
+
+    Formal parallel to Shannon:
+    - Shannon: H(X) = -Σ p(xᵢ) log₂ p(xᵢ)  — entropy of a message source
+    - GAD: H_phase = D * log₂(T/D + 1)  — decision entropy scaled by the task space
+
+    The log term captures diminishing returns — 10 decisions in a 10-task phase is more intense than 10 decisions in a 100-task phase. This gives us a cleaner formula that sits formally alongside Shannon's.</summary>
+    <impact>compute-self-eval.mjs pressure calculation updated. Self-eval scores change — phases with many decisions (42.2, 42.3, 44.5) should score higher. Site displays updated. The D/T ratio becomes a first-class metric in project analytics.</impact>
+  </decision>
+
+  <decision id="gad-221">
+    <title>Epigenetic skills: install, use, shed — skills that build once and are no longer needed</title>
+    <date>2026-04-16</date>
+    <summary>Not all skills are permanent. Some build a complex capability once (e.g., "build an EPUB reader", "add export adapter for epub3 format") and are then unneeded. These are epigenetic skills — they modify the generation's phenotype but aren't part of the ongoing species DNA. The lifecycle: install skill → run generation → skill builds the capability → shed skill (uninstall). The generation keeps the built artifact; the species drops the skill from its active set. This is different from deprecated skills (which were once useful and became obsolete). Epigenetic skills were always intended to be temporary. Species.json should track: `activeSkills` (permanent), `epigeneticSkills` (build-once, shed after), `shedSkills` (previously active, now removed with reason).</summary>
+    <impact>Species config gains skill lifecycle tracking. Editors show skill status (active/epigenetic/shed). Generation runs can auto-shed skills marked epigenetic after successful build. Skill authoring workflow needs "mark as epigenetic" option.</impact>
+  </decision>
+
 </decisions>
 
