@@ -1294,6 +1294,8 @@ const stateSetNextActionCmd = defineCommand({
       return;
     }
     fs.writeFileSync(statePath, replaced);
+    // Auto-rebuild graph after state mutation (decision gad-201)
+    maybeRebuildGraph(baseDir, root);
     console.log(`Updated: ${path.relative(baseDir, statePath)}`);
     console.log(`Length:  ${text.length}/${NEXT_ACTION_MAX_CHARS} chars`);
   },
@@ -7165,6 +7167,9 @@ const tasksClaimCmd = defineCommand({
     });
     addTaskClaim(planDir, agentBootstrap.agent.agentId, task.id, task.phase);
 
+    // Auto-rebuild graph after task claim mutation (decision gad-201)
+    maybeRebuildGraph(baseDir, root);
+
     const updatedTask = readTasks(root, baseDir, {}).find((row) => row.id === task.id);
     const payload = {
       project: root.id,
@@ -7225,6 +7230,9 @@ const tasksReleaseCmd = defineCommand({
     if (actingAgentId) {
       removeTaskClaim(planDir, actingAgentId, task.id, task.phase, args['release-agent'] === true || args.done === true);
     }
+
+    // Auto-rebuild graph after task status mutation (decision gad-201)
+    maybeRebuildGraph(baseDir, root);
 
     const updatedTask = readTasks(root, baseDir, {}).find((row) => row.id === task.id);
     const payload = {
@@ -11436,6 +11444,23 @@ const modelsCmd = defineCommand({
 // Structural queries are LLM-free — see `gad query`.
 
 const graphExtractor = require('../lib/graph-extractor.cjs');
+
+/**
+ * Silently rebuild graph.json after a planning file mutation (task status change,
+ * decision added, state update). ~320ms, zero deps, no output unless error.
+ * Only rebuilds when useGraphQuery is enabled in gad-config.toml.
+ */
+function maybeRebuildGraph(baseDir, root) {
+  try {
+    if (!graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path))) return;
+    const gadDir = path.resolve(__dirname, '..');
+    const planDir = path.join(baseDir, root.path, root.planningDir);
+    const graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
+    fs.writeFileSync(path.join(planDir, 'graph.json'), JSON.stringify(graph, null, 2));
+  } catch {
+    // Silent — graph rebuild is best-effort, never blocks the primary operation.
+  }
+}
 
 const graphBuildCmd = defineCommand({
   meta: { name: 'build', description: 'Generate graph.json + graph.html from .planning/ XML files' },
