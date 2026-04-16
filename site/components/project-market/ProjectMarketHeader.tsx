@@ -21,14 +21,14 @@ export function ProjectMarketHeader() {
         titleClassName="mt-3 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl"
         title={
           <>
-            Every eval project. <span className="gradient-text">Playable in your browser.</span>
+            Every species. <span className="gradient-text">Playable in your browser.</span>
           </>
         }
       />
       <SiteProse className="mt-5 max-w-2xl">
-        Browse the full catalog of agent evaluation projects across games, video, software, and
-        tooling. Each project tests a hypothesis about how coding agents build under different
-        conditions.
+        Browse the full catalog of species across games, video, software, and tooling. Each
+        species is an evolutionary branch of a project that tests a hypothesis about how coding
+        agents build under different conditions.
       </SiteProse>
       </Identified>
     </SiteSection>

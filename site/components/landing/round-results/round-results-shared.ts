@@ -24,5 +24,5 @@ export const ROUND_RESULTS_DEFAULT_HEADLINE: RoundHeadlineData = {
   kicker: "All results",
   headline: "Every scored run. Every condition.",
   headlineHighlight: "Every condition.",
-  description: "All evaluation runs with human review scores, across all rounds and conditions.",
+  description: "All generation runs with human review scores, across all rounds and conditions.",
 };

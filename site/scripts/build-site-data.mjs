@@ -1746,7 +1746,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 ## Catalog
 
 - [Skills](${SITE_URL}/skills): ${catalog.skills.length} skills (some are emergent, agent-authored, excluded from default install)
-- [Requirements](${SITE_URL}/requirements): Every eval project's current REQUIREMENTS.xml
+- [Requirements](${SITE_URL}/requirements): Every species' current REQUIREMENTS.xml
 - [Playable archive](${SITE_URL}/#play): Every scored build playable in-browser
 
 ## System

@@ -10,12 +10,12 @@ import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
   title: "Get Anything Done — measurable AI agent workflows",
   description:
-    "GAD is a planning + evaluation framework for AI coding agents. We measure whether structured workflows actually beat unstructured ones — with reproducible benchmarks, not vibes.",
+    "GAD is an evolutionary framework for AI coding agents — species, generations, and measurable pressure. We measure whether structured workflows actually beat unstructured ones with reproducible benchmarks, not vibes.",
   metadataBase: new URL("https://get-anything-done.vercel.app"),
   openGraph: {
     title: "Get Anything Done",
     description:
-      "A planning + evaluation framework for AI coding agents. Measured, not vibed.",
+      "Evolutionary framework for AI coding agents. Species, generations, measurable pressure. Measured, not vibed.",
     type: "website",
   },
 };

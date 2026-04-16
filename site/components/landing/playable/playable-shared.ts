@@ -89,7 +89,7 @@ export const PROJECT_FAMILIES: Array<{
   {
     id: "escape-the-dungeon",
     label: "Escape the Dungeon",
-    description: "Roguelike dungeon crawler — primary eval vehicle across all rounds",
+    description: "Roguelike dungeon crawler — primary project across all evolution rounds",
     projects: [
       "escape-the-dungeon",
       "escape-the-dungeon-bare",
@@ -99,13 +99,13 @@ export const PROJECT_FAMILIES: Array<{
   {
     id: "gad-explainer-video",
     label: "GAD Explainer Video",
-    description: "Remotion composition — planned eval for video generation workflows",
+    description: "Remotion composition — planned species for video generation workflows",
     projects: ["gad-explainer-video"],
   },
   {
     id: "skill-evaluation-app",
     label: "Skill Evaluation App",
-    description: "Interactive requirements editor — planned eval for tooling workflows",
+    description: "Interactive requirements editor — planned species for tooling workflows",
     projects: ["skill-evaluation-app"],
   },
 ];
