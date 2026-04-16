@@ -4,11 +4,23 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-16d in progress. TRACK 1 partial: nav-shared + PlayableTeaser vocabulary rebrand (eval→generation/species/spawn) + pre-existing TS fix (EvalProjectMeta.published optional). Build passes. 3 new todos captured: site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot.
+  <next-action>Session 2026-04-16d CLOSE. TRACK 1 advanced across 3 commits in submodule + 1 bump in outer repo (pushed):
+- 65ddd91: nav-shared + PlayableTeaser home vocab + TS fix (EvalProjectMeta.published optional)
+- f3ade4b: docs/quick-start.md (v1.32→1.33 + new CLI canonical shape gad projects init / gad species create / gad spawn / gad generation)
+- 8c1234x (this session final): /downloads metadata + Templates intro/section vocab rebrand (eval project → species)
 
-REMAINING — still planned:
+Outer repo bump: 5b12b3a (pushed).
 
-TRACK 1 (site rebrand) — continue: rest of /downloads, /quickstart, /how-it-works, /project-market, templates/*, playable/* descriptions still have "eval" copy. Task 45-15 (vocabulary audit) is the umbrella.
+Parallel commits on submodule during session (not mine, from user's agent-experiment work): 504f691 gad bundle export command, 8591d71 OpenCode permissions simplification. No conflicts.
+
+3 new todos captured from session design discussion:
+- site-article-parallel-subagent-cost (cost breakdown → landing article)
+- structural-parallelism-task-outbox (per-agent scratch files, avoid shared-file merge conflicts)
+- lightweight-agent-and-scoped-snapshot (agent profiles, gad snapshot --task, minimal-agent mode)
+
+REMAINING — still planned (next session):
+
+TRACK 1 (site rebrand) — continue: /how-it-works (536 LOC, biggest), /project-market, playable-shared descriptions, round-results, results, hypothesis-tracks, templates/TemplateEvalCard. Footer is operator-owned, skip. Task 45-15 umbrella remains in-progress.
 
 TRACK 2 (VCS portability): Run `gad spawn escape-the-dungeon/vcs-test`. Compare bare data-attributes vs React component. Iterate VCS skill. STOP after: one generation complete + skill iterated.
 
@@ -60,7 +72,7 @@ TODOS (11): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-comm
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-16T21:55:00.000Z</last-updated>
+  <last-updated>2026-04-16T23:10:00.000Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
 

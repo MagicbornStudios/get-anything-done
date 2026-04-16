@@ -8,7 +8,7 @@ import Templates from "@/components/landing/templates/Templates";
 export const metadata = {
   title: "Downloads — GAD",
   description:
-    "Installer, CLI reference, VCS component registry, and planning packs — everything you need to run GAD.",
+    "Installer, CLI reference, VCS component registry, and species templates — everything you need to run GAD.",
 };
 
 const CLI_COMMANDS = [
@@ -173,7 +173,7 @@ export default function DownloadsPage() {
         </Identified>
       </SiteSection>
 
-      {/* ── Section 3: Planning Packs ── */}
+      {/* ── Section 3: Species Templates ── */}
       <Templates />
     </MarketingShell>
   );
