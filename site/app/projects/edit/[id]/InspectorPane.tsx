@@ -1,9 +1,54 @@
 "use client";
 
+import { useMemo } from "react";
 import { SiteSection } from "@/components/site";
-import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
+import type { EvalProjectMeta, EvalRunRecord, EvalScores } from "@/lib/eval-data";
 import type { EditorSelection } from "./ProjectEditor";
 import { InventoryGrid } from "./InventoryGrid";
+import { TraitBar, type Trait } from "./TraitBar";
+import { RadarChart, type RadarSeries } from "./RadarChart";
+
+const SCORE_LABELS: Record<string, string> = {
+  requirement_coverage: "Req Coverage",
+  planning_quality: "Planning",
+  per_task_discipline: "Discipline",
+  skill_accuracy: "Skill Accuracy",
+  time_efficiency: "Time Efficiency",
+  human_review: "Human Review",
+  workflow_emergence: "Workflow Emergence",
+  implementation_quality: "Impl Quality",
+  iteration_evidence: "Iteration Evidence",
+  composite: "Composite",
+};
+
+const SERIES_COLORS = [
+  "#60a5fa", // blue-400
+  "#f97316", // orange-500
+  "#a78bfa", // violet-400
+  "#34d399", // emerald-400
+  "#fb7185", // rose-400
+  "#facc15", // yellow-400
+];
+
+function scoresToTraits(scores: EvalScores): Trait[] {
+  return Object.entries(scores)
+    .filter(([, v]) => v != null && typeof v === "number")
+    .map(([key, value]) => ({
+      key,
+      label: SCORE_LABELS[key] ?? key.replace(/_/g, " "),
+      value: value as number,
+    }));
+}
+
+function scoresToAxesAndValues(scores: EvalScores): { axes: string[]; values: number[] } {
+  const entries = Object.entries(scores).filter(
+    ([k, v]) => v != null && typeof v === "number" && k !== "composite",
+  );
+  return {
+    axes: entries.map(([k]) => SCORE_LABELS[k] ?? k.replace(/_/g, " ")),
+    values: entries.map(([, v]) => v as number),
+  };
+}
 
 function ProjectInspector({ project }: { project: EvalProjectMeta }) {
   return (
@@ -45,6 +90,30 @@ function SpeciesInspector({
   runs: EvalRunRecord[];
 }) {
   const latestRun = runs[0];
+
+  // Build radar chart series from all generations with scores
+  const radarData = useMemo(() => {
+    const runsWithScores = runs.filter(
+      (r) => r.scores && Object.values(r.scores).some((v) => v != null),
+    );
+    if (runsWithScores.length === 0) return null;
+
+    // Use the first run's keys as the canonical axes (excluding composite)
+    const first = runsWithScores[0];
+    const { axes } = scoresToAxesAndValues(first.scores);
+    if (axes.length < 3) return null;
+
+    const series: RadarSeries[] = runsWithScores.map((r, i) => {
+      const { values } = scoresToAxesAndValues(r.scores);
+      return {
+        label: r.version,
+        color: SERIES_COLORS[i % SERIES_COLORS.length],
+        values,
+      };
+    });
+    return { axes, series };
+  }, [runs]);
+
   return (
     <div className="p-3">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -86,6 +155,16 @@ function SpeciesInspector({
           </div>
         )}
       </dl>
+
+      {/* Radar chart overlaying all generations */}
+      {radarData && (
+        <RadarChart
+          axes={radarData.axes}
+          series={radarData.series}
+          title="Score Comparison"
+        />
+      )}
+
       {speciesRow.scoringWeights && (
         <InventoryGrid data={speciesRow.scoringWeights} title="Scoring Weights" />
       )}
@@ -99,10 +178,16 @@ function SpeciesInspector({
 function GenerationInspector({
   run,
   speciesRow,
+  speciesRuns,
+  onCompare,
 }: {
   run: EvalRunRecord;
   speciesRow: EvalProjectMeta | undefined;
+  speciesRuns: EvalRunRecord[];
+  onCompare?: (species: string, versionA: string, versionB: string) => void;
 }) {
+  const traits = scoresToTraits(run.scores);
+
   return (
     <div className="p-3">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -166,6 +251,38 @@ function GenerationInspector({
           </a>
         </div>
       </dl>
+
+      {/* Trait bars for scores */}
+      {traits.length > 0 && <TraitBar traits={traits} title="Scores" />}
+
+      {/* Compare with another generation */}
+      {onCompare && speciesRuns.length > 1 && (
+        <div className="px-0 py-2 border-t border-border/40 mt-3">
+          <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            Compare
+          </h3>
+          <div className="flex flex-wrap gap-1">
+            {speciesRuns
+              .filter((r) => r.version !== run.version)
+              .map((r) => (
+                <button
+                  key={r.version}
+                  type="button"
+                  onClick={() =>
+                    onCompare(
+                      run.species ?? run.project,
+                      run.version,
+                      r.version,
+                    )
+                  }
+                  className="rounded border border-border/40 px-2 py-0.5 text-[10px] font-mono text-muted-foreground hover:border-accent/60 hover:text-foreground transition-colors"
+                >
+                  vs {r.version}
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -175,11 +292,13 @@ export function InspectorPane({
   allProjects,
   allRuns,
   selection,
+  onCompare,
 }: {
   project: EvalProjectMeta;
   allProjects: EvalProjectMeta[];
   allRuns: EvalRunRecord[];
   selection: EditorSelection;
+  onCompare?: (species: string, versionA: string, versionB: string) => void;
 }) {
   if (selection.kind === "project") {
     return (
@@ -236,7 +355,12 @@ export function InspectorPane({
       sectionShell={false}
       className="border-b-0"
     >
-      <GenerationInspector run={run} speciesRow={speciesRow} />
+      <GenerationInspector
+        run={run}
+        speciesRow={speciesRow}
+        speciesRuns={speciesRuns}
+        onCompare={onCompare}
+      />
     </SiteSection>
   );
 }
