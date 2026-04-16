@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Download, ExternalLink, Package } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Package, Pencil } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -113,6 +113,19 @@ export function ProjectHeroSection({
               Source on GitHub
             </a>
           </Button>
+          {process.env.NODE_ENV === "development" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-full border-amber-500/40 bg-amber-500/5 px-5 py-2.5 text-xs font-semibold text-amber-400 hover:border-amber-500/60 hover:bg-amber-500/10 [&_svg]:size-3"
+              asChild
+            >
+              <Link href={`/projects/edit/${project.project ?? project.id.split("/")[0]}`}>
+                <Pencil size={12} aria-hidden />
+                Open in Editor
+              </Link>
+            </Button>
+          )}
         </Identified>
       </Identified>
     </SiteSection>

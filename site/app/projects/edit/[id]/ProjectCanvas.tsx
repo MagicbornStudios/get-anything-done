@@ -1,0 +1,150 @@
+"use client";
+
+import { useMemo } from "react";
+import { SiteSection } from "@/components/site";
+import { cn } from "@/lib/utils";
+import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
+
+type SpeciesGroup = {
+  species: string;
+  contextFramework: string | null;
+  runs: EvalRunRecord[];
+  latest: EvalRunRecord | null;
+};
+
+function groupBySpecies(
+  project: EvalProjectMeta,
+  allProjects: EvalProjectMeta[],
+  allRuns: EvalRunRecord[],
+): SpeciesGroup[] {
+  // Find all species rows for this project
+  const projectSlug = project.project ?? project.id.split("/")[0];
+  const speciesRows = allProjects.filter(
+    (p) => (p.project ?? p.id.split("/")[0]) === projectSlug,
+  );
+
+  return speciesRows.map((sp) => {
+    const runs = allRuns
+      .filter((r) => r.project === sp.project && r.species === sp.species)
+      .sort((a, b) => {
+        const va = parseInt(a.version.replace("v", ""), 10);
+        const vb = parseInt(b.version.replace("v", ""), 10);
+        return vb - va;
+      });
+    return {
+      species: sp.species ?? sp.workflow ?? "default",
+      contextFramework: sp.contextFramework,
+      runs,
+      latest: runs[0] ?? null,
+    };
+  });
+}
+
+function SpeciesCard({ group }: { group: SpeciesGroup }) {
+  const hasPlayable = group.runs.some(
+    (r) => r.version != null,
+  );
+
+  return (
+    // cid prototype: project-editor-species-card-<species>-site-section
+    <SiteSection
+      cid={`project-editor-species-card-${group.species}-site-section` as const}
+      sectionShell={false}
+      className="border border-border/60 rounded-lg bg-card/30 hover:bg-card/50 transition-colors"
+    >
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">{group.species}</h3>
+            <p className="text-xs text-muted-foreground">
+              {group.contextFramework ?? "no framework"} &middot;{" "}
+              {group.runs.length} generation{group.runs.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          {group.latest && (
+            <span className="text-xs font-mono text-muted-foreground">
+              latest: {group.latest.version}
+            </span>
+          )}
+        </div>
+
+        {/* Generation grid (brood) */}
+        {group.runs.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {group.runs.map((run) => (
+              // cid prototype: project-editor-generation-chip-<species>-<version>-site-section
+              <a
+                key={run.version}
+                href={`/runs/${run.project}/${run.version}`}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-mono transition-colors",
+                  "border border-border/40 hover:border-accent/60 hover:bg-accent/10",
+                )}
+              >
+                {run.version}
+                {run.traceSchemaVersion >= 4 && (
+                  <span className="text-[9px] text-emerald-400" title="trace v4+">
+                    &#x2022;
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {!hasPlayable && (
+          <p className="mt-3 text-[10px] text-muted-foreground/50">
+            No generations yet
+          </p>
+        )}
+      </div>
+    </SiteSection>
+  );
+}
+
+export function ProjectCanvas({
+  project,
+  allProjects,
+  allRuns,
+}: {
+  project: EvalProjectMeta;
+  allProjects: EvalProjectMeta[];
+  allRuns: EvalRunRecord[];
+}) {
+  const species = useMemo(
+    () => groupBySpecies(project, allProjects, allRuns),
+    [project, allProjects, allRuns],
+  );
+
+  return (
+    <div className="p-6">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">
+          {project.name?.split("/")[0] ?? project.id}
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          {species.length} species &middot;{" "}
+          {species.reduce((n, s) => n + s.runs.length, 0)} total generations
+        </p>
+      </div>
+
+      {/* Species grid */}
+      <SiteSection
+        cid="project-editor-species-grid-site-section"
+        sectionShell={false}
+        className="border-b-0"
+      >
+        <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {species.map((g) => (
+            <SpeciesCard key={g.species} group={g} />
+          ))}
+          {species.length === 0 && (
+            <p className="col-span-full text-sm text-muted-foreground">
+              No species defined for this project yet.
+            </p>
+          )}
+        </div>
+      </SiteSection>
+    </div>
+  );
+}

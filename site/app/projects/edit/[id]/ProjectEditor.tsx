@@ -1,13 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { SiteSection, SiteSectionHeading } from "@/components/site";
+import { SiteSection } from "@/components/site";
 import { cn } from "@/lib/utils";
-import type { EvalProjectMeta } from "@/lib/eval-data";
+import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
+import { DnaEditor } from "./DnaEditor";
+import { ProjectCanvas } from "./ProjectCanvas";
 
 type Tab = "dna" | "bestiary" | "recipes";
 
-export function ProjectEditor({ project }: { project: EvalProjectMeta }) {
+export function ProjectEditor({
+  project,
+  allProjects,
+  allRuns,
+}: {
+  project: EvalProjectMeta;
+  allProjects: EvalProjectMeta[];
+  allRuns: EvalRunRecord[];
+}) {
   const [activeTab, setActiveTab] = useState<Tab>("dna");
 
   return (
@@ -77,11 +87,7 @@ export function ProjectEditor({ project }: { project: EvalProjectMeta }) {
 
               {/* Tab content placeholder */}
               <div className="p-3">
-                {activeTab === "dna" && (
-                  <p className="text-xs text-muted-foreground">
-                    DNA Editor — gene states will populate here (44.5-12)
-                  </p>
-                )}
+                {activeTab === "dna" && <DnaEditor />}
                 {activeTab === "bestiary" && (
                   <p className="text-xs text-muted-foreground">
                     Bestiary — brood cards will populate here (44.5-07)
@@ -102,17 +108,11 @@ export function ProjectEditor({ project }: { project: EvalProjectMeta }) {
             sectionShell={false}
             className="flex-1 overflow-y-auto border-b-0"
           >
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <SiteSectionHeading preset="section" title={project.name} />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Canvas — preview and detail panes render here
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground/60">
-                  {project.description}
-                </p>
-              </div>
-            </div>
+            <ProjectCanvas
+              project={project}
+              allProjects={allProjects}
+              allRuns={allRuns}
+            />
           </SiteSection>
 
           {/* ── Right pane (inspector) ─────────────────────── */}

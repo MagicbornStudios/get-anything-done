@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { EVAL_PROJECTS } from "@/lib/eval-data";
+import { EVAL_PROJECTS, EVAL_RUNS } from "@/lib/eval-data";
 import { ProjectEditor } from "./ProjectEditor";
 
 export const dynamic = "force-dynamic";
@@ -29,5 +29,18 @@ export default async function ProjectEditPage({
   const project = EVAL_PROJECTS.find((p) => p.id === id || p.project === id);
   if (!project) notFound();
 
-  return <ProjectEditor project={project} />;
+  // Collect all species rows + runs for this project so the canvas can show them
+  const projectSlug = project.project ?? project.id.split("/")[0];
+  const allProjectSpecies = EVAL_PROJECTS.filter(
+    (p) => (p.project ?? p.id.split("/")[0]) === projectSlug,
+  );
+  const allRuns = EVAL_RUNS.filter((r) => r.project === projectSlug);
+
+  return (
+    <ProjectEditor
+      project={project}
+      allProjects={allProjectSpecies}
+      allRuns={allRuns}
+    />
+  );
 }
