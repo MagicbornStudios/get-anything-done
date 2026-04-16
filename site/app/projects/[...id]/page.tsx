@@ -98,7 +98,7 @@ export async function generateMetadata({
   const project = EVAL_PROJECTS.find((p) => p.id === joined);
   if (!project) return { title: "Project not found" };
   return {
-    title: `${project.name} — GAD eval project`,
+    title: `${project.name} — GAD project`,
     description: project.description ?? "",
   };
 }

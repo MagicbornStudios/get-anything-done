@@ -233,6 +233,20 @@ export interface EvalProjectMeta {
   techStack: string | null;
   buildRequirement: string | null;
   published?: boolean;
+
+  // Authorship (decision gad-213)
+  authors?: string[];
+  usageCount?: number;
+  lastUsed?: string | null;
+  projectsUsedIn?: string[];
+
+  // Showcase media (decision gad-213)
+  showcaseMedia?: Array<{ type: "image" | "video" | "playable"; src: string; caption?: string }>;
+  featuredGeneration?: { project: string; version: string } | null;
+
+  // Transferability (decision gad-209)
+  transferable?: boolean;
+  tags?: string[];
 }
 
 export interface ProducedArtifacts {

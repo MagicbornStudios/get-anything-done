@@ -11,7 +11,7 @@ import { EVAL_PROJECTS } from "@/lib/eval-data";
 export const metadata: Metadata = {
   title: "Project Market - GAD",
   description:
-    "Browse all eval projects: games, video, software, and tooling. Play any scored build in your browser.",
+    "Browse all projects and species: games, video, software, and tooling. Play any scored build in your browser.",
 };
 
 // Task 44-30: when ?projectid= names a project that has eval rows, collapse

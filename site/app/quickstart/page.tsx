@@ -7,7 +7,7 @@ import { MarketingShell, SiteSection } from "@/components/site";
 
 export const metadata = {
   title: "Quick Start — GAD in 5 minutes",
-  description: "Install a coding agent, install GAD, and run your first eval in 5 minutes.",
+  description: "Install a coding agent, install GAD, and run your first species generation in 5 minutes.",
 };
 
 function getContent() {

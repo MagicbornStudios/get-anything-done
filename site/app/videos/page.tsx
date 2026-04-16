@@ -33,7 +33,7 @@ export default function VideosPage() {
           <SiteProse className="mt-6">
             Each embed below is a row in{" "}
             <code className="rounded bg-card/60 px-1 py-0.5 text-sm">remotion/registry.ts</code> — same
-            metadata the per-run pages use when a composition is tied to a preserved eval. Add a
+            metadata the per-run pages use when a composition is tied to a preserved generation. Add a
             composition there and it appears here automatically.
           </SiteProse>
         </Identified>

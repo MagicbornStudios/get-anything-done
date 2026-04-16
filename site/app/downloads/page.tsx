@@ -18,8 +18,8 @@ const CLI_COMMANDS = [
   { command: "gad tasks", purpose: "View task registry" },
   { command: "gad phases", purpose: "View roadmap phases" },
   { command: "gad decisions", purpose: "View decision log" },
-  { command: "gad eval run <name>", purpose: "Launch an eval generation" },
-  { command: "gad eval preserve", purpose: "Save eval artifacts" },
+  { command: "gad species run <name>", purpose: "Launch a new generation from a species" },
+  { command: "gad generation preserve", purpose: "Save generation artifacts" },
 ] as const;
 
 const VCS_COMPONENTS = [

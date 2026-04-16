@@ -15,8 +15,8 @@
  *   gad phases [--projectid <id>]
  *   gad tasks [--projectid <id>]
  *   gad docs compile [--sink <path>]
- *   gad eval list
- *   gad eval run --project <name>
+ *   gad species list
+ *   gad species run --project <name>
  *   gad session list
  *   gad session new [--project <id>]
  *   gad session resume <id>
@@ -530,7 +530,7 @@ function listEvalProjectsHint() {
   }
   console.error(`\nMissing --project. Available eval projects:\n`);
   for (const p of discovered) console.error(`  ${p.name}`);
-  console.error(`\nRerun: gad eval run --project ${discovered[0].name}`);
+  console.error(`\nRerun: gad species run --project ${discovered[0].name}`);
   process.exit(1);
 }
 
@@ -1378,7 +1378,7 @@ const speciesList = defineCommand({
 });
 
 const speciesCmd = defineCommand({
-  meta: { name: 'species', description: 'Manage eval species (list, create, edit, clone, archive)' },
+  meta: { name: 'species', description: 'Manage species (list, create, edit, clone, archive, run, suite)' },
   subCommands: {
     list: speciesList,
     create: speciesCreate,
@@ -1575,7 +1575,7 @@ const generationSalvage = defineCommand({
     if (!fs.existsSync(runDir)) {
       outputError(
         `No run/ directory found at ${gen.dir}.\n` +
-        `  Has this generation been preserved? Run \`gad eval preserve\` first.`
+        `  Has this generation been preserved? Run \`gad generation preserve\` first.`
       );
       return;
     }
@@ -1694,7 +1694,7 @@ const generationSalvage = defineCommand({
 });
 
 const generationCmd = defineCommand({
-  meta: { name: 'generation', description: 'Manage generation runs (salvage data assets)' },
+  meta: { name: 'generation', description: 'Manage generations (salvage, preserve, verify, open, review, report)' },
   subCommands: {
     salvage: generationSalvage,
   },
@@ -3007,7 +3007,7 @@ const evalRun = defineCommand({
     const gadDir = path.join(__dirname, '..');
     const resolved = resolveEvalProject(args.project);
     if (!resolved) {
-      outputError(`Eval project '${args.project}' not found. Run \`gad eval list\` to see available projects.`);
+      outputError(`Eval project '${args.project}' not found. Run \`gad species list\` to see available projects.`);
       return;
     }
     const projectDir = resolved.projectDir;
@@ -3180,7 +3180,7 @@ const evalRun = defineCommand({
           `After the agent completes:`,
           `1. Update TRACE.json timing.ended + timing.duration_minutes + token_usage from agent result`,
           `1b. Verify runtime identity / trace files were captured for ${evalRuntime.id}`,
-          `2. Run: gad eval preserve ${args.project} v${runNum} --from <worktree-path>`,
+          `2. Run: gad generation preserve ${args.project} v${runNum} --from <worktree-path>`,
           `3. Regenerate site data: cd site && node scripts/build-site-data.mjs`,
           `4. Build + commit + push`,
         ],
@@ -3201,7 +3201,7 @@ const evalRun = defineCommand({
       console.log(`  4. Set env: GAD_LOG_DIR=${path.join(runDir, '.gad-log')}`);
       console.log(`  5. Spawn an Agent with isolation: "worktree" using the prompt`);
       console.log(`  6. On completion: update TRACE.json with timing + tokens`);
-      console.log(`  7. Run: gad eval preserve ${args.project} v${runNum} --from <worktree>`);
+      console.log(`  7. Run: gad generation preserve ${args.project} v${runNum} --from <worktree>`);
       console.log(`  8. Regenerate site data + push`);
 
       // Output JSON to stdout for machine parsing
@@ -3224,7 +3224,7 @@ const evalRun = defineCommand({
       console.log(`  ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
       console.log(`\nAgent should work in: ${worktreePath}`);
       console.log(`After agent completes, run:`);
-      console.log(`  gad eval preserve ${args.project} v${runNum} --from ${worktreePath}`);
+      console.log(`  gad generation preserve ${args.project} v${runNum} --from ${worktreePath}`);
     } finally {
       try {
         execSync(`git worktree remove --force "${worktreePath}"`, { stdio: 'pipe' });
@@ -3263,7 +3263,7 @@ const evalScore = defineCommand({
       .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
 
     if (versions.length === 0) {
-      outputError(`No runs found for project '${args.project}'. Run \`gad eval run --project ${args.project}\` first.`);
+      outputError(`No runs found for project '${args.project}'. Run \`gad species run --project ${args.project}\` first.`);
     }
 
     const version = args.version || versions[versions.length - 1];
@@ -4389,7 +4389,7 @@ const evalRuns = defineCommand({
       .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
 
     if (runDirs.length === 0) {
-      console.log(`No runs yet for '${args.project}'. Run: gad eval run --project ${args.project}`);
+      console.log(`No runs yet for '${args.project}'. Run: gad species run --project ${args.project}`);
       return;
     }
 
@@ -4589,7 +4589,7 @@ Manual score added to SCORE.md.
     console.log(`  REQUIREMENTS.md — eval definition`);
     if (args.requirements) console.log(`  source-requirements${path.extname(args.requirements)} — copied source`);
     console.log(`\n  Next: add REQUIREMENTS.xml to template/.planning/ with structured requirements`);
-    console.log(`  Then: gad eval run --project ${args.project}`);
+    console.log(`  Then: gad species run --project ${args.project}`);
   },
 });
 
@@ -4662,7 +4662,7 @@ const evalSuite = defineCommand({
     console.log(`\n✓ Suite prepared: ${results.length} prompt(s) in:`);
     console.log(`  ${path.relative(process.cwd(), suiteDir)}/`);
     console.log(`\nTo run: launch each prompt as a separate agent with worktree isolation.`);
-    console.log(`After all complete: gad eval report`);
+    console.log(`After all complete: gad generation report`);
   },
 });
 
@@ -4791,7 +4791,7 @@ const evalReport = defineCommand({
     const unreviewed = rows.filter(r => r.human === '—' && r.type === 'impl');
     const noTrace = rows.filter(r => r.version === '—');
     if (unreviewed.length > 0) {
-      console.log(`\n* = auto_composite (no human review). Run: gad eval review <project> <version> --score <0-1>`);
+      console.log(`\n* = auto_composite (no human review). Run: gad generation review <project> <version> --score <0-1>`);
     }
     if (noTrace.length > 0) {
       console.log(`\n${noTrace.length} project(s) without traces:`);
@@ -4841,7 +4841,7 @@ const evalReport = defineCommand({
   },
 });
 
-// gad eval preserve — copy agent outputs to canonical per-version locations
+// gad generation preserve — copy agent outputs to canonical per-version locations
 // This is MANDATORY after every eval run. Without this, outputs can be lost
 // when worktrees are cleaned up or overwritten.
 const evalPreserve = defineCommand({
@@ -5166,7 +5166,7 @@ function dirSizeBytes(dirPath) {
   return total;
 }
 
-// gad eval verify — audit preservation of all eval runs
+// gad generation verify — audit preservation of all eval runs
 const evalVerify = defineCommand({
   meta: { name: 'verify', description: 'Audit all eval runs for preservation completeness (code, build, logs, trace)' },
   args: {
@@ -5267,7 +5267,7 @@ const evalVerify = defineCommand({
   },
 });
 
-// gad eval review — human scoring
+// gad generation review — human scoring
 const evalReview = defineCommand({
   meta: { name: 'review', description: 'Submit human review score for an eval run — single score or rubric JSON (phase 27 track 1)' },
   args: {
@@ -5434,7 +5434,7 @@ const evalReview = defineCommand({
   },
 });
 
-// gad eval open — launch eval output in browser
+// gad generation open — launch eval output in browser
 const evalOpen = defineCommand({
   meta: { name: 'open', description: 'Open eval build output in browser' },
   args: {
@@ -6269,9 +6269,27 @@ const evalInheritSkills = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Promote eval subcommands into species / generation (decision gad-212)
+// ---------------------------------------------------------------------------
+// Species-level commands: list, run, suite
+speciesCmd.subCommands.run = evalRun;
+speciesCmd.subCommands.suite = evalSuite;
+
+// Generation-level commands: preserve, verify, open, review, report
+generationCmd.subCommands.preserve = evalPreserve;
+generationCmd.subCommands.verify = evalVerify;
+generationCmd.subCommands.open = evalOpen;
+generationCmd.subCommands.review = evalReview;
+generationCmd.subCommands.report = evalReport;
+
+// Deprecated alias — eval vocabulary replaced by species/generation per decision gad-212
 const evalCmd = defineCommand({
-  meta: { name: 'eval', description: 'Run and manage eval projects' },
+  meta: { name: 'eval', description: '[DEPRECATED] Use `gad species` or `gad generation` instead' },
   subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd, suite: evalSuite, report: evalReport, review: evalReview, open: evalOpen, preserve: evalPreserve, verify: evalVerify, skill: evalSkillCmd, 'inherit-skills': evalInheritSkills, readme: evalReadme },
+  run() {
+    console.warn("DEPRECATED: 'gad eval <cmd>' is deprecated. Use 'gad species <cmd>' or 'gad generation <cmd>' instead.");
+  },
 });
 
 // ---------------------------------------------------------------------------

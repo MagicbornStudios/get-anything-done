@@ -524,7 +524,7 @@ export default function HowItWorksPage() {
                     GitHub repository
                     <ExternalLink size={12} aria-hidden />
                   </a>{" "}
-                  — CLI, skills, eval harness, and this site.
+                  — CLI, skills, species runner, and this site.
                 </p>
               </CardBody>
             </Card>
