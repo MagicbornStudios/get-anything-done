@@ -4,22 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action><![CDATA[Phase 44.5 DNA Editor COMPLETE. All tasks 44.5-01 through 44.5-15 shipped this session:
-  01: Project Editor route /projects/edit/[id] with dev gate
-  02: Scoped command bridge /api/dev/command-bridge
-  11: DNA Editor scaffold with 5 VCS cids
-  01c: "Open in Editor" CTA on listing
-  12: Live gene population (91 skills via /api/dev/gene-states)
-  13: Action row wiring (Show/Promote/Validate/Shed/Cleanup per gene state)
-  14: Artifact preview iframe with close + breadcrumb
-  15: Command palette (Cmd+K) with gene autocomplete
-
-Also shipped: live planning data SSE (/api/dev/live), graph viz in editor,
-10/10 graph extractor tests, feature flag for graph query fallback.
-
-Remaining 44.5 tasks (not DNA Editor): 44.5-01b/01d/02b/03/04/05/06/07/08/09/10.
-Next priority: 42.2-43 (wire graph into site search), 44.5-07 (Bestiary), or
-continue with remaining 44.5 editor panes.]]></next-action></next-action>
+  <next-action>Graph query default rollout COMPLETE (decision gad-201). Shipped: auto-rebuild on task/state mutations, --graph flag on tasks/state, GRAPH section in snapshot, useGraphQuery=true in default config template, AGENTS.md + gad-loop.md updated. Next pick: 42.2-43 (wire graph into site search), 44.5-07 (Bestiary), or remaining 44.5 editor panes (01b/01d/02b/03-10).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>

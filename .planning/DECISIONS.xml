@@ -1364,6 +1364,13 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Task 42.2-45 (native Node planning-graph extractor) superseded. New tasks for Graphify full install, gad query, gad graph, and context-savings measurement. Installer gains Python runtime bootstrapping for consumers.</impact>
   </decision>
 
+  <decision id="gad-201">
+    <title>Graph query is the default lookup mechanism for all GAD projects</title>
+    <date>2026-04-16</date>
+    <summary>Graph queries (gad query, gad tasks --graph, gad state --graph) are the default for targeted planning lookups across all GAD projects. 12.9x token savings (1770 tokens raw vs 137 tokens graph query). ~320ms rebuild, zero external deps. Auto-rebuild hooks on task claim/release and state set-next-action keep graph.json fresh. New gad-config.toml template includes useGraphQuery=true. Snapshot gains GRAPH section (node/edge counts, types, top 5 most-connected nodes). AGENTS.md and gad-loop.md updated.</summary>
+    <impact>All new projects get graph queries enabled by default. gad tasks/state gain --graph flag. Snapshot includes GRAPH section in full mode. gad-loop.md flowchart includes graph rebuild step 4.5. Feature flag useGraphQuery=false for fallback.</impact>
+  </decision>
+
   <decision id="gad-200">
     <title>Post-shed cleanup pass: review code touched by shed skills, remove dead code, re-graphify</title>
     <date>2026-04-16</date>
