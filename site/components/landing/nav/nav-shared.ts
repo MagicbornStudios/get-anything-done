@@ -23,11 +23,6 @@ export type NavGroup =
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Theory",
-    links: [
-    ],
-  },
-  {
     label: "Play",
     links: [
       { href: "/library", label: "Library", note: "play all published generation builds" },
