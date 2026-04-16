@@ -11639,23 +11639,85 @@ function writeTryProvenance(sandboxDir, resolved, deps) {
   fs.writeFileSync(path.join(sandboxDir, 'PROVENANCE.md'), body);
 }
 
+function buildHandoffPrompt(resolved) {
+  // The canonical copy-paste text that the user hands to their coding
+  // agent. Single source of truth so ENTRY.md, stdout, and the clipboard
+  // all get the same string.
+  return [
+    `Invoke the skill at .gad-try/${resolved.slug}/SKILL.md on this directory.`,
+    `Follow its instructions exactly. When done, tell me what artifacts it produced.`,
+  ].join(' ');
+}
+
+/**
+ * Copy a string to the OS clipboard via the platform's native command.
+ * Shells out to clip.exe (Windows), pbcopy (macOS), wl-copy (Wayland),
+ * xclip / xsel (X11). Silently degrades when no clipboard tool is
+ * available — the handoff prompt is always printed and saved to
+ * ENTRY.md so the clipboard path is a convenience, not a requirement.
+ *
+ * Returns the tool name on success, or null if nothing worked.
+ */
+function copyToClipboardSync(text) {
+  const { spawnSync } = require('child_process');
+  const attempts = [];
+  if (process.platform === 'win32') {
+    attempts.push({ cmd: 'clip', args: [] });
+  } else if (process.platform === 'darwin') {
+    attempts.push({ cmd: 'pbcopy', args: [] });
+  } else {
+    if (process.env.WAYLAND_DISPLAY) {
+      attempts.push({ cmd: 'wl-copy', args: [] });
+    }
+    attempts.push({ cmd: 'xclip', args: ['-selection', 'clipboard'] });
+    attempts.push({ cmd: 'xsel', args: ['--clipboard', '--input'] });
+    // Wayland fallback for systems without WAYLAND_DISPLAY set.
+    if (!process.env.WAYLAND_DISPLAY) {
+      attempts.push({ cmd: 'wl-copy', args: [] });
+    }
+  }
+  for (const { cmd, args } of attempts) {
+    try {
+      const result = spawnSync(cmd, args, {
+        input: text,
+        stdio: ['pipe', 'ignore', 'ignore'],
+      });
+      if (result.status === 0 && !result.error) return cmd;
+    } catch {
+      // Try the next one.
+    }
+  }
+  return null;
+}
+
 function writeTryEntry(sandboxDir, resolved, skillBody) {
   const { fields } = parseFrontmatterLoose(skillBody);
   const skillName = fields.name || resolved.slug;
+  const cwd = path.dirname(sandboxDir).replace(new RegExp(`[\\\\/]?\\.gad-try$`), '');
+  const prompt = buildHandoffPrompt(resolved);
   const body = [
     `# ${skillName} — try entry`,
     '',
     `Staged by \`gad try\` on ${new Date().toISOString().slice(0, 10)}.`,
     '',
+    '## Where the sandbox is',
+    '',
+    `The sandbox lives at \`${sandboxDir}\` (relative to whatever directory`,
+    'you ran `gad try` in — the sandbox is always under `<cwd>/.gad-try/<slug>/`,',
+    'regardless of whether `gad` itself is globally or locally installed).',
+    '',
     '## How to run it',
     '',
     'Open your coding agent (Claude Code, Codex, Cursor, Windsurf, etc.)',
-    `in **${path.dirname(sandboxDir)}** (the parent of .gad-try/) and paste:`,
+    `in **${cwd}** (the directory that contains \`.gad-try/\`) and paste:`,
     '',
     '```',
-    `Invoke the skill at .gad-try/${resolved.slug}/SKILL.md on this directory.`,
-    `Follow its instructions exactly. When done, tell me what artifacts it produced.`,
+    prompt,
     '```',
+    '',
+    'The exact prompt above was also copied to your clipboard when `gad try`',
+    'finished, if your OS has a clipboard tool installed (clip.exe on Windows,',
+    'pbcopy on macOS, xclip/xsel/wl-copy on Linux).',
     '',
     'Or, if the skill ships its own slash command and is wired into your',
     'runtime, use that command directly — the skill body will tell you what',
@@ -11751,14 +11813,26 @@ const tryStage = defineCommand({
       writeTryProvenance(sandboxDir, resolved, deps);
       writeTryEntry(sandboxDir, resolved, skillBody);
 
+      // Auto-populate the clipboard with the handoff prompt so the user
+      // can immediately paste into their coding agent without opening
+      // ENTRY.md. Silent degradation when no clipboard tool is available.
+      const prompt = buildHandoffPrompt(resolved);
+      const clipboardTool = copyToClipboardSync(prompt);
+
       console.log('');
       console.log(`  Staged ${path.relative(cwd, sandboxDir)}`);
       console.log(`  Handoff prompt: ${path.relative(cwd, path.join(sandboxDir, 'ENTRY.md'))}`);
+      if (clipboardTool) {
+        console.log(`  Clipboard: copied via ${clipboardTool}`);
+      } else {
+        console.log(`  Clipboard: (no clipboard tool found — prompt is in ENTRY.md)`);
+      }
       console.log('');
-      console.log('Next:');
-      console.log(`  cat ${path.relative(cwd, path.join(sandboxDir, 'ENTRY.md'))}`);
-      console.log(`  # then paste the handoff prompt into your coding agent`);
+      console.log(`Paste this into your coding agent running in ${cwd}:`);
       console.log('');
+      console.log(`  ${prompt}`);
+      console.log('');
+      console.log('Then:');
       console.log(`  gad try status                     # list all staged sandboxes`);
       console.log(`  gad try cleanup ${resolved.slug}   # remove this sandbox when done`);
     } finally {
@@ -11873,16 +11947,29 @@ const tryHelp = defineCommand({
   run() {
     console.log('gad try — temporary skill install flow');
     console.log('');
+    console.log('Stages an external skill into .gad-try/<slug>/ in your current');
+    console.log('directory — NOT in ~/.claude/skills/ or any global location.');
+    console.log('The sandbox is always under <cwd>/.gad-try/, regardless of');
+    console.log('whether the gad binary is installed globally or locally, so cd');
+    console.log('into the project where you want the sandbox to live before');
+    console.log('running gad try.');
+    console.log('');
     console.log('Usage:');
     console.log('  gad try <slug|path|url>       Stage a skill into .gad-try/<slug>/');
-    console.log('  gad try status                List staged sandboxes');
+    console.log('  gad try status                List staged sandboxes in cwd');
     console.log('  gad try cleanup <slug>        Remove one sandbox');
-    console.log('  gad try cleanup --all         Remove all sandboxes');
+    console.log('  gad try cleanup --all         Remove all sandboxes in cwd');
     console.log('');
     console.log('Examples:');
-    console.log('  gad try gad-help                                  # local slug from skills/');
+    console.log('  cd ~/my-project');
+    console.log('  gad try gad-help                                  # local slug from framework skills/');
     console.log('  gad try ./my-skill/                               # local path');
-    console.log('  gad try https://github.com/safishamsi/graphify    # git url');
+    console.log('  gad try https://github.com/safishamsi/graphify    # git url, any branch');
+    console.log('');
+    console.log('On stage: the handoff prompt is copied to your clipboard');
+    console.log('(clip.exe / pbcopy / xclip / xsel / wl-copy depending on OS),');
+    console.log('so you can immediately paste it into your coding agent.');
+    console.log('Silent degradation if no clipboard tool is installed.');
   },
 });
 

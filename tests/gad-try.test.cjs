@@ -55,6 +55,13 @@ describe('gad try — local slug', () => {
     assert.match(entry, /— try entry/, 'ENTRY has try entry heading');
     assert.match(entry, /Invoke the skill at \.gad-try\/gad-help\/SKILL\.md/, 'ENTRY has handoff prompt');
     assert.match(entry, /gad try cleanup gad-help/, 'ENTRY documents cleanup command');
+    assert.match(entry, /Where the sandbox is/, 'ENTRY explains cwd-relative sandbox location');
+    assert.match(entry, /copied to your clipboard/, 'ENTRY mentions clipboard auto-populate');
+
+    // stdout should also include the handoff prompt inline + clipboard status.
+    assert.match(result.output, /Paste this into your coding agent running in/, 'stdout prints paste banner');
+    assert.match(result.output, /Invoke the skill at \.gad-try\/gad-help\/SKILL\.md/, 'stdout prints the handoff prompt');
+    assert.match(result.output, /Clipboard:/, 'stdout reports clipboard status');
   });
 
   test('refuses to re-stage when sandbox already exists', () => {
