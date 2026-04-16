@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Dna,
   ExternalLink,
+  Gauge,
   GitBranch,
   Layers,
   RotateCcw,
@@ -357,12 +358,150 @@ export default function HowItWorksPage() {
         </div>
       </SiteSection>
 
-      {/* ---- Section 3: Scoring & Measurement ---- */}
-      <SiteSection cid="how-it-works-scoring" tone="muted">
+      {/* ---- Section 3: Pressure ---- */}
+      <SiteSection cid="how-it-works-pressure" tone="muted">
+        <div className="mx-auto max-w-4xl space-y-8 py-12">
+          <SiteSectionHeading
+            icon={Gauge}
+            kicker="Section 3"
+            title="Pressure"
+            preset="section"
+          />
+          <SiteProse>
+            Pressure is how we measure a phase's complexity before judging the
+            build that answered it. Not just "how many tasks" — an
+            information-theoretic view that counts decisions (questions we
+            answered) and crosscuts (questions that surprised us). Anchored in
+            decisions gad-145, gad-220, gad-222.
+          </SiteProse>
+
+          {/* Formula */}
+          <Card>
+            <CardTitle>Pressure formula (v3)</CardTitle>
+            <CardBody>
+              <pre className="mt-3 overflow-x-auto rounded-md border border-border bg-background/60 p-4 font-mono text-sm text-foreground">
+                <code>P = T + C_a · w_c + C_l · w_l + D · w_d + (D/T) · w_r</code>
+              </pre>
+              <p className="mt-4">
+                Each term captures a different source of load. Weights are
+                configurable in <code className="rounded bg-card/60 px-1 py-0.5 text-xs">self-eval-config.json</code>.
+              </p>
+            </CardBody>
+          </Card>
+
+          {/* Dimensions table */}
+          <div data-cid="pressure-dimensions" className="space-y-3">
+            {[
+              {
+                sym: "T",
+                name: "Task volume",
+                weight: "implicit 1",
+                desc: "Raw task count for the phase — the baseline.",
+              },
+              {
+                sym: "C_a",
+                name: "Anticipated crosscuts",
+                weight: "w_c = 2",
+                desc: "Tasks that touch ≥2 subsystems AND have an associated decision. Someone saw it coming.",
+              },
+              {
+                sym: "C_l",
+                name: "Latent crosscuts",
+                weight: "w_l = 4",
+                desc: "Crosscuts with NO associated decision. The system surprised everyone — hardest kind of complexity.",
+              },
+              {
+                sym: "D",
+                name: "Decisions produced",
+                weight: "w_d = 3",
+                desc: "Questions of high importance that got resolved in this phase. Each decision closes a branch.",
+              },
+              {
+                sym: "D/T",
+                name: "Decision rate",
+                weight: "w_r = 5",
+                desc: "Information density — how much uncertainty resolved per task. Heavily weighted because density matters more than volume.",
+              },
+            ].map((row) => (
+              <div
+                key={row.sym}
+                className="flex items-start gap-4 rounded-lg border border-border bg-card p-4"
+              >
+                <span className="shrink-0 rounded bg-accent/10 px-2 py-0.5 font-mono text-xs font-bold text-accent">
+                  {row.sym}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {row.name}
+                    </p>
+                    <p className="font-mono text-[11px] text-muted-foreground">
+                      {row.weight}
+                    </p>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{row.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Entropy decomposition */}
+          <Card>
+            <CardTitle>Shannon parallel — entropy decomposition</CardTitle>
+            <CardBody>
+              <p>
+                Two of the terms map cleanly to information-theoretic entropy:
+              </p>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-md border border-border bg-background/50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                    Resolved entropy (H_d)
+                  </p>
+                  <pre className="mt-2 font-mono text-xs text-foreground">
+                    <code>H_d = D · log₂(T/D + 1)</code>
+                  </pre>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Information resolved by decisions. Diminishing returns: 10
+                    decisions in 10 tasks is more intense than 10 in 100.
+                  </p>
+                </div>
+                <div className="rounded-md border border-border bg-background/50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                    Latent entropy (H_l)
+                  </p>
+                  <pre className="mt-2 font-mono text-xs text-foreground">
+                    <code>H_l = L · log₂(C/L + 1)</code>
+                  </pre>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Unresolved surprise complexity. L = latent crosscuts, C =
+                    total crosscuts. High L/C = many unknowns forcing themselves
+                    across boundaries.
+                  </p>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="border-accent/30 bg-accent/5">
+            <CardBody>
+              <p className="font-medium text-foreground">Key insight:</p>
+              <p className="mt-1">
+                A phase with high pressure and a good outcome is evidence the
+                species handled complexity. A phase with low pressure and a
+                great score proves nothing — it was never hard. Pressure is
+                what makes the score <em>mean</em> something.
+              </p>
+            </CardBody>
+          </Card>
+        </div>
+      </SiteSection>
+
+      {/* ---- Section 4: Scoring & Measurement ---- */}
+      <SiteSection cid="how-it-works-scoring">
         <div className="mx-auto max-w-4xl space-y-8 py-12">
           <SiteSectionHeading
             icon={Trophy}
-            kicker="Section 3"
+            kicker="Section 4"
             title="Scoring & Measurement"
             preset="section"
           />
@@ -439,12 +578,12 @@ export default function HowItWorksPage() {
         </div>
       </SiteSection>
 
-      {/* ---- Section 4: Standards & References ---- */}
-      <SiteSection cid="how-it-works-standards">
+      {/* ---- Section 5: Standards & References ---- */}
+      <SiteSection cid="how-it-works-standards" tone="muted">
         <div className="mx-auto max-w-4xl space-y-8 py-12">
           <SiteSectionHeading
             icon={BookOpen}
-            kicker="Section 4"
+            kicker="Section 5"
             title="Standards & References"
             preset="section"
           />
