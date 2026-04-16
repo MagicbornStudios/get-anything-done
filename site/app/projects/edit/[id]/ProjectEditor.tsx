@@ -11,13 +11,15 @@ import { LiveDataPanel } from "./LiveDataPanel";
 import { CommandPalette } from "./CommandPalette";
 import { BestiaryTab } from "./BestiaryTab";
 import { RecipesTab } from "./RecipesTab";
+import { DiffTree } from "./DiffTree";
 
 type LeftTab = "dna" | "bestiary" | "recipes";
 
 type CanvasMode =
   | { kind: "species" }
   | { kind: "graph" }
-  | { kind: "preview"; url: string; title: string };
+  | { kind: "preview"; url: string; title: string }
+  | { kind: "diff"; speciesA: string; versionA: string; versionB: string };
 
 export type EditorSelection =
   | { kind: "project" }
@@ -40,6 +42,15 @@ export function ProjectEditor({
   const [selection, setSelection] = useState<EditorSelection>({ kind: "project" });
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [geneList, setGeneList] = useState<{ slug: string; name: string; status: string }[]>([]);
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+
+  // Auto-collapse right pane when a generation iframe preview is showing
+  useEffect(() => {
+    if (selection.kind === "generation" && canvasMode.kind !== "diff") {
+      setRightCollapsed(true);
+    }
+  }, [selection.kind, canvasMode.kind]);
 
   // Fetch gene slugs for command palette autocomplete
   useEffect(() => {
@@ -88,6 +99,14 @@ export function ProjectEditor({
     setCanvasMode({ kind: "preview", url, title });
   };
 
+  // Compare two generations in diff view
+  const handleCompare = useCallback(
+    (species: string, versionA: string, versionB: string) => {
+      setCanvasMode({ kind: "diff", speciesA: species, versionA, versionB });
+    },
+    [],
+  );
+
   // Determine which canvas to render
   const renderCanvas = () => {
     if (canvasMode.kind === "graph") {
@@ -127,11 +146,53 @@ export function ProjectEditor({
             <iframe
               src={canvasMode.url}
               title={canvasMode.title}
-              className="flex-1 border-0"
+              className="flex-1 w-full border-0"
               sandbox="allow-scripts allow-same-origin"
             />
           </div>
         </SiteSection>
+      );
+    }
+
+    if (canvasMode.kind === "diff") {
+      const runA = allRuns.find(
+        (r) =>
+          (r.species ?? r.project) === canvasMode.speciesA &&
+          r.version === canvasMode.versionA,
+      );
+      const runB = allRuns.find(
+        (r) =>
+          (r.species ?? r.project) === canvasMode.speciesA &&
+          r.version === canvasMode.versionB,
+      );
+      const objA = runA
+        ? { scores: runA.scores, humanReview: runA.humanReview, derived: runA.derived }
+        : {};
+      const objB = runB
+        ? { scores: runB.scores, humanReview: runB.humanReview, derived: runB.derived }
+        : {};
+      return (
+        <div className="flex h-full flex-col">
+          <div className="flex items-center gap-2 border-b border-border/40 px-3 py-1.5">
+            <span className="text-[11px] font-medium">
+              Diff: {canvasMode.speciesA} {canvasMode.versionA} vs {canvasMode.versionB}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCanvasMode({ kind: "species" })}
+              className="ml-auto text-[10px] text-muted-foreground hover:text-foreground"
+            >
+              Close
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <DiffTree
+              label={`${canvasMode.versionA} vs ${canvasMode.versionB}`}
+              before={objA as Record<string, unknown>}
+              after={objB as Record<string, unknown>}
+            />
+          </div>
+        </div>
       );
     }
 
@@ -251,76 +312,124 @@ export function ProjectEditor({
         className="border-b-0"
       >
         <div className="flex h-[calc(100vh-41px)]">
-          {/* ── Left pane ──────────────────────────────────── */}
-          <SiteSection
-            cid="project-editor-left-pane-site-section"
-            sectionShell={false}
-            className="w-72 shrink-0 border-r border-border/60 overflow-y-auto border-b-0"
-          >
-            <div className="flex flex-col">
-              <div className="flex border-b border-border/40">
-                {(
-                  [
-                    { key: "dna", label: "DNA" },
-                    { key: "bestiary", label: "Bestiary" },
-                    { key: "recipes", label: "Recipes" },
-                  ] as const
-                ).map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setActiveTab(tab.key)}
-                    className={cn(
-                      "flex-1 py-2 text-xs font-medium transition-colors",
-                      activeTab === tab.key
-                        ? "border-b-2 border-accent text-accent"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="p-3">
-                {activeTab === "dna" && <DnaEditor onPreview={handlePreview} />}
-                {activeTab === "bestiary" && (
-                  <BestiaryTab
-                    allProjects={allProjects}
-                    allRuns={allRuns}
-                    selection={selection}
-                    onSelect={setSelection}
-                  />
-                )}
-                {activeTab === "recipes" && (
-                  <RecipesTab allProjects={allProjects} />
-                )}
-              </div>
+          {/* ── Left pane (collapsible) ───────────────────── */}
+          {leftCollapsed ? (
+            <div className="shrink-0 border-r border-border/60 flex flex-col items-center py-2 w-8">
+              <button
+                type="button"
+                onClick={() => setLeftCollapsed(false)}
+                className="text-muted-foreground hover:text-foreground text-[10px] [writing-mode:vertical-lr] rotate-180"
+                title="Expand left pane"
+              >
+                DNA / Bestiary
+              </button>
             </div>
-          </SiteSection>
+          ) : (
+            <SiteSection
+              cid="project-editor-left-pane-site-section"
+              sectionShell={false}
+              className="w-72 shrink-0 border-r border-border/60 overflow-y-auto border-b-0"
+            >
+              <div className="flex flex-col">
+                <div className="flex border-b border-border/40">
+                  {(
+                    [
+                      { key: "dna", label: "DNA" },
+                      { key: "bestiary", label: "Bestiary" },
+                      { key: "recipes", label: "Recipes" },
+                    ] as const
+                  ).map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTab(tab.key)}
+                      className={cn(
+                        "flex-1 py-2 text-xs font-medium transition-colors",
+                        activeTab === tab.key
+                          ? "border-b-2 border-accent text-accent"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setLeftCollapsed(true)}
+                    className="px-2 py-2 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors"
+                    title="Collapse left pane"
+                  >
+                    &laquo;
+                  </button>
+                </div>
+                <div className="p-3">
+                  {activeTab === "dna" && <DnaEditor onPreview={handlePreview} />}
+                  {activeTab === "bestiary" && (
+                    <BestiaryTab
+                      allProjects={allProjects}
+                      allRuns={allRuns}
+                      selection={selection}
+                      onSelect={setSelection}
+                    />
+                  )}
+                  {activeTab === "recipes" && (
+                    <RecipesTab allProjects={allProjects} />
+                  )}
+                </div>
+              </div>
+            </SiteSection>
+          )}
 
           {/* ── Canvas (center) ────────────────────────────── */}
           <SiteSection
             cid="project-editor-canvas-site-section"
             sectionShell={false}
-            className="flex-1 overflow-hidden border-b-0"
+            className="flex-1 min-w-0 overflow-hidden border-b-0"
           >
             {renderCanvas()}
           </SiteSection>
 
-          {/* ── Right pane (inspector) ─────────────────────── */}
-          <SiteSection
-            cid="project-editor-right-pane-site-section"
-            sectionShell={false}
-            className="w-80 shrink-0 border-l border-border/60 overflow-y-auto border-b-0"
-          >
-            <InspectorPane
-              project={project}
-              allProjects={allProjects}
-              allRuns={allRuns}
-              selection={selection}
-            />
-            <LiveDataPanel />
-          </SiteSection>
+          {/* ── Right pane (collapsible inspector) ────────── */}
+          {rightCollapsed ? (
+            <div className="shrink-0 border-l border-border/60 flex flex-col items-center py-2 w-8">
+              <button
+                type="button"
+                onClick={() => setRightCollapsed(false)}
+                className="text-muted-foreground hover:text-foreground text-[10px] [writing-mode:vertical-lr]"
+                title="Expand inspector"
+              >
+                Inspector
+              </button>
+            </div>
+          ) : (
+            <SiteSection
+              cid="project-editor-right-pane-site-section"
+              sectionShell={false}
+              className="w-64 shrink-0 border-l border-border/60 overflow-y-auto border-b-0"
+            >
+              <div className="flex items-center justify-between border-b border-border/40 px-3 py-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Inspector
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setRightCollapsed(true)}
+                  className="text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors"
+                  title="Collapse inspector"
+                >
+                  &raquo;
+                </button>
+              </div>
+              <InspectorPane
+                project={project}
+                allProjects={allProjects}
+                allRuns={allRuns}
+                selection={selection}
+                onCompare={handleCompare}
+              />
+              <LiveDataPanel />
+            </SiteSection>
+          )}
         </div>
       </SiteSection>
 
