@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-16T01:46:18.591Z
+Generated: 2026-04-16T03:14:38.027Z
 
 
 ---
@@ -4821,7 +4821,37 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (193)
+# Decisions (196)
+
+## gad-200: Post-shed cleanup pass: review code touched by shed skills, remove dead code, re-graphify
+
+### Summary
+
+After any evolution shed cycle, the codebase must be reviewed for dead code left behind by the shed skills. Run Graphify to regenerate the graph post-shed, then query for orphaned references. This is a mandatory step in the evolution lifecycle, not optional cleanup.
+
+### Impact
+
+Evolution shed workflow gains a cleanup gate. References/skill-lifecycle.md must document this as step N+1 after shed.
+
+## gad-199: Graphify accepted as full dependency — supersedes hybrid approach (gad-197)
+
+### Summary
+
+Accept Graphify (Python) as the real graph backend, not just a trial. Three deliverables: (1) full install (not gad-try), (2) `gad query` CLI command for token-efficient graph lookups, (3) `gad graph` to regenerate. The installer (bin/install.js) packages or helps install Python/pip for consumers. Supersedes gad-197's "hybrid, sequenced" approach — Option A (vendor Graphify) becomes the primary path; Option B (native Node extractor, task 42.2-45) is cancelled.
+
+### Impact
+
+Task 42.2-45 (native Node planning-graph extractor) superseded. New tasks for Graphify full install, gad query, gad graph, and context-savings measurement. Installer gains Python runtime bootstrapping for consumers.
+
+## gad-199: Full native planning-graph implementation — supersedes gad-197 hybrid approach
+
+### Summary
+
+Operator accepted the Graphify concept but chose full native Node implementation over vendoring the Python package. Supersedes gad-197 (which recommended hybrid: native extractor first, Graphify as opt-in trial). Rationale: the planning-graph use case is fully structural — walking typed XML files with known schemas — and does not need Graphify's multimodal extraction (vision, audio, PDF). A 500-line Node module (lib/graph-extractor.cjs) covers 100% of the planning-graph extraction, query, and visualization needs with zero new dependencies. Result: 827 nodes, 1129 edges from GAD's own planning files. Query engine handles natural-language-ish patterns and structured flags. Measured 53x token savings vs full snapshot, 589x vs raw XML read. The `gad try graphify` path remains available for operators who want multimodal extraction on arbitrary folders, but the framework's own graph pipeline is self-contained Node. Python dependency NOT accepted into the framework core.
+
+### Impact
+
+Task 42.2-45 (native extractor) marked done. New tasks 42.2-47 (gad query) and 42.2-48 (gad graph) shipped same session. .planning/graph.json and .planning/graph.html are new artifacts. gad-197 hybrid approach superseded — no Python in the framework dependency tree. The graph can be regenerated on demand via `gad graph build` and queried via `gad query`.
 
 ## gad-198: Skills are the genes in the DNA — install/try/proto/shed/promote collapse into one lifecycle, surfaced as the DNA Editor inside the Project Editor
 
@@ -7279,7 +7309,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (354)
+# Tasks (356)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -7783,7 +7813,11 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.2-44** [planned]: New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. Every node gets a cid derived from its id so the modal footer CRUD can target nodes. Integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. Depends on 42.2-43.
 
-- **42.2-45** [planned]: Implement `skills/gad-planning-graph/` — Node-only knowledge-graph extractor that walks `.planning/*.xml`, `skills/*/SKILL.md`, `decisions/*.xml`, `workflows/*.md` and emits `site/data/planning-graph.json` in a shape compatible with Graphify's `graph.json` (typed nodes + typed edges + community detection so downstream tools like Obsidian, Neo4j, Gephi can consume it). Node types: `phase`, `task`, 
+- **42.2-45** [done]: Implement `skills/gad-planning-graph/` — Node-only knowledge-graph extractor that walks `.planning/*.xml`, `skills/*/SKILL.md`, `decisions/*.xml`, `workflows/*.md` and emits `site/data/planning-graph.json` in a shape compatible with Graphify's `graph.json` (typed nodes + typed edges + community detection so downstream tools like Obsidian, Neo4j, Gephi can consume it). Node types: `phase`, `task`, 
+
+- **42.2-47** [done]: Build `gad query` CLI command — structural graph queries against .planning/graph.json. Accepts natural-language-ish queries or structured flags (--type, --phase, --status, --depends, --cites, --skill, --search). Auto-rebuilds graph if missing. Returns compact, token-efficient results for agent consumption. LLM-free.
+
+- **42.2-48** [done]: Build `gad graph` CLI command — generate .planning/graph.json and .planning/graph.html from planning XML files. Subcommands: build (generate), stats (inspect without regenerating). Interactive HTML visualization with force-directed layout, type filtering, search, and click-to-inspect.
 
 - **42.3-01** [done]: Design the workflow planning-artifact schema and write `.planning/workflows/README.md`.
 
@@ -7947,17 +7981,17 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44-37** [done]: Retrospective: Visual Context landing band — intro landmarks vs inner showcase scope (2026-04-15). Capture where confusion lived (agent prioritized showcase/meteor demos; user wanted intro kicker/title/body as separate Identified targets for DevPanel), resolution (split `LandingVisualContextIntroKicker`, `IntroTitle`, `IntroBody` under outer `LandingVisualContextShowcase`), and mitigations for fut
 
-- **44.5-01** [planned]: Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config ins
+- **44.5-01** [done]: Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config ins
 
 - **44.5-01a** [done]: Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal
 
 - **44.5-01b** [planned]: Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a "no published projects yet — browse drafts in the editor" empty state with a CTA that routes to the Project Editor. Upda
 
-- **44.5-01c** [planned]: "Open in Editor" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an "Exit to listing" link in the editor shell that routes back to the listing detail 
+- **44.5-01c** [done]: "Open in Editor" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an "Exit to listing" link in the editor shell that routes back to the listing detail 
 
 - **44.5-01d** [planned]: Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generat
 
-- **44.5-02** [planned]: Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after t
+- **44.5-02** [done]: Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after t
 
 - **44.5-02b** [planned]: Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive "any gad/npx" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structu
 
@@ -7977,9 +8011,9 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **44.5-10** [planned]: iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, "open in new tab" link, URL path input for SPA routes, and a fallback screenshot 
 
-- **44.5-11** [planned]: Scaffold the DNA Editor pane inside the Project Editor left-pane region (sibling to the Bestiary pane) using the `scaffold-visual-context-surface` skill promoted 2026-04-15. Follow its 6-step checklist: (1) dev gate via `NODE_ENV === 'development'`, (2) enumerate panes + cid assignments (pane shell `dna-editor-pane-site-section`, four state groups `dna-editor-state-{dna,expressed,mutation,shed}-si
+- **44.5-11** [done]: Scaffold the DNA Editor pane inside the Project Editor left-pane region (sibling to the Bestiary pane) using the `scaffold-visual-context-surface` skill promoted 2026-04-15. Follow its 6-step checklist: (1) dev gate via `NODE_ENV === 'development'`, (2) enumerate panes + cid assignments (pane shell `dna-editor-pane-site-section`, four state groups `dna-editor-state-{dna,expressed,mutation,shed}-si
 
-- **44.5-12** [planned]: DNA Editor list population — read the four gene states into the scaffolded 44.5-11 pane. **DNA**: enumerate `.claude/skills/` (or the per-runtime skills dir) in the current project, read SKILL.md frontmatter for name/description/status. **Expressed**: enumerate `.gad-try/&lt;slug&gt;/` sandboxes in cwd, read PROVENANCE.md for source/kind/staged_on and ENTRY.md for the handoff prompt. **Mutations**
+- **44.5-12** [done]: DNA Editor list population — read the four gene states into the scaffolded 44.5-11 pane. **DNA**: enumerate `.claude/skills/` (or the per-runtime skills dir) in the current project, read SKILL.md frontmatter for name/description/status. **Expressed**: enumerate `.gad-try/&lt;slug&gt;/` sandboxes in cwd, read PROVENANCE.md for source/kind/staged_on and ENTRY.md for the handoff prompt. **Mutations**
 
 - **44.5-13** [planned]: DNA Editor action row wiring via the 44.5-02 dev bridge. Each gene state gets state-appropriate buttons that spawn the corresponding CLI command and stream output via SSE: **Try** (run `gad try &lt;ref&gt;` for a URL/slug/path input form), **Promote** (run `gad evolution promote &lt;slug&gt;` on a mutation), **Shed** (run `gad evolution shed &lt;slug&gt;` or `discard`), **Cleanup** (run `gad try c
 

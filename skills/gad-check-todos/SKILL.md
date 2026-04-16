@@ -31,6 +31,14 @@ Arguments: $ARGUMENTS (optional area filter)
 Todo state and roadmap correlation are loaded in-workflow using `init todos` and targeted reads.
 </context>
 
+<graph_query_guidance>
+Use `gad query` (decision gad-202) for targeted lookups instead of reading raw XML:
+- `gad query "open tasks"` — find all open/planned tasks across phases
+- `gad query "tasks in phase <N>"` — scope to a specific phase
+- `gad tasks --status planned` — list only planned tasks
+These are gated on `useGraphQuery=true` in gad-config.toml. If graph query is unavailable, fall back to reading `.planning/` XML directly.
+</graph_query_guidance>
+
 <process>
 **Follow the check-todos workflow** from `@workflows/check-todos.md`.
 

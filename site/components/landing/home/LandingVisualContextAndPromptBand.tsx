@@ -43,33 +43,6 @@ export function LandingVisualContextAndPromptBand() {
           <LandingVisualContextPanelShowcase />
         </Identified>
 
-        <Identified as="LandingVisualContextPatternList" className="mt-8">
-            <ul className="grid gap-4 text-sm text-muted-foreground md:grid-cols-3">
-              <li className="rounded-xl border border-border/60 bg-card/20 p-4">
-                <span className="font-semibold text-foreground">UI + UX patterns</span>
-                <p className="mt-2">
-                  Section shells, editorial vs utility copy, motion discipline, and accessible
-                  controls stay in the design system — product rules live beside the components they
-                  reference.
-                </p>
-              </li>
-              <li className="rounded-xl border border-border/60 bg-card/20 p-4">
-                <span className="font-semibold text-foreground">Software design tokens</span>
-                <p className="mt-2">
-                  Search hints like <code className="text-xs">cid="play-site-section"</code> travel
-                  with the band so agents can open the exact file span the human pointed at.
-                </p>
-              </li>
-              <li className="rounded-xl border border-border/60 bg-card/20 p-4">
-                <span className="font-semibold text-foreground">Workflow</span>
-                <p className="mt-2">
-                  Hover a band, copy the handoff payload, optionally dictate edits — the prompt
-                  builder folds speech into the structured update template before anything ships.
-                </p>
-              </li>
-            </ul>
-        </Identified>
-
         <Identified as="LandingPageGenerationPromptExample" className="mt-10">
           <p className="text-sm font-semibold text-foreground">Agent handoff templates (quick prompts)</p>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">

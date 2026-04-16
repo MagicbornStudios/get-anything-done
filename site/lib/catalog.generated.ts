@@ -2335,7 +2335,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 4
           }
         },
         {
@@ -2348,7 +2348,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2361,7 +2361,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 12
+            "count": 17
           }
         },
         {
@@ -2374,7 +2374,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -2387,7 +2387,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 17
+            "count": 2
           }
         },
         {
@@ -2400,7 +2400,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2413,7 +2413,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 13
           }
         },
         {
@@ -2426,7 +2426,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 9
           }
         },
         {
@@ -2439,7 +2439,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         }
       ],
@@ -2556,7 +2556,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 2
           }
         },
         {
@@ -2569,7 +2569,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -2606,9 +2606,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 2
           }
         },
         {
@@ -2619,9 +2619,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 6
           }
         },
         {
@@ -2632,9 +2632,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2660,7 +2660,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
           }
         },
         {
@@ -2673,7 +2673,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 6
           }
         },
         {
@@ -2699,7 +2699,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -2712,7 +2712,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -2725,7 +2725,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 7
           }
         },
         {
@@ -2749,9 +2749,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 5
           }
         },
         {
@@ -2762,9 +2762,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
           }
         },
         {
@@ -2775,9 +2775,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/ROADMAP.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -2790,7 +2790,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 5
           }
         },
         {
@@ -2816,7 +2816,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
           }
         },
         {
@@ -2840,7 +2840,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 3
           }
@@ -2853,9 +2853,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2866,9 +2866,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 2
           }
         },
         {
@@ -2879,7 +2879,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -2892,9 +2892,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/ROADMAP.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 1
           }
         },
         {
@@ -2905,7 +2905,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -2920,7 +2920,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/ROADMAP.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 4
           }
         },
         {
@@ -2933,7 +2933,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 3
           }
         },
         {
@@ -2946,7 +2946,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -2959,7 +2959,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -2972,7 +2972,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 8
           }
         },
         {
@@ -2983,9 +2983,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 960
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 6
           }
         },
         {
@@ -2996,7 +2996,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 960
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -3009,9 +3009,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 960
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 4
           }
         },
         {
@@ -3024,7 +3024,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -3035,7 +3035,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 1080
           },
           "data": {
-            "label": ".planning/ROADMAP.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 1
           }
@@ -3048,9 +3048,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 1080
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/ROADMAP.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -3061,9 +3061,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 1080
           },
           "data": {
-            "label": ".planning/ROADMAP.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 6
           }
         },
         {
@@ -3074,9 +3074,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 1200
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -3089,7 +3089,20 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n42",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 1200
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 3
           }
         }
       ],
@@ -3339,6 +3352,12 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-discuss-plan-execute-n40",
           "target": "gad-discuss-plan-execute-n41",
           "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e41",
+          "source": "gad-discuss-plan-execute-n41",
+          "target": "gad-discuss-plan-execute-n42",
+          "animated": false
         }
       ]
     },
@@ -3498,7 +3517,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 2
           }
         },
         {
@@ -3511,7 +3530,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -3548,9 +3567,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 2
           }
         },
         {
@@ -3561,9 +3580,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 6
           }
         },
         {
@@ -3574,9 +3593,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -3602,7 +3621,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
           }
         },
         {
@@ -3615,7 +3634,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 6
           }
         },
         {
@@ -3641,7 +3660,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -3654,7 +3673,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -3667,7 +3686,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 7
           }
         },
         {
@@ -3691,9 +3710,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 5
           }
         },
         {
@@ -3704,9 +3723,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
           }
         },
         {
@@ -3717,9 +3736,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 5
           }
         },
         {
@@ -3730,7 +3749,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -3743,7 +3762,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -3756,9 +3775,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 2
           }
         },
         {
@@ -3769,9 +3788,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 600
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -3784,7 +3803,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -3797,7 +3816,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -3810,7 +3829,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 2
           }
         },
         {
@@ -3821,7 +3840,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 720
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 2
           }
@@ -3836,7 +3855,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 3
           }
         },
         {
@@ -3849,7 +3868,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -3862,7 +3881,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 3
           }
         },
         {
@@ -3875,7 +3894,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 8
           }
         },
         {
@@ -3888,7 +3907,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 6
           }
         },
         {
@@ -3914,7 +3933,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -3927,7 +3946,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -3938,9 +3957,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 960
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -3953,7 +3972,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 6
           }
         },
         {
@@ -3966,7 +3985,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 4
           }
         },
         {
@@ -3977,7 +3996,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 1080
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
             "count": 3
           }
@@ -3990,9 +4009,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 1080
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         }
       ],
@@ -4276,46 +4295,26 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": "site/components/devid/Identified.tsx",
-            "kind": "artifact",
-            "count": 1
-          }
-        },
-        {
-          "id": "gad-visual-context-identity-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
             "label": "site/components/site/SiteSection.tsx",
             "kind": "artifact",
             "count": 2
           }
         }
       ],
-      "edges": [
-        {
-          "id": "gad-visual-context-identity-e0",
-          "source": "gad-visual-context-identity-n0",
-          "target": "gad-visual-context-identity-n1",
-          "animated": false
-        }
-      ]
+      "edges": []
     },
     "conformance": {
-      "score": 0.286,
-      "matched": 2,
+      "score": 0.143,
+      "matched": 1,
       "extra": 0,
       "out_of_order": 0,
       "expected": 7
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-177-0",
+    "slug": "emergent-bash-bash-bash-127-0",
     "name": "Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 177Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-177-0` or discard.",
+    "description": "Recurring tool-use sequence detected 127Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-127-0` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4330,12 +4329,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>177Ã—</strong>: Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>127Ã—</strong>: Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-177-0-n0",
+          "id": "emergent-bash-bash-bash-127-0-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4344,11 +4343,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 177
+            "count": 127
           }
         },
         {
-          "id": "emergent-bash-bash-bash-177-0-n1",
+          "id": "emergent-bash-bash-bash-127-0-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4357,11 +4356,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 177
+            "count": 127
           }
         },
         {
-          "id": "emergent-bash-bash-bash-177-0-n2",
+          "id": "emergent-bash-bash-bash-127-0-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4370,32 +4369,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 177
+            "count": 127
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-177-0-e0",
-          "source": "emergent-bash-bash-bash-177-0-n0",
-          "target": "emergent-bash-bash-bash-177-0-n1"
+          "id": "emergent-bash-bash-bash-127-0-e0",
+          "source": "emergent-bash-bash-bash-127-0-n0",
+          "target": "emergent-bash-bash-bash-127-0-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-177-0-e1",
-          "source": "emergent-bash-bash-bash-177-0-n1",
-          "target": "emergent-bash-bash-bash-177-0-n2"
+          "id": "emergent-bash-bash-bash-127-0-e1",
+          "source": "emergent-bash-bash-bash-127-0-n1",
+          "target": "emergent-bash-bash-bash-127-0-n2"
         }
       ]
     },
     "support": {
-      "phases": 177,
+      "phases": 127,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-120-1",
+    "slug": "emergent-bash-bash-bash-bash-82-1",
     "name": "Bash â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 120Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-120-1` or discard.",
+    "description": "Recurring tool-use sequence detected 82Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-82-1` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4410,12 +4409,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>120Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>82Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-120-1-n0",
+          "id": "emergent-bash-bash-bash-bash-82-1-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4424,11 +4423,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 120
+            "count": 82
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-120-1-n1",
+          "id": "emergent-bash-bash-bash-bash-82-1-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4437,11 +4436,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 120
+            "count": 82
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-120-1-n2",
+          "id": "emergent-bash-bash-bash-bash-82-1-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4450,11 +4449,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 120
+            "count": 82
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-120-1-n3",
+          "id": "emergent-bash-bash-bash-bash-82-1-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4463,37 +4462,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 120
+            "count": 82
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-120-1-e0",
-          "source": "emergent-bash-bash-bash-bash-120-1-n0",
-          "target": "emergent-bash-bash-bash-bash-120-1-n1"
+          "id": "emergent-bash-bash-bash-bash-82-1-e0",
+          "source": "emergent-bash-bash-bash-bash-82-1-n0",
+          "target": "emergent-bash-bash-bash-bash-82-1-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-120-1-e1",
-          "source": "emergent-bash-bash-bash-bash-120-1-n1",
-          "target": "emergent-bash-bash-bash-bash-120-1-n2"
+          "id": "emergent-bash-bash-bash-bash-82-1-e1",
+          "source": "emergent-bash-bash-bash-bash-82-1-n1",
+          "target": "emergent-bash-bash-bash-bash-82-1-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-120-1-e2",
-          "source": "emergent-bash-bash-bash-bash-120-1-n2",
-          "target": "emergent-bash-bash-bash-bash-120-1-n3"
+          "id": "emergent-bash-bash-bash-bash-82-1-e2",
+          "source": "emergent-bash-bash-bash-bash-82-1-n2",
+          "target": "emergent-bash-bash-bash-bash-82-1-n3"
         }
       ]
     },
     "support": {
-      "phases": 120,
+      "phases": 82,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-bash-83-2",
+    "slug": "emergent-bash-bash-bash-bash-bash-51-2",
     "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 83Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-83-2` or discard.",
+    "description": "Recurring tool-use sequence detected 51Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-51-2` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4508,12 +4507,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>83Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>51Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-n0",
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4522,11 +4521,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 83
+            "count": 51
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-n1",
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4535,11 +4534,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 83
+            "count": 51
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-n2",
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4548,11 +4547,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 83
+            "count": 51
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-n3",
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4561,11 +4560,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 83
+            "count": 51
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-n4",
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -4574,42 +4573,42 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 83
+            "count": 51
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-e0",
-          "source": "emergent-bash-bash-bash-bash-bash-83-2-n0",
-          "target": "emergent-bash-bash-bash-bash-bash-83-2-n1"
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-e0",
+          "source": "emergent-bash-bash-bash-bash-bash-51-2-n0",
+          "target": "emergent-bash-bash-bash-bash-bash-51-2-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-e1",
-          "source": "emergent-bash-bash-bash-bash-bash-83-2-n1",
-          "target": "emergent-bash-bash-bash-bash-bash-83-2-n2"
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-e1",
+          "source": "emergent-bash-bash-bash-bash-bash-51-2-n1",
+          "target": "emergent-bash-bash-bash-bash-bash-51-2-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-e2",
-          "source": "emergent-bash-bash-bash-bash-bash-83-2-n2",
-          "target": "emergent-bash-bash-bash-bash-bash-83-2-n3"
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-e2",
+          "source": "emergent-bash-bash-bash-bash-bash-51-2-n2",
+          "target": "emergent-bash-bash-bash-bash-bash-51-2-n3"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-83-2-e3",
-          "source": "emergent-bash-bash-bash-bash-bash-83-2-n3",
-          "target": "emergent-bash-bash-bash-bash-bash-83-2-n4"
+          "id": "emergent-bash-bash-bash-bash-bash-51-2-e3",
+          "source": "emergent-bash-bash-bash-bash-bash-51-2-n3",
+          "target": "emergent-bash-bash-bash-bash-bash-51-2-n4"
         }
       ]
     },
     "support": {
-      "phases": 83,
+      "phases": 51,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-read-50-3",
+    "slug": "emergent-bash-bash-read-46-3",
     "name": "Bash â†’ Bash â†’ Read",
-    "description": "Recurring tool-use sequence detected 50Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-50-3` or discard.",
+    "description": "Recurring tool-use sequence detected 46Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-46-3` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4624,12 +4623,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>50Ã—</strong>: Bash â†’ Bash â†’ Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>46Ã—</strong>: Bash â†’ Bash â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-read-50-3-n0",
+          "id": "emergent-bash-bash-read-46-3-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4638,11 +4637,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 50
+            "count": 46
           }
         },
         {
-          "id": "emergent-bash-bash-read-50-3-n1",
+          "id": "emergent-bash-bash-read-46-3-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4651,11 +4650,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 50
+            "count": 46
           }
         },
         {
-          "id": "emergent-bash-bash-read-50-3-n2",
+          "id": "emergent-bash-bash-read-46-3-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4664,32 +4663,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 50
+            "count": 46
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-read-50-3-e0",
-          "source": "emergent-bash-bash-read-50-3-n0",
-          "target": "emergent-bash-bash-read-50-3-n1"
+          "id": "emergent-bash-bash-read-46-3-e0",
+          "source": "emergent-bash-bash-read-46-3-n0",
+          "target": "emergent-bash-bash-read-46-3-n1"
         },
         {
-          "id": "emergent-bash-bash-read-50-3-e1",
-          "source": "emergent-bash-bash-read-50-3-n1",
-          "target": "emergent-bash-bash-read-50-3-n2"
+          "id": "emergent-bash-bash-read-46-3-e1",
+          "source": "emergent-bash-bash-read-46-3-n1",
+          "target": "emergent-bash-bash-read-46-3-n2"
         }
       ]
     },
     "support": {
-      "phases": 50,
+      "phases": 46,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-47-4",
+    "slug": "emergent-edit-bash-bash-43-4",
     "name": "Edit â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 47Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-47-4` or discard.",
+    "description": "Recurring tool-use sequence detected 43Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-43-4` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4704,12 +4703,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>47Ã—</strong>: Edit â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>43Ã—</strong>: Edit â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-47-4-n0",
+          "id": "emergent-edit-bash-bash-43-4-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4718,11 +4717,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 47
+            "count": 43
           }
         },
         {
-          "id": "emergent-edit-bash-bash-47-4-n1",
+          "id": "emergent-edit-bash-bash-43-4-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4731,11 +4730,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 47
+            "count": 43
           }
         },
         {
-          "id": "emergent-edit-bash-bash-47-4-n2",
+          "id": "emergent-edit-bash-bash-43-4-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4744,32 +4743,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 47
+            "count": 43
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-47-4-e0",
-          "source": "emergent-edit-bash-bash-47-4-n0",
-          "target": "emergent-edit-bash-bash-47-4-n1"
+          "id": "emergent-edit-bash-bash-43-4-e0",
+          "source": "emergent-edit-bash-bash-43-4-n0",
+          "target": "emergent-edit-bash-bash-43-4-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-47-4-e1",
-          "source": "emergent-edit-bash-bash-47-4-n1",
-          "target": "emergent-edit-bash-bash-47-4-n2"
+          "id": "emergent-edit-bash-bash-43-4-e1",
+          "source": "emergent-edit-bash-bash-43-4-n1",
+          "target": "emergent-edit-bash-bash-43-4-n2"
         }
       ]
     },
     "support": {
-      "phases": 47,
+      "phases": 43,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-bash-32-5",
+    "slug": "emergent-edit-bash-bash-bash-28-5",
     "name": "Edit â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 32Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-32-5` or discard.",
+    "description": "Recurring tool-use sequence detected 28Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-28-5` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4784,12 +4783,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>32Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>28Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-bash-32-5-n0",
+          "id": "emergent-edit-bash-bash-bash-28-5-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4798,11 +4797,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 32
+            "count": 28
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-32-5-n1",
+          "id": "emergent-edit-bash-bash-bash-28-5-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4811,11 +4810,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 32
+            "count": 28
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-32-5-n2",
+          "id": "emergent-edit-bash-bash-bash-28-5-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4824,11 +4823,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 32
+            "count": 28
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-32-5-n3",
+          "id": "emergent-edit-bash-bash-bash-28-5-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4837,37 +4836,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 32
+            "count": 28
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-bash-32-5-e0",
-          "source": "emergent-edit-bash-bash-bash-32-5-n0",
-          "target": "emergent-edit-bash-bash-bash-32-5-n1"
+          "id": "emergent-edit-bash-bash-bash-28-5-e0",
+          "source": "emergent-edit-bash-bash-bash-28-5-n0",
+          "target": "emergent-edit-bash-bash-bash-28-5-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-32-5-e1",
-          "source": "emergent-edit-bash-bash-bash-32-5-n1",
-          "target": "emergent-edit-bash-bash-bash-32-5-n2"
+          "id": "emergent-edit-bash-bash-bash-28-5-e1",
+          "source": "emergent-edit-bash-bash-bash-28-5-n1",
+          "target": "emergent-edit-bash-bash-bash-28-5-n2"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-32-5-e2",
-          "source": "emergent-edit-bash-bash-bash-32-5-n2",
-          "target": "emergent-edit-bash-bash-bash-32-5-n3"
+          "id": "emergent-edit-bash-bash-bash-28-5-e2",
+          "source": "emergent-edit-bash-bash-bash-28-5-n2",
+          "target": "emergent-edit-bash-bash-bash-28-5-n3"
         }
       ]
     },
     "support": {
-      "phases": 32,
+      "phases": 28,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-read-31-6",
+    "slug": "emergent-bash-bash-bash-read-27-6",
     "name": "Bash â†’ Bash â†’ Bash â†’ Read",
-    "description": "Recurring tool-use sequence detected 31Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-31-6` or discard.",
+    "description": "Recurring tool-use sequence detected 27Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-27-6` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4882,12 +4881,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>31Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>27Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-read-31-6-n0",
+          "id": "emergent-bash-bash-bash-read-27-6-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4896,11 +4895,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 27
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-31-6-n1",
+          "id": "emergent-bash-bash-bash-read-27-6-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4909,11 +4908,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 27
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-31-6-n2",
+          "id": "emergent-bash-bash-bash-read-27-6-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4922,11 +4921,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 27
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-31-6-n3",
+          "id": "emergent-bash-bash-bash-read-27-6-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4935,283 +4934,25 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 31
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-bash-bash-bash-read-31-6-e0",
-          "source": "emergent-bash-bash-bash-read-31-6-n0",
-          "target": "emergent-bash-bash-bash-read-31-6-n1"
-        },
-        {
-          "id": "emergent-bash-bash-bash-read-31-6-e1",
-          "source": "emergent-bash-bash-bash-read-31-6-n1",
-          "target": "emergent-bash-bash-bash-read-31-6-n2"
-        },
-        {
-          "id": "emergent-bash-bash-bash-read-31-6-e2",
-          "source": "emergent-bash-bash-bash-read-31-6-n2",
-          "target": "emergent-bash-bash-bash-read-31-6-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 31,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-edit-bash-38-7",
-    "name": "Edit â†’ Edit â†’ Bash",
-    "description": "Recurring tool-use sequence detected 38Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-38-7` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>38Ã—</strong>: Edit â†’ Edit â†’ Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-bash-38-7-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 38
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-38-7-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 38
-          }
-        },
-        {
-          "id": "emergent-edit-edit-bash-38-7-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 38
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-bash-38-7-e0",
-          "source": "emergent-edit-edit-bash-38-7-n0",
-          "target": "emergent-edit-edit-bash-38-7-n1"
-        },
-        {
-          "id": "emergent-edit-edit-bash-38-7-e1",
-          "source": "emergent-edit-edit-bash-38-7-n1",
-          "target": "emergent-edit-edit-bash-38-7-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 38,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-read-bash-38-8",
-    "name": "Bash â†’ Read â†’ Bash",
-    "description": "Recurring tool-use sequence detected 38Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-bash-38-8` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>38Ã—</strong>: Bash â†’ Read â†’ Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-read-bash-38-8-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 38
-          }
-        },
-        {
-          "id": "emergent-bash-read-bash-38-8-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 38
-          }
-        },
-        {
-          "id": "emergent-bash-read-bash-38-8-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 38
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-bash-read-bash-38-8-e0",
-          "source": "emergent-bash-read-bash-38-8-n0",
-          "target": "emergent-bash-read-bash-38-8-n1"
-        },
-        {
-          "id": "emergent-bash-read-bash-38-8-e1",
-          "source": "emergent-bash-read-bash-38-8-n1",
-          "target": "emergent-bash-read-bash-38-8-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 38,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-bash-read-bash-27-9",
-    "name": "Bash â†’ Bash â†’ Read â†’ Bash",
-    "description": "Recurring tool-use sequence detected 27Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-bash-27-9` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>27Ã—</strong>: Bash â†’ Bash â†’ Read â†’ Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-bash-read-bash-27-9-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 27
-          }
-        },
-        {
-          "id": "emergent-bash-bash-read-bash-27-9-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 27
-          }
-        },
-        {
-          "id": "emergent-bash-bash-read-bash-27-9-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 27
-          }
-        },
-        {
-          "id": "emergent-bash-bash-read-bash-27-9-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
             "count": 27
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-read-bash-27-9-e0",
-          "source": "emergent-bash-bash-read-bash-27-9-n0",
-          "target": "emergent-bash-bash-read-bash-27-9-n1"
+          "id": "emergent-bash-bash-bash-read-27-6-e0",
+          "source": "emergent-bash-bash-bash-read-27-6-n0",
+          "target": "emergent-bash-bash-bash-read-27-6-n1"
         },
         {
-          "id": "emergent-bash-bash-read-bash-27-9-e1",
-          "source": "emergent-bash-bash-read-bash-27-9-n1",
-          "target": "emergent-bash-bash-read-bash-27-9-n2"
+          "id": "emergent-bash-bash-bash-read-27-6-e1",
+          "source": "emergent-bash-bash-bash-read-27-6-n1",
+          "target": "emergent-bash-bash-bash-read-27-6-n2"
         },
         {
-          "id": "emergent-bash-bash-read-bash-27-9-e2",
-          "source": "emergent-bash-bash-read-bash-27-9-n2",
-          "target": "emergent-bash-bash-read-bash-27-9-n3"
+          "id": "emergent-bash-bash-bash-read-27-6-e2",
+          "source": "emergent-bash-bash-bash-read-27-6-n2",
+          "target": "emergent-bash-bash-bash-read-27-6-n3"
         }
       ]
     },
@@ -5221,9 +4962,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-bash-bash-21-10",
-    "name": "Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 21Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-21-10` or discard.",
+    "slug": "emergent-bash-read-bash-34-7",
+    "name": "Bash â†’ Read â†’ Bash",
+    "description": "Recurring tool-use sequence detected 34Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-bash-34-7` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -5238,38 +4979,38 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>21Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>34Ã—</strong>: Bash â†’ Read â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-n0",
+          "id": "emergent-bash-read-bash-34-7-n0",
           "type": "live",
           "position": {
             "x": 0,
             "y": 0
           },
           "data": {
-            "label": "Edit",
+            "label": "Bash",
             "kind": "skill",
-            "count": 21
+            "count": 34
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-n1",
+          "id": "emergent-bash-read-bash-34-7-n1",
           "type": "live",
           "position": {
             "x": 220,
             "y": 0
           },
           "data": {
-            "label": "Bash",
+            "label": "Read",
             "kind": "skill",
-            "count": 21
+            "count": 34
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-n2",
+          "id": "emergent-bash-read-bash-34-7-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -5278,11 +5019,171 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 21
+            "count": 34
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-read-bash-34-7-e0",
+          "source": "emergent-bash-read-bash-34-7-n0",
+          "target": "emergent-bash-read-bash-34-7-n1"
+        },
+        {
+          "id": "emergent-bash-read-bash-34-7-e1",
+          "source": "emergent-bash-read-bash-34-7-n1",
+          "target": "emergent-bash-read-bash-34-7-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 34,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-edit-bash-32-8",
+    "name": "Edit â†’ Edit â†’ Bash",
+    "description": "Recurring tool-use sequence detected 32Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-32-8` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>32Ã—</strong>: Edit â†’ Edit â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-edit-bash-32-8-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 32
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-n3",
+          "id": "emergent-edit-edit-bash-32-8-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 32
+          }
+        },
+        {
+          "id": "emergent-edit-edit-bash-32-8-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 32
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-edit-bash-32-8-e0",
+          "source": "emergent-edit-edit-bash-32-8-n0",
+          "target": "emergent-edit-edit-bash-32-8-n1"
+        },
+        {
+          "id": "emergent-edit-edit-bash-32-8-e1",
+          "source": "emergent-edit-edit-bash-32-8-n1",
+          "target": "emergent-edit-edit-bash-32-8-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 32,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-bash-bash-19-9",
+    "name": "Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 19Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-19-9` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>19Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -5291,11 +5192,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 21
+            "count": 19
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-n4",
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -5304,42 +5205,42 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 21
+            "count": 19
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-e0",
-          "source": "emergent-edit-bash-bash-bash-bash-21-10-n0",
-          "target": "emergent-edit-bash-bash-bash-bash-21-10-n1"
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-e0",
+          "source": "emergent-edit-bash-bash-bash-bash-19-9-n0",
+          "target": "emergent-edit-bash-bash-bash-bash-19-9-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-e1",
-          "source": "emergent-edit-bash-bash-bash-bash-21-10-n1",
-          "target": "emergent-edit-bash-bash-bash-bash-21-10-n2"
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-e1",
+          "source": "emergent-edit-bash-bash-bash-bash-19-9-n1",
+          "target": "emergent-edit-bash-bash-bash-bash-19-9-n2"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-e2",
-          "source": "emergent-edit-bash-bash-bash-bash-21-10-n2",
-          "target": "emergent-edit-bash-bash-bash-bash-21-10-n3"
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-e2",
+          "source": "emergent-edit-bash-bash-bash-bash-19-9-n2",
+          "target": "emergent-edit-bash-bash-bash-bash-19-9-n3"
         },
         {
-          "id": "emergent-edit-bash-bash-bash-bash-21-10-e3",
-          "source": "emergent-edit-bash-bash-bash-bash-21-10-n3",
-          "target": "emergent-edit-bash-bash-bash-bash-21-10-n4"
+          "id": "emergent-edit-bash-bash-bash-bash-19-9-e3",
+          "source": "emergent-edit-bash-bash-bash-bash-19-9-n3",
+          "target": "emergent-edit-bash-bash-bash-bash-19-9-n4"
         }
       ]
     },
     "support": {
-      "phases": 21,
+      "phases": 19,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-edit-edit-bash-bash-26-11",
-    "name": "Edit â†’ Edit â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 26Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-bash-bash-26-11` or discard.",
+    "slug": "emergent-bash-read-edit-30-10",
+    "name": "Bash â†’ Read â†’ Edit",
+    "description": "Recurring tool-use sequence detected 30Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-edit-30-10` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -5354,38 +5255,118 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>26Ã—</strong>: Edit â†’ Edit â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>30Ã—</strong>: Bash â†’ Read â†’ Edit.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-edit-bash-bash-26-11-n0",
+          "id": "emergent-bash-read-edit-30-10-n0",
           "type": "live",
           "position": {
             "x": 0,
             "y": 0
           },
           "data": {
-            "label": "Edit",
+            "label": "Bash",
             "kind": "skill",
-            "count": 26
+            "count": 30
           }
         },
         {
-          "id": "emergent-edit-edit-bash-bash-26-11-n1",
+          "id": "emergent-bash-read-edit-30-10-n1",
           "type": "live",
           "position": {
             "x": 220,
             "y": 0
           },
           "data": {
-            "label": "Edit",
+            "label": "Read",
             "kind": "skill",
-            "count": 26
+            "count": 30
           }
         },
         {
-          "id": "emergent-edit-edit-bash-bash-26-11-n2",
+          "id": "emergent-bash-read-edit-30-10-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 30
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-read-edit-30-10-e0",
+          "source": "emergent-bash-read-edit-30-10-n0",
+          "target": "emergent-bash-read-edit-30-10-n1"
+        },
+        {
+          "id": "emergent-bash-read-edit-30-10-e1",
+          "source": "emergent-bash-read-edit-30-10-n1",
+          "target": "emergent-bash-read-edit-30-10-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 30,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-bash-bash-bash-read-18-11",
+    "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Read",
+    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-read-18-11` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>18Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Read.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-bash-bash-bash-read-18-11-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 18
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-18-11-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 18
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-18-11-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -5394,11 +5375,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 26
+            "count": 18
           }
         },
         {
-          "id": "emergent-edit-edit-bash-bash-26-11-n3",
+          "id": "emergent-bash-bash-bash-bash-read-18-11-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -5407,30 +5388,48 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 26
+            "count": 18
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-18-11-n4",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 18
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-edit-bash-bash-26-11-e0",
-          "source": "emergent-edit-edit-bash-bash-26-11-n0",
-          "target": "emergent-edit-edit-bash-bash-26-11-n1"
+          "id": "emergent-bash-bash-bash-bash-read-18-11-e0",
+          "source": "emergent-bash-bash-bash-bash-read-18-11-n0",
+          "target": "emergent-bash-bash-bash-bash-read-18-11-n1"
         },
         {
-          "id": "emergent-edit-edit-bash-bash-26-11-e1",
-          "source": "emergent-edit-edit-bash-bash-26-11-n1",
-          "target": "emergent-edit-edit-bash-bash-26-11-n2"
+          "id": "emergent-bash-bash-bash-bash-read-18-11-e1",
+          "source": "emergent-bash-bash-bash-bash-read-18-11-n1",
+          "target": "emergent-bash-bash-bash-bash-read-18-11-n2"
         },
         {
-          "id": "emergent-edit-edit-bash-bash-26-11-e2",
-          "source": "emergent-edit-edit-bash-bash-26-11-n2",
-          "target": "emergent-edit-edit-bash-bash-26-11-n3"
+          "id": "emergent-bash-bash-bash-bash-read-18-11-e2",
+          "source": "emergent-bash-bash-bash-bash-read-18-11-n2",
+          "target": "emergent-bash-bash-bash-bash-read-18-11-n3"
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-18-11-e3",
+          "source": "emergent-bash-bash-bash-bash-read-18-11-n3",
+          "target": "emergent-bash-bash-bash-bash-read-18-11-n4"
         }
       ]
     },
     "support": {
-      "phases": 26,
+      "phases": 18,
       "stability": 1
     }
   }
@@ -5483,30 +5482,42 @@ export const HUMAN_WORKFLOWS: HumanWorkflow[] = [
 ];
 
 export const SIGNAL: Signal = {
-  "totalEvents": 810,
+  "totalEvents": 795,
   "topFiles": [
     {
       "path": "vendor/get-anything-done/bin/gad.cjs",
-      "count": 80
+      "count": 77
     },
     {
       "path": "vendor/get-anything-done/.planning/TASK-REGISTRY.xml",
-      "count": 33
+      "count": 39
     },
     {
       "path": "vendor/get-anything-done/bin/install.js",
-      "count": 33
+      "count": 23
     },
     {
       "path": "vendor/get-anything-done/.planning/STATE.xml",
-      "count": 21
+      "count": 19
+    },
+    {
+      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/ProjectEditor.tsx",
+      "count": 19
     },
     {
       "path": "vendor/get-anything-done/tests/consumer-init-install.test.cjs",
       "count": 12
     },
     {
+      "path": "vendor/get-anything-done/.planning/DECISIONS.xml",
+      "count": 11
+    },
+    {
       "path": "vendor/get-anything-done/site/app/planning/PlanningTabbedContent.tsx",
+      "count": 9
+    },
+    {
+      "path": "vendor/get-anything-done/lib/graph-extractor.cjs",
       "count": 9
     },
     {
@@ -5514,94 +5525,82 @@ export const SIGNAL: Signal = {
       "count": 7
     },
     {
-      "path": "vendor/get-anything-done/.planning/DECISIONS.xml",
+      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/DnaEditor.tsx",
       "count": 6
-    },
-    {
-      "path": "vendor/get-anything-done/skills/create-proto-skill/SKILL.md",
-      "count": 6
-    },
-    {
-      "path": "vendor/get-anything-done/workflows/evolution-evolve.md",
-      "count": 5
     },
     {
       "path": "vendor/get-anything-done/references/proto-skills.md",
       "count": 5
     },
     {
-      "path": "vendor/get-anything-done/references/skill-shape.md",
-      "count": 4
-    },
-    {
       "path": "vendor/get-anything-done/.planning/ROADMAP.xml",
+      "count": 5
+    },
+    {
+      "path": "vendor/get-anything-done/skills/create-proto-skill/SKILL.md",
       "count": 4
     },
     {
-      "path": "vendor/get-anything-done/skills/gad-evolution-evolve/SKILL.md",
-      "count": 3
+      "path": "vendor/get-anything-done/workflows/evolution-evolve.md",
+      "count": 4
     },
     {
-      "path": "vendor/get-anything-done/tests/evolution-install-bundle.test.cjs",
-      "count": 3
+      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/page.tsx",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/site/app/projects/[...id]/ProjectHeroSection.tsx",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/tests/graph-extractor.test.cjs",
+      "count": 4
     },
     {
       "path": "vendor/get-anything-done/tests/gad-try.test.cjs",
       "count": 3
     },
     {
-      "path": "vendor/get-anything-done/site/components/devid/DevIdModalContextFooter.tsx",
-      "count": 2
-    },
-    {
-      "path": "vendor/get-anything-done/site/components/devid/DevIdPromptTemplates.ts",
-      "count": 2
-    },
-    {
-      "path": "vendor/get-anything-done/scripts/validate-canonical-assets.mjs",
-      "count": 2
-    },
-    {
-      "path": "vendor/get-anything-done/skills/gad-skill-creator/SKILL.md",
-      "count": 2
+      "path": ".planning/STATE.xml",
+      "count": 3
     }
   ],
   "topSkills": [],
   "toolMix": {
-    "Edit": {
-      "count": 155,
-      "pct": 19.1
-    },
-    "Grep": {
-      "count": 31,
-      "pct": 3.8
+    "Bash": {
+      "count": 374,
+      "pct": 47
     },
     "Read": {
-      "count": 142,
-      "pct": 17.5
-    },
-    "Bash": {
-      "count": 432,
-      "pct": 53.3
+      "count": 166,
+      "pct": 20.9
     },
     "Write": {
-      "count": 35,
-      "pct": 4.3
+      "count": 49,
+      "pct": 6.2
     },
-    "Glob": {
-      "count": 4,
-      "pct": 0.5
+    "Edit": {
+      "count": 156,
+      "pct": 19.6
+    },
+    "Grep": {
+      "count": 40,
+      "pct": 5
     },
     "Agent": {
-      "count": 11,
-      "pct": 1.4
+      "count": 7,
+      "pct": 0.9
+    },
+    "Glob": {
+      "count": 3,
+      "pct": 0.4
     }
   },
   "agentSplit": {
-    "default": 683,
-    "sub": 127,
+    "default": 633,
+    "sub": 162,
     "byRole": {
-      "(unspecified)": 127
+      "(unspecified)": 162
     }
   }
 };
@@ -5692,8 +5691,8 @@ export const CONTEXT_FRAMEWORKS: ContextFramework[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "44.5",
   "milestone": "gad-v1.1",
-  "nextAction": "Evolution turn through checkpoint 37 shipped 2026-04-15. Full unblock chain landed in one session: 42.2-36 (consumer-init-install Flow C parameterized across 5 runtimes + two real bin/install.js bug fixes — sdk/agents ENOENT fallback to repo-root agents/, plus `codexGsdPath` typo fix; silent skip-on-fail branch removed; 9/9 tests green). 42.2-03 (gad-quick-skill → create-proto-skill rename marked done retroactively — shipped under 42.2-10 consolidation). 42.2-06 (create-proto-skill implementation per decision gad-171 — SKILL.md body rewritten as five-step bulk-batching + per-candidate-checkpoint workflow with resume protocol; new `lib/proto-skill-state.cjs` exposes `classifyProtoSkillDraftingState` returning pending/inProgress/complete arrays; `gad evolution status` now renders a \"Drafting queue\" block with the three counts + resume targets; 7 new unit tests in `tests/proto-skill-state.test.cjs` all green). 42.2-13 (first real end-to-end evolution pipeline run — authored `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` as a self-contained bundle following the full checkpoint protocol, PROVENANCE.md first as lock marker, then workflow.md 6-step scaffolding checklist, then SKILL.md thin entry point named `scaffold-visual-context-surface`, then PROVENANCE flipped to complete; pattern extracted is the scaffolding-first Visual Context coverage loop applying to 8 of 15 phase 44.5 tasks; `gad evolution install --claude --config-dir &lt;tmp&gt;` verified bundle lands in both skills/ and .agents/skills/ mirrors; VALIDATION.md written as advisory operator review gate with recommendation: promote). 18/18 targeted tests green. Pipeline proven end-to-end: candidate → create-proto-skill → bundle → install → validate. Operator approved promote same session — ran `gad evolution promote`, surfaced 3 real evolutionPromote defects (ugly slug-based dir/workflow naming + `status: proto` not flipped to `stable`), all fixed under 42.2-37. Post-fix re-promoted cleanly to `skills/scaffold-visual-context-surface/` + `workflows/scaffold-visual-context-surface.md`. True end-to-end proof completed via the real `bin/install.js` executable installer: reports \"Installed 50 canonical skills\" (up from 49) and the new skill lands with correct frontmatter in both `skills/` and `.agents/skills/` mirror. Evolution pipeline now proven against the real distribution path, not just the dev-time CLI. 42.2-38 shipped (onboard flow) — `bin/install.js` gains a third install option \"New GAD project folder\" and a scriptable `--new-project &lt;path&gt;` flag that creates the folder, runs a local install into `&lt;folder&gt;/.claude/`, then scaffolds `.planning/` with the six canonical XML ledgers in one double-clickable pass. Default folder is `~/Desktop/my-gad-project/` (fallback `~/my-gad-project/`). Non-interference contract: never touches global state, never writes outside the chosen folder, warns before overwriting non-empty dirs. New Flow D test proves end-to-end: one folder contains both `.claude/skills/` (91 runtime skills) and `.planning/` (6 canonical XML files), zero escapes. 10/10 consumer-init-install tests green. Operator can now double-click the installer, pick a folder, and have a working GAD project. 42.2-39 follow-up shipped same session: `bin/install.js` gains a hooks fallback (prefers `sdk/hooks/dist`, falls back to repo-root `hooks/dist` + `hooks/*.sh` in a clone) so all 8 hook files land at `.claude/hooks/` and every settings.json hook reference now resolves; the onboard flow also writes `CLAUDE.md` + `AGENTS.md` at the project root with a bounded `&lt;!-- GAD:boot-start --&gt;` / `&lt;!-- GAD:boot-end --&gt;` block so re-runs against existing files replace only the GAD section and preserve user content verbatim (append default, overwrite + skip available via interactive prompt or `GAD_ONBOARD_BOOT_MODE` env). 20/20 tests green including new Flow D cases covering the bounded-block replacement and hook file presence. Next direction: temporary skill install flow (`gad try &lt;skill&gt;`) designed in `.planning/notes/temp-skill-install-and-graphify-2026-04-15.md` as the enabling feature for trialing Graphify (knowledge graph + visualization) before committing to a vendor-vs-native decision. Tasks 42.2-40 through 42.2-42 shipped same session:\r\n        42.2-40 — `gad try &lt;ref&gt;` CLI with stage/status/cleanup/help subcommands, resolves local-slug / local-path / git-url sources (shallow clone with v1/main/master branch fallback + 3-level recursive SKILL.md walker handles Graphify's non-standard layout), writes PROVENANCE + ENTRY with dual declared-plus-implicit dependency capture (frontmatter `requires:` / `installs:` / `outputs:` keys + body-scan regex for pip/npm/brew/curl), non-destructive staging. 9 new tests in `tests/gad-try.test.cjs`, 29/29 regression green.\r\n        42.2-41 — real Graphify trial via `gad try https://github.com/safishamsi/graphify`. End-to-end flow works against a real third-party repo. 33 files staged, consent gate caught `pip install graphifyy` from body scan. Full findings in `evals/FINDINGS-2026-04-15-graphify-trial.md`: Graphify is a Python-backed pipeline (~15 modules), output is a typed-edge `graph.json` + interactive `graph.html` + `GRAPH_REPORT.md` + Obsidian/Neo4j/Gephi exports, structural queries are LLM-free (good for our command+K), multimodal extraction (vision/whisper/PDF) is out of reach in Node.\r\n        42.2-42 + decision gad-197 — **hybrid, sequenced**. Ship Option B (native Node extractor) first as `skills/gad-planning-graph/` targeting planning XML + skills + decisions + workflows with typed nodes (phase/task/decision/skill/workflow/file/requirement) and typed edges (cites/depends_on/decides/belongs_to/authored_by/supersedes). Keep Option A (vendor Graphify) as evidence-gated opt-in via `gad try` for operators who want multimodal extraction. New task 42.2-45 implements Option B. Tasks 42.2-43 (site data pipeline + command+K integration) and 42.2-44 (VCS graph panel primitive) depend on 42.2-45. Task 42.2-40.a queued for `gad try` polish items (strip .git, `--branch` flag, interactive consent, lowercase skill.md warning).\r\n        Still open for next session: 42.2-45 (native planning-graph extractor), 42.2-43 (site pipeline), 42.2-44 (VCS graph panel). Snapshot EQUIPPED SKILLS pinned refactor + Position B workflow retrofits still queued from earlier.\r\n        **Decision gad-198 landed same session**: skills = genes in the DNA, `gad try` = epigenetic expression, proto-skills = mutations, promote = integration. Verb collapse: two verbs (express / integrate) against three states (expressed / mutation / integrated). The scattered install/try/proto/shed/promote commands are all one lifecycle. **DNA Editor** is the unified surface: a new pane inside the Project Editor (phase 44.5) consistent with Project Editor / Brood Editor / Bestiary naming. Shows all four gene states with state-appropriate actions wired through the 44.5-02 dev bridge to the CLI; artifacts with HTML output render in the 44.5-10 iframe. Phase 44.5 goal extended (no new phase number). New tasks 44.5-11 (scaffold via `scaffold-visual-context-surface` skill — first real application, fractal closure on 42.2-13 evolution pipeline proof), 44.5-12 (list population from `.claude/skills/` + `.gad-try/` + `.planning/proto-skills/` + shed data), 44.5-13 (action row wiring through dev bridge), 44.5-14 (iframe preview for trial artifacts), 44.5-15 (command+K shortcuts). Plus 42.2-46 (verb collapse docs in `references/skill-lifecycle.md` + deprecate install-skill global as default first-encounter path). Session at clean planning boundary — restart recommended for the implementation pass. Still open for next session: (a) third canonical discovery battery rerun, (b) snapshot EQUIPPED SKILLS pinned-skills refactor, (c) more Position B workflow retrofits (gad-plan-phase, gad-debug), (d) extend consumer-init-install Flow C to gemini/opencode/copilot/antigravity runtimes if desired, (e) phase 44.5 Project Editor work (can now use the new proto-skill as guidance). All committed work is durable. Parallel-work session nearing end as context fills. New: 42.2-34 (promote-folder scope fix — framework-only, `--project` flag removed), 42.2-35 (consumer init/install integration test + bin/install.js:4860 local-checkout bug fix — canonicalSkillsSrc now falls back from sdk/skills to repo-root skills/; 5/5 tests green, 139 SKILL.md files install correctly from a local clone). Commits 2326bc6, b22397d, 991f443. Shipped since last state update: 42.2-32 (gad skill promote-folder + VCS canonicalized to status: stable), 42.2-33 (gad:proto-skill-battery skill + workflow + evolution-evolve auto-hook). Commits: 6498414, 03497e0. Proto-skill battery is the parallel of the canonical discovery battery but scoped to proto-skills with a proto-vs-proto supersession arm (not proto-vs-canonical — that framing was wrong per operator clarification: canonical is framework-specific, consumer projects have their own ecosystems that grow and obsolete each other). Three scores per proto: findability (0-10), execution_sufficiency (0-10), shed_score (0.0-1.0 derived from proto-vs-proto ranking). Shed thresholds: 0.5 flags, 0.75 recommends eviction. Battery never mutates canonical state; operator decides. Auto-runs as evolution-evolve step 9. Open for next session: (a) third canonical battery rerun after 42.2-30 skill-find shipped to measure Agent C delta, (b) snapshot EQUIPPED SKILLS pinned-skills refactor (still-open P1), (c) more Position B workflow retrofits (gad-plan-phase, gad-debug), (d) first actual `gad evolution evolve` run to exercise the new 9-step pipeline end-to-end including the proto-skill battery hook, (e) unblock 42.2-13 via 42.2-06 (create-proto-skill implementation), (f) phase 44.5 Project Editor work. All committed work is durable. Session can end cleanly.",
-  "lastUpdated": "2026-04-16T01:19:58.786Z",
+  "nextAction": "<![CDATA[Planning graph shipped (42.2-45/47/48, decision gad-199). gad graph build produces 827-node graph.json + interactive HTML viz. gad query provides LLM-free structural queries (98.1% fewer tokens than snapshot — 145 vs 7,680). Native Node implementation (lib/graph-extractor.cjs), zero new deps.\r\n\r\nProject Editor scaffold shipped same session (44.5-01/02/11/01c). Three-pane layout with species/generation canvas, interactive selection, iframe preview, inspector, DNA Editor pane, scoped command bridge. All VCS cids as literals.\r\n\r\nNext:\r\n1. 44.5-12 — DNA Editor list population (wire gene states through command bridge)\r\n2. 44.5-13 — DNA Editor action row wiring\r\n3. 42.2-43 — wire graph into site command+K search\r\n4. 42.2-44 — VCS graph panel in project editor]]>",
+  "lastUpdated": "2026-04-16T02:00:00.000Z",
   "phases": [
     {
       "id": "01",
@@ -5998,11 +5997,6 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. Every node gets a cid derived from its id so the modal footer CRUD can target nodes. Integrates with the `scaffoâ€¦"
     },
     {
-      "id": "42.2-45",
-      "status": "planned",
-      "goal": "Implement `skills/gad-planning-graph/` — Node-only knowledge-graph extractor that walks `.planning/*.xml`, `skills/*/SKILL.md`, `decisions/*.xml`, `workflows/*.md` and emits `site/data/planning-graph.json` in a shape compatible with Graphify's `graph.json` (tâ€¦"
-    },
-    {
       "id": "42.3-13",
       "status": "planned",
       "goal": "Noise panel on the /planning Workflows tab â€” separate surface from the signal sections per decision gad-174. Two views: (a) raw event timeline (filterable by phase, session, event type) for events the emergent detector could not absorb into any candidate, (â€¦"
@@ -6068,29 +6062,14 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Normalize remaining sections to the explicit-id pattern across the app: every user-facing SiteSection should have a stable literal cid token and any redundant Identified wrappers that only restate the same section identity should be removed. Keep Identified oâ€¦"
     },
     {
-      "id": "44.5-01",
-      "status": "planned",
-      "goal": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane pâ€¦"
-    },
-    {
       "id": "44.5-01b",
       "status": "planned",
       "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `publisâ€¦"
     },
     {
-      "id": "44.5-01c",
-      "status": "planned",
-      "goal": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flaâ€¦"
-    },
-    {
       "id": "44.5-01d",
       "status": "planned",
       "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the pâ€¦"
-    },
-    {
-      "id": "44.5-02",
-      "status": "planned",
-      "goal": "Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fightiâ€¦"
     },
     {
       "id": "44.5-02b",
@@ -6138,16 +6117,6 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frâ€¦"
     },
     {
-      "id": "44.5-11",
-      "status": "planned",
-      "goal": "Scaffold the DNA Editor pane inside the Project Editor left-pane region (sibling to the Bestiary pane) using the `scaffold-visual-context-surface` skill promoted 2026-04-15. Follow its 6-step checklist: (1) dev gate via `NODE_ENV === 'development'`, (2) enumeâ€¦"
-    },
-    {
-      "id": "44.5-12",
-      "status": "planned",
-      "goal": "DNA Editor list population — read the four gene states into the scaffolded 44.5-11 pane. **DNA**: enumerate `.claude/skills/` (or the per-runtime skills dir) in the current project, read SKILL.md frontmatter for name/description/status. **Expressed**: enumeraâ€¦"
-    },
-    {
       "id": "44.5-13",
       "status": "planned",
       "goal": "DNA Editor action row wiring via the 44.5-02 dev bridge. Each gene state gets state-appropriate buttons that spawn the corresponding CLI command and stream output via SSE: **Try** (run `gad try &lt;ref&gt;` for a URL/slug/path input form), **Promote** (run `gâ€¦"
@@ -6168,8 +6137,23 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the tâ€¦"
     }
   ],
-  "doneTasksCount": 295,
+  "doneTasksCount": 303,
   "recentDecisions": [
+    {
+      "id": "gad-199",
+      "title": "Full native planning-graph implementation — supersedes gad-197 hybrid approach",
+      "summary": "Operator accepted the Graphify concept but chose full native Node implementation over vendoring the Python package. Supersedes gad-197 (which recommended hybrid: native extractor first, Graphify as opt-in trial). Rationale: the planning-graph use case is fully structural — walking typed XML files with known schemas — and does not need Graphify's multimodal extraction (vision, audio, PDF). A 500-li"
+    },
+    {
+      "id": "gad-200",
+      "title": "Post-shed cleanup pass: review code touched by shed skills, remove dead code, re-graphify",
+      "summary": "After any evolution shed cycle, the codebase must be reviewed for dead code left behind by the shed skills. Run Graphify to regenerate the graph post-shed, then query for orphaned references. This is a mandatory step in the evolution lifecycle, not optional cleanup."
+    },
+    {
+      "id": "gad-199",
+      "title": "Graphify accepted as full dependency — supersedes hybrid approach (gad-197)",
+      "summary": "Accept Graphify (Python) as the real graph backend, not just a trial. Three deliverables: (1) full install (not gad-try), (2) `gad query` CLI command for token-efficient graph lookups, (3) `gad graph` to regenerate. The installer (bin/install.js) packages or helps install Python/pip for consumers. Supersedes gad-197's \"hybrid, sequenced\" approach — Option A (vendor Graphify) becomes the primary pa"
+    },
     {
       "id": "gad-198",
       "title": "Skills are the genes in the DNA — install/try/proto/shed/promote collapse into one lifecycle, surfaced as the DNA Editor inside the Project Editor",
@@ -6214,21 +6198,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-188",
       "title": "44-28 umbrella: installer + release pipeline + data scoping — distribution is GitHub releases, not npm, with a Windows-first lightweight installer writing only into .planning/ and agent dirs",
       "summary": "Discuss-phase 2026-04-14 on task 44-28 produced a 12-point decision set that reframes the original thin \"gad site install\" scope into an umbrella covering 5 sub-tasks (44-30 through 44-34). Locked: (1) NO npm publishing ever — we ship from GitHub releases of github.com/MagicbornStudios/get-anything-done pulled from our site. (2) Windows-first with a real lightweight installer.exe; Go/Rust rewrites"
-    },
-    {
-      "id": "gad-187",
-      "title": "Visual Context Panel naming contract: section cid is the default identity; Identified is optional depth",
-      "summary": "Human-in-the-loop feedback from the /skeptic and /projects surfaces converged on one stable requirement: operators must be able to copy a visible identifier and grep it directly in source for fast update/delete handoff prompts. Policy: the primary section identity is an explicit literal cid on SiteSection (example: project-skills-scope-section-site-section), and this is the default token the Visua"
-    },
-    {
-      "id": "gad-186",
-      "title": "Dev-panel copy tokens must be source-searchable literals; compact panel is the single maintained surface",
-      "summary": "The dev panel exists to let an operator identify what they are looking at and hand that exact target to another agent. Runtime-only ids with React `useId()` suffixes fail that job because they are not greppable in source. Policy: every copied dev token and every update/delete handoff prompt should prefer a source-searchable literal such as `cid=\"...\"`, `stableCid=\"...\"`, `stableBandCid=\"...\"`, or "
-    },
-    {
-      "id": "gad-185",
-      "title": "Canonical planning-root shape: minimum file set, optional set, legacy list, and audit binding",
-      "summary": "Every GAD planning root (`[[planning.roots]]` in `gad-config.toml`) has a canonical shape. The canonical MINIMUM file set that every `.planning/` directory MUST contain is four files: `STATE.xml`, `ROADMAP.xml`, `TASK-REGISTRY.xml`, `DECISIONS.xml`. This is the \"everyone can run `gad snapshot`/`state`/`tasks`/`decisions` against it\" bar and is present in 7/7 audited roots. The canonical OPTIONAL f"
     }
   ]
 };

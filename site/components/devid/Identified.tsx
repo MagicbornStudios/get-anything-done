@@ -83,6 +83,7 @@ export function Identified({
     ctrlLaneCids,
     setCtrlLaneCids,
     flashCid,
+    vcIdentifiedRingsSuppressedForPngCapture,
   } = useDevId();
   const registry = useSectionRegistry();
   const registerFn = registry?.register;
@@ -107,6 +108,7 @@ export function Identified({
   const isFlash = flashCid === resolvedCid;
   const hasPersistentSelection = isPrimaryHighlight || inAltMerge || inCtrl;
   const showFlashRing = enabled && isFlash && !hasPersistentSelection;
+  const stripRingsForCapture = enabled && vcIdentifiedRingsSuppressedForPngCapture;
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -144,9 +146,9 @@ export function Identified({
   );
 
   const ctrlHalo =
-    enabled && inCtrl ? "shadow-[inset_0_0_0_2px_rgba(56,189,248,0.78)]" : "";
+    enabled && inCtrl && !stripRingsForCapture ? "shadow-[inset_0_0_0_2px_rgba(56,189,248,0.78)]" : "";
   let altRing = "";
-  if (enabled && (isPrimaryHighlight || inAltMerge)) {
+  if (enabled && !stripRingsForCapture && (isPrimaryHighlight || inAltMerge)) {
     altRing = isPrimaryHighlight
       ? "ring-2 ring-inset ring-accent"
       : "ring-2 ring-inset ring-violet-500/65";
@@ -171,7 +173,7 @@ export function Identified({
         enabled ? "scroll-mt-3 scroll-mb-1 sm:scroll-mt-4" : "",
         ctrlHalo,
         altRing,
-        showFlashRing
+        !stripRingsForCapture && showFlashRing
           ? "ring-2 ring-inset ring-emerald-400/90 shadow-[inset_0_0_12px_rgba(52,211,153,0.2)] transition-[box-shadow,ring-color] duration-300"
           : "",
       ]

@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DataSource } from "./data-shared";
 import DataJsonTreeView from "./DataJsonTreeView";
 import DataQueryEditor from "./DataQueryEditor";
-import { DEFAULT_QUERY, executeDbQuery, type QueryField } from "./query";
+import { DEFAULT_QUERY, executeDbQuery, parseDbQuery, type QueryField } from "./query";
 
 type DbCollection = {
   key: string;
@@ -37,37 +37,174 @@ function rowField(record: DataSource, field: QueryField): string {
   return String(record.notes?.length ?? 0);
 }
 
-function buildCollections(sources: DataSource[]): DbCollection[] {
-  const grouped = new Map<string, DataSource[]>();
-  for (const source of sources) {
-    const key = toCollectionKey(source.surface);
-    const current = grouped.get(key) ?? [];
-    current.push(source);
-    grouped.set(key, current);
+function pickPrimaryCollectionData(collection: string, value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const obj = value as Record<string, unknown>;
+  const preferredByCollection: Record<string, string[]> = {
+    glossary: ["terms"],
+    "planning-bugs": ["bugs"],
+    "open-questions": ["questions"],
+    "feature-requests": ["requests", "features", "items"],
+    rounds: ["rounds"],
+    "eval-conditions": ["conditions"],
+    "self-eval": ["runs", "records", "items"],
+  };
+  const preferred = preferredByCollection[collection] ?? [];
+  for (const key of preferred) {
+    if (Array.isArray(obj[key])) return obj[key];
   }
+  const firstArrayEntry = Object.values(obj).find((entry) => Array.isArray(entry));
+  if (firstArrayEntry) return firstArrayEntry;
+  return value;
+}
 
-  const bySurface = [...grouped.entries()].map(([key, rows]) => ({
-    key,
-    label: rows[0]?.surface ?? key,
-    description: "Local data group",
-    rows,
-  }));
-
+function toCollectionRows(collection: string, value: unknown): DataSource[] {
+  const primary = pickPrimaryCollectionData(collection, value);
+  if (Array.isArray(primary)) {
+    return primary.map((item, index) => ({
+      id:
+        collection === "glossary" &&
+        item &&
+        typeof item === "object" &&
+        typeof (item as { id?: unknown }).id === "string"
+          ? (item as { id: string }).id
+          : `${collection}-${index + 1}`,
+      surface: collection,
+      number:
+        collection === "glossary" &&
+        item &&
+        typeof item === "object" &&
+        typeof (item as { term?: unknown }).term === "string"
+          ? (item as { term: string }).term
+          : String(index + 1),
+      source: JSON.stringify(item),
+      formula: "payload array item",
+      trust: "authored",
+      page: "/data",
+      notes: typeof item === "object" && item ? Object.keys(item as Record<string, unknown>).join(", ") : "",
+    }));
+  }
+  if (primary && typeof primary === "object") {
+    return Object.entries(primary as Record<string, unknown>).map(([key, item], index) => ({
+      id: `${collection}-${index + 1}`,
+      surface: collection,
+      number: key,
+      source: JSON.stringify(item),
+      formula: "payload object entry",
+      trust: "authored",
+      page: "/data",
+      notes: key,
+    }));
+  }
   return [
     {
-      key: "active",
-      label: "active",
-      description: "All local records in the current data catalog",
-      rows: sources,
+      id: `${collection}-1`,
+      surface: collection,
+      number: "value",
+      source: JSON.stringify(value),
+      formula: "payload scalar value",
+      trust: "authored",
+      page: "/data",
+      notes: "",
     },
-    ...bySurface.sort((a, b) => a.label.localeCompare(b.label)),
   ];
 }
 
+function buildCollections(sources: DataSource[], payload: unknown): DbCollection[] {
+  const p = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
+  const raw = (p.raw && typeof p.raw === "object" ? p.raw : {}) as Record<string, unknown>;
+  const repoData = (raw.repo_data_files && typeof raw.repo_data_files === "object"
+    ? raw.repo_data_files
+    : {}) as Record<string, unknown>;
+  const siteData = (raw.site_data_files && typeof raw.site_data_files === "object"
+    ? raw.site_data_files
+    : {}) as Record<string, unknown>;
+
+  const collections: DbCollection[] = [];
+  if (p._schema !== undefined) {
+    collections.push({
+      key: "schema",
+      label: "schema",
+      description: "DB payload schema/metadata",
+      rows: toCollectionRows("schema", p._schema),
+    });
+  }
+
+  const repoCollectionMap: Array<{ key: string; label: string; sourceKey: string; description: string }> = [
+    { key: "glossary", label: "glossary", sourceKey: "glossary.json", description: "Repo data: glossary entries" },
+    { key: "planning-bugs", label: "planning bugs", sourceKey: "bugs.json", description: "Repo data: planning bugs" },
+    {
+      key: "open-questions",
+      label: "open questions",
+      sourceKey: "open-questions.json",
+      description: "Repo data: open questions",
+    },
+    {
+      key: "feature-requests",
+      label: "feature requests",
+      sourceKey: "feature-requests.json",
+      description: "Repo data: feature requests",
+    },
+  ];
+  for (const entry of repoCollectionMap) {
+    if (repoData[entry.sourceKey] === undefined) continue;
+    collections.push({
+      key: entry.key,
+      label: entry.label,
+      description: entry.description,
+      rows: toCollectionRows(entry.key, repoData[entry.sourceKey]),
+    });
+  }
+
+  const siteCollectionMap: Array<{ key: string; label: string; sourceKey: string; description: string }> = [
+    { key: "rounds", label: "rounds", sourceKey: "rounds.json", description: "Site data: eval rounds" },
+    {
+      key: "eval-conditions",
+      label: "eval conditions",
+      sourceKey: "eval-conditions.json",
+      description: "Site data: eval conditions",
+    },
+    {
+      key: "self-eval",
+      label: "self eval",
+      sourceKey: "self-eval.json",
+      description: "Site data: self evaluation outputs",
+    },
+  ];
+  for (const entry of siteCollectionMap) {
+    if (siteData[entry.sourceKey] === undefined) continue;
+    collections.push({
+      key: entry.key,
+      label: entry.label,
+      description: entry.description,
+      rows: toCollectionRows(entry.key, siteData[entry.sourceKey]),
+    });
+  }
+
+  collections.push({
+    key: "active",
+    label: "active records",
+    description: "Canonical DataSource rows used by the DB viewer",
+    rows: sources,
+  });
+
+  return collections;
+}
+
+function buildCollectionQuery(collectionKey: string): string {
+  return `{
+  "collection": "${collectionKey}",
+  "filter": {},
+  "sort": { "number": 1 },
+  "limit": 100,
+  "projection": ["id", "number", "trust", "surface", "page"]
+}`;
+}
+
 export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { sources: DataSource[]; dbPayload: unknown; dbSourcePath: string }) {
-  const collections = useMemo(() => buildCollections(sources), [sources]);
+  const collections = useMemo(() => buildCollections(sources, dbPayload), [sources, dbPayload]);
   const isLocalJsonSource = useMemo(() => !dbSourcePath.startsWith("mongo:"), [dbSourcePath]);
-  const queryEditorCollections = useMemo(() => ["active"], []);
+  const queryEditorCollections = useMemo(() => collections.map((collection) => collection.key), [collections]);
   const collectionsByKey = useMemo(
     () =>
       collections.reduce<Record<string, DataSource[]>>((acc, collection) => {
@@ -112,14 +249,18 @@ export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { 
   );
   const runQuery = () => {
     setQueryText(queryDraft);
-    const parsedFrom = queryDraft
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .find((line) => line.toUpperCase().startsWith("FROM "));
-    const nextCollection = parsedFrom?.slice(5).trim().toLowerCase();
+    const nextCollection = parseDbQuery(queryDraft).plan.from.trim().toLowerCase();
     if (nextCollection && collectionsByKey[nextCollection]) {
       setActiveCollectionKey(nextCollection);
     }
+  };
+
+  const selectCollection = (collectionKey: string) => {
+    setActiveCollectionKey(collectionKey);
+    const nextQuery = buildCollectionQuery(collectionKey);
+    setQueryDraft(nextQuery);
+    setQueryText(nextQuery);
+    setDbPanelTab("results");
   };
 
   const syncToMongo = async () => {
@@ -287,7 +428,7 @@ export default function DataHeroSection({ sources, dbPayload, dbSourcePath }: { 
                         <button
                           key={collection.key}
                           type="button"
-                          onClick={() => setActiveCollectionKey(collection.key)}
+                          onClick={() => selectCollection(collection.key)}
                           className={`w-full rounded-md border px-2.5 py-2 text-left transition ${
                             active
                               ? "border-accent bg-accent/10"

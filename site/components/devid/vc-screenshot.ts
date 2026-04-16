@@ -13,6 +13,15 @@ type WindowWithDirPicker = Window &
     }) => Promise<FileSystemFileHandle[]>;
   };
 
+const VC_IMAGE_FILE_TYPES: Array<{ description: string; accept: Record<string, string[]> }> = [
+  {
+    description: "Images",
+    accept: {
+      "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".avif"],
+    },
+  },
+];
+
 function getWindowWithPicker(): WindowWithDirPicker | null {
   return typeof window !== "undefined" ? (window as WindowWithDirPicker) : null;
 }
@@ -36,6 +45,25 @@ export async function ensureVcDirectoryWritable(handle: FileSystemDirectoryHandl
   } catch {
     return false;
   }
+}
+
+/** Resolve or pick the VC export directory; mutates `dirRef` when a new folder is chosen. No persistence — caller may persist. */
+export async function resolveVcExportDirectory(dirRef: {
+  current: FileSystemDirectoryHandle | null;
+}): Promise<FileSystemDirectoryHandle | null> {
+  const cur = dirRef.current;
+  if (cur) {
+    const ok = await ensureVcDirectoryWritable(cur);
+    if (!ok) {
+      dirRef.current = null;
+      return null;
+    }
+    return cur;
+  }
+  const dir = await pickVcScreenshotFolder();
+  if (!dir) return null;
+  dirRef.current = dir;
+  return dir;
 }
 
 export async function pickVcScreenshotFolder(
@@ -83,31 +111,42 @@ export async function writePngToSessionFolder(
   await writable.close();
 }
 
-/** Picks one image inside `dir` (same session export folder). Returns a display path, not a host filesystem path. */
-export async function pickImageFromSessionFolder(
+/**
+ * Opens the native file picker (lists image files; `startIn` is the VC export folder).
+ * Use this instead of `showDirectoryPicker` when you need to see and select image file(s).
+ * Returns display paths `folderName/file.png`; `null` if API missing or dialog error; `[]` if cancelled/empty.
+ */
+export async function pickImagesFromSessionFolder(
   dir: FileSystemDirectoryHandle,
-): Promise<{ displayPath: string } | null> {
+  options?: { multiple?: boolean },
+): Promise<string[] | null> {
   const w = getWindowWithPicker();
   if (!w?.showOpenFilePicker) return null;
+  const multiple = options?.multiple !== false;
   try {
     const handles = await w.showOpenFilePicker({
-      multiple: false,
+      multiple,
       startIn: dir,
-      types: [
-        {
-          description: "Images",
-          accept: {
-            "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".avif"],
-          },
-        },
-      ],
+      types: VC_IMAGE_FILE_TYPES,
     });
-    const fh = handles[0];
-    if (!fh) return null;
-    const file = await fh.getFile();
-    const displayPath = `${dir.name}/${file.name}`;
-    return { displayPath };
+    if (!handles?.length) return [];
+    const out: string[] = [];
+    for (const fh of handles) {
+      const file = await fh.getFile();
+      out.push(`${dir.name}/${file.name}`);
+    }
+    return out;
   } catch {
     return null;
   }
+}
+
+/** @deprecated Prefer `pickImagesFromSessionFolder` with `multiple: false`. */
+export async function pickImageFromSessionFolder(
+  dir: FileSystemDirectoryHandle,
+): Promise<{ displayPath: string } | null> {
+  const paths = await pickImagesFromSessionFolder(dir, { multiple: false });
+  if (paths == null) return null;
+  const first = paths[0];
+  return first ? { displayPath: first } : null;
 }

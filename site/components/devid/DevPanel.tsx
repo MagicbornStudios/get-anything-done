@@ -7,17 +7,9 @@ import {
   useRef,
   useState,
   type MouseEvent,
-  type ReactMouseEvent,
 } from "react";
 import { usePathname } from "next/navigation";
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Mic,
-  MicOff,
-  Trash2,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
@@ -30,6 +22,7 @@ import {
   buildDeletePromptMerged,
   buildUpdateLockedPrefix,
   buildUpdateLockedPrefixMerged,
+  formatVcDeleteHandoffBrowserStorageAppendix,
   formatVcPromptMediaRefs,
 } from "./DevIdPromptTemplates";
 import {
@@ -44,7 +37,18 @@ import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
-import { DevPanelScreenshotButton } from "./DevPanelScreenshotButton";
+import {
+  DevPanelHandoffActionRow,
+  DevPanelVcHintsFooter,
+  VC_HOVER_FRAMEWORK,
+} from "./DevPanelHandoffToolbar";
+import { resolveVcExportForPanelMediaPick } from "./vc-export-session";
+import {
+  vcChordShowsDeleteMediaPair,
+  vcChordShowsUpdateMediaPair,
+} from "./vcChordModifiers";
+import { mergeUniqueMediaPaths } from "./vcMediaPaths";
+import { pickImagesFromSessionFolder, supportsVcLocalFolder, supportsVcOpenFilePicker } from "./vc-screenshot";
 import { VcPanelHoverAnchorContext } from "./VcPanelHoverAnchorContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,28 +77,6 @@ function resolveHandoffEntries(
     .filter((e): e is RegistryEntry => Boolean(e));
   if (ordered.length >= 2) return ordered;
   return [clicked];
-}
-
-const VC_HOVER_FRAMEWORK = <p className="text-muted-foreground">Framework wordmark on this strip.</p>;
-const VC_HOVER_UPDATE = (
-  <p>
-    Mic: dictate additions to the update handoff for the selected target. Copies a locked prefix (route, label,
-    source-search hints) plus your text.
-  </p>
-);
-const VC_HOVER_DELETE = (
-  <p>
-    Click: copy a delete handoff for the selected targets. Ctrl/Cmd+click: clear the saved VC export folder for
-    this site (IndexedDB + permission handle) so you can pick a new location on the next PNG or Open.
-  </p>
-);
-
-function vcVerbosityHoverBody(isFull: boolean) {
-  return isFull ? (
-    <p>Prompts include full context. Click to switch to compact templates.</p>
-  ) : (
-    <p>Prompts use compact templates. Click to include full context.</p>
-  );
 }
 
 type DevPanelProps =
@@ -262,9 +244,14 @@ export function DevPanel(props: DevPanelProps) {
     setCtrlLaneCids,
     promptVerbosity,
     setPromptVerbosity,
+    vcPanelHoverHintsEnabled,
+    setVcPanelHoverHintsEnabled,
     updatePromptMediaRefs,
+    setUpdatePromptMediaRefs,
     deletePromptMediaRefs,
     clearPersistedVcExportFolder,
+    vcChordModifiers,
+    vcExportDirHandleRef,
   } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -561,6 +548,9 @@ export function DevPanel(props: DevPanelProps) {
     return `${altSummary}${ctrlHint}`;
   })();
 
+  const updateMediaChordShow = vcChordShowsUpdateMediaPair(vcChordModifiers);
+  const deleteMediaChordShow = vcChordShowsDeleteMediaPair(vcChordModifiers);
+
   const finalizeUpdatePromptCopy = useCallback(
     (transcript: string) => {
       if (!panelHandoffEntriesResolved.length) return;
@@ -619,33 +609,49 @@ export function DevPanel(props: DevPanelProps) {
     listeningMessage: "Listening for panel chrome…",
   });
 
-  const copyResolvedDeletePrompt = useCallback(() => {
-    if (!panelHandoffEntriesResolved.length) return;
-    const base = buildDeletePromptMerged(
-      absolutePageUrl(pathname),
-      panelHandoffEntriesResolved,
+  const copyResolvedDeletePrompt = useCallback(
+    (options?: { includeBrowserStorageMediaDirective?: boolean }) => {
+      if (!panelHandoffEntriesResolved.length) return;
+      const base = buildDeletePromptMerged(
+        absolutePageUrl(pathname),
+        panelHandoffEntriesResolved,
+        promptVerbosity,
+        ctrlLaneEntriesResolved,
+      );
+      const media = formatVcPromptMediaRefs(deletePromptMediaRefs, "delete", promptVerbosity);
+      const storage =
+        options?.includeBrowserStorageMediaDirective === true
+          ? formatVcDeleteHandoffBrowserStorageAppendix(promptVerbosity)
+          : "";
+      const resolved = `${base}${media}${storage}`;
+      navigator.clipboard?.writeText(resolved).catch(() => {});
+      setHeaderCopied("delete");
+      window.setTimeout(() => setHeaderCopied(null), 1200);
+      toast.success("Delete prompt copied");
+    },
+    [
+      pathname,
       promptVerbosity,
+      panelHandoffEntriesResolved,
       ctrlLaneEntriesResolved,
-    );
-    const media = formatVcPromptMediaRefs(deletePromptMediaRefs, "delete", promptVerbosity);
-    const resolved = `${base}${media}`;
-    navigator.clipboard?.writeText(resolved).catch(() => {});
-    setHeaderCopied("delete");
-    window.setTimeout(() => setHeaderCopied(null), 1200);
-    toast.success("Delete prompt copied");
-  }, [
-    pathname,
-    promptVerbosity,
-    panelHandoffEntriesResolved,
-    ctrlLaneEntriesResolved,
-    deletePromptMediaRefs,
-  ]);
+      deletePromptMediaRefs,
+    ],
+  );
 
   const onDeleteHandoffButtonClick = useCallback(
-    (e: ReactMouseEvent<HTMLButtonElement>) => {
-      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    (e: MouseEvent<HTMLButtonElement>) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey) {
         e.preventDefault();
         void clearPersistedVcExportFolder();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        if (!panelHandoffEntriesResolved.length) {
+          toast.error("Select Alt-lane targets first (panel rows or Alt+click).");
+          return;
+        }
+        copyResolvedDeletePrompt({ includeBrowserStorageMediaDirective: true });
         return;
       }
       if (!panelHandoffEntriesResolved.length) {
@@ -655,6 +661,51 @@ export function DevPanel(props: DevPanelProps) {
       copyResolvedDeletePrompt();
     },
     [clearPersistedVcExportFolder, copyResolvedDeletePrompt, panelHandoffEntriesResolved],
+  );
+
+  const onUpdateHandoffButtonClick = useCallback(
+    async (e: MouseEvent<HTMLButtonElement>) => {
+      if (!panelHandoffEntriesResolved.length) return;
+      if (listening) {
+        toggleUpdatePromptWithSpeech();
+        return;
+      }
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        if (!supportsVcLocalFolder() || !supportsVcOpenFilePicker()) {
+          toast.error("Image picks need a Chromium browser with folder + file picker support.");
+          return;
+        }
+        const dir = await resolveVcExportForPanelMediaPick(vcExportDirHandleRef);
+        if (!dir) {
+          toast.message("Choose an export folder or cancel.");
+          return;
+        }
+        const paths = await pickImagesFromSessionFolder(dir, { multiple: true });
+        if (paths == null) {
+          toast.error("Could not open image file picker.");
+          return;
+        }
+        if (paths.length > 0) {
+          setUpdatePromptMediaRefs((prev) => mergeUniqueMediaPaths(prev, paths));
+          toast.success(
+            paths.length === 1
+              ? "Added 1 image path. Starting dictation…"
+              : `Added ${paths.length} image paths. Starting dictation…`,
+          );
+        } else {
+          toast.message("No images selected — starting dictation.");
+        }
+      }
+      toggleUpdatePromptWithSpeech();
+    },
+    [
+      panelHandoffEntriesResolved.length,
+      listening,
+      toggleUpdatePromptWithSpeech,
+      vcExportDirHandleRef,
+      setUpdatePromptMediaRefs,
+    ],
   );
 
   const handleSectionRowClick = useCallback(
@@ -815,51 +866,20 @@ export function DevPanel(props: DevPanelProps) {
                   </p>
                 </DevChromeHoverHint>
               </div>
-              <div className="mt-1 flex items-center gap-1.5 text-[10px]">
-                <DevChromeHoverHint dockCorner={sectionCorner} body={VC_HOVER_UPDATE}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleUpdatePromptWithSpeech}
-                    disabled={!panelHandoffEntriesResolved.length}
-                    className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
-                  >
-                    {headerCopied === "update" ? (
-                      <Check size={12} />
-                    ) : listening ? (
-                      <MicOff size={12} />
-                    ) : (
-                      <Mic size={12} />
-                    )}
-                    Update
-                  </Button>
-                </DevChromeHoverHint>
-                <DevChromeHoverHint dockCorner={sectionCorner} body={VC_HOVER_DELETE}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onDeleteHandoffButtonClick}
-                    className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
-                  >
-                    {headerCopied === "delete" ? <Check size={12} /> : <Trash2 size={12} />}
-                    Delete
-                  </Button>
-                </DevChromeHoverHint>
-                <DevPanelScreenshotButton dockCorner={sectionCorner} firstAltLaneCid={firstAltLaneCid} />
-                <DevChromeHoverHint dockCorner={sectionCorner} body={vcVerbosityHoverBody(promptVerbosity === "full")}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
-                    className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
-                  >
-                    {promptVerbosity === "compact" ? "Short" : "Full"}
-                  </Button>
-                </DevChromeHoverHint>
-              </div>
+              <DevPanelHandoffActionRow
+                dockCorner={sectionCorner}
+                size="section"
+                headerCopied={headerCopied}
+                listening={listening}
+                updateMediaChordShow={updateMediaChordShow}
+                deleteMediaChordShow={deleteMediaChordShow}
+                handoffDisabled={!panelHandoffEntriesResolved.length}
+                onUpdateClick={onUpdateHandoffButtonClick}
+                onDeleteClick={onDeleteHandoffButtonClick}
+                promptVerbosity={promptVerbosity}
+                onToggleVerbosity={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
+                firstAltLaneCid={firstAltLaneCid}
+              />
               <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
                 <div className="min-w-0">
                   <p className="truncate">
@@ -910,14 +930,20 @@ export function DevPanel(props: DevPanelProps) {
               <div className="mt-1 text-[10px] text-muted-foreground">
                 depth {"<="} {registry?.maxDepth ?? 0}
               </div>
-              <div className="ml-2 flex items-center gap-1">
-                <DevPanelPositionControls
-                  edge={sectionEdge}
-                  corner={sectionCorner}
-                  onEdgeChange={setSectionEdge}
-                  onCornerChange={setSectionCorner}
-                />
-              </div>
+              <DevPanelPositionControls
+                edge={sectionEdge}
+                corner={sectionCorner}
+                onEdgeChange={setSectionEdge}
+                onCornerChange={setSectionCorner}
+                trailing={
+                  <DevPanelVcHintsFooter
+                    dockCorner={sectionCorner}
+                    size="section"
+                    vcPanelHoverHintsEnabled={vcPanelHoverHintsEnabled}
+                    onToggleVcPanelHoverHints={() => setVcPanelHoverHintsEnabled((v) => !v)}
+                  />
+                }
+              />
                 </div>
               </VcPanelHoverAnchorContext.Provider>
             </Identified>
@@ -997,51 +1023,20 @@ export function DevPanel(props: DevPanelProps) {
                 </p>
               </DevChromeHoverHint>
             </div>
-            <div className="mt-1 flex items-center gap-1.5 text-[10px]">
-              <DevChromeHoverHint dockCorner={corner} body={VC_HOVER_UPDATE}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleUpdatePromptWithSpeech}
-                  disabled={!panelHandoffEntriesResolved.length}
-                  className="h-6 gap-1 px-1.5 text-[10px]"
-                >
-                  {headerCopied === "update" ? (
-                    <Check size={11} />
-                  ) : listening ? (
-                    <MicOff size={11} />
-                  ) : (
-                    <Mic size={11} />
-                  )}
-                  Update
-                </Button>
-              </DevChromeHoverHint>
-              <DevChromeHoverHint dockCorner={corner} body={VC_HOVER_DELETE}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onDeleteHandoffButtonClick}
-                  className="h-6 gap-1 px-1.5 text-[10px]"
-                >
-                  {headerCopied === "delete" ? <Check size={11} /> : <Trash2 size={11} />}
-                  Delete
-                </Button>
-              </DevChromeHoverHint>
-              <DevPanelScreenshotButton dockCorner={corner} firstAltLaneCid={firstAltLaneCid} size="band" />
-              <DevChromeHoverHint dockCorner={corner} body={vcVerbosityHoverBody(promptVerbosity === "full")}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
-                  className="h-6 px-1.5 text-[9px] font-semibold uppercase tracking-wide"
-                >
-                  {promptVerbosity === "compact" ? "Short" : "Full"}
-                </Button>
-              </DevChromeHoverHint>
-            </div>
+            <DevPanelHandoffActionRow
+              dockCorner={corner}
+              size="band"
+              headerCopied={headerCopied}
+              listening={listening}
+              updateMediaChordShow={updateMediaChordShow}
+              deleteMediaChordShow={deleteMediaChordShow}
+              handoffDisabled={!panelHandoffEntriesResolved.length}
+              onUpdateClick={onUpdateHandoffButtonClick}
+              onDeleteClick={onDeleteHandoffButtonClick}
+              promptVerbosity={promptVerbosity}
+              onToggleVerbosity={() => setPromptVerbosity((v) => (v === "full" ? "compact" : "full"))}
+              firstAltLaneCid={firstAltLaneCid}
+            />
             <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
               <div className="min-w-0">
                 <p className="truncate">
@@ -1091,6 +1086,14 @@ export function DevPanel(props: DevPanelProps) {
               corner={compactCorner}
               onEdgeChange={setCompactEdge}
               onCornerChange={setCompactCorner}
+              trailing={
+                <DevPanelVcHintsFooter
+                  dockCorner={corner}
+                  size="band"
+                  vcPanelHoverHintsEnabled={vcPanelHoverHintsEnabled}
+                  onToggleVcPanelHoverHints={() => setVcPanelHoverHintsEnabled((v) => !v)}
+                />
+              }
             />
               </div>
             </VcPanelHoverAnchorContext.Provider>

@@ -117,7 +117,7 @@ export function LandingVisualContextPanelShowcase() {
               <div className="flex items-start justify-between gap-2 text-[10px]">
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold uppercase tracking-wide text-accent">{DEV_PANEL_LABEL}</p>
-                  <p className="truncate text-muted-foreground">Visual context · 3 items</p>
+                  <p className="truncate text-muted-foreground">Visual context · 2 items</p>
                 </div>
                 <p className="shrink-0 max-w-[5.5rem] text-right text-[9px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground/85">
                   {DEV_PANEL_BRAND_MARK}
@@ -158,18 +158,6 @@ export function LandingVisualContextPanelShowcase() {
                     <span className="block truncate font-mono text-[10px] text-accent/90">
                       LandingVisualContextShowcase
                     </span>
-                  </div>
-                  <span className="inline-flex size-5 items-center justify-center opacity-70">
-                    <Copy size={10} aria-hidden />
-                  </span>
-                  <span className="inline-flex size-5 items-center justify-center opacity-70">
-                    <MessageSquare size={10} aria-hidden />
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 rounded border border-border/50 p-0.5 text-muted-foreground">
-                  <div className="min-w-0 flex-1 px-1 py-0.5 text-left">
-                    <span className="block truncate text-[10px]">LandingVisualContextPatternList</span>
-                    <span className="block truncate font-mono text-[10px]">LandingVisualContextPatternList</span>
                   </div>
                   <span className="inline-flex size-5 items-center justify-center opacity-70">
                     <Copy size={10} aria-hidden />

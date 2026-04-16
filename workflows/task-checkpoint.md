@@ -10,7 +10,7 @@ Verifies that the agent updated planning docs for the completed task before movi
 
 ## What it checks
 
-Read `.planning/TASK-REGISTRY.xml` and `.planning/STATE.xml`, then verify:
+Use `gad query "task <task-id>"` and `gad state` to check task and state status (decision gad-202). Fallback: read `.planning/TASK-REGISTRY.xml` and `.planning/STATE.xml` directly. Then verify:
 
 ### 1. Previous task is marked done
 

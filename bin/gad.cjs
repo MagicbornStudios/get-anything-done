@@ -6272,28 +6272,64 @@ const snapshotCmd = defineCommand({
     sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapSection.trim() });
 
     // 3. TASK-REGISTRY.xml — open tasks only
-    const allTasks = readTasks(root, baseDir, {});
-    const openTasks = allTasks.filter(t => t.status !== 'done');
-    let tasksSection = '';
-    if (openTasks.length > 0) {
-      let currentTaskPhase = '';
-      for (const t of openTasks) {
-        const taskPhase = t.id ? t.id.split('-')[0] : '';
-        if (taskPhase !== currentTaskPhase) {
-          currentTaskPhase = taskPhase;
-          tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
-        }
-        const goalText = (t.goal || '').slice(0, 200);
-        const extraAttrs = [
-          t.skill ? `skill="${t.skill}"` : '',
-          t.type ? `type="${t.type}"` : '',
-          t.agentId ? `agent-id="${t.agentId}"` : '',
-        ].filter(Boolean).join(' ');
-        const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
-        tasksSection += `    <task id="${t.id}" status="${t.status}"${attrStr}><goal>${goalText}</goal></task>\n`;
+    // Graph-backed path when useGraphQuery=true (decision gad-201, gad-202)
+    const snapshotUseGraph = graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path));
+    let allTasks, openTasks, tasksSection = '', doneCount;
+    if (snapshotUseGraph) {
+      const planDir = path.join(baseDir, root.path, root.planningDir);
+      const jsonPath = path.join(planDir, 'graph.json');
+      const gadDir = path.resolve(__dirname, '..');
+      if (!fs.existsSync(jsonPath)) {
+        const g = graphExtractor.buildGraph(root, baseDir, { gadDir });
+        fs.writeFileSync(jsonPath, JSON.stringify(g, null, 2));
       }
+      const graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      const allResult = graphExtractor.queryGraph(graph, { type: 'task' });
+      const allMatches = allResult.matches || [];
+      const openMatches = allMatches.filter(m => m.status !== 'done');
+      doneCount = allMatches.length - openMatches.length;
+      if (openMatches.length > 0) {
+        let currentTaskPhase = '';
+        for (const m of openMatches) {
+          const taskId = m.id.replace(/^task:/, '');
+          const taskPhase = taskId.split('-')[0];
+          if (taskPhase !== currentTaskPhase) {
+            currentTaskPhase = taskPhase;
+            tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+          }
+          const goalText = (m.goal || m.label || '').slice(0, 200);
+          const extraAttrs = [
+            m.skill ? `skill="${m.skill}"` : '',
+            m.type ? `type="${m.type}"` : '',
+          ].filter(Boolean).join(' ');
+          const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
+          tasksSection += `    <task id="${taskId}" status="${m.status}"${attrStr}>${goalText}</task>\n`;
+        }
+      }
+      openTasks = openMatches;
+    } else {
+      allTasks = readTasks(root, baseDir, {});
+      openTasks = allTasks.filter(t => t.status !== 'done');
+      if (openTasks.length > 0) {
+        let currentTaskPhase = '';
+        for (const t of openTasks) {
+          const taskPhase = t.id ? t.id.split('-')[0] : '';
+          if (taskPhase !== currentTaskPhase) {
+            currentTaskPhase = taskPhase;
+            tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+          }
+          const goalText = (t.goal || '').slice(0, 200);
+          const extraAttrs = [
+            t.skill ? `skill="${t.skill}"` : '',
+            t.type ? `type="${t.type}"` : '',
+            t.agentId ? `agent-id="${t.agentId}"` : '',
+          ].filter(Boolean).join(' ');
+          const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
+          tasksSection += `    <task id="${t.id}" status="${t.status}"${attrStr}><goal>${goalText}</goal></task>\n`;
+        }
+      }
+      doneCount = allTasks.length - openTasks.length;
     }
-    const doneCount = allTasks.length - openTasks.length;
     sections.push({ title: `TASKS (${openTasks.length} open, ${doneCount} done)`, content: tasksSection.trim() || '(no open tasks)' });
 
     // 4. DECISIONS.xml — only decisions relevant to sprint phases
@@ -6993,28 +7029,63 @@ const snapshotV2Cmd = defineCommand({
     }
     sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapSection.trim() });
 
-    const openTasks = allTasks.filter((task) => task.status !== 'done');
-    let tasksSection = '';
-    if (openTasks.length > 0) {
-      let currentTaskPhase = '';
-      for (const task of openTasks) {
-        const taskPhase = task.id ? task.id.split('-')[0] : '';
-        if (taskPhase !== currentTaskPhase) {
-          currentTaskPhase = taskPhase;
-          tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
-        }
-        const goalText = (task.goal || '').slice(0, 120);
-        const extraAttrs = [
-          task.skill ? `skill="${task.skill}"` : '',
-          task.type ? `type="${task.type}"` : '',
-          task.agentId ? `agent-id="${task.agentId}"` : '',
-        ].filter(Boolean).join(' ');
-        const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
-        tasksSection += `    <task id="${task.id}" status="${task.status}"${attrStr}>${goalText}</task>\n`;
+    // Graph-backed task listing for sprint snapshot (decision gad-201, gad-202)
+    const sprintUseGraph = graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path));
+    let sprintOpenTasks, sprintTasksSection = '', sprintDoneCount;
+    if (sprintUseGraph) {
+      const sprintJsonPath = path.join(planDir, 'graph.json');
+      const gadDir = path.resolve(__dirname, '..');
+      if (!fs.existsSync(sprintJsonPath)) {
+        const g = graphExtractor.buildGraph(root, baseDir, { gadDir });
+        fs.writeFileSync(sprintJsonPath, JSON.stringify(g, null, 2));
       }
+      const sprintGraph = JSON.parse(fs.readFileSync(sprintJsonPath, 'utf8'));
+      const sprintAllResult = graphExtractor.queryGraph(sprintGraph, { type: 'task' });
+      const sprintAllMatches = sprintAllResult.matches || [];
+      const sprintOpenMatches = sprintAllMatches.filter(m => m.status !== 'done');
+      sprintDoneCount = sprintAllMatches.length - sprintOpenMatches.length;
+      if (sprintOpenMatches.length > 0) {
+        let currentTaskPhase = '';
+        for (const m of sprintOpenMatches) {
+          const taskId = m.id.replace(/^task:/, '');
+          const taskPhase = taskId.split('-')[0];
+          if (taskPhase !== currentTaskPhase) {
+            currentTaskPhase = taskPhase;
+            sprintTasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+          }
+          const goalText = (m.goal || m.label || '').slice(0, 120);
+          const extraAttrs = [
+            m.skill ? `skill="${m.skill}"` : '',
+            m.type ? `type="${m.type}"` : '',
+          ].filter(Boolean).join(' ');
+          const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
+          sprintTasksSection += `    <task id="${taskId}" status="${m.status}"${attrStr}>${goalText}</task>\n`;
+        }
+      }
+      sprintOpenTasks = sprintOpenMatches;
+    } else {
+      sprintOpenTasks = allTasks.filter((task) => task.status !== 'done');
+      if (sprintOpenTasks.length > 0) {
+        let currentTaskPhase = '';
+        for (const task of sprintOpenTasks) {
+          const taskPhase = task.id ? task.id.split('-')[0] : '';
+          if (taskPhase !== currentTaskPhase) {
+            currentTaskPhase = taskPhase;
+            sprintTasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+          }
+          const goalText = (task.goal || '').slice(0, 120);
+          const extraAttrs = [
+            task.skill ? `skill="${task.skill}"` : '',
+            task.type ? `type="${task.type}"` : '',
+            task.agentId ? `agent-id="${task.agentId}"` : '',
+          ].filter(Boolean).join(' ');
+          const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
+          sprintTasksSection += `    <task id="${task.id}" status="${task.status}"${attrStr}>${goalText}</task>\n`;
+        }
+      }
+      sprintDoneCount = allTasks.length - sprintOpenTasks.length;
     }
-    const doneCount = allTasks.length - openTasks.length;
-    sections.push({ title: `TASKS (${openTasks.length} open, ${doneCount} done)`, content: tasksSection.trim() || '(no open tasks)' });
+    sections.push({ title: `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`, content: sprintTasksSection.trim() || '(no open tasks)' });
 
     // Decision gad-195: --mode=active emits ONLY the changing state —
     // STATE.xml (next-action), ROADMAP (sprint phases), TASKS (open sprint).

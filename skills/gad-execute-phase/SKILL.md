@@ -63,6 +63,15 @@ Phase: $ARGUMENTS
 Context files are resolved inside the workflow via `gad-tools init execute-phase` and per-subagent `<files_to_read>` blocks.
 </context>
 
+<graph_query_guidance>
+Use `gad query` (decision gad-202) for targeted lookups instead of reading raw XML:
+- `gad query "tasks planned in phase <N>"` — discover tasks to execute in this phase
+- `gad query "task <task-id>"` — check status of a specific task
+- `gad tasks --phase <N> --status planned` — list only planned tasks in the phase
+- `gad state` — check current next-action without reading STATE.xml
+These are gated on `useGraphQuery=true` in gad-config.toml. If graph query is unavailable, fall back to reading `.planning/` XML directly.
+</graph_query_guidance>
+
 <process>
 Execute the execute-phase workflow from @workflows/gad-execute-phase.md end-to-end.
 Preserve all workflow gates (wave execution, checkpoint handling, verification, state updates, routing).

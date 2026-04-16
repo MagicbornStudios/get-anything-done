@@ -5354,9 +5354,39 @@
     },
     {
       "type": "decision",
+      "id": "decision:gad-201",
+      "label": "Graph query is the default lookup mechanism for all GAD projects",
+      "summary": "Graph queries (gad query, gad tasks --graph, gad state --graph) are the default for targeted planning lookups across all GAD projects. 12.9x token savings (1770 tokens raw vs 137 tokens graph query). ~320ms rebuild, zero external deps. Auto-rebuild hooks on task claim/release and state set-next-acti"
+    },
+    {
+      "type": "decision",
       "id": "decision:gad-200",
       "label": "Post-shed cleanup pass: review code touched by shed skills, remove dead code, re-graphify",
       "summary": "After any evolution shed cycle, the codebase must be reviewed for dead code left behind by the shed skills. Run Graphify to regenerate the graph post-shed, then query for orphaned references. This is a mandatory step in the evolution lifecycle, not optional cleanup."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-202",
+      "label": "All GAD workflows prefer `gad query` over raw XML reads for targeted lookups",
+      "summary": "All GAD skill and workflow instructions now prefer `gad query` over raw XML reads when `useGraphQuery=true` is set in gad-config.toml. Skills updated: gad-plan-phase (query decisions/tasks before planning), gad-execute-phase (query planned tasks in phase), gad-verify-work (query done tasks in phase)"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-plan-phase",
+      "label": "gad-plan-phase",
+      "source": "decision-citation"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-verify-work",
+      "label": "gad-verify-work",
+      "source": "decision-citation"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-check-todos",
+      "label": "gad-check-todos",
+      "source": "decision-citation"
     },
     {
       "type": "workflow",
@@ -11921,6 +11951,41 @@
       "type": "REFERENCES"
     },
     {
+      "source": "decision:gad-201",
+      "target": "skill:gad-config",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-201",
+      "target": "skill:gad-loop",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-202",
+      "target": "skill:gad-config",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-202",
+      "target": "skill:gad-plan-phase",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-202",
+      "target": "skill:gad-execute-phase",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-202",
+      "target": "skill:gad-verify-work",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-202",
+      "target": "skill:gad-check-todos",
+      "type": "REFERENCES"
+    },
+    {
       "source": "decision:gad-199",
       "target": "task:42.2-45",
       "type": "CITES"
@@ -12338,14 +12403,14 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-16T04:03:48.040Z",
-    "nodeCount": 829,
-    "edgeCount": 1142,
+    "generated": "2026-04-16T06:03:11.956Z",
+    "nodeCount": 834,
+    "edgeCount": 1149,
     "nodeTypes": {
       "phase": 50,
       "task": 355,
-      "skill": 125,
-      "decision": 195,
+      "skill": 128,
+      "decision": 197,
       "workflow": 104
     },
     "edgeTypes": {
@@ -12353,7 +12418,7 @@
       "CITES": 458,
       "DEPENDS_ON": 31,
       "USES_SKILL": 144,
-      "REFERENCES": 74,
+      "REFERENCES": 81,
       "USES_WORKFLOW": 79
     }
   }

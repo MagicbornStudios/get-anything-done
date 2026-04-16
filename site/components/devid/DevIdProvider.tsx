@@ -20,6 +20,13 @@ import {
   clearPersistedVcExportDirectory,
   restoreVcExportDirectoryHandle,
 } from "./vc-export-persist";
+import {
+  VC_CHORD_IDLE,
+  attachVcChordGlobalListeners,
+  type VcChordModifiers,
+} from "./vcChordModifiers";
+
+export type { VcChordModifiers };
 
 interface DevIdContextValue {
   enabled: boolean;
@@ -36,6 +43,9 @@ interface DevIdContextValue {
   flashComponent: (cid: string) => void;
   promptVerbosity: PromptVerbosity;
   setPromptVerbosity: Dispatch<SetStateAction<PromptVerbosity>>;
+  /** Radix hovercards / docked tooltips on VC panel chrome; persisted like prompt verbosity. */
+  vcPanelHoverHintsEnabled: boolean;
+  setVcPanelHoverHintsEnabled: Dispatch<SetStateAction<boolean>>;
   /** VC export folder (PNG / Alt media pick); restored from IndexedDB when permitted. */
   vcExportDirHandleRef: MutableRefObject<FileSystemDirectoryHandle | null>;
   /** Clears saved export folder, in-memory handle, and VC media path lists (Ctrl/Cmd+click Delete on panel). */
@@ -46,6 +56,14 @@ interface DevIdContextValue {
   /** Display paths appended to delete handoff when using Ctrl/Cmd+Pick. */
   deletePromptMediaRefs: string[];
   setDeletePromptMediaRefs: Dispatch<SetStateAction<string[]>>;
+  /** Alt / Ctrl|Meta / Shift for VC panel chord preview (single listener, shared by buttons). */
+  vcChordModifiers: VcChordModifiers;
+  /**
+   * While true, `Identified` omits Alt/Ctrl/flash ring styling so PNG capture matches ship chrome.
+   * Set only around `captureElementToPngBlob` (not persisted).
+   */
+  vcIdentifiedRingsSuppressedForPngCapture: boolean;
+  setVcIdentifiedRingsSuppressedForPngCapture: Dispatch<SetStateAction<boolean>>;
 }
 
 const noopRef = { current: null } as MutableRefObject<FileSystemDirectoryHandle | null>;
@@ -61,14 +79,19 @@ const DevIdContext = createContext<DevIdContextValue>({
   setCtrlLaneCids: () => {},
   flashCid: null,
   flashComponent: () => {},
-  promptVerbosity: "full",
+  promptVerbosity: "compact",
   setPromptVerbosity: () => {},
+  vcPanelHoverHintsEnabled: false,
+  setVcPanelHoverHintsEnabled: () => {},
   vcExportDirHandleRef: noopRef,
   clearPersistedVcExportFolder: async () => {},
   updatePromptMediaRefs: [],
   setUpdatePromptMediaRefs: () => {},
   deletePromptMediaRefs: [],
   setDeletePromptMediaRefs: () => {},
+  vcChordModifiers: VC_CHORD_IDLE,
+  vcIdentifiedRingsSuppressedForPngCapture: false,
+  setVcIdentifiedRingsSuppressedForPngCapture: () => {},
 });
 
 export function DevIdProvider({ children }: { children: React.ReactNode }) {
@@ -79,18 +102,24 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const [ctrlLaneCids, setCtrlLaneCids] = useState<string[]>([]);
   const [flashCid, setFlashCid] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
+  const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("compact");
+  const [vcPanelHoverHintsEnabled, setVcPanelHoverHintsEnabled] = useState(false);
   const [updatePromptMediaRefs, setUpdatePromptMediaRefs] = useState<string[]>([]);
   const [deletePromptMediaRefs, setDeletePromptMediaRefs] = useState<string[]>([]);
   const vcExportDirHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [vcChordModifiers, setVcChordModifiers] = useState<VcChordModifiers>(VC_CHORD_IDLE);
+  const [vcIdentifiedRingsSuppressedForPngCapture, setVcIdentifiedRingsSuppressedForPngCapture] =
+    useState(false);
 
   const clearPersistedVcExportFolder = useCallback(async () => {
     vcExportDirHandleRef.current = null;
     setUpdatePromptMediaRefs([]);
     setDeletePromptMediaRefs([]);
     await clearPersistedVcExportDirectory();
-    toast.success("VC export folder cleared. Choose a new folder on the next PNG or Open.");
+    toast.success(
+      "VC export folder cleared. Choose a new folder on the next PNG / Pick / Dir — or use Ctrl+Shift+Delete on the panel.",
+    );
   }, []);
 
   useEffect(() => {
@@ -111,6 +140,8 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => attachVcChordGlobalListeners(setVcChordModifiers), []);
 
   const flashComponent = useCallback((cid: string) => {
     if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
@@ -134,6 +165,9 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     if (stored === "1" || (stored == null && envOn)) setEnabled(true);
     const verbosity = typeof window !== "undefined" ? localStorage.getItem("devid.prompt.verbosity") : null;
     if (verbosity === "compact" || verbosity === "full") setPromptVerbosity(verbosity);
+    const hoverHints = typeof window !== "undefined" ? localStorage.getItem("devid.panel.hoverHints") : null;
+    if (hoverHints === "1") setVcPanelHoverHintsEnabled(true);
+    else if (hoverHints === "0") setVcPanelHoverHintsEnabled(false);
   }, []);
 
   useEffect(() => {
@@ -143,6 +177,14 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       // ignore storage issues
     }
   }, [promptVerbosity]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("devid.panel.hoverHints", vcPanelHoverHintsEnabled ? "1" : "0");
+    } catch {
+      // ignore storage issues
+    }
+  }, [vcPanelHoverHintsEnabled]);
 
   useEffect(() => {
     try {
@@ -227,12 +269,17 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       flashComponent,
       promptVerbosity,
       setPromptVerbosity,
+      vcPanelHoverHintsEnabled,
+      setVcPanelHoverHintsEnabled,
       vcExportDirHandleRef,
       clearPersistedVcExportFolder,
       updatePromptMediaRefs,
       setUpdatePromptMediaRefs,
       deletePromptMediaRefs,
       setDeletePromptMediaRefs,
+      vcChordModifiers,
+      vcIdentifiedRingsSuppressedForPngCapture,
+      setVcIdentifiedRingsSuppressedForPngCapture,
     }),
     [
       enabled,
@@ -243,9 +290,12 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       flashCid,
       flashComponent,
       promptVerbosity,
+      vcPanelHoverHintsEnabled,
       clearPersistedVcExportFolder,
       updatePromptMediaRefs,
       deletePromptMediaRefs,
+      vcChordModifiers,
+      vcIdentifiedRingsSuppressedForPngCapture,
     ],
   );
 

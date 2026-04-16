@@ -50,6 +50,15 @@ Phase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omit
 Normalize phase input in step 2 before any directory lookups.
 </context>
 
+<graph_query_guidance>
+Before planning, use `gad query` (decision gad-202) for targeted lookups instead of reading raw XML:
+- `gad query "decisions citing phase <N>"` — find decisions relevant to this phase
+- `gad query "tasks in phase <N>"` — check existing tasks before creating new ones
+- `gad query "open tasks"` — understand current workload across phases
+- `gad tasks --phase <N>` — concise task listing for the target phase
+These are gated on `useGraphQuery=true` in gad-config.toml. If graph query is unavailable, fall back to reading `.planning/` XML directly.
+</graph_query_guidance>
+
 <process>
 Execute the plan-phase workflow from @workflows/gad-plan-phase.md end-to-end.
 Preserve all workflow gates (validation, research, planning, verification loop, routing).

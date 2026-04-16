@@ -15,6 +15,7 @@ import {
 import { createPortal } from "react-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
+import { useDevId } from "./DevIdProvider";
 import { useVcPanelHoverAnchorRef } from "./VcPanelHoverAnchorContext";
 
 type Side = "top" | "bottom" | "left" | "right";
@@ -43,8 +44,6 @@ export function DevChromeHoverHint({
   openDelay = 95,
   closeDelay = 70,
   contentClassName,
-  /** When set on docked hints, portaled content gets this `data-vc-chrome-hint-content` value for chord-preview hit-testing. */
-  chromeHintScopeId,
 }: {
   children: ReactNode;
   body: ReactNode;
@@ -54,9 +53,13 @@ export function DevChromeHoverHint({
   openDelay?: number;
   closeDelay?: number;
   contentClassName?: string;
-  chromeHintScopeId?: string;
 }) {
+  const { vcPanelHoverHintsEnabled } = useDevId();
   const panelAnchorRef = useVcPanelHoverAnchorRef();
+
+  if (!vcPanelHoverHintsEnabled) {
+    return <>{children}</>;
+  }
   const side: Side =
     sideOverride ??
     (dockCorner === "right" ? "left" : dockCorner === "left" ? "right" : "top");
@@ -75,7 +78,6 @@ export function DevChromeHoverHint({
         openDelay={openDelay}
         closeDelay={closeDelay}
         contentClassName={contentClassName}
-        chromeHintScopeId={chromeHintScopeId}
         trigger={children}
         body={body}
       />
@@ -110,7 +112,6 @@ function VcPanelDockedHoverHint({
   openDelay,
   closeDelay,
   contentClassName,
-  chromeHintScopeId,
   trigger,
   body,
 }: {
@@ -121,7 +122,6 @@ function VcPanelDockedHoverHint({
   openDelay: number;
   closeDelay: number;
   contentClassName?: string;
-  chromeHintScopeId?: string;
   trigger: ReactNode;
   body: ReactNode;
 }) {
@@ -258,9 +258,6 @@ function VcPanelDockedHoverHint({
               role="tooltip"
               onPointerEnter={onContentPointerEnter}
               onPointerLeave={onContentPointerLeave}
-              {...(chromeHintScopeId
-                ? { "data-vc-chrome-hint-content": chromeHintScopeId }
-                : {})}
               className={cn(
                 "z-[230] w-max max-w-[min(20rem,90vw)] rounded-md border border-border/70 bg-popover p-2.5 text-[10px] leading-snug text-popover-foreground shadow-md outline-none",
                 dockCorner === "right" || dockCorner === "left" ? "max-w-[13rem]" : "",

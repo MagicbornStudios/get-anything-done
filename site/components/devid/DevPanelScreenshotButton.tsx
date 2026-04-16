@@ -1,32 +1,31 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { Camera, FolderOpen } from "lucide-react";
+import { useCallback, useState } from "react";
+import { flushSync } from "react-dom";
+import { Camera, FolderOpen, ImagePlus, Images } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DevChromeHoverHint, type VcPanelCorner } from "@/components/devid/DevChromeHoverHint";
 import { queryByCid } from "./devid-dom-scan";
 import { useDevId } from "./DevIdProvider";
-import { persistVcExportDirectoryHandle } from "./vc-export-persist";
+import {
+  appendUpdateMediaPaths,
+  changeVcExportFolder,
+  ensureVcExportFolderForSession,
+} from "./vc-export-session";
+import {
+  readChordFromEvent,
+  resolveVcScreenshotChordMode,
+  type VcScreenshotChordMode,
+} from "./vcChordModifiers";
 import {
   captureElementToPngBlob,
-  ensureVcDirectoryWritable,
-  pickImageFromSessionFolder,
-  pickVcScreenshotFolder,
+  pickImagesFromSessionFolder,
   safeVcFilenamePart,
   supportsVcLocalFolder,
   supportsVcOpenFilePicker,
   writePngToSessionFolder,
 } from "./vc-screenshot";
-import { useVcChordPreview } from "./useVcChordPreview";
-
-type HintMode = "png" | "open-export" | "upd-media";
-
-function resolveHintMode(mod: { alt: boolean; ctrl: boolean }): HintMode {
-  if (mod.ctrl && !mod.alt) return "open-export";
-  if (mod.alt && !mod.ctrl) return "upd-media";
-  return "png";
-}
 
 export function DevPanelScreenshotButton({
   dockCorner,
@@ -38,76 +37,35 @@ export function DevPanelScreenshotButton({
   firstAltLaneCid: string | null;
   size?: "section" | "band";
 }) {
-  const { vcExportDirHandleRef, setUpdatePromptMediaRefs } = useDevId();
+  const {
+    vcExportDirHandleRef,
+    setUpdatePromptMediaRefs,
+    vcChordModifiers,
+    setVcIdentifiedRingsSuppressedForPngCapture,
+  } = useDevId();
   const [busy, setBusy] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const chromeHintScopeIdRef = useRef<string | null>(null);
-  if (!chromeHintScopeIdRef.current) {
-    chromeHintScopeIdRef.current = `vcch-${Math.random().toString(36).slice(2, 11)}`;
-  }
+  const hintMode: VcScreenshotChordMode = resolveVcScreenshotChordMode(vcChordModifiers);
 
-  const mod = useVcChordPreview(buttonRef, chromeHintScopeIdRef.current);
-  const hintMode = resolveHintMode(mod);
-
-  const ensureSessionDir = useCallback(async () => {
-    const cur = vcExportDirHandleRef.current;
-    if (cur) {
-      const ok = await ensureVcDirectoryWritable(cur);
-      if (!ok) {
-        toast.error(
-          "Export folder needs permission again, or clear it with Ctrl+click Delete on the panel.",
-        );
-        vcExportDirHandleRef.current = null;
-        return null;
-      }
-      return cur;
-    }
-    const dir = await pickVcScreenshotFolder();
-    if (!dir) return null;
-    vcExportDirHandleRef.current = dir;
-    try {
-      await persistVcExportDirectoryHandle(dir);
-    } catch {
-      // still usable this session
-    }
-    toast.success("Export folder set (remembered for this site in this browser).");
-    return dir;
-  }, [vcExportDirHandleRef]);
-
-  const appendUpdateMediaPath = useCallback(
-    (displayPath: string) => {
-      setUpdatePromptMediaRefs((prev) => (prev.includes(displayPath) ? prev : [...prev, displayPath]));
-      toast.success(`Added to update handoff media: ${displayPath}`);
-    },
+  const appendPaths = useCallback(
+    (paths: string[]) => appendUpdateMediaPaths(setUpdatePromptMediaRefs, paths, "screenshot"),
     [setUpdatePromptMediaRefs],
   );
 
   const onClick = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
-      const ctrl = e.ctrlKey || e.metaKey;
-      const alt = e.altKey;
-      const openExport = (ctrl && !alt) || (ctrl && alt);
-      const mediaUpdate = alt && !ctrl;
+      const chord = readChordFromEvent(e);
 
-      if (openExport) {
+      if (chord.ctrl && chord.shift) {
         if (!supportsVcLocalFolder()) {
-          toast.error("Opening a folder needs a Chromium-based browser (Chrome, Edge, Brave).");
+          toast.error("Changing the export folder needs a Chromium-based browser (Chrome, Edge, Brave).");
           return;
         }
         setBusy(true);
         try {
-          const next = await pickVcScreenshotFolder(vcExportDirHandleRef.current);
+          const next = await changeVcExportFolder(vcExportDirHandleRef);
           if (!next) {
             toast.message("Folder dialog cancelled.");
-            return;
           }
-          vcExportDirHandleRef.current = next;
-          try {
-            await persistVcExportDirectoryHandle(next);
-          } catch {
-            /* ignore persist failure */
-          }
-          toast.success("Export folder updated (saved for this site).");
         } catch (err) {
           console.error(err);
           toast.error(err instanceof Error ? err.message : "Could not open folder picker.");
@@ -117,28 +75,32 @@ export function DevPanelScreenshotButton({
         return;
       }
 
-      if (mediaUpdate) {
+      if ((chord.ctrl && !chord.shift) || (chord.alt && !chord.ctrl)) {
         if (!firstAltLaneCid) {
           toast.error("Select an Alt-lane target first (panel row or Alt+click a landmark).");
           return;
         }
         if (!supportsVcLocalFolder() || !supportsVcOpenFilePicker()) {
-          toast.error("Picking media needs a Chromium browser with folder + file picker support.");
+          toast.error("Picking images needs a Chromium browser with folder + file picker support.");
           return;
         }
         setBusy(true);
         try {
-          const dir = await ensureSessionDir();
+          const dir = await ensureVcExportFolderForSession(vcExportDirHandleRef);
           if (!dir) {
             toast.message("Choose an export folder first, or cancel.");
             return;
           }
-          const picked = await pickImageFromSessionFolder(dir);
-          if (!picked) {
-            toast.message("No image selected.");
+          const paths = await pickImagesFromSessionFolder(dir, { multiple: true });
+          if (paths == null) {
+            toast.error("Could not open image file picker.");
             return;
           }
-          appendUpdateMediaPath(picked.displayPath);
+          if (paths.length === 0) {
+            toast.message("No image(s) selected.");
+            return;
+          }
+          appendPaths(paths);
         } catch (err) {
           console.error(err);
           toast.error(err instanceof Error ? err.message : "Media pick failed.");
@@ -158,7 +120,7 @@ export function DevPanelScreenshotButton({
       }
       setBusy(true);
       try {
-        const dir = await ensureSessionDir();
+        const dir = await ensureVcExportFolderForSession(vcExportDirHandleRef);
         if (!dir) {
           toast.message("Folder selection cancelled.");
           return;
@@ -168,7 +130,13 @@ export function DevPanelScreenshotButton({
           toast.error("Could not find that landmark on the page.");
           return;
         }
-        const blob = await captureElementToPngBlob(el);
+        let blob: Blob;
+        flushSync(() => setVcIdentifiedRingsSuppressedForPngCapture(true));
+        try {
+          blob = await captureElementToPngBlob(el);
+        } finally {
+          flushSync(() => setVcIdentifiedRingsSuppressedForPngCapture(false));
+        }
         const base = `vc-${safeVcFilenamePart(firstAltLaneCid)}`;
         const name = e.shiftKey ? `${base}-${Date.now()}.png` : `${base}.png`;
         await writePngToSessionFolder(dir, name, blob);
@@ -180,42 +148,53 @@ export function DevPanelScreenshotButton({
         setBusy(false);
       }
     },
-    [firstAltLaneCid, ensureSessionDir, appendUpdateMediaPath, vcExportDirHandleRef],
+    [firstAltLaneCid, appendPaths, vcExportDirHandleRef, setVcIdentifiedRingsSuppressedForPngCapture],
   );
 
   const iconSize = size === "band" ? 11 : 12;
-  const isFolder = hintMode !== "png";
-  const label = hintMode === "png" ? "PNG" : hintMode === "open-export" ? "Open" : "Upd";
+  const label =
+    hintMode === "png" ? "PNG" : hintMode === "dir" ? "Dir" : hintMode === "media" ? "Pick" : "Upd";
 
   const hoverBody =
     hintMode === "png" ? (
       <p>
-        Click: capture the first Alt-lane landmark as a PNG. Each landmark reuses{" "}
+        Click: capture the first Alt-lane landmark as a PNG (VC rings and flash halos are hidden for that frame so
+        the bitmap matches ship chrome). Each landmark reuses{" "}
         <code className="rounded bg-muted px-0.5">vc-&lt;cid&gt;.png</code> (overwrite); Shift+click adds a
-        timestamped copy. The export folder is remembered for this site in this browser (IndexedDB). Ctrl/Cmd
-        + hover: Open — re-open the folder picker starting from the saved folder. Alt+hover: pick an image for
-        the update handoff.
+        timestamped copy. The export folder is remembered (IndexedDB). While modifiers are held: Ctrl/Cmd+Shift
+        = Dir (change save folder); Ctrl/Cmd = Pick (open file dialog in that folder — you can select multiple
+        images); Alt = Upd (same multi-image pick). Plain click = PNG.
       </p>
-    ) : hintMode === "open-export" ? (
+    ) : hintMode === "dir" ? (
       <p>
-        Ctrl/Cmd+click: open the system folder dialog starting from your saved VC export folder so you can browse
-        files or switch to another folder (choice is saved again).
+        Ctrl/Cmd+Shift+click: choose a different VC export folder (directory picker). Saved again for this site.
+      </p>
+    ) : hintMode === "media" ? (
+      <p>
+        Ctrl/Cmd+click: open the image file picker starting in your export folder so you can see and select one or
+        more images; paths are appended to the update handoff.
       </p>
     ) : (
       <p>
-        Alt+click: pick an image inside the export folder; its path is appended to the update handoff. Requires
-        a saved export folder (PNG once, or Open with Ctrl).
+        Alt+click: same as Ctrl — pick one or more images from the export folder for the update handoff (requires
+        Alt-lane target selected).
       </p>
     );
 
+  const chromeIcon =
+    hintMode === "png" ? (
+      <Camera size={iconSize} aria-hidden />
+    ) : hintMode === "dir" ? (
+      <FolderOpen size={iconSize} aria-hidden />
+    ) : hintMode === "media" ? (
+      <Images size={iconSize} aria-hidden />
+    ) : (
+      <ImagePlus size={iconSize} aria-hidden />
+    );
+
   return (
-    <DevChromeHoverHint
-      dockCorner={dockCorner}
-      body={hoverBody}
-      chromeHintScopeId={chromeHintScopeIdRef.current}
-    >
+    <DevChromeHoverHint dockCorner={dockCorner} body={hoverBody}>
       <Button
-        ref={buttonRef}
         type="button"
         variant="outline"
         size="sm"
@@ -230,16 +209,14 @@ export function DevPanelScreenshotButton({
         aria-label={
           hintMode === "png"
             ? "Save PNG screenshot to VC export folder"
-            : hintMode === "open-export"
-              ? "Open or change VC export folder"
-              : "Pick image for update handoff media paths"
+            : hintMode === "dir"
+              ? "Change VC export folder"
+              : hintMode === "media"
+                ? "Pick one or more images for update handoff"
+                : "Pick image(s) for update handoff (Alt)"
         }
       >
-        {isFolder ? (
-          <FolderOpen size={iconSize} aria-hidden />
-        ) : (
-          <Camera size={iconSize} aria-hidden />
-        )}
+        {chromeIcon}
         {label}
       </Button>
     </DevChromeHoverHint>

@@ -227,9 +227,9 @@ export function formatVcPromptMediaRefs(
   const lines = paths.map((p, i) => `  ${i + 1}. ${p}`);
   if (role === "update") {
     if (verbosity === "compact") {
-      return `\n\nMedia (update): ${paths.join("; ")}\n`;
+      return `\n\nMedia path(s) (update): ${paths.join("; ")}\n`;
     }
-    return `\n\nMedia references (session export folder — attach, replace, or align code with these files):\n${lines.join("\n")}\n`;
+    return `\n\nMedia path(s) from the session export folder — attach, replace, or align code with these image(s):\n${lines.join("\n")}\n`;
   }
   if (verbosity === "compact") {
     return `\n\nMedia (delete): ${paths.join("; ")}\n\nAlso delete those files from the same export folder on disk, not only in-repo references.\n`;
@@ -238,6 +238,17 @@ export function formatVcPromptMediaRefs(
     `\n\nMedia references (remove from the UI and delete the files from the session export folder you used for PNG / media picks):\n${lines.join("\n")}\n` +
     `\nAfter removing in-repo references, delete the listed files from disk at that folder location (the browser-granted export directory), not only from the repository.\n`
   );
+}
+
+/**
+ * Appended when the user copies the delete handoff with Ctrl/Cmd held: instruct the agent to remove
+ * matching image file(s) from the author’s browser-granted VC export folder when that path is reachable.
+ */
+export function formatVcDeleteHandoffBrowserStorageAppendix(verbosity: PromptVerbosity): string {
+  if (verbosity === "compact") {
+    return `\n\nBrowser VC export: If your environment can reach the same on-disk folder the author used for Visual Context (paths under Media above), delete those image file(s) there; otherwise remove in-repo references only.\n`;
+  }
+  return `\n\n## Browser / session export storage (targets above)\nThe author may have saved screenshots or picked images into a folder granted by the browser (File System Access). If your working environment has access to that same directory or the same relative paths listed in the Media section, delete the corresponding image file(s) from storage as part of removing this UI. If you only have the repository, remove references and bundled assets in-repo; do not assume access to the author’s local export folder.\n`;
 }
 
 /** Locked update prefix: header → Target(s) (Alt + Ctrl) → Execution… Tasking… */

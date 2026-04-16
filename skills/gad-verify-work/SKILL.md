@@ -33,6 +33,14 @@ Phase: $ARGUMENTS (optional)
 Context files are resolved inside the workflow (`init verify-work`) and delegated via `<files_to_read>` blocks.
 </context>
 
+<graph_query_guidance>
+Use `gad query` (decision gad-202) for targeted lookups instead of reading raw XML:
+- `gad query "tasks done in phase <N>"` — find completed tasks to verify
+- `gad query "decisions in phase <N>"` — check decisions that affect verification criteria
+- `gad tasks --phase <N> --status done` — list tasks marked done in the phase
+These are gated on `useGraphQuery=true` in gad-config.toml. If graph query is unavailable, fall back to reading `.planning/` XML directly.
+</graph_query_guidance>
+
 <process>
 Execute the verify-work workflow from @workflows/verify-work.md end-to-end.
 Preserve all workflow gates (session management, test presentation, diagnosis, fix planning, routing).

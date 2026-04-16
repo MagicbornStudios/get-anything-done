@@ -49,12 +49,12 @@ cat AGENTS.md | grep -A5 "Build\|Verify"
 
 | Category | What to check | How |
 |----------|--------------|-----|
-| **Tasks complete** | All tasks in the phase are status=done | Read TASK-REGISTRY.xml |
+| **Tasks complete** | All tasks in the phase are status=done | `gad query "tasks done in phase <N>"` or `gad tasks --phase <N>` (decision gad-202) |
 | **Build passes** | Code compiles, no errors | Run build command |
 | **Tests pass** | If tests exist, they pass | Run test command |
 | **Deliverables exist** | Files/features the phase promised exist | Check file paths |
-| **State is current** | STATE.xml next-action references the NEXT phase, not this one (≤600 chars; update via `gad state set-next-action`) | Read STATE.xml |
-| **Decisions captured** | If architectural choices were made, they're in DECISIONS.xml | Read DECISIONS.xml |
+| **State is current** | STATE.xml next-action references the NEXT phase, not this one (≤600 chars; update via `gad state set-next-action`) | `gad state` (decision gad-202) |
+| **Decisions captured** | If architectural choices were made, they're in DECISIONS.xml | `gad query "decisions in phase <N>"` or `gad decisions` (decision gad-202) |
 | **Conventions documented** | If first implementation phase, CONVENTIONS.md exists | Check file |
 
 ## Step 2 — Run checks
