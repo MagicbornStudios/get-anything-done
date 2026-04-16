@@ -35,6 +35,7 @@ import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
+import { VcPanelHoverAnchorContext } from "./VcPanelHoverAnchorContext";
 import { Button } from "@/components/ui/button";
 import {
   collectScopedEntries,
@@ -241,6 +242,7 @@ export function DevPanel(props: DevPanelProps) {
   } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const vcPanelHoverAnchorRef = useRef<HTMLDivElement | null>(null);
   const highlightPrevRef = useRef<string | null>(null);
   const highlightDepthSyncRef = useRef<string | null>(null);
 
@@ -675,7 +677,9 @@ export function DevPanel(props: DevPanelProps) {
               ].join(" ")}
               depth={0}
             >
-              <div className="flex items-start justify-between gap-2 text-[10px]">
+              <VcPanelHoverAnchorContext.Provider value={vcPanelHoverAnchorRef}>
+                <div ref={vcPanelHoverAnchorRef} className="flex min-h-0 min-w-0 flex-col gap-0">
+                  <div className="flex items-start justify-between gap-2 text-[10px]">
                 <div className="group/paneltitle min-w-0 flex-1">
                   <div className="relative h-6 w-full min-w-0">
                     <p className="absolute inset-0 flex items-center font-semibold uppercase tracking-wide text-accent transition-opacity group-hover/paneltitle:pointer-events-none group-hover/paneltitle:opacity-0">
@@ -809,6 +813,8 @@ export function DevPanel(props: DevPanelProps) {
                   onCornerChange={setSectionCorner}
                 />
               </div>
+                </div>
+              </VcPanelHoverAnchorContext.Provider>
             </Identified>
           </div>
         </div>
@@ -850,6 +856,8 @@ export function DevPanel(props: DevPanelProps) {
             ].join(" ")}
             depth={0}
           >
+            <VcPanelHoverAnchorContext.Provider value={vcPanelHoverAnchorRef}>
+              <div ref={vcPanelHoverAnchorRef} className="flex min-h-0 min-w-0 flex-col gap-0">
             <div className="flex items-start justify-between gap-2 text-[10px]">
               <div className="group/paneltitle min-w-0 flex-1">
                 <div className="relative h-6 w-full min-w-0">
@@ -977,6 +985,8 @@ export function DevPanel(props: DevPanelProps) {
               onEdgeChange={setCompactEdge}
               onCornerChange={setCompactCorner}
             />
+              </div>
+            </VcPanelHoverAnchorContext.Provider>
           </Identified>
         </div>
       </div>
