@@ -33,24 +33,15 @@ export function safeVcFilenamePart(cid: string): string {
 }
 
 export async function captureElementToPngBlob(el: HTMLElement): Promise<Blob> {
-  const { default: html2canvas } = await import("html2canvas");
-  const canvas = await html2canvas(el, {
-    scale: Math.min(2, typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1),
-    useCORS: true,
-    logging: false,
-    allowTaint: true,
-    backgroundColor: null,
-  });
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (b) => {
-        if (b) resolve(b);
-        else reject(new Error("PNG encoding failed"));
-      },
-      "image/png",
-      0.92,
-    );
-  });
+  /**
+   * `html2canvas` parses stylesheet colors and throws on Tailwind v4 `lab()` tokens.
+   * `modern-screenshot` rasterizes via a path that tolerates modern color functions.
+   */
+  const { domToBlob } = await import("modern-screenshot");
+  const scale = Math.min(2, typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1);
+  const blob = await domToBlob(el, { scale });
+  if (!blob) throw new Error("Screenshot produced empty image");
+  return blob;
 }
 
 export async function writePngToSessionFolder(
