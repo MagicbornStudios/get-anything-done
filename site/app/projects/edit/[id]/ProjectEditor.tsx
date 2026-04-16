@@ -45,10 +45,11 @@ export function ProjectEditor({
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
 
-  // Auto-collapse right pane when a generation iframe preview is showing
+  // Auto-collapse both panes when iframe preview is showing — give game max space
   useEffect(() => {
     if (selection.kind === "generation" && canvasMode.kind !== "diff") {
       setRightCollapsed(true);
+      setLeftCollapsed(true);
     }
   }, [selection.kind, canvasMode.kind]);
 
@@ -111,46 +112,35 @@ export function ProjectEditor({
   const renderCanvas = () => {
     if (canvasMode.kind === "graph") {
       return (
-        <SiteSection
-          cid="project-editor-graph-pane-site-section"
-          sectionShell={false}
-          className="h-full border-b-0"
-        >
-          <iframe
-            src="/api/dev/graph"
-            title="Planning Graph Visualization"
-            className="h-full w-full border-0"
-          />
-        </SiteSection>
+        <iframe
+          data-cid="project-editor-graph-pane-site-section"
+          src="/api/dev/graph"
+          title="Planning Graph Visualization"
+          className="h-full w-full border-0"
+        />
       );
     }
 
     if (canvasMode.kind === "preview") {
       return (
-        <SiteSection
-          cid="project-editor-artifact-preview-site-section"
-          sectionShell={false}
-          className="h-full border-b-0"
-        >
-          <div className="flex h-full flex-col">
-            <div className="flex items-center gap-2 border-b border-border/40 px-3 py-1.5">
-              <span className="text-[11px] font-medium">{canvasMode.title}</span>
-              <button
-                type="button"
-                onClick={() => setCanvasMode({ kind: "species" })}
-                className="ml-auto text-[10px] text-muted-foreground hover:text-foreground"
-              >
-                Close
-              </button>
-            </div>
-            <iframe
-              src={canvasMode.url}
-              title={canvasMode.title}
-              className="flex-1 w-full border-0"
-              sandbox="allow-scripts allow-same-origin"
-            />
+        <div data-cid="project-editor-artifact-preview-site-section" className="flex h-full flex-col">
+          <div className="flex items-center gap-2 border-b border-border/40 px-3 py-1.5">
+            <span className="text-[11px] font-medium">{canvasMode.title}</span>
+            <button
+              type="button"
+              onClick={() => setCanvasMode({ kind: "species" })}
+              className="ml-auto text-[10px] text-muted-foreground hover:text-foreground"
+            >
+              Close
+            </button>
           </div>
-        </SiteSection>
+          <iframe
+            src={canvasMode.url}
+            title={canvasMode.title}
+            className="flex-1 w-full border-0"
+            sandbox="allow-scripts allow-same-origin"
+          />
+        </div>
       );
     }
 
@@ -198,18 +188,13 @@ export function ProjectEditor({
 
     if (selection.kind === "generation") {
       return (
-        <SiteSection
-          cid="project-editor-preview-pane-site-section"
-          sectionShell={false}
-          className="h-full border-b-0"
-        >
-          <iframe
-            src={`/playable/${project.project ?? project.id.split("/")[0]}/${selection.species}/${selection.version}/index.html`}
-            title={`${selection.species} ${selection.version} preview`}
-            className="h-full w-full border-0"
-            sandbox="allow-scripts allow-same-origin"
-          />
-        </SiteSection>
+        <iframe
+          data-cid="project-editor-preview-pane-site-section"
+          src={`/playable/${project.project ?? project.id.split("/")[0]}/${selection.species}/${selection.version}/index.html`}
+          title={`${selection.species} ${selection.version} preview`}
+          className="h-full w-full border-0"
+          sandbox="allow-scripts allow-same-origin"
+        />
       );
     }
 
@@ -381,13 +366,12 @@ export function ProjectEditor({
           )}
 
           {/* ── Canvas (center) ────────────────────────────── */}
-          <SiteSection
-            cid="project-editor-canvas-site-section"
-            sectionShell={false}
-            className="flex-1 min-w-0 overflow-hidden border-b-0"
+          <div
+            data-cid="project-editor-canvas-site-section"
+            className="flex-1 min-w-0 overflow-hidden relative"
           >
             {renderCanvas()}
-          </SiteSection>
+          </div>
 
           {/* ── Right pane (collapsible inspector) ────────── */}
           {rightCollapsed ? (
