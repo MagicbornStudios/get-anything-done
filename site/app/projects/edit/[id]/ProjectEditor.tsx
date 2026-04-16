@@ -6,8 +6,14 @@ import { cn } from "@/lib/utils";
 import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
 import { DnaEditor } from "./DnaEditor";
 import { ProjectCanvas } from "./ProjectCanvas";
+import { InspectorPane } from "./InspectorPane";
 
 type Tab = "dna" | "bestiary" | "recipes";
+
+export type EditorSelection =
+  | { kind: "project" }
+  | { kind: "species"; species: string }
+  | { kind: "generation"; species: string; version: string };
 
 export function ProjectEditor({
   project,
@@ -19,6 +25,7 @@ export function ProjectEditor({
   allRuns: EvalRunRecord[];
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("dna");
+  const [selection, setSelection] = useState<EditorSelection>({ kind: "project" });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -38,9 +45,28 @@ export function ProjectEditor({
           <span className="text-xs text-muted-foreground">
             {project.species ?? project.workflow ?? "—"}
           </span>
+          {/* Breadcrumb for selection */}
+          {selection.kind !== "project" && (
+            <>
+              <span className="text-xs text-muted-foreground/40">/</span>
+              <button
+                type="button"
+                onClick={() =>
+                  selection.kind === "generation"
+                    ? setSelection({ kind: "species", species: selection.species })
+                    : setSelection({ kind: "project" })
+                }
+                className="text-xs text-accent hover:underline"
+              >
+                {selection.kind === "generation"
+                  ? `${selection.species} / ${selection.version}`
+                  : selection.species}
+              </button>
+            </>
+          )}
           <div className="ml-auto flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground/60">
-              /projects/edit/{project.id}
+              /projects/edit/{project.project ?? project.id.split("/")[0]}
             </span>
           </div>
         </div>
@@ -85,7 +111,7 @@ export function ProjectEditor({
                 ))}
               </div>
 
-              {/* Tab content placeholder */}
+              {/* Tab content */}
               <div className="p-3">
                 {activeTab === "dna" && <DnaEditor />}
                 {activeTab === "bestiary" && (
@@ -108,11 +134,29 @@ export function ProjectEditor({
             sectionShell={false}
             className="flex-1 overflow-y-auto border-b-0"
           >
-            <ProjectCanvas
-              project={project}
-              allProjects={allProjects}
-              allRuns={allRuns}
-            />
+            {selection.kind === "generation" ? (
+              // iframe preview for selected generation
+              <SiteSection
+                cid="project-editor-preview-pane-site-section"
+                sectionShell={false}
+                className="h-full border-b-0"
+              >
+                <iframe
+                  src={`/playable/escape-the-dungeon/${selection.species}/${selection.version}/index.html`}
+                  title={`${selection.species} ${selection.version} preview`}
+                  className="h-full w-full border-0"
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              </SiteSection>
+            ) : (
+              <ProjectCanvas
+                project={project}
+                allProjects={allProjects}
+                allRuns={allRuns}
+                selection={selection}
+                onSelect={setSelection}
+              />
+            )}
           </SiteSection>
 
           {/* ── Right pane (inspector) ─────────────────────── */}
@@ -121,33 +165,12 @@ export function ProjectEditor({
             sectionShell={false}
             className="w-80 shrink-0 border-l border-border/60 overflow-y-auto border-b-0"
           >
-            <div className="p-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Inspector
-              </h2>
-              <dl className="mt-3 space-y-2 text-xs">
-                <div>
-                  <dt className="text-muted-foreground">Project</dt>
-                  <dd className="font-mono">{project.project ?? project.id}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Species</dt>
-                  <dd className="font-mono">{project.species ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Framework</dt>
-                  <dd className="font-mono">{project.contextFramework ?? project.workflow ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Domain</dt>
-                  <dd className="font-mono">{project.domain ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Tech Stack</dt>
-                  <dd className="font-mono">{project.techStack ?? "—"}</dd>
-                </div>
-              </dl>
-            </div>
+            <InspectorPane
+              project={project}
+              allProjects={allProjects}
+              allRuns={allRuns}
+              selection={selection}
+            />
           </SiteSection>
         </div>
       </SiteSection>

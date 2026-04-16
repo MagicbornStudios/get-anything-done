@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { SiteSection } from "@/components/site";
 import { cn } from "@/lib/utils";
 import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
+import type { EditorSelection } from "./ProjectEditor";
 
 type SpeciesGroup = {
   species: string;
@@ -17,7 +18,6 @@ function groupBySpecies(
   allProjects: EvalProjectMeta[],
   allRuns: EvalRunRecord[],
 ): SpeciesGroup[] {
-  // Find all species rows for this project
   const projectSlug = project.project ?? project.id.split("/")[0];
   const speciesRows = allProjects.filter(
     (p) => (p.project ?? p.id.split("/")[0]) === projectSlug,
@@ -40,19 +40,30 @@ function groupBySpecies(
   });
 }
 
-function SpeciesCard({ group }: { group: SpeciesGroup }) {
-  const hasPlayable = group.runs.some(
-    (r) => r.version != null,
-  );
-
+function SpeciesCard({
+  group,
+  selected,
+  onSelectSpecies,
+  onSelectGeneration,
+}: {
+  group: SpeciesGroup;
+  selected: boolean;
+  onSelectSpecies: () => void;
+  onSelectGeneration: (version: string) => void;
+}) {
   return (
     // cid prototype: project-editor-species-card-<species>-site-section
     <SiteSection
       cid={`project-editor-species-card-${group.species}-site-section` as const}
       sectionShell={false}
-      className="border border-border/60 rounded-lg bg-card/30 hover:bg-card/50 transition-colors"
+      className={cn(
+        "border rounded-lg transition-colors cursor-pointer",
+        selected
+          ? "border-accent/60 bg-accent/5"
+          : "border-border/60 bg-card/30 hover:bg-card/50",
+      )}
     >
-      <div className="p-4">
+      <div className="p-4" onClick={onSelectSpecies}>
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold">{group.species}</h3>
@@ -70,12 +81,13 @@ function SpeciesCard({ group }: { group: SpeciesGroup }) {
 
         {/* Generation grid (brood) */}
         {group.runs.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
             {group.runs.map((run) => (
               // cid prototype: project-editor-generation-chip-<species>-<version>-site-section
-              <a
+              <button
                 key={run.version}
-                href={`/runs/${run.project}/${run.version}`}
+                type="button"
+                onClick={() => onSelectGeneration(run.version)}
                 className={cn(
                   "inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-mono transition-colors",
                   "border border-border/40 hover:border-accent/60 hover:bg-accent/10",
@@ -87,12 +99,12 @@ function SpeciesCard({ group }: { group: SpeciesGroup }) {
                     &#x2022;
                   </span>
                 )}
-              </a>
+              </button>
             ))}
           </div>
         )}
 
-        {!hasPlayable && (
+        {group.runs.length === 0 && (
           <p className="mt-3 text-[10px] text-muted-foreground/50">
             No generations yet
           </p>
@@ -106,10 +118,14 @@ export function ProjectCanvas({
   project,
   allProjects,
   allRuns,
+  selection,
+  onSelect,
 }: {
   project: EvalProjectMeta;
   allProjects: EvalProjectMeta[];
   allRuns: EvalRunRecord[];
+  selection: EditorSelection;
+  onSelect: (s: EditorSelection) => void;
 }) {
   const species = useMemo(
     () => groupBySpecies(project, allProjects, allRuns),
@@ -136,7 +152,20 @@ export function ProjectCanvas({
       >
         <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {species.map((g) => (
-            <SpeciesCard key={g.species} group={g} />
+            <SpeciesCard
+              key={g.species}
+              group={g}
+              selected={
+                (selection.kind === "species" || selection.kind === "generation") &&
+                selection.species === g.species
+              }
+              onSelectSpecies={() =>
+                onSelect({ kind: "species", species: g.species })
+              }
+              onSelectGeneration={(version) =>
+                onSelect({ kind: "generation", species: g.species, version })
+              }
+            />
           ))}
           {species.length === 0 && (
             <p className="col-span-full text-sm text-muted-foreground">
