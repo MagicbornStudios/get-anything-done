@@ -11219,11 +11219,20 @@ const bundleExport = defineCommand({
           : path.join(repoRoot, fm.workflow);
 
         if (fs.existsSync(workflowPath)) {
-          const workflowContent = fs.readFileSync(workflowPath, 'utf8');
+          let workflowContent = fs.readFileSync(workflowPath, 'utf8');
+          workflowContent = workflowContent
+            .split('\n')
+            .filter(line => line.trim() !== '---')
+            .join('\n')
+            .trim();
           bundled = content.replace(
             /^workflow:\s*.+$/m,
             `workflow_content: |\n${workflowContent.split('\n').map(l => '  ' + l).join('\n')}`
           );
+          bundled = bundled
+            .split('\n')
+            .filter(line => line.trim() !== '---')
+            .join('\n');
         } else {
           console.warn(`  [warn] Workflow not found: ${workflowPath}`);
         }
