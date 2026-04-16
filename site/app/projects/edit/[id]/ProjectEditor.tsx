@@ -7,6 +7,7 @@ import type { EvalProjectMeta, EvalRunRecord } from "@/lib/eval-data";
 import { DnaEditor } from "./DnaEditor";
 import { ProjectCanvas } from "./ProjectCanvas";
 import { InspectorPane } from "./InspectorPane";
+import { LiveDataPanel } from "./LiveDataPanel";
 
 type LeftTab = "dna" | "bestiary" | "recipes";
 type CanvasMode = "species" | "graph";
@@ -212,6 +213,7 @@ export function ProjectEditor({
               allRuns={allRuns}
               selection={selection}
             />
+            <LiveDataPanel />
           </SiteSection>
         </div>
       </SiteSection>
