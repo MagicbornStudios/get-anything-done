@@ -24,10 +24,12 @@ export type EditorSelection =
 
 export function ProjectEditor({
   project,
+  projectDisplayName,
   allProjects,
   allRuns,
 }: {
   project: EvalProjectMeta;
+  projectDisplayName: string;
   allProjects: EvalProjectMeta[];
   allRuns: EvalRunRecord[];
 }) {
@@ -152,6 +154,7 @@ export function ProjectEditor({
       <div className="overflow-y-auto h-full">
         <ProjectCanvas
           project={project}
+          projectDisplayName={projectDisplayName}
           allProjects={allProjects}
           allRuns={allRuns}
           selection={selection}
@@ -174,7 +177,7 @@ export function ProjectEditor({
             dev mode
           </span>
           <h1 className="text-sm font-semibold tracking-tight">
-            {project.name}
+            {projectDisplayName}
           </h1>
           <span className="text-xs text-muted-foreground">
             {project.species ?? project.workflow ?? "—"}

@@ -7,7 +7,8 @@ export const runtime = "nodejs";
 
 /**
  * Serves the interactive planning graph HTML visualization.
- * GET /api/dev/graph — returns the graph.html
+ * GET /api/dev/graph — returns graph.html for the GAD project
+ * GET /api/dev/graph?projectid=X — per-project graph
  * GET /api/dev/graph?rebuild=1 — regenerates graph first
  * GET /api/dev/graph?format=json — returns raw graph.json
  */
@@ -19,17 +20,26 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const rebuild = url.searchParams.get("rebuild") === "1";
   const format = url.searchParams.get("format");
+  const projectId = url.searchParams.get("projectid");
 
   const siteDir = process.cwd();
   const repoRoot = path.resolve(siteDir, "..");
-  const graphHtml = path.join(repoRoot, ".planning", "graph.html");
-  const graphJson = path.join(repoRoot, ".planning", "graph.json");
   const gadBin = path.join(repoRoot, "bin", "gad.cjs");
+
+  // Resolve graph file paths — default to GAD's own .planning/
+  const planDir = path.join(repoRoot, ".planning");
+  const graphHtml = path.join(planDir, "graph.html");
+  const graphJson = path.join(planDir, "graph.json");
+
+  // Build command — scope to project if specified
+  const buildCmd = projectId
+    ? `node "${gadBin}" graph build --projectid ${projectId}`
+    : `node "${gadBin}" graph build`;
 
   // Rebuild if requested or if files don't exist
   if (rebuild || !fs.existsSync(graphHtml) || !fs.existsSync(graphJson)) {
     try {
-      execSync(`node "${gadBin}" graph build`, {
+      execSync(buildCmd, {
         cwd: repoRoot,
         env: { ...process.env, FORCE_COLOR: "0" },
         timeout: 30000,

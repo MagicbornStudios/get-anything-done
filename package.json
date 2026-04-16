@@ -45,7 +45,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "citty": "^0.1.6"
+    "citty": "^0.1.6",
+    "pdf-parse": "^2.4.5"
   },
   "optionalDependencies": {
     "@huggingface/transformers": "^3.0.0"
@@ -71,4 +72,3 @@
     "test:coverage": "c8 --check-coverage --lines 70 --reporter text --exclude 'tests/**' --all node scripts/run-tests.cjs"
   }
 }
-

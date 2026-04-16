@@ -116,12 +116,14 @@ function SpeciesCard({
 
 export function ProjectCanvas({
   project,
+  projectDisplayName,
   allProjects,
   allRuns,
   selection,
   onSelect,
 }: {
   project: EvalProjectMeta;
+  projectDisplayName: string;
   allProjects: EvalProjectMeta[];
   allRuns: EvalRunRecord[];
   selection: EditorSelection;
@@ -136,7 +138,7 @@ export function ProjectCanvas({
     <div className="p-6">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">
-          {project.name?.split("/")[0] ?? project.id}
+          {projectDisplayName}
         </h2>
         <p className="text-xs text-muted-foreground">
           {species.length} species &middot;{" "}
