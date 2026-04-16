@@ -6,6 +6,11 @@
 type WindowWithDirPicker = Window &
   typeof globalThis & {
     showDirectoryPicker?: (options?: { mode?: "read" | "readwrite" }) => Promise<FileSystemDirectoryHandle>;
+    showOpenFilePicker?: (options?: {
+      multiple?: boolean;
+      startIn?: FileSystemDirectoryHandle;
+      types?: Array<{ description?: string; accept: Record<string, string[]> }>;
+    }) => Promise<FileSystemFileHandle[]>;
   };
 
 function getWindowWithPicker(): WindowWithDirPicker | null {
@@ -17,11 +22,33 @@ export function supportsVcLocalFolder(): boolean {
   return Boolean(w && typeof w.showDirectoryPicker === "function");
 }
 
-export async function pickVcScreenshotFolder(): Promise<FileSystemDirectoryHandle | null> {
+export function supportsVcOpenFilePicker(): boolean {
+  const w = getWindowWithPicker();
+  return Boolean(w && typeof w.showOpenFilePicker === "function");
+}
+
+export async function ensureVcDirectoryWritable(handle: FileSystemDirectoryHandle): Promise<boolean> {
+  try {
+    let perm = await handle.queryPermission({ mode: "readwrite" });
+    if (perm === "granted") return true;
+    perm = await handle.requestPermission({ mode: "readwrite" });
+    return perm === "granted";
+  } catch {
+    return false;
+  }
+}
+
+export async function pickVcScreenshotFolder(
+  startIn?: FileSystemDirectoryHandle | null,
+): Promise<FileSystemDirectoryHandle | null> {
   const w = getWindowWithPicker();
   if (!w?.showDirectoryPicker) return null;
   try {
-    return await w.showDirectoryPicker({ mode: "readwrite" });
+    return await w.showDirectoryPicker({
+      mode: "readwrite",
+      id: "gad-vc-export",
+      ...(startIn ? { startIn } : {}),
+    });
   } catch {
     return null;
   }
@@ -44,6 +71,7 @@ export async function captureElementToPngBlob(el: HTMLElement): Promise<Blob> {
   return blob;
 }
 
+/** Writes PNG bytes; same `filename` replaces the previous file (truncate-on-write). */
 export async function writePngToSessionFolder(
   dir: FileSystemDirectoryHandle,
   filename: string,
@@ -53,4 +81,33 @@ export async function writePngToSessionFolder(
   const writable = await fileHandle.createWritable();
   await writable.write(blob);
   await writable.close();
+}
+
+/** Picks one image inside `dir` (same session export folder). Returns a display path, not a host filesystem path. */
+export async function pickImageFromSessionFolder(
+  dir: FileSystemDirectoryHandle,
+): Promise<{ displayPath: string } | null> {
+  const w = getWindowWithPicker();
+  if (!w?.showOpenFilePicker) return null;
+  try {
+    const handles = await w.showOpenFilePicker({
+      multiple: false,
+      startIn: dir,
+      types: [
+        {
+          description: "Images",
+          accept: {
+            "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".avif"],
+          },
+        },
+      ],
+    });
+    const fh = handles[0];
+    if (!fh) return null;
+    const file = await fh.getFile();
+    const displayPath = `${dir.name}/${file.name}`;
+    return { displayPath };
+  } catch {
+    return null;
+  }
 }

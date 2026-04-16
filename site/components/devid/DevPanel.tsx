@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactMouseEvent,
+} from "react";
 import { usePathname } from "next/navigation";
 import {
   Check,
@@ -22,6 +30,7 @@ import {
   buildDeletePromptMerged,
   buildUpdateLockedPrefix,
   buildUpdateLockedPrefixMerged,
+  formatVcPromptMediaRefs,
 } from "./DevIdPromptTemplates";
 import {
   DEV_PANEL_BRAND_MARK,
@@ -73,7 +82,12 @@ const VC_HOVER_UPDATE = (
     source-search hints) plus your text.
   </p>
 );
-const VC_HOVER_DELETE = <p>Copy a delete handoff prompt for the selected target (route, label, and source-search hints).</p>;
+const VC_HOVER_DELETE = (
+  <p>
+    Click: copy a delete handoff for the selected targets. Ctrl/Cmd+click: clear the saved VC export folder for
+    this site (IndexedDB + permission handle) so you can pick a new location on the next PNG or Open.
+  </p>
+);
 
 function vcVerbosityHoverBody(isFull: boolean) {
   return isFull ? (
@@ -248,6 +262,9 @@ export function DevPanel(props: DevPanelProps) {
     setCtrlLaneCids,
     promptVerbosity,
     setPromptVerbosity,
+    updatePromptMediaRefs,
+    deletePromptMediaRefs,
+    clearPersistedVcExportFolder,
   } = useDevId();
   const registry = useSectionRegistry();
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -553,13 +570,20 @@ export function DevPanel(props: DevPanelProps) {
         promptVerbosity,
         ctrlLaneEntriesResolved,
       );
-      const resolved = `${prefix}\n${transcript.trim()}`;
+      const media = formatVcPromptMediaRefs(updatePromptMediaRefs, "update", promptVerbosity);
+      const resolved = `${prefix}${media}\n${transcript.trim()}`;
       navigator.clipboard?.writeText(resolved).catch(() => {});
       setHeaderCopied("update");
       window.setTimeout(() => setHeaderCopied(null), 1200);
       toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
     },
-    [pathname, promptVerbosity, panelHandoffEntriesResolved, ctrlLaneEntriesResolved],
+    [
+      pathname,
+      promptVerbosity,
+      panelHandoffEntriesResolved,
+      ctrlLaneEntriesResolved,
+      updatePromptMediaRefs,
+    ],
   );
 
   const { listening, interim, toggle: toggleUpdatePromptWithSpeech } = useDictatedPromptCopy({
@@ -597,17 +621,41 @@ export function DevPanel(props: DevPanelProps) {
 
   const copyResolvedDeletePrompt = useCallback(() => {
     if (!panelHandoffEntriesResolved.length) return;
-    const resolved = buildDeletePromptMerged(
+    const base = buildDeletePromptMerged(
       absolutePageUrl(pathname),
       panelHandoffEntriesResolved,
       promptVerbosity,
       ctrlLaneEntriesResolved,
     );
+    const media = formatVcPromptMediaRefs(deletePromptMediaRefs, "delete", promptVerbosity);
+    const resolved = `${base}${media}`;
     navigator.clipboard?.writeText(resolved).catch(() => {});
     setHeaderCopied("delete");
     window.setTimeout(() => setHeaderCopied(null), 1200);
     toast.success("Delete prompt copied");
-  }, [pathname, promptVerbosity, panelHandoffEntriesResolved, ctrlLaneEntriesResolved]);
+  }, [
+    pathname,
+    promptVerbosity,
+    panelHandoffEntriesResolved,
+    ctrlLaneEntriesResolved,
+    deletePromptMediaRefs,
+  ]);
+
+  const onDeleteHandoffButtonClick = useCallback(
+    (e: ReactMouseEvent<HTMLButtonElement>) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        e.preventDefault();
+        void clearPersistedVcExportFolder();
+        return;
+      }
+      if (!panelHandoffEntriesResolved.length) {
+        toast.error("Select Alt-lane targets first (panel rows or Alt+click).");
+        return;
+      }
+      copyResolvedDeletePrompt();
+    },
+    [clearPersistedVcExportFolder, copyResolvedDeletePrompt, panelHandoffEntriesResolved],
+  );
 
   const handleSectionRowClick = useCallback(
     (entry: RegistryEntry, e: MouseEvent<HTMLButtonElement>) => {
@@ -792,8 +840,7 @@ export function DevPanel(props: DevPanelProps) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={copyResolvedDeletePrompt}
-                    disabled={!panelHandoffEntriesResolved.length}
+                    onClick={onDeleteHandoffButtonClick}
                     className="h-6 gap-1 px-2 text-[10px] font-semibold uppercase tracking-wide"
                   >
                     {headerCopied === "delete" ? <Check size={12} /> : <Trash2 size={12} />}
@@ -975,8 +1022,7 @@ export function DevPanel(props: DevPanelProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={copyResolvedDeletePrompt}
-                  disabled={!panelHandoffEntriesResolved.length}
+                  onClick={onDeleteHandoffButtonClick}
                   className="h-6 gap-1 px-1.5 text-[10px]"
                 >
                   {headerCopied === "delete" ? <Check size={11} /> : <Trash2 size={11} />}

@@ -23,6 +23,7 @@ import { useDevId } from "./DevIdProvider";
 import {
   buildDeletePromptMerged,
   buildUpdateLockedPrefixMerged,
+  formatVcPromptMediaRefs,
   type HandoffComponentTag,
 } from "./DevIdPromptTemplates";
 
@@ -248,7 +249,12 @@ export function DevIdAgentPromptDialog({
   const [handoffEpoch, setHandoffEpoch] = useState(0);
   const [activeEntry, setActiveEntry] = useState<RegistryEntry | null>(null);
   const modalScanRef = useRef<HTMLDivElement | null>(null);
-  const { promptVerbosity, setPromptVerbosity } = useDevId();
+  const {
+    promptVerbosity,
+    setPromptVerbosity,
+    updatePromptMediaRefs,
+    deletePromptMediaRefs,
+  } = useDevId();
   const ctrlRefResolved = ctrlReferenceEntries ?? EMPTY_CTRL_REF_ENTRIES;
 
   const pageUrl = useMemo(() => absolutePageUrl(pathname), [pathname]);
@@ -276,13 +282,19 @@ export function DevIdAgentPromptDialog({
 
   useEffect(() => {
     if (!open || !entries?.length) return;
-    setUpdateLockedPrefix(
-      buildUpdateLockedPrefixMerged(pageUrl, entries, promptVerbosity, ctrlRefResolved),
-    );
-    setDeleteLockedText(
-      buildDeletePromptMerged(pageUrl, entries, promptVerbosity, ctrlRefResolved),
-    );
-  }, [open, entries, ctrlRefResolved, pageUrl, promptVerbosity]);
+    const updBase = buildUpdateLockedPrefixMerged(pageUrl, entries, promptVerbosity, ctrlRefResolved);
+    const delBase = buildDeletePromptMerged(pageUrl, entries, promptVerbosity, ctrlRefResolved);
+    setUpdateLockedPrefix(`${updBase}${formatVcPromptMediaRefs(updatePromptMediaRefs, "update", promptVerbosity)}`);
+    setDeleteLockedText(`${delBase}${formatVcPromptMediaRefs(deletePromptMediaRefs, "delete", promptVerbosity)}`);
+  }, [
+    open,
+    entries,
+    ctrlRefResolved,
+    pageUrl,
+    promptVerbosity,
+    updatePromptMediaRefs,
+    deletePromptMediaRefs,
+  ]);
 
   useEffect(() => {
     return () => {

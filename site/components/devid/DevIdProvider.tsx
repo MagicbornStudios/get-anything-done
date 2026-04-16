@@ -6,13 +6,20 @@ import {
   useEffect,
   useState,
   useCallback,
+  useMemo,
   useRef,
   type Dispatch,
+  type MutableRefObject,
   type SetStateAction,
 } from "react";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { DevIdSearchDialog } from "./DevIdSearchDialog";
 import type { PromptVerbosity } from "./DevIdPromptTemplates";
+import {
+  clearPersistedVcExportDirectory,
+  restoreVcExportDirectoryHandle,
+} from "./vc-export-persist";
 
 interface DevIdContextValue {
   enabled: boolean;
@@ -29,7 +36,19 @@ interface DevIdContextValue {
   flashComponent: (cid: string) => void;
   promptVerbosity: PromptVerbosity;
   setPromptVerbosity: Dispatch<SetStateAction<PromptVerbosity>>;
+  /** VC export folder (PNG / Alt media pick); restored from IndexedDB when permitted. */
+  vcExportDirHandleRef: MutableRefObject<FileSystemDirectoryHandle | null>;
+  /** Clears saved export folder, in-memory handle, and VC media path lists (Ctrl/Cmd+click Delete on panel). */
+  clearPersistedVcExportFolder: () => Promise<void>;
+  /** Display paths (e.g. `folder/file.png`) appended to update handoff when using Alt+Pick. */
+  updatePromptMediaRefs: string[];
+  setUpdatePromptMediaRefs: Dispatch<SetStateAction<string[]>>;
+  /** Display paths appended to delete handoff when using Ctrl/Cmd+Pick. */
+  deletePromptMediaRefs: string[];
+  setDeletePromptMediaRefs: Dispatch<SetStateAction<string[]>>;
 }
+
+const noopRef = { current: null } as MutableRefObject<FileSystemDirectoryHandle | null>;
 
 const DevIdContext = createContext<DevIdContextValue>({
   enabled: false,
@@ -44,6 +63,12 @@ const DevIdContext = createContext<DevIdContextValue>({
   flashComponent: () => {},
   promptVerbosity: "full",
   setPromptVerbosity: () => {},
+  vcExportDirHandleRef: noopRef,
+  clearPersistedVcExportFolder: async () => {},
+  updatePromptMediaRefs: [],
+  setUpdatePromptMediaRefs: () => {},
+  deletePromptMediaRefs: [],
+  setDeletePromptMediaRefs: () => {},
 });
 
 export function DevIdProvider({ children }: { children: React.ReactNode }) {
@@ -55,7 +80,37 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const [flashCid, setFlashCid] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("full");
+  const [updatePromptMediaRefs, setUpdatePromptMediaRefs] = useState<string[]>([]);
+  const [deletePromptMediaRefs, setDeletePromptMediaRefs] = useState<string[]>([]);
+  const vcExportDirHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearPersistedVcExportFolder = useCallback(async () => {
+    vcExportDirHandleRef.current = null;
+    setUpdatePromptMediaRefs([]);
+    setDeletePromptMediaRefs([]);
+    await clearPersistedVcExportDirectory();
+    toast.success("VC export folder cleared. Choose a new folder on the next PNG or Open.");
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const h = await restoreVcExportDirectoryHandle();
+        if (cancelled || !h) return;
+        const perm = await h.queryPermission({ mode: "readwrite" });
+        if (perm === "granted") {
+          vcExportDirHandleRef.current = h;
+        }
+      } catch {
+        // ignore restore errors
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const flashComponent = useCallback((cid: string) => {
     if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
@@ -145,6 +200,8 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
         setHighlightCid(null);
         setSameDepthMergeCids([]);
         setCtrlLaneCids([]);
+        setUpdatePromptMediaRefs([]);
+        setDeletePromptMediaRefs([]);
         setFlashCid(null);
         if (flashTimeoutRef.current) {
           clearTimeout(flashTimeoutRef.current);
@@ -156,23 +213,44 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [toggle, highlightCid]);
 
+  const contextValue = useMemo<DevIdContextValue>(
+    () => ({
+      enabled,
+      toggle,
+      highlightCid,
+      setHighlightCid,
+      sameDepthMergeCids,
+      setSameDepthMergeCids,
+      ctrlLaneCids,
+      setCtrlLaneCids,
+      flashCid,
+      flashComponent,
+      promptVerbosity,
+      setPromptVerbosity,
+      vcExportDirHandleRef,
+      clearPersistedVcExportFolder,
+      updatePromptMediaRefs,
+      setUpdatePromptMediaRefs,
+      deletePromptMediaRefs,
+      setDeletePromptMediaRefs,
+    }),
+    [
+      enabled,
+      toggle,
+      highlightCid,
+      sameDepthMergeCids,
+      ctrlLaneCids,
+      flashCid,
+      flashComponent,
+      promptVerbosity,
+      clearPersistedVcExportFolder,
+      updatePromptMediaRefs,
+      deletePromptMediaRefs,
+    ],
+  );
+
   return (
-    <DevIdContext.Provider
-      value={{
-        enabled,
-        toggle,
-        highlightCid,
-        setHighlightCid,
-        sameDepthMergeCids,
-        setSameDepthMergeCids,
-        ctrlLaneCids,
-        setCtrlLaneCids,
-        flashCid,
-        flashComponent,
-        promptVerbosity,
-        setPromptVerbosity,
-      }}
-    >
+    <DevIdContext.Provider value={contextValue}>
       {children}
       {enabled ? (
         <>

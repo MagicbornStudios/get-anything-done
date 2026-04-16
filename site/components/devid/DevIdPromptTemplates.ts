@@ -214,6 +214,32 @@ export function formatCtrlLaneReferenceAppendix(entries: RegistryEntry[], verbos
   return formatDualLaneTargetsBlock([], entries, verbosity);
 }
 
+/**
+ * Appends session-export image paths to handoff text (browser-relative: `folderName/file.png`).
+ * Delete role adds explicit disk-removal instructions when paths are non-empty.
+ */
+export function formatVcPromptMediaRefs(
+  paths: string[],
+  role: "update" | "delete",
+  verbosity: PromptVerbosity,
+): string {
+  if (paths.length === 0) return "";
+  const lines = paths.map((p, i) => `  ${i + 1}. ${p}`);
+  if (role === "update") {
+    if (verbosity === "compact") {
+      return `\n\nMedia (update): ${paths.join("; ")}\n`;
+    }
+    return `\n\nMedia references (session export folder — attach, replace, or align code with these files):\n${lines.join("\n")}\n`;
+  }
+  if (verbosity === "compact") {
+    return `\n\nMedia (delete): ${paths.join("; ")}\n\nAlso delete those files from the same export folder on disk, not only in-repo references.\n`;
+  }
+  return (
+    `\n\nMedia references (remove from the UI and delete the files from the session export folder you used for PNG / media picks):\n${lines.join("\n")}\n` +
+    `\nAfter removing in-repo references, delete the listed files from disk at that folder location (the browser-granted export directory), not only from the repository.\n`
+  );
+}
+
 /** Locked update prefix: header → Target(s) (Alt + Ctrl) → Execution… Tasking… */
 export function buildUpdateLockedPrefixMerged(
   pageUrl: string,
