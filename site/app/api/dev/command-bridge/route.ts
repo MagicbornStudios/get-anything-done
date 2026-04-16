@@ -29,6 +29,8 @@ const ALLOWED_SUBCOMMANDS = new Set([
   "site",
   "projects",
   "sink",
+  "graph",
+  "query",
 ]);
 
 type BridgeBody = {

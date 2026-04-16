@@ -8,7 +8,8 @@ import { DnaEditor } from "./DnaEditor";
 import { ProjectCanvas } from "./ProjectCanvas";
 import { InspectorPane } from "./InspectorPane";
 
-type Tab = "dna" | "bestiary" | "recipes";
+type LeftTab = "dna" | "bestiary" | "recipes";
+type CanvasMode = "species" | "graph";
 
 export type EditorSelection =
   | { kind: "project" }
@@ -24,8 +25,17 @@ export function ProjectEditor({
   allProjects: EvalProjectMeta[];
   allRuns: EvalRunRecord[];
 }) {
-  const [activeTab, setActiveTab] = useState<Tab>("dna");
+  const [activeTab, setActiveTab] = useState<LeftTab>("dna");
+  const [canvasMode, setCanvasMode] = useState<CanvasMode>("species");
   const [selection, setSelection] = useState<EditorSelection>({ kind: "project" });
+
+  // When switching to graph mode, clear generation selection so canvas takes over
+  const handleCanvasMode = (mode: CanvasMode) => {
+    setCanvasMode(mode);
+    if (mode === "graph" && selection.kind === "generation") {
+      setSelection({ kind: "project" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -45,6 +55,7 @@ export function ProjectEditor({
           <span className="text-xs text-muted-foreground">
             {project.species ?? project.workflow ?? "—"}
           </span>
+
           {/* Breadcrumb for selection */}
           {selection.kind !== "project" && (
             <>
@@ -64,8 +75,25 @@ export function ProjectEditor({
               </button>
             </>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground/60">
+
+          {/* Canvas mode toggle */}
+          <div className="ml-auto flex items-center gap-1">
+            {(["species", "graph"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => handleCanvasMode(mode)}
+                className={cn(
+                  "px-2 py-1 rounded text-[11px] font-medium transition-colors",
+                  canvasMode === mode
+                    ? "bg-accent/15 text-accent"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {mode === "species" ? "Species" : "Graph"}
+              </button>
+            ))}
+            <span className="ml-2 text-[10px] text-muted-foreground/60">
               /projects/edit/{project.project ?? project.id.split("/")[0]}
             </span>
           </div>
@@ -132,30 +160,43 @@ export function ProjectEditor({
           <SiteSection
             cid="project-editor-canvas-site-section"
             sectionShell={false}
-            className="flex-1 overflow-y-auto border-b-0"
+            className="flex-1 overflow-hidden border-b-0"
           >
-            {selection.kind === "generation" ? (
-              // iframe preview for selected generation
+            {canvasMode === "graph" ? (
+              <SiteSection
+                cid="project-editor-graph-pane-site-section"
+                sectionShell={false}
+                className="h-full border-b-0"
+              >
+                <iframe
+                  src="/api/dev/graph"
+                  title="Planning Graph Visualization"
+                  className="h-full w-full border-0"
+                />
+              </SiteSection>
+            ) : selection.kind === "generation" ? (
               <SiteSection
                 cid="project-editor-preview-pane-site-section"
                 sectionShell={false}
                 className="h-full border-b-0"
               >
                 <iframe
-                  src={`/playable/escape-the-dungeon/${selection.species}/${selection.version}/index.html`}
+                  src={`/playable/${project.project ?? project.id.split("/")[0]}/${selection.species}/${selection.version}/index.html`}
                   title={`${selection.species} ${selection.version} preview`}
                   className="h-full w-full border-0"
                   sandbox="allow-scripts allow-same-origin"
                 />
               </SiteSection>
             ) : (
-              <ProjectCanvas
-                project={project}
-                allProjects={allProjects}
-                allRuns={allRuns}
-                selection={selection}
-                onSelect={setSelection}
-              />
+              <div className="overflow-y-auto h-full">
+                <ProjectCanvas
+                  project={project}
+                  allProjects={allProjects}
+                  allRuns={allRuns}
+                  selection={selection}
+                  onSelect={setSelection}
+                />
+              </div>
             )}
           </SiteSection>
 
