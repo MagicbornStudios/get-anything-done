@@ -69,8 +69,8 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Engage",
         links: [
           { href: "/security", label: "Security", note: "skill risks + certification" },
-          { href: "/contribute", label: "Contribute", note: "clone and run your own" },
-          { href: "/contribute", label: "Contribute", note: "how to help and where to start" },
+          { href: "/roadmap", label: "Roadmap", note: "what we are testing next" },
+          { href: "/downloads", label: "Get Started", note: "templates and packs to run locally" },
         ],
       },
     ],
@@ -80,6 +80,7 @@ export const NAV_GROUPS: NavGroup[] = [
 export const NAV_TOP_LEVEL: NavLink[] = [];
 
 export const NAV_GITHUB_HREF = "https://github.com/MagicbornStudios/get-anything-done";
+
 
 
 
