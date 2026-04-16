@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -164,6 +165,26 @@ export async function GET(request: Request) {
       const state = getCurrentState(planDir);
       send("state", state);
 
+      // Debounced graph rebuild — 500ms after last planning file change
+      const gadBin = path.join(repoRoot, "bin", "gad.cjs");
+      let graphRebuildTimer: ReturnType<typeof setTimeout> | null = null;
+      const rebuildGraph = () => {
+        if (graphRebuildTimer) clearTimeout(graphRebuildTimer);
+        graphRebuildTimer = setTimeout(() => {
+          try {
+            execSync(`node "${gadBin}" graph build`, {
+              cwd: repoRoot,
+              env: { ...process.env, FORCE_COLOR: "0" },
+              timeout: 10000,
+              stdio: "ignore",
+            });
+            send("graph-rebuilt", { timestamp: Date.now() });
+          } catch {
+            // Graph rebuild failed — non-fatal
+          }
+        }, 500);
+      };
+
       // Watch .planning/ for changes
       const watchers: fs.FSWatcher[] = [];
       const watchFiles = ["STATE.xml", "TASK-REGISTRY.xml", "DECISIONS.xml", "ROADMAP.xml"];
@@ -202,6 +223,9 @@ export async function GET(request: Request) {
               // Ignore read errors during concurrent writes
             }
 
+            // Rebuild graph (debounced — waits 500ms for writes to settle)
+            rebuildGraph();
+
             // Push agent presence inference
             const agents = detectAgentPresence(recentChanges);
             if (agents.length > 0) {
@@ -239,6 +263,7 @@ export async function GET(request: Request) {
 
       watcherCleanup = () => {
         clearInterval(heartbeat);
+        if (graphRebuildTimer) clearTimeout(graphRebuildTimer);
         for (const w of watchers) {
           try { w.close(); } catch { /* ignore */ }
         }
