@@ -22,13 +22,13 @@ Download the current release asset for your platform from GitHub Releases.
 Windows global install:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install-gad-windows.ps1 -Artifact .\gad-v1.32.0-windows-x64.exe
+powershell -ExecutionPolicy Bypass -File .\install-gad-windows.ps1 -Artifact .\gad-v1.33.0-windows-x64.exe
 ```
 
 Portable use:
 
 ```powershell
-.\gad-v1.32.0-windows-x64.exe --help
+.\gad-v1.33.0-windows-x64.exe --help
 ```
 
 Optional Node/GitHub path if you already have Node:
@@ -58,25 +58,30 @@ gad install all --claude --global
 
 Use the runtime flags you actually need.
 
-## 5. Start a project or eval
+## 5. Start a project and spawn a generation
 
 ```bash
+gad projects init --projectid <your-project> --name "<Your Project>"
+gad species create --project <your-project> --name default
 gad snapshot --projectid <your-project>
-gad eval setup --project my-eval
-gad eval run --project my-eval --prompt-only
+gad spawn <your-project>/default --prompt-only
 ```
+
+A **project** is the umbrella (e.g. `escape-the-dungeon`). A **species** is an
+evolutionary branch of that project (e.g. `bare`, `emergent`, a test variant).
+A **generation** is one build of a species — what `gad spawn` produces.
 
 If snapshot output or SDK skills reference alias paths like `@references/...`,
 `@workflows/...`, `@templates/...`, `@agents/...`, or `@hooks/...`, resolve them from the GAD
 framework root. Example: `@references/checkpoints.md` → `references/checkpoints.md`.
 
-## 6. Preserve and review evals
+## 6. Preserve and review generations
 
 ```bash
-gad eval preserve my-eval v1 --from <worktree-path>
-gad eval verify
-gad eval review my-eval v1 --score 0.7
-gad eval report
+gad generation preserve <your-project> v1 --from <worktree-path>
+gad generation verify
+gad generation review <your-project> v1 --score 0.7
+gad generation report
 ```
 
 ## Key split

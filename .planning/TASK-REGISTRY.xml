@@ -1765,7 +1765,7 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <goal>Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.</goal>
       <depends>45-04</depends>
       <keywords>vocabulary-audit,string-sweep,gad-166,gad-169,terminology</keywords>
-      <notes>2026-04-16d partial: nav-shared.ts (Quickstart/How-It-Works/Downloads notes) + PlayableTeaser home copy rebranded. Remaining: /downloads, /quickstart, /how-it-works pages, templates/*, playable-shared descriptions, Footer.</notes>
+      <notes>2026-04-16d partial: nav-shared.ts, PlayableTeaser home copy, and docs/quick-start.md (v1.32→1.33, eval→generation/species, CLI commands updated to gad projects init / gad species create / gad spawn / gad generation). Footer owned by user (opt-out). Remaining: /downloads, /how-it-works, /project-market, templates/*, playable-shared descriptions.</notes>
     </task>
     <task id="45-16" status="planned" type="site">
       <goal>Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.</goal>
