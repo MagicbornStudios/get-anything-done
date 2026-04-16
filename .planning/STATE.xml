@@ -18,13 +18,18 @@ Parallel commits on submodule during session (not mine, from user's agent-experi
 - structural-parallelism-task-outbox (per-agent scratch files, avoid shared-file merge conflicts)
 - lightweight-agent-and-scoped-snapshot (agent profiles, gad snapshot --task, minimal-agent mode)
 
+COMPLETED this session (additional):
+- TRACK 1 finish: task 45-15 DONE (vocabulary audit across all live user-facing surfaces). /how-it-works verified already clean. Residual "eval" is in generated data files from historical decision/task text — intentional preservation.
+- TRACK 3 partial: `gad breed` CLI command shipped (decision gad-219). breedSpecies() added to lib/eval-data-access.cjs with union-and-shed merge semantics. Top-level gad breed subcommand registered. Manual verification: bred bare + emergent on escape-the-dungeon → correct species.json (workflow=bare precedence, constraints merged, bredFrom tracked, dna/installedSkills dedup ready). Test species archived+deleted after verification.
+- Session dump heuristics note captured: .planning/notes/session-dump-heuristics-2026-04-16.md (operator question about when to restart — rules of thumb + proposed profile modes senior/balanced/junior).
+
 REMAINING — still planned (next session):
 
-TRACK 1 (site rebrand) — continue: /how-it-works (536 LOC, biggest), /project-market, playable-shared descriptions, round-results, results, hypothesis-tracks, templates/TemplateEvalCard. Footer is operator-owned, skip. Task 45-15 umbrella remains in-progress.
+TRACK 3 continued: pressure formula display on /how-it-works (the second half of TRACK 3 — formula visible on site).
 
 TRACK 2 (VCS portability): Run `gad spawn escape-the-dungeon/vcs-test`. Compare bare data-attributes vs React component. Iterate VCS skill. STOP after: one generation complete + skill iterated.
 
-TRACK 3 (breed command + formula): Implement `gad breed`. Refine pressure formula display on /how-it-works.
+TRACK 3 (formula display): `gad breed` DONE (this session). Remaining: refine pressure formula display on /how-it-works — show formula, dimensions, current values.
 
 STRUCTURAL INVESTIGATIONS (not decided, captured as todos):
 - Per-agent task outbox pattern — avoid shared-file merge conflicts (structural-parallelism-task-outbox)
