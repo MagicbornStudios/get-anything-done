@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-16c continued. Phase 46 extended: eval→species/generation CLI rename DONE (gad-212), species.json tracking schema DONE (authors, usageCount, showcaseMedia, transferable, tags — gad-213/215), site eval vocabulary replaced in user-facing copy. Build passes clean. NEXT: (1) VCS downloads live component demos + multiple install paths, (2) site content gaps — images, GSD YouTube, reverse-engineering showcase, (3) context framework builder as new project, (4) phase 42.4 (context framework catalog type), (5) phase 43 (domain rename + schema unification — much of the vocabulary work is now done). Todos: context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, editor-ux-and-platform.</next-action>
+  <next-action>Session 2026-04-16c continued. Decisions gad-216..218 captured (VCS primitives, AI generation fundamentals, desktop client). VCS test species created for escape-the-dungeon (species/vcs-test with VCS skill, inherits bare, KAPLAY canvas game test bed). Video outline drafted (.planning/notes/vcs-showcase-video-outline). Todos captured: vcs-video-and-primitives, gad-generate-commands, desktop-client-and-skill-authoring. NEXT: (1) Run VCS test generation on escape-the-dungeon, (2) VCS downloads live demos, (3) gad generate text command, (4) site content — images, GSD YouTube, (5) phases 42.4/43.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>

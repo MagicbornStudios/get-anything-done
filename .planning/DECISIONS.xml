@@ -1484,5 +1484,26 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>Need "promote to project" and "promote to species" actions in editors. Salvage pipeline (gad-210) is the data direction; this adds the requirements/learnings direction. Species usage tracking feeds the marketplace showcase.</impact>
   </decision>
 
+  <decision id="gad-216">
+    <title>VCS primitives are the core deliverable — minimal identifiers + panel + context capture that any project species installs</title>
+    <date>2026-04-16</date>
+    <summary>The VCS is not a site-specific feature — it is the primitive layer every GAD project should build first. The minimal surface: (1) Identifiers coded into compartmentalized UI sections, (2) a panel/footer that attaches to sections for localized landmark data, (3) self-referential context capture — the panel itself has identifiers so it can iterate on its own UI via quick prompts. SiteSections are structural convenience, not required — identifiers can exist without them. The panel/footer is a template surface with identifiers that trace back to exact code in src from the built version on screen. The goal: build VCS skills that any species can install, then verify by running a generation (e.g. escape-the-dungeon) and checking whether the agent builds the VCS correctly. This is the testable hypothesis for VCS portability.</summary>
+    <impact>VCS skills become the first thing tested in new species. escape-the-dungeon gets a VCS test generation. The primitives list (Identified, panel, context capture, ID collection) is the deliverable, not the full site component library.</impact>
+  </decision>
+
+  <decision id="gad-217">
+    <title>GAD CLI supports AI generation fundamentals — image, audio, video, text as one-shot file creation</title>
+    <date>2026-04-16</date>
+    <summary>The GAD CLI needs basic AI generation commands that don't require a coding agent: simple prompt → file output. Use cases: generate an image (cover art, sprite), generate audio (sound effect, music), generate video (trailer clip), generate text (markdown, code, config) and write it to a target output path. These are one-shot generation fundamentals that feed into the project assets pipeline (decision gad-210). Not agentic workflows — just prompt-in, file-out. Provider-agnostic (OpenRouter, Anthropic, OpenAI, local models).</summary>
+    <impact>New gad generate subcommand group. Feeds into species templates (pre-seed assets), project marketing material, and generation seeding. Enables non-technical users to produce assets without coding agents.</impact>
+  </decision>
+
+  <decision id="gad-218">
+    <title>Desktop client is a local-first project management tool — users build locally, publish to platform</title>
+    <date>2026-04-16</date>
+    <summary>GAD's distribution model: desktop client for local project management, platform for publishing. Users bring their own coding agent subscription (Claude Code, Cursor, etc.) and build locally on their machine. The desktop client provides white-glove setup, project/species/generation management, skill authoring, and VCS editors. Published projects, species, and generations go to the hosted platform. The desktop is NOT a build engine — it orchestrates local tools. Windows is first-class (user's primary platform). Build times are local — no server-side builds. Cloud editors possible if cost-effective, but local-first is the default. The desktop client is essentially the site + editors packaged as a standalone app with local file system access.</summary>
+    <impact>Installer work (decision gad-188) targets desktop distribution. Site components must work both hosted and local. Build pipeline stays local. Platform hosts published artifacts only.</impact>
+  </decision>
+
 </decisions>
 

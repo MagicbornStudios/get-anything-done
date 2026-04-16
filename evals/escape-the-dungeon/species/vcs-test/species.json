@@ -1,0 +1,20 @@
+{
+  "type": "eval",
+  "name": "vcs-test",
+  "description": "VCS portability test: bare v1 game with VCS skills installed. Tests whether an agent can build identifiers + dev panel in a KAPLAY canvas game.",
+  "workflow": "bare",
+  "trace": true,
+  "constraints": {
+    "must_implement_vcs": true,
+    "vcs_skill": "visual-context-system.md",
+    "min_cids_per_scene": 3,
+    "dev_panel_required": true
+  },
+  "tags": ["vcs", "portability-test", "kaplay", "canvas-game"],
+  "inherits_from": "bare",
+  "createdAt": "2026-04-16T20:01:28.755Z",
+  "updatedAt": "2026-04-16T20:01:28.755Z",
+  "authoredAt": "2026-04-16T20:01:28.755Z",
+  "usageCount": 0,
+  "transferable": true
+}
