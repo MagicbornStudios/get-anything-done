@@ -2001,5 +2001,11 @@ Operator priority statement: "I just need it working right now. If we can put it
     <impact>Task 60-01 is unblocked and can now produce vendor/get-anything-done/references/byok-design.md codifying these 8 choices as the authoritative spec. Downstream implementation tasks 60-02..60-08 have concrete targets. Decision D KDF parity flip from scrypt to PBKDF2 means task 60-02 secrets-store uses PBKDF2 on both Node (crypto.pbkdf2Sync) and browser (WebCrypto subtle.deriveKey) — same algorithm, same iteration count, simpler implementation. Master-key UX staging means Windows users get keychain-first day one; non-Windows users use passphrase fallback until platform adapter lands.</impact>
   </decision>
 
+  <decision id="gad-267">
+    <title>Security patterns surfaced during spec/design work become teaching tips</title>
+    <summary>When a spec-authoring or design-doc subagent surfaces defense-in-depth patterns (AEAD+AAD binding, fail-closed defaults, derive-dont-store, migration cutover windows, audit-log privacy tradeoffs, etc.) those patterns should be harvested into the teachings catalog under a 'security' category. Rationale: the llm-from-scratch project covers tokenizer-level LLM internals but the operator has limited exposure to applied context-security patterns (key management, prompt-injection hygiene, scoped-env discipline, gitignore+secret-store failure modes). BYOK spec work (phase 60 task 60-01) generated 6 such patterns which otherwise lived only inside the design doc. Treating them as teaching tips makes them portable — they apply to any agent/LLM app, not just GAD's BYOK surface.</summary>
+    <impact>New teachings category 'security' joins existing context-engineering / gad-framework / llm-internals. Spec/design subagent prompts (gad-doc-writer, researcher agents) gain an explicit directive: 'surface any defense-in-depth patterns you add beyond the original inputs; the main session will tip-author them.' First batch authored retroactively from phase 60 byok-design.md §2 design-decisions additions. Ongoing: phase 60 implementation tasks (60-02..60-08) continue feeding this category as they surface key-lifecycle, scoped-spawn, and browser-crypto patterns.</impact>
+  </decision>
+
 </decisions>
 

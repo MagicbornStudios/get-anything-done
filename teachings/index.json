@@ -171,6 +171,94 @@
       "related": [
         "llm-internals-tokens-01"
       ]
+    },
+    {
+      "id": "security-aead-aad-01",
+      "title": "AEAD + AAD — pin your ciphertext to its context",
+      "category": "security",
+      "difficulty": "intermediate",
+      "tags": [
+        "crypto",
+        "aead",
+        "aes-gcm",
+        "defense-in-depth"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/security/01-aead-with-aad.md",
+      "implementation": [
+        "vendor/get-anything-done/references/byok-design.md"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-fail-closed-01",
+        "security-derive-dont-store-01"
+      ]
+    },
+    {
+      "id": "security-fail-closed-01",
+      "title": "Fail closed — never silently fall back when the safety check fails",
+      "category": "security",
+      "difficulty": "beginner",
+      "tags": [
+        "defense-in-depth",
+        "error-handling",
+        "gitignore",
+        "posture"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/security/02-fail-closed.md",
+      "implementation": [
+        "vendor/get-anything-done/references/byok-design.md"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-aead-aad-01",
+        "security-derive-dont-store-01"
+      ]
+    },
+    {
+      "id": "security-derive-dont-store-01",
+      "title": "Derive, don't store — keep the secret one step away from disk",
+      "category": "security",
+      "difficulty": "intermediate",
+      "tags": [
+        "crypto",
+        "kdf",
+        "keychain",
+        "derived-keys",
+        "defense-in-depth"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/security/03-derive-dont-store.md",
+      "implementation": [
+        "vendor/get-anything-done/references/byok-design.md"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-aead-aad-01",
+        "security-fail-closed-01"
+      ]
     }
   ]
 }
