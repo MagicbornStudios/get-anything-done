@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 pivot dump captured. Read .planning/notes/strategy-pivot-2026-04-17.md FIRST — 22 decisions (gad-233..254) + 11 phases (46-56) + 7 parked todos. TweakCN-OpenAI fork pushed (4b1f5f9), README rewritten, BYOK posture documented. NEXT: decide (a) build gad decisions/phases/todos add CLI first, then port all from note to XML, OR (b) hand-edit XML once as exception. Then phase 46 (TweakCN lib extraction). portfolio-v2 = pilot species personal-portfolio.</next-action>
+  <next-action>2026-04-17 session 2 — CLI gap fixed + snapshot compacted + pivot data ported. New: gad decisions|phases|todos add; gad snapshot --format=compact (default) saves ~13%/~860 tokens per call. Planning state current: gad-233..254 decisions, phases 47-57, 7 todos from strategy-pivot note. NEXT SESSION: read .planning/notes/strategy-pivot-2026-04-17.md, then pick phase 47 (TweakCN lib extraction → packages/tweakcn-openai). Phase 46 (pre-existing 'Site architecture redesign') still active and may overlap new phases — review sequencing first.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
