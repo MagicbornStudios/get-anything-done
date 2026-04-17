@@ -1710,7 +1710,7 @@ const generationCmd = defineCommand({
   meta: {
     name: 'generation',
     description:
-      'Preserved generations: salvage, preserve, verify, open (static build / same as `gad play`), review, report. Does not serve the GAD planning/landing site — use `gad site serve` for that.',
+      'Preserved generations: salvage, preserve, verify, open (HTTP preview of **build artifact** — same as `gad play`), review, report. Not `gad site serve` (planning/marketing Next app).',
   },
   subCommands: {
     salvage: generationSalvage,
@@ -5456,102 +5456,124 @@ const evalReview = defineCommand({
   },
 });
 
-// gad generation open — serve preserved generation static build (same handler as `gad play`).
-// Not `gad site serve` (planning/landing Next extract) — see decision gad-225.
+/**
+ * Serve a preserved generation **build artifact** (HTML/JS/CSS under a directory with index.html).
+ * Not the GAD planning/landing Next app — that is `gad site serve` only (decision gad-225).
+ * Uses `lib/static-http-serve.cjs` (not `site-compile.cjs`) so this path does not load the site pipeline.
+ */
+function servePreservedGenerationBuildArtifact({ project, version: versionArg, logPrefix, noBrowser }) {
+  const projectDir = resolveOrDefaultEvalProjectDir(project);
+
+  if (!fs.existsSync(projectDir)) {
+    outputError(`Eval project not found: ${project}`);
+    return;
+  }
+
+  let version = versionArg;
+  if (!version) {
+    const versions = fs.readdirSync(projectDir).filter(n => /^v\d+$/.test(n)).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+    version = versions[versions.length - 1] || '';
+  }
+
+  if (!version) {
+    outputError(`No runs found for ${project}`);
+    return;
+  }
+
+  const repoRoot = findRepoRoot();
+  const candidates = [
+    path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', project, version, 'index.html'),
+    path.join(projectDir, version, 'game', 'dist', 'index.html'),
+    path.join(projectDir, version, 'dist', 'index.html'),
+    path.join(projectDir, version, 'build', 'index.html'),
+    path.join(projectDir, version, 'index.html'),
+    path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', project, 'index.html'),
+  ];
+
+  let found = null;
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      found = c;
+      break;
+    }
+  }
+
+  if (!found) {
+    console.log(`No preserved build artifact (index.html) found for ${project} ${version}`);
+    console.log('Checked:');
+    for (const c of candidates) console.log(`  ${path.relative(process.cwd(), c)}`);
+    return;
+  }
+
+  const serveDir = path.dirname(path.resolve(found));
+  const { serveStatic } = require('../lib/static-http-serve.cjs');
+  const { exec } = require('child_process');
+
+  const port = 4173 + Math.floor(Math.random() * 500);
+  const host = '127.0.0.1';
+  const previewUrl = `http://${host}:${port}/`;
+
+  console.log(`${logPrefix} preserved generation build artifact (HTML bundle — not \`gad site serve\`)`);
+  console.log(`${logPrefix} artifact root: ${path.relative(process.cwd(), serveDir)}`);
+
+  let opened = false;
+  const openBrowser = () => {
+    if (noBrowser) return;
+    if (opened) return;
+    opened = true;
+    const isWin = process.platform === 'win32';
+    const cmd = isWin ? `start "" "${previewUrl}"` : (process.platform === 'darwin' ? `open "${previewUrl}"` : `xdg-open "${previewUrl}"`);
+    exec(cmd);
+  };
+
+  const server = serveStatic({
+    rootDir: serveDir,
+    port,
+    host,
+    logPrefix,
+    onListening: () => {
+      openBrowser();
+    },
+  });
+
+  if (noBrowser) {
+    console.log(`${logPrefix} --no-browser: embed this preview URL in an iframe (e.g. editor generation preview):`);
+    console.log(`${logPrefix} ${previewUrl}`);
+  }
+
+  console.log(`\n${logPrefix} Press Ctrl+C to stop the server.`);
+  process.on('SIGINT', () => {
+    try {
+      server.close(() => process.exit(0));
+    } catch {
+      process.exit(0);
+    }
+  });
+}
+
+// gad generation open — same as `gad play`; serves build artifact only (see servePreservedGenerationBuildArtifact).
 const evalOpen = defineCommand({
   meta: {
     name: 'open',
     description:
-      'Serve preserved generation static build over HTTP and open browser. Same as `gad play`. For the GAD planning/landing site use `gad site serve`, not this command.',
+      'HTTP preview of a preserved **generation build artifact** (directory with index.html). Not the GAD planning/marketing site (`gad site serve`). Use `--no-browser` to print the preview URL for an editor iframe.',
   },
   args: {
     project: { type: 'positional', description: 'Eval project name (or project/species for nested ids)', required: true },
     version: { type: 'positional', description: 'Version (default: latest)', default: '' },
+    noBrowser: {
+      type: 'boolean',
+      description: 'Do not open a system browser; print the preview URL only (e.g. for iframe embedding in the editor).',
+      default: false,
+    },
   },
   run({ args }) {
-    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
-
-    if (!fs.existsSync(projectDir)) {
-      outputError(`Eval project not found: ${args.project}`);
-      return;
-    }
-
-    // Find version
-    let version = args.version;
-    if (!version) {
-      const versions = fs.readdirSync(projectDir).filter(n => /^v\d+$/.test(n)).sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
-      version = versions[versions.length - 1] || '';
-    }
-
-    if (!version) {
-      outputError(`No runs found for ${args.project}`);
-      return;
-    }
-
-    // Look for build output in common locations (version-specific first)
-    const repoRoot = findRepoRoot();
-    const candidates = [
-      // Portfolio public, per-version (canonical location for preserved builds)
-      path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, version, 'index.html'),
-      // Eval dir per-version
-      path.join(projectDir, version, 'game', 'dist', 'index.html'),
-      path.join(projectDir, version, 'dist', 'index.html'),
-      path.join(projectDir, version, 'build', 'index.html'),
-      path.join(projectDir, version, 'index.html'),
-      // Legacy: portfolio public root (latest only)
-      path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, 'index.html'),
-    ];
-
-    let found = null;
-    for (const c of candidates) {
-      if (fs.existsSync(c)) { found = c; break; }
-    }
-
-    if (!found) {
-      console.log(`No build output found for ${args.project} ${version}`);
-      console.log('Checked:');
-      for (const c of candidates) console.log(`  ${path.relative(process.cwd(), c)}`);
-      return;
-    }
-
-    const serveDir = path.dirname(path.resolve(found));
-    const { serveStatic } = require('../lib/site-compile.cjs');
-    const { exec } = require('child_process');
-
-    const port = 4173 + Math.floor(Math.random() * 500);
-    const host = '127.0.0.1';
-    const logPrefix = '[gad play]';
-
-    console.log(`${logPrefix} generation static build (not the GAD landing site — use \`gad site serve\` for that)`);
-    console.log(`${logPrefix} root: ${path.relative(process.cwd(), serveDir)}`);
-
-    let opened = false;
-    const openBrowser = () => {
-      if (opened) return;
-      opened = true;
-      const isWin = process.platform === 'win32';
-      const url = `http://${host}:${port}/`;
-      const cmd = isWin ? `start "" "${url}"` : (process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`);
-      exec(cmd);
-    };
-
-    const server = serveStatic({
-      rootDir: serveDir,
-      port,
-      host,
-      logPrefix,
-      onListening: () => {
-        openBrowser();
-      },
-    });
-
-    console.log(`\n${logPrefix} Press Ctrl+C to stop the server.`);
-    process.on('SIGINT', () => {
-      try {
-        server.close(() => process.exit(0));
-      } catch {
-        process.exit(0);
-      }
+    const noBrowser = args.noBrowser === true || args['no-browser'] === true;
+    servePreservedGenerationBuildArtifact({
+      project: args.project,
+      version: args.version,
+      logPrefix: '[gad generation open]',
+      noBrowser,
     });
   },
 });
@@ -13352,10 +13374,15 @@ const playCmd = defineCommand({
   meta: {
     name: 'play',
     description:
-      "Serve a preserved generation's static build over HTTP (opens browser). Shorthand for `gad generation open`. Not `gad site serve` (planning/landing UI).",
+      "HTTP preview of a preserved generation's **build artifact** (HTML). Same as `gad generation open`. Not `gad site serve`. Use `--no-browser` for editor iframe workflows.",
   },
   args: {
     target: { type: 'positional', description: 'Project/species/version (e.g. escape-the-dungeon/bare/v3)', required: true },
+    noBrowser: {
+      type: 'boolean',
+      description: 'Do not open a system browser; print the preview URL only.',
+      default: false,
+    },
   },
   run({ args }) {
     const parts = args.target.split('/');
@@ -13365,8 +13392,13 @@ const playCmd = defineCommand({
     }
     const version = parts[parts.length - 1];
     const project = parts.slice(0, -1).join('/');
-    // Delegate to evalOpen with parsed project and version
-    evalOpen.run({ args: { project, version } });
+    const noBrowser = args.noBrowser === true || args['no-browser'] === true;
+    servePreservedGenerationBuildArtifact({
+      project,
+      version,
+      logPrefix: '[gad play]',
+      noBrowser,
+    });
   },
 });
 

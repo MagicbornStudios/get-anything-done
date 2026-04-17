@@ -149,10 +149,12 @@ SDK tree before checking any runtime-local installed layout. These aliases are c
 
 | Command | Serves |
 |---------|--------|
-| `gad site compile` / `gad site serve` | GAD **planning / landing** UI (Next.js app under `site/`, static extract). Project root = dir with `.planning/`. |
-| `gad play <project>/<species>/vN` / `gad generation open` / `gad eval open` | **Preserved generation** static build (`index.html` + assets — e.g. under `public/evals/`). Same HTTP static server implementation as `gad site serve`, different log prefix (`[gad play]`). |
+| `gad site compile` / `gad site serve` | GAD **planning / marketing** Next app (under `site/`) compiled against a project’s `.planning/`. |
+| `gad play …` / `gad generation open` / `gad eval open` | **Preserved generation build artifact** only: directory with `index.html` (game/app HTML output). Implemented with `lib/static-http-serve.cjs` — not `site-compile` (so this is not “launching the site”). |
 
-Do not use `gad site serve` to preview eval game/app builds. Do not use `gad play` for the planning dashboard. Decision **gad-225**.
+Use **`--no-browser`** on `gad generation open` or `gad play` to print the preview URL for an **iframe** (e.g. in-project editor shells) without opening the OS browser.
+
+Do not use `gad site serve` to preview generation builds. Do not use `gad play` for the planning dashboard. Decision **gad-225**.
 
 ## Docs sink
 
