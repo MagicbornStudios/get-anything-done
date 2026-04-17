@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "tips": [
+    {
+      "id": "llm-internals-tokens-01",
+      "title": "Tokens are not words",
+      "category": "llm-internals",
+      "difficulty": "intro",
+      "tags": ["bpe", "vocabulary", "tokenization"],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/llm-internals/01-tokens-are-not-words.md"
+    },
+    {
+      "id": "llm-internals-attention-01",
+      "title": "Attention, in one picture",
+      "category": "llm-internals",
+      "difficulty": "intro",
+      "tags": ["attention", "transformer", "qkv"],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/llm-internals/02-attention-in-one-picture.md"
+    },
+    {
+      "id": "llm-internals-embeddings-01",
+      "title": "From token ID to vector",
+      "category": "llm-internals",
+      "difficulty": "intro",
+      "tags": ["embeddings", "vectors", "lookup"],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/llm-internals/03-from-token-id-to-vector.md"
+    },
+    {
+      "id": "context-engineering-snapshot-compaction-01",
+      "title": "Kill the XML wrappers",
+      "category": "context-engineering",
+      "difficulty": "intermediate",
+      "tags": ["snapshot", "tokens", "compaction", "xml"],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/context-engineering/01-kill-the-xml-wrappers.md"
+    },
+    {
+      "id": "gad-framework-pressure-01",
+      "title": "Pressure is the only ontology",
+      "category": "gad-framework",
+      "difficulty": "intermediate",
+      "tags": ["pressure", "gauges", "ontology"],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/01-pressure-is-the-only-ontology.md"
+    }
+  ]
+}

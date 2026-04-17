@@ -1,0 +1,68 @@
+name: Daily tip
+
+on:
+  schedule:
+    # 08:00 UTC every day
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Backfill date (YYYY-MM-DD). Leave empty for today.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: daily-tip
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Skip if today's tip already exists
+        id: exists
+        run: |
+          DATE="${{ github.event.inputs.date }}"
+          if [ -z "$DATE" ]; then DATE=$(date -u +%Y-%m-%d); fi
+          Y=$(echo "$DATE" | cut -d- -f1)
+          M=$(echo "$DATE" | cut -d- -f2)
+          D=$(echo "$DATE" | cut -d- -f3)
+          FILE="teachings/generated/$Y/$M/$D.md"
+          echo "tip_date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "tip_file=$FILE" >> "$GITHUB_OUTPUT"
+          if [ -f "$FILE" ]; then
+            echo "already_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate tip
+        if: steps.exists.outputs.already_exists == 'false'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TIP_DATE: ${{ steps.exists.outputs.tip_date }}
+        run: node scripts/generate-daily-tip.mjs
+
+      - name: Commit + push
+        if: steps.exists.outputs.already_exists == 'false'
+        run: |
+          git config user.name  "gad-bot"
+          git config user.email "gad-bot@users.noreply.github.com"
+          git add teachings/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "teachings: daily tip ${{ steps.exists.outputs.tip_date }}"
+          git push

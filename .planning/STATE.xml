@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 session 2 — CLI gap fixed + snapshot compacted + pivot data ported. New: gad decisions|phases|todos add; gad snapshot --format=compact (default) saves ~13%/~860 tokens per call. Planning state current: gad-233..254 decisions, phases 47-57, 7 todos from strategy-pivot note. NEXT SESSION: read .planning/notes/strategy-pivot-2026-04-17.md, then pick phase 47 (TweakCN lib extraction → packages/tweakcn-openai). Phase 46 (pre-existing 'Site architecture redesign') still active and may overlap new phases — review sequencing first.</next-action>
+  <next-action>2026-04-17 session 3 — teachings system shipped (seed 5 tips + gad tip CLI + daily generator + GH Actions workflow). New project llm-from-scratch scaffolded (9 phases, 4 decisions). Phase 58 added. Binary rebuild pending — installed gad.exe is stale (use 'node vendor/get-anything-done/bin/gad.cjs ...' until rebuilt). NEXT: (1) set OPENAI_API_KEY GH secret to enable daily workflow, (2) rebuild gad binary to pick up tip + writer subcommands, (3) phase 47 (TweakCN lib extraction) OR phase 01 of llm-from-scratch (BPE tokenizer) — operator pick.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

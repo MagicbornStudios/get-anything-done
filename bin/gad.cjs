@@ -45,6 +45,7 @@ const {
   compactRoadmapSection,
   compactTasksSection,
 } = require('../lib/snapshot-compact.cjs');
+const teachings = require('../lib/teachings-reader.cjs');
 const { readRequirements } = require('../lib/requirements-reader.cjs');
 const { readErrors } = require('../lib/errors-reader.cjs');
 const { readBlockers } = require('../lib/blockers-reader.cjs');
@@ -2888,7 +2889,7 @@ const docsServe = defineCommand({
     host: { type: 'string', description: 'Bind host', default: '127.0.0.1' },
     port: {
       type: 'string',
-      description: `Explicit TCP port, or leave empty for auto (${GAD_DOCS_SERVE_PORT_DEV} dev, ${GAD_DOCS_SERVE_PORT_CONSUMER} with --consumer, or GAD_DOCS_SERVE_PORT / GAD_DOCS_PORT).`,
+      description: `Explicit TCP port, or leave empty for auto (${GAD_DOCS_SERVE_PORT_DEV} dev, ${GAD_DOCS_SERVE_PORT_CONSUMER} with --consumer, or GAD_DOCS_SERVE_PORT / GAD_DOCS_PORT). When auto-selected and in use, docs serve will try the next ports.`,
       default: '',
     },
     consumer: {
@@ -2931,7 +2932,14 @@ const docsServe = defineCommand({
             : 'dev default (omit --consumer)';
       console.log(`[gad docs] port ${port} (${why})`);
     }
-    serveStatic({ rootDir: absDocsPath, port, host: args.host, logPrefix: '[gad docs]' });
+    serveStatic({
+      rootDir: absDocsPath,
+      port,
+      host: args.host,
+      logPrefix: '[gad docs]',
+      autoPort: source !== 'explicit',
+      maxPortAttempts: 50,
+    });
   },
 });
 
@@ -9860,12 +9868,193 @@ const discoveryTestCmd = defineCommand({
   },
 });
 
+const STARTUP_DELEGATED_ENV = 'GAD_STARTUP_DELEGATED';
+const STARTUP_PRIMARY_EXECUTABLE_ENV = 'GAD_STARTUP_PRIMARY_EXECUTABLE';
+
+function resolveStartupFrameworkRoot() {
+  let repoRoot = null;
+  try {
+    repoRoot = findRepoRoot();
+  } catch {
+    return null;
+  }
+  const candidates = [
+    repoRoot,
+    path.join(repoRoot, 'vendor', 'get-anything-done'),
+  ];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const buildScript = path.join(candidate, 'scripts', 'build-release.mjs');
+    const installScript = path.join(candidate, 'scripts', 'install-gad-windows.ps1');
+    if (fs.existsSync(buildScript) && fs.existsSync(installScript)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function shouldRunStartupSelfRefresh(args, frameworkRoot) {
+  if (!frameworkRoot) return false;
+  if (args['skip-build']) return false;
+  if (process.env.GAD_STARTUP_SKIP_BUILD === '1') return false;
+  return true;
+}
+
+function shouldDelegateStartupToTemporaryExecutable() {
+  if (process.platform !== 'win32') return false;
+  if (process.env[STARTUP_DELEGATED_ENV] === '1') return false;
+  const executable = getPackagedExecutablePath() || process.execPath || '';
+  const basename = path.basename(executable).toLowerCase();
+  return basename === 'gad.exe' || basename === 'get-anything-done.exe';
+}
+
+function delegateStartupToTemporaryExecutable() {
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const primaryExecutable = getPackagedExecutablePath();
+  if (!primaryExecutable || !fs.existsSync(primaryExecutable)) {
+    throw new Error(`Packaged executable not found at ${primaryExecutable || '(empty path)'}`);
+  }
+  const tempExecutable = path.join(
+    os.tmpdir(),
+    `gad-startup-${Date.now()}-${process.pid}.exe`,
+  );
+  fs.copyFileSync(primaryExecutable, tempExecutable);
+  const env = {
+    ...process.env,
+    [STARTUP_DELEGATED_ENV]: '1',
+    [STARTUP_PRIMARY_EXECUTABLE_ENV]: primaryExecutable,
+  };
+  const result = spawnSync(tempExecutable, process.argv.slice(2), {
+    stdio: 'inherit',
+    env,
+  });
+  try { fs.rmSync(tempExecutable, { force: true }); } catch {}
+  process.exit(result.status || 0);
+}
+
+function resolveStartupReleaseArtifactPath(frameworkRoot) {
+  const pkgPath = path.join(frameworkRoot, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const platformLabel = process.platform === 'win32'
+    ? 'windows'
+    : process.platform === 'darwin'
+      ? 'macos'
+      : process.platform;
+  const baseName = `gad-v${pkg.version}-${platformLabel}-${process.arch}`;
+  const artifactName = process.platform === 'win32' ? `${baseName}.exe` : baseName;
+  const artifactPath = path.join(frameworkRoot, 'dist', 'release', artifactName);
+  if (fs.existsSync(artifactPath)) return artifactPath;
+  throw new Error(`Release artifact not found: ${artifactPath}`);
+}
+
+function scheduleDeferredWindowsInstall(installScript, artifactPath) {
+  const { spawn } = require('child_process');
+  const escapedInstaller = String(installScript || '').replace(/'/g, "''");
+  const escapedArtifact = String(artifactPath || '').replace(/'/g, "''");
+  const script = [
+    `$installer='${escapedInstaller}';`,
+    `$artifact='${escapedArtifact}';`,
+    'for ($i = 0; $i -lt 240; $i++) {',
+    '  try {',
+    '    & $installer -Artifact $artifact *> $null;',
+    '    if ($?) { exit 0 }',
+    '  } catch {}',
+    '  Start-Sleep -Milliseconds 250',
+    '}',
+    'exit 1',
+  ].join(' ');
+  const child = spawn(
+    'powershell',
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script],
+    { detached: true, stdio: 'ignore', env: process.env },
+  );
+  child.unref();
+}
+
+function runStartupSelfRefresh(frameworkRoot) {
+  const { spawnSync } = require('child_process');
+  const buildScript = path.join(frameworkRoot, 'scripts', 'build-release.mjs');
+  const installScript = path.join(frameworkRoot, 'scripts', 'install-gad-windows.ps1');
+  const nodeCommand = isPackagedExecutableRuntime() ? 'node' : process.execPath;
+
+  console.log(`[gad startup] dogfood refresh: building from ${frameworkRoot}`);
+  const buildResult = spawnSync(nodeCommand, [buildScript], {
+    cwd: frameworkRoot,
+    stdio: 'inherit',
+    env: process.env,
+  });
+  if (buildResult.error) throw buildResult.error;
+  if (buildResult.status !== 0) {
+    throw new Error(`build-release failed with status ${buildResult.status || 1}`);
+  }
+
+  const artifactPath = resolveStartupReleaseArtifactPath(frameworkRoot);
+  if (process.platform === 'win32') {
+    console.log(`[gad startup] dogfood refresh: installing ${path.basename(artifactPath)}`);
+    const installResult = spawnSync(
+      'powershell',
+      ['-ExecutionPolicy', 'Bypass', '-File', installScript, '-Artifact', artifactPath],
+      { cwd: frameworkRoot, stdio: 'pipe', env: process.env, encoding: 'utf8' },
+    );
+    if (installResult.stdout) process.stdout.write(installResult.stdout);
+    if (installResult.stderr) process.stderr.write(installResult.stderr);
+    if (installResult.error) throw installResult.error;
+    if (installResult.status !== 0) {
+      const combinedOutput = `${installResult.stdout || ''}\n${installResult.stderr || ''}`;
+      const lockConflict = /being used by another process|cannot access the file/i.test(combinedOutput);
+      if (lockConflict) {
+        scheduleDeferredWindowsInstall(installScript, artifactPath);
+        console.log('[gad startup] install deferred: current gad.exe is still running; retry will complete after this command exits.');
+        return;
+      }
+      throw new Error(`install-gad-windows.ps1 failed with status ${installResult.status || 1}`);
+    }
+    return;
+  }
+
+  const targetDir = getDefaultSelfInstallDir();
+  const targetExecutable = path.join(targetDir, 'gad');
+  fs.mkdirSync(targetDir, { recursive: true });
+  fs.copyFileSync(artifactPath, targetExecutable);
+  try { fs.chmodSync(targetExecutable, 0o755); } catch {}
+  console.log(`[gad startup] dogfood refresh: installed ${targetExecutable}`);
+}
+
+function runStartupSnapshot(projectId, sessionArg = []) {
+  const { spawnSync } = require('child_process');
+  const packagedRuntime = isPackagedExecutableRuntime();
+  const command = packagedRuntime
+    ? (process.env[STARTUP_PRIMARY_EXECUTABLE_ENV] || getPackagedExecutablePath())
+    : process.execPath;
+  const commandArgs = packagedRuntime
+    ? ['snapshot', '--projectid', projectId, ...sessionArg]
+    : [__filename, 'snapshot', '--projectid', projectId, ...sessionArg];
+  return spawnSync(command, commandArgs, { stdio: 'inherit', env: process.env });
+}
+
 const startupCmd = defineCommand({
   meta: { name: 'startup', description: 'Print the GAD session-start contract. One-shot answer to "how do I begin working on this project?" (task 42.2-22, fixes chicken-and-egg identified by subagent battery findings 2026-04-15).' },
   args: {
     projectid: { type: 'string', description: 'Project id to snapshot against (default: first root)', default: '' },
+    'skip-build': { type: 'boolean', description: 'Skip dogfood self-refresh build/install when a local framework checkout is detected', default: false },
   },
   run({ args }) {
+    const startupFrameworkRoot = resolveStartupFrameworkRoot();
+    const shouldSelfRefresh = shouldRunStartupSelfRefresh(args, startupFrameworkRoot);
+    if (shouldSelfRefresh && shouldDelegateStartupToTemporaryExecutable()) {
+      delegateStartupToTemporaryExecutable();
+      return;
+    }
+    if (shouldSelfRefresh) {
+      try {
+        runStartupSelfRefresh(startupFrameworkRoot);
+      } catch (err) {
+        console.error(`[gad startup] dogfood refresh failed: ${err.message || err}`);
+        process.exit(1);
+      }
+    }
+
     const lines = [
       'GAD session startup — one command gets you full context.',
       '',
@@ -9950,11 +10139,7 @@ const startupCmd = defineCommand({
       console.log(`Running snapshot now for projectid=${args.projectid}...`);
       console.log('');
       // Delegate to snapshot by re-invoking the process — simplest path.
-      const result = require('child_process').spawnSync(
-        process.execPath,
-        [__filename, 'snapshot', '--projectid', args.projectid, ...sessionArg],
-        { stdio: 'inherit' }
-      );
+      const result = runStartupSnapshot(args.projectid, sessionArg);
       process.exit(result.status || 0);
     }
   },
@@ -13732,6 +13917,113 @@ const playCmd = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// tip command — daily teachings, file-backed, zero API cost
+// ---------------------------------------------------------------------------
+
+function renderTipHeader(tip) {
+  if (!tip) return '(no tips found — run `gad tip reindex` or add files under teachings/static/)';
+  const tags = (tip.tags || []).join(', ');
+  return [
+    `${tip.title}`,
+    `  ${tip.category} · ${tip.difficulty}${tags ? ` · tags: ${tags}` : ''}`,
+    `  source: ${tip.source}${tip.date ? ` · ${tip.date}` : ''}`,
+    `  file: teachings/${tip.path}`,
+  ].join('\n');
+}
+
+function renderTipFull(tip) {
+  if (!tip) return renderTipHeader(null);
+  const body = teachings.stripFrontmatter(teachings.readBody(tip));
+  return body || renderTipHeader(tip);
+}
+
+const tipTodayCmd = defineCommand({
+  meta: { name: 'today', description: "Print today's teaching tip (deterministic pick, zero API cost)" },
+  args: {
+    headers: { type: 'boolean', description: 'Only print the title + metadata, not the body', default: false },
+  },
+  run({ args }) {
+    const tip = teachings.pickToday();
+    console.log(args.headers ? renderTipHeader(tip) : renderTipFull(tip));
+  },
+});
+
+const tipRandomCmd = defineCommand({
+  meta: { name: 'random', description: 'Print a random tip from the catalog' },
+  args: {
+    headers: { type: 'boolean', description: 'Only print the title + metadata, not the body', default: false },
+  },
+  run({ args }) {
+    const tip = teachings.pickRandom();
+    console.log(args.headers ? renderTipHeader(tip) : renderTipFull(tip));
+  },
+});
+
+const tipSearchCmd = defineCommand({
+  meta: { name: 'search', description: 'Substring search across title, tags, category' },
+  args: {
+    query: { type: 'positional', description: 'Query string', required: true },
+  },
+  run({ args }) {
+    const hits = teachings.search(String(args.query));
+    if (hits.length === 0) {
+      console.log(`No tips matching "${args.query}".`);
+      return;
+    }
+    for (const t of hits) console.log(renderTipHeader(t) + '\n');
+    console.log(`${hits.length} tip(s).`);
+  },
+});
+
+const tipListCmd = defineCommand({
+  meta: { name: 'list', description: 'List all tips (optionally filtered by --category)' },
+  args: {
+    category: { type: 'string', description: 'Filter by category slug', default: '' },
+  },
+  run({ args }) {
+    const tips = args.category ? teachings.filterByCategory(args.category) : teachings.listAll();
+    if (tips.length === 0) {
+      console.log('No tips found.');
+      return;
+    }
+    for (const t of tips) console.log(renderTipHeader(t) + '\n');
+    console.log(`${tips.length} tip(s).`);
+  },
+});
+
+const tipCategoriesCmd = defineCommand({
+  meta: { name: 'categories', description: 'List teaching categories with tip counts' },
+  run() {
+    const cats = teachings.listCategories();
+    if (cats.length === 0) {
+      console.log('No categories yet.');
+      return;
+    }
+    for (const c of cats) console.log(`  ${c.category.padEnd(24)} ${c.count}`);
+  },
+});
+
+const tipReindexCmd = defineCommand({
+  meta: { name: 'reindex', description: 'Rescan teachings/ and rewrite index.json' },
+  run() {
+    const n = teachings.reindex();
+    console.log(`Reindexed ${n} tip(s) → teachings/index.json`);
+  },
+});
+
+const tipCmd = defineCommand({
+  meta: { name: 'tip', description: 'Daily teachings — today (default), random, search, list, categories, reindex. File-backed, zero API cost.' },
+  subCommands: {
+    today: tipTodayCmd,
+    random: tipRandomCmd,
+    search: tipSearchCmd,
+    list: tipListCmd,
+    categories: tipCategoriesCmd,
+    reindex: tipReindexCmd,
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -13789,6 +14081,7 @@ const main = defineCommand({
     spawn: spawnCmd,
     breed: breedCmd,
     play: playCmd,
+    tip: tipCmd,
     version: versionCmd,
   },
 });
@@ -13916,6 +14209,20 @@ const main = defineCommand({
   const known = new Set(['list', 'add']);
   if (first === undefined || first.startsWith('-')) {
     a.splice(i + 1, 0, 'list');
+    return;
+  }
+  if (!known.has(first)) return;
+})();
+
+// `gad tip` with no subcommand defaults to `gad tip today`.
+(function injectTipTodayDefault() {
+  const a = process.argv;
+  const i = a.indexOf('tip');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['today', 'random', 'search', 'list', 'categories', 'reindex']);
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'today');
     return;
   }
   if (!known.has(first)) return;

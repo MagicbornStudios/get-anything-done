@@ -400,5 +400,12 @@
     <depends></depends>
   </phase>
 
+  <phase id="58">
+    <title>Daily teachings system — pipeline + site integration</title>
+    <goal>Wire the teachings/ catalog into user-facing surfaces. (1) Snapshot footer: add a one-line 'tip of the day' reference to gad snapshot output (~60 chars, zero token cost beyond that line). (2) GitHub Actions daily-tip.yml tested end-to-end with OPENAI_API_KEY secret. (3) Site /teachings route under phase 46 — card grid, category filter, search, difficulty badges. (4) Optional weekly recap generator. (5) Document contribution path for static tips in teachings/README.md. Content backlog is fed by llm-from-scratch project (decision llm-004 / gad-256) + daily generator.</goal>
+    <status>planned</status>
+    <depends>46</depends>
+  </phase>
+
 </roadmap>
 

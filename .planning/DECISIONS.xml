@@ -1904,5 +1904,29 @@ Operator priority statement: "I just need it working right now. If we can put it
     </references>
   </decision>
 
+  <decision id="gad-255">
+    <title>Daily teachings system — file-backed tips, zero-cost CLI read, daily OpenAI generation</title>
+    <date>2026-04-17</date>
+    <summary>GAD framework ships a teachings/ catalog in vendor/get-anything-done/teachings/. Content layers: static/ (hand-authored canonical tips) and generated/YYYY/MM/ (daily OpenAI output). Surfaces: gad tip (today/random/search/list/categories/reindex), future snapshot footer line, and phase 46 landing-site /teachings route. Reading tips in any surface is pure file I/O — zero API cost in coding agent sessions. Only generation runs a paid model (GitHub Actions cron, 1x/day, OpenAI Responses API with web_search_preview, ~/usr/bin/bash.002/tip). Seeded with five static tips covering tokens, attention, embeddings, snapshot compaction, pressure ontology.</summary>
+    <impact>New lib/teachings-reader.cjs + bin/gad.cjs tipCmd subcommand group. New scripts/generate-daily-tip.mjs. New .github/workflows/daily-tip.yml (requires OPENAI_API_KEY secret). Phase 58 tracks site integration + snapshot-footer wire-up. Also phase 46 (existing) absorbs /teachings route design. Every llm-from-scratch phase is expected to author 3-10 static tips per decision llm-004 — this project IS the primary content source.</impact>
+    <references>
+      <file path="vendor/get-anything-done/teachings/README.md"/>
+      <file path="vendor/get-anything-done/lib/teachings-reader.cjs"/>
+      <file path="vendor/get-anything-done/scripts/generate-daily-tip.mjs"/>
+    </references>
+  </decision>
+
+  <decision id="gad-256">
+    <title>New project llm-from-scratch — learning-first bottom-up coding agent rebuild</title>
+    <date>2026-04-17</date>
+    <summary>New GAD project at projects/llm-from-scratch/ (planning root registered in gad-config.toml). Scope: rebuild the entire coding agent stack from primitives for learning — tokenizer, embeddings, attention, training, inference, sampling, agent scaffolding, context engine, self-managing loop. Not for distribution. Fully functional as an end state. Eventually manages itself via its own model + agent + GAD planning docs. Four foundation decisions scoped inside the project (llm-001..004): learning-not-product, no-library-shortcuts for core concepts, Python for model + TypeScript for agent, every implementation produces teaching tips.</summary>
+    <impact>projects/llm-from-scratch/ directory exists. .planning/ scaffolded with 9 planned phases (01 BPE → 09 self-managing loop). 4 foundation decisions landed. This project becomes the primary content source for teachings/ via decision llm-004. Tech stack: Python (torch) + TypeScript (agent, context, tools). Bridge: stdio JSON-RPC likely.</impact>
+    <references>
+      <file path="projects/llm-from-scratch/README.md"/>
+      <file path="projects/llm-from-scratch/.planning/ROADMAP.xml"/>
+      <file path="projects/llm-from-scratch/.planning/DECISIONS.xml"/>
+    </references>
+  </decision>
+
 </decisions>
 
