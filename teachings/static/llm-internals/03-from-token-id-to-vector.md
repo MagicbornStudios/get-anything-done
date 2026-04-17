@@ -6,6 +6,10 @@ difficulty: intro
 tags: [embeddings, vectors, lookup, rope]
 source: static
 date: 2026-04-17
+implementation: projects/llm-from-scratch/.planning/ROADMAP.xml
+decisions: llm-002
+phases: llm-from-scratch:02
+related: llm-internals-tokens-01, llm-internals-attention-01
 ---
 
 # From token ID to vector
@@ -46,3 +50,8 @@ The embedding table is LEARNED during pretraining — gradient descent pushes to
 ## Takeaway
 
 When you read "the token is projected into Q/K/V," what's actually projected is its learned embedding vector — NOT the string. The string was discarded at step 1. Everything downstream is linear algebra on learned vectors.
+
+## Where this lives in our stack
+
+- **Planned implementation**: `projects/llm-from-scratch/` phase 02 hand-rolls the embedding table + RoPE. No `torch.nn.Embedding` shortcut per decision `llm-002` — forward + backward pass implemented by hand, numerically verified against a reference.
+- **Phase depends**: phase 02 (embeddings) → phase 03 (attention) → phase 04 (stack + training loop). See `projects/llm-from-scratch/.planning/ROADMAP.xml`.

@@ -6,6 +6,10 @@ difficulty: intermediate
 tags: [snapshot, tokens, compaction, xml]
 source: static
 date: 2026-04-17
+implementation: vendor/get-anything-done/lib/snapshot-compact.cjs, vendor/get-anything-done/bin/gad.cjs
+decisions: gad-241, gad-195
+phases: get-anything-done:57
+related: llm-internals-attention-01, llm-internals-tokens-01
 ---
 
 # Kill the XML wrappers
@@ -53,3 +57,12 @@ The one exception: if an existing skill or script greps for `<next-action>` or s
 ## Takeaway
 
 Before shipping any context-dumping pipeline: grep it for closing tags. Count the characters in tags vs content. If tags are more than ~10% of bytes, you're paying for presentation, not information.
+
+## Where this lives in our stack
+
+- **Implementation**: `vendor/get-anything-done/lib/snapshot-compact.cjs` — `compactStateXml`, `compactRoadmapSection`, `compactTasksSection`.
+- **Integration**: `vendor/get-anything-done/bin/gad.cjs` — `gad snapshot --format=compact` (default) vs `--format=xml` (legacy escape hatch).
+- **Decision**: `gad-241` — snapshot + startup output is token-redundant; rewrite to compact format.
+- **Related decision**: `gad-195` — session-scoped snapshot contract, active-mode auto-downgrade.
+- **Phase**: `get-anything-done:57` — already landed early as part of this session's CLI-gap work.
+- **Measured savings**: 26,261 → 22,814 chars (~13%, ~860 tokens/snapshot).

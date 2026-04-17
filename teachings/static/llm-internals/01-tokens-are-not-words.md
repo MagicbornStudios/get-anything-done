@@ -6,6 +6,10 @@ difficulty: intro
 tags: [bpe, vocabulary, tokenization]
 source: static
 date: 2026-04-17
+implementation: projects/llm-from-scratch/.planning/ROADMAP.xml
+decisions: llm-002
+phases: llm-from-scratch:01
+related: llm-internals-embeddings-01, llm-internals-attention-01
 ---
 
 # Tokens are not words
@@ -47,3 +51,8 @@ BPE works by taking the most frequent byte pairs in the training corpus and iter
 ## Takeaway
 
 Before a prompt hits a model, it's chopped into integer IDs — not words. Count tokens when you estimate context budget; never count words.
+
+## Where this lives in our stack
+
+- **Planned implementation**: `projects/llm-from-scratch/` phase 01 will hand-roll a BPE tokenizer on a small corpus. No `tiktoken` — decision `llm-002` forbids library shortcuts for core concepts.
+- **Evidence in GAD itself**: `vendor/get-anything-done/bin/gad.cjs` measures tokens when it prints `~${totalChars / 4} tokens` at the end of every snapshot. That 4-chars-per-token heuristic is direct consequence of BPE subword granularity on English prose.

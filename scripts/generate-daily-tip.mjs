@@ -103,6 +103,10 @@ Length: 300-500 words after the title line. Under 800 if you really need it.
 
 Ground your claim in current real-world practice. If there is a specific recent paper, tool release, or engineering pattern that makes this tip timely (2025 or 2026), reference it. Use web search if needed to verify a claim.
 
+## Backref footer (IMPORTANT)
+
+If and only if you can point at a real file, command, decision, or phase that implements or motivates the idea — whether in the GAD framework, the llm-from-scratch project, or a well-known open-source reference — end the tip with a **## Where this lives in our stack** section. Use concrete repo paths like \`vendor/get-anything-done/lib/snapshot-compact.cjs\`, decision ids like \`gad-241\`, or phase references like \`llm-from-scratch:03\`. If you cannot honestly cite anything in this repo or a well-known external reference, omit the section — do not invent paths.
+
 Output format (NO code fencing around the whole response, NO yaml frontmatter — we add that):
 
 # <Title>

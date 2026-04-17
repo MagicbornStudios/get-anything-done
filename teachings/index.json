@@ -1,55 +1,148 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "tips": [
-    {
-      "id": "llm-internals-tokens-01",
-      "title": "Tokens are not words",
-      "category": "llm-internals",
-      "difficulty": "intro",
-      "tags": ["bpe", "vocabulary", "tokenization"],
-      "source": "static",
-      "date": "2026-04-17",
-      "path": "static/llm-internals/01-tokens-are-not-words.md"
-    },
-    {
-      "id": "llm-internals-attention-01",
-      "title": "Attention, in one picture",
-      "category": "llm-internals",
-      "difficulty": "intro",
-      "tags": ["attention", "transformer", "qkv"],
-      "source": "static",
-      "date": "2026-04-17",
-      "path": "static/llm-internals/02-attention-in-one-picture.md"
-    },
-    {
-      "id": "llm-internals-embeddings-01",
-      "title": "From token ID to vector",
-      "category": "llm-internals",
-      "difficulty": "intro",
-      "tags": ["embeddings", "vectors", "lookup"],
-      "source": "static",
-      "date": "2026-04-17",
-      "path": "static/llm-internals/03-from-token-id-to-vector.md"
-    },
     {
       "id": "context-engineering-snapshot-compaction-01",
       "title": "Kill the XML wrappers",
       "category": "context-engineering",
       "difficulty": "intermediate",
-      "tags": ["snapshot", "tokens", "compaction", "xml"],
+      "tags": [
+        "snapshot",
+        "tokens",
+        "compaction",
+        "xml"
+      ],
       "source": "static",
       "date": "2026-04-17",
-      "path": "static/context-engineering/01-kill-the-xml-wrappers.md"
+      "path": "static/context-engineering/01-kill-the-xml-wrappers.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/snapshot-compact.cjs",
+        "vendor/get-anything-done/bin/gad.cjs"
+      ],
+      "decisions": [
+        "gad-241",
+        "gad-195"
+      ],
+      "phases": [
+        "get-anything-done:57"
+      ],
+      "related": [
+        "llm-internals-attention-01",
+        "llm-internals-tokens-01"
+      ]
     },
     {
       "id": "gad-framework-pressure-01",
       "title": "Pressure is the only ontology",
       "category": "gad-framework",
       "difficulty": "intermediate",
-      "tags": ["pressure", "gauges", "ontology"],
+      "tags": [
+        "pressure",
+        "gauges",
+        "ontology",
+        "philosophy"
+      ],
       "source": "static",
       "date": "2026-04-17",
-      "path": "static/gad-framework/01-pressure-is-the-only-ontology.md"
+      "path": "static/gad-framework/01-pressure-is-the-only-ontology.md",
+      "implementation": [
+        "vendor/get-anything-done/references/pressure-formula.md"
+      ],
+      "decisions": [
+        "gad-250",
+        "gad-251",
+        "gad-220",
+        "gad-222"
+      ],
+      "phases": [
+        "get-anything-done:56"
+      ],
+      "related": [
+        "context-engineering-snapshot-compaction-01"
+      ]
+    },
+    {
+      "id": "llm-internals-tokens-01",
+      "title": "Tokens are not words",
+      "category": "llm-internals",
+      "difficulty": "intro",
+      "tags": [
+        "bpe",
+        "vocabulary",
+        "tokenization"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/llm-internals/01-tokens-are-not-words.md",
+      "implementation": [
+        "projects/llm-from-scratch/.planning/ROADMAP.xml"
+      ],
+      "decisions": [
+        "llm-002"
+      ],
+      "phases": [
+        "llm-from-scratch:01"
+      ],
+      "related": [
+        "llm-internals-embeddings-01",
+        "llm-internals-attention-01"
+      ]
+    },
+    {
+      "id": "llm-internals-attention-01",
+      "title": "Attention, in one picture",
+      "category": "llm-internals",
+      "difficulty": "intro",
+      "tags": [
+        "attention",
+        "transformer",
+        "qkv"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/llm-internals/02-attention-in-one-picture.md",
+      "implementation": [
+        "projects/llm-from-scratch/.planning/ROADMAP.xml"
+      ],
+      "decisions": [
+        "llm-002"
+      ],
+      "phases": [
+        "llm-from-scratch:03"
+      ],
+      "related": [
+        "llm-internals-tokens-01",
+        "llm-internals-embeddings-01",
+        "context-engineering-snapshot-compaction-01"
+      ]
+    },
+    {
+      "id": "llm-internals-embeddings-01",
+      "title": "From token ID to vector",
+      "category": "llm-internals",
+      "difficulty": "intro",
+      "tags": [
+        "embeddings",
+        "vectors",
+        "lookup",
+        "rope"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/llm-internals/03-from-token-id-to-vector.md",
+      "implementation": [
+        "projects/llm-from-scratch/.planning/ROADMAP.xml"
+      ],
+      "decisions": [
+        "llm-002"
+      ],
+      "phases": [
+        "llm-from-scratch:02"
+      ],
+      "related": [
+        "llm-internals-tokens-01",
+        "llm-internals-attention-01"
+      ]
     }
   ]
 }

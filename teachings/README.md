@@ -47,6 +47,12 @@ difficulty: intro        # intro | intermediate | advanced
 tags: [bpe, vocabulary, tokenization]
 source: static           # static | generated
 date: 2026-04-17
+
+# Backrefs — concrete pointers so the reader can go read the code
+implementation: projects/llm-from-scratch/.planning/ROADMAP.xml, vendor/get-anything-done/lib/snapshot-compact.cjs
+decisions: gad-241, llm-002
+phases: get-anything-done:57, llm-from-scratch:01
+related: llm-internals-tokens-01, llm-internals-attention-01
 ---
 
 # Tokens are not words
@@ -56,7 +62,22 @@ date: 2026-04-17
 ## Takeaway
 
 <one actionable sentence>
+
+## Where this lives in our stack
+
+<concrete sentences pointing at the implementation + decisions + phases>
 ```
+
+### Backref fields (all optional, comma-separated flat lists)
+
+| Field | Example | Meaning |
+|---|---|---|
+| `implementation` | `path/to/file.cjs, path/to/other.mjs` | Files where the concept is (or will be) coded in this repo. |
+| `decisions` | `gad-241, llm-002` | DECISIONS.xml ids that formalize or motivate the tip. |
+| `phases` | `get-anything-done:57, llm-from-scratch:01` | ROADMAP.xml phases that implement or depend on the concept. Format `project:phaseId`. |
+| `related` | `llm-internals-tokens-01` | Sibling tips the reader should follow. |
+
+Backrefs are rendered as a "Backrefs" block by `gad tip` and a compact "implementation/decisions/phases/related" block by `gad tip --headers`. They let a reader ask "where does this live in our code?" and immediately navigate there.
 
 ## Contributing
 

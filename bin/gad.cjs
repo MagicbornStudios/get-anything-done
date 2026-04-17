@@ -14003,18 +14003,43 @@ const playCmd = defineCommand({
 function renderTipHeader(tip) {
   if (!tip) return '(no tips found — run `gad tip reindex` or add files under teachings/static/)';
   const tags = (tip.tags || []).join(', ');
-  return [
+  const lines = [
     `${tip.title}`,
     `  ${tip.category} · ${tip.difficulty}${tags ? ` · tags: ${tags}` : ''}`,
     `  source: ${tip.source}${tip.date ? ` · ${tip.date}` : ''}`,
     `  file: teachings/${tip.path}`,
-  ].join('\n');
+  ];
+  const refs = renderTipBackrefs(tip);
+  if (refs) lines.push(refs);
+  return lines.join('\n');
+}
+
+function renderTipBackrefs(tip) {
+  if (!tip) return '';
+  const lines = [];
+  if (tip.implementation && tip.implementation.length) {
+    lines.push(`  implementation:`);
+    for (const p of tip.implementation) lines.push(`    - ${p}`);
+  }
+  if (tip.decisions && tip.decisions.length) {
+    lines.push(`  decisions: ${tip.decisions.join(', ')}`);
+  }
+  if (tip.phases && tip.phases.length) {
+    lines.push(`  phases: ${tip.phases.join(', ')}`);
+  }
+  if (tip.related && tip.related.length) {
+    lines.push(`  related: ${tip.related.join(', ')}`);
+  }
+  return lines.join('\n');
 }
 
 function renderTipFull(tip) {
   if (!tip) return renderTipHeader(null);
   const body = teachings.stripFrontmatter(teachings.readBody(tip));
-  return body || renderTipHeader(tip);
+  if (!body) return renderTipHeader(tip);
+  const refs = renderTipBackrefs(tip);
+  const backrefBlock = refs ? `\n\n---\n\n**Backrefs**\n\n${refs.replace(/^  /gm, '')}\n` : '';
+  return body + backrefBlock;
 }
 
 const tipTodayCmd = defineCommand({

@@ -6,6 +6,10 @@ difficulty: intermediate
 tags: [pressure, gauges, ontology, philosophy]
 source: static
 date: 2026-04-17
+implementation: vendor/get-anything-done/references/pressure-formula.md
+decisions: gad-250, gad-251, gad-220, gad-222
+phases: get-anything-done:56
+related: context-engineering-snapshot-compaction-01
 ---
 
 # Pressure is the only ontology
@@ -55,3 +59,11 @@ If the answers are "none / none / none" but the commit count is high, you produc
 ## Takeaway
 
 Realization is not an accumulation of activity. It's a function of sustained friction against the real problem. When your gauges light up but nothing feels harder than yesterday, you're probably measuring motion.
+
+## Where this lives in our stack
+
+- **Formula**: `vendor/get-anything-done/references/pressure-formula.md` — canonical pressure definition and inputs (decisions `gad-220`, `gad-222`).
+- **North-star decision**: `gad-250` — "Nothing exists in a project until pressure is produced."
+- **Gauge bank decision**: `gad-251` — decisions / errors-and-attempts / notes / task-throughput, all pressure-gated. VCS hit rate deliberately excluded.
+- **Phase**: `get-anything-done:56` — `packages/gauges` will implement all four gauges with pressure as a mandatory input multiplier.
+- **Self-eval signal**: `vendor/get-anything-done/site/scripts/compute-self-eval.mjs` emits `pressure_per_phase` — the authoritative metric for any phase's realization level.
