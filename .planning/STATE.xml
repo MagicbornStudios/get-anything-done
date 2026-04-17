@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 S7 close. Phase 59 PLAN.md landed (9 tasks, 6 waves, 11 risks, 5 open Qs). Phase 60 BYOK discussion doc landed (8 design Qs with defaults). BOTH AWAITING OPERATOR INPUT. Phase 59 blockers: Q1 planning-app binary bundling path (recommend B), Q2 teachings-reader migration timing, Q3 BYOK-status placeholder (recommend C), Q4 landing /my-projects ownership post-split. Phase 60: reply 'go' or letter-flips. NEXT: operator reviews both docs and signs off, then 59-01 (scaffold planning-app) starts.</next-action>
+  <next-action>2026-04-17 S8 close. Phase 59 Q1-Q5 signed off (gad-265). Phase 60 A-H signed off (gad-266, KDF flipped scrypt-&gt;PBKDF2 for browser/CLI parity). Phase 59 task 59-01 done — apps/planning-app/ scaffolded as pnpm workspace entry @portfolio/planning-app, port 3002, redirect / -&gt; /my-projects placeholder. Task 60-01 (byok-design.md) subagent RUNNING in background. NEXT: (1) verify pnpm install picks up new workspace, (2) smoke-test dev server on 3002, (3) wave 2: 59-02 shared primitives + 59-05 gad planning serve CLI (parallel).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

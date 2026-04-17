@@ -1875,8 +1875,9 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     </task>
   </phase>
   <phase id="59">
-    <task id="59-01" type="scaffold" status="planned">
+    <task id="59-01" type="scaffold" status="done" skill="default" agent="default" agent-role="default" runtime="claude-code">
       <goal>Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home page redirecting to /my-projects, tailwind config mirroring the landing app, tsconfig paths. Runs on a distinct dev port (3002) so it coexists with the landing app during migration.</goal>
+      <implementation>apps/planning-app/{package.json,tsconfig.json,next.config.mjs,postcss.config.mjs,next-env.d.ts,README.md,app/layout.tsx,app/globals.css,app/page.tsx,app/my-projects/page.tsx}</implementation>
     </task>
     <task id="59-02" type="refactor" status="planned">
       <goal>Extract shared UI primitives into a consumable location. Candidates: MarketingShell (rename to AppShell with slot-based navigation), SectionEpigraph, SiteSection, SiteProse. Options: (a) packages/ui-shared workspace package, (b) direct imports from vendor/get-anything-done/site/components/site/ with a re-export barrel. Pick (b) initially — faster, defer package extraction until a third consumer emerges.</goal>
