@@ -1,11 +1,11 @@
 # GET ANYTHING DONE
 
-GAD is an operational CLI, planning framework, and evaluation system for coding-agent workflows.
+GAD is an operational CLI, planning framework, and evolutionary system for coding-agent workflows.
 It is not a coding-agent runtime by itself. You run GAD alongside Claude Code, Codex, and the
-other supported runtimes to keep planning, telemetry, eval preservation, and human review
+other supported runtimes to keep planning, telemetry, generation preservation, and human review
 coherent as the work scales.
 
-GAD exists because raw agent sessions drift. Context gets noisy, plans go stale, evals become
+GAD exists because raw agent sessions drift. Context gets noisy, plans go stale, generations become
 hard to compare, and you stop knowing whether progress came from a better agent, a better
 framework, or just a different prompt. GAD is the layer that makes those runs operational.
 
@@ -13,7 +13,7 @@ framework, or just a different prompt. GAD is the layer that makes those runs op
 
 - gives repos a living planning loop
 - keeps agent work tied to explicit project state
-- scaffolds controlled eval runs with preserved code, builds, logs, and review data
+- scaffolds controlled generations with preserved code, builds, logs, and review data
 - tracks runtime identity so Claude Code vs Codex comparisons can be first-class
 - ships skills, hooks, templates, and agents as framework assets instead of one-off prompts
 
@@ -124,18 +124,19 @@ The important split is:
 2. Install the `gad` executable from GitHub Releases.
 3. Install any GAD skills you want with `npx skills add ...`.
 4. Run `gad install all --claude --global` or `gad install all --codex --global`.
-5. Start work with `gad snapshot --projectid <id>` or scaffold an eval with `gad eval setup --project <name>`.
+5. Start work with `gad snapshot --projectid <id>` or scaffold a new species with `gad projects init` and `gad species create`.
 
-Core flow:
+Core flow (2026-04 canonical — the `gad eval` subcommand is deprecated):
 
 ```bash
-gad snapshot --projectid <id>
-gad eval list
-gad eval setup --project my-eval
-gad eval run --project my-eval --prompt-only --runtime codex
-gad eval preserve my-eval v1 --from <worktree>
-gad eval verify
-gad eval report
+gad projects init --projectid my-project --name "My Project"
+gad species create --project my-project --name default
+gad snapshot --projectid my-project
+gad species list --project my-project
+gad spawn my-project/default --prompt-only --runtime codex
+gad generation preserve my-project v1 --from <worktree>
+gad generation verify
+gad generation report
 ```
 
 ## Optional OpenAI Image Generation (Disabled by Default)
@@ -181,7 +182,7 @@ Each completed run is designed to preserve:
 - runtime identity for the actual agent/runtime that performed the work
 - human review
 
-New eval runs also stamp runtime identity and per-run log directories so Claude Code vs Codex
+New generations also stamp runtime identity and per-run log directories so Claude Code vs Codex
 comparisons remain attributable.
 
 ## Planning model
@@ -194,7 +195,7 @@ At a high level:
 2. pick one planned task
 3. implement it
 4. update planning artifacts
-5. preserve evidence when the work is an eval or milestone-worthy step
+5. preserve evidence when the work is a generation or milestone-worthy step
 
 For GAD’s own framework assets, the canonical authored consumer/runtime content now lives under:
 
@@ -270,9 +271,9 @@ gad install all --claude --global
 gad install all --codex --global
 ```
 
-If eval verification fails on runtime identity:
+If generation verification fails on runtime identity:
 
-- regenerate the run with `gad eval run --runtime <runtime>`
+- regenerate with `gad spawn <project>/<species> --runtime <runtime>`
 - ensure `GAD_RUNTIME`, `GAD_LOG_DIR`, and `GAD_EVAL_TRACE_DIR` were set for that run
 
 If you are using the source path and hook output looks stale:

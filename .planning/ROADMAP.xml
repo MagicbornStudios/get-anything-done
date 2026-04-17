@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <roadmap>
+  <!--
+    Transitional vocabulary note (decision D-16, task 43-10):
+    Pre-phase-43 entries use "round" for what we now call **evolution** (a
+    numbered sequence of generations across species), and "vN" per project
+    for what we now call **generation** per species (e.g. escape-the-dungeon/
+    bare/v3). Phase 43 formalized the project -> species -> generation schema;
+    earlier phase prose is preserved verbatim per D-15 and should be read
+    with this mapping in mind. New work uses the canonical vocabulary.
+  -->
   <phase id="01">
     <title>Foundation</title>
     <goal>Citty-based CJS CLI scaffold. bin/gad.cjs, defineCommand, workspace/projects commands, planning-config.toml loading, findRepoRoot.</goal>

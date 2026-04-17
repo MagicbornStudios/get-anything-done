@@ -139,8 +139,8 @@ SDK tree before checking any runtime-local installed layout. These aliases are c
 | Skill | Purpose |
 |-------|---------|
 | `manuscript` | Fiction/book creation methodology |
-| `eval-run` | Run a GAD evaluation |
-| `eval-report` | Compare eval runs |
+| `eval-run` | Run a generation via `gad spawn` (legacy skill name; the CLI is now `gad spawn <project>/<species>`) |
+| `eval-report` | Compare generations via `gad generation report` |
 | `write-intent` | Capture project intent into planning docs |
 | `write-feature-doc` | Produce a feature doc into the sink |
 | `write-tech-doc` | Produce a technical breakdown doc |

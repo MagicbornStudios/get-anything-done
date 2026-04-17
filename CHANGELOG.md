@@ -6,6 +6,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- `gad breed --project <id> --parentA <s> --parentB <s> --name <new>` — merge two species into a new one (decision gad-219). parentA precedence on scalar conflicts; arrays unioned + deduped; constraints merged; `bredFrom: [parentA, parentB]` recorded. `breedSpecies()` added to `lib/eval-data-access.cjs`.
+
+### Changed
+- Canonical CLI vocabulary for the generation workflow: `gad projects init` → `gad species create` → `gad spawn <project>/<species>` → `gad generation preserve|verify|review|report`. The `gad eval <subcommand>` surface is deprecated (still functional) and shows DEPRECATED in help output.
+- README.md and docs/quick-start.md rewritten to the canonical CLI shape.
+- Landing site TRACK 1 vocabulary audit (task 45-15 done): nav-shared, PlayableTeaser, /downloads, Templates, Footer, playable-shared descriptions, round-results, ProjectMarketHeader, layout metadata — all rebranded from "eval project / planning packs" to "species / generation / species templates". Residual "eval" in generated data files is sourced from historical decision text (durable historical record, intentionally preserved).
+- Footer stale-link repair: `/#lineage` → `/#agent-handoff-cycle` (decision gad-196 drift), `/#framework` → `/#visual-context`, `/#templates` → `/downloads`.
+- /how-it-works adds a dedicated "Pressure" section (decisions gad-145, gad-220, gad-222): formula `P = T + C_a·w_c + C_l·w_l + D·w_d + (D/T)·w_r`, 5-row dimension table, Shannon-parallel entropy decomposition.
+
+### Notes
+- Session cost shape + agent profile modes captured at `.planning/notes/session-dump-heuristics-2026-04-16.md`. junior/balanced/senior as session-start configuration, not runtime heuristic. Heuristic-driven auto-dump rejected as too fragile.
+- Three new todos captured: parallel-subagent cost article, per-agent task outbox pattern, lightweight-agent + scoped-snapshot profiles.
+
 ## [1.33.0] - 2026-04-14
 
 First GitHub release cut of GAD with downloadable Windows installer artifacts attached. Sprint 9 delta — 376 commits since 1.32.0 — covering the evolution/skill pipeline, site planning surfaces, eval preservation, the full `gad skill` subcommand, encounter-style snapshot hydration, and the release pipeline itself.
