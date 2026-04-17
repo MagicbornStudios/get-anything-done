@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 S8 close. Phase 59 Q1-Q5 signed off (gad-265). Phase 60 A-H signed off (gad-266, KDF flipped scrypt-&gt;PBKDF2 for browser/CLI parity). Phase 59 task 59-01 done — apps/planning-app/ scaffolded as pnpm workspace entry @portfolio/planning-app, port 3002, redirect / -&gt; /my-projects placeholder. Task 60-01 (byok-design.md) subagent RUNNING in background. NEXT: (1) verify pnpm install picks up new workspace, (2) smoke-test dev server on 3002, (3) wave 2: 59-02 shared primitives + 59-05 gad planning serve CLI (parallel).</next-action>
+  <next-action>2026-04-17 S9 close. Phase 60 task 60-01 done — references/byok-design.md 926 lines, subagent added 6 defense-in-depth details beyond A-H sign-off (AAD slot-swap prevention, fail-closed gitignore, non-logged reads, keychain stores derived bytes, test override, env-fallback cutover). Phase 59 scaffolding (59-01) in apps/planning-app/ awaiting pnpm install. NEXT: (1) pnpm install + smoke-test port 3002, (2) phase 59 wave 2 — 59-02 shared primitives || 59-05 gad planning serve CLI, (3) phase 60 wave 2 — 60-02 secrets-store + Windows keychain adapter.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
