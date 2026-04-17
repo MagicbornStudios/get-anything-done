@@ -212,6 +212,11 @@ always re-derivable from passphrase + salt.
     "saltB64": "<16-byte base64>",
     "keyLengthBits": 256
   },
+  "verifier": {
+    "nonceB64": "<12-byte base64>",
+    "ciphertextB64": "<base64 — encrypts constant VERIFIER_PLAINTEXT>",
+    "authTagB64": "<16-byte base64>"
+  },
   "keys": {
     "<KEY_NAME>": {
       "currentVersion": <int>,
@@ -256,6 +261,27 @@ always re-derivable from passphrase + salt.
 | `keys.<X>.provider` | string | no | Free-text provider label (e.g. `"openai"`, `"anthropic"`, `"replicate"`). |
 | `keys.<X>.scope` | string | no | Free-text scope label (e.g. `"model-api"`, `"image-gen"`, `"telemetry"`). |
 | `keys.<X>.lastRotated` | ISO8601 | yes | Updated on rotation; equals `addedAt` of current version. |
+| `verifier` | object | yes (new) | Passphrase-verifier slot (see §5.4). Added during 60-02 implementation to distinguish `PASSPHRASE_INVALID` from `BAG_CORRUPT` per §12 error contract. Legacy envelopes without this field skip the gate (backward-compat). |
+
+### 5.4 Passphrase verifier slot
+
+AEAD alone produces a single failure symptom — "auth tag verify failed" — which can mean *wrong passphrase*, *tampered ciphertext*, *corrupted nonce*, or *AAD mismatch*. §12 requires distinguishing `PASSPHRASE_INVALID` from `BAG_CORRUPT` for operator experience.
+
+**Mechanism:** at envelope creation, encrypt a fixed known plaintext (`VERIFIER_PLAINTEXT = "gad-secrets-store-verifier-v1"`) under the master key and store the resulting ciphertext + auth tag + nonce in `envelope.verifier`. AAD for the verifier is `<projectId>|__verifier__|0` (parallels the per-key AAD convention from §3.3 to prevent cross-bag verifier swap).
+
+**Unlock flow:**
+
+1. Derive candidate master key from passphrase (or read from keychain).
+2. Attempt to decrypt `envelope.verifier` with the candidate key + fixed AAD.
+3. If decrypt fails → throw `PASSPHRASE_INVALID`. (User mistyped or keychain drift.)
+4. If decrypt succeeds but plaintext doesn't match `VERIFIER_PLAINTEXT` → throw `PASSPHRASE_INVALID`. (Key derivation was right but something else is wrong; safest to treat as auth failure.)
+5. If decrypt succeeds and plaintext matches → master key is correct. Any subsequent AEAD failure on a user key is `BAG_CORRUPT`, not passphrase.
+
+**Cost:** one AES-GCM decrypt per unlock (~microseconds). The UX win is clean error routing — operators see "wrong passphrase, try again" vs "envelope corrupted, restore backup" and can act.
+
+**Backward compat:** envelopes written before this addition have no `verifier` field. On unlock, a missing field skips the gate (same behavior as before — first key decrypt doubles as verifier). New envelopes always include it. Migration to add the field to legacy envelopes happens lazily on the next `set`/`rotate`.
+
+**See also:** teachings tip `security-passphrase-verifier-01` generalizes the pattern beyond BYOK.
 
 ### 5.3 Concrete example — two keys, one rotated
 

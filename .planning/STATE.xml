@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 S9 close. Phase 60 task 60-01 done — references/byok-design.md 926 lines, subagent added 6 defense-in-depth details beyond A-H sign-off (AAD slot-swap prevention, fail-closed gitignore, non-logged reads, keychain stores derived bytes, test override, env-fallback cutover). Phase 59 scaffolding (59-01) in apps/planning-app/ awaiting pnpm install. NEXT: (1) pnpm install + smoke-test port 3002, (2) phase 59 wave 2 — 59-02 shared primitives || 59-05 gad planning serve CLI, (3) phase 60 wave 2 — 60-02 secrets-store + Windows keychain adapter.</next-action>
+  <next-action>2026-04-17 S11 close. Phase 59 wave 2 complete: 59-02 + 59-05 done. Phase 60 wave 2 in: 60-02 secrets-store + Windows DPAPI keychain + 20/20 tests done (subagent 666d8c6). 2 new security tips harvested (verifier-slot, fail-closed-ordering) — 11 tips total. byok-design.md §5 extended with verifier-slot spec (§5.4). NEXT wave 3: parallel — 59-03 port /planning, 59-06 gad start, 60-03 gad env CLI family. All three spawnable as subagents; 60-03 blocks 60-04 scoped-spawn.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
@@ -45,7 +45,7 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-16T23:00:00.000Z</last-updated>
+  <last-updated>2026-04-17T23:04:43.414Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
 

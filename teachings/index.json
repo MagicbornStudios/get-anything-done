@@ -259,6 +259,64 @@
         "security-aead-aad-01",
         "security-fail-closed-01"
       ]
+    },
+    {
+      "id": "security-passphrase-verifier-01",
+      "title": "Passphrase verifier — distinguish wrong-key from tampered-data",
+      "category": "security",
+      "difficulty": "intermediate",
+      "tags": [
+        "crypto",
+        "aead",
+        "error-handling",
+        "ux"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/security/04-passphrase-verifier.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/secrets-store.cjs"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-aead-aad-01",
+        "security-fail-closed-01"
+      ]
+    },
+    {
+      "id": "security-fail-closed-ordering-01",
+      "title": "Fail-closed ordering — run the guard before any on-disk change",
+      "category": "security",
+      "difficulty": "beginner",
+      "tags": [
+        "defense-in-depth",
+        "error-handling",
+        "atomicity",
+        "ordering"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/security/05-fail-closed-ordering.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/secrets-store.cjs"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-fail-closed-01",
+        "security-aead-aad-01"
+      ]
     }
   ]
 }
