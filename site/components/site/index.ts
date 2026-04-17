@@ -11,3 +11,4 @@ export {
   type SiteSectionHeadingProps,
 } from "./SiteSectionHeading";
 export { SiteTextCard, type SiteTextCardProps } from "./SiteTextCard";
+export { SectionEpigraph } from "./SectionEpigraph";

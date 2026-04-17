@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { notFound } from "next/navigation";
-import { MarketingShell } from "@/components/site";
+import { MarketingShell, SectionEpigraph } from "@/components/site";
 import {
   EVAL_PROJECTS,
   EVAL_TEMPLATES,
@@ -130,18 +130,25 @@ export default async function ProjectPage({
   //   → Bugs → Scoring weights. Findings moved above Requirements so
   //   visitors see outcomes before inputs. Workflow visualization and VCS
   //   showcase are scoped out to a 45-13 follow-up.
+  // Section epigraphs (45-16): use project id as the seed so the picks
+  // are stable across renders AND vary between projects — a different
+  // project shows a different rotation of Sun Tzu lines.
   const overviewContent = (
     <>
       <ProjectHeroSection project={project} planning={planning} template={template} />
       <ProjectStatsBar projectName={projectName} runs={runs} />
+      <SectionEpigraph section="hero" seed={`project-${project.id}-hero`} />
       <ProjectRunsSection runs={runs} />
+      <SectionEpigraph section="bestiary" seed={`project-${project.id}-bestiary`} />
       <ProjectFindingsSection projectId={project.id} />
       <ProjectRequirementsSection projectId={project.id} />
+      <SectionEpigraph section="planning" seed={`project-${project.id}-planning`} />
       <ProjectSkillsScopeSection project={project} runs={runs} />
       {project.workflow === "emergent" && runs.length > 0 ? (
         <ProjectEmergentLineageSection runs={runs} />
       ) : null}
       <ProjectBugsSection projectId={project.id} />
+      <SectionEpigraph section="scoring" seed={`project-${project.id}-scoring`} />
       <ProjectScoringWeightsSection project={project} />
     </>
   );

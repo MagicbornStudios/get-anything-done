@@ -58,7 +58,9 @@ Operator directive 2026-04-16: do visible content, stay on it until the chain br
 
 45-13 done (pragmatic cut): new `ProjectStatsBar` (4 cells — generations / species / best human review / latest) + Overview composition reorder (Hero → StatsBar → Runs → Findings-before-Requirements → Skills → lineage → Bugs → Scoring). Workflow visualization + VCS showcase deferred to todo `2026-04-16-45-13-followup-workflow-vcs-showcase.md`; doing them inline would have exploded scope mid-sprint.
 
-NEXT in visible-content chain: 45-16 hero copy + epigraphs (consumes 45-05 registry + 45-13 landing) → 45-14 type ramp + palette → 45-17 logo/favicon → 45-18 marketplace integration verification.</next-action>
+45-16 done: new `SectionEpigraph` component in `@/components/site`. Six dividers on landing (hero/system/planning/evolution/findings/marketplace) + four on project Overview (hero/bestiary/planning/scoring) with seed-deterministic picks. Hero copy polish: fixed "roto skills" → "proto-skills" typo, added evolutionary framing ("species mutate, generations compete, survivors promote") without rewriting the approved "context under pressure" tagline.
+
+NEXT in visible-content chain: 45-14 type ramp + color palette — scope to audit-first, don't blow up tokens unless necessary. Then 45-17 logo/favicon (may need asset decisions), 45-18 marketplace integration verify.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

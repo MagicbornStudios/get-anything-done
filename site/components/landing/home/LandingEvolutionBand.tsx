@@ -44,9 +44,10 @@ export function LandingEvolutionBand() {
           proseSize="md"
           proseClassName="max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg"
         >
-          GAD is a context system: uncertainty in a phase (Shannon entropy) signals where new skills
-          should form. Pressure comes from the work itself - then candidates, review, and promotion
-          into permanent roto skills for your workflow.
+          GAD is an evolutionary context system: uncertainty in a phase (Shannon entropy) signals
+          where new skills should form. Pressure comes from the work itself — species mutate,
+          generations compete, and the survivors promote into permanent proto-skills for your
+          workflow.
         </SiteSectionIntro>
 
         <div className="mt-12">

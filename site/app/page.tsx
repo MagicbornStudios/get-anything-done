@@ -5,17 +5,23 @@ import { LandingInstallerUpstreamBand } from "@/components/landing/home/LandingI
 import { LandingVisualContextAndPromptBand } from "@/components/landing/home/LandingVisualContextAndPromptBand";
 import AgentHandoffCycle from "@/components/landing/agent-handoff-cycle/AgentHandoffCycle";
 import PlayableTeaser from "@/components/landing/playable/PlayableTeaser";
-import { MarketingShell } from "@/components/site";
+import { MarketingShell, SectionEpigraph } from "@/components/site";
 
 export default function Page() {
   return (
     <MarketingShell>
       <LandingEvolutionBand />
+      <SectionEpigraph section="hero" seed="home-hero" align="center" />
       <LandingGraphifyChaosBand />
+      <SectionEpigraph section="system" seed="home-system" />
       <LandingVisualContextAndPromptBand />
+      <SectionEpigraph section="planning" seed="home-planning" />
       <PlayableTeaser />
+      <SectionEpigraph section="evolution" seed="home-evolution" />
       <AgentHandoffCycle />
+      <SectionEpigraph section="findings" seed="home-findings" />
       <LandingInstallerUpstreamBand />
+      <SectionEpigraph section="marketplace" seed="home-marketplace" align="center" />
     </MarketingShell>
   );
 }
