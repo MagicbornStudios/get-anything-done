@@ -4,33 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-17 CLOSED — full handoff note at `.planning/notes/session-handoff-2026-04-17.md`. Read that first.
-
-Session shipped (tasks status=done): 42.4-21 (TRACK 3 pressure live-example), 45-04 (vocabulary.ts), 45-01 (tab shell), 45-02 (adapter + notes), 45-07 (decisions sub-pane wire), 45-08 (roadmap sub-pane wire), 45-18 (marketplace verify + stats-bar cidKey fix), 45-05 (epigraph registry to 22×8), 45-13 pragmatic cut (ProjectStatsBar + Overview reorder — workflow-viz + VCS showcase parked), 45-16 (SectionEpigraph component + 10 dividers + hero polish).
-
-Decisions added: gad-226 (gauges), gad-227 (listing visibility), gad-228 (agent selector), gad-229 (roadmap demoted — 4 gauges committed), gad-230 (palette: black/gold/maroon/red gilded), gad-231 (tweakcn adopted), gad-232 (VCS 3-demo spec).
-
-Outside GAD submodule: TweakCN-OpenAI fork shipped at `C:/Users/benja/Documents/tweakcn` → `https://github.com/B2Gdevs/tweakcn` commit `23439d4`. Gutted auth/DB/billing/ratelimit, swapped Gemini → OpenAI (gpt-4o-mini / gpt-4o). `pnpm build` passes. Run: `PORT=3010 pnpm dev` → `http://localhost:3010/editor/theme`. Needs `OPENAI_API_KEY` in `.env.local`.
-
-FIRST ACTIONS NEXT SESSION:
-1. `gad startup --projectid get-anything-done`; save session id; trust working memory, don't reflexively re-full-snapshot (gad-195).
-2. Read `.planning/notes/session-handoff-2026-04-17.md` — session context that doesn't fit here (live gotchas, operator-made revisions to ship-point files, port conventions, pickup list).
-3. Confirm whether operator generated a first tweakcn theme. If yes → start 45-14 palette landing. If no → park 45-14, pick another chain.
-
-PICKUP CANDIDATES by operator preference (45 → 44.5 editor → 44 market → TRACK 2):
-- 45-14 type ramp + palette (waits on tweakcn theme export).
-- 45-17 logo + favicon (waits on `ai-asset-generation-pipeline` todo).
-- VCS 3-demo showcase — demos 2+3 ready to ship (client-side, deterministic); demo 1 conditional.
-- Infra closure: 45-03 (API consolidation onto adapter), 45-06 (tasks migration), 45-09 (requirements + notes migration), 45-10 (Evolution tab components), 45-11 (System tab components).
-
-TODOS parked (19): planning-artifact-gauges, listing-visibility-config, moderation-tooling, editor-agent-selector, shrink-roadmap-surface, tweakcn-integration (running-docs, shipped), ai-asset-generation-pipeline, vcs-live-showcase-three-demos, 45-13-followup-workflow-vcs-showcase, vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template.
-
-GOTCHAS (expanded in handoff note):
-- tweakcn dev server may still be running on :3010 from the prior session (PID 58776).
-- Outer commit 43e43b4 swept 26 pre-staged `rp-*` legacy deletions — already flagged, operator to confirm intent.
-- Operator revised `SectionEpigraph` post-ship: original-first, adapted-as-"In our model" gloss. Don't revert.
-- Operator polished `LandingEvolutionBand` (Shannon/Pressure block) and added `LandingEvolutionLoopBand` to the landing composition. Don't revert.
-- Port conventions: 3000=GAD portfolio site, 3010=tweakcn-openai, 3456=`gad site serve` default.</next-action>
+  <next-action>2026-04-17 pivot dump captured. Read .planning/notes/strategy-pivot-2026-04-17.md FIRST — 22 decisions (gad-233..254) + 11 phases (46-56) + 7 parked todos. TweakCN-OpenAI fork pushed (4b1f5f9), README rewritten, BYOK posture documented. NEXT: decide (a) build gad decisions/phases/todos add CLI first, then port all from note to XML, OR (b) hand-edit XML once as exception. Then phase 46 (TweakCN lib extraction). portfolio-v2 = pilot species personal-portfolio.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
