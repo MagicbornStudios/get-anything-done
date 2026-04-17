@@ -66,7 +66,17 @@ OPERATOR DESIGN DROP 2026-04-16 — captured in DECISIONS + todos:
 - gad-232: VCS live showcase = three scripted client-side demos (character/tileset conditional, component-remove mandatory, self-referential discovery mandatory). Deterministic, no LLM calls, no backend.
 - Todos: `tweakcn-integration`, `ai-asset-generation-pipeline` (gad asset generate sprite/icon/bg/favicon/og/tileset/avatar), `vcs-live-showcase-three-demos`.
 
-AGREED NEXT: 45-18 marketplace verify (low-risk, closes Overview link loop). Then get tweakcn working — operator wants it working now. After that, pause for operator to eyeball shipped work before high-risk 45-14 palette execution.</next-action>
+DONE: 45-18 verified + stats-bar cidKey fix. tweakcn investigated — self-host needs Postgres + OAuth + Gemini + Groq + Google Fonts keys, 30+ min setup, rejected as the default path. Committed path: use **hosted tweakcn.com** directly. Operator generates theme there → exports shadcn CSS variables → pastes into `site/app/globals.css`. Adapter script `site/scripts/apply-tweakcn-theme.mjs` lands IF the export format needs normalisation — write it when the first exported theme arrives.
+
+PAUSE POINT: operator asked us to pause before the high-risk 45-14 palette execution so the operator can eyeball the shipped visible-content work (stats bar, epigraphs, Overview reorder, sub-tabs) and generate a first tweakcn theme.
+
+RECENT OUTER-REPO COMMIT NOTE: commit 43e43b4 (outer) swept 26 pre-staged legacy `rp-*` (repo-planner) file deletions up to main alongside the submodule bump. Those deletions were already staged when I ran `git add vendor/get-anything-done && git commit`; not my authorship, but my commit published them. Flagged to operator — if intended, no action.
+
+NEXT CANDIDATES (after operator feedback):
+- 45-14 type ramp + palette (consumes the tweakcn export).
+- 45-17 logo + favicon (needs AI asset pipeline, see todo).
+- VCS live showcase (3 demos per gad-232) — can start with demos 2+3 (no sprite sheet needed), ship demo 1 if easy.
+- 45-06 / 45-09 / 45-03 infra closure (tasks/requirements/notes migrations + API consolidation).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

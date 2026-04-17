@@ -1,42 +1,71 @@
-# tweakcn theme generator — stand up + integrate
+# tweakcn theme generator — hosted-first, with adapter for our globals.css
 
 **Date captured**: 2026-04-16
-**Decision**: gad-231 (adopt tweakcn), gad-230 (palette direction: black/gold/maroon/red, gilded)
-**Source**: https://github.com/jnsahaj/tweakcn
+**Decision**: gad-231 (adopt tweakcn), gad-230 (palette: black/gold/maroon/red, gilded)
+**Source**: https://github.com/jnsahaj/tweakcn, hosted at https://tweakcn.com
 
-## Goal
+## Correction after inspection (2026-04-16)
 
-Get tweakcn running so the operator can generate themes in the
-black/gold/maroon/red gilded aesthetic and export them into
-`site/app/globals.css` as CSS variables.
+Self-hosting tweakcn was investigated and rejected as the default path.
+The repo is a full SaaS stack — `.env.example` requires:
 
-## Path A — standalone (committed)
+- Postgres (Neon serverless adapter)
+- Better-auth with GitHub + Google OAuth credentials
+- Google Gemini API key (their AI provider — NOT OpenAI)
+- Groq API key
+- Google Fonts API key
 
-1. Clone or submodule tweakcn under `tmp/tweakcn/` (or `vendor/`).
-2. Install + run locally — confirm it launches.
-3. If AI theme generation via OpenAI needs tweaking (operator flagged),
-   document the tweak (API key env var, endpoint override, etc.).
-4. Operator generates first theme in the gad-230 aesthetic.
-5. Export the theme → paste/merge into `site/app/globals.css`.
-6. If the output format ≠ our CSS variable shape, write a thin
-   adapter script in `site/scripts/apply-tweakcn-theme.mjs`.
+Not a 5-minute local run. Overkill for "I just need to generate a theme."
 
-## Path B — site-integration (nice-to-have)
+## Path A — hosted (committed)
 
-Only pursue if Path A succeeds AND tweakcn's editor can be embedded
-without bloating the site bundle. Landing location: `/admin/theme`
-(dev-only) or similar.
+1. Operator visits https://tweakcn.com.
+2. Uses their AI theme generator (Gemini-backed) or manual editor to
+   produce a theme matching gad-230 — black-dominant, gold/maroon/red
+   accents, gilded-shiny, sleek, non-typical.
+3. Exports the theme as shadcn-compatible CSS variables (they support
+   this via an "Export" / "Code" button in the editor).
+4. Operator pastes the exported CSS into `site/app/globals.css`
+   (replacing the current `:root` / `.dark` variable blocks).
+5. Build + eyeball `/`, `/projects/[...id]`, `/project-market` to
+   confirm the palette lands without breaking anything.
 
-If tweakcn is heavy or its import graph leaks through to production
-bundles, stop; keep it as a standalone tool.
+## Adapter script (write when first theme lands)
+
+If the exported CSS doesn't drop cleanly into `globals.css` (e.g. uses
+different variable names, or includes extra scaffolding), write a
+small adapter:
+
+`site/scripts/apply-tweakcn-theme.mjs <path-to-exported.css>`
+
+Normalizes variable names, strips tweakcn-specific scaffolding, writes
+into `site/app/globals.css` between `/* tweakcn:start */` and
+`/* tweakcn:end */` markers so the apply is idempotent.
+
+## Path B — self-host (deferred)
+
+Only if we want the editor embedded inline on our own site. Would
+require:
+
+- Provision a dev Neon DB + drizzle migrations.
+- Create OAuth apps.
+- Google Gemini API key (tweakcn's AI provider). The operator's
+  "needs tweaking to work with OpenAI" hint suggests a fork/patch to
+  swap Gemini for OpenAI — doable but nontrivial (Vercel AI SDK call
+  sites + different streaming / system prompt shape).
+- Package it either as a mounted Next.js route or as an iframe-embed
+  from our own hosted instance.
+
+Park this until Path A produces visible value.
 
 ## Risks
 
-- AI theme generation may need a custom OpenAI endpoint / model override.
-- tweakcn may output tokens in a shape incompatible with our existing
-  shadcn theme. Adapter fixes this, but adds one file of glue.
+- tweakcn.com's export format may change. Adapter script absorbs drift.
+- If we outgrow the hosted editor's feature set, self-host becomes the
+  right call. Until then, simplest-thing-that-works wins.
 
 ## Not in scope
 
-- Designing the actual palette. That's operator-driven via the generator.
-- Site-wide theme migration. Task 45-14 does that after tokens exist.
+- Designing the actual palette. Operator-driven via the generator.
+- Site-wide theme migration. Task 45-14 does that AFTER the first
+  exported theme lands in `globals.css`.
