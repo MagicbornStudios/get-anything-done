@@ -1708,13 +1708,15 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     </task>
   </phase>
   <phase id="45">
-    <task id="45-01" status="planned" type="site">
+    <task id="45-01" status="done" type="site" skill="default" agent="default">
       <goal>Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL search param ?tab= routing.</goal>
-      <keywords>route,tabs,project-detail,scaffold</keywords>
+      <resolution>Shipped 2026-04-16. Tab shell was scaffolded earlier — this task closes it by (1) routing hardcoded tab labels through the 45-04 VOCAB catalogue (`VOCAB.tabs.overview/planning/evolution/system`), giving the four top-level labels one source of truth and eliminating a 45-15-audit blind spot; and (2) persisting the Planning sub-tab (tasks/decisions/roadmap/requirements/notes) in the URL via a new `?sub=` search param with the same default-hides pattern as `?tab=` — tasks is the default and omits the param; any other sub-tab writes `?sub=<key>` via `router.replace({ scroll: false })`. The sub-tab buttons now gain `data-cid="project-planning-subtab-<key>"` so the Visual Context System can address each one. Decisions/roadmap sub-panes still show "coming soon" placeholders pointing at the specific follow-up tasks (45-07, 45-08) that will wire them. Files touched: `site/app/projects/[...id]/ProjectDetailTabs.tsx`, `site/app/projects/[...id]/ProjectDetailTabContent.tsx`. Typecheck + build clean.</resolution>
+      <keywords>route,tabs,project-detail,scaffold,url-state,vocabulary,phase-45-wave-2,45-04-consumer</keywords>
     </task>
-    <task id="45-02" status="planned" type="site">
+    <task id="45-02" status="done" type="site" skill="default" agent="default">
       <goal>Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, decisions, phases, requirements, notes as typed props.</goal>
-      <keywords>data-adapter,planning-xml,server-component,loader</keywords>
+      <resolution>Shipped 2026-04-16. Adapter `site/app/projects/[...id]/project-planning-data.ts` was partially scaffolded earlier (tasks/decisions/phases/requirements/state via the CJS readers). This task closes it by adding notes support: (1) new `PlanningNote` exported type `{ id, title, updatedAt, snippet, relPath }`; (2) `notes: PlanningNote[]` added to the `ProjectPlanningData` interface and populated by `loadProjectPlanningData()` for each project; (3) new `loadProjectNotes(projectId)` standalone export; (4) `collectNotes()` walker that recurses `.planning/notes/` and `.planning/docs/`, reads `.md` / `.mdx`, derives title (first H1 or filename), snippet (first paragraph, 220-char cap, trailing ellipsis), and updatedAt (mtime ISO), sorted newest-first. Logic mirrors the existing `site/app/api/dev/evals/projects/[id]/planning/route.ts` scanner so the API route can migrate to this in a later pass (not in scope here). Smoke-tested with the live project: `get-anything-done` → 389 tasks / 221 decisions / 51 phases / 17 notes / state.currentPhase=42.4. Typecheck + build clean. Unblocks 45-06..11 migrations (tab components can now consume the adapter directly instead of fetching the API route).</resolution>
+      <keywords>data-adapter,planning-xml,server-component,loader,notes,phase-45-wave-2</keywords>
     </task>
     <task id="45-03" status="planned" type="site">
       <goal>Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.</goal>

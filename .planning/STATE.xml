@@ -4,20 +4,24 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-17a — TRACK 3 + 45-04 DONE.
+  <next-action>Session 2026-04-17a — phase 45 wave 2 advancing. TRACK 3 + 45-04 + 45-01 + 45-02 DONE.
 
 DONE this session:
 - 42.4-21: /how-it-works pressure live-example card (TRACK 3) — P=173.41 from phase 42.2, computed from self-eval.json.
-- 45-04: site/lib/vocabulary.ts rewritten as full single-source vocabulary catalogue per gad-166, gad-169, gad-189, gad-219. Adds typed ENTITIES (project/recipe/species/generation/brood/bestiary/dna/finding — each with singular/plural/article), conditions (gad/gsd/bare/custom, no GAD+emergent), publication states (draft/published), section/tab labels, verbs (spawn/breed/evolve/publish/preserve), legacy-key renamed table, + helpers entityLabel/pluralize/withArticle/countLabel/canonicalizeLegacyKey. BANNED_TERMS array seeded for 45-15 audit. 18/18 smoke-test checks pass. No consumers yet — unblocks 45-06..11 migrations and 45-15.
+- 45-04: site/lib/vocabulary.ts rewritten as full single-source vocabulary catalogue (gad-166, gad-169, gad-189, gad-219). 18/18 smoke checks pass.
+- 45-01: Project detail tab shell closure. Tabs now sourced from VOCAB.tabs (removes hardcoded labels, first consumer of 45-04). Planning sub-tab state persists in URL via `?sub=` (tasks default omits param). New data-cid on each sub-tab button. Decisions/roadmap sub-panes still show "coming soon" with follow-up refs (45-07, 45-08).
+- 45-02: Per-project data adapter closure. Adapter already read tasks/decisions/phases/requirements/state; this task added notes. New `PlanningNote` type, `notes: PlanningNote[]` on `ProjectPlanningData`, standalone `loadProjectNotes()`, `collectNotes()` walker over `.planning/notes/` + `.planning/docs/` (.md/.mdx, title from first H1 or filename, 220-char snippet, mtime ISO). Smoke test against `get-anything-done`: 389 tasks, 221 decisions, 51 phases, 17 notes, state.currentPhase=42.4. Unblocks 45-06..11 migrations.
 
-Phase 45 progress: 45-04 + 45-15 (TRACK 1 vocab, prior session) done. Remaining wave: 45-01 project-detail tab shell, 45-02 per-project data adapter, 45-03 per-project API routes, 45-05 Art of War epigraphs, 45-06..11 tab migrations (depend on 45-01 + 45-02), 45-12 /planning rewire, 45-13 landing composition, 45-14 type ramp + palette, 45-16 hero copy + epigraphs, 45-17 logo + favicon, 45-18 marketplace verification, 45-19 dead-import cleanup, 45-20 VCS audit + build, 45-21 README + external docs.
+Phase 45 progress: 45-01, 45-02, 45-04, 45-15 done. Remaining: 45-03 (API routes), 45-05 (epigraphs), 45-06..11 (tab component migrations — now unblocked), 45-07 (decisions sub-pane wire — adapter ready), 45-08 (roadmap sub-pane wire — adapter ready), 45-12..21.
 
 NEXT candidates (by dependency):
-- 45-01 project-detail tab shell — foundation for all 45-06..11 migrations. Medium size.
-- 45-02 per-project data adapter — server loader; feeds 45-03 routes + migrations. Medium.
-- 45-05 Art of War epigraphs — small, independent; pairs well with 45-16 later.
+- 45-03 per-project API routes — /api/dev/evals/projects/[id]/planning + /system. Small. The planning route partly exists but should now consume the 45-02 adapter instead of duplicating logic.
+- 45-07 decisions sub-pane wire — ProjectPlanningDecisionsTab already exists as a file, just not wired. Needs to call through to loadProjectDecisions or the existing fetch path. Small.
+- 45-08 roadmap sub-pane wire — ProjectPlanningRoadmapTab same story. Small.
+- 45-06 tasks migration — ProjectPlanningTasksTab already wired; 45-06's goal is to feed it via the 45-02 adapter. Small.
+- 45-05 Art of War epigraphs — independent, pairs with 45-16 later. Small.
 
-Recommended: 45-01 (tab shell) — the tab component becomes the container that 45-06..11 migrate INTO. Parallelizes with 45-02 adapter via mock data.
+Recommended next: 45-07 + 45-08 (wire the two placeholder panes). Closes the "coming soon" holes users hit on /projects/[...id]?tab=planning&sub=decisions / ?sub=roadmap.
 
 After 45 lands: 44.5 editor → 44 project-market wave 2 → TRACK 2 VCS portability spawn.
 

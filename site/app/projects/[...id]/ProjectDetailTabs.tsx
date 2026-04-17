@@ -3,13 +3,14 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { type ReactNode, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { VOCAB } from "@/lib/vocabulary";
 import { ProjectDetailTabContent } from "./ProjectDetailTabContent";
 
 const TABS = [
-  { key: "overview", label: "Overview" },
-  { key: "planning", label: "Planning" },
-  { key: "evolution", label: "Evolution" },
-  { key: "system", label: "System" },
+  { key: "overview", label: VOCAB.tabs.overview },
+  { key: "planning", label: VOCAB.tabs.planning },
+  { key: "evolution", label: VOCAB.tabs.evolution },
+  { key: "system", label: VOCAB.tabs.system },
 ] as const;
 
 export type DetailTab = (typeof TABS)[number]["key"];

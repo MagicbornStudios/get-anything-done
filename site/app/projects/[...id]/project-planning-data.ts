@@ -84,11 +84,20 @@ export interface PlanningState {
   nextAction: string | null;
 }
 
+export interface PlanningNote {
+  id: string;
+  title: string;
+  updatedAt: string;
+  snippet: string;
+  relPath: string;
+}
+
 export interface ProjectPlanningData {
   tasks: PlanningTask[];
   decisions: PlanningDecision[];
   phases: PlanningPhase[];
   requirements: PlanningRequirement[];
+  notes: PlanningNote[];
   state: PlanningState | null;
 }
 
@@ -220,12 +229,15 @@ export function loadProjectPlanningData(
     readers.requirements.readRequirements(root, baseDir),
   );
   const state = safeRead(() => readers.state.readState(root, baseDir));
+  const planningDirAbs = path.resolve(baseDir, resolved.planningDir);
+  const notes = collectNotes(planningDirAbs);
 
   return {
     tasks,
     decisions,
     phases,
     requirements,
+    notes,
     state: state.length > 0 ? state[0] : null,
   };
 }
@@ -311,6 +323,16 @@ export function loadProjectState(
   }
 }
 
+/**
+ * Load notes only — scans .planning/notes/ and .planning/docs/ for .md / .mdx.
+ */
+export function loadProjectNotes(projectId: string): PlanningNote[] {
+  const resolved = resolveProjectRoot(projectId);
+  if (!resolved) return [];
+  const planningDirAbs = path.resolve(resolved.baseDir, resolved.planningDir);
+  return collectNotes(planningDirAbs);
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -324,5 +346,84 @@ function safeRead<T>(fn: () => T): T extends unknown[] ? T : T[] {
     return [result] as T extends unknown[] ? T : T[];
   } catch {
     return [] as unknown as T extends unknown[] ? T : T[];
+  }
+}
+
+const NOTE_ROOTS = ["notes", "docs"] as const;
+
+function firstHeadingOrName(src: string, fallback: string): string {
+  const m = src.match(/^\s*#\s+(.+)$/m);
+  return (m?.[1] || fallback).trim();
+}
+
+function firstParagraph(src: string, max = 220): string {
+  const lines = src.split(/\r?\n/);
+  const para: string[] = [];
+  let started = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!started && (!line || line.startsWith("#"))) continue;
+    if (started && !line) break;
+    if (!line.startsWith("#")) {
+      para.push(line);
+      started = true;
+    }
+  }
+  const out = para.join(" ").replace(/\s+/g, " ").trim();
+  return out.length > max ? `${out.slice(0, max - 1)}…` : out;
+}
+
+/**
+ * Walk .planning/notes/ and .planning/docs/ recursively, gathering markdown
+ * files as PlanningNote entries sorted newest-first by mtime.
+ */
+function collectNotes(planningDirAbs: string): PlanningNote[] {
+  if (!fs.existsSync(planningDirAbs)) return [];
+  const out: PlanningNote[] = [];
+  for (const root of NOTE_ROOTS) {
+    const dir = path.join(planningDirAbs, root);
+    if (!fs.existsSync(dir)) continue;
+    walkNotes(dir, planningDirAbs, out);
+  }
+  return out.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+}
+
+function walkNotes(
+  dir: string,
+  planningDirAbs: string,
+  acc: PlanningNote[],
+): void {
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const e of entries) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      walkNotes(full, planningDirAbs, acc);
+      continue;
+    }
+    if (!e.isFile() || !/\.(md|mdx)$/i.test(e.name)) continue;
+    let src: string;
+    let stat: fs.Stats;
+    try {
+      src = fs.readFileSync(full, "utf8");
+      stat = fs.statSync(full);
+    } catch {
+      continue;
+    }
+    const relPath = path
+      .relative(planningDirAbs, full)
+      .replace(/\\/g, "/");
+    const base = e.name.replace(/\.(md|mdx)$/i, "");
+    acc.push({
+      id: relPath.replace(/[^\w/-]+/g, "-"),
+      title: firstHeadingOrName(src, base),
+      updatedAt: stat.mtime.toISOString(),
+      snippet: firstParagraph(src),
+      relPath,
+    });
   }
 }
