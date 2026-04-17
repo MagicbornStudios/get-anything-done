@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 S6 close. Landed: /teachings reader polish (difficulty badges w/ color, hover lift, detail page hero), phase 59 (planning-app split + gad start) broken into 9 tasks, phase 60 BYOK broken into 8 tasks, teachings-reader.cjs path resolver fixed (walks up for repo config, prefers vendor/get-anything-done/teachings). NEXT: (1) close session so installed gad.exe frees file lock + reinstall picks up reindex fix; (2) plan phase 59 properly (gad:plan-phase) before first task 59-01 scaffold; (3) or discuss phase 60 BYOK crypto/keychain choices first.</next-action>
+  <next-action>2026-04-17 S7 close. Phase 59 PLAN.md landed (9 tasks, 6 waves, 11 risks, 5 open Qs). Phase 60 BYOK discussion doc landed (8 design Qs with defaults). BOTH AWAITING OPERATOR INPUT. Phase 59 blockers: Q1 planning-app binary bundling path (recommend B), Q2 teachings-reader migration timing, Q3 BYOK-status placeholder (recommend C), Q4 landing /my-projects ownership post-split. Phase 60: reply 'go' or letter-flips. NEXT: operator reviews both docs and signs off, then 59-01 (scaffold planning-app) starts.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
