@@ -414,5 +414,12 @@
     <depends>46</depends>
   </phase>
 
+  <phase id="60">
+    <title>Per-project BYOK encrypted env — .gad/secrets store, CLI, scoped spawn, UI surfaces</title>
+    <goal>Implement decision gad-260 per-project BYOK env storage. Scope: (1) crypto primitive decision (libsodium sealed-box vs AES-256-GCM+scrypt) written up in references/byok-design.md, (2) master-key UX — OS keychain first (Windows Credential Manager, macOS Keychain, linux secret-service) with passphrase fallback, (3) .gad/secrets/&amp;lt;projectid&amp;gt;.enc storage format (versioned, per-key metadata), (4) CLI family 'gad env get|set|rotate|list|revoke --projectid', (5) scoped spawn wrapper so subagents inherit per-project env without process-wide leak, (6) .gitignore enforcement for .gad/secrets/, (7) migration — llm-from-scratch OPENAI_API_KEY moves from global env into its project bag, (8) project-editor BYOK tab UI (local-dev, paste+validate+save), (9) landing-site project-dashboard BYOK surface (auth-gated, lands on planning-app post phase 59 split). Acceptance: llm-from-scratch subagent reads OPENAI_API_KEY from its encrypted bag via 'gad env get'; key never persists on disk in plaintext; 'gad env rotate' works end-to-end.</goal>
+    <status>planned</status>
+    <depends>59</depends>
+  </phase>
+
 </roadmap>
 

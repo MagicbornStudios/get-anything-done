@@ -5,6 +5,26 @@ import { notFound } from "next/navigation";
 import { marked } from "marked";
 import { MarketingShell } from "@/components/site";
 
+const DIFFICULTY_CLASSES: Record<string, string> = {
+  intro: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
+  beginner: "bg-sky-500/15 text-sky-300 ring-sky-500/30",
+  intermediate: "bg-amber-500/15 text-amber-300 ring-amber-500/30",
+  advanced: "bg-rose-500/15 text-rose-300 ring-rose-500/30",
+};
+
+function DifficultyBadge({ level }: { level: string }) {
+  const cls =
+    DIFFICULTY_CLASSES[level] ??
+    "bg-muted text-muted-foreground ring-border";
+  return (
+    <span
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset ${cls}`}
+    >
+      {level}
+    </span>
+  );
+}
+
 type Tip = {
   id: string;
   title: string;
@@ -109,16 +129,24 @@ export default async function TeachingDetailPage({
           </Link>
         </nav>
 
-        <header className="mb-6 border-b border-border pb-6">
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-            <span>{tip.category.replace(/-/g, " ")}</span>
-            <span>&middot;</span>
-            <span>{tip.difficulty}</span>
-            <span>&middot;</span>
-            <span>{tip.date}</span>
-            <span>&middot;</span>
-            <span>{tip.source}</span>
+        <header className="mb-8 border-b border-border pb-6">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <DifficultyBadge level={tip.difficulty} />
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              {tip.category.replace(/-/g, " ")}
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {tip.date}
+            </span>
+            {tip.source === "generated" && (
+              <span className="rounded bg-violet-500/15 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-violet-300 ring-1 ring-inset ring-violet-500/30">
+                generated
+              </span>
+            )}
           </div>
+          <h1 className="mb-3 text-3xl font-bold tracking-tight text-foreground">
+            {tip.title}
+          </h1>
           {tip.tags?.length ? (
             <div className="flex flex-wrap gap-1">
               {tip.tags.map((t) => (

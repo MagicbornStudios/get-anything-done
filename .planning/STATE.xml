@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 S4 close. Landed: llm-from-scratch phase 01 decomposed (9 tasks), gad-258 subagent-only exec, gad-259 DAILY section retired (binary rebuilt), gad-260 BYOK design. NEXT: (1) spawn subagent for llm-from-scratch 01-01 (py pkg scaffold); (2) plan BYOK/secrets phase — crypto, master-key UX, project-editor BYOK tab, landing dashboard; (3) plan 'my projects' dashboard phase (site + local editor); (4) implement gad tasks add CLI writer (todo filed).</next-action>
+  <next-action>2026-04-17 S6 close. Landed: /teachings reader polish (difficulty badges w/ color, hover lift, detail page hero), phase 59 (planning-app split + gad start) broken into 9 tasks, phase 60 BYOK broken into 8 tasks, teachings-reader.cjs path resolver fixed (walks up for repo config, prefers vendor/get-anything-done/teachings). NEXT: (1) close session so installed gad.exe frees file lock + reinstall picks up reindex fix; (2) plan phase 59 properly (gad:plan-phase) before first task 59-01 scaffold; (3) or discuss phase 60 BYOK crypto/keychain choices first.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

@@ -48,6 +48,26 @@ const DIFFICULTY_ORDER: Record<string, number> = {
   advanced: 3,
 };
 
+const DIFFICULTY_CLASSES: Record<string, string> = {
+  intro: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
+  beginner: "bg-sky-500/15 text-sky-300 ring-sky-500/30",
+  intermediate: "bg-amber-500/15 text-amber-300 ring-amber-500/30",
+  advanced: "bg-rose-500/15 text-rose-300 ring-rose-500/30",
+};
+
+function DifficultyBadge({ level }: { level: string }) {
+  const cls =
+    DIFFICULTY_CLASSES[level] ??
+    "bg-muted text-muted-foreground ring-border";
+  return (
+    <span
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ring-1 ring-inset ${cls}`}
+    >
+      {level}
+    </span>
+  );
+}
+
 export default function TeachingsPage() {
   const { tips } = loadTeachings();
 
@@ -100,18 +120,19 @@ export default function TeachingsPage() {
                     <li
                       key={tip.id}
                       data-cid={`teachings-card-${tip.id}`}
-                      className="rounded border border-border bg-card p-4 transition-colors hover:border-primary/50"
+                      className="group rounded-lg border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
                     >
                       <Link
                         href={`/teachings/${encodeURIComponent(tip.id)}`}
                         className="block"
                       >
-                        <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                          <span>{tip.difficulty}</span>
-                          <span>&middot;</span>
-                          <span>{tip.date}</span>
+                        <div className="mb-3 flex items-center gap-2">
+                          <DifficultyBadge level={tip.difficulty} />
+                          <span className="text-[10px] text-muted-foreground">
+                            {tip.date}
+                          </span>
                         </div>
-                        <h3 className="mb-2 text-base font-semibold text-foreground">
+                        <h3 className="mb-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary">
                           {tip.title}
                         </h3>
                         {tip.tags?.length ? (

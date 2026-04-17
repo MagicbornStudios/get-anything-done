@@ -1869,6 +1869,80 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <goal>Teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detail (marked markdown render, frontmatter stripped, backrefs panel for implementation/decisions/phases/related). Server components read teachings/index.json + per-tip md bodies from teachings/static/**. Decision gad-264 promoted this into active phase 46 scope. Acceptance: curl /teachings returns 200 with tip titles visible; curl /teachings/&lt;slug&gt; returns 200 with rendered body. Verified against all 6 indexed tips.</goal>
       <keywords>teachings,site,route,reader,markdown,backrefs</keywords>
     </task>
+    <task id="46-10" status="done" type="cli" skill="default" agent="default" agent-role="default" runtime="claude-code">
+      <goal>Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd looking for a gad-config.toml repo root and preferring vendor/get-anything-done/teachings/ (or direct teachings/) on that root before falling back to the bundled runtime location. GAD_TEACHINGS_DIR env override added for testing. Source CLI verified — 'node vendor/get-anything-done/bin/gad.cjs tip reindex' now writes to the user repo's teachings/ instead of the read-only runtime bundle. Installed binary picks up the fix on next reinstall (deferred: current gad.exe is still held open by this session).</goal>
+      <keywords>teachings,reindex,runtime,path-resolve,installed-binary</keywords>
+    </task>
+  </phase>
+  <phase id="59">
+    <task id="59-01" type="scaffold" status="planned">
+      <goal>Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home page redirecting to /my-projects, tailwind config mirroring the landing app, tsconfig paths. Runs on a distinct dev port (3002) so it coexists with the landing app during migration.</goal>
+    </task>
+    <task id="59-02" type="refactor" status="planned">
+      <goal>Extract shared UI primitives into a consumable location. Candidates: MarketingShell (rename to AppShell with slot-based navigation), SectionEpigraph, SiteSection, SiteProse. Options: (a) packages/ui-shared workspace package, (b) direct imports from vendor/get-anything-done/site/components/site/ with a re-export barrel. Pick (b) initially — faster, defer package extraction until a third consumer emerges.</goal>
+      <depends>59-01</depends>
+    </task>
+    <task id="59-03" type="migration" status="planned">
+      <goal>Port /planning route from landing app to planning-app. All existing tabs (Tasks, Decisions, Requirements, Notes, Workflows, SkillCandidates, System) move intact. Data source stays the same — planning CLI readers via gad binary or direct XML parse. Landing app's /planning stays for one release cycle with a deprecation banner.</goal>
+      <depends>59-02</depends>
+    </task>
+    <task id="59-04" type="migration" status="planned">
+      <goal>Port /projects routes + build the /my-projects dashboard. Dashboard shows: list of owned projects with phase/next-action snippet, per-project drawer (current phase, open tasks, recent decisions, subagent-run history, BYOK env status), action buttons (trigger daily subagent, view last report, open planning XML). Consumes gad CLI readers. Lives on planning-app only — landing gets a redirect banner.</goal>
+      <depends>59-03</depends>
+    </task>
+    <task id="59-05" type="cli" status="planned">
+      <goal>Implement 'gad planning serve' CLI subcommand. Spawns planning-app (next dev in dev / next start in prod) on port 3002 with reuse detection — if something is already listening on the port and responds with a planning-app health endpoint, attach rather than spawn. Logs go to ~/.gad/logs/planning-app-&lt;date&gt;.jsonl. Graceful shutdown on SIGINT.</goal>
+      <depends>59-01</depends>
+    </task>
+    <task id="59-06" type="cli" status="planned">
+      <goal>Implement 'gad start' CLI subcommand (decision gad-262). Runs 'gad planning serve' if not running, waits for health, opens browser to http://localhost:3002/my-projects. Aliased as 'gad dashboard'. Idempotent. --no-browser flag skips the browser open for editor/iframe workflows.</goal>
+      <depends>59-05</depends>
+    </task>
+    <task id="59-07" type="cli" status="planned">
+      <goal>Daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config for daily-subagent: true and, if today's run has not yet been recorded in .planning/subagent-runs/&lt;projectid&gt;/, spawns the configured subagent runtime with the project snapshot + task context. Writes run record on completion (consumes subagent-run-history todo schema).</goal>
+      <depends>59-04,59-06</depends>
+    </task>
+    <task id="59-08" type="cleanup" status="planned">
+      <goal>Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view moved to gad planning serve' with copy-pasteable install+run commands. Keep for one release cycle then remove. Update all internal cross-links to /my-projects.</goal>
+      <depends>59-04</depends>
+    </task>
+    <task id="59-09" type="site" status="planned">
+      <goal>Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (schema from todo 2026-04-17-subagent-run-history.md). Timeline view — date, task id, status, one-line outcome, link to full report body, link to teaching tip produced. Empty state with a 'trigger a run' button.</goal>
+      <depends>59-04,59-07</depends>
+    </task>
+  </phase>
+  <phase id="60">
+    <task id="60-01" type="design" status="planned">
+      <goal>Write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive — libsodium sealed-box vs AES-256-GCM with scrypt KDF, recommend one, (b) master-key UX — OS keychain-first (Windows Credential Manager, macOS Keychain, Linux secret-service) with passphrase fallback when keychain unavailable, (c) on-disk format — JSON envelope with version, salt, nonce, per-key metadata (last-rotated, scope, provider), (d) rotation model — in-place vs additive, (e) site-side strategy — browser-only WebCrypto decrypt vs server-side per-user KMS.</goal>
+    </task>
+    <task id="60-02" type="code" status="planned">
+      <goal>Implement lib/secrets-store.cjs + OS-keychain wrappers. .gad/secrets/&lt;projectid&gt;.enc format from 60-01. Three keychain adapters: windows-credential-manager (via PowerShell or node-ffi), macos-keychain (security CLI), linux-secret-service (via dbus-next). Unit tests with a mock keychain adapter. .gad/ added to repo-level .gitignore across all projects that register a planning root.</goal>
+      <depends>60-01</depends>
+    </task>
+    <task id="60-03" type="cli" status="planned">
+      <goal>CLI family: 'gad env get &lt;KEY&gt; --projectid', 'gad env set &lt;KEY&gt; --projectid' (reads value from prompt, not argv, to avoid shell history), 'gad env list --projectid' (keys + metadata, never values), 'gad env rotate &lt;KEY&gt; --projectid', 'gad env revoke &lt;KEY&gt; --projectid'. All operations require master-key unlock.</goal>
+      <depends>60-02</depends>
+    </task>
+    <task id="60-04" type="code" status="planned">
+      <goal>Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges into child process.env ONLY for the child, never mutates parent process.env. Subagent dispatch (phase 59 task 59-07) uses this wrapper. Subagent sees OPENAI_API_KEY etc. without the main session leaking it.</goal>
+      <depends>60-03</depends>
+    </task>
+    <task id="60-05" type="code" status="planned">
+      <goal>Key lifecycle UX: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + record revocation event in audit log), audit log at .gad/secrets/&lt;projectid&gt;.audit.jsonl (append-only, gitignored).</goal>
+      <depends>60-03</depends>
+    </task>
+    <task id="60-06" type="migration" status="planned">
+      <goal>Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scratch uses scoped-spawn + 'gad env get' to decrypt at dispatch time. Documents the expected migration in references/byok-design.md §Migration.</goal>
+      <depends>60-04</depends>
+    </task>
+    <task id="60-07" type="site" status="planned">
+      <goal>Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate.</goal>
+      <depends>60-03</depends>
+    </task>
+    <task id="60-08" type="site" status="planned">
+      <goal>Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.</goal>
+      <depends>60-07,59-04</depends>
+    </task>
   </phase>
 </task-registry>
 
