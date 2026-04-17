@@ -1630,6 +1630,53 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>(1) `planning-artifact-gauges` todo implements four gauges, not five. (2) No ROADMAP.xml schema changes. No `gad phases` or snapshot changes. (3) The roadmap-artifact-question note is updated with a "Resolved 2026-04-16 — Option D" header but kept as the durable record of the B/C options for the future phase. (4) Decision gad-226's "roadmap = OPEN QUESTION" caveat is now resolved; gad-226's scope is four gauges, with roadmap deferred to its own future decision.</impact>
   </decision>
 
+  <decision id="gad-230">
+    <title>Visual identity palette — black-dominant with gold / maroon / red accents, gilded-shiny aesthetic, non-typical and sleek</title>
+    <date>2026-04-16</date>
+    <summary>Operator direction for the phase-45 visual identity refresh (task 45-14 + future theme work): the site leans into a **black-heavy base** with **gold, maroon, and red** as accent colors — more black than anything else — finished with **gilded / shiny highlights** (subtle sheen on borders, gold-tinted gradients, metallic button states). The overall feel should read as **non-typical, creative, sleek** — closer to a specialty leather-bound book or a fine-instrument brand than a generic "dev tool dashboard." Avoids the default shadcn slate/neutral palette and avoids the generic dark-blue SaaS aesthetic.
+
+**Hierarchy intent**: black is the base, gold is the "direction / hero" accent, maroon is the "depth / secondary" accent, red is the "alarm / latent / pressure" accent. This maps well onto the gauge bank (gad-226): decisions gauge = gold (direction), requirements/tasks gauges = maroon (secondary but structural), notes gauge = red for latent-entropy warnings.
+
+**Not prescriptive on exact hex values** — the palette is a direction, not a spec. Specific tokens land when 45-14 executes, likely generated/refined via the theme-generator tool (gad-231).</summary>
+    <impact>(1) Task 45-14 (type ramp + color palette refresh) works inside this aesthetic direction, not a neutral refresh. (2) Asset generation pipeline (todo: ai-asset-generation-pipeline) writes its prompts inside the same aesthetic so generated sprites / backgrounds / icons match. (3) Gauge components (gad-226 consumers) map the gold/maroon/red roles onto their specific semantics. (4) Existing accent system in `globals.css` gets audited — anywhere it renders as "plain shadcn blue-ish accent" gets replaced with the gold tint.</impact>
+  </decision>
+
+  <decision id="gad-231">
+    <title>Adopt tweakcn as the project's theme generator — standalone first, site-integration if low-cost</title>
+    <date>2026-04-16</date>
+    <summary>Use the open-source tweakcn tool (https://github.com/jnsahaj/tweakcn) as the theme generator for the site's shadcn-style design tokens. tweakcn is a visual theme editor for shadcn/ui that can generate Tailwind-compatible CSS variables; it likely supports AI-assisted theme generation but may need tweaking to work with OpenAI (operator flagged this). Adoption path: (1) stand up tweakcn **standalone** first — local Next app or hosted instance the operator can run against to generate themes, exports as CSS variable sets. (2) Import generated tokens into `site/app/globals.css`. (3) Consider **in-site integration** (embed the tweakcn editor at `/admin/theme` or similar) only if it drops in cleanly without bloating the site bundle. The site-integration path is a nice-to-have, not a blocker — standalone is the committed path.
+
+Operator priority statement: "I just need it working right now. If we can put it in the site easily, even better." → deliver standalone first, site-integration as follow-up.</summary>
+    <impact>(1) New todo `tweakcn-integration` with standalone-first path: clone / submodule / install tweakcn, confirm local run, document the OpenAI tweak if needed, export first theme in the gad-230 aesthetic. (2) Task 45-14 palette work consumes the output, not the generator itself. (3) If tweakcn's theme output format ≠ our `globals.css` shape, a thin adapter converts it. (4) Site-integration (embed the editor inline) is a parked follow-up; do not block palette work on it.</impact>
+  </decision>
+
+  <decision id="gad-232">
+    <title>VCS live showcase on landing — three scripted demos, deterministic, client-side, no server</title>
+    <date>2026-04-16</date>
+    <summary>The "VCS showcase" deferred from task 45-13 (see `2026-04-16-45-13-followup-workflow-vcs-showcase.md`) is scoped to **three specific demos**, each playing a scripted interaction that is deterministic, client-side only, and needs no backend:
+
+**Demo 1 — Character on a tileset** (only if easy and client-side):
+- User clicks the recorder icon.
+- Script plays: "move up and then go left."
+- The demo applies simple heuristics + client-side semantic similarity to resolve the prompt to a direction pair.
+- A sprite character moves up then left across a static tileset (sprite sheet, CSS steps animation, deterministic path — no pathfinding).
+- Conditional: do this ONLY if a sprite sheet and 50-ish lines of client code get it done. Skip if it starts ballooning.
+
+**Demo 2 — Context panel component manipulation**:
+- User clicks the recorder icon.
+- Script plays: "remove this element."
+- Deterministic: a specific target element is highlighted, then animated out of the DOM (fade + slide). The context panel updates to reflect the removal.
+- No LLM call — the action is hardcoded, the "live" feel comes from the sequence of UI updates driven by the recorded prompt.
+
+**Demo 3 — Self-referential VCS discovery**:
+- User clicks the recorder icon.
+- Script plays: "I want to be able to identify elements on the screen by clicking and have a list of available ones show here."
+- Deterministic: a list panel fades in on the side; clicking any demo element adds its cid to the list. The VCS is literally explaining itself by demonstrating its own primary use case.
+
+**Shared properties**: all three are triggered by the same recorder button; all three play a pre-recorded prompt string (TTS or text-type-in animation); all three produce their visual effect from hardcoded scripts, not from a live agent. The "magic" is the choreography, not the compute.</summary>
+    <impact>(1) Replaces the "VCS showcase" entry in the 45-13 follow-up todo with a concrete three-demo spec. (2) Landing page gains a new band, likely between `LandingVisualContextAndPromptBand` and `PlayableTeaser`, that plays these three demos in sequence (or user-triggered). (3) No network calls, no OpenAI key required — every demo is deterministic. (4) Character sprite demo (#1) is conditional; the other two are mandatory. (5) A new todo captures the implementation — client-side only, sprite sheet (for #1), CSS animation + React state for #2 and #3.</impact>
+  </decision>
+
   <decision id="gad-225">
     <title>CLI vocabulary: `gad site` vs `gad play` / `gad generation open` — planning site vs generation build artifact</title>
     <date>2026-04-16</date>

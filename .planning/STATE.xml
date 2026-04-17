@@ -60,7 +60,13 @@ Operator directive 2026-04-16: do visible content, stay on it until the chain br
 
 45-16 done: new `SectionEpigraph` component in `@/components/site`. Six dividers on landing (hero/system/planning/evolution/findings/marketplace) + four on project Overview (hero/bestiary/planning/scoring) with seed-deterministic picks. Hero copy polish: fixed "roto skills" → "proto-skills" typo, added evolutionary framing ("species mutate, generations compete, survivors promote") without rewriting the approved "context under pressure" tagline.
 
-NEXT in visible-content chain: 45-14 type ramp + color palette — scope to audit-first, don't blow up tokens unless necessary. Then 45-17 logo/favicon (may need asset decisions), 45-18 marketplace integration verify.</next-action>
+OPERATOR DESIGN DROP 2026-04-16 — captured in DECISIONS + todos:
+- gad-230: palette direction = black-dominant, gold/maroon/red accents, gilded-shiny, non-typical, sleek. Maps onto gauges (gold=direction, maroon=structural, red=latent/alarm).
+- gad-231: adopt tweakcn (github.com/jnsahaj/tweakcn) as theme generator. Standalone first; site-integration nice-to-have. OpenAI tweak likely needed.
+- gad-232: VCS live showcase = three scripted client-side demos (character/tileset conditional, component-remove mandatory, self-referential discovery mandatory). Deterministic, no LLM calls, no backend.
+- Todos: `tweakcn-integration`, `ai-asset-generation-pipeline` (gad asset generate sprite/icon/bg/favicon/og/tileset/avatar), `vcs-live-showcase-three-demos`.
+
+AGREED NEXT: 45-18 marketplace verify (low-risk, closes Overview link loop). Then get tweakcn working — operator wants it working now. After that, pause for operator to eyeball shipped work before high-risk 45-14 palette execution.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
