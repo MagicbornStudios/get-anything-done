@@ -2219,6 +2219,153 @@ const todosCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// env command — BYOK secrets per project (task 60-03, decision gad-266)
+// ---------------------------------------------------------------------------
+//
+// Wraps lib/secrets-store.cjs (task 60-02). Routing-only in this file; the
+// actual prompt / format / error-mapping logic lives in lib/env-cli.cjs so
+// it stays unit-testable without spinning up citty.
+
+// Single lazily-built instance shared across all env subcommands within a
+// process. Tests that inject mocks go through lib/env-cli.cjs directly.
+let _envCliSingleton = null;
+function getEnvCli() {
+  if (!_envCliSingleton) {
+    const { createEnvCli } = require('../lib/env-cli.cjs');
+    _envCliSingleton = createEnvCli();
+  }
+  return _envCliSingleton;
+}
+
+const envGetCmd = defineCommand({
+  meta: {
+    name: 'get',
+    description: 'Decrypt and print a key\'s value to stdout. Nothing else is printed so it composes with $(...). Exit 1 if the key is missing or the passphrase is invalid.',
+  },
+  args: {
+    key: { type: 'positional', description: 'Key name (e.g. OPENAI_API_KEY)', required: true },
+    projectid: { type: 'string', description: 'Project id whose bag to read', required: true },
+    version: { type: 'string', description: 'Specific version (default: current)', default: '' },
+    passphrase: { type: 'boolean', description: 'Force passphrase prompt — skip keychain', default: false },
+  },
+  async run({ args }) {
+    const cli = getEnvCli();
+    const version = args.version ? Number(args.version) : undefined;
+    await cli.getCmd({
+      keyName: String(args.key),
+      projectid: String(args.projectid),
+      version: Number.isFinite(version) ? version : undefined,
+      passphrase: !!args.passphrase,
+    });
+  },
+});
+
+const envSetCmd = defineCommand({
+  meta: {
+    name: 'set',
+    description: 'Store a key. The value is read from an echoless TTY prompt (not argv — shell history would leak it). Piped stdin is also accepted for scripting: `echo val | gad env set KEY --projectid P`. Creates the project bag + .gitignore entry on first use.',
+  },
+  args: {
+    key: { type: 'positional', description: 'Key name (uppercase-underscore convention)', required: true },
+    projectid: { type: 'string', description: 'Project id whose bag to write into', required: true },
+    provider: { type: 'string', description: 'Optional provider label (e.g. openai, anthropic)', default: '' },
+    scope: { type: 'string', description: 'Optional scope label (e.g. model-api, image-gen)', default: '' },
+    passphrase: { type: 'boolean', description: 'Force passphrase prompt — skip keychain', default: false },
+  },
+  async run({ args }) {
+    const cli = getEnvCli();
+    await cli.setCmd({
+      keyName: String(args.key),
+      projectid: String(args.projectid),
+      provider: String(args.provider || ''),
+      scope: String(args.scope || ''),
+      passphrase: !!args.passphrase,
+    });
+  },
+});
+
+const envListCmd = defineCommand({
+  meta: {
+    name: 'list',
+    description: 'List keys + metadata (name, provider, scope, version, last-rotated). Never prints values. --json emits a JSON array for tooling.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Project id whose bag to inspect', required: true },
+    json: { type: 'boolean', description: 'Emit JSON array instead of a table', default: false },
+    passphrase: { type: 'boolean', description: 'Force passphrase prompt — skip keychain', default: false },
+  },
+  async run({ args }) {
+    const cli = getEnvCli();
+    await cli.listCmd({
+      projectid: String(args.projectid),
+      json: !!args.json,
+      passphrase: !!args.passphrase,
+    });
+  },
+});
+
+const envRotateCmd = defineCommand({
+  meta: {
+    name: 'rotate',
+    description: 'Additive rotation. Prompts for the NEW value (echoless TTY or piped stdin), appends a new version, and retires the old with a grace window (default 7 days, range 0-30).',
+  },
+  args: {
+    key: { type: 'positional', description: 'Key name to rotate (must already exist)', required: true },
+    projectid: { type: 'string', description: 'Project id whose bag to rotate in', required: true },
+    'grace-days': { type: 'string', description: 'Grace period for old version (0-30, default 7)', default: '7' },
+    passphrase: { type: 'boolean', description: 'Force passphrase prompt — skip keychain', default: false },
+  },
+  async run({ args }) {
+    const cli = getEnvCli();
+    await cli.rotateCmd({
+      keyName: String(args.key),
+      projectid: String(args.projectid),
+      graceDays: args['grace-days'],
+      passphrase: !!args.passphrase,
+    });
+  },
+});
+
+const envRevokeCmd = defineCommand({
+  meta: {
+    name: 'revoke',
+    description: 'Remove a key (or a specific version) immediately — no grace. Without --force, prompts for confirmation.',
+  },
+  args: {
+    key: { type: 'positional', description: 'Key name to revoke', required: true },
+    projectid: { type: 'string', description: 'Project id whose bag to revoke from', required: true },
+    version: { type: 'string', description: 'Revoke a specific version (default: all versions)', default: '' },
+    force: { type: 'boolean', description: 'Skip confirmation prompt', default: false },
+    passphrase: { type: 'boolean', description: 'Force passphrase prompt — skip keychain', default: false },
+  },
+  async run({ args }) {
+    const cli = getEnvCli();
+    const version = args.version ? Number(args.version) : undefined;
+    await cli.revokeCmd({
+      keyName: String(args.key),
+      projectid: String(args.projectid),
+      version: Number.isFinite(version) ? version : undefined,
+      force: !!args.force,
+      passphrase: !!args.passphrase,
+    });
+  },
+});
+
+const envCmd = defineCommand({
+  meta: {
+    name: 'env',
+    description: 'Per-project BYOK secrets — get / set / list / rotate / revoke. Values are encrypted with AES-256-GCM under a PBKDF2-derived master key and stored at .gad/secrets/<projectid>.enc. See references/byok-design.md.',
+  },
+  subCommands: {
+    get: envGetCmd,
+    set: envSetCmd,
+    list: envListCmd,
+    rotate: envRotateCmd,
+    revoke: envRevokeCmd,
+  },
+});
+
+// ---------------------------------------------------------------------------
 // requirements command
 // ---------------------------------------------------------------------------
 
@@ -14283,6 +14430,7 @@ const main = defineCommand({
     site: siteCmd,
     'self-eval': selfEvalCmd,
     data: dataCmd,
+    env: envCmd,
     eval: evalCmd,
     evolution: evolutionCmd,
     skill: skillCmd,
