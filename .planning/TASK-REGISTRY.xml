@@ -1803,10 +1803,11 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <goal>Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metadata references.</goal>
       <keywords>logo,favicon,og-image,visual-identity</keywords>
     </task>
-    <task id="45-18" status="planned" type="site">
+    <task id="45-18" status="done" type="site" skill="default" agent="default">
       <goal>Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.</goal>
       <depends>45-13</depends>
-      <keywords>marketplace,project-market,integration,verification</keywords>
+      <resolution>Shipped 2026-04-16 as a verification pass. All three bullets confirmed: (1) `ProjectCard.tsx:148` links to `/projects/${project.id}` which hits the new tab-shell (45-01). (2) Published filter is active at `use-project-market.ts:44-48`: `EVAL_PROJECTS.filter((p) => p.published === true)` — since no project has `published: true` yet, the marketplace correctly renders the `ProjectMarketEmptyCatalog` ("No published projects yet") empty state. Live probe: `curl http://localhost:3000/project-market` returns the empty state and has no `View project` card links, as expected. (3) Landing page content on `/projects/<id>` is visible: live probe of `/projects/app-forge/gad` renders all four stats-bar cells, 4 distinct `section-epigraph-<section>` data-cids (hero/bestiary/planning/scoring), and tab-shell buttons. Minor fix landed alongside: `ProjectStatsBar` previously derived its data-cid from `sub.split(" ")[0]` which collided when two cells started with "no" ("no preserved yet" / "no review yet"). Added an explicit `cidKey` prop so each cell has a stable, unique identifier regardless of subtext — `project-stats-bar-cell-{generations|species|review|latest}`. Typecheck + build path clean.</resolution>
+      <keywords>marketplace,project-market,integration,verification,data-cid-fix</keywords>
     </task>
     <task id="45-19" status="planned" type="cleanup">
       <goal>Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.</goal>

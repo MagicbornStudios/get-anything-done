@@ -44,21 +44,25 @@ export function ProjectStatsBar({ projectName, runs }: ProjectStatsBarProps) {
           className="grid grid-cols-2 gap-3 sm:grid-cols-4"
         >
           <StatCell
+            cidKey="generations"
             icon={GitBranch}
             label={countLabel("generation", generationCount)}
             sub={generationCount === 0 ? "none preserved yet" : "preserved builds"}
           />
           <StatCell
+            cidKey="species"
             icon={Dna}
             label={countLabel("species", speciesCount)}
             sub={speciesCount === 1 ? "single recipe" : "recipes in brood"}
           />
           <StatCell
+            cidKey="review"
             icon={Star}
             label={bestScore !== null ? formatScore(bestScore) : "—"}
             sub={bestScore !== null ? `best ${VOCAB.entities.generation.singular.toLowerCase()} review` : "no review yet"}
           />
           <StatCell
+            cidKey="latest"
             icon={Clock}
             label={latestVersion ?? "—"}
             sub={latestDate ? `latest ${formatRelative(latestDate)}` : "no latest"}
@@ -70,17 +74,19 @@ export function ProjectStatsBar({ projectName, runs }: ProjectStatsBarProps) {
 }
 
 function StatCell({
+  cidKey,
   icon: Icon,
   label,
   sub,
 }: {
+  cidKey: string;
   icon: React.ComponentType<{ size?: number; className?: string; "aria-hidden"?: boolean }>;
   label: string;
   sub: string;
 }) {
   return (
     <div
-      data-cid={`project-stats-bar-cell-${sub.split(" ")[0]}`}
+      data-cid={`project-stats-bar-cell-${cidKey}`}
       className="flex items-start gap-3 rounded-lg border border-border/50 bg-card/30 p-3"
     >
       <Icon size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden />
