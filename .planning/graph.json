@@ -358,6 +358,97 @@
       "goal": "Redesign the landing site from 25+ routes to 9 focused public pages (decisions gad-207..211). Consolidate gad workspace into gad projects. Add SpriteAnimation component. Scaffold species-level .planning/ dirs on species create. Expand /downloads as VCS component showcase + installer hub. Build /how-it-works methodology page absorbing glossary, formulas, standards, eval-guide content. Define project-level assets convention and generation data salvage pipeline."
     },
     {
+      "type": "phase",
+      "id": "phase:47",
+      "label": "TweakCN lib extraction → packages/tweakcn-openai",
+      "status": "planned",
+      "goal": "Slice the editor surface out of the B2Gdevs/TweakCN-OpenAI fork (currently a full Next.js app) into a publishable package. Extract: theme engine, stores (zustand), editor routes as mountable React components. Peer deps on React 19 + ai sdk. Publish flow via pnpm pack / optional npm publish. Consumer apps (GAD site, platform) import it without pulling the whole Next.js app."
+    },
+    {
+      "type": "phase",
+      "id": "phase:48",
+      "label": "TweakCN BYOK flow — client sessionStorage + UI banner",
+      "status": "planned",
+      "goal": "Implement BYOK per gad-244. UI captures OpenAI key on first generate, stores in sessionStorage (tab-scoped), sends inline per request, server never persists. Explicit banner. Optional 24h encrypted localStorage toggle (Web Crypto device-bound key), default off. Zero server-side key storage, zero Redis."
+    },
+    {
+      "type": "phase",
+      "id": "phase:49",
+      "label": "GAD site Theme nav — mount TweakCN lib",
+      "status": "planned",
+      "goal": "Add \"Theme\" nav item to the GAD marketing site (vendor/get-anything-done/site). Mount extracted tweakcn editor under /theme. Wire BYOK flow from phase 48. Users can try TweakCN-OpenAI directly inside the GAD site using their own key — zero maintenance for us."
+    },
+    {
+      "type": "phase",
+      "id": "phase:50",
+      "label": "apps/portfolio-v2 as pilot species personal-portfolio",
+      "status": "planned",
+      "goal": "Treat apps/portfolio-v2 (operator personal site — broken pieces + great content) as pilot species personal-portfolio. Wire through GAD. Current Vercel deploy = current generation. Per operator: just a normal landing site + some security for private stuff + easy VCS rework + articles + resumes + projects. First real-site dogfood of the project/species/generation model on a non-eval site."
+    },
+    {
+      "type": "phase",
+      "id": "phase:50.1",
+      "label": "apps/portfolio → RE target species",
+      "status": "planned",
+      "goal": "Set up apps/portfolio as a public reverse-engineering eval species per gad-235. First-class RE species support: species.json kind=reverse-engineer, framework fitness signal = quality of planning docs produced from the existing codebase. Proves the framework can produce planning docs on non-trivial input."
+    },
+    {
+      "type": "phase",
+      "id": "phase:51",
+      "label": "apps/platform scaffold — Clerk + Supabase + data model",
+      "status": "planned",
+      "goal": "Scaffold apps/platform as a new Next.js app in the monorepo. Wire Clerk auth. Wire Supabase (per gad-253, provisional). Define project / species / generation data model + relationships. No user features yet — this is structural. Enables phases 53+."
+    },
+    {
+      "type": "phase",
+      "id": "phase:52",
+      "label": "packages/editor-core — read-only code view + virtual file folder",
+      "status": "planned",
+      "goal": "Shared primitive package. CodeView component (read-only per gad-246). VirtualFileFolder primitive per gad-254 with pluggable data source adapter (local FS vs Supabase). Used by apps/platform AND apps/desktop."
+    },
+    {
+      "type": "phase",
+      "id": "phase:53",
+      "label": "apps/desktop Tauri shell — editors + terminal-as-chat + CLI bridge",
+      "status": "planned",
+      "goal": "Scaffold apps/desktop with Tauri. Host editors mounted from editor-core. Embedded terminal widget wraps a child PTY that runs the user's chosen coding agent CLI (Claude Code, Cursor, etc.) — that terminal IS the chat. CLI install bridge: detect already-installed CLIs, optionally install missing ones. Release as signed .exe."
+    },
+    {
+      "type": "phase",
+      "id": "phase:54",
+      "label": "Species-as-card primitive + per-species planning docs + token mechanic + leaderboards",
+      "status": "planned",
+      "goal": "Implement gad-239 + gad-248 + gad-249. &lt;SpeciesCard&gt; primitive consumes per-species .planning/ subtree (STATE / ROADMAP / DECISIONS / TASKS). Champion-title token with auto-transfer by productivity. Two leaderboards per species: fork contributors and generation continuers. Moderation UI."
+    },
+    {
+      "type": "phase",
+      "id": "phase:55",
+      "label": "Skill lane split — DEV vs PROD frontmatter + catalog filters",
+      "status": "planned",
+      "goal": "Add lane: dev | prod to every SKILL.md frontmatter per gad-247. Update catalog generator to emit lane. Add CLI flag gad skill list --lane. Retag all existing skills. Some span both — decided per-case. Update site skill index with lane filter."
+    },
+    {
+      "type": "phase",
+      "id": "phase:56",
+      "label": "packages/gauges — decisions / errors / notes / throughput, all pressure-gated",
+      "status": "planned",
+      "goal": "Build the four gauges per gad-251 + gad-250 pressure gating. One package exporting composable React components. Decision count, error-and-attempt stability score, note knowledge density, task throughput — each multiplied by pressure. Write references/gauges.md documenting formulas. Compose into dashboards AND species cards."
+    },
+    {
+      "type": "phase",
+      "id": "phase:57",
+      "label": "Snapshot + startup token compaction",
+      "status": "planned",
+      "goal": "Per gad-241. Rewrite gad snapshot + gad startup emitters to drop XML closing-tag cruft where scalar arrays suffice, dedupe overlapping blocks between startup and snapshot, and keep information density at equal or lower token count. Measure tokens before / after. Target ~40% reduction. Preserve info content — this is a presentation rewrite, not an info cut."
+    },
+    {
+      "type": "phase",
+      "id": "phase:58",
+      "label": "Daily teachings system — pipeline + site integration",
+      "status": "planned",
+      "goal": "Wire the teachings/ catalog into user-facing surfaces. (1) Snapshot footer: add a one-line 'tip of the day' reference to gad snapshot output (~60 chars, zero token cost beyond that line). (2) GitHub Actions daily-tip.yml tested end-to-end with OPENAI_API_KEY secret. (3) Site /teachings route under phase 46 — card grid, category filter, search, difficulty badges. (4) Optional weekly recap generator. (5) Document contribution path for static tips in teachings/README.md. Content backlog is fed by llm-from-scratch project (decision llm-004 / gad-256) + daily generator."
+    },
+    {
       "type": "task",
       "id": "task:10-01",
       "label": "Create .planning/ scaffold for get-anything-done and register in planning-config.toml.",
@@ -5937,9 +6028,153 @@
     },
     {
       "type": "decision",
-      "id": "decision:TEST-SMOKE",
-      "label": "smoke test",
-      "summary": "verify writer path"
+      "id": "decision:gad-233",
+      "label": "TweakCN consumed as lib; auth stays out of fork",
+      "summary": "TweakCN-OpenAI fork (B2Gdevs/TweakCN-OpenAI) stays minimal — auth/DB/billing stripped and NOT restored. Downstream consumers (GAD landing site, platform) handle auth and persistence themselves. Fork exists to be embeddable."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-234",
+      "label": "Platform is a separate Next.js app, not a section",
+      "summary": "apps/platform (new) hosts auth (Clerk), marketplace, user projects, BYOK store. NOT a /platform route in the existing portfolio site. Monorepo is pnpm workspaces (already set up)."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-235",
+      "label": "apps/portfolio becomes RE target species",
+      "summary": "The current apps/portfolio marketing site is archived-as-reverse-engineering-target: a species that benchmarks how well the framework can reverse-engineer a non-trivial existing app into planning docs. Reverse engineering becomes a staple species TYPE in the ecosystem."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-236",
+      "label": "Desktop client owns editors + terminal-as-chat + CLI bridge",
+      "summary": "Desktop client = Tauri shell (Rust-based, small exe, fast builds). Hosts the editors. Embedded terminal IS the agent chat surface — we launch the user's already-present coding agent CLI inside the terminal. We also handle CLI installs on the user's behalf."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-237",
+      "label": "Users bring own coding agent — shared + dedicated runners",
+      "summary": "Users supply their own coding agent (Claude Code, Cursor, Codex, etc.). Platform brokers runners: shared default + dedicated-server option for heavier users. No house agent dependency."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-238",
+      "label": "No rebrand — GAD name stays; carry evolution theme in README + landing",
+      "summary": "Considered rebrands (Context-Evolution-Framework, Skills-as-Genes, Long-Term-Context-Engine) all lack marketing or collide. Decision: keep GAD as the framework name and keep get-anything-done as the flagship. Instead invest in README + landing-page storytelling that makes the evolution theme and pla"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-239",
+      "label": "Species are first-class tradable primitives with own planning docs",
+      "summary": "Species stop being evaluation-project variants; they become primitives. Each species has its own STATE / ROADMAP / DECISIONS / TASKS scoped to the species itself. Species can be forked, iterated, compared, and rank-ordered on leaderboards."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-240",
+      "label": "Three iteration layers (project / species / generation), each planning-gauged",
+      "summary": "Project, species, and generation are all \"projects\" in the general sense — each has planning docs readable at any time AND each has quantitative gauges visible as game-UI widgets. More signal = more visible investment, with explicit tradeoffs."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-241",
+      "label": "Snapshot + startup output is token-redundant — rewrite to compact format",
+      "summary": "Operator observed that gad startup and gad snapshot duplicate information (phase 42.4 listed in both). Snapshot also wraps scalar arrays in XML (&lt;references&gt;&lt;reference&gt;...&lt;/reference&gt;&lt;/references&gt;) when a bare array would do. Closing tags cost tokens without adding informatio"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-242",
+      "label": "Runtime context surgery is a framework R&amp;D target",
+      "summary": "During a run, redundancy accumulates in the agent's context window (repeated snapshots, re-read files, stale blocks). Rather than just pruning at compaction, explore surgical mid-run removal — drop specific redundant spans while keeping the rest live."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-243",
+      "label": "Proto-skill + skill-creation revisit gated on VCS findings",
+      "summary": "Current VCS implementation is surfacing new findings (compass-neighbor explored + removed; drag+depth approach next). Until VCS requirements stabilize, skill-creation and proto-skill flows should not be reworked — they would re-churn against moving requirements."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-244",
+      "label": "TweakCN BYOK = client-side sessionStorage, server never persists",
+      "summary": "Vercel serverless has no reliable cross-instance in-memory persistence and \"encrypted server-side temp\" is weaker than never storing. End user pastes their OpenAI key once per tab → browser sessionStorage → sent inline per request → server passes to OpenAI client → response returned → key discarded."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-245",
+      "label": "Monorepo = pnpm workspaces (existing), additive packages only",
+      "summary": "custom_portfolio already uses pnpm-workspace.yaml with apps/* + packages/* + packages-shared/* + select vendor entries. No migration to Turborepo / Nx needed. New scope is additive — drop new packages in packages/, new apps in apps/."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-246",
+      "label": "Code editor views are read-only; mutations via UI + coding agents only",
+      "summary": "In platform + desktop editors, file views are READ-ONLY — no direct text editing. Mutations happen via UI actions (pick a theme, run a skill, accept a diff) or via the user's coding agent in the embedded terminal. Never by hand-typing into the view."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-247",
+      "label": "Skills split DEV (build) vs PROD (ship) via `lane:` frontmatter",
+      "summary": "Current skills all blur together. Introducing two lanes: DEV skills = building the thing (ideation, plan, code, debug, test, assets, iteration). PROD skills = shipping the thing to users (packaging, marketing copy, SEO, billing, moderation, onboarding, support, analytics, compliance)."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-248",
+      "label": "Species token = champion-title, auto-transfers by productivity",
+      "summary": "A species has a single champion-title token that marks the current most-productive fork. It is NOT ownership — original author is always referenced. Token transfers when a fork's (generation-count × pressure-score × contribution-score) exceeds the current holder's. Moderated."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-249",
+      "label": "Leaderboards for species forks AND generation continuers",
+      "summary": "Two leaderboards per species: (1) fork contributors (who is evolving the species) and (2) generation continuers (who is taking a generation forward). Both moderated — reports + thresholds + appeals."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-250",
+      "label": "Pressure ontology — nothing exists in a project until pressure is produced (NORTH STAR)",
+      "summary": "Operator framing: \"If there is no pressure, there is no meaningful information about the realization of a project until pressure is produced. Nothing in a project / species / generation exists until pressure is produced.\" Pressure is the creation ontology — the gate every other gauge multiplies agai"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-251",
+      "label": "Gauges = decisions / errors-and-attempts / notes / throughput; VCS hit rate dropped",
+      "summary": "Gauge bank formalized. (1) Decisions = direction. (2) Errors-and-attempts = stability / reputation — weighted by same-problem × attempt variance, decays as later unrelated tasks complete without recurrence. (3) Notes = knowledge density — count × length × (1 - change-rate). (4) Task throughput = rea"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-252",
+      "label": "Feature-request flow = user-agent drafts, platform-agents PR, human reviews",
+      "summary": "User's coding agent (inside the embedded terminal in the editor) drafts a feature request with a coded README example → submits to platform → platform's own coding agents open a PR against the target repo → human reviewer approves. User-side VCS customizations stay local until a PR lands."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-253",
+      "label": "Supabase stays (for now); swap gated on virtual-file-folder requirements",
+      "summary": "Current stack wires Clerk + Supabase. Clerk stays definitively. Supabase stays provisionally — may be swapped if the virtual-file-folder requirement (gad-254) or per-project data model pushes out its limits. Decision deferred until phase 51 scaffold surfaces concrete needs."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-254",
+      "label": "Virtual file folder required for cloud projects",
+      "summary": "Cloud-hosted projects need an in-browser virtual file folder UI — users view project files without local checkout. Read-only (per gad-246). Shared primitive across platform + desktop."
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-255",
+      "label": "Daily teachings system — file-backed tips, zero-cost CLI read, daily OpenAI generation",
+      "summary": "GAD framework ships a teachings/ catalog in vendor/get-anything-done/teachings/. Content layers: static/ (hand-authored canonical tips) and generated/YYYY/MM/ (daily OpenAI output). Surfaces: gad tip (today/random/search/list/categories/reindex), future snapshot footer line, and phase 46 landing-sit"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-256",
+      "label": "New project llm-from-scratch — learning-first bottom-up coding agent rebuild",
+      "summary": "New GAD project at projects/llm-from-scratch/ (planning root registered in gad-config.toml). Scope: rebuild the entire coding agent stack from primitives for learning — tokenizer, embeddings, attention, training, inference, sampling, agent scaffolding, context engine, self-managing loop. Not for dis"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-257",
+      "label": "Daily teachings — startup-triggered generation, session-surfaced nudge, not cron",
+      "summary": "Reverses the GitHub Actions cron approach from gad-255. Daily tip generation runs LOCALLY as part of gad startup if OPENAI_API_KEY is set AND today's tip file is missing. Rationale: operator works with gad CLI every day anyway — generation happens naturally on session start, only when they're actual"
     },
     {
       "type": "workflow",
@@ -13279,6 +13514,81 @@
       "type": "CITES"
     },
     {
+      "source": "decision:gad-238",
+      "target": "phase:45",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-241",
+      "target": "phase:42.4",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-241",
+      "target": "phase:57",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-244",
+      "target": "phase:48",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-248",
+      "target": "phase:54",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-251",
+      "target": "phase:56",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-253",
+      "target": "phase:51",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-253",
+      "target": "phase:52",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-253",
+      "target": "decision:gad-254",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-254",
+      "target": "decision:gad-246",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-255",
+      "target": "task:3-10",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-255",
+      "target": "phase:46",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-255",
+      "target": "phase:58",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-256",
+      "target": "skill:gad-config",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-257",
+      "target": "decision:gad-255",
+      "type": "CITES"
+    },
+    {
       "source": "skill:create-proto-skill",
       "target": "workflow:./workflow.md",
       "type": "USES_WORKFLOW"
@@ -13676,22 +13986,22 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-17T19:10:37.242Z",
-    "nodeCount": 902,
-    "edgeCount": 1293,
+    "generated": "2026-04-17T20:20:44.071Z",
+    "nodeCount": 939,
+    "edgeCount": 1308,
     "nodeTypes": {
-      "phase": 51,
+      "phase": 64,
       "task": 391,
       "skill": 128,
-      "decision": 228,
+      "decision": 252,
       "workflow": 104
     },
     "edgeTypes": {
       "BELONGS_TO": 393,
-      "CITES": 493,
+      "CITES": 507,
       "DEPENDS_ON": 63,
       "USES_SKILL": 182,
-      "REFERENCES": 83,
+      "REFERENCES": 84,
       "USES_WORKFLOW": 79
     }
   }

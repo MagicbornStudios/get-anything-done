@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 session 3 — teachings system shipped (seed 5 tips + gad tip CLI + daily generator + GH Actions workflow). New project llm-from-scratch scaffolded (9 phases, 4 decisions). Phase 58 added. Binary rebuild pending — installed gad.exe is stale (use 'node vendor/get-anything-done/bin/gad.cjs ...' until rebuilt). NEXT: (1) set OPENAI_API_KEY GH secret to enable daily workflow, (2) rebuild gad binary to pick up tip + writer subcommands, (3) phase 47 (TweakCN lib extraction) OR phase 01 of llm-from-scratch (BPE tokenizer) — operator pick.</next-action>
+  <next-action>2026-04-17 session 3 close — teachings system live. gad tip (file-backed, zero-cost read), gad tip generate (local startup-triggered), DAILY snapshot section surfaces today's tip + llm-from-scratch next-action + 'one small task per session' protocol. 5 seed tips. New project llm-from-scratch scaffolded (9 phases, 4 decisions, current=01 BPE). gad-255 + gad-256 + gad-257 landed. NEXT: (1) rebuild gad binary (stale), (2) set OPENAI_API_KEY in env, (3) daily small task on llm-from-scratch phase 01 BPE.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

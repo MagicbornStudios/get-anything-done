@@ -1928,5 +1928,16 @@ Operator priority statement: "I just need it working right now. If we can put it
     </references>
   </decision>
 
+  <decision id="gad-257">
+    <title>Daily teachings — startup-triggered generation, session-surfaced nudge, not cron</title>
+    <date>2026-04-17</date>
+    <summary>Reverses the GitHub Actions cron approach from gad-255. Daily tip generation runs LOCALLY as part of gad startup if OPENAI_API_KEY is set AND today's tip file is missing. Rationale: operator works with gad CLI every day anyway — generation happens naturally on session start, only when they're actually working. No stale tips during inactive periods. No GitHub secret to manage. Complements with: every gad snapshot emits a DAILY section surfacing (1) today's tip title + 'gad tip' pointer, and (2) the llm-from-scratch project's current next-action, tagged 'protocol: one small task per session'. This enforces the long-term learning habit without blocking other work — nudge, not gate.</summary>
+    <impact>Deleted .github/workflows/daily-tip.yml. Added gad tip generate subcommand. Wired gad startup to invoke the generator automatically when conditions met. Added buildDailySection helper to snapshot — appends DAILY section after TASKS. Generator script unchanged (scripts/generate-daily-tip.mjs); only the trigger moved from cron to startup. Tip-surface cost per snapshot: ~120 tokens for the DAILY block vs 0 before, in exchange for always-visible daily nudge + no GH Actions admin.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad.cjs"/>
+      <file path="vendor/get-anything-done/lib/teachings-reader.cjs"/>
+    </references>
+  </decision>
+
 </decisions>
 

@@ -46,6 +46,51 @@ const {
   compactTasksSection,
 } = require('../lib/snapshot-compact.cjs');
 const teachings = require('../lib/teachings-reader.cjs');
+
+/**
+ * Build the DAILY snapshot section — today's teaching tip reference + the
+ * long-term-learning project nudge. Keep under ~450 chars total so the
+ * token cost of surfacing is trivial (~120 tokens).
+ *
+ * Decision gad-255 + gad-257:
+ *  - Reading tips is file I/O, zero API cost.
+ *  - Every session should close one small task on the long-term learning
+ *    project (default: llm-from-scratch). Nudge printed on every snapshot.
+ */
+function buildDailySection(roots, baseDir) {
+  const lines = [];
+
+  // Today's tip
+  const tip = teachings.pickToday();
+  if (tip) {
+    lines.push(`tip: ${tip.title}  [${tip.category}, ${tip.difficulty}]`);
+    lines.push(`  gad tip  # read full body`);
+  }
+
+  // Long-term learning project nudge
+  const LEARNING_PROJECT_ID = 'llm-from-scratch';
+  const learningRoot = (roots || []).find(r => r.id === LEARNING_PROJECT_ID);
+  if (learningRoot) {
+    const statePath = require('path').join(
+      baseDir, learningRoot.path, learningRoot.planningDir, 'STATE.xml'
+    );
+    if (require('fs').existsSync(statePath)) {
+      const xml = require('fs').readFileSync(statePath, 'utf8');
+      const phaseMatch = xml.match(/<current-phase>([\s\S]*?)<\/current-phase>/);
+      const nextMatch = xml.match(/<next-action>([\s\S]*?)<\/next-action>/);
+      const phase = phaseMatch ? phaseMatch[1].trim() : '?';
+      const nextRaw = nextMatch ? nextMatch[1].trim() : '';
+      const next = nextRaw.length > 200 ? nextRaw.slice(0, 197) + '...' : nextRaw;
+      if (lines.length) lines.push('');
+      lines.push(`${LEARNING_PROJECT_ID}: phase ${phase}`);
+      if (next) lines.push(`  next: ${next}`);
+      lines.push(`  protocol: one small task per session (long-term learning project)`);
+    }
+  }
+
+  if (lines.length === 0) return null;
+  return { title: 'DAILY', content: lines.join('\n') };
+}
 const { readRequirements } = require('../lib/requirements-reader.cjs');
 const { readErrors } = require('../lib/errors-reader.cjs');
 const { readBlockers } = require('../lib/blockers-reader.cjs');
@@ -8028,6 +8073,12 @@ const snapshotV2Cmd = defineCommand({
     })();
     sections.push({ title: `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`, content: tasksContent });
 
+    // DAILY section — today's teaching tip + long-term-learning-project nudge.
+    // Decision gad-255 + gad-257: file-backed tips read with zero API cost;
+    // one-small-task-per-session protocol surfaced in every snapshot.
+    const dailySection = buildDailySection(config.roots, baseDir);
+    if (dailySection) sections.push(dailySection);
+
     // Decision gad-195: --mode=active emits ONLY the changing state —
     // STATE.xml (next-action), ROADMAP (sprint phases), TASKS (open sprint).
     // Static sections (decisions, file refs, conventions, equipped skills,
@@ -10136,6 +10187,9 @@ const startupCmd = defineCommand({
         }
       } catch { /* non-fatal — snapshot still works without session */ }
 
+      // Daily routine — generate today's tip if OPENAI_API_KEY set and tip missing.
+      try { maybeGenerateDailyTip(); } catch (e) { /* non-fatal */ }
+
       console.log(`Running snapshot now for projectid=${args.projectid}...`);
       console.log('');
       // Delegate to snapshot by re-invoking the process — simplest path.
@@ -10144,6 +10198,31 @@ const startupCmd = defineCommand({
     }
   },
 });
+
+/**
+ * Check if today's tip file exists; if not and OPENAI_API_KEY is set, fire the
+ * generator. Silent on skip (key missing) or success. Errors print to stderr
+ * but don't block startup.
+ */
+function maybeGenerateDailyTip() {
+  const today = teachings.isoDate();
+  const [Y, M, D] = today.split('-');
+  const teachingsDir = teachings.TEACHINGS_DIR;
+  const todayFile = path.join(teachingsDir, 'generated', Y, M, `${D}.md`);
+  if (fs.existsSync(todayFile)) return;
+  if (!process.env.OPENAI_API_KEY) return;
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'generate-daily-tip.mjs');
+  if (!fs.existsSync(scriptPath)) return;
+  console.log(`[daily tip] generating today's teaching (${today}) ...`);
+  const result = require('child_process').spawnSync(process.execPath, [scriptPath], {
+    env: process.env,
+    stdio: 'inherit',
+  });
+  if (result.status !== 0) {
+    console.error(`[daily tip] generation failed (exit ${result.status}) — continuing without.`);
+  }
+  console.log('');
+}
 
 const versionCmd = defineCommand({
   meta: { name: 'version', description: 'Print GAD framework version + git commit/branch for trace stamping' },
@@ -14012,8 +14091,44 @@ const tipReindexCmd = defineCommand({
   },
 });
 
+const tipGenerateCmd = defineCommand({
+  meta: { name: 'generate', description: "Generate today's tip via OpenAI (requires OPENAI_API_KEY). Skips if today's file exists unless --force." },
+  args: {
+    date: { type: 'string', description: 'Backfill date (YYYY-MM-DD); default today', default: '' },
+    force: { type: 'boolean', description: 'Overwrite today\'s tip if it already exists', default: false },
+    quiet: { type: 'boolean', description: 'Suppress non-error output', default: false },
+  },
+  run({ args }) {
+    if (!process.env.OPENAI_API_KEY) {
+      if (!args.quiet) {
+        console.log('tip generate: OPENAI_API_KEY not set — skipping generation.');
+        console.log('  Set the key to enable daily tip generation on startup.');
+      }
+      return;
+    }
+    const scriptPath = path.join(__dirname, '..', 'scripts', 'generate-daily-tip.mjs');
+    if (!fs.existsSync(scriptPath)) {
+      outputError(`Generator script missing: ${path.relative(findRepoRoot(), scriptPath)}`);
+      return;
+    }
+    const env = { ...process.env };
+    if (args.date) env.TIP_DATE = args.date;
+    if (args.force) env.TIP_FORCE = '1';
+    const result = require('child_process').spawnSync(process.execPath, [scriptPath], {
+      env,
+      stdio: args.quiet ? 'pipe' : 'inherit',
+    });
+    if (result.status !== 0) {
+      if (args.quiet) {
+        process.stderr.write(String(result.stderr || ''));
+      }
+      process.exit(result.status || 1);
+    }
+  },
+});
+
 const tipCmd = defineCommand({
-  meta: { name: 'tip', description: 'Daily teachings — today (default), random, search, list, categories, reindex. File-backed, zero API cost.' },
+  meta: { name: 'tip', description: 'Daily teachings — today (default), random, search, list, categories, reindex, generate. Reading is file-backed; only generate costs API tokens.' },
   subCommands: {
     today: tipTodayCmd,
     random: tipRandomCmd,
@@ -14021,6 +14136,7 @@ const tipCmd = defineCommand({
     list: tipListCmd,
     categories: tipCategoriesCmd,
     reindex: tipReindexCmd,
+    generate: tipGenerateCmd,
   },
 });
 
@@ -14220,7 +14336,7 @@ const main = defineCommand({
   const i = a.indexOf('tip');
   if (i === -1) return;
   const first = a[i + 1];
-  const known = new Set(['today', 'random', 'search', 'list', 'categories', 'reindex']);
+  const known = new Set(['today', 'random', 'search', 'list', 'categories', 'reindex', 'generate']);
   if (first === undefined || first.startsWith('-')) {
     a.splice(i + 1, 0, 'today');
     return;
