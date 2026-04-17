@@ -36,7 +36,11 @@ TODOS (19) remain parked: vcs-video-and-primitives, vcs-primitives-redesign, gad
 
 RESOLVED: roadmap artifact question → Option D via decision gad-229. Gauge bank is FOUR gauges (decisions/tasks/requirements/notes), roadmap stays as agent input, no ROADMAP.xml schema change. Note updated with resolution header. B (kill + fold into tasks) and C (reframe as workflow instances) remain viable long-term restructures for a future phase once gauge UI is in operator hands.
 
-C DISCUSSION OPEN (not a decision): operator flagged that if Option C reduces to "only solves merge conflicts" then it is not a strong argument on its own. Need to separate C (workflow-instance restructure, semantic generalization) from the outbox pattern (per-agent scratch files for merge-conflict avoidance — already captured as todo `structural-parallelism-task-outbox`). The two are orthogonal. Discussion sketched in response; awaits operator direction before capturing a new decision.</next-action>
+C DISCUSSION CLOSED: operator confirmed the real pain is (1) merge conflicts. The outbox todo handles that; no C (workflow-instance restructure) needed. Operator also flagged roadmap is likely over-complex — captured as todo `2026-04-16-shrink-roadmap-surface.md` (parked, post-gauge, NOT mid-flight). Broader principle noted: audit for redundant context surfaces in planning docs after gauge UI ships.
+
+Back to phase 45 wave 2. Site work is the priority. Current recommended next: **45-07 + 45-08** — wire ProjectPlanningDecisionsTab and ProjectPlanningRoadmapTab into the "coming soon" placeholders on /projects/[...id]?tab=planning&sub=decisions / ?sub=roadmap. Both files already exist in `site/app/projects/[...id]/`; just need imports in ProjectDetailTabContent.tsx. Small pair.
+
+After 45-07 + 45-08: consider 45-06 (tasks migration through 45-02 adapter), 45-05 (Art of War epigraphs), 45-03 (API routes consolidation onto the 45-02 adapter), 45-14 (type ramp + palette), 45-16 (hero copy + epigraphs).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
