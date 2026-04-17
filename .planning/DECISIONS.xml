@@ -1939,5 +1939,31 @@ Operator priority statement: "I just need it working right now. If we can put it
     </references>
   </decision>
 
+  <decision id="gad-258">
+    <title>llm-from-scratch always executes via subagent; chat surface receives report + tip only</title>
+    <summary>The llm-from-scratch project is intentionally isolated from the GAD framework's own development concerns. Its tasks (BPE, embeddings, attention, training, agent, context engine) are self-contained and share no direct coupling with framework code. Running them inline in the main GAD session wastes operator context, mixes two unrelated work streams, and makes the daily one-small-task rhythm invasive rather than ambient. Rule: every llm-from-scratch task is dispatched to a subagent with the project snapshot, the specific task id, and the teaching-tip authoring contract. The subagent executes the task, updates the project's planning docs (STATE.xml next-action, TASK-REGISTRY.xml status=done, teachings files), commits, and returns a structured report. The main session surfaces only: (a) task completed, (b) one-line outcome, (c) teaching tip body, (d) next-session task id. No intermediate tool output pollutes chat.</summary>
+    <impact>Daily llm-from-scratch execution becomes a single subagent invocation producing a brief operator-facing summary. The operator reads one report per day instead of wading through tokenizer code. The project stays inside GAD (planning docs, attribution, commit cadence) without being noise in the main thread. Supersedes gad-257's assumption that tips surface via snapshot — tips now arrive via subagent report.</impact>
+  </decision>
+
+  <decision id="gad-259">
+    <title>Remove DAILY/tip section from snapshot output</title>
+    <summary>The DAILY section added by decision gad-257 surfaced today's llm-internals tip plus the llm-from-scratch next-action in every snapshot. After gad-258 the subagent model makes that duplicate work: the subagent is the one actually consuming the tip and the next-action, not the main session. Keeping DAILY in the main snapshot is token waste and misdirection — it implies the operator/main agent should act on the tip, when the actual actor is the daily subagent. Change: remove the DAILY renderer from snapshot mode=full AND mode=active. Tip authoring still happens in the subagent (driven by decision llm-004). Tip reading still happens in the subagent and is returned in its report. Everywhere else tips remain available via (no tips found — run `gad tip reindex` or add files under teachings/static/) CLI on explicit demand.</summary>
+    <impact>Snapshot output drops ~50-200 tokens per call depending on tip length. Main-session prompt-cache stability improves (no daily-rotating content). The tip-gen cron and file-backed store remain; only the snapshot-surface is retired. Need a one-liner note in gad-snapshot-optimize skill referencing this.</impact>
+    <references>
+      <file path="vendor/get-anything-done/bin/gad-snapshot.cjs"/>
+      <file path="vendor/get-anything-done/skills/snapshot-optimize/SKILL.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-260">
+    <title>Per-project BYOK env storage - encrypted, uploadable via project editor, visible in project dashboard</title>
+    <summary>Projects increasingly need their own API keys (OpenAI for llm-from-scratch tip-gen, model providers for per-project evals, cloud services per-project). A single global env var bag does not scope properly: different projects want different providers, different rate-limit budgets, and different access scopes. Design: (1) Each project in the catalog gets an encrypted env-bag keyed by projectId. (2) Storage at rest uses a per-user master key (derived from an operator passphrase or OS keychain) - keys never transit or persist in plaintext on disk outside process memory. (3) Upload surfaces: project editor (local-dev dashboard) has a BYOK tab that lets the operator paste keys, validate them by test-call, and save them into the encrypted store; landing site project dashboard exposes the same surface for publicly listed projects when the user is authenticated. (4) Consumption: a thin gad-env-get CLI returns decrypted values for the active project; subagents launched from a project context inherit its env bag through a scoped spawn wrapper, not by leaking into process-wide env. (5) Never commit keys to git - encrypted store lives under .gad/secrets/projectid.enc with .gad/ gitignored. Rotation/revocation is a first-class operation.</summary>
+    <impact>New capability surface - requires its own roadmap phase(s). Need to decide crypto primitive (libsodium sealed-box vs AES-256-GCM + scrypt KDF), master-key UX (passphrase prompt vs OS keychain - macOS Keychain / Windows Credential Manager / linux secret-service), site-side storage (browser-only decrypt with WebCrypto, or server-side decrypt with per-user KMS). Three net-new work items filed as todos: (a) spec the crypto + storage model, (b) build the project-editor BYOK tab, (c) build the landing-site project-dashboard surface. llm-from-scratch immediately benefits: OPENAI_API_KEY moves from global env into the project encrypted bag.</impact>
+    <references>
+      <file path="projects/llm-from-scratch"/>
+      <file path="vendor/get-anything-done/apps/portfolio/app/project-market"/>
+    </references>
+  </decision>
+
 </decisions>
 

@@ -47,50 +47,11 @@ const {
 } = require('../lib/snapshot-compact.cjs');
 const teachings = require('../lib/teachings-reader.cjs');
 
-/**
- * Build the DAILY snapshot section — today's teaching tip reference + the
- * long-term-learning project nudge. Keep under ~450 chars total so the
- * token cost of surfacing is trivial (~120 tokens).
- *
- * Decision gad-255 + gad-257:
- *  - Reading tips is file I/O, zero API cost.
- *  - Every session should close one small task on the long-term learning
- *    project (default: llm-from-scratch). Nudge printed on every snapshot.
- */
-function buildDailySection(roots, baseDir) {
-  const lines = [];
-
-  // Today's tip
-  const tip = teachings.pickToday();
-  if (tip) {
-    lines.push(`tip: ${tip.title}  [${tip.category}, ${tip.difficulty}]`);
-    lines.push(`  gad tip  # read full body`);
-  }
-
-  // Long-term learning project nudge
-  const LEARNING_PROJECT_ID = 'llm-from-scratch';
-  const learningRoot = (roots || []).find(r => r.id === LEARNING_PROJECT_ID);
-  if (learningRoot) {
-    const statePath = require('path').join(
-      baseDir, learningRoot.path, learningRoot.planningDir, 'STATE.xml'
-    );
-    if (require('fs').existsSync(statePath)) {
-      const xml = require('fs').readFileSync(statePath, 'utf8');
-      const phaseMatch = xml.match(/<current-phase>([\s\S]*?)<\/current-phase>/);
-      const nextMatch = xml.match(/<next-action>([\s\S]*?)<\/next-action>/);
-      const phase = phaseMatch ? phaseMatch[1].trim() : '?';
-      const nextRaw = nextMatch ? nextMatch[1].trim() : '';
-      const next = nextRaw.length > 200 ? nextRaw.slice(0, 197) + '...' : nextRaw;
-      if (lines.length) lines.push('');
-      lines.push(`${LEARNING_PROJECT_ID}: phase ${phase}`);
-      if (next) lines.push(`  next: ${next}`);
-      lines.push(`  protocol: one small task per session (long-term learning project)`);
-    }
-  }
-
-  if (lines.length === 0) return null;
-  return { title: 'DAILY', content: lines.join('\n') };
-}
+// Decision gad-259 (2026-04-17): DAILY snapshot section removed.
+// After gad-258 moved llm-from-scratch execution into a daily subagent,
+// the main-session snapshot no longer needs to surface the tip or the
+// learning-project next-action. The subagent consumes them directly and
+// returns a brief operator-facing report. `gad tip` remains on demand.
 const { readRequirements } = require('../lib/requirements-reader.cjs');
 const { readErrors } = require('../lib/errors-reader.cjs');
 const { readBlockers } = require('../lib/blockers-reader.cjs');
@@ -8073,11 +8034,8 @@ const snapshotV2Cmd = defineCommand({
     })();
     sections.push({ title: `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`, content: tasksContent });
 
-    // DAILY section — today's teaching tip + long-term-learning-project nudge.
-    // Decision gad-255 + gad-257: file-backed tips read with zero API cost;
-    // one-small-task-per-session protocol surfaced in every snapshot.
-    const dailySection = buildDailySection(config.roots, baseDir);
-    if (dailySection) sections.push(dailySection);
+    // Decision gad-259 (2026-04-17): DAILY section retired. See function-site
+    // comment above where buildDailySection used to live.
 
     // Decision gad-195: --mode=active emits ONLY the changing state —
     // STATE.xml (next-action), ROADMAP (sprint phases), TASKS (open sprint).
