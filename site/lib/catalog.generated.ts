@@ -2018,14 +2018,16 @@ export const SKILL_INHERITANCE: Record<string, string[]> = {
   "create-skill": [
     "escape-the-dungeon/bare",
     "escape-the-dungeon/emergent",
-    "escape-the-dungeon/gad"
+    "escape-the-dungeon/gad",
+    "escape-the-dungeon/vcs-test"
   ],
   "eval-skill-install": [],
   "find-skills": [],
   "find-sprites": [
     "escape-the-dungeon/bare",
     "escape-the-dungeon/emergent",
-    "escape-the-dungeon/gad"
+    "escape-the-dungeon/gad",
+    "escape-the-dungeon/vcs-test"
   ],
   "framework-upgrade": [],
   "gad-add-backlog": [],
@@ -2148,6 +2150,16 @@ export const CURRENT_REQUIREMENTS: CurrentRequirementsFile[] = [
     "bytes": 30342,
     "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n  Eval project: Escape the Dungeon\r\n  Requirements version history:\r\n    v1 (2026-04-06): 12 systems-focused criteria, no gates\r\n    v2 (2026-04-08): Gate criteria, vertical-slice priority, UI-first mandate\r\n    v3 (2026-04-08): Game-loop gate, spell-crafting gate, UI quality gate\r\n    v4 (2026-04-08): Pressure-oriented design, authored-only, ingenuity enforcement,\r\n                     floor progression with boss gates, forge integrated with encounter design,\r\n                     starter abilities explicitly insufficient, Traits UI label\r\n    v5 (2026-04-09): Playtest-driven expansion — 21 new/amended requirements from user\r\n                     play of Bare v5, Emergent v4, GAD v9/v10. Adds combat model choice\r\n                     (rule-based UO-style preferred), entity-trait action policies (enemies\r\n                     AND NPCs), real-time game-time, affinity reward loop, central visual\r\n                     nav map, encounter visuals, spells-as-ingredients, rune uniqueness,\r\n                     event-driven rendering, save checkpoints, merchants, NPC dialogue,\r\n                     inventory/equipment, character sheet + skill tree, loadout slots.\r\n                     v4 remains THE BASE — everything in v4 still applies. v5 adds on top.\r\n-->\r\n<requirements version=\"v5\" updated=\"2026-04-09\">\r\n  <goal>\r\n    Build a playable roguelike dungeon crawler \"Escape the Dungeon\" where players must\r\n    exercise INGENUITY through spell crafting and adaptation to progress. This is not a\r\n    features checklist — it is a problem-solving loop disguised as a dungeon crawler.\r\n    Every mechanical system must create friction that rewards creative player choice.\r\n  </goal>\r\n\r\n  <audience>Solo player (keyboard + mouse). Authored content only. Target: Vite + TypeScript + KAPLAY (web).</audience>\r\n\r\n  <core-principle>\r\n    **Baseline starter abilities must NOT be sufficient to comfortably complete a full\r\n    floor without adaptation or enhancement.** If a player can brute-force progression\r\n    using only what they start with, the design has failed. Encounters must demand\r\n    spell crafting, skill use, resource management, or build specialization.\r\n  </core-principle>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- GATE CRITERIA — all must pass or requirement_coverage = 0    -->\r\n  <!-- ============================================================ -->\r\n  <gate-criteria>\r\n\r\n    <gate id=\"G1\" name=\"game-loop\">\r\n      The complete game loop must work without softlock. A test run must walk through:\r\n      1. Title screen renders and \"New Game\" starts a run\r\n      2. Player enters first room with visible navigation options\r\n      3. Player navigates to a second room (scene transition succeeds)\r\n      4. Player encounters combat OR dialogue and resolves it\r\n      5. After resolution, player returns to room navigation state\r\n      6. Player continues into at least one additional room without softlock or dead end\r\n      Minimum 3 total room transitions in a passing run.\r\n    </gate>\r\n\r\n    <gate id=\"G2\" name=\"forge-with-ingenuity-payoff\">\r\n      The game must include a functional spell-crafting system AND at least one encounter\r\n      per floor where the crafted/adapted spell provides a meaningful advantage.\r\n\r\n      Crafting requirements:\r\n      - Player can access a forge / spell-craft interface during gameplay\r\n      - Player selects at least 2 crafting inputs (runes or components)\r\n      - System produces a new, usable spell from the combination\r\n      - Crafted spell can be equipped and used in encounter flow\r\n      - Minimum 3-5 runes/components, 3+ valid combinations\r\n\r\n      Ingenuity payoff requirement (THIS IS THE KEY ADDITION):\r\n      - At least one encounter per floor must significantly favor or require a crafted/\r\n        adapted spell. Examples: enemy resistant to base damage types, enemy that punishes\r\n        spell repetition, enemy that only yields to DoT or burst, etc.\r\n      - Mere spell acquisition through loot/NPC rewards does NOT satisfy this gate.\r\n      - Player must intentionally CRAFT to succeed.\r\n    </gate>\r\n\r\n    <gate id=\"G3\" name=\"ui-quality\">\r\n      The game must present a fully intentional UI. Required:\r\n      - Readable, visually structured layout with spacing and hierarchy\r\n      - Room-type icons or sprite representations\r\n      - Encounter/entity visual representation via sprite, portrait, or coherent placeholder\r\n      - Themed visual differentiation across room types (color, background, or panel treatment)\r\n      - Styled interactive controls (buttons with visible affordance)\r\n      - HP/mana/resources as visual bars, not only numeric dumps\r\n      - Color-coded statuses / spell types / factions\r\n\r\n      Acceptable asset sourcing (in order of preference):\r\n      1. Lightweight installable icon/sprite libraries (npm packages, CDN)\r\n      2. Web-searched free/open-license sprites and tilesets (use the find-sprites skill)\r\n      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)\r\n      4. Simple geometric fallback tiles — LAST RESORT, counts against UI quality score\r\n\r\n      Raw ASCII/text-only UI fails this gate. Ugly primitive-only output counts as a gate\r\n      failure even if asset sourcing was attempted.\r\n    </gate>\r\n\r\n    <gate id=\"G4\" name=\"pressure-mechanics\">\r\n      The game must include at least TWO systems that constrain player behavior such that\r\n      crafting or adapting spells provides a meaningful advantage or is required for success.\r\n\r\n      Pick at least two from these categories:\r\n      A. **Resource pressure** — limited mana pool, limited healing, forge training has a cost,\r\n         cannot spam indefinitely\r\n      B. **Enemy counterplay** — resistances, immunities, behavior that punishes repetition,\r\n         shields requiring specific effects\r\n      C. **Encounter design pressure** — elites with unique rules, bosses that invalidate\r\n         default play, rooms with mechanical constraints\r\n      D. **Build pressure** — player cannot master everything, affinity pushes specialization,\r\n         loadout limits force trade-offs\r\n\r\n      At least one pressure mechanic must interact with the forge so crafted spells are\r\n      demonstrably more effective than default spells in affected encounters.\r\n    </gate>\r\n\r\n  </gate-criteria>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- DUNGEON STRUCTURE (authored, not procedural)                 -->\r\n  <!-- ============================================================ -->\r\n  <dungeon-structure>\r\n    <authored-only>\r\n      All content is authored. No procedural level generation. Light randomness in encounter\r\n      tables or loot is acceptable; structural layout must be hand-designed.\r\n    </authored-only>\r\n\r\n    <hierarchy>\r\n      Floors → Rooms → Boss Gate. Each floor has 5-8 authored rooms plus a floor boss that\r\n      gates progression to the next floor. Player clears a floor by defeating the boss,\r\n      which unlocks the next floor.\r\n    </hierarchy>\r\n\r\n    <room-types>\r\n      <type name=\"Combat\">Standard enemy encounter, authored enemy composition.</type>\r\n      <type name=\"Elite\">Stress test for a mechanic introduced earlier on this floor or a previous one. Harder than standard combat, usually requires crafted spells or adaptation.</type>\r\n      <type name=\"Forge\">Crafting + affinity training interface. May cost mana crystals or XP to use.</type>\r\n      <type name=\"Rest\">Limited recovery (heal HP/mana to a cap, NOT full restore every time).</type>\r\n      <type name=\"Event\">Choices, narrative, tradeoffs. May give items, information, or apply debuffs.</type>\r\n    </room-types>\r\n\r\n    <floor-mechanical-constraint>\r\n      Each floor MUST introduce at least one mechanical constraint or enemy behavior that\r\n      cannot be brute-forced with the player's current default abilities. Examples:\r\n      - Floor 1: enemies resistant to raw damage → player must apply DoT or status effects\r\n      - Floor 2: enemies that reflect direct damage → player must use indirect or summon-based attacks\r\n      - Floor 3: enemies with mana-drain aura → player must conserve or use physical skills\r\n      This constraint is discovered through gameplay, not explained in a tutorial.\r\n    </floor-mechanical-constraint>\r\n\r\n    <respawn-and-grinding>\r\n      Combat rooms on a cleared floor may respawn enemies on re-entry (respawn cadence is\r\n      authored, not every entry). Player can grind for XP, crystals, and rune affinity\r\n      before attempting bosses. Grinding should be slower than forge training to create\r\n      choice pressure.\r\n    </respawn-and-grinding>\r\n  </dungeon-structure>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- FORGE SYSTEM (now integrated with encounter design)          -->\r\n  <!-- ============================================================ -->\r\n  <forge-system>\r\n    <required>\r\n      - Forge interface accessible at Forge rooms\r\n      - 3-5 runes or crafting components\r\n      - 3+ valid combinations producing distinct spell effects\r\n      - Affinity tracking per rune/spell family, increases with use\r\n      - Forge can train affinity directly in exchange for XP (cheaper than combat grinding)\r\n      - At least one encounter per floor requires or strongly favors a crafted/adapted spell\r\n    </required>\r\n    <strongly-recommended>\r\n      - Visible affinity level (UI shows current levels)\r\n      - Affinity thresholds unlock stronger spell variants\r\n      - Authored or player-authored spell customization (player can name their spells)\r\n    </strongly-recommended>\r\n    <deferred-to-v5>\r\n      - Cross-affinity decay when runes are neglected\r\n      - Deep evolution trees\r\n      - Multi-stage spell mutations\r\n    </deferred-to-v5>\r\n  </forge-system>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- SKILLS (scored, not gated)                                    -->\r\n  <!-- ============================================================ -->\r\n  <skills-system>\r\n    <required>\r\n      Combat must support at least one non-spell action category (basic attack, skill, or similar).\r\n      The combat model should NOT be single-lane \"spell or nothing\".\r\n    </required>\r\n    <scored>\r\n      Full skill system with physical (no-mana) actions, skill XP / evolution, mana-crystal\r\n      overcharge to add extra damage or effects (DoT, burn, bleed, stun, knockback).\r\n    </scored>\r\n  </skills-system>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- ASSET SOURCING (first attempt real assets)                   -->\r\n  <!-- ============================================================ -->\r\n  <asset-sourcing>\r\n    <workflow>\r\n      Agents must attempt asset sourcing first via the find-sprites skill or equivalent\r\n      web-search workflow. Sourced assets should be lightweight, installable, and legally\r\n      usable (open-license, public domain, or generated).\r\n    </workflow>\r\n    <preference-order>\r\n      1. Lightweight installable icon/sprite npm packages (game-icons, pixel-art packs)\r\n      2. Web-searched free/open-license sprites/tilesets (itch.io, OpenGameArt, etc.)\r\n      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)\r\n      4. Geometric fallback tiles — LAST RESORT, counts against UI quality\r\n    </preference-order>\r\n    <fallback-policy>\r\n      Fallback to generated/geometric placeholders is allowed ONLY if sourcing genuinely\r\n      fails (404s, no suitable assets, integration cost disproportionate). Fallback must\r\n      still be visually coherent. Using fallback when real assets were reachable is a\r\n      gate violation.\r\n    </fallback-policy>\r\n  </asset-sourcing>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- TERMINOLOGY                                                   -->\r\n  <!-- ============================================================ -->\r\n  <terminology>\r\n    <ui-label>Traits — player-facing label for narrative/progression stats</ui-label>\r\n    <code-identifier>narrativeStats — internal code/data structure name</code-identifier>\r\n    <rationale>Splits stable internal naming from clearer external naming. Document the mapping once.</rationale>\r\n  </terminology>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- SCORED CRITERIA                                               -->\r\n  <!-- ============================================================ -->\r\n  <scored-criteria>\r\n    <criterion>Turn-based combat with Fight/Spells/Bag/Run, visible HP bars, damage numbers, XP/crystal rewards</criterion>\r\n    <criterion>At least 3 distinct enemy types with different stats and mechanical behaviors</criterion>\r\n    <criterion>NPC dialogue with portrait/representation and choice options that affect gameplay</criterion>\r\n    <criterion>Persistent HUD: player name, HP bar, mana bar, current floor, dungeon tick or turn count, crystal currency</criterion>\r\n    <criterion>At least two overlay menus (Map, Bag, Stats, Spellbook)</criterion>\r\n    <criterion>Entity model with at least 3 entity types loaded from content pack JSON</criterion>\r\n    <criterion>Game state persists across page refresh (localStorage)</criterion>\r\n    <criterion>Player can level up or gain power through gameplay progression</criterion>\r\n    <criterion>At least 2 floors with different mechanical constraints and boss encounters</criterion>\r\n    <criterion>\"Traits\" label used in UI where narrative stats appear</criterion>\r\n    <criterion>Full skill system with mana-crystal overcharge (scored bonus, not gate)</criterion>\r\n    <criterion>Affinity thresholds unlock spell variants (scored bonus, not gate)</criterion>\r\n  </scored-criteria>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- INGENUITY / ADAPTATION SCORING                                -->\r\n  <!-- ============================================================ -->\r\n  <ingenuity-scoring>\r\n    <dimension>ingenuity_score</dimension>\r\n    <measures>\r\n      Whether the player needed to change strategy, whether crafted spells were meaningfully\r\n      used, and whether encounters encouraged experimentation. Scored 0.0 to 1.0.\r\n    </measures>\r\n    <signals>\r\n      - Number of crafted spells actually used in a test run\r\n      - Diversity of spell usage (no single spell dominates)\r\n      - Can the starter spell alone clear every floor? (this should be NO)\r\n      - Does at least one encounter REQUIRE crafted spell usage to succeed?\r\n      - Did the test player adapt their build across floors?\r\n    </signals>\r\n    <scoring-notes>\r\n      This is measured via human review during playtesting. The reviewer asks: \"Did I feel\r\n      like I needed to craft to make progress, or could I spam the default spell?\"\r\n    </scoring-notes>\r\n  </ingenuity-scoring>\r\n\r\n  <non-goals>\r\n    <item>Procedural generation — authored content only</item>\r\n    <item>Full rune affinity decay — deferred to v5</item>\r\n    <item>Multi-stage deep evolution trees — deferred to v5</item>\r\n    <item>Tile-based movement or 2D grid walking</item>\r\n    <item>Multiplayer or networking</item>\r\n    <item>Complex asset pipelines or custom art tools</item>\r\n  </non-goals>\r\n\r\n  <source-docs>\r\n    <doc path=\"source-GAMEPLAY-DESIGN.xml\" role=\"Trimmed gameplay design (vertical slice focus)\" />\r\n    <doc path=\"source-STAT-AND-BEHAVIOUR-TAXONOMY.md\" role=\"Canonical stat names, groupings, engine mappings\" />\r\n  </source-docs>\r\n\r\n  <evaluation-notes>\r\n    Human reviewer rubric for ingenuity:\r\n    - 0.0: Could spam starter abilities to clear everything, no crafting needed\r\n    - 0.3: Had to use forge once, but mostly spammed\r\n    - 0.6: Had to craft 2-3 spells and switch strategies per floor\r\n    - 1.0: Had to think carefully about builds, crafted spells were essential, felt like a puzzle\r\n  </evaluation-notes>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- v5 ADDENDUM (2026-04-09) — playtest-driven                   -->\r\n  <!--                                                              -->\r\n  <!-- Captured from user play of Bare v5 (0.805 rubric), Emergent  -->\r\n  <!-- v4 (0.885 rubric after rescore), GAD v9 (rate-limited), GAD  -->\r\n  <!-- v10 (api-interrupted). Source markdown:                      -->\r\n  <!-- evals/_v5-requirements-addendum.md                           -->\r\n  <!--                                                              -->\r\n  <!-- Everything in v4 above still applies. v5 adds on top.        -->\r\n  <!-- ============================================================ -->\r\n  <addendum version=\"v5\" updated=\"2026-04-09\">\r\n\r\n    <requirement id=\"R-v5.01\" amends=\"G2\" title=\"Training via encounter, not menu\">\r\n      Affinity must increase as a side effect of casting spells in encounters, not as a\r\n      direct menu action. Remove any \"select affinity → train\" menu that picks the trained\r\n      element for the player. Introduce a Training Dummy encounter (low-XP, no-loot combat\r\n      room type) whose only purpose is letting the player cast without risk so affinity\r\n      rises through use. Any room with combat must produce affinity gain for the elements/\r\n      runes the cast spell used. The forge becomes a place to forge and combine, not to\r\n      train. Rationale: the casting of spells must be what increases rune affinity; direct\r\n      training menus turn a discovery loop into a shopping list.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.02\" title=\"Rune discovery as a gameplay loop\">\r\n      Not all runes are listed or available at game start. Runes must be DISCOVERED across\r\n      the dungeon. Starter inventory contains a small subset of runes (2-3). The rest are\r\n      found as loot drops from combat/elite encounters, hidden in event rooms, sold by\r\n      merchants, or awarded by NPC dialogue outcomes. The rune forge UI must visibly\r\n      distinguish known vs undiscovered runes (locked slots, ???, or similar). At least\r\n      one rune per floor must be gated behind a non-combat interaction.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.03\" title=\"Merchants with buy/sell/trade\">\r\n      The dungeon must contain at least one merchant encounter per floor. Merchant room\r\n      type. Inventory of runes, potions, and items with gold cost. Three operations: buy\r\n      (cost gold), sell (gain gold), trade (exchange owned item for stocked item with a\r\n      relative value rule). Gold or an equivalent currency becomes a tracked resource.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.04\" title=\"NPC dialogue with branching outcomes\">\r\n      Authored NPCs must appear with dialogue options that trigger items, events, or\r\n      combat. At least 3 authored NPCs across the dungeon with 2+ dialogue branches each.\r\n      Dialogue choices must cause persistent game state changes: item gain, rune unlock,\r\n      enemy spawn, merchant discount, quest flag.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.05\" title=\"Inventory/bag with grid and equippable items\">\r\n      Player must have a visible inventory UI. Bag with a finite grid of slots. Items have\r\n      categories: consumable (potions, keys), rune, equipment (weapon, armor, trinket,\r\n      focus, etc.). Equipment slots must exist on a character sheet with at least:\r\n      main-hand, off-hand, body, trinket. Equipping an item must affect combat stats or\r\n      spell outputs in a measurable way. Items must drop from combat, events, and\r\n      merchants.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.06\" title=\"Visible character sheet with combat/physical skills and a skill tree\">\r\n      Player must be able to inspect their character at any time. Panel showing: HP, mana,\r\n      affinities, physical/combat stats, resistances, equipped items, known spells, known\r\n      physical skills. Skill tree or equivalent progression graph for physical/combat\r\n      skills, SEPARATE FROM SPELLS. Physical skills cost stamina or a non-mana resource to\r\n      distinguish from spells.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.07\" title=\"Spell slots and skill slots (loadout constraint)\">\r\n      When the player has many spells/skills, they must choose which to equip. Fixed-size\r\n      spell loadout (suggested: 4-6 equipped slots out of all known spells). Fixed-size\r\n      physical skill loadout (suggested: 2-4 equipped slots). Loadout can only be changed\r\n      in rest rooms or at specific stations, not mid-combat. Build pressure mechanic\r\n      satisfying G4.\r\n    </requirement>\r\n\r\n    <!-- R-v5.08 REMOVED — v4 progression requirements were sufficient. -->\r\n\r\n    <requirement id=\"R-v5.09\" amends=\"G1\" title=\"Session persistence\">\r\n      The game must support resumable sessions. On room-clear or floor-clear, the\r\n      game checkpoints the player's state. If the player closes the browser or the\r\n      session ends, re-opening the game presents a Continue option that restores the\r\n      most recent checkpoint. New Game starts fresh. Both paths must work without error.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.10\" amends=\"G3\" title=\"Transient UI feedback\">\r\n      UI feedback elements (toasts, status messages, combat results) must be transient\r\n      and session-scoped. Each element auto-dismisses after a brief display period\r\n      (3-5 seconds) or provides an explicit dismiss control. Starting a new session\r\n      must present a clean UI with no carried-over feedback from a previous session.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.11\" amends=\"room-types\" title=\"Rest rooms must offer rest\">\r\n      Any room typed Rest (including the rune forge rest variant) must expose a Rest\r\n      action that restores HP/mana and allows loadout changes. Forge rooms may combine\r\n      Forge + Train + Rest actions, but Rest must be one of the action buttons if the room\r\n      claims Rest as a room type.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.12\" amends=\"G3\" title=\"Navigation and map usability\">\r\n      Map/navigation UI must be more than a linear list. Map view must show at minimum a\r\n      2D graph layout of discovered rooms with current position, cleared/uncleared state,\r\n      and available exits. Navigation from the map must be one click, not a multi-step\r\n      menu. See R-v5.17 for the stronger form.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.13\" amends=\"G1 G4\" title=\"Auto-resolve combat with tactical loadout (Unicorn Overlord style)\">\r\n      Combat resolves automatically based on the player's pre-set loadout, equipped\r\n      spells/skills, and tactical rules. The player does NOT click-attack individual\r\n      enemies during combat. Instead:\r\n\r\n      1. Before an encounter, the player configures: equipped spells, equipped physical\r\n         skills (per loadout slots from R-v5.07), formation/positioning of party members\r\n         (if applicable), and action-policy rules (e.g. \"use heal when HP below 30%\",\r\n         \"prioritize targets weak to equipped element\").\r\n      2. Combat plays out in real-time with a visible combat log showing each action,\r\n         its effect, and why it was chosen (which rule triggered).\r\n      3. The player can PAUSE at any time to adjust loadout, swap spells, or change\r\n         action-policy rules. The fight resumes with the new configuration.\r\n      4. Resolution depends on the loadout quality, spell/skill choices, and how well\r\n         the action policies match the enemy composition — this is where the forge and\r\n         rune crafting systems pay off.\r\n\r\n      This model rewards preparation and build-crafting over reflexes. The ingenuity\r\n      requirement (G2) is satisfied by encounters where the default loadout fails and\r\n      the player must pause, rethink, and adapt their tactical rules.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.14\" title=\"Trait-driven behavior for all entities\">\r\n      Every entity with agency (enemies, NPCs, the player character) has traits that\r\n      drive their behavior. Traits are NOT static labels — they shift based on:\r\n\r\n      - Dialogue choices the player makes (choosing aggressive responses shifts the\r\n        player toward \"aggressive\" trait, which changes available dialogue options\r\n        with NPCs who react to that trait)\r\n      - Moral interactions (sparing vs defeating enemies, helping vs ignoring NPCs,\r\n        stealing vs buying from merchants)\r\n      - Combat actions (repeatedly using fire spells shifts affinity toward fire,\r\n        which may change how fire-resistant enemies react)\r\n\r\n      Enemy behavior in auto-resolve combat is governed by their traits: an aggressive\r\n      enemy prioritizes attack, a territorial enemy holds position, a cowardly enemy\r\n      flees at low HP. NPC dialogue options expand or contract based on trait alignment\r\n      between the player and the NPC. Traits have visible NUMERIC values on the\r\n      character sheet (e.g. aggression: 0.7, compassion: 0.3, arcane affinity: 0.8).\r\n      When a trait shifts, the numeric change is shown inline (combat log or a brief\r\n      HUD notification like \"+0.1 aggression\").\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.15\" title=\"Real-time game clock\">\r\n      The dungeon has an in-game clock that progresses in real time (suggested ratio:\r\n      1 real hour = 1 in-game day). The clock can influence gameplay: encounter\r\n      composition may shift by time of day, merchant stock may rotate, certain NPC\r\n      events may be time-gated. Day/night UI tinting is a SOFT bonus (not a gate).\r\n      The clock is purely flavor and pacing — it does NOT add turn-based tick\r\n      mechanics or per-tick processing. All rendering remains event-driven per\r\n      R-v5.21.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.16\" title=\"Affinity reward loop\">\r\n      Boosting a rune's affinity must produce a visible, valuable reward — not just a\r\n      stat increment hidden on a sheet. Suggested rewards at affinity thresholds: new\r\n      rune variant unlocked, existing spells using that rune gain a visual effect tier,\r\n      new spell combinations become craftable, access to an affinity-gated event or NPC.\r\n      At least one affinity reward must be visible in the forge UI (e.g. an affinity\r\n      progress bar with named milestones).\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.17\" amends=\"G3 R-v5.12\" title=\"Central visual navigation map with player location\">\r\n      Stronger form of R-v5.12. The navigation view must be a persistent, reachable,\r\n      visual map. Accessible from a single button/keystroke at any time in exploration\r\n      mode. Shows the player token on its current room, room type icons, discovered vs\r\n      undiscovered rooms, cleared vs active rooms, and visible exit connections between\r\n      rooms. Clicking an adjacent room must move the player there in one action.\r\n      Preferred layout: 2D grid or spatial floor map.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.18\" title=\"Visual player vs enemy identity in encounters\">\r\n      Encounter rendering must make it obvious which visual element is the player and\r\n      which is the enemy. Distinct portrait, positioning, or color treatment. Reference\r\n      style: Pokemon or Unicorn Overlord (UO preferred). No rendering where the player\r\n      cannot visually distinguish themselves from the first enemy without reading text\r\n      labels.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.19\" title=\"Spells as craftable ingredients + procedural-but-semantic naming\">\r\n      Spell crafting accepts runes AND existing spells as ingredients. A spell used as an\r\n      ingredient consumes or copies from the existing spell (design choice explicit).\r\n      Combining two spells or a spell + rune produces an evolved spell with procedurally\r\n      generated but semantically meaningful naming. Naming scheme must be consistent but\r\n      varied — similar combinations produce similar names, slight differences produce\r\n      slightly varied names. Not too verbose. Example scheme: root spell + modifier noun\r\n      keyed to added element/spell. \"Fireball\" + Ice rune → \"Frostfall Ember\". Two\r\n      Frostfall Embers fused → \"Glacial Ember\" (same family, progressed). This requirement\r\n      mirrors the emergent-evolution working hypothesis (gad-68): the in-game rune/spell/\r\n      merge system is an explicit narrative analogue for the agent's skill-authoring/merge\r\n      loop.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.20\" title=\"Unique ingredients per spell\">\r\n      Each spell recipe requires unique ingredients — the same rune cannot be used\r\n      twice in a single spell's ingredient list. Selecting a rune already in the\r\n      current recipe must deselect it or be rejected. The same rune CAN appear\r\n      across different spells in the spellbook. Affinity gain is calculated per\r\n      unique rune slot consumed.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.21\" title=\"Event-driven rendering (remove per-tick redraws)\">\r\n      All UI updates must be event-driven, not per-tick. No redraw loops firing at a\r\n      fixed rate regardless of state changes. Observable symptom to eliminate: glitchy\r\n      redraws on button clicks, observed across ALL round-4 builds. This is a\r\n      perf-and-stability gate failure mode. Acceptable patterns: React reconciliation on\r\n      state change, requestAnimationFrame scheduling only when animation is active.\r\n    </requirement>\r\n\r\n    <gate-impact-summary>\r\n      v4 gates remain (G1 game-loop, G2 forge-with-ingenuity-payoff, G3 ui-quality,\r\n      G4 pressure-mechanics). v5 amendments tighten G1 (death/continue, end-boss reachable),\r\n      G2 (training is encounter-driven), G3 (notification lifecycle, map usability), and\r\n      introduce new scored dimensions for inventory_and_equipment_present and\r\n      npc_dialogue_present rather than new gates — a run missing those does not get\r\n      gate-zeroed but takes a meaningful scored hit.\r\n    </gate-impact-summary>\r\n\r\n    <deferred-to-v6>\r\n      <item>Deep evolution trees (multi-stage mutations).</item>\r\n      <item>Rune affinity decay when unused.</item>\r\n      <item>Multi-character party play — out of scope for escape-the-dungeon family.</item>\r\n    </deferred-to-v6>\r\n\r\n  </addendum>\r\n</requirements>\r\n",
     "sourcePath": "evals/escape-the-dungeon/species/gad/template/.planning/REQUIREMENTS.xml"
+  },
+  {
+    "project": "escape-the-dungeon",
+    "species": "vcs-test",
+    "id": "escape-the-dungeon/vcs-test",
+    "version": "v5",
+    "path": "/downloads/requirements/escape-the-dungeon-vcs-test-REQUIREMENTS-v5.xml",
+    "bytes": 30342,
+    "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!--\r\n  Eval project: Escape the Dungeon\r\n  Requirements version history:\r\n    v1 (2026-04-06): 12 systems-focused criteria, no gates\r\n    v2 (2026-04-08): Gate criteria, vertical-slice priority, UI-first mandate\r\n    v3 (2026-04-08): Game-loop gate, spell-crafting gate, UI quality gate\r\n    v4 (2026-04-08): Pressure-oriented design, authored-only, ingenuity enforcement,\r\n                     floor progression with boss gates, forge integrated with encounter design,\r\n                     starter abilities explicitly insufficient, Traits UI label\r\n    v5 (2026-04-09): Playtest-driven expansion — 21 new/amended requirements from user\r\n                     play of Bare v5, Emergent v4, GAD v9/v10. Adds combat model choice\r\n                     (rule-based UO-style preferred), entity-trait action policies (enemies\r\n                     AND NPCs), real-time game-time, affinity reward loop, central visual\r\n                     nav map, encounter visuals, spells-as-ingredients, rune uniqueness,\r\n                     event-driven rendering, save checkpoints, merchants, NPC dialogue,\r\n                     inventory/equipment, character sheet + skill tree, loadout slots.\r\n                     v4 remains THE BASE — everything in v4 still applies. v5 adds on top.\r\n-->\r\n<requirements version=\"v5\" updated=\"2026-04-09\">\r\n  <goal>\r\n    Build a playable roguelike dungeon crawler \"Escape the Dungeon\" where players must\r\n    exercise INGENUITY through spell crafting and adaptation to progress. This is not a\r\n    features checklist — it is a problem-solving loop disguised as a dungeon crawler.\r\n    Every mechanical system must create friction that rewards creative player choice.\r\n  </goal>\r\n\r\n  <audience>Solo player (keyboard + mouse). Authored content only. Target: Vite + TypeScript + KAPLAY (web).</audience>\r\n\r\n  <core-principle>\r\n    **Baseline starter abilities must NOT be sufficient to comfortably complete a full\r\n    floor without adaptation or enhancement.** If a player can brute-force progression\r\n    using only what they start with, the design has failed. Encounters must demand\r\n    spell crafting, skill use, resource management, or build specialization.\r\n  </core-principle>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- GATE CRITERIA — all must pass or requirement_coverage = 0    -->\r\n  <!-- ============================================================ -->\r\n  <gate-criteria>\r\n\r\n    <gate id=\"G1\" name=\"game-loop\">\r\n      The complete game loop must work without softlock. A test run must walk through:\r\n      1. Title screen renders and \"New Game\" starts a run\r\n      2. Player enters first room with visible navigation options\r\n      3. Player navigates to a second room (scene transition succeeds)\r\n      4. Player encounters combat OR dialogue and resolves it\r\n      5. After resolution, player returns to room navigation state\r\n      6. Player continues into at least one additional room without softlock or dead end\r\n      Minimum 3 total room transitions in a passing run.\r\n    </gate>\r\n\r\n    <gate id=\"G2\" name=\"forge-with-ingenuity-payoff\">\r\n      The game must include a functional spell-crafting system AND at least one encounter\r\n      per floor where the crafted/adapted spell provides a meaningful advantage.\r\n\r\n      Crafting requirements:\r\n      - Player can access a forge / spell-craft interface during gameplay\r\n      - Player selects at least 2 crafting inputs (runes or components)\r\n      - System produces a new, usable spell from the combination\r\n      - Crafted spell can be equipped and used in encounter flow\r\n      - Minimum 3-5 runes/components, 3+ valid combinations\r\n\r\n      Ingenuity payoff requirement (THIS IS THE KEY ADDITION):\r\n      - At least one encounter per floor must significantly favor or require a crafted/\r\n        adapted spell. Examples: enemy resistant to base damage types, enemy that punishes\r\n        spell repetition, enemy that only yields to DoT or burst, etc.\r\n      - Mere spell acquisition through loot/NPC rewards does NOT satisfy this gate.\r\n      - Player must intentionally CRAFT to succeed.\r\n    </gate>\r\n\r\n    <gate id=\"G3\" name=\"ui-quality\">\r\n      The game must present a fully intentional UI. Required:\r\n      - Readable, visually structured layout with spacing and hierarchy\r\n      - Room-type icons or sprite representations\r\n      - Encounter/entity visual representation via sprite, portrait, or coherent placeholder\r\n      - Themed visual differentiation across room types (color, background, or panel treatment)\r\n      - Styled interactive controls (buttons with visible affordance)\r\n      - HP/mana/resources as visual bars, not only numeric dumps\r\n      - Color-coded statuses / spell types / factions\r\n\r\n      Acceptable asset sourcing (in order of preference):\r\n      1. Lightweight installable icon/sprite libraries (npm packages, CDN)\r\n      2. Web-searched free/open-license sprites and tilesets (use the find-sprites skill)\r\n      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)\r\n      4. Simple geometric fallback tiles — LAST RESORT, counts against UI quality score\r\n\r\n      Raw ASCII/text-only UI fails this gate. Ugly primitive-only output counts as a gate\r\n      failure even if asset sourcing was attempted.\r\n    </gate>\r\n\r\n    <gate id=\"G4\" name=\"pressure-mechanics\">\r\n      The game must include at least TWO systems that constrain player behavior such that\r\n      crafting or adapting spells provides a meaningful advantage or is required for success.\r\n\r\n      Pick at least two from these categories:\r\n      A. **Resource pressure** — limited mana pool, limited healing, forge training has a cost,\r\n         cannot spam indefinitely\r\n      B. **Enemy counterplay** — resistances, immunities, behavior that punishes repetition,\r\n         shields requiring specific effects\r\n      C. **Encounter design pressure** — elites with unique rules, bosses that invalidate\r\n         default play, rooms with mechanical constraints\r\n      D. **Build pressure** — player cannot master everything, affinity pushes specialization,\r\n         loadout limits force trade-offs\r\n\r\n      At least one pressure mechanic must interact with the forge so crafted spells are\r\n      demonstrably more effective than default spells in affected encounters.\r\n    </gate>\r\n\r\n  </gate-criteria>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- DUNGEON STRUCTURE (authored, not procedural)                 -->\r\n  <!-- ============================================================ -->\r\n  <dungeon-structure>\r\n    <authored-only>\r\n      All content is authored. No procedural level generation. Light randomness in encounter\r\n      tables or loot is acceptable; structural layout must be hand-designed.\r\n    </authored-only>\r\n\r\n    <hierarchy>\r\n      Floors → Rooms → Boss Gate. Each floor has 5-8 authored rooms plus a floor boss that\r\n      gates progression to the next floor. Player clears a floor by defeating the boss,\r\n      which unlocks the next floor.\r\n    </hierarchy>\r\n\r\n    <room-types>\r\n      <type name=\"Combat\">Standard enemy encounter, authored enemy composition.</type>\r\n      <type name=\"Elite\">Stress test for a mechanic introduced earlier on this floor or a previous one. Harder than standard combat, usually requires crafted spells or adaptation.</type>\r\n      <type name=\"Forge\">Crafting + affinity training interface. May cost mana crystals or XP to use.</type>\r\n      <type name=\"Rest\">Limited recovery (heal HP/mana to a cap, NOT full restore every time).</type>\r\n      <type name=\"Event\">Choices, narrative, tradeoffs. May give items, information, or apply debuffs.</type>\r\n    </room-types>\r\n\r\n    <floor-mechanical-constraint>\r\n      Each floor MUST introduce at least one mechanical constraint or enemy behavior that\r\n      cannot be brute-forced with the player's current default abilities. Examples:\r\n      - Floor 1: enemies resistant to raw damage → player must apply DoT or status effects\r\n      - Floor 2: enemies that reflect direct damage → player must use indirect or summon-based attacks\r\n      - Floor 3: enemies with mana-drain aura → player must conserve or use physical skills\r\n      This constraint is discovered through gameplay, not explained in a tutorial.\r\n    </floor-mechanical-constraint>\r\n\r\n    <respawn-and-grinding>\r\n      Combat rooms on a cleared floor may respawn enemies on re-entry (respawn cadence is\r\n      authored, not every entry). Player can grind for XP, crystals, and rune affinity\r\n      before attempting bosses. Grinding should be slower than forge training to create\r\n      choice pressure.\r\n    </respawn-and-grinding>\r\n  </dungeon-structure>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- FORGE SYSTEM (now integrated with encounter design)          -->\r\n  <!-- ============================================================ -->\r\n  <forge-system>\r\n    <required>\r\n      - Forge interface accessible at Forge rooms\r\n      - 3-5 runes or crafting components\r\n      - 3+ valid combinations producing distinct spell effects\r\n      - Affinity tracking per rune/spell family, increases with use\r\n      - Forge can train affinity directly in exchange for XP (cheaper than combat grinding)\r\n      - At least one encounter per floor requires or strongly favors a crafted/adapted spell\r\n    </required>\r\n    <strongly-recommended>\r\n      - Visible affinity level (UI shows current levels)\r\n      - Affinity thresholds unlock stronger spell variants\r\n      - Authored or player-authored spell customization (player can name their spells)\r\n    </strongly-recommended>\r\n    <deferred-to-v5>\r\n      - Cross-affinity decay when runes are neglected\r\n      - Deep evolution trees\r\n      - Multi-stage spell mutations\r\n    </deferred-to-v5>\r\n  </forge-system>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- SKILLS (scored, not gated)                                    -->\r\n  <!-- ============================================================ -->\r\n  <skills-system>\r\n    <required>\r\n      Combat must support at least one non-spell action category (basic attack, skill, or similar).\r\n      The combat model should NOT be single-lane \"spell or nothing\".\r\n    </required>\r\n    <scored>\r\n      Full skill system with physical (no-mana) actions, skill XP / evolution, mana-crystal\r\n      overcharge to add extra damage or effects (DoT, burn, bleed, stun, knockback).\r\n    </scored>\r\n  </skills-system>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- ASSET SOURCING (first attempt real assets)                   -->\r\n  <!-- ============================================================ -->\r\n  <asset-sourcing>\r\n    <workflow>\r\n      Agents must attempt asset sourcing first via the find-sprites skill or equivalent\r\n      web-search workflow. Sourced assets should be lightweight, installable, and legally\r\n      usable (open-license, public domain, or generated).\r\n    </workflow>\r\n    <preference-order>\r\n      1. Lightweight installable icon/sprite npm packages (game-icons, pixel-art packs)\r\n      2. Web-searched free/open-license sprites/tilesets (itch.io, OpenGameArt, etc.)\r\n      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)\r\n      4. Geometric fallback tiles — LAST RESORT, counts against UI quality\r\n    </preference-order>\r\n    <fallback-policy>\r\n      Fallback to generated/geometric placeholders is allowed ONLY if sourcing genuinely\r\n      fails (404s, no suitable assets, integration cost disproportionate). Fallback must\r\n      still be visually coherent. Using fallback when real assets were reachable is a\r\n      gate violation.\r\n    </fallback-policy>\r\n  </asset-sourcing>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- TERMINOLOGY                                                   -->\r\n  <!-- ============================================================ -->\r\n  <terminology>\r\n    <ui-label>Traits — player-facing label for narrative/progression stats</ui-label>\r\n    <code-identifier>narrativeStats — internal code/data structure name</code-identifier>\r\n    <rationale>Splits stable internal naming from clearer external naming. Document the mapping once.</rationale>\r\n  </terminology>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- SCORED CRITERIA                                               -->\r\n  <!-- ============================================================ -->\r\n  <scored-criteria>\r\n    <criterion>Turn-based combat with Fight/Spells/Bag/Run, visible HP bars, damage numbers, XP/crystal rewards</criterion>\r\n    <criterion>At least 3 distinct enemy types with different stats and mechanical behaviors</criterion>\r\n    <criterion>NPC dialogue with portrait/representation and choice options that affect gameplay</criterion>\r\n    <criterion>Persistent HUD: player name, HP bar, mana bar, current floor, dungeon tick or turn count, crystal currency</criterion>\r\n    <criterion>At least two overlay menus (Map, Bag, Stats, Spellbook)</criterion>\r\n    <criterion>Entity model with at least 3 entity types loaded from content pack JSON</criterion>\r\n    <criterion>Game state persists across page refresh (localStorage)</criterion>\r\n    <criterion>Player can level up or gain power through gameplay progression</criterion>\r\n    <criterion>At least 2 floors with different mechanical constraints and boss encounters</criterion>\r\n    <criterion>\"Traits\" label used in UI where narrative stats appear</criterion>\r\n    <criterion>Full skill system with mana-crystal overcharge (scored bonus, not gate)</criterion>\r\n    <criterion>Affinity thresholds unlock spell variants (scored bonus, not gate)</criterion>\r\n  </scored-criteria>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- INGENUITY / ADAPTATION SCORING                                -->\r\n  <!-- ============================================================ -->\r\n  <ingenuity-scoring>\r\n    <dimension>ingenuity_score</dimension>\r\n    <measures>\r\n      Whether the player needed to change strategy, whether crafted spells were meaningfully\r\n      used, and whether encounters encouraged experimentation. Scored 0.0 to 1.0.\r\n    </measures>\r\n    <signals>\r\n      - Number of crafted spells actually used in a test run\r\n      - Diversity of spell usage (no single spell dominates)\r\n      - Can the starter spell alone clear every floor? (this should be NO)\r\n      - Does at least one encounter REQUIRE crafted spell usage to succeed?\r\n      - Did the test player adapt their build across floors?\r\n    </signals>\r\n    <scoring-notes>\r\n      This is measured via human review during playtesting. The reviewer asks: \"Did I feel\r\n      like I needed to craft to make progress, or could I spam the default spell?\"\r\n    </scoring-notes>\r\n  </ingenuity-scoring>\r\n\r\n  <non-goals>\r\n    <item>Procedural generation — authored content only</item>\r\n    <item>Full rune affinity decay — deferred to v5</item>\r\n    <item>Multi-stage deep evolution trees — deferred to v5</item>\r\n    <item>Tile-based movement or 2D grid walking</item>\r\n    <item>Multiplayer or networking</item>\r\n    <item>Complex asset pipelines or custom art tools</item>\r\n  </non-goals>\r\n\r\n  <source-docs>\r\n    <doc path=\"source-GAMEPLAY-DESIGN.xml\" role=\"Trimmed gameplay design (vertical slice focus)\" />\r\n    <doc path=\"source-STAT-AND-BEHAVIOUR-TAXONOMY.md\" role=\"Canonical stat names, groupings, engine mappings\" />\r\n  </source-docs>\r\n\r\n  <evaluation-notes>\r\n    Human reviewer rubric for ingenuity:\r\n    - 0.0: Could spam starter abilities to clear everything, no crafting needed\r\n    - 0.3: Had to use forge once, but mostly spammed\r\n    - 0.6: Had to craft 2-3 spells and switch strategies per floor\r\n    - 1.0: Had to think carefully about builds, crafted spells were essential, felt like a puzzle\r\n  </evaluation-notes>\r\n\r\n  <!-- ============================================================ -->\r\n  <!-- v5 ADDENDUM (2026-04-09) — playtest-driven                   -->\r\n  <!--                                                              -->\r\n  <!-- Captured from user play of Bare v5 (0.805 rubric), Emergent  -->\r\n  <!-- v4 (0.885 rubric after rescore), GAD v9 (rate-limited), GAD  -->\r\n  <!-- v10 (api-interrupted). Source markdown:                      -->\r\n  <!-- evals/_v5-requirements-addendum.md                           -->\r\n  <!--                                                              -->\r\n  <!-- Everything in v4 above still applies. v5 adds on top.        -->\r\n  <!-- ============================================================ -->\r\n  <addendum version=\"v5\" updated=\"2026-04-09\">\r\n\r\n    <requirement id=\"R-v5.01\" amends=\"G2\" title=\"Training via encounter, not menu\">\r\n      Affinity must increase as a side effect of casting spells in encounters, not as a\r\n      direct menu action. Remove any \"select affinity → train\" menu that picks the trained\r\n      element for the player. Introduce a Training Dummy encounter (low-XP, no-loot combat\r\n      room type) whose only purpose is letting the player cast without risk so affinity\r\n      rises through use. Any room with combat must produce affinity gain for the elements/\r\n      runes the cast spell used. The forge becomes a place to forge and combine, not to\r\n      train. Rationale: the casting of spells must be what increases rune affinity; direct\r\n      training menus turn a discovery loop into a shopping list.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.02\" title=\"Rune discovery as a gameplay loop\">\r\n      Not all runes are listed or available at game start. Runes must be DISCOVERED across\r\n      the dungeon. Starter inventory contains a small subset of runes (2-3). The rest are\r\n      found as loot drops from combat/elite encounters, hidden in event rooms, sold by\r\n      merchants, or awarded by NPC dialogue outcomes. The rune forge UI must visibly\r\n      distinguish known vs undiscovered runes (locked slots, ???, or similar). At least\r\n      one rune per floor must be gated behind a non-combat interaction.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.03\" title=\"Merchants with buy/sell/trade\">\r\n      The dungeon must contain at least one merchant encounter per floor. Merchant room\r\n      type. Inventory of runes, potions, and items with gold cost. Three operations: buy\r\n      (cost gold), sell (gain gold), trade (exchange owned item for stocked item with a\r\n      relative value rule). Gold or an equivalent currency becomes a tracked resource.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.04\" title=\"NPC dialogue with branching outcomes\">\r\n      Authored NPCs must appear with dialogue options that trigger items, events, or\r\n      combat. At least 3 authored NPCs across the dungeon with 2+ dialogue branches each.\r\n      Dialogue choices must cause persistent game state changes: item gain, rune unlock,\r\n      enemy spawn, merchant discount, quest flag.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.05\" title=\"Inventory/bag with grid and equippable items\">\r\n      Player must have a visible inventory UI. Bag with a finite grid of slots. Items have\r\n      categories: consumable (potions, keys), rune, equipment (weapon, armor, trinket,\r\n      focus, etc.). Equipment slots must exist on a character sheet with at least:\r\n      main-hand, off-hand, body, trinket. Equipping an item must affect combat stats or\r\n      spell outputs in a measurable way. Items must drop from combat, events, and\r\n      merchants.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.06\" title=\"Visible character sheet with combat/physical skills and a skill tree\">\r\n      Player must be able to inspect their character at any time. Panel showing: HP, mana,\r\n      affinities, physical/combat stats, resistances, equipped items, known spells, known\r\n      physical skills. Skill tree or equivalent progression graph for physical/combat\r\n      skills, SEPARATE FROM SPELLS. Physical skills cost stamina or a non-mana resource to\r\n      distinguish from spells.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.07\" title=\"Spell slots and skill slots (loadout constraint)\">\r\n      When the player has many spells/skills, they must choose which to equip. Fixed-size\r\n      spell loadout (suggested: 4-6 equipped slots out of all known spells). Fixed-size\r\n      physical skill loadout (suggested: 2-4 equipped slots). Loadout can only be changed\r\n      in rest rooms or at specific stations, not mid-combat. Build pressure mechanic\r\n      satisfying G4.\r\n    </requirement>\r\n\r\n    <!-- R-v5.08 REMOVED — v4 progression requirements were sufficient. -->\r\n\r\n    <requirement id=\"R-v5.09\" amends=\"G1\" title=\"Session persistence\">\r\n      The game must support resumable sessions. On room-clear or floor-clear, the\r\n      game checkpoints the player's state. If the player closes the browser or the\r\n      session ends, re-opening the game presents a Continue option that restores the\r\n      most recent checkpoint. New Game starts fresh. Both paths must work without error.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.10\" amends=\"G3\" title=\"Transient UI feedback\">\r\n      UI feedback elements (toasts, status messages, combat results) must be transient\r\n      and session-scoped. Each element auto-dismisses after a brief display period\r\n      (3-5 seconds) or provides an explicit dismiss control. Starting a new session\r\n      must present a clean UI with no carried-over feedback from a previous session.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.11\" amends=\"room-types\" title=\"Rest rooms must offer rest\">\r\n      Any room typed Rest (including the rune forge rest variant) must expose a Rest\r\n      action that restores HP/mana and allows loadout changes. Forge rooms may combine\r\n      Forge + Train + Rest actions, but Rest must be one of the action buttons if the room\r\n      claims Rest as a room type.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.12\" amends=\"G3\" title=\"Navigation and map usability\">\r\n      Map/navigation UI must be more than a linear list. Map view must show at minimum a\r\n      2D graph layout of discovered rooms with current position, cleared/uncleared state,\r\n      and available exits. Navigation from the map must be one click, not a multi-step\r\n      menu. See R-v5.17 for the stronger form.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.13\" amends=\"G1 G4\" title=\"Auto-resolve combat with tactical loadout (Unicorn Overlord style)\">\r\n      Combat resolves automatically based on the player's pre-set loadout, equipped\r\n      spells/skills, and tactical rules. The player does NOT click-attack individual\r\n      enemies during combat. Instead:\r\n\r\n      1. Before an encounter, the player configures: equipped spells, equipped physical\r\n         skills (per loadout slots from R-v5.07), formation/positioning of party members\r\n         (if applicable), and action-policy rules (e.g. \"use heal when HP below 30%\",\r\n         \"prioritize targets weak to equipped element\").\r\n      2. Combat plays out in real-time with a visible combat log showing each action,\r\n         its effect, and why it was chosen (which rule triggered).\r\n      3. The player can PAUSE at any time to adjust loadout, swap spells, or change\r\n         action-policy rules. The fight resumes with the new configuration.\r\n      4. Resolution depends on the loadout quality, spell/skill choices, and how well\r\n         the action policies match the enemy composition — this is where the forge and\r\n         rune crafting systems pay off.\r\n\r\n      This model rewards preparation and build-crafting over reflexes. The ingenuity\r\n      requirement (G2) is satisfied by encounters where the default loadout fails and\r\n      the player must pause, rethink, and adapt their tactical rules.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.14\" title=\"Trait-driven behavior for all entities\">\r\n      Every entity with agency (enemies, NPCs, the player character) has traits that\r\n      drive their behavior. Traits are NOT static labels — they shift based on:\r\n\r\n      - Dialogue choices the player makes (choosing aggressive responses shifts the\r\n        player toward \"aggressive\" trait, which changes available dialogue options\r\n        with NPCs who react to that trait)\r\n      - Moral interactions (sparing vs defeating enemies, helping vs ignoring NPCs,\r\n        stealing vs buying from merchants)\r\n      - Combat actions (repeatedly using fire spells shifts affinity toward fire,\r\n        which may change how fire-resistant enemies react)\r\n\r\n      Enemy behavior in auto-resolve combat is governed by their traits: an aggressive\r\n      enemy prioritizes attack, a territorial enemy holds position, a cowardly enemy\r\n      flees at low HP. NPC dialogue options expand or contract based on trait alignment\r\n      between the player and the NPC. Traits have visible NUMERIC values on the\r\n      character sheet (e.g. aggression: 0.7, compassion: 0.3, arcane affinity: 0.8).\r\n      When a trait shifts, the numeric change is shown inline (combat log or a brief\r\n      HUD notification like \"+0.1 aggression\").\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.15\" title=\"Real-time game clock\">\r\n      The dungeon has an in-game clock that progresses in real time (suggested ratio:\r\n      1 real hour = 1 in-game day). The clock can influence gameplay: encounter\r\n      composition may shift by time of day, merchant stock may rotate, certain NPC\r\n      events may be time-gated. Day/night UI tinting is a SOFT bonus (not a gate).\r\n      The clock is purely flavor and pacing — it does NOT add turn-based tick\r\n      mechanics or per-tick processing. All rendering remains event-driven per\r\n      R-v5.21.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.16\" title=\"Affinity reward loop\">\r\n      Boosting a rune's affinity must produce a visible, valuable reward — not just a\r\n      stat increment hidden on a sheet. Suggested rewards at affinity thresholds: new\r\n      rune variant unlocked, existing spells using that rune gain a visual effect tier,\r\n      new spell combinations become craftable, access to an affinity-gated event or NPC.\r\n      At least one affinity reward must be visible in the forge UI (e.g. an affinity\r\n      progress bar with named milestones).\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.17\" amends=\"G3 R-v5.12\" title=\"Central visual navigation map with player location\">\r\n      Stronger form of R-v5.12. The navigation view must be a persistent, reachable,\r\n      visual map. Accessible from a single button/keystroke at any time in exploration\r\n      mode. Shows the player token on its current room, room type icons, discovered vs\r\n      undiscovered rooms, cleared vs active rooms, and visible exit connections between\r\n      rooms. Clicking an adjacent room must move the player there in one action.\r\n      Preferred layout: 2D grid or spatial floor map.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.18\" title=\"Visual player vs enemy identity in encounters\">\r\n      Encounter rendering must make it obvious which visual element is the player and\r\n      which is the enemy. Distinct portrait, positioning, or color treatment. Reference\r\n      style: Pokemon or Unicorn Overlord (UO preferred). No rendering where the player\r\n      cannot visually distinguish themselves from the first enemy without reading text\r\n      labels.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.19\" title=\"Spells as craftable ingredients + procedural-but-semantic naming\">\r\n      Spell crafting accepts runes AND existing spells as ingredients. A spell used as an\r\n      ingredient consumes or copies from the existing spell (design choice explicit).\r\n      Combining two spells or a spell + rune produces an evolved spell with procedurally\r\n      generated but semantically meaningful naming. Naming scheme must be consistent but\r\n      varied — similar combinations produce similar names, slight differences produce\r\n      slightly varied names. Not too verbose. Example scheme: root spell + modifier noun\r\n      keyed to added element/spell. \"Fireball\" + Ice rune → \"Frostfall Ember\". Two\r\n      Frostfall Embers fused → \"Glacial Ember\" (same family, progressed). This requirement\r\n      mirrors the emergent-evolution working hypothesis (gad-68): the in-game rune/spell/\r\n      merge system is an explicit narrative analogue for the agent's skill-authoring/merge\r\n      loop.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.20\" title=\"Unique ingredients per spell\">\r\n      Each spell recipe requires unique ingredients — the same rune cannot be used\r\n      twice in a single spell's ingredient list. Selecting a rune already in the\r\n      current recipe must deselect it or be rejected. The same rune CAN appear\r\n      across different spells in the spellbook. Affinity gain is calculated per\r\n      unique rune slot consumed.\r\n    </requirement>\r\n\r\n    <requirement id=\"R-v5.21\" title=\"Event-driven rendering (remove per-tick redraws)\">\r\n      All UI updates must be event-driven, not per-tick. No redraw loops firing at a\r\n      fixed rate regardless of state changes. Observable symptom to eliminate: glitchy\r\n      redraws on button clicks, observed across ALL round-4 builds. This is a\r\n      perf-and-stability gate failure mode. Acceptable patterns: React reconciliation on\r\n      state change, requestAnimationFrame scheduling only when animation is active.\r\n    </requirement>\r\n\r\n    <gate-impact-summary>\r\n      v4 gates remain (G1 game-loop, G2 forge-with-ingenuity-payoff, G3 ui-quality,\r\n      G4 pressure-mechanics). v5 amendments tighten G1 (death/continue, end-boss reachable),\r\n      G2 (training is encounter-driven), G3 (notification lifecycle, map usability), and\r\n      introduce new scored dimensions for inventory_and_equipment_present and\r\n      npc_dialogue_present rather than new gates — a run missing those does not get\r\n      gate-zeroed but takes a meaningful scored hit.\r\n    </gate-impact-summary>\r\n\r\n    <deferred-to-v6>\r\n      <item>Deep evolution trees (multi-stage mutations).</item>\r\n      <item>Rune affinity decay when unused.</item>\r\n      <item>Multi-character party play — out of scope for escape-the-dungeon family.</item>\r\n    </deferred-to-v6>\r\n\r\n  </addendum>\r\n</requirements>\r\n",
+    "sourcePath": "evals/escape-the-dungeon/species/vcs-test/template/REQUIREMENTS.xml"
   },
   {
     "project": "escape-the-dungeon",
@@ -2348,7 +2360,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 3
           }
         },
         {
@@ -2361,7 +2373,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 3
           }
         },
         {
@@ -2387,7 +2399,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -2400,7 +2412,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 10
           }
         },
         {
@@ -2413,7 +2425,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -2426,7 +2438,33 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 4
+          }
+        },
+        {
+          "id": "gad-decide-n8",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/DECISIONS.xml",
+            "kind": "artifact",
+            "count": 2
+          }
+        },
+        {
+          "id": "gad-decide-n9",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 240
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 11
           }
         }
       ],
@@ -2471,6 +2509,18 @@ export const WORKFLOWS: Workflow[] = [
           "id": "gad-decide-e6",
           "source": "gad-decide-n6",
           "target": "gad-decide-n7",
+          "animated": false
+        },
+        {
+          "id": "gad-decide-e7",
+          "source": "gad-decide-n7",
+          "target": "gad-decide-n8",
+          "animated": false
+        },
+        {
+          "id": "gad-decide-e8",
+          "source": "gad-decide-n8",
+          "target": "gad-decide-n9",
           "animated": false
         }
       ]
@@ -2535,9 +2585,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -2548,9 +2598,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 3
           }
         },
         {
@@ -2561,7 +2611,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 3
           }
@@ -2574,9 +2624,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 3
           }
         },
         {
@@ -2587,9 +2637,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -2626,7 +2676,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 3
           }
@@ -2654,7 +2704,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 7
           }
         },
         {
@@ -2665,7 +2715,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
             "count": 4
           }
@@ -2678,9 +2728,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 10
           }
         },
         {
@@ -2691,9 +2741,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -2706,7 +2756,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -2717,9 +2767,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 2
           }
         },
         {
@@ -2732,7 +2782,46 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 5
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n16",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 7
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n17",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 6
+          }
+        },
+        {
+          "id": "gad-discuss-plan-execute-n18",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 6
           }
         }
       ],
@@ -2825,6 +2914,24 @@ export const WORKFLOWS: Workflow[] = [
           "id": "gad-discuss-plan-execute-e14",
           "source": "gad-discuss-plan-execute-n14",
           "target": "gad-discuss-plan-execute-n15",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e15",
+          "source": "gad-discuss-plan-execute-n15",
+          "target": "gad-discuss-plan-execute-n16",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e16",
+          "source": "gad-discuss-plan-execute-n16",
+          "target": "gad-discuss-plan-execute-n17",
+          "animated": false
+        },
+        {
+          "id": "gad-discuss-plan-execute-e17",
+          "source": "gad-discuss-plan-execute-n17",
+          "target": "gad-discuss-plan-execute-n18",
           "animated": false
         }
       ]
@@ -2958,9 +3065,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -2971,9 +3078,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 3
           }
         },
         {
@@ -2984,7 +3091,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
             "count": 3
           }
@@ -2997,9 +3104,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 3
           }
         },
         {
@@ -3010,9 +3117,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -3049,7 +3156,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
             "count": 3
           }
@@ -3077,7 +3184,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 1
+            "count": 7
           }
         },
         {
@@ -3088,7 +3195,7 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
             "count": 4
           }
@@ -3101,9 +3208,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 10
           }
         },
         {
@@ -3114,9 +3221,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 2
           }
         },
         {
@@ -3129,7 +3236,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 4
           }
         },
         {
@@ -3140,9 +3247,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 2
           }
         },
         {
@@ -3155,7 +3262,46 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 5
+          }
+        },
+        {
+          "id": "gad-loop-n16",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 7
+          }
+        },
+        {
+          "id": "gad-loop-n17",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/STATE.xml",
+            "kind": "artifact",
+            "count": 6
+          }
+        },
+        {
+          "id": "gad-loop-n18",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 480
+          },
+          "data": {
+            "label": ".planning/TASK-REGISTRY.xml",
+            "kind": "artifact",
+            "count": 6
           }
         }
       ],
@@ -3248,6 +3394,24 @@ export const WORKFLOWS: Workflow[] = [
           "id": "gad-loop-e14",
           "source": "gad-loop-n14",
           "target": "gad-loop-n15",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e15",
+          "source": "gad-loop-n15",
+          "target": "gad-loop-n16",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e16",
+          "source": "gad-loop-n16",
+          "target": "gad-loop-n17",
+          "animated": false
+        },
+        {
+          "id": "gad-loop-e17",
+          "source": "gad-loop-n17",
+          "target": "gad-loop-n18",
           "animated": false
         }
       ]
@@ -3370,6 +3534,19 @@ export const WORKFLOWS: Workflow[] = [
             "kind": "artifact",
             "count": 25
           }
+        },
+        {
+          "id": "gad-visual-context-identity-n6",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 120
+          },
+          "data": {
+            "label": "site/components/site/SiteSection.tsx",
+            "kind": "artifact",
+            "count": 1
+          }
         }
       ],
       "edges": [
@@ -3402,6 +3579,12 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-visual-context-identity-n4",
           "target": "gad-visual-context-identity-n5",
           "animated": false
+        },
+        {
+          "id": "gad-visual-context-identity-e5",
+          "source": "gad-visual-context-identity-n5",
+          "target": "gad-visual-context-identity-n6",
+          "animated": false
         }
       ]
     },
@@ -3414,9 +3597,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-66-0",
+    "slug": "emergent-bash-bash-bash-77-0",
     "name": "Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 66Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-66-0` or discard.",
+    "description": "Recurring tool-use sequence detected 77Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-77-0` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3431,12 +3614,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>66Ã—</strong>: Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>77Ã—</strong>: Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-66-0-n0",
+          "id": "emergent-bash-bash-bash-77-0-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3445,11 +3628,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 66
+            "count": 77
           }
         },
         {
-          "id": "emergent-bash-bash-bash-66-0-n1",
+          "id": "emergent-bash-bash-bash-77-0-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3458,11 +3641,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 66
+            "count": 77
           }
         },
         {
-          "id": "emergent-bash-bash-bash-66-0-n2",
+          "id": "emergent-bash-bash-bash-77-0-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3471,32 +3654,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 66
+            "count": 77
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-66-0-e0",
-          "source": "emergent-bash-bash-bash-66-0-n0",
-          "target": "emergent-bash-bash-bash-66-0-n1"
+          "id": "emergent-bash-bash-bash-77-0-e0",
+          "source": "emergent-bash-bash-bash-77-0-n0",
+          "target": "emergent-bash-bash-bash-77-0-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-66-0-e1",
-          "source": "emergent-bash-bash-bash-66-0-n1",
-          "target": "emergent-bash-bash-bash-66-0-n2"
+          "id": "emergent-bash-bash-bash-77-0-e1",
+          "source": "emergent-bash-bash-bash-77-0-n1",
+          "target": "emergent-bash-bash-bash-77-0-n2"
         }
       ]
     },
     "support": {
-      "phases": 66,
+      "phases": 77,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-43-1",
+    "slug": "emergent-bash-bash-bash-bash-49-1",
     "name": "Bash â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 43Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-43-1` or discard.",
+    "description": "Recurring tool-use sequence detected 49Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-49-1` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3511,12 +3694,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>43Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>49Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-43-1-n0",
+          "id": "emergent-bash-bash-bash-bash-49-1-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3525,11 +3708,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 43
+            "count": 49
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-43-1-n1",
+          "id": "emergent-bash-bash-bash-bash-49-1-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3538,11 +3721,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 43
+            "count": 49
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-43-1-n2",
+          "id": "emergent-bash-bash-bash-bash-49-1-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3551,11 +3734,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 43
+            "count": 49
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-43-1-n3",
+          "id": "emergent-bash-bash-bash-bash-49-1-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -3564,37 +3747,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 43
+            "count": 49
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-43-1-e0",
-          "source": "emergent-bash-bash-bash-bash-43-1-n0",
-          "target": "emergent-bash-bash-bash-bash-43-1-n1"
+          "id": "emergent-bash-bash-bash-bash-49-1-e0",
+          "source": "emergent-bash-bash-bash-bash-49-1-n0",
+          "target": "emergent-bash-bash-bash-bash-49-1-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-43-1-e1",
-          "source": "emergent-bash-bash-bash-bash-43-1-n1",
-          "target": "emergent-bash-bash-bash-bash-43-1-n2"
+          "id": "emergent-bash-bash-bash-bash-49-1-e1",
+          "source": "emergent-bash-bash-bash-bash-49-1-n1",
+          "target": "emergent-bash-bash-bash-bash-49-1-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-43-1-e2",
-          "source": "emergent-bash-bash-bash-bash-43-1-n2",
-          "target": "emergent-bash-bash-bash-bash-43-1-n3"
+          "id": "emergent-bash-bash-bash-bash-49-1-e2",
+          "source": "emergent-bash-bash-bash-bash-49-1-n2",
+          "target": "emergent-bash-bash-bash-bash-49-1-n3"
         }
       ]
     },
     "support": {
-      "phases": 43,
+      "phases": 49,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-bash-31-2",
+    "slug": "emergent-bash-bash-bash-bash-bash-32-2",
     "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 31Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-31-2` or discard.",
+    "description": "Recurring tool-use sequence detected 32Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-32-2` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3609,12 +3792,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>31Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>32Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-n0",
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3623,11 +3806,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 32
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-n1",
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3636,11 +3819,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 32
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-n2",
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3649,11 +3832,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 32
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-n3",
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -3662,11 +3845,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 32
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-n4",
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -3675,42 +3858,42 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 31
+            "count": 32
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-e0",
-          "source": "emergent-bash-bash-bash-bash-bash-31-2-n0",
-          "target": "emergent-bash-bash-bash-bash-bash-31-2-n1"
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-e0",
+          "source": "emergent-bash-bash-bash-bash-bash-32-2-n0",
+          "target": "emergent-bash-bash-bash-bash-bash-32-2-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-e1",
-          "source": "emergent-bash-bash-bash-bash-bash-31-2-n1",
-          "target": "emergent-bash-bash-bash-bash-bash-31-2-n2"
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-e1",
+          "source": "emergent-bash-bash-bash-bash-bash-32-2-n1",
+          "target": "emergent-bash-bash-bash-bash-bash-32-2-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-e2",
-          "source": "emergent-bash-bash-bash-bash-bash-31-2-n2",
-          "target": "emergent-bash-bash-bash-bash-bash-31-2-n3"
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-e2",
+          "source": "emergent-bash-bash-bash-bash-bash-32-2-n2",
+          "target": "emergent-bash-bash-bash-bash-bash-32-2-n3"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-31-2-e3",
-          "source": "emergent-bash-bash-bash-bash-bash-31-2-n3",
-          "target": "emergent-bash-bash-bash-bash-bash-31-2-n4"
+          "id": "emergent-bash-bash-bash-bash-bash-32-2-e3",
+          "source": "emergent-bash-bash-bash-bash-bash-32-2-n3",
+          "target": "emergent-bash-bash-bash-bash-bash-32-2-n4"
         }
       ]
     },
     "support": {
-      "phases": 31,
+      "phases": 32,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-read-read-read-37-3",
+    "slug": "emergent-read-read-read-44-3",
     "name": "Read â†’ Read â†’ Read",
-    "description": "Recurring tool-use sequence detected 37Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-37-3` or discard.",
+    "description": "Recurring tool-use sequence detected 44Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-44-3` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3725,12 +3908,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>37Ã—</strong>: Read â†’ Read â†’ Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>44Ã—</strong>: Read â†’ Read â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-read-read-read-37-3-n0",
+          "id": "emergent-read-read-read-44-3-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3739,11 +3922,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 37
+            "count": 44
           }
         },
         {
-          "id": "emergent-read-read-read-37-3-n1",
+          "id": "emergent-read-read-read-44-3-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3752,11 +3935,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 37
+            "count": 44
           }
         },
         {
-          "id": "emergent-read-read-read-37-3-n2",
+          "id": "emergent-read-read-read-44-3-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3765,112 +3948,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 37
+            "count": 44
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-read-read-read-37-3-e0",
-          "source": "emergent-read-read-read-37-3-n0",
-          "target": "emergent-read-read-read-37-3-n1"
+          "id": "emergent-read-read-read-44-3-e0",
+          "source": "emergent-read-read-read-44-3-n0",
+          "target": "emergent-read-read-read-44-3-n1"
         },
         {
-          "id": "emergent-read-read-read-37-3-e1",
-          "source": "emergent-read-read-read-37-3-n1",
-          "target": "emergent-read-read-read-37-3-n2"
+          "id": "emergent-read-read-read-44-3-e1",
+          "source": "emergent-read-read-read-44-3-n1",
+          "target": "emergent-read-read-read-44-3-n2"
         }
       ]
     },
     "support": {
-      "phases": 37,
+      "phases": 44,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-edit-edit-edit-26-4",
-    "name": "Edit â†’ Edit â†’ Edit",
-    "description": "Recurring tool-use sequence detected 26Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-26-4` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>26Ã—</strong>: Edit â†’ Edit â†’ Edit.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-edit-26-4-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 26
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-26-4-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 26
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-26-4-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 26
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-edit-26-4-e0",
-          "source": "emergent-edit-edit-edit-26-4-n0",
-          "target": "emergent-edit-edit-edit-26-4-n1"
-        },
-        {
-          "id": "emergent-edit-edit-edit-26-4-e1",
-          "source": "emergent-edit-edit-edit-26-4-n1",
-          "target": "emergent-edit-edit-edit-26-4-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 26,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-read-read-read-read-18-5",
+    "slug": "emergent-read-read-read-read-25-4",
     "name": "Read â†’ Read â†’ Read â†’ Read",
-    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-read-18-5` or discard.",
+    "description": "Recurring tool-use sequence detected 25Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-read-25-4` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3885,12 +3988,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>18Ã—</strong>: Read â†’ Read â†’ Read â†’ Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>25Ã—</strong>: Read â†’ Read â†’ Read â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-read-read-read-read-18-5-n0",
+          "id": "emergent-read-read-read-read-25-4-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3899,11 +4002,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 18
+            "count": 25
           }
         },
         {
-          "id": "emergent-read-read-read-read-18-5-n1",
+          "id": "emergent-read-read-read-read-25-4-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -3912,11 +4015,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 18
+            "count": 25
           }
         },
         {
-          "id": "emergent-read-read-read-read-18-5-n2",
+          "id": "emergent-read-read-read-read-25-4-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -3925,11 +4028,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 18
+            "count": 25
           }
         },
         {
-          "id": "emergent-read-read-read-read-18-5-n3",
+          "id": "emergent-read-read-read-read-25-4-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -3938,37 +4041,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 18
+            "count": 25
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-read-read-read-read-18-5-e0",
-          "source": "emergent-read-read-read-read-18-5-n0",
-          "target": "emergent-read-read-read-read-18-5-n1"
+          "id": "emergent-read-read-read-read-25-4-e0",
+          "source": "emergent-read-read-read-read-25-4-n0",
+          "target": "emergent-read-read-read-read-25-4-n1"
         },
         {
-          "id": "emergent-read-read-read-read-18-5-e1",
-          "source": "emergent-read-read-read-read-18-5-n1",
-          "target": "emergent-read-read-read-read-18-5-n2"
+          "id": "emergent-read-read-read-read-25-4-e1",
+          "source": "emergent-read-read-read-read-25-4-n1",
+          "target": "emergent-read-read-read-read-25-4-n2"
         },
         {
-          "id": "emergent-read-read-read-read-18-5-e2",
-          "source": "emergent-read-read-read-read-18-5-n2",
-          "target": "emergent-read-read-read-read-18-5-n3"
+          "id": "emergent-read-read-read-read-25-4-e2",
+          "source": "emergent-read-read-read-read-25-4-n2",
+          "target": "emergent-read-read-read-read-25-4-n3"
         }
       ]
     },
     "support": {
-      "phases": 18,
+      "phases": 25,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-21-6",
-    "name": "Edit â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 21Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-21-6` or discard.",
+    "slug": "emergent-edit-edit-edit-25-5",
+    "name": "Edit â†’ Edit â†’ Edit",
+    "description": "Recurring tool-use sequence detected 25Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-25-5` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -3983,12 +4086,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>21Ã—</strong>: Edit â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>25Ã—</strong>: Edit â†’ Edit â†’ Edit.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-21-6-n0",
+          "id": "emergent-edit-edit-edit-25-5-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -3997,58 +4100,58 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 21
+            "count": 25
           }
         },
         {
-          "id": "emergent-edit-bash-bash-21-6-n1",
+          "id": "emergent-edit-edit-edit-25-5-n1",
           "type": "live",
           "position": {
             "x": 220,
             "y": 0
           },
           "data": {
-            "label": "Bash",
+            "label": "Edit",
             "kind": "skill",
-            "count": 21
+            "count": 25
           }
         },
         {
-          "id": "emergent-edit-bash-bash-21-6-n2",
+          "id": "emergent-edit-edit-edit-25-5-n2",
           "type": "live",
           "position": {
             "x": 440,
             "y": 0
           },
           "data": {
-            "label": "Bash",
+            "label": "Edit",
             "kind": "skill",
-            "count": 21
+            "count": 25
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-edit-bash-bash-21-6-e0",
-          "source": "emergent-edit-bash-bash-21-6-n0",
-          "target": "emergent-edit-bash-bash-21-6-n1"
+          "id": "emergent-edit-edit-edit-25-5-e0",
+          "source": "emergent-edit-edit-edit-25-5-n0",
+          "target": "emergent-edit-edit-edit-25-5-n1"
         },
         {
-          "id": "emergent-edit-bash-bash-21-6-e1",
-          "source": "emergent-edit-bash-bash-21-6-n1",
-          "target": "emergent-edit-bash-bash-21-6-n2"
+          "id": "emergent-edit-edit-edit-25-5-e1",
+          "source": "emergent-edit-edit-edit-25-5-n1",
+          "target": "emergent-edit-edit-edit-25-5-n2"
         }
       ]
     },
     "support": {
-      "phases": 21,
+      "phases": 25,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-read-grep-read-19-7",
-    "name": "Read â†’ Grep â†’ Read",
-    "description": "Recurring tool-use sequence detected 19Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-grep-read-19-7` or discard.",
+    "slug": "emergent-read-read-read-read-read-13-6",
+    "name": "Read â†’ Read â†’ Read â†’ Read â†’ Read",
+    "description": "Recurring tool-use sequence detected 13Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-read-read-13-6` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4063,12 +4166,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>19Ã—</strong>: Read â†’ Grep â†’ Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>13Ã—</strong>: Read â†’ Read â†’ Read â†’ Read â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-read-grep-read-19-7-n0",
+          "id": "emergent-read-read-read-read-read-13-6-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4077,24 +4180,24 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 19
+            "count": 13
           }
         },
         {
-          "id": "emergent-read-grep-read-19-7-n1",
+          "id": "emergent-read-read-read-read-read-13-6-n1",
           "type": "live",
           "position": {
             "x": 220,
             "y": 0
           },
           "data": {
-            "label": "Grep",
+            "label": "Read",
             "kind": "skill",
-            "count": 19
+            "count": 13
           }
         },
         {
-          "id": "emergent-read-grep-read-19-7-n2",
+          "id": "emergent-read-read-read-read-read-13-6-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4103,20 +4206,136 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
+            "count": 13
+          }
+        },
+        {
+          "id": "emergent-read-read-read-read-read-13-6-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 13
+          }
+        },
+        {
+          "id": "emergent-read-read-read-read-read-13-6-n4",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 13
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-read-read-read-read-read-13-6-e0",
+          "source": "emergent-read-read-read-read-read-13-6-n0",
+          "target": "emergent-read-read-read-read-read-13-6-n1"
+        },
+        {
+          "id": "emergent-read-read-read-read-read-13-6-e1",
+          "source": "emergent-read-read-read-read-read-13-6-n1",
+          "target": "emergent-read-read-read-read-read-13-6-n2"
+        },
+        {
+          "id": "emergent-read-read-read-read-read-13-6-e2",
+          "source": "emergent-read-read-read-read-read-13-6-n2",
+          "target": "emergent-read-read-read-read-read-13-6-n3"
+        },
+        {
+          "id": "emergent-read-read-read-read-read-13-6-e3",
+          "source": "emergent-read-read-read-read-read-13-6-n3",
+          "target": "emergent-read-read-read-read-read-13-6-n4"
+        }
+      ]
+    },
+    "support": {
+      "phases": 13,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-19-7",
+    "name": "Edit â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 19Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-19-7` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>19Ã—</strong>: Edit â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-19-7-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-19-7-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-19-7-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
             "count": 19
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-read-grep-read-19-7-e0",
-          "source": "emergent-read-grep-read-19-7-n0",
-          "target": "emergent-read-grep-read-19-7-n1"
+          "id": "emergent-edit-bash-bash-19-7-e0",
+          "source": "emergent-edit-bash-bash-19-7-n0",
+          "target": "emergent-edit-bash-bash-19-7-n1"
         },
         {
-          "id": "emergent-read-grep-read-19-7-e1",
-          "source": "emergent-read-grep-read-19-7-n1",
-          "target": "emergent-read-grep-read-19-7-n2"
+          "id": "emergent-edit-bash-bash-19-7-e1",
+          "source": "emergent-edit-bash-bash-19-7-n1",
+          "target": "emergent-edit-bash-bash-19-7-n2"
         }
       ]
     },
@@ -4126,9 +4345,107 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-grep-read-edit-18-8",
+    "slug": "emergent-edit-bash-bash-bash-14-8",
+    "name": "Edit â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 14Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-14-8` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>14Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-bash-14-8-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 14
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-14-8-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 14
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-14-8-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 14
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-14-8-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 14
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-bash-bash-bash-14-8-e0",
+          "source": "emergent-edit-bash-bash-bash-14-8-n0",
+          "target": "emergent-edit-bash-bash-bash-14-8-n1"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-14-8-e1",
+          "source": "emergent-edit-bash-bash-bash-14-8-n1",
+          "target": "emergent-edit-bash-bash-bash-14-8-n2"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-14-8-e2",
+          "source": "emergent-edit-bash-bash-bash-14-8-n2",
+          "target": "emergent-edit-bash-bash-bash-14-8-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 14,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-grep-read-edit-18-9",
     "name": "Grep â†’ Read â†’ Edit",
-    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-grep-read-edit-18-8` or discard.",
+    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-grep-read-edit-18-9` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4148,7 +4465,7 @@ export const WORKFLOWS: Workflow[] = [
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-grep-read-edit-18-8-n0",
+          "id": "emergent-grep-read-edit-18-9-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4161,7 +4478,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-grep-read-edit-18-8-n1",
+          "id": "emergent-grep-read-edit-18-9-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4174,7 +4491,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-grep-read-edit-18-8-n2",
+          "id": "emergent-grep-read-edit-18-9-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4189,14 +4506,14 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-grep-read-edit-18-8-e0",
-          "source": "emergent-grep-read-edit-18-8-n0",
-          "target": "emergent-grep-read-edit-18-8-n1"
+          "id": "emergent-grep-read-edit-18-9-e0",
+          "source": "emergent-grep-read-edit-18-9-n0",
+          "target": "emergent-grep-read-edit-18-9-n1"
         },
         {
-          "id": "emergent-grep-read-edit-18-8-e1",
-          "source": "emergent-grep-read-edit-18-8-n1",
-          "target": "emergent-grep-read-edit-18-8-n2"
+          "id": "emergent-grep-read-edit-18-9-e1",
+          "source": "emergent-grep-read-edit-18-9-n1",
+          "target": "emergent-grep-read-edit-18-9-n2"
         }
       ]
     },
@@ -4206,169 +4523,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-grep-grep-read-18-9",
-    "name": "Grep â†’ Grep â†’ Read",
-    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-grep-grep-read-18-9` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>18Ã—</strong>: Grep â†’ Grep â†’ Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-grep-grep-read-18-9-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Grep",
-            "kind": "skill",
-            "count": 18
-          }
-        },
-        {
-          "id": "emergent-grep-grep-read-18-9-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Grep",
-            "kind": "skill",
-            "count": 18
-          }
-        },
-        {
-          "id": "emergent-grep-grep-read-18-9-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 18
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-grep-grep-read-18-9-e0",
-          "source": "emergent-grep-grep-read-18-9-n0",
-          "target": "emergent-grep-grep-read-18-9-n1"
-        },
-        {
-          "id": "emergent-grep-grep-read-18-9-e1",
-          "source": "emergent-grep-grep-read-18-9-n1",
-          "target": "emergent-grep-grep-read-18-9-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 18,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-grep-read-read-18-10",
-    "name": "Grep â†’ Read â†’ Read",
-    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-grep-read-read-18-10` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>18Ã—</strong>: Grep â†’ Read â†’ Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-grep-read-read-18-10-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Grep",
-            "kind": "skill",
-            "count": 18
-          }
-        },
-        {
-          "id": "emergent-grep-read-read-18-10-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 18
-          }
-        },
-        {
-          "id": "emergent-grep-read-read-18-10-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 18
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-grep-read-read-18-10-e0",
-          "source": "emergent-grep-read-read-18-10-n0",
-          "target": "emergent-grep-read-read-18-10-n1"
-        },
-        {
-          "id": "emergent-grep-read-read-18-10-e1",
-          "source": "emergent-grep-read-read-18-10-n1",
-          "target": "emergent-grep-read-read-18-10-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 18,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-read-read-edit-18-11",
+    "slug": "emergent-read-read-edit-18-10",
     "name": "Read â†’ Read â†’ Edit",
-    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-edit-18-11` or discard.",
+    "description": "Recurring tool-use sequence detected 18Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-edit-18-10` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4388,7 +4545,7 @@ export const WORKFLOWS: Workflow[] = [
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-read-read-edit-18-11-n0",
+          "id": "emergent-read-read-edit-18-10-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4401,7 +4558,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-read-read-edit-18-11-n1",
+          "id": "emergent-read-read-edit-18-10-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4414,7 +4571,7 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-read-read-edit-18-11-n2",
+          "id": "emergent-read-read-edit-18-10-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4429,19 +4586,117 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-read-read-edit-18-11-e0",
-          "source": "emergent-read-read-edit-18-11-n0",
-          "target": "emergent-read-read-edit-18-11-n1"
+          "id": "emergent-read-read-edit-18-10-e0",
+          "source": "emergent-read-read-edit-18-10-n0",
+          "target": "emergent-read-read-edit-18-10-n1"
         },
         {
-          "id": "emergent-read-read-edit-18-11-e1",
-          "source": "emergent-read-read-edit-18-11-n1",
-          "target": "emergent-read-read-edit-18-11-n2"
+          "id": "emergent-read-read-edit-18-10-e1",
+          "source": "emergent-read-read-edit-18-10-n1",
+          "target": "emergent-read-read-edit-18-10-n2"
         }
       ]
     },
     "support": {
       "phases": 18,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-edit-edit-edit-13-11",
+    "name": "Edit â†’ Edit â†’ Edit â†’ Edit",
+    "description": "Recurring tool-use sequence detected 13Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-edit-13-11` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>13Ã—</strong>: Edit â†’ Edit â†’ Edit â†’ Edit.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-edit-edit-edit-13-11-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 13
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-13-11-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 13
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-13-11-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 13
+          }
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-13-11-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 13
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-edit-edit-edit-13-11-e0",
+          "source": "emergent-edit-edit-edit-edit-13-11-n0",
+          "target": "emergent-edit-edit-edit-edit-13-11-n1"
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-13-11-e1",
+          "source": "emergent-edit-edit-edit-edit-13-11-n1",
+          "target": "emergent-edit-edit-edit-edit-13-11-n2"
+        },
+        {
+          "id": "emergent-edit-edit-edit-edit-13-11-e2",
+          "source": "emergent-edit-edit-edit-edit-13-11-n2",
+          "target": "emergent-edit-edit-edit-edit-13-11-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 13,
       "stability": 1
     }
   }
@@ -4494,7 +4749,7 @@ export const HUMAN_WORKFLOWS: HumanWorkflow[] = [
 ];
 
 export const SIGNAL: Signal = {
-  "totalEvents": 813,
+  "totalEvents": 826,
   "topFiles": [
     {
       "path": "vendor/get-anything-done/bin/gad.cjs",
@@ -4502,11 +4757,7 @@ export const SIGNAL: Signal = {
     },
     {
       "path": "vendor/get-anything-done/site/app/projects/edit/[id]/ProjectEditor.tsx",
-      "count": 46
-    },
-    {
-      "path": "vendor/get-anything-done/lib/graph-extractor.cjs",
-      "count": 24
+      "count": 26
     },
     {
       "path": "vendor/get-anything-done/site/components/devid/DevPanel.tsx",
@@ -4514,46 +4765,54 @@ export const SIGNAL: Signal = {
     },
     {
       "path": "vendor/get-anything-done/.planning/TASK-REGISTRY.xml",
-      "count": 16
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/InspectorPane.tsx",
-      "count": 14
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/ProjectCanvas.tsx",
-      "count": 13
+      "count": 20
     },
     {
       "path": "vendor/get-anything-done/.planning/STATE.xml",
+      "count": 18
+    },
+    {
+      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/InspectorPane.tsx",
       "count": 13
     },
     {
-      "path": "vendor/get-anything-done/.planning/DECISIONS.xml",
-      "count": 11
+      "path": "vendor/get-anything-done/site/scripts/build-site-data.mjs",
+      "count": 13
     },
     {
       "path": "vendor/get-anything-done/site/lib/eval-data.generated.ts",
       "count": 11
     },
     {
-      "path": "vendor/get-anything-done/site/scripts/build-site-data.mjs",
-      "count": 11
+      "path": "vendor/get-anything-done/.planning/DECISIONS.xml",
+      "count": 10
+    },
+    {
+      "path": "vendor/get-anything-done/lib/eval-data-access.cjs",
+      "count": 10
+    },
+    {
+      "path": "vendor/get-anything-done/lib/graph-extractor.cjs",
+      "count": 9
+    },
+    {
+      "path": "vendor/get-anything-done/site/app/projects/edit/eval-data-runtime.ts",
+      "count": 8
+    },
+    {
+      "path": "vendor/get-anything-done/site/components/site/SiteSection.tsx",
+      "count": 8
     },
     {
       "path": "vendor/get-anything-done/site/app/api/dev/live/route.ts",
-      "count": 8
+      "count": 7
     },
     {
       "path": "vendor/get-anything-done/site/app/projects/edit/[id]/BestiaryTab.tsx",
       "count": 7
     },
     {
-      "path": "vendor/get-anything-done/site/app/projects/edit/eval-data-runtime.ts",
-      "count": 7
-    },
-    {
-      "path": "vendor/get-anything-done/site/components/site/SiteSection.tsx",
+      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/ProjectCanvas.tsx",
       "count": 7
     },
     {
@@ -4561,15 +4820,11 @@ export const SIGNAL: Signal = {
       "count": 7
     },
     {
-      "path": "vendor/get-anything-done/lib/eval-data-access.cjs",
-      "count": 7
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/DnaEditor.tsx",
+      "path": "vendor/get-anything-done/AGENTS.md",
       "count": 6
     },
     {
-      "path": "vendor/get-anything-done/AGENTS.md",
+      "path": "vendor/get-anything-done/site/app/downloads/page.tsx",
       "count": 6
     },
     {
@@ -4579,44 +4834,48 @@ export const SIGNAL: Signal = {
   ],
   "topSkills": [],
   "toolMix": {
-    "Edit": {
-      "count": 157,
-      "pct": 19.3
-    },
-    "Bash": {
-      "count": 205,
-      "pct": 25.2
-    },
-    "Write": {
-      "count": 31,
-      "pct": 3.8
+    "Grep": {
+      "count": 131,
+      "pct": 15.9
     },
     "Read": {
-      "count": 235,
-      "pct": 28.9
+      "count": 236,
+      "pct": 28.6
     },
-    "Grep": {
-      "count": 141,
-      "pct": 17.3
-    },
-    "Agent": {
-      "count": 10,
-      "pct": 1.2
+    "Edit": {
+      "count": 151,
+      "pct": 18.3
     },
     "Glob": {
-      "count": 30,
-      "pct": 3.7
+      "count": 32,
+      "pct": 3.9
+    },
+    "Bash": {
+      "count": 218,
+      "pct": 26.4
+    },
+    "Agent": {
+      "count": 12,
+      "pct": 1.5
+    },
+    "Write": {
+      "count": 24,
+      "pct": 2.9
     },
     "TaskUpdate": {
+      "count": 18,
+      "pct": 2.2
+    },
+    "TaskCreate": {
       "count": 4,
       "pct": 0.5
     }
   },
   "agentSplit": {
-    "default": 299,
-    "sub": 514,
+    "default": 307,
+    "sub": 519,
     "byRole": {
-      "(unspecified)": 514
+      "(unspecified)": 519
     }
   }
 };
@@ -4705,10 +4964,10 @@ export const CONTEXT_FRAMEWORKS: ContextFramework[] = [
 ];
 
 export const PLANNING_STATE: PlanningState = {
-  "currentPhase": "44.5",
+  "currentPhase": "42.4",
   "milestone": "gad-v1.1",
-  "nextAction": "Session 2026-04-16b: ~43 deliverables. Phase 44.5 COMPLETE (22 tasks). Phase 45 waves 1+2 COMPLETE (12 tasks — tabs, data, migration, /planning rewired). Generate-publish-play pipeline shipped (3 tasks). VCS: dismiss, speech, Ctrl+arrow. REMAINING: phase 45 waves 3+4 (visual rebrand, vocab audit, hero copy, logo, cleanup). Todos: media-service-infra, editor-ux-platform, generate-publish-play refinement. tweakcn cloned to tmp/.",
-  "lastUpdated": "2026-04-16T02:00:00.000Z",
+  "nextAction": "Session 2026-04-16d CLOSE. TRACK 1 advanced across 3 commits in submodule + 1 bump in outer repo (pushed):\r\n- 65ddd91: nav-shared + PlayableTeaser home vocab + TS fix (EvalProjectMeta.published optional)\r\n- f3ade4b: docs/quick-start.md (v1.32→1.33 + new CLI canonical shape gad projects init / gad species create / gad spawn / gad generation)\r\n- 8c1234x (this session final): /downloads metadata + Templates intro/section vocab rebrand (eval project → species)\r\n\r\nOuter repo bump: 5b12b3a (pushed).\r\n\r\nParallel commits on submodule during session (not mine, from user's agent-experiment work): 504f691 gad bundle export command, 8591d71 OpenCode permissions simplification. No conflicts.\r\n\r\n3 new todos captured from session design discussion:\r\n- site-article-parallel-subagent-cost (cost breakdown → landing article)\r\n- structural-parallelism-task-outbox (per-agent scratch files, avoid shared-file merge conflicts)\r\n- lightweight-agent-and-scoped-snapshot (agent profiles, gad snapshot --task, minimal-agent mode)\r\n\r\nCOMPLETED this session (total 11 submodule commits, all pushed):\r\n\r\nTasks closed (status=done):\r\n- 45-15 vocabulary audit — all live user-facing site surfaces rebranded (nav, PlayableTeaser, docs/quick-start, /downloads, Templates, Footer, playable-shared, round-results, ProjectMarketHeader, layout, llms.txt generator). Residual \"eval\" in generated data files is historical decision text, preserved intentionally.\r\n- 43-10 docs vocabulary + transitional note — README.md + AGENTS.md + CHANGELOG.md (Unreleased section) + ROADMAP.xml transitional note (pre-43 \"round\" ↔ post-43 \"evolution\"; \"vN per project\" ↔ \"generation per species\", per D-16).\r\n- 42.2-04 validator dedup — lib/evolution-validator.cjs extractFileRefs deduplicates trailing-substring refs; 5 unit tests in tests/evolution-validator.test.cjs, all pass.\r\n- TRACK 3 part 1: gad breed CLI — breedSpecies() in eval-data-access.cjs, top-level `gad breed --project <id> --parentA <s> --parentB <s> --name <new>`. Verified on escape-the-dungeon bare+emergent.\r\n- TRACK 3 part 2: Pressure section on /how-it-works — new Section 3 with formula P = T + C_a·w_c + C_l·w_l + D·w_d + (D/T)·w_r, 5-row dimension table, Shannon-parallel entropy decomposition H_d / H_l. Sections 3 and 4 renumbered to 4 and 5.\r\n\r\nTasks partial (status=in-progress):\r\n- 42.2-40.b gad try polish — items 1 (strip .git/), 2 (--branch flag), 4 (skill.md normalize) shipped. Item 3 (interactive y/N consent) remains future, belongs with runtime-invocation flow.\r\n\r\nCaptured (notes + todos):\r\n- .planning/notes/session-dump-heuristics-2026-04-16.md — session cost shape + junior/balanced/senior profile modes as CONFIGURATION (not heuristic auto-dump, which was rejected as too fragile). Junior/senior analogy corrected: junior = fewer skills = cheaper, senior = more skills = expensive + capable.\r\n- .planning/todos/2026-04-16-site-article-parallel-subagent-cost.md\r\n- .planning/todos/2026-04-16-structural-parallelism-task-outbox.md\r\n- .planning/todos/2026-04-16-lightweight-agent-and-scoped-snapshot.md\r\n- CHANGELOG.md Unreleased section documents all of the above.\r\n\r\nREMAINING — next session pickup candidates:\r\n\r\n- TRACK 2 (VCS portability): `gad spawn escape-the-dungeon/vcs-test` — empirical test of VCS primitives on KAPLAY canvas.\r\n- Blocking todo: generate-publish-play-pipeline — editor → preserved build → public playable, new /library route.\r\n- Phase 45 wave 2+: 45-01 through 45-21 (project detail tab shell, per-project API routes, vocabulary constants, Art of War epigraphs, migration of Planning tab components to project-scoped, type ramp, logo, etc.)\r\n- 44-13 gad projects init config-write location (needs repro — may already be fixed by earlier changes to findRepoRoot).\r\n- 44-09 live project-market data sync in dev.\r\n- Captured todos for structural investigation: outbox pattern, scoped snapshots, minimal-agent profile. Each needs its own discuss-phase to become a real roadmap entry.\r\n\r\nTRACK 2 (VCS portability): Run `gad spawn escape-the-dungeon/vcs-test`. Compare bare data-attributes vs React component. Iterate VCS skill. STOP after: one generation complete + skill iterated.\r\n\r\nTRACK 3 (formula display): `gad breed` DONE (this session). Remaining: refine pressure formula display on /how-it-works — show formula, dimensions, current values.\r\n\r\nSTRUCTURAL INVESTIGATIONS (not decided, captured as todos):\r\n- Per-agent task outbox pattern — avoid shared-file merge conflicts (structural-parallelism-task-outbox)\r\n- Scoped snapshot + lightweight agent profile — drop subagent cold-start cost (lightweight-agent-and-scoped-snapshot)\r\n- Landing-site article on parallel-subagent cost (site-article-parallel-subagent-cost)\r\n\r\nTODOS (15): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template.",
+  "lastUpdated": "2026-04-17T00:30:00.000Z",
   "phases": [
     {
       "id": "01",
@@ -4959,6 +5218,11 @@ export const PLANNING_STATE: PlanningState = {
       "id": "45",
       "title": "Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model",
       "status": "planned"
+    },
+    {
+      "id": "46",
+      "title": "Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning",
+      "status": "active"
     }
   ],
   "openTasks": [
@@ -4988,18 +5252,13 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, and hydration are canonical. Decide whether phase prompts should stay on a fixed file manifest or move to scoped/query-driven hydration, and â€¦"
     },
     {
-      "id": "42.2-04",
-      "status": "planned",
-      "goal": "Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case."
-    },
-    {
       "id": "42.2-05",
       "status": "planned",
       "goal": "Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-16â€¦"
     },
     {
       "id": "42.2-40.b",
-      "status": "planned",
+      "status": "in-progress",
       "goal": "Remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2) add a `--branch &lt;name&gt;` flag for explicit branch selection instead of the fallback probe, (3) interactive consent gate `y/N` promptâ€¦"
     },
     {
@@ -5026,11 +5285,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "43-09",
       "status": "planned",
       "goal": "Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a râ€¦"
-    },
-    {
-      "id": "43-10",
-      "status": "planned",
-      "goal": "Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project foâ€¦"
     },
     {
       "id": "44-09",
@@ -5153,11 +5407,6 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved."
     },
     {
-      "id": "45-15",
-      "status": "planned",
-      "goal": "Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove."
-    },
-    {
       "id": "45-16",
       "status": "planned",
       "goal": "Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout."
@@ -5188,67 +5437,67 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers."
     }
   ],
-  "doneTasksCount": 319,
+  "doneTasksCount": 330,
   "recentDecisions": [
     {
-      "id": "gad-206",
-      "title": "Species are evolutionary branches of a project — inheritance-based configuration forking",
-      "summary": "Species are not just \"eval configurations\" — they are evolutionary branches of a project. Each species inherits the project's requirements, skills, and structure but configures differently (different workflow, different skill set, different constraints). Creating a species is like branching. Running a generation is like a commit on that branch. The project is the monorepo-shaped GAD project with ."
+      "id": "gad-224",
+      "title": "Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash",
+      "summary": "Open-source contribution model where users opt in to having their local coding agent work on project features/bugs. The project publishes a feature/bug queue. Users with GAD CLI + hooks installed can opt in. Their local agent picks up a feature, works on it using their coding agent subscription (their tokens, their machine), and submits a PR. The project gets contributions measured in AI tokens sp"
     },
     {
-      "id": "gad-199",
-      "title": "Full native planning-graph implementation — supersedes gad-197 hybrid approach",
-      "summary": "Operator accepted the Graphify concept but chose full native Node implementation over vendoring the Python package. Supersedes gad-197 (which recommended hybrid: native extractor first, Graphify as opt-in trial). Rationale: the planning-graph use case is fully structural — walking typed XML files with known schemas — and does not need Graphify's multimodal extraction (vision, audio, PDF). A 500-li"
+      "id": "gad-223",
+      "title": "Question the VCS component hierarchy — Identified and SiteSection may not be the right primitives",
+      "summary": "The current VCS uses SiteSection (structural wrapper with cid) and Identified (inner landmark wrapper). But these may be unnecessary component abstractions. The universal requirement is simpler: a way to place source-searchable identity literals on any element, trace them from built output back to source, and collect them quickly for agent prompts. A plain data attribute on a standard div might be"
     },
     {
-      "id": "gad-205",
-      "title": "Multi-tenant platform vision — local-first data model maps to hosted",
-      "summary": "The operator envisions a hosted platform where users text an agent (via WhatsApp or similar) to build projects, paying per run. Each project is a repo. The data architecture must support: (1) local single-user dev (filesystem), (2) hosted multi-tenant (database). The migration path: build eval-data-access.cjs as the abstraction layer now, swap the backend later. Key concerns: generation-level appl"
+      "id": "gad-222",
+      "title": "Pressure v3: crosscuts classified as anticipated (with decision) vs latent (unknown unknowns)",
+      "summary": "Crosscut tasks are now classified by whether they have an associated decision. A crosscut WITH a decision = anticipated complexity (someone saw the question coming and resolved it). A crosscut WITHOUT a decision = latent entropy — an unknown unknown that manifested as cross-system work without anyone even formulating the question. Latent crosscuts are weighted higher (default 4x vs 2x for anticipa"
     },
     {
-      "id": "gad-204",
-      "title": "Graphify is shelfware — native graph extractor is the production system",
-      "summary": "Graphify (Python) was never installed or run. All graph functionality (829 nodes, 1142 edges, 12.9x token savings, force-directed viz, auto-rebuild via file watcher) is our own zero-dep Node code in lib/graph-extractor.cjs. Graphify would only matter for reverse-engineering external codebases that have no .planning/ structure — it uses LLMs/vision/whisper to infer entities from unstructured conten"
+      "id": "gad-221",
+      "title": "Epigenetic skills: install, use, shed — skills that build once and are no longer needed",
+      "summary": "Not all skills are permanent. Some build a complex capability once (e.g., \"build an EPUB reader\", \"add export adapter for epub3 format\") and are then unneeded. These are epigenetic skills — they modify the generation's phenotype but aren't part of the ongoing species DNA. The lifecycle: install skill → run generation → skill builds the capability → shed skill (uninstall). The generation keeps the "
     },
     {
-      "id": "gad-203",
-      "title": "Data architecture: filesystem-as-database with eval-data-access.cjs unified module",
-      "summary": "The editor's data layer uses the filesystem directly as the database — JSON files on disk (project.json, species.json, TRACE.json), no separate DB server. A single shared Node module (lib/eval-data-access.cjs) provides CRUD for both CLI and site API routes. Schema adds nullable createdAt/updatedAt/createdBy to project.json and species.json. Runtime API at /api/dev/evals/ provides REST routes for p"
+      "id": "gad-220",
+      "title": "Pressure formula v2: add decision entropy as a core dimension alongside task count and crosscuts",
+      "summary": "Current pressure formula P = T + C*w is too basic — it counts tasks and crosscuts but ignores the information-theoretic signal: decisions. A decision is produced when a question of high importance and directional consequence is resolved. Decision count per phase/task is a direct proxy for information entropy — how much uncertainty was resolved. Shannon entropy H = -Σ p(x) log₂ p(x) measures inform"
     },
     {
-      "id": "gad-202",
-      "title": "All GAD workflows prefer `gad query` over raw XML reads for targeted lookups",
-      "summary": "All GAD skill and workflow instructions now prefer `gad query` over raw XML reads when `useGraphQuery=true` is set in gad-config.toml. Skills updated: gad-plan-phase (query decisions/tasks before planning), gad-execute-phase (query planned tasks in phase), gad-verify-work (query done tasks in phase), gad-check-todos (query open tasks). Snapshot task listing uses graph-backed path when enabled. Tas"
+      "id": "gad-219",
+      "title": "Command vocabulary: play/spawn/breed are distinct evolutionary operations, not aliases",
+      "summary": "Three verbs for three operations: (1) `gad play &lt;project&gt;/&lt;species&gt;/&lt;version&gt;` — opens the built artifact (HTML game, app, book, website). Playing is consuming the output. (2) `gad spawn &lt;project&gt;/&lt;species&gt;` — creates a new generation by running a species in an ecosystem/environment. Spawning is the act of generation. The ecosystem is the project context the species e"
     },
     {
-      "id": "gad-200",
-      "title": "Post-shed cleanup pass: review code touched by shed skills, remove dead code, re-graphify",
-      "summary": "After any evolution shed cycle, the codebase must be reviewed for dead code left behind by the shed skills. Run Graphify to regenerate the graph post-shed, then query for orphaned references. This is a mandatory step in the evolution lifecycle, not optional cleanup."
+      "id": "gad-218",
+      "title": "Desktop client is a local-first project management tool — users build locally, publish to platform",
+      "summary": "GAD's distribution model: desktop client for local project management, platform for publishing. Users bring their own coding agent subscription (Claude Code, Cursor, etc.) and build locally on their machine. The desktop client provides white-glove setup, project/species/generation management, skill authoring, and VCS editors. Published projects, species, and generations go to the hosted platform. "
     },
     {
-      "id": "gad-201",
-      "title": "Graph query is the default lookup mechanism for all GAD projects",
-      "summary": "Graph queries (gad query, gad tasks --graph, gad state --graph) are the default for targeted planning lookups across all GAD projects. 12.9x token savings (1770 tokens raw vs 137 tokens graph query). ~320ms rebuild, zero external deps. Auto-rebuild hooks on task claim/release and state set-next-action keep graph.json fresh. New gad-config.toml template includes useGraphQuery=true. Snapshot gains G"
+      "id": "gad-217",
+      "title": "GAD CLI supports AI generation fundamentals — image, audio, video, text as one-shot file creation",
+      "summary": "The GAD CLI needs basic AI generation commands that don't require a coding agent: simple prompt → file output. Use cases: generate an image (cover art, sprite), generate audio (sound effect, music), generate video (trailer clip), generate text (markdown, code, config) and write it to a target output path. These are one-shot generation fundamentals that feed into the project assets pipeline (decisi"
     },
     {
-      "id": "gad-199",
-      "title": "Graphify accepted as full dependency — supersedes hybrid approach (gad-197)",
-      "summary": "Accept Graphify (Python) as the real graph backend, not just a trial. Three deliverables: (1) full install (not gad-try), (2) `gad query` CLI command for token-efficient graph lookups, (3) `gad graph` to regenerate. The installer (bin/install.js) packages or helps install Python/pip for consumers. Supersedes gad-197's \"hybrid, sequenced\" approach — Option A (vendor Graphify) becomes the primary pa"
+      "id": "gad-216",
+      "title": "VCS primitives are the core deliverable — minimal identifiers + panel + context capture that any project species installs",
+      "summary": "The VCS is not a site-specific feature — it is the primitive layer every GAD project should build first. The minimal surface: (1) Identifiers coded into compartmentalized UI sections, (2) a panel/footer that attaches to sections for localized landmark data, (3) self-referential context capture — the panel itself has identifiers so it can iterate on its own UI via quick prompts. SiteSections are st"
     },
     {
-      "id": "gad-198",
-      "title": "Skills are the genes in the DNA — install/try/proto/shed/promote collapse into one lifecycle, surfaced as the DNA Editor inside the Project Editor",
-      "summary": "Operator (2026-04-15) made the biological metaphor explicit and the scattered commands suddenly line up:\r\n\r\n**Genes = skills.** A skill (SKILL.md + workflow) is the atomic hereditary unit. The project's `.claude/skills/` dir is the DNA — the permanent, integrated set of genes the organism expresses by default.\r\n\r\n**`gad try` is epigenetic expression.** Staging a skill into `.gad-try/&lt;slug&gt;/`"
+      "id": "gad-215",
+      "title": "Bidirectional data flow: generation learnings and requirements flow back to project and species",
+      "summary": "Data flows both directions in the hierarchy. Down: project requirements + species config → generation. Up: generation produces learnings, discovered requirements, salvaged data, new skills that should flow back to the project (as new requirements) and species (as improved config). When editing a species or generation, insights that are better suited as project requirements get promoted upward. Sam"
     },
     {
-      "id": "gad-197",
-      "title": "Graphify integration: Option B (native Node extractor) ships first, Option A (vendor Graphify) gated on evidence",
-      "summary": "Task 42.2-41 trialed Graphify end-to-end via the newly-shipped `gad try` flow. Findings in `evals/FINDINGS-2026-04-15-graphify-trial.md` — pipeline proven end-to-end, 33 files staged into `.gad-try/graphify/`, consent gate correctly surfaced the implicit `pip install graphifyy` dependency via body scan.\r\n\r\nTwo integration paths were considered for bringing a knowledge-graph + visualization primiti"
+      "id": "gad-214",
+      "title": "VCS as universal agent-addressability layer — minimal surface for any system (React, Kaplay, Phaser, etc.)",
+      "summary": "The Visual Context System goal is the minimal component/ID surface needed for an agent to understand what the user sees and reference specific elements on screen. Every species using VCS skills implements dev tooling, sectioning, and IDs. The system must work across rendering boundaries (React DOM, Kaplay canvas, Phaser, etc.). Three approaches: (1) species place IDs/formats in code, our editor sc"
     },
     {
-      "id": "gad-196",
-      "title": "Home band rename: `lineage` → `agent-handoff-cycle` — retrospective on stale naming",
-      "summary": "The home-page section `components/landing/lineage/` used `SiteSection` `cid=\"lineage-site-section\"` while the **product meaning** had shifted to a visual-context handoff loop (site → panel → speech → clipboard → coding agent → ship → repeat). \"Lineage\" remained accurate only for the **GSD upstream reference** (link + YouTube segment), not for the primary UX story. That mismatch persisted across re"
+      "id": "gad-213",
+      "title": "GAD as RPG: species are character builds, generations are gameplay, editors are the game surface",
+      "summary": "The GAD experience is explicitly gamified. Species configuration is analogous to RPG character building — selecting tech stack, skills, context framework, constraints. Running a generation is \"playing the game\" with that build against a project's requirements. The editors (project editor, species editor, generation editor) are the game surface. Voice-first interaction with VCS landmarks for spatia"
     }
   ]
 };

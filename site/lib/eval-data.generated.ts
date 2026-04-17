@@ -233,20 +233,6 @@ export interface EvalProjectMeta {
   techStack: string | null;
   buildRequirement: string | null;
   published?: boolean;
-
-  // Authorship (decision gad-213)
-  authors?: string[];
-  usageCount?: number;
-  lastUsed?: string | null;
-  projectsUsedIn?: string[];
-
-  // Showcase media (decision gad-213)
-  showcaseMedia?: Array<{ type: "image" | "video" | "playable"; src: string; caption?: string }>;
-  featuredGeneration?: { project: string; version: string } | null;
-
-  // Transferability (decision gad-209)
-  transferable?: boolean;
-  tags?: string[];
 }
 
 export interface ProducedArtifacts {
@@ -2916,6 +2902,13 @@ export const EVAL_TEMPLATES: EvalTemplateAsset[] = [
     "bytes": 44416
   },
   {
+    "project": "escape-the-dungeon",
+    "species": "vcs-test",
+    "id": "escape-the-dungeon/vcs-test",
+    "zipPath": "/downloads/eval-escape-the-dungeon-vcs-test-template.zip",
+    "bytes": 19523
+  },
+  {
     "project": "gad-explainer-video",
     "species": "gad",
     "id": "gad-explainer-video/gad",
@@ -2948,6 +2941,14 @@ export const PLANNING_ZIPS: PlanningZipAsset[] = [
     "zipPath": "/downloads/planning/eval-escape-the-dungeon-gad-planning.zip",
     "bytes": 44416,
     "files": 16
+  },
+  {
+    "project": "escape-the-dungeon",
+    "species": "vcs-test",
+    "id": "escape-the-dungeon/vcs-test",
+    "zipPath": "/downloads/planning/eval-escape-the-dungeon-vcs-test-planning.zip",
+    "bytes": 19523,
+    "files": 5
   },
   {
     "project": "gad-explainer-video",
@@ -3232,6 +3233,68 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = [
           "label": "Stability",
           "weight": 0.1,
           "description": "Does the game crash? Do scene transitions leave stale state? Does save/load work? Can you finish a run start-to-end without reload?"
+        }
+      ]
+    },
+    "domain": "game",
+    "techStack": "kaplay",
+    "buildRequirement": "playable HTML game"
+  },
+  {
+    "id": "escape-the-dungeon/vcs-test",
+    "project": "escape-the-dungeon",
+    "species": "vcs-test",
+    "name": "escape-the-dungeon/vcs-test",
+    "description": "VCS portability test: bare v1 game with VCS skills installed. Tests whether an agent can build identifiers + dev panel in a KAPLAY canvas game.",
+    "workflow": "bare",
+    "contextFramework": "bare",
+    "baseline": null,
+    "constraints": {
+      "must_implement_vcs": true,
+      "vcs_skill": "visual-context-system.md",
+      "min_cids_per_scene": 3,
+      "dev_panel_required": true
+    },
+    "scoringWeights": {
+      "requirement_coverage": 0.2,
+      "implementation_quality": 0.2,
+      "workflow_emergence": 0.15,
+      "iteration_evidence": 0.1,
+      "time_efficiency": 0.05,
+      "human_review": 0.3
+    },
+    "humanReviewRubric": {
+      "version": "v1",
+      "dimensions": [
+        {
+          "key": "playability",
+          "label": "Playability",
+          "weight": 0.3,
+          "description": "Does the game run end-to-end? Title → new game → rooms → combat → return → continue. No softlocks."
+        },
+        {
+          "key": "ui_polish",
+          "label": "UI polish",
+          "weight": 0.2,
+          "description": "Does the UI feel intentional? Icons, HP/mana bars, room-type differentiation, styled controls. No raw ASCII."
+        },
+        {
+          "key": "mechanics_implementation",
+          "label": "Mechanics implementation",
+          "weight": 0.2,
+          "description": "Are combat, forge, rune crafting, resistances functional and coherent?"
+        },
+        {
+          "key": "ingenuity_requirement_met",
+          "label": "Ingenuity requirement met",
+          "weight": 0.2,
+          "description": "v4 principle: do starter abilities feel insufficient? Is the forge necessary, not cosmetic?"
+        },
+        {
+          "key": "stability",
+          "label": "Stability",
+          "weight": 0.1,
+          "description": "Crashes? Stale state? Save/load works? Finish a run without reload?"
         }
       ]
     },
@@ -4689,6 +4752,114 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-224",
+    "title": "Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash",
+    "summary": "Open-source contribution model where users opt in to having their local coding agent work on project features/bugs. The project publishes a feature/bug queue. Users with GAD CLI + hooks installed can opt in. Their local agent picks up a feature, works on it using their coding agent subscription (their tokens, their machine), and submits a PR. The project gets contributions measured in AI tokens spent, not cash. Users get contributor credit + their agent learns from the codebase. Hooks enable this: on opt-in, the GAD CLI pulls a feature from the queue, sets up a worktree, spawns a subagent, and submits the result. Private repos need explicit access grants. Public repos work out of the box. This is decentralized CI/CD where the compute is distributed across contributor machines.",
+    "impact": "New GAD feature: contributor queue (feature/bug list), opt-in hook, PR submission pipeline. Requires: feature queue format, contributor agent prompt template, PR review workflow. Long-term: this is how GAD itself gets maintained — by its users' agents."
+  },
+  {
+    "id": "gad-223",
+    "title": "Question the VCS component hierarchy — Identified and SiteSection may not be the right primitives",
+    "summary": "The current VCS uses SiteSection (structural wrapper with cid) and Identified (inner landmark wrapper). But these may be unnecessary component abstractions. The universal requirement is simpler: a way to place source-searchable identity literals on any element, trace them from built output back to source, and collect them quickly for agent prompts. A plain data attribute on a standard div might be all that's needed. The component wrappers add convenience but also coupling. Research needed: what is the absolute minimal instrumentation pattern that works across React, Kaplay/canvas, Phaser, terminal, and arbitrary renderers? Maybe it's just a naming convention + a scan script, not components at all. The panels (DevPanel, BandDevPanel) add visual noise — they make section layout visible but clutter the dev experience. Worth exploring: panels as opt-in overlays toggled by keyboard, not always-present UI chrome. The goal is context capture speed, not visual density.",
+    "impact": "Next VCS iteration should test: (1) bare data attributes vs component wrappers, (2) panels as keyboard-toggled overlays vs persistent UI, (3) cross-renderer ID patterns. The VCS test species on escape-the-dungeon is the testing ground."
+  },
+  {
+    "id": "gad-222",
+    "title": "Pressure v3: crosscuts classified as anticipated (with decision) vs latent (unknown unknowns)",
+    "summary": "Crosscut tasks are now classified by whether they have an associated decision. A crosscut WITH a decision = anticipated complexity (someone saw the question coming and resolved it). A crosscut WITHOUT a decision = latent entropy — an unknown unknown that manifested as cross-system work without anyone even formulating the question. Latent crosscuts are weighted higher (default 4x vs 2x for anticipated) because the hardest problems are the ones nobody knew to ask about.\r\n\r\n    Formal model — three entropy dimensions:\r\n    1. Resolved entropy: H_d = D * log₂(T/D + 1) — decisions that answered known questions\r\n    2. Latent entropy: H_l = L * log₂(C/L + 1) — crosscuts that appeared without a question being asked\r\n    3. Task volume: T — raw work count\r\n\r\n    Full formula v3:\r\n    P = T + C_a * w_c + C_l * w_l + D * w_d + (D/T) * w_r\r\n\r\n    Where C_a = anticipated crosscuts, C_l = latent crosscuts, w_l = latent weight (default 4).\r\n\r\n    The latent/anticipated ratio (L/C) is a project health metric: high L/C means the project has many unknown unknowns — the team is surprised by complexity. Low L/C means crosscuts were anticipated and addressed with decisions.",
+    "impact": "Self-eval pressure scores change significantly. Phases with many latent crosscuts (42.2: 25 latent, 44: 22 latent) score higher. Phase 21 (14 crosscuts, 0 decisions) is flagged as pure unknown territory. The L/C ratio becomes a new project health metric."
+  },
+  {
+    "id": "gad-221",
+    "title": "Epigenetic skills: install, use, shed — skills that build once and are no longer needed",
+    "summary": "Not all skills are permanent. Some build a complex capability once (e.g., \"build an EPUB reader\", \"add export adapter for epub3 format\") and are then unneeded. These are epigenetic skills — they modify the generation's phenotype but aren't part of the ongoing species DNA. The lifecycle: install skill → run generation → skill builds the capability → shed skill (uninstall). The generation keeps the built artifact; the species drops the skill from its active set. This is different from deprecated skills (which were once useful and became obsolete). Epigenetic skills were always intended to be temporary. Species.json should track: `activeSkills` (permanent), `epigeneticSkills` (build-once, shed after), `shedSkills` (previously active, now removed with reason).",
+    "impact": "Species config gains skill lifecycle tracking. Editors show skill status (active/epigenetic/shed). Generation runs can auto-shed skills marked epigenetic after successful build. Skill authoring workflow needs \"mark as epigenetic\" option."
+  },
+  {
+    "id": "gad-220",
+    "title": "Pressure formula v2: add decision entropy as a core dimension alongside task count and crosscuts",
+    "summary": "Current pressure formula P = T + C*w is too basic — it counts tasks and crosscuts but ignores the information-theoretic signal: decisions. A decision is produced when a question of high importance and directional consequence is resolved. Decision count per phase/task is a direct proxy for information entropy — how much uncertainty was resolved. Shannon entropy H = -Σ p(x) log₂ p(x) measures information content. In our context: each decision resolves one branch of uncertainty, reducing the project's state space. A phase with 5 tasks and 12 decisions had much higher information entropy than a phase with 15 tasks and 0 decisions (mechanical work vs genuine problem-solving).\r\n\r\n    Proposed formula v2:\r\n    P = T + C*w_c + D*w_d + (D/T)*w_r\r\n\r\n    Where:\r\n    - T = total tasks\r\n    - C = crosscut tasks (touch ≥2 subsystems)\r\n    - D = decisions produced in this phase\r\n    - w_c = crosscut weight (default 2)\r\n    - w_d = decision weight (default 3 — decisions are harder than tasks)\r\n    - w_r = decision-rate weight (default 5 — high D/T ratio signals every task was hard)\r\n    - D/T = decision rate (decisions per task — the density of uncertainty)\r\n\r\n    The D/T ratio is the key insight: it's analogous to the inverse of Shannon's redundancy. High D/T = low redundancy = high information content = hard phase. Low D/T = high redundancy = mechanical work = easy phase.\r\n\r\n    Formal parallel to Shannon:\r\n    - Shannon: H(X) = -Σ p(xᵢ) log₂ p(xᵢ)  — entropy of a message source\r\n    - GAD: H_phase = D * log₂(T/D + 1)  — decision entropy scaled by the task space\r\n\r\n    The log term captures diminishing returns — 10 decisions in a 10-task phase is more intense than 10 decisions in a 100-task phase. This gives us a cleaner formula that sits formally alongside Shannon's.",
+    "impact": "compute-self-eval.mjs pressure calculation updated. Self-eval scores change — phases with many decisions (42.2, 42.3, 44.5) should score higher. Site displays updated. The D/T ratio becomes a first-class metric in project analytics."
+  },
+  {
+    "id": "gad-219",
+    "title": "Command vocabulary: play/spawn/breed are distinct evolutionary operations, not aliases",
+    "summary": "Three verbs for three operations: (1) `gad play &lt;project&gt;/&lt;species&gt;/&lt;version&gt;` — opens the built artifact (HTML game, app, book, website). Playing is consuming the output. (2) `gad spawn &lt;project&gt;/&lt;species&gt;` — creates a new generation by running a species in an ecosystem/environment. Spawning is the act of generation. The ecosystem is the project context the species enters. (3) `gad breed &lt;gen1&gt; &lt;gen2&gt;` — merges two generations' species configurations and requirements, shedding redundancy. Breeding produces a new species from two parents. `gad run` is too generic. These verbs map to the evolutionary metaphor: species live in ecosystems, spawn generations, and breed to produce new species.",
+    "impact": "CLI gets three distinct verbs. play replaces eval open. spawn replaces eval run. breed is new — merges species configs. Ecosystem = project context. All editor surfaces use these verbs consistently."
+  },
+  {
+    "id": "gad-218",
+    "title": "Desktop client is a local-first project management tool — users build locally, publish to platform",
+    "summary": "GAD's distribution model: desktop client for local project management, platform for publishing. Users bring their own coding agent subscription (Claude Code, Cursor, etc.) and build locally on their machine. The desktop client provides white-glove setup, project/species/generation management, skill authoring, and VCS editors. Published projects, species, and generations go to the hosted platform. The desktop is NOT a build engine — it orchestrates local tools. Windows is first-class (user's primary platform). Build times are local — no server-side builds. Cloud editors possible if cost-effective, but local-first is the default. The desktop client is essentially the site + editors packaged as a standalone app with local file system access.",
+    "impact": "Installer work (decision gad-188) targets desktop distribution. Site components must work both hosted and local. Build pipeline stays local. Platform hosts published artifacts only."
+  },
+  {
+    "id": "gad-217",
+    "title": "GAD CLI supports AI generation fundamentals — image, audio, video, text as one-shot file creation",
+    "summary": "The GAD CLI needs basic AI generation commands that don't require a coding agent: simple prompt → file output. Use cases: generate an image (cover art, sprite), generate audio (sound effect, music), generate video (trailer clip), generate text (markdown, code, config) and write it to a target output path. These are one-shot generation fundamentals that feed into the project assets pipeline (decision gad-210). Not agentic workflows — just prompt-in, file-out. Provider-agnostic (OpenRouter, Anthropic, OpenAI, local models).",
+    "impact": "New gad generate subcommand group. Feeds into species templates (pre-seed assets), project marketing material, and generation seeding. Enables non-technical users to produce assets without coding agents."
+  },
+  {
+    "id": "gad-216",
+    "title": "VCS primitives are the core deliverable — minimal identifiers + panel + context capture that any project species installs",
+    "summary": "The VCS is not a site-specific feature — it is the primitive layer every GAD project should build first. The minimal surface: (1) Identifiers coded into compartmentalized UI sections, (2) a panel/footer that attaches to sections for localized landmark data, (3) self-referential context capture — the panel itself has identifiers so it can iterate on its own UI via quick prompts. SiteSections are structural convenience, not required — identifiers can exist without them. The panel/footer is a template surface with identifiers that trace back to exact code in src from the built version on screen. The goal: build VCS skills that any species can install, then verify by running a generation (e.g. escape-the-dungeon) and checking whether the agent builds the VCS correctly. This is the testable hypothesis for VCS portability.",
+    "impact": "VCS skills become the first thing tested in new species. escape-the-dungeon gets a VCS test generation. The primitives list (Identified, panel, context capture, ID collection) is the deliverable, not the full site component library."
+  },
+  {
+    "id": "gad-215",
+    "title": "Bidirectional data flow: generation learnings and requirements flow back to project and species",
+    "summary": "Data flows both directions in the hierarchy. Down: project requirements + species config → generation. Up: generation produces learnings, discovered requirements, salvaged data, new skills that should flow back to the project (as new requirements) and species (as improved config). When editing a species or generation, insights that are better suited as project requirements get promoted upward. Same for species-level discoveries that should become project-level. The reverse-engineering flow (generation → requirements) is the same mechanism. Species track which projects and generations have used them, providing a usage/impact graph.",
+    "impact": "Need \"promote to project\" and \"promote to species\" actions in editors. Salvage pipeline (gad-210) is the data direction; this adds the requirements/learnings direction. Species usage tracking feeds the marketplace showcase."
+  },
+  {
+    "id": "gad-214",
+    "title": "VCS as universal agent-addressability layer — minimal surface for any system (React, Kaplay, Phaser, etc.)",
+    "summary": "The Visual Context System goal is the minimal component/ID surface needed for an agent to understand what the user sees and reference specific elements on screen. Every species using VCS skills implements dev tooling, sectioning, and IDs. The system must work across rendering boundaries (React DOM, Kaplay canvas, Phaser, etc.). Three approaches: (1) species place IDs/formats in code, our editor scans and highlights/selects on their behalf, (2) landmark-based spatial context — identify general location, talk about what's visible, (3) collect-all-IDs button for quick prompt injection. Voice-first with VCS landmark navigation as the primary interaction pattern. Removable UI surfaces — minimize chrome, maximize agent context.",
+    "impact": "VCS skill files become the core deliverable species install. Cross-renderer ID scanning is a research problem. Editor needs a \"collect visible IDs\" action. Minimal UI chrome — landmarks + voice + quick prompts."
+  },
+  {
+    "id": "gad-213",
+    "title": "GAD as RPG: species are character builds, generations are gameplay, editors are the game surface",
+    "summary": "The GAD experience is explicitly gamified. Species configuration is analogous to RPG character building — selecting tech stack, skills, context framework, constraints. Running a generation is \"playing the game\" with that build against a project's requirements. The editors (project editor, species editor, generation editor) are the game surface. Voice-first interaction with VCS landmarks for spatial context. The system should be fun to use. Species usage stats (times used across projects, original author, editing authors) function like RPG character sheets with play history. Species and generations accumulate media showcasing what the build can do — like a trophy case.",
+    "impact": "Editor UX design should lean into gamification. Species cards show usage stats, authorship chain, showcase media. Generation completion feels like finishing a game session with loot (salvaged data, new skills learned). Editors are voice-first with quick-prompt VCS shortcuts."
+  },
+  {
+    "id": "gad-212",
+    "title": "Eval vocabulary replaced by species/generation throughout — \"eval\" is an internal implementation detail",
+    "summary": "All user-facing references to \"eval\" become species/generation language. `gad eval run` becomes species/generation commands. \"Eval project templates\" become \"species templates\" — they carry skills, content, context framework, tech stack. The word \"eval\" only appears in internal code paths and legacy data. This aligns with the evolutionary metaphor: species are character builds, generations are playing the game. The act of running a generation IS the game — the editors and communication of notes and requirements are the gameplay surface.",
+    "impact": "CLI rename needed: eval → species/generation commands. Site copy, nav labels, template naming all shift. Downloads page \"planning packs\" section becomes \"species templates\"."
+  },
+  {
+    "id": "gad-211",
+    "title": "Sprite sheet animation as a site-wide capability — CSS steps() component",
+    "summary": "Add a SpriteAnimation React component to the site UI library. Uses CSS background-position with steps() animation for performance. Props: src (sprite sheet URL), frameWidth, frameHeight, frameCount, fps, loop, className. Use cases: hero mascot/logo animation, project card thumbnails (animated preview of generation gameplay), loading states, page transitions. Canvas fallback available for complex cases (multiple layers, runtime tinting) but CSS is the default. Sprite sheets are stored in public/sprites/ or per-project in the assets convention.",
+    "impact": "Landing site gains animated visual personality. Project showcase cards can show gameplay previews. Reusable across all site surfaces. Lightweight — no JS animation library dependency."
+  },
+  {
+    "id": "gad-210",
+    "title": "Project-level media assets + generation data salvage pipeline",
+    "summary": "Each project gets a conventional assets/ directory for marketing, audio, video, and reusable media. Generations produce unique data (game content JSON, dialogue trees, entity definitions, level layouts) that should be salvageable back to the species or project level for reuse. The salvage pipeline: (1) generation completes, (2) extract valuable data assets from run output, (3) reshape to fit project-level data schemas, (4) store at species level for next generation to inherit. New generations can seed from species-level salvaged data instead of regenerating from scratch. This prevents the \"rebuild everything every run\" problem and lets content compound across generations, especially for video games where authored content (maps, items, dialogue) is expensive to recreate.",
+    "impact": "Generations build on prior work instead of starting fresh. Species accumulate not just skills but data assets. Project-level media assets are available for marketing/showcase on the landing site. Content compounds across the evolutionary tree."
+  },
+  {
+    "id": "gad-209",
+    "title": "Species get durable .planning/ subtrees — transferable config bundles with their own planning scope",
+    "summary": "Species are transferable configuration bundles (tech stack + skills + context framework + workflow). They get their own .planning/ subtree under the project for decisions, notes, and depth documentation. Generations inherit the species .planning/ and add generation-specific brownfield state that persists across runs. Hierarchy: project/.planning/ (project-level) → species/&lt;name&gt;/.planning/ (species-level) → species/&lt;name&gt;/generations/&lt;version&gt;/.planning/ (generation brownfield). When someone imports a species into their project, they get the species config and its .planning/ docs but NOT the original project's requirements or generations. `gad projects sync` with discover=true on a project root auto-detects species-level .planning/ dirs.",
+    "impact": "Species become first-class planning entities with durable docs. Enables trading/sharing species between accounts. Generation brownfield state survives across runs. Planning doc hierarchy mirrors the project→species→generation data model."
+  },
+  {
+    "id": "gad-208",
+    "title": "Workspace concept eliminated — everything is a GAD project, workspace is just a repo with multiple projects",
+    "summary": "`gad workspace` commands (show/sync/add/ignore) merge into `gad projects` (list/sync/add/ignore). A \"workspace\" is not a separate concept — it is simply a repo that has multiple GAD projects registered in gad-config.toml. The config.roots array IS the project registry. `gad workspace` becomes a deprecated alias pointing to `gad projects` with a deprecation notice, removed after one version. The word \"workspace\" only appears casually to describe \"a repo with multiple GAD projects.\" CLI surface is exclusively `gad projects`. Species and generations nest under their project via the existing planning root model — no workspace-level management needed.",
+    "impact": "CLI simplification: one noun (projects) instead of two (projects + workspace). Reduces confusion for new users. `gad projects sync` crawls for .planning/ dirs. `gad projects add` registers a root. No conceptual overhead."
+  },
+  {
+    "id": "gad-207",
+    "title": "Landing site page map: 9 public routes, everything else dev-only or removed",
+    "summary": "The GAD landing site serves two audiences: visitors (what is GAD, let me try it) and operators (managing projects). Public pages: / (home), /how-it-works (methodology, replaces eval-guide+formulas+standards), /library (play published builds), /library/play (iframe player), /projects (showcase grid), /projects/[id] (detail with tabs), /downloads (installer, CLI clients, VCS component showcase, planning packs), /videos (Remotion compositions, walkthrough demos), /quickstart (5-step onboarding). Removed from public nav: /planning (content lives in /projects/[id]?tab=planning), /project-market (merges into /library for public; marketplace trading is platform/editor feature), /data (dev-only), /decisions, /tasks, /phases, /bugs (internal — accessible via project detail or CLI), /glossary, /formulas, /insights, /standards, /eval-guide (merged into /how-it-works or /downloads), /agents/[id], /commands/[id], /runs/[project]/[version] (catalog detail — dev-only or removed).",
+    "impact": "Site drops from 25+ routes to 9 public pages. Cleaner visitor experience. Dev-only routes kept but not in nav. /downloads becomes the component showcase + installer hub. /videos is the demo surface."
+  },
   {
     "id": "gad-206",
     "title": "Species are evolutionary branches of a project — inheritance-based configuration forking",
@@ -9265,9 +9436,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "42.2-04",
     "phaseId": "42.2",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "framework",
     "goal": "Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case.",
     "keywords": [
@@ -9911,9 +10082,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "42.2-40.b",
     "phaseId": "42.2",
-    "status": "planned",
+    "status": "in-progress",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "cli",
     "goal": "Remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2) add a `--branch &lt;name&gt;` flag for explicit branch selection instead of the fallback probe, (3) interactive consent gate `y/N` prompt for future runtime-invocation flows where the skill actually runs (not needed for the current stage-only flow), (4) warn or normalize when external skills use lowercase `skill.md` instead of the canonical `SKILL.md`.",
     "keywords": [
@@ -10816,9 +10987,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "43-10",
     "phaseId": "43",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "docs",
     "goal": "Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used \"round\" for what we now call \"evolution\" and \"vN\" per project for what we now call \"generation\" per species.",
     "keywords": [
@@ -12125,9 +12296,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-15",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.",
     "keywords": [
@@ -12248,6 +12419,152 @@ export const ALL_TASKS: TaskRecord[] = [
     ],
     "depends": [
       "45-15"
+    ]
+  },
+  {
+    "id": "46-01",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.",
+    "keywords": [
+      "cli",
+      "workspace",
+      "projects",
+      "consolidation",
+      "deprecation"
+    ],
+    "depends": []
+  },
+  {
+    "id": "46-02",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.",
+    "keywords": [
+      "nav",
+      "routes",
+      "cleanup",
+      "site-architecture",
+      "page-map"
+    ],
+    "depends": []
+  },
+  {
+    "id": "46-03",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.",
+    "keywords": [
+      "sprite",
+      "animation",
+      "component",
+      "css-steps",
+      "ui"
+    ],
+    "depends": []
+  },
+  {
+    "id": "46-04",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.",
+    "keywords": [
+      "species",
+      "planning",
+      "sub-roots",
+      "discover",
+      "sync"
+    ],
+    "depends": [
+      "46-01"
+    ]
+  },
+  {
+    "id": "46-05",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "framework",
+    "goal": "Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.",
+    "keywords": [
+      "assets",
+      "media",
+      "salvage",
+      "generation",
+      "data-reuse"
+    ],
+    "depends": [
+      "46-04"
+    ]
+  },
+  {
+    "id": "46-06",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.",
+    "keywords": [
+      "downloads",
+      "vcs",
+      "components",
+      "installer",
+      "showcase"
+    ],
+    "depends": [
+      "46-02"
+    ]
+  },
+  {
+    "id": "46-07",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.",
+    "keywords": [
+      "methodology",
+      "how-it-works",
+      "loop",
+      "scoring",
+      "species-model"
+    ],
+    "depends": [
+      "46-02"
+    ]
+  },
+  {
+    "id": "46-08",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.",
+    "keywords": [
+      "verification",
+      "build",
+      "type-check",
+      "broken-imports"
+    ],
+    "depends": [
+      "46-02",
+      "46-03"
     ]
   }
 ];
@@ -12613,6 +12930,13 @@ export const ALL_PHASES: PhaseRecord[] = [
     "status": "planned",
     "goal": "The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/DNA/evolution language. Make the site read playfully (e.g. \"the bare species' generation 4 evolved a fitter descendant that crushed the earlier run\"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor. Must drop any remaining \"GAD+emergent\" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169.",
     "outcome": null
+  },
+  {
+    "id": "46",
+    "title": "Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning",
+    "status": "active",
+    "goal": "Redesign the landing site from 25+ routes to 9 focused public pages (decisions gad-207..211). Consolidate gad workspace into gad projects. Add SpriteAnimation component. Scaffold species-level .planning/ dirs on species create. Expand /downloads as VCS component showcase + installer hub. Build /how-it-works methodology page absorbing glossary, formulas, standards, eval-guide content. Define project-level assets convention and generation data salvage pipeline.",
+    "outcome": null
   }
 ];
 
@@ -12629,6 +12953,132 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-224",
+    "title": "Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash",
+    "kind": "decision",
+    "href": "/decisions#gad-224",
+    "body": "gad-224 decentralized auto-contributor model — users contribute ai tokens to open-source features, not cash open-source contribution model where users opt in to having their local coding agent work on project features/bugs. the project publishes a feature/bug queue. users with gad cli + hooks installed can opt in. their local agent picks up a feature, works on it using their coding agent subscription (their tokens, their machine), and submits a pr. the project gets contributions measured in ai tokens sp"
+  },
+  {
+    "id": "gad-223",
+    "title": "Question the VCS component hierarchy — Identified and SiteSection may not be the right primitives",
+    "kind": "decision",
+    "href": "/decisions#gad-223",
+    "body": "gad-223 question the vcs component hierarchy — identified and sitesection may not be the right primitives the current vcs uses sitesection (structural wrapper with cid) and identified (inner landmark wrapper). but these may be unnecessary component abstractions. the universal requirement is simpler: a way to place source-searchable identity literals on any element, trace them from built output back to source, and collect them quickly for agent prompts. a plain data attribute on a standard div might be"
+  },
+  {
+    "id": "gad-222",
+    "title": "Pressure v3: crosscuts classified as anticipated (with decision) vs latent (unknown unknowns)",
+    "kind": "decision",
+    "href": "/decisions#gad-222",
+    "body": "gad-222 pressure v3: crosscuts classified as anticipated (with decision) vs latent (unknown unknowns) crosscut tasks are now classified by whether they have an associated decision. a crosscut with a decision = anticipated complexity (someone saw the question coming and resolved it). a crosscut without a decision = latent entropy — an unknown unknown that manifested as cross-system work without anyone even formulating the question. latent crosscuts are weighted higher (default 4x vs 2x for anticipa"
+  },
+  {
+    "id": "gad-221",
+    "title": "Epigenetic skills: install, use, shed — skills that build once and are no longer needed",
+    "kind": "decision",
+    "href": "/decisions#gad-221",
+    "body": "gad-221 epigenetic skills: install, use, shed — skills that build once and are no longer needed not all skills are permanent. some build a complex capability once (e.g., \"build an epub reader\", \"add export adapter for epub3 format\") and are then unneeded. these are epigenetic skills — they modify the generation's phenotype but aren't part of the ongoing species dna. the lifecycle: install skill → run generation → skill builds the capability → shed skill (uninstall). the generation keeps the "
+  },
+  {
+    "id": "gad-220",
+    "title": "Pressure formula v2: add decision entropy as a core dimension alongside task count and crosscuts",
+    "kind": "decision",
+    "href": "/decisions#gad-220",
+    "body": "gad-220 pressure formula v2: add decision entropy as a core dimension alongside task count and crosscuts current pressure formula p = t + c*w is too basic — it counts tasks and crosscuts but ignores the information-theoretic signal: decisions. a decision is produced when a question of high importance and directional consequence is resolved. decision count per phase/task is a direct proxy for information entropy — how much uncertainty was resolved. shannon entropy h = -σ p(x) log₂ p(x) measures inform"
+  },
+  {
+    "id": "gad-219",
+    "title": "Command vocabulary: play/spawn/breed are distinct evolutionary operations, not aliases",
+    "kind": "decision",
+    "href": "/decisions#gad-219",
+    "body": "gad-219 command vocabulary: play/spawn/breed are distinct evolutionary operations, not aliases three verbs for three operations: (1) `gad play &lt;project&gt;/&lt;species&gt;/&lt;version&gt;` — opens the built artifact (html game, app, book, website). playing is consuming the output. (2) `gad spawn &lt;project&gt;/&lt;species&gt;` — creates a new generation by running a species in an ecosystem/environment. spawning is the act of generation. the ecosystem is the project context the species e"
+  },
+  {
+    "id": "gad-218",
+    "title": "Desktop client is a local-first project management tool — users build locally, publish to platform",
+    "kind": "decision",
+    "href": "/decisions#gad-218",
+    "body": "gad-218 desktop client is a local-first project management tool — users build locally, publish to platform gad's distribution model: desktop client for local project management, platform for publishing. users bring their own coding agent subscription (claude code, cursor, etc.) and build locally on their machine. the desktop client provides white-glove setup, project/species/generation management, skill authoring, and vcs editors. published projects, species, and generations go to the hosted platform. "
+  },
+  {
+    "id": "gad-217",
+    "title": "GAD CLI supports AI generation fundamentals — image, audio, video, text as one-shot file creation",
+    "kind": "decision",
+    "href": "/decisions#gad-217",
+    "body": "gad-217 gad cli supports ai generation fundamentals — image, audio, video, text as one-shot file creation the gad cli needs basic ai generation commands that don't require a coding agent: simple prompt → file output. use cases: generate an image (cover art, sprite), generate audio (sound effect, music), generate video (trailer clip), generate text (markdown, code, config) and write it to a target output path. these are one-shot generation fundamentals that feed into the project assets pipeline (decisi"
+  },
+  {
+    "id": "gad-216",
+    "title": "VCS primitives are the core deliverable — minimal identifiers + panel + context capture that any project species installs",
+    "kind": "decision",
+    "href": "/decisions#gad-216",
+    "body": "gad-216 vcs primitives are the core deliverable — minimal identifiers + panel + context capture that any project species installs the vcs is not a site-specific feature — it is the primitive layer every gad project should build first. the minimal surface: (1) identifiers coded into compartmentalized ui sections, (2) a panel/footer that attaches to sections for localized landmark data, (3) self-referential context capture — the panel itself has identifiers so it can iterate on its own ui via quick prompts. sitesections are st"
+  },
+  {
+    "id": "gad-215",
+    "title": "Bidirectional data flow: generation learnings and requirements flow back to project and species",
+    "kind": "decision",
+    "href": "/decisions#gad-215",
+    "body": "gad-215 bidirectional data flow: generation learnings and requirements flow back to project and species data flows both directions in the hierarchy. down: project requirements + species config → generation. up: generation produces learnings, discovered requirements, salvaged data, new skills that should flow back to the project (as new requirements) and species (as improved config). when editing a species or generation, insights that are better suited as project requirements get promoted upward. sam"
+  },
+  {
+    "id": "gad-214",
+    "title": "VCS as universal agent-addressability layer — minimal surface for any system (React, Kaplay, Phaser, etc.)",
+    "kind": "decision",
+    "href": "/decisions#gad-214",
+    "body": "gad-214 vcs as universal agent-addressability layer — minimal surface for any system (react, kaplay, phaser, etc.) the visual context system goal is the minimal component/id surface needed for an agent to understand what the user sees and reference specific elements on screen. every species using vcs skills implements dev tooling, sectioning, and ids. the system must work across rendering boundaries (react dom, kaplay canvas, phaser, etc.). three approaches: (1) species place ids/formats in code, our editor sc"
+  },
+  {
+    "id": "gad-213",
+    "title": "GAD as RPG: species are character builds, generations are gameplay, editors are the game surface",
+    "kind": "decision",
+    "href": "/decisions#gad-213",
+    "body": "gad-213 gad as rpg: species are character builds, generations are gameplay, editors are the game surface the gad experience is explicitly gamified. species configuration is analogous to rpg character building — selecting tech stack, skills, context framework, constraints. running a generation is \"playing the game\" with that build against a project's requirements. the editors (project editor, species editor, generation editor) are the game surface. voice-first interaction with vcs landmarks for spatia"
+  },
+  {
+    "id": "gad-212",
+    "title": "Eval vocabulary replaced by species/generation throughout — \"eval\" is an internal implementation detail",
+    "kind": "decision",
+    "href": "/decisions#gad-212",
+    "body": "gad-212 eval vocabulary replaced by species/generation throughout — \"eval\" is an internal implementation detail all user-facing references to \"eval\" become species/generation language. `gad eval run` becomes species/generation commands. \"eval project templates\" become \"species templates\" — they carry skills, content, context framework, tech stack. the word \"eval\" only appears in internal code paths and legacy data. this aligns with the evolutionary metaphor: species are character builds, generations are pla"
+  },
+  {
+    "id": "gad-211",
+    "title": "Sprite sheet animation as a site-wide capability — CSS steps() component",
+    "kind": "decision",
+    "href": "/decisions#gad-211",
+    "body": "gad-211 sprite sheet animation as a site-wide capability — css steps() component add a spriteanimation react component to the site ui library. uses css background-position with steps() animation for performance. props: src (sprite sheet url), framewidth, frameheight, framecount, fps, loop, classname. use cases: hero mascot/logo animation, project card thumbnails (animated preview of generation gameplay), loading states, page transitions. canvas fallback available for complex c"
+  },
+  {
+    "id": "gad-210",
+    "title": "Project-level media assets + generation data salvage pipeline",
+    "kind": "decision",
+    "href": "/decisions#gad-210",
+    "body": "gad-210 project-level media assets + generation data salvage pipeline each project gets a conventional assets/ directory for marketing, audio, video, and reusable media. generations produce unique data (game content json, dialogue trees, entity definitions, level layouts) that should be salvageable back to the species or project level for reuse. the salvage pipeline: (1) generation completes, (2) extract valuable data assets from run output, (3) reshape to fit proje"
+  },
+  {
+    "id": "gad-209",
+    "title": "Species get durable .planning/ subtrees — transferable config bundles with their own planning scope",
+    "kind": "decision",
+    "href": "/decisions#gad-209",
+    "body": "gad-209 species get durable .planning/ subtrees — transferable config bundles with their own planning scope species are transferable configuration bundles (tech stack + skills + context framework + workflow). they get their own .planning/ subtree under the project for decisions, notes, and depth documentation. generations inherit the species .planning/ and add generation-specific brownfield state that persists across runs. hierarchy: project/.planning/ (project-level) → species/&lt;name&gt;/.planning/ ("
+  },
+  {
+    "id": "gad-208",
+    "title": "Workspace concept eliminated — everything is a GAD project, workspace is just a repo with multiple projects",
+    "kind": "decision",
+    "href": "/decisions#gad-208",
+    "body": "gad-208 workspace concept eliminated — everything is a gad project, workspace is just a repo with multiple projects `gad workspace` commands (show/sync/add/ignore) merge into `gad projects` (list/sync/add/ignore). a \"workspace\" is not a separate concept — it is simply a repo that has multiple gad projects registered in gad-config.toml. the config.roots array is the project registry. `gad workspace` becomes a deprecated alias pointing to `gad projects` with a deprecation notice, removed after one version. the wo"
+  },
+  {
+    "id": "gad-207",
+    "title": "Landing site page map: 9 public routes, everything else dev-only or removed",
+    "kind": "decision",
+    "href": "/decisions#gad-207",
+    "body": "gad-207 landing site page map: 9 public routes, everything else dev-only or removed the gad landing site serves two audiences: visitors (what is gad, let me try it) and operators (managing projects). public pages: / (home), /how-it-works (methodology, replaces eval-guide+formulas+standards), /library (play published builds), /library/play (iframe player), /projects (showcase grid), /projects/[id] (detail with tabs), /downloads (installer, cli clients, vcs component showcase, plan"
+  },
   {
     "id": "gad-206",
     "title": "Species are evolutionary branches of a project — inheritance-based configuration forking",
@@ -16697,6 +17147,62 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "45-21 readme + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop gad+emergent framing, treat findings as articles/whitepapers. readme docs vocabulary copy-pass external-facing"
   },
   {
+    "id": "46-01",
+    "title": "Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-01",
+    "body": "46-01 consolidate gad workspace commands into gad projects (sync/add/ignore). deprecate workspace as alias with notice. update all error messages referencing workspace. decision gad-208. cli workspace projects consolidation deprecation"
+  },
+  {
+    "id": "46-02",
+    "title": "Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tas",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-02",
+    "body": "46-02 trim landing site nav to 9 public routes. remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). create /how-it-works stub. decision gad-207. nav routes cleanup site-architecture page-map"
+  },
+  {
+    "id": "46-03",
+    "title": "Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, fr",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-03",
+    "body": "46-03 build spriteanimation react component — css steps() based sprite sheet renderer. props: src, framewidth, frameheight, framecount, fps, loop, direction, paused. decision gad-211. sprite animation component css-steps ui"
+  },
+  {
+    "id": "46-04",
+    "title": "Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ di",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-04",
+    "body": "46-04 add species-level .planning/ support to gad projects sync. when discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. decision gad-209. species planning sub-roots discover sync"
+  },
+  {
+    "id": "46-05",
+    "title": "Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from compl",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-05",
+    "body": "46-05 define project-level assets/ directory convention and generation data salvage pipeline. extract valuable data from completed generation runs to species level. decision gad-210. assets media salvage generation data-reuse"
+  },
+  {
+    "id": "46-06",
+    "title": "Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-06",
+    "body": "46-06 expand /downloads page: three sections — installer+cli, vcs component registry (npx-installable showcase with live demos), planning packs. decision gad-207. downloads vcs components installer showcase"
+  },
+  {
+    "id": "46-07",
+    "title": "Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards re",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-07",
+    "body": "46-07 build /how-it-works content: gad loop diagram, species/generation/dna model explainer, scoring methodology, standards references. absorbs content from removed /eval-guide, /formulas, /standards routes. methodology how-it-works loop scoring species-model"
+  },
+  {
+    "id": "46-08",
+    "title": "Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-08",
+    "body": "46-08 verify build passes after route removal + nav trim. fix broken imports from deleted routes. full type-check + vcs audit. verification build type-check broken-imports"
+  },
+  {
     "id": "01",
     "title": "Phase 01 â€” Foundation",
     "kind": "phase",
@@ -17045,6 +17551,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "phase",
     "href": "/planning?tab=phases#45",
     "body": "45 full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model the big polish pass after the rename and marketplace land. refresh the visual identity, type ramp, color palette, hero copy, about page, readme, and external-facing docs around the new species/generation/dna/evolution language. make the site read playfully (e.g. \"the bare species' generation 4 evolved a fitter descendant that crushed the earlier run\"). audit every public-facing string. includes site-wide consistency check: same word for same concept everywhere. logo + favicon refresh if needed. standalone phase because it's a focused design + copy effort, not a code refactor. must drop any remaining \"gad+emergent\" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169."
+  },
+  {
+    "id": "46",
+    "title": "Phase 46 â€” Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning",
+    "kind": "phase",
+    "href": "/planning?tab=phases#46",
+    "body": "46 site architecture redesign + cli consolidation — 9-route public page map, workspace elimination, sprite animation, species planning redesign the landing site from 25+ routes to 9 focused public pages (decisions gad-207..211). consolidate gad workspace into gad projects. add spriteanimation component. scaffold species-level .planning/ dirs on species create. expand /downloads as vcs component showcase + installer hub. build /how-it-works methodology page absorbing glossary, formulas, standards, eval-guide content. define project-level assets convention and generation data salvage pipeline."
   },
   {
     "id": "compound-skills-hypothesis",

@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-16T16:44:57.740Z
+Generated: 2026-04-17T00:19:15.462Z
 
 
 ---
@@ -4873,7 +4873,219 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (202)
+# Decisions (220)
+
+## gad-224: Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash
+
+### Summary
+
+Open-source contribution model where users opt in to having their local coding agent work on project features/bugs. The project publishes a feature/bug queue. Users with GAD CLI + hooks installed can opt in. Their local agent picks up a feature, works on it using their coding agent subscription (their tokens, their machine), and submits a PR. The project gets contributions measured in AI tokens spent, not cash. Users get contributor credit + their agent learns from the codebase. Hooks enable this: on opt-in, the GAD CLI pulls a feature from the queue, sets up a worktree, spawns a subagent, and submits the result. Private repos need explicit access grants. Public repos work out of the box. This is decentralized CI/CD where the compute is distributed across contributor machines.
+
+### Impact
+
+New GAD feature: contributor queue (feature/bug list), opt-in hook, PR submission pipeline. Requires: feature queue format, contributor agent prompt template, PR review workflow. Long-term: this is how GAD itself gets maintained — by its users' agents.
+
+## gad-223: Question the VCS component hierarchy — Identified and SiteSection may not be the right primitives
+
+### Summary
+
+The current VCS uses SiteSection (structural wrapper with cid) and Identified (inner landmark wrapper). But these may be unnecessary component abstractions. The universal requirement is simpler: a way to place source-searchable identity literals on any element, trace them from built output back to source, and collect them quickly for agent prompts. A plain data attribute on a standard div might be all that's needed. The component wrappers add convenience but also coupling. Research needed: what is the absolute minimal instrumentation pattern that works across React, Kaplay/canvas, Phaser, terminal, and arbitrary renderers? Maybe it's just a naming convention + a scan script, not components at all. The panels (DevPanel, BandDevPanel) add visual noise — they make section layout visible but clutter the dev experience. Worth exploring: panels as opt-in overlays toggled by keyboard, not always-present UI chrome. The goal is context capture speed, not visual density.
+
+### Impact
+
+Next VCS iteration should test: (1) bare data attributes vs component wrappers, (2) panels as keyboard-toggled overlays vs persistent UI, (3) cross-renderer ID patterns. The VCS test species on escape-the-dungeon is the testing ground.
+
+## gad-222: Pressure v3: crosscuts classified as anticipated (with decision) vs latent (unknown unknowns)
+
+### Summary
+
+Crosscut tasks are now classified by whether they have an associated decision. A crosscut WITH a decision = anticipated complexity (someone saw the question coming and resolved it). A crosscut WITHOUT a decision = latent entropy — an unknown unknown that manifested as cross-system work without anyone even formulating the question. Latent crosscuts are weighted higher (default 4x vs 2x for anticipated) because the hardest problems are the ones nobody knew to ask about.
+
+    Formal model — three entropy dimensions:
+    1. Resolved entropy: H_d = D * log₂(T/D + 1) — decisions that answered known questions
+    2. Latent entropy: H_l = L * log₂(C/L + 1) — crosscuts that appeared without a question being asked
+    3. Task volume: T — raw work count
+
+    Full formula v3:
+    P = T + C_a * w_c + C_l * w_l + D * w_d + (D/T) * w_r
+
+    Where C_a = anticipated crosscuts, C_l = latent crosscuts, w_l = latent weight (default 4).
+
+    The latent/anticipated ratio (L/C) is a project health metric: high L/C means the project has many unknown unknowns — the team is surprised by complexity. Low L/C means crosscuts were anticipated and addressed with decisions.
+
+### Impact
+
+Self-eval pressure scores change significantly. Phases with many latent crosscuts (42.2: 25 latent, 44: 22 latent) score higher. Phase 21 (14 crosscuts, 0 decisions) is flagged as pure unknown territory. The L/C ratio becomes a new project health metric.
+
+## gad-221: Epigenetic skills: install, use, shed — skills that build once and are no longer needed
+
+### Summary
+
+Not all skills are permanent. Some build a complex capability once (e.g., "build an EPUB reader", "add export adapter for epub3 format") and are then unneeded. These are epigenetic skills — they modify the generation's phenotype but aren't part of the ongoing species DNA. The lifecycle: install skill → run generation → skill builds the capability → shed skill (uninstall). The generation keeps the built artifact; the species drops the skill from its active set. This is different from deprecated skills (which were once useful and became obsolete). Epigenetic skills were always intended to be temporary. Species.json should track: `activeSkills` (permanent), `epigeneticSkills` (build-once, shed after), `shedSkills` (previously active, now removed with reason).
+
+### Impact
+
+Species config gains skill lifecycle tracking. Editors show skill status (active/epigenetic/shed). Generation runs can auto-shed skills marked epigenetic after successful build. Skill authoring workflow needs "mark as epigenetic" option.
+
+## gad-220: Pressure formula v2: add decision entropy as a core dimension alongside task count and crosscuts
+
+### Summary
+
+Current pressure formula P = T + C*w is too basic — it counts tasks and crosscuts but ignores the information-theoretic signal: decisions. A decision is produced when a question of high importance and directional consequence is resolved. Decision count per phase/task is a direct proxy for information entropy — how much uncertainty was resolved. Shannon entropy H = -Σ p(x) log₂ p(x) measures information content. In our context: each decision resolves one branch of uncertainty, reducing the project's state space. A phase with 5 tasks and 12 decisions had much higher information entropy than a phase with 15 tasks and 0 decisions (mechanical work vs genuine problem-solving).
+
+    Proposed formula v2:
+    P = T + C*w_c + D*w_d + (D/T)*w_r
+
+    Where:
+    - T = total tasks
+    - C = crosscut tasks (touch ≥2 subsystems)
+    - D = decisions produced in this phase
+    - w_c = crosscut weight (default 2)
+    - w_d = decision weight (default 3 — decisions are harder than tasks)
+    - w_r = decision-rate weight (default 5 — high D/T ratio signals every task was hard)
+    - D/T = decision rate (decisions per task — the density of uncertainty)
+
+    The D/T ratio is the key insight: it's analogous to the inverse of Shannon's redundancy. High D/T = low redundancy = high information content = hard phase. Low D/T = high redundancy = mechanical work = easy phase.
+
+    Formal parallel to Shannon:
+    - Shannon: H(X) = -Σ p(xᵢ) log₂ p(xᵢ)  — entropy of a message source
+    - GAD: H_phase = D * log₂(T/D + 1)  — decision entropy scaled by the task space
+
+    The log term captures diminishing returns — 10 decisions in a 10-task phase is more intense than 10 decisions in a 100-task phase. This gives us a cleaner formula that sits formally alongside Shannon's.
+
+### Impact
+
+compute-self-eval.mjs pressure calculation updated. Self-eval scores change — phases with many decisions (42.2, 42.3, 44.5) should score higher. Site displays updated. The D/T ratio becomes a first-class metric in project analytics.
+
+## gad-219: Command vocabulary: play/spawn/breed are distinct evolutionary operations, not aliases
+
+### Summary
+
+Three verbs for three operations: (1) `gad play &lt;project&gt;/&lt;species&gt;/&lt;version&gt;` — opens the built artifact (HTML game, app, book, website). Playing is consuming the output. (2) `gad spawn &lt;project&gt;/&lt;species&gt;` — creates a new generation by running a species in an ecosystem/environment. Spawning is the act of generation. The ecosystem is the project context the species enters. (3) `gad breed &lt;gen1&gt; &lt;gen2&gt;` — merges two generations' species configurations and requirements, shedding redundancy. Breeding produces a new species from two parents. `gad run` is too generic. These verbs map to the evolutionary metaphor: species live in ecosystems, spawn generations, and breed to produce new species.
+
+### Impact
+
+CLI gets three distinct verbs. play replaces eval open. spawn replaces eval run. breed is new — merges species configs. Ecosystem = project context. All editor surfaces use these verbs consistently.
+
+## gad-218: Desktop client is a local-first project management tool — users build locally, publish to platform
+
+### Summary
+
+GAD's distribution model: desktop client for local project management, platform for publishing. Users bring their own coding agent subscription (Claude Code, Cursor, etc.) and build locally on their machine. The desktop client provides white-glove setup, project/species/generation management, skill authoring, and VCS editors. Published projects, species, and generations go to the hosted platform. The desktop is NOT a build engine — it orchestrates local tools. Windows is first-class (user's primary platform). Build times are local — no server-side builds. Cloud editors possible if cost-effective, but local-first is the default. The desktop client is essentially the site + editors packaged as a standalone app with local file system access.
+
+### Impact
+
+Installer work (decision gad-188) targets desktop distribution. Site components must work both hosted and local. Build pipeline stays local. Platform hosts published artifacts only.
+
+## gad-217: GAD CLI supports AI generation fundamentals — image, audio, video, text as one-shot file creation
+
+### Summary
+
+The GAD CLI needs basic AI generation commands that don't require a coding agent: simple prompt → file output. Use cases: generate an image (cover art, sprite), generate audio (sound effect, music), generate video (trailer clip), generate text (markdown, code, config) and write it to a target output path. These are one-shot generation fundamentals that feed into the project assets pipeline (decision gad-210). Not agentic workflows — just prompt-in, file-out. Provider-agnostic (OpenRouter, Anthropic, OpenAI, local models).
+
+### Impact
+
+New gad generate subcommand group. Feeds into species templates (pre-seed assets), project marketing material, and generation seeding. Enables non-technical users to produce assets without coding agents.
+
+## gad-216: VCS primitives are the core deliverable — minimal identifiers + panel + context capture that any project species installs
+
+### Summary
+
+The VCS is not a site-specific feature — it is the primitive layer every GAD project should build first. The minimal surface: (1) Identifiers coded into compartmentalized UI sections, (2) a panel/footer that attaches to sections for localized landmark data, (3) self-referential context capture — the panel itself has identifiers so it can iterate on its own UI via quick prompts. SiteSections are structural convenience, not required — identifiers can exist without them. The panel/footer is a template surface with identifiers that trace back to exact code in src from the built version on screen. The goal: build VCS skills that any species can install, then verify by running a generation (e.g. escape-the-dungeon) and checking whether the agent builds the VCS correctly. This is the testable hypothesis for VCS portability.
+
+### Impact
+
+VCS skills become the first thing tested in new species. escape-the-dungeon gets a VCS test generation. The primitives list (Identified, panel, context capture, ID collection) is the deliverable, not the full site component library.
+
+## gad-215: Bidirectional data flow: generation learnings and requirements flow back to project and species
+
+### Summary
+
+Data flows both directions in the hierarchy. Down: project requirements + species config → generation. Up: generation produces learnings, discovered requirements, salvaged data, new skills that should flow back to the project (as new requirements) and species (as improved config). When editing a species or generation, insights that are better suited as project requirements get promoted upward. Same for species-level discoveries that should become project-level. The reverse-engineering flow (generation → requirements) is the same mechanism. Species track which projects and generations have used them, providing a usage/impact graph.
+
+### Impact
+
+Need "promote to project" and "promote to species" actions in editors. Salvage pipeline (gad-210) is the data direction; this adds the requirements/learnings direction. Species usage tracking feeds the marketplace showcase.
+
+## gad-214: VCS as universal agent-addressability layer — minimal surface for any system (React, Kaplay, Phaser, etc.)
+
+### Summary
+
+The Visual Context System goal is the minimal component/ID surface needed for an agent to understand what the user sees and reference specific elements on screen. Every species using VCS skills implements dev tooling, sectioning, and IDs. The system must work across rendering boundaries (React DOM, Kaplay canvas, Phaser, etc.). Three approaches: (1) species place IDs/formats in code, our editor scans and highlights/selects on their behalf, (2) landmark-based spatial context — identify general location, talk about what's visible, (3) collect-all-IDs button for quick prompt injection. Voice-first with VCS landmark navigation as the primary interaction pattern. Removable UI surfaces — minimize chrome, maximize agent context.
+
+### Impact
+
+VCS skill files become the core deliverable species install. Cross-renderer ID scanning is a research problem. Editor needs a "collect visible IDs" action. Minimal UI chrome — landmarks + voice + quick prompts.
+
+## gad-213: GAD as RPG: species are character builds, generations are gameplay, editors are the game surface
+
+### Summary
+
+The GAD experience is explicitly gamified. Species configuration is analogous to RPG character building — selecting tech stack, skills, context framework, constraints. Running a generation is "playing the game" with that build against a project's requirements. The editors (project editor, species editor, generation editor) are the game surface. Voice-first interaction with VCS landmarks for spatial context. The system should be fun to use. Species usage stats (times used across projects, original author, editing authors) function like RPG character sheets with play history. Species and generations accumulate media showcasing what the build can do — like a trophy case.
+
+### Impact
+
+Editor UX design should lean into gamification. Species cards show usage stats, authorship chain, showcase media. Generation completion feels like finishing a game session with loot (salvaged data, new skills learned). Editors are voice-first with quick-prompt VCS shortcuts.
+
+## gad-212: Eval vocabulary replaced by species/generation throughout — "eval" is an internal implementation detail
+
+### Summary
+
+All user-facing references to "eval" become species/generation language. `gad eval run` becomes species/generation commands. "Eval project templates" become "species templates" — they carry skills, content, context framework, tech stack. The word "eval" only appears in internal code paths and legacy data. This aligns with the evolutionary metaphor: species are character builds, generations are playing the game. The act of running a generation IS the game — the editors and communication of notes and requirements are the gameplay surface.
+
+### Impact
+
+CLI rename needed: eval → species/generation commands. Site copy, nav labels, template naming all shift. Downloads page "planning packs" section becomes "species templates".
+
+## gad-211: Sprite sheet animation as a site-wide capability — CSS steps() component
+
+### Summary
+
+Add a SpriteAnimation React component to the site UI library. Uses CSS background-position with steps() animation for performance. Props: src (sprite sheet URL), frameWidth, frameHeight, frameCount, fps, loop, className. Use cases: hero mascot/logo animation, project card thumbnails (animated preview of generation gameplay), loading states, page transitions. Canvas fallback available for complex cases (multiple layers, runtime tinting) but CSS is the default. Sprite sheets are stored in public/sprites/ or per-project in the assets convention.
+
+### Impact
+
+Landing site gains animated visual personality. Project showcase cards can show gameplay previews. Reusable across all site surfaces. Lightweight — no JS animation library dependency.
+
+## gad-210: Project-level media assets + generation data salvage pipeline
+
+### Summary
+
+Each project gets a conventional assets/ directory for marketing, audio, video, and reusable media. Generations produce unique data (game content JSON, dialogue trees, entity definitions, level layouts) that should be salvageable back to the species or project level for reuse. The salvage pipeline: (1) generation completes, (2) extract valuable data assets from run output, (3) reshape to fit project-level data schemas, (4) store at species level for next generation to inherit. New generations can seed from species-level salvaged data instead of regenerating from scratch. This prevents the "rebuild everything every run" problem and lets content compound across generations, especially for video games where authored content (maps, items, dialogue) is expensive to recreate.
+
+### Impact
+
+Generations build on prior work instead of starting fresh. Species accumulate not just skills but data assets. Project-level media assets are available for marketing/showcase on the landing site. Content compounds across the evolutionary tree.
+
+## gad-209: Species get durable .planning/ subtrees — transferable config bundles with their own planning scope
+
+### Summary
+
+Species are transferable configuration bundles (tech stack + skills + context framework + workflow). They get their own .planning/ subtree under the project for decisions, notes, and depth documentation. Generations inherit the species .planning/ and add generation-specific brownfield state that persists across runs. Hierarchy: project/.planning/ (project-level) → species/&lt;name&gt;/.planning/ (species-level) → species/&lt;name&gt;/generations/&lt;version&gt;/.planning/ (generation brownfield). When someone imports a species into their project, they get the species config and its .planning/ docs but NOT the original project's requirements or generations. `gad projects sync` with discover=true on a project root auto-detects species-level .planning/ dirs.
+
+### Impact
+
+Species become first-class planning entities with durable docs. Enables trading/sharing species between accounts. Generation brownfield state survives across runs. Planning doc hierarchy mirrors the project→species→generation data model.
+
+## gad-208: Workspace concept eliminated — everything is a GAD project, workspace is just a repo with multiple projects
+
+### Summary
+
+`gad workspace` commands (show/sync/add/ignore) merge into `gad projects` (list/sync/add/ignore). A "workspace" is not a separate concept — it is simply a repo that has multiple GAD projects registered in gad-config.toml. The config.roots array IS the project registry. `gad workspace` becomes a deprecated alias pointing to `gad projects` with a deprecation notice, removed after one version. The word "workspace" only appears casually to describe "a repo with multiple GAD projects." CLI surface is exclusively `gad projects`. Species and generations nest under their project via the existing planning root model — no workspace-level management needed.
+
+### Impact
+
+CLI simplification: one noun (projects) instead of two (projects + workspace). Reduces confusion for new users. `gad projects sync` crawls for .planning/ dirs. `gad projects add` registers a root. No conceptual overhead.
+
+## gad-207: Landing site page map: 9 public routes, everything else dev-only or removed
+
+### Summary
+
+The GAD landing site serves two audiences: visitors (what is GAD, let me try it) and operators (managing projects). Public pages: / (home), /how-it-works (methodology, replaces eval-guide+formulas+standards), /library (play published builds), /library/play (iframe player), /projects (showcase grid), /projects/[id] (detail with tabs), /downloads (installer, CLI clients, VCS component showcase, planning packs), /videos (Remotion compositions, walkthrough demos), /quickstart (5-step onboarding). Removed from public nav: /planning (content lives in /projects/[id]?tab=planning), /project-market (merges into /library for public; marketplace trading is platform/editor feature), /data (dev-only), /decisions, /tasks, /phases, /bugs (internal — accessible via project detail or CLI), /glossary, /formulas, /insights, /standards, /eval-guide (merged into /how-it-works or /downloads), /agents/[id], /commands/[id], /runs/[project]/[version] (catalog detail — dev-only or removed).
+
+### Impact
+
+Site drops from 25+ routes to 9 public pages. Cleaner visitor experience. Dev-only routes kept but not in nav. /downloads becomes the component showcase + installer hub. /videos is the demo surface.
 
 ## gad-206: Species are evolutionary branches of a project — inheritance-based configuration forking
 
@@ -7421,7 +7633,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (379)
+# Tasks (387)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -7839,7 +8051,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.2-03** [done]: Rename `skills/gad-quick-skill/` â†’ `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched â€” decision gad-168.
 
-- **42.2-04** [planned]: Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case.
+- **42.2-04** [done]: Validator v2 fix: patch `lib/evolution-validator.cjs` extractFileRefs to dedup overlapping path prefixes so a long-form path and its trailing substring are treated as the same reference. ~10 line change, add a unit test covering the dedup case.
 
 - **42.2-05** [planned]: Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.
 
@@ -7915,7 +8127,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.2-40.a** [done]: Polish items for `gad try` surfaced by operator questions after shipping 42.2-40: (1) clipboard auto-populate with the handoff prompt so the user can paste directly into their coding agent without opening ENTRY.md, (2) clearer documentation that the sandbox is always cwd-relative regardless of whether the gad binary is globally or locally installed, (3) stdout prints the handoff prompt inline alon
 
-- **42.2-40.b** [planned]: Remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2) add a `--branch &lt;name&gt;` flag for explicit branch selection instead of the fallback probe, (3) interactive consent gate `y/N` prompt for future runtime-invocation flows where the skill actually runs (not needed for the current stage-only flow), (4) warn or normalize when e
+- **42.2-40.b** [in-progress]: Remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2) add a `--branch &lt;name&gt;` flag for explicit branch selection instead of the fallback probe, (3) interactive consent gate `y/N` prompt for future runtime-invocation flows where the skill actually runs (not needed for the current stage-only flow), (4) warn or normalize when e
 
 - **42.2-41** [done]: Graphify trial via `gad try` against the real github.com/safishamsi/graphify repository. Capture what the skill looks like when staged, what dependencies it declares, whether the output shape is useful for the GAD site's planning-graph use case, and whether the `gad try` flow handles a real third-party skill cleanly. Blocks the vendor-vs-native decision for the knowledge-graph feature.
 
@@ -8021,7 +8233,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **43-09** [planned]: Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.
 
-- **43-10** [planned]: Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used "round" for what we now call "evolution" and "vN" per project for what we now call "generation" per species.
+- **43-10** [done]: Update AGENTS.md, the Loop docs, README, and CHANGELOG with the new vocabulary. Add the single transitional note to PROJECT.md (or top of ROADMAP.xml) per D-16 explaining that pre-43 phases used "round" for what we now call "evolution" and "vN" per project for what we now call "generation" per species.
 
 - **43-11** [done]: Update ROADMAP.xml phase 44.5 title from "Brood Editor" to "Species Editor" and rewrite its goal to drop "brood" / "Brood Editor" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the "v4 brood" example phrasing. Closed phase prose stays verbatim per D-15.
 
@@ -8167,7 +8379,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **45-14** [planned]: Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.
 
-- **45-15** [planned]: Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.
+- **45-15** [done]: Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.
 
 - **45-16** [planned]: Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.
 
@@ -8181,10 +8393,26 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **45-21** [planned]: README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers.
 
+- **46-01** [done]: Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.
+
+- **46-02** [done]: Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.
+
+- **46-03** [done]: Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.
+
+- **46-04** [done]: Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.
+
+- **46-05** [done]: Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.
+
+- **46-06** [done]: Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.
+
+- **46-07** [done]: Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.
+
+- **46-08** [done]: Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.
+
 
 ---
 
-# Phases (50)
+# Phases (51)
 
 ## Phase 01: Foundation
 
@@ -8485,6 +8713,12 @@ After the marketplace lands (phase 44), build a local-dev-only Project Editor su
 Status: planned
 
 The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/DNA/evolution language. Make the site read playfully (e.g. "the bare species' generation 4 evolved a fitter descendant that crushed the earlier run"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor. Must drop any remaining "GAD+emergent" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169.
+
+## Phase 46: Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning
+
+Status: active
+
+Redesign the landing site from 25+ routes to 9 focused public pages (decisions gad-207..211). Consolidate gad workspace into gad projects. Add SpriteAnimation component. Scaffold species-level .planning/ dirs on species create. Expand /downloads as VCS component showcase + installer hub. Build /how-it-works methodology page absorbing glossary, formulas, standards, eval-guide content. Define project-level assets convention and generation data salvage pipeline.
 
 
 ---
@@ -9530,6 +9764,524 @@ Source: evals/escape-the-dungeon/species/emergent/template/REQUIREMENTS.xml
 ## escape-the-dungeon v5
 
 Source: evals/escape-the-dungeon/species/gad/template/.planning/REQUIREMENTS.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Eval project: Escape the Dungeon
+  Requirements version history:
+    v1 (2026-04-06): 12 systems-focused criteria, no gates
+    v2 (2026-04-08): Gate criteria, vertical-slice priority, UI-first mandate
+    v3 (2026-04-08): Game-loop gate, spell-crafting gate, UI quality gate
+    v4 (2026-04-08): Pressure-oriented design, authored-only, ingenuity enforcement,
+                     floor progression with boss gates, forge integrated with encounter design,
+                     starter abilities explicitly insufficient, Traits UI label
+    v5 (2026-04-09): Playtest-driven expansion — 21 new/amended requirements from user
+                     play of Bare v5, Emergent v4, GAD v9/v10. Adds combat model choice
+                     (rule-based UO-style preferred), entity-trait action policies (enemies
+                     AND NPCs), real-time game-time, affinity reward loop, central visual
+                     nav map, encounter visuals, spells-as-ingredients, rune uniqueness,
+                     event-driven rendering, save checkpoints, merchants, NPC dialogue,
+                     inventory/equipment, character sheet + skill tree, loadout slots.
+                     v4 remains THE BASE — everything in v4 still applies. v5 adds on top.
+-->
+<requirements version="v5" updated="2026-04-09">
+  <goal>
+    Build a playable roguelike dungeon crawler "Escape the Dungeon" where players must
+    exercise INGENUITY through spell crafting and adaptation to progress. This is not a
+    features checklist — it is a problem-solving loop disguised as a dungeon crawler.
+    Every mechanical system must create friction that rewards creative player choice.
+  </goal>
+
+  <audience>Solo player (keyboard + mouse). Authored content only. Target: Vite + TypeScript + KAPLAY (web).</audience>
+
+  <core-principle>
+    **Baseline starter abilities must NOT be sufficient to comfortably complete a full
+    floor without adaptation or enhancement.** If a player can brute-force progression
+    using only what they start with, the design has failed. Encounters must demand
+    spell crafting, skill use, resource management, or build specialization.
+  </core-principle>
+
+  <!-- ============================================================ -->
+  <!-- GATE CRITERIA — all must pass or requirement_coverage = 0    -->
+  <!-- ============================================================ -->
+  <gate-criteria>
+
+    <gate id="G1" name="game-loop">
+      The complete game loop must work without softlock. A test run must walk through:
+      1. Title screen renders and "New Game" starts a run
+      2. Player enters first room with visible navigation options
+      3. Player navigates to a second room (scene transition succeeds)
+      4. Player encounters combat OR dialogue and resolves it
+      5. After resolution, player returns to room navigation state
+      6. Player continues into at least one additional room without softlock or dead end
+      Minimum 3 total room transitions in a passing run.
+    </gate>
+
+    <gate id="G2" name="forge-with-ingenuity-payoff">
+      The game must include a functional spell-crafting system AND at least one encounter
+      per floor where the crafted/adapted spell provides a meaningful advantage.
+
+      Crafting requirements:
+      - Player can access a forge / spell-craft interface during gameplay
+      - Player selects at least 2 crafting inputs (runes or components)
+      - System produces a new, usable spell from the combination
+      - Crafted spell can be equipped and used in encounter flow
+      - Minimum 3-5 runes/components, 3+ valid combinations
+
+      Ingenuity payoff requirement (THIS IS THE KEY ADDITION):
+      - At least one encounter per floor must significantly favor or require a crafted/
+        adapted spell. Examples: enemy resistant to base damage types, enemy that punishes
+        spell repetition, enemy that only yields to DoT or burst, etc.
+      - Mere spell acquisition through loot/NPC rewards does NOT satisfy this gate.
+      - Player must intentionally CRAFT to succeed.
+    </gate>
+
+    <gate id="G3" name="ui-quality">
+      The game must present a fully intentional UI. Required:
+      - Readable, visually structured layout with spacing and hierarchy
+      - Room-type icons or sprite representations
+      - Encounter/entity visual representation via sprite, portrait, or coherent placeholder
+      - Themed visual differentiation across room types (color, background, or panel treatment)
+      - Styled interactive controls (buttons with visible affordance)
+      - HP/mana/resources as visual bars, not only numeric dumps
+      - Color-coded statuses / spell types / factions
+
+      Acceptable asset sourcing (in order of preference):
+      1. Lightweight installable icon/sprite libraries (npm packages, CDN)
+      2. Web-searched free/open-license sprites and tilesets (use the find-sprites skill)
+      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)
+      4. Simple geometric fallback tiles — LAST RESORT, counts against UI quality score
+
+      Raw ASCII/text-only UI fails this gate. Ugly primitive-only output counts as a gate
+      failure even if asset sourcing was attempted.
+    </gate>
+
+    <gate id="G4" name="pressure-mechanics">
+      The game must include at least TWO systems that constrain player behavior such that
+      crafting or adapting spells provides a meaningful advantage or is required for success.
+
+      Pick at least two from these categories:
+      A. **Resource pressure** — limited mana pool, limited healing, forge training has a cost,
+         cannot spam indefinitely
+      B. **Enemy counterplay** — resistances, immunities, behavior that punishes repetition,
+         shields requiring specific effects
+      C. **Encounter design pressure** — elites with unique rules, bosses that invalidate
+         default play, rooms with mechanical constraints
+      D. **Build pressure** — player cannot master everything, affinity pushes specialization,
+         loadout limits force trade-offs
+
+      At least one pressure mechanic must interact with the forge so crafted spells are
+      demonstrably more effective than default spells in affected encounters.
+    </gate>
+
+  </gate-criteria>
+
+  <!-- ============================================================ -->
+  <!-- DUNGEON STRUCTURE (authored, not procedural)                 -->
+  <!-- ============================================================ -->
+  <dungeon-structure>
+    <authored-only>
+      All content is authored. No procedural level generation. Light randomness in encounter
+      tables or loot is acceptable; structural layout must be hand-designed.
+    </authored-only>
+
+    <hierarchy>
+      Floors → Rooms → Boss Gate. Each floor has 5-8 authored rooms plus a floor boss that
+      gates progression to the next floor. Player clears a floor by defeating the boss,
+      which unlocks the next floor.
+    </hierarchy>
+
+    <room-types>
+      <type name="Combat">Standard enemy encounter, authored enemy composition.</type>
+      <type name="Elite">Stress test for a mechanic introduced earlier on this floor or a previous one. Harder than standard combat, usually requires crafted spells or adaptation.</type>
+      <type name="Forge">Crafting + affinity training interface. May cost mana crystals or XP to use.</type>
+      <type name="Rest">Limited recovery (heal HP/mana to a cap, NOT full restore every time).</type>
+      <type name="Event">Choices, narrative, tradeoffs. May give items, information, or apply debuffs.</type>
+    </room-types>
+
+    <floor-mechanical-constraint>
+      Each floor MUST introduce at least one mechanical constraint or enemy behavior that
+      cannot be brute-forced with the player's current default abilities. Examples:
+      - Floor 1: enemies resistant to raw damage → player must apply DoT or status effects
+      - Floor 2: enemies that reflect direct damage → player must use indirect or summon-based attacks
+      - Floor 3: enemies with mana-drain aura → player must conserve or use physical skills
+      This constraint is discovered through gameplay, not explained in a tutorial.
+    </floor-mechanical-constraint>
+
+    <respawn-and-grinding>
+      Combat rooms on a cleared floor may respawn enemies on re-entry (respawn cadence is
+      authored, not every entry). Player can grind for XP, crystals, and rune affinity
+      before attempting bosses. Grinding should be slower than forge training to create
+      choice pressure.
+    </respawn-and-grinding>
+  </dungeon-structure>
+
+  <!-- ============================================================ -->
+  <!-- FORGE SYSTEM (now integrated with encounter design)          -->
+  <!-- ============================================================ -->
+  <forge-system>
+    <required>
+      - Forge interface accessible at Forge rooms
+      - 3-5 runes or crafting components
+      - 3+ valid combinations producing distinct spell effects
+      - Affinity tracking per rune/spell family, increases with use
+      - Forge can train affinity directly in exchange for XP (cheaper than combat grinding)
+      - At least one encounter per floor requires or strongly favors a crafted/adapted spell
+    </required>
+    <strongly-recommended>
+      - Visible affinity level (UI shows current levels)
+      - Affinity thresholds unlock stronger spell variants
+      - Authored or player-authored spell customization (player can name their spells)
+    </strongly-recommended>
+    <deferred-to-v5>
+      - Cross-affinity decay when runes are neglected
+      - Deep evolution trees
+      - Multi-stage spell mutations
+    </deferred-to-v5>
+  </forge-system>
+
+  <!-- ============================================================ -->
+  <!-- SKILLS (scored, not gated)                                    -->
+  <!-- ============================================================ -->
+  <skills-system>
+    <required>
+      Combat must support at least one non-spell action category (basic attack, skill, or similar).
+      The combat model should NOT be single-lane "spell or nothing".
+    </required>
+    <scored>
+      Full skill system with physical (no-mana) actions, skill XP / evolution, mana-crystal
+      overcharge to add extra damage or effects (DoT, burn, bleed, stun, knockback).
+    </scored>
+  </skills-system>
+
+  <!-- ============================================================ -->
+  <!-- ASSET SOURCING (first attempt real assets)                   -->
+  <!-- ============================================================ -->
+  <asset-sourcing>
+    <workflow>
+      Agents must attempt asset sourcing first via the find-sprites skill or equivalent
+      web-search workflow. Sourced assets should be lightweight, installable, and legally
+      usable (open-license, public domain, or generated).
+    </workflow>
+    <preference-order>
+      1. Lightweight installable icon/sprite npm packages (game-icons, pixel-art packs)
+      2. Web-searched free/open-license sprites/tilesets (itch.io, OpenGameArt, etc.)
+      3. Generated placeholder art (canvas-drawn, SVG, emoji-based)
+      4. Geometric fallback tiles — LAST RESORT, counts against UI quality
+    </preference-order>
+    <fallback-policy>
+      Fallback to generated/geometric placeholders is allowed ONLY if sourcing genuinely
+      fails (404s, no suitable assets, integration cost disproportionate). Fallback must
+      still be visually coherent. Using fallback when real assets were reachable is a
+      gate violation.
+    </fallback-policy>
+  </asset-sourcing>
+
+  <!-- ============================================================ -->
+  <!-- TERMINOLOGY                                                   -->
+  <!-- ============================================================ -->
+  <terminology>
+    <ui-label>Traits — player-facing label for narrative/progression stats</ui-label>
+    <code-identifier>narrativeStats — internal code/data structure name</code-identifier>
+    <rationale>Splits stable internal naming from clearer external naming. Document the mapping once.</rationale>
+  </terminology>
+
+  <!-- ============================================================ -->
+  <!-- SCORED CRITERIA                                               -->
+  <!-- ============================================================ -->
+  <scored-criteria>
+    <criterion>Turn-based combat with Fight/Spells/Bag/Run, visible HP bars, damage numbers, XP/crystal rewards</criterion>
+    <criterion>At least 3 distinct enemy types with different stats and mechanical behaviors</criterion>
+    <criterion>NPC dialogue with portrait/representation and choice options that affect gameplay</criterion>
+    <criterion>Persistent HUD: player name, HP bar, mana bar, current floor, dungeon tick or turn count, crystal currency</criterion>
+    <criterion>At least two overlay menus (Map, Bag, Stats, Spellbook)</criterion>
+    <criterion>Entity model with at least 3 entity types loaded from content pack JSON</criterion>
+    <criterion>Game state persists across page refresh (localStorage)</criterion>
+    <criterion>Player can level up or gain power through gameplay progression</criterion>
+    <criterion>At least 2 floors with different mechanical constraints and boss encounters</criterion>
+    <criterion>"Traits" label used in UI where narrative stats appear</criterion>
+    <criterion>Full skill system with mana-crystal overcharge (scored bonus, not gate)</criterion>
+    <criterion>Affinity thresholds unlock spell variants (scored bonus, not gate)</criterion>
+  </scored-criteria>
+
+  <!-- ============================================================ -->
+  <!-- INGENUITY / ADAPTATION SCORING                                -->
+  <!-- ============================================================ -->
+  <ingenuity-scoring>
+    <dimension>ingenuity_score</dimension>
+    <measures>
+      Whether the player needed to change strategy, whether crafted spells were meaningfully
+      used, and whether encounters encouraged experimentation. Scored 0.0 to 1.0.
+    </measures>
+    <signals>
+      - Number of crafted spells actually used in a test run
+      - Diversity of spell usage (no single spell dominates)
+      - Can the starter spell alone clear every floor? (this should be NO)
+      - Does at least one encounter REQUIRE crafted spell usage to succeed?
+      - Did the test player adapt their build across floors?
+    </signals>
+    <scoring-notes>
+      This is measured via human review during playtesting. The reviewer asks: "Did I feel
+      like I needed to craft to make progress, or could I spam the default spell?"
+    </scoring-notes>
+  </ingenuity-scoring>
+
+  <non-goals>
+    <item>Procedural generation — authored content only</item>
+    <item>Full rune affinity decay — deferred to v5</item>
+    <item>Multi-stage deep evolution trees — deferred to v5</item>
+    <item>Tile-based movement or 2D grid walking</item>
+    <item>Multiplayer or networking</item>
+    <item>Complex asset pipelines or custom art tools</item>
+  </non-goals>
+
+  <source-docs>
+    <doc path="source-GAMEPLAY-DESIGN.xml" role="Trimmed gameplay design (vertical slice focus)" />
+    <doc path="source-STAT-AND-BEHAVIOUR-TAXONOMY.md" role="Canonical stat names, groupings, engine mappings" />
+  </source-docs>
+
+  <evaluation-notes>
+    Human reviewer rubric for ingenuity:
+    - 0.0: Could spam starter abilities to clear everything, no crafting needed
+    - 0.3: Had to use forge once, but mostly spammed
+    - 0.6: Had to craft 2-3 spells and switch strategies per floor
+    - 1.0: Had to think carefully about builds, crafted spells were essential, felt like a puzzle
+  </evaluation-notes>
+
+  <!-- ============================================================ -->
+  <!-- v5 ADDENDUM (2026-04-09) — playtest-driven                   -->
+  <!--                                                              -->
+  <!-- Captured from user play of Bare v5 (0.805 rubric), Emergent  -->
+  <!-- v4 (0.885 rubric after rescore), GAD v9 (rate-limited), GAD  -->
+  <!-- v10 (api-interrupted). Source markdown:                      -->
+  <!-- evals/_v5-requirements-addendum.md                           -->
+  <!--                                                              -->
+  <!-- Everything in v4 above still applies. v5 adds on top.        -->
+  <!-- ============================================================ -->
+  <addendum version="v5" updated="2026-04-09">
+
+    <requirement id="R-v5.01" amends="G2" title="Training via encounter, not menu">
+      Affinity must increase as a side effect of casting spells in encounters, not as a
+      direct menu action. Remove any "select affinity → train" menu that picks the trained
+      element for the player. Introduce a Training Dummy encounter (low-XP, no-loot combat
+      room type) whose only purpose is letting the player cast without risk so affinity
+      rises through use. Any room with combat must produce affinity gain for the elements/
+      runes the cast spell used. The forge becomes a place to forge and combine, not to
+      train. Rationale: the casting of spells must be what increases rune affinity; direct
+      training menus turn a discovery loop into a shopping list.
+    </requirement>
+
+    <requirement id="R-v5.02" title="Rune discovery as a gameplay loop">
+      Not all runes are listed or available at game start. Runes must be DISCOVERED across
+      the dungeon. Starter inventory contains a small subset of runes (2-3). The rest are
+      found as loot drops from combat/elite encounters, hidden in event rooms, sold by
+      merchants, or awarded by NPC dialogue outcomes. The rune forge UI must visibly
+      distinguish known vs undiscovered runes (locked slots, ???, or similar). At least
+      one rune per floor must be gated behind a non-combat interaction.
+    </requirement>
+
+    <requirement id="R-v5.03" title="Merchants with buy/sell/trade">
+      The dungeon must contain at least one merchant encounter per floor. Merchant room
+      type. Inventory of runes, potions, and items with gold cost. Three operations: buy
+      (cost gold), sell (gain gold), trade (exchange owned item for stocked item with a
+      relative value rule). Gold or an equivalent currency becomes a tracked resource.
+    </requirement>
+
+    <requirement id="R-v5.04" title="NPC dialogue with branching outcomes">
+      Authored NPCs must appear with dialogue options that trigger items, events, or
+      combat. At least 3 authored NPCs across the dungeon with 2+ dialogue branches each.
+      Dialogue choices must cause persistent game state changes: item gain, rune unlock,
+      enemy spawn, merchant discount, quest flag.
+    </requirement>
+
+    <requirement id="R-v5.05" title="Inventory/bag with grid and equippable items">
+      Player must have a visible inventory UI. Bag with a finite grid of slots. Items have
+      categories: consumable (potions, keys), rune, equipment (weapon, armor, trinket,
+      focus, etc.). Equipment slots must exist on a character sheet with at least:
+      main-hand, off-hand, body, trinket. Equipping an item must affect combat stats or
+      spell outputs in a measurable way. Items must drop from combat, events, and
+      merchants.
+    </requirement>
+
+    <requirement id="R-v5.06" title="Visible character sheet with combat/physical skills and a skill tree">
+      Player must be able to inspect their character at any time. Panel showing: HP, mana,
+      affinities, physical/combat stats, resistances, equipped items, known spells, known
+      physical skills. Skill tree or equivalent progression graph for physical/combat
+      skills, SEPARATE FROM SPELLS. Physical skills cost stamina or a non-mana resource to
+      distinguish from spells.
+    </requirement>
+
+    <requirement id="R-v5.07" title="Spell slots and skill slots (loadout constraint)">
+      When the player has many spells/skills, they must choose which to equip. Fixed-size
+      spell loadout (suggested: 4-6 equipped slots out of all known spells). Fixed-size
+      physical skill loadout (suggested: 2-4 equipped slots). Loadout can only be changed
+      in rest rooms or at specific stations, not mid-combat. Build pressure mechanic
+      satisfying G4.
+    </requirement>
+
+    <!-- R-v5.08 REMOVED — v4 progression requirements were sufficient. -->
+
+    <requirement id="R-v5.09" amends="G1" title="Session persistence">
+      The game must support resumable sessions. On room-clear or floor-clear, the
+      game checkpoints the player's state. If the player closes the browser or the
+      session ends, re-opening the game presents a Continue option that restores the
+      most recent checkpoint. New Game starts fresh. Both paths must work without error.
+    </requirement>
+
+    <requirement id="R-v5.10" amends="G3" title="Transient UI feedback">
+      UI feedback elements (toasts, status messages, combat results) must be transient
+      and session-scoped. Each element auto-dismisses after a brief display period
+      (3-5 seconds) or provides an explicit dismiss control. Starting a new session
+      must present a clean UI with no carried-over feedback from a previous session.
+    </requirement>
+
+    <requirement id="R-v5.11" amends="room-types" title="Rest rooms must offer rest">
+      Any room typed Rest (including the rune forge rest variant) must expose a Rest
+      action that restores HP/mana and allows loadout changes. Forge rooms may combine
+      Forge + Train + Rest actions, but Rest must be one of the action buttons if the room
+      claims Rest as a room type.
+    </requirement>
+
+    <requirement id="R-v5.12" amends="G3" title="Navigation and map usability">
+      Map/navigation UI must be more than a linear list. Map view must show at minimum a
+      2D graph layout of discovered rooms with current position, cleared/uncleared state,
+      and available exits. Navigation from the map must be one click, not a multi-step
+      menu. See R-v5.17 for the stronger form.
+    </requirement>
+
+    <requirement id="R-v5.13" amends="G1 G4" title="Auto-resolve combat with tactical loadout (Unicorn Overlord style)">
+      Combat resolves automatically based on the player's pre-set loadout, equipped
+      spells/skills, and tactical rules. The player does NOT click-attack individual
+      enemies during combat. Instead:
+
+      1. Before an encounter, the player configures: equipped spells, equipped physical
+         skills (per loadout slots from R-v5.07), formation/positioning of party members
+         (if applicable), and action-policy rules (e.g. "use heal when HP below 30%",
+         "prioritize targets weak to equipped element").
+      2. Combat plays out in real-time with a visible combat log showing each action,
+         its effect, and why it was chosen (which rule triggered).
+      3. The player can PAUSE at any time to adjust loadout, swap spells, or change
+         action-policy rules. The fight resumes with the new configuration.
+      4. Resolution depends on the loadout quality, spell/skill choices, and how well
+         the action policies match the enemy composition — this is where the forge and
+         rune crafting systems pay off.
+
+      This model rewards preparation and build-crafting over reflexes. The ingenuity
+      requirement (G2) is satisfied by encounters where the default loadout fails and
+      the player must pause, rethink, and adapt their tactical rules.
+    </requirement>
+
+    <requirement id="R-v5.14" title="Trait-driven behavior for all entities">
+      Every entity with agency (enemies, NPCs, the player character) has traits that
+      drive their behavior. Traits are NOT static labels — they shift based on:
+
+      - Dialogue choices the player makes (choosing aggressive responses shifts the
+        player toward "aggressive" trait, which changes available dialogue options
+        with NPCs who react to that trait)
+      - Moral interactions (sparing vs defeating enemies, helping vs ignoring NPCs,
+        stealing vs buying from merchants)
+      - Combat actions (repeatedly using fire spells shifts affinity toward fire,
+        which may change how fire-resistant enemies react)
+
+      Enemy behavior in auto-resolve combat is governed by their traits: an aggressive
+      enemy prioritizes attack, a territorial enemy holds position, a cowardly enemy
+      flees at low HP. NPC dialogue options expand or contract based on trait alignment
+      between the player and the NPC. Traits have visible NUMERIC values on the
+      character sheet (e.g. aggression: 0.7, compassion: 0.3, arcane affinity: 0.8).
+      When a trait shifts, the numeric change is shown inline (combat log or a brief
+      HUD notification like "+0.1 aggression").
+    </requirement>
+
+    <requirement id="R-v5.15" title="Real-time game clock">
+      The dungeon has an in-game clock that progresses in real time (suggested ratio:
+      1 real hour = 1 in-game day). The clock can influence gameplay: encounter
+      composition may shift by time of day, merchant stock may rotate, certain NPC
+      events may be time-gated. Day/night UI tinting is a SOFT bonus (not a gate).
+      The clock is purely flavor and pacing — it does NOT add turn-based tick
+      mechanics or per-tick processing. All rendering remains event-driven per
+      R-v5.21.
+    </requirement>
+
+    <requirement id="R-v5.16" title="Affinity reward loop">
+      Boosting a rune's affinity must produce a visible, valuable reward — not just a
+      stat increment hidden on a sheet. Suggested rewards at affinity thresholds: new
+      rune variant unlocked, existing spells using that rune gain a visual effect tier,
+      new spell combinations become craftable, access to an affinity-gated event or NPC.
+      At least one affinity reward must be visible in the forge UI (e.g. an affinity
+      progress bar with named milestones).
+    </requirement>
+
+    <requirement id="R-v5.17" amends="G3 R-v5.12" title="Central visual navigation map with player location">
+      Stronger form of R-v5.12. The navigation view must be a persistent, reachable,
+      visual map. Accessible from a single button/keystroke at any time in exploration
+      mode. Shows the player token on its current room, room type icons, discovered vs
+      undiscovered rooms, cleared vs active rooms, and visible exit connections between
+      rooms. Clicking an adjacent room must move the player there in one action.
+      Preferred layout: 2D grid or spatial floor map.
+    </requirement>
+
+    <requirement id="R-v5.18" title="Visual player vs enemy identity in encounters">
+      Encounter rendering must make it obvious which visual element is the player and
+      which is the enemy. Distinct portrait, positioning, or color treatment. Reference
+      style: Pokemon or Unicorn Overlord (UO preferred). No rendering where the player
+      cannot visually distinguish themselves from the first enemy without reading text
+      labels.
+    </requirement>
+
+    <requirement id="R-v5.19" title="Spells as craftable ingredients + procedural-but-semantic naming">
+      Spell crafting accepts runes AND existing spells as ingredients. A spell used as an
+      ingredient consumes or copies from the existing spell (design choice explicit).
+      Combining two spells or a spell + rune produces an evolved spell with procedurally
+      generated but semantically meaningful naming. Naming scheme must be consistent but
+      varied — similar combinations produce similar names, slight differences produce
+      slightly varied names. Not too verbose. Example scheme: root spell + modifier noun
+      keyed to added element/spell. "Fireball" + Ice rune → "Frostfall Ember". Two
+      Frostfall Embers fused → "Glacial Ember" (same family, progressed). This requirement
+      mirrors the emergent-evolution working hypothesis (gad-68): the in-game rune/spell/
+      merge system is an explicit narrative analogue for the agent's skill-authoring/merge
+      loop.
+    </requirement>
+
+    <requirement id="R-v5.20" title="Unique ingredients per spell">
+      Each spell recipe requires unique ingredients — the same rune cannot be used
+      twice in a single spell's ingredient list. Selecting a rune already in the
+      current recipe must deselect it or be rejected. The same rune CAN appear
+      across different spells in the spellbook. Affinity gain is calculated per
+      unique rune slot consumed.
+    </requirement>
+
+    <requirement id="R-v5.21" title="Event-driven rendering (remove per-tick redraws)">
+      All UI updates must be event-driven, not per-tick. No redraw loops firing at a
+      fixed rate regardless of state changes. Observable symptom to eliminate: glitchy
+      redraws on button clicks, observed across ALL round-4 builds. This is a
+      perf-and-stability gate failure mode. Acceptable patterns: React reconciliation on
+      state change, requestAnimationFrame scheduling only when animation is active.
+    </requirement>
+
+    <gate-impact-summary>
+      v4 gates remain (G1 game-loop, G2 forge-with-ingenuity-payoff, G3 ui-quality,
+      G4 pressure-mechanics). v5 amendments tighten G1 (death/continue, end-boss reachable),
+      G2 (training is encounter-driven), G3 (notification lifecycle, map usability), and
+      introduce new scored dimensions for inventory_and_equipment_present and
+      npc_dialogue_present rather than new gates — a run missing those does not get
+      gate-zeroed but takes a meaningful scored hit.
+    </gate-impact-summary>
+
+    <deferred-to-v6>
+      <item>Deep evolution trees (multi-stage mutations).</item>
+      <item>Rune affinity decay when unused.</item>
+      <item>Multi-character party play — out of scope for escape-the-dungeon family.</item>
+    </deferred-to-v6>
+
+  </addendum>
+</requirements>
+
+```
+
+## escape-the-dungeon v5
+
+Source: evals/escape-the-dungeon/species/vcs-test/template/REQUIREMENTS.xml
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>

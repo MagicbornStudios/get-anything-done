@@ -22,6 +22,27 @@ import {
   SiteSection,
   SiteSectionHeading,
 } from "@/components/site";
+import selfEvalData from "@/data/self-eval.json";
+
+type PressureRow = {
+  phase: string;
+  tasks_total: number;
+  crosscuts_anticipated: number;
+  crosscuts_latent: number;
+  decisions: number;
+  decision_rate: number;
+  decision_entropy: number;
+  latent_entropy: number;
+  pressure_score: number;
+};
+
+const PRESSURE_WEIGHTS = { w_c: 2, w_l: 4, w_d: 3, w_r: 5 } as const;
+
+function pickTopPressurePhase(): PressureRow | null {
+  const rows = (selfEvalData.latest?.phases_pressure ?? []) as PressureRow[];
+  if (rows.length === 0) return null;
+  return [...rows].sort((a, b) => b.pressure_score - a.pressure_score)[0];
+}
 
 export const metadata = {
   title: "How It Works — GAD",
@@ -82,6 +103,7 @@ function CardBody({ children }: { children: React.ReactNode }) {
 /* ------------------------------------------------------------------ */
 
 export default function HowItWorksPage() {
+  const top = pickTopPressurePhase();
   return (
     <MarketingShell>
       {/* ---- Hero ---- */}
@@ -444,6 +466,127 @@ export default function HowItWorksPage() {
               </div>
             ))}
           </div>
+
+          {/* Live example — current values from self-eval.json */}
+          {top && (
+            <Card data-cid="pressure-live-example">
+              <CardTitle>
+                Live example — highest-pressure phase in our own planning data
+              </CardTitle>
+              <CardBody>
+                <p>
+                  Computed from{" "}
+                  <code className="rounded bg-card/60 px-1 py-0.5 text-xs">
+                    site/data/self-eval.json
+                  </code>{" "}
+                  — regenerated on every build from{" "}
+                  <code className="rounded bg-card/60 px-1 py-0.5 text-xs">
+                    .planning/
+                  </code>{" "}
+                  XML. These are real numbers, not illustrative.
+                </p>
+                <div className="mt-4 space-y-1 font-mono text-xs">
+                  <p className="text-foreground">
+                    <span className="text-accent">Phase {top.phase}</span>
+                  </p>
+                </div>
+                <div className="mt-3 overflow-x-auto rounded-md border border-border bg-background/60 p-4 font-mono text-xs">
+                  <table className="w-full text-left">
+                    <thead className="text-muted-foreground">
+                      <tr>
+                        <th className="pr-4 pb-1 font-normal">Term</th>
+                        <th className="pr-4 pb-1 font-normal">Raw</th>
+                        <th className="pr-4 pb-1 font-normal">Weight</th>
+                        <th className="pb-1 font-normal">Contribution</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-foreground">
+                      <tr>
+                        <td className="pr-4 py-0.5">T</td>
+                        <td className="pr-4 py-0.5">{top.tasks_total} tasks</td>
+                        <td className="pr-4 py-0.5 text-muted-foreground">×1</td>
+                        <td className="py-0.5">{top.tasks_total.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td className="pr-4 py-0.5">C_a</td>
+                        <td className="pr-4 py-0.5">
+                          {top.crosscuts_anticipated} anticipated
+                        </td>
+                        <td className="pr-4 py-0.5 text-muted-foreground">
+                          ×{PRESSURE_WEIGHTS.w_c}
+                        </td>
+                        <td className="py-0.5">
+                          {(top.crosscuts_anticipated * PRESSURE_WEIGHTS.w_c).toFixed(2)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="pr-4 py-0.5">C_l</td>
+                        <td className="pr-4 py-0.5">
+                          {top.crosscuts_latent} latent
+                        </td>
+                        <td className="pr-4 py-0.5 text-muted-foreground">
+                          ×{PRESSURE_WEIGHTS.w_l}
+                        </td>
+                        <td className="py-0.5">
+                          {(top.crosscuts_latent * PRESSURE_WEIGHTS.w_l).toFixed(2)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="pr-4 py-0.5">D</td>
+                        <td className="pr-4 py-0.5">
+                          {top.decisions} decisions
+                        </td>
+                        <td className="pr-4 py-0.5 text-muted-foreground">
+                          ×{PRESSURE_WEIGHTS.w_d}
+                        </td>
+                        <td className="py-0.5">
+                          {(top.decisions * PRESSURE_WEIGHTS.w_d).toFixed(2)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="pr-4 py-0.5">D/T</td>
+                        <td className="pr-4 py-0.5">
+                          {top.decision_rate.toFixed(3)}
+                        </td>
+                        <td className="pr-4 py-0.5 text-muted-foreground">
+                          ×{PRESSURE_WEIGHTS.w_r}
+                        </td>
+                        <td className="py-0.5">
+                          {(top.decision_rate * PRESSURE_WEIGHTS.w_r).toFixed(2)}
+                        </td>
+                      </tr>
+                      <tr className="border-t border-border/60">
+                        <td colSpan={3} className="pr-4 pt-2 font-semibold">
+                          P (total pressure)
+                        </td>
+                        <td className="pt-2 font-semibold text-accent">
+                          {top.pressure_score.toFixed(2)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-md border border-border bg-background/40 p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Resolved entropy
+                    </p>
+                    <p className="mt-1 font-mono text-sm text-foreground">
+                      H_d = {top.decision_entropy.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border bg-background/40 p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Latent entropy
+                    </p>
+                    <p className="mt-1 font-mono text-sm text-foreground">
+                      H_l = {top.latent_entropy.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          )}
 
           {/* Entropy decomposition */}
           <Card>
