@@ -143,6 +143,34 @@
         "llm-internals-tokens-01",
         "llm-internals-attention-01"
       ]
+    },
+    {
+      "id": "llm-internals-src-layout-01",
+      "title": "Src layout without self-install",
+      "category": "llm-internals",
+      "difficulty": "beginner",
+      "tags": [
+        "python",
+        "packaging",
+        "pyproject",
+        "pytest",
+        "namespace"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/llm-internals/04-src-layout-vs-install.md",
+      "implementation": [
+        "projects/llm-from-scratch/pyproject.toml"
+      ],
+      "decisions": [
+        "llm-002"
+      ],
+      "phases": [
+        "llm-from-scratch:01"
+      ],
+      "related": [
+        "llm-internals-tokens-01"
+      ]
     }
   ]
 }

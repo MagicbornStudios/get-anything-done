@@ -407,5 +407,12 @@
     <depends>46</depends>
   </phase>
 
+  <phase id="59">
+    <title>Planning-app split + gad planning serve + gad start daily entry</title>
+    <goal>Split planning surfaces from the landing Next app into a dedicated planning-app (decisions gad-261, gad-262). Scope: (1) scaffold apps/planning-app/ (or vendor/get-anything-done/apps/planning-app/) Next 15 workspace entry with shared primitives from packages/ui. (2) Migrate /planning, /projects, my-projects dashboard routes out of landing into planning-app. (3) CLI: 'gad planning serve' spawns planning-app dev server (port detection + reuse if already running). (4) CLI: 'gad start' spawns 'gad planning serve' if needed + opens browser to /my-projects. (5) Deprecate landing-site /planning + /projects over one release cycle — redirect stubs with 'moved to gad planning serve' banner. (6) Subagent-run history render on /my-projects (consumer of todo 2026-04-17-subagent-run-history.md data). (7) daily-subagent dispatch trigger — 'gad start' optionally auto-dispatches pending daily subagent runs if project config has daily-subagent: true (decision gad-258 enforcement mechanism).</goal>
+    <status>planned</status>
+    <depends>46</depends>
+  </phase>
+
 </roadmap>
 

@@ -1965,5 +1965,29 @@ Operator priority statement: "I just need it working right now. If we can put it
     </references>
   </decision>
 
+  <decision id="gad-261">
+    <title>Planning surface splits into its own app — gad planning serve separate from landing</title>
+    <summary>Today the landing Next app at vendor/get-anything-done/site/ hosts both marketing (/, /how-it-works, /library, /project-market) and planning (/planning, /projects). That coupling bleeds landing UI conventions into planning surfaces and makes it harder to treat planning as private, auth-gated, or locally-only. Split: planning surfaces move to a separate Next app (working name: planning-app) that ships with the GAD binary and runs via 'gad planning serve' on its own dev port. Landing stays public-marketing-only. Both apps share primitives via a packages/ui workspace entry so design drift is contained. Per-project planning data is consumed by the planning app directly from .planning/ roots the CLI already knows about.</summary>
+    <impact>New Next app added under vendor/get-anything-done/apps/planning-app/ (or similar path decided during phase plan). 'gad planning serve' CLI subcommand spawns it. Existing /planning and /projects routes on the landing app get deprecated over one release cycle. Teachings route placement re-scoped: during transition lives on landing under phase 46; long-term belongs on the planning app as 'my learnings.' Shared UI primitives extraction is a dependency and may surface as its own sub-phase.</impact>
+  </decision>
+
+  <decision id="gad-262">
+    <title>gad start — daily dashboard entry command, distinct from gad startup</title>
+    <summary>Two different audiences want two different entry points. Coding agents need text-mode session context: today that is 'gad startup --projectid X' which prints the session contract + triggers snapshot. Humans (operator) need a dashboard to see their projects, subagent-run history, next-actions, and BYOK status: that is 'gad start'. The command spawns 'gad planning serve' if not already running, then opens the browser to /my-projects. Idempotent — re-running attaches to the existing server. No positional args required for the happy path. Aliased as 'gad dashboard' for discoverability.</summary>
+    <impact>New top-level CLI verb. Does NOT replace 'gad startup' — they coexist. Documented as the operator's daily entry point in README. Depends on 'gad planning serve' landing (gad-261) and a /my-projects route existing on the planning app (new, tracks todo 2026-04-17-my-projects-dashboard.md).</impact>
+  </decision>
+
+  <decision id="gad-263">
+    <title>Offload policy — big-token structured work goes to cheap models, reasoning stays with main agent</title>
+    <summary>Cost-token triage for LLM calls across GAD. Default routing: (a) reasoning, novel content generation, agent-loop decisions, phase planning --&gt; main agent (Claude, operator-controlled runtime). (b) structured input / structured output transformations with predictable shape and high token volume --&gt; cheap model (gpt-4o-mini class or equivalent via BYOK, per-project). Examples that belong on the cheap side: git-diff digest generation, event-log daily summary, subagent-report formatter, template hydration (docs-map entries, feature-doc scaffolds), tip-seed expansion when needed, commit-message polish. Examples that stay on the main agent: tip authoring where grappling context matters, plan-phase, decision capture, debug investigation, code review. Gated on BYOK (gad-260) so the cheap-model key is per-project and never hard-coded. Until BYOK lands, offload scripts read OPENAI_API_KEY from process env and document that migration path.</summary>
+    <impact>New convention documented in vendor/get-anything-done/references/offload-policy.md (to be authored). CLI subcommand family 'gad offload &lt;job&gt;' wraps the cheap-model calls with consistent logging + error handling. Downstream: daily-digest generator, subagent-report formatter, weekly-recap (phase 58 item 4) all implemented against this pattern rather than hand-rolled. Tips stay in-subagent per gad-258 — they are reflection, not transformation.</impact>
+  </decision>
+
+  <decision id="gad-264">
+    <title>Teachings reader route promoted to active phase 46 scope</title>
+    <summary>Phase 58 originally slotted the /teachings route as its item (3), but phase 58 is blocked on 46 and the 'only fun if you see it' gap on the teachings catalog is acute — tips exist but nothing renders them. Promote the teachings reader (index page + detail route, read from teachings/static/** via the existing catalog generator) into phase 46 active scope. Phase 58 keeps its other items (snapshot-footer tip-of-the-day line, daily-tip.yml end-to-end test, weekly recap, contribution path docs) and its dependency on 46. The teachings reader's long-term home is the planning app post gad-261 split, but landing it on the landing app under 46 is the fastest path to a visible learning loop.</summary>
+    <impact>Phase 46 gets one additional deliverable: /teachings index + /teachings/[slug] detail routes. Phase 58 item (3) crosses out, remaining items stay. Teachings data pipeline already exists in site/scripts/build-site-data.mjs -- reader page is a consumer of existing data, not new infra. Cross-linked from tip author bylines and from llm-from-scratch project docs once the subagent report contract adds a project-doc output.</impact>
+  </decision>
+
 </decisions>
 
