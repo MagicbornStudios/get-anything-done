@@ -1,8 +1,8 @@
 # Roadmap artifact — keep, fold into workflows, or kill?
 
 **Date**: 2026-04-16
-**Status**: open question — not decided
-**Related decisions**: gad-226 (planning artifacts as gauges)
+**Status**: **RESOLVED 2026-04-16 — Option D (demote, drop gauge) via decision gad-229.** B and C remain viable long-term restructures and this note is kept as the durable record for the future phase that revisits them.
+**Related decisions**: gad-226 (planning artifacts as gauges), gad-229 (this resolution)
 
 ## The question
 

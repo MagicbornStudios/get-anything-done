@@ -1,15 +1,15 @@
 # Planning-artifact gauges on editors
 
 **Date captured**: 2026-04-16
-**Decisions**: gad-226
-**Related**: gad-227 (visibility), gad-220/222 (pressure formula), roadmap-artifact-question-2026-04-16.md
+**Decisions**: gad-226, gad-229
+**Related**: gad-227 (visibility), gad-220/222 (pressure formula), roadmap-artifact-question-2026-04-16.md (RESOLVED — Option D)
 
 ## The idea
 
 Replace the "raw XML viewer" default in the Project / Species / Generation
 editor panes with a gauge bank — one gauge per planning artifact type.
 
-Four confirmed gauges (roadmap pending the open question):
+**Four gauges confirmed** (gad-229 demotes roadmap from the bank):
 
 - **Decisions gauge** — direction. Display: count + D/T ratio. Sweet spot
   band: 1 decision per 10-20 tasks. Low = drifting. High-and-low-tasks =

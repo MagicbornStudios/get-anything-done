@@ -34,7 +34,9 @@ NEW THIS SESSION — operator design drop (captured, not implemented):
 
 TODOS (19) remain parked: vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template, planning-artifact-gauges (NEW), listing-visibility-config (NEW), moderation-tooling (NEW), editor-agent-selector (NEW).
 
-OPEN QUESTION: roadmap artifact — see note. Awaits operator direction before next implementation cycle touching gauge UI or roadmap tooling.</next-action>
+RESOLVED: roadmap artifact question → Option D via decision gad-229. Gauge bank is FOUR gauges (decisions/tasks/requirements/notes), roadmap stays as agent input, no ROADMAP.xml schema change. Note updated with resolution header. B (kill + fold into tasks) and C (reframe as workflow instances) remain viable long-term restructures for a future phase once gauge UI is in operator hands.
+
+C DISCUSSION OPEN (not a decision): operator flagged that if Option C reduces to "only solves merge conflicts" then it is not a strong argument on its own. Need to separate C (workflow-instance restructure, semantic generalization) from the outbox pattern (per-agent scratch files for merge-conflict avoidance — already captured as todo `structural-parallelism-task-outbox`). The two are orthogonal. Discussion sketched in response; awaits operator direction before capturing a new decision.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

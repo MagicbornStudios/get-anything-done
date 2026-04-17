@@ -1617,6 +1617,19 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>(1) Editor UI gains a coding-agent dropdown on the generation-runner pane (existing `site/app/projects/edit/[id]/GenerationRunner.tsx`). (2) Dev-server command bridge adds a `runtime=<cli-name>` arg and translates it to the correct invocation (e.g. `claude`, `codex`, `opencode`). (3) Runtime detection runs once at editor mount, cached per session. (4) Generation trace schema already supports `runtime` per gad-28 — no schema change needed. (5) The selector is dev-only; production `/projects/[...id]` has no generation-runner surface.</impact>
   </decision>
 
+  <decision id="gad-229">
+    <title>Roadmap artifact demoted from the gauge bank — 4 gauges, ROADMAP.xml kept as agent input</title>
+    <date>2026-04-16</date>
+    <summary>Resolves the open question raised in `.planning/notes/roadmap-artifact-question-2026-04-16.md` (gad-226 follow-up). The operator-facing gauge bank (gad-226) commits to **four gauges**: decisions (direction), tasks (implementation detail), requirements (what-to-build), notes (exploration breadth). Roadmap is **demoted** — ROADMAP.xml remains an agent-consumable planning input (phase metadata, dependency graph, sprint window) but does NOT get a gauge in any editor. Reason: roadmap's candidate gauge semantics (horizon / sequencing / velocity / readiness) were all weaker than the four confirmed artifacts. Demoting now unblocks the gauge UI without a schema/tooling migration.
+
+**What stays the same**: `ROADMAP.xml`, `gad phases`, phase-scoped task references, snapshot inclusion, planning-graph edges.
+
+**What changes**: human-facing editor panes render a 4-gauge bank, not 5. Raw roadmap access remains available for debugging/diagnostics but is not a primary UX.
+
+**Deferred (not closed by this decision)**: the longer-term question of whether roadmap should be reframed as workflow instances (Option C in the note) or killed and folded into task metadata (Option B). Both remain viable restructures for a future phase once the gauge UI is shipped and we can see whether roadmap adds operator-facing value in practice. The note's recommendation stands: revisit B/C after gauges ship.</summary>
+    <impact>(1) `planning-artifact-gauges` todo implements four gauges, not five. (2) No ROADMAP.xml schema changes. No `gad phases` or snapshot changes. (3) The roadmap-artifact-question note is updated with a "Resolved 2026-04-16 — Option D" header but kept as the durable record of the B/C options for the future phase. (4) Decision gad-226's "roadmap = OPEN QUESTION" caveat is now resolved; gad-226's scope is four gauges, with roadmap deferred to its own future decision.</impact>
+  </decision>
+
   <decision id="gad-225">
     <title>CLI vocabulary: `gad site` vs `gad play` / `gad generation open` — planning site vs generation build artifact</title>
     <date>2026-04-16</date>

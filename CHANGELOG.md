@@ -26,7 +26,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Decision gad-227** — project detail pages at `/projects/[...id]` are public by default (free hosting). Owners control which planning artifacts render via a `listingVisibility` object on `project.json`. Platform operators get moderation tooling that overrides owner config.
 - **Decision gad-228** — the editor surfaces a coding-agent dropdown (Claude Code / Codex / OpenCode / etc.). Detection runs at editor mount; the selected runtime is recorded on `TRACE.json.runtime` per gad-28 for cross-agent comparability.
 - Four new todos: `planning-artifact-gauges`, `listing-visibility-config`, `moderation-tooling`, `editor-agent-selector`.
-- Open question captured: roadmap artifact future — keep / fold into workflows / demote-and-drop-gauge. Note documents the four options with my recommended direction (demote for now, revisit after gauge UI ships).
+- **Decision gad-229** resolves the roadmap-artifact open question — Option D demote. Gauge bank is four gauges (decisions/tasks/requirements/notes); ROADMAP.xml stays as agent input with no schema change. gad-226's "roadmap semantic pending" caveat is now closed. B (kill + fold into tasks) and C (reframe as workflow instances) remain viable long-term restructures for a future phase; the note is updated with a resolution header but preserved as the durable record.
 
 ### Notes
 - Session cost shape + agent profile modes captured at `.planning/notes/session-dump-heuristics-2026-04-16.md`. junior/balanced/senior as session-start configuration, not runtime heuristic. Heuristic-driven auto-dump rejected as too fragile.
