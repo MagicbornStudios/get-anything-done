@@ -12646,10 +12646,12 @@ function extractSkillDependencies(skillBody) {
   return { requires, installs, outputs, implicit };
 }
 
-function resolveTrySource(ref, repoRoot) {
+function resolveTrySource(ref, repoRoot, opts = {}) {
   // Returns { kind, sourceDir, slug, cleanup } where kind is 'local-slug',
   // 'local-path', or 'git-url'. cleanup is a fn to call when done (e.g.
   // remove tmp clone).
+  // opts.branch (task 42.2-40.b): explicit branch/tag override for git
+  // sources — skips the fallback probe entirely when set.
   const slug = slugifyRef(ref);
 
   // Git URL
@@ -12663,11 +12665,14 @@ function resolveTrySource(ref, repoRoot) {
       cloneUrl = atMatch[1];
       branch = atMatch[2];
     }
+    // Explicit opts.branch wins over @-suffix.
+    if (opts.branch) branch = opts.branch;
 
     const tmpBase = path.join(require('os').tmpdir(), `gad-try-clone-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
 
     // Try the default branch first, then fall back to common skill-hosting
     // branches (v1 is Graphify's pattern, main / master are standard).
+    // When branch is explicit, skip the fallback probe.
     const branchAttempts = branch
       ? [branch]
       : [null, 'v1', 'main', 'master'];
@@ -12779,6 +12784,29 @@ function stageTrySandbox(resolved, sandboxRoot) {
 
   // Copy source dir contents into sandbox.
   fs.cpSync(resolved.sourceDir, sandboxDir, { recursive: true });
+
+  // Task 42.2-40.b (1): strip .git/ from cloned sandboxes to save disk
+  // space. For git-url sources, sourceDir is often the repo root and the
+  // sandbox inherits a full git history that serves no purpose post-stage.
+  const gitDir = path.join(sandboxDir, '.git');
+  if (fs.existsSync(gitDir)) {
+    try { fs.rmSync(gitDir, { recursive: true, force: true }); } catch {}
+  }
+
+  // Task 42.2-40.b (4): normalize lowercase skill.md -> SKILL.md so
+  // downstream reads (which hardcode the canonical filename) succeed and
+  // the sandbox matches the skill-shape contract.
+  const upper = path.join(sandboxDir, 'SKILL.md');
+  const lower = path.join(sandboxDir, 'skill.md');
+  if (!fs.existsSync(upper) && fs.existsSync(lower)) {
+    try {
+      fs.renameSync(lower, upper);
+      console.warn('  Note: source used lowercase skill.md — normalized to SKILL.md in sandbox.');
+    } catch {
+      // On case-insensitive filesystems the rename is a no-op; surface as a warning only.
+      console.warn('  Note: source used lowercase skill.md — filesystem may be case-insensitive; downstream reads target SKILL.md.');
+    }
+  }
 
   return sandboxDir;
 }
@@ -13028,8 +13056,9 @@ const generateCmd = defineCommand({
 const tryStage = defineCommand({
   meta: { name: 'stage', description: 'Stage a skill into .gad-try/<slug>/ (default subcommand)' },
   args: {
-    ref: { type: 'positional', description: 'slug | path | git url', required: true },
-    yes: { type: 'boolean', description: 'Skip consent gate (scripted mode)', default: false },
+    ref:    { type: 'positional', description: 'slug | path | git url', required: true },
+    yes:    { type: 'boolean',   description: 'Skip consent gate (scripted mode)', default: false },
+    branch: { type: 'string',    description: 'Explicit branch/tag for git sources (skips fallback probe). Task 42.2-40.b.', default: '' },
   },
   run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
@@ -13037,14 +13066,19 @@ const tryStage = defineCommand({
 
     let resolved;
     try {
-      resolved = resolveTrySource(args.ref, repoRoot);
+      resolved = resolveTrySource(args.ref, repoRoot, { branch: args.branch || undefined });
     } catch (err) {
       console.error(`gad try: ${err.message}`);
       process.exit(1);
     }
 
     try {
-      const skillBody = fs.readFileSync(path.join(resolved.sourceDir, 'SKILL.md'), 'utf8');
+      // SKILL.md is the canonical name; skill.md (lowercase) is tolerated at
+      // read-time and normalized in stageTrySandbox (task 42.2-40.b).
+      const upperPath = path.join(resolved.sourceDir, 'SKILL.md');
+      const lowerPath = path.join(resolved.sourceDir, 'skill.md');
+      const skillPath = fs.existsSync(upperPath) ? upperPath : lowerPath;
+      const skillBody = fs.readFileSync(skillPath, 'utf8');
       const deps = extractSkillDependencies(skillBody);
 
       console.log(`gad try ${resolved.slug}`);
