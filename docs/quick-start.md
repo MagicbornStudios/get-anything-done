@@ -119,3 +119,5 @@ gad site serve --consumer
 
 **Live Next dev (edit `site/` with hot reload):** `cd site && pnpm install && pnpm dev` from the framework root (requires Node + install in `site/`).
 
+**Parent monorepo (e.g. `custom_portfolio` with `vendor/get-anything-done`):** add `vendor/get-anything-done/site` to the parent `pnpm-workspace.yaml`, then from the **parent repo root** run `pnpm install`, `pnpm gad:site:dev`, and `pnpm gad:site:serve` — see the parent `AGENTS.md` (GAD marketing site table).
+
