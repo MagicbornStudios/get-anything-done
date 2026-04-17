@@ -3007,9 +3007,138 @@ const planningHydrateCmd = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// `gad planning serve` — phase 59 task 59-05 (decision gad-265 Q1).
+// Spawns the planning-app Next dev/start server on port 3002 from a monorepo
+// checkout. Pre-flight health probe detects reuse; conflict on wrong service.
+// Logs to ~/.gad/logs/planning-app-<date>.jsonl. SIGINT forwards to child.
+// ---------------------------------------------------------------------------
+
+const planningServeCmd = defineCommand({
+  meta: {
+    name: 'serve',
+    description:
+      'Spawn apps/planning-app on port 3002 with health-probe reuse detection (monorepo checkout required; shells out to pnpm filter per decision gad-265).',
+  },
+  args: {
+    port: {
+      type: 'string',
+      description: 'Override port (default 3002). Also honored by planning-app via PORT env.',
+      default: '',
+    },
+    prod: {
+      type: 'boolean',
+      description: 'Use `next start` (pnpm filter start) against a prebuilt .next/ bundle instead of `next dev`.',
+      default: false,
+    },
+    'no-browser': {
+      type: 'boolean',
+      description: 'Skip browser open (default; serve never opens a browser — kept for symmetry with `gad start`).',
+      default: false,
+    },
+    'log-dir': {
+      type: 'string',
+      description: 'Override log directory. Defaults to ~/.gad/logs/.',
+      default: '',
+    },
+  },
+  async run({ args }) {
+    const {
+      DEFAULT_PORT,
+      resolveWorkspaceRoot,
+      decideReuseAction,
+      probeHealth,
+      spawnPlanningApp,
+      defaultLogDir,
+      logFileName,
+      ensureLogDir,
+      appendLogLine,
+    } = require('../lib/planning-serve.cjs');
+
+    // Resolve port. --port > GAD_PLANNING_PORT env > DEFAULT_PORT.
+    let port = DEFAULT_PORT;
+    const rawPort = String(args.port || '').trim();
+    if (rawPort) {
+      const p = parseInt(rawPort, 10);
+      if (!Number.isFinite(p) || p <= 0) {
+        outputError(`invalid --port value: ${rawPort}`);
+        return;
+      }
+      port = p;
+    } else if (process.env.GAD_PLANNING_PORT) {
+      const p = parseInt(process.env.GAD_PLANNING_PORT, 10);
+      if (Number.isFinite(p) && p > 0) port = p;
+    }
+
+    const workspace = resolveWorkspaceRoot(process.cwd());
+    if (!workspace) {
+      outputError(
+        'could not locate apps/planning-app/ by walking up from cwd. ' +
+        '`gad planning serve` requires a monorepo checkout (decision gad-265 Q1). ' +
+        'Follow-up: standalone binary bundling gated on task 44-28 pattern.',
+      );
+      return;
+    }
+
+    const logDir = args['log-dir']
+      ? path.resolve(args['log-dir'])
+      : defaultLogDir();
+    ensureLogDir(logDir);
+    const logFile = path.join(logDir, logFileName());
+
+    // Pre-flight health probe.
+    const probe = await probeHealth({ port });
+    const decision = decideReuseAction(probe);
+    if (decision.action === 'attach') {
+      console.log(`[gad planning serve] already serving on port ${port} — ${decision.reason}`);
+      appendLogLine(logFile, 'stderr', `[gad planning serve] attach: ${decision.reason}`);
+      process.exit(0);
+      return;
+    }
+    if (decision.action === 'conflict') {
+      console.error(`[gad planning serve] port conflict — ${decision.reason}`);
+      console.error(
+        '  stop the occupying process, set GAD_PLANNING_PORT, or pass --port <N>.',
+      );
+      appendLogLine(logFile, 'stderr', `[gad planning serve] conflict: ${decision.reason}`);
+      process.exit(1);
+      return;
+    }
+
+    // action === 'spawn'
+    // --no-browser is a no-op here (serve never opens one); accept silently.
+    console.log(
+      `[gad planning serve] spawning pnpm --filter @portfolio/planning-app ${args.prod ? 'start' : 'dev'} on port ${port}`,
+    );
+    console.log(`[gad planning serve] log file: ${logFile}`);
+    appendLogLine(logFile, 'stderr', `[gad planning serve] spawn port=${port} prod=${!!args.prod} cwd=${workspace.root}`);
+
+    const child = spawnPlanningApp({
+      workspaceRoot: workspace.root,
+      port,
+      prod: !!args.prod,
+      logFile,
+      onExit(code) {
+        console.log(`[gad planning serve] shutdown — exit code ${code == null ? 'null' : code}`);
+        process.exit(code == null ? 0 : code);
+      },
+    });
+
+    // Surface spawn errors (e.g. pnpm not on PATH) with an actionable hint.
+    child.on('error', (err) => {
+      outputError(
+        `failed to spawn pnpm: ${err.message}. Ensure pnpm is installed and on PATH.`,
+      );
+    });
+  },
+});
+
 const planningCmd = defineCommand({
-  meta: { name: 'planning', description: 'Planning-directory utilities (hydrate from MD, etc.)' },
-  subCommands: { hydrate: planningHydrateCmd },
+  meta: {
+    name: 'planning',
+    description: 'Planning-directory utilities — hydrate from MD, serve the planning-app.',
+  },
+  subCommands: { hydrate: planningHydrateCmd, serve: planningServeCmd },
 });
 
 // ---------------------------------------------------------------------------
