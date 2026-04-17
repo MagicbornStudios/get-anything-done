@@ -11237,6 +11237,7 @@ const bundleExport = defineCommand({
             }
           }
           bundled = bundled.join('\n') + '\n';
+          bundled = bundled.replace(/<([^>]+)>/g, '&lt;$1&gt;');
         } else {
           console.warn(`  [warn] Workflow not found: ${workflowPath}`);
         }
