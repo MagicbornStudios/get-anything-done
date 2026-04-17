@@ -4,17 +4,22 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-17a — TRACK 3 COMPLETE.
+  <next-action>Session 2026-04-17a — TRACK 3 + 45-04 DONE.
 
-42.4-21 done: `/how-it-works` pressure section now has a "Live example" card between the dimensions table and Shannon entropy decomposition. Computes current values from `site/data/self-eval.json.latest.phases_pressure`, picks the top-pressure phase (currently 42.2, P = 173.41, H_d = 14.91, H_l = 29.09), and renders a Term/Raw/Weight/Contribution table plus H_d / H_l sub-cards. Reader now sees the formula evaluated end-to-end against real planning data, not abstract weights. Typecheck + `npm run build` clean; dev-server probe confirmed rendered output.
+DONE this session:
+- 42.4-21: /how-it-works pressure live-example card (TRACK 3) — P=173.41 from phase 42.2, computed from self-eval.json.
+- 45-04: site/lib/vocabulary.ts rewritten as full single-source vocabulary catalogue per gad-166, gad-169, gad-189, gad-219. Adds typed ENTITIES (project/recipe/species/generation/brood/bestiary/dna/finding — each with singular/plural/article), conditions (gad/gsd/bare/custom, no GAD+emergent), publication states (draft/published), section/tab labels, verbs (spawn/breed/evolve/publish/preserve), legacy-key renamed table, + helpers entityLabel/pluralize/withArticle/countLabel/canonicalizeLegacyKey. BANNED_TERMS array seeded for 45-15 audit. 18/18 smoke-test checks pass. No consumers yet — unblocks 45-06..11 migrations and 45-15.
 
-Also in HEAD (prior session): gad-225 CLI split (`gad site` vs `gad play` / `gad generation open`) and 42.4-20.
+Phase 45 progress: 45-04 + 45-15 (TRACK 1 vocab, prior session) done. Remaining wave: 45-01 project-detail tab shell, 45-02 per-project data adapter, 45-03 per-project API routes, 45-05 Art of War epigraphs, 45-06..11 tab migrations (depend on 45-01 + 45-02), 45-12 /planning rewire, 45-13 landing composition, 45-14 type ramp + palette, 45-16 hero copy + epigraphs, 45-17 logo + favicon, 45-18 marketplace verification, 45-19 dead-import cleanup, 45-20 VCS audit + build, 45-21 README + external docs.
 
-User-defined track order for remainder: 45 → editor → project-market → VCS.
+NEXT candidates (by dependency):
+- 45-01 project-detail tab shell — foundation for all 45-06..11 migrations. Medium size.
+- 45-02 per-project data adapter — server loader; feeds 45-03 routes + migrations. Medium.
+- 45-05 Art of War epigraphs — small, independent; pairs well with 45-16 later.
 
-NEXT per user order: phase 45 wave 2+ (45-01..21). Largest remaining pickup. Recommended opener: 45-04 vocabulary constants file (single-source term mapping, gad-166/169/170) — smallest dep, unblocks 45-15 audit and later marketing copy. Alternatives: 45-01 project-detail tab shell, 45-02 per-project data adapter.
+Recommended: 45-01 (tab shell) — the tab component becomes the container that 45-06..11 migrate INTO. Parallelizes with 45-02 adapter via mock data.
 
-After 45 lands: 44.5 editor (Project Editor + Brood Editor + DNA Editor), then 44 project-market redesign wave 2, then TRACK 2 VCS portability spawn.
+After 45 lands: 44.5 editor → 44 project-market wave 2 → TRACK 2 VCS portability spawn.
 
 TODOS (15) remain parked: vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template.</next-action>
   <references>
