@@ -1,71 +1,97 @@
-# tweakcn theme generator — hosted-first, with adapter for our globals.css
+# TweakCN-OpenAI fork — local theme generator, running
 
 **Date captured**: 2026-04-16
-**Decision**: gad-231 (adopt tweakcn), gad-230 (palette: black/gold/maroon/red, gilded)
-**Source**: https://github.com/jnsahaj/tweakcn, hosted at https://tweakcn.com
+**Executed**: 2026-04-17
+**Decision**: gad-231 (adopt tweakcn), gad-230 (palette direction)
+**Upstream**: https://github.com/jnsahaj/tweakcn
+**Our fork**: https://github.com/B2Gdevs/tweakcn (renamed `tweakcn-openai`, commit `23439d4`)
+**Local checkout**: `C:/Users/benja/Documents/tweakcn/` (sibling to custom_portfolio)
 
-## Correction after inspection (2026-04-16)
+## Status: shipped — the fork builds and runs locally
 
-Self-hosting tweakcn was investigated and rejected as the default path.
-The repo is a full SaaS stack — `.env.example` requires:
+The hosted-first path was rejected in favor of the customize path
+(operator signaled from the start: "needs tweaking to work with
+openai"). The fork is gutted down to the editor-only path with OpenAI
+swapped in. No DB, no auth, no billing, no per-user persistence — just
+the editor.
 
-- Postgres (Neon serverless adapter)
-- Better-auth with GitHub + Google OAuth credentials
-- Google Gemini API key (their AI provider — NOT OpenAI)
-- Groq API key
-- Google Fonts API key
+## What shipped in the fork
 
-Not a 5-minute local run. Overkill for "I just need to generate a theme."
+**Provider swap** — `@ai-sdk/google` + `@google/generative-ai` out;
+`@ai-sdk/openai` in. Models: `base=gpt-4o-mini`,
+`theme-generation=gpt-4o`, `prompt-enhancement=gpt-4o-mini`. Env:
+`OPENAI_API_KEY`.
 
-## Path A — hosted (committed)
+**Gut** — deleted `app/(auth)/`, `app/(legal)/`, `app/dashboard/`,
+`app/settings/`, `app/success/`, `app/pricing/`, `app/community/`,
+`app/oauth/`, `app/figma/`, `app/themes/`, `app/r/`, all `app/api/auth`
+/ `api/oauth` / `api/subscription` / `api/webhook` / `api/v1` routes,
+`db/`, `drizzle/`, `middleware.ts`, `routes.ts`,
+`components/theme-view.tsx`, the DB-only action files
+(account/ai-usage/checkout/community-themes/customer), `Dockerfile`,
+`docker-compose.yml`, `scripts/create-oauth-app.ts`, `lib/polar.ts`,
+`lib/checkout.ts`.
 
-1. Operator visits https://tweakcn.com.
-2. Uses their AI theme generator (Gemini-backed) or manual editor to
-   produce a theme matching gad-230 — black-dominant, gold/maroon/red
-   accents, gilded-shiny, sleek, non-typical.
-3. Exports the theme as shadcn-compatible CSS variables (they support
-   this via an "Export" / "Code" button in the editor).
-4. Operator pastes the exported CSS into `site/app/globals.css`
-   (replacing the current `:root` / `.dark` variable blocks).
-5. Build + eyeball `/`, `/projects/[...id]`, `/project-market` to
-   confirm the palette lands without breaking anything.
+**Stubs** (always-local-user, always-unlimited, no persistence) —
+`lib/auth.ts`, `lib/auth-client.ts`, `lib/subscription.ts`,
+`lib/shared.ts`, `hooks/use-subscription.ts`, `hooks/themes/index.ts`
+(community-hooks → noops), `components/auth-dialog-wrapper.tsx` (null),
+`actions/themes.ts` (in-memory CRUD).
 
-## Adapter script (write when first theme lands)
+**`types/theme.ts`** — Theme type declared directly (was
+`InferSelectModel<typeof theme>` from drizzle).
 
-If the exported CSS doesn't drop cleanly into `globals.css` (e.g. uses
-different variable names, or includes extra scaffolding), write a
-small adapter:
+**`next.config.ts`** — `eslint: { ignoreDuringBuilds: true }` (upstream
+ESLint config depends on a Next plugin absent after the strip).
 
-`site/scripts/apply-tweakcn-theme.mjs <path-to-exported.css>`
+**`package.json`** — renamed `tweakcn-openai`. Removed 12 deps
+(polar-sh/*, better-auth, bcryptjs, @neondatabase/serverless, drizzle,
+@upstash/ratelimit, @vercel/kv, husky, @types/pg, …).
 
-Normalizes variable names, strips tweakcn-specific scaffolding, writes
-into `site/app/globals.css` between `/* tweakcn:start */` and
-`/* tweakcn:end */` markers so the apply is idempotent.
+## How to run
 
-## Path B — self-host (deferred)
+```sh
+cd C:/Users/benja/Documents/tweakcn
+pnpm install
+# Put your OpenAI key in .env.local:
+#   OPENAI_API_KEY="sk-..."
+PORT=3010 pnpm dev    # or pnpm dev (defaults to 3000)
+# Open http://localhost:3010/editor/theme
+```
 
-Only if we want the editor embedded inline on our own site. Would
-require:
+Build passes: `pnpm build` (Turbopack). Dev probe verified — editor
+renders at `/editor/theme` and landing at `/`.
 
-- Provision a dev Neon DB + drizzle migrations.
-- Create OAuth apps.
-- Google Gemini API key (tweakcn's AI provider). The operator's
-  "needs tweaking to work with OpenAI" hint suggests a fork/patch to
-  swap Gemini for OpenAI — doable but nontrivial (Vercel AI SDK call
-  sites + different streaming / system prompt shape).
-- Package it either as a mounted Next.js route or as an iframe-embed
-  from our own hosted instance.
+## Consuming a theme in the portfolio site
 
-Park this until Path A produces visible value.
+1. Generate a theme in the fork's editor (AI-assist via OpenAI, or the
+   visual controls).
+2. Click the "Code" / export panel in the editor; copy the CSS variable
+   block.
+3. Paste into `vendor/get-anything-done/site/app/globals.css` — replace
+   the current `:root` / `.dark` blocks.
+4. Rebuild: `cd vendor/get-anything-done/site && pnpm build`.
 
-## Risks
+If the export format doesn't drop cleanly into our globals.css (variable
+name drift, scaffolding wrapper), write a tiny adapter:
+`site/scripts/apply-tweakcn-theme.mjs <exported.css>` that normalises +
+writes between `/* tweakcn:start */` and `/* tweakcn:end */` markers.
 
-- tweakcn.com's export format may change. Adapter script absorbs drift.
-- If we outgrow the hosted editor's feature set, self-host becomes the
-  right call. Until then, simplest-thing-that-works wins.
+## Risks / watch-for
 
-## Not in scope
+- OpenAI rate limits: upstream's Upstash ratelimit was stripped; heavy
+  use could hit OpenAI's own quota. Not our problem locally.
+- Theme generation quality on OpenAI vs Gemini: upstream tuned prompts
+  for Gemini. If outputs look off, `lib/ai/prompts.ts` is the one place
+  to tweak the system prompts.
+- Turbopack production builds are flagged experimental by Next; fine
+  for local dev, wouldn't deploy this fork.
 
-- Designing the actual palette. Operator-driven via the generator.
-- Site-wide theme migration. Task 45-14 does that AFTER the first
-  exported theme lands in `globals.css`.
+## Not in scope (parked)
+
+- Embedding the editor inside our portfolio site. Keeping it separate
+  per operator direction ("we just want it used inside of projects not
+  fully be one").
+- Cloud save / community-themes / billing. Stripped by design.
+- SQLite local persistence. Zustand localStorage already survives
+  refresh; cloud save was the only thing missing.
