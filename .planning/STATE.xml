@@ -4,79 +4,33 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Session 2026-04-17a — phase 45 wave 2 advancing. TRACK 3 + 45-04 + 45-01 + 45-02 DONE.
+  <next-action>Session 2026-04-17 CLOSED — full handoff note at `.planning/notes/session-handoff-2026-04-17.md`. Read that first.
 
-DONE this session:
-- 42.4-21: /how-it-works pressure live-example card (TRACK 3) — P=173.41 from phase 42.2, computed from self-eval.json.
-- 45-04: site/lib/vocabulary.ts rewritten as full single-source vocabulary catalogue (gad-166, gad-169, gad-189, gad-219). 18/18 smoke checks pass.
-- 45-01: Project detail tab shell closure. Tabs now sourced from VOCAB.tabs (removes hardcoded labels, first consumer of 45-04). Planning sub-tab state persists in URL via `?sub=` (tasks default omits param). New data-cid on each sub-tab button. Decisions/roadmap sub-panes still show "coming soon" with follow-up refs (45-07, 45-08).
-- 45-02: Per-project data adapter closure. Adapter already read tasks/decisions/phases/requirements/state; this task added notes. New `PlanningNote` type, `notes: PlanningNote[]` on `ProjectPlanningData`, standalone `loadProjectNotes()`, `collectNotes()` walker over `.planning/notes/` + `.planning/docs/` (.md/.mdx, title from first H1 or filename, 220-char snippet, mtime ISO). Smoke test against `get-anything-done`: 389 tasks, 221 decisions, 51 phases, 17 notes, state.currentPhase=42.4. Unblocks 45-06..11 migrations.
+Session shipped (tasks status=done): 42.4-21 (TRACK 3 pressure live-example), 45-04 (vocabulary.ts), 45-01 (tab shell), 45-02 (adapter + notes), 45-07 (decisions sub-pane wire), 45-08 (roadmap sub-pane wire), 45-18 (marketplace verify + stats-bar cidKey fix), 45-05 (epigraph registry to 22×8), 45-13 pragmatic cut (ProjectStatsBar + Overview reorder — workflow-viz + VCS showcase parked), 45-16 (SectionEpigraph component + 10 dividers + hero polish).
 
-Phase 45 progress: 45-01, 45-02, 45-04, 45-15 done. Remaining: 45-03 (API routes), 45-05 (epigraphs), 45-06..11 (tab component migrations — now unblocked), 45-07 (decisions sub-pane wire — adapter ready), 45-08 (roadmap sub-pane wire — adapter ready), 45-12..21.
+Decisions added: gad-226 (gauges), gad-227 (listing visibility), gad-228 (agent selector), gad-229 (roadmap demoted — 4 gauges committed), gad-230 (palette: black/gold/maroon/red gilded), gad-231 (tweakcn adopted), gad-232 (VCS 3-demo spec).
 
-NEXT candidates (by dependency):
-- 45-03 per-project API routes — /api/dev/evals/projects/[id]/planning + /system. Small. The planning route partly exists but should now consume the 45-02 adapter instead of duplicating logic.
-- 45-07 decisions sub-pane wire — ProjectPlanningDecisionsTab already exists as a file, just not wired. Needs to call through to loadProjectDecisions or the existing fetch path. Small.
-- 45-08 roadmap sub-pane wire — ProjectPlanningRoadmapTab same story. Small.
-- 45-06 tasks migration — ProjectPlanningTasksTab already wired; 45-06's goal is to feed it via the 45-02 adapter. Small.
-- 45-05 Art of War epigraphs — independent, pairs with 45-16 later. Small.
+Outside GAD submodule: TweakCN-OpenAI fork shipped at `C:/Users/benja/Documents/tweakcn` → `https://github.com/B2Gdevs/tweakcn` commit `23439d4`. Gutted auth/DB/billing/ratelimit, swapped Gemini → OpenAI (gpt-4o-mini / gpt-4o). `pnpm build` passes. Run: `PORT=3010 pnpm dev` → `http://localhost:3010/editor/theme`. Needs `OPENAI_API_KEY` in `.env.local`.
 
-Recommended next: 45-07 + 45-08 (wire the two placeholder panes). Closes the "coming soon" holes users hit on /projects/[...id]?tab=planning&sub=decisions / ?sub=roadmap.
+FIRST ACTIONS NEXT SESSION:
+1. `gad startup --projectid get-anything-done`; save session id; trust working memory, don't reflexively re-full-snapshot (gad-195).
+2. Read `.planning/notes/session-handoff-2026-04-17.md` — session context that doesn't fit here (live gotchas, operator-made revisions to ship-point files, port conventions, pickup list).
+3. Confirm whether operator generated a first tweakcn theme. If yes → start 45-14 palette landing. If no → park 45-14, pick another chain.
 
-After 45 lands: 44.5 editor → 44 project-market wave 2 → TRACK 2 VCS portability spawn.
+PICKUP CANDIDATES by operator preference (45 → 44.5 editor → 44 market → TRACK 2):
+- 45-14 type ramp + palette (waits on tweakcn theme export).
+- 45-17 logo + favicon (waits on `ai-asset-generation-pipeline` todo).
+- VCS 3-demo showcase — demos 2+3 ready to ship (client-side, deterministic); demo 1 conditional.
+- Infra closure: 45-03 (API consolidation onto adapter), 45-06 (tasks migration), 45-09 (requirements + notes migration), 45-10 (Evolution tab components), 45-11 (System tab components).
 
-NEW THIS SESSION — operator design drop (captured, not implemented):
-- Decision gad-226 (planning artifacts as gauges — human-facing display, not human-facing content; semantic mapping: decisions=direction, tasks=implementation, requirements=what-to-build, notes=exploration; sweet spots beat maxes; imbalance flags are the UX signal; scope = project/species/generation editor banks).
-- Decision gad-227 (listing visibility — public by default, per-project listingVisibility booleans on project.json for tasks/decisions/roadmap/requirements/notes/state; moderation tooling overrides owner config).
-- Decision gad-228 (multi-agent selector in the editor — Claude Code / Codex / OpenCode picked via dropdown; detection at mount; TRACE.json runtime records selection per gad-28).
-- Note `.planning/notes/roadmap-artifact-question-2026-04-16.md` — OPEN QUESTION: roadmap artifact future (keep-as-is / kill-and-fold-into-tasks / reframe-as-workflow-instances / demote-drop-gauge). Recommended: Option D (demote for now, revisit after gauges ship).
-- Todos: planning-artifact-gauges, listing-visibility-config, moderation-tooling, editor-agent-selector.
+TODOS parked (19): planning-artifact-gauges, listing-visibility-config, moderation-tooling, editor-agent-selector, shrink-roadmap-surface, tweakcn-integration (running-docs, shipped), ai-asset-generation-pipeline, vcs-live-showcase-three-demos, 45-13-followup-workflow-vcs-showcase, vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template.
 
-TODOS (19) remain parked: vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template, planning-artifact-gauges (NEW), listing-visibility-config (NEW), moderation-tooling (NEW), editor-agent-selector (NEW).
-
-RESOLVED: roadmap artifact question → Option D via decision gad-229. Gauge bank is FOUR gauges (decisions/tasks/requirements/notes), roadmap stays as agent input, no ROADMAP.xml schema change. Note updated with resolution header. B (kill + fold into tasks) and C (reframe as workflow instances) remain viable long-term restructures for a future phase once gauge UI is in operator hands.
-
-C DISCUSSION CLOSED: operator confirmed the real pain is (1) merge conflicts. The outbox todo handles that; no C (workflow-instance restructure) needed. Operator also flagged roadmap is likely over-complex — captured as todo `2026-04-16-shrink-roadmap-surface.md` (parked, post-gauge, NOT mid-flight). Broader principle noted: audit for redundant context surfaces in planning docs after gauge UI ships.
-
-Back to phase 45 wave 2. DONE this session on site: 42.4-21, 45-04, 45-01, 45-02, 45-07, 45-08.
-
-45-07 + 45-08 closed by wiring the already-written `ProjectPlanningDecisionsTab` and `ProjectPlanningRoadmapTab` components into `ProjectDetailTabContent.tsx`, replacing the "coming soon" placeholders. `/projects/[...id]?tab=planning&sub=decisions` and `?sub=roadmap` now render live data.
-
-Phase 45 progress: 45-01, 45-02, 45-04, 45-07, 45-08, 45-15 done. Remaining in wave: 45-03 (API routes consolidation onto 45-02 adapter), 45-05 (Art of War epigraphs), 45-06 (tasks migration through 45-02 adapter), 45-09 (requirements + notes migration), 45-10 (Evolution tab components), 45-11 (System tab components), 45-12..21 (polish, landing rewrite, logo, audit, cleanup, docs).
-
-NEXT candidates:
-- 45-06 tasks migration — ProjectPlanningTasksTab already exists + is wired; goal is to route it through the 45-02 adapter instead of the fetch(). Small refactor.
-- 45-09 requirements + notes migration — same pattern. Both components exist and render.
-- 45-03 API route consolidation — reuse the 45-02 adapter inside the route instead of duplicating logic. Small, tidying.
-- 45-05 Art of War epigraphs — copy/content task, independent of adapter.
-- 45-13 landing composition — Overview tab content rewrite.
-- 45-14 type ramp + palette — visual identity pass.
-
-Operator directive 2026-04-16: do visible content, stay on it until the chain breaks, then shift. Chain so far: 45-05 done. Queue: 45-13 landing composition → 45-16 hero + epigraphs → 45-14 type ramp + palette → 45-17 logo/favicon → 45-18 marketplace integration verify.
-
-45-05 done: `site/lib/epigraphs.ts` expanded to 22 entries across 8 sections (hero/planning/evolution/system/findings/scoring × 3 each, bestiary/marketplace × 2). Typed `EpigraphSection` string-literal + helpers `getAllEpigraphs`, `getEpigraph`, `getEpigraphsFor`, `pickEpigraph(section, seed?)` with deterministic seed hashing, `countBySection`. No consumers wired yet; 45-16 will render a `<SectionEpigraph>` component using these helpers on section dividers.
-
-45-13 done (pragmatic cut): new `ProjectStatsBar` (4 cells — generations / species / best human review / latest) + Overview composition reorder (Hero → StatsBar → Runs → Findings-before-Requirements → Skills → lineage → Bugs → Scoring). Workflow visualization + VCS showcase deferred to todo `2026-04-16-45-13-followup-workflow-vcs-showcase.md`; doing them inline would have exploded scope mid-sprint.
-
-45-16 done: new `SectionEpigraph` component in `@/components/site`. Six dividers on landing (hero/system/planning/evolution/findings/marketplace) + four on project Overview (hero/bestiary/planning/scoring) with seed-deterministic picks. Hero copy polish: fixed "roto skills" → "proto-skills" typo, added evolutionary framing ("species mutate, generations compete, survivors promote") without rewriting the approved "context under pressure" tagline.
-
-OPERATOR DESIGN DROP 2026-04-16 — captured in DECISIONS + todos:
-- gad-230: palette direction = black-dominant, gold/maroon/red accents, gilded-shiny, non-typical, sleek. Maps onto gauges (gold=direction, maroon=structural, red=latent/alarm).
-- gad-231: adopt tweakcn (github.com/jnsahaj/tweakcn) as theme generator. Standalone first; site-integration nice-to-have. OpenAI tweak likely needed.
-- gad-232: VCS live showcase = three scripted client-side demos (character/tileset conditional, component-remove mandatory, self-referential discovery mandatory). Deterministic, no LLM calls, no backend.
-- Todos: `tweakcn-integration`, `ai-asset-generation-pipeline` (gad asset generate sprite/icon/bg/favicon/og/tileset/avatar), `vcs-live-showcase-three-demos`.
-
-DONE: 45-18 verified + stats-bar cidKey fix. TweakCN-OpenAI fork shipped at `C:/Users/benja/Documents/tweakcn` and pushed to `https://github.com/B2Gdevs/tweakcn` commit `23439d4`. Customize-and-self-host path executed (operator rejected the "use hosted tweakcn.com" path — they'd already signalled "needs tweaking to work with openai"). Auth + DB + billing + ratelimit stripped, Gemini swapped for OpenAI (gpt-4o-mini / gpt-4o), community-themes hooks stubbed, Theme type inlined out of drizzle. `pnpm build` passes; dev server probe confirms editor at `/editor/theme` and landing at `/`. Next: operator generates first theme → exports CSS → pastes into `site/app/globals.css`; adapter script drops in later if export format drifts.
-
-PAUSE POINT: operator asked us to pause before the high-risk 45-14 palette execution so the operator can eyeball the shipped visible-content work (stats bar, epigraphs, Overview reorder, sub-tabs) and generate a first tweakcn theme.
-
-RECENT OUTER-REPO COMMIT NOTE: commit 43e43b4 (outer) swept 26 pre-staged legacy `rp-*` (repo-planner) file deletions up to main alongside the submodule bump. Those deletions were already staged when I ran `git add vendor/get-anything-done && git commit`; not my authorship, but my commit published them. Flagged to operator — if intended, no action.
-
-NEXT CANDIDATES (after operator feedback):
-- 45-14 type ramp + palette (consumes the tweakcn export).
-- 45-17 logo + favicon (needs AI asset pipeline, see todo).
-- VCS live showcase (3 demos per gad-232) — can start with demos 2+3 (no sprite sheet needed), ship demo 1 if easy.
-- 45-06 / 45-09 / 45-03 infra closure (tasks/requirements/notes migrations + API consolidation).</next-action>
+GOTCHAS (expanded in handoff note):
+- tweakcn dev server may still be running on :3010 from the prior session (PID 58776).
+- Outer commit 43e43b4 swept 26 pre-staged `rp-*` legacy deletions — already flagged, operator to confirm intent.
+- Operator revised `SectionEpigraph` post-ship: original-first, adapted-as-"In our model" gloss. Don't revert.
+- Operator polished `LandingEvolutionBand` (Shannon/Pressure block) and added `LandingEvolutionLoopBand` to the landing composition. Don't revert.
+- Port conventions: 3000=GAD portfolio site, 3010=tweakcn-openai, 3456=`gad site serve` default.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
