@@ -91,7 +91,7 @@ const epigraphs: readonly Epigraph[] = [
     section: "evolution",
     original: "In the midst of chaos, there is also opportunity.",
     adapted:
-      "In the midst of failing builds, there is also mutation.",
+      "Where there is pressure, there is growth — and the opportunity to shed what the next generation no longer needs.",
     attribution: ATTRIBUTION,
   },
   {
@@ -130,10 +130,9 @@ const epigraphs: readonly Epigraph[] = [
   },
   {
     section: "system",
-    original:
-      "Rapidity is the essence of war.",
+    original: "Rapidity is the essence of war.",
     adapted:
-      "Rapidity is the essence of iteration — tokens spent waiting are tokens lost.",
+      "Tempo beats force: ship a small honest generation before you ship a perfect imagined one.",
     attribution: ATTRIBUTION,
   },
 

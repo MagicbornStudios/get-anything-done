@@ -15,6 +15,7 @@
  *   gad phases [--projectid <id>]
  *   gad tasks [--projectid <id>]
  *   gad docs compile [--sink <path>]
+ *   gad docs serve [--projectid <id>] [--docs-path <path>]
  *   gad species list
  *   gad species run --project <name>
  *   gad session list
@@ -2659,9 +2660,89 @@ const docsList = defineCommand({
   },
 });
 
+const GAD_DOCS_SERVE_PORT_DEV = 3790;
+const GAD_DOCS_SERVE_PORT_CONSUMER = 3890;
+
+/** @returns {{ port: number, source: 'explicit' | 'env' | 'consumer' | 'dev' }} */
+function resolveGadDocsServePortDetailed(args) {
+  const raw = String(args.port != null ? args.port : '').trim();
+  if (raw !== '') {
+    const p = parseInt(raw, 10);
+    if (Number.isFinite(p) && p > 0) return { port: p, source: 'explicit' };
+  }
+  const envRaw = String(process.env.GAD_DOCS_SERVE_PORT || process.env.GAD_DOCS_PORT || '').trim();
+  if (envRaw !== '') {
+    const e = parseInt(envRaw, 10);
+    if (Number.isFinite(e) && e > 0) return { port: e, source: 'env' };
+  }
+  const consumer = args.consumer === true || args['consumer'] === true;
+  if (consumer) return { port: GAD_DOCS_SERVE_PORT_CONSUMER, source: 'consumer' };
+  return { port: GAD_DOCS_SERVE_PORT_DEV, source: 'dev' };
+}
+
+const docsServe = defineCommand({
+  meta: {
+    name: 'serve',
+    description: 'Compile planning docs into docs path then serve that docs directory as a static site (independent of docs_sink)',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Scope compile to one project id', default: '' },
+    all: { type: 'boolean', description: 'Compile all roots before serve', default: false },
+    'docs-path': { type: 'string', description: 'Docs output path (override). Falls back to [docs].path then docs_sink, then "docs".', default: '' },
+    skipCompile: { type: 'boolean', description: 'Skip compile and only serve current docs-path contents', default: false },
+    host: { type: 'string', description: 'Bind host', default: '127.0.0.1' },
+    port: {
+      type: 'string',
+      description: `Explicit TCP port, or leave empty for auto (${GAD_DOCS_SERVE_PORT_DEV} dev, ${GAD_DOCS_SERVE_PORT_CONSUMER} with --consumer, or GAD_DOCS_SERVE_PORT / GAD_DOCS_PORT).`,
+      default: '',
+    },
+    consumer: {
+      type: 'boolean',
+      description: `Use packaged-install default port ${GAD_DOCS_SERVE_PORT_CONSUMER} when --port is omitted (dev default without this flag is ${GAD_DOCS_SERVE_PORT_DEV}).`,
+      default: false,
+    },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const docsPath = args['docs-path'] || config.docs_path || config.docs_sink || 'docs';
+    const absDocsPath = path.resolve(baseDir, docsPath);
+    // citty's kebab→camel conversion isn't consistent across versions; accept both.
+    const skipCompile = args.skipCompile === true || args['skip-compile'] === true;
+
+    if (!skipCompile) {
+      const roots = resolveRoots(args, baseDir, config.roots);
+      if (roots.length === 0) return;
+      let total = 0;
+      for (const root of roots) {
+        total += compileDocs(baseDir, root, docsPath) || 0;
+      }
+      console.log(`[gad docs] compiled ${total} file(s) into ${docsPath}`);
+    }
+
+    if (!fs.existsSync(absDocsPath)) {
+      outputError(`docs path not found: ${docsPath}`);
+      return;
+    }
+
+    const { serveStatic } = require('../lib/static-http-serve.cjs');
+    const { port, source } = resolveGadDocsServePortDetailed(args);
+    if (source !== 'explicit') {
+      const why =
+        source === 'env'
+          ? 'GAD_DOCS_SERVE_PORT / GAD_DOCS_PORT'
+          : source === 'consumer'
+            ? '--consumer install profile'
+            : 'dev default (omit --consumer)';
+      console.log(`[gad docs] port ${port} (${why})`);
+    }
+    serveStatic({ rootDir: absDocsPath, port, host: args.host, logPrefix: '[gad docs]' });
+  },
+});
+
 const docsCmd = defineCommand({
-  meta: { name: 'docs', description: 'List and compile planning docs' },
-  subCommands: { list: docsList, compile: docsCompile },
+  meta: { name: 'docs', description: 'Manage docs listing, compile, and static docs serving' },
+  subCommands: { list: docsList, compile: docsCompile, serve: docsServe },
 });
 
 // ---------------------------------------------------------------------------

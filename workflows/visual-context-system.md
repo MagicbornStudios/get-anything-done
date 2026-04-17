@@ -24,7 +24,16 @@ The three landmark kinds:
 
 The hand-off payload a coding agent receives must carry:
 component kind + component label + source-search literal + rendered `data-cid`
-+ route. This is what makes the copy-paste loop work.
++ route + source location hint (file path and/or pattern anchor). This is
+what makes the copy-paste loop work.
+
+Baseline UX requirements for any implementation:
+
+- **Dev-only + toggleable:** operator can turn the system on/off quickly.
+- **Selection-to-prompt path:** selected UI target can generate CRUD prompts.
+- **Recorder-first flow:** one-click recorder prompt copy to clipboard.
+- **Clipboard acknowledgment:** user gets explicit copied-state feedback.
+- **Self-reference in payload:** prompt includes id, route, and source-location hint.
 
 ## Which workflow to run
 
@@ -71,8 +80,13 @@ can extend as the UI takes shape.
    could be a string constant on the component class.
 
 2. **Ship the minimal `DevPanel` surface** — one panel, gated to `NODE_ENV=development` (or engine-dev-build equivalent). Start with: hover highlight, click-to-copy, copy-with-agent-prompt affordance. No nesting, no section-vs-band duality — that was the 2026-04-14 regression, avoid it.
+   - Include a visible toggle affordance and keyboard toggle shortcut.
+   - Include quick actions for CRUD prompt templates.
+   - Include recorder action that copies a prebuilt update prompt.
 
 3. **Write the agent-prompt handoff payload** as a single shared component. It must emit: route + component kind + component label + source-search literal + `data-cid`. See `DevIdAgentPromptDialog.tsx` for the canonical shape.
+   - Include source-location hint: source file and/or pattern anchor.
+   - Show clipboard success feedback after copy actions.
 
 4. **Seed one landmark per major section** so the user has something to grep against on day one. Don't try to achieve full coverage in Workflow A — the user will drive that as the UI grows.
 
@@ -83,6 +97,8 @@ can extend as the UI takes shape.
 - `components/devid/{DevPanel,Identified,SiteSection,DevIdAgentPromptDialog}.tsx` (or the app's equivalent paths)
 - Dev-only mount of `DevPanel` in the root layout
 - One seeded landmark in at least the home route
+- CRUD quick prompt actions and recorder copy action in the panel/dialog
+- Clipboard success acknowledgment UI
 - The Workflow B audit script stub
 
 ### Failure modes
@@ -90,6 +106,9 @@ can extend as the UI takes shape.
 - **Shipping the panel before the invariant is enforced.** Users copy tokens,
   `grep` finds nothing, trust collapses. Seed at least one literal before the
   panel is visible.
+- **No toggle path.** Operators cannot quickly disable overlay while editing.
+- **Copy without acknowledgment.** User cannot trust whether clipboard action succeeded.
+- **Prompt payload missing source hint.** Agent gets id only, then stalls locating source.
 - **Using runtime-generated ids for landmarks** because it's "temporary". It's
   never temporary. Always start with literal strings.
 - **Splitting the panel into section-mode vs band-mode up front.** Single

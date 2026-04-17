@@ -2,11 +2,11 @@
 status: candidate
 source_phase: "44.5"
 source_phase_title: "Project Editor + Brood Editor + DNA Editor — local-dev gamified species/brood/generation workspace"
-pressure_score: 89.8
+pressure_score: 93
 tasks_total: 25
 tasks_done: 22
 crosscuts: 13
-created_on: "2026-04-16"
+created_on: "2026-04-17"
 created_by: compute-self-eval
 ---
 
@@ -16,7 +16,7 @@ created_by: compute-self-eval
 
 ```
 get-anything-done | 44.5 | Project Editor + Brood Editor + DNA Editor — local-dev gamified species/brood/generation workspace
-selection pressure: 89.8  (25 tasks, 22 done, 13 crosscuts)
+selection pressure: 93  (25 tasks, 22 done, 13 crosscuts)
 ```
 
 ## Tasks

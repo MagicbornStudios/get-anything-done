@@ -2,7 +2,7 @@
 
 This file is a concatenation of every agent-ingestable artifact on the site, for consumption by LLMs evaluating or reviewing the GAD framework. Generated at prebuild from source files in the repo. See llms.txt for the index.
 
-Generated: 2026-04-17T00:19:15.462Z
+Generated: 2026-04-17T03:43:30.064Z
 
 
 ---
@@ -4873,7 +4873,136 @@ That session had talented work output and zero framework discipline. This skill 
 
 ---
 
-# Decisions (220)
+# Decisions (228)
+
+## gad-232: VCS live showcase on landing — three scripted demos, deterministic, client-side, no server
+
+### Summary
+
+The "VCS showcase" deferred from task 45-13 (see `2026-04-16-45-13-followup-workflow-vcs-showcase.md`) is scoped to **three specific demos**, each playing a scripted interaction that is deterministic, client-side only, and needs no backend:
+
+**Demo 1 — Character on a tileset** (only if easy and client-side):
+- User clicks the recorder icon.
+- Script plays: "move up and then go left."
+- The demo applies simple heuristics + client-side semantic similarity to resolve the prompt to a direction pair.
+- A sprite character moves up then left across a static tileset (sprite sheet, CSS steps animation, deterministic path — no pathfinding).
+- Conditional: do this ONLY if a sprite sheet and 50-ish lines of client code get it done. Skip if it starts ballooning.
+
+**Demo 2 — Context panel component manipulation**:
+- User clicks the recorder icon.
+- Script plays: "remove this element."
+- Deterministic: a specific target element is highlighted, then animated out of the DOM (fade + slide). The context panel updates to reflect the removal.
+- No LLM call — the action is hardcoded, the "live" feel comes from the sequence of UI updates driven by the recorded prompt.
+
+**Demo 3 — Self-referential VCS discovery**:
+- User clicks the recorder icon.
+- Script plays: "I want to be able to identify elements on the screen by clicking and have a list of available ones show here."
+- Deterministic: a list panel fades in on the side; clicking any demo element adds its cid to the list. The VCS is literally explaining itself by demonstrating its own primary use case.
+
+**Shared properties**: all three are triggered by the same recorder button; all three play a pre-recorded prompt string (TTS or text-type-in animation); all three produce their visual effect from hardcoded scripts, not from a live agent. The "magic" is the choreography, not the compute.
+
+### Impact
+
+(1) Replaces the "VCS showcase" entry in the 45-13 follow-up todo with a concrete three-demo spec. (2) Landing page gains a new band, likely between `LandingVisualContextAndPromptBand` and `PlayableTeaser`, that plays these three demos in sequence (or user-triggered). (3) No network calls, no OpenAI key required — every demo is deterministic. (4) Character sprite demo (#1) is conditional; the other two are mandatory. (5) A new todo captures the implementation — client-side only, sprite sheet (for #1), CSS animation + React state for #2 and #3.
+
+## gad-231: Adopt tweakcn as the project's theme generator — standalone first, site-integration if low-cost
+
+### Summary
+
+Use the open-source tweakcn tool (https://github.com/jnsahaj/tweakcn) as the theme generator for the site's shadcn-style design tokens. tweakcn is a visual theme editor for shadcn/ui that can generate Tailwind-compatible CSS variables; it likely supports AI-assisted theme generation but may need tweaking to work with OpenAI (operator flagged this). Adoption path: (1) stand up tweakcn **standalone** first — local Next app or hosted instance the operator can run against to generate themes, exports as CSS variable sets. (2) Import generated tokens into `site/app/globals.css`. (3) Consider **in-site integration** (embed the tweakcn editor at `/admin/theme` or similar) only if it drops in cleanly without bloating the site bundle. The site-integration path is a nice-to-have, not a blocker — standalone is the committed path.
+
+Operator priority statement: "I just need it working right now. If we can put it in the site easily, even better." → deliver standalone first, site-integration as follow-up.
+
+### Impact
+
+(1) New todo `tweakcn-integration` with standalone-first path: clone / submodule / install tweakcn, confirm local run, document the OpenAI tweak if needed, export first theme in the gad-230 aesthetic. (2) Task 45-14 palette work consumes the output, not the generator itself. (3) If tweakcn's theme output format ≠ our `globals.css` shape, a thin adapter converts it. (4) Site-integration (embed the editor inline) is a parked follow-up; do not block palette work on it.
+
+## gad-230: Visual identity palette — black-dominant with gold / maroon / red accents, gilded-shiny aesthetic, non-typical and sleek
+
+### Summary
+
+Operator direction for the phase-45 visual identity refresh (task 45-14 + future theme work): the site leans into a **black-heavy base** with **gold, maroon, and red** as accent colors — more black than anything else — finished with **gilded / shiny highlights** (subtle sheen on borders, gold-tinted gradients, metallic button states). The overall feel should read as **non-typical, creative, sleek** — closer to a specialty leather-bound book or a fine-instrument brand than a generic "dev tool dashboard." Avoids the default shadcn slate/neutral palette and avoids the generic dark-blue SaaS aesthetic.
+
+**Hierarchy intent**: black is the base, gold is the "direction / hero" accent, maroon is the "depth / secondary" accent, red is the "alarm / latent / pressure" accent. This maps well onto the gauge bank (gad-226): decisions gauge = gold (direction), requirements/tasks gauges = maroon (secondary but structural), notes gauge = red for latent-entropy warnings.
+
+**Not prescriptive on exact hex values** — the palette is a direction, not a spec. Specific tokens land when 45-14 executes, likely generated/refined via the theme-generator tool (gad-231).
+
+### Impact
+
+(1) Task 45-14 (type ramp + color palette refresh) works inside this aesthetic direction, not a neutral refresh. (2) Asset generation pipeline (todo: ai-asset-generation-pipeline) writes its prompts inside the same aesthetic so generated sprites / backgrounds / icons match. (3) Gauge components (gad-226 consumers) map the gold/maroon/red roles onto their specific semantics. (4) Existing accent system in `globals.css` gets audited — anywhere it renders as "plain shadcn blue-ish accent" gets replaced with the gold tint.
+
+## gad-229: Roadmap artifact demoted from the gauge bank — 4 gauges, ROADMAP.xml kept as agent input
+
+### Summary
+
+Resolves the open question raised in `.planning/notes/roadmap-artifact-question-2026-04-16.md` (gad-226 follow-up). The operator-facing gauge bank (gad-226) commits to **four gauges**: decisions (direction), tasks (implementation detail), requirements (what-to-build), notes (exploration breadth). Roadmap is **demoted** — ROADMAP.xml remains an agent-consumable planning input (phase metadata, dependency graph, sprint window) but does NOT get a gauge in any editor. Reason: roadmap's candidate gauge semantics (horizon / sequencing / velocity / readiness) were all weaker than the four confirmed artifacts. Demoting now unblocks the gauge UI without a schema/tooling migration.
+
+**What stays the same**: `ROADMAP.xml`, `gad phases`, phase-scoped task references, snapshot inclusion, planning-graph edges.
+
+**What changes**: human-facing editor panes render a 4-gauge bank, not 5. Raw roadmap access remains available for debugging/diagnostics but is not a primary UX.
+
+**Deferred (not closed by this decision)**: the longer-term question of whether roadmap should be reframed as workflow instances (Option C in the note) or killed and folded into task metadata (Option B). Both remain viable restructures for a future phase once the gauge UI is shipped and we can see whether roadmap adds operator-facing value in practice. The note's recommendation stands: revisit B/C after gauges ship.
+
+### Impact
+
+(1) `planning-artifact-gauges` todo implements four gauges, not five. (2) No ROADMAP.xml schema changes. No `gad phases` or snapshot changes. (3) The roadmap-artifact-question note is updated with a "Resolved 2026-04-16 — Option D" header but kept as the durable record of the B/C options for the future phase. (4) Decision gad-226's "roadmap = OPEN QUESTION" caveat is now resolved; gad-226's scope is four gauges, with roadmap deferred to its own future decision.
+
+## gad-228: Multi-agent selector in the editor — operator picks which coding agent runs each generation
+
+### Summary
+
+Operators typically have multiple coding agents installed locally (Claude Code, OpenAI Codex, OpenCode, etc.). The Project Editor / Brood Editor (phase 44.5, dev-only per gad-170) must expose a selector for which coding-agent CLI to invoke when spawning a generation. Selector options are discovered from the local environment at editor-mount time — the editor shells a presence check for each known CLI and enables only the ones available. The selected agent is recorded on the generation's `TRACE.json` (`runtime` field per gad-28) so cross-agent comparability downstream is unambiguous. Default agent is the one set in `gad-config.toml` at the project root, with the editor-level override winning when present.
+
+**Scope**: the selector affects `gad spawn` and any other generation-producing command invoked from the editor's dev-server bridge (gad-170). It does not affect other CLI calls (`gad snapshot`, `gad query`, etc.) — those run under the project's own Node runtime regardless of which coding agent did the authoring.
+
+### Impact
+
+(1) Editor UI gains a coding-agent dropdown on the generation-runner pane (existing `site/app/projects/edit/[id]/GenerationRunner.tsx`). (2) Dev-server command bridge adds a `runtime=<cli-name>` arg and translates it to the correct invocation (e.g. `claude`, `codex`, `opencode`). (3) Runtime detection runs once at editor mount, cached per session. (4) Generation trace schema already supports `runtime` per gad-28 — no schema change needed. (5) The selector is dev-only; production `/projects/[...id]` has no generation-runner surface.
+
+## gad-227: Project listing visibility — public by default (free hosting), per-project artifact toggle, platform moderation
+
+### Summary
+
+Because the site is free-hosted, every registered project's detail page at `/projects/[...id]` is public by default. Each project controls which planning artifacts appear on its public detail page via a `listingVisibility` config block on `project.json`. Fields (each boolean, default `true`): `tasks`, `decisions`, `roadmap`, `requirements`, `notes`, `state`. Individual sub-tabs on the public Planning tab hide when their artifact is `false`. A project owner can expose only Overview and hide all Planning sub-tabs — the detail page still renders, just without the planning surface.
+
+**Moderation**: platform operators need tooling to takedown or flag listings independently of the owner's config. Moderation actions are recorded on the project and enforced at render time. Moderation takes precedence over owner visibility config. Moderation tooling lives in a dev-only or admin-gated route; it is not part of the owner-facing editor.
+
+**Relationship to gad-189 draft/published**: draft/published controls whether a project appears in `/project-market`. Listing visibility controls which PARTS of a published project's detail page render. A project can be published-but-hide-tasks, for example.
+
+### Impact
+
+(1) `project.json` schema gains `listingVisibility: { tasks, decisions, roadmap, requirements, notes, state }` booleans — all default `true`. (2) `/projects/[...id]` tab-shell reads visibility and hides sub-tab buttons + their content accordingly. (3) New admin surface (dev-only or admin-role-gated) for moderation actions. (4) Moderation precedence documented so owner config cannot override a takedown. (5) Ties into the decentralized-auto-contributor model (gad-224) — contributor PRs should respect listing visibility when writing artifacts back.
+
+## gad-226: Planning artifacts are gauges — human-facing display, not human-facing content
+
+### Summary
+
+Planning-doc XML (TASK-REGISTRY, DECISIONS, ROADMAP, REQUIREMENTS, notes) is authored and mutated by coding agents and CLIs, not humans. Humans do not read these files at volume — the information density is too high. The right human-facing abstraction is a **gauge**: a visual meter per artifact type that fills as volume grows, with a sweet spot to aim for and imbalance states to avoid.
+
+**Semantic mapping per gauge:**
+- **Decisions** → direction. More decisions = more directed. Low = drifting. Sweet spot tracks pressure — D/T ratio ≈ one decision per 10-20 tasks in moderately complex work.
+- **Tasks** → implementation detail volume. High = lots of concrete work queued/done. Low = nothing to execute.
+- **Requirements** → what-to-build. High = crisp spec. Low = vague, agent guessing.
+- **Notes** → exploration / open-question breadth. High = lots of investigative surface. Ideally converges as decisions resolve notes.
+- **Roadmap** → OPEN QUESTION (see note `roadmap-artifact-question-2026-04-16.md`). Candidate meaning: sequencing / milestone direction. Candidate for removal or fold into workflows.
+
+**Scope**: every editor surface has its own gauge bank — project, species, generation. A species inherits the project's baseline requirements + decisions but has its own tasks/notes. A generation has its own runtime notes + scoring. Gauges compose: species gauges sit inside project gauges inside the platform.
+
+**Framing**: these artifacts are the skeleton. Skills build on top. The gauges tell the operator whether the skeleton is balanced — enough direction for the implementation, enough requirements for the direction, enough notes to capture uncertainty, enough tasks to execute the direction. Sweet spots beat maxes. Imbalance flags (e.g. 200 tasks / 0 decisions = pure thrash; 30 decisions / 2 tasks = overthinking) are the real UX signal.
+
+### Impact
+
+(1) New UI component family `PlanningGauge` — one per artifact type, renders count + sweet-spot band + imbalance warning. Drops into project/species/generation editor panes. (2) Gauges replace raw XML viewers as the default human-facing surface in editors. Raw-XML access remains for debugging but is not the primary UX. (3) Sweet-spot thresholds are per-scope (project-level sweet spot differs from generation-level) and live in a config rather than hardcoded in the gauge component. (4) The pressure formula (gad-220, gad-222) already provides D/T as a density metric — gauges reuse this calculation and extend it per artifact type. (5) Roadmap's position in this model is deferred pending the roadmap-artifact-question note.
+
+## gad-225: CLI vocabulary: `gad site` vs `gad play` / `gad generation open` — planning site vs generation build artifact
+
+### Summary
+
+Users confused two unrelated surfaces: (1) the GAD planning/marketing Next.js app compiled via `gad site compile` / served via `gad site serve`, and (2) preserved **generation build artifacts** (typically `index.html` + assets under `apps/portfolio/public/evals/...` or eval version dirs). Artifacts are HTML app/game output — not the planning “site”. Both need HTTP because ES modules do not load from file://. Policy: `gad site *` is ONLY for the framework planning/landing extract. `gad generation open` and `gad play` serve ONLY artifact directories via **`lib/static-http-serve.cjs`** (shared minimal static server). `gad site serve` wraps the same server with `[gad site]` log prefix but lives in `site-compile.cjs` — generation commands must NOT `require` `site-compile` so the code path is not mistaken for “launching the site”. Distinct log prefixes: `[gad site]` vs `[gad generation open]` / `[gad play]`. `gad eval open` remains an alias to `gad generation open`. **`--no-browser`** on open/play prints the preview URL for iframe embedding (editor shells) instead of opening the OS browser.
+
+### Impact
+
+(1) Help text and AGENTS.md use “build artifact” / “preview URL” language — never “site” for generation open. (2) Static server extracted to `lib/static-http-serve.cjs`; `gad generation open` / `gad play` load only that module. (3) No `npx serve`. (4) Future `gad site install` stays under `gad site` only.
 
 ## gad-224: Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash
 
@@ -7633,7 +7762,7 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 ---
 
-# Tasks (387)
+# Tasks (391)
 
 - **10-01** [done]: Create .planning/ scaffold for get-anything-done and register in planning-config.toml.
 
@@ -8215,6 +8344,14 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.4-19** [done]: Normalize species.json keys to camelCase (decision gad-184, follow-up to task 42.4-15). The project âŠ‡ species inheritance loader (`lib/eval-loader.cjs`) does literal key matching via `applyLayer`, so when `project.json` declares `techStack` (camelCase) and a species declares `tech_stack` (snake_case), the species override silently fails and both keys end up on the merged shape. Per gad-184 contr
 
+- **42.4-20** [done]: Disambiguate `gad site serve` (planning/landing Next static extract) from `gad play` / `gad generation open` (preserved generation HTML). Unify generation artifact serving on `lib/site-compile.cjs` `serveStatic` instead of `npx serve`; update CLI help strings; record decision gad-225.
+
+- **42.4-21** [done]: TRACK 3 formula display remainder: refine /how-it-works pressure section (Section 3) to show current values, not just the abstract formula. Previous session delivered formula + dimension table + Shannon entropy decomposition; this task adds a "Live example" card between the dimensions table and entropy cards that computes the top-pressure phase from `site/data/self-eval.json` and renders each pres
+
+- **42.4-22** [done]: Artifact preview must not load `site-compile`: extract `lib/static-http-serve.cjs`, wire `gad generation open` / `gad play` through shared helper; add `--no-browser` for iframe URLs; vocabulary “build artifact” not “site”.
+
+- **42.4-23** [done]: `gad site serve` distinct default ports: dev/monorepo 3456 vs packaged consumer 3780 via `--consumer`; env `GAD_SITE_SERVE_PORT` / `GAD_SITE_PORT`; explicit `--port` wins.
+
 - **43-01** [done]: Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under app
 
 - **43-02** [done]: Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.
@@ -8351,21 +8488,21 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **42.2-46** [planned]: Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the three states (**expressed** in `.gad-try/`, **mutation** in `.planning/proto-skills/`, **integrated** in `.claude/skills/` or canonical `skill
 
-- **45-01** [planned]: Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL search param ?tab= routing.
+- **45-01** [done]: Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL search param ?tab= routing.
 
-- **45-02** [planned]: Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, decisions, phases, requirements, notes as typed props.
+- **45-02** [done]: Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, decisions, phases, requirements, notes as typed props.
 
 - **45-03** [planned]: Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.
 
-- **45-04** [planned]: Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. Exports VOCAB object used by all components.
+- **45-04** [done]: Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. Exports VOCAB object used by all components.
 
-- **45-05** [planned]: Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants.
+- **45-05** [done]: Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants.
 
 - **45-06** [planned]: Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire into Planning tab.
 
-- **45-07** [planned]: Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.
+- **45-07** [done]: Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.
 
-- **45-08** [planned]: Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.
+- **45-08** [done]: Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.
 
 - **45-09** [planned]: Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.
 
@@ -8375,17 +8512,17 @@ Per gad-18, the GAD loop is: (1) `gad snapshot` to re-hydrate context, (2) pick 
 
 - **45-12** [planned]: Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content now lives per-project.
 
-- **45-13** [planned]: Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase.
+- **45-13** [done]: Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase.
 
 - **45-14** [planned]: Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.
 
 - **45-15** [done]: Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.
 
-- **45-16** [planned]: Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.
+- **45-16** [done]: Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.
 
 - **45-17** [planned]: Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metadata references.
 
-- **45-18** [planned]: Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.
+- **45-18** [done]: Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.
 
 - **45-19** [planned]: Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.
 

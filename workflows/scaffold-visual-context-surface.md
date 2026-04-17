@@ -37,6 +37,10 @@ the Project Editor command bridge (phase 44.5-02) learned this the hard
 way. Reject prod at the boundary so a wide-open dev surface can never
 ship.
 
+Also ensure the visual-context UI itself is toggleable in dev (keyboard
+shortcut + visible control). Developers must be able to turn the overlay
+on/off without reload.
+
 ## Step 2 — enumerate panes and assign cids
 
 Before writing any JSX, list every distinct region of the surface:
@@ -96,6 +100,13 @@ Check with the real dev panel, not by inspection. The registration path
 is owned by `gad-visual-context-panel-identities`; read that skill's
 workflow once for the registration CLI surface.
 
+Required panel capabilities at this step:
+
+- Quick CRUD prompt actions bound to selected target id.
+- Recorder action for one-click clipboard prompt copy.
+- Clipboard success acknowledgment (toast/inline copied state).
+- Prompt payload includes route + id + source-location hint.
+
 ## Step 5 — round-trip one prompt BEFORE feature work
 
 Mandatory gate before writing any feature affordance: pick one cid from
@@ -103,6 +114,12 @@ the surface, open the modal footer CRUD form against it, submit a prompt,
 and confirm the round-trip produces the expected update in the source
 tree. This is the "at least one prompt from the visual-context-modal-footer
 round-trips against a pane cid" acceptance from phase 44.5-01.
+
+Also verify recorder flow in this step:
+
+- Click recorder for selected target.
+- Prompt is copied to clipboard.
+- User sees explicit copy acknowledgment.
 
 If the round-trip fails, **do not build features**. Fix the wiring first:
 
@@ -127,6 +144,8 @@ Acceptance for the scaffold phase (step 6 entry gate):
 - [ ] Every pane emits a literal cid
 - [ ] Every cid registered with the Visual Context Panel
 - [ ] At least one modal-footer CRUD round-trip green
+- [ ] Recorder copy flow green with explicit copy acknowledgment
+- [ ] Prompt payload includes route + id + source location hint
 - [ ] Dev-panel badge visible
 - [ ] tsc clean
 

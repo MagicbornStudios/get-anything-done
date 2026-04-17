@@ -4753,6 +4753,54 @@ export interface DecisionRecord {
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
   {
+    "id": "gad-232",
+    "title": "VCS live showcase on landing — three scripted demos, deterministic, client-side, no server",
+    "summary": "The \"VCS showcase\" deferred from task 45-13 (see `2026-04-16-45-13-followup-workflow-vcs-showcase.md`) is scoped to **three specific demos**, each playing a scripted interaction that is deterministic, client-side only, and needs no backend:\r\n\r\n**Demo 1 — Character on a tileset** (only if easy and client-side):\r\n- User clicks the recorder icon.\r\n- Script plays: \"move up and then go left.\"\r\n- The demo applies simple heuristics + client-side semantic similarity to resolve the prompt to a direction pair.\r\n- A sprite character moves up then left across a static tileset (sprite sheet, CSS steps animation, deterministic path — no pathfinding).\r\n- Conditional: do this ONLY if a sprite sheet and 50-ish lines of client code get it done. Skip if it starts ballooning.\r\n\r\n**Demo 2 — Context panel component manipulation**:\r\n- User clicks the recorder icon.\r\n- Script plays: \"remove this element.\"\r\n- Deterministic: a specific target element is highlighted, then animated out of the DOM (fade + slide). The context panel updates to reflect the removal.\r\n- No LLM call — the action is hardcoded, the \"live\" feel comes from the sequence of UI updates driven by the recorded prompt.\r\n\r\n**Demo 3 — Self-referential VCS discovery**:\r\n- User clicks the recorder icon.\r\n- Script plays: \"I want to be able to identify elements on the screen by clicking and have a list of available ones show here.\"\r\n- Deterministic: a list panel fades in on the side; clicking any demo element adds its cid to the list. The VCS is literally explaining itself by demonstrating its own primary use case.\r\n\r\n**Shared properties**: all three are triggered by the same recorder button; all three play a pre-recorded prompt string (TTS or text-type-in animation); all three produce their visual effect from hardcoded scripts, not from a live agent. The \"magic\" is the choreography, not the compute.",
+    "impact": "(1) Replaces the \"VCS showcase\" entry in the 45-13 follow-up todo with a concrete three-demo spec. (2) Landing page gains a new band, likely between `LandingVisualContextAndPromptBand` and `PlayableTeaser`, that plays these three demos in sequence (or user-triggered). (3) No network calls, no OpenAI key required — every demo is deterministic. (4) Character sprite demo (#1) is conditional; the other two are mandatory. (5) A new todo captures the implementation — client-side only, sprite sheet (for #1), CSS animation + React state for #2 and #3."
+  },
+  {
+    "id": "gad-231",
+    "title": "Adopt tweakcn as the project's theme generator — standalone first, site-integration if low-cost",
+    "summary": "Use the open-source tweakcn tool (https://github.com/jnsahaj/tweakcn) as the theme generator for the site's shadcn-style design tokens. tweakcn is a visual theme editor for shadcn/ui that can generate Tailwind-compatible CSS variables; it likely supports AI-assisted theme generation but may need tweaking to work with OpenAI (operator flagged this). Adoption path: (1) stand up tweakcn **standalone** first — local Next app or hosted instance the operator can run against to generate themes, exports as CSS variable sets. (2) Import generated tokens into `site/app/globals.css`. (3) Consider **in-site integration** (embed the tweakcn editor at `/admin/theme` or similar) only if it drops in cleanly without bloating the site bundle. The site-integration path is a nice-to-have, not a blocker — standalone is the committed path.\r\n\r\nOperator priority statement: \"I just need it working right now. If we can put it in the site easily, even better.\" → deliver standalone first, site-integration as follow-up.",
+    "impact": "(1) New todo `tweakcn-integration` with standalone-first path: clone / submodule / install tweakcn, confirm local run, document the OpenAI tweak if needed, export first theme in the gad-230 aesthetic. (2) Task 45-14 palette work consumes the output, not the generator itself. (3) If tweakcn's theme output format ≠ our `globals.css` shape, a thin adapter converts it. (4) Site-integration (embed the editor inline) is a parked follow-up; do not block palette work on it."
+  },
+  {
+    "id": "gad-230",
+    "title": "Visual identity palette — black-dominant with gold / maroon / red accents, gilded-shiny aesthetic, non-typical and sleek",
+    "summary": "Operator direction for the phase-45 visual identity refresh (task 45-14 + future theme work): the site leans into a **black-heavy base** with **gold, maroon, and red** as accent colors — more black than anything else — finished with **gilded / shiny highlights** (subtle sheen on borders, gold-tinted gradients, metallic button states). The overall feel should read as **non-typical, creative, sleek** — closer to a specialty leather-bound book or a fine-instrument brand than a generic \"dev tool dashboard.\" Avoids the default shadcn slate/neutral palette and avoids the generic dark-blue SaaS aesthetic.\r\n\r\n**Hierarchy intent**: black is the base, gold is the \"direction / hero\" accent, maroon is the \"depth / secondary\" accent, red is the \"alarm / latent / pressure\" accent. This maps well onto the gauge bank (gad-226): decisions gauge = gold (direction), requirements/tasks gauges = maroon (secondary but structural), notes gauge = red for latent-entropy warnings.\r\n\r\n**Not prescriptive on exact hex values** — the palette is a direction, not a spec. Specific tokens land when 45-14 executes, likely generated/refined via the theme-generator tool (gad-231).",
+    "impact": "(1) Task 45-14 (type ramp + color palette refresh) works inside this aesthetic direction, not a neutral refresh. (2) Asset generation pipeline (todo: ai-asset-generation-pipeline) writes its prompts inside the same aesthetic so generated sprites / backgrounds / icons match. (3) Gauge components (gad-226 consumers) map the gold/maroon/red roles onto their specific semantics. (4) Existing accent system in `globals.css` gets audited — anywhere it renders as \"plain shadcn blue-ish accent\" gets replaced with the gold tint."
+  },
+  {
+    "id": "gad-229",
+    "title": "Roadmap artifact demoted from the gauge bank — 4 gauges, ROADMAP.xml kept as agent input",
+    "summary": "Resolves the open question raised in `.planning/notes/roadmap-artifact-question-2026-04-16.md` (gad-226 follow-up). The operator-facing gauge bank (gad-226) commits to **four gauges**: decisions (direction), tasks (implementation detail), requirements (what-to-build), notes (exploration breadth). Roadmap is **demoted** — ROADMAP.xml remains an agent-consumable planning input (phase metadata, dependency graph, sprint window) but does NOT get a gauge in any editor. Reason: roadmap's candidate gauge semantics (horizon / sequencing / velocity / readiness) were all weaker than the four confirmed artifacts. Demoting now unblocks the gauge UI without a schema/tooling migration.\r\n\r\n**What stays the same**: `ROADMAP.xml`, `gad phases`, phase-scoped task references, snapshot inclusion, planning-graph edges.\r\n\r\n**What changes**: human-facing editor panes render a 4-gauge bank, not 5. Raw roadmap access remains available for debugging/diagnostics but is not a primary UX.\r\n\r\n**Deferred (not closed by this decision)**: the longer-term question of whether roadmap should be reframed as workflow instances (Option C in the note) or killed and folded into task metadata (Option B). Both remain viable restructures for a future phase once the gauge UI is shipped and we can see whether roadmap adds operator-facing value in practice. The note's recommendation stands: revisit B/C after gauges ship.",
+    "impact": "(1) `planning-artifact-gauges` todo implements four gauges, not five. (2) No ROADMAP.xml schema changes. No `gad phases` or snapshot changes. (3) The roadmap-artifact-question note is updated with a \"Resolved 2026-04-16 — Option D\" header but kept as the durable record of the B/C options for the future phase. (4) Decision gad-226's \"roadmap = OPEN QUESTION\" caveat is now resolved; gad-226's scope is four gauges, with roadmap deferred to its own future decision."
+  },
+  {
+    "id": "gad-228",
+    "title": "Multi-agent selector in the editor — operator picks which coding agent runs each generation",
+    "summary": "Operators typically have multiple coding agents installed locally (Claude Code, OpenAI Codex, OpenCode, etc.). The Project Editor / Brood Editor (phase 44.5, dev-only per gad-170) must expose a selector for which coding-agent CLI to invoke when spawning a generation. Selector options are discovered from the local environment at editor-mount time — the editor shells a presence check for each known CLI and enables only the ones available. The selected agent is recorded on the generation's `TRACE.json` (`runtime` field per gad-28) so cross-agent comparability downstream is unambiguous. Default agent is the one set in `gad-config.toml` at the project root, with the editor-level override winning when present.\r\n\r\n**Scope**: the selector affects `gad spawn` and any other generation-producing command invoked from the editor's dev-server bridge (gad-170). It does not affect other CLI calls (`gad snapshot`, `gad query`, etc.) — those run under the project's own Node runtime regardless of which coding agent did the authoring.",
+    "impact": "(1) Editor UI gains a coding-agent dropdown on the generation-runner pane (existing `site/app/projects/edit/[id]/GenerationRunner.tsx`). (2) Dev-server command bridge adds a `runtime=<cli-name>` arg and translates it to the correct invocation (e.g. `claude`, `codex`, `opencode`). (3) Runtime detection runs once at editor mount, cached per session. (4) Generation trace schema already supports `runtime` per gad-28 — no schema change needed. (5) The selector is dev-only; production `/projects/[...id]` has no generation-runner surface."
+  },
+  {
+    "id": "gad-227",
+    "title": "Project listing visibility — public by default (free hosting), per-project artifact toggle, platform moderation",
+    "summary": "Because the site is free-hosted, every registered project's detail page at `/projects/[...id]` is public by default. Each project controls which planning artifacts appear on its public detail page via a `listingVisibility` config block on `project.json`. Fields (each boolean, default `true`): `tasks`, `decisions`, `roadmap`, `requirements`, `notes`, `state`. Individual sub-tabs on the public Planning tab hide when their artifact is `false`. A project owner can expose only Overview and hide all Planning sub-tabs — the detail page still renders, just without the planning surface.\r\n\r\n**Moderation**: platform operators need tooling to takedown or flag listings independently of the owner's config. Moderation actions are recorded on the project and enforced at render time. Moderation takes precedence over owner visibility config. Moderation tooling lives in a dev-only or admin-gated route; it is not part of the owner-facing editor.\r\n\r\n**Relationship to gad-189 draft/published**: draft/published controls whether a project appears in `/project-market`. Listing visibility controls which PARTS of a published project's detail page render. A project can be published-but-hide-tasks, for example.",
+    "impact": "(1) `project.json` schema gains `listingVisibility: { tasks, decisions, roadmap, requirements, notes, state }` booleans — all default `true`. (2) `/projects/[...id]` tab-shell reads visibility and hides sub-tab buttons + their content accordingly. (3) New admin surface (dev-only or admin-role-gated) for moderation actions. (4) Moderation precedence documented so owner config cannot override a takedown. (5) Ties into the decentralized-auto-contributor model (gad-224) — contributor PRs should respect listing visibility when writing artifacts back."
+  },
+  {
+    "id": "gad-226",
+    "title": "Planning artifacts are gauges — human-facing display, not human-facing content",
+    "summary": "Planning-doc XML (TASK-REGISTRY, DECISIONS, ROADMAP, REQUIREMENTS, notes) is authored and mutated by coding agents and CLIs, not humans. Humans do not read these files at volume — the information density is too high. The right human-facing abstraction is a **gauge**: a visual meter per artifact type that fills as volume grows, with a sweet spot to aim for and imbalance states to avoid.\r\n\r\n**Semantic mapping per gauge:**\r\n- **Decisions** → direction. More decisions = more directed. Low = drifting. Sweet spot tracks pressure — D/T ratio ≈ one decision per 10-20 tasks in moderately complex work.\r\n- **Tasks** → implementation detail volume. High = lots of concrete work queued/done. Low = nothing to execute.\r\n- **Requirements** → what-to-build. High = crisp spec. Low = vague, agent guessing.\r\n- **Notes** → exploration / open-question breadth. High = lots of investigative surface. Ideally converges as decisions resolve notes.\r\n- **Roadmap** → OPEN QUESTION (see note `roadmap-artifact-question-2026-04-16.md`). Candidate meaning: sequencing / milestone direction. Candidate for removal or fold into workflows.\r\n\r\n**Scope**: every editor surface has its own gauge bank — project, species, generation. A species inherits the project's baseline requirements + decisions but has its own tasks/notes. A generation has its own runtime notes + scoring. Gauges compose: species gauges sit inside project gauges inside the platform.\r\n\r\n**Framing**: these artifacts are the skeleton. Skills build on top. The gauges tell the operator whether the skeleton is balanced — enough direction for the implementation, enough requirements for the direction, enough notes to capture uncertainty, enough tasks to execute the direction. Sweet spots beat maxes. Imbalance flags (e.g. 200 tasks / 0 decisions = pure thrash; 30 decisions / 2 tasks = overthinking) are the real UX signal.",
+    "impact": "(1) New UI component family `PlanningGauge` — one per artifact type, renders count + sweet-spot band + imbalance warning. Drops into project/species/generation editor panes. (2) Gauges replace raw XML viewers as the default human-facing surface in editors. Raw-XML access remains for debugging but is not the primary UX. (3) Sweet-spot thresholds are per-scope (project-level sweet spot differs from generation-level) and live in a config rather than hardcoded in the gauge component. (4) The pressure formula (gad-220, gad-222) already provides D/T as a density metric — gauges reuse this calculation and extend it per artifact type. (5) Roadmap's position in this model is deferred pending the roadmap-artifact-question note."
+  },
+  {
+    "id": "gad-225",
+    "title": "CLI vocabulary: `gad site` vs `gad play` / `gad generation open` — planning site vs generation build artifact",
+    "summary": "Users confused two unrelated surfaces: (1) the GAD planning/marketing Next.js app compiled via `gad site compile` / served via `gad site serve`, and (2) preserved **generation build artifacts** (typically `index.html` + assets under `apps/portfolio/public/evals/...` or eval version dirs). Artifacts are HTML app/game output — not the planning “site”. Both need HTTP because ES modules do not load from file://. Policy: `gad site *` is ONLY for the framework planning/landing extract. `gad generation open` and `gad play` serve ONLY artifact directories via **`lib/static-http-serve.cjs`** (shared minimal static server). `gad site serve` wraps the same server with `[gad site]` log prefix but lives in `site-compile.cjs` — generation commands must NOT `require` `site-compile` so the code path is not mistaken for “launching the site”. Distinct log prefixes: `[gad site]` vs `[gad generation open]` / `[gad play]`. `gad eval open` remains an alias to `gad generation open`. **`--no-browser`** on open/play prints the preview URL for iframe embedding (editor shells) instead of opening the OS browser.",
+    "impact": "(1) Help text and AGENTS.md use “build artifact” / “preview URL” language — never “site” for generation open. (2) Static server extracted to `lib/static-http-serve.cjs`; `gad generation open` / `gad play` load only that module. (3) No `npx serve`. (4) Future `gad site install` stays under `gad site` only."
+  },
+  {
     "id": "gad-224",
     "title": "Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash",
     "summary": "Open-source contribution model where users opt in to having their local coding agent work on project features/bugs. The project publishes a feature/bug queue. Users with GAD CLI + hooks installed can opt in. Their local agent picks up a feature, works on it using their coding agent subscription (their tokens, their machine), and submits a PR. The project gets contributions measured in AI tokens spent, not cash. Users get contributor credit + their agent learns from the codebase. Hooks enable this: on opt-in, the GAD CLI pulls a feature from the queue, sets up a worktree, spawns a subagent, and submits the result. Private repos need explicit access grants. Public repos work out of the box. This is decentralized CI/CD where the compute is distributed across contributor machines.",
@@ -10843,6 +10891,79 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": []
   },
   {
+    "id": "42.4-20",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "framework-upgrade",
+    "type": "framework",
+    "goal": "Disambiguate `gad site serve` (planning/landing Next static extract) from `gad play` / `gad generation open` (preserved generation HTML). Unify generation artifact serving on `lib/site-compile.cjs` `serveStatic` instead of `npx serve`; update CLI help strings; record decision gad-225.",
+    "keywords": [
+      "cli",
+      "site-serve",
+      "gad-play",
+      "generation-open",
+      "static-server",
+      "gad-225"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-21",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "TRACK 3 formula display remainder: refine /how-it-works pressure section (Section 3) to show current values, not just the abstract formula. Previous session delivered formula + dimension table + Shannon entropy decomposition; this task adds a \"Live example\" card between the dimensions table and entropy cards that computes the top-pressure phase from `site/data/self-eval.json` and renders each pressure term with its raw count, weight, and contribution — plus H_d / H_l side-by-side — so a reader sees the formula evaluated end-to-end against real planning data.",
+    "keywords": [
+      "site",
+      "how-it-works",
+      "pressure",
+      "formula-display",
+      "self-eval-json",
+      "track-3",
+      "gad-145",
+      "gad-220",
+      "gad-222"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-22",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "framework-upgrade",
+    "type": "framework",
+    "goal": "Artifact preview must not load `site-compile`: extract `lib/static-http-serve.cjs`, wire `gad generation open` / `gad play` through shared helper; add `--no-browser` for iframe URLs; vocabulary “build artifact” not “site”.",
+    "keywords": [
+      "cli",
+      "artifact-preview",
+      "static-http-serve",
+      "gad-225",
+      "generation-open"
+    ],
+    "depends": []
+  },
+  {
+    "id": "42.4-23",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": null,
+    "skill": "framework-upgrade",
+    "type": "framework",
+    "goal": "`gad site serve` distinct default ports: dev/monorepo 3456 vs packaged consumer 3780 via `--consumer`; env `GAD_SITE_SERVE_PORT` / `GAD_SITE_PORT`; explicit `--port` wins.",
+    "keywords": [
+      "cli",
+      "site-serve",
+      "port",
+      "consumer",
+      "monorepo"
+    ],
+    "depends": []
+  },
+  {
     "id": "43-01",
     "phaseId": "43",
     "status": "done",
@@ -12041,32 +12162,38 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-01",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL search param ?tab= routing.",
     "keywords": [
       "route",
       "tabs",
       "project-detail",
-      "scaffold"
+      "scaffold",
+      "url-state",
+      "vocabulary",
+      "phase-45-wave-2",
+      "45-04-consumer"
     ],
     "depends": []
   },
   {
     "id": "45-02",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, decisions, phases, requirements, notes as typed props.",
     "keywords": [
       "data-adapter",
       "planning-xml",
       "server-component",
-      "loader"
+      "loader",
+      "notes",
+      "phase-45-wave-2"
     ],
     "depends": []
   },
@@ -12089,9 +12216,9 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-04",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. Exports VOCAB object used by all components.",
     "keywords": [
@@ -12100,23 +12227,27 @@ export const ALL_TASKS: TaskRecord[] = [
       "gad-166",
       "gad-169",
       "gad-189",
-      "terminology"
+      "gad-219",
+      "terminology",
+      "phase-45-wave-2"
     ],
     "depends": []
   },
   {
     "id": "45-05",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants.",
     "keywords": [
       "epigraphs",
       "art-of-war",
       "copy",
-      "visual-identity"
+      "visual-identity",
+      "content",
+      "45-16-upstream"
     ],
     "depends": []
   },
@@ -12141,15 +12272,17 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-07",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.",
     "keywords": [
       "component-migration",
       "decisions-tab",
-      "project-scoped"
+      "project-scoped",
+      "45-01-consumer",
+      "45-02-consumer"
     ],
     "depends": [
       "45-01",
@@ -12159,16 +12292,19 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-08",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.",
     "keywords": [
       "component-migration",
       "roadmap-tab",
       "gantt",
-      "project-scoped"
+      "project-scoped",
+      "45-01-consumer",
+      "45-02-consumer",
+      "gad-229-scope-note"
     ],
     "depends": [
       "45-01",
@@ -12260,17 +12396,19 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-13",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase.",
     "keywords": [
       "landing-page",
-      "workflow-viz",
+      "stats-bar",
       "findings",
       "marketing",
-      "overview"
+      "overview",
+      "45-05-consumer-future",
+      "45-04-consumer"
     ],
     "depends": [
       "45-01"
@@ -12315,16 +12453,19 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-16",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.",
     "keywords": [
       "hero-copy",
       "epigraphs",
       "evolutionary-language",
-      "copy-pass"
+      "copy-pass",
+      "45-05-consumer",
+      "45-13-consumer",
+      "section-divider"
     ],
     "depends": [
       "45-05",
@@ -12350,16 +12491,17 @@ export const ALL_TASKS: TaskRecord[] = [
   {
     "id": "45-18",
     "phaseId": "45",
-    "status": "planned",
+    "status": "done",
     "agentId": null,
-    "skill": null,
+    "skill": "default",
     "type": "site",
     "goal": "Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.",
     "keywords": [
       "marketplace",
       "project-market",
       "integration",
-      "verification"
+      "verification",
+      "data-cid-fix"
     ],
     "depends": [
       "45-13"
@@ -12953,6 +13095,62 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-232",
+    "title": "VCS live showcase on landing — three scripted demos, deterministic, client-side, no server",
+    "kind": "decision",
+    "href": "/decisions#gad-232",
+    "body": "gad-232 vcs live showcase on landing — three scripted demos, deterministic, client-side, no server the \"vcs showcase\" deferred from task 45-13 (see `2026-04-16-45-13-followup-workflow-vcs-showcase.md`) is scoped to **three specific demos**, each playing a scripted interaction that is deterministic, client-side only, and needs no backend:\r\n\r\n**demo 1 — character on a tileset** (only if easy and client-side):\r\n- user clicks the recorder icon.\r\n- script plays: \"move up and then go left.\"\r\n- the de"
+  },
+  {
+    "id": "gad-231",
+    "title": "Adopt tweakcn as the project's theme generator — standalone first, site-integration if low-cost",
+    "kind": "decision",
+    "href": "/decisions#gad-231",
+    "body": "gad-231 adopt tweakcn as the project's theme generator — standalone first, site-integration if low-cost use the open-source tweakcn tool (https://github.com/jnsahaj/tweakcn) as the theme generator for the site's shadcn-style design tokens. tweakcn is a visual theme editor for shadcn/ui that can generate tailwind-compatible css variables; it likely supports ai-assisted theme generation but may need tweaking to work with openai (operator flagged this). adoption path: (1) stand up tweakcn **standalone*"
+  },
+  {
+    "id": "gad-230",
+    "title": "Visual identity palette — black-dominant with gold / maroon / red accents, gilded-shiny aesthetic, non-typical and sleek",
+    "kind": "decision",
+    "href": "/decisions#gad-230",
+    "body": "gad-230 visual identity palette — black-dominant with gold / maroon / red accents, gilded-shiny aesthetic, non-typical and sleek operator direction for the phase-45 visual identity refresh (task 45-14 + future theme work): the site leans into a **black-heavy base** with **gold, maroon, and red** as accent colors — more black than anything else — finished with **gilded / shiny highlights** (subtle sheen on borders, gold-tinted gradients, metallic button states). the overall feel should read as **non-typical, creative, sleek*"
+  },
+  {
+    "id": "gad-229",
+    "title": "Roadmap artifact demoted from the gauge bank — 4 gauges, ROADMAP.xml kept as agent input",
+    "kind": "decision",
+    "href": "/decisions#gad-229",
+    "body": "gad-229 roadmap artifact demoted from the gauge bank — 4 gauges, roadmap.xml kept as agent input resolves the open question raised in `.planning/notes/roadmap-artifact-question-2026-04-16.md` (gad-226 follow-up). the operator-facing gauge bank (gad-226) commits to **four gauges**: decisions (direction), tasks (implementation detail), requirements (what-to-build), notes (exploration breadth). roadmap is **demoted** — roadmap.xml remains an agent-consumable planning input (phase metadata, depen"
+  },
+  {
+    "id": "gad-228",
+    "title": "Multi-agent selector in the editor — operator picks which coding agent runs each generation",
+    "kind": "decision",
+    "href": "/decisions#gad-228",
+    "body": "gad-228 multi-agent selector in the editor — operator picks which coding agent runs each generation operators typically have multiple coding agents installed locally (claude code, openai codex, opencode, etc.). the project editor / brood editor (phase 44.5, dev-only per gad-170) must expose a selector for which coding-agent cli to invoke when spawning a generation. selector options are discovered from the local environment at editor-mount time — the editor shells a presence check for each known "
+  },
+  {
+    "id": "gad-227",
+    "title": "Project listing visibility — public by default (free hosting), per-project artifact toggle, platform moderation",
+    "kind": "decision",
+    "href": "/decisions#gad-227",
+    "body": "gad-227 project listing visibility — public by default (free hosting), per-project artifact toggle, platform moderation because the site is free-hosted, every registered project's detail page at `/projects/[...id]` is public by default. each project controls which planning artifacts appear on its public detail page via a `listingvisibility` config block on `project.json`. fields (each boolean, default `true`): `tasks`, `decisions`, `roadmap`, `requirements`, `notes`, `state`. individual sub-tabs on the public plann"
+  },
+  {
+    "id": "gad-226",
+    "title": "Planning artifacts are gauges — human-facing display, not human-facing content",
+    "kind": "decision",
+    "href": "/decisions#gad-226",
+    "body": "gad-226 planning artifacts are gauges — human-facing display, not human-facing content planning-doc xml (task-registry, decisions, roadmap, requirements, notes) is authored and mutated by coding agents and clis, not humans. humans do not read these files at volume — the information density is too high. the right human-facing abstraction is a **gauge**: a visual meter per artifact type that fills as volume grows, with a sweet spot to aim for and imbalance states to avoid.\r\n\r\n**semant"
+  },
+  {
+    "id": "gad-225",
+    "title": "CLI vocabulary: `gad site` vs `gad play` / `gad generation open` — planning site vs generation build artifact",
+    "kind": "decision",
+    "href": "/decisions#gad-225",
+    "body": "gad-225 cli vocabulary: `gad site` vs `gad play` / `gad generation open` — planning site vs generation build artifact users confused two unrelated surfaces: (1) the gad planning/marketing next.js app compiled via `gad site compile` / served via `gad site serve`, and (2) preserved **generation build artifacts** (typically `index.html` + assets under `apps/portfolio/public/evals/...` or eval version dirs). artifacts are html app/game output — not the planning “site”. both need http because es modules do not load fr"
+  },
   {
     "id": "gad-224",
     "title": "Decentralized auto-contributor model — users contribute AI tokens to open-source features, not cash",
@@ -16524,6 +16722,34 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "42.4-19 normalize species.json keys to camelcase (decision gad-184, follow-up to task 42.4-15). the project âš‡ species inheritance loader (`lib/eval-loader.cjs`) does literal key matching via `applylayer`, so when `project.json` declares `techstack` (camelcase) and a species declares `tech_stack` (snake_case), the species override silently fails and both keys end up on the merged shape. per gad-184 contract, camelcase is canonical. rename `tech_stack`, `build_requirement`, `human_review_rubric`, and `context_framework` to camelcase across every species.json under `evals/escape-the-dungeon/species/*/` and `evals/gad-explainer-video/species/*/`; confirm the eval loader needs no special-casing (it does not â€” literal-match is the point); update all consumers reading those snake_case keys. framework eval-loader inheritance camelcase snake-case species-json gad-184 42.4-15-followup"
   },
   {
+    "id": "42.4-20",
+    "title": "Disambiguate `gad site serve` (planning/landing Next static extract) from `gad play` / `gad generation open` (preserved ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-20",
+    "body": "42.4-20 disambiguate `gad site serve` (planning/landing next static extract) from `gad play` / `gad generation open` (preserved generation html). unify generation artifact serving on `lib/site-compile.cjs` `servestatic` instead of `npx serve`; update cli help strings; record decision gad-225. cli site-serve gad-play generation-open static-server gad-225"
+  },
+  {
+    "id": "42.4-21",
+    "title": "TRACK 3 formula display remainder: refine /how-it-works pressure section (Section 3) to show current values, not just th",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-21",
+    "body": "42.4-21 track 3 formula display remainder: refine /how-it-works pressure section (section 3) to show current values, not just the abstract formula. previous session delivered formula + dimension table + shannon entropy decomposition; this task adds a \"live example\" card between the dimensions table and entropy cards that computes the top-pressure phase from `site/data/self-eval.json` and renders each pressure term with its raw count, weight, and contribution — plus h_d / h_l side-by-side — so a reader sees the formula evaluated end-to-end against real planning data. site how-it-works pressure formula-display self-eval-json track-3 gad-145 gad-220 gad-222"
+  },
+  {
+    "id": "42.4-22",
+    "title": "Artifact preview must not load `site-compile`: extract `lib/static-http-serve.cjs`, wire `gad generation open` / `gad pl",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-22",
+    "body": "42.4-22 artifact preview must not load `site-compile`: extract `lib/static-http-serve.cjs`, wire `gad generation open` / `gad play` through shared helper; add `--no-browser` for iframe urls; vocabulary “build artifact” not “site”. cli artifact-preview static-http-serve gad-225 generation-open"
+  },
+  {
+    "id": "42.4-23",
+    "title": "`gad site serve` distinct default ports: dev/monorepo 3456 vs packaged consumer 3780 via `--consumer`; env `GAD_SITE_SER",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-23",
+    "body": "42.4-23 `gad site serve` distinct default ports: dev/monorepo 3456 vs packaged consumer 3780 via `--consumer`; env `gad_site_serve_port` / `gad_site_port`; explicit `--port` wins. cli site-serve port consumer monorepo"
+  },
+  {
     "id": "43-01",
     "title": "Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-pla",
     "kind": "task",
@@ -17004,14 +17230,14 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL s",
     "kind": "task",
     "href": "/planning?tab=tasks#45-01",
-    "body": "45-01 project detail tab shell — add tabbed navigation (overview, planning, evolution, system) to /projects/[...id] with url search param ?tab= routing. route tabs project-detail scaffold"
+    "body": "45-01 project detail tab shell — add tabbed navigation (overview, planning, evolution, system) to /projects/[...id] with url search param ?tab= routing. route tabs project-detail scaffold url-state vocabulary phase-45-wave-2 45-04-consumer"
   },
   {
     "id": "45-02",
     "title": "Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, d",
     "kind": "task",
     "href": "/planning?tab=tasks#45-02",
-    "body": "45-02 per-project data adapter — server-side loader that reads .planning/ xml files for a given projectid and returns tasks, decisions, phases, requirements, notes as typed props. data-adapter planning-xml server-component loader"
+    "body": "45-02 per-project data adapter — server-side loader that reads .planning/ xml files for a given projectid and returns tasks, decisions, phases, requirements, notes as typed props. data-adapter planning-xml server-component loader notes phase-45-wave-2"
   },
   {
     "id": "45-03",
@@ -17025,14 +17251,14 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad",
     "kind": "task",
     "href": "/planning?tab=tasks#45-04",
-    "body": "45-04 vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. exports vocab object used by all components. vocabulary constants gad-166 gad-169 gad-189 terminology"
+    "body": "45-04 vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. exports vocab object used by all components. vocabulary constants gad-166 gad-169 gad-189 gad-219 terminology phase-45-wave-2"
   },
   {
     "id": "45-05",
     "title": "Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, s",
     "kind": "task",
     "href": "/planning?tab=tasks#45-05",
-    "body": "45-05 art of war epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants. epigraphs art-of-war copy visual-identity"
+    "body": "45-05 art of war epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants. epigraphs art-of-war copy visual-identity content 45-16-upstream"
   },
   {
     "id": "45-06",
@@ -17046,14 +17272,14 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.",
     "kind": "task",
     "href": "/planning?tab=tasks#45-07",
-    "body": "45-07 migrate planningdecisionstab to project-scoped — accept projectid prop, render per-project decisions under planning tab. component-migration decisions-tab project-scoped"
+    "body": "45-07 migrate planningdecisionstab to project-scoped — accept projectid prop, render per-project decisions under planning tab. component-migration decisions-tab project-scoped 45-01-consumer 45-02-consumer"
   },
   {
     "id": "45-08",
     "title": "Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.",
     "kind": "task",
     "href": "/planning?tab=tasks#45-08",
-    "body": "45-08 migrate planningroadmaptab + ganttsection to project-scoped — roadmap phases and gantt timeline for one project. component-migration roadmap-tab gantt project-scoped"
+    "body": "45-08 migrate planningroadmaptab + ganttsection to project-scoped — roadmap phases and gantt timeline for one project. component-migration roadmap-tab gantt project-scoped 45-01-consumer 45-02-consumer gad-229-scope-note"
   },
   {
     "id": "45-09",
@@ -17088,7 +17314,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human revi",
     "kind": "task",
     "href": "/planning?tab=tasks#45-13",
-    "body": "45-13 landing page composition — rewrite project detail overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, vcs showcase. landing-page workflow-viz findings marketing overview"
+    "body": "45-13 landing page composition — rewrite project detail overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, vcs showcase. landing-page stats-bar findings marketing overview 45-05-consumer-future 45-04-consumer"
   },
   {
     "id": "45-14",
@@ -17109,7 +17335,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful",
     "kind": "task",
     "href": "/planning?tab=tasks#45-16",
-    "body": "45-16 hero copy rewrite + art of war epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout. hero-copy epigraphs evolutionary-language copy-pass"
+    "body": "45-16 hero copy rewrite + art of war epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout. hero-copy epigraphs evolutionary-language copy-pass 45-05-consumer 45-13-consumer section-divider"
   },
   {
     "id": "45-17",
@@ -17123,7 +17349,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft fi",
     "kind": "task",
     "href": "/planning?tab=tasks#45-18",
-    "body": "45-18 marketplace integration verification — /project-market cards link to new project detail overview tab, published/draft filter works, landing page content visible. marketplace project-market integration verification"
+    "body": "45-18 marketplace integration verification — /project-market cards link to new project detail overview tab, published/draft filter works, landing page content visible. marketplace project-market integration verification data-cid-fix"
   },
   {
     "id": "45-19",

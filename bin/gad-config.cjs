@@ -10,7 +10,7 @@
  *
  * Usage (from GAD workflows / commands):
  *   const config = require('./gad-config.cjs').load(projectRoot);
- *   // config.roots, config.docs_sink, config.ignore, config.sprintSize, config.profiles
+ *   // config.roots, config.docs_sink, config.docs_path, config.ignore, config.sprintSize, config.profiles
  *
  * CLI usage:
  *   node bin/gad-config.cjs [--root <dir>] [--json]
@@ -183,6 +183,7 @@ function mergeSectionsIntoRoots(roots, sections) {
  * @returns {{
  *   roots: Array<{id: string, path: string, planningDir: string, discover: boolean}>,
  *   docs_sink: string|null,
+ *   docs_path: string|null,
  *   ignore: string[],
  *   sprintSize: number,
  *   profiles: Record<string, {description: string}>,
@@ -256,6 +257,7 @@ function fromToml(tomlPath, root) {
     roots: rootsMerged,
     evalsRoots,
     docs_sink: planning.docs_sink || null,
+    docs_path: docs.path || docs.docs_path || planning.docs_path || null,
     // Bulk ignore list for `gad sink compile` — project ids skipped
     // regardless of `enabled` per-root flag. Persistent filter used by
     // phase 08 to turn off sections without removing them from config.
@@ -349,6 +351,7 @@ function fromJson(jsonPath, root) {
     roots,
     evalsRoots: [],
     docs_sink: planning.docs_sink || null,
+    docs_path: planning.docs_path || data.docs_path || null,
     docs_sink_ignore: Array.isArray(planning.docs_sink_ignore) ? planning.docs_sink_ignore : [],
     ignore: planning.ignore || ['**/node_modules/**', '**/dist/**'],
     sprintSize: typeof planning.sprintSize === 'number' ? planning.sprintSize : 5,
@@ -396,6 +399,7 @@ function toCompatJson(config, existing = {}) {
   planning.id = planning.id || 'root';
   planning.planningDir = planning.planningDir || '.planning';
   planning.docs_sink = config.docs_sink || planning.docs_sink || null;
+  planning.docs_path = config.docs_path || planning.docs_path || null;
   planning.docs_sink_ignore = Array.isArray(config.docs_sink_ignore) ? config.docs_sink_ignore : (planning.docs_sink_ignore || []);
   planning.ignore = Array.isArray(config.ignore) ? config.ignore : (planning.ignore || []);
   planning.sprintSize = typeof config.sprintSize === 'number' ? config.sprintSize : (planning.sprintSize || 5);
@@ -411,6 +415,9 @@ function toCompatJson(config, existing = {}) {
     : (planning.sub_repos || []);
 
   const docs = existing.docs && typeof existing.docs === 'object' ? { ...existing.docs } : {};
+  if (config.docs_path) {
+    docs.path = config.docs_path;
+  }
   if (Array.isArray(config.docsProjects) && config.docsProjects.length > 0) {
     docs.projects = config.docsProjects.map((project) => ({
       id: project.id,
@@ -508,6 +515,12 @@ function writeToml(root, config) {
   lines.push(`conventionsPaths = ${serializeTomlValue(Array.isArray(config.conventionsPaths) ? config.conventionsPaths : [])}`);
   lines.push('');
 
+  if (config.docs_path != null) {
+    lines.push('[docs]');
+    lines.push(`path = ${serializeTomlValue(config.docs_path)}`);
+    lines.push('');
+  }
+
   for (const rootEntry of config.roots || []) {
     lines.push('[[planning.roots]]');
     lines.push(`id = ${serializeTomlValue(rootEntry.id)}`);
@@ -561,6 +574,7 @@ function defaults(root) {
     }],
     evalsRoots: [],
     docs_sink: null,
+    docs_path: null,
     docs_sink_ignore: [],
     ignore: ['**/node_modules/**', '**/dist/**'],
     sprintSize: 5,
@@ -627,6 +641,7 @@ if (require.main === module) {
     console.log(`Source: ${config.source}`);
     console.log(`Sprint size: ${config.sprintSize}`);
     console.log(`Docs sink: ${config.docs_sink || '(none)'}`);
+    console.log(`Docs path: ${config.docs_path || '(none)'}`);
     console.log(`Roots (${config.roots.length}):`);
     for (const r of config.roots) {
       console.log(`  [${r.id}] ${r.path}/${r.planningDir}${r.discover ? ' (discover)' : ''}`);

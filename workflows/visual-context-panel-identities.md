@@ -13,14 +13,24 @@ points at a region in the UI, the copied token must map directly to a searchable
 ## The pattern
 
 1. Use one panel surface only: `DevPanel` in band mode via `BandDevPanel`.
-2. Treat `PageIdentified as="..."` as the preferred page-level, human-readable component identity.
-3. Give each `SiteSection` a static `cid="..."` literal (or `id="..."` when that id is already stable and intentional).
-4. Keep inner landmarks on `Identified as="..."` so list rows map to component-level names.
-5. Ensure prompt handoff includes:
+2. Keep the panel dev-only and operator-toggleable (keyboard shortcut + visible toggle control).
+3. Treat `PageIdentified as="..."` as the preferred page-level, human-readable component identity.
+4. Give each `SiteSection` a static `cid="..."` literal (or `id="..."` when that id is already stable and intentional).
+5. Keep inner landmarks on `Identified as="..."` so list rows map to component-level names.
+6. Ensure prompt handoff includes self-reference metadata:
    - component kind
    - component label
    - source-search literal (`cid="..."`, `stableCid="..."`, `as="..."`)
+   - route/path
+   - source location hint (file path + pattern anchor, at minimum relational)
    - rendered `data-cid`
+7. Include quick prompt actions for CRUD from the selected target:
+   - `Create`
+   - `Read/Explain`
+   - `Update`
+   - `Delete`
+8. Include a recorder action that copies a prebuilt prompt to clipboard for the current target.
+9. Show user acknowledgment on clipboard actions (toast or inline "Copied" state).
 
 ## Naming contract
 
@@ -77,8 +87,12 @@ break that bridge because they are not reliably greppable or stable across edits
 ## Verification checklist
 
 - Hover one section/page band: only one Visual Context Panel appears.
+- Dev toggle works: panel can be enabled/disabled without reload.
 - Copy from panel row/header and `rg` it in repo: token resolves to intended component.
+- Copied payload includes route + identifier + source location hint.
 - Update/Delete prompt payload includes route + component kind + search literal + `data-cid`.
+- CRUD quick prompt buttons generate target-specific prompts.
+- Recorder action copies a prompt to clipboard and shows a visible success acknowledgment.
 - Added sections include explicit static `cid` and meaningful `as` labels.
 - Speech/noisy prompt still resolves when route + `cid` are present.
 

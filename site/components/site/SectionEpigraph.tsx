@@ -7,16 +7,18 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * Task 45-16: drop-in epigraph divider between site sections.
+ * Drop-in epigraph divider between site sections.
  *
- * Renders the Sun Tzu `original` as small muted text and the codebase-
- * adapted line as the emphasised takeaway. Pass an optional `seed` to
- * pick a specific epigraph from the section's bucket deterministically
- * (same seed → same epigraph across renders).
+ * Renders the verbatim `original` quote as the emphasised hero line (attribution
+ * inline) and surfaces the codebase `adapted` gloss as a small muted subtitle —
+ * clearly marked as our interpretation, not a fabricated Sun Tzu line. This
+ * order change (direct quote first) lands with the landing-page copy cleanup
+ * (2026-04-17) after the "no morphed quotes" feedback.
  *
- * Data source: `site/lib/epigraphs.ts` (task 45-05). If the section has
- * no registered epigraphs the component renders nothing — safe to drop
- * between any two sections without a guard at the call site.
+ * Data source: `site/lib/epigraphs.ts` (task 45-05). If the section has no
+ * registered epigraphs the component renders nothing — safe to drop between
+ * any two sections without a guard at the call site. If an entry omits
+ * `adapted`, only the direct quote renders.
  */
 export function SectionEpigraph({
   section,
@@ -36,6 +38,8 @@ export function SectionEpigraph({
     ? pickEpigraph(section, seed)
     : getEpigraph(section);
   if (!entry) return null;
+
+  const showGloss = entry.adapted && entry.adapted.trim().length > 0;
 
   return (
     <div
@@ -60,12 +64,24 @@ export function SectionEpigraph({
           aria-hidden
         />
         <p className="text-base italic leading-relaxed text-foreground md:text-lg">
-          “{entry.adapted}”
+          &ldquo;{entry.original}&rdquo;
         </p>
-        <p className="mt-3 text-xs text-muted-foreground">
-          After {entry.attribution}:{" "}
-          <span className="italic">“{entry.original}”</span>
+        <p className="mt-2 text-xs text-muted-foreground">
+          &mdash; {entry.attribution}
         </p>
+        {showGloss ? (
+          <p
+            className={cn(
+              "mt-4 text-xs leading-relaxed text-muted-foreground/90",
+              align !== "center" && "border-l-2 border-accent/40 pl-3",
+            )}
+          >
+            <span className="mr-1 uppercase tracking-wide text-accent/70">
+              In our model
+            </span>
+            <span>{entry.adapted}</span>
+          </p>
+        ) : null}
       </div>
     </div>
   );
