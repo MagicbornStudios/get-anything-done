@@ -21,6 +21,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - /how-it-works adds a dedicated "Pressure" section (decisions gad-145, gad-220, gad-222): formula `P = T + C_a·w_c + C_l·w_l + D·w_d + (D/T)·w_r`, 5-row dimension table, Shannon-parallel entropy decomposition.
 - /how-it-works pressure section now renders a "Live example" card between the dimensions table and Shannon entropy cards (task 42.4-21, TRACK 3 complete). Computes the top-pressure phase from `site/data/self-eval.json.latest.phases_pressure` at build time and renders each pressure term with raw count × weight = contribution, plus H_d / H_l side-by-side — so the formula is visibly evaluated against real planning data instead of remaining abstract.
 
+### Design captured (not yet implemented)
+- **Decision gad-226** — planning artifacts (tasks/decisions/roadmap/requirements/notes) are agent-editable volumes of data, not human-readable content. The right human surface is a gauge per artifact type with a sweet-spot band and imbalance flags. Gauges exist at project / species / generation editor scopes. Decisions=direction, tasks=implementation detail, requirements=what-to-build, notes=exploration breadth. Roadmap semantic is an open question (see `.planning/notes/roadmap-artifact-question-2026-04-16.md`).
+- **Decision gad-227** — project detail pages at `/projects/[...id]` are public by default (free hosting). Owners control which planning artifacts render via a `listingVisibility` object on `project.json`. Platform operators get moderation tooling that overrides owner config.
+- **Decision gad-228** — the editor surfaces a coding-agent dropdown (Claude Code / Codex / OpenCode / etc.). Detection runs at editor mount; the selected runtime is recorded on `TRACE.json.runtime` per gad-28 for cross-agent comparability.
+- Four new todos: `planning-artifact-gauges`, `listing-visibility-config`, `moderation-tooling`, `editor-agent-selector`.
+- Open question captured: roadmap artifact future — keep / fold into workflows / demote-and-drop-gauge. Note documents the four options with my recommended direction (demote for now, revisit after gauge UI ships).
+
 ### Notes
 - Session cost shape + agent profile modes captured at `.planning/notes/session-dump-heuristics-2026-04-16.md`. junior/balanced/senior as session-start configuration, not runtime heuristic. Heuristic-driven auto-dump rejected as too fragile.
 - Three new todos captured: parallel-subagent cost article, per-agent task outbox pattern, lightweight-agent + scoped-snapshot profiles.

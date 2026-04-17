@@ -1579,6 +1579,44 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>New GAD feature: contributor queue (feature/bug list), opt-in hook, PR submission pipeline. Requires: feature queue format, contributor agent prompt template, PR review workflow. Long-term: this is how GAD itself gets maintained — by its users' agents.</impact>
   </decision>
 
+  <decision id="gad-226">
+    <title>Planning artifacts are gauges — human-facing display, not human-facing content</title>
+    <date>2026-04-16</date>
+    <summary>Planning-doc XML (TASK-REGISTRY, DECISIONS, ROADMAP, REQUIREMENTS, notes) is authored and mutated by coding agents and CLIs, not humans. Humans do not read these files at volume — the information density is too high. The right human-facing abstraction is a **gauge**: a visual meter per artifact type that fills as volume grows, with a sweet spot to aim for and imbalance states to avoid.
+
+**Semantic mapping per gauge:**
+- **Decisions** → direction. More decisions = more directed. Low = drifting. Sweet spot tracks pressure — D/T ratio ≈ one decision per 10-20 tasks in moderately complex work.
+- **Tasks** → implementation detail volume. High = lots of concrete work queued/done. Low = nothing to execute.
+- **Requirements** → what-to-build. High = crisp spec. Low = vague, agent guessing.
+- **Notes** → exploration / open-question breadth. High = lots of investigative surface. Ideally converges as decisions resolve notes.
+- **Roadmap** → OPEN QUESTION (see note `roadmap-artifact-question-2026-04-16.md`). Candidate meaning: sequencing / milestone direction. Candidate for removal or fold into workflows.
+
+**Scope**: every editor surface has its own gauge bank — project, species, generation. A species inherits the project's baseline requirements + decisions but has its own tasks/notes. A generation has its own runtime notes + scoring. Gauges compose: species gauges sit inside project gauges inside the platform.
+
+**Framing**: these artifacts are the skeleton. Skills build on top. The gauges tell the operator whether the skeleton is balanced — enough direction for the implementation, enough requirements for the direction, enough notes to capture uncertainty, enough tasks to execute the direction. Sweet spots beat maxes. Imbalance flags (e.g. 200 tasks / 0 decisions = pure thrash; 30 decisions / 2 tasks = overthinking) are the real UX signal.</summary>
+    <impact>(1) New UI component family `PlanningGauge` — one per artifact type, renders count + sweet-spot band + imbalance warning. Drops into project/species/generation editor panes. (2) Gauges replace raw XML viewers as the default human-facing surface in editors. Raw-XML access remains for debugging but is not the primary UX. (3) Sweet-spot thresholds are per-scope (project-level sweet spot differs from generation-level) and live in a config rather than hardcoded in the gauge component. (4) The pressure formula (gad-220, gad-222) already provides D/T as a density metric — gauges reuse this calculation and extend it per artifact type. (5) Roadmap's position in this model is deferred pending the roadmap-artifact-question note.</impact>
+  </decision>
+
+  <decision id="gad-227">
+    <title>Project listing visibility — public by default (free hosting), per-project artifact toggle, platform moderation</title>
+    <date>2026-04-16</date>
+    <summary>Because the site is free-hosted, every registered project's detail page at `/projects/[...id]` is public by default. Each project controls which planning artifacts appear on its public detail page via a `listingVisibility` config block on `project.json`. Fields (each boolean, default `true`): `tasks`, `decisions`, `roadmap`, `requirements`, `notes`, `state`. Individual sub-tabs on the public Planning tab hide when their artifact is `false`. A project owner can expose only Overview and hide all Planning sub-tabs — the detail page still renders, just without the planning surface.
+
+**Moderation**: platform operators need tooling to takedown or flag listings independently of the owner's config. Moderation actions are recorded on the project and enforced at render time. Moderation takes precedence over owner visibility config. Moderation tooling lives in a dev-only or admin-gated route; it is not part of the owner-facing editor.
+
+**Relationship to gad-189 draft/published**: draft/published controls whether a project appears in `/project-market`. Listing visibility controls which PARTS of a published project's detail page render. A project can be published-but-hide-tasks, for example.</summary>
+    <impact>(1) `project.json` schema gains `listingVisibility: { tasks, decisions, roadmap, requirements, notes, state }` booleans — all default `true`. (2) `/projects/[...id]` tab-shell reads visibility and hides sub-tab buttons + their content accordingly. (3) New admin surface (dev-only or admin-role-gated) for moderation actions. (4) Moderation precedence documented so owner config cannot override a takedown. (5) Ties into the decentralized-auto-contributor model (gad-224) — contributor PRs should respect listing visibility when writing artifacts back.</impact>
+  </decision>
+
+  <decision id="gad-228">
+    <title>Multi-agent selector in the editor — operator picks which coding agent runs each generation</title>
+    <date>2026-04-16</date>
+    <summary>Operators typically have multiple coding agents installed locally (Claude Code, OpenAI Codex, OpenCode, etc.). The Project Editor / Brood Editor (phase 44.5, dev-only per gad-170) must expose a selector for which coding-agent CLI to invoke when spawning a generation. Selector options are discovered from the local environment at editor-mount time — the editor shells a presence check for each known CLI and enables only the ones available. The selected agent is recorded on the generation's `TRACE.json` (`runtime` field per gad-28) so cross-agent comparability downstream is unambiguous. Default agent is the one set in `gad-config.toml` at the project root, with the editor-level override winning when present.
+
+**Scope**: the selector affects `gad spawn` and any other generation-producing command invoked from the editor's dev-server bridge (gad-170). It does not affect other CLI calls (`gad snapshot`, `gad query`, etc.) — those run under the project's own Node runtime regardless of which coding agent did the authoring.</summary>
+    <impact>(1) Editor UI gains a coding-agent dropdown on the generation-runner pane (existing `site/app/projects/edit/[id]/GenerationRunner.tsx`). (2) Dev-server command bridge adds a `runtime=<cli-name>` arg and translates it to the correct invocation (e.g. `claude`, `codex`, `opencode`). (3) Runtime detection runs once at editor mount, cached per session. (4) Generation trace schema already supports `runtime` per gad-28 — no schema change needed. (5) The selector is dev-only; production `/projects/[...id]` has no generation-runner surface.</impact>
+  </decision>
+
   <decision id="gad-225">
     <title>CLI vocabulary: `gad site` vs `gad play` / `gad generation open` — two different static servers</title>
     <date>2026-04-16</date>

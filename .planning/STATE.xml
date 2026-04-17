@@ -25,7 +25,16 @@ Recommended next: 45-07 + 45-08 (wire the two placeholder panes). Closes the "co
 
 After 45 lands: 44.5 editor → 44 project-market wave 2 → TRACK 2 VCS portability spawn.
 
-TODOS (15) remain parked: vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template.</next-action>
+NEW THIS SESSION — operator design drop (captured, not implemented):
+- Decision gad-226 (planning artifacts as gauges — human-facing display, not human-facing content; semantic mapping: decisions=direction, tasks=implementation, requirements=what-to-build, notes=exploration; sweet spots beat maxes; imbalance flags are the UX signal; scope = project/species/generation editor banks).
+- Decision gad-227 (listing visibility — public by default, per-project listingVisibility booleans on project.json for tasks/decisions/roadmap/requirements/notes/state; moderation tooling overrides owner config).
+- Decision gad-228 (multi-agent selector in the editor — Claude Code / Codex / OpenCode picked via dropdown; detection at mount; TRACE.json runtime records selection per gad-28).
+- Note `.planning/notes/roadmap-artifact-question-2026-04-16.md` — OPEN QUESTION: roadmap artifact future (keep-as-is / kill-and-fold-into-tasks / reframe-as-workflow-instances / demote-drop-gauge). Recommended: Option D (demote for now, revisit after gauges ship).
+- Todos: planning-artifact-gauges, listing-visibility-config, moderation-tooling, editor-agent-selector.
+
+TODOS (19) remain parked: vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template, planning-artifact-gauges (NEW), listing-visibility-config (NEW), moderation-tooling (NEW), editor-agent-selector (NEW).
+
+OPEN QUESTION: roadmap artifact — see note. Awaits operator direction before next implementation cycle touching gauge UI or roadmap tooling.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
