@@ -145,6 +145,15 @@ SDK tree before checking any runtime-local installed layout. These aliases are c
 | `write-feature-doc` | Produce a feature doc into the sink |
 | `write-tech-doc` | Produce a technical breakdown doc |
 
+## Site vs preserved generation (CLI)
+
+| Command | Serves |
+|---------|--------|
+| `gad site compile` / `gad site serve` | GAD **planning / landing** UI (Next.js app under `site/`, static extract). Project root = dir with `.planning/`. |
+| `gad play <project>/<species>/vN` / `gad generation open` / `gad eval open` | **Preserved generation** static build (`index.html` + assets — e.g. under `public/evals/`). Same HTTP static server implementation as `gad site serve`, different log prefix (`[gad play]`). |
+
+Do not use `gad site serve` to preview eval game/app builds. Do not use `gad play` for the planning dashboard. Decision **gad-225**.
+
 ## Docs sink
 
 ```sh

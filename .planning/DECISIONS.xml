@@ -1579,5 +1579,12 @@ States: `expressed` (`.gad-try/`), `mutation` (`.planning/proto-skills/`), `inte
     <impact>New GAD feature: contributor queue (feature/bug list), opt-in hook, PR submission pipeline. Requires: feature queue format, contributor agent prompt template, PR review workflow. Long-term: this is how GAD itself gets maintained — by its users' agents.</impact>
   </decision>
 
+  <decision id="gad-225">
+    <title>CLI vocabulary: `gad site` vs `gad play` / `gad generation open` — two different static servers</title>
+    <date>2026-04-16</date>
+    <summary>Users confused two unrelated surfaces: (1) the GAD planning/landing Next.js app compiled via `gad site compile` / served via `gad site serve`, and (2) preserved generation build output (typically `index.html` under `apps/portfolio/public/evals/...` or eval version dirs) opened for local review. Both need HTTP because ES modules do not load from file://. Policy: `gad site *` is ONLY for the framework planning/landing site extract. `gad generation open` and top-level `gad play` serve ONLY preserved generation static roots and share one code path. Both use the same minimal Node static file server (`lib/site-compile.cjs` `serveStatic`) with distinct log prefixes — `[gad site]` vs `[gad play]` — so terminal output is unambiguous. `gad eval open` remains an alias wired to the same handler as `gad generation open` for backwards compatibility. `gad install` / agent runtime installers do not bundle Node; packaged desktop builds (e.g. Node SEA) ship their own runtime separately from this vocabulary split.</summary>
+    <impact>(1) Help text and AGENTS.md document the split explicitly. (2) `gad generation open` no longer shells out to `npx serve` — removes undeclared dependency on global npx and aligns Node SEA / minimal installs with the in-process server. (3) Future `gad site install` (configuring default site output path) stays under `gad site` only.</impact>
+  </decision>
+
 </decisions>
 

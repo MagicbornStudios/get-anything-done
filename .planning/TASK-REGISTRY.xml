@@ -1428,6 +1428,10 @@ Explicit `workflow_enter`/`workflow_exit` events are still queued as a separate 
       </commands>
       <keywords>framework,eval-loader,inheritance,camelcase,snake-case,species-json,gad-184,42.4-15-followup</keywords>
     </task>
+    <task id="42.4-20" type="framework" status="done" skill="framework-upgrade" agent="default"><goal>Disambiguate `gad site serve` (planning/landing Next static extract) from `gad play` / `gad generation open` (preserved generation HTML). Unify generation artifact serving on `lib/site-compile.cjs` `serveStatic` instead of `npx serve`; update CLI help strings; record decision gad-225.</goal>
+      <resolution>Shipped 2026-04-16. `serveStatic` accepts `logPrefix` and optional `onListening` callback. `gad generation open` / `gad eval open` / `gad play` resolve preserved `index.html`, then call `serveStatic` with `[gad play]` prefix and browser open on listen. Removed `npx serve` subprocess. Updated meta descriptions for `generation`, `site`, `play`, `site serve`, and `generation open`. Added DECISIONS.xml gad-225. Documented split in vendor/get-anything-done/AGENTS.md.</resolution>
+      <keywords>cli,site-serve,gad-play,generation-open,static-server,gad-225</keywords>
+    </task>
   </phase>
   <phase id="43">
     <task id="43-01" type="cleanup" status="done" skill="default" agent="default"><goal>Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.</goal>

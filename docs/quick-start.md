@@ -90,3 +90,10 @@ gad generation report
 - GAD skills: methodology docs, installed from GitHub with `npx skills add`
 - Coding agent runtime: Claude Code, Codex, Cursor, or another supported runtime
 
+## 7. Preview: planning site vs generation build
+
+- **`gad site serve`** — local HTTP server for the **planning / landing** dashboard (Next.js app compiled from your project’s `.planning/`). Not the game or app a generation produced.
+- **`gad play <project>/<species>/vN`** (same as **`gad generation open`**) — serves the **preserved static build** (`index.html` + assets), typically after `gad generation preserve`.
+
+See decision **gad-225** in `.planning/DECISIONS.xml`.
+

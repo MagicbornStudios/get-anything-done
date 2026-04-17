@@ -1707,7 +1707,11 @@ const generationSalvage = defineCommand({
 });
 
 const generationCmd = defineCommand({
-  meta: { name: 'generation', description: 'Manage generations (salvage, preserve, verify, open, review, report)' },
+  meta: {
+    name: 'generation',
+    description:
+      'Preserved generations: salvage, preserve, verify, open (static build / same as `gad play`), review, report. Does not serve the GAD planning/landing site — use `gad site serve` for that.',
+  },
   subCommands: {
     salvage: generationSalvage,
   },
@@ -2760,7 +2764,8 @@ const siteCompileCmd = defineCommand({
 const siteServeCmd = defineCommand({
   meta: {
     name: 'serve',
-    description: 'Compile then locally serve a GAD project\'s planning site (no dev hot reload)',
+    description:
+      'Compile then locally serve the GAD planning/landing static site (no dev hot reload). For preserved generation HTML builds use `gad play`, not this command.',
   },
   args: {
     root: {
@@ -2814,7 +2819,11 @@ const siteServeCmd = defineCommand({
 });
 
 const siteCmd = defineCommand({
-  meta: { name: 'site', description: 'Compile and serve a GAD project\'s planning site (phase 10)' },
+  meta: {
+    name: 'site',
+    description:
+      'GAD planning / landing site (Next.js app under vendor/get-anything-done/site): compile static extract or serve it. Not preserved generation builds — use `gad play` or `gad generation open` for those.',
+  },
   subCommands: { compile: siteCompileCmd, serve: siteServeCmd },
 });
 
@@ -5447,11 +5456,16 @@ const evalReview = defineCommand({
   },
 });
 
-// gad generation open — launch eval output in browser
+// gad generation open — serve preserved generation static build (same handler as `gad play`).
+// Not `gad site serve` (planning/landing Next extract) — see decision gad-225.
 const evalOpen = defineCommand({
-  meta: { name: 'open', description: 'Open eval build output in browser' },
+  meta: {
+    name: 'open',
+    description:
+      'Serve preserved generation static build over HTTP and open browser. Same as `gad play`. For the GAD planning/landing site use `gad site serve`, not this command.',
+  },
   args: {
-    project: { type: 'positional', description: 'Eval project name', required: true },
+    project: { type: 'positional', description: 'Eval project name (or project/species for nested ids)', required: true },
     version: { type: 'positional', description: 'Version (default: latest)', default: '' },
   },
   run({ args }) {
@@ -5501,42 +5515,44 @@ const evalOpen = defineCommand({
     }
 
     const serveDir = path.dirname(path.resolve(found));
-    const { exec, spawn } = require('child_process');
+    const { serveStatic } = require('../lib/site-compile.cjs');
+    const { exec } = require('child_process');
 
-    // Start a local HTTP server — ES module builds don't work on file://
-    const port = 4173 + Math.floor(Math.random() * 100);
-    console.log(`Serving: ${path.relative(process.cwd(), serveDir)}`);
-    console.log(`http://localhost:${port}/`);
+    const port = 4173 + Math.floor(Math.random() * 500);
+    const host = '127.0.0.1';
+    const logPrefix = '[gad play]';
 
-    // Try npx serve first, fall back to python, fall back to file://
-    const server = spawn('npx', ['serve', serveDir, '-l', String(port), '--no-clipboard'], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      shell: true,
-    });
+    console.log(`${logPrefix} generation static build (not the GAD landing site — use \`gad site serve\` for that)`);
+    console.log(`${logPrefix} root: ${path.relative(process.cwd(), serveDir)}`);
 
     let opened = false;
     const openBrowser = () => {
       if (opened) return;
       opened = true;
       const isWin = process.platform === 'win32';
-      const url = `http://localhost:${port}/`;
+      const url = `http://${host}:${port}/`;
       const cmd = isWin ? `start "" "${url}"` : (process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`);
       exec(cmd);
     };
 
-    server.stdout.on('data', (d) => {
-      const s = d.toString();
-      if (s.includes('Accepting') || s.includes('Local:') || s.includes('listening')) {
+    const server = serveStatic({
+      rootDir: serveDir,
+      port,
+      host,
+      logPrefix,
+      onListening: () => {
         openBrowser();
-      }
+      },
     });
 
-    // Give it 3 seconds then open anyway
-    setTimeout(openBrowser, 3000);
-
-    // Keep process alive until ctrl+c
-    console.log('\nPress Ctrl+C to stop the server.');
-    process.on('SIGINT', () => { server.kill(); process.exit(); });
+    console.log(`\n${logPrefix} Press Ctrl+C to stop the server.`);
+    process.on('SIGINT', () => {
+      try {
+        server.close(() => process.exit(0));
+      } catch {
+        process.exit(0);
+      }
+    });
   },
 });
 
@@ -13333,7 +13349,11 @@ const breedCmd = defineCommand({
 });
 
 const playCmd = defineCommand({
-  meta: { name: 'play', description: "Play a generation's built artifact (open in browser)" },
+  meta: {
+    name: 'play',
+    description:
+      "Serve a preserved generation's static build over HTTP (opens browser). Shorthand for `gad generation open`. Not `gad site serve` (planning/landing UI).",
+  },
   args: {
     target: { type: 'positional', description: 'Project/species/version (e.g. escape-the-dungeon/bare/v3)', required: true },
   },
