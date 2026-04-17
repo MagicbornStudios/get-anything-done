@@ -18,14 +18,33 @@ Parallel commits on submodule during session (not mine, from user's agent-experi
 - structural-parallelism-task-outbox (per-agent scratch files, avoid shared-file merge conflicts)
 - lightweight-agent-and-scoped-snapshot (agent profiles, gad snapshot --task, minimal-agent mode)
 
-COMPLETED this session (additional):
-- TRACK 1 finish: task 45-15 DONE (vocabulary audit across all live user-facing surfaces). /how-it-works verified already clean. Residual "eval" is in generated data files from historical decision/task text — intentional preservation.
-- TRACK 3 partial: `gad breed` CLI command shipped (decision gad-219). breedSpecies() added to lib/eval-data-access.cjs with union-and-shed merge semantics. Top-level gad breed subcommand registered. Manual verification: bred bare + emergent on escape-the-dungeon → correct species.json (workflow=bare precedence, constraints merged, bredFrom tracked, dna/installedSkills dedup ready). Test species archived+deleted after verification.
-- Session dump heuristics note captured: .planning/notes/session-dump-heuristics-2026-04-16.md (operator question about when to restart — rules of thumb + proposed profile modes senior/balanced/junior).
+COMPLETED this session (total 11 submodule commits, all pushed):
 
-REMAINING — still planned (next session):
+Tasks closed (status=done):
+- 45-15 vocabulary audit — all live user-facing site surfaces rebranded (nav, PlayableTeaser, docs/quick-start, /downloads, Templates, Footer, playable-shared, round-results, ProjectMarketHeader, layout, llms.txt generator). Residual "eval" in generated data files is historical decision text, preserved intentionally.
+- 43-10 docs vocabulary + transitional note — README.md + AGENTS.md + CHANGELOG.md (Unreleased section) + ROADMAP.xml transitional note (pre-43 "round" ↔ post-43 "evolution"; "vN per project" ↔ "generation per species", per D-16).
+- 42.2-04 validator dedup — lib/evolution-validator.cjs extractFileRefs deduplicates trailing-substring refs; 5 unit tests in tests/evolution-validator.test.cjs, all pass.
+- TRACK 3 part 1: gad breed CLI — breedSpecies() in eval-data-access.cjs, top-level `gad breed --project <id> --parentA <s> --parentB <s> --name <new>`. Verified on escape-the-dungeon bare+emergent.
+- TRACK 3 part 2: Pressure section on /how-it-works — new Section 3 with formula P = T + C_a·w_c + C_l·w_l + D·w_d + (D/T)·w_r, 5-row dimension table, Shannon-parallel entropy decomposition H_d / H_l. Sections 3 and 4 renumbered to 4 and 5.
 
-TRACK 3 continued: pressure formula display on /how-it-works (the second half of TRACK 3 — formula visible on site).
+Tasks partial (status=in-progress):
+- 42.2-40.b gad try polish — items 1 (strip .git/), 2 (--branch flag), 4 (skill.md normalize) shipped. Item 3 (interactive y/N consent) remains future, belongs with runtime-invocation flow.
+
+Captured (notes + todos):
+- .planning/notes/session-dump-heuristics-2026-04-16.md — session cost shape + junior/balanced/senior profile modes as CONFIGURATION (not heuristic auto-dump, which was rejected as too fragile). Junior/senior analogy corrected: junior = fewer skills = cheaper, senior = more skills = expensive + capable.
+- .planning/todos/2026-04-16-site-article-parallel-subagent-cost.md
+- .planning/todos/2026-04-16-structural-parallelism-task-outbox.md
+- .planning/todos/2026-04-16-lightweight-agent-and-scoped-snapshot.md
+- CHANGELOG.md Unreleased section documents all of the above.
+
+REMAINING — next session pickup candidates:
+
+- TRACK 2 (VCS portability): `gad spawn escape-the-dungeon/vcs-test` — empirical test of VCS primitives on KAPLAY canvas.
+- Blocking todo: generate-publish-play-pipeline — editor → preserved build → public playable, new /library route.
+- Phase 45 wave 2+: 45-01 through 45-21 (project detail tab shell, per-project API routes, vocabulary constants, Art of War epigraphs, migration of Planning tab components to project-scoped, type ramp, logo, etc.)
+- 44-13 gad projects init config-write location (needs repro — may already be fixed by earlier changes to findRepoRoot).
+- 44-09 live project-market data sync in dev.
+- Captured todos for structural investigation: outbox pattern, scoped snapshots, minimal-agent profile. Each needs its own discuss-phase to become a real roadmap entry.
 
 TRACK 2 (VCS portability): Run `gad spawn escape-the-dungeon/vcs-test`. Compare bare data-attributes vs React component. Iterate VCS skill. STOP after: one generation complete + skill iterated.
 
@@ -36,7 +55,7 @@ STRUCTURAL INVESTIGATIONS (not decided, captured as todos):
 - Scoped snapshot + lightweight agent profile — drop subagent cold-start cost (lightweight-agent-and-scoped-snapshot)
 - Landing-site article on parallel-subagent cost (site-article-parallel-subagent-cost)
 
-TODOS (11): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot.</next-action>
+TODOS (15): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-commands, desktop-client-and-skill-authoring, decentralized-auto-contributor, context-framework-builder-project, site-content-gaps, species-tracking-and-showcase, site-article-parallel-subagent-cost, structural-parallelism-task-outbox, lightweight-agent-and-scoped-snapshot, editor-ux-and-platform, generate-publish-play-pipeline (blocking), media-service-infra, site-as-project-template.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (tasks 42.1-01..06, 42.2-01..06, 42.3-01..17, 42.4-01..07, 44.5-01..04+02b)</reference>
@@ -77,7 +96,7 @@ TODOS (11): vcs-video-and-primitives, vcs-primitives-redesign, gad-generate-comm
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-16T23:10:00.000Z</last-updated>
+  <last-updated>2026-04-17T00:30:00.000Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
 
