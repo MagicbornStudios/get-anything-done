@@ -5936,6 +5936,12 @@
       "summary": "Users confused two unrelated surfaces: (1) the GAD planning/marketing Next.js app compiled via `gad site compile` / served via `gad site serve`, and (2) preserved **generation build artifacts** (typically `index.html` + assets under `apps/portfolio/public/evals/...` or eval version dirs). Artifacts "
     },
     {
+      "type": "decision",
+      "id": "decision:TEST-SMOKE",
+      "label": "smoke test",
+      "summary": "verify writer path"
+    },
+    {
       "type": "workflow",
       "id": "workflow:./workflow.md",
       "label": "./workflow.md",
@@ -13670,14 +13676,14 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-17T06:29:34.240Z",
-    "nodeCount": 901,
+    "generated": "2026-04-17T19:10:37.242Z",
+    "nodeCount": 902,
     "edgeCount": 1293,
     "nodeTypes": {
       "phase": 51,
       "task": 391,
       "skill": 128,
-      "decision": 227,
+      "decision": 228,
       "workflow": 104
     },
     "edgeTypes": {

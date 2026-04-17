@@ -315,5 +315,90 @@
     <status>active</status>
     <depends>44.5</depends>
   </phase>
+
+  <phase id="47">
+    <title>TweakCN lib extraction → packages/tweakcn-openai</title>
+    <goal>Slice the editor surface out of the B2Gdevs/TweakCN-OpenAI fork (currently a full Next.js app) into a publishable package. Extract: theme engine, stores (zustand), editor routes as mountable React components. Peer deps on React 19 + ai sdk. Publish flow via pnpm pack / optional npm publish. Consumer apps (GAD site, platform) import it without pulling the whole Next.js app.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
+  <phase id="48">
+    <title>TweakCN BYOK flow — client sessionStorage + UI banner</title>
+    <goal>Implement BYOK per gad-244. UI captures OpenAI key on first generate, stores in sessionStorage (tab-scoped), sends inline per request, server never persists. Explicit banner. Optional 24h encrypted localStorage toggle (Web Crypto device-bound key), default off. Zero server-side key storage, zero Redis.</goal>
+    <status>planned</status>
+    <depends>47</depends>
+  </phase>
+
+  <phase id="49">
+    <title>GAD site Theme nav — mount TweakCN lib</title>
+    <goal>Add "Theme" nav item to the GAD marketing site (vendor/get-anything-done/site). Mount extracted tweakcn editor under /theme. Wire BYOK flow from phase 48. Users can try TweakCN-OpenAI directly inside the GAD site using their own key — zero maintenance for us.</goal>
+    <status>planned</status>
+    <depends>47,48</depends>
+  </phase>
+
+  <phase id="50">
+    <title>apps/portfolio-v2 as pilot species personal-portfolio</title>
+    <goal>Treat apps/portfolio-v2 (operator personal site — broken pieces + great content) as pilot species personal-portfolio. Wire through GAD. Current Vercel deploy = current generation. Per operator: just a normal landing site + some security for private stuff + easy VCS rework + articles + resumes + projects. First real-site dogfood of the project/species/generation model on a non-eval site.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
+  <phase id="50.1">
+    <title>apps/portfolio → RE target species</title>
+    <goal>Set up apps/portfolio as a public reverse-engineering eval species per gad-235. First-class RE species support: species.json kind=reverse-engineer, framework fitness signal = quality of planning docs produced from the existing codebase. Proves the framework can produce planning docs on non-trivial input.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
+  <phase id="51">
+    <title>apps/platform scaffold — Clerk + Supabase + data model</title>
+    <goal>Scaffold apps/platform as a new Next.js app in the monorepo. Wire Clerk auth. Wire Supabase (per gad-253, provisional). Define project / species / generation data model + relationships. No user features yet — this is structural. Enables phases 53+.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
+  <phase id="52">
+    <title>packages/editor-core — read-only code view + virtual file folder</title>
+    <goal>Shared primitive package. CodeView component (read-only per gad-246). VirtualFileFolder primitive per gad-254 with pluggable data source adapter (local FS vs Supabase). Used by apps/platform AND apps/desktop.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
+  <phase id="53">
+    <title>apps/desktop Tauri shell — editors + terminal-as-chat + CLI bridge</title>
+    <goal>Scaffold apps/desktop with Tauri. Host editors mounted from editor-core. Embedded terminal widget wraps a child PTY that runs the user's chosen coding agent CLI (Claude Code, Cursor, etc.) — that terminal IS the chat. CLI install bridge: detect already-installed CLIs, optionally install missing ones. Release as signed .exe.</goal>
+    <status>planned</status>
+    <depends>52</depends>
+  </phase>
+
+  <phase id="54">
+    <title>Species-as-card primitive + per-species planning docs + token mechanic + leaderboards</title>
+    <goal>Implement gad-239 + gad-248 + gad-249. &lt;SpeciesCard&gt; primitive consumes per-species .planning/ subtree (STATE / ROADMAP / DECISIONS / TASKS). Champion-title token with auto-transfer by productivity. Two leaderboards per species: fork contributors and generation continuers. Moderation UI.</goal>
+    <status>planned</status>
+    <depends>51</depends>
+  </phase>
+
+  <phase id="55">
+    <title>Skill lane split — DEV vs PROD frontmatter + catalog filters</title>
+    <goal>Add lane: dev | prod to every SKILL.md frontmatter per gad-247. Update catalog generator to emit lane. Add CLI flag gad skill list --lane. Retag all existing skills. Some span both — decided per-case. Update site skill index with lane filter.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
+  <phase id="56">
+    <title>packages/gauges — decisions / errors / notes / throughput, all pressure-gated</title>
+    <goal>Build the four gauges per gad-251 + gad-250 pressure gating. One package exporting composable React components. Decision count, error-and-attempt stability score, note knowledge density, task throughput — each multiplied by pressure. Write references/gauges.md documenting formulas. Compose into dashboards AND species cards.</goal>
+    <status>planned</status>
+    <depends>54</depends>
+  </phase>
+
+  <phase id="57">
+    <title>Snapshot + startup token compaction</title>
+    <goal>Per gad-241. Rewrite gad snapshot + gad startup emitters to drop XML closing-tag cruft where scalar arrays suffice, dedupe overlapping blocks between startup and snapshot, and keep information density at equal or lower token count. Measure tokens before / after. Target ~40% reduction. Preserve info content — this is a presentation rewrite, not an info cut.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
 </roadmap>
 

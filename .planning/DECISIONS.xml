@@ -1684,5 +1684,225 @@ Operator priority statement: "I just need it working right now. If we can put it
     <impact>(1) Help text and AGENTS.md use “build artifact” / “preview URL” language — never “site” for generation open. (2) Static server extracted to `lib/static-http-serve.cjs`; `gad generation open` / `gad play` load only that module. (3) No `npx serve`. (4) Future `gad site install` stays under `gad site` only.</impact>
   </decision>
 
+  <decision id="gad-233">
+    <title>TweakCN consumed as lib; auth stays out of fork</title>
+    <date>2026-04-17</date>
+    <summary>TweakCN-OpenAI fork (B2Gdevs/TweakCN-OpenAI) stays minimal — auth/DB/billing stripped and NOT restored. Downstream consumers (GAD landing site, platform) handle auth and persistence themselves. Fork exists to be embeddable.</summary>
+    <impact>Extract editor surface as @b2g/tweakcn-openai package. Platform owns auth. Never re-entangle.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-234">
+    <title>Platform is a separate Next.js app, not a section</title>
+    <date>2026-04-17</date>
+    <summary>apps/platform (new) hosts auth (Clerk), marketplace, user projects, BYOK store. NOT a /platform route in the existing portfolio site. Monorepo is pnpm workspaces (already set up).</summary>
+    <impact>Scaffold apps/platform as a standalone Next.js app alongside existing apps/portfolio, apps/portfolio-v2, apps/forge.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-235">
+    <title>apps/portfolio becomes RE target species</title>
+    <date>2026-04-17</date>
+    <summary>The current apps/portfolio marketing site is archived-as-reverse-engineering-target: a species that benchmarks how well the framework can reverse-engineer a non-trivial existing app into planning docs. Reverse engineering becomes a staple species TYPE in the ecosystem.</summary>
+    <impact>Mark apps/portfolio as an eval species input. RE species type gets first-class support (species.json kind=reverse-engineer). Framework produces planning docs from an existing codebase as the fitness signal.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-236">
+    <title>Desktop client owns editors + terminal-as-chat + CLI bridge</title>
+    <date>2026-04-17</date>
+    <summary>Desktop client = Tauri shell (Rust-based, small exe, fast builds). Hosts the editors. Embedded terminal IS the agent chat surface — we launch the user's already-present coding agent CLI inside the terminal. We also handle CLI installs on the user's behalf.</summary>
+    <impact>Scaffold apps/desktop with Tauri. Editor views mounted from packages/editor-core. Terminal widget wraps a child PTY that runs user's chosen coding CLI. Bridge for `gad` + common coding-agent CLIs.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-237">
+    <title>Users bring own coding agent — shared + dedicated runners</title>
+    <date>2026-04-17</date>
+    <summary>Users supply their own coding agent (Claude Code, Cursor, Codex, etc.). Platform brokers runners: shared default + dedicated-server option for heavier users. No house agent dependency.</summary>
+    <impact>Terminal-as-chat is provider-agnostic. Runner infra exposes both pool and pinned-instance modes. Pricing + auth tiers gate dedicated.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-238">
+    <title>No rebrand — GAD name stays; carry evolution theme in README + landing</title>
+    <date>2026-04-17</date>
+    <summary>Considered rebrands (Context-Evolution-Framework, Skills-as-Genes, Long-Term-Context-Engine) all lack marketing or collide. Decision: keep GAD as the framework name and keep get-anything-done as the flagship. Instead invest in README + landing-page storytelling that makes the evolution theme and platform branding explicit.</summary>
+    <impact>No file renames. Phase 45 site rebrand pass targets narrative + identity, not the name. README gets a from-scratch rewrite around project/species/generation + pressure + champion-title vocabulary.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-239">
+    <title>Species are first-class tradable primitives with own planning docs</title>
+    <date>2026-04-17</date>
+    <summary>Species stop being evaluation-project variants; they become primitives. Each species has its own STATE / ROADMAP / DECISIONS / TASKS scoped to the species itself. Species can be forked, iterated, compared, and rank-ordered on leaderboards.</summary>
+    <impact>Species directory structure grows .planning/ subtree. Site gains SpeciesCard primitive with per-species gauges. Species-level planning docs inform species evolution distinct from project-level planning.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-240">
+    <title>Three iteration layers (project / species / generation), each planning-gauged</title>
+    <date>2026-04-17</date>
+    <summary>Project, species, and generation are all "projects" in the general sense — each has planning docs readable at any time AND each has quantitative gauges visible as game-UI widgets. More signal = more visible investment, with explicit tradeoffs.</summary>
+    <impact>Gauges package (packages/gauges) composes into project dashboards AND species cards AND generation detail pages. Same primitives at each layer.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-241">
+    <title>Snapshot + startup output is token-redundant — rewrite to compact format</title>
+    <date>2026-04-17</date>
+    <summary>Operator observed that gad startup and gad snapshot duplicate information (phase 42.4 listed in both). Snapshot also wraps scalar arrays in XML (&lt;references&gt;&lt;reference&gt;...&lt;/reference&gt;&lt;/references&gt;) when a bare array would do. Closing tags cost tokens without adding information.</summary>
+    <impact>Phase 57: rewrite gad snapshot + gad startup emitters. Dedupe overlapping blocks. Drop XML wrappers where arrays suffice. Target ~40% token reduction at equal information density. Measure before/after.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-242">
+    <title>Runtime context surgery is a framework R&amp;D target</title>
+    <date>2026-04-17</date>
+    <summary>During a run, redundancy accumulates in the agent's context window (repeated snapshots, re-read files, stale blocks). Rather than just pruning at compaction, explore surgical mid-run removal — drop specific redundant spans while keeping the rest live.</summary>
+    <impact>Research direction. Captured as parked todo context-surgery-runtime. Likely intersects with context-engine work (sdk/src/context-engine.ts).</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-243">
+    <title>Proto-skill + skill-creation revisit gated on VCS findings</title>
+    <date>2026-04-17</date>
+    <summary>Current VCS implementation is surfacing new findings (compass-neighbor explored + removed; drag+depth approach next). Until VCS requirements stabilize, skill-creation and proto-skill flows should not be reworked — they would re-churn against moving requirements.</summary>
+    <impact>Parked todo proto-skill-revisit-after-vcs. Revisit once VCS spatial-exploration approach lands.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-244">
+    <title>TweakCN BYOK = client-side sessionStorage, server never persists</title>
+    <date>2026-04-17</date>
+    <summary>Vercel serverless has no reliable cross-instance in-memory persistence and "encrypted server-side temp" is weaker than never storing. End user pastes their OpenAI key once per tab → browser sessionStorage → sent inline per request → server passes to OpenAI client → response returned → key discarded. Optional 24h localStorage encrypted via Web Crypto, default off.</summary>
+    <impact>Phase 48 BYOK implementation. UI banner: "Your key lives in this tab only." No server-side store, no KV, no Redis. Toggle for persistent mode with explicit warning.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-245">
+    <title>Monorepo = pnpm workspaces (existing), additive packages only</title>
+    <date>2026-04-17</date>
+    <summary>custom_portfolio already uses pnpm-workspace.yaml with apps/* + packages/* + packages-shared/* + select vendor entries. No migration to Turborepo / Nx needed. New scope is additive — drop new packages in packages/, new apps in apps/.</summary>
+    <impact>No tool migration. New additions: packages/tweakcn-openai, packages/editor-core, packages/gauges, apps/platform, apps/desktop.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-246">
+    <title>Code editor views are read-only; mutations via UI + coding agents only</title>
+    <date>2026-04-17</date>
+    <summary>In platform + desktop editors, file views are READ-ONLY — no direct text editing. Mutations happen via UI actions (pick a theme, run a skill, accept a diff) or via the user's coding agent in the embedded terminal. Never by hand-typing into the view.</summary>
+    <impact>packages/editor-core exposes CodeView component without edit affordances. Save keystrokes disabled. Contextual UI surfaces actions next to code instead of letting user edit inline.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-247">
+    <title>Skills split DEV (build) vs PROD (ship) via `lane:` frontmatter</title>
+    <date>2026-04-17</date>
+    <summary>Current skills all blur together. Introducing two lanes: DEV skills = building the thing (ideation, plan, code, debug, test, assets, iteration). PROD skills = shipping the thing to users (packaging, marketing copy, SEO, billing, moderation, onboarding, support, analytics, compliance).</summary>
+    <impact>Add lane: dev | prod to every SKILL.md frontmatter. Catalog filters by lane. gad skill list --lane prod. Retag all existing skills. Some span both (debug, verify) — decided per-case.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-248">
+    <title>Species token = champion-title, auto-transfers by productivity</title>
+    <date>2026-04-17</date>
+    <summary>A species has a single champion-title token that marks the current most-productive fork. It is NOT ownership — original author is always referenced. Token transfers when a fork's (generation-count × pressure-score × contribution-score) exceeds the current holder's. Moderated.</summary>
+    <impact>Phase 54 species-card + token mechanic. Leaderboard UI shows champion + top 10. Token move produces a public event (provenance chain). Moderation surface for disputes.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-249">
+    <title>Leaderboards for species forks AND generation continuers</title>
+    <date>2026-04-17</date>
+    <summary>Two leaderboards per species: (1) fork contributors (who is evolving the species) and (2) generation continuers (who is taking a generation forward). Both moderated — reports + thresholds + appeals.</summary>
+    <impact>Leaderboard primitives in packages/gauges consume species + generation data. Moderation surface lives in apps/platform with roles (reporter / mod / admin).</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-250">
+    <title>Pressure ontology — nothing exists in a project until pressure is produced (NORTH STAR)</title>
+    <date>2026-04-17</date>
+    <summary>Operator framing: "If there is no pressure, there is no meaningful information about the realization of a project until pressure is produced. Nothing in a project / species / generation exists until pressure is produced." Pressure is the creation ontology — the gate every other gauge multiplies against.</summary>
+    <impact>All gauges are pressure-gated — a zero-pressure gauge reads zero. UI reflects this: a project with 500 decisions and zero pressure displays as having produced nothing. references/pressure-formula.md is the canonical formula. Gauge primitives accept pressure as mandatory input.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-251">
+    <title>Gauges = decisions / errors-and-attempts / notes / throughput; VCS hit rate dropped</title>
+    <date>2026-04-17</date>
+    <summary>Gauge bank formalized. (1) Decisions = direction. (2) Errors-and-attempts = stability / reputation — weighted by same-problem × attempt variance, decays as later unrelated tasks complete without recurrence. (3) Notes = knowledge density — count × length × (1 - change-rate). (4) Task throughput = realized output relative to planned. All gated by pressure. VCS hit rate is NOT a gauge — VCS is dev-internal only.</summary>
+    <impact>Phase 56 gauges package. Four gauge primitives. Shared pressure multiplier. Documented at references/gauges.md (to write).</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-252">
+    <title>Feature-request flow = user-agent drafts, platform-agents PR, human reviews</title>
+    <date>2026-04-17</date>
+    <summary>User's coding agent (inside the embedded terminal in the editor) drafts a feature request with a coded README example → submits to platform → platform's own coding agents open a PR against the target repo → human reviewer approves. User-side VCS customizations stay local until a PR lands.</summary>
+    <impact>Platform exposes a feature-request submission endpoint. Internal platform coding-agent pool handles incoming work. Review + merge via GitHub PR surface. User never edits files directly in the editor.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-253">
+    <title>Supabase stays (for now); swap gated on virtual-file-folder requirements</title>
+    <date>2026-04-17</date>
+    <summary>Current stack wires Clerk + Supabase. Clerk stays definitively. Supabase stays provisionally — may be swapped if the virtual-file-folder requirement (gad-254) or per-project data model pushes out its limits. Decision deferred until phase 51 scaffold surfaces concrete needs.</summary>
+    <impact>Do not rip out Supabase this phase. When phase 51 scaffolds apps/platform, evaluate actual data-access patterns. Revisit after phase 52 editor-core is live.</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-254">
+    <title>Virtual file folder required for cloud projects</title>
+    <date>2026-04-17</date>
+    <summary>Cloud-hosted projects need an in-browser virtual file folder UI — users view project files without local checkout. Read-only (per gad-246). Shared primitive across platform + desktop.</summary>
+    <impact>packages/editor-core exposes VirtualFileFolder primitive. Backed by a data source adapter (local FS for desktop, Supabase/storage for platform).</impact>
+    <references>
+      <file path=".planning/notes/strategy-pivot-2026-04-17.md"/>
+    </references>
+  </decision>
+
 </decisions>
 

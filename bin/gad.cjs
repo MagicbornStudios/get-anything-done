@@ -36,7 +36,15 @@ const { render, shouldUseJson } = require('../lib/table.cjs');
 const { readState } = require('../lib/state-reader.cjs');
 const { readTasks } = require('../lib/task-registry-reader.cjs');
 const { readPhases, readDocFlow } = require('../lib/roadmap-reader.cjs');
+const { writePhase } = require('../lib/roadmap-writer.cjs');
 const { readDecisions } = require('../lib/decisions-reader.cjs');
+const { writeDecision } = require('../lib/decisions-writer.cjs');
+const { writeTodo, listTodos } = require('../lib/todos-writer.cjs');
+const {
+  compactStateXml,
+  compactRoadmapSection,
+  compactTasksSection,
+} = require('../lib/snapshot-compact.cjs');
 const { readRequirements } = require('../lib/requirements-reader.cjs');
 const { readErrors } = require('../lib/errors-reader.cjs');
 const { readBlockers } = require('../lib/blockers-reader.cjs');
@@ -1898,8 +1906,8 @@ const stateCmd = defineCommand({
 // phases command
 // ---------------------------------------------------------------------------
 
-const phasesCmd = defineCommand({
-  meta: { name: 'phases', description: 'List phases from ROADMAP.xml' },
+const phasesListCmd = defineCommand({
+  meta: { name: 'list', description: 'List phases from ROADMAP.xml' },
   args: {
     projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
     all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
@@ -1960,12 +1968,64 @@ const phasesCmd = defineCommand({
   },
 });
 
+const phasesAddCmd = defineCommand({
+  meta: { name: 'add', description: 'Append a <phase> to ROADMAP.xml. Fails if id collides.' },
+  args: {
+    id: { type: 'positional', description: 'Phase id (e.g. 47, 47.1)', required: true },
+    title: { type: 'string', description: 'Short phase title', required: true },
+    goal: { type: 'string', description: 'Phase goal text (the outcome)', required: true },
+    status: { type: 'string', description: 'Phase status', default: 'planned' },
+    depends: { type: 'string', description: 'Comma-separated phase ids this depends on', default: '' },
+    milestone: { type: 'string', description: 'Milestone (optional)', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+      return;
+    }
+    if (roots.length > 1) {
+      outputError('phases add requires a single project. Pass --projectid <id>.');
+      return;
+    }
+    const root = roots[0];
+    try {
+      const result = writePhase(root, baseDir, {
+        id: String(args.id),
+        title: String(args.title),
+        goal: String(args.goal),
+        status: String(args.status || 'planned'),
+        depends: String(args.depends || ''),
+        milestone: String(args.milestone || ''),
+      });
+      console.log(`Added phase ${args.id}: ${args.title}`);
+      console.log(`File:    ${path.relative(baseDir, result.filePath)}`);
+      console.log(`Total:   ${result.count} phase(s)`);
+      maybeRebuildGraph(baseDir, root);
+    } catch (e) {
+      outputError(e.message);
+      process.exit(1);
+    }
+  },
+});
+
+const phasesCmd = defineCommand({
+  meta: { name: 'phases', description: 'Manage phases — list (default), add' },
+  subCommands: {
+    list: phasesListCmd,
+    add: phasesAddCmd,
+  },
+});
+
 // ---------------------------------------------------------------------------
 // decisions command
 // ---------------------------------------------------------------------------
 
-const decisionsCmd = defineCommand({
-  meta: { name: 'decisions', description: 'List decisions from DECISIONS.xml' },
+const decisionsListCmd = defineCommand({
+  meta: { name: 'list', description: 'List decisions from DECISIONS.xml' },
   args: {
     projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
     all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
@@ -2013,6 +2073,141 @@ const decisionsCmd = defineCommand({
       }));
       console.log(render(tableRows, { format: 'table', title: `Decisions (${rows.length})` }));
     }
+  },
+});
+
+const decisionsAddCmd = defineCommand({
+  meta: { name: 'add', description: 'Append a <decision> to DECISIONS.xml. Fails if id collides.' },
+  args: {
+    id: { type: 'positional', description: 'Decision id (e.g. gad-233)', required: true },
+    title: { type: 'string', description: 'Short decision title', required: true },
+    summary: { type: 'string', description: 'Full summary text', required: true },
+    impact: { type: 'string', description: 'Impact statement (optional)', default: '' },
+    date: { type: 'string', description: 'Decision date (YYYY-MM-DD, optional)', default: '' },
+    refs: { type: 'string', description: 'Comma-separated file paths for <references>', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+      return;
+    }
+    if (roots.length > 1) {
+      outputError('decisions add requires a single project. Pass --projectid <id>.');
+      return;
+    }
+    const root = roots[0];
+    const references = String(args.refs || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    try {
+      const result = writeDecision(root, baseDir, {
+        id: String(args.id),
+        title: String(args.title),
+        summary: String(args.summary),
+        impact: String(args.impact || ''),
+        date: String(args.date || ''),
+        references,
+      });
+      console.log(`Added decision ${args.id}: ${args.title}`);
+      console.log(`File:    ${path.relative(baseDir, result.filePath)}`);
+      console.log(`Total:   ${result.count} decision(s)`);
+      maybeRebuildGraph(baseDir, root);
+    } catch (e) {
+      outputError(e.message);
+      process.exit(1);
+    }
+  },
+});
+
+const decisionsCmd = defineCommand({
+  meta: { name: 'decisions', description: 'Manage decisions — list (default), add' },
+  subCommands: {
+    list: decisionsListCmd,
+    add: decisionsAddCmd,
+  },
+});
+
+// ---------------------------------------------------------------------------
+// todos command
+// ---------------------------------------------------------------------------
+
+const todosListCmd = defineCommand({
+  meta: { name: 'list', description: 'List todo files from .planning/todos/' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) return;
+
+    const rows = [];
+    for (const root of roots) {
+      for (const t of listTodos(root, baseDir)) {
+        rows.push({ project: root.id, date: t.date, slug: t.slug, file: t.filename });
+      }
+    }
+    if (rows.length === 0) {
+      console.log('No todos found. Create with `gad todos add <slug> ...`.');
+      return;
+    }
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+    console.log(render(rows, { format: fmt, title: `Todos (${rows.length})` }));
+  },
+});
+
+const todosAddCmd = defineCommand({
+  meta: { name: 'add', description: 'Create a new todo md file in .planning/todos/. Fails if slug+date collides.' },
+  args: {
+    slug: { type: 'positional', description: 'Short slug (e.g. context-surgery-runtime)', required: true },
+    title: { type: 'string', description: 'Human title for the H1', required: true },
+    body: { type: 'string', description: 'Todo body (markdown)', required: true },
+    source: { type: 'string', description: 'Provenance line (e.g. "session 2026-04-17 strategy pivot")', default: '' },
+    date: { type: 'string', description: 'Date stamp YYYY-MM-DD (defaults to today)', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+      return;
+    }
+    if (roots.length > 1) {
+      outputError('todos add requires a single project. Pass --projectid <id>.');
+      return;
+    }
+    const root = roots[0];
+    try {
+      const result = writeTodo(root, baseDir, {
+        slug: String(args.slug),
+        title: String(args.title),
+        body: String(args.body),
+        source: String(args.source || ''),
+        date: String(args.date || ''),
+      });
+      console.log(`Added todo: ${result.filename}`);
+      console.log(`File:    ${path.relative(baseDir, result.filePath)}`);
+    } catch (e) {
+      outputError(e.message);
+      process.exit(1);
+    }
+  },
+});
+
+const todosCmd = defineCommand({
+  meta: { name: 'todos', description: 'Manage parked todos in .planning/todos/ — list (default), add' },
+  subCommands: {
+    list: todosListCmd,
+    add: todosAddCmd,
   },
 });
 
@@ -7181,6 +7376,7 @@ const snapshotV2Cmd = defineCommand({
     skills: { type: 'string', description: 'Number of equipped skills to surface (44-35). 0 disables. Default: 5.', default: '5' },
     mode: { type: 'string', description: 'full (default) | active — "active" emits ONLY STATE.xml next-action + current phase + open sprint tasks (skips static catalog, references, decisions). Decision gad-195: static info loaded once at session start, active info re-pullable cheap without context waste.', default: '' },
     session: { type: 'string', description: 'Session ID. When provided, auto-downgrades to mode=active if static context was already delivered in this session. Env fallback: GAD_SESSION_ID.', default: '' },
+    format: { type: 'string', description: 'compact (default) | xml — "compact" strips XML envelope tokens (prolog, outer tags, per-item tag pairs) while preserving content. "xml" dumps raw file content (legacy). Decision gad-241.', default: 'compact' },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
@@ -7630,6 +7826,8 @@ const snapshotV2Cmd = defineCommand({
       return;
     }
 
+    const compactFmt = (args.format || 'compact').toLowerCase() !== 'xml';
+
     if (scope.isScoped) {
       const sections = [];
       sections.push({
@@ -7640,7 +7838,10 @@ const snapshotV2Cmd = defineCommand({
       if (agentSection) sections.push(agentSection);
       const assignmentsSection = buildAssignmentsSection();
       if (assignmentsSection) sections.push(assignmentsSection);
-      if (stateXml) sections.push({ title: 'STATE.xml', content: stateXml.trim() });
+      if (stateXml) {
+        const stateContent = compactFmt ? compactStateXml(stateXml) : stateXml.trim();
+        sections.push({ title: 'STATE', content: stateContent });
+      }
       if (scopedPhaseId) {
         const phase = phases.find((row) => row.id === scopedPhaseId);
         if (phase) {
@@ -7734,7 +7935,11 @@ const snapshotV2Cmd = defineCommand({
     if (sprintAgentSection) sections.push(sprintAgentSection);
     const sprintAssignmentsSection = buildAssignmentsSection();
     if (sprintAssignmentsSection) sections.push(sprintAssignmentsSection);
-    if (stateXml) sections.push({ title: 'STATE.xml', content: stateXml.trim() });
+    const useCompact = compactFmt;
+    if (stateXml) {
+      const stateContent = useCompact ? compactStateXml(stateXml) : stateXml.trim();
+      sections.push({ title: 'STATE', content: stateContent });
+    }
 
     let roadmapSection = '';
     let outOfSprintCount = 0;
@@ -7750,7 +7955,8 @@ const snapshotV2Cmd = defineCommand({
     if (outOfSprintCount > 0) {
       roadmapSection += `(+${outOfSprintCount} out-of-sprint phases — see .planning/ROADMAP.xml)`;
     }
-    sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapSection.trim() });
+    const roadmapContent = useCompact ? compactRoadmapSection(roadmapSection.trim()) : roadmapSection.trim();
+    sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapContent });
 
     // Graph-backed task listing for sprint snapshot (decision gad-201, gad-202)
     const sprintUseGraph = graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path));
@@ -7808,7 +8014,11 @@ const snapshotV2Cmd = defineCommand({
       }
       sprintDoneCount = allTasks.length - sprintOpenTasks.length;
     }
-    sections.push({ title: `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`, content: sprintTasksSection.trim() || '(no open tasks)' });
+    const tasksContent = (() => {
+      const raw = sprintTasksSection.trim() || '(no open tasks)';
+      return useCompact ? compactTasksSection(raw) : raw;
+    })();
+    sections.push({ title: `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`, content: tasksContent });
 
     // Decision gad-195: --mode=active emits ONLY the changing state —
     // STATE.xml (next-action), ROADMAP (sprint phases), TASKS (open sprint).
@@ -13542,6 +13752,7 @@ const main = defineCommand({
     tasks: tasksV2Cmd,
     'task-checkpoint': taskCheckpoint,
     decisions: decisionsCmd,
+    todos: todosCmd,
     requirements: requirementsCmd,
     errors: errorsCmd,
     blockers: blockersCmd,
@@ -13662,6 +13873,47 @@ const main = defineCommand({
   if (i === -1) return;
   const first = a[i + 1];
   const known = new Set(['list', 'claim', 'release', 'active']);
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'list');
+    return;
+  }
+  if (!known.has(first)) return;
+})();
+
+// `gad phases` / `gad decisions` / `gad todos` with no subcommand default
+// to `list` so existing CLI UX is preserved after the groups were added.
+(function injectPhasesListDefault() {
+  const a = process.argv;
+  const i = a.indexOf('phases');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['list', 'add']);
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'list');
+    return;
+  }
+  if (!known.has(first)) return;
+})();
+
+(function injectDecisionsListDefault() {
+  const a = process.argv;
+  const i = a.indexOf('decisions');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['list', 'add']);
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'list');
+    return;
+  }
+  if (!known.has(first)) return;
+})();
+
+(function injectTodosListDefault() {
+  const a = process.argv;
+  const i = a.indexOf('todos');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['list', 'add']);
   if (first === undefined || first.startsWith('-')) {
     a.splice(i + 1, 0, 'list');
     return;

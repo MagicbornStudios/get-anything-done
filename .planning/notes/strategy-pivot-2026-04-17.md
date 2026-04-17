@@ -76,24 +76,24 @@ custom_portfolio/
 | gad-253 | Supabase stays (for now) | Supabase is already wired. Swap gated on whether virtual-file-folder requirements push it out. Clerk stays definitely. |
 | gad-254 | Virtual file folder required | Cloud projects need a virtual file folder UI for users to view (but not edit) project files. Shared primitive in `packages/editor-core`. |
 
-## Phases 46-56 (roadmap additions)
+## Phases 47-57 (roadmap additions) — LANDED
 
-Once `gad phases add` exists, port these into `ROADMAP.xml`.
+Ported to `ROADMAP.xml` via new `gad phases add` this session. Renumbered from proposed 46-56 because phase 46 was already occupied by "Site architecture redesign + CLI consolidation".
 
 | # | Title | Depends | Summary |
 |---|---|---|---|
-| 46 | TweakCN lib extraction | — | Slice editor surface out of `B2Gdevs/tweakcn` into publishable `packages/tweakcn-openai` — engine, stores, editor page as mountable component. |
-| 47 | TweakCN BYOK flow | 46 | Client-side sessionStorage key capture + UI banner + optional 24h encrypted persist. Zero server-side storage. |
-| 48 | GAD site Theme nav | 46, 47 | Mount extracted lib under new "Theme" nav item on GAD marketing site. Wire BYOK flow. |
-| 49 | Portfolio-v2 as pilot species | — | Treat `apps/portfolio-v2` as pilot species `personal-portfolio`. Wire through GAD. Current Vercel deploy = current generation. First dogfood of project/species/generation model on a real non-eval site. |
-| 49.1 | Portfolio → RE target species | — | Set up `apps/portfolio` as a public reverse-engineering eval species. Proves the framework can produce planning docs from a non-trivial existing app. |
-| 50 | `apps/platform` scaffold | — | New Next.js app. Clerk auth. Supabase wiring (keep until pushed out). Project / species / generation data model. No features yet — structural. |
-| 51 | `packages/editor-core` | — | Read-only code view primitive + virtual file folder UI. Shared between platform + desktop. |
-| 52 | `apps/desktop` Tauri shell | 51 | Tauri app. Editors mounted from editor-core. Terminal component = agent chat surface. CLI-install bridge (auto-install or use already-present CLIs). |
-| 53 | Species-as-card primitive + token mechanic | 50 | `<SpeciesCard>` primitive. Per-species planning docs (species-scoped STATE / ROADMAP / DECISIONS / TASKS). Champion-title token. Contribution + continuation leaderboards. |
-| 54 | Skill lane split (DEV vs PROD) | — | Add `lane:` frontmatter to every skill. Catalog filters by lane. CLI flag `gad skill list --lane prod`. Retag existing skills. |
-| 55 | Gauges package | 50 | `packages/gauges` with 4 gauges (decisions / errors / notes / throughput), all pressure-gated. Composable into species cards + project dashboards. |
-| 56 | Snapshot token compaction | — | Rewrite `gad snapshot` + `gad startup` output. Dedup startup↔snapshot info. Drop closing XML wrappers where arrays suffice. Target ~40% token reduction at equal information density. |
+| 47 | TweakCN lib extraction | — | Slice editor surface out of `B2Gdevs/TweakCN-OpenAI` into publishable `packages/tweakcn-openai` — engine, stores, editor page as mountable component. |
+| 48 | TweakCN BYOK flow | 47 | Client-side sessionStorage key capture + UI banner + optional 24h encrypted persist. Zero server-side storage. |
+| 49 | GAD site Theme nav | 47, 48 | Mount extracted lib under new "Theme" nav item on GAD marketing site. Wire BYOK flow. |
+| 50 | Portfolio-v2 as pilot species | — | Treat `apps/portfolio-v2` as pilot species `personal-portfolio`. Wire through GAD. Current Vercel deploy = current generation. First dogfood of project/species/generation model on a real non-eval site. |
+| 50.1 | Portfolio → RE target species | — | Set up `apps/portfolio` as a public reverse-engineering eval species. Proves the framework can produce planning docs from a non-trivial existing app. |
+| 51 | `apps/platform` scaffold | — | New Next.js app. Clerk auth. Supabase wiring (keep until pushed out). Project / species / generation data model. No features yet — structural. |
+| 52 | `packages/editor-core` | — | Read-only code view primitive + virtual file folder UI. Shared between platform + desktop. |
+| 53 | `apps/desktop` Tauri shell | 52 | Tauri app. Editors mounted from editor-core. Terminal component = agent chat surface. CLI-install bridge (auto-install or use already-present CLIs). |
+| 54 | Species-as-card primitive + token mechanic | 51 | `<SpeciesCard>` primitive. Per-species planning docs (species-scoped STATE / ROADMAP / DECISIONS / TASKS). Champion-title token. Contribution + continuation leaderboards. |
+| 55 | Skill lane split (DEV vs PROD) | — | Add `lane:` frontmatter to every skill. Catalog filters by lane. CLI flag `gad skill list --lane prod`. Retag existing skills. |
+| 56 | Gauges package | 54 | `packages/gauges` with 4 gauges (decisions / errors / notes / throughput), all pressure-gated. Composable into species cards + project dashboards. |
+| 57 | Snapshot token compaction | — | Rewrite `gad snapshot` + `gad startup` output. Dedup startup↔snapshot info. Drop closing XML wrappers where arrays suffice. Target ~40% token reduction at equal information density. |
 
 ## Parked todos
 
@@ -117,10 +117,11 @@ Ideas that don't fit a current phase but need to persist:
 | 2 | Rewrite tweakcn README for fork | ✓ done (4b1f5f9) |
 | 3 | Push fork to `B2Gdevs/tweakcn` main | ✓ done |
 | 4 | Write this strategy-pivot note | ✓ done |
-| 5 | Add decisions gad-233..gad-254 to DECISIONS.xml | ⊘ BLOCKED on CLI gap — captured here instead |
-| 6 | Add phases 46-56 to ROADMAP.xml | ⊘ BLOCKED on CLI gap — captured here instead |
-| 7 | Add parked todos | ⊘ BLOCKED on CLI gap — captured here instead |
-| 8 | Update STATE next-action | pending — will use `gad state set-next-action` |
+| 5 | Add decisions gad-233..gad-254 to DECISIONS.xml | ✓ landed via new `gad decisions add` (CLI gap fixed this session) |
+| 6 | Add phases **47-57** (shifted from proposed 46-56 — phase 46 was already occupied by "Site architecture redesign + CLI consolidation") | ✓ landed via new `gad phases add` |
+| 7 | Add 7 parked todos | ✓ landed via new `gad todos add` |
+| 8 | Update STATE next-action | ✓ updated (462/600 chars) |
+| 9 | **CLI gap fixed mid-session** | ✓ `lib/decisions-writer.cjs`, `lib/roadmap-writer.cjs`, `lib/todos-writer.cjs` + wired subcommands in `bin/gad.cjs`. Backward-compat via injectDefault. |
 
 ## Handoff for next session
 
