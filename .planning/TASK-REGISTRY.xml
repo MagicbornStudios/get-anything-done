@@ -1440,6 +1440,10 @@ Explicit `workflow_enter`/`workflow_exit` events are still queued as a separate 
       <resolution>Shipped 2026-04-16. New `static-http-serve.cjs`; `site-compile` delegates with `[gad site]` default. `servePreservedGenerationBuildArtifact` in `bin/gad.cjs`; log prefixes `[gad generation open]` vs `[gad play]`. gad-225 summary/impact updated; AGENTS, quick-start, root CLAUDE, CHANGELOG.</resolution>
       <keywords>cli,artifact-preview,static-http-serve,gad-225,generation-open</keywords>
     </task>
+    <task id="42.4-23" type="framework" status="done" skill="framework-upgrade" agent="default"><goal>`gad site serve` distinct default ports: dev/monorepo 3456 vs packaged consumer 3780 via `--consumer`; env `GAD_SITE_SERVE_PORT` / `GAD_SITE_PORT`; explicit `--port` wins.</goal>
+      <resolution>Shipped 2026-04-17. `resolveGadSiteServePortDetailed` in `bin/gad.cjs`; `--consumer` flag; port arg default empty; log line explains source. AGENTS + quick-start + CHANGELOG.</resolution>
+      <keywords>cli,site-serve,port,consumer,monorepo</keywords>
+    </task>
   </phase>
   <phase id="43">
     <task id="43-01" type="cleanup" status="done" skill="default" agent="default"><goal>Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.</goal>

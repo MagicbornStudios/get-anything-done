@@ -97,3 +97,25 @@ gad generation report
 
 See decision **gad-225** in `.planning/DECISIONS.xml`.
 
+## 8. Run the GAD marketing site (monorepo / clone)
+
+The Next.js app source is in **`site/`** at the framework root (same tree as `bin/gad.cjs`). You always have the source when you have the repo or submodule.
+
+**Static planning preview (matches what you ship as static HTML):**
+
+```bash
+# From a project that has .planning/ (example: framework itself)
+cd vendor/get-anything-done
+node bin/gad.cjs site serve --projectid get-anything-done
+# Listens on port 3456 by default (dev). Generation previews use different ports (gad play).
+```
+
+**Packaged / consumer profile** (different default port so you can run it next to dev):
+
+```bash
+gad site serve --consumer
+# default port 3780 unless you set GAD_SITE_SERVE_PORT or pass --port
+```
+
+**Live Next dev (edit `site/` with hot reload):** `cd site && pnpm install && pnpm dev` from the framework root (requires Node + install in `site/`).
+

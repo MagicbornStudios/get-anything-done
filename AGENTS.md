@@ -156,6 +156,13 @@ Use **`--no-browser`** on `gad generation open` or `gad play` to print the previ
 
 Do not use `gad site serve` to preview generation builds. Do not use `gad play` for the planning dashboard. Decision **gad-225**.
 
+### Run the marketing site from this monorepo
+
+- **Source** lives at **`site/`** inside the get-anything-done framework root (this repo / `vendor/get-anything-done` when vendored). Full Next.js app — not a binary blob.
+- **Planning static preview:** from any directory that has `.planning/`, run **`gad site serve`** (or pass **`--root <path>`** / **`--projectid`** as you already do for `gad snapshot`). First run does `next build` + extract; default listen **port `3456`** (dev).
+- **Side-by-side with a packaged install:** run the consumer binary with **`gad site serve --consumer`** so the default port is **`3780`** (still overridable with **`--port`** or **`GAD_SITE_SERVE_PORT`**).
+- **Hot reload while editing React:** from the framework root, **`cd site && pnpm install && pnpm dev`** (this monorepo does not list `vendor/get-anything-done/site` in the root `pnpm-workspace.yaml`, so use `cd` into `site/`). Separate from **`gad site serve`** (static extract, no HMR).
+
 ## Docs sink
 
 ```sh

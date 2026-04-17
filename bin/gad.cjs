@@ -2725,6 +2725,31 @@ const planningCmd = defineCommand({
 // ---------------------------------------------------------------------------
 // site subcommands (phase 10) — compile project planning into deployable HTML
 // ---------------------------------------------------------------------------
+//
+// `gad site serve` port policy: monorepo / dev defaults to GAD_SITE_SERVE_PORT_DEV
+// so it is visually distinct from `gad play` / `gad generation open` (random 4173+).
+// Packaged installs should pass `--consumer` (default GAD_SITE_SERVE_PORT_CONSUMER)
+// or set GAD_SITE_SERVE_PORT / GAD_SITE_PORT in the environment.
+
+const GAD_SITE_SERVE_PORT_DEV = 3456;
+const GAD_SITE_SERVE_PORT_CONSUMER = 3780;
+
+/** @returns {{ port: number, source: 'explicit' | 'env' | 'consumer' | 'dev' }} */
+function resolveGadSiteServePortDetailed(args) {
+  const raw = String(args.port != null ? args.port : '').trim();
+  if (raw !== '') {
+    const p = parseInt(raw, 10);
+    if (Number.isFinite(p) && p > 0) return { port: p, source: 'explicit' };
+  }
+  const envRaw = String(process.env.GAD_SITE_SERVE_PORT || process.env.GAD_SITE_PORT || '').trim();
+  if (envRaw !== '') {
+    const e = parseInt(envRaw, 10);
+    if (Number.isFinite(e) && e > 0) return { port: e, source: 'env' };
+  }
+  const consumer = args.consumer === true || args['consumer'] === true;
+  if (consumer) return { port: GAD_SITE_SERVE_PORT_CONSUMER, source: 'consumer' };
+  return { port: GAD_SITE_SERVE_PORT_DEV, source: 'dev' };
+}
 
 const siteCompileCmd = defineCommand({
   meta: {
@@ -2765,7 +2790,7 @@ const siteServeCmd = defineCommand({
   meta: {
     name: 'serve',
     description:
-      'Compile then locally serve the GAD planning/landing static site (no dev hot reload). For preserved generation HTML builds use `gad play`, not this command.',
+      'Compile then locally serve the GAD planning/landing static site (no dev hot reload). Default port 3456 (dev); use `--consumer` for 3780 when side-by-side with dev. For generation HTML use `gad play`, not this command.',
   },
   args: {
     root: {
@@ -2785,13 +2810,18 @@ const siteServeCmd = defineCommand({
     },
     port: {
       type: 'string',
-      description: 'HTTP port. Defaults to 3456.',
-      default: '3456',
+      description: `Explicit TCP port, or leave empty for auto (${GAD_SITE_SERVE_PORT_DEV} dev, ${GAD_SITE_SERVE_PORT_CONSUMER} with --consumer, or GAD_SITE_SERVE_PORT / GAD_SITE_PORT).`,
+      default: '',
     },
     host: {
       type: 'string',
       description: 'Bind host. Defaults to 127.0.0.1.',
       default: '127.0.0.1',
+    },
+    consumer: {
+      type: 'boolean',
+      description: `Use packaged-install default port ${GAD_SITE_SERVE_PORT_CONSUMER} when --port is omitted (dev default without this flag is ${GAD_SITE_SERVE_PORT_DEV}).`,
+      default: false,
     },
     skipCompile: {
       type: 'boolean',
@@ -2804,12 +2834,21 @@ const siteServeCmd = defineCommand({
     const projectRoot = path.resolve(args.root || process.cwd());
     const projectId = args.projectid || path.basename(projectRoot);
     const outDir = path.resolve(args.out || path.join(projectRoot, 'dist', 'site'));
-    const port = parseInt(args.port, 10) || 3456;
+    const { port, source } = resolveGadSiteServePortDetailed(args);
     // citty's kebab→camel conversion isn't consistent across versions; accept both.
     const skipCompile = args.skipCompile === true || args['skip-compile'] === true;
     try {
       if (!skipCompile) {
         compileSite({ projectRoot, projectId, outDir });
+      }
+      if (source !== 'explicit') {
+        const why =
+          source === 'env'
+            ? 'GAD_SITE_SERVE_PORT / GAD_SITE_PORT'
+            : source === 'consumer'
+              ? '--consumer install profile'
+              : 'dev default (omit --consumer)';
+        console.log(`[gad site] port ${port} (${why})`);
       }
       serveStatic({ rootDir: outDir, port, host: args.host });
     } catch (err) {
