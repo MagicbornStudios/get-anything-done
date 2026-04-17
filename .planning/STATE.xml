@@ -38,9 +38,23 @@ RESOLVED: roadmap artifact question → Option D via decision gad-229. Gauge ban
 
 C DISCUSSION CLOSED: operator confirmed the real pain is (1) merge conflicts. The outbox todo handles that; no C (workflow-instance restructure) needed. Operator also flagged roadmap is likely over-complex — captured as todo `2026-04-16-shrink-roadmap-surface.md` (parked, post-gauge, NOT mid-flight). Broader principle noted: audit for redundant context surfaces in planning docs after gauge UI ships.
 
-Back to phase 45 wave 2. Site work is the priority. Current recommended next: **45-07 + 45-08** — wire ProjectPlanningDecisionsTab and ProjectPlanningRoadmapTab into the "coming soon" placeholders on /projects/[...id]?tab=planning&sub=decisions / ?sub=roadmap. Both files already exist in `site/app/projects/[...id]/`; just need imports in ProjectDetailTabContent.tsx. Small pair.
+Back to phase 45 wave 2. DONE this session on site: 42.4-21, 45-04, 45-01, 45-02, 45-07, 45-08.
 
-After 45-07 + 45-08: consider 45-06 (tasks migration through 45-02 adapter), 45-05 (Art of War epigraphs), 45-03 (API routes consolidation onto the 45-02 adapter), 45-14 (type ramp + palette), 45-16 (hero copy + epigraphs).</next-action>
+45-07 + 45-08 closed by wiring the already-written `ProjectPlanningDecisionsTab` and `ProjectPlanningRoadmapTab` components into `ProjectDetailTabContent.tsx`, replacing the "coming soon" placeholders. `/projects/[...id]?tab=planning&sub=decisions` and `?sub=roadmap` now render live data.
+
+Phase 45 progress: 45-01, 45-02, 45-04, 45-07, 45-08, 45-15 done. Remaining in wave: 45-03 (API routes consolidation onto 45-02 adapter), 45-05 (Art of War epigraphs), 45-06 (tasks migration through 45-02 adapter), 45-09 (requirements + notes migration), 45-10 (Evolution tab components), 45-11 (System tab components), 45-12..21 (polish, landing rewrite, logo, audit, cleanup, docs).
+
+NEXT candidates:
+- 45-06 tasks migration — ProjectPlanningTasksTab already exists + is wired; goal is to route it through the 45-02 adapter instead of the fetch(). Small refactor.
+- 45-09 requirements + notes migration — same pattern. Both components exist and render.
+- 45-03 API route consolidation — reuse the 45-02 adapter inside the route instead of duplicating logic. Small, tidying.
+- 45-05 Art of War epigraphs — copy/content task, independent of adapter.
+- 45-13 landing composition — Overview tab content rewrite.
+- 45-14 type ramp + palette — visual identity pass.
+
+Recommended next: **45-06 + 45-09** pair — finish the planning sub-tab migrations (tasks/requirements/notes) so all five sub-panes ride the same shape. Small. Closes the sub-tab migration story for Wave 2.
+
+After 45-06 + 45-09: 45-03 (route consolidation), then start pushing on visible content (45-13 landing, 45-14 palette, 45-05/45-16 epigraphs).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

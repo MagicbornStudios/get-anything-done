@@ -5,6 +5,8 @@ import { type ReactNode, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { DetailTab } from "./ProjectDetailTabs";
 import { ProjectPlanningTasksTab } from "./ProjectPlanningTasksTab";
+import { ProjectPlanningDecisionsTab } from "./ProjectPlanningDecisionsTab";
+import { ProjectPlanningRoadmapTab } from "./ProjectPlanningRoadmapTab";
 import { ProjectPlanningRequirementsTab } from "./ProjectPlanningRequirementsTab";
 import { ProjectPlanningNotesTab } from "./ProjectPlanningNotesTab";
 import { ProjectSystemTab } from "./ProjectSystemTab";
@@ -87,10 +89,10 @@ export function ProjectDetailTabContent({
           <ProjectPlanningTasksTab projectId={projectId} />
         )}
         {planningSubTab === "decisions" && (
-          <p className="text-sm text-muted-foreground">Decisions — coming soon (task 45-07)</p>
+          <ProjectPlanningDecisionsTab projectId={projectId} />
         )}
         {planningSubTab === "roadmap" && (
-          <p className="text-sm text-muted-foreground">Roadmap — coming soon (task 45-08)</p>
+          <ProjectPlanningRoadmapTab projectId={projectId} />
         )}
         {planningSubTab === "requirements" && (
           <ProjectPlanningRequirementsTab projectId={projectId} />

@@ -1744,15 +1744,17 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <depends>45-01,45-02</depends>
       <keywords>component-migration,tasks-tab,project-scoped</keywords>
     </task>
-    <task id="45-07" status="planned" type="site">
+    <task id="45-07" status="done" type="site" skill="default" agent="default">
       <goal>Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.</goal>
       <depends>45-01,45-02</depends>
-      <keywords>component-migration,decisions-tab,project-scoped</keywords>
+      <resolution>Shipped 2026-04-16. `ProjectPlanningDecisionsTab` was already written as a project-scoped component (accepts `projectId`, fetches `/api/dev/evals/projects/[id]/planning`, newest-first ordering, expand/collapse past 30 items, `data-cid="project-planning-decisions-site-section"`). This task closes the migration by replacing the "coming soon" placeholder in `ProjectDetailTabContent.tsx` — the `planningSubTab === "decisions"` branch now renders the component. Build clean. Users hitting `/projects/[...id]?tab=planning&sub=decisions` now get live decisions data (221 for get-anything-done) instead of a placeholder.</resolution>
+      <keywords>component-migration,decisions-tab,project-scoped,45-01-consumer,45-02-consumer</keywords>
     </task>
-    <task id="45-08" status="planned" type="site">
+    <task id="45-08" status="done" type="site" skill="default" agent="default">
       <goal>Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.</goal>
       <depends>45-01,45-02</depends>
-      <keywords>component-migration,roadmap-tab,gantt,project-scoped</keywords>
+      <resolution>Shipped 2026-04-16. `ProjectPlanningRoadmapTab` was already written as a project-scoped component (accepts `projectId`, fetches phases + tasks from the planning API, renders phase list + Gantt-style timeline with per-status color bands). This task closes the migration by replacing the "coming soon" placeholder in `ProjectDetailTabContent.tsx` — the `planningSubTab === "roadmap"` branch now renders the component. Build clean. Note: roadmap is demoted in the gauge bank (gad-229) but remains a first-class planning sub-tab — this task is about VIEWING roadmap data, not gauging it.</resolution>
+      <keywords>component-migration,roadmap-tab,gantt,project-scoped,45-01-consumer,45-02-consumer,gad-229-scope-note</keywords>
     </task>
     <task id="45-09" status="planned" type="site">
       <goal>Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.</goal>
