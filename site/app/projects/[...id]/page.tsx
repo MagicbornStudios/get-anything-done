@@ -17,6 +17,7 @@ import { ProjectRequirementsSection } from "./ProjectRequirementsSection";
 import { ProjectRunsSection } from "./ProjectRunsSection";
 import { ProjectScoringWeightsSection } from "./ProjectScoringWeightsSection";
 import { ProjectSkillsScopeSection } from "./ProjectSkillsScopeSection";
+import { ProjectStatsBar } from "./ProjectStatsBar";
 import { projectRuns } from "./project-detail-shared";
 
 const IS_DEV = process.env.NODE_ENV === "development";
@@ -123,16 +124,23 @@ export default async function ProjectPage({
   const preservedBuild = IS_DEV ? resolvePreservedBuild(projectName) : null;
   const latestGeneration = IS_DEV ? resolveLatestGeneration(projectName) : null;
 
+  // Marketing-landing composition (task 45-13):
+  //   Hero → StatsBar (at-a-glance numbers) → Runs → Findings (whitepaper
+  //   cards) → Requirements → Skills scope → Emergent lineage (if applicable)
+  //   → Bugs → Scoring weights. Findings moved above Requirements so
+  //   visitors see outcomes before inputs. Workflow visualization and VCS
+  //   showcase are scoped out to a 45-13 follow-up.
   const overviewContent = (
     <>
       <ProjectHeroSection project={project} planning={planning} template={template} />
-      <ProjectSkillsScopeSection project={project} runs={runs} />
+      <ProjectStatsBar projectName={projectName} runs={runs} />
       <ProjectRunsSection runs={runs} />
+      <ProjectFindingsSection projectId={project.id} />
+      <ProjectRequirementsSection projectId={project.id} />
+      <ProjectSkillsScopeSection project={project} runs={runs} />
       {project.workflow === "emergent" && runs.length > 0 ? (
         <ProjectEmergentLineageSection runs={runs} />
       ) : null}
-      <ProjectRequirementsSection projectId={project.id} />
-      <ProjectFindingsSection projectId={project.id} />
       <ProjectBugsSection projectId={project.id} />
       <ProjectScoringWeightsSection project={project} />
     </>

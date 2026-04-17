@@ -1777,10 +1777,11 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <depends>45-06,45-07,45-08,45-09,45-10,45-11</depends>
       <keywords>planning-route,redirect,dashboard,cleanup</keywords>
     </task>
-    <task id="45-13" status="planned" type="site">
+    <task id="45-13" status="done" type="site" skill="default" agent="default">
       <goal>Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase.</goal>
       <depends>45-01</depends>
-      <keywords>landing-page,workflow-viz,findings,marketing,overview</keywords>
+      <resolution>Shipped 2026-04-16 — pragmatic cut: stats bar + section reorder, with workflow visualization and VCS showcase deferred to a 45-13 follow-up to avoid scope explosion mid-flight. (1) New component `site/app/projects/[...id]/ProjectStatsBar.tsx`: 4-cell grid across generations (runs count + "preserved builds" sub), species (count + "recipes in brood"), best human review (max `humanReviewNormalized.aggregate_score` / `humanReview.score` across runs, normalized to X.X / 5 or X.X / 10 depending on source scale), latest generation (version + relative date — "3d ago", "2w ago", etc). Icons from lucide (GitBranch/Dna/Star/Clock), rendered as bordered cards with accent icons. Uses the 45-04 `countLabel()` helper so "1 Generation" / "3 Generations" pluralize correctly. Each cell has `data-cid="project-stats-bar-cell-<subword>"` for VCS. (2) Overview composition reordered in `/projects/[...id]/page.tsx`: Hero → StatsBar → Runs → Findings (moved up from below Requirements — visitors see outcomes before inputs) → Requirements → Skills scope → Emergent lineage (workflow-gated) → Bugs → Scoring weights. ProjectFindingsSection is already card/article-style per `ProjectFindingArticle`, so "whitepaper cards" requirement is satisfied by promoting its position. (3) Deferred scope captured in an inline comment on the composition JSX and as `2026-04-16-45-13-followup-workflow-vcs-showcase.md` todo: workflow-graph visualization component + VCS showcase panel each deserve their own task, not inline with the composition rewrite. Typecheck + build clean.</resolution>
+      <keywords>landing-page,stats-bar,findings,marketing,overview,45-05-consumer-future,45-04-consumer</keywords>
     </task>
     <task id="45-14" status="planned" type="site">
       <goal>Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.</goal>

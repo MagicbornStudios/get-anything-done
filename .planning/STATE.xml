@@ -56,7 +56,9 @@ Operator directive 2026-04-16: do visible content, stay on it until the chain br
 
 45-05 done: `site/lib/epigraphs.ts` expanded to 22 entries across 8 sections (hero/planning/evolution/system/findings/scoring × 3 each, bestiary/marketplace × 2). Typed `EpigraphSection` string-literal + helpers `getAllEpigraphs`, `getEpigraph`, `getEpigraphsFor`, `pickEpigraph(section, seed?)` with deterministic seed hashing, `countBySection`. No consumers wired yet; 45-16 will render a `<SectionEpigraph>` component using these helpers on section dividers.
 
-NEXT: 45-13 landing composition — rewrite `/projects/[...id]` Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase. Depends on 45-01 (done). Unblocks 45-16 and 45-18.</next-action>
+45-13 done (pragmatic cut): new `ProjectStatsBar` (4 cells — generations / species / best human review / latest) + Overview composition reorder (Hero → StatsBar → Runs → Findings-before-Requirements → Skills → lineage → Bugs → Scoring). Workflow visualization + VCS showcase deferred to todo `2026-04-16-45-13-followup-workflow-vcs-showcase.md`; doing them inline would have exploded scope mid-sprint.
+
+NEXT in visible-content chain: 45-16 hero copy + epigraphs (consumes 45-05 registry + 45-13 landing) → 45-14 type ramp + palette → 45-17 logo/favicon → 45-18 marketplace integration verification.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
