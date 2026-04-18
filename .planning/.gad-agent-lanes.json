@@ -361,10 +361,29 @@
       "updatedAt": "2026-04-18T18:07:54.274Z",
       "lastSeenAt": "2026-04-18T18:07:54.275Z",
       "leaseExpiresAt": null
+    },
+    {
+      "agentId": "claude-default-0017",
+      "agentRole": "default",
+      "runtime": "claude-code",
+      "runtimeSessionId": null,
+      "parentAgentId": null,
+      "rootAgentId": "claude-default-0017",
+      "depth": 0,
+      "modelProfile": null,
+      "resolvedModel": null,
+      "humanOperator": false,
+      "status": "released",
+      "claimedTaskIds": [],
+      "claimedPhaseIds": [],
+      "createdAt": "2026-04-18T18:10:55.747Z",
+      "updatedAt": "2026-04-18T18:10:56.072Z",
+      "lastSeenAt": "2026-04-18T18:10:56.073Z",
+      "leaseExpiresAt": null
     }
   ],
   "sequenceByKey": {
-    "claude::default": 16,
+    "claude::default": 17,
     "claude::snapshot-format": 1,
     "human::default": 2
   }

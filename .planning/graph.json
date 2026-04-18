@@ -4739,7 +4739,7 @@
       "type": "task",
       "id": "task:63-03",
       "label": "User settings scaffold (non-checked-in). Local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per",
-      "status": "planned",
+      "status": "done",
       "goal": "User settings scaffold (non-checked-in). Local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per 63-01 audit). Fields: displayName (default = os.userInfo().username), lastActiveProjectid, assignedSouls {projectid: soulslug}, lastSessionId, preferredRuntime, teachingSnoozeUntil. Gitignored. Read by gad startup, gad snapshot, SessionStart hook, and anywhere we need to know &apos;who is logged in&apos;. Addresses 2026-04-18 user feedback: &apos;we should have user settings that dont get checked in so we know who is logged in. if they dont have a name, default to machine name. users can have souls assigned to them in the gad project for that to be injected.&apos;",
       "skill": "",
       "taskType": "framework",
@@ -15205,7 +15205,7 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T18:07:54.338Z",
+    "generated": "2026-04-18T18:10:56.139Z",
     "nodeCount": 990,
     "edgeCount": 1462,
     "nodeTypes": {
