@@ -62,6 +62,36 @@
       ]
     },
     {
+      "id": "gad-framework-error-cause-preservation-01",
+      "title": "Error rewrap with .cause — preserve the stack across module boundaries",
+      "category": "gad-framework",
+      "difficulty": "intermediate",
+      "tags": [
+        "error-handling",
+        "debugging",
+        "stack-traces",
+        "typescript",
+        "javascript"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/error-cause-preservation.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/scoped-spawn.cjs"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-error-code-remediation-01",
+        "gad-framework-testable-cli-01"
+      ]
+    },
+    {
       "id": "gad-framework-next-rsc-cjs-externals-01",
       "title": "Loading CJS externals from RSC in Next 16 / Turbopack — the getBuiltinModule dance",
       "category": "gad-framework",
