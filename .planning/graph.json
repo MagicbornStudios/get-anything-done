@@ -463,6 +463,13 @@
       "goal": "Implement decision gad-260 per-project BYOK env storage. Scope: (1) crypto primitive decision (libsodium sealed-box vs AES-256-GCM+scrypt) written up in references/byok-design.md, (2) master-key UX — OS keychain first (Windows Credential Manager, macOS Keychain, linux secret-service) with passphrase fallback, (3) .gad/secrets/&amp;lt;projectid&amp;gt;.enc storage format (versioned, per-key metadata), (4) CLI family 'gad env get|set|rotate|list|revoke --projectid', (5) scoped spawn wrapper so subagents inherit per-project env without process-wide leak, (6) .gitignore enforcement for .gad/secrets/, (7) migration — llm-from-scratch OPENAI_API_KEY moves from global env into its project bag, (8) project-editor BYOK tab UI (local-dev, paste+validate+save), (9) landing-site project-dashboard BYOK surface (auth-gated, lands on planning-app post phase 59 split). Acceptance: llm-from-scratch subagent reads OPENAI_API_KEY from its encrypted bag via 'gad env get'; key never persists on disk in plaintext; 'gad env rotate' works end-to-end."
     },
     {
+      "type": "phase",
+      "id": "phase:63",
+      "label": "Agent/state/session hygiene",
+      "status": "planned",
+      "goal": "Consolidate scattered state/log writes across .omx/, .planning/, team-state, hud-state, etc; land session-continuity contract so 'lets continue' works without orientation cost; scaffold non-checked-in user settings (machine-name default + assigned soul); author canonical agent-lane manifest so parallel agents (claude/codex/cursor) have clear file ownership; wire daily tip + soul reference into session-open surface. Driven by 2026-04-18 post-mortem: 3-agent parallel session lost ~15% of Claude turn to stash incident and ~20% to orientation-from-logs instead of handoff pickup."
+    },
+    {
       "type": "task",
       "id": "task:10-01",
       "label": "Create .planning/ scaffold for get-anything-done and register in planning-config.toml.",
@@ -3452,6 +3459,16 @@
     },
     {
       "type": "task",
+      "id": "task:42.4-24",
+      "label": "Tree-format output for gad snapshot refs section per decision gad-241. Replace flat &apos;- path&apos; list with indente",
+      "status": "done",
+      "goal": "Tree-format output for gad snapshot refs section per decision gad-241. Replace flat &apos;- path&apos; list with indented tree that groups shared prefixes (e.g. .planning/workflows/*, references/*, site/{lib,scripts,app}/*). Implementation: lib/snapshot-compact.cjs gains compactRefsTree() with single-child dir-chain collapse and single-leaf fold. Threshold REFS_TREE_THRESHOLD=5 keeps small lists flat. Tests: tests/snapshot-compact-refs-tree.test.cjs covers empty/below-threshold/tree-mode/collapse/fold/annotations/duplicates/dir-suffix/token-savings/compactStateXml-wiring (11 tests). Measured: full snapshot 17813B → 17622B (−191B, ~1%); refs section alone ~9% reduction; BPE token savings higher than byte due to shared-prefix coalescing. Follow-ups: apply same tree form to gad startup contract output; investigate deeper compression on DECISIONS section (title-only already compact).",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
       "id": "task:43-01",
       "label": "Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-pla",
       "status": "done",
@@ -3901,6 +3918,16 @@
       "skill": "default",
       "taskType": "meta",
       "keywords": "retrospective,visual-context,identified,landmarks,intro,dev-panel,44-15,44-16"
+    },
+    {
+      "type": "task",
+      "id": "task:44-38",
+      "label": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm publ",
+      "status": "planned",
+      "goal": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm public registry) to GitHub Releases tarball. Discovered 2026-04-18: workflows/update.md step run_update invokes npx -y get-anything-done@latest which dies for every user. Rewrite: (a) hooks/gad-check-update.js polls GitHub Releases API for latest tag, (b) workflows/update.md fetches tarball via gh release download, unpacks, runs bin/install.js, (c) version-compare against git tag not npm, (d) keep backup/reapply-patches flow. Acceptance: gad update works on a clean machine with zero prior vendor checkout. Blocks wider adoption — today every user who runs /gad-update sees 404. Connects to 44-28.B0 (44-31, done).",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
     },
     {
       "type": "task",
@@ -4460,6 +4487,16 @@
     },
     {
       "type": "task",
+      "id": "task:55-00",
+      "label": "Catalog all 91 vendor SKILL.md files into DEV/PROD/META lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. Output:",
+      "status": "done",
+      "goal": "Catalog all 91 vendor SKILL.md files into DEV/PROD/META lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. Output: .planning/notes/skill-lane-taxonomy-2026-04-18.md (counts: 60 dev, 22 meta, 3 prod, 6 dual-tag). Recommends META as third lane. Answers todo open questions (debug=dev+meta, verify-phase=dev, verify-work=dev+prod, create-skill=meta, third lane=yes). Provides phase 55 frontmatter schema + 5-wave migration order. Closes audit todo; phase 55 frontmatter rollout itself is a separate task.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": "skill-catalog,lane,dev,prod,meta,taxonomy,phase-55-prep"
+    },
+    {
+      "type": "task",
       "id": "task:59-01",
       "label": "Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home pa",
       "status": "done",
@@ -4542,10 +4579,20 @@
       "type": "task",
       "id": "task:59-09",
       "label": "Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (sche",
-      "status": "planned",
+      "status": "done",
       "goal": "Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (schema from todo 2026-04-17-subagent-run-history.md). Timeline view — date, task id, status, one-line outcome, link to full report body, link to teaching tip produced. Empty state with a 'trigger a run' button.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-10",
+      "label": "CLI efficiency gap cluster: land task-registry writer + gad tasks add + gad tasks promote + gad tasks --stalled + gad ne",
+      "status": "done",
+      "goal": "CLI efficiency gap cluster: land task-registry writer + gad tasks add + gad tasks promote + gad tasks --stalled + gad next. Closes the hand-editing loop that forced agents to edit TASK-REGISTRY.xml by hand to register new tasks (root cause of the 45-todo backlog in vendor/get-anything-done/.planning/todos/ never becoming real tasks). New lib/task-registry-writer.cjs: pure addTaskToXml + atomic appendTaskToFile, fs-injectable for tests, stable error codes (TASK_ID_EXISTS, PHASE_NOT_FOUND, VALIDATION_FAILED, MALFORMED_XML, WRITE_FAILED). CLI subcommands under tasksV2Cmd: add (register by id/phase/goal), promote (lift a .planning/todos/*.md file into a task — filename derives id, first prose line becomes goal, todo moves to todos/promoted/ unless --keep). tasks list gains --stalled flag (in-progress tasks with no agent/skill/runtime attribution). New top-level gad next command: cross-project priority hotlist (tiers: active → stalled → next planned → idle). Tests: 16/16 in tests/task-registry-writer.test.cjs, all fs-injected, no real XML parser, no real disk. Also: operator-local gsd-* hooks deleted (gsd-check-update, gsd-context-monitor, gsd-prompt-guard, gsd-statusline, gsd-workflow-guard) + stale gsd-update-check.json cache + gsd-file-manifest.json — they were orphaned and surfacing /gsd:update prompts. Settings.json already points at gad-* siblings.",
+      "skill": "default",
+      "taskType": "code",
       "keywords": ""
     },
     {
@@ -4600,6 +4647,16 @@
     },
     {
       "type": "task",
+      "id": "task:60-05a",
+      "label": "CLI wiring for the lib/secrets-lifecycle.cjs layer delivered in 60-05. Two new subcommands: `gad env audit &lt;projectid",
+      "status": "done",
+      "goal": "CLI wiring for the lib/secrets-lifecycle.cjs layer delivered in 60-05. Two new subcommands: `gad env audit &lt;projectid&gt; [--since ISO] [--limit N] [--json]` (newest-first audit-log view, wraps secretsLifecycle.auditLog) and `gad env purge &lt;projectid&gt; [--as-of ISO] [--dry-run] [--json]` (manual grace-period purge, wraps secretsLifecycle.purgeExpired). Plus a best-effort auto-purge preflight in `gad start` — scans all projects with an existing .gad/secrets/&lt;id&gt;.enc envelope, calls purgeExpired on each, logs one-line summary to stderr, NEVER fails start on purge error (swallow + log). Library extension in lib/env-cli.cjs adds auditCmd + purgeCmd following the same dep-injection + guarded error pattern. Tests in tests/env-cli.test.cjs (audit + purge describe blocks) with lifecycle mocks matching the existing store-mock shape.",
+      "skill": "default",
+      "taskType": "code",
+      "keywords": ""
+    },
+    {
+      "type": "task",
       "id": "task:60-06",
       "label": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scra",
       "status": "done",
@@ -4626,6 +4683,26 @@
       "goal": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.",
       "skill": "",
       "taskType": "site",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-09",
+      "label": "Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026",
+      "status": "planned",
+      "goal": "Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026-04-18-handoff-queue-design.md). Shape: .planning/handoffs/{open,claimed,closed}/ with one md file per handoff. Lifecycle = fs.rename between dirs (atomic on POSIX + Windows, no lock needed). Each file = YAML frontmatter {id, projectid, phase, task_id, created_at, created_by, claimed_by, claimed_at, completed_at, priority, estimated_context} + markdown body. CLI: gad handoffs {list,claim,complete,show,create}. gad-pause-work + gad-session pause invoke &apos;handoffs create&apos;. gad startup/snapshot surface unclaimed count + top-3 summary. Idle agents pick appropriate items by estimated_context (mechanical→Haiku/Sonnet, reasoning→Opus per offload policy). Gap discovered: no &apos;gad tasks update &lt;id&gt; --goal&apos; exists — surfaced in design note, file as follow-up. See .planning/notes/2026-04-18-handoff-queue-design.md for full schema.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-10",
+      "label": "Split secrets-store error codes: PROJECT_NOT_FOUND for missing envelope on disk vs KEY_NOT_FOUND for envelope-exists-but",
+      "status": "done",
+      "goal": "Split secrets-store error codes: PROJECT_NOT_FOUND for missing envelope on disk vs KEY_NOT_FOUND for envelope-exists-but-key-absent. Removes the substring-match antipattern in scoped-spawn.cjs (isMissingEnvelope) and env-cli.cjs list-empty soft-swallow. Files touched: lib/secrets-store.cjs (1 throw site), lib/scoped-spawn.cjs (isMissingEnvelope), lib/env-cli.cjs (messageFor + list catch), references/byok-design.md (sec.12 error table), tests/secrets-store.test.cjs (split test), tests/scoped-spawn.test.cjs (mock helper), tests/env-cli.test.cjs (list-empty + messageFor table). Closes todo 2026-04-17-secrets-store-project-not-found-split. Unblocks BYOK UI rendering in 60-07/60-08.",
+      "skill": "",
+      "taskType": "framework",
       "keywords": ""
     },
     {
@@ -6954,14 +7031,6 @@
     },
     {
       "type": "skill",
-      "id": "skill:gad:merge-skill",
-      "label": ">-",
-      "slug": "gad-merge-skill",
-      "trigger": "",
-      "source": "canonical"
-    },
-    {
-      "type": "skill",
       "id": "skill:gad:migrate-schema",
       "label": "Convert RP XML planning files (STATE.xml, ROADMAP.xml) to GAD Markdown format",
       "slug": "gad-migrate-schema",
@@ -7193,7 +7262,7 @@
     {
       "type": "skill",
       "id": "skill:gad:reverse-engineer",
-      "label": "Analyze any codebase (local or GitHub URL) and produce requirements for clean-room reimplementation",
+      "label": "Analyze any codebase (local or GitHub URL) and extract implementation-agnostic requirements plus system-skill contracts for clean-room reimplementation",
       "slug": "gad-reverse-engineer",
       "trigger": "",
       "source": "canonical"
@@ -10559,6 +10628,21 @@
       "type": "USES_SKILL"
     },
     {
+      "source": "task:42.4-24",
+      "target": "phase:42.4",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:42.4-24",
+      "target": "task:42.4-23",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:42.4-24",
+      "target": "decision:gad-241",
+      "type": "CITES"
+    },
+    {
       "source": "task:43-01",
       "target": "phase:43",
       "type": "BELONGS_TO"
@@ -11156,6 +11240,26 @@
     {
       "source": "task:44-37",
       "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:44-38",
+      "target": "phase:44",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-38",
+      "target": "task:44-28",
+      "type": "CITES"
+    },
+    {
+      "source": "task:44-38",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:44-38",
+      "target": "task:44-31",
       "type": "CITES"
     },
     {
@@ -12074,6 +12178,26 @@
       "type": "USES_SKILL"
     },
     {
+      "source": "task:55-00",
+      "target": "phase:55",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:55-00",
+      "target": "decision:gad-247",
+      "type": "CITES"
+    },
+    {
+      "source": "task:55-00",
+      "target": "phase:55",
+      "type": "CITES"
+    },
+    {
+      "source": "task:55-00",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
       "source": "task:59-01",
       "target": "phase:59",
       "type": "BELONGS_TO"
@@ -12215,8 +12339,23 @@
     },
     {
       "source": "task:59-09",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-09",
       "target": "task:2026-04",
       "type": "CITES"
+    },
+    {
+      "source": "task:59-10",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-10",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:60-01",
@@ -12314,6 +12453,26 @@
       "type": "USES_SKILL"
     },
     {
+      "source": "task:60-05a",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-05a",
+      "target": "task:60-05",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-05a",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:60-05a",
+      "target": "task:60-05",
+      "type": "CITES"
+    },
+    {
       "source": "task:60-06",
       "target": "phase:60",
       "type": "BELONGS_TO"
@@ -12371,6 +12530,51 @@
     {
       "source": "task:60-08",
       "target": "task:60-01",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-09",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-09",
+      "target": "task:59-10",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-09",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-10",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-10",
+      "target": "task:60-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-10",
+      "target": "task:60-05",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-10",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-10",
+      "target": "task:60-07",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-10",
+      "target": "task:60-08",
       "type": "CITES"
     },
     {
@@ -14771,21 +14975,21 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T01:10:05.825Z",
-    "nodeCount": 974,
-    "edgeCount": 1407,
+    "generated": "2026-04-18T16:35:25.938Z",
+    "nodeCount": 981,
+    "edgeCount": 1434,
     "nodeTypes": {
-      "phase": 66,
-      "task": 410,
-      "skill": 132,
+      "phase": 67,
+      "task": 417,
+      "skill": 131,
       "decision": 262,
       "workflow": 104
     },
     "edgeTypes": {
-      "BELONGS_TO": 412,
-      "CITES": 548,
-      "DEPENDS_ON": 81,
-      "USES_SKILL": 198,
+      "BELONGS_TO": 419,
+      "CITES": 560,
+      "DEPENDS_ON": 86,
+      "USES_SKILL": 201,
       "REFERENCES": 89,
       "USES_WORKFLOW": 79
     }

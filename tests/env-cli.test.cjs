@@ -255,11 +255,13 @@ describe('env-cli: list', () => {
     assert.strictEqual(parsed[0].currentVersion, 2);
   });
 
-  test('empty envelope (KEY_NOT_FOUND "no envelope") surfaces as 0 keys, not an error', async () => {
+  test('empty envelope (PROJECT_NOT_FOUND) surfaces as 0 keys, not an error', async () => {
+    // Code-split per todo 2026-04-17-secrets-store-project-not-found-split:
+    // list() in env-cli now branches on err.code, not on a message regex.
     const h = makeHarness({
       storeOverrides: {
         list: async () => {
-          throw new SecretsStoreError('KEY_NOT_FOUND', 'no envelope for project "p" at .../p.enc');
+          throw new SecretsStoreError('PROJECT_NOT_FOUND', 'no envelope for project "p" at .../p.enc');
         },
       },
     });
@@ -353,6 +355,7 @@ describe('env-cli: error-code mapping (byok-design §12)', () => {
     ['KEY_EXPIRED', /grace period has lapsed/],
     ['ROTATION_GRACE_EXPIRED', /already auto-purged/],
     ['GITIGNORE_WRITE_FAILED', /\.gitignore could not be updated/],
+    ['PROJECT_NOT_FOUND', /No encrypted bag exists for project/],
     ['KEY_ALREADY_EXISTS', /already set for project/],
     ['GRACE_DAYS_OUT_OF_RANGE', /--grace-days must be between 0 and 30/],
   ];

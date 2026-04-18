@@ -150,4 +150,58 @@ describe('gad runtime command integration', () => {
     assert.equal(typeof payload.context.contextProvenance.handoffInputs.present, 'boolean');
     assert.equal(payload.context.contextProvenance.contextBlocksInjected, payload.context.contextBlockCount);
   });
+
+  test('runtime launch dry-run resolves explicit id alias', { skip: !HAS_RUNTIME_SUBSTRATE }, () => {
+    const payload = gadJson([
+      'runtime', 'launch',
+      '--projectid', 'global',
+      '--sessionid', 's1',
+      '--id', 'claude',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(payload.runtime, 'claude-code');
+    assert.equal(payload.dryRun, true);
+    assert.equal(payload.launchInNewShell, true);
+    assert.equal(payload.sameShell, false);
+    assert.equal(payload.command, 'claude');
+    assert.ok(Array.isArray(payload.args));
+    assert.ok(payload.contextProvenance);
+    assert.equal(typeof payload.contextProvenance.snapshotSource.present, 'boolean');
+  });
+
+  test('runtime shorthand with --id dispatches to launch mode', { skip: !HAS_RUNTIME_SUBSTRATE }, () => {
+    const payload = gadJson([
+      'runtime',
+      '--id', 'codex',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(payload.runtime, 'codex-cli');
+    assert.equal(payload.dryRun, true);
+    assert.equal(payload.launchInNewShell, true);
+    assert.ok(Array.isArray(payload.args));
+    assert.ok(
+      payload.args.some((value) => /scripts[\\/]+codex-trial\.mjs$/i.test(String(value))),
+      'expected codex launch args to include scripts/codex-trial.mjs',
+    );
+  });
+
+  test('runtime launch same-shell flag disables new-shell mode in payload', { skip: !HAS_RUNTIME_SUBSTRATE }, () => {
+    const payload = gadJson([
+      'runtime', 'launch',
+      '--id', 'gemini',
+      '--same-shell',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(payload.runtime, 'gemini-cli');
+    assert.equal(payload.sameShell, true);
+    assert.equal(payload.launchInNewShell, false);
+    assert.ok(Array.isArray(payload.args));
+    assert.ok(
+      payload.args.some((value) => /scripts[\\/]+gemini-trial\.mjs$/i.test(String(value))),
+      'expected gemini launch args to include scripts/gemini-trial.mjs',
+    );
+  });
 });

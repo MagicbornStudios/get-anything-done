@@ -421,5 +421,12 @@
     <depends>59</depends>
   </phase>
 
+  <phase id="63">
+    <title>Agent/state/session hygiene</title>
+    <goal>Consolidate scattered state/log writes across .omx/, .planning/, team-state, hud-state, etc; land session-continuity contract so 'lets continue' works without orientation cost; scaffold non-checked-in user settings (machine-name default + assigned soul); author canonical agent-lane manifest so parallel agents (claude/codex/cursor) have clear file ownership; wire daily tip + soul reference into session-open surface. Driven by 2026-04-18 post-mortem: 3-agent parallel session lost ~15% of Claude turn to stash incident and ~20% to orientation-from-logs instead of handoff pickup.</goal>
+    <status>planned</status>
+    <depends>60</depends>
+  </phase>
+
 </roadmap>
 

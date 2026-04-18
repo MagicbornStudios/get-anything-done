@@ -228,9 +228,29 @@
       "updatedAt": "2026-04-18T01:08:51.195Z",
       "lastSeenAt": "2026-04-18T01:08:51.197Z",
       "leaseExpiresAt": null
+    },
+    {
+      "agentId": "claude-snapshot-format-0001",
+      "agentRole": "snapshot-format",
+      "runtime": "claude-code",
+      "runtimeSessionId": null,
+      "parentAgentId": null,
+      "rootAgentId": "claude-snapshot-format-0001",
+      "depth": 0,
+      "modelProfile": "quality",
+      "resolvedModel": "claude-opus-4-7",
+      "humanOperator": false,
+      "status": "released",
+      "claimedTaskIds": [],
+      "claimedPhaseIds": [],
+      "createdAt": "2026-04-18T16:02:30.433Z",
+      "updatedAt": "2026-04-18T16:02:30.804Z",
+      "lastSeenAt": "2026-04-18T16:02:30.806Z",
+      "leaseExpiresAt": null
     }
   ],
   "sequenceByKey": {
-    "claude::default": 12
+    "claude::default": 12,
+    "claude::snapshot-format": 1
   }
 }

@@ -28,14 +28,16 @@ const { SecretsStoreError } = require('../lib/secrets-store-errors.cjs');
 function makeMockStore({ bag = null, getError = null, listError = null } = {}) {
   // `bag` is a plain { KEY: value } map representing the project's decrypted
   // current-version keys. `null` models "no envelope yet" — both list() and
-  // get() throw the no-envelope shape.
+  // get() throw PROJECT_NOT_FOUND in that case (todo
+  // 2026-04-17-secrets-store-project-not-found-split). KEY_NOT_FOUND is
+  // reserved for "envelope exists but the named key is absent".
   const calls = { list: [], get: [] };
   const store = {
     async list({ projectId }) {
       calls.list.push({ projectId });
       if (listError) throw listError;
       if (bag === null) {
-        throw new SecretsStoreError('KEY_NOT_FOUND', `no envelope for project "${projectId}"`);
+        throw new SecretsStoreError('PROJECT_NOT_FOUND', `no envelope for project "${projectId}"`);
       }
       return Object.keys(bag).map((keyName) => ({
         keyName,
@@ -49,7 +51,7 @@ function makeMockStore({ bag = null, getError = null, listError = null } = {}) {
       calls.get.push({ projectId, keyName });
       if (getError) throw getError;
       if (bag === null) {
-        throw new SecretsStoreError('KEY_NOT_FOUND', `no envelope for project "${projectId}"`);
+        throw new SecretsStoreError('PROJECT_NOT_FOUND', `no envelope for project "${projectId}"`);
       }
       if (!(keyName in bag)) {
         throw new SecretsStoreError('KEY_NOT_FOUND', `key "${keyName}" not set for project "${projectId}"`);

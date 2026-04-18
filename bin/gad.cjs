@@ -2491,6 +2491,61 @@ function parseCsvValues(value) {
     .filter(Boolean);
 }
 
+function parseRuntimeLaunchArgsText(rawValue) {
+  const raw = String(rawValue || '');
+  if (!raw.trim()) return [];
+  const out = [];
+  let current = '';
+  let quote = null;
+  for (let i = 0; i < raw.length; i += 1) {
+    const ch = raw[i];
+    if (quote) {
+      if (ch === quote) {
+        quote = null;
+      } else {
+        current += ch;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      if (current.length > 0) {
+        out.push(current);
+        current = '';
+      }
+      continue;
+    }
+    current += ch;
+  }
+  if (quote) {
+    throw new Error('Unterminated quote in --launch-args value.');
+  }
+  if (current.length > 0) out.push(current);
+  return out;
+}
+
+function resolveRuntimeLaunchExtraArgs(args) {
+  const jsonRaw = String(getRuntimeArg(args, 'launch-args-json', '') || '').trim();
+  if (jsonRaw) {
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonRaw);
+    } catch (err) {
+      throw new Error(`Invalid --launch-args-json payload: ${err.message || err}`);
+    }
+    if (!Array.isArray(parsed)) {
+      throw new Error('--launch-args-json must be a JSON array of strings.');
+    }
+    return parsed.map((entry) => String(entry));
+  }
+  const textRaw = String(getRuntimeArg(args, 'launch-args', '') || '').trim();
+  if (!textRaw) return [];
+  return parseRuntimeLaunchArgsText(textRaw);
+}
+
 function getRuntimeArg(args, key, fallback = undefined) {
   if (!args || typeof args !== 'object') return fallback;
   const camel = String(key).replace(/-([a-z])/g, (_, ch) => ch.toUpperCase());
@@ -2499,6 +2554,85 @@ function getRuntimeArg(args, key, fallback = undefined) {
   if (Object.prototype.hasOwnProperty.call(args, camel)) return args[camel];
   if (Object.prototype.hasOwnProperty.call(args, key)) return args[key];
   return fallback;
+}
+
+function normalizeRuntimeLaunchId(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return '';
+  if (raw === 'claude') return 'claude-code';
+  if (raw === 'codex') return 'codex-cli';
+  if (raw === 'gemini') return 'gemini-cli';
+  if (raw === 'open-code') return 'opencode';
+  return raw;
+}
+
+function buildInteractiveRuntimeLaunchSpec(runtimeId, runtimeRepoRoot) {
+  if (runtimeId === 'claude-code') {
+    return { command: 'claude', args: [] };
+  }
+  if (runtimeId === 'codex-cli') {
+    return {
+      command: process.execPath,
+      args: [path.join(runtimeRepoRoot, 'scripts', 'codex-trial.mjs'), '--'],
+    };
+  }
+  if (runtimeId === 'gemini-cli') {
+    return {
+      command: process.execPath,
+      args: [path.join(runtimeRepoRoot, 'scripts', 'gemini-trial.mjs'), '--'],
+    };
+  }
+  if (runtimeId === 'opencode') {
+    return {
+      command: process.execPath,
+      args: [path.join(runtimeRepoRoot, 'scripts', 'opencode-trial.mjs'), '--'],
+    };
+  }
+  throw new Error(`Unsupported runtime id for interactive launch: ${runtimeId}`);
+}
+
+function escapePowerShellSingleQuoted(value) {
+  return `'${String(value || '').replace(/'/g, "''")}'`;
+}
+
+function launchRuntimeInNewShellWindows({ command, args = [], cwd, runtimeId = 'runtime' }) {
+  const { spawnSync } = require('child_process');
+  const argList = Array.isArray(args) ? args : [];
+  const psArgArray = `@(${argList.map((entry) => escapePowerShellSingleQuoted(entry)).join(', ')})`;
+  const childCommand = [
+    '$ErrorActionPreference = "Stop"',
+    `$host.UI.RawUI.WindowTitle = ${escapePowerShellSingleQuoted(`GAD Runtime: ${runtimeId}`)}`,
+    `$wd = ${escapePowerShellSingleQuoted(cwd)}`,
+    'Set-Location -LiteralPath $wd',
+    `$cmd = ${escapePowerShellSingleQuoted(command)}`,
+    `$argList = ${psArgArray}`,
+    'Write-Host ""',
+    `Write-Host ${escapePowerShellSingleQuoted(`[gad runtime launch] ${runtimeId}`)} -ForegroundColor Cyan`,
+    'Write-Host ""',
+    'if ($argList.Count -gt 0) { & $cmd @argList } else { & $cmd }',
+    '$exitCode = $LASTEXITCODE',
+    'if ($null -ne $exitCode -and $exitCode -ne 0) {',
+    '  Write-Host ""',
+    '  Write-Host ("[gad runtime launch] process exited with code {0}" -f $exitCode) -ForegroundColor Yellow',
+    '}',
+  ].join('; ');
+  const script = [
+    '$ErrorActionPreference = "Stop"',
+    `$wd = ${escapePowerShellSingleQuoted(cwd)}`,
+    `$childCommand = ${escapePowerShellSingleQuoted(childCommand)}`,
+    "Start-Process -FilePath 'powershell' -ArgumentList @('-NoLogo','-NoExit','-ExecutionPolicy','Bypass','-Command',$childCommand) -WorkingDirectory $wd -WindowStyle Normal",
+  ].join('; ');
+  const launched = spawnSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script], {
+    env: process.env,
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  if (launched.error) throw launched.error;
+  if (launched.status !== 0) {
+    const stderr = String(launched.stderr || '').trim();
+    const stdout = String(launched.stdout || '').trim();
+    throw new Error(stderr || stdout || `Failed to launch runtime shell for ${command}.`);
+  }
 }
 
 function readFileExcerpt(filePath, maxChars = 2400) {
@@ -3202,16 +3336,203 @@ const runtimePipelineCmd = defineCommand({
   },
 });
 
+const runtimeLaunchCmd = defineCommand({
+  meta: {
+    name: 'launch',
+    description: 'Launch an interactive runtime CLI (new shell by default) using GAD project/session context.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Project id (GAD planning root)', default: '' },
+    sessionid: { type: 'string', description: 'Session id for context hydration', default: '' },
+    id: { type: 'string', description: 'Runtime id alias (claude, codex, gemini, opencode)', default: '' },
+    runtime: { type: 'string', description: 'Runtime id (claude-code, codex-cli, gemini-cli, opencode)', default: '' },
+    runtimes: { type: 'string', description: 'Comma-separated runtimes to consider when --id/--runtime omitted', default: '' },
+    'task-shape': { type: 'string', description: 'Task shape category', default: '' },
+    mode: { type: 'string', description: 'Substrate rollout mode override (off|shadow|assist|active)', default: '' },
+    'force-runtime': { type: 'string', description: 'Bypass selector and force a runtime', default: '' },
+    'allow-runtime-override': { type: 'boolean', description: 'Allow routing overrides for this invocation', default: false },
+    'new-shell': { type: 'boolean', description: 'Launch in a new shell window', default: true },
+    'same-shell': { type: 'boolean', description: 'Launch in the current shell (blocks until runtime exits)', default: false },
+    'skip-health-check': { type: 'boolean', description: 'Skip runtime executable/auth health probes before launch', default: false },
+    'launch-args': { type: 'string', description: 'Extra args passed to the launched runtime command (supports simple quoted strings)', default: '' },
+    'launch-args-json': { type: 'string', description: 'JSON array of extra args passed to the launched runtime command (overrides --launch-args)', default: '' },
+    'dry-run': { type: 'boolean', description: 'Resolve runtime and launch command but do not execute', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  async run({ args }) {
+    try {
+      const context = await resolveGadRuntimeContext({
+        projectId: args.projectid,
+        sessionId: args.sessionid,
+        modeOverride: args.mode,
+        forceRuntime: getRuntimeArg(args, 'force-runtime', ''),
+        allowRuntimeOverride: Boolean(getRuntimeArg(args, 'allow-runtime-override', false)),
+        taskShape: getRuntimeArg(args, 'task-shape', ''),
+      });
+      const core = context.core || (await import(pathToFileURL(path.join(context.runtimeRepoRoot, 'scripts', 'runtime-substrate-core.mjs')).href));
+
+      const explicitId = normalizeRuntimeLaunchId(getRuntimeArg(args, 'id', '') || getRuntimeArg(args, 'runtime', ''));
+      const forceRuntime = normalizeRuntimeLaunchId(getRuntimeArg(args, 'force-runtime', ''));
+      const selectionRuntimeIds = resolveRuntimeIds(args, core).map((id) => normalizeRuntimeLaunchId(id));
+      let selectedRuntime = explicitId || forceRuntime || '';
+      let selectionTrace = null;
+
+      if (!selectedRuntime) {
+        const runtimeIds = Array.from(new Set(selectionRuntimeIds.filter(Boolean)));
+        const healthStatuses = {};
+        for (const runtime of runtimeIds) {
+          healthStatuses[runtime] = core.runtimeHealthReport(runtime, {
+            smoke: false,
+            timeoutMs: 25000,
+          });
+        }
+        const authStatuses = core.authStatusByRuntime(runtimeIds);
+        const installed = Object.fromEntries(
+          runtimeIds.map((runtime) => [
+            runtime,
+            {
+              installed: Boolean(healthStatuses[runtime]?.installed),
+              executablePath: healthStatuses[runtime]?.executablePath ?? null,
+              version: healthStatuses[runtime]?.version ?? null,
+              issues: [...(healthStatuses[runtime]?.issues || [])],
+            },
+          ]),
+        );
+        const decision = core.selectRuntimeWithGuards({
+          runtimeIds,
+          taskShape: context.taskShape,
+          estimatedTokensIn: 0,
+          requiresHeadless: false,
+          requiresJsonOutput: false,
+          requiresShell: true,
+          requiresWrite: true,
+          authStatuses,
+          healthStatuses,
+          installed,
+          promotedSkills: context.promotedSkills,
+          effectiveConfig: context.effectiveRuntimeConfig,
+          forceRuntime: forceRuntime || null,
+        });
+        selectionTrace = toSelectionTrace(decision, {
+          projectOverrideActive: context.projectOverrideActive,
+          forceRuntimeActive: Boolean(forceRuntime),
+          forceRuntime,
+        });
+        selectedRuntime = normalizeRuntimeLaunchId(decision.effective?.primary || decision.computed?.primary || '');
+      }
+
+      if (!selectedRuntime) {
+        throw new Error('Could not resolve a runtime to launch. Pass --id <runtime> to force one.');
+      }
+
+      const launchSpec = buildInteractiveRuntimeLaunchSpec(selectedRuntime, context.runtimeRepoRoot);
+      const extraRuntimeArgs = resolveRuntimeLaunchExtraArgs(args);
+      const launchArgs = [...(launchSpec.args || []), ...extraRuntimeArgs];
+      const sameShell = Boolean(getRuntimeArg(args, 'same-shell', false));
+      const launchInNewShell = sameShell ? false : Boolean(getRuntimeArg(args, 'new-shell', true));
+      const dryRun = Boolean(getRuntimeArg(args, 'dry-run', false));
+      const skipHealthCheck = Boolean(getRuntimeArg(args, 'skip-health-check', false)) || dryRun;
+      const auth = core.authStatusByRuntime([selectedRuntime])[selectedRuntime];
+      let health = {
+        installed: null,
+        version: null,
+        executablePath: null,
+        supportsWorkspaceWrite: null,
+        supportsHeadless: null,
+        supportsJsonOutput: null,
+        issues: [],
+        warnings: [],
+      };
+      if (!skipHealthCheck) {
+        health = core.runtimeHealthReport(selectedRuntime, { smoke: false, timeoutMs: 25000 });
+        if (!health.installed) {
+          throw new Error(`Runtime ${selectedRuntime} is not installed or not on PATH. ${health.issues.join(' | ')}`);
+        }
+      }
+
+      const payload = {
+        projectId: context.projectId,
+        sessionId: context.sessionId,
+        taskShape: context.taskShape,
+        runtime: selectedRuntime,
+        launchInNewShell,
+        sameShell,
+        dryRun,
+        command: launchSpec.command,
+        args: launchArgs,
+        cwd: context.runtimeRepoRoot,
+        extraArgs: extraRuntimeArgs,
+        healthCheckSkipped: skipHealthCheck,
+        health: {
+          installed: health.installed,
+          version: health.version,
+          executablePath: health.executablePath,
+          supportsWorkspaceWrite: health.supportsWorkspaceWrite,
+          supportsHeadless: health.supportsHeadless,
+          supportsJsonOutput: health.supportsJsonOutput,
+          issues: health.issues,
+          warnings: health.warnings,
+        },
+        auth: auth || null,
+        contextProvenance: context.contextProvenance,
+        selectionTrace,
+      };
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify(payload, null, 2));
+        if (dryRun) return;
+      }
+
+      if (dryRun) {
+        console.log(`Runtime launch dry-run: ${selectedRuntime}`);
+        console.log(`command=${launchSpec.command} ${(launchArgs || []).join(' ')}`.trim());
+        return;
+      }
+
+      if (launchInNewShell) {
+        if (process.platform !== 'win32') {
+          throw new Error('New-shell launch is currently implemented for Windows only. Use --same-shell on this platform.');
+        }
+        launchRuntimeInNewShellWindows({
+          command: launchSpec.command,
+          args: launchArgs,
+          cwd: context.runtimeRepoRoot,
+          runtimeId: selectedRuntime,
+        });
+        if (!args.json && !shouldUseJson()) {
+          console.log(`Launched ${selectedRuntime} in a new shell window.`);
+        }
+        return;
+      }
+
+      const { spawnSync } = require('child_process');
+      const child = spawnSync(launchSpec.command, launchArgs, {
+        cwd: context.runtimeRepoRoot,
+        env: process.env,
+        stdio: 'inherit',
+        shell: false,
+      });
+      if (child.error) throw child.error;
+      if (child.status !== 0) {
+        throw new Error(`${selectedRuntime} exited with status ${child.status}.`);
+      }
+    } catch (err) {
+      outputError(err.message);
+    }
+  },
+});
+
 const runtimeCmd = defineCommand({
   meta: {
     name: 'runtime',
-    description: 'GAD-native runtime substrate commands (check/select/matrix/pipeline).',
+    description: 'GAD-native runtime substrate commands (check/select/matrix/pipeline/launch).',
   },
   subCommands: {
     check: runtimeCheckCmd,
     select: runtimeSelectCmd,
     matrix: runtimeMatrixCmd,
     pipeline: runtimePipelineCmd,
+    launch: runtimeLaunchCmd,
   },
 });
 
@@ -10529,11 +10850,77 @@ const sinkCmd = defineCommand({
 // verify command
 // ---------------------------------------------------------------------------
 
+function safeReadJson(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function detectProjectScriptRunner(projectDir) {
+  if (
+    fs.existsSync(path.join(projectDir, 'pnpm-workspace.yaml'))
+    || fs.existsSync(path.join(projectDir, 'pnpm-lock.yaml'))
+  ) {
+    return 'pnpm run';
+  }
+  return 'npm run';
+}
+
+function resolveVerifyBuildCommands({ config, root, projectDir, cliBuildCmd }) {
+  const fromCli = String(cliBuildCmd || '').trim();
+  if (fromCli) {
+    return {
+      source: 'cli',
+      commands: [fromCli],
+    };
+  }
+
+  const projectId = String(root?.id || '').trim();
+  const projectScoped = config?.verify?.projects?.[projectId]?.buildCommands;
+  if (Array.isArray(projectScoped) && projectScoped.length > 0) {
+    return {
+      source: `config:verify.projects.${projectId}`,
+      commands: projectScoped,
+    };
+  }
+
+  const globalScoped = config?.verify?.buildCommands;
+  if (Array.isArray(globalScoped) && globalScoped.length > 0) {
+    return {
+      source: 'config:verify',
+      commands: globalScoped,
+    };
+  }
+
+  const runner = detectProjectScriptRunner(projectDir);
+  const packageJsonPath = path.join(projectDir, 'package.json');
+  const pkg = fs.existsSync(packageJsonPath) ? safeReadJson(packageJsonPath) : null;
+  const scripts = pkg && typeof pkg.scripts === 'object' ? pkg.scripts : {};
+  const prioritizedScripts = ['build', 'build:cli', 'build:skills', 'build:hooks', 'build:release'];
+  const commands = [];
+  for (const scriptName of prioritizedScripts) {
+    if (Object.prototype.hasOwnProperty.call(scripts, scriptName)) {
+      commands.push(`${runner} ${scriptName}`);
+      break;
+    }
+  }
+  if (fs.existsSync(path.join(projectDir, 'tsconfig.json'))) {
+    commands.push('npx tsc --noEmit');
+  }
+  if (commands.length === 0) {
+    return { source: 'auto', commands: [] };
+  }
+  return { source: 'auto', commands };
+}
+
 const verifyCmd = defineCommand({
   meta: { name: 'verify', description: 'Verify a phase achieved its goals — checks tasks, build, state, conventions' },
   args: {
     projectid: { type: 'string', description: 'Project ID', default: '' },
     phase: { type: 'string', description: 'Phase ID to verify', default: '' },
+    'build-cmd': { type: 'string', description: 'Override build/typecheck command used by verify', default: '' },
   },
   run({ args }) {
     const { execSync } = require('child_process');
@@ -10577,26 +10964,32 @@ const verifyCmd = defineCommand({
       evidence: openTasks.length === 0 ? `${doneTasks.length} done` : `${openTasks.length} still open: ${openTasks.map(t => t.id).join(', ')}`,
     });
 
-    // 2. Build passes (try common commands)
+    // 2. Build/typecheck passes
     const projectDir = path.join(baseDir, root.path);
     let buildResult = 'SKIP';
-    let buildEvidence = 'no build command detected';
-    const buildCmds = [
-      { cmd: 'npm run build', check: 'package.json' },
-      { cmd: 'npx tsc --noEmit', check: 'tsconfig.json' },
-      { cmd: 'pnpm run build', check: 'pnpm-workspace.yaml' },
-    ];
-    for (const bc of buildCmds) {
-      if (fs.existsSync(path.join(projectDir, bc.check))) {
-        try {
-          execSync(bc.cmd, { cwd: projectDir, encoding: 'utf8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] });
-          buildResult = 'PASS';
-          buildEvidence = `${bc.cmd} exited 0`;
-        } catch (e) {
-          buildResult = 'FAIL';
-          buildEvidence = `${bc.cmd} failed: ${(e.stderr || e.message || '').slice(0, 200)}`;
-        }
-        break;
+    let buildEvidence = 'no build/typecheck command resolved';
+    const buildPlan = resolveVerifyBuildCommands({
+      config,
+      root,
+      projectDir,
+      cliBuildCmd: args['build-cmd'] || args.buildCmd,
+    });
+    const selectedBuildCommand = Array.isArray(buildPlan.commands) && buildPlan.commands.length > 0
+      ? String(buildPlan.commands[0]).trim()
+      : '';
+    if (selectedBuildCommand) {
+      try {
+        execSync(selectedBuildCommand, {
+          cwd: projectDir,
+          encoding: 'utf8',
+          timeout: 60000,
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
+        buildResult = 'PASS';
+        buildEvidence = `${selectedBuildCommand} exited 0 (${buildPlan.source})`;
+      } catch (e) {
+        buildResult = 'FAIL';
+        buildEvidence = `${selectedBuildCommand} failed (${buildPlan.source}): ${(e.stderr || e.message || '').slice(0, 200)}`;
       }
     }
     checks.push({ category: 'Build', check: 'Build/typecheck passes', result: buildResult, evidence: buildEvidence });
@@ -11454,37 +11847,13 @@ function resolveStartupReleaseArtifactPath(frameworkRoot) {
   throw new Error(`Release artifact not found: ${artifactPath}`);
 }
 
-function scheduleDeferredWindowsInstall(installScript, artifactPath) {
-  const { spawn } = require('child_process');
-  const escapedInstaller = String(installScript || '').replace(/'/g, "''");
-  const escapedArtifact = String(artifactPath || '').replace(/'/g, "''");
-  const script = [
-    `$installer='${escapedInstaller}';`,
-    `$artifact='${escapedArtifact}';`,
-    'for ($i = 0; $i -lt 240; $i++) {',
-    '  try {',
-    '    & $installer -Artifact $artifact *> $null;',
-    '    if ($?) { exit 0 }',
-    '  } catch {}',
-    '  Start-Sleep -Milliseconds 250',
-    '}',
-    'exit 1',
-  ].join(' ');
-  const child = spawn(
-    'powershell',
-    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script],
-    { detached: true, stdio: 'ignore', env: process.env },
-  );
-  child.unref();
-}
-
-function runStartupSelfRefresh(frameworkRoot) {
+function runStartupSelfRefresh(frameworkRoot, commandLabel = 'gad startup') {
   const { spawnSync } = require('child_process');
   const buildScript = path.join(frameworkRoot, 'scripts', 'build-release.mjs');
   const installScript = path.join(frameworkRoot, 'scripts', 'install-gad-windows.ps1');
   const nodeCommand = isPackagedExecutableRuntime() ? 'node' : process.execPath;
 
-  console.log(`[gad startup] dogfood refresh: building from ${frameworkRoot}`);
+  console.log(`[${commandLabel}] dogfood refresh: building from ${frameworkRoot}`);
   const buildResult = spawnSync(nodeCommand, [buildScript], {
     cwd: frameworkRoot,
     stdio: 'inherit',
@@ -11497,7 +11866,7 @@ function runStartupSelfRefresh(frameworkRoot) {
 
   const artifactPath = resolveStartupReleaseArtifactPath(frameworkRoot);
   if (process.platform === 'win32') {
-    console.log(`[gad startup] dogfood refresh: installing ${path.basename(artifactPath)}`);
+    console.log(`[${commandLabel}] dogfood refresh: installing ${path.basename(artifactPath)}`);
     const installResult = spawnSync(
       'powershell',
       ['-ExecutionPolicy', 'Bypass', '-File', installScript, '-Artifact', artifactPath],
@@ -11510,9 +11879,7 @@ function runStartupSelfRefresh(frameworkRoot) {
       const combinedOutput = `${installResult.stdout || ''}\n${installResult.stderr || ''}`;
       const lockConflict = /being used by another process|cannot access the file/i.test(combinedOutput);
       if (lockConflict) {
-        scheduleDeferredWindowsInstall(installScript, artifactPath);
-        console.log('[gad startup] install deferred: current gad.exe is still running; retry will complete after this command exits.');
-        return;
+        throw new Error('gad.exe is locked by another process. Close running gad.exe processes and rerun the command.');
       }
       throw new Error(`install-gad-windows.ps1 failed with status ${installResult.status || 1}`);
     }
@@ -11524,7 +11891,25 @@ function runStartupSelfRefresh(frameworkRoot) {
   fs.mkdirSync(targetDir, { recursive: true });
   fs.copyFileSync(artifactPath, targetExecutable);
   try { fs.chmodSync(targetExecutable, 0o755); } catch {}
-  console.log(`[gad startup] dogfood refresh: installed ${targetExecutable}`);
+  console.log(`[${commandLabel}] dogfood refresh: installed ${targetExecutable}`);
+}
+
+function runDogfoodSelfRefreshOrExit(commandLabel) {
+  const frameworkRoot = resolveStartupFrameworkRoot();
+  if (!frameworkRoot) {
+    console.error(`[${commandLabel}] could not locate local framework checkout (expected scripts/build-release.mjs).`);
+    process.exit(1);
+  }
+  if (shouldDelegateStartupToTemporaryExecutable()) {
+    delegateStartupToTemporaryExecutable();
+    return;
+  }
+  try {
+    runStartupSelfRefresh(frameworkRoot, commandLabel);
+  } catch (err) {
+    console.error(`[${commandLabel}] failed: ${err.message || err}`);
+    process.exit(1);
+  }
 }
 
 function runStartupSnapshot(projectId, sessionArg = []) {
@@ -11651,6 +12036,37 @@ const startupCmd = defineCommand({
       const result = runStartupSnapshot(args.projectid, sessionArg);
       process.exit(result.status || 0);
     }
+  },
+});
+
+const selfRefreshCmd = defineCommand({
+  meta: {
+    name: 'refresh',
+    description: 'Build + install the local GAD executable from the framework checkout (dogfood convenience).',
+  },
+  run() {
+    runDogfoodSelfRefreshOrExit('gad self refresh');
+  },
+});
+
+const selfInstallCmd = defineCommand({
+  meta: {
+    name: 'install',
+    description: 'Alias for `gad self refresh`.',
+  },
+  run() {
+    runDogfoodSelfRefreshOrExit('gad self install');
+  },
+});
+
+const selfCmd = defineCommand({
+  meta: {
+    name: 'self',
+    description: 'Self-management commands for local dogfood build/install convenience.',
+  },
+  subCommands: {
+    refresh: selfRefreshCmd,
+    install: selfInstallCmd,
   },
 });
 
@@ -15735,6 +16151,7 @@ const main = defineCommand({
     planning: planningCmd,
     narrative: narrativeCmd,
     site: siteCmd,
+    self: selfCmd,
     'self-eval': selfEvalCmd,
     data: dataCmd,
     env: envCmd,
@@ -15907,9 +16324,16 @@ const main = defineCommand({
   const i = a.indexOf('runtime');
   if (i === -1) return;
   const first = a[i + 1];
-  const known = new Set(['check', 'select', 'matrix', 'pipeline', 'help']);
+  const known = new Set(['check', 'select', 'matrix', 'pipeline', 'launch', 'help']);
   if (first === undefined || first.startsWith('-')) {
-    a.splice(i + 1, 0, 'select');
+    const launchFlag = String(first || '');
+    const shouldDefaultToLaunch = launchFlag === '--id'
+      || launchFlag.startsWith('--id=')
+      || launchFlag === '--same-shell'
+      || launchFlag === '--new-shell'
+      || launchFlag === '--no-new-shell'
+      || launchFlag === '--dry-run';
+    a.splice(i + 1, 0, shouldDefaultToLaunch ? 'launch' : 'select');
     return;
   }
   if (!known.has(first)) return;

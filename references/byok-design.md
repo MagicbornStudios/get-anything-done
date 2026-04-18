@@ -740,11 +740,11 @@ throw `Error` subclasses with `.code` set.
 | `KEYCHAIN_UNAVAILABLE` | "OS keychain not supported on this platform." | "Use `--passphrase` flag or set up a platform keychain adapter." |
 | `KEYCHAIN_LOCKED` | "OS keychain rejected the unlock request." | "Unlock the OS keychain via system settings, then retry. Or force passphrase with `--passphrase`." |
 | `BAG_CORRUPT` | "Envelope at `.gad/secrets/<id>.enc` is malformed or tampered." | "Inspect the file; if unrecoverable, delete and re-run `gad env set` for each key." |
-| `KEY_NOT_FOUND` | "Key `<NAME>` is not set for project `<id>`." | "Run `gad env list --projectid <id>` to see available keys, or `gad env set <NAME>` to add it." |
+| `KEY_NOT_FOUND` | "Key `<NAME>` is not set for project `<id>` (envelope exists, key absent)." | "Run `gad env list --projectid <id>` to see available keys, or `gad env set <NAME>` to add it." |
 | `KEY_EXPIRED` | "Version `<n>` of key `<NAME>` has been purged past grace period." | "Use `--version <current>` or `gad env rotate <NAME>` to refresh." |
 | `ROTATION_GRACE_EXPIRED` | "Requested version retired on `<date>` and was auto-purged." | "Switch to the current version, or re-set the key if the old value is still needed." |
 | `GITIGNORE_WRITE_FAILED` | "Could not add `.gad/` to `<project-root>/.gitignore`." | "Check filesystem permissions; fix manually then retry `gad env set`." |
-| `PROJECT_NOT_FOUND` | "No planning root found for `projectid=<id>`." | "Run `gad startup --projectid <id>` or check `gad-config.toml` `[[planning.roots]]`." |
+| `PROJECT_NOT_FOUND` | "No encrypted bag exists for project `<id>` (envelope absent on disk)." | "Create the bag by setting your first key: `gad env set <KEY> --projectid <id>`." |
 | `KEY_ALREADY_EXISTS` | "Key `<NAME>` is already set for project `<id>`." | "Use `gad env rotate <NAME>` to update the value; `gad env set` is add-only." |
 | `GRACE_DAYS_OUT_OF_RANGE` | "`--grace-days` must be between 0 and 30." | "Re-run with a value in range." |
 

@@ -1444,6 +1444,10 @@ Explicit `workflow_enter`/`workflow_exit` events are still queued as a separate 
       <resolution>Shipped 2026-04-17. `resolveGadSiteServePortDetailed` in `bin/gad.cjs`; `--consumer` flag; port arg default empty; log line explains source. AGENTS + quick-start + CHANGELOG.</resolution>
       <keywords>cli,site-serve,port,consumer,monorepo</keywords>
     </task>
+    <task id="42.4-24" type="framework" status="done" agent-id="claude-snapshot-format-0001" agent-role="snapshot-format" runtime="claude-code" model-profile="quality" resolved-model="claude-opus-4-7">
+      <goal>Tree-format output for gad snapshot refs section per decision gad-241. Replace flat &apos;- path&apos; list with indented tree that groups shared prefixes (e.g. .planning/workflows/*, references/*, site/{lib,scripts,app}/*). Implementation: lib/snapshot-compact.cjs gains compactRefsTree() with single-child dir-chain collapse and single-leaf fold. Threshold REFS_TREE_THRESHOLD=5 keeps small lists flat. Tests: tests/snapshot-compact-refs-tree.test.cjs covers empty/below-threshold/tree-mode/collapse/fold/annotations/duplicates/dir-suffix/token-savings/compactStateXml-wiring (11 tests). Measured: full snapshot 17813B → 17622B (−191B, ~1%); refs section alone ~9% reduction; BPE token savings higher than byte due to shared-prefix coalescing. Follow-ups: apply same tree form to gad startup contract output; investigate deeper compression on DECISIONS section (title-only already compact).</goal>
+      <depends>42.4-23</depends>
+    </task>
   </phase>
   <phase id="43">
     <task id="43-01" type="cleanup" status="done" skill="default" agent="default"><goal>Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-planning-only (D-21), all etd-brownfield-* (D-22, drops greenfield/brownfield mode framing entirely), and all etd-{babylonjs,phaser,pixijs,threejs} tech-stack variants (D-23, not testing tech-stack variation under the new schema). Also delete corresponding preserved builds under apps/portfolio/public/evals/ if present. Single commit.</goal>
@@ -1625,6 +1629,9 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     <task id="44-37" type="meta" status="done" skill="default" agent="default"><goal>Retrospective: Visual Context landing band — intro landmarks vs inner showcase scope (2026-04-15). Capture where confusion lived (agent prioritized showcase/meteor demos; user wanted intro kicker/title/body as separate Identified targets for DevPanel), resolution (split `LandingVisualContextIntroKicker`, `IntroTitle`, `IntroBody` under outer `LandingVisualContextShowcase`), and mitigations for future UI work (name scope explicitly; atomic Identified per DevPanel target; verify with grep before closing).</goal>
       <resolution>Artifact: `.planning/notes/retr-visual-context-landmarks-intro-2026-04-15.md`. Code: `site/components/landing/home/LandingVisualContextAndPromptBand.tsx` — intro uses three `Identified` children plus existing `LandingVisualContextPanelShowcase`, `LandingVisualContextPatternList`, `LandingPageGenerationPromptExample`.</resolution>
       <keywords>retrospective,visual-context,identified,landmarks,intro,dev-panel,44-15,44-16</keywords>
+    </task>
+    <task id="44-38" type="framework" status="planned">
+      <goal>44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm public registry) to GitHub Releases tarball. Discovered 2026-04-18: workflows/update.md step run_update invokes npx -y get-anything-done@latest which dies for every user. Rewrite: (a) hooks/gad-check-update.js polls GitHub Releases API for latest tag, (b) workflows/update.md fetches tarball via gh release download, unpacks, runs bin/install.js, (c) version-compare against git tag not npm, (d) keep backup/reapply-patches flow. Acceptance: gad update works on a clean machine with zero prior vendor checkout. Blocks wider adoption — today every user who runs /gad-update sees 404. Connects to 44-28.B0 (44-31, done).</goal>
     </task>
   </phase>
   <phase id="44.5">
@@ -1873,6 +1880,15 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <goal>Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd looking for a gad-config.toml repo root and preferring vendor/get-anything-done/teachings/ (or direct teachings/) on that root before falling back to the bundled runtime location. GAD_TEACHINGS_DIR env override added for testing. Source CLI verified — 'node vendor/get-anything-done/bin/gad.cjs tip reindex' now writes to the user repo's teachings/ instead of the read-only runtime bundle. Installed binary picks up the fix on next reinstall (deferred: current gad.exe is still held open by this session).</goal>
       <keywords>teachings,reindex,runtime,path-resolve,installed-binary</keywords>
     </task>
+    <task id="46-15" type="cleanup" status="planned">
+      <goal>Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deleted. Initial scan 2026-04-18: mb-cli-framework has 103 live references (packages/magicborn-cli tests + docs + vendor-registry + ink-tui) — KEEP. grime-time-site / repub-builder / claw-code status unknown, user suspects unused now that PayloadCMS pivot was dropped. Deliverable: references/submodule-audit-2026-04.md with KEEP/INLINE/DROP recommendation per submodule. Follow-up tasks for any DROP + gitmodules cleanup.</goal>
+    </task>
+  </phase>
+  <phase id="55">
+    <task id="55-00" status="done" type="framework" skill="" agent="default">
+      <goal>Catalog all 91 vendor SKILL.md files into DEV/PROD/META lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. Output: .planning/notes/skill-lane-taxonomy-2026-04-18.md (counts: 60 dev, 22 meta, 3 prod, 6 dual-tag). Recommends META as third lane. Answers todo open questions (debug=dev+meta, verify-phase=dev, verify-work=dev+prod, create-skill=meta, third lane=yes). Provides phase 55 frontmatter schema + 5-wave migration order. Closes audit todo; phase 55 frontmatter rollout itself is a separate task.</goal>
+      <keywords>skill-catalog,lane,dev,prod,meta,taxonomy,phase-55-prep</keywords>
+    </task>
   </phase>
   <phase id="59">
     <task id="59-01" type="scaffold" status="done" skill="default" agent="default" agent-role="default" runtime="claude-code">
@@ -1969,6 +1985,36 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     <task id="60-08" type="site" status="planned">
       <goal>Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.</goal>
       <depends>60-07,59-04</depends>
+    </task>
+    <task id="60-09" type="framework" status="planned">
+      <goal>Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026-04-18-handoff-queue-design.md). Shape: .planning/handoffs/{open,claimed,closed}/ with one md file per handoff. Lifecycle = fs.rename between dirs (atomic on POSIX + Windows, no lock needed). Each file = YAML frontmatter {id, projectid, phase, task_id, created_at, created_by, claimed_by, claimed_at, completed_at, priority, estimated_context} + markdown body. CLI: gad handoffs {list,claim,complete,show,create}. gad-pause-work + gad-session pause invoke &apos;handoffs create&apos;. gad startup/snapshot surface unclaimed count + top-3 summary. Idle agents pick appropriate items by estimated_context (mechanical→Haiku/Sonnet, reasoning→Opus per offload policy). Gap discovered: no &apos;gad tasks update &lt;id&gt; --goal&apos; exists — surfaced in design note, file as follow-up. See .planning/notes/2026-04-18-handoff-queue-design.md for full schema.</goal>
+      <depends>59-10</depends>
+    </task>
+    <task id="60-10" type="framework" status="done" skill="" agent="default">
+      <goal>Split secrets-store error codes: PROJECT_NOT_FOUND for missing envelope on disk vs KEY_NOT_FOUND for envelope-exists-but-key-absent. Removes the substring-match antipattern in scoped-spawn.cjs (isMissingEnvelope) and env-cli.cjs list-empty soft-swallow. Files touched: lib/secrets-store.cjs (1 throw site), lib/scoped-spawn.cjs (isMissingEnvelope), lib/env-cli.cjs (messageFor + list catch), references/byok-design.md (sec.12 error table), tests/secrets-store.test.cjs (split test), tests/scoped-spawn.test.cjs (mock helper), tests/env-cli.test.cjs (list-empty + messageFor table). Closes todo 2026-04-17-secrets-store-project-not-found-split. Unblocks BYOK UI rendering in 60-07/60-08.</goal>
+      <depends>60-04,60-05</depends>
+    </task>
+  </phase>
+  <phase id="63">
+    <task id="63-01" type="framework" status="planned">
+      <goal>State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-hook-state, skill-active-state, team-state, tmux-hook-state), .planning/{STATE.xml, TASK-REGISTRY.xml, .gad-log/*.jsonl, .trace-events.jsonl, .trace-seq, .gad-agent-lanes.json, graph.json, config.json, sessions/*.json, notes/, todos/}, .claude/{settings.json, settings.local.json, hooks/state}, ~/.cache/gad/. Classify per pattern: (a) contested AGGREGATE → CLI-mediated writes, (b) shared APPEND-ONLY streams → JSONL append-safe, (c) contested SINGLE-OWNER → per-agent dir, (d) cross-agent INTENT → per-file dir + fs.rename. Deliverable: references/state-writes-inventory.md. Follow-ups filed per consolidation action. See 2026-04-18 post-mortem notes.</goal>
+    </task>
+    <task id="63-02" type="framework" status="planned">
+      <goal>Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session pause writes handoff file, (b) user settings 63-03 stores last-active-projectid, (c) &apos;gad start&apos; or new session auto-invokes gad handoffs list --unclaimed --mine-first + gad snapshot --projectid &lt;last-active&gt;, (d) if exactly one unclaimed handoff matches runtime auto-claim, (e) SessionStart hook surfaces &apos;1 unclaimed handoff — /pickup to resume&apos;. Metrics to beat: 2026-04-18 baseline ~35% of Claude turn on orientation (archaeology + /gsd:update + projectid guessing). Target &lt;1 tool call to restored context.</goal>
+      <depends>60-09</depends>
+    </task>
+    <task id="63-03" type="framework" status="planned">
+      <goal>User settings scaffold (non-checked-in). Local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per 63-01 audit). Fields: displayName (default = os.userInfo().username), lastActiveProjectid, assignedSouls {projectid: soulslug}, lastSessionId, preferredRuntime, teachingSnoozeUntil. Gitignored. Read by gad startup, gad snapshot, SessionStart hook, and anywhere we need to know &apos;who is logged in&apos;. Addresses 2026-04-18 user feedback: &apos;we should have user settings that dont get checked in so we know who is logged in. if they dont have a name, default to machine name. users can have souls assigned to them in the gad project for that to be injected.&apos;</goal>
+    </task>
+    <task id="63-04" type="framework" status="planned">
+      <goal>Agent lane manifest — canonical file/directory ownership per agent runtime. Authors a top-level AGENT-LANES.md (or references/agent-lanes.md) that every parallel agent consults as ground truth. Minimum content: (a) per-runtime lane definition (claude-code, codex, cursor, etc.) with file-glob allow + deny lists, (b) shared-write protocols (TASK-REGISTRY.xml via gad tasks add ONLY, etc.), (c) conflict-resolution playbook (who wins on collision, how to cede, how to request cross-lane work), (d) session-start etiquette (read this file BEFORE touching anything). Driven by 2026-04-18 3-agent overlap post-mortem where Cursor misattributed Claude&apos;s tasks to Codex, costing ~5% of its turn. Codex owns runtime/bin/gad.cjs + lib/runtime-* + verify; Cursor owns BYOK/lib/secrets-* + lib/env-cli + lib/scoped-spawn; Claude owns snapshot/lib/snapshot-* + planning docs + memory + cross-cutting framework hygiene. Operator assigns souls per lane per project.</goal>
+    </task>
+    <task id="63-05" type="framework" status="planned">
+      <goal>Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader.cjs exist but the Claude SessionStart hook chain (~/.claude/hooks/gad-check-update.js + gad-session-state.sh) does not emit them. Also: SOUL.md at repo root is readable but not auto-mentioned — Kael persona only lands when I recall CLAUDE.md pointer. Wire: (a) gad-session-state.sh emits the day&apos;s teaching tip (falls through silently if no tip), (b) new hook or same emits &apos;Active soul: &lt;name&gt; (SOUL.md)&apos; when SOUL.md present, (c) teaching generation runs per decision gad-257 at startup (dedup across multi-session-per-day), (d) llm-from-scratch subagent dispatch per gad-256/258 when appropriate. Did NOT fire for Claude this session despite decisions gad-255..258 being in place.</goal>
+      <depends>58</depends>
+    </task>
+    <task id="63-06" type="framework" status="planned">
+      <goal>Gap: gad phases add writes only to ROADMAP.xml, not TASK-REGISTRY.xml. Discovered 2026-04-18 when filing phase 63 — after &apos;gad phases add&apos; succeeded, &apos;gad tasks add --phase 63&apos; failed with PHASE_NOT_FOUND in TASK-REGISTRY. Hand-added &lt;phase id=&quot;63&quot;&gt;&lt;/phase&gt; container as workaround. Fix: gad phases add should atomically append the matching &lt;phase id=&quot;N&quot;&gt;&lt;/phase&gt; element to TASK-REGISTRY.xml via lib/task-registry-writer.cjs (already exists from 59-10). Test: new tests/phases-add-registry-sync.test.cjs — roundtrip verify both files updated. Also add &apos;gad tasks update &lt;id&gt; --goal&apos; (discovered gap: design notes for 60-09 had to be sidecar files because no in-place goal rewrite).</goal>
     </task>
   </phase>
 </task-registry>

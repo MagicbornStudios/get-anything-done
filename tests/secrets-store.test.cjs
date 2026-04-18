@@ -362,9 +362,21 @@ describe('secrets-store: input validation', () => {
     );
   });
 
-  test('get on missing envelope throws KEY_NOT_FOUND', async () => {
+  test('get on missing envelope throws PROJECT_NOT_FOUND (envelope absent)', async () => {
+    // Code-split per todo 2026-04-17-secrets-store-project-not-found-split:
+    // PROJECT_NOT_FOUND  = no envelope file on disk
+    // KEY_NOT_FOUND      = envelope exists but the key is absent
     await assert.rejects(
       () => store.get({ projectId: PROJECT_ID, keyName: 'X', passphrase: PASSPHRASE }),
+      (err) => err instanceof SecretsStoreError && err.code === 'PROJECT_NOT_FOUND',
+    );
+  });
+
+  test('get on existing envelope but missing key throws KEY_NOT_FOUND', async () => {
+    // Seed the envelope by setting one key, then ask for a different one.
+    await store.set({ projectId: PROJECT_ID, keyName: 'A', value: 'a1', passphrase: PASSPHRASE });
+    await assert.rejects(
+      () => store.get({ projectId: PROJECT_ID, keyName: 'NOPE', passphrase: PASSPHRASE }),
       (err) => err instanceof SecretsStoreError && err.code === 'KEY_NOT_FOUND',
     );
   });

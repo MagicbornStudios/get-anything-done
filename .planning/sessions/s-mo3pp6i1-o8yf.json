@@ -1,0 +1,29 @@
+{
+  "id": "s-mo3pp6i1-o8yf",
+  "projectId": "get-anything-done",
+  "contextMode": "loaded",
+  "position": {
+    "phase": "42.4",
+    "plan": null,
+    "task": null
+  },
+  "status": "closed",
+  "refs": [
+    {
+      "file": "AGENTS.md",
+      "reason": "agent conventions"
+    },
+    {
+      "file": ".planning\\STATE.xml",
+      "reason": "current position and status"
+    },
+    {
+      "file": ".planning\\ROADMAP.xml",
+      "reason": "phase roadmap"
+    }
+  ],
+  "createdAt": "2026-04-18T02:22:29.929Z",
+  "updatedAt": "2026-04-18T02:22:37.951Z",
+  "lastSnapshotAt": "2026-04-18T02:22:37.151Z",
+  "staticLoadedAt": "2026-04-18T02:22:35.020Z"
+}

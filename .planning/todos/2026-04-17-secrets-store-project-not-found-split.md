@@ -1,5 +1,7 @@
 # Split KEY_NOT_FOUND vs PROJECT_NOT_FOUND at secrets-store boundary
 
+**Status:** CLOSED — shipped 2026-04-18 as task **60-10** (default agent, claude-code session). Tests green: `node --test tests/secrets-store.test.cjs tests/scoped-spawn.test.cjs tests/env-cli.test.cjs` → 83/83 pass. Kept here as reference for the antipattern that motivated the fix.
+
 **Source:** 2026-04-17 S15 — scoped-spawn 60-04 workaround surfaced it
 
 In lib/secrets-store.cjs (task 60-02), both 'no envelope file for this project' and 'envelope exists but this specific key is absent' currently throw KEY_NOT_FOUND with different messages. This forces downstream callers (lib/scoped-spawn.cjs in 60-04) to substring-match the message to disambiguate — a known antipattern (errors should branch on code, not message shape).

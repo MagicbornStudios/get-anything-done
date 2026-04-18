@@ -221,6 +221,8 @@ function fromToml(tomlPath, root) {
   const planning = data.planning || {};
   const profiles = data.profiles || {};
   const docs = data.docs || {};
+  const verify = data.verify || {};
+  const verifyProjects = (verify.projects && typeof verify.projects === 'object') ? verify.projects : {};
 
   const rootsTable = (planning.roots || []).map((r) => ({
     id: r.id || path.basename(r.path || root),
@@ -302,6 +304,27 @@ function fromToml(tomlPath, root) {
       contentSkill: p['content-skill'] || null,
       repo: p.repo || null,
     })),
+    verify: {
+      buildCommands: Array.isArray(verify.build_commands)
+        ? verify.build_commands.map((entry) => String(entry || '').trim()).filter(Boolean)
+        : (Array.isArray(verify.buildCommands)
+            ? verify.buildCommands.map((entry) => String(entry || '').trim()).filter(Boolean)
+            : []),
+      projects: Object.fromEntries(
+        Object.entries(verifyProjects).map(([projectId, projectCfg]) => {
+          const cfg = projectCfg && typeof projectCfg === 'object' ? projectCfg : {};
+          const buildCommands = Array.isArray(cfg.build_commands)
+            ? cfg.build_commands
+            : (Array.isArray(cfg.buildCommands) ? cfg.buildCommands : []);
+          return [
+            String(projectId || '').trim(),
+            {
+              buildCommands: buildCommands.map((entry) => String(entry || '').trim()).filter(Boolean),
+            },
+          ];
+        }).filter(([projectId]) => Boolean(projectId)),
+      ),
+    },
     source: 'toml',
     legacyToml: path.basename(tomlPath) === GAD_TOML_LEGACY,
   };
@@ -316,6 +339,7 @@ function fromJson(jsonPath, root) {
   }
 
   const planning = data.planning || data || {};
+  const verify = data.verify || planning.verify || {};
   const subRepos = planning.sub_repos || [];
 
   // Map config.json sub_repos to roots format
@@ -386,6 +410,29 @@ function fromJson(jsonPath, root) {
     },
     agent_skills: data.agent_skills || {},
     docsProjects: [],
+    verify: {
+      buildCommands: Array.isArray(verify.build_commands)
+        ? verify.build_commands.map((entry) => String(entry || '').trim()).filter(Boolean)
+        : (Array.isArray(verify.buildCommands)
+            ? verify.buildCommands.map((entry) => String(entry || '').trim()).filter(Boolean)
+            : []),
+      projects: (verify.projects && typeof verify.projects === 'object')
+        ? Object.fromEntries(
+            Object.entries(verify.projects).map(([projectId, projectCfg]) => {
+              const cfg = projectCfg && typeof projectCfg === 'object' ? projectCfg : {};
+              const buildCommands = Array.isArray(cfg.build_commands)
+                ? cfg.build_commands
+                : (Array.isArray(cfg.buildCommands) ? cfg.buildCommands : []);
+              return [
+                String(projectId || '').trim(),
+                {
+                  buildCommands: buildCommands.map((entry) => String(entry || '').trim()).filter(Boolean),
+                },
+              ];
+            }).filter(([projectId]) => Boolean(projectId)),
+          )
+        : {},
+    },
     source: 'json',
     legacyToml: false,
   };
@@ -609,6 +656,10 @@ function defaults(root) {
     },
     agent_skills: {},
     docsProjects: [],
+    verify: {
+      buildCommands: [],
+      projects: {},
+    },
     source: 'defaults',
     legacyToml: false,
   };
