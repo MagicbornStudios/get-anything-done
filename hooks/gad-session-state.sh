@@ -1,33 +1,42 @@
-#!/bin/bash
-# gad-session-state.sh — SessionStart hook: inject project state reminder
-# Outputs STATE.md head on every session start for orientation.
+#!/usr/bin/env bash
+# gad-hook-version: 1.33.0
+# SessionStart hook — emit soul banner + daily teaching nudge + unclaimed
+# handoff pointer. Keeps output <15 lines. No network, no LLM. Exits 0
+# even on failure so the session always starts.
 #
-# OPT-IN: This hook is a no-op unless config.json has hooks.community: true.
-# Enable with: "hooks": { "community": true } in .planning/config.json
+# Driven by tasks 63-05 (soul + tip) and 63-02 (handoff surface). The
+# STATE.md-head reminder from the earlier opt-in hook is superseded by
+# `gad snapshot` which every agent runs on session open per CLAUDE.md.
 
-# Check opt-in config — exit silently if not enabled
-if [ -f .planning/config.json ]; then
-  ENABLED=$(node -e "try{const c=require('./.planning/config.json');process.stdout.write(c.hooks?.community===true?'1':'0')}catch{process.stdout.write('0')}" 2>/dev/null)
-  if [ "$ENABLED" != "1" ]; then exit 0; fi
-else
-  exit 0
+set -uo pipefail
+
+cwd="${PWD:-$(pwd)}"
+
+# Active soul — repo-root SOUL.md is the pointer per decision gad-256/257.
+soul_file="$cwd/SOUL.md"
+if [ -f "$soul_file" ]; then
+  soul_line="$(head -n 1 "$soul_file" 2>/dev/null | sed 's/^# Active Soul — //; s/^# //')"
+  if [ -n "$soul_line" ]; then
+    printf 'Active soul: %s (SOUL.md)\n' "$soul_line"
+  fi
 fi
 
-echo '## Project State Reminder'
-echo ''
+# Daily teaching nudge — title only, deterministic (teachings-reader zero-cost).
+if command -v gad >/dev/null 2>&1; then
+  tip_title="$(gad tip --headers 2>/dev/null | head -n 1)"
+  if [ -n "$tip_title" ]; then
+    printf 'Daily teaching: %s — run `gad tip` for the body.\n' "$tip_title"
+  fi
 
-if [ -f .planning/STATE.md ]; then
-  echo 'STATE.md exists - check for blockers and current phase.'
-  head -20 .planning/STATE.md
-else
-  echo 'No .planning/ found - suggest gad new-project if starting new work.'
-fi
-
-echo ''
-
-if [ -f .planning/config.json ]; then
-  MODE=$(grep -o '"mode"[[:space:]]*:[[:space:]]*"[^"]*"' .planning/config.json 2>/dev/null || echo '"mode": "unknown"')
-  echo "Config: $MODE"
+  # Unclaimed handoff nudge (task 63-02). Silent if gad binary predates
+  # the handoffs subcommand (exit code 1 from `gad handoffs list`).
+  handoff_json="$(gad handoffs list --json 2>/dev/null)"
+  if [ -n "$handoff_json" ]; then
+    handoff_count="$(printf '%s' "$handoff_json" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const a=JSON.parse(d);process.stdout.write(String(Array.isArray(a)?a.length:''))}catch{process.stdout.write('')}})" 2>/dev/null)"
+    if [ -n "$handoff_count" ] && [ "$handoff_count" != "0" ]; then
+      printf 'Unclaimed handoffs: %s — run `gad handoffs list` to pick one up.\n' "$handoff_count"
+    fi
+  fi
 fi
 
 exit 0

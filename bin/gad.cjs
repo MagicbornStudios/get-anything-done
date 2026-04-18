@@ -2199,12 +2199,16 @@ const handoffsListCmd = defineCommand({
       runtime: process.env.GAD_AGENT || undefined,
     });
 
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
     if (results.length === 0) {
-      console.log(`No handoffs in '${bucket}' bucket${args.projectid ? ` for ${args.projectid}` : ''}.`);
+      if (fmt === 'json') {
+        console.log('[]');
+      } else {
+        console.log(`No handoffs in '${bucket}' bucket${args.projectid ? ` for ${args.projectid}` : ''}.`);
+      }
       return;
     }
 
-    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
     if (fmt === 'json') {
       console.log(JSON.stringify(results.map(r => ({ ...r.frontmatter, bucket: r.bucket, filePath: r.filePath })), null, 2));
     } else {
