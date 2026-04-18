@@ -10,6 +10,7 @@ description: >-
   across runs. If a score can't be decomposed into dimensions or traced back to the events
   that produced it, it isn't objective — it's just a vibe with a number attached.
 lane: meta
+type: meta-framework
 ---
 
 # objective-eval-design

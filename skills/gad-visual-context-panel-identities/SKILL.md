@@ -5,6 +5,7 @@ description: >-
   point at what they see, copy exact component/section tokens, and hand off precise update/delete
   prompts to coding agents through the Visual Context Panel.
 lane: dev
+type: system-requirements
 workflow: workflows/visual-context-panel-identities.md
 ---
 

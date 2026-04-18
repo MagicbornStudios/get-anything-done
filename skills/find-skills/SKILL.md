@@ -15,6 +15,7 @@ description: >-
   merge-skill + create-skill) that enable the emergent-evolution hypothesis
   to be tested in practice.
 lane: meta
+type: meta-framework
 ---
 
 # find-skills

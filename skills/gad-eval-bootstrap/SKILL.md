@@ -2,6 +2,7 @@
 name: gad:eval-bootstrap
 description: Bootstrap an eval agent with full GAD context injected into its prompt
 lane: meta
+type: meta-framework
 argument-hint: --project <name>
 allowed-tools:
   - Read

@@ -2,6 +2,7 @@
 name: self-eval
 description: Score a round of GAD development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics.
 lane: meta
+type: meta-framework
 ---
 
 # self-eval

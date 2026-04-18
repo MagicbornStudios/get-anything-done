@@ -11,6 +11,7 @@ description: >-
   or any time you want to validate an existing proto-skill in
   `.planning/proto-skills/<slug>/`.
 lane: meta
+type: meta-framework
 workflow: workflows/evolution-validator.md
 ---
 

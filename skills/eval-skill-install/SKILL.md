@@ -10,6 +10,7 @@ description: >-
   Triggers on "evaluate this skill", "test this skill", "install skill into
   eval", "run eval with skill", "compare skill versions".
 lane: meta
+type: meta-framework
 ---
 
 # eval-skill-install

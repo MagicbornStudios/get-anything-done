@@ -2,6 +2,7 @@
 name: gad:update
 description: Update GAD to latest version with changelog display
 lane: meta
+type: command-wrapper
 allowed-tools:
   - Bash
   - AskUserQuestion

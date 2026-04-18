@@ -15,6 +15,7 @@ description: >-
   PROVENANCE.md, optional CANDIDATE.md copy. For high-stakes skills that
   need real test runs, use `gad-skill-creator` (heavy path) instead.
 lane: meta
+type: meta-framework
 status: stable
 ---
 

@@ -11,6 +11,7 @@ description: >-
   populates site/data/discovery-findings.json for the planning site
   visualization.
 lane: meta
+type: meta-framework
 workflow: workflows/discovery-test.md
 ---
 

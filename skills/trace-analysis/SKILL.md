@@ -2,6 +2,7 @@
 name: trace-analysis
 description: Analyze GAD trace data (.gad-log JSONL + .trace-events.jsonl + preserved eval traces) to produce usage reports such as tool mix, skill invocations, commit rhythm, token coverage, runtime mix, and per-project breakdowns.
 lane: meta
+type: meta-framework
 ---
 
 # trace-analysis
