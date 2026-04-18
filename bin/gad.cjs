@@ -3309,6 +3309,12 @@ const startCmd = defineCommand({
       description: 'Skip browser open. Useful for editor/iframe workflows.',
       default: false,
     },
+    'dispatch-subagents': {
+      type: 'boolean',
+      description:
+        'After opening the dashboard, run daily-subagent dispatch for every project in gad-config.toml with `dailySubagent = true` (phase 59 task 59-07, decision gad-258).',
+      default: false,
+    },
   },
   async run({ args }) {
     const { DEFAULT_PORT } = require('../lib/planning-serve.cjs');
@@ -3328,7 +3334,59 @@ const startCmd = defineCommand({
     const result = await runStart({ port, noBrowser: Boolean(args['no-browser']) });
     if (result.action === 'conflict') {
       process.exitCode = 1;
+      return;
     }
+
+    if (args['dispatch-subagents']) {
+      const { dispatchAll } = require('../lib/subagent-dispatch.cjs');
+      const baseDir = findRepoRoot();
+      const disp = dispatchAll({ baseDir });
+      if (disp.exitCode !== 0 && !process.exitCode) {
+        process.exitCode = disp.exitCode;
+      }
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// gad subagents — daily-subagent dispatch (phase 59 task 59-07, decision gad-258)
+// ---------------------------------------------------------------------------
+
+const subagentsDispatchCmd = defineCommand({
+  meta: {
+    name: 'dispatch',
+    description:
+      'Emit daily-subagent prompts for every project flagged `dailySubagent = true` in gad-config.toml. Prompt-emit-only for this phase — writes .planning/subagent-runs/<projectid>/<today>-<taskid>.{prompt.md,json}. Real runtime dispatch is a follow-up task.',
+  },
+  args: {
+    projectid: {
+      type: 'string',
+      description: 'Scope to a single project id (otherwise all flagged projects dispatch).',
+      default: '',
+    },
+    all: {
+      type: 'boolean',
+      description: 'Dispatch for every flagged project (explicit; matches no-flag default).',
+      default: false,
+    },
+  },
+  run({ args }) {
+    const { dispatchAll } = require('../lib/subagent-dispatch.cjs');
+    const baseDir = findRepoRoot();
+    const projectId = String(args.projectid || '').trim();
+    const disp = dispatchAll({ baseDir, projectId: projectId || undefined });
+    if (disp.exitCode !== 0) process.exitCode = disp.exitCode;
+  },
+});
+
+const subagentsCmd = defineCommand({
+  meta: {
+    name: 'subagents',
+    description:
+      'Subagent dispatch + run-history CLI family (decision gad-258). Subcommand: dispatch.',
+  },
+  subCommands: {
+    dispatch: subagentsDispatchCmd,
   },
 });
 
@@ -14485,6 +14543,7 @@ const main = defineCommand({
     snapshot: snapshotV2Cmd,
     start: startCmd,
     dashboard: startCmd,
+    subagents: subagentsCmd,
     startup: startupCmd,
     'discovery-test': discoveryTestCmd,
     sprint: sprintCmd,
