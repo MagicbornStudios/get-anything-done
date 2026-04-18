@@ -17192,9 +17192,9 @@ function gadOperatorAttribution() {
   return { operator: op, headers };
 }
 
-const publishCmd = defineCommand({
+const publishSetCmd = defineCommand({
   meta: {
-    name: 'publish',
+    name: 'set',
     description: 'Set publish status (draft|published|unlisted) on a generation. Stamps x-operator-id from env.',
   },
   args: {
@@ -17259,6 +17259,92 @@ const publishCmd = defineCommand({
       if ('isPublished' in payload) console.log(`  live:        ${payload.isPublished ? 'yes' : 'no'}`);
     }
     console.log('');
+  },
+});
+
+// Task 51-08: `gad publish list [--mine] [--all]` — read the marketplace
+// index from disk and surface published generations. --mine filters to
+// rows where publishedBy matches the operator chain (OPERATOR_ID env >
+// solo-operator); --all overrides --mine. Reading from disk avoids
+// requiring a running planning-app for read-only inspection.
+const publishListCmd = defineCommand({
+  meta: {
+    name: 'list',
+    description: 'List published generations from marketplace-index.generated.json. Default scope: --mine.',
+  },
+  args: {
+    mine: { type: 'boolean', description: 'Only show generations published by the current operator (default).' },
+    all: { type: 'boolean', description: 'Show all published generations across operators.' },
+    project: { type: 'string', description: 'Filter to a single project id.' },
+    species: { type: 'string', description: 'Filter to a single species name.' },
+    json: { type: 'boolean', description: 'Emit JSON' },
+    indexPath: { type: 'string', description: 'Override path to marketplace-index.generated.json' },
+  },
+  run({ args }) {
+    const indexPath =
+      args.indexPath ||
+      path.join(__dirname, '..', 'site', 'lib', 'marketplace-index.generated.json');
+    if (!fs.existsSync(indexPath)) {
+      console.error(`error: marketplace index not found at ${indexPath}`);
+      console.error('(run a vendor-site predev or publish a generation to create it)');
+      process.exitCode = 1;
+      return;
+    }
+    let index;
+    try {
+      index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    } catch (err) {
+      console.error(`error: failed to parse ${indexPath}: ${err.message}`);
+      process.exitCode = 1;
+      return;
+    }
+    const { operator } = gadOperatorAttribution();
+    const scopeMine = !args.all;
+    let rows = Array.isArray(index.generations) ? index.generations.slice() : [];
+    if (args.project) rows = rows.filter((g) => g.project === args.project);
+    if (args.species) rows = rows.filter((g) => g.species === args.species);
+    if (scopeMine) rows = rows.filter((g) => (g.publishedBy ?? '') === operator);
+
+    if (args.json) {
+      process.stdout.write(JSON.stringify({ operator, scope: scopeMine ? 'mine' : 'all', count: rows.length, generations: rows }, null, 2) + '\n');
+      return;
+    }
+    console.log(`\nPublished generations · scope=${scopeMine ? 'mine' : 'all'} · operator=${operator}`);
+    if (args.project) console.log(`  filter: project=${args.project}`);
+    if (args.species) console.log(`  filter: species=${args.species}`);
+    if (rows.length === 0) {
+      console.log('\n  (none)');
+      if (scopeMine) console.log(`  hint: pass --all to see ${index.generations?.length ?? 0} total published, or set OPERATOR_ID env to match a specific publisher.`);
+      console.log('');
+      return;
+    }
+    const headers = ['PROJECT', 'SPECIES', 'VERSION', 'PUBLISHED-AT', 'BY', 'SCORE'];
+    const data = rows.map((g) => [
+      g.project ?? '',
+      g.species ?? '',
+      g.version ?? '',
+      g.publishedAt ? String(g.publishedAt).slice(0, 10) : '—',
+      g.publishedBy ?? '—',
+      g.score === null || g.score === undefined ? '—' : Number(g.score).toFixed(2),
+    ]);
+    const widths = headers.map((h, i) => Math.max(h.length, ...data.map((r) => String(r[i]).length)));
+    const fmt = (cells) => cells.map((c, i) => String(c).padEnd(widths[i])).join('  ');
+    console.log('');
+    console.log('  ' + fmt(headers));
+    console.log('  ' + widths.map((w) => '-'.repeat(w)).join('  '));
+    for (const r of data) console.log('  ' + fmt(r));
+    console.log(`\n  ${rows.length} of ${index.generations?.length ?? 0} total published\n`);
+  },
+});
+
+const publishCmd = defineCommand({
+  meta: {
+    name: 'publish',
+    description: 'Manage marketplace publish state — set, list (default: list --mine).',
+  },
+  subCommands: {
+    set: publishSetCmd,
+    list: publishListCmd,
   },
 });
 
@@ -17482,6 +17568,22 @@ const main = defineCommand({
     return;
   }
   if (!known.has(first)) return;
+})();
+
+// `gad publish` with no subcommand defaults to `gad publish list --mine`.
+// `gad publish <projectid> ...` (positional) routes to `gad publish set`.
+(function injectPublishDefault() {
+  const a = process.argv;
+  const i = a.indexOf('publish');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['set', 'list', 'help']);
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'list');
+    return;
+  }
+  if (known.has(first)) return;
+  a.splice(i + 1, 0, 'set');
 })();
 
 // `gad tip` with no subcommand defaults to `gad tip today`.

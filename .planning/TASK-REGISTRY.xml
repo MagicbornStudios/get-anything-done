@@ -1954,6 +1954,16 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <impl>vendor/get-anything-done/bin/gad.cjs: new gadOperatorAttribution() helper reads OPERATOR_ID/GAD_OPERATOR_ID/GAD_AGENT_ID/GAD_AGENT_ROLE from env and returns request headers. New publishCmd (positional project; --species --version --status --url --json) PATCHes the planning-app publish endpoint with attribution headers; falls back to GAD_PLANNING_APP_URL or http://localhost:3002. Wired into main subCommands as `publish`. Help output includes operator + planning-app URL guidance.</impl>
       <depends>51-03</depends>
     </task>
+    <task id="51-08" type="framework" status="done" agent-id="cursor-marketplace-lane-0001" agent-role="marketplace-lane" runtime="cursor-composer" model-profile="balanced" resolved-model="composer-2">
+      <goal>gad publish list — read-only inspection of the marketplace index from the CLI. Operators want to confirm what their identity has actually shipped without opening /my-published in a browser, and agents want a way to assert published state in scripts without spinning up planning-app.</goal>
+      <impl>vendor/get-anything-done/bin/gad.cjs: restructured publishCmd into parent with subCommands {set, list}. publishSetCmd is the prior PATCH behavior (renamed). publishListCmd reads vendor/get-anything-done/site/lib/marketplace-index.generated.json directly from disk, applies --mine (default, filters by gadOperatorAttribution operator) | --all | --project | --species filters, prints a padded table or --json. Added injectPublishDefault() so `gad publish` (bare) routes to `publish list` and `gad publish &lt;projectid&gt; ...` routes to `publish set` to preserve ergonomics. Help output for the parent describes both subcommands.</impl>
+      <depends>51-07</depends>
+    </task>
+    <task id="51-09" type="framework" status="done" agent-id="cursor-marketplace-lane-0001" agent-role="marketplace-lane" runtime="cursor-composer" model-profile="balanced" resolved-model="composer-2">
+      <goal>UI publish actions need to be distinguishable from CLI/agent publishes in the audit trail. Without a marker, server logs show `operator=&lt;id&gt;` for both a Bestiary tab click and a `gad publish` call from an agent, hiding intent.</goal>
+      <impl>apps/planning-app/app/projects/edit/[id]/BestiaryTab.tsx + InspectorPane.tsx: publish PATCH calls now stamp `x-gad-agent-id: ui-click:&lt;surface&gt;:&lt;ts36&gt;` and `x-gad-agent-role: ui-click` headers (surface=bestiary|inspector). Server route apps/planning-app/app/api/dev/evals/projects/[id]/species/[name]/generations/[version]/publish/route.ts reads both headers and emits a single `[publish] &lt;path&gt; → &lt;status&gt; · operator=&lt;id&gt; · role=&lt;role&gt; · agent=&lt;agentId&gt;` console.info per PATCH so dev-server logs visibly distinguish UI vs CLI/agent publishes. Headers are best-effort; missing values just produce a shorter log line.</impl>
+      <depends>51-03,51-07</depends>
+    </task>
   </phase>
   <phase id="59">
     <task id="59-01" type="scaffold" status="done" skill="default" agent="default" agent-role="default" runtime="claude-code">
@@ -2102,6 +2112,9 @@ Vendor site `/projects/edit` and `/api/dev/*` routes are deleted in the same cha
     <task id="63-health-cli" type="framework" status="planned">
       <goal>Machine health CLI — gad health disk, gad health prune, gad health caches. Surface disk pressure + remediate from inside the loop so agents can detect OOM/ENOSPC before builds fail. (a) gad health disk reports df + du of known-hot dirs; (b) gad health prune --worktrees safely removes stale registered worktrees with no uncommitted work; (c) gad health caches --dry-run lists reproducible artifacts (build output, npm cache). Motivated by 2026-04-18 incident: cursor site build blocked by ENOSPC (2 GB free of 456 GB); 17 stale agent worktrees in .claude/worktrees/ which gad worktree list does not detect — close that gap. Acceptance: gad health disk runs under 2s on Windows without hanging du, reports top 5 hogs. gad health prune --worktrees detects orphans. gad worktree list sees claude-code agent-* worktrees.</goal>
     </task>
+  </phase>
+
+  <phase id="64">
   </phase>
 </task-registry>
 
