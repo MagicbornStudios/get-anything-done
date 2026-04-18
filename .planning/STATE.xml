@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 63 in progress. 63-04 done (references/agent-lanes.md promoted + linked from CLAUDE.md + AGENTS.md). Handoff h-2026-04-18-claude-orchestration-handoff claimed by claude-opus-4-7. Next pick: 63-06 (gad tasks update --goal + gad phases add TASK-REGISTRY sync). Open queue: 63-06, 63-05, 63-03, 63-02 (deps 60-09+63-03), 63-01. Codex lane (bin/gad.cjs runtime, lib/runtime-*, lib/secrets-*, lib/env-cli) off-limits — see references/agent-lanes.md.</next-action>
+  <next-action>Phase 63. 63-04 + 63-06 done. Next pick: 63-05 (SessionStart daily tip + soul) or parallel 60-09 handoff CLI. Queue: 63-06✓, 63-05, 63-03, 63-02 (deps 60-09+63-03), 63-01 (Haiku subagent dispatched). Codex lane (bin/gad.cjs runtime, lib/runtime-*, lib/secrets-*, lib/env-cli) off-limits — see references/agent-lanes.md.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

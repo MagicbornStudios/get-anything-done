@@ -4768,9 +4768,29 @@
     {
       "type": "task",
       "id": "task:63-06",
-      "label": "Gap: gad phases add writes only to ROADMAP.xml, not TASK-REGISTRY.xml. Discovered 2026-04-18 when filing phase 63 — afte",
-      "status": "planned",
-      "goal": "Gap: gad phases add writes only to ROADMAP.xml, not TASK-REGISTRY.xml. Discovered 2026-04-18 when filing phase 63 — after &apos;gad phases add&apos; succeeded, &apos;gad tasks add --phase 63&apos; failed with PHASE_NOT_FOUND in TASK-REGISTRY. Hand-added &lt;phase id=&quot;63&quot;&gt;&lt;/phase&gt; container as workaround. Fix: gad phases add should atomically append the matching &lt;phase id=&quot;N&quot;&gt;&lt;/phase&gt; element to TASK-REGISTRY.xml via lib/task-registry-writer.cjs (already exists from 59-10). Test: new tests/phases-add-registry-sync.test.cjs — roundtrip verify both files updated. Also add &apos;gad tasks update &lt;id&gt; --goal&apos; (discovered gap: design notes for 60-09 had to be sidecar files because no in-place goal rewrite).",
+      "label": "Gap closed: gad phases add atomically syncs TASK-REGISTRY.xml container, gad tasks update --goal available. DONE 2026-04",
+      "status": "done",
+      "goal": "Gap closed: gad phases add atomically syncs TASK-REGISTRY.xml container, gad tasks update --goal available. DONE 2026-04-18 S20 by claude-opus-4-7. Regex boundary bug in addPhaseToRegistryXml (word-boundary after closing quote) prevented idempotent no-op detection — fixed in lib/task-registry-writer.cjs. All 23 writer tests + phases-add-registry-sync tests pass. Installed gad v1.33.0 still pre-fix — 44-38 rebuild needed for distribution.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-06a",
+      "label": "Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remov",
+      "status": "in-progress",
+      "goal": "Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remove raw -Command one-liners.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-06b",
+      "label": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&g",
+      "status": "in-progress",
+      "goal": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal CLI path.",
       "skill": "",
       "taskType": "framework",
       "keywords": ""
@@ -7098,14 +7118,6 @@
       "id": "workflow:workflows/gad-map-codebase.md",
       "label": "workflows/gad-map-codebase.md",
       "source": "skill-ref"
-    },
-    {
-      "type": "skill",
-      "id": "skill:gad:merge-skill",
-      "label": ">-",
-      "slug": "gad-merge-skill",
-      "trigger": "",
-      "source": "canonical"
     },
     {
       "type": "skill",
@@ -12757,23 +12769,28 @@
     },
     {
       "source": "task:63-06",
-      "target": "phase:63",
-      "type": "CITES"
-    },
-    {
-      "source": "task:63-06",
       "target": "task:2026-04",
       "type": "CITES"
     },
     {
       "source": "task:63-06",
-      "target": "task:59-10",
+      "target": "task:4-7",
       "type": "CITES"
     },
     {
       "source": "task:63-06",
-      "target": "task:60-09",
+      "target": "task:44-38",
       "type": "CITES"
+    },
+    {
+      "source": "task:63-06a",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-06b",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
     },
     {
       "source": "decision:gad-92",
@@ -15173,19 +15190,19 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T17:22:43.404Z",
-    "nodeCount": 989,
-    "edgeCount": 1458,
+    "generated": "2026-04-18T17:29:41.897Z",
+    "nodeCount": 990,
+    "edgeCount": 1459,
     "nodeTypes": {
       "phase": 67,
-      "task": 424,
-      "skill": 132,
+      "task": 426,
+      "skill": 131,
       "decision": 262,
       "workflow": 104
     },
     "edgeTypes": {
-      "BELONGS_TO": 426,
-      "CITES": 575,
+      "BELONGS_TO": 428,
+      "CITES": 574,
       "DEPENDS_ON": 88,
       "USES_SKILL": 201,
       "REFERENCES": 89,

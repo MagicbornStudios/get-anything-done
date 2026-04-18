@@ -2013,8 +2013,14 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <goal>Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader.cjs exist but the Claude SessionStart hook chain (~/.claude/hooks/gad-check-update.js + gad-session-state.sh) does not emit them. Also: SOUL.md at repo root is readable but not auto-mentioned — Kael persona only lands when I recall CLAUDE.md pointer. Wire: (a) gad-session-state.sh emits the day&apos;s teaching tip (falls through silently if no tip), (b) new hook or same emits &apos;Active soul: &lt;name&gt; (SOUL.md)&apos; when SOUL.md present, (c) teaching generation runs per decision gad-257 at startup (dedup across multi-session-per-day), (d) llm-from-scratch subagent dispatch per gad-256/258 when appropriate. Did NOT fire for Claude this session despite decisions gad-255..258 being in place.</goal>
       <depends>58</depends>
     </task>
-    <task id="63-06" type="framework" status="planned">
-      <goal>Gap: gad phases add writes only to ROADMAP.xml, not TASK-REGISTRY.xml. Discovered 2026-04-18 when filing phase 63 — after &apos;gad phases add&apos; succeeded, &apos;gad tasks add --phase 63&apos; failed with PHASE_NOT_FOUND in TASK-REGISTRY. Hand-added &lt;phase id=&quot;63&quot;&gt;&lt;/phase&gt; container as workaround. Fix: gad phases add should atomically append the matching &lt;phase id=&quot;N&quot;&gt;&lt;/phase&gt; element to TASK-REGISTRY.xml via lib/task-registry-writer.cjs (already exists from 59-10). Test: new tests/phases-add-registry-sync.test.cjs — roundtrip verify both files updated. Also add &apos;gad tasks update &lt;id&gt; --goal&apos; (discovered gap: design notes for 60-09 had to be sidecar files because no in-place goal rewrite).</goal>
+    <task id="63-06" type="framework" status="done" agent-id="claude-default-0014" agent-role="default" runtime="claude-code">
+      <goal>Gap closed: gad phases add atomically syncs TASK-REGISTRY.xml container, gad tasks update --goal available. DONE 2026-04-18 S20 by claude-opus-4-7. Regex boundary bug in addPhaseToRegistryXml (word-boundary after closing quote) prevented idempotent no-op detection — fixed in lib/task-registry-writer.cjs. All 23 writer tests + phases-add-registry-sync tests pass. Installed gad v1.33.0 still pre-fix — 44-38 rebuild needed for distribution.</goal>
+    </task>
+    <task id="63-06a" type="framework" status="in-progress">
+      <goal>Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remove raw -Command one-liners.</goal>
+    </task>
+    <task id="63-06b" type="framework" status="in-progress">
+      <goal>Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal CLI path.</goal>
     </task>
   </phase>
 </task-registry>
