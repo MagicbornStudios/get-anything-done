@@ -122,6 +122,36 @@
       ]
     },
     {
+      "id": "gad-framework-filename-prefix-idempotency-01",
+      "title": "Filename-prefix as idempotency key — skip-already-done without parsing",
+      "category": "gad-framework",
+      "difficulty": "beginner",
+      "tags": [
+        "idempotency",
+        "filesystem",
+        "daily-loops",
+        "concurrency",
+        "robustness"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/filename-prefix-idempotency.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/subagent-dispatch.cjs"
+      ],
+      "decisions": [
+        "gad-258",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:59"
+      ],
+      "related": [
+        "gad-framework-defensive-aggregation-01",
+        "security-fail-closed-01"
+      ]
+    },
+    {
       "id": "gad-framework-next-rsc-cjs-externals-01",
       "title": "Loading CJS externals from RSC in Next 16 / Turbopack — the getBuiltinModule dance",
       "category": "gad-framework",
