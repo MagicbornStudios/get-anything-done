@@ -62,6 +62,63 @@
       ]
     },
     {
+      "id": "gad-framework-next-rsc-cjs-externals-01",
+      "title": "Loading CJS externals from RSC in Next 16 / Turbopack — the getBuiltinModule dance",
+      "category": "gad-framework",
+      "difficulty": "advanced",
+      "tags": [
+        "nextjs",
+        "turbopack",
+        "rsc",
+        "createRequire",
+        "cjs",
+        "esm"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/next-rsc-cjs-externals.md",
+      "implementation": [
+        "apps/planning-app/lib/planning-data.ts"
+      ],
+      "decisions": [
+        "gad-261",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:59"
+      ],
+      "related": [
+        "gad-framework-testable-cli-01"
+      ]
+    },
+    {
+      "id": "gad-framework-tailwind-v4-theme-tokens-01",
+      "title": "Tailwind v4 @theme tokens silently no-op unless bound to :root",
+      "category": "gad-framework",
+      "difficulty": "beginner",
+      "tags": [
+        "tailwindcss",
+        "tailwind-v4",
+        "theme",
+        "css-variables"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/tailwind-v4-theme-tokens.md",
+      "implementation": [
+        "apps/planning-app/app/globals.css"
+      ],
+      "decisions": [
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:59"
+      ],
+      "related": [
+        "gad-framework-next-rsc-cjs-externals-01"
+      ]
+    },
+    {
       "id": "gad-framework-testable-cli-01",
       "title": "Testable CLI via injected stdio — stop monkey-patching process",
       "category": "gad-framework",
