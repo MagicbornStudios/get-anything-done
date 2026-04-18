@@ -14,6 +14,7 @@ description: >-
   TASK-REGISTRY.xml. Use when starting a session, resuming after auto-compact,
   picking up new user instructions, or noticing you have drifted into ad-hoc
   execution.
+lane: dev
 ---
 
 > **Emergent skill.** This skill was authored by an agent (Claude Code) in response
