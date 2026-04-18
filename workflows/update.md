@@ -1,5 +1,5 @@
 <purpose>
-Check for GAD updates via npm, display changelog for versions between installed and latest, obtain user confirmation, and execute clean installation with cache clearing.
+Check for GAD updates via GitHub Releases, display changelog for versions between installed and latest, obtain user confirmation, and execute clean installation with cache clearing.
 </purpose>
 
 <required_reading>
@@ -143,17 +143,32 @@ Proceed to install step (treat as version 0.0.0 for comparison).
 </step>
 
 <step name="check_latest_version">
-Check npm for latest version:
+Check GitHub Releases for the latest version. Default repo is the installed package's `repository` field; override with `GAD_RELEASE_REPO=<owner>/<repo>` for forks.
+
+Preferred lookup:
 
 ```bash
-npm view get-anything-done version 2>/dev/null
+REPO="${GAD_RELEASE_REPO:-MagicbornStudios/get-anything-done}"
+gh api "repos/$REPO/releases/latest" --jq .tag_name 2>/dev/null
 ```
 
-**If npm check fails:**
-```
-Couldn't check for updates (offline or npm unavailable).
+Fallback when `gh` is missing or unauthenticated:
 
-To update manually: `npx get-anything-done --global`
+```bash
+node -e "const { execFileSync } = require('child_process'); const repo = process.argv[1]; const out = execFileSync('git', ['ls-remote', '--tags', '--refs', `https://github.com/${repo}.git`], { encoding: 'utf8' }).trim(); const tags = out.split(/\r?\n/).map((line) => (line.split(/\s+/)[1] || '').replace(/^refs\/tags\//, '')).filter((tag) => /^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })); process.stdout.write(tags[tags.length - 1] || '');" "$REPO"
+```
+
+Set `LATEST_TAG` from the first successful command and compare on the normalized version string:
+
+```bash
+LATEST_VERSION="${LATEST_TAG#v}"
+```
+
+**If both checks fail:**
+```
+Couldn't check for updates (GitHub Releases unavailable).
+
+To update manually: download `get-anything-done-<version>.tgz` from the latest GitHub release, extract it, and run `node package/bin/install.js --claude --global`.
 ```
 
 Exit.
@@ -250,19 +265,28 @@ Build runtime flag from step 1:
 RUNTIME_FLAG="--$TARGET_RUNTIME"
 ```
 
+Create a temp directory, download the tarball asset from GitHub Releases, extract it, then run the packaged installer:
+
+```bash
+REPO="${GAD_RELEASE_REPO:-MagicbornStudios/get-anything-done}"
+TMP_DIR="$(node -e "const fs=require('fs');const os=require('os');const path=require('path');process.stdout.write(fs.mkdtempSync(path.join(os.tmpdir(),'gad-update-')));")"
+gh release download "$LATEST_TAG" --repo "$REPO" --pattern 'get-anything-done-*.tgz' --dir "$TMP_DIR"
+tar -xzf "$TMP_DIR"/get-anything-done-*.tgz -C "$TMP_DIR"
+```
+
 **If LOCAL install:**
 ```bash
-npx -y get-anything-done@latest "$RUNTIME_FLAG" --local
+node "$TMP_DIR/package/bin/install.js" "$RUNTIME_FLAG" --local
 ```
 
 **If GLOBAL install:**
 ```bash
-npx -y get-anything-done@latest "$RUNTIME_FLAG" --global
+node "$TMP_DIR/package/bin/install.js" "$RUNTIME_FLAG" --global
 ```
 
 **If UNKNOWN install:**
 ```bash
-npx -y get-anything-done@latest --claude --global
+node "$TMP_DIR/package/bin/install.js" --claude --global
 ```
 
 Capture output. If install fails, show error and exit.
@@ -270,14 +294,17 @@ Capture output. If install fails, show error and exit.
 Clear the update cache so statusline indicator disappears:
 
 ```bash
-# Clear update cache across all runtime directories
+rm -f "$HOME/.cache/gad/gad-update-check.json"
+rm -f "$HOME/.cache/gsd/gsd-update-check.json"
 for dir in .claude .config/opencode .opencode .gemini .codex; do
   rm -f "./$dir/cache/gad-update-check.json"
   rm -f "$HOME/$dir/cache/gad-update-check.json"
+  rm -f "./$dir/cache/gsd-update-check.json"
+  rm -f "$HOME/$dir/cache/gsd-update-check.json"
 done
 ```
 
-The SessionStart hook (`gad-check-update.js`) writes to the detected runtime's cache directory, so all paths must be cleared to prevent stale update indicators.
+The SessionStart hook (`gad-check-update.js`) now writes to the shared `~/.cache/gad/gad-update-check.json` cache file, but the legacy runtime-specific paths should still be cleared for backward compatibility.
 </step>
 
 <step name="display_result">

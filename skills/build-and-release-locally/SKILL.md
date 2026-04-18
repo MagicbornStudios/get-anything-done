@@ -146,9 +146,10 @@ npm run publish:release
 This runs `scripts/publish-release.mjs` which:
 
 1. Reads the current `package.json` version and derives `v<version>` as the tag.
-2. Checks `gh release view v<version>` — if the release already exists, skips the create step.
-3. Otherwise runs `gh release create v<version> --title "GAD v<version>" --generate-notes`.
-4. Uploads every artifact in `dist/release/` matching `gad-v*` or `install-gad-windows.ps1` or `INSTALL.txt` via `gh release upload --clobber`.
+2. Runs `npm pack --pack-destination dist/release` if `dist/release/` does not already contain `get-anything-done-<version>.tgz`.
+3. Checks `gh release view v<version>` — if the release already exists, skips the create step.
+4. Otherwise runs `gh release create v<version> --title "GAD v<version>" --generate-notes`.
+5. Uploads every artifact in `dist/release/` matching `gad-v*`, `get-anything-done-*.tgz`, `install-gad-windows.ps1`, or `INSTALL.txt` via `gh release upload --clobber`.
 
 `--clobber` means re-running the skill after fixing a bad artifact is safe: the upload replaces the existing asset at the same name.
 
@@ -165,7 +166,7 @@ gh release view v<version>
 gh release view v<version> --json assets --jq '.assets[].name'
 ```
 
-Confirm the tag exists, the title is correct, and every expected artifact is attached. Open the URL in a browser if the operator wants a visual check:
+Confirm the tag exists, the title is correct, and every expected artifact is attached (`gad-v<version>-<platform>-<arch>`, `get-anything-done-<version>.tgz`, install helper files). Open the URL in a browser if the operator wants a visual check:
 
 ```sh
 gh release view v<version> --web

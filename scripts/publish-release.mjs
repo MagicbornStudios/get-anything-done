@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
@@ -9,8 +9,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const RELEASE_DIR = join(ROOT, 'dist', 'release');
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+const NPM_COMMAND = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-function parseArgs(argv) {
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const TARBALL_RE = new RegExp(`^${escapeRegExp(pkg.name)}-\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?\\.tgz$`);
+
+export function parseArgs(argv) {
   const parsed = {
     tag: `v${pkg.version}`,
     title: `GAD v${pkg.version}`,
@@ -25,17 +32,38 @@ function parseArgs(argv) {
   return parsed;
 }
 
-function getArtifacts() {
-  if (!existsSync(RELEASE_DIR)) {
+export function getReleaseDir(root = ROOT) {
+  return process.env.GAD_RELEASE_DIR || join(root, 'dist', 'release');
+}
+
+export function isReleaseArtifactName(name) {
+  return /^gad-v.+/.test(name) || name === 'install-gad-windows.ps1' || name === 'INSTALL.txt' || TARBALL_RE.test(name);
+}
+
+export function getArtifacts(releaseDir = getReleaseDir()) {
+  if (!existsSync(releaseDir)) {
     throw new Error('dist/release does not exist. Run `npm run build:release` first.');
   }
-  const entries = readdirSync(RELEASE_DIR)
-    .filter((name) => /^gad-v.+/.test(name) || name === 'install-gad-windows.ps1' || name === 'INSTALL.txt')
-    .map((name) => join(RELEASE_DIR, name));
+  const entries = readdirSync(releaseDir)
+    .filter((name) => isReleaseArtifactName(name))
+    .map((name) => join(releaseDir, name));
   if (entries.length === 0) {
     throw new Error('No release artifacts found in dist/release.');
   }
   return entries;
+}
+
+export function ensureReleaseTarball({ root = ROOT, releaseDir = getReleaseDir(root), execFile = execFileSync, npmCommand = NPM_COMMAND } = {}) {
+  if (!existsSync(releaseDir)) {
+    throw new Error('dist/release does not exist. Run `npm run build:release` first.');
+  }
+  const hasTarball = readdirSync(releaseDir).some((name) => TARBALL_RE.test(name));
+  if (hasTarball) return;
+  mkdirSync(releaseDir, { recursive: true });
+  execFile(npmCommand, ['pack', '--pack-destination', releaseDir], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function hasRelease(tag) {
@@ -47,9 +75,11 @@ function hasRelease(tag) {
   }
 }
 
-function main() {
+export function main() {
   const args = parseArgs(process.argv.slice(2));
-  const artifacts = getArtifacts();
+  const releaseDir = getReleaseDir();
+  ensureReleaseTarball({ root: ROOT, releaseDir });
+  const artifacts = getArtifacts(releaseDir);
 
   if (!hasRelease(args.tag)) {
     const createArgs = ['release', 'create', args.tag, '--title', args.title];
@@ -69,4 +99,7 @@ function main() {
   console.log(`Published ${artifacts.length} artifact(s) to GitHub release ${args.tag}.`);
 }
 
-main();
+const isDirectRun = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main();
+}

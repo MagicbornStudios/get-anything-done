@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.34.0] - 2026-04-18
+
+Release focused on restoring a working GitHub-based update path so installed GAD users can actually receive the sprint's runtime, handoff, and session-continuity work.
+
 ### Added
 - `gad breed --project <id> --parentA <s> --parentB <s> --name <new>` — merge two species into a new one (decision gad-219). parentA precedence on scalar conflicts; arrays unioned + deduped; constraints merged; `bredFrom: [parentA, parentB]` recorded. `breedSpecies()` added to `lib/eval-data-access.cjs`.
 - `site/lib/vocabulary.ts` rewritten as a full single-source vocabulary catalogue (task 45-04, decisions gad-166, gad-169, gad-189, gad-219). Typed `ENTITIES` record with singular/plural/article for every evolutionary noun (project/recipe/species/generation/brood/bestiary/dna/finding), plus `VOCAB.conditions` (gad/gsd/bare/custom, no GAD+emergent), `VOCAB.publication` (draft/published), `VOCAB.sections` + `VOCAB.tabs` for UI labels, `VOCAB.verbs` (spawn/breed/evolve/publish/preserve), a `VOCAB.renamed` legacy-key table, and helpers `entityLabel` / `pluralize` / `withArticle` / `countLabel` / `canonicalizeLegacyKey`. `BANNED_TERMS` seeded for the 45-15 audit grep — bare "emergent" is deliberately not banned (it remains a legitimate workflow descriptor).
@@ -15,6 +19,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Art of War epigraph registry expansion (task 45-05): `site/lib/epigraphs.ts` goes from 10 unstructured entries to 22 typed entries across 8 sections (hero/planning/evolution/system/findings/scoring × 3, bestiary/marketplace × 2). Every entry pairs the verbatim Sun Tzu `original` with an `adapted` line rewritten through our evolutionary/build vocabulary. New `EpigraphSection` string-literal type + helpers `getAllEpigraphs`, `getEpigraph` (backwards-compat), `getEpigraphsFor` (all for a section), `pickEpigraph(section, seed?)` (deterministic pick via a small non-crypto hash — same seed → same epigraph, so a page can stabilise its choice per session/build), and `countBySection()` for rotation/coverage reporting. Consumer UI lands in 45-16 (hero copy + epigraphs on section dividers).
 - Overview tab marketing-landing rewrite (task 45-13, pragmatic cut): new `ProjectStatsBar` at the top of the Overview composition — four cells (Generations count, Species count, Best human review normalized to X.X / 5 or /10, Latest version + relative date "3d ago"). Uses the 45-04 `countLabel()` pluralization helper. Overview sections reordered: Hero → **StatsBar** → Runs → **Findings** (promoted above Requirements — outcomes before inputs) → Requirements → Skills scope → Emergent lineage (workflow-gated) → Bugs → Scoring weights. Workflow visualization and VCS showcase are explicitly deferred to a 45-13 follow-up todo (`2026-04-16-45-13-followup-workflow-vcs-showcase.md`) to avoid scope explosion mid-sprint.
 - Section epigraphs + hero copy polish (task 45-16): new reusable `<SectionEpigraph section="..." seed="..." align="...">` component under `@/components/site` — renders the adapted Sun Tzu line as emphasized italic with the verbatim original shown beneath ("After Sun Tzu, The Art of War: ..."). Null-renders when the section has no entries so it's safe to drop anywhere. Six dividers placed between the existing bands on the landing page (`hero/system/planning/evolution/findings/marketplace`) with stable string seeds so the pick is deterministic across refreshes. Four dividers on the project Overview tab (`hero/bestiary/planning/scoring`) with seeds namespaced by `project.id` so different projects see a different rotation of Sun Tzu lines. Hero copy polish on `LandingEvolutionBand`: fixed the "permanent roto skills" typo → "permanent proto-skills"; added evolutionary framing ("species mutate, generations compete, and the survivors promote…"); preserved the "context under pressure" tagline.
+
+### Changed
+- `/gad-update` and the SessionStart update check now resolve the latest version from GitHub Releases instead of npm. Lookup uses `gh api` first, falls back to `git ls-remote --tags`, and respects `GAD_RELEASE_REPO` for forks (task 44-38).
+- `scripts/publish-release.mjs` now creates and uploads `get-anything-done-<version>.tgz` alongside the SEA executable, and the package packlist was trimmed so the tarball no longer embeds `dist/release-support` or other build-only output (task 44-38).
+
+### Fixed
+- `workflows/update.md` no longer tells users to run `npx -y get-anything-done@latest`, which 404ed because GAD is not published on npm. The update path now downloads the GitHub release tarball and runs `node package/bin/install.js` directly (task 44-38).
 
 ### Changed
 - **`gad site serve`** — default port is **`3456`** when `--port` is omitted (monorepo/dev). New **`--consumer`** uses default **`3780`** so a packaged install can run beside dev without colliding. **`GAD_SITE_SERVE_PORT`** or **`GAD_SITE_PORT`** overrides both; explicit **`--port`** wins (task **42.4-23**).
@@ -1882,7 +1893,8 @@ First GitHub release cut of GAD with downloadable Windows installer artifacts at
 - YOLO mode for autonomous execution
 - Interactive mode with checkpoints
 
-[Unreleased]: https://github.com/gsd-build/get-shit-done/compare/v1.30.0...HEAD
+[Unreleased]: https://github.com/MagicbornStudios/get-anything-done/compare/v1.34.0...HEAD
+[1.34.0]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.0
 [1.30.0]: https://github.com/gsd-build/get-shit-done/releases/tag/v1.30.0
 [1.29.0]: https://github.com/gsd-build/get-shit-done/releases/tag/v1.29.0
 [1.28.0]: https://github.com/gsd-build/get-shit-done/releases/tag/v1.28.0
