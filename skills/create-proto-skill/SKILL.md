@@ -51,6 +51,32 @@ crash or auto-compact halfway through.
 - The pattern isn't actually clear yet — write a quick note (`gad note`)
   and let the next evolution surface it.
 
+## Draft quality bar — compartmentalized systems over captured answers
+
+When drafting a proto-skill SKILL.md, default to the
+**compartmentalized-system-as-skill** shape defined in
+`skills/create-skill/SKILL.md` (§ The quality bar). In short:
+
+1. Open the SKILL.md with a **requirements contract** — 3-6 falsifiable items
+   the host system must satisfy. Not pseudocode, not tech-stack-specific —
+   checkable contract items.
+2. Name the **UX or behavior pattern** the skill instantiates on the host.
+3. Note any preconditions the skill itself enforces (dev gate, runtime,
+   eval condition, lane).
+4. Keep examples anchored in one concrete host, but write the contract so
+   it survives porting to a different host.
+
+The canonical reference is `skills/gad-visual-context-system/SKILL.md`
+(first proto-skill to prove the pattern). Model the drafted SKILL.md
+against it when the candidate is clearly a repeatable system pattern and
+not just a captured answer. If the candidate is a one-off fix recipe,
+default to the lighter "captured-answer" shape (When to use / The pattern /
+Why / Failure modes / Related) and skip the requirements contract.
+
+The validator (`gad-evolution-validator`) reports advisory file-ref checks,
+not quality-bar checks — compartmentalized-system review is a drafting-
+time concern, not a post-hoc audit.
+
 ## Step 1 — enumerate pending candidates
 
 Run `gad evolution status` first to see the current state. The command

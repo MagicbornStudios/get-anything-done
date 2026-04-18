@@ -32,6 +32,70 @@ Do NOT write a skill for:
 - One-off fixes specific to a single file that nobody will touch again.
 - Speculation about patterns you haven't actually used.
 
+## The quality bar — skills are compartmentalized systems, not stored answers
+
+**A skill that works is a small system with a tight requirements contract and
+a reusable UX pattern.** The best proto-skill in the framework today is
+`gad-visual-context-system` (VCS). Read it — that's the shape.
+
+VCS's requirements contract, compressed to one table:
+
+| Requirement | Applies where |
+|---|---|
+| Every interactive element has a searchable, deterministic id (`cid`) | In any UI surface the skill is installed into |
+| A dev-only gate hides the identity overlay from production users | Same |
+| Every modal ships a CRUD-round-trip footer against a real cid | Same |
+| Performance cost is zero when the dev surface is disabled | Same |
+
+Four requirements. Each one is checkable by a reader on the target surface.
+The skill does not prescribe React vs Vue, or canvas vs DOM — it prescribes
+the identity + discoverability contract, and any host system that satisfies
+it gets the benefit (the agent can now act on "the thing I'm pointing at").
+
+Call this pattern **compartmentalized-system-as-skill**:
+
+1. **Small requirements set** — 3-6 items, each falsifiable on the host
+   system. If you can't write a grep or a visual check that says "yes this
+   host satisfies the contract", the requirement is too vague.
+2. **UX or behavior pattern the skill wants to instantiate** — what
+   changes for the operator/agent/user when the contract is satisfied.
+   VCS's: "point at the thing, name the thing, let an agent address it."
+3. **Host-agnostic** — the skill is the virus, the codebase is the host.
+   VCS works in a Next.js app or a Phaser game or a Three.js scene, because
+   the requirements are identity + dev gate + footer, not "use this React
+   component." A 3D-space variant of VCS is viable *because* the contract
+   is cell-level, not transport-level. A TUI variant is viable for the
+   same reason.
+4. **Self-contained rollout** — the skill names its own install steps. No
+   "first go ship phase X". If the skill's preconditions aren't met, list
+   them; don't make the reader guess.
+
+Skills that don't meet this bar are still useful as **captured answers**
+(how to fix a specific bug, how to configure a specific tool). Those belong
+in the `dev` lane and look like the bulk of `skills/gad-*`. But when a skill
+*can* be written as a compartmentalized system, prefer that shape — it
+travels further and resists rot.
+
+## Proto-skill signal check
+
+Before promoting a proto-skill from `.planning/proto-skills/<slug>/` to
+`skills/<slug>/` via `gad skill promote`, ask:
+
+1. Does the skill name a small set of host-agnostic requirements?
+2. Does it name the UX or behavior pattern it instantiates on the host?
+3. Can I imagine running this skill against a stack other than the one it
+   was born in (browser → TUI, web → game engine, etc.) and the requirements
+   still make sense?
+4. Did the skill already produce observable value in at least one host?
+
+All four yes → promote. Two or fewer → keep as a captured-answer skill and
+don't try to universalize. Somewhere in between → rewrite the requirements
+section until it's either clearly universalizable or clearly not, then
+re-ask.
+
+See `skills/gad-visual-context-system/SKILL.md` + `VALIDATION.md` for the
+canonical shape.
+
 ## Where skills live
 
 ```
