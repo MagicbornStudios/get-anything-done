@@ -29,6 +29,7 @@
 const { defineCommand, runMain, createMain } = require('citty');
 const path = require('path');
 const fs = require('fs');
+const { pathToFileURL } = require('url');
 
 const gadConfig = require('./gad-config.cjs');
 const { resolveTomlPath } = require('./gad-config.cjs');
@@ -2409,6 +2410,657 @@ const envCmd = defineCommand({
     revoke: envRevokeCmd,
     audit: envAuditCmd,
     purge: envPurgeCmd,
+  },
+});
+
+// ---------------------------------------------------------------------------
+// runtime command namespace (GAD-native wrapper over runtime substrate)
+// ---------------------------------------------------------------------------
+
+function detectRuntimeSubstrateRepoRoot(baseDir) {
+  const candidates = [];
+  const addCandidate = (dir) => {
+    if (!dir) return;
+    const resolved = path.resolve(dir);
+    if (!candidates.includes(resolved)) candidates.push(resolved);
+  };
+
+  addCandidate(baseDir);
+  addCandidate(process.cwd());
+  addCandidate(path.resolve(__dirname, '..', '..', '..'));
+
+  let cursor = path.resolve(baseDir);
+  for (let i = 0; i < 6; i += 1) {
+    addCandidate(cursor);
+    const parent = path.dirname(cursor);
+    if (parent === cursor) break;
+    cursor = parent;
+  }
+
+  for (const root of candidates) {
+    const marker = path.join(root, 'scripts', 'runtime-substrate-core.mjs');
+    if (fs.existsSync(marker)) return root;
+  }
+  return null;
+}
+
+function resolveRuntimeScriptPath(runtimeRepoRoot, scriptName) {
+  const scriptPath = path.join(runtimeRepoRoot, 'scripts', scriptName);
+  if (!fs.existsSync(scriptPath)) {
+    throw new Error(`Runtime substrate script not found: ${scriptPath}`);
+  }
+  return scriptPath;
+}
+
+function runRuntimeScriptJson(runtimeRepoRoot, scriptName, scriptArgs) {
+  const { spawnSync } = require('child_process');
+  const scriptPath = resolveRuntimeScriptPath(runtimeRepoRoot, scriptName);
+  const result = spawnSync(process.execPath, [scriptPath, ...scriptArgs], {
+    cwd: runtimeRepoRoot,
+    env: process.env,
+    encoding: 'utf8',
+    maxBuffer: 20 * 1024 * 1024,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+
+  if (result.status !== 0) {
+    const stderr = (result.stderr || '').trim();
+    const stdout = (result.stdout || '').trim();
+    throw new Error(stderr || stdout || `${scriptName} failed with exit ${result.status}`);
+  }
+
+  const raw = (result.stdout || '').trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const lines = raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    for (let i = lines.length - 1; i >= 0; i -= 1) {
+      try {
+        return JSON.parse(lines[i]);
+      } catch {}
+    }
+    throw new Error(`Expected JSON output from ${scriptName}, received non-JSON payload.`);
+  }
+}
+
+function parseCsvValues(value) {
+  return String(value || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function getRuntimeArg(args, key, fallback = undefined) {
+  if (!args || typeof args !== 'object') return fallback;
+  const camel = String(key).replace(/-([a-z])/g, (_, ch) => ch.toUpperCase());
+  // citty can expose both dashed and camelized keys; prefer camelized values
+  // because dashed keys may retain defaults even when CLI flags are provided.
+  if (Object.prototype.hasOwnProperty.call(args, camel)) return args[camel];
+  if (Object.prototype.hasOwnProperty.call(args, key)) return args[key];
+  return fallback;
+}
+
+function readFileExcerpt(filePath, maxChars = 2400) {
+  try {
+    const text = fs.readFileSync(filePath, 'utf8');
+    if (text.length <= maxChars) return text;
+    return `${text.slice(0, maxChars)}\n\n…[truncated for runtime context]`;
+  } catch {
+    return null;
+  }
+}
+
+function detectContextKindFromFile(fileRef) {
+  const normalized = String(fileRef || '').replace(/\\/g, '/').toLowerCase();
+  if (normalized.endsWith('state.xml') || normalized.endsWith('state.md')) return 'task';
+  if (normalized.endsWith('roadmap.xml') || normalized.endsWith('roadmap.md')) return 'phase';
+  if (normalized.includes('/phases/') && normalized.endsWith('plan.md')) return 'phase';
+  if (normalized.endsWith('agents.md') || normalized.endsWith('claude.md')) return 'runtime-hints';
+  if (normalized.includes('handoff')) return 'decision-log';
+  return 'file-snippet';
+}
+
+function inferTaskShapeFromState(state, explicitTaskShape) {
+  if (explicitTaskShape) return explicitTaskShape;
+  const nextAction = String(state?.nextAction || '').toLowerCase();
+  if (nextAction.includes('test') || nextAction.includes('failing')) return 'test-repair';
+  if (nextAction.includes('refactor') || nextAction.includes('cleanup')) return 'refactor';
+  if (nextAction.includes('analy') || nextAction.includes('investigat')) return 'analysis';
+  return 'planning';
+}
+
+async function resolveGadRuntimeContext({
+  projectId = '',
+  sessionId = '',
+  modeOverride = '',
+  forceRuntime = '',
+  allowRuntimeOverride = false,
+  taskShape = '',
+} = {}) {
+  const baseDir = findRepoRoot();
+  const config = gadConfig.load(baseDir);
+  const roots = resolveRoots({ projectid: projectId || '', all: false }, baseDir, config.roots);
+  if (roots.length === 0) {
+    throw new Error('No project resolved. Pass --projectid <id> or run from a project root.');
+  }
+  const root = roots[0];
+  const planningDirAbs = path.join(baseDir, root.path, root.planningDir);
+
+  const allSessions = loadSessions(baseDir, [root]);
+  const explicitSessionId = String(sessionId || '').trim();
+  let session = null;
+  if (explicitSessionId) {
+    session = allSessions.find((s) => s.id === explicitSessionId) || null;
+  } else {
+    const active = allSessions.filter((s) => s.status === SESSION_STATUS.ACTIVE);
+    if (active.length > 0) session = active[0];
+  }
+
+  const resolvedSessionId = session?.id || (explicitSessionId || null);
+  const state = readState(root, baseDir);
+  const resolvedTaskShape = inferTaskShapeFromState(state, taskShape);
+  const refs = buildContextRefs(root, baseDir, session);
+  const contextBlocks = [];
+  for (const ref of refs.slice(0, 8)) {
+    const filePath = fs.existsSync(path.join(baseDir, ref.file))
+      ? path.join(baseDir, ref.file)
+      : path.join(baseDir, root.path, ref.file);
+    const excerpt = readFileExcerpt(filePath, 2200);
+    if (!excerpt) continue;
+    contextBlocks.push({
+      id: `ref:${ref.file}`,
+      kind: detectContextKindFromFile(ref.file),
+      priority: ref.file.includes('STATE') ? 95 : ref.file.includes('ROADMAP') ? 85 : 70,
+      content: `source: ${ref.file}\nreason: ${ref.reason}\n\n${excerpt}`,
+    });
+  }
+
+  const handoffArtifacts = [];
+  const handoffCandidates = [
+    path.join(planningDirAbs, 'HANDOFF.json'),
+    path.join(planningDirAbs, 'HANDOFF.md'),
+  ];
+  if (session?._file) handoffCandidates.push(session._file);
+  for (const candidate of handoffCandidates) {
+    if (!candidate || !fs.existsSync(candidate)) continue;
+    const excerpt = readFileExcerpt(candidate, 2400);
+    if (!excerpt) continue;
+    const rel = path.relative(baseDir, candidate).replace(/\\/g, '/');
+    handoffArtifacts.push(rel);
+    contextBlocks.push({
+      id: `handoff:${path.basename(candidate)}`,
+      kind: 'decision-log',
+      priority: 92,
+      content: `artifact: ${rel}\n\n${excerpt}`,
+    });
+  }
+
+  const runtimeRepoRoot = detectRuntimeSubstrateRepoRoot(baseDir);
+  if (!runtimeRepoRoot) {
+    throw new Error('Could not locate runtime substrate scripts. Expected scripts/runtime-substrate-core.mjs.');
+  }
+
+  const coreModulePath = pathToFileURL(path.join(runtimeRepoRoot, 'scripts', 'runtime-substrate-core.mjs')).href;
+  const core = await import(coreModulePath);
+  const effectiveRuntimeConfig = core.resolveEffectiveRuntimeSubstrateConfig({
+    repoRoot: runtimeRepoRoot,
+    projectId: root.id,
+    modeOverride: modeOverride || null,
+    allowRuntimeOverride: Boolean(allowRuntimeOverride),
+  });
+  const promotedSkills = core.loadPromotedRuntimeSkills({
+    repoRoot: runtimeRepoRoot,
+    projectId: root.id,
+    taskShape: resolvedTaskShape,
+  });
+
+  const phaseId = state.currentPhase || session?.position?.phase || null;
+  const nextAction = state.nextAction || '';
+  const defaultPrompt = [
+    'Use the provided GAD planning context to choose and execute the next safe action.',
+    `project: ${root.id}`,
+    `session: ${resolvedSessionId || 'none'}`,
+    `phase: ${phaseId || 'none'}`,
+    `next-action: ${nextAction || 'none'}`,
+  ].join('\n');
+
+  return {
+    baseDir,
+    runtimeRepoRoot,
+    core,
+    root,
+    projectId: root.id,
+    sessionId: resolvedSessionId,
+    sessionResolved: Boolean(session),
+    state,
+    contextRefs: refs,
+    contextBlocks,
+    handoffArtifacts,
+    taskShape: resolvedTaskShape,
+    handoffArtifactsFound: handoffArtifacts.length,
+    effectiveRuntimeConfig,
+    promotedSkills,
+    defaultPrompt,
+    selectionInput: {
+      taskShape: resolvedTaskShape,
+      promotedSkills,
+      forceRuntime: forceRuntime || null,
+    },
+  };
+}
+
+function buildRuntimePrompt(core, context, explicitPrompt) {
+  const basePrompt = explicitPrompt || context.defaultPrompt;
+  if (typeof core.assemblePromptWithContext === 'function') {
+    return core.assemblePromptWithContext(basePrompt, context.contextBlocks);
+  }
+  return basePrompt;
+}
+
+function resolveRuntimeIds(args, core) {
+  const runtimes = [];
+  if (args.runtime) runtimes.push(String(args.runtime).trim());
+  if (args.runtimes) runtimes.push(...parseCsvValues(args.runtimes));
+  const unique = Array.from(new Set(runtimes.filter(Boolean)));
+  if (unique.length > 0) return unique;
+  return Array.isArray(core.RUNTIME_IDS) ? core.RUNTIME_IDS : ['claude-code', 'codex-cli', 'gemini-cli', 'opencode'];
+}
+
+const runtimeCheckCmd = defineCommand({
+  meta: { name: 'check', description: 'Run runtime health checks through GAD project/session context.' },
+  args: {
+    projectid: { type: 'string', description: 'Project id (GAD planning root)', default: '' },
+    sessionid: { type: 'string', description: 'Session id for context hydration', default: '' },
+    runtime: { type: 'string', description: 'Single runtime id to check', default: '' },
+    runtimes: { type: 'string', description: 'Comma-separated runtime ids to check', default: '' },
+    smoke: { type: 'boolean', description: 'Run smoke prompt checks when supported', default: false },
+    'timeout-ms': { type: 'string', description: 'Probe timeout in milliseconds', default: '60000' },
+    'no-save': { type: 'boolean', description: 'Do not persist runtime health artifacts', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  async run({ args }) {
+    try {
+      const context = await resolveGadRuntimeContext({
+        projectId: args.projectid,
+        sessionId: args.sessionid,
+      });
+      const scriptArgs = ['--project-id', context.projectId, '--json'];
+      if (args.runtime) scriptArgs.push('--runtime', String(args.runtime));
+      if (args.runtimes) scriptArgs.push('--runtimes', String(args.runtimes));
+      if (args.smoke) scriptArgs.push('--smoke');
+      const timeoutMs = getRuntimeArg(args, 'timeout-ms', '60000');
+      const noSave = Boolean(getRuntimeArg(args, 'no-save', false));
+      if (timeoutMs) scriptArgs.push('--timeout-ms', String(timeoutMs));
+      if (noSave) scriptArgs.push('--no-save');
+
+      const payload = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-check.mjs', scriptArgs);
+      payload.gadContext = {
+        projectId: context.projectId,
+        sessionId: context.sessionId,
+        sessionResolved: context.sessionResolved,
+        handoffArtifacts: context.handoffArtifacts,
+      };
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify(payload, null, 2));
+        return;
+      }
+
+      console.log(`Runtime check complete for project=${context.projectId} session=${context.sessionId || 'none'}`);
+      const rows = (payload.runtimes || []).map((entry) => ({
+        runtime: entry.runtime,
+        installed: entry.installed,
+        auth: entry.authConfigured,
+        headless: entry.supportsHeadless,
+        json: entry.supportsJsonOutput,
+      }));
+      output(rows, { title: 'Runtime health (GAD)', format: 'table' });
+    } catch (err) {
+      outputError(err.message);
+    }
+  },
+});
+
+const runtimeSelectCmd = defineCommand({
+  meta: { name: 'select', description: 'Read-only guarded runtime selection with computed vs effective decision output.' },
+  args: {
+    projectid: { type: 'string', description: 'Project id (GAD planning root)', default: '' },
+    sessionid: { type: 'string', description: 'Session id for context hydration', default: '' },
+    runtime: { type: 'string', description: 'Single runtime id to consider', default: '' },
+    runtimes: { type: 'string', description: 'Comma-separated runtime ids to consider', default: '' },
+    prompt: { type: 'string', description: 'Task prompt override', default: '' },
+    'task-shape': { type: 'string', description: 'Task shape category', default: '' },
+    mode: { type: 'string', description: 'Substrate rollout mode override (off|shadow|assist|active)', default: '' },
+    'run-mode': { type: 'string', description: 'Execution mode (plan|implement|analyze|repair|eval)', default: 'plan' },
+    'force-runtime': { type: 'string', description: 'Bypass selector and force a runtime', default: '' },
+    'allow-runtime-override': { type: 'boolean', description: 'Allow routing overrides for this invocation', default: false },
+    'shadow-log': { type: 'boolean', description: 'Include computed decision payload when mode=shadow (disable with --no-shadow-log)', default: true },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  async run({ args }) {
+    try {
+      const context = await resolveGadRuntimeContext({
+        projectId: args.projectid,
+        sessionId: args.sessionid,
+        modeOverride: args.mode,
+        forceRuntime: getRuntimeArg(args, 'force-runtime', ''),
+        allowRuntimeOverride: Boolean(getRuntimeArg(args, 'allow-runtime-override', false)),
+        taskShape: getRuntimeArg(args, 'task-shape', ''),
+      });
+      const noShadowLog = !Boolean(getRuntimeArg(args, 'shadow-log', true))
+        || Boolean(getRuntimeArg(args, 'no-shadow-log', false));
+      if (noShadowLog) {
+        context.effectiveRuntimeConfig.log_shadow_decisions = false;
+      }
+      const core = context.core || (await import(pathToFileURL(path.join(context.runtimeRepoRoot, 'scripts', 'runtime-substrate-core.mjs')).href));
+      const runtimeIds = resolveRuntimeIds(args, core);
+      const prompt = buildRuntimePrompt(core, context, args.prompt);
+      const estimatedTokensIn = Math.ceil(String(prompt || '').length / 4);
+
+      const healthStatuses = {};
+      for (const runtime of runtimeIds) {
+        healthStatuses[runtime] = core.runtimeHealthReport(runtime, {
+          smoke: false,
+          timeoutMs: 25000,
+        });
+      }
+      const authStatuses = core.authStatusByRuntime(runtimeIds);
+      const installed = Object.fromEntries(
+        runtimeIds.map((runtime) => [
+          runtime,
+          {
+            installed: Boolean(healthStatuses[runtime]?.installed),
+            executablePath: healthStatuses[runtime]?.executablePath ?? null,
+            version: healthStatuses[runtime]?.version ?? null,
+            issues: [...(healthStatuses[runtime]?.issues || [])],
+          },
+        ]),
+      );
+
+      const decision = core.selectRuntimeWithGuards({
+        runtimeIds,
+        taskShape: context.taskShape,
+        estimatedTokensIn,
+        requiresHeadless: true,
+        requiresJsonOutput: true,
+        requiresShell: false,
+        requiresWrite: false,
+        authStatuses,
+        healthStatuses,
+        installed,
+        promotedSkills: context.promotedSkills,
+        effectiveConfig: context.effectiveRuntimeConfig,
+        forceRuntime: getRuntimeArg(args, 'force-runtime', '') || null,
+      });
+
+      const payload = {
+        projectId: context.projectId,
+        sessionId: context.sessionId,
+        mode: decision.mode,
+        configuredPrimary: decision.configuredPrimary || null,
+        computedPrimary: decision.mode === 'shadow' && !context.effectiveRuntimeConfig.log_shadow_decisions
+          ? null
+          : decision.computed.primary,
+        effectivePrimary: decision.effective.primary,
+        fallbackChain: decision.effective.fallbackChain,
+        reasoning: decision.effective.reasoning,
+        appliedSkills: decision.effective.appliedSkills,
+        suppressedSkills: decision.suppressedSkills,
+        suppressedReason: decision.suppressedReason,
+        forceRuntime: getRuntimeArg(args, 'force-runtime', '') || null,
+        routingOverrideSuppressed: decision.routingOverrideSuppressed,
+        primaryRuntimeFixed: decision.primaryRuntimeFixed,
+        taskShape: context.taskShape,
+        runMode: getRuntimeArg(args, 'run-mode', 'plan') || 'plan',
+        promotedSkillCount: context.promotedSkills.length,
+        handoffArtifacts: context.handoffArtifacts,
+        computed: decision.mode === 'shadow' && !context.effectiveRuntimeConfig.log_shadow_decisions
+          ? null
+          : decision.computed,
+        effective: decision.effective,
+      };
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify(payload, null, 2));
+        return;
+      }
+
+      console.log('Runtime selection (GAD)');
+      console.log(`project=${payload.projectId} session=${payload.sessionId || 'none'} mode=${payload.mode}`);
+      console.log(`configured=${payload.configuredPrimary || 'none'} computed=${payload.computedPrimary || 'none'} effective=${payload.effectivePrimary || 'none'}`);
+      if (payload.forceRuntime) console.log(`force-runtime=${payload.forceRuntime}`);
+      if (payload.reasoning.length > 0) {
+        console.log('\nreasoning:');
+        for (const line of payload.reasoning) console.log(`  - ${line}`);
+      }
+    } catch (err) {
+      outputError(err.message);
+    }
+  },
+});
+
+const runtimeMatrixCmd = defineCommand({
+  meta: { name: 'matrix', description: 'Run runtime matrix through GAD project/session context and snapshot-aware prompt assembly.' },
+  args: {
+    projectid: { type: 'string', description: 'Project id (GAD planning root)', default: '' },
+    sessionid: { type: 'string', description: 'Session id for context hydration', default: '' },
+    runtime: { type: 'string', description: 'Single runtime id', default: '' },
+    runtimes: { type: 'string', description: 'Comma-separated runtime ids', default: '' },
+    prompt: { type: 'string', description: 'Prompt override', default: '' },
+    'task-shape': { type: 'string', description: 'Task shape category', default: '' },
+    mode: { type: 'string', description: 'Substrate rollout mode override (off|shadow|assist|active)', default: '' },
+    'run-mode': { type: 'string', description: 'Execution mode', default: 'plan' },
+    'phase-id': { type: 'string', description: 'Phase id override', default: '' },
+    'task-id': { type: 'string', description: 'Task id override', default: '' },
+    'timeout-ms': { type: 'string', description: 'Execution timeout in milliseconds', default: '60000' },
+    'expected-file-touches': { type: 'string', description: 'Expected file touch count', default: '0' },
+    'no-execute': { type: 'boolean', description: 'Skip runtime execution (selection + health only)', default: false },
+    'no-save': { type: 'boolean', description: 'Do not persist traces/matrix artifacts', default: false },
+    'force-runtime': { type: 'string', description: 'Bypass selector and force a runtime', default: '' },
+    'allow-runtime-override': { type: 'boolean', description: 'Allow routing overrides for this invocation', default: false },
+    'shadow-log': { type: 'boolean', description: 'Include computed decision payload when mode=shadow (disable with --no-shadow-log)', default: true },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  async run({ args }) {
+    try {
+      const context = await resolveGadRuntimeContext({
+        projectId: args.projectid,
+        sessionId: args.sessionid,
+        modeOverride: args.mode,
+        forceRuntime: getRuntimeArg(args, 'force-runtime', ''),
+        allowRuntimeOverride: Boolean(getRuntimeArg(args, 'allow-runtime-override', false)),
+        taskShape: getRuntimeArg(args, 'task-shape', ''),
+      });
+      const core = context.core || (await import(pathToFileURL(path.join(context.runtimeRepoRoot, 'scripts', 'runtime-substrate-core.mjs')).href));
+      const prompt = buildRuntimePrompt(core, context, args.prompt);
+      const runMode = getRuntimeArg(args, 'run-mode', 'plan');
+      const phaseIdArg = getRuntimeArg(args, 'phase-id', '');
+      const taskIdArg = getRuntimeArg(args, 'task-id', '');
+      const timeoutMs = getRuntimeArg(args, 'timeout-ms', '60000');
+      const expectedFileTouches = getRuntimeArg(args, 'expected-file-touches', '0');
+      const noExecute = Boolean(getRuntimeArg(args, 'no-execute', false));
+      const noSave = Boolean(getRuntimeArg(args, 'no-save', false));
+      const forceRuntime = getRuntimeArg(args, 'force-runtime', '');
+      const allowRuntimeOverride = Boolean(getRuntimeArg(args, 'allow-runtime-override', false));
+      const noShadowLog = !Boolean(getRuntimeArg(args, 'shadow-log', true))
+        || Boolean(getRuntimeArg(args, 'no-shadow-log', false));
+
+      const scriptArgs = [
+        '--project-id', context.projectId,
+        '--task-shape', context.taskShape,
+        '--run-mode', String(runMode || 'plan'),
+        '--mode', context.effectiveRuntimeConfig.mode,
+        '--prompt', prompt,
+        '--json',
+      ];
+      if (args.runtime) scriptArgs.push('--runtime', String(args.runtime));
+      if (args.runtimes) scriptArgs.push('--runtimes', String(args.runtimes));
+      if (phaseIdArg || context.state.currentPhase) scriptArgs.push('--phase-id', String(phaseIdArg || context.state.currentPhase));
+      if (taskIdArg) scriptArgs.push('--task-id', String(taskIdArg));
+      if (timeoutMs) scriptArgs.push('--timeout-ms', String(timeoutMs));
+      if (expectedFileTouches) scriptArgs.push('--expected-file-touches', String(expectedFileTouches));
+      if (noExecute) scriptArgs.push('--no-execute');
+      if (noSave) scriptArgs.push('--no-save');
+      if (forceRuntime) scriptArgs.push('--force-runtime', String(forceRuntime));
+      if (allowRuntimeOverride) scriptArgs.push('--allow-runtime-override');
+      if (noShadowLog) scriptArgs.push('--no-shadow-log');
+
+      const payload = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-matrix.mjs', scriptArgs);
+      payload.gadContext = {
+        projectId: context.projectId,
+        sessionId: context.sessionId,
+        sessionResolved: context.sessionResolved,
+        contextRefCount: context.contextRefs.length,
+        contextBlockCount: context.contextBlocks.length,
+        handoffArtifacts: context.handoffArtifacts,
+      };
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify(payload, null, 2));
+        return;
+      }
+
+      console.log(`Runtime matrix complete (project=${context.projectId}, session=${context.sessionId || 'none'})`);
+      console.log(`mode=${payload.substrateMode || context.effectiveRuntimeConfig.mode} runMode=${payload.runMode || args['run-mode']}`);
+      const rows = (payload.runs || []).map((run) => ({
+        runtime: run.runtime,
+        status: run.status,
+        error: run.normalizedErrorCode || 'none',
+        durationMs: run.durationMs,
+      }));
+      output(rows, { title: 'Runtime matrix results', format: 'table' });
+    } catch (err) {
+      outputError(err.message);
+    }
+  },
+});
+
+const runtimePipelineCmd = defineCommand({
+  meta: { name: 'pipeline', description: 'Run check -> matrix -> score -> candidates using GAD runtime context.' },
+  args: {
+    projectid: { type: 'string', description: 'Project id (GAD planning root)', default: '' },
+    sessionid: { type: 'string', description: 'Session id for context hydration', default: '' },
+    runtime: { type: 'string', description: 'Single runtime id', default: '' },
+    runtimes: { type: 'string', description: 'Comma-separated runtime ids', default: '' },
+    prompt: { type: 'string', description: 'Prompt override', default: '' },
+    'task-shape': { type: 'string', description: 'Task shape category', default: '' },
+    mode: { type: 'string', description: 'Substrate rollout mode override (off|shadow|assist|active)', default: '' },
+    'run-mode': { type: 'string', description: 'Execution mode', default: 'plan' },
+    'phase-id': { type: 'string', description: 'Phase id override', default: '' },
+    'task-id': { type: 'string', description: 'Task id override', default: '' },
+    'timeout-ms': { type: 'string', description: 'Execution timeout in milliseconds', default: '60000' },
+    'expected-file-touches': { type: 'string', description: 'Expected file touch count', default: '0' },
+    'no-execute': { type: 'boolean', description: 'Skip runtime execution during matrix stage', default: false },
+    'no-save': { type: 'boolean', description: 'Do not persist traces/matrix artifacts', default: false },
+    'force-runtime': { type: 'string', description: 'Bypass selector and force a runtime', default: '' },
+    'allow-runtime-override': { type: 'boolean', description: 'Allow routing overrides for this invocation', default: false },
+    'shadow-log': { type: 'boolean', description: 'Include computed decision payload when mode=shadow (disable with --no-shadow-log)', default: true },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  async run({ args }) {
+    try {
+      const context = await resolveGadRuntimeContext({
+        projectId: args.projectid,
+        sessionId: args.sessionid,
+        modeOverride: args.mode,
+        forceRuntime: getRuntimeArg(args, 'force-runtime', ''),
+        allowRuntimeOverride: Boolean(getRuntimeArg(args, 'allow-runtime-override', false)),
+        taskShape: getRuntimeArg(args, 'task-shape', ''),
+      });
+      const core = context.core || (await import(pathToFileURL(path.join(context.runtimeRepoRoot, 'scripts', 'runtime-substrate-core.mjs')).href));
+      const prompt = buildRuntimePrompt(core, context, args.prompt);
+      const runMode = getRuntimeArg(args, 'run-mode', 'plan');
+      const phaseIdArg = getRuntimeArg(args, 'phase-id', '');
+      const taskIdArg = getRuntimeArg(args, 'task-id', '');
+      const timeoutMs = getRuntimeArg(args, 'timeout-ms', '60000');
+      const expectedFileTouches = getRuntimeArg(args, 'expected-file-touches', '0');
+      const noExecute = Boolean(getRuntimeArg(args, 'no-execute', false));
+      const noSave = Boolean(getRuntimeArg(args, 'no-save', false));
+      const forceRuntime = getRuntimeArg(args, 'force-runtime', '');
+      const allowRuntimeOverride = Boolean(getRuntimeArg(args, 'allow-runtime-override', false));
+      const noShadowLog = !Boolean(getRuntimeArg(args, 'shadow-log', true))
+        || Boolean(getRuntimeArg(args, 'no-shadow-log', false));
+
+      const commonCheckArgs = ['--project-id', context.projectId, '--json'];
+      if (args.runtime) commonCheckArgs.push('--runtime', String(args.runtime));
+      if (args.runtimes) commonCheckArgs.push('--runtimes', String(args.runtimes));
+      if (timeoutMs) commonCheckArgs.push('--timeout-ms', String(timeoutMs));
+      if (noSave) commonCheckArgs.push('--no-save');
+
+      const check = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-check.mjs', commonCheckArgs);
+
+      const matrixArgs = [
+        '--project-id', context.projectId,
+        '--task-shape', context.taskShape,
+        '--run-mode', String(runMode || 'plan'),
+        '--mode', context.effectiveRuntimeConfig.mode,
+        '--prompt', prompt,
+        '--json',
+      ];
+      if (args.runtime) matrixArgs.push('--runtime', String(args.runtime));
+      if (args.runtimes) matrixArgs.push('--runtimes', String(args.runtimes));
+      if (phaseIdArg || context.state.currentPhase) matrixArgs.push('--phase-id', String(phaseIdArg || context.state.currentPhase));
+      if (taskIdArg) matrixArgs.push('--task-id', String(taskIdArg));
+      if (timeoutMs) matrixArgs.push('--timeout-ms', String(timeoutMs));
+      if (expectedFileTouches) matrixArgs.push('--expected-file-touches', String(expectedFileTouches));
+      if (noExecute) matrixArgs.push('--no-execute');
+      if (noSave) matrixArgs.push('--no-save');
+      if (forceRuntime) matrixArgs.push('--force-runtime', String(forceRuntime));
+      if (allowRuntimeOverride) matrixArgs.push('--allow-runtime-override');
+      if (noShadowLog) matrixArgs.push('--no-shadow-log');
+
+      const matrix = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-matrix.mjs', matrixArgs);
+      const score = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-score.mjs', ['--project-id', context.projectId, '--json']);
+      const candidates = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-candidates.mjs', ['--json']);
+
+      const payload = {
+        executedAt: new Date().toISOString(),
+        context: {
+          projectId: context.projectId,
+          sessionId: context.sessionId,
+          sessionResolved: context.sessionResolved,
+          taskShape: context.taskShape,
+          mode: context.effectiveRuntimeConfig.mode,
+          contextRefCount: context.contextRefs.length,
+          contextBlockCount: context.contextBlocks.length,
+          handoffArtifacts: context.handoffArtifacts,
+        },
+        check,
+        matrix,
+        score,
+        candidates,
+      };
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify(payload, null, 2));
+        return;
+      }
+
+      console.log(`Runtime pipeline complete (project=${context.projectId}, session=${context.sessionId || 'none'})`);
+      console.log(`mode=${context.effectiveRuntimeConfig.mode} task-shape=${context.taskShape}`);
+      const emitted = Array.isArray(candidates.emitted) ? candidates.emitted.length : 0;
+      console.log(`candidates-emitted=${emitted}`);
+      const runs = Array.isArray(matrix.runs) ? matrix.runs : [];
+      for (const run of runs) {
+        console.log(`  - ${run.runtime}: status=${run.status} error=${run.normalizedErrorCode || 'none'}`);
+      }
+    } catch (err) {
+      outputError(err.message);
+    }
+  },
+});
+
+const runtimeCmd = defineCommand({
+  meta: {
+    name: 'runtime',
+    description: 'GAD-native runtime substrate commands (check/select/matrix/pipeline).',
+  },
+  subCommands: {
+    check: runtimeCheckCmd,
+    select: runtimeSelectCmd,
+    matrix: runtimeMatrixCmd,
+    pipeline: runtimePipelineCmd,
   },
 });
 
@@ -8747,14 +9399,30 @@ function runTasksListView(args) {
     }
   }
 
-  if (rows.length === 0) {
-    console.log('No tasks found.');
+  // Stall heuristic: in-progress task with no attribution (agent / skill /
+  // runtime). "Truly active" work carries attribution; rows that don't are
+  // stalled carryovers. Cheap first pass — no git calls. Can refine later.
+  let filteredRows = rows;
+  if (args.stalled) {
+    filteredRows = rows.filter((r) => {
+      const attributed = Boolean(
+        (r['agent-id'] && String(r['agent-id']).trim()) ||
+        (r['agent-role'] && String(r['agent-role']).trim()) ||
+        (r.runtime && String(r.runtime).trim()),
+      );
+      return r.status === 'in-progress' && !attributed;
+    });
+  }
+
+  if (filteredRows.length === 0) {
+    console.log(args.stalled ? 'No stalled tasks.' : 'No tasks found.');
     return;
   }
 
   const fmt = args.json ? 'json' : 'table';
   const modeLabel = useGraph ? ' (graph)' : '';
-  console.log(render(rows, { format: fmt, title: `Tasks${modeLabel} (${rows.length})` }));
+  const stalledLabel = args.stalled ? ' stalled' : '';
+  console.log(render(filteredRows, { format: fmt, title: `Tasks${stalledLabel}${modeLabel} (${filteredRows.length})` }));
 }
 
 function resolveSingleTaskRoot(projectid) {
@@ -8982,6 +9650,7 @@ const tasksListCmd = defineCommand({
     phase: { type: 'string', description: 'Filter by phase id (e.g. 03)', default: '' },
     full: { type: 'boolean', description: 'Show full goal text (no truncation)', default: false },
     graph: { type: 'boolean', description: 'Use graph-backed query (auto-enabled when useGraphQuery=true)', default: false },
+    stalled: { type: 'boolean', description: 'Show only in-progress tasks without attribution (no agent / skill / runtime) — stall heuristic', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
   },
   run({ args }) {
@@ -8989,13 +9658,162 @@ const tasksListCmd = defineCommand({
   },
 });
 
+const tasksAddCmd = defineCommand({
+  meta: {
+    name: 'add',
+    description: 'Register a new task in TASK-REGISTRY.xml. The canonical write path — no more hand-editing XML.',
+  },
+  args: {
+    id: { type: 'positional', description: 'Task id (e.g. 60-05a)', required: true },
+    projectid: { type: 'string', description: 'Project id whose TASK-REGISTRY.xml to write into', required: true },
+    phase: { type: 'string', description: 'Existing phase id to nest under (must already exist in ROADMAP.xml)', required: true },
+    goal: { type: 'string', description: 'One-sentence or longer description of the task outcome', required: true },
+    type: { type: 'string', description: 'Optional category (code | site | design | migration | cleanup | framework | …)', default: '' },
+    depends: { type: 'string', description: 'Comma-separated list of prerequisite task ids (no spaces)', default: '' },
+    status: { type: 'string', description: 'Initial status (default: planned)', default: 'planned' },
+    print: { type: 'boolean', description: 'Print the mutated XML to stdout instead of writing the file', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const root = config.roots.find((r) => r.id === args.projectid);
+    if (!root) {
+      outputError(`Project not found: ${args.projectid}. Run \`gad ls\` to see registered projects.`);
+      process.exit(1);
+      return;
+    }
+    const xmlPath = path.join(baseDir, root.path, root.planningDir, 'TASK-REGISTRY.xml');
+    if (!fs.existsSync(xmlPath)) {
+      outputError(`TASK-REGISTRY.xml not found at ${xmlPath}`);
+      process.exit(1);
+      return;
+    }
+    const { appendTaskToFile, addTaskToXml, TaskWriterError } = require('../lib/task-registry-writer.cjs');
+    const def = {
+      id: String(args.id),
+      phase: String(args.phase),
+      goal: String(args.goal),
+      type: String(args.type || ''),
+      depends: String(args.depends || ''),
+      status: String(args.status || 'planned'),
+    };
+    try {
+      if (args.print) {
+        const xml = fs.readFileSync(xmlPath, 'utf8');
+        const mutated = addTaskToXml(xml, def);
+        process.stdout.write(mutated);
+        return;
+      }
+      appendTaskToFile({ filePath: xmlPath, def });
+      console.log(`Added task ${def.id} to phase ${def.phase} (${args.projectid}).`);
+    } catch (e) {
+      if (e instanceof TaskWriterError) {
+        outputError(`${e.code}: ${e.message}`);
+        process.exit(1);
+        return;
+      }
+      throw e;
+    }
+  },
+});
+
+const tasksPromoteCmd = defineCommand({
+  meta: {
+    name: 'promote',
+    description: 'Promote a .planning/todos/*.md file into a real task entry. Filename derives the id unless --id is set; first H1/prose line becomes the goal; full file body is preserved as the <implementation> block. Move the todo to .planning/todos/promoted/ after success unless --keep.',
+  },
+  args: {
+    todo: { type: 'positional', description: 'Path to the todo markdown file (absolute or relative to cwd)', required: true },
+    projectid: { type: 'string', description: 'Project id whose TASK-REGISTRY.xml to write into', required: true },
+    phase: { type: 'string', description: 'Existing phase id to nest under', required: true },
+    id: { type: 'string', description: 'Override the auto-derived task id', default: '' },
+    type: { type: 'string', description: 'Optional category', default: '' },
+    depends: { type: 'string', description: 'Comma-separated prerequisite task ids', default: '' },
+    status: { type: 'string', description: 'Initial status (default: planned)', default: 'planned' },
+    keep: { type: 'boolean', description: 'Do not move the todo into .planning/todos/promoted/', default: false },
+    print: { type: 'boolean', description: 'Print the mutated XML without writing files', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const root = config.roots.find((r) => r.id === args.projectid);
+    if (!root) {
+      outputError(`Project not found: ${args.projectid}.`);
+      process.exit(1);
+      return;
+    }
+    const todoPath = path.isAbsolute(args.todo) ? args.todo : path.resolve(process.cwd(), args.todo);
+    if (!fs.existsSync(todoPath)) {
+      outputError(`Todo file not found: ${todoPath}`);
+      process.exit(1);
+      return;
+    }
+    const todoContent = fs.readFileSync(todoPath, 'utf8');
+
+    // Derive id from --id or the filename (strip date prefix + .md).
+    const basename = path.basename(todoPath, '.md');
+    const derivedId = args.id
+      ? String(args.id)
+      : basename.replace(/^\d{4}-\d{2}-\d{2}-/, '').slice(0, 80);
+
+    // Derive goal: first non-empty prose line. Skip H1 "# title" marker if present.
+    const firstLine = todoContent
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .find((l) => l.length > 0 && !l.startsWith('---')) || '';
+    const goal = firstLine.replace(/^#+\s*/, '').trim() || `Promoted from ${path.basename(todoPath)}`;
+
+    const xmlPath = path.join(baseDir, root.path, root.planningDir, 'TASK-REGISTRY.xml');
+    if (!fs.existsSync(xmlPath)) {
+      outputError(`TASK-REGISTRY.xml not found at ${xmlPath}`);
+      process.exit(1);
+      return;
+    }
+    const { appendTaskToFile, addTaskToXml, TaskWriterError } = require('../lib/task-registry-writer.cjs');
+    const def = {
+      id: derivedId,
+      phase: String(args.phase),
+      goal,
+      type: String(args.type || ''),
+      depends: String(args.depends || ''),
+      status: String(args.status || 'planned'),
+    };
+    try {
+      if (args.print) {
+        const xml = fs.readFileSync(xmlPath, 'utf8');
+        const mutated = addTaskToXml(xml, def);
+        process.stdout.write(mutated);
+        return;
+      }
+      appendTaskToFile({ filePath: xmlPath, def });
+      console.log(`Promoted ${path.relative(baseDir, todoPath)} → task ${def.id} (phase ${def.phase}).`);
+      if (!args.keep) {
+        const promotedDir = path.join(path.dirname(todoPath), 'promoted');
+        fs.mkdirSync(promotedDir, { recursive: true });
+        const dest = path.join(promotedDir, path.basename(todoPath));
+        fs.renameSync(todoPath, dest);
+        console.log(`  moved → ${path.relative(baseDir, dest)}`);
+      }
+    } catch (e) {
+      if (e instanceof TaskWriterError) {
+        outputError(`${e.code}: ${e.message}`);
+        process.exit(1);
+        return;
+      }
+      throw e;
+    }
+  },
+});
+
 const tasksV2Cmd = defineCommand({
-  meta: { name: 'tasks', description: 'Show, claim, release, and inspect active tasks' },
+  meta: { name: 'tasks', description: 'Show, claim, release, add, promote, and inspect tasks' },
   subCommands: {
     list: tasksListCmd,
     claim: tasksClaimCmd,
     release: tasksReleaseCmd,
     active: tasksActiveCmd,
+    add: tasksAddCmd,
+    promote: tasksPromoteCmd,
   },
 });
 
@@ -14650,6 +15468,90 @@ const tipCmd = defineCommand({
   },
 });
 
+/**
+ * `gad next` — cross-project priority hotlist.
+ *
+ * Priority tiers (top = most urgent):
+ *   1. in-progress tasks WITH attribution (agent / skill / runtime set) —
+ *      actively claimed work.
+ *   2. in-progress tasks WITHOUT attribution — stalled carryovers.
+ *   3. first planned task per project, ordered by earliest sprint phase.
+ *
+ * Scope defaults: use session/cwd scope via resolveRoots, same as `tasks
+ * list`. Pass --all to emit every project. --json emits the structured
+ * array for tooling.
+ */
+const nextCmd = defineCommand({
+  meta: {
+    name: 'next',
+    description: 'Priority hotlist of what to work on next — in-progress first, then stalled carryovers, then the first planned task per project.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    all: { type: 'boolean', description: 'Show every project (overrides session/cwd scope)', default: false },
+    limit: { type: 'string', description: 'Max rows per project (default 3)', default: '3' },
+    json: { type: 'boolean', description: 'Emit structured JSON', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+    const limit = Math.max(1, parseInt(args.limit, 10) || 3);
+
+    const rows = [];
+    for (const root of roots) {
+      const tasks = readTasks(root, baseDir, {});
+      const attributed = (t) => Boolean(
+        (t.agentId && String(t.agentId).trim()) ||
+        (t.agentRole && String(t.agentRole).trim()) ||
+        (t.runtime && String(t.runtime).trim()),
+      );
+      const inProgressAttributed = tasks.filter((t) => t.status === 'in-progress' && attributed(t));
+      const inProgressStalled = tasks.filter((t) => t.status === 'in-progress' && !attributed(t));
+      const planned = tasks.filter((t) => t.status === 'planned');
+      // Order planned by phase ascending (lexical works for "01-02" style ids).
+      planned.sort((a, b) => (a.phase || '').localeCompare(b.phase || ''));
+
+      const candidates = [];
+      for (const t of inProgressAttributed) candidates.push({ t, tier: 'active' });
+      for (const t of inProgressStalled) candidates.push({ t, tier: 'stalled' });
+      for (const t of planned) candidates.push({ t, tier: 'next' });
+
+      let emitted = 0;
+      for (const { t, tier } of candidates) {
+        if (emitted >= limit) break;
+        const goal = t.goal || '';
+        rows.push({
+          project: root.id,
+          tier,
+          id: formatId(root.id, 'T', t.id),
+          'legacy-id': t.id,
+          phase: t.phase,
+          goal: goal.length > 90 ? goal.slice(0, 87) + '…' : goal,
+        });
+        emitted += 1;
+      }
+      if (emitted === 0) {
+        rows.push({
+          project: root.id,
+          tier: 'idle',
+          id: '—',
+          'legacy-id': '—',
+          phase: '—',
+          goal: 'No open tasks.',
+        });
+      }
+    }
+
+    if (args.json) {
+      console.log(JSON.stringify(rows, null, 2));
+      return;
+    }
+    console.log(render(rows, { format: 'table', title: `Next (${rows.length})` }));
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -14669,6 +15571,7 @@ const main = defineCommand({
     phases: phasesCmd,
     tasks: tasksV2Cmd,
     'task-checkpoint': taskCheckpoint,
+    next: nextCmd,
     decisions: decisionsCmd,
     todos: todosCmd,
     requirements: requirementsCmd,
@@ -14683,6 +15586,7 @@ const main = defineCommand({
     'self-eval': selfEvalCmd,
     data: dataCmd,
     env: envCmd,
+    runtime: runtimeCmd,
     eval: evalCmd,
     evolution: evolutionCmd,
     skill: skillCmd,
@@ -14840,6 +15744,20 @@ const main = defineCommand({
   const known = new Set(['list', 'add']);
   if (first === undefined || first.startsWith('-')) {
     a.splice(i + 1, 0, 'list');
+    return;
+  }
+  if (!known.has(first)) return;
+})();
+
+// `gad runtime` defaults to `gad runtime select` for read-only inspection.
+(function injectRuntimeSelectDefault() {
+  const a = process.argv;
+  const i = a.indexOf('runtime');
+  if (i === -1) return;
+  const first = a[i + 1];
+  const known = new Set(['check', 'select', 'matrix', 'pipeline', 'help']);
+  if (first === undefined || first.startsWith('-')) {
+    a.splice(i + 1, 0, 'select');
     return;
   }
   if (!known.has(first)) return;
