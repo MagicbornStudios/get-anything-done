@@ -52,11 +52,56 @@ tone — otherwise inherit the default.
 
 Auto-compact handles it. After compaction, run `gad snapshot` to re-hydrate and continue. Never stop work, never ask the user to restart.
 
-## Session start for this project
+## Daily workflow (every session, every agent)
+
+Same four commands in the same order. No exceptions.
 
 ```sh
-gad snapshot --projectid get-anything-done
+# 1. Orient — state / roadmap / tasks / decisions in one bundle.
+gad startup --projectid get-anything-done       # first call of a new session
+gad snapshot --projectid get-anything-done      # subsequent calls (downgrades to active mode)
+
+# 2. Pick up assigned work — unclaimed handoffs targeted at your runtime.
+gad handoffs list --mine-first
+
+# 3. Claim before you touch anything.
+gad handoffs claim <id>                         # moves open/ → claimed/
+
+# 4. Complete when done.
+gad handoffs complete <id>                      # moves claimed/ → closed/
 ```
+
+If the queue is empty, pick one `status="planned"` task from `TASK-REGISTRY.xml`
+that matches your lane (per `references/agent-lanes.md`) and execute "The loop"
+above. If the queue has unclaimed work targeted at you (`runtime_preference`
+matches your runtime), prefer that over picking a task cold — the handoff
+carries scope + context the operator or another agent already thought through.
+
+### Cross-lane work
+
+If your task requires editing a file outside your lane, **do not silently
+edit it**. File a handoff for the owning lane:
+
+```sh
+gad handoffs create \
+  --projectid get-anything-done \
+  --phase <N> \
+  --task-id <id> \
+  --priority <low|normal|high> \
+  --context <mechanical|reasoning> \
+  --runtime-preference <claude-code|codex|cursor> \
+  --body "<self-contained instructions>"
+```
+
+Keep working your own lane while the target lane picks it up.
+
+### Installed-vs-source CLI
+
+If `gad --version` is older than the latest submodule commit, new subcommands
+(e.g. `gad handoffs`, `gad tasks update --goal`) live only in source. Run
+them via `node vendor/get-anything-done/bin/gad.cjs <...>` until operator
+re-runs `gad install` from source. Tarball distribution is tracked as
+task 44-38.
 
 ## Planning files
 
