@@ -57,6 +57,23 @@ describe('update workflow distribution docs', () => {
 });
 
 describe('publish-release tarball handling', () => {
+  test('getPackCommandInvocation uses cmd.exe wrapper on Windows', async () => {
+    const mod = await loadPublishReleaseModule();
+    const invocation = mod.getPackCommandInvocation({
+      releaseDir: 'C:\\tmp\\release',
+      npmCommand: 'npm.cmd',
+      platform: 'win32',
+      comspec: 'C:\\Windows\\System32\\cmd.exe',
+    });
+    assert.equal(invocation.command, 'C:\\Windows\\System32\\cmd.exe');
+    assert.deepStrictEqual(invocation.args, [
+      '/d',
+      '/s',
+      '/c',
+      '"npm.cmd" pack --pack-destination "C:\\tmp\\release"',
+    ]);
+  });
+
   test('ensureReleaseTarball creates a package tarball when missing and uploads include it', async () => {
     const mod = await loadPublishReleaseModule();
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-release-'));
@@ -76,7 +93,9 @@ describe('publish-release tarball handling', () => {
     });
 
     assert.equal(calls.length, 1);
-    assert.deepStrictEqual(calls[0].args, ['pack', '--pack-destination', releaseDir]);
+    const expected = mod.getPackCommandInvocation({ releaseDir, npmCommand: process.platform === 'win32' ? 'npm.cmd' : 'npm' });
+    assert.equal(calls[0].command, expected.command);
+    assert.deepStrictEqual(calls[0].args, expected.args);
 
     const artifacts = mod.getArtifacts(releaseDir).map((file) => path.basename(file)).sort();
     assert.deepStrictEqual(artifacts, [

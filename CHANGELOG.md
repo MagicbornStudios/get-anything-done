@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.34.1] - 2026-04-18
+
+Follow-up release to repair the Windows release publisher so the GitHub release assets can actually be generated from the tagged build.
+
+### Fixed
+- `scripts/publish-release.mjs` now shells `npm.cmd pack` through `cmd.exe` on Windows instead of invoking the batch file directly through `spawnSync`, which failed with `EINVAL` during `npm run publish:release`.
+- Release-publisher regression coverage now asserts the Windows command invocation shape so this path stays locked down.
+
 ## [1.34.0] - 2026-04-18
 
 Release focused on restoring a working GitHub-based update path so installed GAD users can actually receive the sprint's runtime, handoff, and session-continuity work.
@@ -1893,7 +1901,8 @@ First GitHub release cut of GAD with downloadable Windows installer artifacts at
 - YOLO mode for autonomous execution
 - Interactive mode with checkpoints
 
-[Unreleased]: https://github.com/MagicbornStudios/get-anything-done/compare/v1.34.0...HEAD
+[Unreleased]: https://github.com/MagicbornStudios/get-anything-done/compare/v1.34.1...HEAD
+[1.34.1]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.1
 [1.34.0]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.0
 [1.30.0]: https://github.com/gsd-build/get-shit-done/releases/tag/v1.30.0
 [1.29.0]: https://github.com/gsd-build/get-shit-done/releases/tag/v1.29.0

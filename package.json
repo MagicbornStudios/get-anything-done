@@ -1,6 +1,6 @@
 {
   "name": "get-anything-done",
-  "version": "1.34.0",
+  "version": "1.34.1",
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by MagicbornStudios.",
   "bin": {
     "get-anything-done": "bin/install.js",

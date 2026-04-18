@@ -53,6 +53,24 @@ export function getArtifacts(releaseDir = getReleaseDir()) {
   return entries;
 }
 
+export function getPackCommandInvocation({
+  releaseDir,
+  npmCommand = NPM_COMMAND,
+  platform = process.platform,
+  comspec = process.env.ComSpec || 'cmd.exe',
+} = {}) {
+  if (platform === 'win32') {
+    return {
+      command: comspec,
+      args: ['/d', '/s', '/c', `"${npmCommand}" pack --pack-destination "${releaseDir}"`],
+    };
+  }
+  return {
+    command: npmCommand,
+    args: ['pack', '--pack-destination', releaseDir],
+  };
+}
+
 export function ensureReleaseTarball({ root = ROOT, releaseDir = getReleaseDir(root), execFile = execFileSync, npmCommand = NPM_COMMAND } = {}) {
   if (!existsSync(releaseDir)) {
     throw new Error('dist/release does not exist. Run `npm run build:release` first.');
@@ -60,7 +78,8 @@ export function ensureReleaseTarball({ root = ROOT, releaseDir = getReleaseDir(r
   const hasTarball = readdirSync(releaseDir).some((name) => TARBALL_RE.test(name));
   if (hasTarball) return;
   mkdirSync(releaseDir, { recursive: true });
-  execFile(npmCommand, ['pack', '--pack-destination', releaseDir], {
+  const { command, args } = getPackCommandInvocation({ releaseDir, npmCommand });
+  execFile(command, args, {
     cwd: root,
     stdio: 'inherit',
   });
