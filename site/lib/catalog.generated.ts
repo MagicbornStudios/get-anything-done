@@ -7,6 +7,7 @@ export interface CatalogSkill {
   id: string;
   name: string;
   description: string;
+  lane?: string | string[] | null;
   imagePath?: string | null;
   origin?: "human-authored" | "emergent" | "inherited" | "official" | "internal" | null;
   authoredBy?: string | null;
@@ -237,6 +238,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "build-and-release-locally",
     "name": "build-and-release-locally",
     "description": "Cut a new GAD release — version bump, CHANGELOG entry, Node SEA rebuild, git tag, and `gh release create` with artifacts attached. Operator-triggered only, no CI, no npm publish. Trigger this skill whenever the user asks to \"cut a release\", \"ship v<N>\", \"publish a new release\", \"bump the version\", or any variation that means \"the canonical GAD repo should have a new downloadable installer artifact on GitHub Releases.\" Canonical-repo-only: refuses to run outside the MagicbornStudios/get-anything-done clone. See decision gad-188 (44-28 umbrella — distribution is GitHub Releases + executable download, no GitHub Actions).",
+    "lane": "prod",
     "imagePath": null,
     "origin": "official",
     "authoredBy": null,
@@ -245,13 +247,14 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/build-and-release-locally/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>build-and-release-locally</h1>\n<p>This is the procedure for cutting a GAD release from the operator&#39;s workstation. There is no CI. There is no <code>npm publish</code>. The only distribution channel is GitHub Releases on <code>github.com/MagicbornStudios/get-anything-done</code>, and the only way to populate it is to run this skill end-to-end on a machine that has Node, <code>gh</code>, and <code>git</code> installed, with push access to the canonical repo.</p>\n<h2>When to trigger this skill</h2>\n<ul>\n<li>User asks to &quot;cut a release&quot;, &quot;ship v<N>&quot;, &quot;publish a new release&quot;, &quot;bump the version to <N>&quot;.</li>\n<li>Task 44-31 or any downstream Track B installer task (44-32/33/34) is blocked waiting for a release to exist.</li>\n<li>CHANGELOG <code>[Unreleased]</code> section has accumulated enough material to warrant a new version, and the user confirms they want to publish.</li>\n<li>A downstream consumer (eval runner, someone installing GAD into their repo) needs a fresh <code>installer.exe</code> and the last published release is materially stale.</li>\n</ul>\n<h2>When NOT to trigger this skill</h2>\n<ul>\n<li>In-progress work on a feature branch — releases come from <code>main</code> after the work is merged.</li>\n<li>When <code>dist/release/gad-v*.exe</code> is already current and only docs or planning changed — a release is not required for every commit.</li>\n<li>When running inside a consumer project (the canonical-repo gate will refuse).</li>\n<li>When the user asks to publish to npm — GAD does not ship to npm. Explain and refuse.</li>\n</ul>\n<h2>Hard gates before you start</h2>\n<ol>\n<li><strong>Canonical repo check.</strong> Run <code>git config --get remote.origin.url</code> and confirm it matches <code>MagicbornStudios/get-anything-done(.git)?</code>. If not, refuse: the operator is in a consumer project and this skill cannot run.</li>\n<li><strong>Branch check.</strong> Confirm <code>git branch --show-current</code> is <code>main</code> and <code>git status --porcelain</code> is empty. Releases come from a clean <code>main</code>. If there are uncommitted changes, list them and stop — the operator decides whether to commit/stash/discard before you proceed.</li>\n<li><strong>Tool availability.</strong> Confirm <code>node --version</code>, <code>gh --version</code>, and <code>git --version</code> all return. If <code>gh</code> is missing or unauthenticated (<code>gh auth status</code>), stop and print the install/auth instructions.</li>\n<li><strong>Fetch.</strong> Run <code>git fetch --tags</code> so local tag state matches the remote. If a tag with the target version already exists, refuse — version bumps must be monotonic.</li>\n<li><strong>Dependencies.</strong> Run <code>npm install</code> (or confirm <code>node_modules/</code> + <code>node_modules/.bin/postject</code> exists). The SEA build depends on <code>postject</code> being installed locally.</li>\n</ol>\n<h2>Procedure</h2>\n<h3>Step 1 — Decide the new version</h3>\n<p>Read <code>package.json</code> <code>version</code> field and propose the next version following semver:</p>\n<table>\n<thead>\n<tr>\n<th>Change type</th>\n<th>Bump</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Breaking CLI surface, removed commands, schema renames</td>\n<td>MAJOR</td>\n</tr>\n<tr>\n<td>New commands, new subcommands, new decisions, new skills</td>\n<td>MINOR</td>\n</tr>\n<tr>\n<td>Bug fixes only, no new surface</td>\n<td>PATCH</td>\n</tr>\n</tbody></table>\n<p>Confirm the chosen version with the operator before editing files. The operator can override.</p>\n<h3>Step 2 — Bump version in package files</h3>\n<p>Edit both:</p>\n<ul>\n<li><code>package.json</code> — update <code>version</code> field</li>\n<li><code>package-lock.json</code> — update BOTH top-level <code>version</code> AND the <code>packages[&quot;&quot;].version</code> field</li>\n</ul>\n<p>Use the <code>Edit</code> tool, not a manual <code>npm version</code> call — npm version creates a commit + tag unprompted, which collides with this skill&#39;s control flow.</p>\n<h3>Step 3 — Write the CHANGELOG entry</h3>\n<p>Edit <code>CHANGELOG.md</code>. Keep the structure:</p>\n<pre><code>## [Unreleased]\n\n## [&lt;new-version&gt;] - &lt;YYYY-MM-DD&gt;\n\n&lt;one-paragraph summary of the release&gt;\n\n### Added\n- …\n\n### Changed\n- …\n\n### Fixed\n- …\n\n### Contract notes (optional)\n- …\n</code></pre>\n<p>Source material: <code>git log --oneline &lt;previous-tag&gt;..HEAD</code> if there is a previous tag, or <code>git log --since=&lt;previous-release-date&gt; --oneline</code> if not. Group commits by subsystem (CLI, site, framework, release pipeline, eval framework). Cite decision IDs (<code>gad-NNN</code> / <code>GAD-D-NNN</code>) and task IDs (<code>NN-NN</code> / <code>GAD-T-NN-NN</code>) where relevant — the changelog is a primary durable record of WHY changes happened.</p>\n<p>Keep it concise but thorough. A release with 300+ commits warrants a long changelog section; a patch release warrants 5 lines.</p>\n<h3>Step 4 — Rebuild the release artifact</h3>\n<pre><code class=\"language-sh\">npm run build:release\n</code></pre>\n<p>This runs <code>scripts/build-release.mjs</code> which:</p>\n<ol>\n<li>Calls <code>scripts/build-hooks.js</code> (compile hook shims).</li>\n<li>Calls <code>scripts/build-cli.mjs</code> (bundle CLI entrypoints).</li>\n<li>Calls <code>scripts/build-release-support.mjs</code> (build the support tree of skills, commands, templates, references bundled into the SEA blob).</li>\n<li>Generates <code>sea-config-&lt;platform&gt;-&lt;arch&gt;.json</code> via <code>--experimental-sea-config</code> and emits <code>sea-prep-&lt;platform&gt;-&lt;arch&gt;.blob</code>.</li>\n<li>Copies <code>process.execPath</code> (the running Node binary) to <code>dist/release/gad-v&lt;version&gt;-&lt;platform&gt;-&lt;arch&gt;.exe</code>.</li>\n<li>Injects the SEA blob into the executable via <code>postject</code> using the SEA sentinel fuse constant (see <code>SEA_SENTINEL</code> in <code>scripts/build-release.mjs</code> — do NOT quote the literal value in any file that lands in the release-support tree; the sentinel string must only appear once in the final binary, so any skill/doc/template that embeds a copy will break the build via postject&#39;s &quot;Multiple occurrences of sentinel&quot; sanity check).</li>\n<li>On Windows, also copies <code>scripts/install-gad-windows.ps1</code> and writes a fresh <code>dist/release/INSTALL.txt</code> with the correct artifact name and invocation instructions.</li>\n</ol>\n<p>Cross-platform note: <code>build-release.mjs</code> refuses to cross-build. Windows artifacts must be built on Windows, macOS on macOS, Linux on Linux. If the operator needs multi-platform artifacts, they must run the skill on each target OS and upload to the same tag.</p>\n<p><strong>Verify the build</strong> before committing:</p>\n<pre><code class=\"language-sh\">ls -la dist/release/\n./dist/release/gad-v&lt;version&gt;-windows-x64.exe --version    # on Windows\n./dist/release/gad-v&lt;version&gt;-&lt;platform&gt;-&lt;arch&gt; --version  # on macOS/Linux\n</code></pre>\n<p>The version output must match the version you just bumped to. If it reports the old version, the SEA blob did not rebuild — investigate <code>scripts/build-release-support.mjs</code> and the esbuild cache.</p>\n<h3>Step 5 — Commit the release</h3>\n<pre><code class=\"language-sh\">git add package.json package-lock.json CHANGELOG.md\ngit commit -m &quot;release: v&lt;version&gt;&quot;\n</code></pre>\n<p>Do NOT commit <code>dist/</code> — it is gitignored. The artifact lives only in GitHub Releases.</p>\n<h3>Step 6 — Tag</h3>\n<pre><code class=\"language-sh\">git tag -a v&lt;version&gt; -m &quot;GAD v&lt;version&gt;&quot;\n</code></pre>\n<p>Annotated tag, not lightweight — the tag message is what <code>gh release create --generate-notes</code> picks up if no <code>--notes-file</code> is given.</p>\n<h3>Step 7 — Push commit + tag</h3>\n<pre><code class=\"language-sh\">git push origin main\ngit push origin v&lt;version&gt;\n</code></pre>\n<p>If the operator is working in a monorepo where <code>vendor/get-anything-done/</code> is a git submodule (this is the current reality in <code>custom_portfolio</code>), the push is from INSIDE the submodule, not from the outer repo. The outer repo&#39;s submodule pointer will need a separate commit in a follow-up step — but that is the consumer&#39;s job, not this skill&#39;s.</p>\n<p><strong>This is the visible, shared-state step.</strong> Before pushing the tag, explicitly confirm with the operator. The tag push triggers the release in step 8 and is not trivially reversible (deleting a tag that downstream consumers have already fetched is bad form). If the operator approved &quot;cut a release&quot; but did not explicitly approve &quot;push the tag now,&quot; pause and ask.</p>\n<h3>Step 8 — Create the GitHub release</h3>\n<pre><code class=\"language-sh\">npm run publish:release\n</code></pre>\n<p>This runs <code>scripts/publish-release.mjs</code> which:</p>\n<ol>\n<li>Reads the current <code>package.json</code> version and derives <code>v&lt;version&gt;</code> as the tag.</li>\n<li>Checks <code>gh release view v&lt;version&gt;</code> — if the release already exists, skips the create step.</li>\n<li>Otherwise runs <code>gh release create v&lt;version&gt; --title &quot;GAD v&lt;version&gt;&quot; --generate-notes</code>.</li>\n<li>Uploads every artifact in <code>dist/release/</code> matching <code>gad-v*</code> or <code>install-gad-windows.ps1</code> or <code>INSTALL.txt</code> via <code>gh release upload --clobber</code>.</li>\n</ol>\n<p><code>--clobber</code> means re-running the skill after fixing a bad artifact is safe: the upload replaces the existing asset at the same name.</p>\n<p><strong>Alternative</strong>: to attach a richer body than <code>--generate-notes</code>, pass <code>--notes-file</code> pointing at a temporary file containing the CHANGELOG section you wrote in step 3:</p>\n<pre><code class=\"language-sh\">node scripts/publish-release.mjs --notes-file /tmp/release-notes-v&lt;version&gt;.md\n</code></pre>\n<h3>Step 9 — Verify</h3>\n<pre><code class=\"language-sh\">gh release view v&lt;version&gt;\ngh release view v&lt;version&gt; --json assets --jq &#39;.assets[].name&#39;\n</code></pre>\n<p>Confirm the tag exists, the title is correct, and every expected artifact is attached. Open the URL in a browser if the operator wants a visual check:</p>\n<pre><code class=\"language-sh\">gh release view v&lt;version&gt; --web\n</code></pre>\n<h3>Step 10 — Update planning docs</h3>\n<p>Edit <code>.planning/STATE.xml</code> <code>&lt;next-action&gt;</code> to reflect that the release is cut. If the release closes a task, update <code>.planning/TASK-REGISTRY.xml</code> — set <code>status=&quot;done&quot;</code>, <code>skill=&quot;build-and-release-locally&quot;</code>, <code>agent=&quot;default&quot;</code>, <code>type=&quot;framework&quot;</code>. Capture any new decisions in <code>.planning/DECISIONS.xml</code> (e.g. version cadence policy, what went into the release notes).</p>\n<p>Commit the planning-doc updates separately from the release commit — the release commit should be minimal (version files + CHANGELOG only).</p>\n<h2>Common failure modes</h2>\n<table>\n<thead>\n<tr>\n<th>Failure</th>\n<th>Cause</th>\n<th>Fix</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>postject: command not found</code></td>\n<td><code>node_modules/.bin/postject</code> missing</td>\n<td><code>npm install</code> from vendor root</td>\n</tr>\n<tr>\n<td><code>Cross-platform SEA builds must run on the target platform/arch</code></td>\n<td>Operator passed <code>--platform</code> / <code>--arch</code> that doesn&#39;t match the host</td>\n<td>Re-run on the target OS, or drop the flags</td>\n</tr>\n<tr>\n<td><code>gh: command not found</code></td>\n<td><code>gh</code> CLI not installed</td>\n<td>Install from <code>https://cli.github.com</code></td>\n</tr>\n<tr>\n<td><code>gh auth status: not logged in</code></td>\n<td><code>gh</code> not authenticated</td>\n<td>Run <code>gh auth login</code>, pick HTTPS or SSH, follow the prompts</td>\n</tr>\n<tr>\n<td>Release exists, upload fails with 422</td>\n<td>Previous run uploaded bad artifacts</td>\n<td><code>gh release upload &lt;tag&gt; ... --clobber</code> (already the default in <code>publish-release.mjs</code>)</td>\n</tr>\n<tr>\n<td>Exe reports old version after rebuild</td>\n<td>Stale SEA blob, esbuild cache, or support-tree pre-cache</td>\n<td><code>rm -rf dist/ &amp;&amp; npm run build:release</code></td>\n</tr>\n<tr>\n<td>postject: <code>Multiple occurences of sentinel ... found in the binary</code></td>\n<td><strong>Something in the release-support tree embeds a copy of the SEA sentinel string literal.</strong> The SEA sentinel is meant to appear exactly once — in the placeholder region of the copied <code>node.exe</code>. When postject injects the blob as a PE resource on Windows, the blob contents end up in a resource section of the final binary; if the blob contains the sentinel string (e.g., a skill doc or script quotes it verbatim), postject&#39;s post-inject sanity re-scan finds two copies and aborts. This is NOT a Node version bug — initially misdiagnosed as such. Confirmed 2026-04-14 via <code>node -e &quot;buf.indexOf(...)&quot;</code> direct scan of <code>sea-prep-win32-x64.blob</code> showing 2 hits, both in the same <code>skills/build-and-release-locally/SKILL.md</code> file (included twice: once from <code>skills/</code> and once from <code>dist/release-support/get-anything-done/skills/</code>).</td>\n<td>Find the offending file: <code>node -e &quot;const fs=require(&#39;fs&#39;);const b=fs.readFileSync(&#39;dist/release/sea-prep-win32-x64.blob&#39;);const n=Buffer.from(&#39;NODE_SEA_FUSE_&#39;+&#39;&lt;hex&gt;&#39;);let i=0;while((i=b.indexOf(n,i))!==-1){console.log(i,b.slice(Math.max(0,i-80),i+60).toString().replace(/[^\\x20-\\x7e]/g,&#39;.&#39;));i++}&quot;</code> — the context will identify which source file embeds the literal. Then either remove the literal or break it with string concatenation so it doesn&#39;t appear as a contiguous byte sequence on disk. <strong>Rule</strong>: never quote the sentinel in any file that gets bundled into the release-support tree (<code>skills/</code>, <code>commands/</code>, <code>templates/</code>, <code>references/</code>, <code>agents/</code>, <code>hooks/</code>, <code>workflows/</code>, SDK assets). The sentinel may only be referenced symbolically, e.g., &quot;the <code>SEA_SENTINEL</code> constant in <code>scripts/build-release.mjs</code>&quot;.</td>\n</tr>\n<tr>\n<td><code>esbuild: No loader is configured for &quot;.node&quot; files</code> (onnxruntime-node)</td>\n<td>Optional embedding backend (<code>@huggingface/transformers</code>) transitively pulls native <code>.node</code> binaries that esbuild can&#39;t bundle. Fixed 2026-04-14 in <code>scripts/build-cli.mjs</code> by adding <code>@huggingface/transformers</code>, <code>onnxruntime-node</code>, <code>onnxruntime-common</code>, <code>onnxruntime-web</code>, <code>sharp</code> to the esbuild <code>external</code> list.</td>\n<td>If this regresses, re-apply the fix. Optional deps that ship native bindings must always be externals in the SEA bundle — the packaged exe runs without embeddings and falls back to Jaccard ranking in <code>gad snapshot</code>.</td>\n</tr>\n<tr>\n<td>Tag push rejected</td>\n<td>Someone else tagged first, or local is behind</td>\n<td><code>git pull --rebase origin main &amp;&amp; git fetch --tags</code> and re-verify version</td>\n</tr>\n<tr>\n<td>Build-release succeeds but exe won&#39;t launch on Windows</td>\n<td>Windows Defender or SmartScreen blocked an unsigned binary</td>\n<td>Expected for unsigned releases; instruct consumers to right-click → Properties → Unblock. Code-signing is a separate decision not covered here.</td>\n</tr>\n</tbody></table>\n<h2>Contract with 44-28 umbrella</h2>\n<p>This skill is the B0 foundation of the Track B installer pipeline (decision gad-188). Downstream tasks that depend on a consumable release:</p>\n<ul>\n<li><strong>44-32 / B2</strong> — <code>bin/install.js</code> <code>--from-release &lt;url|tag&gt;</code> flag needs a real release to pull from.</li>\n<li><strong>44-33 / B3</strong> — Site packaging produces a <code>site-&lt;version&gt;.zip</code> artifact uploaded alongside the installer.</li>\n<li><strong>44-34 / B4</strong> — Portable Node bootstrap ships a <code>node-v&lt;N&gt;-&lt;platform&gt;.zip</code> artifact uploaded alongside the installer.</li>\n</ul>\n<p>Every one of those downstream tasks <strong>adds a new artifact</strong> to the release. The shape of <code>publish-release.mjs</code>&#39;s <code>getArtifacts()</code> filter (<code>/^gad-v.+/</code> + explicit install files) may need to widen when B2/B3/B4 land — revise this skill at that point.</p>\n<h2>Guardrails — things this skill MUST NOT do</h2>\n<ol>\n<li><strong>Never run <code>npm publish</code>.</strong> GAD is not on npm. If the operator asks, explain and refuse.</li>\n<li><strong>Never trigger CI / GitHub Actions.</strong> There is no CI. This skill is the only release path.</li>\n<li><strong>Never force-push to <code>main</code>.</strong> If the release commit fails a hook, fix the underlying problem and create a new commit — do not <code>git push --force</code>.</li>\n<li><strong>Never delete a published tag.</strong> If a release is bad, cut a new version that fixes it. Deleting published tags breaks downstream consumers.</li>\n<li><strong>Never run outside the canonical repo.</strong> The gate in step 1 is load-bearing. Consumer projects should use <code>gad skill promote --project</code> to equip skills, not this skill.</li>\n<li><strong>Never push the tag without explicit operator confirmation in the conversation where the skill is running.</strong> The <code>git push origin v&lt;version&gt;</code> step is the point of no return.</li>\n</ol>\n",
-    "bodyRaw": "\n# build-and-release-locally\n\nThis is the procedure for cutting a GAD release from the operator's workstation. There is no CI. There is no `npm publish`. The only distribution channel is GitHub Releases on `github.com/MagicbornStudios/get-anything-done`, and the only way to populate it is to run this skill end-to-end on a machine that has Node, `gh`, and `git` installed, with push access to the canonical repo.\n\n## When to trigger this skill\n\n- User asks to \"cut a release\", \"ship v<N>\", \"publish a new release\", \"bump the version to <N>\".\n- Task 44-31 or any downstream Track B installer task (44-32/33/34) is blocked waiting for a release to exist.\n- CHANGELOG `[Unreleased]` section has accumulated enough material to warrant a new version, and the user confirms they want to publish.\n- A downstream consumer (eval runner, someone installing GAD into their repo) needs a fresh `installer.exe` and the last published release is materially stale.\n\n## When NOT to trigger this skill\n\n- In-progress work on a feature branch — releases come from `main` after the work is merged.\n- When `dist/release/gad-v*.exe` is already current and only docs or planning changed — a release is not required for every commit.\n- When running inside a consumer project (the canonical-repo gate will refuse).\n- When the user asks to publish to npm — GAD does not ship to npm. Explain and refuse.\n\n## Hard gates before you start\n\n1. **Canonical repo check.** Run `git config --get remote.origin.url` and confirm it matches `MagicbornStudios/get-anything-done(.git)?`. If not, refuse: the operator is in a consumer project and this skill cannot run.\n2. **Branch check.** Confirm `git branch --show-current` is `main` and `git status --porcelain` is empty. Releases come from a clean `main`. If there are uncommitted changes, list them and stop — the operator decides whether to commit/stash/discard before you proceed.\n3. **Tool availability.** Confirm `node --version`, `gh --version`, and `git --version` all return. If `gh` is missing or unauthenticated (`gh auth status`), stop and print the install/auth instructions.\n4. **Fetch.** Run `git fetch --tags` so local tag state matches the remote. If a tag with the target version already exists, refuse — version bumps must be monotonic.\n5. **Dependencies.** Run `npm install` (or confirm `node_modules/` + `node_modules/.bin/postject` exists). The SEA build depends on `postject` being installed locally.\n\n## Procedure\n\n### Step 1 — Decide the new version\n\nRead `package.json` `version` field and propose the next version following semver:\n\n| Change type | Bump |\n|---|---|\n| Breaking CLI surface, removed commands, schema renames | MAJOR |\n| New commands, new subcommands, new decisions, new skills | MINOR |\n| Bug fixes only, no new surface | PATCH |\n\nConfirm the chosen version with the operator before editing files. The operator can override.\n\n### Step 2 — Bump version in package files\n\nEdit both:\n\n- `package.json` — update `version` field\n- `package-lock.json` — update BOTH top-level `version` AND the `packages[\"\"].version` field\n\nUse the `Edit` tool, not a manual `npm version` call — npm version creates a commit + tag unprompted, which collides with this skill's control flow.\n\n### Step 3 — Write the CHANGELOG entry\n\nEdit `CHANGELOG.md`. Keep the structure:\n\n```\n## [Unreleased]\n\n## [<new-version>] - <YYYY-MM-DD>\n\n<one-paragraph summary of the release>\n\n### Added\n- …\n\n### Changed\n- …\n\n### Fixed\n- …\n\n### Contract notes (optional)\n- …\n```\n\nSource material: `git log --oneline <previous-tag>..HEAD` if there is a previous tag, or `git log --since=<previous-release-date> --oneline` if not. Group commits by subsystem (CLI, site, framework, release pipeline, eval framework). Cite decision IDs (`gad-NNN` / `GAD-D-NNN`) and task IDs (`NN-NN` / `GAD-T-NN-NN`) where relevant — the changelog is a primary durable record of WHY changes happened.\n\nKeep it concise but thorough. A release with 300+ commits warrants a long changelog section; a patch release warrants 5 lines.\n\n### Step 4 — Rebuild the release artifact\n\n```sh\nnpm run build:release\n```\n\nThis runs `scripts/build-release.mjs` which:\n\n1. Calls `scripts/build-hooks.js` (compile hook shims).\n2. Calls `scripts/build-cli.mjs` (bundle CLI entrypoints).\n3. Calls `scripts/build-release-support.mjs` (build the support tree of skills, commands, templates, references bundled into the SEA blob).\n4. Generates `sea-config-<platform>-<arch>.json` via `--experimental-sea-config` and emits `sea-prep-<platform>-<arch>.blob`.\n5. Copies `process.execPath` (the running Node binary) to `dist/release/gad-v<version>-<platform>-<arch>.exe`.\n6. Injects the SEA blob into the executable via `postject` using the SEA sentinel fuse constant (see `SEA_SENTINEL` in `scripts/build-release.mjs` — do NOT quote the literal value in any file that lands in the release-support tree; the sentinel string must only appear once in the final binary, so any skill/doc/template that embeds a copy will break the build via postject's \"Multiple occurrences of sentinel\" sanity check).\n7. On Windows, also copies `scripts/install-gad-windows.ps1` and writes a fresh `dist/release/INSTALL.txt` with the correct artifact name and invocation instructions.\n\nCross-platform note: `build-release.mjs` refuses to cross-build. Windows artifacts must be built on Windows, macOS on macOS, Linux on Linux. If the operator needs multi-platform artifacts, they must run the skill on each target OS and upload to the same tag.\n\n**Verify the build** before committing:\n\n```sh\nls -la dist/release/\n./dist/release/gad-v<version>-windows-x64.exe --version    # on Windows\n./dist/release/gad-v<version>-<platform>-<arch> --version  # on macOS/Linux\n```\n\nThe version output must match the version you just bumped to. If it reports the old version, the SEA blob did not rebuild — investigate `scripts/build-release-support.mjs` and the esbuild cache.\n\n### Step 5 — Commit the release\n\n```sh\ngit add package.json package-lock.json CHANGELOG.md\ngit commit -m \"release: v<version>\"\n```\n\nDo NOT commit `dist/` — it is gitignored. The artifact lives only in GitHub Releases.\n\n### Step 6 — Tag\n\n```sh\ngit tag -a v<version> -m \"GAD v<version>\"\n```\n\nAnnotated tag, not lightweight — the tag message is what `gh release create --generate-notes` picks up if no `--notes-file` is given.\n\n### Step 7 — Push commit + tag\n\n```sh\ngit push origin main\ngit push origin v<version>\n```\n\nIf the operator is working in a monorepo where `vendor/get-anything-done/` is a git submodule (this is the current reality in `custom_portfolio`), the push is from INSIDE the submodule, not from the outer repo. The outer repo's submodule pointer will need a separate commit in a follow-up step — but that is the consumer's job, not this skill's.\n\n**This is the visible, shared-state step.** Before pushing the tag, explicitly confirm with the operator. The tag push triggers the release in step 8 and is not trivially reversible (deleting a tag that downstream consumers have already fetched is bad form). If the operator approved \"cut a release\" but did not explicitly approve \"push the tag now,\" pause and ask.\n\n### Step 8 — Create the GitHub release\n\n```sh\nnpm run publish:release\n```\n\nThis runs `scripts/publish-release.mjs` which:\n\n1. Reads the current `package.json` version and derives `v<version>` as the tag.\n2. Checks `gh release view v<version>` — if the release already exists, skips the create step.\n3. Otherwise runs `gh release create v<version> --title \"GAD v<version>\" --generate-notes`.\n4. Uploads every artifact in `dist/release/` matching `gad-v*` or `install-gad-windows.ps1` or `INSTALL.txt` via `gh release upload --clobber`.\n\n`--clobber` means re-running the skill after fixing a bad artifact is safe: the upload replaces the existing asset at the same name.\n\n**Alternative**: to attach a richer body than `--generate-notes`, pass `--notes-file` pointing at a temporary file containing the CHANGELOG section you wrote in step 3:\n\n```sh\nnode scripts/publish-release.mjs --notes-file /tmp/release-notes-v<version>.md\n```\n\n### Step 9 — Verify\n\n```sh\ngh release view v<version>\ngh release view v<version> --json assets --jq '.assets[].name'\n```\n\nConfirm the tag exists, the title is correct, and every expected artifact is attached. Open the URL in a browser if the operator wants a visual check:\n\n```sh\ngh release view v<version> --web\n```\n\n### Step 10 — Update planning docs\n\nEdit `.planning/STATE.xml` `<next-action>` to reflect that the release is cut. If the release closes a task, update `.planning/TASK-REGISTRY.xml` — set `status=\"done\"`, `skill=\"build-and-release-locally\"`, `agent=\"default\"`, `type=\"framework\"`. Capture any new decisions in `.planning/DECISIONS.xml` (e.g. version cadence policy, what went into the release notes).\n\nCommit the planning-doc updates separately from the release commit — the release commit should be minimal (version files + CHANGELOG only).\n\n## Common failure modes\n\n| Failure | Cause | Fix |\n|---|---|---|\n| `postject: command not found` | `node_modules/.bin/postject` missing | `npm install` from vendor root |\n| `Cross-platform SEA builds must run on the target platform/arch` | Operator passed `--platform` / `--arch` that doesn't match the host | Re-run on the target OS, or drop the flags |\n| `gh: command not found` | `gh` CLI not installed | Install from `https://cli.github.com` |\n| `gh auth status: not logged in` | `gh` not authenticated | Run `gh auth login`, pick HTTPS or SSH, follow the prompts |\n| Release exists, upload fails with 422 | Previous run uploaded bad artifacts | `gh release upload <tag> ... --clobber` (already the default in `publish-release.mjs`) |\n| Exe reports old version after rebuild | Stale SEA blob, esbuild cache, or support-tree pre-cache | `rm -rf dist/ && npm run build:release` |\n| postject: `Multiple occurences of sentinel ... found in the binary` | **Something in the release-support tree embeds a copy of the SEA sentinel string literal.** The SEA sentinel is meant to appear exactly once — in the placeholder region of the copied `node.exe`. When postject injects the blob as a PE resource on Windows, the blob contents end up in a resource section of the final binary; if the blob contains the sentinel string (e.g., a skill doc or script quotes it verbatim), postject's post-inject sanity re-scan finds two copies and aborts. This is NOT a Node version bug — initially misdiagnosed as such. Confirmed 2026-04-14 via `node -e \"buf.indexOf(...)\"` direct scan of `sea-prep-win32-x64.blob` showing 2 hits, both in the same `skills/build-and-release-locally/SKILL.md` file (included twice: once from `skills/` and once from `dist/release-support/get-anything-done/skills/`). | Find the offending file: `node -e \"const fs=require('fs');const b=fs.readFileSync('dist/release/sea-prep-win32-x64.blob');const n=Buffer.from('NODE_SEA_FUSE_'+'<hex>');let i=0;while((i=b.indexOf(n,i))!==-1){console.log(i,b.slice(Math.max(0,i-80),i+60).toString().replace(/[^\\x20-\\x7e]/g,'.'));i++}\"` — the context will identify which source file embeds the literal. Then either remove the literal or break it with string concatenation so it doesn't appear as a contiguous byte sequence on disk. **Rule**: never quote the sentinel in any file that gets bundled into the release-support tree (`skills/`, `commands/`, `templates/`, `references/`, `agents/`, `hooks/`, `workflows/`, SDK assets). The sentinel may only be referenced symbolically, e.g., \"the `SEA_SENTINEL` constant in `scripts/build-release.mjs`\". |\n| `esbuild: No loader is configured for \".node\" files` (onnxruntime-node) | Optional embedding backend (`@huggingface/transformers`) transitively pulls native `.node` binaries that esbuild can't bundle. Fixed 2026-04-14 in `scripts/build-cli.mjs` by adding `@huggingface/transformers`, `onnxruntime-node`, `onnxruntime-common`, `onnxruntime-web`, `sharp` to the esbuild `external` list. | If this regresses, re-apply the fix. Optional deps that ship native bindings must always be externals in the SEA bundle — the packaged exe runs without embeddings and falls back to Jaccard ranking in `gad snapshot`. |\n| Tag push rejected | Someone else tagged first, or local is behind | `git pull --rebase origin main && git fetch --tags` and re-verify version |\n| Build-release succeeds but exe won't launch on Windows | Windows Defender or SmartScreen blocked an unsigned binary | Expected for unsigned releases; instruct consumers to right-click → Properties → Unblock. Code-signing is a separate decision not covered here. |\n\n## Contract with 44-28 umbrella\n\nThis skill is the B0 foundation of the Track B installer pipeline (decision gad-188). Downstream tasks that depend on a consumable release:\n\n- **44-32 / B2** — `bin/install.js` `--from-release <url|tag>` flag needs a real release to pull from.\n- **44-33 / B3** — Site packaging produces a `site-<version>.zip` artifact uploaded alongside the installer.\n- **44-34 / B4** — Portable Node bootstrap ships a `node-v<N>-<platform>.zip` artifact uploaded alongside the installer.\n\nEvery one of those downstream tasks **adds a new artifact** to the release. The shape of `publish-release.mjs`'s `getArtifacts()` filter (`/^gad-v.+/` + explicit install files) may need to widen when B2/B3/B4 land — revise this skill at that point.\n\n## Guardrails — things this skill MUST NOT do\n\n1. **Never run `npm publish`.** GAD is not on npm. If the operator asks, explain and refuse.\n2. **Never trigger CI / GitHub Actions.** There is no CI. This skill is the only release path.\n3. **Never force-push to `main`.** If the release commit fails a hook, fix the underlying problem and create a new commit — do not `git push --force`.\n4. **Never delete a published tag.** If a release is bad, cut a new version that fixes it. Deleting published tags breaks downstream consumers.\n5. **Never run outside the canonical repo.** The gate in step 1 is load-bearing. Consumer projects should use `gad skill promote --project` to equip skills, not this skill.\n6. **Never push the tag without explicit operator confirmation in the conversation where the skill is running.** The `git push origin v<version>` step is the point of no return.\n"
+    "bodyHtml": "<h1>build-and-release-locally</h1>\n<p>This is the procedure for cutting a GAD release from the operator&#39;s workstation. There is no CI. There is no <code>npm publish</code>. The only distribution channel is GitHub Releases on <code>github.com/MagicbornStudios/get-anything-done</code>, and the only way to populate it is to run this skill end-to-end on a machine that has Node, <code>gh</code>, and <code>git</code> installed, with push access to the canonical repo.</p>\n<h2>When to trigger this skill</h2>\n<ul>\n<li>User asks to &quot;cut a release&quot;, &quot;ship v<N>&quot;, &quot;publish a new release&quot;, &quot;bump the version to <N>&quot;.</li>\n<li>Task 44-31 or any downstream Track B installer task (44-32/33/34) is blocked waiting for a release to exist.</li>\n<li>CHANGELOG <code>[Unreleased]</code> section has accumulated enough material to warrant a new version, and the user confirms they want to publish.</li>\n<li>A downstream consumer (eval runner, someone installing GAD into their repo) needs a fresh <code>installer.exe</code> and the last published release is materially stale.</li>\n</ul>\n<h2>When NOT to trigger this skill</h2>\n<ul>\n<li>In-progress work on a feature branch — releases come from <code>main</code> after the work is merged.</li>\n<li>When <code>dist/release/gad-v*.exe</code> is already current and only docs or planning changed — a release is not required for every commit.</li>\n<li>When running inside a consumer project (the canonical-repo gate will refuse).</li>\n<li>When the user asks to publish to npm — GAD does not ship to npm. Explain and refuse.</li>\n</ul>\n<h2>Hard gates before you start</h2>\n<ol>\n<li><strong>Canonical repo check.</strong> Run <code>git config --get remote.origin.url</code> and confirm it matches <code>MagicbornStudios/get-anything-done(.git)?</code>. If not, refuse: the operator is in a consumer project and this skill cannot run.</li>\n<li><strong>Branch check.</strong> Confirm <code>git branch --show-current</code> is <code>main</code> and <code>git status --porcelain</code> is empty. Releases come from a clean <code>main</code>. If there are uncommitted changes, list them and stop — the operator decides whether to commit/stash/discard before you proceed.</li>\n<li><strong>Tool availability.</strong> Confirm <code>node --version</code>, <code>gh --version</code>, and <code>git --version</code> all return. If <code>gh</code> is missing or unauthenticated (<code>gh auth status</code>), stop and print the install/auth instructions.</li>\n<li><strong>Fetch.</strong> Run <code>git fetch --tags</code> so local tag state matches the remote. If a tag with the target version already exists, refuse — version bumps must be monotonic.</li>\n<li><strong>Dependencies.</strong> Run <code>npm install</code> (or confirm <code>node_modules/</code> + <code>node_modules/.bin/postject</code> exists). The SEA build depends on <code>postject</code> being installed locally.</li>\n</ol>\n<h2>Procedure</h2>\n<h3>Step 1 — Decide the new version</h3>\n<p>Read <code>package.json</code> <code>version</code> field and propose the next version following semver:</p>\n<table>\n<thead>\n<tr>\n<th>Change type</th>\n<th>Bump</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Breaking CLI surface, removed commands, schema renames</td>\n<td>MAJOR</td>\n</tr>\n<tr>\n<td>New commands, new subcommands, new decisions, new skills</td>\n<td>MINOR</td>\n</tr>\n<tr>\n<td>Bug fixes only, no new surface</td>\n<td>PATCH</td>\n</tr>\n</tbody></table>\n<p>Confirm the chosen version with the operator before editing files. The operator can override.</p>\n<h3>Step 2 — Bump version in package files</h3>\n<p>Edit both:</p>\n<ul>\n<li><code>package.json</code> — update <code>version</code> field</li>\n<li><code>package-lock.json</code> — update BOTH top-level <code>version</code> AND the <code>packages[&quot;&quot;].version</code> field</li>\n</ul>\n<p>Use the <code>Edit</code> tool, not a manual <code>npm version</code> call — npm version creates a commit + tag unprompted, which collides with this skill&#39;s control flow.</p>\n<h3>Step 3 — Write the CHANGELOG entry</h3>\n<p>Edit <code>CHANGELOG.md</code>. Keep the structure:</p>\n<pre><code>## [Unreleased]\n\n## [&lt;new-version&gt;] - &lt;YYYY-MM-DD&gt;\n\n&lt;one-paragraph summary of the release&gt;\n\n### Added\n- …\n\n### Changed\n- …\n\n### Fixed\n- …\n\n### Contract notes (optional)\n- …\n</code></pre>\n<p>Source material: <code>git log --oneline &lt;previous-tag&gt;..HEAD</code> if there is a previous tag, or <code>git log --since=&lt;previous-release-date&gt; --oneline</code> if not. Group commits by subsystem (CLI, site, framework, release pipeline, eval framework). Cite decision IDs (<code>gad-NNN</code> / <code>GAD-D-NNN</code>) and task IDs (<code>NN-NN</code> / <code>GAD-T-NN-NN</code>) where relevant — the changelog is a primary durable record of WHY changes happened.</p>\n<p>Keep it concise but thorough. A release with 300+ commits warrants a long changelog section; a patch release warrants 5 lines.</p>\n<h3>Step 4 — Rebuild the release artifact</h3>\n<pre><code class=\"language-sh\">npm run build:release\n</code></pre>\n<p>This runs <code>scripts/build-release.mjs</code> which:</p>\n<ol>\n<li>Calls <code>scripts/build-hooks.js</code> (compile hook shims).</li>\n<li>Calls <code>scripts/build-cli.mjs</code> (bundle CLI entrypoints).</li>\n<li>Calls <code>scripts/build-release-support.mjs</code> (build the support tree of skills, commands, templates, references bundled into the SEA blob).</li>\n<li>Generates <code>sea-config-&lt;platform&gt;-&lt;arch&gt;.json</code> via <code>--experimental-sea-config</code> and emits <code>sea-prep-&lt;platform&gt;-&lt;arch&gt;.blob</code>.</li>\n<li>Copies <code>process.execPath</code> (the running Node binary) to <code>dist/release/gad-v&lt;version&gt;-&lt;platform&gt;-&lt;arch&gt;.exe</code>.</li>\n<li>Injects the SEA blob into the executable via <code>postject</code> using the SEA sentinel fuse constant (see <code>SEA_SENTINEL</code> in <code>scripts/build-release.mjs</code> — do NOT quote the literal value in any file that lands in the release-support tree; the sentinel string must only appear once in the final binary, so any skill/doc/template that embeds a copy will break the build via postject&#39;s &quot;Multiple occurrences of sentinel&quot; sanity check).</li>\n<li>On Windows, also copies <code>scripts/install-gad-windows.ps1</code> and writes a fresh <code>dist/release/INSTALL.txt</code> with the correct artifact name and invocation instructions.</li>\n</ol>\n<p>Cross-platform note: <code>build-release.mjs</code> refuses to cross-build. Windows artifacts must be built on Windows, macOS on macOS, Linux on Linux. If the operator needs multi-platform artifacts, they must run the skill on each target OS and upload to the same tag.</p>\n<p><strong>Verify the build</strong> before committing:</p>\n<pre><code class=\"language-sh\">ls -la dist/release/\n./dist/release/gad-v&lt;version&gt;-windows-x64.exe --version    # on Windows\n./dist/release/gad-v&lt;version&gt;-&lt;platform&gt;-&lt;arch&gt; --version  # on macOS/Linux\n</code></pre>\n<p>The version output must match the version you just bumped to. If it reports the old version, the SEA blob did not rebuild — investigate <code>scripts/build-release-support.mjs</code> and the esbuild cache.</p>\n<h3>Step 5 — Commit the release</h3>\n<pre><code class=\"language-sh\">git add package.json package-lock.json CHANGELOG.md\ngit commit -m &quot;release: v&lt;version&gt;&quot;\n</code></pre>\n<p>Do NOT commit <code>dist/</code> — it is gitignored. The artifact lives only in GitHub Releases.</p>\n<h3>Step 6 — Tag</h3>\n<pre><code class=\"language-sh\">git tag -a v&lt;version&gt; -m &quot;GAD v&lt;version&gt;&quot;\n</code></pre>\n<p>Annotated tag, not lightweight — the tag message is what <code>gh release create --generate-notes</code> picks up if no <code>--notes-file</code> is given.</p>\n<h3>Step 7 — Push commit + tag</h3>\n<pre><code class=\"language-sh\">git push origin main\ngit push origin v&lt;version&gt;\n</code></pre>\n<p>Submodule consumers: push from INSIDE the submodule. Outer repo&#39;s submodule pointer is a separate follow-up commit.</p>\n<p>Tag push is the point of no return — confirm with the operator before pushing. Deleting a published tag breaks downstream consumers.</p>\n<h3>Step 8 — Create the GitHub release</h3>\n<pre><code class=\"language-sh\">npm run publish:release\n</code></pre>\n<p>This runs <code>scripts/publish-release.mjs</code> which:</p>\n<ol>\n<li>Reads the current <code>package.json</code> version and derives <code>v&lt;version&gt;</code> as the tag.</li>\n<li>Checks <code>gh release view v&lt;version&gt;</code> — if the release already exists, skips the create step.</li>\n<li>Otherwise runs <code>gh release create v&lt;version&gt; --title &quot;GAD v&lt;version&gt;&quot; --generate-notes</code>.</li>\n<li>Uploads every artifact in <code>dist/release/</code> matching <code>gad-v*</code> or <code>install-gad-windows.ps1</code> or <code>INSTALL.txt</code> via <code>gh release upload --clobber</code>.</li>\n</ol>\n<p><code>--clobber</code> means re-running the skill after fixing a bad artifact is safe: the upload replaces the existing asset at the same name.</p>\n<p><strong>Alternative</strong>: to attach a richer body than <code>--generate-notes</code>, pass <code>--notes-file</code> pointing at a temporary file containing the CHANGELOG section you wrote in step 3:</p>\n<pre><code class=\"language-sh\">node scripts/publish-release.mjs --notes-file /tmp/release-notes-v&lt;version&gt;.md\n</code></pre>\n<h3>Step 9 — Verify</h3>\n<pre><code class=\"language-sh\">gh release view v&lt;version&gt;\ngh release view v&lt;version&gt; --json assets --jq &#39;.assets[].name&#39;\n</code></pre>\n<p>Confirm the tag exists, the title is correct, and every expected artifact is attached. Open the URL in a browser if the operator wants a visual check:</p>\n<pre><code class=\"language-sh\">gh release view v&lt;version&gt; --web\n</code></pre>\n<h3>Step 10 — Update planning docs</h3>\n<p>Edit <code>.planning/STATE.xml</code> <code>&lt;next-action&gt;</code> to reflect that the release is cut. If the release closes a task, update <code>.planning/TASK-REGISTRY.xml</code> — set <code>status=&quot;done&quot;</code>, <code>skill=&quot;build-and-release-locally&quot;</code>, <code>agent=&quot;default&quot;</code>, <code>type=&quot;framework&quot;</code>. Capture any new decisions in <code>.planning/DECISIONS.xml</code> (e.g. version cadence policy, what went into the release notes).</p>\n<p>Commit the planning-doc updates separately from the release commit — the release commit should be minimal (version files + CHANGELOG only).</p>\n<h2>Common failure modes</h2>\n<table>\n<thead>\n<tr>\n<th>Failure</th>\n<th>Cause</th>\n<th>Fix</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>postject: command not found</code></td>\n<td><code>node_modules/.bin/postject</code> missing</td>\n<td><code>npm install</code> from vendor root</td>\n</tr>\n<tr>\n<td><code>Cross-platform SEA builds must run on the target platform/arch</code></td>\n<td>Operator passed <code>--platform</code> / <code>--arch</code> that doesn&#39;t match the host</td>\n<td>Re-run on the target OS, or drop the flags</td>\n</tr>\n<tr>\n<td><code>gh: command not found</code></td>\n<td><code>gh</code> CLI not installed</td>\n<td>Install from <code>https://cli.github.com</code></td>\n</tr>\n<tr>\n<td><code>gh auth status: not logged in</code></td>\n<td><code>gh</code> not authenticated</td>\n<td>Run <code>gh auth login</code>, pick HTTPS or SSH, follow the prompts</td>\n</tr>\n<tr>\n<td>Release exists, upload fails with 422</td>\n<td>Previous run uploaded bad artifacts</td>\n<td><code>gh release upload &lt;tag&gt; ... --clobber</code> (already the default in <code>publish-release.mjs</code>)</td>\n</tr>\n<tr>\n<td>Exe reports old version after rebuild</td>\n<td>Stale SEA blob, esbuild cache, or support-tree pre-cache</td>\n<td><code>rm -rf dist/ &amp;&amp; npm run build:release</code></td>\n</tr>\n<tr>\n<td>postject: <code>Multiple occurrences of sentinel found in the binary</code></td>\n<td>A bundled file in the release-support tree embeds the SEA sentinel literal. Sentinel must appear once (in the placeholder region). See <code>TROUBLESHOOTING.md</code> for the debug-grep command + incident history.</td>\n<td>Rule: never quote the sentinel in any file bundled under <code>skills/</code>, <code>commands/</code>, <code>templates/</code>, <code>references/</code>, <code>agents/</code>, <code>hooks/</code>, <code>workflows/</code>. Reference it symbolically (<code>SEA_SENTINEL</code> constant in <code>scripts/build-release.mjs</code>).</td>\n</tr>\n<tr>\n<td><code>esbuild: No loader is configured for &quot;.node&quot; files</code></td>\n<td>Native binaries from optional deps (<code>@huggingface/transformers</code>, onnxruntime, sharp) leaking into the SEA bundle.</td>\n<td><code>scripts/build-cli.mjs</code> must list those as <code>external</code>. Packaged exe runs without embeddings; falls back to Jaccard ranking in snapshot.</td>\n</tr>\n<tr>\n<td>Tag push rejected</td>\n<td>Someone else tagged first, or local is behind</td>\n<td><code>git pull --rebase origin main &amp;&amp; git fetch --tags</code> and re-verify version</td>\n</tr>\n<tr>\n<td>Build-release succeeds but exe won&#39;t launch on Windows</td>\n<td>Windows Defender or SmartScreen blocked an unsigned binary</td>\n<td>Expected for unsigned releases; instruct consumers to right-click → Properties → Unblock. Code-signing is a separate decision not covered here.</td>\n</tr>\n</tbody></table>\n<h2>Contract with 44-28 umbrella</h2>\n<p>This skill is the B0 foundation of the Track B installer pipeline (decision gad-188). Downstream tasks that depend on a consumable release:</p>\n<ul>\n<li><strong>44-32 / B2</strong> — <code>bin/install.js</code> <code>--from-release &lt;url|tag&gt;</code> flag needs a real release to pull from.</li>\n<li><strong>44-33 / B3</strong> — Site packaging produces a <code>site-&lt;version&gt;.zip</code> artifact uploaded alongside the installer.</li>\n<li><strong>44-34 / B4</strong> — Portable Node bootstrap ships a <code>node-v&lt;N&gt;-&lt;platform&gt;.zip</code> artifact uploaded alongside the installer.</li>\n</ul>\n<p>Every one of those downstream tasks <strong>adds a new artifact</strong> to the release. The shape of <code>publish-release.mjs</code>&#39;s <code>getArtifacts()</code> filter (<code>/^gad-v.+/</code> + explicit install files) may need to widen when B2/B3/B4 land — revise this skill at that point.</p>\n<h2>Guardrails — things this skill MUST NOT do</h2>\n<ol>\n<li><strong>Never run <code>npm publish</code>.</strong> GAD is not on npm. If the operator asks, explain and refuse.</li>\n<li><strong>Never trigger CI / GitHub Actions.</strong> There is no CI. This skill is the only release path.</li>\n<li><strong>Never force-push to <code>main</code>.</strong> If the release commit fails a hook, fix the underlying problem and create a new commit — do not <code>git push --force</code>.</li>\n<li><strong>Never delete a published tag.</strong> If a release is bad, cut a new version that fixes it. Deleting published tags breaks downstream consumers.</li>\n<li><strong>Never run outside the canonical repo.</strong> The gate in step 1 is load-bearing. Consumer projects should use <code>gad skill promote --project</code> to equip skills, not this skill.</li>\n<li><strong>Never push the tag without explicit operator confirmation in the conversation where the skill is running.</strong> The <code>git push origin v&lt;version&gt;</code> step is the point of no return.</li>\n</ol>\n",
+    "bodyRaw": "\r\n\r\n# build-and-release-locally\r\n\r\nThis is the procedure for cutting a GAD release from the operator's workstation. There is no CI. There is no `npm publish`. The only distribution channel is GitHub Releases on `github.com/MagicbornStudios/get-anything-done`, and the only way to populate it is to run this skill end-to-end on a machine that has Node, `gh`, and `git` installed, with push access to the canonical repo.\r\n\r\n## When to trigger this skill\r\n\r\n- User asks to \"cut a release\", \"ship v<N>\", \"publish a new release\", \"bump the version to <N>\".\r\n- Task 44-31 or any downstream Track B installer task (44-32/33/34) is blocked waiting for a release to exist.\r\n- CHANGELOG `[Unreleased]` section has accumulated enough material to warrant a new version, and the user confirms they want to publish.\r\n- A downstream consumer (eval runner, someone installing GAD into their repo) needs a fresh `installer.exe` and the last published release is materially stale.\r\n\r\n## When NOT to trigger this skill\r\n\r\n- In-progress work on a feature branch — releases come from `main` after the work is merged.\r\n- When `dist/release/gad-v*.exe` is already current and only docs or planning changed — a release is not required for every commit.\r\n- When running inside a consumer project (the canonical-repo gate will refuse).\r\n- When the user asks to publish to npm — GAD does not ship to npm. Explain and refuse.\r\n\r\n## Hard gates before you start\r\n\r\n1. **Canonical repo check.** Run `git config --get remote.origin.url` and confirm it matches `MagicbornStudios/get-anything-done(.git)?`. If not, refuse: the operator is in a consumer project and this skill cannot run.\r\n2. **Branch check.** Confirm `git branch --show-current` is `main` and `git status --porcelain` is empty. Releases come from a clean `main`. If there are uncommitted changes, list them and stop — the operator decides whether to commit/stash/discard before you proceed.\r\n3. **Tool availability.** Confirm `node --version`, `gh --version`, and `git --version` all return. If `gh` is missing or unauthenticated (`gh auth status`), stop and print the install/auth instructions.\r\n4. **Fetch.** Run `git fetch --tags` so local tag state matches the remote. If a tag with the target version already exists, refuse — version bumps must be monotonic.\r\n5. **Dependencies.** Run `npm install` (or confirm `node_modules/` + `node_modules/.bin/postject` exists). The SEA build depends on `postject` being installed locally.\r\n\r\n## Procedure\r\n\r\n### Step 1 — Decide the new version\r\n\r\nRead `package.json` `version` field and propose the next version following semver:\r\n\r\n| Change type | Bump |\r\n|---|---|\r\n| Breaking CLI surface, removed commands, schema renames | MAJOR |\r\n| New commands, new subcommands, new decisions, new skills | MINOR |\r\n| Bug fixes only, no new surface | PATCH |\r\n\r\nConfirm the chosen version with the operator before editing files. The operator can override.\r\n\r\n### Step 2 — Bump version in package files\r\n\r\nEdit both:\r\n\r\n- `package.json` — update `version` field\r\n- `package-lock.json` — update BOTH top-level `version` AND the `packages[\"\"].version` field\r\n\r\nUse the `Edit` tool, not a manual `npm version` call — npm version creates a commit + tag unprompted, which collides with this skill's control flow.\r\n\r\n### Step 3 — Write the CHANGELOG entry\r\n\r\nEdit `CHANGELOG.md`. Keep the structure:\r\n\r\n```\r\n## [Unreleased]\r\n\r\n## [<new-version>] - <YYYY-MM-DD>\r\n\r\n<one-paragraph summary of the release>\r\n\r\n### Added\r\n- …\r\n\r\n### Changed\r\n- …\r\n\r\n### Fixed\r\n- …\r\n\r\n### Contract notes (optional)\r\n- …\r\n```\r\n\r\nSource material: `git log --oneline <previous-tag>..HEAD` if there is a previous tag, or `git log --since=<previous-release-date> --oneline` if not. Group commits by subsystem (CLI, site, framework, release pipeline, eval framework). Cite decision IDs (`gad-NNN` / `GAD-D-NNN`) and task IDs (`NN-NN` / `GAD-T-NN-NN`) where relevant — the changelog is a primary durable record of WHY changes happened.\r\n\r\nKeep it concise but thorough. A release with 300+ commits warrants a long changelog section; a patch release warrants 5 lines.\r\n\r\n### Step 4 — Rebuild the release artifact\r\n\r\n```sh\r\nnpm run build:release\r\n```\r\n\r\nThis runs `scripts/build-release.mjs` which:\r\n\r\n1. Calls `scripts/build-hooks.js` (compile hook shims).\r\n2. Calls `scripts/build-cli.mjs` (bundle CLI entrypoints).\r\n3. Calls `scripts/build-release-support.mjs` (build the support tree of skills, commands, templates, references bundled into the SEA blob).\r\n4. Generates `sea-config-<platform>-<arch>.json` via `--experimental-sea-config` and emits `sea-prep-<platform>-<arch>.blob`.\r\n5. Copies `process.execPath` (the running Node binary) to `dist/release/gad-v<version>-<platform>-<arch>.exe`.\r\n6. Injects the SEA blob into the executable via `postject` using the SEA sentinel fuse constant (see `SEA_SENTINEL` in `scripts/build-release.mjs` — do NOT quote the literal value in any file that lands in the release-support tree; the sentinel string must only appear once in the final binary, so any skill/doc/template that embeds a copy will break the build via postject's \"Multiple occurrences of sentinel\" sanity check).\r\n7. On Windows, also copies `scripts/install-gad-windows.ps1` and writes a fresh `dist/release/INSTALL.txt` with the correct artifact name and invocation instructions.\r\n\r\nCross-platform note: `build-release.mjs` refuses to cross-build. Windows artifacts must be built on Windows, macOS on macOS, Linux on Linux. If the operator needs multi-platform artifacts, they must run the skill on each target OS and upload to the same tag.\r\n\r\n**Verify the build** before committing:\r\n\r\n```sh\r\nls -la dist/release/\r\n./dist/release/gad-v<version>-windows-x64.exe --version    # on Windows\r\n./dist/release/gad-v<version>-<platform>-<arch> --version  # on macOS/Linux\r\n```\r\n\r\nThe version output must match the version you just bumped to. If it reports the old version, the SEA blob did not rebuild — investigate `scripts/build-release-support.mjs` and the esbuild cache.\r\n\r\n### Step 5 — Commit the release\r\n\r\n```sh\r\ngit add package.json package-lock.json CHANGELOG.md\r\ngit commit -m \"release: v<version>\"\r\n```\r\n\r\nDo NOT commit `dist/` — it is gitignored. The artifact lives only in GitHub Releases.\r\n\r\n### Step 6 — Tag\r\n\r\n```sh\r\ngit tag -a v<version> -m \"GAD v<version>\"\r\n```\r\n\r\nAnnotated tag, not lightweight — the tag message is what `gh release create --generate-notes` picks up if no `--notes-file` is given.\r\n\r\n### Step 7 — Push commit + tag\r\n\r\n```sh\r\ngit push origin main\r\ngit push origin v<version>\r\n```\r\n\r\nSubmodule consumers: push from INSIDE the submodule. Outer repo's submodule pointer is a separate follow-up commit.\r\n\r\nTag push is the point of no return — confirm with the operator before pushing. Deleting a published tag breaks downstream consumers.\r\n\r\n### Step 8 — Create the GitHub release\r\n\r\n```sh\r\nnpm run publish:release\r\n```\r\n\r\nThis runs `scripts/publish-release.mjs` which:\r\n\r\n1. Reads the current `package.json` version and derives `v<version>` as the tag.\r\n2. Checks `gh release view v<version>` — if the release already exists, skips the create step.\r\n3. Otherwise runs `gh release create v<version> --title \"GAD v<version>\" --generate-notes`.\r\n4. Uploads every artifact in `dist/release/` matching `gad-v*` or `install-gad-windows.ps1` or `INSTALL.txt` via `gh release upload --clobber`.\r\n\r\n`--clobber` means re-running the skill after fixing a bad artifact is safe: the upload replaces the existing asset at the same name.\r\n\r\n**Alternative**: to attach a richer body than `--generate-notes`, pass `--notes-file` pointing at a temporary file containing the CHANGELOG section you wrote in step 3:\r\n\r\n```sh\r\nnode scripts/publish-release.mjs --notes-file /tmp/release-notes-v<version>.md\r\n```\r\n\r\n### Step 9 — Verify\r\n\r\n```sh\r\ngh release view v<version>\r\ngh release view v<version> --json assets --jq '.assets[].name'\r\n```\r\n\r\nConfirm the tag exists, the title is correct, and every expected artifact is attached. Open the URL in a browser if the operator wants a visual check:\r\n\r\n```sh\r\ngh release view v<version> --web\r\n```\r\n\r\n### Step 10 — Update planning docs\r\n\r\nEdit `.planning/STATE.xml` `<next-action>` to reflect that the release is cut. If the release closes a task, update `.planning/TASK-REGISTRY.xml` — set `status=\"done\"`, `skill=\"build-and-release-locally\"`, `agent=\"default\"`, `type=\"framework\"`. Capture any new decisions in `.planning/DECISIONS.xml` (e.g. version cadence policy, what went into the release notes).\r\n\r\nCommit the planning-doc updates separately from the release commit — the release commit should be minimal (version files + CHANGELOG only).\r\n\r\n## Common failure modes\r\n\r\n| Failure | Cause | Fix |\r\n|---|---|---|\r\n| `postject: command not found` | `node_modules/.bin/postject` missing | `npm install` from vendor root |\r\n| `Cross-platform SEA builds must run on the target platform/arch` | Operator passed `--platform` / `--arch` that doesn't match the host | Re-run on the target OS, or drop the flags |\r\n| `gh: command not found` | `gh` CLI not installed | Install from `https://cli.github.com` |\r\n| `gh auth status: not logged in` | `gh` not authenticated | Run `gh auth login`, pick HTTPS or SSH, follow the prompts |\r\n| Release exists, upload fails with 422 | Previous run uploaded bad artifacts | `gh release upload <tag> ... --clobber` (already the default in `publish-release.mjs`) |\r\n| Exe reports old version after rebuild | Stale SEA blob, esbuild cache, or support-tree pre-cache | `rm -rf dist/ && npm run build:release` |\r\n| postject: `Multiple occurrences of sentinel found in the binary` | A bundled file in the release-support tree embeds the SEA sentinel literal. Sentinel must appear once (in the placeholder region). See `TROUBLESHOOTING.md` for the debug-grep command + incident history. | Rule: never quote the sentinel in any file bundled under `skills/`, `commands/`, `templates/`, `references/`, `agents/`, `hooks/`, `workflows/`. Reference it symbolically (`SEA_SENTINEL` constant in `scripts/build-release.mjs`). |\r\n| `esbuild: No loader is configured for \".node\" files` | Native binaries from optional deps (`@huggingface/transformers`, onnxruntime, sharp) leaking into the SEA bundle. | `scripts/build-cli.mjs` must list those as `external`. Packaged exe runs without embeddings; falls back to Jaccard ranking in snapshot. |\r\n| Tag push rejected | Someone else tagged first, or local is behind | `git pull --rebase origin main && git fetch --tags` and re-verify version |\r\n| Build-release succeeds but exe won't launch on Windows | Windows Defender or SmartScreen blocked an unsigned binary | Expected for unsigned releases; instruct consumers to right-click → Properties → Unblock. Code-signing is a separate decision not covered here. |\r\n\r\n## Contract with 44-28 umbrella\r\n\r\nThis skill is the B0 foundation of the Track B installer pipeline (decision gad-188). Downstream tasks that depend on a consumable release:\r\n\r\n- **44-32 / B2** — `bin/install.js` `--from-release <url|tag>` flag needs a real release to pull from.\r\n- **44-33 / B3** — Site packaging produces a `site-<version>.zip` artifact uploaded alongside the installer.\r\n- **44-34 / B4** — Portable Node bootstrap ships a `node-v<N>-<platform>.zip` artifact uploaded alongside the installer.\r\n\r\nEvery one of those downstream tasks **adds a new artifact** to the release. The shape of `publish-release.mjs`'s `getArtifacts()` filter (`/^gad-v.+/` + explicit install files) may need to widen when B2/B3/B4 land — revise this skill at that point.\r\n\r\n## Guardrails — things this skill MUST NOT do\r\n\r\n1. **Never run `npm publish`.** GAD is not on npm. If the operator asks, explain and refuse.\r\n2. **Never trigger CI / GitHub Actions.** There is no CI. This skill is the only release path.\r\n3. **Never force-push to `main`.** If the release commit fails a hook, fix the underlying problem and create a new commit — do not `git push --force`.\r\n4. **Never delete a published tag.** If a release is bad, cut a new version that fixes it. Deleting published tags breaks downstream consumers.\r\n5. **Never run outside the canonical repo.** The gate in step 1 is load-bearing. Consumer projects should use `gad skill promote --project` to equip skills, not this skill.\r\n6. **Never push the tag without explicit operator confirmation in the conversation where the skill is running.** The `git push origin v<version>` step is the point of no return.\r\n"
   },
   {
     "id": "create-proto-skill",
     "name": "create-proto-skill",
     "description": ">-",
+    "lane": "meta",
     "imagePath": null,
     "origin": "official",
     "authoredBy": null,
@@ -260,13 +263,14 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/create-proto-skill/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>create-proto-skill</h1>\n<p>The lightweight drafter inside the GAD evolution loop. Walks every raw\ncandidate under <code>.planning/candidates/</code>, drafts each one into a proto-skill\nbundle under <code>.planning/proto-skills/&lt;slug&gt;/</code>, and hands off to\n<code>gad evolution validate</code> and <code>gad evolution install</code> for advisory scoring\nand runtime test use.</p>\n<p>Renamed from <code>gad-quick-skill</code> per decision gad-168. Output shape locked by\ndecision gad-191. Bulk-batch + per-candidate-checkpoint protocol locked by\ndecision gad-171 — the whole point is that a 20-candidate batch survives a\ncrash or auto-compact halfway through.</p>\n<h2>When to use this skill</h2>\n<ul>\n<li><code>gad:evolution:evolve</code> calls this during the drafting step for every\ncandidate that <code>compute-self-eval</code> surfaced above the pressure threshold.</li>\n<li>A user says &quot;draft a proto-skill for X&quot;, &quot;convert this candidate&quot;, or\n&quot;draft all pending candidates&quot;.</li>\n<li>You&#39;ve finished a workflow and want to capture a SKILL.md immediately\nwithout running <code>gad-skill-creator</code>&#39;s full eval loop.</li>\n<li>You have clear context sources — CANDIDATE.md files from self-eval, raw\nphase dumps, or working session notes you want to preserve.</li>\n</ul>\n<h2>When NOT to use this</h2>\n<ul>\n<li>The skill is high-stakes and you want real subagent test runs to validate\nit — use <code>gad-skill-creator</code> (heavy path).</li>\n<li>You&#39;re improving an existing skill that already has tests — use\n<code>gad-skill-creator</code>, it re-runs the tests.</li>\n<li>The pattern isn&#39;t actually clear yet — write a quick note (<code>gad note</code>)\nand let the next evolution surface it.</li>\n</ul>\n<h2>Step 1 — enumerate pending candidates</h2>\n<p>Run <code>gad evolution status</code> first to see the current state. The command\nrenders three counts for the proto-skill backlog:</p>\n<ul>\n<li><strong>pending</strong> — candidates under <code>.planning/candidates/&lt;slug&gt;/</code> with no\nmatching <code>.planning/proto-skills/&lt;slug&gt;/</code> directory at all.</li>\n<li><strong>in-progress</strong> — proto-skill dirs with PROVENANCE.md but no SKILL.md\nyet (a previous run crashed or was compacted mid-draft, lock marker left\nbehind).</li>\n<li><strong>complete</strong> — proto-skill dirs with both PROVENANCE.md and SKILL.md.</li>\n</ul>\n<p>Your batch is <code>pending ∪ in-progress</code>. Skip <code>complete</code>.</p>\n<p>Enumerate explicitly:</p>\n<pre><code class=\"language-sh\">gad evolution status\n# Or, to get the raw list:\nls .planning/candidates/\nls .planning/proto-skills/\n</code></pre>\n<p>For each candidate slug, decide its state:</p>\n<ul>\n<li>PROVENANCE.md missing → <strong>pending</strong> (fresh draft)</li>\n<li>PROVENANCE.md present, SKILL.md missing → <strong>in-progress</strong> (resume; keep\nthe existing PROVENANCE.md, do not rewrite)</li>\n<li>Both present → <strong>complete</strong> (skip)</li>\n</ul>\n<h2>Step 2 — ensure dot-agent create-skill is installed</h2>\n<p>Idempotent — only installs if missing:</p>\n<pre><code class=\"language-sh\">if [ ! -d &quot;$HOME/.agents/skills/create-skill&quot; ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n</code></pre>\n<p>After install, <code>~/.agents/skills/create-skill/SKILL.md</code> is the canonical\nauthoring guide plus four reference files in <code>references/</code>. Read SKILL.md\nonce for the format rules — this wrapper only handles input plumbing and\nthe checkpoint protocol.</p>\n<h2>Step 3 — per-candidate checkpoint protocol</h2>\n<p>Loop over the pending+in-progress list. For each slug, <strong>in this order</strong>:</p>\n<h3>3a. Write PROVENANCE.md FIRST (lock marker)</h3>\n<p>Create <code>.planning/proto-skills/&lt;slug&gt;/</code> and write PROVENANCE.md before\nanything else. This is the lock marker that tells the next run &quot;this slug\nis in-progress, don&#39;t re-draft it from scratch&quot;:</p>\n<pre><code class=\"language-markdown\">---\ncandidate_slug: &lt;slug&gt;\nsource_phase: &lt;phase id from CANDIDATE.md frontmatter&gt;\npressure_score: &lt;from CANDIDATE.md&gt;\ncreated_on: &lt;YYYY-MM-DD&gt;\ncreated_by: create-proto-skill\nstatus: in-progress\n---\n\n# Provenance for &lt;slug&gt;\n\nDrafted from `.planning/candidates/&lt;slug&gt;/CANDIDATE.md` during evolution\nturn &lt;N&gt;. Raw source: self-eval pressure dump (tasks, decisions, file refs,\nCLI surface, related skills).\n</code></pre>\n<p>If PROVENANCE.md already exists (resume case), <strong>do not overwrite it</strong>.\nRead its <code>status:</code> field — if <code>in-progress</code>, you&#39;re resuming a crashed run.</p>\n<h3>3b. Read the candidate</h3>\n<p>Read <code>.planning/candidates/&lt;slug&gt;/CANDIDATE.md</code>. It contains the raw phase\ndump and is <strong>not curated</strong> — no proposed name, no hand-picked decisions,\nno suggested test prompts. Decide what matters. This is intentional per the\n2026-04-13 evolution-loop experiment finding: curators filter, raw input\npulls in more decisions.</p>\n<p>For direct user requests where no candidate exists, write a minimal\nCANDIDATE.md into <code>.planning/candidates/&lt;slug&gt;/</code> from whatever the user is\npointing at, then continue.</p>\n<h3>3c. Write workflow.md</h3>\n<p>Write the procedural body to <code>.planning/proto-skills/&lt;slug&gt;/workflow.md</code>.\nThis is the &quot;what the agent actually does&quot; file — step-by-step instructions,\nguardrails, failure modes. Follow dot-agent&#39;s authoring rules: imperative\nform, explain <em>why</em> not just <em>what</em>, split deeper content into\n<code>references/&lt;file&gt;.md</code> and reference from here.</p>\n<p>Pick the kebab-case skill name yourself, drawing from the phase or context.\nDo not ask the human. The autonomous loop exists because you make the call.</p>\n<h3>3d. Write SKILL.md (thin entry point)</h3>\n<p>Write <code>.planning/proto-skills/&lt;slug&gt;/SKILL.md</code> as the thin trigger doc with\n<code>workflow: ./workflow.md</code> per decision gad-191:</p>\n<pre><code class=\"language-markdown\">---\nname: &lt;skill-name&gt;\ndescription: &gt;-\n  &lt;2-4 sentence trigger-friendly description. Start strong. Include the\n  &quot;when to use&quot; framing so it fires reliably.&gt;\nstatus: proto\nworkflow: ./workflow.md\n---\n\n# &lt;skill-name&gt;\n\n&lt;One-paragraph summary. Point the reader at workflow.md for the procedure.&gt;\n\n**Workflow:** [./workflow.md](./workflow.md)\n\n## Provenance\n\nDrafted by `create-proto-skill` from `.planning/candidates/&lt;slug&gt;/\nCANDIDATE.md` on &lt;date&gt;. See PROVENANCE.md for source metadata.\n</code></pre>\n<p>Hard rule: <strong>SKILL.md under 200 lines.</strong> If the body is long, move it to\nworkflow.md and keep SKILL.md as the trigger-only entry point.</p>\n<h3>3e. Flip PROVENANCE.md status to <code>complete</code></h3>\n<p>After both workflow.md and SKILL.md land, update PROVENANCE.md <code>status:</code>\nfrom <code>in-progress</code> to <code>complete</code>. This closes the lock marker.</p>\n<h3>3f. Commit checkpoint (if in a long batch)</h3>\n<p>For batches over ~5 candidates, commit after each completed proto-skill so\npartial progress survives independent of the working tree. Commit message\nshape: <code>evolution: draft proto-skill &lt;slug&gt; from candidate</code>.</p>\n<h2>Step 4 — hand off to the validator</h2>\n<p>After the batch finishes, the orchestrator (<code>gad:evolution:evolve</code>) runs\n<code>gad-evolution-validator</code> across the new proto-skills. The validator writes\n<code>.planning/proto-skills/&lt;slug&gt;/VALIDATION.md</code> with advisory notes:</p>\n<ul>\n<li>Files cited in SKILL.md/workflow.md that don&#39;t exist in the repo</li>\n<li>CLI commands cited that don&#39;t appear in <code>gad --help</code></li>\n<li>Convention shapes that don&#39;t match existing files</li>\n</ul>\n<p>VALIDATION.md is <strong>advisory, not blocking</strong>. The human reviewer reads\nSKILL.md + workflow.md + VALIDATION.md before promote/discard. You don&#39;t\nneed to act on validator output — just leave the proto-skills in place.</p>\n<h2>Step 5 — stop</h2>\n<p>Do not iterate. Do not run test prompts. Do not ask for review. Proto-skills\nstay in <code>.planning/proto-skills/&lt;slug&gt;/</code> until a human runs\n<code>gad evolution install &lt;slug&gt;</code>, <code>gad evolution promote &lt;slug&gt;</code>, or\n<code>gad evolution discard &lt;slug&gt;</code> later.</p>\n<h2>Resume protocol (crash / auto-compact recovery)</h2>\n<p>If you&#39;re invoked after a previous batch crashed mid-draft:</p>\n<ol>\n<li>Run <code>gad evolution status</code> — the <code>in-progress</code> count is your work queue.</li>\n<li>For each in-progress slug, read the existing PROVENANCE.md to confirm\nit&#39;s a lock marker, not a false positive.</li>\n<li>Resume at step 3b (re-read the candidate, then 3c → 3d → 3e).</li>\n<li>Never regenerate PROVENANCE.md on resume — the original timestamp and\nmetadata are part of the audit trail.</li>\n</ol>\n<h2>Failure modes</h2>\n<ul>\n<li><strong>dot-agent guide says to ask the user questions.</strong> Don&#39;t. Make the call\nyourself, document the decision in workflow.md. Autonomous loop.</li>\n<li><strong>Tempted to run test prompts.</strong> That&#39;s <code>gad-skill-creator</code> territory.\nStop at SKILL.md + workflow.md.</li>\n<li><strong>CANDIDATE.md is sparse.</strong> Read it anyway and pull from the file\nreferences it points at — that&#39;s where the depth lives.</li>\n<li><strong>Forgot to write PROVENANCE.md first.</strong> Re-run from step 3a for that\nslug. The checkpoint protocol is not decorative; without a lock marker,\ncrash-resume can&#39;t distinguish &quot;never started&quot; from &quot;half-done&quot;.</li>\n<li><strong>Existing <code>.planning/proto-skills/&lt;slug&gt;/</code> from a prior run.</strong> Inspect\nbefore overwriting: <code>complete</code> means skip, <code>in-progress</code> means resume.</li>\n</ul>\n<h2>Reference</h2>\n<ul>\n<li><code>~/.agents/skills/create-skill/SKILL.md</code> — dot-agent authoring guide</li>\n<li><code>references/skill-shape.md</code> — uniform shape contract</li>\n<li><code>references/proto-skills.md</code> — proto-skill bundle contract</li>\n<li><code>gad-skill-creator</code> — heavy path with full eval loop</li>\n<li><code>gad-evolution-evolve</code> — orchestrator that calls this in a batch</li>\n<li>Decision gad-171 — bulk batching + per-candidate checkpoints</li>\n<li>Decision gad-191 — proto-skill bundle shape at <code>.planning/proto-skills/</code></li>\n<li>2026-04-13 evolution-loop experiment finding\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>)</li>\n</ul>\n",
-    "bodyRaw": "\n# create-proto-skill\n\nThe lightweight drafter inside the GAD evolution loop. Walks every raw\ncandidate under `.planning/candidates/`, drafts each one into a proto-skill\nbundle under `.planning/proto-skills/<slug>/`, and hands off to\n`gad evolution validate` and `gad evolution install` for advisory scoring\nand runtime test use.\n\nRenamed from `gad-quick-skill` per decision gad-168. Output shape locked by\ndecision gad-191. Bulk-batch + per-candidate-checkpoint protocol locked by\ndecision gad-171 — the whole point is that a 20-candidate batch survives a\ncrash or auto-compact halfway through.\n\n## When to use this skill\n\n- `gad:evolution:evolve` calls this during the drafting step for every\n  candidate that `compute-self-eval` surfaced above the pressure threshold.\n- A user says \"draft a proto-skill for X\", \"convert this candidate\", or\n  \"draft all pending candidates\".\n- You've finished a workflow and want to capture a SKILL.md immediately\n  without running `gad-skill-creator`'s full eval loop.\n- You have clear context sources — CANDIDATE.md files from self-eval, raw\n  phase dumps, or working session notes you want to preserve.\n\n## When NOT to use this\n\n- The skill is high-stakes and you want real subagent test runs to validate\n  it — use `gad-skill-creator` (heavy path).\n- You're improving an existing skill that already has tests — use\n  `gad-skill-creator`, it re-runs the tests.\n- The pattern isn't actually clear yet — write a quick note (`gad note`)\n  and let the next evolution surface it.\n\n## Step 1 — enumerate pending candidates\n\nRun `gad evolution status` first to see the current state. The command\nrenders three counts for the proto-skill backlog:\n\n- **pending** — candidates under `.planning/candidates/<slug>/` with no\n  matching `.planning/proto-skills/<slug>/` directory at all.\n- **in-progress** — proto-skill dirs with PROVENANCE.md but no SKILL.md\n  yet (a previous run crashed or was compacted mid-draft, lock marker left\n  behind).\n- **complete** — proto-skill dirs with both PROVENANCE.md and SKILL.md.\n\nYour batch is `pending ∪ in-progress`. Skip `complete`.\n\nEnumerate explicitly:\n\n```sh\ngad evolution status\n# Or, to get the raw list:\nls .planning/candidates/\nls .planning/proto-skills/\n```\n\nFor each candidate slug, decide its state:\n\n- PROVENANCE.md missing → **pending** (fresh draft)\n- PROVENANCE.md present, SKILL.md missing → **in-progress** (resume; keep\n  the existing PROVENANCE.md, do not rewrite)\n- Both present → **complete** (skip)\n\n## Step 2 — ensure dot-agent create-skill is installed\n\nIdempotent — only installs if missing:\n\n```sh\nif [ ! -d \"$HOME/.agents/skills/create-skill\" ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n```\n\nAfter install, `~/.agents/skills/create-skill/SKILL.md` is the canonical\nauthoring guide plus four reference files in `references/`. Read SKILL.md\nonce for the format rules — this wrapper only handles input plumbing and\nthe checkpoint protocol.\n\n## Step 3 — per-candidate checkpoint protocol\n\nLoop over the pending+in-progress list. For each slug, **in this order**:\n\n### 3a. Write PROVENANCE.md FIRST (lock marker)\n\nCreate `.planning/proto-skills/<slug>/` and write PROVENANCE.md before\nanything else. This is the lock marker that tells the next run \"this slug\nis in-progress, don't re-draft it from scratch\":\n\n```markdown\n---\ncandidate_slug: <slug>\nsource_phase: <phase id from CANDIDATE.md frontmatter>\npressure_score: <from CANDIDATE.md>\ncreated_on: <YYYY-MM-DD>\ncreated_by: create-proto-skill\nstatus: in-progress\n---\n\n# Provenance for <slug>\n\nDrafted from `.planning/candidates/<slug>/CANDIDATE.md` during evolution\nturn <N>. Raw source: self-eval pressure dump (tasks, decisions, file refs,\nCLI surface, related skills).\n```\n\nIf PROVENANCE.md already exists (resume case), **do not overwrite it**.\nRead its `status:` field — if `in-progress`, you're resuming a crashed run.\n\n### 3b. Read the candidate\n\nRead `.planning/candidates/<slug>/CANDIDATE.md`. It contains the raw phase\ndump and is **not curated** — no proposed name, no hand-picked decisions,\nno suggested test prompts. Decide what matters. This is intentional per the\n2026-04-13 evolution-loop experiment finding: curators filter, raw input\npulls in more decisions.\n\nFor direct user requests where no candidate exists, write a minimal\nCANDIDATE.md into `.planning/candidates/<slug>/` from whatever the user is\npointing at, then continue.\n\n### 3c. Write workflow.md\n\nWrite the procedural body to `.planning/proto-skills/<slug>/workflow.md`.\nThis is the \"what the agent actually does\" file — step-by-step instructions,\nguardrails, failure modes. Follow dot-agent's authoring rules: imperative\nform, explain *why* not just *what*, split deeper content into\n`references/<file>.md` and reference from here.\n\nPick the kebab-case skill name yourself, drawing from the phase or context.\nDo not ask the human. The autonomous loop exists because you make the call.\n\n### 3d. Write SKILL.md (thin entry point)\n\nWrite `.planning/proto-skills/<slug>/SKILL.md` as the thin trigger doc with\n`workflow: ./workflow.md` per decision gad-191:\n\n```markdown\n---\nname: <skill-name>\ndescription: >-\n  <2-4 sentence trigger-friendly description. Start strong. Include the\n  \"when to use\" framing so it fires reliably.>\nstatus: proto\nworkflow: ./workflow.md\n---\n\n# <skill-name>\n\n<One-paragraph summary. Point the reader at workflow.md for the procedure.>\n\n**Workflow:** [./workflow.md](./workflow.md)\n\n## Provenance\n\nDrafted by `create-proto-skill` from `.planning/candidates/<slug>/\nCANDIDATE.md` on <date>. See PROVENANCE.md for source metadata.\n```\n\nHard rule: **SKILL.md under 200 lines.** If the body is long, move it to\nworkflow.md and keep SKILL.md as the trigger-only entry point.\n\n### 3e. Flip PROVENANCE.md status to `complete`\n\nAfter both workflow.md and SKILL.md land, update PROVENANCE.md `status:`\nfrom `in-progress` to `complete`. This closes the lock marker.\n\n### 3f. Commit checkpoint (if in a long batch)\n\nFor batches over ~5 candidates, commit after each completed proto-skill so\npartial progress survives independent of the working tree. Commit message\nshape: `evolution: draft proto-skill <slug> from candidate`.\n\n## Step 4 — hand off to the validator\n\nAfter the batch finishes, the orchestrator (`gad:evolution:evolve`) runs\n`gad-evolution-validator` across the new proto-skills. The validator writes\n`.planning/proto-skills/<slug>/VALIDATION.md` with advisory notes:\n\n- Files cited in SKILL.md/workflow.md that don't exist in the repo\n- CLI commands cited that don't appear in `gad --help`\n- Convention shapes that don't match existing files\n\nVALIDATION.md is **advisory, not blocking**. The human reviewer reads\nSKILL.md + workflow.md + VALIDATION.md before promote/discard. You don't\nneed to act on validator output — just leave the proto-skills in place.\n\n## Step 5 — stop\n\nDo not iterate. Do not run test prompts. Do not ask for review. Proto-skills\nstay in `.planning/proto-skills/<slug>/` until a human runs\n`gad evolution install <slug>`, `gad evolution promote <slug>`, or\n`gad evolution discard <slug>` later.\n\n## Resume protocol (crash / auto-compact recovery)\n\nIf you're invoked after a previous batch crashed mid-draft:\n\n1. Run `gad evolution status` — the `in-progress` count is your work queue.\n2. For each in-progress slug, read the existing PROVENANCE.md to confirm\n   it's a lock marker, not a false positive.\n3. Resume at step 3b (re-read the candidate, then 3c → 3d → 3e).\n4. Never regenerate PROVENANCE.md on resume — the original timestamp and\n   metadata are part of the audit trail.\n\n## Failure modes\n\n- **dot-agent guide says to ask the user questions.** Don't. Make the call\n  yourself, document the decision in workflow.md. Autonomous loop.\n- **Tempted to run test prompts.** That's `gad-skill-creator` territory.\n  Stop at SKILL.md + workflow.md.\n- **CANDIDATE.md is sparse.** Read it anyway and pull from the file\n  references it points at — that's where the depth lives.\n- **Forgot to write PROVENANCE.md first.** Re-run from step 3a for that\n  slug. The checkpoint protocol is not decorative; without a lock marker,\n  crash-resume can't distinguish \"never started\" from \"half-done\".\n- **Existing `.planning/proto-skills/<slug>/` from a prior run.** Inspect\n  before overwriting: `complete` means skip, `in-progress` means resume.\n\n## Reference\n\n- `~/.agents/skills/create-skill/SKILL.md` — dot-agent authoring guide\n- `references/skill-shape.md` — uniform shape contract\n- `references/proto-skills.md` — proto-skill bundle contract\n- `gad-skill-creator` — heavy path with full eval loop\n- `gad-evolution-evolve` — orchestrator that calls this in a batch\n- Decision gad-171 — bulk batching + per-candidate checkpoints\n- Decision gad-191 — proto-skill bundle shape at `.planning/proto-skills/`\n- 2026-04-13 evolution-loop experiment finding\n  (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)\n"
+    "bodyHtml": "<h1>create-proto-skill</h1>\n<p>The lightweight drafter inside the GAD evolution loop. Walks every raw\ncandidate under <code>.planning/candidates/</code>, drafts each one into a proto-skill\nbundle under <code>.planning/proto-skills/&lt;slug&gt;/</code>, and hands off to\n<code>gad evolution validate</code> and <code>gad evolution install</code> for advisory scoring\nand runtime test use.</p>\n<p>Renamed from <code>gad-quick-skill</code> per decision gad-168. Output shape locked by\ndecision gad-191. Bulk-batch + per-candidate-checkpoint protocol locked by\ndecision gad-171 — the whole point is that a 20-candidate batch survives a\ncrash or auto-compact halfway through.</p>\n<h2>When to use this skill</h2>\n<ul>\n<li><code>gad:evolution:evolve</code> calls this during the drafting step for every\ncandidate that <code>compute-self-eval</code> surfaced above the pressure threshold.</li>\n<li>A user says &quot;draft a proto-skill for X&quot;, &quot;convert this candidate&quot;, or\n&quot;draft all pending candidates&quot;.</li>\n<li>You&#39;ve finished a workflow and want to capture a SKILL.md immediately\nwithout running <code>gad-skill-creator</code>&#39;s full eval loop.</li>\n<li>You have clear context sources — CANDIDATE.md files from self-eval, raw\nphase dumps, or working session notes you want to preserve.</li>\n</ul>\n<h2>When NOT to use this</h2>\n<ul>\n<li>The skill is high-stakes and you want real subagent test runs to validate\nit — use <code>gad-skill-creator</code> (heavy path).</li>\n<li>You&#39;re improving an existing skill that already has tests — use\n<code>gad-skill-creator</code>, it re-runs the tests.</li>\n<li>The pattern isn&#39;t actually clear yet — write a quick note (<code>gad note</code>)\nand let the next evolution surface it.</li>\n</ul>\n<h2>Draft quality bar — compartmentalized systems over captured answers</h2>\n<p>When drafting a proto-skill SKILL.md, default to the\n<strong>compartmentalized-system-as-skill</strong> shape defined in\n<code>skills/create-skill/SKILL.md</code> (§ The quality bar). In short:</p>\n<ol>\n<li>Open the SKILL.md with a <strong>requirements contract</strong> — 3-6 falsifiable items\nthe host system must satisfy. Not pseudocode, not tech-stack-specific —\ncheckable contract items.</li>\n<li>Name the <strong>UX or behavior pattern</strong> the skill instantiates on the host.</li>\n<li>Note any preconditions the skill itself enforces (dev gate, runtime,\neval condition, lane).</li>\n<li>Keep examples anchored in one concrete host, but write the contract so\nit survives porting to a different host.</li>\n</ol>\n<p>The canonical reference is <code>skills/gad-visual-context-system/SKILL.md</code>\n(first proto-skill to prove the pattern). Model the drafted SKILL.md\nagainst it when the candidate is clearly a repeatable system pattern and\nnot just a captured answer. If the candidate is a one-off fix recipe,\ndefault to the lighter &quot;captured-answer&quot; shape (When to use / The pattern /\nWhy / Failure modes / Related) and skip the requirements contract.</p>\n<p>The validator (<code>gad-evolution-validator</code>) reports advisory file-ref checks,\nnot quality-bar checks — compartmentalized-system review is a drafting-\ntime concern, not a post-hoc audit.</p>\n<h2>Step 1 — enumerate pending candidates</h2>\n<p>Run <code>gad evolution status</code> first to see the current state. The command\nrenders three counts for the proto-skill backlog:</p>\n<ul>\n<li><strong>pending</strong> — candidates under <code>.planning/candidates/&lt;slug&gt;/</code> with no\nmatching <code>.planning/proto-skills/&lt;slug&gt;/</code> directory at all.</li>\n<li><strong>in-progress</strong> — proto-skill dirs with PROVENANCE.md but no SKILL.md\nyet (a previous run crashed or was compacted mid-draft, lock marker left\nbehind).</li>\n<li><strong>complete</strong> — proto-skill dirs with both PROVENANCE.md and SKILL.md.</li>\n</ul>\n<p>Your batch is <code>pending ∪ in-progress</code>. Skip <code>complete</code>.</p>\n<p>Enumerate explicitly:</p>\n<pre><code class=\"language-sh\">gad evolution status\n# Or, to get the raw list:\nls .planning/candidates/\nls .planning/proto-skills/\n</code></pre>\n<p>For each candidate slug, decide its state:</p>\n<ul>\n<li>PROVENANCE.md missing → <strong>pending</strong> (fresh draft)</li>\n<li>PROVENANCE.md present, SKILL.md missing → <strong>in-progress</strong> (resume; keep\nthe existing PROVENANCE.md, do not rewrite)</li>\n<li>Both present → <strong>complete</strong> (skip)</li>\n</ul>\n<h2>Step 2 — ensure dot-agent create-skill is installed</h2>\n<p>Idempotent — only installs if missing:</p>\n<pre><code class=\"language-sh\">if [ ! -d &quot;$HOME/.agents/skills/create-skill&quot; ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n</code></pre>\n<p>After install, <code>~/.agents/skills/create-skill/SKILL.md</code> is the canonical\nauthoring guide plus four reference files in <code>references/</code>. Read SKILL.md\nonce for the format rules — this wrapper only handles input plumbing and\nthe checkpoint protocol.</p>\n<h2>Step 3 — per-candidate checkpoint protocol</h2>\n<p>Loop over the pending+in-progress list. For each slug, <strong>in this order</strong>:</p>\n<h3>3a. Write PROVENANCE.md FIRST (lock marker)</h3>\n<p>Create <code>.planning/proto-skills/&lt;slug&gt;/</code> and write PROVENANCE.md before\nanything else. This is the lock marker that tells the next run &quot;this slug\nis in-progress, don&#39;t re-draft it from scratch&quot;:</p>\n<pre><code class=\"language-markdown\">---\ncandidate_slug: &lt;slug&gt;\nsource_phase: &lt;phase id from CANDIDATE.md frontmatter&gt;\npressure_score: &lt;from CANDIDATE.md&gt;\ncreated_on: &lt;YYYY-MM-DD&gt;\ncreated_by: create-proto-skill\nstatus: in-progress\n---\n\n# Provenance for &lt;slug&gt;\n\nDrafted from `.planning/candidates/&lt;slug&gt;/CANDIDATE.md` during evolution\nturn &lt;N&gt;. Raw source: self-eval pressure dump (tasks, decisions, file refs,\nCLI surface, related skills).\n</code></pre>\n<p>If PROVENANCE.md already exists (resume case), <strong>do not overwrite it</strong>.\nRead its <code>status:</code> field — if <code>in-progress</code>, you&#39;re resuming a crashed run.</p>\n<h3>3b. Read the candidate</h3>\n<p>Read <code>.planning/candidates/&lt;slug&gt;/CANDIDATE.md</code>. It contains the raw phase\ndump and is <strong>not curated</strong> — no proposed name, no hand-picked decisions,\nno suggested test prompts. Decide what matters. This is intentional per the\n2026-04-13 evolution-loop experiment finding: curators filter, raw input\npulls in more decisions.</p>\n<p>For direct user requests where no candidate exists, write a minimal\nCANDIDATE.md into <code>.planning/candidates/&lt;slug&gt;/</code> from whatever the user is\npointing at, then continue.</p>\n<h3>3c. Write workflow.md</h3>\n<p>Write the procedural body to <code>.planning/proto-skills/&lt;slug&gt;/workflow.md</code>.\nThis is the &quot;what the agent actually does&quot; file — step-by-step instructions,\nguardrails, failure modes. Follow dot-agent&#39;s authoring rules: imperative\nform, explain <em>why</em> not just <em>what</em>, split deeper content into\n<code>references/&lt;file&gt;.md</code> and reference from here.</p>\n<p>Pick the kebab-case skill name yourself, drawing from the phase or context.\nDo not ask the human. The autonomous loop exists because you make the call.</p>\n<h3>3d. Write SKILL.md (thin entry point)</h3>\n<p>Write <code>.planning/proto-skills/&lt;slug&gt;/SKILL.md</code> as the thin trigger doc with\n<code>workflow: ./workflow.md</code> per decision gad-191:</p>\n<pre><code class=\"language-markdown\">---\nname: &lt;skill-name&gt;\ndescription: &gt;-\n  &lt;2-4 sentence trigger-friendly description. Start strong. Include the\n  &quot;when to use&quot; framing so it fires reliably.&gt;\nstatus: proto\nworkflow: ./workflow.md\n---\n\n# &lt;skill-name&gt;\n\n&lt;One-paragraph summary. Point the reader at workflow.md for the procedure.&gt;\n\n**Workflow:** [./workflow.md](./workflow.md)\n\n## Provenance\n\nDrafted by `create-proto-skill` from `.planning/candidates/&lt;slug&gt;/\nCANDIDATE.md` on &lt;date&gt;. See PROVENANCE.md for source metadata.\n</code></pre>\n<p>Hard rule: <strong>SKILL.md under 200 lines.</strong> If the body is long, move it to\nworkflow.md and keep SKILL.md as the trigger-only entry point.</p>\n<h3>3e. Flip PROVENANCE.md status to <code>complete</code></h3>\n<p>After both workflow.md and SKILL.md land, update PROVENANCE.md <code>status:</code>\nfrom <code>in-progress</code> to <code>complete</code>. This closes the lock marker.</p>\n<h3>3f. Commit checkpoint (if in a long batch)</h3>\n<p>For batches over ~5 candidates, commit after each completed proto-skill so\npartial progress survives independent of the working tree. Commit message\nshape: <code>evolution: draft proto-skill &lt;slug&gt; from candidate</code>.</p>\n<h2>Step 4 — hand off to the validator</h2>\n<p>After the batch finishes, the orchestrator (<code>gad:evolution:evolve</code>) runs\n<code>gad-evolution-validator</code> across the new proto-skills. The validator writes\n<code>.planning/proto-skills/&lt;slug&gt;/VALIDATION.md</code> with advisory notes:</p>\n<ul>\n<li>Files cited in SKILL.md/workflow.md that don&#39;t exist in the repo</li>\n<li>CLI commands cited that don&#39;t appear in <code>gad --help</code></li>\n<li>Convention shapes that don&#39;t match existing files</li>\n</ul>\n<p>VALIDATION.md is <strong>advisory, not blocking</strong>. The human reviewer reads\nSKILL.md + workflow.md + VALIDATION.md before promote/discard. You don&#39;t\nneed to act on validator output — just leave the proto-skills in place.</p>\n<h2>Step 5 — stop</h2>\n<p>Do not iterate. Do not run test prompts. Do not ask for review. Proto-skills\nstay in <code>.planning/proto-skills/&lt;slug&gt;/</code> until a human runs\n<code>gad evolution install &lt;slug&gt;</code>, <code>gad evolution promote &lt;slug&gt;</code>, or\n<code>gad evolution discard &lt;slug&gt;</code> later.</p>\n<h2>Resume protocol (crash / auto-compact recovery)</h2>\n<p>If you&#39;re invoked after a previous batch crashed mid-draft:</p>\n<ol>\n<li>Run <code>gad evolution status</code> — the <code>in-progress</code> count is your work queue.</li>\n<li>For each in-progress slug, read the existing PROVENANCE.md to confirm\nit&#39;s a lock marker, not a false positive.</li>\n<li>Resume at step 3b (re-read the candidate, then 3c → 3d → 3e).</li>\n<li>Never regenerate PROVENANCE.md on resume — the original timestamp and\nmetadata are part of the audit trail.</li>\n</ol>\n<h2>Failure modes</h2>\n<ul>\n<li><strong>dot-agent guide says to ask the user questions.</strong> Don&#39;t. Make the call\nyourself, document the decision in workflow.md. Autonomous loop.</li>\n<li><strong>Tempted to run test prompts.</strong> That&#39;s <code>gad-skill-creator</code> territory.\nStop at SKILL.md + workflow.md.</li>\n<li><strong>CANDIDATE.md is sparse.</strong> Read it anyway and pull from the file\nreferences it points at — that&#39;s where the depth lives.</li>\n<li><strong>Forgot to write PROVENANCE.md first.</strong> Re-run from step 3a for that\nslug. The checkpoint protocol is not decorative; without a lock marker,\ncrash-resume can&#39;t distinguish &quot;never started&quot; from &quot;half-done&quot;.</li>\n<li><strong>Existing <code>.planning/proto-skills/&lt;slug&gt;/</code> from a prior run.</strong> Inspect\nbefore overwriting: <code>complete</code> means skip, <code>in-progress</code> means resume.</li>\n</ul>\n<h2>Reference</h2>\n<ul>\n<li><code>~/.agents/skills/create-skill/SKILL.md</code> — dot-agent authoring guide</li>\n<li><code>references/skill-shape.md</code> — uniform shape contract</li>\n<li><code>references/proto-skills.md</code> — proto-skill bundle contract</li>\n<li><code>gad-skill-creator</code> — heavy path with full eval loop</li>\n<li><code>gad-evolution-evolve</code> — orchestrator that calls this in a batch</li>\n<li>Decision gad-171 — bulk batching + per-candidate checkpoints</li>\n<li>Decision gad-191 — proto-skill bundle shape at <code>.planning/proto-skills/</code></li>\n<li>2026-04-13 evolution-loop experiment finding\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>)</li>\n</ul>\n",
+    "bodyRaw": "\n# create-proto-skill\n\nThe lightweight drafter inside the GAD evolution loop. Walks every raw\ncandidate under `.planning/candidates/`, drafts each one into a proto-skill\nbundle under `.planning/proto-skills/<slug>/`, and hands off to\n`gad evolution validate` and `gad evolution install` for advisory scoring\nand runtime test use.\n\nRenamed from `gad-quick-skill` per decision gad-168. Output shape locked by\ndecision gad-191. Bulk-batch + per-candidate-checkpoint protocol locked by\ndecision gad-171 — the whole point is that a 20-candidate batch survives a\ncrash or auto-compact halfway through.\n\n## When to use this skill\n\n- `gad:evolution:evolve` calls this during the drafting step for every\n  candidate that `compute-self-eval` surfaced above the pressure threshold.\n- A user says \"draft a proto-skill for X\", \"convert this candidate\", or\n  \"draft all pending candidates\".\n- You've finished a workflow and want to capture a SKILL.md immediately\n  without running `gad-skill-creator`'s full eval loop.\n- You have clear context sources — CANDIDATE.md files from self-eval, raw\n  phase dumps, or working session notes you want to preserve.\n\n## When NOT to use this\n\n- The skill is high-stakes and you want real subagent test runs to validate\n  it — use `gad-skill-creator` (heavy path).\n- You're improving an existing skill that already has tests — use\n  `gad-skill-creator`, it re-runs the tests.\n- The pattern isn't actually clear yet — write a quick note (`gad note`)\n  and let the next evolution surface it.\n\n## Draft quality bar — compartmentalized systems over captured answers\n\nWhen drafting a proto-skill SKILL.md, default to the\n**compartmentalized-system-as-skill** shape defined in\n`skills/create-skill/SKILL.md` (§ The quality bar). In short:\n\n1. Open the SKILL.md with a **requirements contract** — 3-6 falsifiable items\n   the host system must satisfy. Not pseudocode, not tech-stack-specific —\n   checkable contract items.\n2. Name the **UX or behavior pattern** the skill instantiates on the host.\n3. Note any preconditions the skill itself enforces (dev gate, runtime,\n   eval condition, lane).\n4. Keep examples anchored in one concrete host, but write the contract so\n   it survives porting to a different host.\n\nThe canonical reference is `skills/gad-visual-context-system/SKILL.md`\n(first proto-skill to prove the pattern). Model the drafted SKILL.md\nagainst it when the candidate is clearly a repeatable system pattern and\nnot just a captured answer. If the candidate is a one-off fix recipe,\ndefault to the lighter \"captured-answer\" shape (When to use / The pattern /\nWhy / Failure modes / Related) and skip the requirements contract.\n\nThe validator (`gad-evolution-validator`) reports advisory file-ref checks,\nnot quality-bar checks — compartmentalized-system review is a drafting-\ntime concern, not a post-hoc audit.\n\n## Step 1 — enumerate pending candidates\n\nRun `gad evolution status` first to see the current state. The command\nrenders three counts for the proto-skill backlog:\n\n- **pending** — candidates under `.planning/candidates/<slug>/` with no\n  matching `.planning/proto-skills/<slug>/` directory at all.\n- **in-progress** — proto-skill dirs with PROVENANCE.md but no SKILL.md\n  yet (a previous run crashed or was compacted mid-draft, lock marker left\n  behind).\n- **complete** — proto-skill dirs with both PROVENANCE.md and SKILL.md.\n\nYour batch is `pending ∪ in-progress`. Skip `complete`.\n\nEnumerate explicitly:\n\n```sh\ngad evolution status\n# Or, to get the raw list:\nls .planning/candidates/\nls .planning/proto-skills/\n```\n\nFor each candidate slug, decide its state:\n\n- PROVENANCE.md missing → **pending** (fresh draft)\n- PROVENANCE.md present, SKILL.md missing → **in-progress** (resume; keep\n  the existing PROVENANCE.md, do not rewrite)\n- Both present → **complete** (skip)\n\n## Step 2 — ensure dot-agent create-skill is installed\n\nIdempotent — only installs if missing:\n\n```sh\nif [ ! -d \"$HOME/.agents/skills/create-skill\" ]; then\n  npx --yes skills add https://github.com/siviter-xyz/dot-agent --skill create-skill --global --yes\nfi\n```\n\nAfter install, `~/.agents/skills/create-skill/SKILL.md` is the canonical\nauthoring guide plus four reference files in `references/`. Read SKILL.md\nonce for the format rules — this wrapper only handles input plumbing and\nthe checkpoint protocol.\n\n## Step 3 — per-candidate checkpoint protocol\n\nLoop over the pending+in-progress list. For each slug, **in this order**:\n\n### 3a. Write PROVENANCE.md FIRST (lock marker)\n\nCreate `.planning/proto-skills/<slug>/` and write PROVENANCE.md before\nanything else. This is the lock marker that tells the next run \"this slug\nis in-progress, don't re-draft it from scratch\":\n\n```markdown\n---\ncandidate_slug: <slug>\nsource_phase: <phase id from CANDIDATE.md frontmatter>\npressure_score: <from CANDIDATE.md>\ncreated_on: <YYYY-MM-DD>\ncreated_by: create-proto-skill\nstatus: in-progress\n---\n\n# Provenance for <slug>\n\nDrafted from `.planning/candidates/<slug>/CANDIDATE.md` during evolution\nturn <N>. Raw source: self-eval pressure dump (tasks, decisions, file refs,\nCLI surface, related skills).\n```\n\nIf PROVENANCE.md already exists (resume case), **do not overwrite it**.\nRead its `status:` field — if `in-progress`, you're resuming a crashed run.\n\n### 3b. Read the candidate\n\nRead `.planning/candidates/<slug>/CANDIDATE.md`. It contains the raw phase\ndump and is **not curated** — no proposed name, no hand-picked decisions,\nno suggested test prompts. Decide what matters. This is intentional per the\n2026-04-13 evolution-loop experiment finding: curators filter, raw input\npulls in more decisions.\n\nFor direct user requests where no candidate exists, write a minimal\nCANDIDATE.md into `.planning/candidates/<slug>/` from whatever the user is\npointing at, then continue.\n\n### 3c. Write workflow.md\n\nWrite the procedural body to `.planning/proto-skills/<slug>/workflow.md`.\nThis is the \"what the agent actually does\" file — step-by-step instructions,\nguardrails, failure modes. Follow dot-agent's authoring rules: imperative\nform, explain *why* not just *what*, split deeper content into\n`references/<file>.md` and reference from here.\n\nPick the kebab-case skill name yourself, drawing from the phase or context.\nDo not ask the human. The autonomous loop exists because you make the call.\n\n### 3d. Write SKILL.md (thin entry point)\n\nWrite `.planning/proto-skills/<slug>/SKILL.md` as the thin trigger doc with\n`workflow: ./workflow.md` per decision gad-191:\n\n```markdown\n---\nname: <skill-name>\ndescription: >-\n  <2-4 sentence trigger-friendly description. Start strong. Include the\n  \"when to use\" framing so it fires reliably.>\nstatus: proto\nworkflow: ./workflow.md\n---\n\n# <skill-name>\n\n<One-paragraph summary. Point the reader at workflow.md for the procedure.>\n\n**Workflow:** [./workflow.md](./workflow.md)\n\n## Provenance\n\nDrafted by `create-proto-skill` from `.planning/candidates/<slug>/\nCANDIDATE.md` on <date>. See PROVENANCE.md for source metadata.\n```\n\nHard rule: **SKILL.md under 200 lines.** If the body is long, move it to\nworkflow.md and keep SKILL.md as the trigger-only entry point.\n\n### 3e. Flip PROVENANCE.md status to `complete`\n\nAfter both workflow.md and SKILL.md land, update PROVENANCE.md `status:`\nfrom `in-progress` to `complete`. This closes the lock marker.\n\n### 3f. Commit checkpoint (if in a long batch)\n\nFor batches over ~5 candidates, commit after each completed proto-skill so\npartial progress survives independent of the working tree. Commit message\nshape: `evolution: draft proto-skill <slug> from candidate`.\n\n## Step 4 — hand off to the validator\n\nAfter the batch finishes, the orchestrator (`gad:evolution:evolve`) runs\n`gad-evolution-validator` across the new proto-skills. The validator writes\n`.planning/proto-skills/<slug>/VALIDATION.md` with advisory notes:\n\n- Files cited in SKILL.md/workflow.md that don't exist in the repo\n- CLI commands cited that don't appear in `gad --help`\n- Convention shapes that don't match existing files\n\nVALIDATION.md is **advisory, not blocking**. The human reviewer reads\nSKILL.md + workflow.md + VALIDATION.md before promote/discard. You don't\nneed to act on validator output — just leave the proto-skills in place.\n\n## Step 5 — stop\n\nDo not iterate. Do not run test prompts. Do not ask for review. Proto-skills\nstay in `.planning/proto-skills/<slug>/` until a human runs\n`gad evolution install <slug>`, `gad evolution promote <slug>`, or\n`gad evolution discard <slug>` later.\n\n## Resume protocol (crash / auto-compact recovery)\n\nIf you're invoked after a previous batch crashed mid-draft:\n\n1. Run `gad evolution status` — the `in-progress` count is your work queue.\n2. For each in-progress slug, read the existing PROVENANCE.md to confirm\n   it's a lock marker, not a false positive.\n3. Resume at step 3b (re-read the candidate, then 3c → 3d → 3e).\n4. Never regenerate PROVENANCE.md on resume — the original timestamp and\n   metadata are part of the audit trail.\n\n## Failure modes\n\n- **dot-agent guide says to ask the user questions.** Don't. Make the call\n  yourself, document the decision in workflow.md. Autonomous loop.\n- **Tempted to run test prompts.** That's `gad-skill-creator` territory.\n  Stop at SKILL.md + workflow.md.\n- **CANDIDATE.md is sparse.** Read it anyway and pull from the file\n  references it points at — that's where the depth lives.\n- **Forgot to write PROVENANCE.md first.** Re-run from step 3a for that\n  slug. The checkpoint protocol is not decorative; without a lock marker,\n  crash-resume can't distinguish \"never started\" from \"half-done\".\n- **Existing `.planning/proto-skills/<slug>/` from a prior run.** Inspect\n  before overwriting: `complete` means skip, `in-progress` means resume.\n\n## Reference\n\n- `~/.agents/skills/create-skill/SKILL.md` — dot-agent authoring guide\n- `references/skill-shape.md` — uniform shape contract\n- `references/proto-skills.md` — proto-skill bundle contract\n- `gad-skill-creator` — heavy path with full eval loop\n- `gad-evolution-evolve` — orchestrator that calls this in a batch\n- Decision gad-171 — bulk batching + per-candidate checkpoints\n- Decision gad-191 — proto-skill bundle shape at `.planning/proto-skills/`\n- 2026-04-13 evolution-loop experiment finding\n  (`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`)\n"
   },
   {
     "id": "create-skill",
     "name": "create-skill",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/create-skill.png",
     "origin": "official",
     "authoredBy": null,
@@ -275,13 +279,14 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/create-skill/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>create-skill</h1>\n<p>A skill is a short, concrete methodology document. It captures &quot;when you hit X, do Y, because Z.&quot; Skills are the durable memory of an agent that has no other planning framework — write them as soon as you learn something worth keeping, not at the end of a session.</p>\n<h2>When to write a skill</h2>\n<p>Write a skill when ANY of these are true:</p>\n<ul>\n<li>You solved a problem that took more than one attempt.</li>\n<li>You found a pattern that worked where a more obvious one did not.</li>\n<li>You hit a bug whose fix is not self-evident from reading the fixed code.</li>\n<li>You made a design decision that a later agent could reasonably question.</li>\n<li>You built a reusable primitive (scene transition, state composition, loader, etc.).</li>\n</ul>\n<p>Do NOT write a skill for:</p>\n<ul>\n<li>Things any agent would already know (e.g. &quot;use const not var&quot;).</li>\n<li>One-off fixes specific to a single file that nobody will touch again.</li>\n<li>Speculation about patterns you haven&#39;t actually used.</li>\n</ul>\n<h2>Where skills live</h2>\n<pre><code>game/.planning/skills/&lt;kebab-name&gt;.md\n</code></pre>\n<p>One skill per file. Kebab-case filename matching the skill&#39;s topic.</p>\n<h2>Trace marker contract (for evals)</h2>\n<p>When running inside an eval with GAD trace hooks installed (<code>gad install hooks</code>),\n<strong>any skill you author should write its id to the trace marker file at start and\nclear it at end.</strong> This is how the hook handler attributes subsequent tool calls\nto the active skill and emits a discrete <code>skill_invocation</code> event on each\ntransition.</p>\n<pre><code class=\"language-sh\"># At the start of the skill\necho &quot;my-skill-id&quot; &gt; .planning/.trace-active-skill\n\n# ... skill body runs, tool calls get attributed ...\n\n# At the end of the skill (or before handing control back)\necho -n &quot;&quot; &gt; .planning/.trace-active-skill\n</code></pre>\n<p>Nested skills: when skill X invokes skill Y, Y overwrites the marker with its\nown id. The hook handler records <code>parent: &quot;X&quot;</code> on the <code>skill_invocation</code> event\nfor Y, then when Y finishes and restores the marker to &quot;X&quot;, another transition\nevent is emitted. The lineage is preserved as a chain of parent pointers.</p>\n<p><strong>The agent never reads the marker directly.</strong> The hook is the source of truth\nfor the event stream. The marker is a one-file write per skill start, zero\nceremony beyond that. No other coordination required.</p>\n<p>Not running inside an eval? The marker file is harmless — it&#39;s just an\nuntracked file in <code>.planning/</code> that nothing reads. Write to it freely; it&#39;s\nonly consumed by <code>gad-trace-hook.cjs</code> when hooks are installed.</p>\n<h2>YAML frontmatter format (critical)</h2>\n<p>Every skill starts with a YAML frontmatter block (<code>---</code> delimiters) containing <code>name</code> and\n<code>description</code> fields. The skill loader in Claude Code, Cursor, Codex, and other runtimes\nall parse this strictly with js-yaml, which means:</p>\n<ul>\n<li><p><strong>Descriptions with embedded colons break parsing.</strong> A description like\n<code>&quot;methodology: the core idea&quot;</code> fails because YAML reads <code>methodology:</code> as a key.</p>\n</li>\n<li><p><strong>Always use the folded block scalar form</strong> (<code>&gt;-</code>) for descriptions, which lets you\nwrite multi-line prose without worrying about colons, quotes, or line length:</p>\n<pre><code class=\"language-yaml\">---\nname: my-skill\ndescription: &gt;-\n  First paragraph of the description, as long as you want. The folded scalar joins\n  wrapped lines with spaces so the final string is a single paragraph. Colons inside\n  the prose are safe: they don&#39;t get parsed as YAML keys because the scalar is treated\n  as a single opaque string.\n---\n</code></pre>\n</li>\n<li><p>The <code>&gt;-</code> is <code>&gt;</code> (folded, lines join with spaces) plus <code>-</code> (strip trailing newline).\nWithout the <code>-</code>, you get an extra newline at the end; without the <code>&gt;</code>, you get literal\nline breaks preserved.</p>\n</li>\n<li><p>Indentation matters. The body of the folded scalar must be indented more than the\n<code>description:</code> key. Two spaces is the convention.</p>\n</li>\n</ul>\n<p><strong>Test your skill frontmatter</strong> before shipping by running any YAML parser:</p>\n<pre><code class=\"language-sh\">node -e &quot;console.log(require(&#39;js-yaml&#39;).load(require(&#39;fs&#39;).readFileSync(&#39;SKILL.md&#39;,&#39;utf8&#39;).split(&#39;---&#39;)[1]))&quot;\n</code></pre>\n<p>Or just let <code>install.js</code> do it — it validates every SKILL.md during install and warns on\nthe exact line and column of any failure (this is how we caught the two broken skills in\nsession 6).</p>\n<h2>Skill structure</h2>\n<p>Every skill follows the same shape. Keep it short — a skill longer than one screen is usually two skills.</p>\n<pre><code class=\"language-markdown\"># &lt;Skill name — imperative or noun phrase&gt;\n\n## When to use\n&lt;1-3 bullets describing the trigger — what situation makes this skill relevant&gt;\n\n## The pattern\n&lt;The concrete recipe. Code snippet preferred over prose. Show the working shape.&gt;\n\n## Why\n&lt;One paragraph. The reason this works, or the reason the obvious alternative fails.\n If this skill exists because of a specific past failure, describe the failure.&gt;\n\n## Failure modes\n&lt;Bullets. What goes wrong if you do this slightly wrong. How to recognize it.&gt;\n\n## Related\n&lt;Other skills this depends on or supersedes, if any.&gt;\n</code></pre>\n<h2>Writing rules</h2>\n<ol>\n<li><strong>Lead with the trigger.</strong> A skill nobody reads because they don&#39;t know when it applies is dead. The &quot;When to use&quot; section must let a future agent decide in 5 seconds whether to keep reading.</li>\n<li><strong>Show working code, not pseudocode.</strong> Paste the shape that actually worked. An agent reading the skill should be able to adapt the snippet directly.</li>\n<li><strong>Explain the failure you avoided.</strong> &quot;Why&quot; is the most load-bearing section. Without it, future agents cannot judge edge cases — they&#39;ll either blindly follow or blindly ignore.</li>\n<li><strong>Write it immediately.</strong> If you defer skill-writing to &quot;the end of the phase,&quot; you will forget the details that matter (the specific error message, the alternative you tried first, why it failed). Write the skill in the same commit that contains the fix.</li>\n<li><strong>Update, don&#39;t duplicate.</strong> Before creating a new skill, check existing <code>.planning/skills/</code> for one covering the same ground. Update and sharpen the existing skill instead of adding a near-duplicate.</li>\n<li><strong>Delete wrong skills.</strong> If a skill turns out to encode a bad pattern, delete or rewrite it. A stale skill is worse than no skill — it actively misleads.</li>\n</ol>\n<h2>Emergent condition: inheritance and evolution</h2>\n<p>If you are running in the <code>emergent</code> eval condition, you inherit skills from the previous run under <code>game/.planning/skills/</code>. Your job is to:</p>\n<ol>\n<li>Read every inherited skill before writing code.</li>\n<li>Apply the ones that match your situation.</li>\n<li>When an inherited skill is wrong or incomplete, REWRITE it in place. Keep the filename so the skill&#39;s lineage is trackable.</li>\n<li>Write a <code>CHANGELOG.md</code> in <code>game/.planning/skills/</code> summarizing what you changed from the inherited set and why. This is how the next run learns.</li>\n</ol>\n<h2>Bare condition: you start with nothing</h2>\n<p>If you are running in the <code>bare</code> eval condition, you start with only this skill. Everything else is yours to author. The expectation is not that you build a clone of the GAD framework — it&#39;s that you write down whatever working methodology emerges, so that you can pick it up again after a context reset and so that future emergent runs can inherit it.</p>\n<h2>Confirm capture</h2>\n<p>After writing a skill, log the capture in your working notes (wherever you&#39;re tracking progress):</p>\n<pre><code>Skill captured: &lt;name&gt;\nTrigger: &lt;one-line trigger&gt;\nFile: game/.planning/skills/&lt;name&gt;.md\n</code></pre>\n<p>Then continue with the work that prompted the skill. Skill capture should take under two minutes — if it takes longer, you are probably writing a design doc, not a skill.</p>\n",
-    "bodyRaw": "\n# create-skill\n\nA skill is a short, concrete methodology document. It captures \"when you hit X, do Y, because Z.\" Skills are the durable memory of an agent that has no other planning framework — write them as soon as you learn something worth keeping, not at the end of a session.\n\n## When to write a skill\n\nWrite a skill when ANY of these are true:\n\n- You solved a problem that took more than one attempt.\n- You found a pattern that worked where a more obvious one did not.\n- You hit a bug whose fix is not self-evident from reading the fixed code.\n- You made a design decision that a later agent could reasonably question.\n- You built a reusable primitive (scene transition, state composition, loader, etc.).\n\nDo NOT write a skill for:\n\n- Things any agent would already know (e.g. \"use const not var\").\n- One-off fixes specific to a single file that nobody will touch again.\n- Speculation about patterns you haven't actually used.\n\n## Where skills live\n\n```\ngame/.planning/skills/<kebab-name>.md\n```\n\nOne skill per file. Kebab-case filename matching the skill's topic.\n\n## Trace marker contract (for evals)\n\nWhen running inside an eval with GAD trace hooks installed (`gad install hooks`),\n**any skill you author should write its id to the trace marker file at start and\nclear it at end.** This is how the hook handler attributes subsequent tool calls\nto the active skill and emits a discrete `skill_invocation` event on each\ntransition.\n\n```sh\n# At the start of the skill\necho \"my-skill-id\" > .planning/.trace-active-skill\n\n# ... skill body runs, tool calls get attributed ...\n\n# At the end of the skill (or before handing control back)\necho -n \"\" > .planning/.trace-active-skill\n```\n\nNested skills: when skill X invokes skill Y, Y overwrites the marker with its\nown id. The hook handler records `parent: \"X\"` on the `skill_invocation` event\nfor Y, then when Y finishes and restores the marker to \"X\", another transition\nevent is emitted. The lineage is preserved as a chain of parent pointers.\n\n**The agent never reads the marker directly.** The hook is the source of truth\nfor the event stream. The marker is a one-file write per skill start, zero\nceremony beyond that. No other coordination required.\n\nNot running inside an eval? The marker file is harmless — it's just an\nuntracked file in `.planning/` that nothing reads. Write to it freely; it's\nonly consumed by `gad-trace-hook.cjs` when hooks are installed.\n\n## YAML frontmatter format (critical)\n\nEvery skill starts with a YAML frontmatter block (`---` delimiters) containing `name` and\n`description` fields. The skill loader in Claude Code, Cursor, Codex, and other runtimes\nall parse this strictly with js-yaml, which means:\n\n- **Descriptions with embedded colons break parsing.** A description like\n  `\"methodology: the core idea\"` fails because YAML reads `methodology:` as a key.\n- **Always use the folded block scalar form** (`>-`) for descriptions, which lets you\n  write multi-line prose without worrying about colons, quotes, or line length:\n\n  ```yaml\n  ---\n  name: my-skill\n  description: >-\n    First paragraph of the description, as long as you want. The folded scalar joins\n    wrapped lines with spaces so the final string is a single paragraph. Colons inside\n    the prose are safe: they don't get parsed as YAML keys because the scalar is treated\n    as a single opaque string.\n  ---\n  ```\n\n- The `>-` is `>` (folded, lines join with spaces) plus `-` (strip trailing newline).\n  Without the `-`, you get an extra newline at the end; without the `>`, you get literal\n  line breaks preserved.\n- Indentation matters. The body of the folded scalar must be indented more than the\n  `description:` key. Two spaces is the convention.\n\n**Test your skill frontmatter** before shipping by running any YAML parser:\n\n```sh\nnode -e \"console.log(require('js-yaml').load(require('fs').readFileSync('SKILL.md','utf8').split('---')[1]))\"\n```\n\nOr just let `install.js` do it — it validates every SKILL.md during install and warns on\nthe exact line and column of any failure (this is how we caught the two broken skills in\nsession 6).\n\n## Skill structure\n\nEvery skill follows the same shape. Keep it short — a skill longer than one screen is usually two skills.\n\n```markdown\n# <Skill name — imperative or noun phrase>\n\n## When to use\n<1-3 bullets describing the trigger — what situation makes this skill relevant>\n\n## The pattern\n<The concrete recipe. Code snippet preferred over prose. Show the working shape.>\n\n## Why\n<One paragraph. The reason this works, or the reason the obvious alternative fails.\n If this skill exists because of a specific past failure, describe the failure.>\n\n## Failure modes\n<Bullets. What goes wrong if you do this slightly wrong. How to recognize it.>\n\n## Related\n<Other skills this depends on or supersedes, if any.>\n```\n\n## Writing rules\n\n1. **Lead with the trigger.** A skill nobody reads because they don't know when it applies is dead. The \"When to use\" section must let a future agent decide in 5 seconds whether to keep reading.\n2. **Show working code, not pseudocode.** Paste the shape that actually worked. An agent reading the skill should be able to adapt the snippet directly.\n3. **Explain the failure you avoided.** \"Why\" is the most load-bearing section. Without it, future agents cannot judge edge cases — they'll either blindly follow or blindly ignore.\n4. **Write it immediately.** If you defer skill-writing to \"the end of the phase,\" you will forget the details that matter (the specific error message, the alternative you tried first, why it failed). Write the skill in the same commit that contains the fix.\n5. **Update, don't duplicate.** Before creating a new skill, check existing `.planning/skills/` for one covering the same ground. Update and sharpen the existing skill instead of adding a near-duplicate.\n6. **Delete wrong skills.** If a skill turns out to encode a bad pattern, delete or rewrite it. A stale skill is worse than no skill — it actively misleads.\n\n## Emergent condition: inheritance and evolution\n\nIf you are running in the `emergent` eval condition, you inherit skills from the previous run under `game/.planning/skills/`. Your job is to:\n\n1. Read every inherited skill before writing code.\n2. Apply the ones that match your situation.\n3. When an inherited skill is wrong or incomplete, REWRITE it in place. Keep the filename so the skill's lineage is trackable.\n4. Write a `CHANGELOG.md` in `game/.planning/skills/` summarizing what you changed from the inherited set and why. This is how the next run learns.\n\n## Bare condition: you start with nothing\n\nIf you are running in the `bare` eval condition, you start with only this skill. Everything else is yours to author. The expectation is not that you build a clone of the GAD framework — it's that you write down whatever working methodology emerges, so that you can pick it up again after a context reset and so that future emergent runs can inherit it.\n\n## Confirm capture\n\nAfter writing a skill, log the capture in your working notes (wherever you're tracking progress):\n\n```\nSkill captured: <name>\nTrigger: <one-line trigger>\nFile: game/.planning/skills/<name>.md\n```\n\nThen continue with the work that prompted the skill. Skill capture should take under two minutes — if it takes longer, you are probably writing a design doc, not a skill.\n"
+    "bodyHtml": "<h1>create-skill</h1>\n<p>A skill is a short, concrete methodology document. It captures &quot;when you hit X, do Y, because Z.&quot; Skills are the durable memory of an agent that has no other planning framework — write them as soon as you learn something worth keeping, not at the end of a session.</p>\n<h2>When to write a skill</h2>\n<p>Write a skill when ANY of these are true:</p>\n<ul>\n<li>You solved a problem that took more than one attempt.</li>\n<li>You found a pattern that worked where a more obvious one did not.</li>\n<li>You hit a bug whose fix is not self-evident from reading the fixed code.</li>\n<li>You made a design decision that a later agent could reasonably question.</li>\n<li>You built a reusable primitive (scene transition, state composition, loader, etc.).</li>\n</ul>\n<p>Do NOT write a skill for:</p>\n<ul>\n<li>Things any agent would already know (e.g. &quot;use const not var&quot;).</li>\n<li>One-off fixes specific to a single file that nobody will touch again.</li>\n<li>Speculation about patterns you haven&#39;t actually used.</li>\n</ul>\n<h2>The quality bar — skills are compartmentalized systems, not stored answers</h2>\n<p><strong>A skill that works is a small system with a tight requirements contract and\na reusable UX pattern.</strong> The best proto-skill in the framework today is\n<code>gad-visual-context-system</code> (VCS). Read it — that&#39;s the shape.</p>\n<p>VCS&#39;s requirements contract, compressed to one table:</p>\n<table>\n<thead>\n<tr>\n<th>Requirement</th>\n<th>Applies where</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Every interactive element has a searchable, deterministic id (<code>cid</code>)</td>\n<td>In any UI surface the skill is installed into</td>\n</tr>\n<tr>\n<td>A dev-only gate hides the identity overlay from production users</td>\n<td>Same</td>\n</tr>\n<tr>\n<td>Every modal ships a CRUD-round-trip footer against a real cid</td>\n<td>Same</td>\n</tr>\n<tr>\n<td>Performance cost is zero when the dev surface is disabled</td>\n<td>Same</td>\n</tr>\n</tbody></table>\n<p>Four requirements. Each one is checkable by a reader on the target surface.\nThe skill does not prescribe React vs Vue, or canvas vs DOM — it prescribes\nthe identity + discoverability contract, and any host system that satisfies\nit gets the benefit (the agent can now act on &quot;the thing I&#39;m pointing at&quot;).</p>\n<p>Call this pattern <strong>compartmentalized-system-as-skill</strong>:</p>\n<ol>\n<li><strong>Small requirements set</strong> — 3-6 items, each falsifiable on the host\nsystem. If you can&#39;t write a grep or a visual check that says &quot;yes this\nhost satisfies the contract&quot;, the requirement is too vague.</li>\n<li><strong>UX or behavior pattern the skill wants to instantiate</strong> — what\nchanges for the operator/agent/user when the contract is satisfied.\nVCS&#39;s: &quot;point at the thing, name the thing, let an agent address it.&quot;</li>\n<li><strong>Host-agnostic</strong> — the skill is the virus, the codebase is the host.\nVCS works in a Next.js app or a Phaser game or a Three.js scene, because\nthe requirements are identity + dev gate + footer, not &quot;use this React\ncomponent.&quot; A 3D-space variant of VCS is viable <em>because</em> the contract\nis cell-level, not transport-level. A TUI variant is viable for the\nsame reason.</li>\n<li><strong>Self-contained rollout</strong> — the skill names its own install steps. No\n&quot;first go ship phase X&quot;. If the skill&#39;s preconditions aren&#39;t met, list\nthem; don&#39;t make the reader guess.</li>\n</ol>\n<p>Skills that don&#39;t meet this bar are still useful as <strong>captured answers</strong>\n(how to fix a specific bug, how to configure a specific tool). Those belong\nin the <code>dev</code> lane and look like the bulk of <code>skills/gad-*</code>. But when a skill\n<em>can</em> be written as a compartmentalized system, prefer that shape — it\ntravels further and resists rot.</p>\n<h2>Proto-skill signal check</h2>\n<p>Before promoting a proto-skill from <code>.planning/proto-skills/&lt;slug&gt;/</code> to\n<code>skills/&lt;slug&gt;/</code> via <code>gad skill promote</code>, ask:</p>\n<ol>\n<li>Does the skill name a small set of host-agnostic requirements?</li>\n<li>Does it name the UX or behavior pattern it instantiates on the host?</li>\n<li>Can I imagine running this skill against a stack other than the one it\nwas born in (browser → TUI, web → game engine, etc.) and the requirements\nstill make sense?</li>\n<li>Did the skill already produce observable value in at least one host?</li>\n</ol>\n<p>All four yes → promote. Two or fewer → keep as a captured-answer skill and\ndon&#39;t try to universalize. Somewhere in between → rewrite the requirements\nsection until it&#39;s either clearly universalizable or clearly not, then\nre-ask.</p>\n<p>See <code>skills/gad-visual-context-system/SKILL.md</code> + <code>VALIDATION.md</code> for the\ncanonical shape.</p>\n<h2>Where skills live</h2>\n<pre><code>game/.planning/skills/&lt;kebab-name&gt;.md\n</code></pre>\n<p>One skill per file. Kebab-case filename matching the skill&#39;s topic.</p>\n<h2>Trace marker contract (for evals)</h2>\n<p>When running inside an eval with GAD trace hooks installed (<code>gad install hooks</code>),\n<strong>any skill you author should write its id to the trace marker file at start and\nclear it at end.</strong> This is how the hook handler attributes subsequent tool calls\nto the active skill and emits a discrete <code>skill_invocation</code> event on each\ntransition.</p>\n<pre><code class=\"language-sh\"># At the start of the skill\necho &quot;my-skill-id&quot; &gt; .planning/.trace-active-skill\n\n# ... skill body runs, tool calls get attributed ...\n\n# At the end of the skill (or before handing control back)\necho -n &quot;&quot; &gt; .planning/.trace-active-skill\n</code></pre>\n<p>Nested skills: when skill X invokes skill Y, Y overwrites the marker with its\nown id. The hook handler records <code>parent: &quot;X&quot;</code> on the <code>skill_invocation</code> event\nfor Y, then when Y finishes and restores the marker to &quot;X&quot;, another transition\nevent is emitted. The lineage is preserved as a chain of parent pointers.</p>\n<p><strong>The agent never reads the marker directly.</strong> The hook is the source of truth\nfor the event stream. The marker is a one-file write per skill start, zero\nceremony beyond that. No other coordination required.</p>\n<p>Not running inside an eval? The marker file is harmless — it&#39;s just an\nuntracked file in <code>.planning/</code> that nothing reads. Write to it freely; it&#39;s\nonly consumed by <code>gad-trace-hook.cjs</code> when hooks are installed.</p>\n<h2>YAML frontmatter format (critical)</h2>\n<p>Every skill starts with a YAML frontmatter block (<code>---</code> delimiters) containing <code>name</code> and\n<code>description</code> fields. The skill loader in Claude Code, Cursor, Codex, and other runtimes\nall parse this strictly with js-yaml, which means:</p>\n<ul>\n<li><p><strong>Descriptions with embedded colons break parsing.</strong> A description like\n<code>&quot;methodology: the core idea&quot;</code> fails because YAML reads <code>methodology:</code> as a key.</p>\n</li>\n<li><p><strong>Always use the folded block scalar form</strong> (<code>&gt;-</code>) for descriptions, which lets you\nwrite multi-line prose without worrying about colons, quotes, or line length:</p>\n<pre><code class=\"language-yaml\">---\nname: my-skill\ndescription: &gt;-\n  First paragraph of the description, as long as you want. The folded scalar joins\n  wrapped lines with spaces so the final string is a single paragraph. Colons inside\n  the prose are safe: they don&#39;t get parsed as YAML keys because the scalar is treated\n  as a single opaque string.\n---\n</code></pre>\n</li>\n<li><p>The <code>&gt;-</code> is <code>&gt;</code> (folded, lines join with spaces) plus <code>-</code> (strip trailing newline).\nWithout the <code>-</code>, you get an extra newline at the end; without the <code>&gt;</code>, you get literal\nline breaks preserved.</p>\n</li>\n<li><p>Indentation matters. The body of the folded scalar must be indented more than the\n<code>description:</code> key. Two spaces is the convention.</p>\n</li>\n</ul>\n<p><strong>Test your skill frontmatter</strong> before shipping by running any YAML parser:</p>\n<pre><code class=\"language-sh\">node -e &quot;console.log(require(&#39;js-yaml&#39;).load(require(&#39;fs&#39;).readFileSync(&#39;SKILL.md&#39;,&#39;utf8&#39;).split(&#39;---&#39;)[1]))&quot;\n</code></pre>\n<p>Or just let <code>install.js</code> do it — it validates every SKILL.md during install and warns on\nthe exact line and column of any failure (this is how we caught the two broken skills in\nsession 6).</p>\n<h2>Skill structure</h2>\n<p>Every skill follows the same shape. Keep it short — a skill longer than one screen is usually two skills.</p>\n<pre><code class=\"language-markdown\"># &lt;Skill name — imperative or noun phrase&gt;\n\n## When to use\n&lt;1-3 bullets describing the trigger — what situation makes this skill relevant&gt;\n\n## The pattern\n&lt;The concrete recipe. Code snippet preferred over prose. Show the working shape.&gt;\n\n## Why\n&lt;One paragraph. The reason this works, or the reason the obvious alternative fails.\n If this skill exists because of a specific past failure, describe the failure.&gt;\n\n## Failure modes\n&lt;Bullets. What goes wrong if you do this slightly wrong. How to recognize it.&gt;\n\n## Related\n&lt;Other skills this depends on or supersedes, if any.&gt;\n</code></pre>\n<h2>Writing rules</h2>\n<ol>\n<li><strong>Lead with the trigger.</strong> A skill nobody reads because they don&#39;t know when it applies is dead. The &quot;When to use&quot; section must let a future agent decide in 5 seconds whether to keep reading.</li>\n<li><strong>Show working code, not pseudocode.</strong> Paste the shape that actually worked. An agent reading the skill should be able to adapt the snippet directly.</li>\n<li><strong>Explain the failure you avoided.</strong> &quot;Why&quot; is the most load-bearing section. Without it, future agents cannot judge edge cases — they&#39;ll either blindly follow or blindly ignore.</li>\n<li><strong>Write it immediately.</strong> If you defer skill-writing to &quot;the end of the phase,&quot; you will forget the details that matter (the specific error message, the alternative you tried first, why it failed). Write the skill in the same commit that contains the fix.</li>\n<li><strong>Update, don&#39;t duplicate.</strong> Before creating a new skill, check existing <code>.planning/skills/</code> for one covering the same ground. Update and sharpen the existing skill instead of adding a near-duplicate.</li>\n<li><strong>Delete wrong skills.</strong> If a skill turns out to encode a bad pattern, delete or rewrite it. A stale skill is worse than no skill — it actively misleads.</li>\n</ol>\n<h2>Emergent condition: inheritance and evolution</h2>\n<p>If you are running in the <code>emergent</code> eval condition, you inherit skills from the previous run under <code>game/.planning/skills/</code>. Your job is to:</p>\n<ol>\n<li>Read every inherited skill before writing code.</li>\n<li>Apply the ones that match your situation.</li>\n<li>When an inherited skill is wrong or incomplete, REWRITE it in place. Keep the filename so the skill&#39;s lineage is trackable.</li>\n<li>Write a <code>CHANGELOG.md</code> in <code>game/.planning/skills/</code> summarizing what you changed from the inherited set and why. This is how the next run learns.</li>\n</ol>\n<h2>Bare condition: you start with nothing</h2>\n<p>If you are running in the <code>bare</code> eval condition, you start with only this skill. Everything else is yours to author. The expectation is not that you build a clone of the GAD framework — it&#39;s that you write down whatever working methodology emerges, so that you can pick it up again after a context reset and so that future emergent runs can inherit it.</p>\n<h2>Confirm capture</h2>\n<p>After writing a skill, log the capture in your working notes (wherever you&#39;re tracking progress):</p>\n<pre><code>Skill captured: &lt;name&gt;\nTrigger: &lt;one-line trigger&gt;\nFile: game/.planning/skills/&lt;name&gt;.md\n</code></pre>\n<p>Then continue with the work that prompted the skill. Skill capture should take under two minutes — if it takes longer, you are probably writing a design doc, not a skill.</p>\n",
+    "bodyRaw": "\n# create-skill\n\nA skill is a short, concrete methodology document. It captures \"when you hit X, do Y, because Z.\" Skills are the durable memory of an agent that has no other planning framework — write them as soon as you learn something worth keeping, not at the end of a session.\n\n## When to write a skill\n\nWrite a skill when ANY of these are true:\n\n- You solved a problem that took more than one attempt.\n- You found a pattern that worked where a more obvious one did not.\n- You hit a bug whose fix is not self-evident from reading the fixed code.\n- You made a design decision that a later agent could reasonably question.\n- You built a reusable primitive (scene transition, state composition, loader, etc.).\n\nDo NOT write a skill for:\n\n- Things any agent would already know (e.g. \"use const not var\").\n- One-off fixes specific to a single file that nobody will touch again.\n- Speculation about patterns you haven't actually used.\n\n## The quality bar — skills are compartmentalized systems, not stored answers\n\n**A skill that works is a small system with a tight requirements contract and\na reusable UX pattern.** The best proto-skill in the framework today is\n`gad-visual-context-system` (VCS). Read it — that's the shape.\n\nVCS's requirements contract, compressed to one table:\n\n| Requirement | Applies where |\n|---|---|\n| Every interactive element has a searchable, deterministic id (`cid`) | In any UI surface the skill is installed into |\n| A dev-only gate hides the identity overlay from production users | Same |\n| Every modal ships a CRUD-round-trip footer against a real cid | Same |\n| Performance cost is zero when the dev surface is disabled | Same |\n\nFour requirements. Each one is checkable by a reader on the target surface.\nThe skill does not prescribe React vs Vue, or canvas vs DOM — it prescribes\nthe identity + discoverability contract, and any host system that satisfies\nit gets the benefit (the agent can now act on \"the thing I'm pointing at\").\n\nCall this pattern **compartmentalized-system-as-skill**:\n\n1. **Small requirements set** — 3-6 items, each falsifiable on the host\n   system. If you can't write a grep or a visual check that says \"yes this\n   host satisfies the contract\", the requirement is too vague.\n2. **UX or behavior pattern the skill wants to instantiate** — what\n   changes for the operator/agent/user when the contract is satisfied.\n   VCS's: \"point at the thing, name the thing, let an agent address it.\"\n3. **Host-agnostic** — the skill is the virus, the codebase is the host.\n   VCS works in a Next.js app or a Phaser game or a Three.js scene, because\n   the requirements are identity + dev gate + footer, not \"use this React\n   component.\" A 3D-space variant of VCS is viable *because* the contract\n   is cell-level, not transport-level. A TUI variant is viable for the\n   same reason.\n4. **Self-contained rollout** — the skill names its own install steps. No\n   \"first go ship phase X\". If the skill's preconditions aren't met, list\n   them; don't make the reader guess.\n\nSkills that don't meet this bar are still useful as **captured answers**\n(how to fix a specific bug, how to configure a specific tool). Those belong\nin the `dev` lane and look like the bulk of `skills/gad-*`. But when a skill\n*can* be written as a compartmentalized system, prefer that shape — it\ntravels further and resists rot.\n\n## Proto-skill signal check\n\nBefore promoting a proto-skill from `.planning/proto-skills/<slug>/` to\n`skills/<slug>/` via `gad skill promote`, ask:\n\n1. Does the skill name a small set of host-agnostic requirements?\n2. Does it name the UX or behavior pattern it instantiates on the host?\n3. Can I imagine running this skill against a stack other than the one it\n   was born in (browser → TUI, web → game engine, etc.) and the requirements\n   still make sense?\n4. Did the skill already produce observable value in at least one host?\n\nAll four yes → promote. Two or fewer → keep as a captured-answer skill and\ndon't try to universalize. Somewhere in between → rewrite the requirements\nsection until it's either clearly universalizable or clearly not, then\nre-ask.\n\nSee `skills/gad-visual-context-system/SKILL.md` + `VALIDATION.md` for the\ncanonical shape.\n\n## Where skills live\n\n```\ngame/.planning/skills/<kebab-name>.md\n```\n\nOne skill per file. Kebab-case filename matching the skill's topic.\n\n## Trace marker contract (for evals)\n\nWhen running inside an eval with GAD trace hooks installed (`gad install hooks`),\n**any skill you author should write its id to the trace marker file at start and\nclear it at end.** This is how the hook handler attributes subsequent tool calls\nto the active skill and emits a discrete `skill_invocation` event on each\ntransition.\n\n```sh\n# At the start of the skill\necho \"my-skill-id\" > .planning/.trace-active-skill\n\n# ... skill body runs, tool calls get attributed ...\n\n# At the end of the skill (or before handing control back)\necho -n \"\" > .planning/.trace-active-skill\n```\n\nNested skills: when skill X invokes skill Y, Y overwrites the marker with its\nown id. The hook handler records `parent: \"X\"` on the `skill_invocation` event\nfor Y, then when Y finishes and restores the marker to \"X\", another transition\nevent is emitted. The lineage is preserved as a chain of parent pointers.\n\n**The agent never reads the marker directly.** The hook is the source of truth\nfor the event stream. The marker is a one-file write per skill start, zero\nceremony beyond that. No other coordination required.\n\nNot running inside an eval? The marker file is harmless — it's just an\nuntracked file in `.planning/` that nothing reads. Write to it freely; it's\nonly consumed by `gad-trace-hook.cjs` when hooks are installed.\n\n## YAML frontmatter format (critical)\n\nEvery skill starts with a YAML frontmatter block (`---` delimiters) containing `name` and\n`description` fields. The skill loader in Claude Code, Cursor, Codex, and other runtimes\nall parse this strictly with js-yaml, which means:\n\n- **Descriptions with embedded colons break parsing.** A description like\n  `\"methodology: the core idea\"` fails because YAML reads `methodology:` as a key.\n- **Always use the folded block scalar form** (`>-`) for descriptions, which lets you\n  write multi-line prose without worrying about colons, quotes, or line length:\n\n  ```yaml\n  ---\n  name: my-skill\n  description: >-\n    First paragraph of the description, as long as you want. The folded scalar joins\n    wrapped lines with spaces so the final string is a single paragraph. Colons inside\n    the prose are safe: they don't get parsed as YAML keys because the scalar is treated\n    as a single opaque string.\n  ---\n  ```\n\n- The `>-` is `>` (folded, lines join with spaces) plus `-` (strip trailing newline).\n  Without the `-`, you get an extra newline at the end; without the `>`, you get literal\n  line breaks preserved.\n- Indentation matters. The body of the folded scalar must be indented more than the\n  `description:` key. Two spaces is the convention.\n\n**Test your skill frontmatter** before shipping by running any YAML parser:\n\n```sh\nnode -e \"console.log(require('js-yaml').load(require('fs').readFileSync('SKILL.md','utf8').split('---')[1]))\"\n```\n\nOr just let `install.js` do it — it validates every SKILL.md during install and warns on\nthe exact line and column of any failure (this is how we caught the two broken skills in\nsession 6).\n\n## Skill structure\n\nEvery skill follows the same shape. Keep it short — a skill longer than one screen is usually two skills.\n\n```markdown\n# <Skill name — imperative or noun phrase>\n\n## When to use\n<1-3 bullets describing the trigger — what situation makes this skill relevant>\n\n## The pattern\n<The concrete recipe. Code snippet preferred over prose. Show the working shape.>\n\n## Why\n<One paragraph. The reason this works, or the reason the obvious alternative fails.\n If this skill exists because of a specific past failure, describe the failure.>\n\n## Failure modes\n<Bullets. What goes wrong if you do this slightly wrong. How to recognize it.>\n\n## Related\n<Other skills this depends on or supersedes, if any.>\n```\n\n## Writing rules\n\n1. **Lead with the trigger.** A skill nobody reads because they don't know when it applies is dead. The \"When to use\" section must let a future agent decide in 5 seconds whether to keep reading.\n2. **Show working code, not pseudocode.** Paste the shape that actually worked. An agent reading the skill should be able to adapt the snippet directly.\n3. **Explain the failure you avoided.** \"Why\" is the most load-bearing section. Without it, future agents cannot judge edge cases — they'll either blindly follow or blindly ignore.\n4. **Write it immediately.** If you defer skill-writing to \"the end of the phase,\" you will forget the details that matter (the specific error message, the alternative you tried first, why it failed). Write the skill in the same commit that contains the fix.\n5. **Update, don't duplicate.** Before creating a new skill, check existing `.planning/skills/` for one covering the same ground. Update and sharpen the existing skill instead of adding a near-duplicate.\n6. **Delete wrong skills.** If a skill turns out to encode a bad pattern, delete or rewrite it. A stale skill is worse than no skill — it actively misleads.\n\n## Emergent condition: inheritance and evolution\n\nIf you are running in the `emergent` eval condition, you inherit skills from the previous run under `game/.planning/skills/`. Your job is to:\n\n1. Read every inherited skill before writing code.\n2. Apply the ones that match your situation.\n3. When an inherited skill is wrong or incomplete, REWRITE it in place. Keep the filename so the skill's lineage is trackable.\n4. Write a `CHANGELOG.md` in `game/.planning/skills/` summarizing what you changed from the inherited set and why. This is how the next run learns.\n\n## Bare condition: you start with nothing\n\nIf you are running in the `bare` eval condition, you start with only this skill. Everything else is yours to author. The expectation is not that you build a clone of the GAD framework — it's that you write down whatever working methodology emerges, so that you can pick it up again after a context reset and so that future emergent runs can inherit it.\n\n## Confirm capture\n\nAfter writing a skill, log the capture in your working notes (wherever you're tracking progress):\n\n```\nSkill captured: <name>\nTrigger: <one-line trigger>\nFile: game/.planning/skills/<name>.md\n```\n\nThen continue with the work that prompted the skill. Skill capture should take under two minutes — if it takes longer, you are probably writing a design doc, not a skill.\n"
   },
   {
     "id": "eval-skill-install",
     "name": "eval-skill-install",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/eval-skill-install.png",
     "origin": "official",
     "authoredBy": null,
@@ -297,6 +302,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "find-skills",
     "name": "find-skills",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/find-skills.png",
     "origin": "human-authored",
     "authoredBy": null,
@@ -312,6 +318,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "find-sprites",
     "name": "find-sprites",
     "description": "Source visual assets (sprites, icons, tilesets, portraits) for a game or UI-heavy build in a way that yields a coherent, intentional look instead of a debug-console aesthetic. Use this skill when you need art for rooms, entities, UI controls, HP bars, spell icons, status effects, or any other visual element; when the build is failing its UI-quality gate because it looks unintentional; or when you're about to fall back to raw ASCII/text UI. The goal is \"looks like someone designed it\" — not photorealism, not 1:1 with AAA games, but internally consistent and readable.",
+    "lane": "dev",
     "imagePath": "/skills/find-sprites.png",
     "origin": "official",
     "authoredBy": null,
@@ -327,6 +334,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "framework-upgrade",
     "name": "framework-upgrade",
     "description": "Ship a change to the GAD framework itself (new skill, new subagent, reworked command, altered loop) in a way that preserves the ability to interpret eval results across versions. Trigger this skill whenever a framework change could affect how an agent behaves during an eval run — e.g. adding a mandatory skill, changing a command's spawned subagent, rewording AGENTS.md, changing the plan-phase flow, anything that would make \"the same agent prompt\" produce different output. The goal is to make framework drift visible so we don't mistake a framework improvement for an agent improvement (or vice versa) when scores move.",
+    "lane": "meta",
     "imagePath": "/skills/framework-upgrade.png",
     "origin": "official",
     "authoredBy": null,
@@ -342,6 +350,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-add-backlog",
     "name": "gad:add-backlog",
     "description": "Add an idea to the backlog parking lot (999.x numbering)",
+    "lane": "dev",
     "imagePath": "/skills/gad-add-backlog.png",
     "origin": "official",
     "authoredBy": null,
@@ -357,6 +366,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-add-phase",
     "name": "gad:add-phase",
     "description": "Add phase to end of current milestone in roadmap",
+    "lane": "dev",
     "imagePath": "/skills/gad-add-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -372,6 +382,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-add-tests",
     "name": "gad:add-tests",
     "description": "Generate tests for a completed phase based on UAT criteria and implementation",
+    "lane": "dev",
     "imagePath": "/skills/gad-add-tests.png",
     "origin": "official",
     "authoredBy": null,
@@ -387,6 +398,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-add-todo",
     "name": "gad:add-todo",
     "description": "Capture idea or task as todo from current conversation context",
+    "lane": "dev",
     "imagePath": "/skills/gad-add-todo.png",
     "origin": "official",
     "authoredBy": null,
@@ -402,6 +414,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-audit-milestone",
     "name": "gad:audit-milestone",
     "description": "Audit milestone completion against original intent before archiving",
+    "lane": "dev",
     "imagePath": "/skills/gad-audit-milestone.png",
     "origin": "official",
     "authoredBy": null,
@@ -417,6 +430,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-audit-uat",
     "name": "gad:audit-uat",
     "description": "Cross-phase audit of all outstanding UAT and verification items",
+    "lane": "dev",
     "imagePath": "/skills/gad-audit-uat.png",
     "origin": "official",
     "authoredBy": null,
@@ -432,6 +446,10 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-auto-conventions",
     "name": "gad:auto-conventions",
     "description": "Auto-scaffold CONVENTIONS.md from codebase patterns after first implementation phase",
+    "lane": [
+      "dev",
+      "meta"
+    ],
     "imagePath": "/skills/gad-auto-conventions.png",
     "origin": "official",
     "authoredBy": null,
@@ -447,6 +465,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-autonomous",
     "name": "gad:autonomous",
     "description": "Run all remaining phases autonomously — discuss→plan→execute per phase",
+    "lane": "dev",
     "imagePath": "/skills/gad-autonomous.png",
     "origin": "official",
     "authoredBy": null,
@@ -462,6 +481,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-check-todos",
     "name": "gad:check-todos",
     "description": "List pending todos and select one to work on",
+    "lane": "dev",
     "imagePath": "/skills/gad-check-todos.png",
     "origin": "official",
     "authoredBy": null,
@@ -477,6 +497,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-cleanup",
     "name": "gad:cleanup",
     "description": "Archive accumulated phase directories from completed milestones",
+    "lane": "dev",
     "imagePath": "/skills/gad-cleanup.png",
     "origin": "official",
     "authoredBy": null,
@@ -492,6 +513,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-complete-milestone",
     "name": "gad:complete-milestone",
     "description": "Archive completed milestone and prepare for next version",
+    "lane": "dev",
     "imagePath": "/skills/gad-complete-milestone.png",
     "origin": "official",
     "authoredBy": null,
@@ -507,6 +529,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-cross-config-domain-change",
     "name": "gad-cross-config-domain-change",
     "description": ">-",
+    "lane": "meta",
     "imagePath": null,
     "origin": "official",
     "authoredBy": null,
@@ -522,6 +545,10 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-debug",
     "name": "gad:debug",
     "description": "Systematic debugging with persistent state across context resets",
+    "lane": [
+      "dev",
+      "meta"
+    ],
     "imagePath": "/skills/gad-debug.png",
     "origin": "official",
     "authoredBy": null,
@@ -537,6 +564,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-discovery-test",
     "name": "gad:discovery-test",
     "description": ">-",
+    "lane": "meta",
     "imagePath": null,
     "origin": "official",
     "authoredBy": null,
@@ -552,6 +580,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-discuss-phase",
     "name": "gad:discuss-phase",
     "description": "Gather phase context through adaptive questioning before planning. Use --auto to skip interactive questions (Claude picks recommended defaults). Use --chain for interactive discuss followed by automatic plan+execute.",
+    "lane": "dev",
     "imagePath": "/skills/gad-discuss-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -567,6 +596,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-do",
     "name": "gad:do",
     "description": "Route freeform text to the right GAD command automatically",
+    "lane": "dev",
     "imagePath": "/skills/gad-do.png",
     "origin": "official",
     "authoredBy": null,
@@ -582,6 +612,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-docs-compile",
     "name": "gad:docs-compile",
     "description": "Compile planning docs from all roots into docs_sink as MDX files",
+    "lane": "dev",
     "imagePath": "/skills/gad-docs-compile.png",
     "origin": "official",
     "authoredBy": null,
@@ -597,6 +628,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-docs-update",
     "name": "gad:docs-update",
     "description": "Generate or update project documentation verified against the codebase",
+    "lane": "dev",
     "imagePath": "/skills/gad-docs-update.png",
     "origin": "official",
     "authoredBy": null,
@@ -612,6 +644,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-eval-bootstrap",
     "name": "gad:eval-bootstrap",
     "description": "Bootstrap an eval agent with full GAD context injected into its prompt",
+    "lane": "meta",
     "imagePath": "/skills/gad-eval-bootstrap.png",
     "origin": "official",
     "authoredBy": null,
@@ -627,6 +660,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-eval-list",
     "name": "gad:eval-list",
     "description": "List available eval projects and their run history",
+    "lane": "dev",
     "imagePath": "/skills/gad-eval-list.png",
     "origin": "official",
     "authoredBy": null,
@@ -642,6 +676,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-eval-report",
     "name": "gad:eval-report",
     "description": "Show cross-project eval comparison and findings",
+    "lane": "dev",
     "imagePath": "/skills/gad-eval-report.png",
     "origin": "official",
     "authoredBy": null,
@@ -657,6 +692,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-eval-run",
     "name": "gad:eval-run",
     "description": "Run an eval project in an isolated git worktree",
+    "lane": "dev",
     "imagePath": "/skills/gad-eval-run.png",
     "origin": "official",
     "authoredBy": null,
@@ -672,6 +708,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-eval-spawn",
     "name": "gad:eval-spawn",
     "description": ">-",
+    "lane": "dev",
     "imagePath": "/skills/gad-eval-spawn.png",
     "origin": "official",
     "authoredBy": null,
@@ -687,6 +724,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-eval-suite",
     "name": "gad:eval-suite",
     "description": "Run all eval projects in parallel with bootstrap prompts",
+    "lane": "meta",
     "imagePath": "/skills/gad-eval-suite.png",
     "origin": "official",
     "authoredBy": null,
@@ -702,6 +740,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-evolution-evolve",
     "name": "gad-evolution-evolve",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/gad-evolution-evolve.png",
     "origin": "official",
     "authoredBy": null,
@@ -717,6 +756,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-evolution-images",
     "name": "gad-evolution-images",
     "description": ">-",
+    "lane": "prod",
     "imagePath": "/skills/gad-evolution-images.png",
     "origin": "official",
     "authoredBy": null,
@@ -732,6 +772,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-evolution-validator",
     "name": "gad-evolution-validator",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/gad-evolution-validator.png",
     "origin": "official",
     "authoredBy": null,
@@ -747,6 +788,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-execute-phase",
     "name": "gad:execute-phase",
     "description": "Execute all plans in a phase with wave-based parallelization",
+    "lane": "dev",
     "imagePath": "/skills/gad-execute-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -762,6 +804,10 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-forensics",
     "name": "gad:forensics",
     "description": "Post-mortem investigation for failed GAD workflows — analyzes git history, artifacts, and state to diagnose what went wrong",
+    "lane": [
+      "dev",
+      "meta"
+    ],
     "imagePath": "/skills/gad-forensics.png",
     "origin": "official",
     "authoredBy": null,
@@ -774,9 +820,26 @@ export const SKILLS: CatalogSkill[] = [
     "bodyRaw": "\n<objective>\nInvestigate what went wrong during a GAD workflow execution. Analyzes git history, `.planning/` artifacts, and file system state to detect anomalies and generate a structured diagnostic report.\n\nPurpose: Diagnose failed or stuck workflows so the user can understand root cause and take corrective action.\nOutput: Forensic report saved to `.planning/forensics/`, presented inline, with optional issue creation.\n</objective>\n\n<execution_context>\n@workflows/forensics.md\n</execution_context>\n\n<context>\n**Data sources:**\n- `git log` (recent commits, patterns, time gaps)\n- `git status` / `git diff` (uncommitted work, conflicts)\n- `.planning/STATE.md` (current position, session history)\n- `.planning/ROADMAP.md` (phase scope and progress)\n- `.planning/phases/*/` (PLAN.md, SUMMARY.md, VERIFICATION.md, CONTEXT.md)\n- `.planning/reports/SESSION_REPORT.md` (last session outcomes)\n\n**User input:**\n- Problem description: $ARGUMENTS (optional — will ask if not provided)\n</context>\n\n<process>\nRead and execute the forensics workflow from @workflows/forensics.md end-to-end.\n</process>\n\n<success_criteria>\n- Evidence gathered from all available data sources\n- At least 4 anomaly types checked (stuck loop, missing artifacts, abandoned work, crash/interruption)\n- Structured forensic report written to `.planning/forensics/report-{timestamp}.md`\n- Report presented inline with findings, anomalies, and recommendations\n- Interactive investigation offered for deeper analysis\n- GitHub issue creation offered if actionable findings exist\n</success_criteria>\n\n<critical_rules>\n- **Read-only investigation:** Do not modify project source files during forensics. Only write the forensic report and update STATE.md session tracking.\n- **Redact sensitive data:** Strip absolute paths, API keys, tokens from reports and issues.\n- **Ground findings in evidence:** Every anomaly must cite specific commits, files, or state data.\n- **No speculation without evidence:** If data is insufficient, say so — do not fabricate root causes.\n</critical_rules>\n"
   },
   {
+    "id": "gad-handoffs",
+    "name": "gad-handoffs",
+    "description": ">-",
+    "lane": "dev",
+    "imagePath": null,
+    "origin": "official",
+    "authoredBy": null,
+    "authoredOn": null,
+    "excludedFromDefaultInstall": false,
+    "frameworkSkill": false,
+    "file": "vendor/get-anything-done/skills/gad-handoffs/SKILL.md",
+    "source": "framework",
+    "bodyHtml": "<h1>gad-handoffs</h1>\n<p>Canonical workflow for the <code>gad handoffs</code> CLI family (shipped 2026-04-18, task\n60-09). Every agent in every runtime consults this skill when they need to\neither produce a handoff (pause / cross-lane request / end-of-session) or\nconsume one (session-start pickup / reassignment).</p>\n<h2>When to use</h2>\n<table>\n<thead>\n<tr>\n<th>Moment</th>\n<th>Direction</th>\n<th>Reach for</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Session open</td>\n<td>Consume</td>\n<td><code>gad handoffs list --mine-first</code> as step 2 of the daily workflow</td>\n</tr>\n<tr>\n<td>Pausing mid-work</td>\n<td>Produce</td>\n<td><code>gad handoffs create</code> with a self-contained body</td>\n</tr>\n<tr>\n<td>Touching a file outside your lane</td>\n<td>Produce</td>\n<td><code>gad handoffs create --runtime-preference &lt;owning-lane&gt;</code></td>\n</tr>\n<tr>\n<td>Reassigning stalled work to another agent</td>\n<td>Produce</td>\n<td>same</td>\n</tr>\n<tr>\n<td>Context exhaustion near auto-compact</td>\n<td>Produce</td>\n<td>write the handoff BEFORE compaction so future-you has the state</td>\n</tr>\n</tbody></table>\n<h2>When NOT to use</h2>\n<ul>\n<li>A task you&#39;ll finish in the same session — just do it. Handoffs are for work\nthat crosses an agent / session / lane boundary.</li>\n<li>Architectural decisions — those go in <code>DECISIONS.xml</code> via <code>gad decisions add</code>.</li>\n<li>Design sketches that aren&#39;t action items — those go in <code>.planning/notes/</code>.</li>\n<li>Purely internal state (e.g. &quot;what&#39;s the current test count&quot;) — that goes in\n<code>STATE.xml</code> next-action or the task registry, not the queue.</li>\n</ul>\n<h2>The five verbs</h2>\n<pre><code class=\"language-sh\">gad handoffs list [--unclaimed|--claimed|--closed|--all] [--projectid &lt;id&gt;] [--mine-first] [--json]\ngad handoffs show &lt;id&gt;\ngad handoffs claim &lt;id&gt; [--agent &lt;name&gt;]\ngad handoffs complete &lt;id&gt;\ngad handoffs create --projectid &lt;id&gt; --phase &lt;N&gt; --task-id &lt;t&gt; \\\n  --priority &lt;low|normal|high&gt; --context &lt;mechanical|reasoning&gt; \\\n  [--runtime-preference &lt;claude-code|codex|cursor&gt;] \\\n  --body &quot;&lt;self-contained instructions&gt;&quot;\n</code></pre>\n<p><code>list</code> defaults to the <code>open</code> bucket. <code>--mine-first</code> sorts by matching\n<code>runtime_preference</code> so a codex agent sees codex-targeted handoffs first.\n<code>--json</code> emits <code>[]</code> when empty (needed for shell gating in hooks).</p>\n<h2>Lifecycle</h2>\n<pre><code>open/     ─ gad handoffs claim ────&gt; claimed/ ─ gad handoffs complete ─&gt; closed/\n  │                                     │                                   │\n  │ created by `gad handoffs create`    │ owner works it                    │ audit trail\n  │ or author&#39;s own fs.rename           │                                   │\n</code></pre>\n<p>Transitions are <code>fs.renameSync</code> — atomic on both POSIX and Windows on the\nsame filesystem. No lock file. The directory listing IS the index.</p>\n<h2>Writing a good handoff body</h2>\n<p>Self-contained. The claiming agent should never need to come back to you\n(the author) for scope. Minimum elements:</p>\n<ol>\n<li><strong>Context pointers</strong> — which references/notes/decisions explain why.</li>\n<li><strong>What to do</strong> — numbered steps, with file paths.</li>\n<li><strong>Constraints</strong> — lane deny lists, avoided patterns, external blockers.</li>\n<li><strong>Acceptance</strong> — how the claimant knows they&#39;re done.</li>\n<li><strong>When done</strong> — literal CLI command to close (<code>gad handoffs complete &lt;id&gt;</code>).</li>\n</ol>\n<p>If the body is over ~150 lines, the work probably deserves a proper phase\n(<code>gad phases add</code>) and the handoff points at that phase instead. Handoff\nbodies are transient; phase goals are canonical.</p>\n<h2>Frontmatter fields</h2>\n<p>Set by <code>gad handoffs create</code>, readable in every listing:</p>\n<table>\n<thead>\n<tr>\n<th>field</th>\n<th>meaning</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>id</code></td>\n<td><code>h-&lt;ISO-timestamp&gt;-&lt;projectid&gt;-&lt;phase&gt;</code> (generated)</td>\n</tr>\n<tr>\n<td><code>projectid</code></td>\n<td>scoping — which planning root this touches</td>\n</tr>\n<tr>\n<td><code>phase</code></td>\n<td>phase id (string — supports decimals like <code>42.4</code>)</td>\n</tr>\n<tr>\n<td><code>task_id</code></td>\n<td>optional — existing TASK-REGISTRY task id this refines</td>\n</tr>\n<tr>\n<td><code>priority</code></td>\n<td><code>low</code> / <code>normal</code> / <code>high</code> — only <code>high</code> should break other work</td>\n</tr>\n<tr>\n<td><code>estimated_context</code></td>\n<td><code>mechanical</code> (Haiku-doable) / <code>reasoning</code> (Opus-worth)</td>\n</tr>\n<tr>\n<td><code>runtime_preference</code></td>\n<td>target lane — <code>claude-code</code> / <code>codex</code> / <code>cursor</code> / empty for any</td>\n</tr>\n<tr>\n<td><code>created_by</code> / <code>claimed_by</code></td>\n<td>runtime + agent id (auto-filled)</td>\n</tr>\n<tr>\n<td><code>created_at</code> / <code>claimed_at</code> / <code>completed_at</code></td>\n<td>ISO timestamps</td>\n</tr>\n</tbody></table>\n<h2>Interaction with TASK-REGISTRY.xml</h2>\n<p>Handoffs are <strong>intent</strong>, tasks are <strong>commitments</strong>. Typical relationship:</p>\n<ul>\n<li>Task 63-02 sits in TASK-REGISTRY as the canonical commitment.</li>\n<li>One or more handoffs reference it via <code>task_id=63-02</code> to pass specific\nsub-work between lanes.</li>\n<li>When the handoff is closed, the task may also close (via\n<code>gad tasks release &lt;id&gt; --done</code>) if the handoff was the last piece.</li>\n</ul>\n<p>Never put the handoff body content in TASK-REGISTRY goal — goals are\nlong-lived summaries, not action queues.</p>\n<h2>Cross-lane protocol</h2>\n<p>If you need a file outside your lane (per <code>references/agent-lanes.md</code>),\n<strong>do not silently edit it</strong>. File a handoff:</p>\n<pre><code class=\"language-sh\">gad handoffs create \\\n  --projectid get-anything-done \\\n  --phase &lt;N&gt; --task-id &lt;id&gt; \\\n  --priority normal --context reasoning \\\n  --runtime-preference &lt;owning-lane&gt; \\\n  --body &quot;$(cat &lt;&lt;&#39;EOF&#39;\n# Short title\n\n## Before you start\n- Read `references/agent-lanes.md` — you are on the &lt;owning-lane&gt; lane.\n- Relevant files: &lt;paths&gt;\n\n## Implementation\n1. ...\n2. ...\n\n## Acceptance\n- ...\n\n## When done\ngad handoffs complete &lt;this-id&gt;\nEOF\n)&quot;\n</code></pre>\n<p>Keep your own lane&#39;s work moving; the target lane drains the queue on\ntheir next session.</p>\n<h2>Common gotchas</h2>\n<table>\n<thead>\n<tr>\n<th>Symptom</th>\n<th>Cause</th>\n<th>Fix</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>Hook shows &quot;Unclaimed handoffs&quot; but count is garbled</td>\n<td>Installed binary predates 60-09; text output bleeds into JSON parse</td>\n<td>Upgrade when 44-38 ships</td>\n</tr>\n<tr>\n<td><code>gad handoffs list --json</code> prints help instead of <code>[]</code></td>\n<td>Same — stale binary</td>\n<td>Same</td>\n</tr>\n<tr>\n<td>Two agents both try to claim the same handoff</td>\n<td>Race between <code>list</code> and <code>claim</code></td>\n<td>The second <code>claim</code> errors <code>ALREADY_CLAIMED</code> — no state corruption</td>\n</tr>\n<tr>\n<td>Claimed handoff abandoned (agent dead)</td>\n<td>No TTL enforcement today</td>\n<td>Manually <code>fs.rename</code> back to <code>open/</code> or <code>gad handoffs list --claimed</code> and re-file</td>\n</tr>\n</tbody></table>\n<h2>Related</h2>\n<ul>\n<li><code>references/agent-lanes.md</code> — which lane owns what, when cross-lane is OK</li>\n<li><code>references/communication-style.md</code> — SITREP register for handoff bodies</li>\n<li><code>.planning/notes/2026-04-18-handoff-queue-design.md</code> — original design doc</li>\n<li><code>.planning/notes/2026-04-18-handoff-snapshot-integration.md</code> — pending snapshot surface</li>\n<li><code>skills/gad-pause-work</code> — alias that wraps <code>gad handoffs create</code> for the &quot;ending work&quot; moment</li>\n</ul>\n",
+    "bodyRaw": "\n# gad-handoffs\n\nCanonical workflow for the `gad handoffs` CLI family (shipped 2026-04-18, task\n60-09). Every agent in every runtime consults this skill when they need to\neither produce a handoff (pause / cross-lane request / end-of-session) or\nconsume one (session-start pickup / reassignment).\n\n## When to use\n\n| Moment | Direction | Reach for |\n|---|---|---|\n| Session open | Consume | `gad handoffs list --mine-first` as step 2 of the daily workflow |\n| Pausing mid-work | Produce | `gad handoffs create` with a self-contained body |\n| Touching a file outside your lane | Produce | `gad handoffs create --runtime-preference <owning-lane>` |\n| Reassigning stalled work to another agent | Produce | same |\n| Context exhaustion near auto-compact | Produce | write the handoff BEFORE compaction so future-you has the state |\n\n## When NOT to use\n\n- A task you'll finish in the same session — just do it. Handoffs are for work\n  that crosses an agent / session / lane boundary.\n- Architectural decisions — those go in `DECISIONS.xml` via `gad decisions add`.\n- Design sketches that aren't action items — those go in `.planning/notes/`.\n- Purely internal state (e.g. \"what's the current test count\") — that goes in\n  `STATE.xml` next-action or the task registry, not the queue.\n\n## The five verbs\n\n```sh\ngad handoffs list [--unclaimed|--claimed|--closed|--all] [--projectid <id>] [--mine-first] [--json]\ngad handoffs show <id>\ngad handoffs claim <id> [--agent <name>]\ngad handoffs complete <id>\ngad handoffs create --projectid <id> --phase <N> --task-id <t> \\\n  --priority <low|normal|high> --context <mechanical|reasoning> \\\n  [--runtime-preference <claude-code|codex|cursor>] \\\n  --body \"<self-contained instructions>\"\n```\n\n`list` defaults to the `open` bucket. `--mine-first` sorts by matching\n`runtime_preference` so a codex agent sees codex-targeted handoffs first.\n`--json` emits `[]` when empty (needed for shell gating in hooks).\n\n## Lifecycle\n\n```\nopen/     ─ gad handoffs claim ────> claimed/ ─ gad handoffs complete ─> closed/\n  │                                     │                                   │\n  │ created by `gad handoffs create`    │ owner works it                    │ audit trail\n  │ or author's own fs.rename           │                                   │\n```\n\nTransitions are `fs.renameSync` — atomic on both POSIX and Windows on the\nsame filesystem. No lock file. The directory listing IS the index.\n\n## Writing a good handoff body\n\nSelf-contained. The claiming agent should never need to come back to you\n(the author) for scope. Minimum elements:\n\n1. **Context pointers** — which references/notes/decisions explain why.\n2. **What to do** — numbered steps, with file paths.\n3. **Constraints** — lane deny lists, avoided patterns, external blockers.\n4. **Acceptance** — how the claimant knows they're done.\n5. **When done** — literal CLI command to close (`gad handoffs complete <id>`).\n\nIf the body is over ~150 lines, the work probably deserves a proper phase\n(`gad phases add`) and the handoff points at that phase instead. Handoff\nbodies are transient; phase goals are canonical.\n\n## Frontmatter fields\n\nSet by `gad handoffs create`, readable in every listing:\n\n| field | meaning |\n|---|---|\n| `id` | `h-<ISO-timestamp>-<projectid>-<phase>` (generated) |\n| `projectid` | scoping — which planning root this touches |\n| `phase` | phase id (string — supports decimals like `42.4`) |\n| `task_id` | optional — existing TASK-REGISTRY task id this refines |\n| `priority` | `low` / `normal` / `high` — only `high` should break other work |\n| `estimated_context` | `mechanical` (Haiku-doable) / `reasoning` (Opus-worth) |\n| `runtime_preference` | target lane — `claude-code` / `codex` / `cursor` / empty for any |\n| `created_by` / `claimed_by` | runtime + agent id (auto-filled) |\n| `created_at` / `claimed_at` / `completed_at` | ISO timestamps |\n\n## Interaction with TASK-REGISTRY.xml\n\nHandoffs are **intent**, tasks are **commitments**. Typical relationship:\n\n- Task 63-02 sits in TASK-REGISTRY as the canonical commitment.\n- One or more handoffs reference it via `task_id=63-02` to pass specific\n  sub-work between lanes.\n- When the handoff is closed, the task may also close (via\n  `gad tasks release <id> --done`) if the handoff was the last piece.\n\nNever put the handoff body content in TASK-REGISTRY goal — goals are\nlong-lived summaries, not action queues.\n\n## Cross-lane protocol\n\nIf you need a file outside your lane (per `references/agent-lanes.md`),\n**do not silently edit it**. File a handoff:\n\n```sh\ngad handoffs create \\\n  --projectid get-anything-done \\\n  --phase <N> --task-id <id> \\\n  --priority normal --context reasoning \\\n  --runtime-preference <owning-lane> \\\n  --body \"$(cat <<'EOF'\n# Short title\n\n## Before you start\n- Read `references/agent-lanes.md` — you are on the <owning-lane> lane.\n- Relevant files: <paths>\n\n## Implementation\n1. ...\n2. ...\n\n## Acceptance\n- ...\n\n## When done\ngad handoffs complete <this-id>\nEOF\n)\"\n```\n\nKeep your own lane's work moving; the target lane drains the queue on\ntheir next session.\n\n## Common gotchas\n\n| Symptom | Cause | Fix |\n|---|---|---|\n| Hook shows \"Unclaimed handoffs\" but count is garbled | Installed binary predates 60-09; text output bleeds into JSON parse | Upgrade when 44-38 ships |\n| `gad handoffs list --json` prints help instead of `[]` | Same — stale binary | Same |\n| Two agents both try to claim the same handoff | Race between `list` and `claim` | The second `claim` errors `ALREADY_CLAIMED` — no state corruption |\n| Claimed handoff abandoned (agent dead) | No TTL enforcement today | Manually `fs.rename` back to `open/` or `gad handoffs list --claimed` and re-file |\n\n## Related\n\n- `references/agent-lanes.md` — which lane owns what, when cross-lane is OK\n- `references/communication-style.md` — SITREP register for handoff bodies\n- `.planning/notes/2026-04-18-handoff-queue-design.md` — original design doc\n- `.planning/notes/2026-04-18-handoff-snapshot-integration.md` — pending snapshot surface\n- `skills/gad-pause-work` — alias that wraps `gad handoffs create` for the \"ending work\" moment\n"
+  },
+  {
     "id": "gad-health",
     "name": "gad:health",
     "description": "Diagnose planning directory health and optionally repair issues",
+    "lane": "dev",
     "imagePath": "/skills/gad-health.png",
     "origin": "official",
     "authoredBy": null,
@@ -792,6 +855,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-help",
     "name": "gad:help",
     "description": "Show available GAD commands and usage guide",
+    "lane": "dev",
     "imagePath": "/skills/gad-help.png",
     "origin": "official",
     "authoredBy": null,
@@ -807,6 +871,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-insert-phase",
     "name": "gad:insert-phase",
     "description": "Insert urgent work as decimal phase (e.g., 72.1) between existing phases",
+    "lane": "dev",
     "imagePath": "/skills/gad-insert-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -822,6 +887,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-list-phase-assumptions",
     "name": "gad:list-phase-assumptions",
     "description": "Surface Claude's assumptions about a phase approach before planning",
+    "lane": "dev",
     "imagePath": "/skills/gad-list-phase-assumptions.png",
     "origin": "official",
     "authoredBy": null,
@@ -837,6 +903,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-manager",
     "name": "gad:manager",
     "description": "Interactive command center for managing multiple phases from one terminal",
+    "lane": "dev",
     "imagePath": "/skills/gad-manager.png",
     "origin": "official",
     "authoredBy": null,
@@ -852,6 +919,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-manuscript",
     "name": "gad:manuscript",
     "description": "Fiction writing adaptation of the GAD loop for novels and story outlines",
+    "lane": "dev",
     "imagePath": "/skills/gad-manuscript.png",
     "origin": "official",
     "authoredBy": null,
@@ -867,6 +935,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-map-codebase",
     "name": "gad:map-codebase",
     "description": "Analyze codebase with parallel mapper agents to produce .planning/codebase/ documents",
+    "lane": "dev",
     "imagePath": "/skills/gad-map-codebase.png",
     "origin": "official",
     "authoredBy": null,
@@ -882,6 +951,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-migrate-schema",
     "name": "gad:migrate-schema",
     "description": "Convert RP XML planning files (STATE.xml, ROADMAP.xml) to GAD Markdown format",
+    "lane": "dev",
     "imagePath": "/skills/gad-migrate-schema.png",
     "origin": "official",
     "authoredBy": null,
@@ -897,6 +967,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-milestone",
     "name": "gad:milestone",
     "description": "Manage the full milestone lifecycle — start a new milestone (new version, new cycle), audit a completed one for gaps before archiving, and close it out with git tag and state reset. Use this skill when the user says \"we're starting v2\", \"let's kick off the next release\", \"we finished everything in this milestone, what's next\", \"archive this milestone\", or wants to review whether all planned work is actually done before closing. Also use it when all phases in the roadmap are marked done and you need to decide whether to start fresh planning or close out. Covers gad:new-milestone + gad:complete-milestone + gad:audit-milestone.",
+    "lane": "dev",
     "imagePath": "/skills/gad-milestone.png",
     "origin": "official",
     "authoredBy": null,
@@ -912,6 +983,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-milestone-summary",
     "name": "gad:milestone-summary",
     "description": "Generate a comprehensive project summary from milestone artifacts for team onboarding and review",
+    "lane": "dev",
     "imagePath": "/skills/gad-milestone-summary.png",
     "origin": "official",
     "authoredBy": null,
@@ -927,6 +999,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-new-milestone",
     "name": "gad:new-milestone",
     "description": "Start a new milestone cycle — update PROJECT.md and route to requirements",
+    "lane": "dev",
     "imagePath": "/skills/gad-new-milestone.png",
     "origin": "official",
     "authoredBy": null,
@@ -942,6 +1015,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-new-project",
     "name": "gad:new-project",
     "description": "Initialize a new project with deep context gathering and PROJECT.md",
+    "lane": "dev",
     "imagePath": "/skills/gad-new-project.png",
     "origin": "official",
     "authoredBy": null,
@@ -957,6 +1031,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-next",
     "name": "gad:next",
     "description": "Automatically advance to the next logical step in the GAD workflow",
+    "lane": "dev",
     "imagePath": "/skills/gad-next.png",
     "origin": "official",
     "authoredBy": null,
@@ -972,6 +1047,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-note",
     "name": "gad:note",
     "description": "Zero-friction idea capture. Append, list, or promote notes to todos.",
+    "lane": "dev",
     "imagePath": "/skills/gad-note.png",
     "origin": "official",
     "authoredBy": null,
@@ -986,7 +1062,8 @@ export const SKILLS: CatalogSkill[] = [
   {
     "id": "gad-pause-work",
     "name": "gad:pause-work",
-    "description": "Create context handoff when pausing work mid-phase",
+    "description": ">-",
+    "lane": "dev",
     "imagePath": "/skills/gad-pause-work.png",
     "origin": "official",
     "authoredBy": null,
@@ -995,13 +1072,14 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-pause-work/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<objective>\nCreate `.continue-here.md` handoff file to preserve complete work state across sessions.\n\n<p>Routes to the pause-work workflow which handles:</p>\n<ul>\n<li>Current phase detection from recent files</li>\n<li>Complete state gathering (position, completed work, remaining work, decisions, blockers)</li>\n<li>Handoff file creation with all context sections</li>\n<li>Git commit as WIP</li>\n<li>Resume instructions</objective></li>\n</ul>\n<execution_context>\n@workflows/pause-work.md\n</execution_context>\n\n<context>\nState and phase progress are gathered in-workflow with targeted reads.\n</context>\n\n<process>\n**Follow the pause-work workflow** from `@workflows/pause-work.md`.\n\n<p>The workflow handles all logic including:</p>\n<ol>\n<li>Phase directory detection</li>\n<li>State gathering with user clarifications</li>\n<li>Handoff file writing with timestamp</li>\n<li>Git commit</li>\n<li>Confirmation with resume instructions</process></li>\n</ol>\n",
-    "bodyRaw": "\n<objective>\nCreate `.continue-here.md` handoff file to preserve complete work state across sessions.\n\nRoutes to the pause-work workflow which handles:\n- Current phase detection from recent files\n- Complete state gathering (position, completed work, remaining work, decisions, blockers)\n- Handoff file creation with all context sections\n- Git commit as WIP\n- Resume instructions\n</objective>\n\n<execution_context>\n@workflows/pause-work.md\n</execution_context>\n\n<context>\nState and phase progress are gathered in-workflow with targeted reads.\n</context>\n\n<process>\n**Follow the pause-work workflow** from `@workflows/pause-work.md`.\n\nThe workflow handles all logic including:\n1. Phase directory detection\n2. State gathering with user clarifications\n3. Handoff file writing with timestamp\n4. Git commit\n5. Confirmation with resume instructions\n</process>\n"
+    "bodyHtml": "<h1>gad:pause-work</h1>\n<p>Route to the canonical handoff queue workflow. <code>pause-work</code> is the &quot;ending\nwork&quot; half of the queue&#39;s create/consume cycle — this skill exists so the\nverb <em>pause</em> remains discoverable in <code>gad skill list</code>, but the actual\nmethodology lives in <strong><code>skills/gad-handoffs/SKILL.md</code></strong>. Read that first.</p>\n<h2>The command</h2>\n<pre><code class=\"language-sh\">gad handoffs create \\\n  --projectid &lt;id&gt; \\\n  --phase &lt;N&gt; \\\n  --task-id &lt;task-id-you-were-on&gt; \\\n  --priority &lt;low|normal|high&gt; \\\n  --context &lt;mechanical|reasoning&gt; \\\n  --runtime-preference &lt;next-runner&#39;s-lane-or-empty&gt; \\\n  --body &quot;$(cat &lt;&lt;&#39;EOF&#39;\n# Short title — &lt;what stopping point&gt;\n\n## Where I am\n- Current phase, current task, current commit sha.\n- What&#39;s done: &lt;bullet points&gt;.\n- What&#39;s half-done: &lt;files modified but not committed, or half-written&gt;.\n\n## Where to pick up\n1. `git status` — see uncommitted work.\n2. &lt;next concrete step&gt;.\n3. &lt;the test / verify command that confirms completion&gt;.\n\n## Blockers / open questions\n- &lt;anything you paused because of a decision needed&gt;.\n\n## When done\n`gad handoffs complete &lt;this-handoff-id&gt;` and `gad tasks release &lt;task-id&gt; --projectid &lt;id&gt; --done` if this was the final piece.\nEOF\n)&quot;\n</code></pre>\n<h2>When to prefer this over a commit</h2>\n<ul>\n<li>You have uncommitted work and need to stop — commit WIP first, then file\nthe handoff so the sha is recoverable.</li>\n<li>You have only committed work but the mental state (decisions-in-flight,\nblockers, &quot;why I stopped&quot;) is the hard part — the handoff captures what\na commit message can&#39;t.</li>\n</ul>\n<h2>Deprecation note</h2>\n<p>The earlier <code>.continue-here.md</code> pattern is retired. That file was a\nsingle-slot queue that lost content on the next pause. The <code>gad handoffs</code>\ndirectory is per-file, append-only (until lifecycle transitions), and\nvisible to every runtime via one CLI.</p>\n<h2>Related</h2>\n<ul>\n<li><code>skills/gad-handoffs</code> — canonical handoff queue workflow</li>\n<li><code>skills/gad-resume-work</code> — the consume-side counterpart</li>\n<li><code>references/agent-lanes.md</code> — who owns what when you pass work cross-lane</li>\n</ul>\n",
+    "bodyRaw": "\n# gad:pause-work\n\nRoute to the canonical handoff queue workflow. `pause-work` is the \"ending\nwork\" half of the queue's create/consume cycle — this skill exists so the\nverb *pause* remains discoverable in `gad skill list`, but the actual\nmethodology lives in **`skills/gad-handoffs/SKILL.md`**. Read that first.\n\n## The command\n\n```sh\ngad handoffs create \\\n  --projectid <id> \\\n  --phase <N> \\\n  --task-id <task-id-you-were-on> \\\n  --priority <low|normal|high> \\\n  --context <mechanical|reasoning> \\\n  --runtime-preference <next-runner's-lane-or-empty> \\\n  --body \"$(cat <<'EOF'\n# Short title — <what stopping point>\n\n## Where I am\n- Current phase, current task, current commit sha.\n- What's done: <bullet points>.\n- What's half-done: <files modified but not committed, or half-written>.\n\n## Where to pick up\n1. `git status` — see uncommitted work.\n2. <next concrete step>.\n3. <the test / verify command that confirms completion>.\n\n## Blockers / open questions\n- <anything you paused because of a decision needed>.\n\n## When done\n`gad handoffs complete <this-handoff-id>` and `gad tasks release <task-id> --projectid <id> --done` if this was the final piece.\nEOF\n)\"\n```\n\n## When to prefer this over a commit\n\n- You have uncommitted work and need to stop — commit WIP first, then file\n  the handoff so the sha is recoverable.\n- You have only committed work but the mental state (decisions-in-flight,\n  blockers, \"why I stopped\") is the hard part — the handoff captures what\n  a commit message can't.\n\n## Deprecation note\n\nThe earlier `.continue-here.md` pattern is retired. That file was a\nsingle-slot queue that lost content on the next pause. The `gad handoffs`\ndirectory is per-file, append-only (until lifecycle transitions), and\nvisible to every runtime via one CLI.\n\n## Related\n\n- `skills/gad-handoffs` — canonical handoff queue workflow\n- `skills/gad-resume-work` — the consume-side counterpart\n- `references/agent-lanes.md` — who owns what when you pass work cross-lane\n"
   },
   {
     "id": "gad-plan-milestone-gaps",
     "name": "gad:plan-milestone-gaps",
     "description": "Create phases to close all gaps identified by milestone audit",
+    "lane": "dev",
     "imagePath": "/skills/gad-plan-milestone-gaps.png",
     "origin": "official",
     "authoredBy": null,
@@ -1017,6 +1095,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-plan-phase",
     "name": "gad:plan-phase",
     "description": "Create detailed phase plan (PLAN.md) with verification loop",
+    "lane": "dev",
     "imagePath": "/skills/gad-plan-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -1032,6 +1111,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-plant-seed",
     "name": "gad:plant-seed",
     "description": "Capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone",
+    "lane": "dev",
     "imagePath": "/skills/gad-plant-seed.png",
     "origin": "official",
     "authoredBy": null,
@@ -1047,6 +1127,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-progress",
     "name": "gad:progress",
     "description": "Check project progress, show context, and route to next action (execute or plan)",
+    "lane": "dev",
     "imagePath": "/skills/gad-progress.png",
     "origin": "official",
     "authoredBy": null,
@@ -1062,6 +1143,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-proto-skill-battery",
     "name": "gad:proto-skill-battery",
     "description": ">-",
+    "lane": "meta",
     "imagePath": null,
     "origin": "official",
     "authoredBy": null,
@@ -1077,6 +1159,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-reapply-patches",
     "name": "gad:reapply-patches",
     "description": "Reapply local modifications after a GAD update",
+    "lane": "meta",
     "imagePath": "/skills/gad-reapply-patches.png",
     "origin": "official",
     "authoredBy": null,
@@ -1092,6 +1175,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-remove-phase",
     "name": "gad:remove-phase",
     "description": "Remove a future phase from roadmap and renumber subsequent phases",
+    "lane": "dev",
     "imagePath": "/skills/gad-remove-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -1107,6 +1191,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-research-phase",
     "name": "gad:research-phase",
     "description": "Research how to implement a phase (standalone - usually use /gad:plan-phase instead)",
+    "lane": "dev",
     "imagePath": "/skills/gad-research-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -1122,6 +1207,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-resume-work",
     "name": "gad:resume-work",
     "description": "Resume work from previous session with full context restoration",
+    "lane": "dev",
     "imagePath": "/skills/gad-resume-work.png",
     "origin": "official",
     "authoredBy": null,
@@ -1136,7 +1222,11 @@ export const SKILLS: CatalogSkill[] = [
   {
     "id": "gad-reverse-engineer",
     "name": "gad:reverse-engineer",
-    "description": "Analyze any codebase (local or GitHub URL) and produce requirements for clean-room reimplementation",
+    "description": "Analyze any codebase (local or GitHub URL) and extract implementation-agnostic requirements plus system-skill contracts for clean-room reimplementation",
+    "lane": [
+      "dev",
+      "meta"
+    ],
     "imagePath": "/skills/gad-reverse-engineer.png",
     "origin": "official",
     "authoredBy": null,
@@ -1145,13 +1235,14 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/gad-reverse-engineer/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>gad:reverse-engineer</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/reverse-engineer.md\">workflows/reverse-engineer.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n<h2>Extraction tiers</h2>\n<p>The workflow uses a tiered extraction pipeline — highest available tier wins:</p>\n<table>\n<thead>\n<tr>\n<th>Tier</th>\n<th>Condition</th>\n<th>Extractor</th>\n<th>Speed</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>1 (native)</td>\n<td>Target has <code>.planning/</code> XML</td>\n<td><code>lib/graph-extractor.cjs</code> / <code>gad query</code></td>\n<td>Fastest</td>\n</tr>\n<tr>\n<td>2 (pdf)</td>\n<td>Target contains PDFs</td>\n<td><code>pdf-parse</code> (npm, installed)</td>\n<td>Fast</td>\n</tr>\n<tr>\n<td>3 (graphify)</td>\n<td>Python + <code>graphify</code> available</td>\n<td><code>graphify</code> CLI (external)</td>\n<td>Slow</td>\n</tr>\n<tr>\n<td>Fallback</td>\n<td>None of the above</td>\n<td>Manual 5-pass deep analysis</td>\n<td>Manual</td>\n</tr>\n</tbody></table>\n<h2>Outputs</h2>\n<ul>\n<li><code>REQUIREMENTS.xml</code> — stable IDs (REQ-NNN)</li>\n<li><code>DECISIONS.xml</code> — inferred architectural decisions (RE-D-NNN)</li>\n<li><code>notes/</code> — pitfalls, tech debt, gotchas (one file per topic)</li>\n<li><code>graph.json</code> — knowledge graph of analyzed codebase</li>\n</ul>\n",
-    "bodyRaw": "\n\n# gad:reverse-engineer\n\n**Workflow:** [workflows/reverse-engineer.md](../../workflows/reverse-engineer.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n\n## Extraction tiers\n\nThe workflow uses a tiered extraction pipeline — highest available tier wins:\n\n| Tier | Condition | Extractor | Speed |\n|------|-----------|-----------|-------|\n| 1 (native) | Target has `.planning/` XML | `lib/graph-extractor.cjs` / `gad query` | Fastest |\n| 2 (pdf) | Target contains PDFs | `pdf-parse` (npm, installed) | Fast |\n| 3 (graphify) | Python + `graphify` available | `graphify` CLI (external) | Slow |\n| Fallback | None of the above | Manual 5-pass deep analysis | Manual |\n\n## Outputs\n\n- `REQUIREMENTS.xml` — stable IDs (REQ-NNN)\n- `DECISIONS.xml` — inferred architectural decisions (RE-D-NNN)\n- `notes/` — pitfalls, tech debt, gotchas (one file per topic)\n- `graph.json` — knowledge graph of analyzed codebase\n"
+    "bodyHtml": "<h1>gad:reverse-engineer</h1>\n<p><strong>Workflow:</strong> <a href=\"../../workflows/reverse-engineer.md\">workflows/reverse-engineer.md</a></p>\n<p>Run the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).</p>\n<h2>Extraction tiers</h2>\n<p>The workflow uses a tiered extraction pipeline; highest available tier wins:</p>\n<table>\n<thead>\n<tr>\n<th>Tier</th>\n<th>Condition</th>\n<th>Extractor</th>\n<th>Speed</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>1 (native)</td>\n<td>Target has <code>.planning/</code> XML</td>\n<td><code>lib/graph-extractor.cjs</code> / <code>gad query</code></td>\n<td>Fastest</td>\n</tr>\n<tr>\n<td>2 (pdf)</td>\n<td>Target contains PDFs</td>\n<td><code>pdf-parse</code> (npm, installed)</td>\n<td>Fast</td>\n</tr>\n<tr>\n<td>3 (graphify)</td>\n<td>Python + <code>graphify</code> available</td>\n<td><code>graphify</code> CLI (external)</td>\n<td>Slow</td>\n</tr>\n<tr>\n<td>Fallback</td>\n<td>None of the above</td>\n<td>Manual 5-pass deep analysis</td>\n<td>Manual</td>\n</tr>\n</tbody></table>\n<h2>Evidence priority (first-class inputs)</h2>\n<p>Requirement extraction must prioritize evidence in this order:</p>\n<ol>\n<li>GAD planning artifacts (<code>.planning/</code> XML, <code>planning/</code> docs, requirements/roadmap/state/decisions)</li>\n<li>Architecture docs (<code>architecture.md</code>, <code>ARCHITECTURE.md</code>, ADR-style docs)</li>\n<li>Product and engineering docs (<code>docs/</code>, design notes, specs)</li>\n<li>Source code (<code>src/</code>, app code, tests, configs)</li>\n</ol>\n<h2>Outputs</h2>\n<ul>\n<li><code>REQUIREMENTS.xml</code> - stable IDs (REQ-NNN)</li>\n<li><code>DECISIONS.xml</code> - inferred architectural decisions (RE-D-NNN)</li>\n<li><code>SYSTEM-SKILLS.md</code> - reusable system-skill contracts (trigger, invariant, required behaviors, non-goals) without prescribing exact implementation</li>\n<li><code>notes/</code> - pitfalls, tech debt, gotchas (one file per topic)</li>\n<li><code>graph.json</code> - knowledge graph of analyzed codebase</li>\n</ul>\n",
+    "bodyRaw": "\n\n# gad:reverse-engineer\n\n**Workflow:** [workflows/reverse-engineer.md](../../workflows/reverse-engineer.md)\n\nRun the workflow. All procedural detail, examples, and tool sequencing live in the workflow file per the canonical skill shape (references/skill-shape.md, decision gad-190).\n\n## Extraction tiers\n\nThe workflow uses a tiered extraction pipeline; highest available tier wins:\n\n| Tier | Condition | Extractor | Speed |\n|------|-----------|-----------|-------|\n| 1 (native) | Target has `.planning/` XML | `lib/graph-extractor.cjs` / `gad query` | Fastest |\n| 2 (pdf) | Target contains PDFs | `pdf-parse` (npm, installed) | Fast |\n| 3 (graphify) | Python + `graphify` available | `graphify` CLI (external) | Slow |\n| Fallback | None of the above | Manual 5-pass deep analysis | Manual |\n\n## Evidence priority (first-class inputs)\n\nRequirement extraction must prioritize evidence in this order:\n\n1. GAD planning artifacts (`.planning/` XML, `planning/` docs, requirements/roadmap/state/decisions)\n2. Architecture docs (`architecture.md`, `ARCHITECTURE.md`, ADR-style docs)\n3. Product and engineering docs (`docs/`, design notes, specs)\n4. Source code (`src/`, app code, tests, configs)\n\n## Outputs\n\n- `REQUIREMENTS.xml` - stable IDs (REQ-NNN)\n- `DECISIONS.xml` - inferred architectural decisions (RE-D-NNN)\n- `SYSTEM-SKILLS.md` - reusable system-skill contracts (trigger, invariant, required behaviors, non-goals) without prescribing exact implementation\n- `notes/` - pitfalls, tech debt, gotchas (one file per topic)\n- `graph.json` - knowledge graph of analyzed codebase\n"
   },
   {
     "id": "gad-review",
     "name": "gad:review",
     "description": "Request cross-AI peer review of phase plans from external AI CLIs",
+    "lane": "dev",
     "imagePath": "/skills/gad-review.png",
     "origin": "official",
     "authoredBy": null,
@@ -1167,6 +1258,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-review-backlog",
     "name": "gad:review-backlog",
     "description": "Review and promote backlog items to active milestone",
+    "lane": "dev",
     "imagePath": "/skills/gad-review-backlog.png",
     "origin": "official",
     "authoredBy": null,
@@ -1182,6 +1274,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-session",
     "name": "gad:session",
     "description": "Save and restore full planning context across sessions — creates a handoff file when pausing and restores from it when resuming. Use this skill when the user is about to stop work mid-phase, wants to hand off to a new context window, is starting a new session and needs to orient fully, or when gad:check-todos alone isn't enough because there's in-progress work, unresolved decisions, or active blockers that aren't captured in the living planning docs. Essential for the autonomous execution loop — call it at pause and resume to maintain continuity.",
+    "lane": "dev",
     "imagePath": "/skills/gad-session.png",
     "origin": "official",
     "authoredBy": null,
@@ -1197,6 +1290,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-session-report",
     "name": "gad:session-report",
     "description": "Generate a session report with token usage estimates, work summary, and outcomes",
+    "lane": "dev",
     "imagePath": "/skills/gad-session-report.png",
     "origin": "official",
     "authoredBy": null,
@@ -1212,6 +1306,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-set-profile",
     "name": "gad:set-profile",
     "description": "Switch model profile for GAD agents (quality/balanced/budget/inherit)",
+    "lane": "dev",
     "imagePath": "/skills/gad-set-profile.png",
     "origin": "official",
     "authoredBy": null,
@@ -1227,6 +1322,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-settings",
     "name": "gad:settings",
     "description": "Configure GAD workflow toggles and model profile",
+    "lane": "dev",
     "imagePath": "/skills/gad-settings.png",
     "origin": "official",
     "authoredBy": null,
@@ -1242,6 +1338,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-skill-creator",
     "name": "gad-skill-creator",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/gad-skill-creator.png",
     "origin": "official",
     "authoredBy": null,
@@ -1257,6 +1354,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-snapshot-optimize",
     "name": "gad:snapshot-optimize",
     "description": "Verify and optimize gad snapshot output to fit within the sprint context window. Use after modifying snapshot logic, adding new planning file types, or when snapshot token count exceeds the target budget.",
+    "lane": "meta",
     "imagePath": "/skills/gad-snapshot-optimize.png",
     "origin": "official",
     "authoredBy": null,
@@ -1272,6 +1370,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-stats",
     "name": "gad:stats",
     "description": "Display project statistics — phases, plans, requirements, git metrics, and timeline",
+    "lane": "dev",
     "imagePath": "/skills/gad-stats.png",
     "origin": "official",
     "authoredBy": null,
@@ -1287,6 +1386,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-task-checkpoint",
     "name": "gad:task-checkpoint",
     "description": "Verify planning doc updates before proceeding to the next task. Called between tasks during execute-phase to enforce per-task tracking. Checks TASK-REGISTRY.xml and STATE.xml are current.",
+    "lane": "dev",
     "imagePath": "/skills/gad-task-checkpoint.png",
     "origin": "official",
     "authoredBy": null,
@@ -1302,6 +1402,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-thread",
     "name": "gad:thread",
     "description": "Manage persistent context threads for cross-session work",
+    "lane": "dev",
     "imagePath": "/skills/gad-thread.png",
     "origin": "official",
     "authoredBy": null,
@@ -1317,6 +1418,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-update",
     "name": "gad:update",
     "description": "Update GAD to latest version with changelog display",
+    "lane": "meta",
     "imagePath": "/skills/gad-update.png",
     "origin": "official",
     "authoredBy": null,
@@ -1332,6 +1434,10 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-validate-phase",
     "name": "gad:validate-phase",
     "description": "Retroactively audit and fill Nyquist validation gaps for a completed phase",
+    "lane": [
+      "dev",
+      "prod"
+    ],
     "imagePath": "/skills/gad-validate-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -1347,6 +1453,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-verify-phase",
     "name": "gad:verify-phase",
     "description": "Verify a completed phase achieved its goals. Runs build checks, validates deliverables exist, checks planning doc state, produces VERIFICATION.md. Works automated (eval agents) or interactive (human review). Use after completing a phase, before marking it done in ROADMAP.xml.",
+    "lane": "dev",
     "imagePath": "/skills/gad-verify-phase.png",
     "origin": "official",
     "authoredBy": null,
@@ -1362,6 +1469,10 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-verify-work",
     "name": "gad:verify-work",
     "description": "Validate built features through conversational UAT",
+    "lane": [
+      "dev",
+      "prod"
+    ],
     "imagePath": "/skills/gad-verify-work.png",
     "origin": "official",
     "authoredBy": null,
@@ -1377,6 +1488,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-visual-context-panel-identities",
     "name": "gad-visual-context-panel-identities",
     "description": ">-",
+    "lane": "dev",
     "imagePath": "/skills/gad-visual-context-panel-identities.png",
     "origin": "official",
     "authoredBy": null,
@@ -1392,6 +1504,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-visual-context-system",
     "name": "gad-visual-context-system",
     "description": ">-",
+    "lane": "dev",
     "imagePath": "/skills/gad-visual-context-system.png",
     "origin": "official",
     "authoredBy": null,
@@ -1407,6 +1520,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-workspace-add",
     "name": "gad:workspace-add",
     "description": "Add a path as a planning root in gad-config.toml",
+    "lane": "dev",
     "imagePath": "/skills/gad-workspace-add.png",
     "origin": "official",
     "authoredBy": null,
@@ -1422,6 +1536,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-workspace-show",
     "name": "gad:workspace-show",
     "description": "Show all registered planning roots and their current status",
+    "lane": "dev",
     "imagePath": "/skills/gad-workspace-show.png",
     "origin": "official",
     "authoredBy": null,
@@ -1437,6 +1552,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-workspace-sync",
     "name": "gad:workspace-sync",
     "description": "Crawl monorepo for .planning/ directories and sync gad-config.toml roots",
+    "lane": "dev",
     "imagePath": "/skills/gad-workspace-sync.png",
     "origin": "official",
     "authoredBy": null,
@@ -1452,6 +1568,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-write-feature-doc",
     "name": "gad:write-feature-doc",
     "description": "Produce a feature documentation MDX file into the docs sink. Use when a project feature needs clear human-readable documentation that persists across sessions.",
+    "lane": "dev",
     "imagePath": "/skills/gad-write-feature-doc.png",
     "origin": "official",
     "authoredBy": null,
@@ -1467,6 +1584,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-write-intent",
     "name": "gad:write-intent",
     "description": "Capture user intent for a project into planning docs. Use when starting a new project, clarifying what a project is for, or when requirements are missing or vague.",
+    "lane": "dev",
     "imagePath": "/skills/gad-write-intent.png",
     "origin": "official",
     "authoredBy": null,
@@ -1482,6 +1600,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "gad-write-tech-doc",
     "name": "gad:write-tech-doc",
     "description": "Produce a technical breakdown doc — architecture, data flow, component design. Use when a system needs to be explained structurally for agent or developer onboarding.",
+    "lane": "dev",
     "imagePath": "/skills/gad-write-tech-doc.png",
     "origin": "official",
     "authoredBy": null,
@@ -1497,6 +1616,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "merge-skill",
     "name": "merge-skill",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/merge-skill.png",
     "origin": "human-authored",
     "authoredBy": null,
@@ -1512,6 +1632,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "objective-eval-design",
     "name": "objective-eval-design",
     "description": ">-",
+    "lane": "meta",
     "imagePath": "/skills/objective-eval-design.png",
     "origin": "official",
     "authoredBy": null,
@@ -1527,6 +1648,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "phase-42.4-context-frameworks",
     "name": "gad-author-context-framework",
     "description": ">-",
+    "lane": "dev",
     "imagePath": "/skills/phase-42.4-context-frameworks.png",
     "origin": "official",
     "authoredBy": null,
@@ -1542,6 +1664,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "portfolio-sync",
     "name": "portfolio-sync",
     "description": "Keep the public-facing GAD site and generated publishing artifacts in sync with the framework as it evolves. Trigger this skill whenever an eval run finishes, a new finding is written, a skill or agent changes, requirements or decisions move, or planning/docs outputs need regeneration.",
+    "lane": "prod",
     "imagePath": "/skills/portfolio-sync.png",
     "origin": "official",
     "authoredBy": null,
@@ -1557,6 +1680,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "scaffold-visual-context-surface",
     "name": "scaffold-visual-context-surface",
     "description": ">-",
+    "lane": "dev",
     "imagePath": null,
     "origin": "official",
     "authoredBy": null,
@@ -1565,13 +1689,14 @@ export const SKILLS: CatalogSkill[] = [
     "frameworkSkill": false,
     "file": "vendor/get-anything-done/skills/scaffold-visual-context-surface/SKILL.md",
     "source": "framework",
-    "bodyHtml": "<h1>scaffold-visual-context-surface</h1>\n<p>Scaffolding-first discipline for new dev-only UI surfaces. Every new\neditor pane, admin route, or inspector modal in this repo must ship with\ncomplete Visual Context coverage before any feature affordance is built\n— stable literal cids on every interactive element, Visual Context Panel\nidentities registered, and at least one modal-footer CRUD round-trip\ngreen against a real cid.</p>\n<p>This proto-skill captures the checklist as a reusable pattern so future\ngated-editor work does not re-derive it from scratch or ship drift.</p>\n<p><strong>Workflow:</strong> <a href=\"./workflow.md\">./workflow.md</a></p>\n<h2>When this fires</h2>\n<ul>\n<li>Task acceptance mentions <code>SiteSection cid</code> or Visual Context Panel</li>\n<li>Building a new <code>/&lt;surface&gt;</code> route behind a dev-mode gate</li>\n<li>Adding an editor, inspector, admin console, or modal stack</li>\n<li>Cleanup pass on a surface that skipped the mandate (&quot;retrofit&quot;)</li>\n</ul>\n<h2>When NOT to use this</h2>\n<ul>\n<li>You&#39;re adding a single element to an already-compliant surface — use\n<code>gad-visual-context-panel-identities</code> directly.</li>\n<li>You&#39;re building a production-facing page (no dev gate) — the gate is\npart of this skill&#39;s contract; different rules apply.</li>\n<li>You&#39;re refactoring internals with no visible surface change.</li>\n</ul>\n<h2>Provenance</h2>\n<p>Drafted by <code>create-proto-skill</code> from\n<code>.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md</code>\non 2026-04-15 as the first end-to-end run of the evolution pipeline\n(task 42.2-13). Selection pressure: 29 (phase 44.5, 15 tasks, 7\ncrosscuts). See PROVENANCE.md for source metadata and reasoning about\nwhat the skill abstracts.</p>\n<h2>Related</h2>\n<ul>\n<li><code>gad-visual-context-panel-identities</code> — identity registration mechanics</li>\n<li>Decisions gad-186, gad-187, gad-189, gad-191</li>\n<li>Feedback memory <code>feedback_visual_context_system_mandatory.md</code></li>\n</ul>\n",
-    "bodyRaw": "\r\n\r\n# scaffold-visual-context-surface\r\n\r\nScaffolding-first discipline for new dev-only UI surfaces. Every new\r\neditor pane, admin route, or inspector modal in this repo must ship with\r\ncomplete Visual Context coverage before any feature affordance is built\r\n— stable literal cids on every interactive element, Visual Context Panel\r\nidentities registered, and at least one modal-footer CRUD round-trip\r\ngreen against a real cid.\r\n\r\nThis proto-skill captures the checklist as a reusable pattern so future\r\ngated-editor work does not re-derive it from scratch or ship drift.\r\n\r\n**Workflow:** [./workflow.md](./workflow.md)\r\n\r\n## When this fires\r\n\r\n- Task acceptance mentions `SiteSection cid` or Visual Context Panel\r\n- Building a new `/<surface>` route behind a dev-mode gate\r\n- Adding an editor, inspector, admin console, or modal stack\r\n- Cleanup pass on a surface that skipped the mandate (\"retrofit\")\r\n\r\n## When NOT to use this\r\n\r\n- You're adding a single element to an already-compliant surface — use\r\n  `gad-visual-context-panel-identities` directly.\r\n- You're building a production-facing page (no dev gate) — the gate is\r\n  part of this skill's contract; different rules apply.\r\n- You're refactoring internals with no visible surface change.\r\n\r\n## Provenance\r\n\r\nDrafted by `create-proto-skill` from\r\n`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`\r\non 2026-04-15 as the first end-to-end run of the evolution pipeline\r\n(task 42.2-13). Selection pressure: 29 (phase 44.5, 15 tasks, 7\r\ncrosscuts). See PROVENANCE.md for source metadata and reasoning about\r\nwhat the skill abstracts.\r\n\r\n## Related\r\n\r\n- `gad-visual-context-panel-identities` — identity registration mechanics\r\n- Decisions gad-186, gad-187, gad-189, gad-191\r\n- Feedback memory `feedback_visual_context_system_mandatory.md`\r\n"
+    "bodyHtml": "<h1>scaffold-visual-context-surface</h1>\n<p>Scaffolding-first discipline for new dev-only UI surfaces. Every new\neditor pane, admin route, or inspector modal in this repo must ship with\ncomplete Visual Context coverage before any feature affordance is built\n— stable literal cids on every interactive element, Visual Context Panel\nidentities registered, and at least one modal-footer CRUD round-trip\ngreen against a real cid.</p>\n<p>This proto-skill captures the checklist as a reusable pattern so future\ngated-editor work does not re-derive it from scratch or ship drift.</p>\n<p><strong>Workflow:</strong> Inline in this SKILL.md (six-step checklist described in the\n&quot;When this fires&quot; / &quot;When NOT to use this&quot; sections below). The parent skill\n<code>gad-visual-context-system</code> has the full methodology at\n<code>workflows/visual-context-system.md</code>.</p>\n<h2>When this fires</h2>\n<ul>\n<li>Task acceptance mentions <code>SiteSection cid</code> or Visual Context Panel</li>\n<li>Building a new <code>/&lt;surface&gt;</code> route behind a dev-mode gate</li>\n<li>Adding an editor, inspector, admin console, or modal stack</li>\n<li>Cleanup pass on a surface that skipped the mandate (&quot;retrofit&quot;)</li>\n</ul>\n<h2>When NOT to use this</h2>\n<ul>\n<li>You&#39;re adding a single element to an already-compliant surface — use\n<code>gad-visual-context-panel-identities</code> directly.</li>\n<li>You&#39;re building a production-facing page (no dev gate) — the gate is\npart of this skill&#39;s contract; different rules apply.</li>\n<li>You&#39;re refactoring internals with no visible surface change.</li>\n</ul>\n<h2>Provenance</h2>\n<p>Drafted by <code>create-proto-skill</code> from\n<code>.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md</code>\non 2026-04-15 as the first end-to-end run of the evolution pipeline\n(task 42.2-13). Selection pressure: 29 (phase 44.5, 15 tasks, 7\ncrosscuts). See PROVENANCE.md for source metadata and reasoning about\nwhat the skill abstracts.</p>\n<h2>Related</h2>\n<ul>\n<li><code>gad-visual-context-panel-identities</code> — identity registration mechanics</li>\n<li>Decisions gad-186, gad-187, gad-189, gad-191</li>\n<li>Feedback memory <code>feedback_visual_context_system_mandatory.md</code></li>\n</ul>\n",
+    "bodyRaw": "\n# scaffold-visual-context-surface\n\nScaffolding-first discipline for new dev-only UI surfaces. Every new\neditor pane, admin route, or inspector modal in this repo must ship with\ncomplete Visual Context coverage before any feature affordance is built\n— stable literal cids on every interactive element, Visual Context Panel\nidentities registered, and at least one modal-footer CRUD round-trip\ngreen against a real cid.\n\nThis proto-skill captures the checklist as a reusable pattern so future\ngated-editor work does not re-derive it from scratch or ship drift.\n\n**Workflow:** Inline in this SKILL.md (six-step checklist described in the\n\"When this fires\" / \"When NOT to use this\" sections below). The parent skill\n`gad-visual-context-system` has the full methodology at\n`workflows/visual-context-system.md`.\n\n## When this fires\n\n- Task acceptance mentions `SiteSection cid` or Visual Context Panel\n- Building a new `/<surface>` route behind a dev-mode gate\n- Adding an editor, inspector, admin console, or modal stack\n- Cleanup pass on a surface that skipped the mandate (\"retrofit\")\n\n## When NOT to use this\n\n- You're adding a single element to an already-compliant surface — use\n  `gad-visual-context-panel-identities` directly.\n- You're building a production-facing page (no dev gate) — the gate is\n  part of this skill's contract; different rules apply.\n- You're refactoring internals with no visible surface change.\n\n## Provenance\n\nDrafted by `create-proto-skill` from\n`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`\non 2026-04-15 as the first end-to-end run of the evolution pipeline\n(task 42.2-13). Selection pressure: 29 (phase 44.5, 15 tasks, 7\ncrosscuts). See PROVENANCE.md for source metadata and reasoning about\nwhat the skill abstracts.\n\n## Related\n\n- `gad-visual-context-panel-identities` — identity registration mechanics\n- Decisions gad-186, gad-187, gad-189, gad-191\n- Feedback memory `feedback_visual_context_system_mandatory.md`\n"
   },
   {
     "id": "self-eval",
     "name": "self-eval",
     "description": "Score a round of GAD development work on this monorepo — framework overhead ratio, loop compliance, planning doc freshness, real-world brownfield metrics.",
+    "lane": "meta",
     "imagePath": "/skills/self-eval.png",
     "origin": "official",
     "authoredBy": null,
@@ -1587,6 +1712,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "trace-analysis",
     "name": "trace-analysis",
     "description": "Analyze GAD trace data (.gad-log JSONL + .trace-events.jsonl + preserved eval traces) to produce usage reports such as tool mix, skill invocations, commit rhythm, token coverage, runtime mix, and per-project breakdowns.",
+    "lane": "meta",
     "imagePath": "/skills/trace-analysis.png",
     "origin": "official",
     "authoredBy": null,
@@ -1602,6 +1728,7 @@ export const SKILLS: CatalogSkill[] = [
     "id": "session-discipline",
     "name": "session-discipline",
     "description": ">-",
+    "lane": "dev",
     "imagePath": null,
     "origin": "emergent",
     "authoredBy": "agent",
@@ -2059,6 +2186,7 @@ export const SKILL_INHERITANCE: Record<string, string[]> = {
   "gad-evolution-validator": [],
   "gad-execute-phase": [],
   "gad-forensics": [],
+  "gad-handoffs": [],
   "gad-health": [],
   "gad-help": [],
   "gad-insert-phase": [],
@@ -2305,7 +2433,32 @@ export const WORKFLOWS: Workflow[] = [
     "origin": "authored",
     "mermaidBody": "flowchart TD\n  A[symptom reported] --> B[debug skill activates]\n  B --> C{existing debug session?}\n  C -->|yes| D[resume .planning/debug/<slug>.md]\n  C -->|no| E[gather symptoms: expected, actual, repro, timeline, prior attempts]\n  E --> F[write .planning/debug/<slug>.md]\n  D --> G[gad-debug skill: form or refine hypotheses]\n  F --> G\n  G --> H[pick one hypothesis to test]\n  H --> I[run minimal test]\n  I --> J{hypothesis confirmed?}\n  J -->|no| K[eliminate, log reason]\n  J -->|yes| L[confirm root cause]\n  K --> G\n  L --> M[fix OR hand off with full investigation log]\n  M --> N[mark session resolved]",
     "bodyHtml": "<p>The GAD debug loop turns debugging into a persisted, resumable\ninvestigation. A <code>.planning/debug/&lt;slug&gt;.md</code> file captures symptoms,\nhypotheses, investigation log, and root cause as the agent works. If\nthe session compacts or crashes mid-investigation, the file is\nenough to rehydrate the state and continue — no lost hypotheses,\nno re-discovered dead ends.</p>\n<p>The value of the workflow is the disciplined hypothesis step. Without\nit the agent will guess at random fixes. With it, the agent is forced\nto name the thing it&#39;s testing before testing it, which both speeds up\nelimination and makes the investigation log useful to a human later.</p>\n<pre><code class=\"language-mermaid\">flowchart TD\n  A[symptom reported] --&gt; B[debug skill activates]\n  B --&gt; C{existing debug session?}\n  C --&gt;|yes| D[resume .planning/debug/&lt;slug&gt;.md]\n  C --&gt;|no| E[gather symptoms: expected, actual, repro, timeline, prior attempts]\n  E --&gt; F[write .planning/debug/&lt;slug&gt;.md]\n  D --&gt; G[gad-debug skill: form or refine hypotheses]\n  F --&gt; G\n  G --&gt; H[pick one hypothesis to test]\n  H --&gt; I[run minimal test]\n  I --&gt; J{hypothesis confirmed?}\n  J --&gt;|no| K[eliminate, log reason]\n  J --&gt;|yes| L[confirm root cause]\n  K --&gt; G\n  L --&gt; M[fix OR hand off with full investigation log]\n  M --&gt; N[mark session resolved]\n</code></pre>\n",
-    "file": ".planning/workflows/gad-debug.md"
+    "file": ".planning/workflows/gad-debug.md",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "gad-debug-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "gad state",
+            "kind": "cli",
+            "count": 3
+          }
+        }
+      ],
+      "edges": []
+    },
+    "conformance": {
+      "score": 0.25,
+      "matched": 1,
+      "extra": 0,
+      "out_of_order": 0,
+      "expected": 4
+    }
   },
   {
     "slug": "gad-decide",
@@ -2347,7 +2500,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 3
           }
         },
         {
@@ -2360,7 +2513,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 1
           }
         },
         {
@@ -2373,7 +2526,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -2386,7 +2539,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 1
           }
         },
         {
@@ -2399,98 +2552,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-decide-n5",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 120
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 18
-          }
-        },
-        {
-          "id": "gad-decide-n6",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 120
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-decide-n7",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 120
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-decide-n8",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 240
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-decide-n9",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 240
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 12
-          }
-        },
-        {
-          "id": "gad-decide-n10",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 240
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-decide-n11",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 240
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 8
+            "count": 1
           }
         }
       ],
@@ -2517,48 +2579,6 @@ export const WORKFLOWS: Workflow[] = [
           "id": "gad-decide-e3",
           "source": "gad-decide-n3",
           "target": "gad-decide-n4",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e4",
-          "source": "gad-decide-n4",
-          "target": "gad-decide-n5",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e5",
-          "source": "gad-decide-n5",
-          "target": "gad-decide-n6",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e6",
-          "source": "gad-decide-n6",
-          "target": "gad-decide-n7",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e7",
-          "source": "gad-decide-n7",
-          "target": "gad-decide-n8",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e8",
-          "source": "gad-decide-n8",
-          "target": "gad-decide-n9",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e9",
-          "source": "gad-decide-n9",
-          "target": "gad-decide-n10",
-          "animated": false
-        },
-        {
-          "id": "gad-decide-e10",
-          "source": "gad-decide-n10",
-          "target": "gad-decide-n11",
           "animated": false
         }
       ]
@@ -2625,7 +2645,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -2636,9 +2656,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/ROADMAP.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 1
           }
         },
         {
@@ -2651,7 +2671,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 7
           }
         },
         {
@@ -2662,9 +2682,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 1
           }
         },
         {
@@ -2690,7 +2710,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 1
           }
         },
         {
@@ -2701,9 +2721,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 1
           }
         },
         {
@@ -2714,9 +2734,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 9
           }
         },
         {
@@ -2729,7 +2749,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 1
           }
         },
         {
@@ -2740,9 +2760,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 2
+            "label": "gad tasks",
+            "kind": "cli",
+            "count": 6
           }
         },
         {
@@ -2753,9 +2773,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 5
+            "count": 3
           }
         },
         {
@@ -2766,9 +2786,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 7
+            "label": "gad state",
+            "kind": "cli",
+            "count": 3
           }
         },
         {
@@ -2779,9 +2799,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 6
+            "label": "gad snapshot",
+            "kind": "cli",
+            "count": 1
           }
         },
         {
@@ -2794,7 +2814,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 9
+            "count": 4
           }
         },
         {
@@ -2805,9 +2825,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 3
+            "label": "gad tasks",
+            "kind": "cli",
+            "count": 1
           }
         },
         {
@@ -2818,9 +2838,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 1
           }
         },
         {
@@ -2831,243 +2851,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 480
           },
           "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n17",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 480
-          },
-          "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n18",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 480
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n19",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 480
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n20",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n21",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n22",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 4
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n23",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n24",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n25",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n26",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n27",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n28",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n29",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n30",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n31",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n32",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 960
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n33",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 960
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-discuss-plan-execute-n34",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 960
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 6
+            "count": 1
           }
         }
       ],
@@ -3167,120 +2953,12 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-discuss-plan-execute-n15",
           "target": "gad-discuss-plan-execute-n16",
           "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e16",
-          "source": "gad-discuss-plan-execute-n16",
-          "target": "gad-discuss-plan-execute-n17",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e17",
-          "source": "gad-discuss-plan-execute-n17",
-          "target": "gad-discuss-plan-execute-n18",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e18",
-          "source": "gad-discuss-plan-execute-n18",
-          "target": "gad-discuss-plan-execute-n19",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e19",
-          "source": "gad-discuss-plan-execute-n19",
-          "target": "gad-discuss-plan-execute-n20",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e20",
-          "source": "gad-discuss-plan-execute-n20",
-          "target": "gad-discuss-plan-execute-n21",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e21",
-          "source": "gad-discuss-plan-execute-n21",
-          "target": "gad-discuss-plan-execute-n22",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e22",
-          "source": "gad-discuss-plan-execute-n22",
-          "target": "gad-discuss-plan-execute-n23",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e23",
-          "source": "gad-discuss-plan-execute-n23",
-          "target": "gad-discuss-plan-execute-n24",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e24",
-          "source": "gad-discuss-plan-execute-n24",
-          "target": "gad-discuss-plan-execute-n25",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e25",
-          "source": "gad-discuss-plan-execute-n25",
-          "target": "gad-discuss-plan-execute-n26",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e26",
-          "source": "gad-discuss-plan-execute-n26",
-          "target": "gad-discuss-plan-execute-n27",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e27",
-          "source": "gad-discuss-plan-execute-n27",
-          "target": "gad-discuss-plan-execute-n28",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e28",
-          "source": "gad-discuss-plan-execute-n28",
-          "target": "gad-discuss-plan-execute-n29",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e29",
-          "source": "gad-discuss-plan-execute-n29",
-          "target": "gad-discuss-plan-execute-n30",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e30",
-          "source": "gad-discuss-plan-execute-n30",
-          "target": "gad-discuss-plan-execute-n31",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e31",
-          "source": "gad-discuss-plan-execute-n31",
-          "target": "gad-discuss-plan-execute-n32",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e32",
-          "source": "gad-discuss-plan-execute-n32",
-          "target": "gad-discuss-plan-execute-n33",
-          "animated": false
-        },
-        {
-          "id": "gad-discuss-plan-execute-e33",
-          "source": "gad-discuss-plan-execute-n33",
-          "target": "gad-discuss-plan-execute-n34",
-          "animated": false
         }
       ]
     },
     "conformance": {
-      "score": 0.188,
-      "matched": 3,
+      "score": 0.438,
+      "matched": 7,
       "extra": 0,
       "out_of_order": 0,
       "expected": 16
@@ -3409,7 +3087,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 2
           }
         },
         {
@@ -3420,9 +3098,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 7
           }
         },
         {
@@ -3433,9 +3111,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 1
           }
         },
         {
@@ -3446,9 +3124,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 0
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 7
           }
         },
         {
@@ -3459,9 +3137,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 7
+            "count": 1
           }
         },
         {
@@ -3472,9 +3150,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 4
+            "count": 1
           }
         },
         {
@@ -3487,7 +3165,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 10
+            "count": 9
           }
         },
         {
@@ -3498,9 +3176,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 120
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/STATE.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 1
           }
         },
         {
@@ -3511,9 +3189,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 4
+            "label": "gad tasks",
+            "kind": "cli",
+            "count": 6
           }
         },
         {
@@ -3524,9 +3202,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/DECISIONS.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 2
+            "count": 3
           }
         },
         {
@@ -3537,9 +3215,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 5
+            "label": "gad state",
+            "kind": "cli",
+            "count": 3
           }
         },
         {
@@ -3550,9 +3228,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 240
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 7
+            "label": "gad snapshot",
+            "kind": "cli",
+            "count": 1
           }
         },
         {
@@ -3563,9 +3241,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 6
+            "count": 4
           }
         },
         {
@@ -3576,9 +3254,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 9
+            "label": "gad tasks",
+            "kind": "cli",
+            "count": 1
           }
         },
         {
@@ -3589,9 +3267,9 @@ export const WORKFLOWS: Workflow[] = [
             "y": 360
           },
           "data": {
-            "label": ".planning/STATE.xml",
+            "label": ".planning/DECISIONS.xml",
             "kind": "artifact",
-            "count": 3
+            "count": 1
           }
         },
         {
@@ -3604,254 +3282,7 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": ".planning/TASK-REGISTRY.xml",
             "kind": "artifact",
-            "count": 4
-          }
-        },
-        {
-          "id": "gad-loop-n16",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 480
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n17",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 480
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n18",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 480
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n19",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 480
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n20",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n21",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n22",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 4
-          }
-        },
-        {
-          "id": "gad-loop-n23",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 600
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n24",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n25",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n26",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n27",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 720
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n28",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n29",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n30",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n31",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 840
-          },
-          "data": {
-            "label": ".planning/DECISIONS.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n32",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 960
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-loop-n33",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 960
-          },
-          "data": {
-            "label": ".planning/TASK-REGISTRY.xml",
-            "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-loop-n34",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 960
-          },
-          "data": {
-            "label": ".planning/STATE.xml",
-            "kind": "artifact",
-            "count": 6
+            "count": 1
           }
         }
       ],
@@ -3945,126 +3376,12 @@ export const WORKFLOWS: Workflow[] = [
           "source": "gad-loop-n14",
           "target": "gad-loop-n15",
           "animated": false
-        },
-        {
-          "id": "gad-loop-e15",
-          "source": "gad-loop-n15",
-          "target": "gad-loop-n16",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e16",
-          "source": "gad-loop-n16",
-          "target": "gad-loop-n17",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e17",
-          "source": "gad-loop-n17",
-          "target": "gad-loop-n18",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e18",
-          "source": "gad-loop-n18",
-          "target": "gad-loop-n19",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e19",
-          "source": "gad-loop-n19",
-          "target": "gad-loop-n20",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e20",
-          "source": "gad-loop-n20",
-          "target": "gad-loop-n21",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e21",
-          "source": "gad-loop-n21",
-          "target": "gad-loop-n22",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e22",
-          "source": "gad-loop-n22",
-          "target": "gad-loop-n23",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e23",
-          "source": "gad-loop-n23",
-          "target": "gad-loop-n24",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e24",
-          "source": "gad-loop-n24",
-          "target": "gad-loop-n25",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e25",
-          "source": "gad-loop-n25",
-          "target": "gad-loop-n26",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e26",
-          "source": "gad-loop-n26",
-          "target": "gad-loop-n27",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e27",
-          "source": "gad-loop-n27",
-          "target": "gad-loop-n28",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e28",
-          "source": "gad-loop-n28",
-          "target": "gad-loop-n29",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e29",
-          "source": "gad-loop-n29",
-          "target": "gad-loop-n30",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e30",
-          "source": "gad-loop-n30",
-          "target": "gad-loop-n31",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e31",
-          "source": "gad-loop-n31",
-          "target": "gad-loop-n32",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e32",
-          "source": "gad-loop-n32",
-          "target": "gad-loop-n33",
-          "animated": false
-        },
-        {
-          "id": "gad-loop-e33",
-          "source": "gad-loop-n33",
-          "target": "gad-loop-n34",
-          "animated": false
         }
       ]
     },
     "conformance": {
-      "score": 0.333,
-      "matched": 3,
+      "score": 0.667,
+      "matched": 6,
       "extra": 0,
       "out_of_order": 0,
       "expected": 9
@@ -4113,219 +3430,24 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "site/components/site/SiteSection.tsx",
             "kind": "artifact",
-            "count": 3
-          }
-        },
-        {
-          "id": "gad-visual-context-identity-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "site/components/devid/DevPanel.tsx",
-            "kind": "artifact",
             "count": 2
-          }
-        },
-        {
-          "id": "gad-visual-context-identity-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "site/components/site/SiteSection.tsx",
-            "kind": "artifact",
-            "count": 6
-          }
-        },
-        {
-          "id": "gad-visual-context-identity-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "site/components/devid/DevPanel.tsx",
-            "kind": "artifact",
-            "count": 1
-          }
-        },
-        {
-          "id": "gad-visual-context-identity-n4",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 120
-          },
-          "data": {
-            "label": "site/components/site/SiteSection.tsx",
-            "kind": "artifact",
-            "count": 2
-          }
-        },
-        {
-          "id": "gad-visual-context-identity-n5",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 120
-          },
-          "data": {
-            "label": "site/components/devid/DevPanel.tsx",
-            "kind": "artifact",
-            "count": 25
-          }
-        },
-        {
-          "id": "gad-visual-context-identity-n6",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 120
-          },
-          "data": {
-            "label": "site/components/site/SiteSection.tsx",
-            "kind": "artifact",
-            "count": 1
           }
         }
       ],
-      "edges": [
-        {
-          "id": "gad-visual-context-identity-e0",
-          "source": "gad-visual-context-identity-n0",
-          "target": "gad-visual-context-identity-n1",
-          "animated": false
-        },
-        {
-          "id": "gad-visual-context-identity-e1",
-          "source": "gad-visual-context-identity-n1",
-          "target": "gad-visual-context-identity-n2",
-          "animated": false
-        },
-        {
-          "id": "gad-visual-context-identity-e2",
-          "source": "gad-visual-context-identity-n2",
-          "target": "gad-visual-context-identity-n3",
-          "animated": false
-        },
-        {
-          "id": "gad-visual-context-identity-e3",
-          "source": "gad-visual-context-identity-n3",
-          "target": "gad-visual-context-identity-n4",
-          "animated": false
-        },
-        {
-          "id": "gad-visual-context-identity-e4",
-          "source": "gad-visual-context-identity-n4",
-          "target": "gad-visual-context-identity-n5",
-          "animated": false
-        },
-        {
-          "id": "gad-visual-context-identity-e5",
-          "source": "gad-visual-context-identity-n5",
-          "target": "gad-visual-context-identity-n6",
-          "animated": false
-        }
-      ]
+      "edges": []
     },
     "conformance": {
-      "score": 0.286,
-      "matched": 2,
+      "score": 0.143,
+      "matched": 1,
       "extra": 0,
       "out_of_order": 0,
       "expected": 7
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-138-0",
-    "name": "Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 138Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-138-0` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>138Ã—</strong>: Bash â†’ Bash â†’ Bash.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-bash-bash-138-0-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 138
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-138-0-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 138
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-138-0-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 138
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-bash-bash-bash-138-0-e0",
-          "source": "emergent-bash-bash-bash-138-0-n0",
-          "target": "emergent-bash-bash-bash-138-0-n1"
-        },
-        {
-          "id": "emergent-bash-bash-bash-138-0-e1",
-          "source": "emergent-bash-bash-bash-138-0-n1",
-          "target": "emergent-bash-bash-bash-138-0-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 138,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-bash-bash-bash-102-1",
+    "slug": "emergent-bash-bash-bash-bash-175-0",
     "name": "Bash â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 102Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-102-1` or discard.",
+    "description": "Recurring tool-use sequence detected 175Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-175-0` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4340,12 +3462,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>102Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>175Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-102-1-n0",
+          "id": "emergent-bash-bash-bash-bash-175-0-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4354,11 +3476,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 102
+            "count": 175
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-102-1-n1",
+          "id": "emergent-bash-bash-bash-bash-175-0-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4367,11 +3489,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 102
+            "count": 175
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-102-1-n2",
+          "id": "emergent-bash-bash-bash-bash-175-0-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4380,11 +3502,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 102
+            "count": 175
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-102-1-n3",
+          "id": "emergent-bash-bash-bash-bash-175-0-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4393,37 +3515,37 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 102
+            "count": 175
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-102-1-e0",
-          "source": "emergent-bash-bash-bash-bash-102-1-n0",
-          "target": "emergent-bash-bash-bash-bash-102-1-n1"
+          "id": "emergent-bash-bash-bash-bash-175-0-e0",
+          "source": "emergent-bash-bash-bash-bash-175-0-n0",
+          "target": "emergent-bash-bash-bash-bash-175-0-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-102-1-e1",
-          "source": "emergent-bash-bash-bash-bash-102-1-n1",
-          "target": "emergent-bash-bash-bash-bash-102-1-n2"
+          "id": "emergent-bash-bash-bash-bash-175-0-e1",
+          "source": "emergent-bash-bash-bash-bash-175-0-n1",
+          "target": "emergent-bash-bash-bash-bash-175-0-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-102-1-e2",
-          "source": "emergent-bash-bash-bash-bash-102-1-n2",
-          "target": "emergent-bash-bash-bash-bash-102-1-n3"
+          "id": "emergent-bash-bash-bash-bash-175-0-e2",
+          "source": "emergent-bash-bash-bash-bash-175-0-n2",
+          "target": "emergent-bash-bash-bash-bash-175-0-n3"
         }
       ]
     },
     "support": {
-      "phases": 102,
+      "phases": 175,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-bash-bash-80-2",
-    "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 80Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-80-2` or discard.",
+    "slug": "emergent-bash-bash-bash-228-1",
+    "name": "Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 228Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-228-1` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4438,12 +3560,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>80Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>228Ã—</strong>: Bash â†’ Bash â†’ Bash.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-n0",
+          "id": "emergent-bash-bash-bash-228-1-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4452,11 +3574,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 80
+            "count": 228
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-n1",
+          "id": "emergent-bash-bash-bash-228-1-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4465,11 +3587,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 80
+            "count": 228
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-n2",
+          "id": "emergent-bash-bash-bash-228-1-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4478,11 +3600,91 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 80
+            "count": 228
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-bash-228-1-e0",
+          "source": "emergent-bash-bash-bash-228-1-n0",
+          "target": "emergent-bash-bash-bash-228-1-n1"
+        },
+        {
+          "id": "emergent-bash-bash-bash-228-1-e1",
+          "source": "emergent-bash-bash-bash-228-1-n1",
+          "target": "emergent-bash-bash-bash-228-1-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 228,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-bash-bash-bash-bash-134-2",
+    "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 134Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-bash-134-2` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>134Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 134
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-n3",
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 134
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 134
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4491,11 +3693,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 80
+            "count": 134
           }
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-n4",
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-n4",
           "type": "live",
           "position": {
             "x": 0,
@@ -4504,42 +3706,42 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 80
+            "count": 134
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-e0",
-          "source": "emergent-bash-bash-bash-bash-bash-80-2-n0",
-          "target": "emergent-bash-bash-bash-bash-bash-80-2-n1"
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-e0",
+          "source": "emergent-bash-bash-bash-bash-bash-134-2-n0",
+          "target": "emergent-bash-bash-bash-bash-bash-134-2-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-e1",
-          "source": "emergent-bash-bash-bash-bash-bash-80-2-n1",
-          "target": "emergent-bash-bash-bash-bash-bash-80-2-n2"
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-e1",
+          "source": "emergent-bash-bash-bash-bash-bash-134-2-n1",
+          "target": "emergent-bash-bash-bash-bash-bash-134-2-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-e2",
-          "source": "emergent-bash-bash-bash-bash-bash-80-2-n2",
-          "target": "emergent-bash-bash-bash-bash-bash-80-2-n3"
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-e2",
+          "source": "emergent-bash-bash-bash-bash-bash-134-2-n2",
+          "target": "emergent-bash-bash-bash-bash-bash-134-2-n3"
         },
         {
-          "id": "emergent-bash-bash-bash-bash-bash-80-2-e3",
-          "source": "emergent-bash-bash-bash-bash-bash-80-2-n3",
-          "target": "emergent-bash-bash-bash-bash-bash-80-2-n4"
+          "id": "emergent-bash-bash-bash-bash-bash-134-2-e3",
+          "source": "emergent-bash-bash-bash-bash-bash-134-2-n3",
+          "target": "emergent-bash-bash-bash-bash-bash-134-2-n4"
         }
       ]
     },
     "support": {
-      "phases": 80,
+      "phases": 134,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-read-read-read-32-3",
+    "slug": "emergent-read-read-read-38-3",
     "name": "Read â†’ Read â†’ Read",
-    "description": "Recurring tool-use sequence detected 32Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-32-3` or discard.",
+    "description": "Recurring tool-use sequence detected 38Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-38-3` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4554,12 +3756,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>32Ã—</strong>: Read â†’ Read â†’ Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>38Ã—</strong>: Read â†’ Read â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-read-read-read-32-3-n0",
+          "id": "emergent-read-read-read-38-3-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4568,11 +3770,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 32
+            "count": 38
           }
         },
         {
-          "id": "emergent-read-read-read-32-3-n1",
+          "id": "emergent-read-read-read-38-3-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4581,11 +3783,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 32
+            "count": 38
           }
         },
         {
-          "id": "emergent-read-read-read-32-3-n2",
+          "id": "emergent-read-read-read-38-3-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4594,32 +3796,32 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 32
+            "count": 38
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-read-read-read-32-3-e0",
-          "source": "emergent-read-read-read-32-3-n0",
-          "target": "emergent-read-read-read-32-3-n1"
+          "id": "emergent-read-read-read-38-3-e0",
+          "source": "emergent-read-read-read-38-3-n0",
+          "target": "emergent-read-read-read-38-3-n1"
         },
         {
-          "id": "emergent-read-read-read-32-3-e1",
-          "source": "emergent-read-read-read-32-3-n1",
-          "target": "emergent-read-read-read-32-3-n2"
+          "id": "emergent-read-read-read-38-3-e1",
+          "source": "emergent-read-read-read-38-3-n1",
+          "target": "emergent-read-read-read-38-3-n2"
         }
       ]
     },
     "support": {
-      "phases": 32,
+      "phases": 38,
       "stability": 1
     }
   },
   {
-    "slug": "emergent-bash-bash-bash-read-22-4",
-    "name": "Bash â†’ Bash â†’ Bash â†’ Read",
-    "description": "Recurring tool-use sequence detected 22Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-22-4` or discard.",
+    "slug": "emergent-bash-bash-read-34-4",
+    "name": "Bash â†’ Bash â†’ Read",
+    "description": "Recurring tool-use sequence detected 34Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-34-4` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4634,12 +3836,12 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>22Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Read.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>34Ã—</strong>: Bash â†’ Bash â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-bash-bash-bash-read-22-4-n0",
+          "id": "emergent-bash-bash-read-34-4-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4648,11 +3850,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 22
+            "count": 34
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-22-4-n1",
+          "id": "emergent-bash-bash-read-34-4-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4661,11 +3863,91 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 22
+            "count": 34
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-22-4-n2",
+          "id": "emergent-bash-bash-read-34-4-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 34
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-read-34-4-e0",
+          "source": "emergent-bash-bash-read-34-4-n0",
+          "target": "emergent-bash-bash-read-34-4-n1"
+        },
+        {
+          "id": "emergent-bash-bash-read-34-4-e1",
+          "source": "emergent-bash-bash-read-34-4-n1",
+          "target": "emergent-bash-bash-read-34-4-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 34,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-bash-bash-read-25-5",
+    "name": "Bash â†’ Bash â†’ Bash â†’ Read",
+    "description": "Recurring tool-use sequence detected 25Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-read-25-5` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>25Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Read.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-bash-bash-read-25-5-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 25
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-read-25-5-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 25
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-read-25-5-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -4674,11 +3956,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 22
+            "count": 25
           }
         },
         {
-          "id": "emergent-bash-bash-bash-read-22-4-n3",
+          "id": "emergent-bash-bash-bash-read-25-5-n3",
           "type": "live",
           "position": {
             "x": 660,
@@ -4687,25 +3969,319 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
+            "count": 25
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-bash-read-25-5-e0",
+          "source": "emergent-bash-bash-bash-read-25-5-n0",
+          "target": "emergent-bash-bash-bash-read-25-5-n1"
+        },
+        {
+          "id": "emergent-bash-bash-bash-read-25-5-e1",
+          "source": "emergent-bash-bash-bash-read-25-5-n1",
+          "target": "emergent-bash-bash-bash-read-25-5-n2"
+        },
+        {
+          "id": "emergent-bash-bash-bash-read-25-5-e2",
+          "source": "emergent-bash-bash-bash-read-25-5-n2",
+          "target": "emergent-bash-bash-bash-read-25-5-n3"
+        }
+      ]
+    },
+    "support": {
+      "phases": 25,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-bash-bash-19-6",
+    "name": "Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 19Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-bash-19-6` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>19Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 19
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-n4",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 19
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-e0",
+          "source": "emergent-edit-bash-bash-bash-bash-19-6-n0",
+          "target": "emergent-edit-bash-bash-bash-bash-19-6-n1"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-e1",
+          "source": "emergent-edit-bash-bash-bash-bash-19-6-n1",
+          "target": "emergent-edit-bash-bash-bash-bash-19-6-n2"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-e2",
+          "source": "emergent-edit-bash-bash-bash-bash-19-6-n2",
+          "target": "emergent-edit-bash-bash-bash-bash-19-6-n3"
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-bash-19-6-e3",
+          "source": "emergent-edit-bash-bash-bash-bash-19-6-n3",
+          "target": "emergent-edit-bash-bash-bash-bash-19-6-n4"
+        }
+      ]
+    },
+    "support": {
+      "phases": 19,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-bash-read-read-31-7",
+    "name": "Bash â†’ Read â†’ Read",
+    "description": "Recurring tool-use sequence detected 31Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-read-read-31-7` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>31Ã—</strong>: Bash â†’ Read â†’ Read.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-bash-read-read-31-7-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 31
+          }
+        },
+        {
+          "id": "emergent-bash-read-read-31-7-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 31
+          }
+        },
+        {
+          "id": "emergent-bash-read-read-31-7-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 31
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-read-read-31-7-e0",
+          "source": "emergent-bash-read-read-31-7-n0",
+          "target": "emergent-bash-read-read-31-7-n1"
+        },
+        {
+          "id": "emergent-bash-read-read-31-7-e1",
+          "source": "emergent-bash-read-read-31-7-n1",
+          "target": "emergent-bash-read-read-31-7-n2"
+        }
+      ]
+    },
+    "support": {
+      "phases": 31,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-bash-22-8",
+    "name": "Edit â†’ Bash â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 22Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-22-8` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>22Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-bash-22-8-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Edit",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-22-8-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-22-8-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 22
+          }
+        },
+        {
+          "id": "emergent-edit-bash-bash-bash-22-8-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
             "count": 22
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-bash-read-22-4-e0",
-          "source": "emergent-bash-bash-bash-read-22-4-n0",
-          "target": "emergent-bash-bash-bash-read-22-4-n1"
+          "id": "emergent-edit-bash-bash-bash-22-8-e0",
+          "source": "emergent-edit-bash-bash-bash-22-8-n0",
+          "target": "emergent-edit-bash-bash-bash-22-8-n1"
         },
         {
-          "id": "emergent-bash-bash-bash-read-22-4-e1",
-          "source": "emergent-bash-bash-bash-read-22-4-n1",
-          "target": "emergent-bash-bash-bash-read-22-4-n2"
+          "id": "emergent-edit-bash-bash-bash-22-8-e1",
+          "source": "emergent-edit-bash-bash-bash-22-8-n1",
+          "target": "emergent-edit-bash-bash-bash-22-8-n2"
         },
         {
-          "id": "emergent-bash-bash-bash-read-22-4-e2",
-          "source": "emergent-bash-bash-bash-read-22-4-n2",
-          "target": "emergent-bash-bash-bash-read-22-4-n3"
+          "id": "emergent-edit-bash-bash-bash-22-8-e2",
+          "source": "emergent-edit-bash-bash-bash-22-8-n2",
+          "target": "emergent-edit-bash-bash-bash-22-8-n3"
         }
       ]
     },
@@ -4715,9 +4291,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-28-5",
-    "name": "Edit â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 28Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-28-5` or discard.",
+    "slug": "emergent-bash-bash-bash-bash-read-17-9",
+    "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Read",
+    "description": "Recurring tool-use sequence detected 17Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-read-17-9` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4732,12 +4308,128 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>28Ã—</strong>: Edit â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>17Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-28-5-n0",
+          "id": "emergent-bash-bash-bash-bash-read-17-9-n0",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 17
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-n1",
+          "type": "live",
+          "position": {
+            "x": 220,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 17
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-n2",
+          "type": "live",
+          "position": {
+            "x": 440,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 17
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-n3",
+          "type": "live",
+          "position": {
+            "x": 660,
+            "y": 0
+          },
+          "data": {
+            "label": "Bash",
+            "kind": "skill",
+            "count": 17
+          }
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-n4",
+          "type": "live",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "data": {
+            "label": "Read",
+            "kind": "skill",
+            "count": 17
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-e0",
+          "source": "emergent-bash-bash-bash-bash-read-17-9-n0",
+          "target": "emergent-bash-bash-bash-bash-read-17-9-n1"
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-e1",
+          "source": "emergent-bash-bash-bash-bash-read-17-9-n1",
+          "target": "emergent-bash-bash-bash-bash-read-17-9-n2"
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-e2",
+          "source": "emergent-bash-bash-bash-bash-read-17-9-n2",
+          "target": "emergent-bash-bash-bash-bash-read-17-9-n3"
+        },
+        {
+          "id": "emergent-bash-bash-bash-bash-read-17-9-e3",
+          "source": "emergent-bash-bash-bash-bash-read-17-9-n3",
+          "target": "emergent-bash-bash-bash-bash-read-17-9-n4"
+        }
+      ]
+    },
+    "support": {
+      "phases": 17,
+      "stability": 1
+    }
+  },
+  {
+    "slug": "emergent-edit-bash-bash-27-10",
+    "name": "Edit â†’ Bash â†’ Bash",
+    "description": "Recurring tool-use sequence detected 27Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-27-10` or discard.",
+    "detector": "tool-level (v1)",
+    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
+    "participants": {
+      "skills": [],
+      "agents": [],
+      "cli": [],
+      "artifacts": []
+    },
+    "parentWorkflow": null,
+    "relatedPhases": [
+      "42.3"
+    ],
+    "origin": "emergent",
+    "mermaidBody": "",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>27Ã—</strong>: Edit â†’ Bash â†’ Bash.</p>",
+    "file": ".planning/workflows/emergent/ (generated)",
+    "liveGraph": {
+      "nodes": [
+        {
+          "id": "emergent-edit-bash-bash-27-10-n0",
           "type": "live",
           "position": {
             "x": 0,
@@ -4746,189 +4438,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Edit",
             "kind": "skill",
-            "count": 28
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-28-5-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 28
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-28-5-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 28
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-bash-bash-28-5-e0",
-          "source": "emergent-edit-bash-bash-28-5-n0",
-          "target": "emergent-edit-bash-bash-28-5-n1"
-        },
-        {
-          "id": "emergent-edit-bash-bash-28-5-e1",
-          "source": "emergent-edit-bash-bash-28-5-n1",
-          "target": "emergent-edit-bash-bash-28-5-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 28,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-read-read-read-read-21-6",
-    "name": "Read â†’ Read â†’ Read â†’ Read",
-    "description": "Recurring tool-use sequence detected 21Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-read-21-6` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>21Ã—</strong>: Read â†’ Read â†’ Read â†’ Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-read-read-read-read-21-6-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 21
-          }
-        },
-        {
-          "id": "emergent-read-read-read-read-21-6-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 21
-          }
-        },
-        {
-          "id": "emergent-read-read-read-read-21-6-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 21
-          }
-        },
-        {
-          "id": "emergent-read-read-read-read-21-6-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 21
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-read-read-read-read-21-6-e0",
-          "source": "emergent-read-read-read-read-21-6-n0",
-          "target": "emergent-read-read-read-read-21-6-n1"
-        },
-        {
-          "id": "emergent-read-read-read-read-21-6-e1",
-          "source": "emergent-read-read-read-read-21-6-n1",
-          "target": "emergent-read-read-read-read-21-6-n2"
-        },
-        {
-          "id": "emergent-read-read-read-read-21-6-e2",
-          "source": "emergent-read-read-read-read-21-6-n2",
-          "target": "emergent-read-read-read-read-21-6-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 21,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-bash-read-27-7",
-    "name": "Bash â†’ Bash â†’ Read",
-    "description": "Recurring tool-use sequence detected 27Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-read-27-7` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>27Ã—</strong>: Bash â†’ Bash â†’ Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-bash-read-27-7-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
             "count": 27
           }
         },
         {
-          "id": "emergent-bash-bash-read-27-7-n1",
+          "id": "emergent-edit-bash-bash-27-10-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -4941,14 +4455,14 @@ export const WORKFLOWS: Workflow[] = [
           }
         },
         {
-          "id": "emergent-bash-bash-read-27-7-n2",
+          "id": "emergent-edit-bash-bash-27-10-n2",
           "type": "live",
           "position": {
             "x": 440,
             "y": 0
           },
           "data": {
-            "label": "Read",
+            "label": "Bash",
             "kind": "skill",
             "count": 27
           }
@@ -4956,14 +4470,14 @@ export const WORKFLOWS: Workflow[] = [
       ],
       "edges": [
         {
-          "id": "emergent-bash-bash-read-27-7-e0",
-          "source": "emergent-bash-bash-read-27-7-n0",
-          "target": "emergent-bash-bash-read-27-7-n1"
+          "id": "emergent-edit-bash-bash-27-10-e0",
+          "source": "emergent-edit-bash-bash-27-10-n0",
+          "target": "emergent-edit-bash-bash-27-10-n1"
         },
         {
-          "id": "emergent-bash-bash-read-27-7-e1",
-          "source": "emergent-bash-bash-read-27-7-n1",
-          "target": "emergent-bash-bash-read-27-7-n2"
+          "id": "emergent-edit-bash-bash-27-10-e1",
+          "source": "emergent-edit-bash-bash-27-10-n1",
+          "target": "emergent-edit-bash-bash-27-10-n2"
         }
       ]
     },
@@ -4973,9 +4487,9 @@ export const WORKFLOWS: Workflow[] = [
     }
   },
   {
-    "slug": "emergent-edit-bash-bash-bash-20-8",
-    "name": "Edit â†’ Bash â†’ Bash â†’ Bash",
-    "description": "Recurring tool-use sequence detected 20Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-bash-bash-bash-20-8` or discard.",
+    "slug": "emergent-read-bash-read-27-11",
+    "name": "Read â†’ Bash â†’ Read",
+    "description": "Recurring tool-use sequence detected 27Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-bash-read-27-11` or discard.",
     "detector": "tool-level (v1)",
     "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
     "participants": {
@@ -4990,25 +4504,25 @@ export const WORKFLOWS: Workflow[] = [
     ],
     "origin": "emergent",
     "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>20Ã—</strong>: Edit â†’ Bash â†’ Bash â†’ Bash.</p>",
+    "bodyHtml": "<p>Recurring tool sequence detected <strong>27Ã—</strong>: Read â†’ Bash â†’ Read.</p>",
     "file": ".planning/workflows/emergent/ (generated)",
     "liveGraph": {
       "nodes": [
         {
-          "id": "emergent-edit-bash-bash-bash-20-8-n0",
+          "id": "emergent-read-bash-read-27-11-n0",
           "type": "live",
           "position": {
             "x": 0,
             "y": 0
           },
           "data": {
-            "label": "Edit",
+            "label": "Read",
             "kind": "skill",
-            "count": 20
+            "count": 27
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-20-8-n1",
+          "id": "emergent-read-bash-read-27-11-n1",
           "type": "live",
           "position": {
             "x": 220,
@@ -5017,305 +4531,11 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Bash",
             "kind": "skill",
-            "count": 20
+            "count": 27
           }
         },
         {
-          "id": "emergent-edit-bash-bash-bash-20-8-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 20
-          }
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-20-8-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 20
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-bash-bash-bash-20-8-e0",
-          "source": "emergent-edit-bash-bash-bash-20-8-n0",
-          "target": "emergent-edit-bash-bash-bash-20-8-n1"
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-20-8-e1",
-          "source": "emergent-edit-bash-bash-bash-20-8-n1",
-          "target": "emergent-edit-bash-bash-bash-20-8-n2"
-        },
-        {
-          "id": "emergent-edit-bash-bash-bash-20-8-e2",
-          "source": "emergent-edit-bash-bash-bash-20-8-n2",
-          "target": "emergent-edit-bash-bash-bash-20-8-n3"
-        }
-      ]
-    },
-    "support": {
-      "phases": 20,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-bash-bash-bash-bash-read-15-9",
-    "name": "Bash â†’ Bash â†’ Bash â†’ Bash â†’ Read",
-    "description": "Recurring tool-use sequence detected 15Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-bash-bash-bash-bash-read-15-9` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>15Ã—</strong>: Bash â†’ Bash â†’ Bash â†’ Bash â†’ Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Bash",
-            "kind": "skill",
-            "count": 15
-          }
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-n4",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 120
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 15
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-e0",
-          "source": "emergent-bash-bash-bash-bash-read-15-9-n0",
-          "target": "emergent-bash-bash-bash-bash-read-15-9-n1"
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-e1",
-          "source": "emergent-bash-bash-bash-bash-read-15-9-n1",
-          "target": "emergent-bash-bash-bash-bash-read-15-9-n2"
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-e2",
-          "source": "emergent-bash-bash-bash-bash-read-15-9-n2",
-          "target": "emergent-bash-bash-bash-bash-read-15-9-n3"
-        },
-        {
-          "id": "emergent-bash-bash-bash-bash-read-15-9-e3",
-          "source": "emergent-bash-bash-bash-bash-read-15-9-n3",
-          "target": "emergent-bash-bash-bash-bash-read-15-9-n4"
-        }
-      ]
-    },
-    "support": {
-      "phases": 15,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-edit-edit-edit-24-10",
-    "name": "Edit â†’ Edit â†’ Edit",
-    "description": "Recurring tool-use sequence detected 24Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-edit-edit-edit-24-10` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>24Ã—</strong>: Edit â†’ Edit â†’ Edit.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-edit-edit-edit-24-10-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 24
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-24-10-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 24
-          }
-        },
-        {
-          "id": "emergent-edit-edit-edit-24-10-n2",
-          "type": "live",
-          "position": {
-            "x": 440,
-            "y": 0
-          },
-          "data": {
-            "label": "Edit",
-            "kind": "skill",
-            "count": 24
-          }
-        }
-      ],
-      "edges": [
-        {
-          "id": "emergent-edit-edit-edit-24-10-e0",
-          "source": "emergent-edit-edit-edit-24-10-n0",
-          "target": "emergent-edit-edit-edit-24-10-n1"
-        },
-        {
-          "id": "emergent-edit-edit-edit-24-10-e1",
-          "source": "emergent-edit-edit-edit-24-10-n1",
-          "target": "emergent-edit-edit-edit-24-10-n2"
-        }
-      ]
-    },
-    "support": {
-      "phases": 24,
-      "stability": 1
-    }
-  },
-  {
-    "slug": "emergent-read-read-read-read-read-13-11",
-    "name": "Read â†’ Read â†’ Read â†’ Read â†’ Read",
-    "description": "Recurring tool-use sequence detected 13Ã— in trace data (detector v1 â€” tool-level fallback; will be replaced once skills start tagging via `gad --skill`). Not hand-authored â€” the live graph IS the workflow shape. Promote to an authored workflow via `gad workflow promote emergent-read-read-read-read-read-13-11` or discard.",
-    "detector": "tool-level (v1)",
-    "trigger": "Detected automatically from .planning/.trace-events.jsonl by the frequent-subgraph detector (phase 42.3-09).",
-    "participants": {
-      "skills": [],
-      "agents": [],
-      "cli": [],
-      "artifacts": []
-    },
-    "parentWorkflow": null,
-    "relatedPhases": [
-      "42.3"
-    ],
-    "origin": "emergent",
-    "mermaidBody": "",
-    "bodyHtml": "<p>Recurring tool sequence detected <strong>13Ã—</strong>: Read â†’ Read â†’ Read â†’ Read â†’ Read.</p>",
-    "file": ".planning/workflows/emergent/ (generated)",
-    "liveGraph": {
-      "nodes": [
-        {
-          "id": "emergent-read-read-read-read-read-13-11-n0",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 13
-          }
-        },
-        {
-          "id": "emergent-read-read-read-read-read-13-11-n1",
-          "type": "live",
-          "position": {
-            "x": 220,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 13
-          }
-        },
-        {
-          "id": "emergent-read-read-read-read-read-13-11-n2",
+          "id": "emergent-read-bash-read-27-11-n2",
           "type": "live",
           "position": {
             "x": 440,
@@ -5324,61 +4544,25 @@ export const WORKFLOWS: Workflow[] = [
           "data": {
             "label": "Read",
             "kind": "skill",
-            "count": 13
-          }
-        },
-        {
-          "id": "emergent-read-read-read-read-read-13-11-n3",
-          "type": "live",
-          "position": {
-            "x": 660,
-            "y": 0
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 13
-          }
-        },
-        {
-          "id": "emergent-read-read-read-read-read-13-11-n4",
-          "type": "live",
-          "position": {
-            "x": 0,
-            "y": 120
-          },
-          "data": {
-            "label": "Read",
-            "kind": "skill",
-            "count": 13
+            "count": 27
           }
         }
       ],
       "edges": [
         {
-          "id": "emergent-read-read-read-read-read-13-11-e0",
-          "source": "emergent-read-read-read-read-read-13-11-n0",
-          "target": "emergent-read-read-read-read-read-13-11-n1"
+          "id": "emergent-read-bash-read-27-11-e0",
+          "source": "emergent-read-bash-read-27-11-n0",
+          "target": "emergent-read-bash-read-27-11-n1"
         },
         {
-          "id": "emergent-read-read-read-read-read-13-11-e1",
-          "source": "emergent-read-read-read-read-read-13-11-n1",
-          "target": "emergent-read-read-read-read-read-13-11-n2"
-        },
-        {
-          "id": "emergent-read-read-read-read-read-13-11-e2",
-          "source": "emergent-read-read-read-read-read-13-11-n2",
-          "target": "emergent-read-read-read-read-read-13-11-n3"
-        },
-        {
-          "id": "emergent-read-read-read-read-read-13-11-e3",
-          "source": "emergent-read-read-read-read-read-13-11-n3",
-          "target": "emergent-read-read-read-read-read-13-11-n4"
+          "id": "emergent-read-bash-read-27-11-e1",
+          "source": "emergent-read-bash-read-27-11-n1",
+          "target": "emergent-read-bash-read-27-11-n2"
         }
       ]
     },
     "support": {
-      "phases": 13,
+      "phases": 27,
       "stability": 1
     }
   }
@@ -5431,141 +4615,133 @@ export const HUMAN_WORKFLOWS: HumanWorkflow[] = [
 ];
 
 export const SIGNAL: Signal = {
-  "totalEvents": 815,
+  "totalEvents": 863,
   "topFiles": [
     {
-      "path": "vendor/get-anything-done/.planning/TASK-REGISTRY.xml",
-      "count": 36
-    },
-    {
-      "path": "vendor/get-anything-done/.planning/STATE.xml",
-      "count": 30
-    },
-    {
-      "path": "vendor/get-anything-done/site/components/devid/DevPanel.tsx",
-      "count": 21
-    },
-    {
       "path": "vendor/get-anything-done/bin/gad.cjs",
-      "count": 19
+      "count": 40
     },
     {
-      "path": "vendor/get-anything-done/CHANGELOG.md",
-      "count": 14
+      "path": "vendor/get-anything-done/.planning/TASK-REGISTRY.xml",
+      "count": 22
     },
     {
-      "path": "vendor/get-anything-done/site/lib/eval-data.generated.ts",
-      "count": 12
-    },
-    {
-      "path": "vendor/get-anything-done/site/scripts/build-site-data.mjs",
+      "path": "apps/planning-app/lib/planning-data.ts",
       "count": 11
     },
     {
+      "path": "vendor/get-anything-done/skills/create-skill/SKILL.md",
+      "count": 8
+    },
+    {
       "path": "vendor/get-anything-done/.planning/DECISIONS.xml",
-      "count": 10
+      "count": 5
     },
     {
-      "path": "vendor/get-anything-done/lib/eval-data-access.cjs",
-      "count": 10
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/ProjectEditor.tsx",
-      "count": 8
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/eval-data-runtime.ts",
-      "count": 8
-    },
-    {
-      "path": "vendor/get-anything-done/site/components/site/SiteSection.tsx",
-      "count": 8
+      "path": "vendor/get-anything-done/references/byok-design.md",
+      "count": 5
     },
     {
       "path": "vendor/get-anything-done/site/app/projects/[...id]/page.tsx",
-      "count": 8
-    },
-    {
-      "path": "vendor/get-anything-done/site/components/devid/DevIdProvider.tsx",
-      "count": 7
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/ProjectCanvas.tsx",
-      "count": 6
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/BestiaryTab.tsx",
-      "count": 6
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/downloads/page.tsx",
-      "count": 6
-    },
-    {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/InspectorPane.tsx",
       "count": 5
     },
     {
-      "path": "vendor/get-anything-done/site/app/projects/edit/[id]/GenerationRunner.tsx",
+      "path": "vendor/get-anything-done/tests/secrets-store.test.cjs",
       "count": 5
     },
     {
-      "path": "vendor/get-anything-done/site/components/site/index.ts",
+      "path": "vendor/get-anything-done/skills/build-and-release-locally/SKILL.md",
       "count": 5
+    },
+    {
+      "path": "vendor/get-anything-done/skills/create-proto-skill/SKILL.md",
+      "count": 5
+    },
+    {
+      "path": "apps/planning-app/app/my-projects/page.tsx",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/.planning/phases/59/PLAN.md",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/lib/secrets-store.cjs",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/lib/secrets-store-errors.cjs",
+      "count": 4
+    },
+    {
+      "path": "gad-config.toml",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/lib/scoped-spawn.cjs",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/tests/scoped-spawn.test.cjs",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/site/scripts/compute-self-eval.mjs",
+      "count": 4
+    },
+    {
+      "path": "vendor/get-anything-done/lib/task-registry-writer.cjs",
+      "count": 4
+    },
+    {
+      "path": "apps/planning-app/lib/cn.ts",
+      "count": 3
     }
   ],
   "topSkills": [],
   "toolMix": {
     "Bash": {
-      "count": 293,
-      "pct": 36
-    },
-    "Glob": {
-      "count": 22,
-      "pct": 2.7
-    },
-    "Read": {
-      "count": 195,
-      "pct": 23.9
+      "count": 441,
+      "pct": 51.1
     },
     "Grep": {
-      "count": 85,
-      "pct": 10.4
+      "count": 63,
+      "pct": 7.3
     },
-    "Agent": {
-      "count": 10,
-      "pct": 1.2
-    },
-    "Edit": {
-      "count": 152,
-      "pct": 18.7
+    "Read": {
+      "count": 209,
+      "pct": 24.2
     },
     "Write": {
-      "count": 34,
-      "pct": 4.2
+      "count": 71,
+      "pct": 8.2
     },
-    "TaskUpdate": {
-      "count": 18,
-      "pct": 2.2
+    "Edit": {
+      "count": 66,
+      "pct": 7.6
     },
-    "TaskCreate": {
-      "count": 4,
-      "pct": 0.5
+    "Agent": {
+      "count": 9,
+      "pct": 1
     },
     "ToolSearch": {
       "count": 1,
       "pct": 0.1
     },
-    "WebFetch": {
+    "TaskOutput": {
+      "count": 2,
+      "pct": 0.2
+    },
+    "Glob": {
       "count": 1,
       "pct": 0.1
     }
   },
   "agentSplit": {
-    "default": 507,
-    "sub": 308,
+    "default": 418,
+    "sub": 445,
     "byRole": {
-      "(unspecified)": 308
+      "(unspecified)": 445
     }
   }
 };
@@ -5656,8 +4832,8 @@ export const CONTEXT_FRAMEWORKS: ContextFramework[] = [
 export const PLANNING_STATE: PlanningState = {
   "currentPhase": "42.4",
   "milestone": "gad-v1.1",
-  "nextAction": "2026-04-17 session 3 close — teachings system live. gad tip (file-backed, zero-cost read), gad tip generate (local startup-triggered), DAILY snapshot section surfaces today's tip + llm-from-scratch next-action + 'one small task per session' protocol. 5 seed tips. New project llm-from-scratch scaffolded (9 phases, 4 decisions, current=01 BPE). gad-255 + gad-256 + gad-257 landed. NEXT: (1) rebuild gad binary (stale), (2) set OPENAI_API_KEY in env, (3) daily small task on llm-from-scratch phase 01 BPE.",
-  "lastUpdated": "2026-04-16T23:00:00.000Z",
+  "nextAction": "Phase 63 near-complete. Done: 63-01 (Haiku audit), 63-03 (user-settings lib), 63-04 (agent-lanes), 63-05 (SessionStart hook), 63-06 (regex idempotency fix), 60-09 (handoff CLI, Sonnet). 63-02 claude-side done (hook handoff nudge + --json empty fix); codex-side filed as handoff h-2026-04-18T18-17-59 covering gad startup extension + gad pause-work + integration test. Skill-lane frontmatter rollout (Haiku) in flight. Snapshot integration deferred to .planning/notes/2026-04-18-handoff-snapshot-integration.md.",
+  "lastUpdated": "2026-04-18T19:50:00.002Z",
   "phases": [
     {
       "id": "01",
@@ -5978,6 +5154,21 @@ export const PLANNING_STATE: PlanningState = {
       "id": "58",
       "title": "Daily teachings system — pipeline + site integration",
       "status": "planned"
+    },
+    {
+      "id": "59",
+      "title": "Planning-app split + gad planning serve + gad start daily entry",
+      "status": "planned"
+    },
+    {
+      "id": "60",
+      "title": "Per-project BYOK encrypted env — .gad/secrets store, CLI, scoped spawn, UI surfaces",
+      "status": "planned"
+    },
+    {
+      "id": "63",
+      "title": "Agent/state/session hygiene",
+      "status": "planned"
     }
   ],
   "openTasks": [
@@ -6087,6 +5278,26 @@ export const PLANNING_STATE: PlanningState = {
       "goal": "Normalize remaining sections to the explicit-id pattern across the app: every user-facing SiteSection should have a stable literal cid token and any redundant Identified wrappers that only restate the same section identity should be removed. Keep Identified oâ€¦"
     },
     {
+      "id": "44-38",
+      "status": "planned",
+      "goal": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm public registry) to GitHub Releases tarball. Discovered 2026-04-18: workflows/update.md step run_update invokes npx -y get-anything-done@latestâ€¦"
+    },
+    {
+      "id": "44-39",
+      "status": "planned",
+      "goal": "Generation publish status: extend per-generation manifest with status (draft|published|unlisted), publishedAt, publishedBy. Editor publish button writes status; file copy to public/playable/ becomes a side effect of status===published. publish/route.ts gains â€¦"
+    },
+    {
+      "id": "44-40",
+      "status": "planned",
+      "goal": "Compile marketplace-index.json from per-generation manifests + EVAL_PROJECTS at predev/prebuild. Index shape: { projects: [...], generations: [{projectId, species, version, status, publishedAt, publishedBy, buildPath, score?}] }. /project-market reads index iâ€¦"
+    },
+    {
+      "id": "44-41",
+      "status": "planned",
+      "goal": "Species index view at /project-market — band that lists distinct species with &gt;=1 published generation, click filters marketplace by species. Read from marketplace-index.json."
+    },
+    {
       "id": "42.2-46",
       "status": "planned",
       "goal": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the tâ€¦"
@@ -6145,10 +5356,70 @@ export const PLANNING_STATE: PlanningState = {
       "id": "45-21",
       "status": "planned",
       "goal": "README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers."
+    },
+    {
+      "id": "46-15",
+      "status": "planned",
+      "goal": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deletâ€¦"
+    },
+    {
+      "id": "60-08",
+      "status": "planned",
+      "goal": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 + scope chain from 60-07b but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-sidâ€¦"
+    },
+    {
+      "id": "63-02",
+      "status": "planned",
+      "goal": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session pause writes handoff file, (b) user settings 63-03 stores last-active-projectid, (c) &apos;gad start&apos; or new session auto-invokes gadâ€¦"
     }
   ],
-  "doneTasksCount": 343,
+  "doneTasksCount": 376,
   "recentDecisions": [
+    {
+      "id": "gad-268",
+      "title": "BYOK keys + non-secret env defaults are scope-resolved across species &gt; eval &gt; planning",
+      "summary": "Both encrypted secrets (BYOK) and non-secret env defaults resolve along an explicit scope chain instead of living in a single per-project bag. Default chain when nothing else is requested: most-specific scope (e.g. evals/&lt;eval&gt;/species/&lt;species&gt;) → evals/&lt;eval&gt; → planning (legacy bag, scope=&apos;&apos;). The most-specific bag that defines a key wins; parent bags whose entries ge"
+    },
+    {
+      "id": "gad-269",
+      "title": "vendor/get-anything-done/site is marketing-only; operator surfaces live in apps/planning-app",
+      "summary": "The Project Editor (`/projects/edit/[id]` + 4 tabs) and the entire `/api/dev/*` surface (secrets, env-defaults, scopes, evals/projects, gene-states, graph, live, command-bridge) move out of `vendor/get-anything-done/site/` and into `apps/planning-app/`. The vendor site keeps only the audience-facing landing/marketing/docs surfaces — anything that's \"operator chrome\" goes to planning-app where it c"
+    },
+    {
+      "id": "gad-267",
+      "title": "Security patterns surfaced during spec/design work become teaching tips",
+      "summary": "When a spec-authoring or design-doc subagent surfaces defense-in-depth patterns (AEAD+AAD binding, fail-closed defaults, derive-dont-store, migration cutover windows, audit-log privacy tradeoffs, etc.) those patterns should be harvested into the teachings catalog under a 'security' category. Rationale: the llm-from-scratch project covers tokenizer-level LLM internals but the operator has limited e"
+    },
+    {
+      "id": "gad-266",
+      "title": "Phase 60 BYOK design choices — operator accepted all A-H advisor defaults",
+      "summary": "Operator accepted all 8 advisor-mode defaults from .planning/notes/phase-60-byok-discussion-2026-04-17.md. A crypto primitive AES-256-GCM with PBKDF2 KDF (adjusted from scrypt per D to achieve browser/CLI parity), 600k iterations. B master-key UX OS keychain with passphrase fallback; Windows Credential Manager adapter first, macOS + Linux adapters deferred until needed. C on-disk format versioned "
+    },
+    {
+      "id": "gad-265",
+      "title": "Phase 59 open questions — operator sign-off accepted planner recommendations",
+      "summary": "Operator accepted the gad-planner subagent recommendations for all 5 open questions on phase 59 PLAN.md. Q1 planning-app binary bundling — path B monorepo-only for this phase, follow-up todo for standalone bundling gated on task 44-28 pattern. Q2 teachings-reader migration timing — will not migrate during phase 59; barrel re-export approach (option b in task 59-02) stands. Q3 /my-projects BYOK sta"
+    },
+    {
+      "id": "gad-264",
+      "title": "Teachings reader route promoted to active phase 46 scope",
+      "summary": "Phase 58 originally slotted the /teachings route as its item (3), but phase 58 is blocked on 46 and the 'only fun if you see it' gap on the teachings catalog is acute — tips exist but nothing renders them. Promote the teachings reader (index page + detail route, read from teachings/static/** via the existing catalog generator) into phase 46 active scope. Phase 58 keeps its other items (snapshot-fo"
+    },
+    {
+      "id": "gad-263",
+      "title": "Offload policy — big-token structured work goes to cheap models, reasoning stays with main agent",
+      "summary": "Cost-token triage for LLM calls across GAD. Default routing: (a) reasoning, novel content generation, agent-loop decisions, phase planning --&gt; main agent (Claude, operator-controlled runtime). (b) structured input / structured output transformations with predictable shape and high token volume --&gt; cheap model (gpt-4o-mini class or equivalent via BYOK, per-project). Examples that belong on th"
+    },
+    {
+      "id": "gad-262",
+      "title": "gad start — daily dashboard entry command, distinct from gad startup",
+      "summary": "Two different audiences want two different entry points. Coding agents need text-mode session context: today that is 'gad startup --projectid X' which prints the session contract + triggers snapshot. Humans (operator) need a dashboard to see their projects, subagent-run history, next-actions, and BYOK status: that is 'gad start'. The command spawns 'gad planning serve' if not already running, then"
+    },
+    {
+      "id": "gad-261",
+      "title": "Planning surface splits into its own app — gad planning serve separate from landing",
+      "summary": "Today the landing Next app at vendor/get-anything-done/site/ hosts both marketing (/, /how-it-works, /library, /project-market) and planning (/planning, /projects). That coupling bleeds landing UI conventions into planning surfaces and makes it harder to treat planning as private, auth-gated, or locally-only. Split: planning surfaces move to a separate Next app (working name: planning-app) that sh"
+    },
     {
       "id": "gad-260",
       "title": "Per-project BYOK env storage - encrypted, uploadable via project editor, visible in project dashboard",
@@ -6163,51 +5434,6 @@ export const PLANNING_STATE: PlanningState = {
       "id": "gad-258",
       "title": "llm-from-scratch always executes via subagent; chat surface receives report + tip only",
       "summary": "The llm-from-scratch project is intentionally isolated from the GAD framework's own development concerns. Its tasks (BPE, embeddings, attention, training, agent, context engine) are self-contained and share no direct coupling with framework code. Running them inline in the main GAD session wastes operator context, mixes two unrelated work streams, and makes the daily one-small-task rhythm invasive"
-    },
-    {
-      "id": "gad-257",
-      "title": "Daily teachings — startup-triggered generation, session-surfaced nudge, not cron",
-      "summary": "Reverses the GitHub Actions cron approach from gad-255. Daily tip generation runs LOCALLY as part of gad startup if OPENAI_API_KEY is set AND today's tip file is missing. Rationale: operator works with gad CLI every day anyway — generation happens naturally on session start, only when they're actually working. No stale tips during inactive periods. No GitHub secret to manage. Complements with: eve"
-    },
-    {
-      "id": "gad-256",
-      "title": "New project llm-from-scratch — learning-first bottom-up coding agent rebuild",
-      "summary": "New GAD project at projects/llm-from-scratch/ (planning root registered in gad-config.toml). Scope: rebuild the entire coding agent stack from primitives for learning — tokenizer, embeddings, attention, training, inference, sampling, agent scaffolding, context engine, self-managing loop. Not for distribution. Fully functional as an end state. Eventually manages itself via its own model + agent + G"
-    },
-    {
-      "id": "gad-255",
-      "title": "Daily teachings system — file-backed tips, zero-cost CLI read, daily OpenAI generation",
-      "summary": "GAD framework ships a teachings/ catalog in vendor/get-anything-done/teachings/. Content layers: static/ (hand-authored canonical tips) and generated/YYYY/MM/ (daily OpenAI output). Surfaces: gad tip (today/random/search/list/categories/reindex), future snapshot footer line, and phase 46 landing-site /teachings route. Reading tips in any surface is pure file I/O — zero API cost in coding agent ses"
-    },
-    {
-      "id": "gad-254",
-      "title": "Virtual file folder required for cloud projects",
-      "summary": "Cloud-hosted projects need an in-browser virtual file folder UI — users view project files without local checkout. Read-only (per gad-246). Shared primitive across platform + desktop."
-    },
-    {
-      "id": "gad-253",
-      "title": "Supabase stays (for now); swap gated on virtual-file-folder requirements",
-      "summary": "Current stack wires Clerk + Supabase. Clerk stays definitively. Supabase stays provisionally — may be swapped if the virtual-file-folder requirement (gad-254) or per-project data model pushes out its limits. Decision deferred until phase 51 scaffold surfaces concrete needs."
-    },
-    {
-      "id": "gad-252",
-      "title": "Feature-request flow = user-agent drafts, platform-agents PR, human reviews",
-      "summary": "User's coding agent (inside the embedded terminal in the editor) drafts a feature request with a coded README example → submits to platform → platform's own coding agents open a PR against the target repo → human reviewer approves. User-side VCS customizations stay local until a PR lands."
-    },
-    {
-      "id": "gad-251",
-      "title": "Gauges = decisions / errors-and-attempts / notes / throughput; VCS hit rate dropped",
-      "summary": "Gauge bank formalized. (1) Decisions = direction. (2) Errors-and-attempts = stability / reputation — weighted by same-problem × attempt variance, decays as later unrelated tasks complete without recurrence. (3) Notes = knowledge density — count × length × (1 - change-rate). (4) Task throughput = realized output relative to planned. All gated by pressure. VCS hit rate is NOT a gauge — VCS is dev-in"
-    },
-    {
-      "id": "gad-250",
-      "title": "Pressure ontology — nothing exists in a project until pressure is produced (NORTH STAR)",
-      "summary": "Operator framing: \"If there is no pressure, there is no meaningful information about the realization of a project until pressure is produced. Nothing in a project / species / generation exists until pressure is produced.\" Pressure is the creation ontology — the gate every other gauge multiplies against."
-    },
-    {
-      "id": "gad-249",
-      "title": "Leaderboards for species forks AND generation continuers",
-      "summary": "Two leaderboards per species: (1) fork contributors (who is evolving the species) and (2) generation continuers (who is taking a generation forward). Both moderated — reports + thresholds + appeals."
     }
   ]
 };
