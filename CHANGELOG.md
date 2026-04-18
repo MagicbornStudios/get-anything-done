@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.35.0] - 2026-04-18
+
+Release focused on moving distribution off the SEA-first path while shipping the current codex/runtime queue: Bun becomes the primary binary build path, startup stops performing self-refresh side effects, and the framework gains the new handoff, evolution, publish, and hygiene surfaces accumulated since `v1.34.3`.
+
+### Added
+- Bun release builder and release-binary CI wiring for GitHub-hosted artifacts, with `build:release:bun` as the primary path and a dedicated `release-binaries` workflow for tagged assets.
+- CLI surface for `gad publish`, publish listing, skill hygiene, evolution scan/shed, and the startup/snapshot evolution block accumulated on `main` after `v1.34.3`.
+- Runtime helpers restored after the rebase stack (`lib/runtime-detect.cjs`, handoff counting) so the packaged CLI runs cleanly from the current source tree.
+
+### Changed
+- `gad startup` no longer auto-builds or auto-installs the CLI before opening a session; it now prints the contract, creates the session, runs snapshot, and stops.
+- `gad self refresh` and release scripts now prefer the Bun binary path; Node SEA remains available only as an explicit fallback.
+- Release publishing now targets Bun/GitHub binary assets instead of relying on the older SEA-first tarball-centric flow.
+
+### Fixed
+- Task attribution hygiene now rejects `--skill DEFAULT` / default-skill writes while still preserving `--no-skill` as an explicit empty-skill escape hatch.
+- Startup output no longer duplicates HANDOFFS and EVOLUTION sections after snapshot.
+- Windows/source release verification now covers the updated binary-distribution path and filters release uploads to the current version's assets.
+
 ## [1.34.3] - 2026-04-18
 
 Follow-up release to make Windows asset publication fully deterministic: the tarball generator now calls npm through `node.exe`, and the publisher only uploads artifacts for the current version instead of whatever older files are still sitting in `dist/release`.
