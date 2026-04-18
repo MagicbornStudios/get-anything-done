@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-18 S19. Phase 59 CLOSED. 59-09 DONE: apps/planning-app/app/my-projects/SubagentRunHistory.tsx fleshed out — day-grouped timeline with status pill + model chip + expandable `<details>` panel (duration, short sha, next task, teaching tip, file, scrollable report body); empty state adds copyable `gad subagents dispatch --projectid <id>` block. Server-side only, native `<details>` element. Verified via `pnpm --filter @portfolio/planning-app build` clean + `next start :3003` SSR check (fixture renders all fields; empty state for claw-cli renders dispatch cmd). 60-05a DONE earlier this session: `gad env audit`/`gad env purge` CLI + `gad start` auto-purge preflight (vendor commit d3cfce1). NEXT options: (a) `gad install` to refresh installed gad.exe (still v1.33.0 pre-ea1ad32) so the new planning serve + narrative + env audit/purge land in $PATH; (b) 60-07 Project Editor BYOK tab (phase 44.5 entry point); (c) phase 42.4 Context Framework as catalog type (sprint 9 head). Pending operator-side: Cursor skill trim verification (fresh Cursor instance should show ~63 skills, not 400+). Parallel-agent caveat: operator runs other agents on CLI harnesses concurrently (memory: project_parallel_agent_work) — 602 pre-existing test failures in spawn/agent-skills/codex/worktree clusters are their WIP, not regressions.</next-action>
+  <next-action>2026-04-18 S20 — END-OF-DAY HANDOFF. See .planning/notes/2026-04-18-fresh-session-handoff.md for the full picture. Three commits landed this session: d3cfce1 (60-05a env audit/purge), 661fe95 (59-09 close), c6c1b11 (59-10 CLI efficiency cluster — task-registry writer + gad tasks add/promote/stalled + gad next). Phase 59 CLOSED. FIRST THING TOMORROW: operator runs `gad install` from vendor/get-anything-done so the new subcommands land in $PATH (installed binary is still v1.33.0 pre-ea1ad32). Then pick one of: (a) 60-07 Project Editor BYOK tab (phase 44.5 entry — operator's stated focus); (b) bulk `gad tasks promote` across the 45 vendor .planning/todos/ entries to drain the backlog (now that the CLI exists); (c) phase 42.4 Context Framework as catalog type. DO NOT open with gad log show — start with `gad startup --projectid get-anything-done` per feedback_startup_first memory. Parallel-agent caveat still applies: the 602 pre-existing vendor test failures are operator-side WIP on runtime substrate / CLI harness / skill promotion — not my regressions. Surgical test runs only (memory: feedback_surgical_test_runs).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
@@ -45,7 +45,7 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-18T03:05:25.000Z</last-updated>
+  <last-updated>2026-04-18T05:01:38.000Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
 
