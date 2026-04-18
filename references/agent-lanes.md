@@ -60,8 +60,14 @@ Every primary agent, on session open:
 
 1. Read this file (or the top-level `AGENT-LANES.md` pointer if present).
 2. Read `SOUL.md` at repo root (if present) — assume the voice.
-3. Run `gad startup --projectid <id>` — picks up handoffs, last-active project, user settings.
-4. Do NOT run `gad log show` first (memory: `feedback_startup_first`).
+3. Run `gad startup --projectid <id>` — prints state / roadmap / tasks / decisions.
+4. Run `gad handoffs list --mine-first` — surface unclaimed handoffs targeted at your
+   runtime. Claim one that matches your lane before picking a task:
+   `gad handoffs claim <id>` → move to `claimed/`, then work, then
+   `gad handoffs complete <id>` when done. (Until snapshot integration
+   lands, `gad startup` does NOT surface the queue — you must list it
+   explicitly. Tracked in `.planning/notes/2026-04-18-handoff-snapshot-integration.md`.)
+5. Do NOT run `gad log show` first (memory: `feedback_startup_first`).
 
 Subagent dispatch MUST include: *"Your lane is X per `references/agent-lanes.md`"*
 in the prompt header, so the subagent inherits the correct allow/deny set.
