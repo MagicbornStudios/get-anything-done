@@ -2351,10 +2351,55 @@ const envRevokeCmd = defineCommand({
   },
 });
 
+const envAuditCmd = defineCommand({
+  meta: {
+    name: 'audit',
+    description: 'Show the append-only audit log for a project bag (rotate/revoke/purge events, newest-first). Never prints values — metadata only.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Project id whose audit log to read', required: true },
+    since: { type: 'string', description: 'Filter to events with ts >= this ISO timestamp', default: '' },
+    limit: { type: 'string', description: 'Max events to return (default: all)', default: '' },
+    json: { type: 'boolean', description: 'Emit JSON {events, nextCursor} instead of a table', default: false },
+  },
+  async run({ args }) {
+    const cli = getEnvCli();
+    const parsedLimit = args.limit ? Number(args.limit) : undefined;
+    await cli.auditCmd({
+      projectid: String(args.projectid),
+      since: args.since || null,
+      limit: Number.isFinite(parsedLimit) ? parsedLimit : null,
+      json: !!args.json,
+    });
+  },
+});
+
+const envPurgeCmd = defineCommand({
+  meta: {
+    name: 'purge',
+    description: 'Remove non-current versions whose grace window has elapsed. --dry-run previews without mutating. Current version is always preserved.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Project id whose bag to purge', required: true },
+    'as-of': { type: 'string', description: 'Cutoff timestamp (ISO8601, default: now)', default: '' },
+    'dry-run': { type: 'boolean', description: 'Preview what would be purged without writing', default: false },
+    json: { type: 'boolean', description: 'Emit JSON result instead of text', default: false },
+  },
+  async run({ args }) {
+    const cli = getEnvCli();
+    await cli.purgeCmd({
+      projectid: String(args.projectid),
+      asOf: args['as-of'] || null,
+      dryRun: !!args['dry-run'],
+      json: !!args.json,
+    });
+  },
+});
+
 const envCmd = defineCommand({
   meta: {
     name: 'env',
-    description: 'Per-project BYOK secrets — get / set / list / rotate / revoke. Values are encrypted with AES-256-GCM under a PBKDF2-derived master key and stored at .gad/secrets/<projectid>.enc. See references/byok-design.md.',
+    description: 'Per-project BYOK secrets — get / set / list / rotate / revoke / audit / purge. Values are encrypted with AES-256-GCM under a PBKDF2-derived master key and stored at .gad/secrets/<projectid>.enc. See references/byok-design.md.',
   },
   subCommands: {
     get: envGetCmd,
@@ -2362,6 +2407,8 @@ const envCmd = defineCommand({
     list: envListCmd,
     rotate: envRotateCmd,
     revoke: envRevokeCmd,
+    audit: envAuditCmd,
+    purge: envPurgeCmd,
   },
 });
 
@@ -3423,6 +3470,23 @@ const startCmd = defineCommand({
         return;
       }
       port = p;
+    }
+
+    // Task 60-05a: best-effort auto-purge preflight. Swallows any error —
+    // the dashboard must still open even if a bag is malformed or keychain
+    // is locked. Runs BEFORE the dashboard spawn so the summary hits
+    // stderr before the "Dashboard ready" line.
+    try {
+      const {
+        purgeExpiredAllProjects,
+        renderStartupPurgeSummary,
+      } = require('../lib/startup-purge.cjs');
+      const baseDir = findRepoRoot();
+      const summary = await purgeExpiredAllProjects({ baseDir });
+      const line = renderStartupPurgeSummary(summary);
+      if (line) process.stderr.write(line);
+    } catch (e) {
+      process.stderr.write(`[gad start] auto-purge skipped: ${e && e.message ? e.message : String(e)}\n`);
     }
 
     const result = await runStart({ port, noBrowser: Boolean(args['no-browser']) });

@@ -470,6 +470,88 @@ describe('secrets-lifecycle: purgeExpired', () => {
   });
 });
 
+describe('secrets-lifecycle: previewPurge (task 60-05a)', () => {
+  test('returns same {purgedCount,byKey} shape as purgeExpired without mutating envelope or audit', async () => {
+    const past = new Date(FROZEN_NOW.getTime() - 24 * 3600 * 1000).toISOString();
+    const { env: beforeEnv } = seedEnvelope({
+      keys: {
+        K: {
+          currentVersion: 2,
+          versions: {
+            '1': { plaintext: 'old', retiresAt: past },
+            '2': { plaintext: 'current', retiresAt: null },
+          },
+        },
+      },
+    });
+    const store = makeSuccessStore();
+    const lc = buildLifecycle({ store });
+
+    const preview = await lc.previewPurge({ projectId: PROJECT_ID });
+    assert.strictEqual(preview.purgedCount, 1);
+    assert.deepStrictEqual(preview.byKey, { K: [1] });
+
+    // Envelope file is untouched — key '1' still present.
+    const p = path.join(tmpRoot, '.gad', 'secrets', `${PROJECT_ID}.enc`);
+    const reread = JSON.parse(fs.readFileSync(p, 'utf8'));
+    assert.deepStrictEqual(Object.keys(reread.keys.K.versions).sort(), ['1', '2']);
+    assert.deepStrictEqual(reread.verifier, beforeEnv.verifier);
+
+    // Audit log has no new events.
+    assert.strictEqual(readAuditFileLines().length, 0);
+  });
+
+  test('missing envelope — zero preview, no throw', async () => {
+    const store = makeSuccessStore();
+    const lc = buildLifecycle({ store });
+    const preview = await lc.previewPurge({ projectId: PROJECT_ID });
+    assert.deepStrictEqual(preview, { purgedCount: 0, byKey: {} });
+  });
+
+  test('current version is never included in preview even with past retiresAt', async () => {
+    const past = new Date(FROZEN_NOW.getTime() - 24 * 3600 * 1000).toISOString();
+    seedEnvelope({
+      keys: {
+        K: {
+          currentVersion: 1,
+          versions: {
+            '1': { plaintext: 'only', retiresAt: past },
+          },
+        },
+      },
+    });
+    const store = makeSuccessStore();
+    const lc = buildLifecycle({ store });
+    const preview = await lc.previewPurge({ projectId: PROJECT_ID });
+    assert.strictEqual(preview.purgedCount, 0);
+  });
+
+  test('asOf override threads through preview walk', async () => {
+    const shortlyFuture = new Date(FROZEN_NOW.getTime() + 24 * 3600 * 1000).toISOString();
+    seedEnvelope({
+      keys: {
+        K: {
+          currentVersion: 2,
+          versions: {
+            '1': { plaintext: 'a', retiresAt: shortlyFuture },
+            '2': { plaintext: 'b', retiresAt: null },
+          },
+        },
+      },
+    });
+    const store = makeSuccessStore();
+    const lc = buildLifecycle({ store });
+
+    let preview = await lc.previewPurge({ projectId: PROJECT_ID });
+    assert.strictEqual(preview.purgedCount, 0);
+
+    const farFuture = new Date(FROZEN_NOW.getTime() + 365 * 24 * 3600 * 1000);
+    preview = await lc.previewPurge({ projectId: PROJECT_ID, asOf: farFuture });
+    assert.strictEqual(preview.purgedCount, 1);
+    assert.deepStrictEqual(preview.byKey, { K: [1] });
+  });
+});
+
 describe('secrets-lifecycle: audit log streaming', () => {
   test('auditLog returns events newest-first; limit respected', async () => {
     // Seed some rotate events directly through the wrapper to populate

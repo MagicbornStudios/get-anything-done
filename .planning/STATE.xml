@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-18 S18. 59-08 DONE: landing /planning + /projects/[...id] deprecation stubs (PlanningAppRedirectStub, 3-step install/serve UX). Nav /projects → /project-market. llms.txt Planning entry relabeled. tsc clean, next build clean. NEXT: 59-09 (subagent-run history flesh-out on /my-projects drawer) to close phase 59, OR 60-05a CLI wiring. Installed gad.exe still pre-59-05 — restart recommended before 59-09 touches planning-app runtime.</next-action>
+  <next-action>2026-04-18 S19. 60-05a DONE: `gad env audit` + `gad env purge` subcommands wired through lib/env-cli.cjs; lib/secrets-lifecycle.cjs gained previewPurge for dry-run support; new lib/startup-purge.cjs preflight hooked into startCmd (best-effort, swallows errors, stderr-only summary). 78/78 relevant tests green (env-cli 55, secrets-lifecycle 19, startup-purge 11 — plus 7 carried). Pre-existing unrelated failures on main: 602 across spawn/agent-skills/codex/worktree-cleanup clusters (baseline 930pass/602fail vs post-change 949pass/602fail — zero regressions from 60-05a). NEXT: 59-09 (subagent-run history flesh-out on /my-projects drawer) to close phase 59. Installed gad.exe still v1.33.0 pre-ea1ad32 — needs `gad install` before 59-09 wiring can exercise planning-app runtime end-to-end. Two follow-up todos filed at monorepo root: trace-events-volume-audit (verbose schema, uncertain consumer value) + gad-tasks-add-cli-gap (no `gad tasks add`; hand-edited XML to register 60-05a).</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
@@ -45,7 +45,7 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-17T23:04:43.414Z</last-updated>
+  <last-updated>2026-04-18T02:35:06.000Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
 </state>
 

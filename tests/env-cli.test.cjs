@@ -14,7 +14,7 @@ const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert');
 const { PassThrough } = require('stream');
 
-const { createEnvCli, messageFor, renderListTable } = require('../lib/env-cli.cjs');
+const { createEnvCli, messageFor, renderListTable, renderAuditTable } = require('../lib/env-cli.cjs');
 const { SecretsStoreError } = require('../lib/secrets-store-errors.cjs');
 
 // ---------------------------------------------------------------------------
@@ -51,7 +51,39 @@ function makeMockStore(overrides = {}) {
   return { impl, calls };
 }
 
-function makeHarness({ storeOverrides, stdinIsTty = false, stdinLine = null, confirm = async () => true, readPassphrase } = {}) {
+function makeMockLifecycle(overrides = {}) {
+  const calls = { rotate: [], revoke: [], purgeExpired: [], previewPurge: [], auditLog: [] };
+  const impl = {
+    async rotate(args) {
+      calls.rotate.push(args);
+      if (overrides.rotate) return overrides.rotate(args);
+      return { oldVersion: 1, newVersion: 2, auditEventId: 'evt-rot' };
+    },
+    async revoke(args) {
+      calls.revoke.push(args);
+      if (overrides.revoke) return overrides.revoke(args);
+      return { auditEventId: 'evt-rev', removedVersions: [1] };
+    },
+    async purgeExpired(args) {
+      calls.purgeExpired.push(args);
+      if (overrides.purgeExpired) return overrides.purgeExpired(args);
+      return { purgedCount: 0, byKey: {} };
+    },
+    async previewPurge(args) {
+      calls.previewPurge.push(args);
+      if (overrides.previewPurge) return overrides.previewPurge(args);
+      return { purgedCount: 0, byKey: {} };
+    },
+    async auditLog(args) {
+      calls.auditLog.push(args);
+      if (overrides.auditLog) return overrides.auditLog(args);
+      return { events: [], nextCursor: null };
+    },
+  };
+  return { impl, calls };
+}
+
+function makeHarness({ storeOverrides, lifecycleOverrides, stdinIsTty = false, stdinLine = null, confirm = async () => true, readPassphrase } = {}) {
   const stdin = new PassThrough();
   stdin.isTTY = stdinIsTty;
   if (stdinLine !== null && !stdinIsTty) {
@@ -65,11 +97,13 @@ function makeHarness({ storeOverrides, stdinIsTty = false, stdinLine = null, con
   stderr.on('data', (c) => stderrChunks.push(c.toString('utf8')));
 
   const { impl: store, calls } = makeMockStore(storeOverrides);
+  const { impl: lifecycle, calls: lifecycleCalls } = makeMockLifecycle(lifecycleOverrides);
   let exitCode = null;
   const exit = (c) => { exitCode = c; };
 
   const cli = createEnvCli({
     store,
+    lifecycle,
     readPassphrase: readPassphrase || (async () => Buffer.from('test-pass', 'utf8')),
     stdin,
     stdout,
@@ -81,6 +115,7 @@ function makeHarness({ storeOverrides, stdinIsTty = false, stdinLine = null, con
   return {
     cli,
     calls,
+    lifecycleCalls,
     getStdout: () => stdoutChunks.join(''),
     getStderr: () => stderrChunks.join(''),
     getExitCode: () => exitCode,
@@ -364,5 +399,219 @@ describe('env-cli: renderListTable', () => {
     assert.strictEqual(lines.length, 3);
     // Neither value nor ciphertext shows up.
     assert.doesNotMatch(out, /ciphertext/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. audit — newest-first log view (task 60-05a)
+// ---------------------------------------------------------------------------
+
+describe('env-cli: audit', () => {
+  test('empty log prints a zero-events hint on stdout', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: { auditLog: async () => ({ events: [], nextCursor: null }) },
+    });
+    await h.cli.auditCmd({ projectid: 'proj1', json: false });
+    assert.strictEqual(h.getStderr(), '');
+    assert.match(h.getStdout(), /0 audit events for project proj1\./);
+    assert.strictEqual(h.lifecycleCalls.auditLog.length, 1);
+    assert.strictEqual(h.lifecycleCalls.auditLog[0].projectId, 'proj1');
+  });
+
+  test('--json emits raw {events, nextCursor} payload (never values)', async () => {
+    const events = [
+      {
+        eventId: 'a', eventType: 'rotate', projectId: 'p', keyName: 'K',
+        ts: '2026-04-18T00:00:00.000Z', actor: 'cli',
+        details: { oldVersion: 1, newVersion: 2, graceDays: 7, reason: null },
+      },
+    ];
+    const h = makeHarness({
+      lifecycleOverrides: { auditLog: async () => ({ events, nextCursor: null }) },
+    });
+    await h.cli.auditCmd({ projectid: 'p', json: true });
+    const parsed = JSON.parse(h.getStdout());
+    assert.strictEqual(parsed.events.length, 1);
+    assert.strictEqual(parsed.events[0].eventType, 'rotate');
+    assert.strictEqual(parsed.nextCursor, null);
+    // Values never appear in audit payloads — defensive.
+    assert.doesNotMatch(h.getStdout(), /sk-|BEGIN PRIVATE|password/i);
+  });
+
+  test('--since and --limit are threaded through to lifecycle.auditLog', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: { auditLog: async () => ({ events: [], nextCursor: null }) },
+    });
+    await h.cli.auditCmd({ projectid: 'p', since: '2026-04-01T00:00:00Z', limit: 5 });
+    assert.deepStrictEqual(h.lifecycleCalls.auditLog[0], {
+      projectId: 'p',
+      since: '2026-04-01T00:00:00Z',
+      limit: 5,
+    });
+  });
+
+  test('table mode prints TS/EVENT/KEY/ACTOR/DETAILS header + a row per event', async () => {
+    const events = [
+      {
+        eventId: 'a', eventType: 'rotate', projectId: 'p', keyName: 'K',
+        ts: '2026-04-18T01:00:00.000Z', actor: 'cli',
+        details: { oldVersion: 1, newVersion: 2, graceDays: 7 },
+      },
+      {
+        eventId: 'b', eventType: 'purge', projectId: 'p', keyName: 'K',
+        ts: '2026-04-18T02:00:00.000Z', actor: 'cli',
+        details: { version: 1, retiredAt: '2026-04-11T00:00:00Z' },
+      },
+    ];
+    const h = makeHarness({
+      lifecycleOverrides: { auditLog: async () => ({ events, nextCursor: null }) },
+    });
+    await h.cli.auditCmd({ projectid: 'p' });
+    const out = h.getStdout();
+    assert.match(out, /TS\s+EVENT\s+KEY\s+ACTOR\s+DETAILS/);
+    assert.match(out, /rotate/);
+    assert.match(out, /v1 → v2 \(grace 7d\)/);
+    assert.match(out, /purge/);
+    assert.match(out, /v1 retired=2026-04-11/);
+  });
+
+  test('nextCursor emits a paging hint on stderr only', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: {
+        auditLog: async () => ({
+          events: [{
+            eventId: 'a', eventType: 'rotate', projectId: 'p', keyName: 'K',
+            ts: '2026-04-18T00:00:00Z', actor: 'cli', details: { oldVersion: 1, newVersion: 2, graceDays: 7 },
+          }],
+          nextCursor: '2026-04-17T00:00:00Z',
+        }),
+      },
+    });
+    await h.cli.auditCmd({ projectid: 'p', limit: 1 });
+    assert.match(h.getStderr(), /more — rerun with --since 2026-04-17T00:00:00Z/);
+    // The hint is stderr-only so tooling piping stdout is unaffected.
+    assert.doesNotMatch(h.getStdout(), /rerun with/);
+  });
+
+  test('lifecycle errors exit non-zero with code-prefixed stderr', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: {
+        auditLog: async () => { throw new SecretsStoreError('BAG_CORRUPT', 'tampered'); },
+      },
+    });
+    await h.cli.auditCmd({ projectid: 'p' });
+    assert.strictEqual(h.getExitCode(), 1);
+    assert.match(h.getStderr(), /^BAG_CORRUPT: /);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 9. purge — manual grace-period purge (task 60-05a)
+// ---------------------------------------------------------------------------
+
+describe('env-cli: purge', () => {
+  test('happy path calls lifecycle.purgeExpired with a Date asOf', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: {
+        purgeExpired: async () => ({ purgedCount: 2, byKey: { OPENAI_API_KEY: [1, 2] } }),
+      },
+    });
+    await h.cli.purgeCmd({ projectid: 'p' });
+    assert.strictEqual(h.lifecycleCalls.purgeExpired.length, 1);
+    assert.ok(h.lifecycleCalls.purgeExpired[0].asOf instanceof Date);
+    assert.match(h.getStdout(), /Purged 2 expired version\(s\) for project p:/);
+    assert.match(h.getStdout(), /OPENAI_API_KEY: v1, v2/);
+  });
+
+  test('no-op purge prints a zero-count line; lifecycle still called', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: { purgeExpired: async () => ({ purgedCount: 0, byKey: {} }) },
+    });
+    await h.cli.purgeCmd({ projectid: 'p' });
+    assert.match(h.getStdout(), /Purged 0 expired versions for project p\./);
+    assert.strictEqual(h.lifecycleCalls.purgeExpired.length, 1);
+  });
+
+  test('--dry-run calls previewPurge (NOT purgeExpired) and prints the planned set', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: {
+        previewPurge: async () => ({ purgedCount: 1, byKey: { K: [3] } }),
+        purgeExpired: async () => { throw new Error('dry-run must not call purgeExpired'); },
+      },
+    });
+    await h.cli.purgeCmd({ projectid: 'p', dryRun: true });
+    assert.strictEqual(h.lifecycleCalls.previewPurge.length, 1);
+    assert.strictEqual(h.lifecycleCalls.purgeExpired.length, 0);
+    assert.match(h.getStdout(), /Dry-run: would purge 1 version\(s\) for project p:/);
+    assert.match(h.getStdout(), /K: v3/);
+  });
+
+  test('invalid --as-of fails fast with Error line on stderr', async () => {
+    const h = makeHarness({});
+    await h.cli.purgeCmd({ projectid: 'p', asOf: 'not-a-date' });
+    assert.strictEqual(h.getExitCode(), 1);
+    assert.match(h.getStderr(), /not a valid date/);
+    assert.strictEqual(h.lifecycleCalls.purgeExpired.length, 0);
+    assert.strictEqual(h.lifecycleCalls.previewPurge.length, 0);
+  });
+
+  test('--json emits the raw result object', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: {
+        purgeExpired: async () => ({ purgedCount: 1, byKey: { K: [1] } }),
+      },
+    });
+    await h.cli.purgeCmd({ projectid: 'p', json: true });
+    const parsed = JSON.parse(h.getStdout());
+    assert.strictEqual(parsed.purgedCount, 1);
+    assert.deepStrictEqual(parsed.byKey.K, [1]);
+  });
+
+  test('--dry-run --json emits {dryRun: true, ...preview}', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: {
+        previewPurge: async () => ({ purgedCount: 0, byKey: {} }),
+      },
+    });
+    await h.cli.purgeCmd({ projectid: 'p', dryRun: true, json: true });
+    const parsed = JSON.parse(h.getStdout());
+    assert.strictEqual(parsed.dryRun, true);
+    assert.strictEqual(parsed.purgedCount, 0);
+  });
+
+  test('lifecycle errors exit non-zero with code-prefixed stderr', async () => {
+    const h = makeHarness({
+      lifecycleOverrides: {
+        purgeExpired: async () => { throw new SecretsStoreError('PROJECT_NOT_FOUND', 'nope'); },
+      },
+    });
+    await h.cli.purgeCmd({ projectid: 'p' });
+    assert.strictEqual(h.getExitCode(), 1);
+    assert.match(h.getStderr(), /^PROJECT_NOT_FOUND: /);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 10. renderAuditTable — formatter coverage
+// ---------------------------------------------------------------------------
+
+describe('env-cli: renderAuditTable', () => {
+  test('summarizes each known event type in the DETAILS column', () => {
+    const out = renderAuditTable([
+      { ts: '2026-04-18T00:00:00Z', eventType: 'rotate', keyName: 'K', actor: 'cli', details: { oldVersion: 1, newVersion: 2, graceDays: 7 } },
+      { ts: '2026-04-18T00:01:00Z', eventType: 'revoke', keyName: 'K', actor: 'cli', details: { removedVersions: [1, 2] } },
+      { ts: '2026-04-18T00:02:00Z', eventType: 'purge', keyName: 'K', actor: 'cli', details: { version: 1, retiredAt: '2026-04-11T00:00:00Z' } },
+    ]);
+    assert.match(out, /v1 → v2 \(grace 7d\)/);
+    assert.match(out, /removed=\[1,2\]/);
+    assert.match(out, /v1 retired=2026-04-11/);
+    assert.match(out, /TS\s+EVENT\s+KEY\s+ACTOR\s+DETAILS/);
+  });
+
+  test('unknown event types render with empty DETAILS', () => {
+    const out = renderAuditTable([
+      { ts: '2026-04-18T00:00:00Z', eventType: 'bag-created', keyName: '', actor: 'cli', details: {} },
+    ]);
+    assert.match(out, /bag-created/);
   });
 });
