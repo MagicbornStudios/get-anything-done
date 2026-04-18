@@ -2,6 +2,14 @@
 
 **This is the canonical GAD loop definition (gad-18).** All other AGENTS.md files reference this one.
 
+## Agent lanes (mandatory read for parallel agents)
+
+**Spec:** `references/agent-lanes.md` — per-runtime allow/deny globs, shared-write
+protocols, collision playbook, session-start etiquette. Every parallel agent
+(claude-code, codex, cursor, future runtimes) reads this on session open and
+before touching a non-owned file. Cross-lane edits only via the handoff queue
+(`.planning/handoffs/open/`). Promoted 2026-04-18 (task 63-04).
+
 ## Communication style (default for every GAD project)
 
 **Spec:** `references/communication-style.md` — read once, follow every turn.

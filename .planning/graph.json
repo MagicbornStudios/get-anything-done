@@ -4487,6 +4487,16 @@
     },
     {
       "type": "task",
+      "id": "task:46-15",
+      "label": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each:",
+      "status": "planned",
+      "goal": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deleted. Initial scan 2026-04-18: mb-cli-framework has 103 live references (packages/magicborn-cli tests + docs + vendor-registry + ink-tui) — KEEP. grime-time-site / repub-builder / claw-code status unknown, user suspects unused now that PayloadCMS pivot was dropped. Deliverable: references/submodule-audit-2026-04.md with KEEP/INLINE/DROP recommendation per submodule. Follow-up tasks for any DROP + gitmodules cleanup.",
+      "skill": "",
+      "taskType": "cleanup",
+      "keywords": ""
+    },
+    {
+      "type": "task",
       "id": "task:55-00",
       "label": "Catalog all 91 vendor SKILL.md files into DEV/PROD/META lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. Output:",
       "status": "done",
@@ -4701,6 +4711,66 @@
       "label": "Split secrets-store error codes: PROJECT_NOT_FOUND for missing envelope on disk vs KEY_NOT_FOUND for envelope-exists-but",
       "status": "done",
       "goal": "Split secrets-store error codes: PROJECT_NOT_FOUND for missing envelope on disk vs KEY_NOT_FOUND for envelope-exists-but-key-absent. Removes the substring-match antipattern in scoped-spawn.cjs (isMissingEnvelope) and env-cli.cjs list-empty soft-swallow. Files touched: lib/secrets-store.cjs (1 throw site), lib/scoped-spawn.cjs (isMissingEnvelope), lib/env-cli.cjs (messageFor + list catch), references/byok-design.md (sec.12 error table), tests/secrets-store.test.cjs (split test), tests/scoped-spawn.test.cjs (mock helper), tests/env-cli.test.cjs (list-empty + messageFor table). Closes todo 2026-04-17-secrets-store-project-not-found-split. Unblocks BYOK UI rendering in 60-07/60-08.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-01",
+      "label": "State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-h",
+      "status": "planned",
+      "goal": "State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-hook-state, skill-active-state, team-state, tmux-hook-state), .planning/{STATE.xml, TASK-REGISTRY.xml, .gad-log/*.jsonl, .trace-events.jsonl, .trace-seq, .gad-agent-lanes.json, graph.json, config.json, sessions/*.json, notes/, todos/}, .claude/{settings.json, settings.local.json, hooks/state}, ~/.cache/gad/. Classify per pattern: (a) contested AGGREGATE → CLI-mediated writes, (b) shared APPEND-ONLY streams → JSONL append-safe, (c) contested SINGLE-OWNER → per-agent dir, (d) cross-agent INTENT → per-file dir + fs.rename. Deliverable: references/state-writes-inventory.md. Follow-ups filed per consolidation action. See 2026-04-18 post-mortem notes.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-02",
+      "label": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session",
+      "status": "planned",
+      "goal": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session pause writes handoff file, (b) user settings 63-03 stores last-active-projectid, (c) &apos;gad start&apos; or new session auto-invokes gad handoffs list --unclaimed --mine-first + gad snapshot --projectid &lt;last-active&gt;, (d) if exactly one unclaimed handoff matches runtime auto-claim, (e) SessionStart hook surfaces &apos;1 unclaimed handoff — /pickup to resume&apos;. Metrics to beat: 2026-04-18 baseline ~35% of Claude turn on orientation (archaeology + /gsd:update + projectid guessing). Target &lt;1 tool call to restored context.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-03",
+      "label": "User settings scaffold (non-checked-in). Local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per",
+      "status": "planned",
+      "goal": "User settings scaffold (non-checked-in). Local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per 63-01 audit). Fields: displayName (default = os.userInfo().username), lastActiveProjectid, assignedSouls {projectid: soulslug}, lastSessionId, preferredRuntime, teachingSnoozeUntil. Gitignored. Read by gad startup, gad snapshot, SessionStart hook, and anywhere we need to know &apos;who is logged in&apos;. Addresses 2026-04-18 user feedback: &apos;we should have user settings that dont get checked in so we know who is logged in. if they dont have a name, default to machine name. users can have souls assigned to them in the gad project for that to be injected.&apos;",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-04",
+      "label": "Agent lane manifest — canonical file/directory ownership per agent runtime. Authors a top-level AGENT-LANES.md (or refer",
+      "status": "done",
+      "goal": "Agent lane manifest — canonical file/directory ownership per agent runtime. Authors a top-level AGENT-LANES.md (or references/agent-lanes.md) that every parallel agent consults as ground truth. Minimum content: (a) per-runtime lane definition (claude-code, codex, cursor, etc.) with file-glob allow + deny lists, (b) shared-write protocols (TASK-REGISTRY.xml via gad tasks add ONLY, etc.), (c) conflict-resolution playbook (who wins on collision, how to cede, how to request cross-lane work), (d) session-start etiquette (read this file BEFORE touching anything). Driven by 2026-04-18 3-agent overlap post-mortem where Cursor misattributed Claude&apos;s tasks to Codex, costing ~5% of its turn. Codex owns runtime/bin/gad.cjs + lib/runtime-* + verify; Cursor owns BYOK/lib/secrets-* + lib/env-cli + lib/scoped-spawn; Claude owns snapshot/lib/snapshot-* + planning docs + memory + cross-cutting framework hygiene. Operator assigns souls per lane per project.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-05",
+      "label": "Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader",
+      "status": "planned",
+      "goal": "Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader.cjs exist but the Claude SessionStart hook chain (~/.claude/hooks/gad-check-update.js + gad-session-state.sh) does not emit them. Also: SOUL.md at repo root is readable but not auto-mentioned — Kael persona only lands when I recall CLAUDE.md pointer. Wire: (a) gad-session-state.sh emits the day&apos;s teaching tip (falls through silently if no tip), (b) new hook or same emits &apos;Active soul: &lt;name&gt; (SOUL.md)&apos; when SOUL.md present, (c) teaching generation runs per decision gad-257 at startup (dedup across multi-session-per-day), (d) llm-from-scratch subagent dispatch per gad-256/258 when appropriate. Did NOT fire for Claude this session despite decisions gad-255..258 being in place.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-06",
+      "label": "Gap: gad phases add writes only to ROADMAP.xml, not TASK-REGISTRY.xml. Discovered 2026-04-18 when filing phase 63 — afte",
+      "status": "planned",
+      "goal": "Gap: gad phases add writes only to ROADMAP.xml, not TASK-REGISTRY.xml. Discovered 2026-04-18 when filing phase 63 — after &apos;gad phases add&apos; succeeded, &apos;gad tasks add --phase 63&apos; failed with PHASE_NOT_FOUND in TASK-REGISTRY. Hand-added &lt;phase id=&quot;63&quot;&gt;&lt;/phase&gt; container as workaround. Fix: gad phases add should atomically append the matching &lt;phase id=&quot;N&quot;&gt;&lt;/phase&gt; element to TASK-REGISTRY.xml via lib/task-registry-writer.cjs (already exists from 59-10). Test: new tests/phases-add-registry-sync.test.cjs — roundtrip verify both files updated. Also add &apos;gad tasks update &lt;id&gt; --goal&apos; (discovered gap: design notes for 60-09 had to be sidecar files because no in-place goal rewrite).",
       "skill": "",
       "taskType": "framework",
       "keywords": ""
@@ -7028,6 +7098,14 @@
       "id": "workflow:workflows/gad-map-codebase.md",
       "label": "workflows/gad-map-codebase.md",
       "source": "skill-ref"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad:merge-skill",
+      "label": ">-",
+      "slug": "gad-merge-skill",
+      "trigger": "",
+      "source": "canonical"
     },
     {
       "type": "skill",
@@ -12178,6 +12256,16 @@
       "type": "USES_SKILL"
     },
     {
+      "source": "task:46-15",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-15",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
       "source": "task:55-00",
       "target": "phase:55",
       "type": "BELONGS_TO"
@@ -12575,6 +12663,116 @@
     {
       "source": "task:60-10",
       "target": "task:60-08",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-01",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-01",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-02",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-02",
+      "target": "task:60-09",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:63-02",
+      "target": "task:60-09",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-02",
+      "target": "task:63-03",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-02",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-03",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-03",
+      "target": "task:63-01",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-03",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-04",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-04",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-05",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-05",
+      "target": "task:58",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:63-05",
+      "target": "decision:gad-257",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-05",
+      "target": "decision:gad-256",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-05",
+      "target": "decision:gad-255",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-06",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-06",
+      "target": "phase:63",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-06",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-06",
+      "target": "task:59-10",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-06",
+      "target": "task:60-09",
       "type": "CITES"
     },
     {
@@ -14975,20 +15173,20 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T16:35:25.938Z",
-    "nodeCount": 981,
-    "edgeCount": 1434,
+    "generated": "2026-04-18T17:22:43.404Z",
+    "nodeCount": 989,
+    "edgeCount": 1458,
     "nodeTypes": {
       "phase": 67,
-      "task": 417,
-      "skill": 131,
+      "task": 424,
+      "skill": 132,
       "decision": 262,
       "workflow": 104
     },
     "edgeTypes": {
-      "BELONGS_TO": 419,
-      "CITES": 560,
-      "DEPENDS_ON": 86,
+      "BELONGS_TO": 426,
+      "CITES": 575,
+      "DEPENDS_ON": 88,
       "USES_SKILL": 201,
       "REFERENCES": 89,
       "USES_WORKFLOW": 79
