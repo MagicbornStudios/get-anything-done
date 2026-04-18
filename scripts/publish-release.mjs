@@ -62,7 +62,7 @@ export function getPackCommandInvocation({
   if (platform === 'win32') {
     return {
       command: comspec,
-      args: ['/d', '/s', '/c', `"${npmCommand}" pack --pack-destination "${releaseDir}"`],
+      args: ['/d', '/s', '/c', `${npmCommand} pack --pack-destination "${releaseDir}"`],
     };
   }
   return {

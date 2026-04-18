@@ -70,7 +70,7 @@ describe('publish-release tarball handling', () => {
       '/d',
       '/s',
       '/c',
-      '"npm.cmd" pack --pack-destination "C:\\tmp\\release"',
+      'npm.cmd pack --pack-destination "C:\\tmp\\release"',
     ]);
   });
 

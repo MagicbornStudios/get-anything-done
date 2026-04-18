@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.34.2] - 2026-04-18
+
+Follow-up release to finish the Windows publisher repair by using the exact `cmd.exe /c npm.cmd ...` form that `npm.cmd` accepts during asset generation.
+
+### Fixed
+- `scripts/publish-release.mjs` no longer wraps `npm.cmd` in extra quotes when building the Windows `cmd.exe /c` pack invocation, avoiding the `'"npm.cmd"' is not recognized` failure that still blocked `npm run publish:release`.
+- Release-publisher regression coverage now locks the unquoted Windows command line that actually works under `cmd.exe`.
+
 ## [1.34.1] - 2026-04-18
 
 Follow-up release to repair the Windows release publisher so the GitHub release assets can actually be generated from the tagged build.
@@ -1901,7 +1909,8 @@ First GitHub release cut of GAD with downloadable Windows installer artifacts at
 - YOLO mode for autonomous execution
 - Interactive mode with checkpoints
 
-[Unreleased]: https://github.com/MagicbornStudios/get-anything-done/compare/v1.34.1...HEAD
+[Unreleased]: https://github.com/MagicbornStudios/get-anything-done/compare/v1.34.2...HEAD
+[1.34.2]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.2
 [1.34.1]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.1
 [1.34.0]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.0
 [1.30.0]: https://github.com/gsd-build/get-shit-done/releases/tag/v1.30.0
