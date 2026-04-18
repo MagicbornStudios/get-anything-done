@@ -30,7 +30,10 @@ green against a real cid.
 This proto-skill captures the checklist as a reusable pattern so future
 gated-editor work does not re-derive it from scratch or ship drift.
 
-**Workflow:** [./workflow.md](./workflow.md)
+**Workflow:** Inline in this SKILL.md (six-step checklist described in the
+"When this fires" / "When NOT to use this" sections below). The parent skill
+`gad-visual-context-system` has the full methodology at
+`workflows/visual-context-system.md`.
 
 ## When this fires
 
