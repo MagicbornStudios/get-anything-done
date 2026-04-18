@@ -57,29 +57,33 @@ describe('update workflow distribution docs', () => {
 });
 
 describe('publish-release tarball handling', () => {
-  test('getPackCommandInvocation uses cmd.exe wrapper on Windows', async () => {
+  test('getPackCommandInvocation uses node + npm-cli.js on Windows when available', async () => {
     const mod = await loadPublishReleaseModule();
     const invocation = mod.getPackCommandInvocation({
       releaseDir: 'C:\\tmp\\release',
       npmCommand: 'npm.cmd',
       platform: 'win32',
-      comspec: 'C:\\Windows\\System32\\cmd.exe',
+      npmExecPath: 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+      nodeCommand: 'C:\\Program Files\\nodejs\\node.exe',
     });
-    assert.equal(invocation.command, 'C:\\Windows\\System32\\cmd.exe');
+    assert.equal(invocation.command, 'C:\\Program Files\\nodejs\\node.exe');
     assert.deepStrictEqual(invocation.args, [
-      '/d',
-      '/s',
-      '/c',
-      'npm.cmd pack --pack-destination "C:\\tmp\\release"',
+      'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+      'pack',
+      '--pack-destination',
+      'C:\\tmp\\release',
     ]);
   });
 
-  test('ensureReleaseTarball creates a package tarball when missing and uploads include it', async () => {
+  test('ensureReleaseTarball creates the current package tarball and uploads only current-version artifacts', async () => {
     const mod = await loadPublishReleaseModule();
+    const currentVersion = mod.parseArgs([]).tag.replace(/^v/, '');
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-release-'));
     const releaseDir = path.join(tmpRoot, 'dist', 'release');
     fs.mkdirSync(releaseDir, { recursive: true });
-    fs.writeFileSync(path.join(releaseDir, 'gad-v1.34.0-windows-x64.exe'), 'exe');
+    fs.writeFileSync(path.join(releaseDir, `gad-v${currentVersion}-windows-x64.exe`), 'exe');
+    fs.writeFileSync(path.join(releaseDir, 'gad-v1.34.1-windows-x64.exe'), 'old exe');
+    fs.writeFileSync(path.join(releaseDir, 'get-anything-done-1.34.1.tgz'), 'old tgz');
 
     const calls = [];
     mod.ensureReleaseTarball({
@@ -87,32 +91,65 @@ describe('publish-release tarball handling', () => {
       releaseDir,
       execFile(command, args, options) {
         calls.push({ command, args, options });
-        fs.writeFileSync(path.join(releaseDir, 'get-anything-done-1.34.0.tgz'), 'tgz');
+        fs.writeFileSync(path.join(releaseDir, `get-anything-done-${currentVersion}.tgz`), 'tgz');
       },
       npmCommand: process.platform === 'win32' ? 'npm.cmd' : 'npm',
+      npmExecPath: process.platform === 'win32' ? 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js' : undefined,
+      nodeCommand: process.platform === 'win32' ? 'C:\\Program Files\\nodejs\\node.exe' : process.execPath,
     });
 
     assert.equal(calls.length, 1);
-    const expected = mod.getPackCommandInvocation({ releaseDir, npmCommand: process.platform === 'win32' ? 'npm.cmd' : 'npm' });
+    const expected = mod.getPackCommandInvocation({
+      releaseDir,
+      npmCommand: process.platform === 'win32' ? 'npm.cmd' : 'npm',
+      npmExecPath: process.platform === 'win32' ? 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js' : undefined,
+      nodeCommand: process.platform === 'win32' ? 'C:\\Program Files\\nodejs\\node.exe' : process.execPath,
+    });
     assert.equal(calls[0].command, expected.command);
     assert.deepStrictEqual(calls[0].args, expected.args);
 
     const artifacts = mod.getArtifacts(releaseDir).map((file) => path.basename(file)).sort();
     assert.deepStrictEqual(artifacts, [
-      'gad-v1.34.0-windows-x64.exe',
-      'get-anything-done-1.34.0.tgz',
+      `gad-v${currentVersion}-windows-x64.exe`,
+      `get-anything-done-${currentVersion}.tgz`,
     ]);
 
     cleanup(tmpRoot);
   });
 
-  test('ensureReleaseTarball skips npm pack when tarball already exists', async () => {
+  test('ensureReleaseTarball does not treat an older tarball as satisfying the current release', async () => {
     const mod = await loadPublishReleaseModule();
+    const currentVersion = mod.parseArgs([]).tag.replace(/^v/, '');
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-release-'));
     const releaseDir = path.join(tmpRoot, 'dist', 'release');
     fs.mkdirSync(releaseDir, { recursive: true });
-    fs.writeFileSync(path.join(releaseDir, 'gad-v1.34.0-windows-x64.exe'), 'exe');
-    fs.writeFileSync(path.join(releaseDir, 'get-anything-done-1.34.0.tgz'), 'tgz');
+    fs.writeFileSync(path.join(releaseDir, `gad-v${currentVersion}-windows-x64.exe`), 'exe');
+    fs.writeFileSync(path.join(releaseDir, 'get-anything-done-1.34.1.tgz'), 'old tgz');
+
+    let called = false;
+    mod.ensureReleaseTarball({
+      root: tmpRoot,
+      releaseDir,
+      execFile() {
+        called = true;
+      },
+      npmCommand: process.platform === 'win32' ? 'npm.cmd' : 'npm',
+      npmExecPath: process.platform === 'win32' ? 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js' : undefined,
+      nodeCommand: process.platform === 'win32' ? 'C:\\Program Files\\nodejs\\node.exe' : process.execPath,
+    });
+
+    assert.equal(called, true);
+    cleanup(tmpRoot);
+  });
+
+  test('ensureReleaseTarball skips npm pack when tarball already exists', async () => {
+    const mod = await loadPublishReleaseModule();
+    const currentVersion = mod.parseArgs([]).tag.replace(/^v/, '');
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-release-'));
+    const releaseDir = path.join(tmpRoot, 'dist', 'release');
+    fs.mkdirSync(releaseDir, { recursive: true });
+    fs.writeFileSync(path.join(releaseDir, `gad-v${currentVersion}-windows-x64.exe`), 'exe');
+    fs.writeFileSync(path.join(releaseDir, `get-anything-done-${currentVersion}.tgz`), 'tgz');
 
     let called = false;
     mod.ensureReleaseTarball({

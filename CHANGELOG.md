@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.34.3] - 2026-04-18
+
+Follow-up release to make Windows asset publication fully deterministic: the tarball generator now calls npm through `node.exe`, and the publisher only uploads artifacts for the current version instead of whatever older files are still sitting in `dist/release`.
+
+### Fixed
+- `scripts/publish-release.mjs` now prefers `node <npm-cli.js> pack --pack-destination ...` on Windows, avoiding both batch-file spawn failures and `cmd.exe` quoting drift around the tarball destination path.
+- Release artifact selection is now version-specific. Stale `gad-v*` executables or older `get-anything-done-*.tgz` files in `dist/release` no longer satisfy tarball generation or get uploaded to the current GitHub release.
+- Regression coverage now checks that older tarballs do not suppress current tarball generation and that only current-version artifacts are selected for upload.
+
 ## [1.34.2] - 2026-04-18
 
 Follow-up release to finish the Windows publisher repair by using the exact `cmd.exe /c npm.cmd ...` form that `npm.cmd` accepts during asset generation.
@@ -1909,7 +1918,8 @@ First GitHub release cut of GAD with downloadable Windows installer artifacts at
 - YOLO mode for autonomous execution
 - Interactive mode with checkpoints
 
-[Unreleased]: https://github.com/MagicbornStudios/get-anything-done/compare/v1.34.2...HEAD
+[Unreleased]: https://github.com/MagicbornStudios/get-anything-done/compare/v1.34.3...HEAD
+[1.34.3]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.3
 [1.34.2]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.2
 [1.34.1]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.1
 [1.34.0]: https://github.com/MagicbornStudios/get-anything-done/releases/tag/v1.34.0
