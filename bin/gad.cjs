@@ -76,6 +76,22 @@ const {
   removeTaskClaim,
   touchAgentLane,
 } = require('../lib/agent-lanes.cjs');
+const { detectRuntimeIdentity, detectRuntimeSessionId } = require('../lib/runtime-detect.cjs');
+const { getLastActiveProjectid, setLastActiveProjectid } = require('../lib/user-settings.cjs');
+const {
+  lintAllSkills,
+  lintSkill,
+  summarizeLint,
+  parseFrontmatter: parseSkillFrontmatter,
+  auditSkillTokens,
+  extractBodyRefs,
+} = require('../lib/skill-linter.cjs');
+const {
+  collectAttributions,
+  buildUsageReport,
+  discoverSkillIds,
+  SENTINEL_SKILL_VALUES,
+} = require('../lib/skill-usage-stats.cjs');
 
 const pkg = require('../package.json');
 
@@ -311,6 +327,18 @@ function outputError(msg) {
   process.exit(1);
 }
 
+const RAW_ARGV = process.argv.slice();
+
+function readRawFlagValue(flagName, argv = RAW_ARGV) {
+  const inline = argv.find((arg) => String(arg).startsWith(`${flagName}=`));
+  if (inline) return String(inline).slice(flagName.length + 1);
+  const idx = argv.indexOf(flagName);
+  if (idx === -1 || idx + 1 >= argv.length) return '';
+  const value = argv[idx + 1];
+  if (!value || String(value).startsWith('--')) return '';
+  return String(value);
+}
+
 // ---------------------------------------------------------------------------
 // Call logger — every gad command writes a JSONL entry
 // ---------------------------------------------------------------------------
@@ -324,21 +352,7 @@ function outputError(msg) {
 const GAD_LOG_DIR = process.env.GAD_LOG_DIR || null;
 let _logDir = null;
 let _logStart = Date.now();
-let _logCmd = process.argv.slice(2).join(' ');
-
-function detectRuntimeIdentity() {
-  const model = process.env.GAD_MODEL || process.env.CLAUDE_MODEL || process.env.OPENAI_MODEL || null;
-  if (process.env.GAD_RUNTIME) {
-    return { id: process.env.GAD_RUNTIME, source: 'env', model };
-  }
-  if (process.env.CODEX_HOME) {
-    return { id: 'codex', source: 'env', model };
-  }
-  if (process.env.CLAUDE_CONFIG_DIR || process.env.CLAUDECODE || process.env.CLAUDE_CODE_ENTRYPOINT) {
-    return { id: 'claude-code', source: 'env', model };
-  }
-  return { id: 'unknown', source: 'unknown', model };
-}
+let _logCmd = RAW_ARGV.slice(2).join(' ');
 
 function normalizeEvalRuntime(runtime) {
   const value = String(runtime || '').trim().toLowerCase();
@@ -367,16 +381,6 @@ function runtimeInstallFlag(runtimeId) {
   if (runtimeId === 'windsurf') return '--windsurf';
   if (runtimeId === 'gemini-cli') return '--gemini';
   return null;
-}
-
-function detectRuntimeSessionId() {
-  return process.env.GAD_RUNTIME_SESSION_ID
-    || process.env.GAD_SESSION_ID
-    || process.env.CLAUDE_SESSION_ID
-    || process.env.CLAUDE_CONVERSATION_ID
-    || process.env.CODEX_SESSION_ID
-    || process.env.CURSOR_SESSION_ID
-    || null;
 }
 
 function detectAgentTelemetry() {
@@ -524,7 +528,7 @@ function logCall(overrides = {}) {
   const entry = {
     ts: new Date().toISOString(),
     cmd: overrides.cmd || _logCmd,
-    args: overrides.args || process.argv.slice(2),
+    args: overrides.args || RAW_ARGV.slice(2),
     duration_ms: Date.now() - _logStart,
     exit: overrides.exit || 0,
     summary: overrides.summary || '',
@@ -2104,6 +2108,59 @@ const decisionsListCmd = defineCommand({
   },
 });
 
+const decisionsShowCmd = defineCommand({
+  meta: { name: 'show', description: 'Show the full body of one decision from DECISIONS.xml' },
+  args: {
+    id: { type: 'positional', description: 'Decision id (e.g. gad-233)', required: true },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    all: { type: 'boolean', description: 'Show all matching projects', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots(args, baseDir, config.roots);
+    if (roots.length === 0) return;
+
+    const matches = [];
+    for (const root of roots) {
+      const decisions = readDecisions(root, baseDir, { id: String(args.id) });
+      for (const decision of decisions) {
+        matches.push({ project: root.id, ...decision });
+      }
+    }
+
+    if (matches.length === 0) {
+      outputError(`Decision not found: ${args.id}`);
+    }
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify(matches, null, 2));
+      return;
+    }
+
+    for (const [index, decision] of matches.entries()) {
+      if (index > 0) console.log('');
+      console.log(`Decision: ${decision.id}`);
+      console.log(`Project:  ${decision.project}`);
+      console.log(`Title:    ${decision.title || '(untitled)'}`);
+      console.log('');
+      console.log('Summary:');
+      console.log(decision.summary || '(none)');
+      if (decision.impact) {
+        console.log('');
+        console.log('Impact:');
+        console.log(decision.impact);
+      }
+      if (decision.references && decision.references.length > 0) {
+        console.log('');
+        console.log('References:');
+        for (const ref of decision.references) console.log(`  - ${ref}`);
+      }
+    }
+  },
+});
+
 const decisionsAddCmd = defineCommand({
   meta: { name: 'add', description: 'Append a <decision> to DECISIONS.xml. Fails if id collides.' },
   args: {
@@ -2156,6 +2213,7 @@ const decisionsCmd = defineCommand({
   meta: { name: 'decisions', description: 'Manage decisions — list (default), add' },
   subCommands: {
     list: decisionsListCmd,
+    show: decisionsShowCmd,
     add: decisionsAddCmd,
   },
 });
@@ -2167,11 +2225,55 @@ const decisionsCmd = defineCommand({
 const {
   HandoffError,
   listHandoffs,
+  countHandoffs,
   readHandoff,
   claimHandoff,
   completeHandoff,
   createHandoff,
 } = require('../lib/handoffs.cjs');
+
+function resolveDetectedRuntimeId() {
+  const detected = detectRuntimeIdentity();
+  if (detected.id && detected.id !== 'unknown') return detected.id;
+  const fallback = String(process.env.GAD_AGENT || '').trim();
+  return fallback || 'unknown';
+}
+
+function buildHandoffsSection({ baseDir, projectid, runtime, mineFirst = false, limit = 5 } = {}) {
+  const total = countHandoffs({ baseDir, bucket: 'open', projectid, runtime });
+  if (total <= 0) return null;
+  const handoffs = listHandoffs({ baseDir, bucket: 'open', projectid, mineFirst, runtime });
+  const visible = handoffs.slice(0, limit);
+  const rows = visible.map((handoff) => ({
+    id: handoff.id,
+    phase: handoff.frontmatter.phase || '',
+    priority: handoff.frontmatter.priority || '',
+    context: handoff.frontmatter.estimated_context || '',
+    runtime: handoff.frontmatter.runtime_preference || '',
+  }));
+  let content = render(rows, { format: 'table', headers: ['id', 'phase', 'priority', 'context', 'runtime'] });
+  if (total > visible.length) {
+    content += `\n+${total - visible.length} more`;
+  }
+  const runtimeMatches = runtime && runtime !== 'unknown'
+    ? handoffs.filter((handoff) => handoff.frontmatter.runtime_preference === runtime)
+    : [];
+  if (runtimeMatches.length === 1) {
+    content += `\nAuto-claim candidate: ${runtimeMatches[0].id} - run: gad handoffs claim ${runtimeMatches[0].id}`;
+  }
+  return {
+    title: `HANDOFFS (${total} unclaimed)`,
+    content,
+    total,
+    autoClaimId: runtimeMatches.length === 1 ? runtimeMatches[0].id : null,
+  };
+}
+
+function printSection(section) {
+  console.log(`-- ${section.title} ${'-'.repeat(Math.max(0, 60 - section.title.length))}`);
+  console.log(section.content);
+  console.log('');
+}
 
 const handoffsListCmd = defineCommand({
   meta: { name: 'list', description: 'List handoffs (default: open bucket)' },
@@ -8871,6 +8973,78 @@ const sessionCmd = defineCommand({
   subCommands: { list: sessionList, new: sessionNew, resume: sessionResume, close: sessionClose },
 });
 
+function inferPauseWorkTask(root, baseDir, state) {
+  if (!state || !state.currentPhase) return null;
+  const phaseTasks = readTasks(root, baseDir, { phase: String(state.currentPhase) });
+  if (phaseTasks.length === 0) return null;
+  const nextAction = String(state.nextAction || '');
+  const referenced = phaseTasks.find((task) => nextAction.includes(task.id));
+  if (referenced) return referenced;
+  const inProgress = phaseTasks.find((task) => task.status === 'in-progress');
+  if (inProgress) return inProgress;
+  const claimed = phaseTasks.find((task) => task.agentId);
+  if (claimed) return claimed;
+  return phaseTasks.find((task) => task.status !== 'done' && task.status !== 'cancelled') || null;
+}
+
+const pauseWorkCmd = defineCommand({
+  meta: { name: 'pause-work', description: 'Capture current work as a handoff for zero-cost pickup later' },
+  args: {
+    goal: { type: 'string', description: 'What the next agent should accomplish', required: true },
+    priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
+    context: { type: 'string', description: 'mechanical | reasoning', default: 'reasoning' },
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    let resolvedProjectid = String(args.projectid || '').trim();
+    if (!resolvedProjectid) {
+      try { resolvedProjectid = String(getLastActiveProjectid() || '').trim(); } catch { /* non-fatal */ }
+    }
+    let roots = resolveRoots({ projectid: resolvedProjectid }, baseDir, config.roots);
+    if (roots.length === 0 && !resolvedProjectid && config.roots.length > 0) {
+      roots = [config.roots[0]];
+    }
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or set a last-active project via gad startup.');
+    }
+    const root = roots[0];
+    const state = readState(root, baseDir);
+    if (!state.currentPhase) {
+      outputError(`Current phase missing in ${path.join(root.path, root.planningDir, 'STATE.xml')}.`);
+    }
+    const currentTask = inferPauseWorkTask(root, baseDir, state);
+    const bodyLines = [
+      '# Paused work',
+      '',
+      `Goal: ${String(args.goal).trim()}`,
+      `Project: ${root.id}`,
+      `Phase: ${state.currentPhase}`,
+      `Task: ${currentTask ? currentTask.id : '(not inferred)'}`,
+    ];
+    if (state.nextAction) {
+      bodyLines.push(`Next action: ${String(state.nextAction).trim()}`);
+    }
+    bodyLines.push('');
+    bodyLines.push('Resume from this state. Generated by `gad pause-work`.');
+    const result = createHandoff({
+      baseDir,
+      projectid: root.id,
+      phase: String(state.currentPhase),
+      taskId: currentTask ? currentTask.id : undefined,
+      priority: String(args.priority || 'normal'),
+      estimatedContext: String(args.context || 'reasoning'),
+      body: bodyLines.join('\n'),
+      createdBy: process.env.GAD_AGENT || resolveDetectedRuntimeId(),
+      runtimePreference: resolveDetectedRuntimeId(),
+    });
+    try { setLastActiveProjectid(root.id); } catch { /* non-fatal */ }
+    console.log(`Created: ${result.id}`);
+    console.log(`Path:    ${path.relative(baseDir, result.filePath)}`);
+  },
+});
+
 // ---------------------------------------------------------------------------
 // context command
 // ---------------------------------------------------------------------------
@@ -9791,6 +9965,14 @@ const snapshotV2Cmd = defineCommand({
             : '(no open tasks in scoped phase)',
         });
       }
+      const scopedHandoffsSection = buildHandoffsSection({
+        baseDir,
+        projectid: root.id,
+        runtime: resolveDetectedRuntimeId(),
+      });
+      if (scopedHandoffsSection) sections.push(scopedHandoffsSection);
+      const scopedEvolutionSection = buildEvolutionSection(root, baseDir);
+      if (scopedEvolutionSection) sections.push(scopedEvolutionSection);
       const scopedDecisionsSection = buildDecisionsSection();
       if (scopedDecisionsSection) sections.push(scopedDecisionsSection);
       const scopedFileRefsSection = buildFileRefsSection();
@@ -9946,6 +10128,14 @@ const snapshotV2Cmd = defineCommand({
       ? `TASKS (${sprintOpenTasks.length} sprint, +${outOfSprintOpenCount} out-of-sprint, ${sprintDoneCount} done)`
       : `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`;
     sections.push({ title: tasksTitle, content: tasksContent });
+    const sprintHandoffsSection = buildHandoffsSection({
+      baseDir,
+      projectid: root.id,
+      runtime: resolveDetectedRuntimeId(),
+    });
+    if (sprintHandoffsSection) sections.push(sprintHandoffsSection);
+    const sprintEvolutionSection = buildEvolutionSection(root, baseDir);
+    if (sprintEvolutionSection) sections.push(sprintEvolutionSection);
 
     // Decision gad-259 (2026-04-17): DAILY section retired. See function-site
     // comment above where buildDailySection used to live.
@@ -10270,6 +10460,8 @@ const tasksReleaseCmd = defineCommand({
     agentid: { type: 'string', description: 'Agent id performing the release', default: '' },
     status: { type: 'string', description: 'Status to apply when not using --done (default: planned)', default: '' },
     done: { type: 'boolean', description: 'Mark the task done and preserve attribution', default: false },
+    skill: { type: 'string', description: 'Skill attribution to write when marking done', default: '' },
+    'no-skill': { type: 'boolean', description: 'Explicitly mark the task done without a skill attribution', default: false },
     force: { type: 'boolean', description: 'Release even if task is owned by another lane', default: false },
     'release-agent': { type: 'boolean', description: 'Mark the lane released when it has no remaining claimed tasks', default: false },
     json: { type: 'boolean', description: 'JSON output', default: false },
@@ -10288,12 +10480,34 @@ const tasksReleaseCmd = defineCommand({
       outputError(`Task ${args.task} is claimed by ${task.agentId}. Re-run with --force to release it anyway.`);
     }
 
-    releaseTask(planDir, task.id, {
+    const releaseOptions = {
       done: args.done === true,
       status: args.status || 'planned',
-    });
+    };
+    const rawSkillMatch = RAW_ARGV.join(' ').match(/--skill(?:=|\s+)([^\s]+)/);
+    const explicitNoSkill = RAW_ARGV.includes('--no-skill') || getRuntimeArg(args, 'no-skill', false) === true;
+    const skillAttribution = String(args.skill || readRawFlagValue('--skill') || (rawSkillMatch ? rawSkillMatch[1] : '') || '').trim();
+    if (explicitNoSkill) {
+      releaseOptions.skill = '';
+    } else if (skillAttribution) {
+      if (SENTINEL_SKILL_VALUES.has(skillAttribution.toLowerCase())) {
+        outputError(
+          `skill="${skillAttribution}" is a placeholder, not a real skill. Either:\n` +
+          '  - Pass a real skill id (gad skill list shows valid options)\n' +
+          '  - Pass --no-skill if no skill was used'
+        );
+      }
+      releaseOptions.skill = skillAttribution;
+    }
+    releaseTask(planDir, task.id, releaseOptions);
     if (actingAgentId) {
-      removeTaskClaim(planDir, actingAgentId, task.id, task.phase, args['release-agent'] === true || args.done === true);
+      removeTaskClaim(
+        planDir,
+        actingAgentId,
+        task.id,
+        task.phase,
+        getRuntimeArg(args, 'release-agent', false) === true || args.done === true,
+      );
     }
 
     // Auto-rebuild graph after task status mutation (decision gad-201)
@@ -12120,13 +12334,6 @@ function resolveStartupFrameworkRoot() {
   return null;
 }
 
-function shouldRunStartupSelfRefresh(args, frameworkRoot) {
-  if (!frameworkRoot) return false;
-  if (args['skip-build']) return false;
-  if (process.env.GAD_STARTUP_SKIP_BUILD === '1') return false;
-  return true;
-}
-
 function shouldDelegateStartupToTemporaryExecutable() {
   if (process.platform !== 'win32') return false;
   if (process.env[STARTUP_DELEGATED_ENV] === '1') return false;
@@ -12256,24 +12463,8 @@ const startupCmd = defineCommand({
   meta: { name: 'startup', description: 'Print the GAD session-start contract. One-shot answer to "how do I begin working on this project?" (task 42.2-22, fixes chicken-and-egg identified by subagent battery findings 2026-04-15).' },
   args: {
     projectid: { type: 'string', description: 'Project id to snapshot against (default: first root)', default: '' },
-    'skip-build': { type: 'boolean', description: 'Skip dogfood self-refresh build/install when a local framework checkout is detected', default: false },
   },
   run({ args }) {
-    const startupFrameworkRoot = resolveStartupFrameworkRoot();
-    const shouldSelfRefresh = shouldRunStartupSelfRefresh(args, startupFrameworkRoot);
-    if (shouldSelfRefresh && shouldDelegateStartupToTemporaryExecutable()) {
-      delegateStartupToTemporaryExecutable();
-      return;
-    }
-    if (shouldSelfRefresh) {
-      try {
-        runStartupSelfRefresh(startupFrameworkRoot);
-      } catch (err) {
-        console.error(`[gad startup] dogfood refresh failed: ${err.message || err}`);
-        process.exit(1);
-      }
-    }
-
     const lines = [
       'GAD session startup — one command gets you full context.',
       '',
@@ -12305,11 +12496,12 @@ const startupCmd = defineCommand({
       '',
       'Common project ids on this repo:',
     ];
+    const startupBaseDir = findRepoRoot();
+    let startupConfig = null;
     // Best-effort enumeration via gad-config.
     try {
-      const baseDir = findRepoRoot();
-      const config = gadConfig.load(baseDir);
-      for (const root of config.roots || []) {
+      startupConfig = gadConfig.load(startupBaseDir);
+      for (const root of startupConfig.roots || []) {
         lines.push(`  - ${root.id}`);
       }
     } catch {
@@ -12320,15 +12512,36 @@ const startupCmd = defineCommand({
     lines.push('Everything else is optional until you have that context.');
     console.log(lines.join('\n'));
 
-    if (args.projectid) {
+    let resolvedProjectid = String(args.projectid || '').trim();
+    let resolvedSource = resolvedProjectid ? 'arg' : '';
+    if (!resolvedProjectid) {
+      try {
+        const lastActiveProjectid = String(getLastActiveProjectid() || '').trim();
+        const knownIds = new Set((startupConfig && startupConfig.roots ? startupConfig.roots : []).map((root) => root.id));
+        if (lastActiveProjectid && knownIds.has(lastActiveProjectid)) {
+          resolvedProjectid = lastActiveProjectid;
+          resolvedSource = 'user-settings';
+        }
+      } catch { /* non-fatal */ }
+    }
+    if (!resolvedProjectid && startupConfig && Array.isArray(startupConfig.roots) && startupConfig.roots.length > 0) {
+      resolvedProjectid = startupConfig.roots[0].id;
+      resolvedSource = 'first-root';
+    }
+
+    if (resolvedProjectid) {
       console.log('');
+      if (resolvedSource === 'user-settings') {
+        console.log(`Resolved projectid from user settings: ${resolvedProjectid}`);
+      } else if (resolvedSource === 'first-root') {
+        console.log(`Resolved projectid from first configured root: ${resolvedProjectid}`);
+      }
       // Auto-create a session so the snapshot stamps staticLoadedAt and
       // subsequent calls with --session auto-downgrade to active mode.
       let sessionArg = [];
       try {
-        const startupBaseDir = findRepoRoot();
-        const startupConfig = gadConfig.load(startupBaseDir);
-        const startupRoots = startupConfig.roots.filter(r => r.id === args.projectid);
+        if (!startupConfig) startupConfig = gadConfig.load(startupBaseDir);
+        const startupRoots = startupConfig.roots.filter(r => r.id === resolvedProjectid);
         if (startupRoots.length > 0) {
           const startupRoot = startupRoots[0];
           const sDir = sessionsDir(startupBaseDir, startupRoot);
@@ -12358,11 +12571,21 @@ const startupCmd = defineCommand({
       // Daily routine — generate today's tip if OPENAI_API_KEY set and tip missing.
       try { maybeGenerateDailyTip(); } catch (e) { /* non-fatal */ }
 
-      console.log(`Running snapshot now for projectid=${args.projectid}...`);
+      console.log(`Running snapshot now for projectid=${resolvedProjectid}...`);
       console.log('');
+      try {
+        if (startupConfig && Array.isArray(startupConfig.roots)) {
+          const startupRoot = startupConfig.roots.find((candidate) => candidate.id === resolvedProjectid);
+          if (startupRoot) writeEvolutionScan(startupRoot, startupBaseDir, path.resolve(__dirname, '..'));
+        }
+      } catch { /* non-fatal */ }
       // Delegate to snapshot by re-invoking the process — simplest path.
-      const result = runStartupSnapshot(args.projectid, sessionArg);
-      process.exit(result.status || 0);
+      const result = runStartupSnapshot(resolvedProjectid, sessionArg);
+      const exitCode = result.status || (result.error ? 1 : 0);
+      if (exitCode === 0) {
+        try { setLastActiveProjectid(resolvedProjectid); } catch { /* non-fatal */ }
+      }
+      process.exit(exitCode);
     }
   },
 });
@@ -13118,6 +13341,18 @@ function splitCsvList(raw, fallback = []) {
     .filter(Boolean);
 }
 
+function resolveSkillRoots(repoRoot) {
+  const defaults = evolutionPaths(repoRoot);
+  return {
+    finalSkillsDir: process.env.GAD_SKILLS_DIR
+      ? path.resolve(process.env.GAD_SKILLS_DIR)
+      : defaults.finalSkillsDir,
+    protoSkillsDir: process.env.GAD_PROTO_SKILLS_DIR
+      ? path.resolve(process.env.GAD_PROTO_SKILLS_DIR)
+      : defaults.protoSkillsDir,
+  };
+}
+
 function listSkillDirs(rootDir) {
   if (!fs.existsSync(rootDir)) return [];
   const out = [];
@@ -13134,19 +13369,216 @@ function listSkillDirs(rootDir) {
 function readSkillFrontmatter(skillFile) {
   let src = '';
   try { src = fs.readFileSync(skillFile, 'utf8'); } catch { return { name: null, description: null, workflow: null }; }
-  const match = src.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
-  if (!match) return { name: null, description: null, workflow: null };
-  let name = null;
-  let description = null;
-  let workflow = null;
-  for (const line of match[1].split(/\r?\n/)) {
-    const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (!kv) continue;
-    if (kv[1] === 'name') name = kv[2].replace(/^["']|["']$/g, '').trim();
-    if (kv[1] === 'description') description = kv[2].replace(/^["']|["']$/g, '').trim();
-    if (kv[1] === 'workflow') workflow = kv[2].replace(/^["']|["']$/g, '').trim() || null;
+  const parsed = parseSkillFrontmatter(src);
+  if (!parsed.hasFrontmatter) return { name: null, description: null, workflow: null };
+  const fields = parsed.fields || {};
+  return {
+    ...fields,
+    name: fields.name || null,
+    description: fields.description || null,
+    workflow: fields.workflow || null,
+  };
+}
+
+function normalizeSkillLaneValues(value) {
+  const raw = Array.isArray(value) ? value : (value ? [value] : []);
+  return raw
+    .map((entry) => String(entry || '').trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function skillMatchesLane(frontmatter, lane) {
+  if (!lane) return true;
+  return normalizeSkillLaneValues(frontmatter.lane).includes(lane);
+}
+
+function validateSkillLaneFilter(raw) {
+  const lane = String(raw || '').trim().toLowerCase();
+  if (!lane) return '';
+  if (!['dev', 'prod', 'meta'].includes(lane)) {
+    outputError(`Invalid lane: ${lane}. Expected dev, prod, or meta.`);
   }
-  return { name, description, workflow };
+  return lane;
+}
+
+function severityRank(severity) {
+  if (severity === 'error') return 3;
+  if (severity === 'warning') return 2;
+  return 1;
+}
+
+function filterIssuesBySeverity(issues, minimumSeverity) {
+  const min = minimumSeverity ? severityRank(minimumSeverity) : 0;
+  if (!min) return issues.slice();
+  return issues.filter((issue) => severityRank(issue.severity) >= min);
+}
+
+function resolveSkillWorkflowPath(repoRoot, skillDir, workflowRef) {
+  if (!workflowRef) return null;
+  const isSibling = workflowRef.startsWith('./') || workflowRef.startsWith('../');
+  return isSibling
+    ? path.resolve(skillDir, workflowRef)
+    : path.resolve(repoRoot, workflowRef);
+}
+
+function buildSkillUsageIndex(baseDir, finalSkillsDir) {
+  const config = gadConfig.load(baseDir);
+  const knownSkills = discoverSkillIds(finalSkillsDir);
+  const attributions = collectAttributions(config, baseDir);
+  const usageReport = buildUsageReport(attributions, knownSkills);
+  return {
+    report: usageReport,
+    bySkill: new Map((usageReport.bySkill || []).map((entry) => [entry.skill, entry])),
+  };
+}
+
+function readSkillSource(skillFile) {
+  try {
+    const raw = fs.readFileSync(skillFile, 'utf8');
+    const parsed = parseSkillFrontmatter(raw);
+    const bodyStart = parsed.hasFrontmatter ? (parsed.frontmatterEnd + 1) : 0;
+    const body = (parsed.rawLines || raw.split(/\r?\n/)).slice(bodyStart).join('\n');
+    return { raw, body, frontmatter: parsed.fields || {} };
+  } catch {
+    return { raw: '', body: '', frontmatter: {} };
+  }
+}
+
+function skillReferencesId(source, skillId) {
+  if (!source || !skillId) return false;
+  if (String(source.parent_skill || '').trim() === skillId) return true;
+  const refs = extractBodyRefs(source.body || '');
+  return refs.some((ref) => ref.kind === 'alias' && ref.ref === `@skills/${skillId}`);
+}
+
+function findReferencedSkillIds(skillRecords) {
+  const referenced = new Set();
+  for (const record of skillRecords) {
+    for (const candidate of skillRecords) {
+      if (record.id === candidate.id) continue;
+      if (skillReferencesId(record.source, candidate.id)) referenced.add(candidate.id);
+    }
+  }
+  return referenced;
+}
+
+function listCandidateDirs(repoRoot) {
+  const candidatesDir = path.join(repoRoot, '.planning', 'candidates');
+  if (!fs.existsSync(candidatesDir)) return [];
+  return fs.readdirSync(candidatesDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
+function buildEvolutionScan(root, baseDir, repoRoot) {
+  const { finalSkillsDir } = resolveSkillRoots(repoRoot);
+  const skillRecords = listSkillDirs(finalSkillsDir).map((entry) => ({
+    ...entry,
+    frontmatter: readSkillFrontmatter(entry.skillFile),
+    source: readSkillSource(entry.skillFile),
+  }));
+  const { report, bySkill } = buildSkillUsageIndex(baseDir, finalSkillsDir);
+  const referencedSkillIds = findReferencedSkillIds(skillRecords);
+  const existingCandidates = listCandidateDirs(repoRoot);
+
+  const tasks = readTasks(root, baseDir, {});
+  const groupedByPhase = new Map();
+  for (const task of tasks) {
+    const phaseId = String(task.phase || task.id.split('-')[0] || '').trim();
+    if (!phaseId) continue;
+    const list = groupedByPhase.get(phaseId) || [];
+    list.push(task);
+    groupedByPhase.set(phaseId, list);
+  }
+  const phaseSignals = [];
+  for (const [phaseId, phaseTasks] of groupedByPhase.entries()) {
+    const doneTasks = phaseTasks.filter((task) => task.status === 'done');
+    if (doneTasks.length < 2) continue;
+    const realSkills = new Set(
+      doneTasks
+        .flatMap((task) => String(task.skill || '').split(',').map((value) => value.trim()).filter(Boolean))
+        .filter((value) => !SENTINEL_SKILL_VALUES.has(value.toLowerCase()))
+    );
+    if (realSkills.size <= 1) {
+      phaseSignals.push({
+        id: `phase-${phaseId}-repeated-work`,
+        phase: phaseId,
+        reason: `${doneTasks.length} done tasks, ${realSkills.size} real attributed skills`,
+      });
+    }
+  }
+
+  const shedCandidates = skillRecords
+    .filter((record) => {
+      const type = String(record.frontmatter.type || '').trim().toLowerCase();
+      if (type === 'meta-framework') return false;
+      if (referencedSkillIds.has(record.id)) return false;
+      const usage = bySkill.get(record.id);
+      return !usage || usage.runs === 0;
+    })
+    .map((record) => ({
+      id: record.id,
+      type: record.frontmatter.type || '',
+      lane: normalizeSkillLaneValues(record.frontmatter.lane),
+      reason: 'unused, unreferenced, and not meta-framework',
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  return {
+    scannedAt: new Date().toISOString(),
+    projectid: root.id,
+    candidates: [
+      ...existingCandidates.map((id) => ({ id, source: 'existing-candidate-dir' })),
+      ...phaseSignals.map((signal) => ({ ...signal, source: 'phase-signal' })),
+    ],
+    shedCandidates,
+    usageSummary: {
+      totalRuns: report.totalRuns,
+      uniqueSkillsUsed: report.uniqueSkillsUsed,
+      unusedSkills: report.unused.length,
+      attributedButMissing: report.attributedButMissing.length,
+    },
+  };
+}
+
+function evolutionScanFilePath(root, baseDir) {
+  return path.join(baseDir, root.path, root.planningDir, '.evolution-scan.json');
+}
+
+function writeEvolutionScan(root, baseDir, repoRoot) {
+  const scan = buildEvolutionScan(root, baseDir, repoRoot);
+  const filePath = evolutionScanFilePath(root, baseDir);
+  fs.writeFileSync(filePath, `${JSON.stringify(scan, null, 2)}\n`, 'utf8');
+  return { scan, filePath };
+}
+
+function readEvolutionScan(root, baseDir) {
+  const filePath = evolutionScanFilePath(root, baseDir);
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function buildEvolutionSection(root, baseDir) {
+  const scan = readEvolutionScan(root, baseDir);
+  if (!scan) return null;
+  const candidateCount = Array.isArray(scan.candidates) ? scan.candidates.length : 0;
+  const shedCount = Array.isArray(scan.shedCandidates) ? scan.shedCandidates.length : 0;
+  if (candidateCount === 0 && shedCount === 0) return null;
+  const lines = [
+    `${candidateCount} candidates surfaced (last scan: ${String(scan.scannedAt || '').slice(0, 16)}Z)`,
+    `${shedCount} skills flagged for shedding (dry-run only)`,
+    'Run: gad evolution evolve   |   gad evolution shed --dry-run',
+  ];
+  return {
+    title: 'EVOLUTION',
+    content: lines.join('\n'),
+    scan,
+  };
 }
 
 function firstExistingImagePath(dir, candidates = []) {
@@ -13891,26 +14323,28 @@ const skillList = defineCommand({
     proto: { type: 'boolean', description: 'List only pending proto-skills' },
     canonical: { type: 'boolean', description: 'List only canonical skills' },
     paths: { type: 'boolean', description: 'Print absolute SKILL.md path and resolved workflow path for each skill (decision gad-194, task 42.2-20)' },
+    lane: { type: 'string', description: 'Filter by lane (dev|prod|meta)', default: '' },
+    'lint-summary': { type: 'boolean', description: 'Append a non-blocking lint summary for the listed canonical skills', default: false },
   },
   run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
-    const { protoSkillsDir, finalSkillsDir } = evolutionPaths(repoRoot);
+    const { protoSkillsDir, finalSkillsDir } = resolveSkillRoots(repoRoot);
     const showCanonical = !args.proto;
     const showProto = !args.canonical;
     const showPaths = Boolean(args.paths);
+    const laneFilter = validateSkillLaneFilter(args.lane);
+    let listedCanonical = [];
     if (showCanonical) {
-      const canonical = listSkillDirs(finalSkillsDir);
-      console.log(`Canonical skills (skills/): ${canonical.length}`);
+      const canonical = listSkillDirs(finalSkillsDir).filter((skill) => skillMatchesLane(readSkillFrontmatter(skill.skillFile), laneFilter));
+      listedCanonical = canonical;
+      console.log(`Canonical skills (skills/): ${canonical.length}${laneFilter ? `  lane=${laneFilter}` : ''}`);
       for (const s of canonical) {
         const fm = readSkillFrontmatter(s.skillFile);
         console.log(`  ${s.id}${fm.name && fm.name !== s.id ? `  (${fm.name})` : ''}`);
         if (showPaths) {
           console.log(`      SKILL.md: ${s.skillFile}`);
           if (fm.workflow) {
-            const isSibling = fm.workflow.startsWith('./') || fm.workflow.startsWith('../');
-            const resolved = isSibling
-              ? path.resolve(s.dir, fm.workflow)
-              : path.resolve(repoRoot, fm.workflow);
+            const resolved = resolveSkillWorkflowPath(repoRoot, s.dir, fm.workflow);
             const exists = fs.existsSync(resolved);
             console.log(`      workflow: ${resolved}${exists ? '' : ' (MISSING)'}`);
           }
@@ -13919,18 +14353,15 @@ const skillList = defineCommand({
       console.log('');
     }
     if (showProto) {
-      const proto = listSkillDirs(protoSkillsDir);
-      console.log(`Proto-skills (.planning/proto-skills/): ${proto.length}`);
+      const proto = listSkillDirs(protoSkillsDir).filter((skill) => skillMatchesLane(readSkillFrontmatter(skill.skillFile), laneFilter));
+      console.log(`Proto-skills (.planning/proto-skills/): ${proto.length}${laneFilter ? `  lane=${laneFilter}` : ''}`);
       for (const s of proto) {
         const fm = readSkillFrontmatter(s.skillFile);
         console.log(`  ${s.id}${fm.name && fm.name !== s.id ? `  (${fm.name})` : ''}`);
         if (showPaths) {
           console.log(`      SKILL.md: ${s.skillFile}`);
           if (fm.workflow) {
-            const isSibling = fm.workflow.startsWith('./') || fm.workflow.startsWith('../');
-            const resolved = isSibling
-              ? path.resolve(s.dir, fm.workflow)
-              : path.resolve(repoRoot, fm.workflow);
+            const resolved = resolveSkillWorkflowPath(repoRoot, s.dir, fm.workflow);
             const exists = fs.existsSync(resolved);
             console.log(`      workflow: ${resolved}${exists ? '' : ' (MISSING)'}`);
           }
@@ -13942,6 +14373,12 @@ const skillList = defineCommand({
         console.log('  gad skill promote <slug> --framework            # canonical (this repo only)');
         console.log('  gad skill promote <slug> --project --claude     # runtime install');
       }
+    }
+    if (args['lint-summary'] && showCanonical) {
+      const lintReports = listedCanonical.map((skill) => lintSkill(skill.skillFile, { gadDir: repoRoot }));
+      const lintSummary = summarizeLint(lintReports);
+      console.log('');
+      console.log(`Lint: ${lintSummary.clean} clean, ${lintSummary.bySeverity.error} errors, ${lintSummary.bySeverity.warning} warnings, ${lintSummary.bySeverity.info} info - run \`gad skill lint\` for detail.`);
     }
     // Authoring skill disambiguation footer (task 42.2-23, findings
     // 2026-04-15). Agents surfaced confusion about which of the four
@@ -13965,6 +14402,202 @@ const skillList = defineCommand({
     console.log('  gad skill show <id>        # name, description, resolved workflow path');
     console.log('  gad skill show <id> --body # full SKILL.md + workflow contents');
     console.log('  gad skill list --paths     # inventory with absolute paths + MISSING flags');
+  },
+});
+
+const skillLint = defineCommand({
+  meta: { name: 'lint', description: 'Run the non-blocking skill linter across canonical skills or one named skill' },
+  args: {
+    id: { type: 'string', description: 'Lint a single canonical skill id', default: '' },
+    severity: { type: 'string', description: 'Filter to issues at or above error|warning|info', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { finalSkillsDir } = resolveSkillRoots(repoRoot);
+    const minimumSeverity = String(args.severity || '').trim().toLowerCase();
+    if (minimumSeverity && !['error', 'warning', 'info'].includes(minimumSeverity)) {
+      outputError(`Invalid severity: ${minimumSeverity}. Expected error, warning, or info.`);
+    }
+
+    let reports;
+    if (args.id) {
+      const skillPath = path.join(finalSkillsDir, String(args.id), 'SKILL.md');
+      if (!fs.existsSync(skillPath)) {
+        outputError(`Skill not found: ${args.id}`);
+      }
+      reports = [lintSkill(skillPath, { gadDir: repoRoot })];
+    } else {
+      reports = lintAllSkills(finalSkillsDir, { gadDir: repoRoot });
+    }
+
+    const filteredReports = reports.map((report) => ({
+      ...report,
+      issues: filterIssuesBySeverity(report.issues || [], minimumSeverity),
+    }));
+    const summary = summarizeLint(filteredReports);
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify({ summary, reports: filteredReports }, null, 2));
+      return;
+    }
+
+    const issueBuckets = filteredReports.filter((report) => report.issues.length > 0);
+    console.log(`Skill lint report - ${summary.totalSkills} skills, ${summary.clean} clean, ${issueBuckets.length} with issues`);
+    if (issueBuckets.length > 0) console.log('');
+    for (const report of issueBuckets) {
+      console.log(`${path.relative(repoRoot, report.skillPath)} (${report.issues.length} issue${report.issues.length === 1 ? '' : 's'})`);
+      for (const issue of report.issues) {
+        console.log(`  [${issue.severity}] ${issue.code} - ${issue.message}`);
+      }
+      console.log('');
+    }
+    console.log(`Summary: ${summary.bySeverity.error} errors, ${summary.bySeverity.warning} warnings, ${summary.bySeverity.info} info`);
+    console.log(`Total tokens: ${summary.totalTokens} across ${summary.totalSkills} skills (avg ${summary.averageTokens}/skill)`);
+  },
+});
+
+const skillTokenAudit = defineCommand({
+  meta: { name: 'token-audit', description: 'Audit canonical skill token footprint and highlight the largest skill bundles' },
+  args: {
+    top: { type: 'string', description: 'How many skills to show (default 10)', default: '10' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const repoRoot = path.resolve(__dirname, '..');
+    const { finalSkillsDir } = resolveSkillRoots(repoRoot);
+    const topN = Math.max(1, Number.parseInt(String(args.top || '10'), 10) || 10);
+    const audits = listSkillDirs(finalSkillsDir).map((skill) => ({
+      id: skill.id,
+      path: skill.skillFile,
+      audit: auditSkillTokens(skill.skillFile, { gadDir: repoRoot }),
+    }));
+    const summary = {
+      totalSkills: audits.length,
+      totalTokens: audits.reduce((sum, entry) => sum + (entry.audit.totalTokens || 0), 0),
+    };
+    summary.averageTokens = summary.totalSkills > 0 ? Math.round(summary.totalTokens / summary.totalSkills) : 0;
+    const top = [...audits]
+      .sort((a, b) => (b.audit.totalTokens || 0) - (a.audit.totalTokens || 0))
+      .slice(0, topN);
+
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify({
+        summary,
+        top: top.map((entry) => ({
+          id: entry.id,
+          path: path.relative(repoRoot, entry.path),
+          totalTokens: entry.audit.totalTokens || 0,
+          sections: entry.audit.sections || [],
+        })),
+      }, null, 2));
+      return;
+    }
+
+    console.log(`Skill token audit - ${summary.totalSkills} skills, ${summary.totalTokens} total tokens, ${summary.averageTokens} avg`);
+    console.log('');
+    console.log(`Top ${top.length} bloat:`);
+    for (const entry of top) {
+      console.log(`  ${(entry.audit.totalTokens || 0).toString().padStart(4, ' ')}  ${path.relative(repoRoot, entry.path)}`);
+    }
+    const breakdown = top.slice(0, Math.min(3, top.length));
+    if (breakdown.length > 0) {
+      console.log('');
+      console.log(`Per-section breakdown for top ${breakdown.length}:`);
+      for (const entry of breakdown) {
+        console.log(`  ${entry.id}:`);
+        for (const section of entry.audit.sections || []) {
+          console.log(`    ${section.name.padEnd(28, ' ')} ~${section.tokens}`);
+        }
+      }
+    }
+  },
+});
+
+const skillStatus = defineCommand({
+  meta: { name: 'status', description: 'Show one skill health card: frontmatter, lint issues, bundle completeness, usage, and token footprint' },
+  args: {
+    id: { type: 'positional', description: 'Skill id (canonical or proto)', required: true },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const repoRoot = path.resolve(__dirname, '..');
+    const { protoSkillsDir, finalSkillsDir } = resolveSkillRoots(repoRoot);
+    const roots = [
+      { label: 'canonical', dir: finalSkillsDir },
+      { label: 'proto', dir: protoSkillsDir },
+    ];
+    let hit = null;
+    for (const root of roots) {
+      const candidate = listSkillDirs(root.dir).find((skill) => skill.id === args.id);
+      if (!candidate) continue;
+      hit = { ...candidate, origin: root.label, fm: readSkillFrontmatter(candidate.skillFile) };
+      break;
+    }
+    if (!hit) {
+      outputError(`Skill not found: ${args.id}`);
+    }
+
+    const lintReport = lintSkill(hit.skillFile, { gadDir: repoRoot });
+    const workflowPath = hit.fm.workflow ? resolveSkillWorkflowPath(repoRoot, hit.dir, hit.fm.workflow) : null;
+    const skillTokenAudit = auditSkillTokens(hit.skillFile, { gadDir: repoRoot });
+    const workflowTokenAudit = workflowPath && fs.existsSync(workflowPath)
+      ? auditSkillTokens(workflowPath, { gadDir: repoRoot })
+      : null;
+    const usageIndex = buildSkillUsageIndex(baseDir, finalSkillsDir);
+    const usage = usageIndex.bySkill.get(hit.id) || null;
+    const bundleChecks = [
+      ['SKILL.md', true],
+      ['PROVENANCE.md', fs.existsSync(path.join(hit.dir, 'PROVENANCE.md'))],
+      ['VALIDATION.md', fs.existsSync(path.join(hit.dir, 'VALIDATION.md'))],
+      ['workflow.md', fs.existsSync(path.join(hit.dir, 'workflow.md'))],
+      ['COMMAND.md', fs.existsSync(path.join(hit.dir, 'COMMAND.md'))],
+      ['references/', fs.existsSync(path.join(hit.dir, 'references'))],
+    ];
+
+    console.log(`Skill: ${hit.id} [${hit.origin}]`);
+    console.log(`  name:       ${hit.fm.name || hit.id}`);
+    console.log(`  lane:       ${normalizeSkillLaneValues(hit.fm.lane).join(', ') || '(none)'}`);
+    console.log(`  type:       ${hit.fm.type || '(none)'}`);
+    console.log(`  status:     ${hit.fm.status || '(none)'}`);
+    console.log(`  parent:     ${hit.fm.parent_skill || '(none)'}`);
+    if (workflowPath) {
+      console.log(`  workflow:   ${hit.fm.workflow} [${fs.existsSync(workflowPath) ? 'ok' : 'missing'}]`);
+    } else {
+      console.log('  workflow:   (none)');
+    }
+    if (workflowTokenAudit) {
+      const totalTokens = (skillTokenAudit.totalTokens || 0) + (workflowTokenAudit.totalTokens || 0);
+      console.log(`  tokens:     ~${skillTokenAudit.totalTokens || 0} SKILL.md + ~${workflowTokenAudit.totalTokens || 0} workflow (~${totalTokens} total)`);
+    } else {
+      console.log(`  tokens:     ~${lintReport.tokenEstimate} (SKILL.md)`);
+    }
+    console.log(`  bundle:     ${bundleChecks.map(([label, ok]) => `${label} ${ok ? '[ok]' : '[missing]'}`).join('  ')}`);
+    if (usage) {
+      const projects = usage.projects || [];
+      const projectSummary = projects.length === 1 ? ` (${projects[0]})` : '';
+      console.log(`  usage:      ${usage.runs} done tasks, ${projects.length} project${projects.length === 1 ? '' : 's'}${projectSummary}; last run ${usage.lastUsedAt ? usage.lastUsedAt.slice(0, 10) : 'unknown'}`);
+    } else {
+      console.log('  usage:      0 done tasks, 0 projects; last run unknown');
+    }
+    if (hit.fm.canonicalization_rationale) {
+      console.log(`  lineage:    ${String(hit.fm.canonicalization_rationale).replace(/\s+/g, ' ').trim()}`);
+    }
+    console.log('');
+    console.log(`Issues${lintReport.issues.length === 0 ? ': (none)' : ` (${lintReport.issues.length}):`}`);
+    if (lintReport.issues.length === 0) {
+      // keep the empty-state inline with the header
+    } else {
+      for (const issue of lintReport.issues) {
+        console.log(`  [${issue.severity}] ${issue.code} - ${issue.message}`);
+      }
+    }
+    console.log('');
+    console.log('Section tokens:');
+    for (const section of skillTokenAudit.sections || []) {
+      console.log(`  ${section.name.padEnd(34, ' ')} ~${section.tokens}`);
+    }
+    console.log(`  ${'(total)'.padEnd(34, ' ')} ~${skillTokenAudit.totalTokens || 0}`);
   },
 });
 
@@ -14136,7 +14769,7 @@ const skillShow = defineCommand({
   },
   run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
-    const { protoSkillsDir, finalSkillsDir } = evolutionPaths(repoRoot);
+    const { protoSkillsDir, finalSkillsDir } = resolveSkillRoots(repoRoot);
 
     // Search canonical first, then proto. Accept exact match or public-name match.
     const roots = [
@@ -14167,10 +14800,7 @@ const skillShow = defineCommand({
     console.log(`  description: ${(hit.fm.description || '').replace(/\s+/g, ' ').trim()}`);
     console.log(`  SKILL.md:    ${hit.skillFile}`);
     if (hit.fm.workflow) {
-      const isSibling = hit.fm.workflow.startsWith('./') || hit.fm.workflow.startsWith('../');
-      const resolved = isSibling
-        ? path.resolve(hit.dir, hit.fm.workflow)
-        : path.resolve(repoRoot, hit.fm.workflow);
+      const resolved = resolveSkillWorkflowPath(repoRoot, hit.dir, hit.fm.workflow);
       const exists = fs.existsSync(resolved);
       console.log(`  workflow:    ${resolved}${exists ? '' : ' (MISSING)'}`);
     } else {
@@ -14182,10 +14812,7 @@ const skillShow = defineCommand({
       console.log('-- SKILL.md ---------------------------------------------------');
       console.log(fs.readFileSync(hit.skillFile, 'utf8'));
       if (hit.fm.workflow) {
-        const isSibling = hit.fm.workflow.startsWith('./') || hit.fm.workflow.startsWith('../');
-        const resolved = isSibling
-          ? path.resolve(hit.dir, hit.fm.workflow)
-          : path.resolve(repoRoot, hit.fm.workflow);
+        const resolved = resolveSkillWorkflowPath(repoRoot, hit.dir, hit.fm.workflow);
         if (fs.existsSync(resolved)) {
           console.log('');
           console.log(`-- workflow (${path.relative(repoRoot, resolved)}) --------`);
@@ -14418,6 +15045,9 @@ const skillCmd = defineCommand({
   subCommands: {
     list: skillList,
     show: skillShow,
+    lint: skillLint,
+    status: skillStatus,
+    'token-audit': skillTokenAudit,
     find: skillFind,
     promote: skillPromote,
     'promote-folder': skillPromoteFolder,
@@ -14739,6 +15369,35 @@ const evolutionSimilarity = defineCommand({
 // it. Deletes the candidate dir and writes a one-line reason marker to
 // skills/.shed/<slug> that compute-self-eval.mjs respects.
 // ---------------------------------------------------------------------------
+const evolutionScan = defineCommand({
+  meta: { name: 'scan', description: 'Run the lightweight evolution scan and write .planning/.evolution-scan.json' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) return;
+    const root = roots[0];
+    const repoRoot = path.resolve(__dirname, '..');
+    const { scan, filePath } = writeEvolutionScan(root, baseDir, repoRoot);
+    const payload = {
+      project: root.id,
+      file: path.relative(baseDir, filePath),
+      candidateCount: scan.candidates.length,
+      shedCount: scan.shedCandidates.length,
+      scan,
+    };
+    if (args.json || shouldUseJson()) {
+      console.log(JSON.stringify(payload, null, 2));
+      return;
+    }
+    console.log(`Evolution scan: ${payload.candidateCount} candidate(s), ${payload.shedCount} shed candidate(s) -> ${payload.file}`);
+  },
+});
+
 function shedOne(repoRoot, slug, reason) {
   const candidateDir = path.join(repoRoot, '.planning', 'candidates', slug);
   const shedDir = path.join(repoRoot, 'skills', '.shed');
@@ -14750,18 +15409,78 @@ function shedOne(repoRoot, slug, reason) {
 }
 
 const evolutionShed = defineCommand({
-  meta: { name: 'shed', description: 'Dismiss candidates — delete and prevent regeneration. Use --all to clear, --obsolete to shed only ones below the sprint-window threshold.' },
+  meta: { name: 'shed', description: 'Dry-run or confirm shedding of unused skills; legacy candidate shedding remains available behind --all/--obsolete/<slug>.' },
   args: {
     slug: { type: 'positional', description: 'Candidate slug (omit when using --all or --obsolete)', required: false, default: '' },
+    confirm: { type: 'string', description: 'Archive the named canonical skill into .archive/skills/', default: '' },
+    projectid: { type: 'string', description: 'Scope scan/readout to one project', default: '' },
     all: { type: 'boolean', description: 'Shed every candidate currently under .planning/candidates/', default: false },
     obsolete: { type: 'boolean', description: 'Shed only candidates flagged obsolete by sprint-window analysis (uses --threshold)', default: false },
     threshold: { type: 'string', description: 'Obsolete cutoff for --obsolete (default 0.65 with embeddings, 0.40 TF-IDF)', default: '' },
     embeddings: { type: 'boolean', description: 'Use embeddings backend for --obsolete (default TF-IDF)', default: false },
     reason: { type: 'string', description: 'Reason recorded in skills/.shed/<slug>', default: 'shed via cli' },
     dryRun: { type: 'boolean', description: 'Print what would be shed without doing it', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
   },
   async run({ args }) {
     const repoRoot = path.resolve(__dirname, '..');
+    const useLegacyCandidateFlow = Boolean(args.slug || args.all || args.obsolete);
+    if (!useLegacyCandidateFlow) {
+      const baseDir = findRepoRoot();
+      const config = gadConfig.load(baseDir);
+      const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+      if (roots.length === 0) return;
+      const root = roots[0];
+      const scan = readEvolutionScan(root, baseDir) || writeEvolutionScan(root, baseDir, repoRoot).scan;
+      const flagged = Array.isArray(scan.shedCandidates) ? scan.shedCandidates : [];
+
+      if (args.confirm) {
+        const slug = String(args.confirm).trim();
+        const skillDir = path.join(repoRoot, 'skills', slug);
+        if (!fs.existsSync(skillDir)) {
+          outputError(`Canonical skill not found: ${slug}`);
+        }
+        const archiveRoot = path.join(repoRoot, '.archive', 'skills');
+        const archiveDir = path.join(archiveRoot, `${slug}-${new Date().toISOString().slice(0, 10)}`);
+        fs.mkdirSync(archiveRoot, { recursive: true });
+        fs.renameSync(skillDir, archiveDir);
+        if (args.json || shouldUseJson()) {
+          console.log(JSON.stringify({
+            project: root.id,
+            archived: slug,
+            archiveDir: path.relative(repoRoot, archiveDir),
+          }, null, 2));
+          return;
+        }
+        console.log(`Shed skill: ${slug}`);
+        console.log(`Archive: ${path.relative(repoRoot, archiveDir)}`);
+        return;
+      }
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify({
+          project: root.id,
+          dryRun: true,
+          count: flagged.length,
+          skills: flagged,
+        }, null, 2));
+        return;
+      }
+
+      console.log(`Evolution shed dry-run: ${flagged.length} skill(s) flagged`);
+      if (flagged.length === 0) {
+        console.log('  none');
+        return;
+      }
+      for (const entry of flagged) {
+        console.log(`  ${entry.id}${entry.type ? `  type=${entry.type}` : ''}`);
+      }
+      console.log('');
+      console.log('Confirm one skill at a time:');
+      console.log('  gad evolution shed --confirm <slug>');
+      return;
+    }
+
     const candidatesDir = path.join(repoRoot, '.planning', 'candidates');
 
     let targets = [];
@@ -14828,6 +15547,7 @@ const evolutionShed = defineCommand({
 const evolutionCmd = defineCommand({
   meta: { name: 'evolution', description: 'Manage GAD evolution proto-skills (validate/promote/discard/status/similarity/images)' },
   subCommands: {
+    scan: evolutionScan,
     install: evolutionInstall,
     validate: evolutionValidate,
     promote: evolutionPromote,
@@ -16497,6 +17217,7 @@ const main = defineCommand({
     dashboard: startCmd,
     subagents: subagentsCmd,
     startup: startupCmd,
+    'pause-work': pauseWorkCmd,
     'discovery-test': discoveryTestCmd,
     sprint: sprintCmd,
     dev: devCmd,
