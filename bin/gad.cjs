@@ -17168,6 +17168,100 @@ const nextCmd = defineCommand({
   },
 });
 
+// ---------------------------------------------------------------------------
+// publishCmd — task 51-03 (extends 51-04). Stamps `x-operator-id` on the
+// publish PATCH so the human operator (Clerk userId or solo-operator)
+// stays attached to MANIFEST.json publishedBy even when the actual write
+// is initiated by an agent runtime spawned via /api/dev/spawn.
+//
+// Reads OPERATOR_ID / GAD_OPERATOR_ID from env (the spawn route stamps
+// these onto every child it launches). Falls back to "solo-operator" so
+// running this from a plain shell still works.
+//
+// Default endpoint is the planning-app dev server at localhost:3002. Set
+// GAD_PLANNING_APP_URL to override (e.g. when planning-app moves).
+// ---------------------------------------------------------------------------
+function gadOperatorAttribution() {
+  const op =
+    process.env.OPERATOR_ID ||
+    process.env.GAD_OPERATOR_ID ||
+    'solo-operator';
+  const headers = { 'x-operator-id': op };
+  if (process.env.GAD_AGENT_ID) headers['x-gad-agent-id'] = process.env.GAD_AGENT_ID;
+  if (process.env.GAD_AGENT_ROLE) headers['x-gad-agent-role'] = process.env.GAD_AGENT_ROLE;
+  return { operator: op, headers };
+}
+
+const publishCmd = defineCommand({
+  meta: {
+    name: 'publish',
+    description: 'Set publish status (draft|published|unlisted) on a generation. Stamps x-operator-id from env.',
+  },
+  args: {
+    project: { type: 'positional', required: true, description: 'Project id (e.g. escape-the-dungeon)' },
+    species: { type: 'string', required: true, description: 'Species name (e.g. gad)' },
+    version: { type: 'string', required: true, description: 'Generation version (e.g. v7)' },
+    status: { type: 'string', default: 'published', description: 'draft | published | unlisted' },
+    url: { type: 'string', description: 'Planning-app base URL (default: env GAD_PLANNING_APP_URL or http://localhost:3002)' },
+    json: { type: 'boolean', description: 'Emit JSON response' },
+  },
+  async run({ args }) {
+    const valid = new Set(['draft', 'published', 'unlisted']);
+    if (!valid.has(args.status)) {
+      console.error(`error: --status must be one of: ${[...valid].join(', ')}`);
+      process.exitCode = 2;
+      return;
+    }
+    const base =
+      args.url ||
+      process.env.GAD_PLANNING_APP_URL ||
+      'http://localhost:3002';
+    const url = `${base.replace(/\/$/, '')}/api/dev/evals/projects/${encodeURIComponent(args.project)}/species/${encodeURIComponent(args.species)}/generations/${encodeURIComponent(args.version)}/publish`;
+    const { operator, headers } = gadOperatorAttribution();
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json', ...headers },
+        body: JSON.stringify({ status: args.status }),
+      });
+    } catch (err) {
+      console.error(`error: PATCH ${url} failed: ${err.message}`);
+      console.error(`(is planning-app running? \`pnpm dev:planning-app\` or \`pnpm --filter @portfolio/planning-app dev\`)`);
+      process.exitCode = 1;
+      return;
+    }
+    const text = await res.text();
+    let payload = null;
+    try { payload = JSON.parse(text); } catch { /* non-json response, surface raw */ }
+    if (!res.ok) {
+      if (args.json) {
+        process.stdout.write(text + '\n');
+      } else {
+        console.error(`error: ${res.status} ${res.statusText}`);
+        if (payload?.error) console.error(payload.error);
+        else console.error(text);
+      }
+      process.exitCode = 1;
+      return;
+    }
+    if (args.json) {
+      process.stdout.write(JSON.stringify(payload ?? text, null, 2) + '\n');
+      return;
+    }
+    console.log(`\n${args.status.toUpperCase()} ${args.project}/${args.species}/${args.version}`);
+    console.log(`  operator:  ${operator}`);
+    if (process.env.GAD_AGENT_ID) console.log(`  agent:     ${process.env.GAD_AGENT_ID}`);
+    if (payload && typeof payload === 'object') {
+      if (payload.publishedAt) console.log(`  publishedAt: ${payload.publishedAt}`);
+      if (payload.publishedBy) console.log(`  publishedBy: ${payload.publishedBy}`);
+      if ('hasBuild' in payload) console.log(`  hasBuild:    ${payload.hasBuild}`);
+      if ('isPublished' in payload) console.log(`  live:        ${payload.isPublished ? 'yes' : 'no'}`);
+    }
+    console.log('');
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'gad',
@@ -17236,6 +17330,7 @@ const main = defineCommand({
     breed: breedCmd,
     play: playCmd,
     tip: tipCmd,
+    publish: publishCmd,
     version: versionCmd,
   },
 });

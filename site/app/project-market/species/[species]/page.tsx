@@ -119,9 +119,21 @@ export default async function SpeciesDetailPage({
         <div className="mt-8 space-y-8">
           {projectGroups.map(([projectId, gens]) => {
             const projectLabel = PROJECT_LABELS[projectId] ?? projectId;
+            // Per-project score chips (task 51-06): best = max composite score
+            // across this species's runs of this project; latest = score of
+            // the most-recently-published run. Either may be null when the
+            // run has no scored TRACE.json (date-only generation).
+            const scored = gens.filter(
+              (g): g is typeof gens[number] & { score: number } => g.score !== null,
+            );
+            const bestScore =
+              scored.length > 0
+                ? scored.reduce((a, b) => (a.score > b.score ? a : b))
+                : null;
+            const latestWithScore = gens.find((g) => g.score !== null) ?? null;
             return (
               <section key={projectId}>
-                <div className="mb-2 flex items-baseline justify-between gap-2">
+                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-sm font-semibold text-foreground">
                     <Link
                       href={`/project-market?projectid=${encodeURIComponent(projectId)}`}
@@ -130,9 +142,33 @@ export default async function SpeciesDetailPage({
                       {projectLabel}
                     </Link>
                   </h2>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {gens.length} generation{gens.length === 1 ? "" : "s"}
-                  </span>
+                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums">
+                    {bestScore && (
+                      <span
+                        className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-300"
+                        title={`Best composite score across this species's runs of ${projectLabel} (${bestScore.version}, published ${fmtDate(bestScore.publishedAt)})`}
+                      >
+                        best {bestScore.score.toFixed(2)} ·{" "}
+                        <span className="font-mono">{bestScore.version}</span>
+                      </span>
+                    )}
+                    {latestWithScore &&
+                      bestScore &&
+                      latestWithScore.id !== bestScore.id && (
+                        <span
+                          className="rounded border border-border/50 px-1.5 py-0.5 text-muted-foreground"
+                          title={`Latest scored run · ${fmtDate(latestWithScore.publishedAt)}`}
+                        >
+                          latest {latestWithScore.score!.toFixed(2)} ·{" "}
+                          <span className="font-mono">
+                            {latestWithScore.version}
+                          </span>
+                        </span>
+                      )}
+                    <span>
+                      {gens.length} generation{gens.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
                 </div>
                 <ul className="divide-y divide-border/30 rounded border border-border/40 bg-card/30">
                   {gens.map((g) => (
