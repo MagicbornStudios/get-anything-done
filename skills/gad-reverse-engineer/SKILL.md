@@ -2,6 +2,7 @@
 name: gad:reverse-engineer
 description: Analyze any codebase (local or GitHub URL) and extract implementation-agnostic requirements plus system-skill contracts for clean-room reimplementation
 lane: [dev, meta]
+type: meta-framework
 argument-hint: --path <local-path> | --repo <github-url> [--branch <branch>]
 allowed-tools:
   - Read

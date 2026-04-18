@@ -2,6 +2,7 @@
 name: gad:write-tech-doc
 description: Produce a technical breakdown doc — architecture, data flow, component design. Use when a system needs to be explained structurally for agent or developer onboarding.
 lane: dev
+type: workflow
 workflow: workflows/write-tech-doc.md
 ---
 

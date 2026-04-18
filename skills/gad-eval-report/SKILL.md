@@ -2,6 +2,7 @@
 name: gad:eval-report
 description: Show cross-project eval comparison and findings
 lane: dev
+type: workflow
 allowed-tools:
   - Read
   - Bash

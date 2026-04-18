@@ -2,6 +2,7 @@
 name: gad:add-todo
 description: Capture idea or task as todo from current conversation context
 lane: dev
+type: workflow
 argument-hint: [optional description]
 allowed-tools:
   - Read

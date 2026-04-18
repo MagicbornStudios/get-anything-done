@@ -4,6 +4,7 @@ origin: emergent
 authored-by: agent
 authored-on: 2026-04-09
 excluded-from-default-install: true
+type: captured-answer
 description: >-
   Hard-start procedure for any agent about to touch the GAD repo in a new turn
   or session. Forces the agent to rehydrate state, check existing planned work,

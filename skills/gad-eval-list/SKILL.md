@@ -2,6 +2,7 @@
 name: gad:eval-list
 description: List available eval projects and their run history
 lane: dev
+type: workflow
 allowed-tools:
   - Read
   - Bash

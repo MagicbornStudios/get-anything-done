@@ -2,6 +2,7 @@
 name: gad:next
 description: Automatically advance to the next logical step in the GAD workflow
 lane: dev
+type: captured-answer
 allowed-tools:
   - Read
   - Bash

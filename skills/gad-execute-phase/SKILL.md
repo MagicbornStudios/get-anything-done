@@ -2,6 +2,7 @@
 name: gad:execute-phase
 description: Execute all plans in a phase with wave-based parallelization
 lane: dev
+type: workflow
 argument-hint: "<phase-number> [--wave N] [--gaps-only] [--interactive]"
 allowed-tools:
   - Read

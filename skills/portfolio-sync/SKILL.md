@@ -2,6 +2,7 @@
 name: portfolio-sync
 description: Keep the public-facing GAD site and generated publishing artifacts in sync with the framework as it evolves. Trigger this skill whenever an eval run finishes, a new finding is written, a skill or agent changes, requirements or decisions move, or planning/docs outputs need regeneration.
 lane: prod
+type: command-wrapper
 ---
 
 # portfolio-sync

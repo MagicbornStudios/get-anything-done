@@ -2,6 +2,7 @@
 name: gad:note
 description: Zero-friction idea capture. Append, list, or promote notes to todos.
 lane: dev
+type: captured-answer
 argument-hint: "<text> | list | promote <N> [--global]"
 allowed-tools:
   - Read

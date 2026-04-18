@@ -2,6 +2,7 @@
 name: gad:auto-conventions
 description: Auto-scaffold CONVENTIONS.md from codebase patterns after first implementation phase
 lane: [dev, meta]
+type: meta-framework
 allowed-tools:
   - Read
   - Write

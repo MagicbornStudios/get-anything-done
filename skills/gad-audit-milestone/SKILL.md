@@ -2,6 +2,7 @@
 name: gad:audit-milestone
 description: Audit milestone completion against original intent before archiving
 lane: dev
+type: captured-answer
 argument-hint: "[version]"
 allowed-tools:
   - Read

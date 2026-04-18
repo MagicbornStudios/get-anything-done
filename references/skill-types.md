@@ -24,7 +24,15 @@ framework` (e.g. `gad-evolution-evolve`). Common pairings:
 | **captured-answer** | most fix recipes | release checklists | framework-only recipes |
 | **workflow** | plan/execute/verify | release/ship | evolve/promote/shed |
 | **command-wrapper** | `gad-do` | `gad-update` | `gad-skill-creator` |
-| **meta-framework** | — | — | all create/shed/evolve |
+| **meta-framework** | rare; surfaces when lane spans `[dev, meta]` (e.g. `gad-reverse-engineer`, `gad-auto-conventions`) | — | all create/shed/evolve |
+
+**Observed lane-type pairings worth noting** (from 2026-04-18 wave 3-5 type-tag pass):
+
+- `gad-verify-work` — `lane: [dev, prod]`, `type: workflow`. Cross-lane workflows are common.
+- `gad-validate-phase` — `lane: [dev, prod]`, `type: captured-answer`. The `prod`-side `captured-answer` cell ("release checklists") generalizes to phase-validation checklists.
+- `gad-reverse-engineer` and `gad-auto-conventions` — `lane: [dev, meta]`, `type: meta-framework`. Span dev work and framework hygiene; classified by dominant shape (framework behavior wins when both apply).
+
+When a skill genuinely sits across two lanes, classify by the dominant *shape* it instantiates on the host, not by the lane bias of the matrix's example slot.
 
 ## Why separate from `lane`
 

@@ -2,6 +2,7 @@
 name: gad:settings
 description: Configure GAD workflow toggles and model profile
 lane: dev
+type: captured-answer
 allowed-tools:
   - Read
   - Write

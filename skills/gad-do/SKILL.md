@@ -2,6 +2,7 @@
 name: gad:do
 description: Route freeform text to the right GAD command automatically
 lane: dev
+type: captured-answer
 argument-hint: "<description of what you want to do>"
 allowed-tools:
   - Read

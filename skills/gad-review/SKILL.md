@@ -2,6 +2,7 @@
 name: gad:review
 description: Request cross-AI peer review of phase plans from external AI CLIs
 lane: dev
+type: captured-answer
 argument-hint: "--phase N [--gemini] [--claude] [--codex] [--opencode] [--all]"
 allowed-tools:
   - Read

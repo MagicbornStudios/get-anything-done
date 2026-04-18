@@ -2,6 +2,7 @@
 name: gad:cleanup
 description: Archive accumulated phase directories from completed milestones
 lane: dev
+type: workflow
 workflow: workflows/cleanup.md
 ---
 <objective>
