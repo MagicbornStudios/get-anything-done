@@ -9862,8 +9862,15 @@ const snapshotV2Cmd = defineCommand({
     sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapContent });
 
     // Graph-backed task listing for sprint snapshot (decision gad-201, gad-202)
+    // Filters out cancelled (permanent history, not actionable) and scopes
+    // to current-sprint phases by default (decision: snapshot bloat audit,
+    // 2026-04-18). Out-of-sprint open tasks are counted but not listed —
+    // `gad tasks --projectid <id>` shows the full set on demand.
+    const sprintPhaseIdSet = new Set(sprintPhaseIds.map(String));
+    const isSprintPhase = (phaseId) => sprintPhaseIdSet.has(String(phaseId));
     const sprintUseGraph = graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path));
     let sprintOpenTasks, sprintTasksSection = '', sprintDoneCount;
+    let outOfSprintOpenCount = 0;
     if (sprintUseGraph) {
       const sprintJsonPath = path.join(planDir, 'graph.json');
       const gadDir = path.resolve(__dirname, '..');
@@ -9874,11 +9881,16 @@ const snapshotV2Cmd = defineCommand({
       const sprintGraph = JSON.parse(fs.readFileSync(sprintJsonPath, 'utf8'));
       const sprintAllResult = graphExtractor.queryGraph(sprintGraph, { type: 'task' });
       const sprintAllMatches = sprintAllResult.matches || [];
-      const sprintOpenMatches = sprintAllMatches.filter(m => m.status !== 'done');
-      sprintDoneCount = sprintAllMatches.length - sprintOpenMatches.length;
-      if (sprintOpenMatches.length > 0) {
+      const sprintOpenMatches = sprintAllMatches.filter(m => m.status !== 'done' && m.status !== 'cancelled');
+      sprintDoneCount = sprintAllMatches.filter(m => m.status === 'done').length;
+      const inSprintOpenMatches = sprintOpenMatches.filter(m => {
+        const taskPhase = m.id.replace(/^task:/, '').split('-')[0];
+        return isSprintPhase(taskPhase);
+      });
+      outOfSprintOpenCount = sprintOpenMatches.length - inSprintOpenMatches.length;
+      if (inSprintOpenMatches.length > 0) {
         let currentTaskPhase = '';
-        for (const m of sprintOpenMatches) {
+        for (const m of inSprintOpenMatches) {
           const taskId = m.id.replace(/^task:/, '');
           const taskPhase = taskId.split('-')[0];
           if (taskPhase !== currentTaskPhase) {
@@ -9894,12 +9906,18 @@ const snapshotV2Cmd = defineCommand({
           sprintTasksSection += `    <task id="${taskId}" status="${m.status}"${attrStr}>${goalText}</task>\n`;
         }
       }
-      sprintOpenTasks = sprintOpenMatches;
+      sprintOpenTasks = inSprintOpenMatches;
     } else {
-      sprintOpenTasks = allTasks.filter((task) => task.status !== 'done');
-      if (sprintOpenTasks.length > 0) {
+      const allOpenTasks = allTasks.filter((task) => task.status !== 'done' && task.status !== 'cancelled');
+      const inSprintOpenTasks = allOpenTasks.filter((task) => {
+        const taskPhase = task.id ? task.id.split('-')[0] : '';
+        return isSprintPhase(taskPhase);
+      });
+      outOfSprintOpenCount = allOpenTasks.length - inSprintOpenTasks.length;
+      sprintOpenTasks = inSprintOpenTasks;
+      if (inSprintOpenTasks.length > 0) {
         let currentTaskPhase = '';
-        for (const task of sprintOpenTasks) {
+        for (const task of inSprintOpenTasks) {
           const taskPhase = task.id ? task.id.split('-')[0] : '';
           if (taskPhase !== currentTaskPhase) {
             currentTaskPhase = taskPhase;
@@ -9915,13 +9933,19 @@ const snapshotV2Cmd = defineCommand({
           sprintTasksSection += `    <task id="${task.id}" status="${task.status}"${attrStr}>${goalText}</task>\n`;
         }
       }
-      sprintDoneCount = allTasks.length - sprintOpenTasks.length;
+      sprintDoneCount = allTasks.filter(t => t.status === 'done').length;
+    }
+    if (outOfSprintOpenCount > 0) {
+      sprintTasksSection += `\n(+${outOfSprintOpenCount} open out-of-sprint — see \`gad tasks --projectid ${root.id}\`)\n`;
     }
     const tasksContent = (() => {
-      const raw = sprintTasksSection.trim() || '(no open tasks)';
+      const raw = sprintTasksSection.trim() || '(no open sprint tasks)';
       return useCompact ? compactTasksSection(raw) : raw;
     })();
-    sections.push({ title: `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`, content: tasksContent });
+    const tasksTitle = outOfSprintOpenCount > 0
+      ? `TASKS (${sprintOpenTasks.length} sprint, +${outOfSprintOpenCount} out-of-sprint, ${sprintDoneCount} done)`
+      : `TASKS (${sprintOpenTasks.length} open, ${sprintDoneCount} done)`;
+    sections.push({ title: tasksTitle, content: tasksContent });
 
     // Decision gad-259 (2026-04-17): DAILY section retired. See function-site
     // comment above where buildDailySection used to live.
