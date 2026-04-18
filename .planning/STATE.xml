@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 63. 63-04 + 63-06 done. Next pick: 63-05 (SessionStart daily tip + soul) or parallel 60-09 handoff CLI. Queue: 63-06✓, 63-05, 63-03, 63-02 (deps 60-09+63-03), 63-01 (Haiku subagent dispatched). Codex lane (bin/gad.cjs runtime, lib/runtime-*, lib/secrets-*, lib/env-cli) off-limits — see references/agent-lanes.md.</next-action>
+  <next-action>Phase 63 near-complete. Done: 63-01 (Haiku audit), 63-03 (user-settings lib), 63-04 (agent-lanes), 63-05 (SessionStart hook), 63-06 (regex idempotency fix), 60-09 (handoff CLI, Sonnet). 63-02 claude-side done (hook handoff nudge + --json empty fix); codex-side filed as handoff h-2026-04-18T18-17-59 covering gad startup extension + gad pause-work + integration test. Skill-lane frontmatter rollout (Haiku) in flight. Snapshot integration deferred to .planning/notes/2026-04-18-handoff-snapshot-integration.md.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
