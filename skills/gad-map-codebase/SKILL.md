@@ -2,6 +2,7 @@
 name: gad:map-codebase
 description: Analyze codebase with parallel mapper agents to produce .planning/codebase/ documents
 lane: dev
+type: workflow
 argument-hint: "[optional: specific area to map, e.g., 'api' or 'auth']"
 allowed-tools:
   - Read

@@ -2,6 +2,7 @@
 name: gad:review-backlog
 description: Review and promote backlog items to active milestone
 lane: dev
+type: captured-answer
 allowed-tools:
   - Read
   - Write

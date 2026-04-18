@@ -2,6 +2,7 @@
 name: gad:check-todos
 description: List pending todos and select one to work on
 lane: dev
+type: captured-answer
 argument-hint: [area filter]
 allowed-tools:
   - Read

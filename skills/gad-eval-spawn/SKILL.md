@@ -10,6 +10,7 @@ description: >-
   `.planning/.eval-runs/<run-id>.json` so the orchestrator can poll status and
   preserve outputs via `gad eval preserve` after the builder session completes.
 lane: dev
+type: command-wrapper
 argument-hint: <project> [--runtime claude-code] [--baseline HEAD]
 allowed-tools:
   - Read

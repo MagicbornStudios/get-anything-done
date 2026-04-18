@@ -2,6 +2,7 @@
 name: gad:add-tests
 description: Generate tests for a completed phase based on UAT criteria and implementation
 lane: dev
+type: workflow
 argument-hint: "<phase> [additional instructions]"
 allowed-tools:
   - Read

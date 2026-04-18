@@ -2,6 +2,7 @@
 name: gad:help
 description: Show available GAD commands and usage guide
 lane: dev
+type: workflow
 workflow: workflows/help.md
 ---
 <objective>

@@ -2,6 +2,7 @@
 name: gad:progress
 description: Check project progress, show context, and route to next action (execute or plan)
 lane: dev
+type: captured-answer
 allowed-tools:
   - Read
   - Bash

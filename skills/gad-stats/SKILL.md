@@ -2,6 +2,7 @@
 name: gad:stats
 description: Display project statistics — phases, plans, requirements, git metrics, and timeline
 lane: dev
+type: workflow
 allowed-tools:
   - Read
   - Bash

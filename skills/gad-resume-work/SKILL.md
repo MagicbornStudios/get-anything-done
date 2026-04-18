@@ -2,6 +2,7 @@
 name: gad:resume-work
 description: Resume work from previous session with full context restoration
 lane: dev
+type: workflow
 allowed-tools:
   - Read
   - Bash

@@ -2,6 +2,7 @@
 name: gad:verify-phase
 description: Verify a completed phase achieved its goals. Runs build checks, validates deliverables exist, checks planning doc state, produces VERIFICATION.md. Works automated (eval agents) or interactive (human review). Use after completing a phase, before marking it done in ROADMAP.xml.
 lane: dev
+type: workflow
 workflow: workflows/verify-phase.md
 ---
 

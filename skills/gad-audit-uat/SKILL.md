@@ -2,6 +2,7 @@
 name: gad:audit-uat
 description: Cross-phase audit of all outstanding UAT and verification items
 lane: dev
+type: workflow
 allowed-tools:
   - Read
   - Glob

@@ -7,6 +7,7 @@ description: >-
   at the END of a work session; use gad-handoffs directly when claiming or
   completing an existing handoff. Supersedes the old .continue-here.md pattern.
 lane: dev
+type: captured-answer
 allowed-tools:
   - Bash
 ---

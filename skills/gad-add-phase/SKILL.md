@@ -2,6 +2,7 @@
 name: gad:add-phase
 description: Add phase to end of current milestone in roadmap
 lane: dev
+type: workflow
 argument-hint: <description>
 allowed-tools:
   - Read

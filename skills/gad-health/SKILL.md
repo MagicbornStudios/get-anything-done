@@ -2,6 +2,7 @@
 name: gad:health
 description: Diagnose planning directory health and optionally repair issues
 lane: dev
+type: captured-answer
 argument-hint: [--repair]
 allowed-tools:
   - Read

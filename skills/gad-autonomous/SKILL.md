@@ -2,6 +2,7 @@
 name: gad:autonomous
 description: Run all remaining phases autonomously — discuss→plan→execute per phase
 lane: dev
+type: workflow
 argument-hint: "[--from N] [--only N] [--interactive]"
 allowed-tools:
   - Read

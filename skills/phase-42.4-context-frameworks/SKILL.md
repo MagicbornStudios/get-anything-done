@@ -8,6 +8,7 @@ description: >-
   or when proposing a new framework variant to run alongside GAD in the eval harness.
   Covers the on-disk shape, the site catalog wiring, and the species.json handshake.
 lane: dev
+type: captured-answer
 source_phase: "42.4"
 source_evolution: 2026-04-14-001
 status: proto

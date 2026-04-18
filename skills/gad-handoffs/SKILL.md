@@ -8,6 +8,7 @@ description: >-
   lifecycle, every gad CLI call is safe against concurrent agents. Required reading
   for every session start; supersedes the old .continue-here.md pattern.
 lane: dev
+type: workflow
 allowed-tools:
   - Bash
 ---

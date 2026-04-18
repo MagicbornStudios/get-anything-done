@@ -2,6 +2,7 @@
 name: gad:validate-phase
 description: Retroactively audit and fill Nyquist validation gaps for a completed phase
 lane: [dev, prod]
+type: captured-answer
 argument-hint: "[phase number]"
 allowed-tools:
   - Read

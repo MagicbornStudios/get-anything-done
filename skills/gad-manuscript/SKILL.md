@@ -2,6 +2,7 @@
 name: gad:manuscript
 description: Fiction writing adaptation of the GAD loop for novels and story outlines
 lane: dev
+type: workflow
 allowed-tools:
   - Read
   - Write

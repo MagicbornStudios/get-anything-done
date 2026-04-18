@@ -2,6 +2,7 @@
 name: gad:new-project
 description: Initialize a new project with deep context gathering and PROJECT.md
 lane: dev
+type: workflow
 argument-hint: "[--auto]"
 allowed-tools:
   - Read

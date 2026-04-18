@@ -6,6 +6,7 @@ description: >-
   for image jobs, or an opt-in OpenAI generation pass. Generation is disabled
   by default and requires OPENAI_API_KEY.
 lane: prod
+type: command-wrapper
 workflow: workflows/evolution-images.md
 ---
 

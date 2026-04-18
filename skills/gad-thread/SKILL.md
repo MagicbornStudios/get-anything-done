@@ -2,6 +2,7 @@
 name: gad:thread
 description: Manage persistent context threads for cross-session work
 lane: dev
+type: captured-answer
 argument-hint: [name | description]
 allowed-tools:
   - Read
