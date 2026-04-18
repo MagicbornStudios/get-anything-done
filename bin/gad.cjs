@@ -3289,6 +3289,50 @@ const planningCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// gad start / gad dashboard — daily operator dashboard entry (59-06, gad-262)
+// ---------------------------------------------------------------------------
+
+const startCmd = defineCommand({
+  meta: {
+    name: 'start',
+    description:
+      'Daily dashboard entry. Spawns `gad planning serve` if not running, waits for health, opens browser to /my-projects. Aliased as `gad dashboard`.',
+  },
+  args: {
+    port: {
+      type: 'string',
+      description: 'Override port (default 3002).',
+      default: '',
+    },
+    'no-browser': {
+      type: 'boolean',
+      description: 'Skip browser open. Useful for editor/iframe workflows.',
+      default: false,
+    },
+  },
+  async run({ args }) {
+    const { DEFAULT_PORT } = require('../lib/planning-serve.cjs');
+    const { runStart } = require('../lib/start-cmd.cjs');
+
+    let port = DEFAULT_PORT;
+    const rawPort = String(args.port || '').trim();
+    if (rawPort) {
+      const p = parseInt(rawPort, 10);
+      if (!Number.isFinite(p) || p <= 0) {
+        outputError(`invalid --port value: ${rawPort}`);
+        return;
+      }
+      port = p;
+    }
+
+    const result = await runStart({ port, noBrowser: Boolean(args['no-browser']) });
+    if (result.action === 'conflict') {
+      process.exitCode = 1;
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
 // site subcommands (phase 10) — compile project planning into deployable HTML
 // ---------------------------------------------------------------------------
 //
@@ -14439,6 +14483,8 @@ const main = defineCommand({
     rounds: roundsCmd,
     verify: verifyCmd,
     snapshot: snapshotV2Cmd,
+    start: startCmd,
+    dashboard: startCmd,
     startup: startupCmd,
     'discovery-test': discoveryTestCmd,
     sprint: sprintCmd,

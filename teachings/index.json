@@ -62,6 +62,33 @@
       ]
     },
     {
+      "id": "gad-framework-testable-cli-01",
+      "title": "Testable CLI via injected stdio — stop monkey-patching process",
+      "category": "gad-framework",
+      "difficulty": "intermediate",
+      "tags": [
+        "testing",
+        "cli",
+        "dependency-injection",
+        "factory-pattern"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/testable-cli-via-injection.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/env-cli.cjs"
+      ],
+      "decisions": [
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-error-code-remediation-01"
+      ]
+    },
+    {
       "id": "llm-internals-tokens-01",
       "title": "Tokens are not words",
       "category": "llm-internals",
@@ -316,6 +343,35 @@
       "related": [
         "security-fail-closed-01",
         "security-aead-aad-01"
+      ]
+    },
+    {
+      "id": "security-error-code-remediation-01",
+      "title": "Error code → remediation map — turn named errors into actionable CLI output",
+      "category": "security",
+      "difficulty": "beginner",
+      "tags": [
+        "error-handling",
+        "cli",
+        "ux",
+        "defense-in-depth"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/security/06-error-code-remediation-map.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/env-cli.cjs"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-fail-closed-01",
+        "security-passphrase-verifier-01"
       ]
     }
   ]

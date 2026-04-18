@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 S11 close. Phase 59 wave 2 complete: 59-02 + 59-05 done. Phase 60 wave 2 in: 60-02 secrets-store + Windows DPAPI keychain + 20/20 tests done (subagent 666d8c6). 2 new security tips harvested (verifier-slot, fail-closed-ordering) — 11 tips total. byok-design.md §5 extended with verifier-slot spec (§5.4). NEXT wave 3: parallel — 59-03 port /planning, 59-06 gad start, 60-03 gad env CLI family. All three spawnable as subagents; 60-03 blocks 60-04 scoped-spawn.</next-action>
+  <next-action>2026-04-17 S13 close. Wave 3 in-flight: 59-06 gad start done (lib/start-cmd.cjs + bin wiring, idempotent via probeHealth, browser opener for win32/darwin/linux, 'dashboard' alias). 60-03 gad env CLI done (subagent 7a3effb, 30/30 tests). 2 tips harvested (error-code-remediation, testable-cli-via-injection). 59-03 /planning port subagent still RUNNING. NEXT: (1) wait on 59-03 notification, (2) release binary rebuild after 59-03 settles, (3) wave 4 — 59-04 /my-projects dashboard + 60-04 scoped-spawn.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>
