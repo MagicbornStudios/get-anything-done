@@ -388,3 +388,107 @@ describe('secrets-store: input validation', () => {
     assert.deepStrictEqual(all, { A: 'a1', B: 'b1' });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 60-07b: scope path resolution + per-scope isolation
+// ---------------------------------------------------------------------------
+
+describe('secrets-store: scope path resolution', () => {
+  test('normalizeScope rejects path traversal + illegal segments', () => {
+    assert.throws(() => store.normalizeScope('../etc'), (err) => err.code === 'VALIDATION');
+    assert.throws(() => store.normalizeScope('foo/..'), (err) => err.code === 'VALIDATION');
+    assert.throws(() => store.normalizeScope('/abs'), (err) => err.code === 'VALIDATION');
+    assert.throws(() => store.normalizeScope('trailing/'), (err) => err.code === 'VALIDATION');
+    assert.throws(() => store.normalizeScope('back\\slash'), (err) => err.code === 'VALIDATION');
+    assert.throws(() => store.normalizeScope('has space'), (err) => err.code === 'VALIDATION');
+    assert.strictEqual(store.normalizeScope('eval-x'), 'eval-x');
+    assert.strictEqual(store.normalizeScope('eval-x/grime-time'), 'eval-x/grime-time');
+    assert.strictEqual(store.normalizeScope(null), null);
+    assert.strictEqual(store.normalizeScope(undefined), null);
+    assert.strictEqual(store.normalizeScope(''), null);
+  });
+
+  test('envelopePath nests scoped bags under the projectId dir', () => {
+    const planning = store.envelopePath(PROJECT_ID);
+    assert.ok(planning.endsWith(`${PROJECT_ID}.enc`));
+    const eval1 = store.envelopePath(PROJECT_ID, 'eval-x');
+    assert.ok(eval1.includes(path.join(PROJECT_ID, 'eval-x.enc')));
+    const species = store.envelopePath(PROJECT_ID, 'eval-x/grime-time');
+    assert.ok(species.includes(path.join(PROJECT_ID, 'eval-x', 'grime-time.enc')));
+  });
+
+  test('keychainAccount uses legacy id for planning, ::scope for scoped', () => {
+    assert.strictEqual(store.keychainAccount(PROJECT_ID), PROJECT_ID);
+    assert.strictEqual(store.keychainAccount(PROJECT_ID, 'eval-x'), `${PROJECT_ID}::eval-x`);
+    assert.strictEqual(store.keychainAccount(PROJECT_ID, 'eval-x/grime-time'), `${PROJECT_ID}::eval-x/grime-time`);
+  });
+});
+
+describe('secrets-store: per-scope isolation', () => {
+  test('writes to one scope do not appear in another', async () => {
+    await store.set({ projectId: PROJECT_ID, keyName: 'K', value: 'planning', passphrase: PASSPHRASE });
+    await store.set({ projectId: PROJECT_ID, keyName: 'K', value: 'eval-c', scopeBag: 'eval-x', passphrase: PASSPHRASE });
+    assert.strictEqual(
+      await store.get({ projectId: PROJECT_ID, keyName: 'K', passphrase: PASSPHRASE }),
+      'planning',
+    );
+    assert.strictEqual(
+      await store.get({ projectId: PROJECT_ID, keyName: 'K', scope: 'eval-x', passphrase: PASSPHRASE }),
+      'eval-c',
+    );
+  });
+
+  test('scoped envelope file lands at .gad/secrets/<projectId>/<scope>.enc', async () => {
+    await store.set({ projectId: PROJECT_ID, keyName: 'K', value: 'v', scopeBag: 'eval-x/grime-time', passphrase: PASSPHRASE });
+    const p = store.envelopePath(PROJECT_ID, 'eval-x/grime-time');
+    assert.ok(fs.existsSync(p), `expected scoped envelope at ${p}`);
+    // planning bag should NOT have been created.
+    assert.ok(!fs.existsSync(store.envelopePath(PROJECT_ID)));
+  });
+
+  test('listChain merges parents and marks shadowed scopes', async () => {
+    await store.set({ projectId: PROJECT_ID, keyName: 'COMMON', value: 'planning-c', passphrase: PASSPHRASE });
+    await store.set({ projectId: PROJECT_ID, keyName: 'PLANNING_ONLY', value: 'po', passphrase: PASSPHRASE });
+    await store.set({ projectId: PROJECT_ID, keyName: 'COMMON', value: 'eval-c', scopeBag: 'eval-x', passphrase: PASSPHRASE });
+    await store.set({ projectId: PROJECT_ID, keyName: 'EVAL_ONLY', value: 'eo', scopeBag: 'eval-x', passphrase: PASSPHRASE });
+    const rows = await store.listChain({
+      projectId: PROJECT_ID,
+      scopeChain: ['eval-x', null],
+      passphrase: PASSPHRASE,
+    });
+    const byKey = Object.fromEntries(rows.map((r) => [r.keyName, r]));
+    assert.strictEqual(byKey.COMMON.scopeBag, 'eval-x');
+    assert.deepStrictEqual(byKey.COMMON.shadows, [null]);
+    assert.strictEqual(byKey.EVAL_ONLY.scopeBag, 'eval-x');
+    assert.deepStrictEqual(byKey.EVAL_ONLY.shadows, []);
+    assert.strictEqual(byKey.PLANNING_ONLY.scopeBag, null);
+    assert.deepStrictEqual(byKey.PLANNING_ONLY.shadows, []);
+  });
+
+  test('decryptChain — most-specific wins, sparse parents tolerated', async () => {
+    await store.set({ projectId: PROJECT_ID, keyName: 'A', value: 'planning-a', passphrase: PASSPHRASE });
+    await store.set({ projectId: PROJECT_ID, keyName: 'B', value: 'planning-b', passphrase: PASSPHRASE });
+    await store.set({ projectId: PROJECT_ID, keyName: 'A', value: 'eval-a', scopeBag: 'eval-x', passphrase: PASSPHRASE });
+    const merged = await store.decryptChain({
+      projectId: PROJECT_ID,
+      scopeChain: ['eval-x/missing-species', 'eval-x', null],
+      passphrase: PASSPHRASE,
+    });
+    assert.deepStrictEqual(merged, { A: 'eval-a', B: 'planning-b' });
+  });
+
+  test('revoke targets the scoped bag, not planning', async () => {
+    await store.set({ projectId: PROJECT_ID, keyName: 'K', value: 'planning', passphrase: PASSPHRASE });
+    await store.set({ projectId: PROJECT_ID, keyName: 'K', value: 'eval', scopeBag: 'eval-x', passphrase: PASSPHRASE });
+    await store.revoke({ projectId: PROJECT_ID, keyName: 'K', scope: 'eval-x', passphrase: PASSPHRASE });
+    // planning still has it
+    assert.strictEqual(
+      await store.get({ projectId: PROJECT_ID, keyName: 'K', passphrase: PASSPHRASE }),
+      'planning',
+    );
+    await assert.rejects(
+      () => store.get({ projectId: PROJECT_ID, keyName: 'K', scope: 'eval-x', passphrase: PASSPHRASE }),
+      (err) => err.code === 'KEY_NOT_FOUND',
+    );
+  });
+});
