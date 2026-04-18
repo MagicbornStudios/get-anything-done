@@ -24,6 +24,7 @@ function renderMarkdown(src) {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const { readTasks } = require("../../lib/task-registry-reader.cjs");
+const { estimateTokens } = require("../../lib/token-estimator.cjs");
 const SITE_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(SITE_ROOT, "..");
 const MONOREPO_ROOT = path.resolve(REPO_ROOT, "..", "..");
@@ -151,12 +152,7 @@ function readProjectTraceEvents() {
   return traces;
 }
 
-function estimateTokensFromText(value) {
-  if (!value) return 0;
-  const text = typeof value === "string" ? value : JSON.stringify(value);
-  if (!text) return 0;
-  return Math.ceil(text.length / 4);
-}
+const estimateTokensFromText = estimateTokens;
 
 function extractSnapshotProjectId(event) {
   const args = Array.isArray(event?.args) ? event.args : [];

@@ -3289,6 +3289,100 @@ const planningCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// gad narrative — enter a GAD project's narrative folder (books, souls,
+// in-world docs). Not auto-read by coding agents. Explicit entry only.
+// ---------------------------------------------------------------------------
+
+const narrativeListCmd = defineCommand({
+  meta: {
+    name: 'list',
+    description: 'List GAD projects that have a narrative/ folder with an active soul.',
+  },
+  args: {
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const { monorepoRoot, listNarratives } = require('../lib/narrative.cjs');
+    const repoRoot = monorepoRoot(process.cwd());
+    if (!repoRoot) {
+      console.error('No gad-config.toml found walking up from cwd.');
+      process.exit(1);
+    }
+    const rows = listNarratives(repoRoot);
+    if (args.json) {
+      console.log(JSON.stringify(rows, null, 2));
+      return;
+    }
+    if (rows.length === 0) {
+      console.log('No projects with a narrative/ folder.');
+      return;
+    }
+    console.log('PROJECT             ACTIVE SOUL        BOOKS  NARRATIVE PATH');
+    console.log('──────────────────  ─────────────────  ─────  ──────────────────────');
+    for (const r of rows) {
+      const p = require('node:path').relative(repoRoot, r.narrativeDir) || r.narrativeDir;
+      console.log(
+        `${r.projectId.padEnd(18).slice(0, 18)}  ${(r.activeSoul || '(none)').padEnd(17).slice(0, 17)}  ${String(r.bookCount).padStart(5)}  ${p}`,
+      );
+    }
+  },
+});
+
+const narrativeEnterCmd = defineCommand({
+  meta: {
+    name: 'enter',
+    description: 'Print active soul + book table of contents for a narrative. Explicit entry point — does not auto-load in coding sessions.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Project id (matches gad-config.toml [[planning.roots]] id).' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const projectId = args.projectid || args._?.[0];
+    if (!projectId) {
+      console.error('Usage: gad narrative enter --projectid <id>  (or: gad narrative enter <id>)');
+      process.exit(1);
+    }
+    const { monorepoRoot, enterNarrative } = require('../lib/narrative.cjs');
+    const repoRoot = monorepoRoot(process.cwd());
+    if (!repoRoot) {
+      console.error('No gad-config.toml found walking up from cwd.');
+      process.exit(1);
+    }
+    const result = enterNarrative(repoRoot, projectId);
+    if (!result.ok) {
+      console.error(`Cannot enter narrative for "${projectId}": ${result.reason}`);
+      process.exit(1);
+    }
+    if (args.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    const path = require('node:path');
+    console.log(`── NARRATIVE: ${result.projectId} — soul: ${result.activeSoul} ──`);
+    console.log('');
+    console.log(result.soulBody);
+    if (result.books.length > 0) {
+      console.log('');
+      console.log('── BOOKS ─────────────────────────────────────────────');
+      for (const b of result.books) {
+        const rel = path.relative(repoRoot, path.resolve(result.narrativeDir, b.path));
+        console.log(`  ${String(b.order).padStart(2)}. ${b.title}`);
+        console.log(`      ${rel}`);
+      }
+    }
+  },
+});
+
+const narrativeCmd = defineCommand({
+  meta: {
+    name: 'narrative',
+    description: 'Enter a GAD project narrative — books, souls, in-world docs. Explicit only; not auto-read by coding agents.',
+  },
+  subCommands: { list: narrativeListCmd, enter: narrativeEnterCmd },
+});
+
+// ---------------------------------------------------------------------------
 // gad start / gad dashboard — daily operator dashboard entry (59-06, gad-262)
 // ---------------------------------------------------------------------------
 
@@ -7658,21 +7752,14 @@ const snapshotCmd = defineCommand({
         const decInner = dm[2];
         const titleMatch = decInner.match(/<title>([\s\S]*?)<\/title>/);
         const title = titleMatch ? titleMatch[1].trim() : '';
-        if (ALWAYS_INCLUDE.includes(decId)) {
-          // Full inline for core decisions — title + summary + impact
-          const summaryMatch = decInner.match(/<summary>([\s\S]*?)<\/summary>/);
-          const impactMatch = decInner.match(/<impact>([\s\S]*?)<\/impact>/);
-          const summary = summaryMatch ? summaryMatch[1].trim() : '';
-          const impact = impactMatch ? impactMatch[1].trim() : '';
-          decSection += `<decision id="${decId}">\n  <title>${title}</title>\n  <summary>${summary}</summary>\n  <impact>${impact}</impact>\n</decision>\n`;
-          decCount++;
-        } else {
-          // One-liner for others
-          decSection += `${decId}: ${title.slice(0, 80)}\n`;
-          decCount++;
-        }
+        // All decisions: title-only one-liner. Full bodies via `gad decisions show <id>`.
+        // Core loop directives (gad-04, gad-17, gad-18) are already duplicated in
+        // CLAUDE.md / AGENTS.md — inlining them here wastes ~400 tokens per snapshot.
+        const marker = ALWAYS_INCLUDE.includes(decId) ? '★' : ' ';
+        decSection += `${marker} ${decId}: ${title.slice(0, 96)}\n`;
+        decCount++;
       }
-      sections.push({ title: `DECISIONS (${totalDec} total, core inlined)`, content: decSection.trim() });
+      sections.push({ title: `DECISIONS (${totalDec} total, ★=core loop — see CLAUDE.md; full body via \`gad decisions show <id>\`)`, content: decSection.trim() });
     }
 
     // 5. File refs — recent git log scoped to project path
@@ -7973,7 +8060,7 @@ const snapshotV2Cmd = defineCommand({
       const decisionsXml = readXmlFile(path.join(planDir, 'DECISIONS.xml'));
       if (!decisionsXml) return null;
       const ALWAYS_INCLUDE = ['gad-04', 'gad-17', 'gad-18'];
-      const RECENT_CAP = 30; // last N one-liners; older are summarized as a count
+      const RECENT_CAP = 15; // last N one-liners; older are summarized as a count
       const decisionRe = /<decision\s+id="([^"]*)">([\s\S]*?)<\/decision>/g;
       const all = [];
       let dm;
@@ -7985,24 +8072,22 @@ const snapshotV2Cmd = defineCommand({
         all.push({ id: decId, inner: decInner, title });
       }
       const totalDec = all.length;
-      const coreInlined = [];
-      for (const d of all) {
-        if (!ALWAYS_INCLUDE.includes(d.id)) continue;
-        const summary = (d.inner.match(/<summary>([\s\S]*?)<\/summary>/) || [, ''])[1].trim();
-        const impact = (d.inner.match(/<impact>([\s\S]*?)<\/impact>/) || [, ''])[1].trim();
-        coreInlined.push(`<decision id="${d.id}">\n  <title>${d.title}</title>\n  <summary>${summary}</summary>\n  <impact>${impact}</impact>\n</decision>`);
-      }
-      // Recent N non-core, by appearance order (file order = chronological in our DECISIONS.xml)
+      // Title-only for all, including core. Core bodies (gad-04/17/18) are
+      // duplicated in CLAUDE.md/AGENTS.md — inlining them here wasted ~500
+      // tokens per snapshot. Mark core with ★ for emphasis.
       const nonCore = all.filter((d) => !ALWAYS_INCLUDE.includes(d.id));
       const recent = nonCore.slice(-RECENT_CAP);
       const olderCount = nonCore.length - recent.length;
-      const recentLines = recent.map((d) => `${d.id}: ${d.title.slice(0, 80)}`);
+      const coreLines = all
+        .filter((d) => ALWAYS_INCLUDE.includes(d.id))
+        .map((d) => `★ ${d.id}: ${d.title.slice(0, 96)}`);
+      const recentLines = recent.map((d) => `  ${d.id}: ${d.title.slice(0, 96)}`);
       const sections = [];
-      if (coreInlined.length) sections.push(coreInlined.join('\n'));
-      if (olderCount > 0) sections.push(`(+${olderCount} older decisions omitted; see .planning/DECISIONS.xml)`);
+      if (coreLines.length) sections.push(coreLines.join('\n'));
+      if (olderCount > 0) sections.push(`(+${olderCount} older decisions omitted; \`gad decisions list\` or \`gad decisions show <id>\`)`);
       if (recentLines.length) sections.push(recentLines.join('\n'));
       return {
-        title: `DECISIONS (${totalDec} total, ${ALWAYS_INCLUDE.length} core + last ${recent.length})`,
+        title: `DECISIONS (${totalDec} total, ★=core loop — see CLAUDE.md; last ${recent.length} shown, full body via \`gad decisions show <id>\`)`,
         content: sections.join('\n').trim(),
       };
     }
@@ -14529,6 +14614,7 @@ const main = defineCommand({
     pack: packCmd,
     docs: docsCmd,
     planning: planningCmd,
+    narrative: narrativeCmd,
     site: siteCmd,
     'self-eval': selfEvalCmd,
     data: dataCmd,
