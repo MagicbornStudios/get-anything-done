@@ -4699,7 +4699,7 @@
       "type": "task",
       "id": "task:60-09",
       "label": "Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026",
-      "status": "planned",
+      "status": "done",
       "goal": "Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026-04-18-handoff-queue-design.md). Shape: .planning/handoffs/{open,claimed,closed}/ with one md file per handoff. Lifecycle = fs.rename between dirs (atomic on POSIX + Windows, no lock needed). Each file = YAML frontmatter {id, projectid, phase, task_id, created_at, created_by, claimed_by, claimed_at, completed_at, priority, estimated_context} + markdown body. CLI: gad handoffs {list,claim,complete,show,create}. gad-pause-work + gad-session pause invoke &apos;handoffs create&apos;. gad startup/snapshot surface unclaimed count + top-3 summary. Idle agents pick appropriate items by estimated_context (mechanical→Haiku/Sonnet, reasoning→Opus per offload policy). Gap discovered: no &apos;gad tasks update &lt;id&gt; --goal&apos; exists — surfaced in design note, file as follow-up. See .planning/notes/2026-04-18-handoff-queue-design.md for full schema.",
       "skill": "",
       "taskType": "framework",
@@ -15205,7 +15205,7 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T18:10:56.139Z",
+    "generated": "2026-04-18T18:14:05.784Z",
     "nodeCount": 990,
     "edgeCount": 1462,
     "nodeTypes": {

@@ -2161,6 +2161,191 @@ const decisionsCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
+// handoffs command (task 60-09)
+// ---------------------------------------------------------------------------
+
+const {
+  HandoffError,
+  listHandoffs,
+  readHandoff,
+  claimHandoff,
+  completeHandoff,
+  createHandoff,
+} = require('../lib/handoffs.cjs');
+
+const handoffsListCmd = defineCommand({
+  meta: { name: 'list', description: 'List handoffs (default: open bucket)' },
+  args: {
+    projectid: { type: 'string', description: 'Filter by project id', default: '' },
+    unclaimed: { type: 'boolean', description: 'Show only open/unclaimed (default)', default: false },
+    claimed: { type: 'boolean', description: 'Show claimed handoffs', default: false },
+    closed: { type: 'boolean', description: 'Show closed handoffs', default: false },
+    all: { type: 'boolean', description: 'Show all buckets', default: false },
+    'mine-first': { type: 'boolean', description: 'Sort by runtime_preference match', default: false },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    let bucket = 'open';
+    if (args.all) bucket = 'all';
+    else if (args.claimed) bucket = 'claimed';
+    else if (args.closed) bucket = 'closed';
+
+    const results = listHandoffs({
+      baseDir,
+      bucket,
+      projectid: args.projectid || undefined,
+      mineFirst: args['mine-first'],
+      runtime: process.env.GAD_AGENT || undefined,
+    });
+
+    if (results.length === 0) {
+      console.log(`No handoffs in '${bucket}' bucket${args.projectid ? ` for ${args.projectid}` : ''}.`);
+      return;
+    }
+
+    const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+    if (fmt === 'json') {
+      console.log(JSON.stringify(results.map(r => ({ ...r.frontmatter, bucket: r.bucket, filePath: r.filePath })), null, 2));
+    } else {
+      const rows = results.map(r => ({
+        bucket: r.bucket,
+        id: r.id,
+        project: r.frontmatter.projectid || '',
+        phase: r.frontmatter.phase || '',
+        priority: r.frontmatter.priority || '',
+        context: r.frontmatter.estimated_context || '',
+        claimed_by: r.frontmatter.claimed_by || '',
+        runtime: r.frontmatter.runtime_preference || '',
+      }));
+      console.log(render(rows, { format: 'table', title: `Handoffs — ${bucket} (${rows.length})` }));
+    }
+  },
+});
+
+const handoffsShowCmd = defineCommand({
+  meta: { name: 'show', description: 'Print full content of a handoff file' },
+  args: {
+    id: { type: 'positional', description: 'Handoff id (e.g. h-2026-04-18-claude-orchestration-handoff)', required: true },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    try {
+      const { frontmatter, body, bucket, filePath } = readHandoff({ baseDir, id: String(args.id) });
+      console.log(`-- ${args.id} [${bucket}] ----`);
+      console.log(`File: ${path.relative(baseDir, filePath)}`);
+      console.log('');
+      for (const [k, v] of Object.entries(frontmatter)) {
+        console.log(`  ${k}: ${v}`);
+      }
+      console.log('');
+      console.log(body);
+    } catch (e) {
+      if (e instanceof HandoffError) {
+        outputError(e.message);
+        process.exit(1);
+      }
+      throw e;
+    }
+  },
+});
+
+const handoffsClaimCmd = defineCommand({
+  meta: { name: 'claim', description: 'Claim an open handoff (moves open→claimed)' },
+  args: {
+    id: { type: 'positional', description: 'Handoff id', required: true },
+    agent: { type: 'string', description: 'Agent name to record as claimer', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    try {
+      const destPath = claimHandoff({
+        baseDir,
+        id: String(args.id),
+        agent: args.agent || process.env.GAD_AGENT || 'unknown',
+      });
+      console.log(`Claimed: ${args.id}`);
+      console.log(`Path:    ${path.relative(baseDir, destPath)}`);
+    } catch (e) {
+      if (e instanceof HandoffError) {
+        outputError(e.message);
+        process.exit(1);
+      }
+      throw e;
+    }
+  },
+});
+
+const handoffsCompleteCmd = defineCommand({
+  meta: { name: 'complete', description: 'Mark a claimed handoff complete (moves claimed→closed)' },
+  args: {
+    id: { type: 'positional', description: 'Handoff id', required: true },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    try {
+      const destPath = completeHandoff({ baseDir, id: String(args.id) });
+      console.log(`Completed: ${args.id}`);
+      console.log(`Path:      ${path.relative(baseDir, destPath)}`);
+    } catch (e) {
+      if (e instanceof HandoffError) {
+        outputError(e.message);
+        process.exit(1);
+      }
+      throw e;
+    }
+  },
+});
+
+const handoffsCreateCmd = defineCommand({
+  meta: { name: 'create', description: 'Create a new handoff in open/' },
+  args: {
+    projectid: { type: 'string', description: 'Project id', required: true },
+    phase: { type: 'string', description: 'Phase id (e.g. 60)', required: true },
+    'task-id': { type: 'string', description: 'Task id (optional)', default: '' },
+    priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
+    context: { type: 'string', description: 'mechanical | reasoning', default: 'mechanical' },
+    body: { type: 'string', description: 'Handoff body (markdown)', required: true },
+    'runtime-preference': { type: 'string', description: 'Runtime hint (e.g. claude-code)', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    try {
+      const result = createHandoff({
+        baseDir,
+        projectid: String(args.projectid),
+        phase: String(args.phase),
+        taskId: args['task-id'] || undefined,
+        priority: String(args.priority || 'normal'),
+        estimatedContext: String(args.context || 'mechanical'),
+        body: String(args.body),
+        createdBy: process.env.GAD_AGENT || 'unknown',
+        runtimePreference: args['runtime-preference'] || undefined,
+      });
+      console.log(`Created: ${result.id}`);
+      console.log(`Path:    ${path.relative(baseDir, result.filePath)}`);
+    } catch (e) {
+      if (e instanceof HandoffError) {
+        outputError(e.message);
+        process.exit(1);
+      }
+      throw e;
+    }
+  },
+});
+
+const handoffsCmd = defineCommand({
+  meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, complete, create' },
+  subCommands: {
+    list: handoffsListCmd,
+    show: handoffsShowCmd,
+    claim: handoffsClaimCmd,
+    complete: handoffsCompleteCmd,
+    create: handoffsCreateCmd,
+  },
+});
+
+// ---------------------------------------------------------------------------
 // todos command
 // ---------------------------------------------------------------------------
 
@@ -16256,6 +16441,7 @@ const main = defineCommand({
     'task-checkpoint': taskCheckpoint,
     next: nextCmd,
     decisions: decisionsCmd,
+    handoffs: handoffsCmd,
     todos: todosCmd,
     requirements: requirementsCmd,
     errors: errorsCmd,
