@@ -7,6 +7,7 @@ import {
   REGISTERED_PROJECTS,
 } from "@/lib/project-config";
 import { EVAL_PROJECTS } from "@/lib/eval-data";
+import { DevCatalogBanner } from "@/components/dev/DevCatalogBanner";
 
 export const metadata: Metadata = {
   title: "Project Market - GAD",
@@ -35,6 +36,7 @@ export default async function ProjectMarketPage({
   const scopeProject = hasEvalRows ? currentProject : null;
   return (
     <MarketingShell>
+      <DevCatalogBanner />
       <ProjectMarket scopeProject={scopeProject} />
     </MarketingShell>
   );
