@@ -1,0 +1,6 @@
+# Investigate repeated runtime matrix/pipeline INVALID_FLAGS artifacts
+
+**Source:** session 2026-04-18 runtime substrate artifacts review
+
+Evidence from root workspace runtime artifacts:\n\n- .gad/matrix/20260418195018.json (projectId: app-forge) and .gad/matrix/20260418195024.json (projectId: global) were written by the runtime substrate matrix path, not gad startup.\n- Matching traces under .gad/traces/2026-04-18/ show untime: claude-code, mode: plan, 	askShape: test-repair, and 
+ormalizedErrorCode: INVALID_FLAGS.\n- Normalized message: Headless execute contract not wired for this runtime yet.\n\nInvestigation needed:\n\n1. Identify which root-level workflow or operator action is invoking untime matrix / untime pipeline unexpectedly.\n2. Confirm whether these blocked runs should be suppressed when the selected runtime lacks headless execute support.\n3. Decide whether matrix/pipeline should auto-fall back, hard-fail early without writing artifacts, or write a clearer operator-facing note.\n4. If these are capacity/health probes, make that explicit in logs/UI so they do not look like stray failures.\n\nThis is outside the endor/get-anything-done startup bug fix lane; no behavior change made here yet.
